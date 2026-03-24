@@ -10,6 +10,11 @@ from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandb
 from orket.adapters.storage.command_runner import CommandRunner
 from orket.application.services.sandbox_cleanup_authority_service import SandboxCleanupAuthorityService
 from orket.application.services.sandbox_cleanup_verification_service import SandboxCleanupVerificationService
+from orket.application.services.sandbox_control_plane_effect_service import SandboxControlPlaneEffectService
+from orket.application.services.sandbox_control_plane_execution_service import SandboxControlPlaneExecutionService
+from orket.application.services.sandbox_control_plane_checkpoint_service import (
+    SandboxControlPlaneCheckpointService,
+)
 from orket.application.services.sandbox_control_plane_lease_service import (
     SandboxControlPlaneLeaseError,
     SandboxControlPlaneLeaseService,
@@ -52,6 +57,8 @@ class SandboxRuntimeLifecycleService:
         docker_host_id: str,
         policy: SandboxLifecyclePolicy | None = None,
         control_plane_publication: ControlPlanePublicationService | None = None,
+        control_plane_execution: SandboxControlPlaneExecutionService | None = None,
+        control_plane_effects: SandboxControlPlaneEffectService | None = None,
     ) -> None:
         self.repository = repository
         self.command_runner = command_runner
@@ -60,13 +67,32 @@ class SandboxRuntimeLifecycleService:
         self.docker_host_id = docker_host_id
         self.policy = policy or SandboxLifecyclePolicy()
         self.control_plane_publication = control_plane_publication
+        self.control_plane_execution = control_plane_execution
+        self.control_plane_effects = control_plane_effects
+        self.control_plane_checkpoints = (
+            None
+            if self.control_plane_publication is None or self.control_plane_execution is None
+            else SandboxControlPlaneCheckpointService(
+                publication=self.control_plane_publication,
+                lifecycle_repository=self.repository,
+                execution_repository=self.control_plane_execution.repository,
+            )
+        )
         self.mutations = SandboxLifecycleMutationService(repository)
         self.reconciler = SandboxLifecycleReconciliationService(
             mutation_service=self.mutations,
             policy=self.policy,
             control_plane_publication=self.control_plane_publication,
+            control_plane_execution=self.control_plane_execution,
+            control_plane_checkpoints=self.control_plane_checkpoints,
         )
-        self.views = SandboxLifecycleViewService(repository)
+        self.views = SandboxLifecycleViewService(
+            repository,
+            control_plane_repository=None if self.control_plane_publication is None else self.control_plane_publication.repository,
+            control_plane_execution_repository=None
+            if self.control_plane_execution is None
+            else self.control_plane_execution.repository,
+        )
         self.event_publisher = SandboxLifecycleEventPublisher(repository=repository)
         self.terminal_evidence = SandboxTerminalEvidenceService()
         self.terminal_outcomes = SandboxTerminalOutcomeService(lifecycle_service=self)
@@ -82,6 +108,7 @@ class SandboxRuntimeLifecycleService:
         compose_project: str,
         workspace_path: str,
         run_id: str,
+        source_reservation_id: str | None = None,
     ) -> SandboxLifecycleRecord:
         created_at = self._now()
         record = SandboxLifecycleRecord(
@@ -104,7 +131,18 @@ class SandboxRuntimeLifecycleService:
             docker_host_id=self.docker_host_id,
         )
         await self.repository.save_record(record)
-        await self._publish_control_plane_lease(record=record, publication_timestamp=created_at)
+        await self._publish_control_plane_lease(
+            record=record,
+            publication_timestamp=created_at,
+            source_reservation_id=source_reservation_id,
+        )
+        if self.control_plane_publication is not None and source_reservation_id is not None:
+            await self.control_plane_publication.promote_reservation_to_lease(
+                reservation_id=source_reservation_id,
+                promoted_lease_id=SandboxControlPlaneLeaseService.lease_id_for_sandbox(sandbox_id),
+                supervisor_authority_ref=f"sandbox-lifecycle:{sandbox_id}:create_record:{self.instance_id}",
+                promotion_basis="sandbox_lifecycle_record_created",
+            )
         return record
 
     async def mark_create_accepted(self, *, sandbox_id: str) -> SandboxLifecycleRecord:
@@ -149,6 +187,7 @@ class SandboxRuntimeLifecycleService:
             )
         ).record
         await self._publish_control_plane_lease(record=record, publication_timestamp=observed_at)
+        await self._publish_control_plane_deploy_effect(record=record, publication_timestamp=observed_at)
         return record
 
     async def mark_start_failed(self, *, sandbox_id: str) -> SandboxLifecycleRecord:
@@ -310,6 +349,7 @@ class SandboxRuntimeLifecycleService:
             record=record,
             publication_timestamp=record.last_heartbeat_at or self._now(),
         )
+        await self._start_control_plane_new_attempt_after_reacquire(record=record)
         return record
 
     async def handle_missing_runtime(self, *, sandbox_id: str) -> SandboxLifecycleRecord | None:
@@ -452,14 +492,81 @@ class SandboxRuntimeLifecycleService:
         *,
         record: SandboxLifecycleRecord,
         publication_timestamp: str,
+        source_reservation_id: str | None = None,
     ) -> None:
         if self.control_plane_publication is None:
             return
         publisher = SandboxControlPlaneLeaseService(publication=self.control_plane_publication)
         try:
-            await publisher.publish_from_record(record=record, publication_timestamp=publication_timestamp)
+            await publisher.publish_from_record(
+                record=record,
+                publication_timestamp=publication_timestamp,
+                source_reservation_id=source_reservation_id,
+            )
         except SandboxControlPlaneLeaseError:
             return
+
+    async def _publish_control_plane_deploy_effect(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+        publication_timestamp: str,
+    ) -> None:
+        if self.control_plane_effects is None or record.run_id is None:
+            return
+        await self.control_plane_effects.publish_deploy_effect(
+            sandbox_id=record.sandbox_id,
+            run_id=record.run_id,
+            compose_project=record.compose_project,
+            workspace_path=record.workspace_path,
+            observed_at=publication_timestamp,
+            lease_epoch=record.lease_epoch,
+        )
+
+    async def _publish_control_plane_cleanup_effect(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+        publication_timestamp: str,
+        cleanup_result: str,
+    ) -> None:
+        if self.control_plane_effects is None or record.run_id is None:
+            return
+        await self.control_plane_effects.publish_cleanup_effect(
+            sandbox_id=record.sandbox_id,
+            run_id=record.run_id,
+            compose_project=record.compose_project,
+            workspace_path=record.workspace_path,
+            observed_at=publication_timestamp,
+            lease_epoch=record.lease_epoch,
+            cleanup_result=cleanup_result,
+        )
+
+    async def _resume_control_plane_execution(
+        self,
+        *,
+        run_id: str | None,
+    ) -> None:
+        if self.control_plane_execution is None or run_id is None:
+            return
+        await self.control_plane_execution.resume_waiting_execution(run_id=run_id)
+
+    async def _start_control_plane_new_attempt_after_reacquire(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+    ) -> None:
+        if self.control_plane_execution is None or record.run_id is None:
+            return
+        rationale_ref = f"sandbox-reconciliation:{record.run_id}:{record.record_version - 1:08d}"
+        await self.control_plane_execution.start_new_attempt_after_reacquire(
+            sandbox_id=record.sandbox_id,
+            run_id=record.run_id,
+            lease_epoch=record.lease_epoch,
+            observed_at=record.last_heartbeat_at or self._now(),
+            policy_version=record.policy_version,
+            rationale_ref=rationale_ref,
+        )
 
     @staticmethod
     def _payload_hash(payload: dict[str, object]) -> str:

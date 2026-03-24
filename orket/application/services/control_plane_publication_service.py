@@ -12,6 +12,7 @@ from orket.core.contracts import (
     OperatorActionRecord,
     ReconciliationRecord,
     RecoveryDecisionRecord,
+    ReservationRecord,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 from orket.core.domain import (
@@ -24,6 +25,8 @@ from orket.core.domain import (
     EvidenceSufficiencyClassification,
     RecoveryActionClass,
     ResidualUncertaintyClassification,
+    ReservationKind,
+    ReservationStatus,
     ResultClass,
     SafeContinuationClass,
     SideEffectBoundaryClass,
@@ -41,6 +44,126 @@ class ControlPlanePublicationService:
     ) -> None:
         self.repository = repository
         self.authority = authority or ControlPlaneAuthorityService()
+
+    async def publish_reservation(
+        self,
+        *,
+        reservation_id: str,
+        holder_ref: str,
+        reservation_kind: ReservationKind,
+        target_scope_ref: str,
+        creation_timestamp: str,
+        expiry_or_invalidation_basis: str,
+        status: ReservationStatus,
+        supervisor_authority_ref: str,
+        promotion_rule: str | None = None,
+        promoted_lease_id: str | None = None,
+    ) -> ReservationRecord:
+        previous_record = await self.repository.get_latest_reservation_record(reservation_id=reservation_id)
+        record = self.authority.publish_reservation(
+            reservation_id=reservation_id,
+            holder_ref=holder_ref,
+            reservation_kind=reservation_kind,
+            target_scope_ref=target_scope_ref,
+            creation_timestamp=creation_timestamp,
+            expiry_or_invalidation_basis=expiry_or_invalidation_basis,
+            status=status,
+            supervisor_authority_ref=supervisor_authority_ref,
+            promotion_rule=promotion_rule,
+            promoted_lease_id=promoted_lease_id,
+            previous_record=previous_record,
+        )
+        return await self.repository.save_reservation_record(record=record)
+
+    async def promote_reservation_to_lease(
+        self,
+        *,
+        reservation_id: str,
+        promoted_lease_id: str,
+        supervisor_authority_ref: str,
+        promotion_basis: str,
+    ) -> ReservationRecord:
+        previous_record = await self.repository.get_latest_reservation_record(reservation_id=reservation_id)
+        if previous_record is None:
+            raise ValueError(f"Reservation not found for promotion: {reservation_id}")
+        return await self.publish_reservation(
+            reservation_id=previous_record.reservation_id,
+            holder_ref=previous_record.holder_ref,
+            reservation_kind=previous_record.reservation_kind,
+            target_scope_ref=previous_record.target_scope_ref,
+            creation_timestamp=previous_record.creation_timestamp,
+            expiry_or_invalidation_basis=promotion_basis,
+            status=ReservationStatus.PROMOTED_TO_LEASE,
+            supervisor_authority_ref=supervisor_authority_ref,
+            promotion_rule=previous_record.promotion_rule,
+            promoted_lease_id=promoted_lease_id,
+        )
+
+    async def invalidate_reservation(
+        self,
+        *,
+        reservation_id: str,
+        supervisor_authority_ref: str,
+        invalidation_basis: str,
+    ) -> ReservationRecord:
+        previous_record = await self.repository.get_latest_reservation_record(reservation_id=reservation_id)
+        if previous_record is None:
+            raise ValueError(f"Reservation not found for invalidation: {reservation_id}")
+        return await self.publish_reservation(
+            reservation_id=previous_record.reservation_id,
+            holder_ref=previous_record.holder_ref,
+            reservation_kind=previous_record.reservation_kind,
+            target_scope_ref=previous_record.target_scope_ref,
+            creation_timestamp=previous_record.creation_timestamp,
+            expiry_or_invalidation_basis=invalidation_basis,
+            status=ReservationStatus.INVALIDATED,
+            supervisor_authority_ref=supervisor_authority_ref,
+            promotion_rule=previous_record.promotion_rule,
+        )
+
+    async def release_reservation(
+        self,
+        *,
+        reservation_id: str,
+        supervisor_authority_ref: str,
+        release_basis: str,
+    ) -> ReservationRecord:
+        previous_record = await self.repository.get_latest_reservation_record(reservation_id=reservation_id)
+        if previous_record is None:
+            raise ValueError(f"Reservation not found for release: {reservation_id}")
+        return await self.publish_reservation(
+            reservation_id=previous_record.reservation_id,
+            holder_ref=previous_record.holder_ref,
+            reservation_kind=previous_record.reservation_kind,
+            target_scope_ref=previous_record.target_scope_ref,
+            creation_timestamp=previous_record.creation_timestamp,
+            expiry_or_invalidation_basis=release_basis,
+            status=ReservationStatus.RELEASED,
+            supervisor_authority_ref=supervisor_authority_ref,
+            promotion_rule=previous_record.promotion_rule,
+        )
+
+    async def expire_reservation(
+        self,
+        *,
+        reservation_id: str,
+        supervisor_authority_ref: str,
+        expiry_basis: str,
+    ) -> ReservationRecord:
+        previous_record = await self.repository.get_latest_reservation_record(reservation_id=reservation_id)
+        if previous_record is None:
+            raise ValueError(f"Reservation not found for expiry: {reservation_id}")
+        return await self.publish_reservation(
+            reservation_id=previous_record.reservation_id,
+            holder_ref=previous_record.holder_ref,
+            reservation_kind=previous_record.reservation_kind,
+            target_scope_ref=previous_record.target_scope_ref,
+            creation_timestamp=previous_record.creation_timestamp,
+            expiry_or_invalidation_basis=expiry_basis,
+            status=ReservationStatus.EXPIRED,
+            supervisor_authority_ref=supervisor_authority_ref,
+            promotion_rule=previous_record.promotion_rule,
+        )
 
     async def append_effect_journal_entry(
         self,
@@ -81,6 +204,14 @@ class ControlPlanePublicationService:
         )
         return await self.repository.append_effect_journal_entry(run_id=run_id, entry=entry)
 
+    async def publish_checkpoint(
+        self,
+        *,
+        checkpoint: CheckpointRecord,
+    ) -> CheckpointRecord:
+        record = self.authority.publish_checkpoint(checkpoint=checkpoint)
+        return await self.repository.save_checkpoint(record=record)
+
     async def accept_checkpoint(
         self,
         *,
@@ -97,6 +228,7 @@ class ControlPlanePublicationService:
         reservation_ids: Iterable[str] | None = None,
         lease_ids: Iterable[str] | None = None,
     ) -> CheckpointAcceptanceRecord:
+        await self.publish_checkpoint(checkpoint=checkpoint)
         acceptance = self.authority.accept_checkpoint(
             acceptance_id=acceptance_id,
             checkpoint=checkpoint,
@@ -124,6 +256,7 @@ class ControlPlanePublicationService:
         integrity_verification_ref: str,
         rejection_reasons: Sequence[str],
     ) -> CheckpointAcceptanceRecord:
+        await self.publish_checkpoint(checkpoint=checkpoint)
         acceptance = self.authority.reject_checkpoint(
             acceptance_id=acceptance_id,
             checkpoint=checkpoint,
@@ -156,6 +289,10 @@ class ControlPlanePublicationService:
         reconciliation_record: ReconciliationRecord | None = None,
         idempotent_retry_permitted: bool = False,
     ) -> RecoveryDecisionRecord:
+        if target_checkpoint_id is not None:
+            checkpoint = await self.repository.get_checkpoint(checkpoint_id=target_checkpoint_id)
+            if checkpoint is None:
+                raise ValueError(f"Checkpoint not found for recovery decision: {target_checkpoint_id}")
         resolved_checkpoint_acceptance = checkpoint_acceptance
         if resolved_checkpoint_acceptance is None and target_checkpoint_id is not None:
             resolved_checkpoint_acceptance = await self.repository.get_checkpoint_acceptance(
@@ -269,6 +406,42 @@ class ControlPlanePublicationService:
             operator_action=operator_action,
         )
         return await self.repository.save_final_truth(record=record)
+
+    async def publish_operator_action(
+        self,
+        *,
+        action_id: str,
+        actor_ref: str,
+        input_class,
+        target_ref: str,
+        timestamp: str,
+        precondition_basis_ref: str,
+        result: str,
+        command_class=None,
+        risk_acceptance_scope: str | None = None,
+        attestation_scope: str | None = None,
+        attestation_payload: dict[str, object] | None = None,
+        affected_transition_refs: list[str] | None = None,
+        affected_resource_refs: list[str] | None = None,
+        receipt_refs: list[str] | None = None,
+    ) -> OperatorActionRecord:
+        record = self.authority.publish_operator_action(
+            action_id=action_id,
+            actor_ref=actor_ref,
+            input_class=input_class,
+            target_ref=target_ref,
+            timestamp=timestamp,
+            precondition_basis_ref=precondition_basis_ref,
+            result=result,
+            command_class=command_class,
+            risk_acceptance_scope=risk_acceptance_scope,
+            attestation_scope=attestation_scope,
+            attestation_payload=attestation_payload,
+            affected_transition_refs=affected_transition_refs,
+            affected_resource_refs=affected_resource_refs,
+            receipt_refs=receipt_refs,
+        )
+        return await self.repository.save_operator_action(record=record)
 
 
 __all__ = ["ControlPlanePublicationService"]

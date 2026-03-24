@@ -11,11 +11,14 @@ from orket.application.services.sandbox_control_plane_closure_service import (
 )
 from orket.core.contracts import (
     CheckpointAcceptanceRecord,
+    CheckpointRecord,
     EffectJournalEntryRecord,
     FinalTruthRecord,
     LeaseRecord,
+    OperatorActionRecord,
     ReconciliationRecord,
     RecoveryDecisionRecord,
+    ReservationRecord,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 from orket.core.domain import (
@@ -34,7 +37,29 @@ pytestmark = pytest.mark.unit
 
 class FinalTruthOnlyRepository(ControlPlaneRecordRepository):
     def __init__(self) -> None:
+        self.reservations_by_id: dict[str, list[ReservationRecord]] = {}
         self.final_truth_by_run: dict[str, FinalTruthRecord] = {}
+
+    async def save_reservation_record(
+        self,
+        *,
+        record: ReservationRecord,
+    ) -> ReservationRecord:
+        self.reservations_by_id.setdefault(record.reservation_id, []).append(record)
+        return record
+
+    async def list_reservation_records(self, *, reservation_id: str) -> list[ReservationRecord]:
+        return list(self.reservations_by_id.get(reservation_id, ()))
+
+    async def get_latest_reservation_record(self, *, reservation_id: str) -> ReservationRecord | None:
+        records = self.reservations_by_id.get(reservation_id, ())
+        return records[-1] if records else None
+
+    async def list_reservation_records_for_holder_ref(self, *, holder_ref: str) -> list[ReservationRecord]:
+        return []
+
+    async def get_latest_reservation_record_for_holder_ref(self, *, holder_ref: str) -> ReservationRecord | None:
+        return None
 
     async def append_effect_journal_entry(
         self,
@@ -45,6 +70,23 @@ class FinalTruthOnlyRepository(ControlPlaneRecordRepository):
         raise NotImplementedError
 
     async def list_effect_journal_entries(self, *, run_id: str) -> list[EffectJournalEntryRecord]:
+        raise NotImplementedError
+
+    async def save_checkpoint(
+        self,
+        *,
+        record: CheckpointRecord,
+    ) -> CheckpointRecord:
+        raise NotImplementedError
+
+    async def get_checkpoint(
+        self,
+        *,
+        checkpoint_id: str,
+    ) -> CheckpointRecord | None:
+        raise NotImplementedError
+
+    async def list_checkpoints(self, *, parent_ref: str) -> list[CheckpointRecord]:
         raise NotImplementedError
 
     async def save_checkpoint_acceptance(
@@ -92,6 +134,25 @@ class FinalTruthOnlyRepository(ControlPlaneRecordRepository):
         raise NotImplementedError
 
     async def get_reconciliation_record(self, *, reconciliation_id: str) -> ReconciliationRecord | None:
+        raise NotImplementedError
+
+    async def list_reconciliation_records(self, *, target_ref: str) -> list[ReconciliationRecord]:
+        raise NotImplementedError
+
+    async def get_latest_reconciliation_record(self, *, target_ref: str) -> ReconciliationRecord | None:
+        raise NotImplementedError
+
+    async def save_operator_action(
+        self,
+        *,
+        record: OperatorActionRecord,
+    ) -> OperatorActionRecord:
+        raise NotImplementedError
+
+    async def get_operator_action(self, *, action_id: str) -> OperatorActionRecord | None:
+        raise NotImplementedError
+
+    async def list_operator_actions(self, *, target_ref: str) -> list[OperatorActionRecord]:
         raise NotImplementedError
 
     async def save_final_truth(self, *, record: FinalTruthRecord) -> FinalTruthRecord:

@@ -12,6 +12,14 @@ from referencing import Registry, Resource
 
 from orket.interfaces.api import app
 import orket.interfaces.api as api_module
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.kernel_action_control_plane_operator_service import (
+    KernelActionControlPlaneOperatorService,
+)
+from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
+from orket.application.services.kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
+from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
+from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
 
 
 client = TestClient(app)
@@ -129,11 +137,11 @@ def test_kernel_admit_proposal_endpoint_routes_to_engine(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
-    def fake_kernel_admit_proposal(request):
+    async def fake_kernel_admit_proposal_async(request):
         captured["request"] = request
         return {"proposal_digest": "b" * 64, "admission_decision": {"decision": "ACCEPT_TO_UNIFY"}}
 
-    monkeypatch.setattr(api_module.engine, "kernel_admit_proposal", fake_kernel_admit_proposal)
+    monkeypatch.setattr(api_module.engine, "kernel_admit_proposal_async", fake_kernel_admit_proposal_async)
 
     response = client.post(
         "/v1/kernel/admit-proposal",
@@ -153,11 +161,11 @@ def test_kernel_commit_proposal_endpoint_routes_to_engine(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
-    def fake_kernel_commit_proposal(request):
+    async def fake_kernel_commit_proposal_async(request):
         captured["request"] = request
         return {"status": "COMMITTED", "commit_event_digest": "c" * 64}
 
-    monkeypatch.setattr(api_module.engine, "kernel_commit_proposal", fake_kernel_commit_proposal)
+    monkeypatch.setattr(api_module.engine, "kernel_commit_proposal_async", fake_kernel_commit_proposal_async)
 
     response = client.post(
         "/v1/kernel/commit-proposal",
@@ -168,22 +176,32 @@ def test_kernel_commit_proposal_endpoint_routes_to_engine(monkeypatch) -> None:
             "proposal_digest": "d" * 64,
             "admission_decision_digest": "e" * 64,
             "execution_result_digest": "f" * 64,
+            "execution_result_payload": {"ok": True},
+            "execution_result_schema_valid": True,
+            "execution_error_reason_code": "TOKEN_INVALID",
+            "canonical_state_digest_after": "1" * 64,
+            "block_result_leaks": True,
         },
     )
     assert response.status_code == 200
     assert response.json()["status"] == "COMMITTED"
     assert captured["request"]["contract_version"] == "kernel_api/v1"
+    assert captured["request"]["execution_result_payload"] == {"ok": True}
+    assert captured["request"]["execution_result_schema_valid"] is True
+    assert captured["request"]["execution_error_reason_code"] == "TOKEN_INVALID"
+    assert captured["request"]["canonical_state_digest_after"] == "1" * 64
+    assert captured["request"]["block_result_leaks"] is True
 
 
 def test_kernel_end_session_endpoint_routes_to_engine(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
-    def fake_kernel_end_session(request):
+    async def fake_kernel_end_session_async(request):
         captured["request"] = request
         return {"status": "ENDED", "event_digest": "1" * 64}
 
-    monkeypatch.setattr(api_module.engine, "kernel_end_session", fake_kernel_end_session)
+    monkeypatch.setattr(api_module.engine, "kernel_end_session_async", fake_kernel_end_session_async)
 
     response = client.post(
         "/v1/kernel/end-session",
@@ -197,6 +215,7 @@ def test_kernel_end_session_endpoint_routes_to_engine(monkeypatch) -> None:
     assert response.status_code == 200
     assert response.json()["status"] == "ENDED"
     assert captured["request"]["contract_version"] == "kernel_api/v1"
+    assert captured["request"]["operator_actor_ref"].startswith("api_key_fingerprint:sha256:")
 
 
 def test_kernel_projection_admit_commit_end_session_real_engine_flow(monkeypatch) -> None:
@@ -258,6 +277,240 @@ def test_kernel_projection_admit_commit_end_session_real_engine_flow(monkeypatch
     )
     assert ended.status_code == 200
     assert ended.json()["status"] == "ENDED"
+
+
+def test_kernel_api_real_engine_flow_publishes_control_plane_governed_action_truth(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
+    monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
+    execution_repo = InMemoryControlPlaneExecutionRepository()
+    record_repo = InMemoryControlPlaneRecordRepository()
+    monkeypatch.setattr(api_module.engine, "control_plane_execution_repository", execution_repo)
+    monkeypatch.setattr(api_module.engine, "control_plane_repository", record_repo)
+    monkeypatch.setattr(api_module.engine, "control_plane_publication", ControlPlanePublicationService(repository=record_repo))
+    monkeypatch.setattr(
+        api_module.engine,
+        "kernel_action_control_plane",
+        KernelActionControlPlaneService(
+            execution_repository=execution_repo,
+            publication=api_module.engine.control_plane_publication,
+        ),
+    )
+    monkeypatch.setattr(
+        api_module.engine,
+        "kernel_action_control_plane_view",
+        KernelActionControlPlaneViewService(
+            record_repository=record_repo,
+            execution_repository=execution_repo,
+        ),
+    )
+
+    session_id = "sess-real-kernel-cp-1"
+    trace_id = "trace-real-kernel-cp-1"
+    admitted = client.post(
+        "/v1/kernel/admit-proposal",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": session_id,
+            "trace_id": trace_id,
+            "proposal": {"proposal_type": "action.tool_call", "payload": {}},
+        },
+    )
+    assert admitted.status_code == 200
+    admitted_payload = admitted.json()
+
+    committed = client.post(
+        "/v1/kernel/commit-proposal",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": session_id,
+            "trace_id": trace_id,
+            "proposal_digest": admitted_payload["proposal_digest"],
+            "admission_decision_digest": admitted_payload["decision_digest"],
+            "execution_result_digest": "f" * 64,
+            "execution_result_payload": {"ok": True, "path": "workspace/out.txt"},
+            "execution_result_schema_valid": True,
+        },
+    )
+    assert committed.status_code == 200
+    assert committed.json()["status"] == "COMMITTED"
+
+    run = execution_repo.run_by_id[KernelActionControlPlaneService.run_id_for(session_id=session_id, trace_id=trace_id)]
+    attempt = execution_repo.attempt_by_id[
+        KernelActionControlPlaneService.attempt_id_for(session_id=session_id, trace_id=trace_id)
+    ]
+    final_truth = record_repo.final_truth_by_run[run.run_id]
+    effects = record_repo.journal_by_run[run.run_id]
+
+    assert run.lifecycle_state.value == "completed"
+    assert attempt.attempt_state.value == "attempt_completed"
+    assert len(execution_repo.step_by_id) == 1
+    assert final_truth.result_class.value == "success"
+    assert len(effects) == 1
+
+    replay = client.get(
+        "/v1/kernel/action-lifecycle/replay",
+        headers={"X-API-Key": "test-key"},
+        params={"session_id": session_id, "trace_id": trace_id},
+    )
+    assert replay.status_code == 200
+    assert replay.json()["control_plane"]["run_state"] == "completed"
+    assert replay.json()["control_plane"]["step_count"] == 1
+    assert replay.json()["control_plane"]["effect_entry_count"] == 1
+    assert replay.json()["control_plane"]["latest_reservation"] is None
+    assert replay.json()["control_plane"]["latest_step"]["namespace_scope"] is None
+    assert replay.json()["control_plane"]["latest_step"]["resources_touched"] == [
+        f"kernel-action-target:{session_id}:{trace_id}"
+    ]
+    assert replay.json()["control_plane"]["latest_step"]["receipt_refs"]
+    assert replay.json()["control_plane"]["final_truth"]["result_class"] == "success"
+    assert replay.json()["control_plane"]["final_truth"]["evidence_sufficiency_classification"] == (
+        "evidence_sufficient"
+    )
+    assert replay.json()["control_plane"]["final_truth"]["residual_uncertainty_classification"] == (
+        "no_residual_uncertainty"
+    )
+    assert replay.json()["control_plane"]["final_truth"]["degradation_classification"] == "no_degradation"
+    assert replay.json()["control_plane"]["final_truth"]["terminality_basis"] == "completed_terminal"
+    assert replay.json()["control_plane"]["final_truth"]["authoritative_result_ref"] == (
+        "kernel-execution-result:" + ("f" * 64)
+    )
+    assert replay.json()["control_plane"]["final_truth"]["authority_sources"] == [
+        "receipt_evidence",
+        "validated_artifact",
+    ]
+
+
+def test_kernel_api_replay_exposes_active_reservation_for_needs_approval_trace(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
+    monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
+    execution_repo = InMemoryControlPlaneExecutionRepository()
+    record_repo = InMemoryControlPlaneRecordRepository()
+    monkeypatch.setattr(api_module.engine, "control_plane_execution_repository", execution_repo)
+    monkeypatch.setattr(api_module.engine, "control_plane_repository", record_repo)
+    monkeypatch.setattr(api_module.engine, "control_plane_publication", ControlPlanePublicationService(repository=record_repo))
+    monkeypatch.setattr(
+        api_module.engine,
+        "kernel_action_control_plane",
+        KernelActionControlPlaneService(
+            execution_repository=execution_repo,
+            publication=api_module.engine.control_plane_publication,
+        ),
+    )
+    monkeypatch.setattr(
+        api_module.engine,
+        "kernel_action_control_plane_view",
+        KernelActionControlPlaneViewService(
+            record_repository=record_repo,
+            execution_repository=execution_repo,
+        ),
+    )
+
+    session_id = "sess-real-kernel-cp-approval-1"
+    trace_id = "trace-real-kernel-cp-approval-1"
+    admitted = client.post(
+        "/v1/kernel/admit-proposal",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": session_id,
+            "trace_id": trace_id,
+            "proposal": {
+                "proposal_type": "action.tool_call",
+                "payload": {"approval_required_destructive": True},
+            },
+        },
+    )
+    assert admitted.status_code == 200
+    admitted_payload = admitted.json()
+    assert admitted_payload["admission_decision"]["decision"] == "NEEDS_APPROVAL"
+    assert admitted_payload["approval_id"]
+
+    replay = client.get(
+        "/v1/kernel/action-lifecycle/replay",
+        headers={"X-API-Key": "test-key"},
+        params={"session_id": session_id, "trace_id": trace_id},
+    )
+    assert replay.status_code == 200
+    control_plane = replay.json()["control_plane"]
+    assert control_plane["run_state"] == "admitted"
+    assert control_plane["current_attempt_state"] == "attempt_created"
+    assert control_plane["latest_reservation"]["reservation_kind"] == "operator_hold_reservation"
+    assert control_plane["latest_reservation"]["status"] == "reservation_active"
+    assert control_plane["latest_reservation"]["expiry_or_invalidation_basis"] == (
+        "pending_tool_approval:action.tool_call"
+    )
+    assert control_plane["latest_reservation"]["supervisor_authority_ref"] == (
+        f"tool-approval-gate:{admitted_payload['approval_id']}:create"
+    )
+
+
+def test_kernel_api_end_session_publishes_operator_cancel_for_unfinished_trace(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
+    monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
+    execution_repo = InMemoryControlPlaneExecutionRepository()
+    record_repo = InMemoryControlPlaneRecordRepository()
+    publication = ControlPlanePublicationService(repository=record_repo)
+    monkeypatch.setattr(api_module.engine, "control_plane_execution_repository", execution_repo)
+    monkeypatch.setattr(api_module.engine, "control_plane_repository", record_repo)
+    monkeypatch.setattr(api_module.engine, "control_plane_publication", publication)
+    monkeypatch.setattr(
+        api_module.engine,
+        "kernel_action_control_plane",
+        KernelActionControlPlaneService(
+            execution_repository=execution_repo,
+            publication=publication,
+        ),
+    )
+    monkeypatch.setattr(
+        api_module.engine,
+        "kernel_action_control_plane_operator",
+        KernelActionControlPlaneOperatorService(publication=publication),
+    )
+    monkeypatch.setattr(
+        api_module.engine,
+        "kernel_action_control_plane_view",
+        KernelActionControlPlaneViewService(
+            record_repository=record_repo,
+            execution_repository=execution_repo,
+        ),
+    )
+
+    session_id = "sess-real-kernel-cp-cancel"
+    trace_id = "trace-real-kernel-cp-cancel"
+    admitted = client.post(
+        "/v1/kernel/admit-proposal",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": session_id,
+            "trace_id": trace_id,
+            "proposal": {"proposal_type": "action.tool_call", "payload": {}},
+        },
+    )
+    assert admitted.status_code == 200
+
+    ended = client.post(
+        "/v1/kernel/end-session",
+        headers={"X-API-Key": "test-key"},
+        json={"session_id": session_id, "trace_id": trace_id, "reason": "manual-close"},
+    )
+    assert ended.status_code == 200
+    run_id = KernelActionControlPlaneService.run_id_for(session_id=session_id, trace_id=trace_id)
+    actions = [record for record in record_repo.operator_action_by_id.values() if record.target_ref == run_id]
+    assert len(actions) == 1
+    assert actions[0].command_class.value == "cancel_run"
+
+    audit = client.get(
+        "/v1/kernel/action-lifecycle/audit",
+        headers={"X-API-Key": "test-key"},
+        params={"session_id": session_id, "trace_id": trace_id},
+    )
+    assert audit.status_code == 200
+    assert audit.json()["control_plane"]["latest_operator_action"]["command_class"] == "cancel_run"
+    assert audit.json()["control_plane"]["latest_operator_action"]["receipt_refs"] == [
+        f"kernel-ledger-event:{ended.json()['event_digest']}"
+    ]
 
 
 def test_kernel_projection_pack_returns_400_when_nervous_system_flag_off(monkeypatch) -> None:

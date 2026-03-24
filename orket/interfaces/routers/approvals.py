@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
 
@@ -51,7 +51,7 @@ def build_approvals_router(engine_getter: Callable[[], Any]) -> APIRouter:
         return approval
 
     @router.post("/approvals/{approval_id}/decision")
-    async def decide_approval(approval_id: str, req: ApprovalDecisionRequest):
+    async def decide_approval(approval_id: str, req: ApprovalDecisionRequest, request: Request):
         engine = engine_getter()
         try:
             result = await engine.decide_approval(
@@ -59,6 +59,7 @@ def build_approvals_router(engine_getter: Callable[[], Any]) -> APIRouter:
                 decision=req.decision,
                 edited_proposal=req.edited_proposal,
                 notes=req.notes,
+                operator_actor_ref=getattr(request.state, "authenticated_actor_ref", None),
             )
         except ValueError as exc:
             detail = str(exc)

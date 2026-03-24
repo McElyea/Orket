@@ -14,12 +14,16 @@ from orket.runtime.protocol_error_codes import (
 )
 
 from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
+from .turn_tool_dispatcher_control_plane import publish_step_if_needed
 from .turn_path_resolver import PathResolver
 from .turn_tool_dispatcher_support import (
     required_sequence_violation,
+    resolved_declared_namespace_scopes,
+    resolved_tool_namespace_scope,
     required_tools_violation,
     tool_policy_violation,
 )
+from .tool_invocation_contracts import build_tool_invocation_manifest, compute_tool_call_hash
 
 
 def collect_protocol_preflight_violations(
@@ -70,6 +74,7 @@ def collect_protocol_preflight_violations(
             tool_name=tool_name,
             binding=binding,
             context=context,
+            issue_id=turn.issue_id,
         )
         if policy_violation:
             return [policy_violation]
@@ -192,6 +197,21 @@ async def load_or_execute_tool(
         execution_context["skill_runtime"] = str(binding.get("runtime") or "")
         execution_context["skill_runtime_version"] = str(binding.get("runtime_version") or "")
         execution_context["tool_runtime_limits"] = dict(binding.get("runtime_limits") or {})
+    execution_context["tool_declared_namespace_scopes"] = resolved_declared_namespace_scopes(
+        binding=binding,
+        context=context,
+        issue_id=turn.issue_id,
+    )
+    execution_context["tool_namespace_scope"] = resolved_tool_namespace_scope(
+        binding=binding,
+        context=context,
+        issue_id=turn.issue_id,
+    )
+    execution_context["run_namespace_scope"] = resolved_tool_namespace_scope(
+        binding=None,
+        context=context,
+        issue_id=turn.issue_id,
+    )
     execution_context["step_id"] = step_id
     execution_context["step_seed"] = step_seed
     execution_context["operation_id"] = operation_id
@@ -207,6 +227,116 @@ async def load_or_execute_tool(
     else:
         result = await toolbox.execute(tool_name, tool_args, execution_context)
     return result if isinstance(result, dict) else {"ok": False, "error": "non_dict_result"}, False
+
+
+async def persist_protocol_operation(
+    *,
+    session_id: str,
+    issue_id: str,
+    role_name: str,
+    turn_index: int,
+    index: int,
+    step_id: str,
+    receipt_seq: int,
+    proposal_hash: str,
+    validator_version: str,
+    protocol_hash: str,
+    tool_schema_hash: str,
+    execution_capsule: dict[str, Any],
+    context: dict[str, Any],
+    tool_name: str,
+    tool_args: dict[str, Any],
+    result: dict[str, Any],
+    binding: dict[str, Any] | None,
+    operation_id: str,
+    replayed: bool,
+    persist_operation_result: Callable[..., None],
+    append_protocol_receipt: Callable[..., dict[str, Any]],
+    control_plane_enabled: bool,
+    control_plane_service,
+    control_plane_run_id: str | None,
+    control_plane_attempt_id: str | None,
+    retry_count: int,
+    validator_duration_ms: int,
+) -> str | None:
+    invocation_manifest = build_tool_invocation_manifest(
+        run_id=session_id,
+        tool_name=tool_name,
+        ring=str((binding or {}).get("ring") or "core"),
+        schema_version=str((binding or {}).get("schema_version") or "1.0.0"),
+        determinism_class=str((binding or {}).get("determinism_class") or "workspace"),
+        capability_profile=str((binding or {}).get("capability_profile") or "workspace"),
+        tool_contract_version=str((binding or {}).get("tool_contract_version") or "1.0.0"),
+        namespace_scope=resolved_tool_namespace_scope(binding=binding, context=context, issue_id=issue_id),
+        namespace_scope_rule=str((binding or {}).get("namespace_scope_rule") or "run_scope_only"),
+        declared_namespace_scopes=resolved_declared_namespace_scopes(
+            binding=binding,
+            context=context,
+            issue_id=issue_id,
+        ),
+    )
+    tool_call_hash = compute_tool_call_hash(
+        tool_name=tool_name,
+        tool_args=tool_args,
+        tool_contract_version=str(invocation_manifest.get("tool_contract_version") or ""),
+        capability_profile=str(invocation_manifest.get("capability_profile") or ""),
+    )
+    await asyncio.to_thread(
+        persist_operation_result,
+        session_id=session_id,
+        issue_id=issue_id,
+        role_name=role_name,
+        turn_index=turn_index,
+        operation_id=operation_id,
+        tool_name=tool_name,
+        tool_args=tool_args,
+        result=result,
+    )
+    await asyncio.to_thread(
+        append_protocol_receipt,
+        session_id=session_id,
+        issue_id=issue_id,
+        role_name=role_name,
+        turn_index=turn_index,
+        receipt={
+            "run_id": session_id,
+            "step_id": step_id,
+            "receipt_seq": receipt_seq,
+            "operation_id": operation_id,
+            "proposal_hash": proposal_hash,
+            "validator_version": validator_version,
+            "protocol_hash": protocol_hash,
+            "tool_schema_hash": tool_schema_hash,
+            "tool_index": index,
+            "tool": tool_name,
+            "tool_args": tool_args,
+            "execution_result": result,
+            "tool_invocation_manifest": invocation_manifest,
+            "tool_call_hash": tool_call_hash,
+            "artifact_digests": [],
+            "retry_count": max(0, int(retry_count)),
+            "validator_duration_ms": max(0, int(validator_duration_ms)),
+            "execution_capsule": execution_capsule,
+            "replayed": bool(replayed),
+            **(
+                {"compat_translation": dict(result.get("compat_translation") or {})}
+                if isinstance(result.get("compat_translation"), dict)
+                else {}
+            ),
+        },
+    )
+    return await publish_step_if_needed(
+        control_plane_enabled=control_plane_enabled,
+        control_plane_service=control_plane_service,
+        control_plane_run_id=control_plane_run_id,
+        control_plane_attempt_id=control_plane_attempt_id,
+        tool_name=tool_name,
+        tool_args=tool_args,
+        result=result,
+        binding=binding,
+        operation_id=operation_id,
+        replayed=bool(replayed),
+    )
 
 
 async def _execute_compatibility_translation(

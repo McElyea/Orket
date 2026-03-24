@@ -7,6 +7,7 @@ from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_executor import TurnResult
 from orket.application.services.guard_agent import GuardAgent
 from orket.application.services.runtime_verifier import build_runtime_guard_contract
+from orket.core.domain import ReservationStatus
 from orket.schema import CardStatus, IssueConfig, TeamConfig, SeatConfig
 from orket.application.services.scaffolder import ScaffoldValidationError
 from orket.application.services.dependency_manager import DependencyValidationError
@@ -1762,7 +1763,9 @@ def test_build_turn_context_protocol_governed_defaults(orchestrator):
     assert context["max_tool_calls"] == 8
     assert context["allowed_tool_rings"] == ["core"]
     assert context["allowed_capability_profiles"] == ["workspace"]
+    assert context["allowed_namespace_scopes"] == ["issue:ARC-3"]
     assert context["capabilities_allowed"] == ["workspace"]
+    assert context["run_namespace_scope"] == "issue:ARC-3"
     assert context["run_determinism_class"] == "workspace"
     assert context["run_determinism_policy"] == "workspace"
     assert context["compatibility_mappings"] == {}
@@ -1877,7 +1880,9 @@ def test_build_turn_context_uses_active_run_policy_overrides(orchestrator):
 
     assert context["allowed_tool_rings"] == ["core", "compatibility"]
     assert context["allowed_capability_profiles"] == ["workspace", "external"]
+    assert context["allowed_namespace_scopes"] == ["issue:ARC-4C"]
     assert context["capabilities_allowed"] == ["workspace", "external"]
+    assert context["run_namespace_scope"] == "issue:ARC-4C"
     assert context["run_determinism_class"] == "external"
     assert context["run_determinism_policy"] == "external"
     assert "openclaw.file_read" in context["compatibility_mappings"]
@@ -2182,6 +2187,15 @@ async def test_build_turn_context_pending_gate_callback_creates_tool_approval_re
     assert req["request_type"] == "tool_approval"
     assert req["reason"] == "approval_required_tool:write_file"
     assert req["payload"]["tool"] == "write_file"
+    assert req["payload"]["role"] == "coder"
+    assert req["payload"]["turn_index"] == 1
+    assert req["payload"]["control_plane_target_ref"] == "turn-tool-run:run-1:I1:coder:0001"
+    reservation = await orch.control_plane_repository.get_latest_reservation_record(
+        reservation_id=f"approval-reservation:{request_id}"
+    )
+    assert reservation is not None
+    assert reservation.status is ReservationStatus.ACTIVE
+    assert reservation.holder_ref == "turn-tool-run:run-1:I1:coder:0001"
 
 
 def test_validate_guard_rejection_payload_default_logic(orchestrator):
@@ -2238,6 +2252,12 @@ async def test_create_pending_gate_request_uses_policy_gate_mode(orchestrator):
     assert call["session_id"] == "run-1"
     assert call["gate_mode"] == "review_required"
     assert call["request_type"] == "guard_rejection_payload"
+    reservation = await orch.control_plane_repository.get_latest_reservation_record(
+        reservation_id=f"approval-reservation:{request_id}"
+    )
+    assert reservation is not None
+    assert reservation.status is ReservationStatus.ACTIVE
+    assert reservation.holder_ref == f"approval-request:{request_id}"
 
 
 @pytest.mark.asyncio

@@ -14,15 +14,23 @@ from pathlib import Path
 from typing import Any, Optional
 
 from orket.adapters.storage.async_executor_service import run_coroutine_blocking
+from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandRunner
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.sandbox_control_plane_effect_service import SandboxControlPlaneEffectService
+from orket.application.services.sandbox_control_plane_execution_service import SandboxControlPlaneExecutionService
+from orket.application.services.sandbox_control_plane_reservation_service import (
+    SandboxControlPlaneReservationService,
+)
+from orket.application.services.sandbox_control_plane_operator_service import SandboxControlPlaneOperatorService
 from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
 from orket.application.services.sandbox_runtime_inspection_service import SandboxRuntimeInspectionService
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
 from orket.application.services.sandbox_runtime_recovery_service import SandboxRuntimeRecoveryService
+from orket.core.domain import ReservationStatus
 from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError, SandboxState as LifecycleState
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.domain.sandbox import PortAllocation, Sandbox, SandboxRegistry, SandboxStatus, TechStack
@@ -68,7 +76,22 @@ class SandboxOrchestrator:
             else resolve_control_plane_db_path(control_plane_db_path)
         )
         self.control_plane_repository = AsyncControlPlaneRecordRepository(resolved_control_plane_db_path)
+        self.control_plane_execution_repository = AsyncControlPlaneExecutionRepository(resolved_control_plane_db_path)
         self.control_plane_publication = ControlPlanePublicationService(repository=self.control_plane_repository)
+        self.control_plane_execution = SandboxControlPlaneExecutionService(
+            repository=self.control_plane_execution_repository,
+            publication=self.control_plane_publication,
+        )
+        self.control_plane_effects = SandboxControlPlaneEffectService(
+            publication=self.control_plane_publication,
+            execution_repository=self.control_plane_execution_repository,
+        )
+        self.control_plane_operator = SandboxControlPlaneOperatorService(
+            publication=self.control_plane_publication
+        )
+        self.control_plane_reservations = SandboxControlPlaneReservationService(
+            publication=self.control_plane_publication
+        )
         self.lifecycle_service = SandboxRuntimeLifecycleService(
             repository=self.lifecycle_repository,
             command_runner=self.command_runner,
@@ -76,6 +99,8 @@ class SandboxOrchestrator:
             docker_context=self.docker_context,
             docker_host_id=self.docker_host_id,
             control_plane_publication=self.control_plane_publication,
+            control_plane_execution=self.control_plane_execution,
+            control_plane_effects=self.control_plane_effects,
         )
         self.lifecycle_recovery = SandboxRuntimeRecoveryService(lifecycle_service=self.lifecycle_service)
         self.restart_policy = SandboxRestartPolicyService(lifecycle_service=self.lifecycle_service)
@@ -118,6 +143,20 @@ class SandboxOrchestrator:
             database_url=self._get_database_url(tech_stack, ports, db_password),
             admin_url=f"http://localhost:{ports.admin_tool}" if ports.admin_tool else None,
         )
+        reservation_id = None
+        try:
+            reservation = await self.control_plane_reservations.publish_allocation_reservation(
+                sandbox_id=sandbox_id,
+                run_id=rock_id,
+                compose_project=sandbox.compose_project,
+                ports=ports,
+                creation_timestamp=sandbox.created_at,
+                instance_id=self.instance_id,
+            )
+            reservation_id = reservation.reservation_id
+        except ValueError:
+            self.registry.port_allocator.release(sandbox_id)
+            raise
 
         # 3. Create durable lifecycle authority before transient registration or Docker work.
         try:
@@ -126,9 +165,37 @@ class SandboxOrchestrator:
                 compose_project=sandbox.compose_project,
                 workspace_path=workspace_path,
                 run_id=rock_id,
+                source_reservation_id=reservation_id,
             )
             await self.lifecycle_service.mark_create_accepted(sandbox_id=sandbox_id)
+            if reservation_id is None:
+                raise ValueError(f"reservation publication missing for sandbox {sandbox_id}")
+            await self.control_plane_execution.initialize_execution(
+                sandbox_id=sandbox_id,
+                run_id=rock_id,
+                workload_id=f"sandbox-workload:{tech_stack.value}",
+                workload_version="docker_sandbox_runtime.v1",
+                compose_project=sandbox.compose_project,
+                workspace_path=workspace_path,
+                configuration_payload={
+                    "tech_stack": tech_stack.value,
+                    "ports": ports.model_dump(),
+                },
+                creation_timestamp=sandbox.created_at,
+                admission_decision_receipt_ref=reservation_id,
+                policy=self.lifecycle_service.policy,
+            )
         except (ValueError, OSError, json.JSONDecodeError, subprocess.SubprocessError):
+            if reservation_id is not None:
+                latest_reservation = await self.control_plane_repository.get_latest_reservation_record(
+                    reservation_id=reservation_id
+                )
+                if latest_reservation is not None and latest_reservation.status is ReservationStatus.ACTIVE:
+                    await self.control_plane_reservations.invalidate_allocation_reservation(
+                        sandbox_id=sandbox_id,
+                        instance_id=self.instance_id,
+                        invalidation_basis="sandbox_create_record_failed",
+                    )
             self.registry.port_allocator.release(sandbox_id)
             raise
         self.registry.register(sandbox)
@@ -186,7 +253,7 @@ class SandboxOrchestrator:
 
         return sandbox
 
-    async def delete_sandbox(self, sandbox_id: str) -> None:
+    async def delete_sandbox(self, sandbox_id: str, operator_actor_ref: str | None = None) -> None:
         """
         Stop and remove all containers for a sandbox.
 
@@ -197,6 +264,7 @@ class SandboxOrchestrator:
         if record is None:
             await self._delete_legacy_sandbox(sandbox_id)
             return
+        before_record = record
         sandbox = self.registry.get(sandbox_id)
         if sandbox:
             sandbox.status = SandboxStatus.STOPPING
@@ -204,6 +272,16 @@ class SandboxOrchestrator:
             sandbox_id=sandbox_id,
             compose_path=self._compose_path(record.workspace_path),
         )
+        if operator_actor_ref is not None:
+            final_truth = None
+            if before_record.run_id is not None:
+                final_truth = await self.control_plane_repository.get_final_truth(run_id=before_record.run_id)
+            await self.control_plane_operator.publish_cancel_run_action(
+                actor_ref=operator_actor_ref,
+                before_record=before_record,
+                after_record=current,
+                final_truth=final_truth,
+            )
         if sandbox:
             sandbox.status = SandboxStatus.DELETED
             sandbox.deleted_at = self._now()

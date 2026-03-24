@@ -9,7 +9,7 @@ import shutil
 
 import pytest
 
-from orket.core.domain import LeaseStatus
+from orket.core.domain import LeaseStatus, ReservationStatus
 from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
@@ -103,18 +103,47 @@ async def test_live_create_health_and_cleanup_flow(tmp_path, monkeypatch) -> Non
             workspace_path=str(tmp_path),
         )
         record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+        active_reservation = await orchestrator.control_plane_repository.get_latest_reservation_record(
+            reservation_id=f"sandbox-reservation:{sandbox.id}"
+        )
+        reservation_history = await orchestrator.control_plane_repository.list_reservation_records(
+            reservation_id=f"sandbox-reservation:{sandbox.id}"
+        )
         active_lease = await orchestrator.control_plane_repository.get_latest_lease_record(
             lease_id=f"sandbox-lease:{sandbox.id}"
         )
+        active_journal = await orchestrator.control_plane_repository.list_effect_journal_entries(run_id="live-cleanup-1")
+        active_views = await orchestrator.list_sandboxes()
         assert sandbox.status.value == "running"
         assert record is not None
         assert record.state.value == "active"
         assert record.managed_resource_inventory.containers
+        assert active_reservation is not None
+        assert active_reservation.status is ReservationStatus.PROMOTED_TO_LEASE
+        assert [record.status for record in reservation_history] == [
+            ReservationStatus.ACTIVE,
+            ReservationStatus.PROMOTED_TO_LEASE,
+        ]
         assert active_lease is not None
         assert active_lease.status is LeaseStatus.ACTIVE
+        assert active_lease.source_reservation_id == active_reservation.reservation_id
+        assert [entry.effect_id for entry in active_journal] == [
+            f"sandbox-effect:{sandbox.id}:deploy:lease_epoch:00000001"
+        ]
+        assert active_views[0]["control_plane_run_state"] == "executing"
+        assert active_views[0]["control_plane_current_attempt_state"] == "attempt_executing"
+        assert active_views[0]["control_plane_recovery_decision_id"] is None
+        assert active_views[0]["control_plane_checkpoint_id"] is None
+        assert active_views[0]["control_plane_checkpoint_resumability_class"] is None
+        assert active_views[0]["control_plane_checkpoint_acceptance_outcome"] is None
+        assert active_views[0]["control_plane_reservation_status"] == "reservation_promoted_to_lease"
+        assert active_views[0]["control_plane_lease_status"] == "lease_active"
+        assert active_views[0]["control_plane_final_result_class"] is None
+        assert active_views[0]["control_plane_final_closure_basis"] is None
+        assert active_views[0]["operator_action_count"] == 0
         assert await orchestrator.health_check(sandbox.id) is True
 
-        await orchestrator.delete_sandbox(sandbox.id)
+        await orchestrator.delete_sandbox(sandbox.id, operator_actor_ref="operator:live-cleanup")
 
         cleaned = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
         released_lease = await orchestrator.control_plane_repository.get_latest_lease_record(
@@ -123,6 +152,11 @@ async def test_live_create_health_and_cleanup_flow(tmp_path, monkeypatch) -> Non
         lease_history = await orchestrator.control_plane_repository.list_lease_records(
             lease_id=f"sandbox-lease:{sandbox.id}"
         )
+        operator_actions = await orchestrator.control_plane_repository.list_operator_actions(
+            target_ref="live-cleanup-1"
+        )
+        journal_entries = await orchestrator.control_plane_repository.list_effect_journal_entries(run_id="live-cleanup-1")
+        cleaned_views = await orchestrator.list_sandboxes()
         containers = await _docker_rows(
             "docker",
             "ps",
@@ -161,6 +195,23 @@ async def test_live_create_health_and_cleanup_flow(tmp_path, monkeypatch) -> Non
             LeaseStatus.ACTIVE,
             LeaseStatus.RELEASED,
         }
+        assert len(operator_actions) == 1
+        assert operator_actions[0].actor_ref == "operator:live-cleanup"
+        assert cleaned_views[0]["control_plane_run_state"] == "cancelled"
+        assert cleaned_views[0]["control_plane_current_attempt_state"] == "attempt_abandoned"
+        assert cleaned_views[0]["control_plane_recovery_decision_id"] is None
+        assert cleaned_views[0]["control_plane_checkpoint_id"] is None
+        assert cleaned_views[0]["control_plane_checkpoint_resumability_class"] is None
+        assert cleaned_views[0]["control_plane_checkpoint_acceptance_outcome"] is None
+        assert cleaned_views[0]["control_plane_reservation_status"] == "reservation_promoted_to_lease"
+        assert cleaned_views[0]["control_plane_lease_status"] == "lease_released"
+        assert cleaned_views[0]["control_plane_final_result_class"] == "blocked"
+        assert cleaned_views[0]["control_plane_final_closure_basis"] == "cancelled_by_authority"
+        assert cleaned_views[0]["operator_action_count"] == 1
+        assert [entry.effect_id for entry in journal_entries] == [
+            f"sandbox-effect:{sandbox.id}:deploy:lease_epoch:00000001",
+            f"sandbox-effect:{sandbox.id}:cleanup:lease_epoch:00000001",
+        ]
         assert containers == []
         assert networks == []
         assert volumes == []

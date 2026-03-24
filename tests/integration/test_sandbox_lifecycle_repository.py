@@ -15,6 +15,7 @@ from orket.core.domain.sandbox_lifecycle_records import (
     SandboxApprovalRecord,
     SandboxLifecycleEventRecord,
     SandboxLifecycleRecord,
+    SandboxLifecycleSnapshotRecord,
     SandboxOperationDedupeEntry,
 )
 
@@ -59,6 +60,29 @@ async def test_repository_round_trips_lifecycle_record(tmp_path) -> None:
     assert loaded.sandbox_id == "sb-1"
     assert loaded.record_version == 3
     assert loaded.managed_resource_inventory.managed_volumes == ["sb-1-db"]
+
+
+@pytest.mark.asyncio
+async def test_repository_round_trips_lifecycle_snapshot(tmp_path) -> None:
+    repo = AsyncSandboxLifecycleRepository(tmp_path / "sandbox_lifecycle.db")
+    record = _record()
+    snapshot = SandboxLifecycleSnapshotRecord(
+        snapshot_id="sandbox-lifecycle-snapshot:sb-1:00000003",
+        sandbox_id="sb-1",
+        record_version=3,
+        created_at="2026-03-11T00:10:00+00:00",
+        integrity_digest="sha256:test",
+        record=record,
+    )
+
+    stored = await repo.save_snapshot(snapshot)
+    loaded = await repo.get_snapshot(snapshot.snapshot_id)
+    listed = await repo.list_snapshots("sb-1")
+
+    assert stored.snapshot_id == snapshot.snapshot_id
+    assert loaded is not None
+    assert loaded.record.record_version == 3
+    assert listed == [snapshot]
 
 
 @pytest.mark.asyncio

@@ -21,14 +21,14 @@ class SandboxManager:
         registry = self._sandbox_orchestrator.registry
         return [item.model_dump() for item in registry.list_active()]
 
-    async def stop(self, sandbox_id: str) -> None:
+    async def stop(self, sandbox_id: str, *, operator_actor_ref: str | None = None) -> None:
         if self._sandbox_orchestrator is None:
             return None
         stop_method = getattr(self._sandbox_orchestrator, "stop_sandbox", None)
         if callable(stop_method):
-            await stop_method(sandbox_id)
+            await stop_method(sandbox_id, operator_actor_ref=operator_actor_ref)
             return None
-        await self._sandbox_orchestrator.delete_sandbox(sandbox_id)
+        await self._sandbox_orchestrator.delete_sandbox(sandbox_id, operator_actor_ref=operator_actor_ref)
 
 
 class SessionController:

@@ -9,17 +9,20 @@ from orket.runtime.protocol_error_codes import (
     E_DETERMINISM_POLICY_VIOLATION_PREFIX,
     E_DETERMINISM_VIOLATION_PREFIX,
     E_MISSING_REQUIRED_TOOL_PREFIX,
+    E_NAMESPACE_POLICY_VIOLATION_PREFIX,
     E_RING_POLICY_VIOLATION_PREFIX,
     E_TOOL_CARDINALITY_PREFIX,
     E_TOOL_INVOCATION_BOUNDARY_PREFIX,
     E_TOOL_SEQUENCE,
     format_protocol_error,
 )
+from orket.application.services.turn_tool_control_plane_support import run_namespace_scope
 
 from .protocol_hashing import hash_clock_artifact_ref, hash_env_allowlist, hash_network_allowlist
 
 _VALID_TOOL_RINGS = {"core", "compatibility", "experimental"}
 _VALID_DETERMINISM_CLASSES = {"pure", "workspace", "external"}
+_VALID_NAMESPACE_SCOPE_RULES = {"run_scope_only", "declared_scope_subset"}
 _DETERMINISM_RANK = {"pure": 0, "workspace": 1, "external": 2}
 
 
@@ -147,6 +150,7 @@ def tool_policy_violation(
     tool_name: str,
     binding: dict[str, Any] | None,
     context: dict[str, Any],
+    issue_id: str = "",
 ) -> str | None:
     if bool(context.get("invoked_from_tool")):
         return format_protocol_error(E_TOOL_INVOCATION_BOUNDARY_PREFIX, tool_name)
@@ -176,6 +180,33 @@ def tool_policy_violation(
             f"{tool_name}:capability={capability_profile}:allowed={allowed}",
         )
 
+    scope_rule = str(policy_binding.get("namespace_scope_rule") or "run_scope_only").strip().lower()
+    if scope_rule not in _VALID_NAMESPACE_SCOPE_RULES:
+        return format_protocol_error(
+            E_NAMESPACE_POLICY_VIOLATION_PREFIX,
+            f"{tool_name}:scope_rule={scope_rule or 'missing'}",
+        )
+    run_scope = run_namespace_scope(issue_id=issue_id, context=context)
+    declared_scopes = resolved_declared_namespace_scopes(binding=binding, context=context, issue_id=issue_id)
+    allowed_scopes = _allowed_namespace_scopes(context=context, issue_id=issue_id)
+    if len(declared_scopes) != 1:
+        return format_protocol_error(
+            E_NAMESPACE_POLICY_VIOLATION_PREFIX,
+            f"{tool_name}:ambiguous_scope_count={len(declared_scopes)}",
+        )
+    if scope_rule == "run_scope_only" and declared_scopes[0] != run_scope:
+        return format_protocol_error(
+            E_NAMESPACE_POLICY_VIOLATION_PREFIX,
+            f"{tool_name}:scope={declared_scopes[0]}:run_scope={run_scope}",
+        )
+    outside_allowed = sorted(scope for scope in declared_scopes if scope not in allowed_scopes)
+    if outside_allowed:
+        allowed = ",".join(sorted(allowed_scopes))
+        return format_protocol_error(
+            E_NAMESPACE_POLICY_VIOLATION_PREFIX,
+            f"{tool_name}:scope={outside_allowed[0]}:allowed={allowed}",
+        )
+
     determinism_class = str(policy_binding.get("determinism_class") or "workspace").strip().lower()
     if determinism_class not in _VALID_DETERMINISM_CLASSES:
         return format_protocol_error(
@@ -196,6 +227,31 @@ def tool_policy_violation(
             f"{tool_name}:{determinism_class}>{run_determinism_class}",
         )
     return None
+
+
+def resolved_declared_namespace_scopes(
+    *,
+    binding: dict[str, Any] | None,
+    context: dict[str, Any],
+    issue_id: str,
+) -> list[str]:
+    scopes = [
+        str(scope).strip()
+        for scope in list((binding or {}).get("declared_namespace_scopes") or [])
+        if str(scope).strip()
+    ]
+    if scopes:
+        return _deduped(scopes)
+    return [run_namespace_scope(issue_id=issue_id, context=context)]
+
+
+def resolved_tool_namespace_scope(
+    *,
+    binding: dict[str, Any] | None,
+    context: dict[str, Any],
+    issue_id: str,
+) -> str:
+    return resolved_declared_namespace_scopes(binding=binding, context=context, issue_id=issue_id)[0]
 
 
 def determinism_violation_for_result(
@@ -270,6 +326,26 @@ def _normalized_tokens(value: Any) -> set[str]:
     if isinstance(value, set):
         return {str(token).strip().lower() for token in value if str(token).strip()}
     return set()
+
+
+def _allowed_namespace_scopes(*, context: dict[str, Any], issue_id: str) -> set[str]:
+    explicit = {
+        str(token).strip()
+        for token in list(context.get("allowed_namespace_scopes") or [])
+        if str(token).strip()
+    }
+    if explicit:
+        return explicit
+    return {run_namespace_scope(issue_id=issue_id, context=context)}
+
+
+def _deduped(values: list[str]) -> list[str]:
+    deduped: list[str] = []
+    for value in values:
+        token = str(value).strip()
+        if token and token not in deduped:
+            deduped.append(token)
+    return deduped
 
 
 def build_execution_capsule(context: dict[str, Any]) -> dict[str, Any]:

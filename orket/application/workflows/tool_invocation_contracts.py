@@ -8,6 +8,7 @@ from .protocol_hashing import hash_canonical_json
 _RUNTIME_ONLY_METADATA_KEYS = {"trace_id", "debug_flags", "retry_count"}
 _VALID_RINGS = {"core", "compatibility", "experimental"}
 _VALID_DETERMINISM_CLASSES = {"pure", "workspace", "external"}
+_VALID_NAMESPACE_SCOPE_RULES = {"run_scope_only", "declared_scope_subset"}
 
 
 def normalize_tool_invocation_manifest(
@@ -27,6 +28,11 @@ def normalize_tool_invocation_manifest(
     candidate["capability_profile"] = str(candidate.get("capability_profile") or "workspace")
     candidate["tool_contract_version"] = str(candidate.get("tool_contract_version") or "1.0.0")
     candidate["run_id"] = str(candidate.get("run_id") or run_id).strip()
+    candidate["namespace_scope"] = str(candidate.get("namespace_scope") or "").strip()
+    candidate["namespace_scope_rule"] = str(candidate.get("namespace_scope_rule") or "run_scope_only").strip().lower()
+    candidate["declared_namespace_scopes"] = [
+        str(token).strip() for token in list(candidate.get("declared_namespace_scopes") or []) if str(token).strip()
+    ]
 
     if not candidate["tool_name"]:
         return None
@@ -35,6 +41,8 @@ def normalize_tool_invocation_manifest(
     if candidate["ring"] not in _VALID_RINGS:
         return None
     if candidate["determinism_class"] not in _VALID_DETERMINISM_CLASSES:
+        return None
+    if candidate["namespace_scope_rule"] not in _VALID_NAMESPACE_SCOPE_RULES:
         return None
 
     digest_payload = dict(candidate)
@@ -53,6 +61,9 @@ def build_tool_invocation_manifest(
     capability_profile: str = "workspace",
     tool_contract_version: str = "1.0.0",
     manifest_version: str = "1.0",
+    namespace_scope: str = "",
+    namespace_scope_rule: str = "run_scope_only",
+    declared_namespace_scopes: list[str] | None = None,
 ) -> dict[str, Any]:
     normalized = normalize_tool_invocation_manifest(
         manifest={
@@ -64,6 +75,9 @@ def build_tool_invocation_manifest(
             "capability_profile": str(capability_profile),
             "tool_contract_version": str(tool_contract_version),
             "run_id": str(run_id),
+            "namespace_scope": str(namespace_scope),
+            "namespace_scope_rule": str(namespace_scope_rule),
+            "declared_namespace_scopes": list(declared_namespace_scopes or []),
         },
         run_id=str(run_id),
         tool_name_fallback=str(tool_name),

@@ -11,11 +11,14 @@ from orket.application.services.sandbox_control_plane_reconciliation_service imp
 )
 from orket.core.contracts import (
     CheckpointAcceptanceRecord,
+    CheckpointRecord,
     EffectJournalEntryRecord,
     FinalTruthRecord,
     LeaseRecord,
+    OperatorActionRecord,
     ReconciliationRecord,
     RecoveryDecisionRecord,
+    ReservationRecord,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 from orket.core.domain import (
@@ -34,9 +37,31 @@ pytestmark = pytest.mark.unit
 
 class ReconciliationRepository(ControlPlaneRecordRepository):
     def __init__(self) -> None:
+        self.reservations_by_id: dict[str, list[ReservationRecord]] = {}
         self.leases_by_id: dict[str, list[LeaseRecord]] = {}
         self.reconciliation_by_id: dict[str, ReconciliationRecord] = {}
         self.final_truth_by_run: dict[str, FinalTruthRecord] = {}
+
+    async def save_reservation_record(
+        self,
+        *,
+        record: ReservationRecord,
+    ) -> ReservationRecord:
+        self.reservations_by_id.setdefault(record.reservation_id, []).append(record)
+        return record
+
+    async def list_reservation_records(self, *, reservation_id: str) -> list[ReservationRecord]:
+        return list(self.reservations_by_id.get(reservation_id, ()))
+
+    async def get_latest_reservation_record(self, *, reservation_id: str) -> ReservationRecord | None:
+        records = self.reservations_by_id.get(reservation_id, ())
+        return records[-1] if records else None
+
+    async def list_reservation_records_for_holder_ref(self, *, holder_ref: str) -> list[ReservationRecord]:
+        return []
+
+    async def get_latest_reservation_record_for_holder_ref(self, *, holder_ref: str) -> ReservationRecord | None:
+        return None
 
     async def append_effect_journal_entry(
         self,
@@ -47,6 +72,23 @@ class ReconciliationRepository(ControlPlaneRecordRepository):
         raise NotImplementedError
 
     async def list_effect_journal_entries(self, *, run_id: str) -> list[EffectJournalEntryRecord]:
+        raise NotImplementedError
+
+    async def save_checkpoint(
+        self,
+        *,
+        record: CheckpointRecord,
+    ) -> CheckpointRecord:
+        raise NotImplementedError
+
+    async def get_checkpoint(
+        self,
+        *,
+        checkpoint_id: str,
+    ) -> CheckpointRecord | None:
+        raise NotImplementedError
+
+    async def list_checkpoints(self, *, parent_ref: str) -> list[CheckpointRecord]:
         raise NotImplementedError
 
     async def save_checkpoint_acceptance(
@@ -98,6 +140,29 @@ class ReconciliationRepository(ControlPlaneRecordRepository):
 
     async def get_reconciliation_record(self, *, reconciliation_id: str) -> ReconciliationRecord | None:
         return self.reconciliation_by_id.get(reconciliation_id)
+
+    async def list_reconciliation_records(self, *, target_ref: str) -> list[ReconciliationRecord]:
+        return sorted(
+            [record for record in self.reconciliation_by_id.values() if record.target_ref == target_ref],
+            key=lambda item: (item.publication_timestamp, item.reconciliation_id),
+        )
+
+    async def get_latest_reconciliation_record(self, *, target_ref: str) -> ReconciliationRecord | None:
+        records = await self.list_reconciliation_records(target_ref=target_ref)
+        return records[-1] if records else None
+
+    async def save_operator_action(
+        self,
+        *,
+        record: OperatorActionRecord,
+    ) -> OperatorActionRecord:
+        return record
+
+    async def get_operator_action(self, *, action_id: str) -> OperatorActionRecord | None:
+        return None
+
+    async def list_operator_actions(self, *, target_ref: str) -> list[OperatorActionRecord]:
+        return []
 
     async def save_final_truth(self, *, record: FinalTruthRecord) -> FinalTruthRecord:
         self.final_truth_by_run[record.run_id] = record

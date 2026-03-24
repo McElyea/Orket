@@ -30,6 +30,37 @@ def test_sandbox_operator_list_exposes_required_lifecycle_fields(monkeypatch):
                 "cleanup_eligible": False,
                 "cleanup_due_at": None,
                 "requires_reconciliation": False,
+                "control_plane_run_state": "executing",
+                "control_plane_current_attempt_id": "sandbox-attempt:sb-1:00000001",
+                "control_plane_current_attempt_state": "attempt_executing",
+                "control_plane_recovery_decision_id": None,
+                "control_plane_checkpoint_id": None,
+                "control_plane_checkpoint_resumability_class": None,
+                "control_plane_checkpoint_acceptance_outcome": None,
+                "control_plane_reconciliation_id": None,
+                "control_plane_divergence_class": None,
+                "control_plane_safe_continuation_class": None,
+                "control_plane_reservation_status": "reservation_promoted_to_lease",
+                "control_plane_lease_status": "lease_active",
+                "final_truth_record_id": None,
+                "control_plane_final_result_class": None,
+                "control_plane_final_closure_basis": None,
+                "control_plane_final_terminality_basis": None,
+                "control_plane_final_evidence_sufficiency_class": None,
+                "control_plane_final_residual_uncertainty_class": None,
+                "control_plane_final_degradation_class": None,
+                "control_plane_final_authoritative_result_ref": None,
+                "control_plane_final_authority_sources": [],
+                "effect_journal_entry_count": 0,
+                "latest_effect_journal_entry_id": None,
+                "latest_effect_id": None,
+                "latest_effect_intended_target_ref": None,
+                "latest_effect_observed_result_ref": None,
+                "latest_effect_authorization_basis_ref": None,
+                "latest_effect_integrity_verification_ref": None,
+                "latest_effect_uncertainty_classification": None,
+                "operator_action_count": 0,
+                "latest_operator_action": None,
             }
         ]
 
@@ -55,6 +86,37 @@ def test_sandbox_operator_list_exposes_required_lifecycle_fields(monkeypatch):
             "cleanup_eligible",
             "cleanup_due_at",
             "requires_reconciliation",
+            "control_plane_run_state",
+            "control_plane_current_attempt_id",
+            "control_plane_current_attempt_state",
+            "control_plane_recovery_decision_id",
+            "control_plane_checkpoint_id",
+            "control_plane_checkpoint_resumability_class",
+            "control_plane_checkpoint_acceptance_outcome",
+            "control_plane_reconciliation_id",
+            "control_plane_divergence_class",
+            "control_plane_safe_continuation_class",
+            "control_plane_reservation_status",
+            "control_plane_lease_status",
+            "final_truth_record_id",
+            "control_plane_final_result_class",
+            "control_plane_final_closure_basis",
+            "control_plane_final_terminality_basis",
+            "control_plane_final_evidence_sufficiency_class",
+            "control_plane_final_residual_uncertainty_class",
+            "control_plane_final_degradation_class",
+            "control_plane_final_authoritative_result_ref",
+            "control_plane_final_authority_sources",
+            "effect_journal_entry_count",
+            "latest_effect_journal_entry_id",
+            "latest_effect_id",
+            "latest_effect_intended_target_ref",
+            "latest_effect_observed_result_ref",
+            "latest_effect_authorization_basis_ref",
+            "latest_effect_integrity_verification_ref",
+            "latest_effect_uncertainty_classification",
+            "operator_action_count",
+            "latest_operator_action",
         ]
     )
 
@@ -62,7 +124,8 @@ def test_sandbox_operator_list_exposes_required_lifecycle_fields(monkeypatch):
 def test_sandbox_operator_stop_returns_conflict_when_reconciliation_blocked(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
-    async def fake_stop_sandbox(_sandbox_id):
+    async def fake_stop_sandbox(_sandbox_id, *, operator_actor_ref=None):
+        assert operator_actor_ref == f"api_key_fingerprint:sha256:{hashlib.sha256(b'test-key').hexdigest()}"
         raise ValueError("Sandbox sb-2 is blocked by requires_reconciliation=true")
 
     monkeypatch.setattr(api_module.engine, "stop_sandbox", fake_stop_sandbox)
@@ -76,3 +139,4 @@ def test_sandbox_operator_stop_returns_conflict_when_reconciliation_blocked(monk
 
     assert response.status_code == 409
     assert response.json()["detail"] == "Sandbox sb-2 is blocked by requires_reconciliation=true"
+import hashlib

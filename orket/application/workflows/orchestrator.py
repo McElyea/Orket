@@ -5,10 +5,17 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
+from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.tool_approval_control_plane_reservation_service import (
+    ToolApprovalControlPlaneReservationService,
+)
 from orket.core.contracts.repositories import CardRepository, SnapshotRepository
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.orchestration.notes import NoteStore
+from orket.runtime_paths import resolve_control_plane_db_path
 from orket.schema import CardStatus, EnvironmentConfig, EpicConfig, IssueConfig, TeamConfig
 
 from . import orchestrator_ops
@@ -87,6 +94,16 @@ class Orchestrator:
         self._sandbox_failed_rocks = set()
         self._team_replan_counts = defaultdict(int)
         self.pending_gates = AsyncPendingGateRepository(self.db_path)
+        runtime_db_path = Path(self.db_path)
+        if not runtime_db_path.is_absolute():
+            runtime_db_path = Path(self.workspace) / runtime_db_path
+        control_plane_db_path = resolve_control_plane_db_path(runtime_db_path.with_name("control_plane_records.sqlite3"))
+        self.control_plane_repository = AsyncControlPlaneRecordRepository(control_plane_db_path)
+        self.control_plane_execution_repository = AsyncControlPlaneExecutionRepository(control_plane_db_path)
+        self.control_plane_publication = ControlPlanePublicationService(repository=self.control_plane_repository)
+        self.tool_approval_control_plane_reservation = ToolApprovalControlPlaneReservationService(
+            publication=self.control_plane_publication
+        )
         self.decision_nodes = DecisionNodeRegistry()
         self.planner_node = self.decision_nodes.resolve_planner(self.org)
         self.router_node = self.decision_nodes.resolve_router(self.org)

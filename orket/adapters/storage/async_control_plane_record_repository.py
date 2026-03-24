@@ -10,10 +10,13 @@ from orket.core.contracts.control_plane_effect_journal_models import (
     EffectJournalEntryRecord,
 )
 from orket.core.contracts.control_plane_models import (
+    CheckpointRecord,
     FinalTruthRecord,
     LeaseRecord,
+    OperatorActionRecord,
     ReconciliationRecord,
     RecoveryDecisionRecord,
+    ReservationRecord,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 
@@ -32,6 +35,23 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
     async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
         await conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS reservation_records (
+                reservation_id TEXT NOT NULL,
+                status TEXT NOT NULL,
+                creation_timestamp TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                PRIMARY KEY (reservation_id, status)
+            )
+            """
+        )
+        await conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_reservation_records_creation
+            ON reservation_records (creation_timestamp)
+            """
+        )
+        await conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS effect_journal_entries (
                 journal_entry_id TEXT PRIMARY KEY,
                 run_id TEXT NOT NULL,
@@ -45,6 +65,22 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             """
             CREATE UNIQUE INDEX IF NOT EXISTS idx_effect_journal_run_sequence
             ON effect_journal_entries (run_id, publication_sequence)
+            """
+        )
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS checkpoint_records (
+                checkpoint_id TEXT PRIMARY KEY,
+                parent_ref TEXT NOT NULL,
+                creation_timestamp TEXT NOT NULL,
+                payload_json TEXT NOT NULL
+            )
+            """
+        )
+        await conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_checkpoint_records_parent
+            ON checkpoint_records (parent_ref, creation_timestamp)
             """
         )
         await conn.execute(
@@ -115,6 +151,22 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
         )
         await conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS operator_action_records (
+                action_id TEXT PRIMARY KEY,
+                target_ref TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                payload_json TEXT NOT NULL
+            )
+            """
+        )
+        await conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_operator_action_target
+            ON operator_action_records (target_ref, timestamp)
+            """
+        )
+        await conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS final_truth_records (
                 final_truth_record_id TEXT PRIMARY KEY,
                 run_id TEXT NOT NULL,
@@ -161,6 +213,104 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             return await insert_op(conn)
 
         return await self._execute(_op, row_factory=True, commit=True)
+
+    async def save_reservation_record(
+        self,
+        *,
+        record: ReservationRecord,
+    ) -> ReservationRecord:
+        payload_json = record.model_dump_json()
+
+        async def _op(conn: aiosqlite.Connection) -> ReservationRecord:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM reservation_records
+                WHERE reservation_id = ? AND status = ?
+                """,
+                (
+                    record.reservation_id,
+                    record.status.value,
+                ),
+            )
+            existing = await cursor.fetchone()
+            if existing is not None:
+                existing_payload = str(existing["payload_json"] if isinstance(existing, aiosqlite.Row) else existing[0])
+                if existing_payload != payload_json:
+                    raise ControlPlaneRecordConflictError(
+                        "reservation_records composite key reused with different payload"
+                    )
+                return ReservationRecord.model_validate_json(existing_payload)
+            await conn.execute(
+                """
+                INSERT INTO reservation_records (
+                    reservation_id, status, creation_timestamp, payload_json
+                ) VALUES (?, ?, ?, ?)
+                """,
+                (
+                    record.reservation_id,
+                    record.status.value,
+                    record.creation_timestamp,
+                    payload_json,
+                ),
+            )
+            return record
+
+        return await self._execute(_op, row_factory=True, commit=True)
+
+    async def list_reservation_records(self, *, reservation_id: str) -> list[ReservationRecord]:
+        async def _op(conn: aiosqlite.Connection) -> list[ReservationRecord]:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM reservation_records
+                WHERE reservation_id = ?
+                ORDER BY rowid ASC
+                """,
+                (reservation_id,),
+            )
+            rows = await cursor.fetchall()
+            return [ReservationRecord.model_validate_json(str(row["payload_json"])) for row in rows]
+
+        return await self._execute(_op, row_factory=True)
+
+    async def get_latest_reservation_record(self, *, reservation_id: str) -> ReservationRecord | None:
+        async def _op(conn: aiosqlite.Connection) -> ReservationRecord | None:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM reservation_records
+                WHERE reservation_id = ?
+                ORDER BY rowid DESC
+                LIMIT 1
+                """,
+                (reservation_id,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                return None
+            return ReservationRecord.model_validate_json(str(row["payload_json"]))
+
+        return await self._execute(_op, row_factory=True)
+
+    async def list_reservation_records_for_holder_ref(self, *, holder_ref: str) -> list[ReservationRecord]:
+        async def _op(conn: aiosqlite.Connection) -> list[ReservationRecord]:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM reservation_records
+                ORDER BY creation_timestamp ASC, reservation_id ASC, rowid ASC
+                """
+            )
+            rows = await cursor.fetchall()
+            records = [ReservationRecord.model_validate_json(str(row["payload_json"])) for row in rows]
+            return [record for record in records if record.holder_ref == holder_ref]
+
+        return await self._execute(_op, row_factory=True)
+
+    async def get_latest_reservation_record_for_holder_ref(self, *, holder_ref: str) -> ReservationRecord | None:
+        records = await self.list_reservation_records_for_holder_ref(holder_ref=holder_ref)
+        return records[-1] if records else None
 
     async def append_effect_journal_entry(
         self,
@@ -209,6 +359,71 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             )
             rows = await cursor.fetchall()
             return [EffectJournalEntryRecord.model_validate_json(str(row["payload_json"])) for row in rows]
+
+        return await self._execute(_op, row_factory=True)
+
+    async def save_checkpoint(
+        self,
+        *,
+        record: CheckpointRecord,
+    ) -> CheckpointRecord:
+        payload_json = record.model_dump_json()
+
+        async def _insert(conn: aiosqlite.Connection) -> CheckpointRecord:
+            await conn.execute(
+                """
+                INSERT INTO checkpoint_records (
+                    checkpoint_id, parent_ref, creation_timestamp, payload_json
+                ) VALUES (?, ?, ?, ?)
+                """,
+                (
+                    record.checkpoint_id,
+                    record.parent_ref,
+                    record.creation_timestamp,
+                    payload_json,
+                ),
+            )
+            return record
+
+        return await self._insert_or_return_existing(
+            table="checkpoint_records",
+            id_field="checkpoint_id",
+            id_value=record.checkpoint_id,
+            payload_json=payload_json,
+            insert_op=_insert,
+            parse_existing=CheckpointRecord.model_validate_json,
+        )
+
+    async def get_checkpoint(
+        self,
+        *,
+        checkpoint_id: str,
+    ) -> CheckpointRecord | None:
+        async def _op(conn: aiosqlite.Connection) -> CheckpointRecord | None:
+            cursor = await conn.execute(
+                "SELECT payload_json FROM checkpoint_records WHERE checkpoint_id = ?",
+                (checkpoint_id,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                return None
+            return CheckpointRecord.model_validate_json(str(row["payload_json"]))
+
+        return await self._execute(_op, row_factory=True)
+
+    async def list_checkpoints(self, *, parent_ref: str) -> list[CheckpointRecord]:
+        async def _op(conn: aiosqlite.Connection) -> list[CheckpointRecord]:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM checkpoint_records
+                WHERE parent_ref = ?
+                ORDER BY creation_timestamp ASC, checkpoint_id ASC
+                """,
+                (parent_ref,),
+            )
+            rows = await cursor.fetchall()
+            return [CheckpointRecord.model_validate_json(str(row["payload_json"])) for row in rows]
 
         return await self._execute(_op, row_factory=True)
 
@@ -434,6 +649,102 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             if row is None:
                 return None
             return ReconciliationRecord.model_validate_json(str(row["payload_json"]))
+
+        return await self._execute(_op, row_factory=True)
+
+    async def list_reconciliation_records(self, *, target_ref: str) -> list[ReconciliationRecord]:
+        async def _op(conn: aiosqlite.Connection) -> list[ReconciliationRecord]:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM reconciliation_records
+                WHERE target_ref = ?
+                ORDER BY publication_timestamp ASC, reconciliation_id ASC
+                """,
+                (target_ref,),
+            )
+            rows = await cursor.fetchall()
+            return [ReconciliationRecord.model_validate_json(str(row["payload_json"])) for row in rows]
+
+        return await self._execute(_op, row_factory=True)
+
+    async def get_latest_reconciliation_record(self, *, target_ref: str) -> ReconciliationRecord | None:
+        async def _op(conn: aiosqlite.Connection) -> ReconciliationRecord | None:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM reconciliation_records
+                WHERE target_ref = ?
+                ORDER BY publication_timestamp DESC, reconciliation_id DESC
+                LIMIT 1
+                """,
+                (target_ref,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                return None
+            return ReconciliationRecord.model_validate_json(str(row["payload_json"]))
+
+        return await self._execute(_op, row_factory=True)
+
+    async def save_operator_action(
+        self,
+        *,
+        record: OperatorActionRecord,
+    ) -> OperatorActionRecord:
+        payload_json = record.model_dump_json()
+
+        async def _insert(conn: aiosqlite.Connection) -> OperatorActionRecord:
+            await conn.execute(
+                """
+                INSERT INTO operator_action_records (
+                    action_id, target_ref, timestamp, payload_json
+                ) VALUES (?, ?, ?, ?)
+                """,
+                (
+                    record.action_id,
+                    record.target_ref,
+                    record.timestamp,
+                    payload_json,
+                ),
+            )
+            return record
+
+        return await self._insert_or_return_existing(
+            table="operator_action_records",
+            id_field="action_id",
+            id_value=record.action_id,
+            payload_json=payload_json,
+            insert_op=_insert,
+            parse_existing=OperatorActionRecord.model_validate_json,
+        )
+
+    async def get_operator_action(self, *, action_id: str) -> OperatorActionRecord | None:
+        async def _op(conn: aiosqlite.Connection) -> OperatorActionRecord | None:
+            cursor = await conn.execute(
+                "SELECT payload_json FROM operator_action_records WHERE action_id = ?",
+                (action_id,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                return None
+            return OperatorActionRecord.model_validate_json(str(row["payload_json"]))
+
+        return await self._execute(_op, row_factory=True)
+
+    async def list_operator_actions(self, *, target_ref: str) -> list[OperatorActionRecord]:
+        async def _op(conn: aiosqlite.Connection) -> list[OperatorActionRecord]:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM operator_action_records
+                WHERE target_ref = ?
+                ORDER BY timestamp ASC, action_id ASC
+                """,
+                (target_ref,),
+            )
+            rows = await cursor.fetchall()
+            return [OperatorActionRecord.model_validate_json(str(row["payload_json"])) for row in rows]
 
         return await self._execute(_op, row_factory=True)
 

@@ -130,6 +130,47 @@ async def test_tool_dispatcher_preflight_rejects_capability_violation(tmp_path: 
 
 # Layer: integration
 @pytest.mark.asyncio
+async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation(tmp_path: Path) -> None:
+    dispatcher = _dispatcher(tmp_path)
+    toolbox = _NoOpToolbox()
+    turn = ExecutionTurn(
+        role="coder",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
+    )
+
+    with pytest.raises(RuntimeError) as exc:
+        await dispatcher.execute_tools(
+            turn=turn,
+            toolbox=toolbox,
+            context={
+                "roles": ["coder"],
+                "session_id": "s1",
+                "turn_index": 1,
+                "protocol_governed_enabled": True,
+                "allowed_namespace_scopes": ["issue:ISSUE-1"],
+                "skill_contract_enforced": True,
+                "skill_tool_bindings": {
+                    "write_file": {
+                        "entrypoint_id": "write_file",
+                        "ring": "core",
+                        "determinism_class": "workspace",
+                        "capability_profile": "workspace",
+                        "namespace_scope_rule": "declared_scope_subset",
+                        "declared_namespace_scopes": ["issue:OTHER-1"],
+                    }
+                },
+            },
+            issue=None,
+        )
+
+    assert "E_NAMESPACE_POLICY_VIOLATION" in str(exc.value)
+    assert toolbox.calls == 0
+
+
+# Layer: integration
+@pytest.mark.asyncio
 async def test_tool_dispatcher_preflight_rejects_missing_compatibility_mapping(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()

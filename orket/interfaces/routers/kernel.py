@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from typing import Any, Callable, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
+from orket.application.services.tool_approval_control_plane_reservation_service import (
+    ToolApprovalControlPlaneReservationService,
+)
+from orket.application.services.kernel_action_control_plane_support import run_id_for as kernel_action_run_id_for
 from orket.interfaces.routers.approvals import build_approvals_router
 
 
@@ -49,8 +53,13 @@ class KernelCommitProposalRequest(BaseModel):
     admission_decision_digest: str
     approval_id: Optional[str] = None
     execution_result_digest: Optional[str] = None
+    execution_result_payload: Any = None
+    execution_result_schema_valid: Optional[bool] = None
+    execution_error_reason_code: Optional[str] = None
     sanitization_digest: Optional[str] = None
     revalidate_policy_forbidden: bool = False
+    canonical_state_digest_after: Optional[str] = None
+    block_result_leaks: bool = False
 
 
 class KernelEndSessionRequest(BaseModel):
@@ -122,50 +131,123 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
     async def kernel_admit_proposal(req: KernelAdmitProposalRequest):
         engine = engine_getter()
         try:
-            return engine.kernel_admit_proposal(
-                {
-                    "contract_version": "kernel_api/v1",
-                    "session_id": req.session_id,
-                    "trace_id": req.trace_id,
-                    "request_id": req.request_id,
-                    "proposal": req.proposal,
-                }
+            handler = getattr(engine, "kernel_admit_proposal_async", None)
+            payload = {
+                "contract_version": "kernel_api/v1",
+                "session_id": req.session_id,
+                "trace_id": req.trace_id,
+                "request_id": req.request_id,
+                "proposal": req.proposal,
+            }
+            if callable(handler):
+                response = await handler(payload)
+            else:
+                response = engine.kernel_admit_proposal(
+                    {
+                        **payload,
+                    }
+                )
+            await _publish_kernel_approval_reservation_if_needed(
+                engine=engine,
+                session_id=req.session_id,
+                trace_id=req.trace_id,
+                proposal=req.proposal,
+                response=response,
             )
+            return response
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    async def _publish_kernel_approval_reservation_if_needed(
+        *,
+        engine: Any,
+        session_id: str,
+        trace_id: str,
+        proposal: dict[str, Any],
+        response: dict[str, Any],
+    ) -> None:
+        admission_decision = response.get("admission_decision")
+        if not isinstance(admission_decision, dict):
+            return
+        if str(admission_decision.get("decision") or "").strip() != "NEEDS_APPROVAL":
+            return
+        approval_id = str(response.get("approval_id") or "").strip()
+        if not approval_id:
+            return
+        publication = getattr(engine, "control_plane_publication", None)
+        if publication is None:
+            return
+        approval = await engine.get_approval(approval_id)
+        if not isinstance(approval, dict):
+            return
+        payload = proposal.get("payload")
+        proposal_payload = payload if isinstance(payload, dict) else {}
+        tool_name = str(proposal_payload.get("tool_name") or proposal.get("proposal_type") or "governed_action").strip()
+        publisher = getattr(engine, "tool_approval_control_plane_reservation", None)
+        if publisher is None or getattr(publisher, "publication", None) is not publication:
+            publisher = ToolApprovalControlPlaneReservationService(publication=publication)
+            setattr(engine, "tool_approval_control_plane_reservation", publisher)
+        await publisher.publish_pending_tool_approval_hold(
+            approval_id=approval_id,
+            session_id=session_id,
+            issue_id="",
+            seat_name="kernel_action",
+            tool_name=tool_name,
+            turn_index=None,
+            created_at=str(approval.get("created_at") or ""),
+            control_plane_target_ref=kernel_action_run_id_for(session_id=session_id, trace_id=trace_id),
+        )
 
     @router.post("/kernel/commit-proposal")
     async def kernel_commit_proposal(req: KernelCommitProposalRequest):
         engine = engine_getter()
         try:
+            handler = getattr(engine, "kernel_commit_proposal_async", None)
+            payload = {
+                "contract_version": "kernel_api/v1",
+                "session_id": req.session_id,
+                "trace_id": req.trace_id,
+                "request_id": req.request_id,
+                "proposal_digest": req.proposal_digest,
+                "admission_decision_digest": req.admission_decision_digest,
+                "approval_id": req.approval_id,
+                "execution_result_digest": req.execution_result_digest,
+                "execution_result_payload": req.execution_result_payload,
+                "execution_result_schema_valid": req.execution_result_schema_valid,
+                "execution_error_reason_code": req.execution_error_reason_code,
+                "sanitization_digest": req.sanitization_digest,
+                "revalidate_policy_forbidden": req.revalidate_policy_forbidden,
+                "canonical_state_digest_after": req.canonical_state_digest_after,
+                "block_result_leaks": req.block_result_leaks,
+            }
+            if callable(handler):
+                return await handler(payload)
             return engine.kernel_commit_proposal(
                 {
-                    "contract_version": "kernel_api/v1",
-                    "session_id": req.session_id,
-                    "trace_id": req.trace_id,
-                    "request_id": req.request_id,
-                    "proposal_digest": req.proposal_digest,
-                    "admission_decision_digest": req.admission_decision_digest,
-                    "approval_id": req.approval_id,
-                    "execution_result_digest": req.execution_result_digest,
-                    "sanitization_digest": req.sanitization_digest,
-                    "revalidate_policy_forbidden": req.revalidate_policy_forbidden,
+                    **payload,
                 }
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.post("/kernel/end-session")
-    async def kernel_end_session(req: KernelEndSessionRequest):
+    async def kernel_end_session(req: KernelEndSessionRequest, request: Request):
         engine = engine_getter()
         try:
+            handler = getattr(engine, "kernel_end_session_async", None)
+            payload = {
+                "contract_version": "kernel_api/v1",
+                "session_id": req.session_id,
+                "trace_id": req.trace_id,
+                "request_id": req.request_id,
+                "reason": req.reason,
+                "operator_actor_ref": getattr(request.state, "authenticated_actor_ref", None),
+            }
+            if callable(handler):
+                return await handler(payload)
             return engine.kernel_end_session(
                 {
-                    "contract_version": "kernel_api/v1",
-                    "session_id": req.session_id,
-                    "trace_id": req.trace_id,
-                    "request_id": req.request_id,
-                    "reason": req.reason,
+                    **payload,
                 }
             )
         except ValueError as exc:
@@ -209,13 +291,23 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
     async def kernel_replay_action_lifecycle(session_id: str, trace_id: str):
         engine = engine_getter()
         try:
-            return engine.kernel_replay_action_lifecycle(
+            payload = {
+                "contract_version": "kernel_api/v1",
+                "session_id": session_id,
+                "trace_id": trace_id,
+            }
+            response = engine.kernel_replay_action_lifecycle(
                 {
-                    "contract_version": "kernel_api/v1",
-                    "session_id": session_id,
-                    "trace_id": trace_id,
+                    **payload,
                 }
             )
+            view_service = getattr(engine, "kernel_action_control_plane_view", None)
+            if view_service is not None:
+                response["control_plane"] = await view_service.build_summary(
+                    session_id=session_id,
+                    trace_id=trace_id,
+                )
+            return response
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -223,13 +315,20 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
     async def kernel_audit_action_lifecycle(session_id: str, trace_id: str):
         engine = engine_getter()
         try:
-            return engine.kernel_audit_action_lifecycle(
+            response = engine.kernel_audit_action_lifecycle(
                 {
                     "contract_version": "kernel_api/v1",
                     "session_id": session_id,
                     "trace_id": trace_id,
                 }
             )
+            view_service = getattr(engine, "kernel_action_control_plane_view", None)
+            if view_service is not None:
+                response["control_plane"] = await view_service.build_summary(
+                    session_id=session_id,
+                    trace_id=trace_id,
+                )
+            return response
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

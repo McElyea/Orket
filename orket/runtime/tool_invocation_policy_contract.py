@@ -5,6 +5,7 @@ from typing import Any
 from orket.runtime.protocol_error_codes import (
     E_CAPABILITY_VIOLATION_PREFIX,
     E_DETERMINISM_POLICY_VIOLATION_PREFIX,
+    E_NAMESPACE_POLICY_VIOLATION_PREFIX,
     E_RING_POLICY_VIOLATION_PREFIX,
     E_TOOL_INVOCATION_BOUNDARY_PREFIX,
     is_registered_protocol_error_code,
@@ -27,6 +28,10 @@ _ALLOWED_DETERMINISM_CLASSES = {
     "workspace",
     "external",
 }
+_ALLOWED_NAMESPACE_SCOPE_RULES = {
+    "run_scope_only",
+    "declared_scope_subset",
+}
 _ALLOWED_TOOL_TO_TOOL_POLICY = {
     "disallow",
 }
@@ -48,12 +53,14 @@ def tool_invocation_policy_contract_snapshot() -> dict[str, Any]:
                 "allowed_capability_profiles": [
                     "workspace",
                 ],
+                "namespace_scope_rule": "run_scope_only",
                 "run_determinism_class": "workspace",
                 "tool_to_tool_invocation": "disallow",
                 "max_tool_invocations_per_run": 200,
                 "required_error_codes": [
                     E_RING_POLICY_VIOLATION_PREFIX,
                     E_CAPABILITY_VIOLATION_PREFIX,
+                    E_NAMESPACE_POLICY_VIOLATION_PREFIX,
                     E_DETERMINISM_POLICY_VIOLATION_PREFIX,
                     E_TOOL_INVOCATION_BOUNDARY_PREFIX,
                 ],
@@ -82,6 +89,7 @@ def validate_tool_invocation_policy_contract(payload: dict[str, Any] | None = No
             for token in list(row.get("allowed_capability_profiles") or [])
             if str(token).strip()
         }
+        namespace_scope_rule = str(row.get("namespace_scope_rule") or "").strip().lower()
         run_determinism_class = str(row.get("run_determinism_class") or "").strip().lower()
         tool_to_tool_invocation = str(row.get("tool_to_tool_invocation") or "").strip().lower()
         max_tool_invocations_per_run = int(row.get("max_tool_invocations_per_run") or 0)
@@ -101,6 +109,8 @@ def validate_tool_invocation_policy_contract(payload: dict[str, Any] | None = No
             raise ValueError(f"E_TOOL_INVOCATION_POLICY_CONTRACT_CAPABILITY_PROFILES_EMPTY:{run_type}")
         if not allowed_capability_profiles.issubset(_ALLOWED_CAPABILITY_PROFILES):
             raise ValueError(f"E_TOOL_INVOCATION_POLICY_CONTRACT_CAPABILITY_PROFILE_INVALID:{run_type}")
+        if namespace_scope_rule not in _ALLOWED_NAMESPACE_SCOPE_RULES:
+            raise ValueError(f"E_TOOL_INVOCATION_POLICY_CONTRACT_NAMESPACE_SCOPE_RULE_INVALID:{run_type}")
         if run_determinism_class not in _ALLOWED_DETERMINISM_CLASSES:
             raise ValueError(f"E_TOOL_INVOCATION_POLICY_CONTRACT_DETERMINISM_CLASS_INVALID:{run_type}")
         if tool_to_tool_invocation not in _ALLOWED_TOOL_TO_TOOL_POLICY:

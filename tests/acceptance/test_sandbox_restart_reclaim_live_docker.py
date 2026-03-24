@@ -10,7 +10,7 @@ import shutil
 import pytest
 
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
-from orket.core.domain import LeaseStatus
+from orket.core.domain import CheckpointAcceptanceOutcome, CheckpointResumabilityClass, LeaseStatus
 from orket.core.domain.sandbox_lifecycle import SandboxState, TerminalReason
 from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
@@ -210,10 +210,18 @@ async def test_live_reclaimable_sandbox_can_be_reacquired_and_stale_owner_cannot
         expired_lease = await orchestrator_a.control_plane_repository.get_latest_lease_record(
             lease_id=f"sandbox-lease:{sandbox.id}"
         )
+        checkpoint = await orchestrator_a.control_plane_repository.get_checkpoint(
+            checkpoint_id=f"sandbox-checkpoint:{sandbox.id}:lease_epoch:00000001"
+        )
+        checkpoint_acceptance = await orchestrator_a.control_plane_repository.get_checkpoint_acceptance(
+            checkpoint_id=f"sandbox-checkpoint:{sandbox.id}:lease_epoch:00000001"
+        )
+        reclaimable_views = await orchestrator_a.list_sandboxes()
         reacquired = await orchestrator_b.reacquire_sandbox_ownership(sandbox.id)
         reacquired_lease = await orchestrator_b.control_plane_repository.get_latest_lease_record(
             lease_id=f"sandbox-lease:{sandbox.id}"
         )
+        active_views = await orchestrator_b.list_sandboxes()
         before = await orchestrator_b.lifecycle_service.repository.get_record(sandbox.id)
         stale_health = await orchestrator_a.health_check(sandbox.id)
         after = await orchestrator_b.lifecycle_service.repository.get_record(sandbox.id)
@@ -221,10 +229,48 @@ async def test_live_reclaimable_sandbox_can_be_reacquired_and_stale_owner_cannot
         assert reclaimable["state"] == "reclaimable"
         assert expired_lease is not None
         assert expired_lease.status is LeaseStatus.EXPIRED
+        assert checkpoint is not None
+        assert (
+            checkpoint.resumability_class
+            is CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT
+        )
+        assert checkpoint_acceptance is not None
+        assert checkpoint_acceptance.outcome is CheckpointAcceptanceOutcome.ACCEPTED
+        assert (
+            checkpoint_acceptance.resumability_class
+            is CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT
+        )
+        snapshot = await orchestrator_a.lifecycle_service.repository.get_snapshot(
+            checkpoint.state_snapshot_ref
+        )
+        assert reclaimable_views[0]["control_plane_checkpoint_id"] == checkpoint.checkpoint_id
+        assert (
+            reclaimable_views[0]["control_plane_checkpoint_resumability_class"]
+            == "resume_new_attempt_from_checkpoint"
+        )
+        assert (
+            reclaimable_views[0]["control_plane_checkpoint_acceptance_outcome"]
+            == "checkpoint_accepted"
+        )
+        assert snapshot is not None
+        assert snapshot.record.state is SandboxState.RECLAIMABLE
         assert reacquired["state"] == "active"
         assert reacquired["owner_instance_id"] == "runner-b"
         assert reacquired_lease is not None
         assert reacquired_lease.status is LeaseStatus.ACTIVE
+        recovery_decision = await orchestrator_b.control_plane_repository.get_recovery_decision(
+            decision_id=f"sandbox-recovery:{sandbox.rock_id}:reacquire:00000002"
+        )
+        assert recovery_decision is not None
+        assert recovery_decision.authorized_next_action.value == "resume_from_checkpoint"
+        assert recovery_decision.target_checkpoint_id == checkpoint.checkpoint_id
+        assert active_views[0]["control_plane_recovery_decision_id"] == recovery_decision.decision_id
+        assert active_views[0]["control_plane_recovery_action"] == "resume_from_checkpoint"
+        assert active_views[0]["control_plane_checkpoint_id"] == checkpoint.checkpoint_id
+        assert (
+            active_views[0]["control_plane_checkpoint_resumability_class"]
+            == "resume_new_attempt_from_checkpoint"
+        )
         assert stale_health is False
         assert before is not None and after is not None
         assert after.owner_instance_id == "runner-b"

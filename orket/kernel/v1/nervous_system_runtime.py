@@ -284,7 +284,7 @@ def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
     admission_decision_digest = get_str(request, "admission_decision_digest", required=True)
     approval_id = normalized_optional_str(request.get("approval_id"))
     execution_result_digest = normalized_optional_str(request.get("execution_result_digest"))
-    commit_key = (proposal_digest, admission_decision_digest, approval_id, execution_result_digest)
+    commit_key = (session_id, trace_id, proposal_digest, admission_decision_digest, approval_id, execution_result_digest)
 
     with _RUNTIME_LOCK:
         existing = _COMMIT_RESULTS_BY_KEY.get(commit_key)
@@ -367,6 +367,19 @@ def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
 
     if status not in COMMIT_STATUSES_V1:
         status = "ERROR"
+
+    if status != "ERROR" and execution_result_payload is not None:
+        append_event(
+            session_id=session_id,
+            trace_id=trace_id,
+            request_id=request_id,
+            event_type="action.executed",
+            body={
+                "proposal_digest": proposal_digest,
+                "execution_result_digest": execution_result_digest or None,
+                "status": "OBSERVED",
+            },
+        )
 
     if result_validation_performed and status != "ERROR":
         append_event(

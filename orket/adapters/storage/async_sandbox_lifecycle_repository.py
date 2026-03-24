@@ -12,6 +12,7 @@ from orket.core.domain.sandbox_lifecycle_records import (
     SandboxApprovalRecord,
     SandboxLifecycleEventRecord,
     SandboxLifecycleRecord,
+    SandboxLifecycleSnapshotRecord,
     SandboxOperationDedupeEntry,
 )
 from orket.adapters.storage.sandbox_lifecycle_row_serialization import (
@@ -108,6 +109,18 @@ class AsyncSandboxLifecycleRepository:
         )
         await conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS sandbox_lifecycle_snapshots (
+                snapshot_id TEXT PRIMARY KEY,
+                sandbox_id TEXT NOT NULL,
+                record_version INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                integrity_digest TEXT NOT NULL,
+                payload_json TEXT NOT NULL
+            )
+            """
+        )
+        await conn.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_sandbox_approvals_sandbox_id
             ON sandbox_approvals (sandbox_id)
             """
@@ -116,6 +129,12 @@ class AsyncSandboxLifecycleRepository:
             """
             CREATE INDEX IF NOT EXISTS idx_sandbox_lifecycle_events_sandbox_id
             ON sandbox_lifecycle_events (sandbox_id)
+            """
+        )
+        await conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_sandbox_lifecycle_snapshots_sandbox_id
+            ON sandbox_lifecycle_snapshots (sandbox_id, record_version, created_at)
             """
         )
 
@@ -440,5 +459,70 @@ class AsyncSandboxLifecycleRepository:
                 )
             rows = await cursor.fetchall()
             return [SandboxLifecycleEventRecord.model_validate(deserialize_event_row(dict(row))) for row in rows]
+
+        return await self._execute(_op, row_factory=True)
+
+    async def save_snapshot(self, snapshot: SandboxLifecycleSnapshotRecord) -> SandboxLifecycleSnapshotRecord:
+        payload = snapshot.model_dump(mode="json")
+
+        async def _op(conn: aiosqlite.Connection) -> SandboxLifecycleSnapshotRecord:
+            cursor = await conn.execute(
+                "SELECT payload_json FROM sandbox_lifecycle_snapshots WHERE snapshot_id = ?",
+                (snapshot.snapshot_id,),
+            )
+            existing = await cursor.fetchone()
+            payload_json = json.dumps(payload, sort_keys=True)
+            if existing is not None:
+                existing_payload = str(existing["payload_json"])
+                if existing_payload != payload_json:
+                    raise SandboxOperationIntegrityError(
+                        f"snapshot_id {snapshot.snapshot_id} reused with different payload."
+                    )
+                return SandboxLifecycleSnapshotRecord.model_validate_json(existing_payload)
+            await conn.execute(
+                """
+                INSERT INTO sandbox_lifecycle_snapshots (
+                    snapshot_id, sandbox_id, record_version, created_at, integrity_digest, payload_json
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    snapshot.snapshot_id,
+                    snapshot.sandbox_id,
+                    snapshot.record_version,
+                    snapshot.created_at,
+                    snapshot.integrity_digest,
+                    payload_json,
+                ),
+            )
+            return snapshot
+
+        return await self._execute(_op, row_factory=True, commit=True)
+
+    async def get_snapshot(self, snapshot_id: str) -> SandboxLifecycleSnapshotRecord | None:
+        async def _op(conn: aiosqlite.Connection) -> SandboxLifecycleSnapshotRecord | None:
+            cursor = await conn.execute(
+                "SELECT payload_json FROM sandbox_lifecycle_snapshots WHERE snapshot_id = ?",
+                (snapshot_id,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                return None
+            return SandboxLifecycleSnapshotRecord.model_validate_json(str(row["payload_json"]))
+
+        return await self._execute(_op, row_factory=True)
+
+    async def list_snapshots(self, sandbox_id: str) -> list[SandboxLifecycleSnapshotRecord]:
+        async def _op(conn: aiosqlite.Connection) -> list[SandboxLifecycleSnapshotRecord]:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM sandbox_lifecycle_snapshots
+                WHERE sandbox_id = ?
+                ORDER BY record_version ASC, created_at ASC, snapshot_id ASC
+                """,
+                (sandbox_id,),
+            )
+            rows = await cursor.fetchall()
+            return [SandboxLifecycleSnapshotRecord.model_validate_json(str(row["payload_json"])) for row in rows]
 
         return await self._execute(_op, row_factory=True)

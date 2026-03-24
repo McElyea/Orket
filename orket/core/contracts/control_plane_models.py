@@ -107,6 +107,7 @@ class RunRecord(_ControlPlaneBaseModel):
     configuration_digest: NonEmptyStr
     creation_timestamp: NonEmptyStr
     admission_decision_receipt_ref: NonEmptyStr
+    namespace_scope: NonEmptyStr | None = None
     lifecycle_state: RunState
     current_attempt_id: NonEmptyStr | None = None
     final_truth_record_id: NonEmptyStr | None = None
@@ -150,6 +151,7 @@ class StepRecord(_ControlPlaneBaseModel):
     step_id: NonEmptyStr
     attempt_id: NonEmptyStr
     step_kind: NonEmptyStr
+    namespace_scope: NonEmptyStr | None = None
     input_ref: NonEmptyStr
     output_ref: NonEmptyStr | None = None
     capability_used: CapabilityClass | None = None

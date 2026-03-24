@@ -105,6 +105,14 @@ class InMemoryCoordinatorStore:
                     cards.append(card.model_copy(deep=True))
             return cards
 
+    def snapshot_card(self, card_id: str) -> Card:
+        with self._lock:
+            return self._get_card(card_id).model_copy(deep=True)
+
+    def snapshot_cards(self) -> list[Card]:
+        with self._lock:
+            return [card.model_copy(deep=True) for card in self._cards.values()]
+
     def _allow_hedged_claim(self, card: Card, meta: dict[str, Any], node_id: str, now: float) -> bool:
         if not card.hedged_execution:
             return False

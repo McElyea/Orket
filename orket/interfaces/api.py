@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 from pathlib import Path
 from contextlib import asynccontextmanager
@@ -444,6 +445,14 @@ def _is_companion_key_valid(
     return api_runtime_node.is_api_key_valid(default_key, provided_key)
 
 
+def _api_key_actor_ref(api_key_value: str | None) -> str | None:
+    token = str(api_key_value or "").strip()
+    if not token:
+        return None
+    digest = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    return f"api_key_fingerprint:sha256:{digest}"
+
+
 async def get_api_key(request: Request, api_key_header: str | None = Security(api_key_header)):
     default_key = _read_api_key_env("ORKET_API_KEY")
     companion_key = _read_api_key_env("ORKET_COMPANION_API_KEY")
@@ -458,6 +467,7 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
             companion_key=companion_key,
             companion_key_strict=companion_key_strict,
         ):
+            request.state.authenticated_actor_ref = _api_key_actor_ref(api_key_header)
             return api_key_header
         reason = "invalid_or_missing_key_for_companion_route"
         if companion_key and companion_key_strict and api_key_header and default_key and api_key_header == default_key:
@@ -471,6 +481,7 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
             companion_key_strict=companion_key_strict,
         )
     elif api_runtime_node.is_api_key_valid(default_key, api_key_header):
+        request.state.authenticated_actor_ref = _api_key_actor_ref(api_key_header)
         return api_key_header
     else:
         reason = "invalid_or_missing_key_for_core_route"
@@ -1285,8 +1296,17 @@ async def list_sandboxes():
 
 
 @v1_router.post("/sandboxes/{sandbox_id}/stop")
-async def stop_sandbox(sandbox_id: str):
+async def stop_sandbox(sandbox_id: str, request: Request):
     invocation = api_runtime_node.resolve_sandbox_stop_invocation(sandbox_id)
+    operator_actor_ref = getattr(request.state, "authenticated_actor_ref", None)
+    if operator_actor_ref is not None:
+        invocation = {
+            **invocation,
+            "kwargs": {
+                **dict(invocation.get("kwargs", {})),
+                "operator_actor_ref": operator_actor_ref,
+            },
+        }
     try:
         await _invoke_async_method(engine, invocation, "sandbox stop")
     except ValueError as exc:

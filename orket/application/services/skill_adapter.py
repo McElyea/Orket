@@ -36,6 +36,13 @@ def build_tool_profile_bindings(skill_manifest_payload: dict[str, Any]) -> dict[
             "runtime_limits": dict(entrypoint.get("runtime_limits") or {}),
             "requested_permissions": dict(entrypoint.get("requested_permissions") or {}),
             "required_permissions": dict(entrypoint.get("required_permissions") or {}),
+            "namespace_scope_rule": str(entrypoint.get("namespace_scope_rule") or "run_scope_only").strip().lower()
+            or "run_scope_only",
+            "declared_namespace_scopes": [
+                str(scope).strip()
+                for scope in list(entrypoint.get("declared_namespace_scopes") or [])
+                if str(scope).strip()
+            ],
         }
     return bindings
 
@@ -68,5 +75,7 @@ def synthesize_role_tool_profile_bindings(
             "runtime_limits": {},
             "requested_permissions": {},
             "required_permissions": {},
+            "namespace_scope_rule": "run_scope_only",
+            "declared_namespace_scopes": [],
         }
     return bindings

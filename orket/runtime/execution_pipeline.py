@@ -23,6 +23,18 @@ from orket.application.services.gitea_state_pilot import (
     collect_gitea_state_pilot_inputs,
     evaluate_gitea_state_pilot_readiness,
 )
+from orket.application.services.gitea_state_control_plane_checkpoint_service import (
+    build_gitea_state_control_plane_checkpoint_service,
+)
+from orket.application.services.gitea_state_control_plane_execution_service import (
+    build_gitea_state_control_plane_execution_service,
+)
+from orket.application.services.gitea_state_control_plane_lease_service import (
+    build_gitea_state_control_plane_lease_service,
+)
+from orket.application.services.gitea_state_control_plane_reservation_service import (
+    build_gitea_state_control_plane_reservation_service,
+)
 from orket.application.services.gitea_state_worker import GiteaStateWorker
 from orket.application.services.gitea_state_worker_coordinator import GiteaStateWorkerCoordinator
 from orket.application.services.runtime_policy import (
@@ -58,7 +70,7 @@ from orket.runtime.settings import resolve_str
 from orket.runtime.state_transition_registry import validate_state_token
 from orket.runtime.workload_adapters import build_cards_workload_contract
 from orket.runtime.workload_shell import SharedWorkloadShell
-from orket.runtime_paths import resolve_runtime_db_path
+from orket.runtime_paths import resolve_control_plane_db_path, resolve_runtime_db_path
 from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, summarize_cards_runtime_issues
 from orket.schema import (
     CardStatus,
@@ -298,6 +310,18 @@ class ExecutionPipeline:
             worker_id=str(worker_id),
             lease_seconds=lease_seconds,
             renew_interval_seconds=renew_interval_seconds,
+            control_plane_checkpoint_service=build_gitea_state_control_plane_checkpoint_service(
+                resolve_control_plane_db_path()
+            ),
+            control_plane_execution_service=build_gitea_state_control_plane_execution_service(
+                resolve_control_plane_db_path()
+            ),
+            control_plane_lease_service=build_gitea_state_control_plane_lease_service(
+                resolve_control_plane_db_path()
+            ),
+            control_plane_reservation_service=build_gitea_state_control_plane_reservation_service(
+                resolve_control_plane_db_path()
+            ),
         )
         coordinator = GiteaStateWorkerCoordinator(
             worker=worker,

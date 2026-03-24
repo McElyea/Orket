@@ -5,6 +5,10 @@ from typing import Any
 
 import pytest
 
+from orket.application.services.turn_tool_control_plane_service import (
+    TurnToolControlPlaneService,
+    build_turn_tool_control_plane_service,
+)
 from orket.application.middleware import MiddlewareOutcome, TurnLifecycleInterceptors
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.policies.tool_gate import ToolGate
@@ -18,6 +22,7 @@ def _dispatcher(
     replay_store: dict[tuple[str, str], dict[str, Any]] | None = None,
     receipt_rows: list[dict[str, Any]] | None = None,
     middleware: TurnLifecycleInterceptors | None = None,
+    control_plane_service: TurnToolControlPlaneService | None = None,
 ) -> ToolDispatcher:
     operation_store = operation_store if operation_store is not None else {}
     replay_store = replay_store if replay_store is not None else {}
@@ -72,6 +77,7 @@ def _dispatcher(
         persist_operation_result=_persist_operation_result,
         append_protocol_receipt=_append_protocol_receipt,
         tool_validation_error_factory=lambda violations: RuntimeError(str(violations)),
+        control_plane_service=control_plane_service,
     )
 
 
@@ -643,6 +649,9 @@ async def test_tool_dispatcher_protocol_receipt_uses_turn_raw_metadata(tmp_path:
     manifest = row["tool_invocation_manifest"]
     assert manifest["run_id"] == "s1"
     assert manifest["tool_name"] == "write_file"
+    assert manifest["namespace_scope"] == "issue:ISSUE-1"
+    assert manifest["namespace_scope_rule"] == "run_scope_only"
+    assert manifest["declared_namespace_scopes"] == ["issue:ISSUE-1"]
     assert len(str(manifest["manifest_hash"])) == 64
     assert len(str(row["tool_call_hash"])) == 64
     capsule = row["execution_capsule"]
@@ -721,3 +730,52 @@ async def test_tool_dispatcher_executes_compatibility_mapping_and_records_transl
     assert result["compat_translation"]["compat_tool_name"] == "openclaw.file_read"
     assert len(receipt_rows) == 1
     assert isinstance(receipt_rows[0].get("compat_translation"), dict)
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_tool_dispatcher_preflight_failure_publishes_control_plane_final_truth(tmp_path: Path) -> None:
+    control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    dispatcher = _dispatcher(tmp_path, control_plane_service=control_plane)
+    turn = ExecutionTurn(
+        role="coder",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[
+            ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"}),
+            ToolCall(tool="read_file", args={"path": "a.txt"}),
+        ],
+    )
+
+    class _Toolbox:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def execute(self, tool_name, args, context):
+            self.calls += 1
+            return {"ok": True}
+
+    toolbox = _Toolbox()
+    with pytest.raises(RuntimeError):
+        await dispatcher.execute_tools(
+            turn=turn,
+            toolbox=toolbox,
+            context={
+                "roles": ["coder"],
+                "session_id": "s1",
+                "turn_index": 1,
+                "protocol_governed_enabled": True,
+                "approval_required_tools": ["write_file"],
+            },
+            issue=None,
+        )
+
+    run_id = "turn-tool-run:s1:ISSUE-1:coder:0001"
+    run = await control_plane.execution_repository.get_run_record(run_id=run_id)
+    truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
+
+    assert toolbox.calls == 0
+    assert run is not None
+    assert truth is not None
+    assert run.lifecycle_state.value == "failed_terminal"
+    assert truth.result_class.value == "blocked"

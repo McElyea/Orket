@@ -150,3 +150,6 @@ async def test_turn_executor_passes_skill_runtime_binding_context_to_toolbox(tmp
     assert toolbox.last_context["skill_runtime"] == "python"
     assert toolbox.last_context["skill_runtime_version"] == "3.11.0"
     assert toolbox.last_context["tool_runtime_limits"]["max_execution_time"] == 10
+    assert toolbox.last_context["run_namespace_scope"] == "issue:ISSUE-1"
+    assert toolbox.last_context["tool_namespace_scope"] == "issue:ISSUE-1"
+    assert toolbox.last_context["tool_declared_namespace_scopes"] == ["issue:ISSUE-1"]

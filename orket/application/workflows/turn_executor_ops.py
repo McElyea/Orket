@@ -7,9 +7,15 @@ import time
 from typing import Any, Dict, Optional
 
 from orket.logging import log_event
+from orket.application.services.turn_tool_control_plane_recovery import TurnToolCheckpointRecoveryError
+from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneError
 from orket.core.domain.state_machine import StateMachineError
 from orket.schema import IssueConfig, RoleConfig
 from .prompt_budget_guard import maybe_record_prompt_budget
+from .turn_executor_control_plane import (
+    ensure_turn_control_plane_reentry_allowed_if_needed,
+    write_turn_checkpoint_and_publish_if_needed,
+)
 from .turn_failure_traces import emit_turn_failure_traces
 from .turn_executor_runtime import (
     invoke_model_complete as _invoke_model_complete,
@@ -99,6 +105,12 @@ async def execute_turn(
         if executor._memory_trace_enabled(context):
             context["_memory_trace_events"] = []
         executor._validate_preconditions(issue, role, context)
+        await ensure_turn_control_plane_reentry_allowed_if_needed(
+            executor=executor,
+            issue_id=issue_id,
+            role_name=role_name,
+            context=context,
+        )
 
         messages = await executor._prepare_messages(issue, role, context, system_prompt)
         messages, middleware_outcome = executor.middleware.apply_before_prompt(
@@ -323,17 +335,11 @@ async def execute_turn(
                 ensure_ascii=False,
             ),
         )
-        await asyncio.to_thread(
-            executor._write_turn_checkpoint,
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
+        await write_turn_checkpoint_and_publish_if_needed(
+            executor=executor,
+            turn=turn,
+            context=context,
             prompt_hash=prompt_hash,
-            selected_model=context.get("selected_model"),
-            tool_calls=[{"tool": tool_call.tool, "args": tool_call.args} for tool_call in turn.tool_calls],
-            state_delta=executor._state_delta_from_tool_calls(context, turn),
-            prompt_metadata=context.get("prompt_metadata"),
         )
 
         if turn.tool_calls:
@@ -425,6 +431,23 @@ async def execute_turn(
         )
         await emit_failure(str(exc), "tool_violation")
         return TurnResult.governance_violation(exc.violations)
+
+    except (TurnToolControlPlaneError, TurnToolCheckpointRecoveryError) as exc:
+        executor.middleware.apply_on_turn_failure(exc, issue=issue, role=role, context=context)
+        log_event(
+            "turn_failed",
+            {
+                "issue_id": issue_id,
+                "error": str(exc),
+                "type": "control_plane_blocked",
+                "session_id": session_id,
+                "turn_index": turn_index,
+                "turn_trace_id": turn_trace_id,
+            },
+            executor.workspace,
+        )
+        await emit_failure(str(exc), "control_plane_blocked")
+        return TurnResult.failed(str(exc), should_retry=False)
 
     except ModelTimeoutError as exc:
         executor.middleware.apply_on_turn_failure(exc, issue=issue, role=role, context=context)

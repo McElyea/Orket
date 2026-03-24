@@ -139,9 +139,19 @@ class SandboxTerminalOutcomeService:
             )
         ).record
         publication = self.lifecycle_service.control_plane_publication
+        final_truth = None
         if publication is not None:
             closure = SandboxControlPlaneClosureService(publication=publication)
-            await closure.publish_terminal_final_truth(record=terminal)
+            final_truth = await closure.publish_terminal_final_truth(record=terminal)
+        if self.lifecycle_service.control_plane_execution is not None and terminal.run_id is not None:
+            await self.lifecycle_service.control_plane_execution.finalize_terminal_execution(
+                run_id=terminal.run_id,
+                observed_at=observed_at,
+                terminal_reason=terminal.terminal_reason or terminal_reason,
+                policy_version=terminal.policy_version,
+                final_truth_record_id=None if final_truth is None else final_truth.final_truth_record_id,
+                rationale_ref=evidence_ref,
+            )
         await self.lifecycle_service.event_publisher.emit(
             sandbox_id=sandbox_id,
             created_at=observed_at,

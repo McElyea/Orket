@@ -14,6 +14,7 @@ class _FakeAdapter:
         self.calls = []
         self.renew_count = 0
         self.renew_results = []
+        self.transition_error = None
 
     async def fetch_ready_cards(self, *, limit: int = 1):
         self.calls.append(("fetch_ready_cards", limit))
@@ -25,6 +26,8 @@ class _FakeAdapter:
 
     async def transition_state(self, card_id: str, *, from_state: str, to_state: str, reason: str | None = None):
         self.calls.append(("transition_state", card_id, from_state, to_state, reason))
+        if self.transition_error is not None:
+            raise self.transition_error
 
     async def renew_lease(self, card_id: str, *, owner_id: str, lease_seconds: int, expected_lease_epoch=None):
         self.renew_count += 1
@@ -84,6 +87,21 @@ async def test_run_once_failure_flow_releases_blocked_with_error():
     assert matching[-1][1] == "9"
     assert matching[-1][2] == "blocked"
     assert "boom" in str(matching[-1][3])
+
+
+@pytest.mark.asyncio
+async def test_run_once_claim_transition_failure_without_control_plane_still_raises():
+    adapter = _FakeAdapter()
+    adapter.cards = [{"issue_number": 10, "state": "ready"}]
+    adapter.acquire_result = {"card_id": "ISSUE-10", "lease_epoch": 1}
+    adapter.transition_error = ValueError("Stale transition rejected for 10")
+    worker = GiteaStateWorker(adapter=adapter, worker_id="worker-a")
+
+    async def _work(_card):
+        return {"ok": True}
+
+    with pytest.raises(ValueError, match="Stale transition rejected"):
+        await worker.run_once(work_fn=_work)
 
 
 @pytest.mark.asyncio
@@ -155,3 +173,35 @@ async def test_run_once_lease_epoch_mismatch_transitions_to_failure():
     assert releases
     assert releases[-1][2] == "blocked"
     assert "E_LEASE_EXPIRED" in str(releases[-1][3])
+
+
+def test_lease_epoch_supports_real_adapter_nested_lease_shape() -> None:
+    lease = {
+        "card_id": "ISSUE-20",
+        "issue_number": 20,
+        "lease": {
+            "owner_id": "worker-a",
+            "acquired_at": "2026-03-24T01:00:00+00:00",
+            "expires_at": "2026-03-24T01:00:30+00:00",
+            "epoch": 4,
+        },
+        "version": 9,
+    }
+
+    assert GiteaStateWorker._lease_epoch(lease) == 4
+
+
+def test_is_lease_expired_detects_nested_epoch_mismatch() -> None:
+    renewed = {
+        "card_id": "ISSUE-21",
+        "issue_number": 21,
+        "lease": {
+            "owner_id": "worker-a",
+            "acquired_at": "2026-03-24T01:00:00+00:00",
+            "expires_at": "2026-03-24T01:01:00+00:00",
+            "epoch": 5,
+        },
+        "version": 10,
+    }
+
+    assert GiteaStateWorker._is_lease_expired(renewed, expected_epoch=4) is True

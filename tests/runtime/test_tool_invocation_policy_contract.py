@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from orket.runtime.protocol_error_codes import E_NAMESPACE_POLICY_VIOLATION_PREFIX
 from orket.runtime.tool_invocation_policy_contract import (
     tool_invocation_policy_contract_snapshot,
     validate_tool_invocation_policy_contract,
@@ -15,6 +16,8 @@ def test_tool_invocation_policy_contract_snapshot_contains_epic_policy() -> None
     policies = list(payload["policies"])
     assert len(policies) == 1
     assert policies[0]["run_type"] == "epic"
+    assert policies[0]["namespace_scope_rule"] == "run_scope_only"
+    assert E_NAMESPACE_POLICY_VIOLATION_PREFIX in policies[0]["required_error_codes"]
     assert policies[0]["tool_to_tool_invocation"] == "disallow"
 
 

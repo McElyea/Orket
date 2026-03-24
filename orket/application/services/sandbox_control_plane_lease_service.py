@@ -22,6 +22,7 @@ class SandboxControlPlaneLeaseService:
         *,
         record: SandboxLifecycleRecord,
         publication_timestamp: str,
+        source_reservation_id: str | None = None,
     ) -> LeaseRecord:
         owner = str(record.owner_instance_id or "").strip()
         status = self._status_for_record(record)
@@ -29,7 +30,7 @@ class SandboxControlPlaneLeaseService:
             raise SandboxControlPlaneLeaseError("sandbox lease publication requires run_id")
         if not owner:
             raise SandboxControlPlaneLeaseError("sandbox lease publication requires owner_instance_id")
-        latest = await self.publication.repository.get_latest_lease_record(lease_id=self._lease_id(record))
+        latest = await self.publication.repository.get_latest_lease_record(lease_id=self.lease_id_for_sandbox(record.sandbox_id))
         if (
             latest is not None
             and latest.lease_epoch == record.lease_epoch
@@ -38,7 +39,7 @@ class SandboxControlPlaneLeaseService:
         ):
             return latest
         return await self.publication.publish_lease(
-            lease_id=self._lease_id(record),
+            lease_id=self.lease_id_for_sandbox(record.sandbox_id),
             resource_id=self._resource_id(record),
             holder_ref=f"sandbox-instance:{owner}",
             lease_epoch=record.lease_epoch,
@@ -46,12 +47,13 @@ class SandboxControlPlaneLeaseService:
             expiry_basis=self._expiry_basis(record),
             status=status,
             last_confirmed_observation=self._observation_ref(record),
+            source_reservation_id=source_reservation_id,
             cleanup_eligibility_rule=f"sandbox_cleanup_policy:{record.policy_version}",
         )
 
     @staticmethod
-    def _lease_id(record: SandboxLifecycleRecord) -> str:
-        return f"sandbox-lease:{record.sandbox_id}"
+    def lease_id_for_sandbox(sandbox_id: str) -> str:
+        return f"sandbox-lease:{sandbox_id}"
 
     @staticmethod
     def _resource_id(record: SandboxLifecycleRecord) -> str:

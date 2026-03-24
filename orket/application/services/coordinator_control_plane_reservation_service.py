@@ -1,0 +1,91 @@
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.coordinator_control_plane_lease_service import (
+    CoordinatorControlPlaneLeaseService,
+)
+from orket.core.contracts import ReservationRecord
+from orket.core.domain import ReservationKind, ReservationStatus
+from orket.core.domain.coordinator_card import Card
+
+
+class CoordinatorControlPlaneReservationService:
+    """Publishes non-hedged coordinator claim reservations and promotion to lease."""
+
+    PROMOTION_RULE = "promote_on_non_hedged_claim_confirmation"
+
+    def __init__(self, *, publication: ControlPlanePublicationService) -> None:
+        self.publication = publication
+
+    @staticmethod
+    def reservation_id_for(card_id: str, lease_epoch: int) -> str:
+        normalized_id = str(card_id).strip()
+        if not normalized_id:
+            raise ValueError("card_id is required")
+        if int(lease_epoch) <= 0:
+            raise ValueError("lease_epoch must be >= 1")
+        return f"coordinator-reservation:{normalized_id}:lease_epoch:{int(lease_epoch):08d}"
+
+    async def publish_claim_reservation(
+        self,
+        *,
+        card: Card,
+        node_id: str,
+        lease_epoch: int,
+        observed_at: str | None = None,
+    ) -> ReservationRecord | None:
+        if not self._should_publish(card=card, node_id=node_id):
+            return None
+        timestamp = observed_at or self._utc_now()
+        return await self.publication.publish_reservation(
+            reservation_id=self.reservation_id_for(card.id, lease_epoch),
+            holder_ref=CoordinatorControlPlaneLeaseService.holder_ref_for(node_id),
+            reservation_kind=ReservationKind.RESOURCE,
+            target_scope_ref=CoordinatorControlPlaneLeaseService.resource_id_for(card.id),
+            creation_timestamp=timestamp,
+            expiry_or_invalidation_basis=self._reservation_basis(card=card),
+            status=ReservationStatus.ACTIVE,
+            supervisor_authority_ref=f"coordinator-api:claim:{str(card.id).strip()}:reserve",
+            promotion_rule=self.PROMOTION_RULE,
+        )
+
+    async def promote_claim_reservation(
+        self,
+        *,
+        card_id: str,
+        lease_epoch: int,
+        observed_at: str | None = None,
+    ) -> ReservationRecord:
+        return await self.publication.promote_reservation_to_lease(
+            reservation_id=self.reservation_id_for(card_id, lease_epoch),
+            promoted_lease_id=CoordinatorControlPlaneLeaseService.lease_id_for(card_id),
+            supervisor_authority_ref=f"coordinator-api:claim:{str(card_id).strip()}:promote",
+            promotion_basis=(
+                "coordinator_claim_promoted_to_lease"
+                f";publication_timestamp={str(observed_at or self._utc_now()).strip()}"
+            ),
+        )
+
+    @staticmethod
+    def _should_publish(*, card: Card, node_id: str) -> bool:
+        normalized_node = str(node_id).strip()
+        return not card.hedged_execution and str(card.claimed_by or "").strip() == normalized_node
+
+    @staticmethod
+    def _reservation_basis(*, card: Card) -> str:
+        expires_at = "none" if card.lease_expires_at is None else f"{float(card.lease_expires_at):.6f}"
+        return (
+            "coordinator_claim_reserved"
+            f";card={str(card.id).strip()}"
+            f";attempts={int(card.attempts)}"
+            f";lease_expires_at_monotonic={expires_at}"
+        )
+
+    @staticmethod
+    def _utc_now() -> str:
+        return datetime.now(UTC).isoformat()
+
+
+__all__ = ["CoordinatorControlPlaneReservationService"]

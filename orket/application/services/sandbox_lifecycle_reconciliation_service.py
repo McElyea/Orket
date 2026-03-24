@@ -25,6 +25,12 @@ from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
 
 if TYPE_CHECKING:
     from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+    from orket.application.services.sandbox_control_plane_checkpoint_service import (
+        SandboxControlPlaneCheckpointService,
+    )
+    from orket.application.services.sandbox_control_plane_execution_service import (
+        SandboxControlPlaneExecutionService,
+    )
 
 
 @dataclass(frozen=True)
@@ -53,10 +59,28 @@ class SandboxLifecycleReconciliationService:
         mutation_service: SandboxLifecycleMutationService,
         policy: SandboxLifecyclePolicy | None = None,
         control_plane_publication: ControlPlanePublicationService | None = None,
+        control_plane_execution: SandboxControlPlaneExecutionService | None = None,
+        control_plane_checkpoints: SandboxControlPlaneCheckpointService | None = None,
     ):
         self.mutation_service = mutation_service
         self.policy = policy or SandboxLifecyclePolicy()
         self.control_plane_publication = control_plane_publication
+        self.control_plane_execution = control_plane_execution
+        self.control_plane_checkpoints = control_plane_checkpoints
+        if (
+            self.control_plane_checkpoints is None
+            and self.control_plane_publication is not None
+            and self.control_plane_execution is not None
+        ):
+            from orket.application.services.sandbox_control_plane_checkpoint_service import (
+                SandboxControlPlaneCheckpointService,
+            )
+
+            self.control_plane_checkpoints = SandboxControlPlaneCheckpointService(
+                publication=self.control_plane_publication,
+                lifecycle_repository=self.mutation_service.repository,
+                execution_repository=self.control_plane_execution.repository,
+            )
 
     async def reconcile_existing_record(
         self,
@@ -83,6 +107,10 @@ class SandboxLifecycleReconciliationService:
             )
             await self._publish_reconciliation_state_change(
                 classification=plan.classification,
+                record=result.record,
+                observed_at=observation.observed_at,
+            )
+            await self._publish_execution_waiting_on_resource(
                 record=result.record,
                 observed_at=observation.observed_at,
             )
@@ -269,7 +297,17 @@ class SandboxLifecycleReconciliationService:
         if self.control_plane_publication is None:
             return
         publisher = SandboxControlPlaneReconciliationService(publication=self.control_plane_publication)
-        await publisher.publish_lost_runtime_reconciliation(record=record, observed_at=observed_at)
+        published = await publisher.publish_lost_runtime_reconciliation(record=record, observed_at=observed_at)
+        if self.control_plane_execution is not None and record.run_id is not None:
+            await self.control_plane_execution.finalize_terminal_execution(
+                run_id=record.run_id,
+                observed_at=observed_at,
+                terminal_reason=record.terminal_reason or TerminalReason.LOST_RUNTIME,
+                policy_version=record.policy_version,
+                final_truth_record_id=published.final_truth.final_truth_record_id if published.final_truth else None,
+                rationale_ref=published.reconciliation_record.reconciliation_id,
+                recovery_rationale_ref=published.reconciliation_record.reconciliation_id,
+            )
 
     async def _publish_reconciliation_state_change(
         self,
@@ -285,6 +323,24 @@ class SandboxLifecycleReconciliationService:
             await publisher.publish_reclaimable_reconciliation(record=record, observed_at=observed_at)
         elif classification is ReconciliationClassification.CLEANED_EXTERNALLY:
             await publisher.publish_cleaned_externally_reconciliation(record=record, observed_at=observed_at)
+
+    async def _publish_execution_waiting_on_resource(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+        observed_at: str,
+    ) -> None:
+        if self.control_plane_execution is None or record.run_id is None:
+            return
+        await self.control_plane_execution.mark_waiting_on_resource(
+            run_id=record.run_id,
+            observed_at=observed_at,
+        )
+        if self.control_plane_checkpoints is not None:
+            await self.control_plane_checkpoints.publish_reclaimable_checkpoint(
+                record=record,
+                observed_at=observed_at,
+            )
 
     @staticmethod
     def _is_due(deadline: str | None, observed_at: str) -> bool:

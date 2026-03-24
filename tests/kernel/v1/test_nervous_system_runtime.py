@@ -176,6 +176,49 @@ def test_commit_is_idempotent_for_identical_tuple() -> None:
     assert second == first
 
 
+def test_commit_idempotency_cache_is_scoped_to_session_and_trace() -> None:
+    admitted_a = admit_proposal_v1(
+        {
+            **_base_request(session_id="sess-commit-scope-a", trace_id="trace-commit-scope-a"),
+            "proposal": {"proposal_type": "action.tool_call", "payload": {}},
+        }
+    )
+    admitted_b = admit_proposal_v1(
+        {
+            **_base_request(session_id="sess-commit-scope-b", trace_id="trace-commit-scope-b"),
+            "proposal": {"proposal_type": "action.tool_call", "payload": {}},
+        }
+    )
+
+    first = commit_proposal_v1(
+        {
+            **_base_request(session_id="sess-commit-scope-a", trace_id="trace-commit-scope-a"),
+            "proposal_digest": admitted_a["proposal_digest"],
+            "admission_decision_digest": admitted_a["decision_digest"],
+            "execution_result_digest": "9" * 64,
+        }
+    )
+    second = commit_proposal_v1(
+        {
+            **_base_request(session_id="sess-commit-scope-b", trace_id="trace-commit-scope-b"),
+            "proposal_digest": admitted_b["proposal_digest"],
+            "admission_decision_digest": admitted_b["decision_digest"],
+            "execution_result_digest": "9" * 64,
+        }
+    )
+
+    assert first["status"] == "COMMITTED"
+    assert second["status"] == "COMMITTED"
+    event_types_a = {
+        str(event.get("event_type") or "") for event in get_session_ledger_events_v1("sess-commit-scope-a")
+    }
+    event_types_b = {
+        str(event.get("event_type") or "") for event in get_session_ledger_events_v1("sess-commit-scope-b")
+    }
+    assert "commit.recorded" in event_types_a
+    assert "commit.recorded" in event_types_b
+
+
 def test_commit_with_digest_only_does_not_narrate_execution() -> None:
     admitted = admit_proposal_v1(
         {
@@ -201,6 +244,32 @@ def test_commit_with_digest_only_does_not_narrate_execution() -> None:
     assert "commit.recorded" in event_types
     assert "action.executed" not in event_types
     assert "action.result_validated" not in event_types
+
+
+def test_commit_with_execution_payload_emits_executed_and_validated_events() -> None:
+    admitted = admit_proposal_v1(
+        {
+            **_base_request(session_id="sess-commit-payload", trace_id="trace-commit-payload"),
+            "proposal": {"proposal_type": "action.tool_call", "payload": {}},
+        }
+    )
+
+    response = commit_proposal_v1(
+        {
+            **_base_request(session_id="sess-commit-payload", trace_id="trace-commit-payload"),
+            "proposal_digest": admitted["proposal_digest"],
+            "admission_decision_digest": admitted["decision_digest"],
+            "execution_result_digest": "1" * 64,
+            "execution_result_payload": {"ok": True, "path": "workspace/out.txt"},
+            "execution_result_schema_valid": True,
+        }
+    )
+
+    assert response["status"] == "COMMITTED"
+    events = get_session_ledger_events_v1("sess-commit-payload")
+    event_types = [str(event.get("event_type") or "") for event in events]
+    assert "action.executed" in event_types
+    assert "action.result_validated" in event_types
 
 
 def test_end_session_emits_ended_status_and_event_digest() -> None:

@@ -94,6 +94,10 @@ async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeyp
     assert called_cards == ["ISSUE-77"]
     assert seen["adapter"]["base_url"] == "https://gitea.local"
     assert seen["worker"]["worker_id"] == "worker-1"
+    assert seen["worker"]["control_plane_checkpoint_service"] is not None
+    assert seen["worker"]["control_plane_execution_service"] is not None
+    assert seen["worker"]["control_plane_lease_service"] is not None
+    assert seen["worker"]["control_plane_reservation_service"] is not None
     assert seen["coordinator"]["fetch_limit"] == 9
     assert payload["summary"]["consumed_count"] == 1
     assert summary_path.exists()

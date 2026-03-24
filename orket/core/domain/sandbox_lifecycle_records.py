@@ -102,6 +102,15 @@ class SandboxLifecycleEventRecord(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
 
+class SandboxLifecycleSnapshotRecord(BaseModel):
+    snapshot_id: str
+    sandbox_id: str
+    record_version: int
+    created_at: str
+    integrity_digest: str
+    record: SandboxLifecycleRecord
+
+
 def ensure_supported_versions(schema_version: str, policy_version: str) -> bool:
     if schema_version not in SUPPORTED_SANDBOX_LIFECYCLE_SCHEMA_VERSIONS:
         raise SandboxLifecycleError(f"Unsupported sandbox lifecycle schema_version: {schema_version}.")

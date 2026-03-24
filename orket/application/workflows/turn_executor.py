@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from orket.application.middleware import TurnLifecycleInterceptors
+from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_contract_validator import ContractValidator
 from orket.application.workflows.turn_corrective_prompt import CorrectivePromptBuilder
@@ -60,6 +61,7 @@ class TurnExecutor:
         tool_gate: ToolGate,
         workspace: Path,
         middleware: Optional[TurnLifecycleInterceptors] = None,
+        control_plane_service: TurnToolControlPlaneService | None = None,
     ):
         self.state = state_machine
         self.tool_gate = tool_gate
@@ -83,6 +85,7 @@ class TurnExecutor:
             persist_operation_result=self.artifact_writer.persist_operation_result,
             append_protocol_receipt=self.artifact_writer.append_protocol_receipt,
             tool_validation_error_factory=lambda violations: ToolValidationError(violations),
+            control_plane_service=control_plane_service,
         )
 
     def __getattr__(self, name: str) -> Any:

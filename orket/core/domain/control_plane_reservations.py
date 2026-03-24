@@ -124,6 +124,60 @@ def validate_lease_status_transition(*, current_status: LeaseStatus, next_status
     return True
 
 
+def reservation_publication_ref(record: ReservationRecord) -> str:
+    return f"reservation:{record.reservation_id}:{record.status.value}"
+
+
+def build_reservation_record(
+    *,
+    reservation_id: str,
+    holder_ref: str,
+    reservation_kind: ReservationKind,
+    target_scope_ref: str,
+    creation_timestamp: str,
+    expiry_or_invalidation_basis: str,
+    status: ReservationStatus,
+    supervisor_authority_ref: str,
+    promotion_rule: str | None = None,
+    promoted_lease_id: str | None = None,
+    previous_record: ReservationRecord | None = None,
+) -> ReservationRecord:
+    from orket.core.contracts.control_plane_models import ReservationRecord
+
+    if previous_record is None and status not in {ReservationStatus.PENDING, ReservationStatus.ACTIVE}:
+        raise ControlPlaneReservationError("initial reservation record must begin in pending or active status")
+
+    history_refs: list[str] = []
+    if previous_record is not None:
+        validate_reservation_status_transition(current_status=previous_record.status, next_status=status)
+        if previous_record.holder_ref != holder_ref:
+            raise ControlPlaneReservationError("reservation holder_ref must remain stable across status updates")
+        if previous_record.reservation_kind is not reservation_kind:
+            raise ControlPlaneReservationError("reservation_kind must remain stable across status updates")
+        if previous_record.target_scope_ref != target_scope_ref:
+            raise ControlPlaneReservationError("target_scope_ref must remain stable across status updates")
+        if previous_record.creation_timestamp != creation_timestamp:
+            raise ControlPlaneReservationError("creation_timestamp must remain stable across status updates")
+        history_refs = list(previous_record.history_refs)
+        prior_ref = reservation_publication_ref(previous_record)
+        if not history_refs or history_refs[-1] != prior_ref:
+            history_refs.append(prior_ref)
+
+    return ReservationRecord(
+        reservation_id=str(reservation_id).strip(),
+        holder_ref=str(holder_ref).strip(),
+        reservation_kind=reservation_kind,
+        target_scope_ref=str(target_scope_ref).strip(),
+        creation_timestamp=str(creation_timestamp).strip(),
+        expiry_or_invalidation_basis=str(expiry_or_invalidation_basis).strip(),
+        status=status,
+        promotion_rule=None if promotion_rule is None else str(promotion_rule).strip(),
+        promoted_lease_id=None if promoted_lease_id is None else str(promoted_lease_id).strip(),
+        supervisor_authority_ref=str(supervisor_authority_ref).strip(),
+        history_refs=history_refs,
+    )
+
+
 def promote_reservation_to_lease(
     *,
     reservation: ReservationRecord,
@@ -169,7 +223,9 @@ __all__ = [
     "TERMINAL_RESERVATION_STATUSES",
     "allowed_lease_status_transitions",
     "allowed_reservation_status_transitions",
+    "build_reservation_record",
     "promote_reservation_to_lease",
+    "reservation_publication_ref",
     "validate_lease_status_transition",
     "validate_reservation_status_transition",
 ]

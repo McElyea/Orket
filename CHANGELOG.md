@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.21] - 2026-03-24 - "The Control Plane Vertical Closeout Cut"
+
+### Added
+- **Governed Turn Recovery Closeout**: Added governed turn reconciliation closeout services, fail-closed re-entry guards, and deeper integration proof for unsafe resume, terminal reconciliation closure, and early control-plane blocking on the non-Gitea governed turn lane.
+- **Coordinator And Approval Reservation Authority**: Added durable coordinator claim reservation services, richer coordinator lease/control-plane response summaries, and operator-hold reservation publication for repo-backed approvals, guard-review pending gates, and governed kernel approval admission.
+- **Non-Sandbox Runtime Authority Surfaces**: Added durable execution, lease, reservation, checkpoint, and failure-closeout services for the Gitea worker lane plus governed kernel and approval control-plane support modules and read models.
+
+### Changed
+- **ControlPlane Runtime Truth**: Expanded live or integration-backed publication across sandbox, governed kernel, governed turn-tool, coordinator, approval, and Gitea worker lanes for reservation, lease, checkpoint, recovery, reconciliation, operator action, and final-truth authority.
+- **Governed Turn Resume Semantics**: Unsafe post-effect or observation-uncertain governed resumes now publish reconciliation evidence and close terminally instead of leaving the run stranded in a recovery intermediate state, while terminal or recovery-blocked governed runs now fail before model execution and checkpoint rewrite.
+- **Authority Docs**: Updated `CURRENT_AUTHORITY.md` and the active ControlPlane packet docs so the described authority surfaces match the current durable runtime behavior.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use the current ControlPlane packet and `CURRENT_AUTHORITY.md` as the source of truth for the governed turn, approval, coordinator, sandbox, and Gitea control-plane seams; no manual migration step is required beyond consuming the updated durable records on the existing SQLite control-plane path.
+
 ## [0.4.20] - 2026-03-24 - "The Control Plane Lease Publication Cut"
 
 ### Added

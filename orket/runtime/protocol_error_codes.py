@@ -20,6 +20,7 @@ E_MISSING_REQUIRED_TOOL_PREFIX: Final[str] = "E_MISSING_REQUIRED_TOOL"
 E_TOOL_CARDINALITY_PREFIX: Final[str] = "E_TOOL_CARDINALITY"
 E_RING_POLICY_VIOLATION_PREFIX: Final[str] = "E_RING_POLICY_VIOLATION"
 E_CAPABILITY_VIOLATION_PREFIX: Final[str] = "E_CAPABILITY_VIOLATION"
+E_NAMESPACE_POLICY_VIOLATION_PREFIX: Final[str] = "E_NAMESPACE_POLICY_VIOLATION"
 E_DETERMINISM_POLICY_VIOLATION_PREFIX: Final[str] = "E_DETERMINISM_POLICY_VIOLATION"
 E_TOOL_INVOCATION_BOUNDARY_PREFIX: Final[str] = "E_TOOL_INVOCATION_BOUNDARY"
 E_DETERMINISM_VIOLATION_PREFIX: Final[str] = "E_DETERMINISM_VIOLATION"
@@ -76,6 +77,7 @@ _PREFIX_CODES: Final[dict[str, str]] = {
     E_TOOL_CARDINALITY_PREFIX: "Required tool count violated deterministic cardinality rules.",
     E_RING_POLICY_VIOLATION_PREFIX: "Tool call violated active ring policy.",
     E_CAPABILITY_VIOLATION_PREFIX: "Tool capability profile is not allowed for this run.",
+    E_NAMESPACE_POLICY_VIOLATION_PREFIX: "Tool namespace targeting exceeded the active run scope policy.",
     E_DETERMINISM_POLICY_VIOLATION_PREFIX: "Tool determinism class exceeds active run determinism policy.",
     E_TOOL_INVOCATION_BOUNDARY_PREFIX: "Direct tool-to-tool invocation is not allowed.",
     E_DETERMINISM_VIOLATION_PREFIX: "Observed tool side effects conflict with declared determinism.",

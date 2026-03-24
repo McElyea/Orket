@@ -452,9 +452,10 @@ class AsyncPendingGateRepository:
         request_type: str,
         reason: str,
         payload: Optional[Dict[str, Any]] = None,
+        created_at: str | None = None,
     ) -> str:
         request_id = str(uuid.uuid4())[:8]
-        now = datetime.now(UTC).isoformat()
+        now = str(created_at or datetime.now(UTC).isoformat())
         async with self._lock:
             async with aiosqlite.connect(self.db_path) as conn:
                 await self._ensure_initialized(conn)

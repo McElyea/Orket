@@ -224,6 +224,11 @@ class SandboxRuntimeRecoveryService:
                     record=record,
                     publication_timestamp=observed_at,
                 )
+                await self.lifecycle_service._publish_control_plane_deploy_effect(
+                    record=record,
+                    publication_timestamp=observed_at,
+                )
+                await self.lifecycle_service._resume_control_plane_execution(run_id=record.run_id)
                 return record
             return await self.lifecycle_service.terminal_outcomes.record_lifecycle_terminal_outcome(
                 sandbox_id=current.sandbox_id,

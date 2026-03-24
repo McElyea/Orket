@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from orket.application.middleware import TurnLifecycleInterceptors
+from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
 from orket.core.policies.tool_gate import ToolGate
 from orket.domain.execution import ExecutionTurn
 from orket.logging import log_event
@@ -19,14 +20,17 @@ from .protocol_hashing import (
     derive_step_seed,
     hash_canonical_json,
 )
-from .tool_invocation_contracts import (
-    build_tool_invocation_manifest,
-    compute_tool_call_hash,
-)
 from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
+from .turn_tool_dispatcher_control_plane import (
+    begin_control_plane_execution_if_needed,
+    finalize_execution_if_needed,
+    persist_non_protocol_tool_result_if_needed,
+    publish_preflight_failure_if_needed,
+)
 from .turn_tool_dispatcher_protocol import (
     collect_protocol_preflight_violations,
     load_or_execute_tool,
+    persist_protocol_operation,
 )
 from .turn_tool_dispatcher_support import (
     as_positive_float,
@@ -36,11 +40,16 @@ from .turn_tool_dispatcher_support import (
     permission_values,
     resolve_skill_tool_binding,
     runtime_limit_violations,
+    tool_policy_violation,
 )
 
 
 class ToolDispatcher:
     """Execute tool calls with governance checks and replay/idempotency caching."""
+
+    resolve_skill_tool_binding = staticmethod(resolve_skill_tool_binding)
+    missing_required_permissions = staticmethod(missing_required_permissions); permission_values = staticmethod(permission_values)
+    runtime_limit_violations = staticmethod(runtime_limit_violations); as_positive_float = staticmethod(as_positive_float)
 
     def __init__(
         self,
@@ -56,6 +65,7 @@ class ToolDispatcher:
         persist_operation_result: Callable[..., None],
         append_protocol_receipt: Callable[..., dict[str, Any]],
         tool_validation_error_factory: Callable[[list[str]], Exception],
+        control_plane_service: TurnToolControlPlaneService | None = None,
     ) -> None:
         self.tool_gate = tool_gate
         self.middleware = middleware
@@ -68,6 +78,7 @@ class ToolDispatcher:
         self.persist_operation_result = persist_operation_result
         self.append_protocol_receipt = append_protocol_receipt
         self.tool_validation_error_factory = tool_validation_error_factory
+        self.control_plane_service = control_plane_service
 
     async def execute_tools(
         self,
@@ -108,20 +119,40 @@ class ToolDispatcher:
         )
         protocol_enabled = bool(context.get("protocol_governed_enabled", False))
         protocol_replay_mode = bool(context.get("protocol_replay_mode"))
+        control_plane_enabled = not protocol_replay_mode and self.control_plane_service is not None
         execution_capsule = build_execution_capsule(context)
         approval_required_tools = {
             str(tool).strip() for tool in (context.get("approval_required_tools") or []) if str(tool).strip()
         }
         request_writer = context.get("create_pending_gate_request")
+        control_plane_run_id: str | None = None
+        control_plane_attempt_id: str | None = None
+        executed_step_count = 0
+        last_result_ref: str | None = None
 
         if protocol_enabled:
-            preflight_violations = self.collect_protocol_preflight_violations(
+            preflight_violations = collect_protocol_preflight_violations(
                 turn=turn,
                 context=context,
                 roles=roles,
                 approval_required_tools=approval_required_tools,
+                tool_gate=self.tool_gate,
+                workspace=self.workspace,
+                resolve_skill_tool_binding=resolve_skill_tool_binding,
+                missing_required_permissions=missing_required_permissions,
+                runtime_limit_violations=runtime_limit_violations,
             )
             if preflight_violations:
+                await publish_preflight_failure_if_needed(
+                    control_plane_enabled=control_plane_enabled,
+                    control_plane_service=self.control_plane_service,
+                    session_id=session_id,
+                    issue_id=turn.issue_id,
+                    role_name=turn.role,
+                    turn_index=turn_index,
+                    proposal_hash=proposal_hash,
+                    preflight_violations=preflight_violations,
+                )
                 if not protocol_replay_mode:
                     first_tool_name = ""
                     if turn.tool_calls:
@@ -139,6 +170,17 @@ class ToolDispatcher:
                         self.workspace,
                     )
                 raise self.tool_validation_error_factory(preflight_violations)
+        control_plane_run_id, control_plane_attempt_id = await begin_control_plane_execution_if_needed(
+            control_plane_enabled=control_plane_enabled,
+            control_plane_service=self.control_plane_service,
+            has_tool_calls=bool(turn.tool_calls),
+            session_id=session_id,
+            issue_id=turn.issue_id,
+            role_name=turn.role,
+            turn_index=turn_index,
+            proposal_hash=proposal_hash,
+            resume_mode=bool(context.get("resume_mode")),
+        )
 
         for index, tool_call in enumerate(turn.tool_calls):
             operation_id = derive_operation_id(
@@ -148,7 +190,7 @@ class ToolDispatcher:
             )
             receipt_seq = index + 1
             tool_name = str(tool_call.tool or "")
-            binding = self.resolve_skill_tool_binding(context, tool_name)
+            binding = resolve_skill_tool_binding(context, tool_name)
             try:
                 middleware_outcome = self.middleware.apply_before_tool(
                     tool_name,
@@ -192,6 +234,29 @@ class ToolDispatcher:
                     context=context,
                     roles=roles,
                 )
+                policy_violation = tool_policy_violation(
+                    tool_name=tool_name,
+                    binding=binding,
+                    context=context,
+                    issue_id=turn.issue_id,
+                )
+                if policy_violation:
+                    if not protocol_replay_mode:
+                        log_event(
+                            "tool_call_blocked",
+                            {
+                                "issue_id": turn.issue_id,
+                                "role": turn.role,
+                                "session_id": session_id,
+                                "turn_index": turn_index,
+                                "tool": tool_name,
+                                "args": tool_call.args,
+                                "reason": policy_violation,
+                            },
+                            self.workspace,
+                        )
+                    violations.append(policy_violation)
+                    continue
                 if gate_violation:
                     if not protocol_replay_mode:
                         log_event(
@@ -214,14 +279,14 @@ class ToolDispatcher:
                     if binding is None:
                         violations.append(f"Skill contract violation: undeclared entrypoint/tool '{tool_name}'.")
                         continue
-                    missing_permissions = self.missing_required_permissions(binding, context)
+                    missing_permissions = missing_required_permissions(binding, context)
                     if missing_permissions:
                         violations.append(
                             "Skill contract violation: missing required permissions for "
                             f"'{tool_name}' ({', '.join(missing_permissions)})."
                         )
                         continue
-                    limit_violations = self.runtime_limit_violations(binding, context)
+                    limit_violations = runtime_limit_violations(binding, context)
                     if limit_violations:
                         violations.append(
                             "Skill contract violation: runtime limits exceeded for "
@@ -386,78 +451,59 @@ class ToolDispatcher:
                         ],
                     )
 
+                result_ref: str | None = None
                 if protocol_enabled:
                     if not protocol_replay_mode:
-                        invocation_manifest = build_tool_invocation_manifest(
-                            run_id=session_id,
-                            tool_name=tool_name,
-                            ring=str((binding or {}).get("ring") or "core"),
-                            schema_version=str((binding or {}).get("schema_version") or "1.0.0"),
-                            determinism_class=str((binding or {}).get("determinism_class") or "workspace"),
-                            capability_profile=str((binding or {}).get("capability_profile") or "workspace"),
-                            tool_contract_version=str((binding or {}).get("tool_contract_version") or "1.0.0"),
-                        )
-                        tool_call_hash = compute_tool_call_hash(
-                            tool_name=tool_name,
-                            tool_args=dict(tool_call.args or {}),
-                            tool_contract_version=str(invocation_manifest.get("tool_contract_version") or ""),
-                            capability_profile=str(invocation_manifest.get("capability_profile") or ""),
-                        )
-                        await asyncio.to_thread(
-                            self.persist_operation_result,
+                        result_ref = await persist_protocol_operation(
                             session_id=session_id,
                             issue_id=turn.issue_id,
                             role_name=turn.role,
                             turn_index=turn_index,
-                            operation_id=operation_id,
+                            index=index,
+                            step_id=step_id,
+                            receipt_seq=receipt_seq,
+                            proposal_hash=proposal_hash,
+                            validator_version=validator_version,
+                            protocol_hash=protocol_hash,
+                            tool_schema_hash=tool_schema_hash,
+                            execution_capsule=execution_capsule,
+                            context=context,
                             tool_name=tool_name,
                             tool_args=dict(tool_call.args or {}),
                             result=result,
-                        )
-                        await asyncio.to_thread(
-                            self.append_protocol_receipt,
-                            session_id=session_id,
-                            issue_id=turn.issue_id,
-                            role_name=turn.role,
-                            turn_index=turn_index,
-                            receipt={
-                                "run_id": session_id,
-                                "step_id": step_id,
-                                "receipt_seq": receipt_seq,
-                                "operation_id": operation_id,
-                                "proposal_hash": proposal_hash,
-                                "validator_version": validator_version,
-                                "protocol_hash": protocol_hash,
-                                "tool_schema_hash": tool_schema_hash,
-                                "tool_index": index,
-                                "tool": tool_name,
-                                "tool_args": dict(tool_call.args or {}),
-                                "execution_result": result,
-                                "tool_invocation_manifest": invocation_manifest,
-                                "tool_call_hash": tool_call_hash,
-                                "artifact_digests": [],
-                                "retry_count": int(context.get("retry_count") or 0),
-                                "validator_duration_ms": int(context.get("validator_duration_ms") or 0),
-                                "execution_capsule": execution_capsule,
-                                "replayed": bool(replayed),
-                                **(
-                                    {"compat_translation": dict(result.get("compat_translation") or {})}
-                                    if isinstance(result, dict) and isinstance(result.get("compat_translation"), dict)
-                                    else {}
-                                ),
-                            },
+                            binding=binding,
+                            operation_id=operation_id,
+                            replayed=bool(replayed),
+                            persist_operation_result=self.persist_operation_result,
+                            append_protocol_receipt=self.append_protocol_receipt,
+                            control_plane_enabled=control_plane_enabled,
+                            control_plane_service=self.control_plane_service,
+                            control_plane_run_id=control_plane_run_id,
+                            control_plane_attempt_id=control_plane_attempt_id,
+                            retry_count=int(context.get("retry_count", 0) or 0),
+                            validator_duration_ms=int(context.get("validator_duration_ms", 0) or 0),
                         )
                 elif not protocol_replay_mode:
-                    await asyncio.to_thread(
-                        self.persist_tool_result,
+                    result_ref = await persist_non_protocol_tool_result_if_needed(
+                        persist_tool_result=self.persist_tool_result, persist_operation_result=self.persist_operation_result,
                         session_id=session_id,
                         issue_id=turn.issue_id,
                         role_name=turn.role,
                         turn_index=turn_index,
                         tool_name=tool_name,
-                        tool_args=tool_call.args,
+                        tool_args=dict(tool_call.args or {}),
                         result=result,
+                        control_plane_enabled=control_plane_enabled,
+                        control_plane_service=self.control_plane_service,
+                        control_plane_run_id=control_plane_run_id,
+                        control_plane_attempt_id=control_plane_attempt_id,
+                        binding=binding,
+                        operation_id=operation_id,
+                        replayed=bool(replayed),
                     )
+                if result_ref is not None:
+                    executed_step_count += 1
+                    last_result_ref = result_ref
 
                 if not protocol_replay_mode:
                     log_event(
@@ -496,42 +542,22 @@ class ToolDispatcher:
                 violations.append(f"Tool {tool_name} error: {exc}")
 
         if violations:
+            await finalize_execution_if_needed(
+                control_plane_enabled=control_plane_enabled,
+                control_plane_service=self.control_plane_service,
+                control_plane_run_id=control_plane_run_id,
+                control_plane_attempt_id=control_plane_attempt_id,
+                authoritative_result_ref=last_result_ref or f"turn-tool-violations:{control_plane_run_id}",
+                violation_reasons=violations,
+                executed_step_count=executed_step_count,
+            )
             raise self.tool_validation_error_factory(violations)
-
-    def collect_protocol_preflight_violations(
-        self,
-        *,
-        turn: ExecutionTurn,
-        context: dict[str, Any],
-        roles: list[str],
-        approval_required_tools: set[str],
-    ) -> list[str]:
-        return collect_protocol_preflight_violations(
-            turn=turn,
-            context=context,
-            roles=roles,
-            approval_required_tools=approval_required_tools,
-            tool_gate=self.tool_gate,
-            workspace=self.workspace,
-            resolve_skill_tool_binding=self.resolve_skill_tool_binding,
-            missing_required_permissions=self.missing_required_permissions,
-            runtime_limit_violations=self.runtime_limit_violations,
+        await finalize_execution_if_needed(
+            control_plane_enabled=control_plane_enabled,
+            control_plane_service=self.control_plane_service,
+            control_plane_run_id=control_plane_run_id,
+            control_plane_attempt_id=control_plane_attempt_id,
+            authoritative_result_ref=last_result_ref or f"turn-tool-complete:{control_plane_run_id}",
+            violation_reasons=[],
+            executed_step_count=executed_step_count,
         )
-
-    @staticmethod
-    def resolve_skill_tool_binding(context: dict[str, Any], tool_name: str) -> dict[str, Any] | None:
-        return resolve_skill_tool_binding(context, tool_name)
-
-    def missing_required_permissions(self, binding: dict[str, Any], context: dict[str, Any]) -> list[str]:
-        return missing_required_permissions(binding, context)
-
-    @staticmethod
-    def permission_values(values: Any) -> set[str]:
-        return permission_values(values)
-
-    def runtime_limit_violations(self, binding: dict[str, Any], context: dict[str, Any]) -> list[str]:
-        return runtime_limit_violations(binding, context)
-
-    @staticmethod
-    def as_positive_float(value: Any) -> float | None:
-        return as_positive_float(value)

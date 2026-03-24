@@ -945,7 +945,14 @@ async def execute_epic(
     prompt_strategy_node = self.decision_nodes.resolve_prompt_strategy(model_selector, self.org)
 
     tool_gate = ToolGate(organization=self.org, workspace_root=self.workspace)
-    executor = TurnExecutor(StateMachine(), tool_gate, self.workspace)
+    from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
+
+    executor = TurnExecutor(
+        StateMachine(),
+        tool_gate,
+        self.workspace,
+        control_plane_service=build_turn_tool_control_plane_service(),
+    )
 
     from orket.policy import create_session_policy
 
@@ -1801,15 +1808,29 @@ async def _create_pending_gate_request(
         except TypeError:
             gate_mode = str(gate_mode_fn(seat_name))
 
-    return await self.pending_gates.create_request(
+    request_created_at = datetime.now(UTC).isoformat()
+    request_id = await self.pending_gates.create_request(
         session_id=run_id,
         issue_id=issue_id,
         seat_name=seat_name,
         gate_mode=gate_mode,
         request_type="guard_rejection_payload",
         reason=reason,
+        created_at=request_created_at,
         payload=payload,
     )
+    publisher = getattr(self, "tool_approval_control_plane_reservation", None)
+    if publisher is not None:
+        await publisher.publish_pending_guard_review_hold(
+            request_id=request_id,
+            session_id=run_id,
+            issue_id=issue_id,
+            seat_name=seat_name,
+            reason=reason,
+            gate_mode=gate_mode,
+            created_at=request_created_at,
+        )
+    return request_id
 
 
 async def _create_pending_tool_approval_request(
@@ -1819,22 +1840,49 @@ async def _create_pending_tool_approval_request(
     issue: IssueConfig,
     seat_name: str,
     gate_mode: str,
+    turn_index: int,
     tool_name: str,
     tool_args: Dict[str, Any],
 ) -> str:
-    return await self.pending_gates.create_request(
+    from orket.application.services.turn_tool_control_plane_support import run_id_for as turn_tool_run_id_for
+
+    request_created_at = datetime.now(UTC).isoformat()
+    control_plane_target_ref = turn_tool_run_id_for(
+        session_id=run_id,
+        issue_id=issue.id,
+        role_name=seat_name,
+        turn_index=int(turn_index),
+    )
+    request_id = await self.pending_gates.create_request(
         session_id=run_id,
         issue_id=issue.id,
         seat_name=seat_name,
         gate_mode=gate_mode,
         request_type="tool_approval",
         reason=f"approval_required_tool:{tool_name}",
+        created_at=request_created_at,
         payload={
             "tool": tool_name,
             "args": tool_args,
+            "role": seat_name,
+            "turn_index": int(turn_index),
+            "control_plane_target_ref": control_plane_target_ref,
             "issue_status": str(issue.status.value if hasattr(issue.status, "value") else issue.status),
         },
     )
+    publisher = getattr(self, "tool_approval_control_plane_reservation", None)
+    if publisher is not None:
+        await publisher.publish_pending_tool_approval_hold(
+            approval_id=request_id,
+            session_id=run_id,
+            issue_id=issue.id,
+            seat_name=seat_name,
+            tool_name=tool_name,
+            turn_index=int(turn_index),
+            created_at=request_created_at,
+            control_plane_target_ref=control_plane_target_ref,
+        )
+    return request_id
 
 
 def _build_turn_context(
@@ -1854,6 +1902,7 @@ def _build_turn_context(
     skill_tool_bindings: Optional[Dict[str, Dict[str, Any]]] = None,
     cards_runtime: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    turn_index = len(self.transcript) + 1
     cards_runtime = dict(cards_runtime or resolve_cards_runtime(issue=issue))
     required_action_tools = []
     required_tools_fn = getattr(self.loop_policy_node, "required_action_tools_for_seat", None)
@@ -1953,6 +2002,7 @@ def _build_turn_context(
             issue=issue,
             seat_name=seat_name,
             gate_mode=gate_mode,
+            turn_index=turn_index,
             tool_name=tool_name,
             tool_args=tool_args,
         )
@@ -2000,6 +2050,7 @@ def _build_turn_context(
         ]
     if not allowed_capability_profiles:
         allowed_capability_profiles = ["workspace"]
+    run_namespace_scope = f"issue:{issue.id}"
 
     run_determinism_class = (
         str(
@@ -2084,7 +2135,7 @@ def _build_turn_context(
         "roles": roles_to_load,
         "current_status": turn_status.value,
         "selected_model": selected_model,
-        "turn_index": len(self.transcript) + 1,
+        "turn_index": turn_index,
         "dependency_context": dependency_context
         or {
             "depends_on": issue.depends_on,
@@ -2149,7 +2200,9 @@ def _build_turn_context(
         "tool_profile_version": tool_profile_version,
         "allowed_tool_rings": allowed_tool_rings,
         "allowed_capability_profiles": allowed_capability_profiles,
+        "allowed_namespace_scopes": [run_namespace_scope],
         "capabilities_allowed": allowed_capability_profiles,
+        "run_namespace_scope": run_namespace_scope,
         "run_determinism_class": run_determinism_class,
         "run_determinism_policy": run_determinism_class,
         "compatibility_mappings": compatibility_mappings,

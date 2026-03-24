@@ -1251,8 +1251,8 @@ def test_sandboxes_list_and_stop(monkeypatch):
     async def fake_get_sandboxes():
         return [{"id": "sb-1"}]
 
-    async def fake_stop_sandbox(sandbox_id):
-        captured["stopped"] = sandbox_id
+    async def fake_stop_sandbox(sandbox_id, *, operator_actor_ref=None):
+        captured["stopped"] = (sandbox_id, operator_actor_ref)
 
     monkeypatch.setattr(api_module.engine, "get_sandboxes", fake_get_sandboxes)
     monkeypatch.setattr(api_module.engine, "stop_sandbox", fake_stop_sandbox)
@@ -1264,7 +1264,10 @@ def test_sandboxes_list_and_stop(monkeypatch):
     assert list_response.json() == [{"id": "sb-1"}]
     assert stop_response.status_code == 200
     assert stop_response.json() == {"ok": True}
-    assert captured["stopped"] == "sb-1"
+    assert captured["stopped"] == (
+        "sb-1",
+        f"api_key_fingerprint:sha256:{hashlib.sha256(b'test-key').hexdigest()}",
+    )
 
 
 def test_sandboxes_endpoint_no_crash_real_path(monkeypatch):
@@ -1282,8 +1285,8 @@ def test_sandboxes_use_runtime_invocation_policies(monkeypatch):
         captured["list_called"] = True
         return [{"id": "sb-2"}]
 
-    async def fake_stop_sandbox(sandbox_id):
-        captured["stop_called"] = sandbox_id
+    async def fake_stop_sandbox(sandbox_id, *, operator_actor_ref=None):
+        captured["stop_called"] = (sandbox_id, operator_actor_ref)
 
     monkeypatch.setattr(api_module.engine, "get_sandboxes", fake_get_sandboxes)
     monkeypatch.setattr(api_module.engine, "stop_sandbox", fake_stop_sandbox)
@@ -1305,7 +1308,10 @@ def test_sandboxes_use_runtime_invocation_policies(monkeypatch):
     assert list_response.json() == [{"id": "sb-2"}]
     assert stop_response.status_code == 200
     assert captured["list_called"] is True
-    assert captured["stop_called"] == "sb-2"
+    assert captured["stop_called"] == (
+        "sb-2",
+        f"api_key_fingerprint:sha256:{hashlib.sha256(b'test-key').hexdigest()}",
+    )
 
 
 def test_sandboxes_reject_unsupported_runtime_methods(monkeypatch):
@@ -2292,3 +2298,4 @@ def test_cards_archive_uses_runtime_response_normalization(monkeypatch):
         "missing_ids": ["Z"],
         "policy": "custom",
     }
+import hashlib

@@ -30,6 +30,35 @@ def test_tool_policy_violation_rejects_capability_profile_not_allowed() -> None:
 
 
 # Layer: unit
+def test_tool_policy_violation_rejects_namespace_scope_not_allowed() -> None:
+    violation = tool_policy_violation(
+        tool_name="write_file",
+        binding={
+            "ring": "core",
+            "capability_profile": "workspace",
+            "determinism_class": "workspace",
+            "namespace_scope_rule": "declared_scope_subset",
+            "declared_namespace_scopes": ["issue:OTHER-1"],
+        },
+        context={"allowed_namespace_scopes": ["issue:ISSUE-1"]},
+        issue_id="ISSUE-1",
+    )
+    assert violation is not None
+    assert "E_NAMESPACE_POLICY_VIOLATION" in violation
+
+
+# Layer: unit
+def test_tool_policy_violation_accepts_default_issue_namespace_scope() -> None:
+    violation = tool_policy_violation(
+        tool_name="write_file",
+        binding={"ring": "core", "capability_profile": "workspace", "determinism_class": "workspace"},
+        context={},
+        issue_id="ISSUE-1",
+    )
+    assert violation is None
+
+
+# Layer: unit
 def test_tool_policy_violation_rejects_determinism_class_more_nondeterministic_than_run() -> None:
     violation = tool_policy_violation(
         tool_name="write_file",

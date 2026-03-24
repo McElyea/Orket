@@ -39,6 +39,7 @@ def build_lease_record(
     resolved_history = list(history_refs)
     resolved_granted_timestamp = str(granted_timestamp or publication_timestamp).strip()
     resolved_publication_timestamp = str(publication_timestamp).strip()
+    resolved_source_reservation_id = None if source_reservation_id is None else str(source_reservation_id).strip()
 
     if previous_record is not None:
         if previous_record.lease_id != str(lease_id).strip():
@@ -66,6 +67,10 @@ def build_lease_record(
                     next_status=status,
                 )
             resolved_granted_timestamp = previous_record.granted_timestamp
+            if resolved_source_reservation_id is None:
+                resolved_source_reservation_id = previous_record.source_reservation_id
+            elif previous_record.source_reservation_id not in {None, resolved_source_reservation_id}:
+                raise ControlPlaneLeaseError("same-epoch lease publication must preserve source_reservation_id")
 
     return LeaseRecord(
         lease_id=str(lease_id).strip(),
@@ -79,7 +84,7 @@ def build_lease_record(
         last_confirmed_observation=(
             None if last_confirmed_observation is None else str(last_confirmed_observation).strip()
         ),
-        source_reservation_id=None if source_reservation_id is None else str(source_reservation_id).strip(),
+        source_reservation_id=resolved_source_reservation_id,
         cleanup_eligibility_rule=str(cleanup_eligibility_rule).strip(),
         history_refs=resolved_history,
     )

@@ -2,33 +2,27 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 import json
 
-from orket.adapters.storage.async_repositories import (
-    AsyncPendingGateRepository,
-    AsyncSessionRepository,
-    AsyncSnapshotRepository,
-    AsyncSuccessRepository,
-)
+from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
+from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.adapters.storage.async_repositories import AsyncPendingGateRepository, AsyncSessionRepository, AsyncSnapshotRepository, AsyncSuccessRepository
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.logging import log_event
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
+from orket.application.services.kernel_action_control_plane_operator_service import KernelActionControlPlaneOperatorService
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
+from orket.application.services.kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
+from orket.application.services.tool_approval_control_plane_operator_service import ToolApprovalControlPlaneOperatorService
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
-from orket.runtime_paths import resolve_runtime_db_path
+from orket.runtime_paths import resolve_control_plane_db_path, resolve_runtime_db_path
 from orket.orchestration.orchestration_config import OrchestrationConfig
-from orket.orchestration.engine_services import (
-    CardArchiver,
-    KernelGatewayFacade,
-    SandboxManager,
-    SessionController,
-)
+from orket.orchestration.engine_services import CardArchiver, KernelGatewayFacade, SandboxManager, SessionController
 from orket.orchestration import engine_approvals
 
 
 class OrchestrationEngine:
-    """
-    The Single Source of Truth for executing Orket Units.
-    Encapsulates all logic previously smeared across main.py and server.py.
-    """
+    """The Single Source of Truth for executing Orket Units."""
 
     def __init__(
         self,
@@ -52,12 +46,10 @@ class OrchestrationEngine:
         self.db_path = resolve_runtime_db_path(db_path)
         self.config_root = self.engine_runtime_node.resolve_config_root(config_root)
 
-        # Config & Assets
         from orket.orket import ConfigLoader
 
         self.loader = ConfigLoader(self.config_root, self.department)
 
-        # Load Organization (Global Policy)
         self.org = self.loader.load_organization()
         self.orchestration_config = OrchestrationConfig(self.org)
         self.state_backend_mode = self.orchestration_config.resolve_state_backend_mode()
@@ -68,7 +60,6 @@ class OrchestrationEngine:
             self.gitea_state_pilot_enabled,
         )
 
-        # Repositories (Accessors)
         self.cards = cards_repo or AsyncCardRepository(self.db_path)
         self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
         self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
@@ -84,9 +75,25 @@ class OrchestrationEngine:
                 primary_mode="sqlite",
             )
         self.pending_gates = AsyncPendingGateRepository(self.db_path)
+        self.control_plane_repository = AsyncControlPlaneRecordRepository(resolve_control_plane_db_path())
+        self.control_plane_execution_repository = AsyncControlPlaneExecutionRepository(resolve_control_plane_db_path())
+        self.control_plane_publication = ControlPlanePublicationService(repository=self.control_plane_repository)
+        self.tool_approval_control_plane_operator = ToolApprovalControlPlaneOperatorService(
+            publication=self.control_plane_publication
+        )
+        self.kernel_action_control_plane = KernelActionControlPlaneService(
+            execution_repository=self.control_plane_execution_repository,
+            publication=self.control_plane_publication,
+        )
+        self.kernel_action_control_plane_operator = KernelActionControlPlaneOperatorService(
+            publication=self.control_plane_publication
+        )
+        self.kernel_action_control_plane_view = KernelActionControlPlaneViewService(
+            record_repository=self.control_plane_repository,
+            execution_repository=self.control_plane_execution_repository,
+        )
         self.kernel_gateway = kernel_gateway or KernelV1Gateway()
 
-        # PERSISTENT PIEPELINE (Avoid rebuilds)
         from orket.orket import ExecutionPipeline
 
         self._pipeline = ExecutionPipeline(
@@ -193,9 +200,9 @@ class OrchestrationEngine:
         """Returns list of active sandboxes."""
         return await self.sandbox_manager.list_active()
 
-    async def stop_sandbox(self, sandbox_id: str):
+    async def stop_sandbox(self, sandbox_id: str, *, operator_actor_ref: str | None = None):
         """Stops and deletes a sandbox."""
-        await self.sandbox_manager.stop(sandbox_id)
+        await self.sandbox_manager.stop(sandbox_id, operator_actor_ref=operator_actor_ref)
 
     async def halt_session(self, session_id: str):
         """Halts an active session by signaling the runtime state."""
@@ -227,6 +234,7 @@ class OrchestrationEngine:
         decision: str,
         edited_proposal: Optional[Dict[str, Any]] = None,
         notes: Optional[str] = None,
+        operator_actor_ref: Optional[str] = None,
     ) -> Dict[str, Any]:
         return await engine_approvals.decide_approval(
             self,
@@ -234,6 +242,7 @@ class OrchestrationEngine:
             decision=decision,
             edited_proposal=edited_proposal,
             notes=notes,
+            operator_actor_ref=operator_actor_ref,
         )
 
     async def archive_card(self, card_id: str, archived_by: str = "system", reason: Optional[str] = None) -> bool:
@@ -332,11 +341,81 @@ class OrchestrationEngine:
     def kernel_admit_proposal(self, request: Dict[str, Any]) -> Dict[str, Any]:
         return self.kernel_gateway_facade.admit_proposal(request)
 
+    async def kernel_admit_proposal_async(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        response = self.kernel_gateway_facade.admit_proposal(request)
+        ledger = self.kernel_gateway_facade.list_ledger_events(
+            {
+                "contract_version": "kernel_api/v1",
+                "session_id": request.get("session_id"),
+                "trace_id": request.get("trace_id"),
+                "limit": 200,
+            }
+        )
+        await self.kernel_action_control_plane.record_admission(
+            request=request,
+            response=response,
+            ledger_items=list(ledger.get("items") or []),
+        )
+        return response
+
     def kernel_commit_proposal(self, request: Dict[str, Any]) -> Dict[str, Any]:
         return self.kernel_gateway_facade.commit_proposal(request)
 
+    async def kernel_commit_proposal_async(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        response = self.kernel_gateway_facade.commit_proposal(request)
+        ledger = self.kernel_gateway_facade.list_ledger_events(
+            {
+                "contract_version": "kernel_api/v1",
+                "session_id": request.get("session_id"),
+                "trace_id": request.get("trace_id"),
+                "limit": 400,
+            }
+        )
+        await self.kernel_action_control_plane.record_commit(
+            request=request,
+            response=response,
+            ledger_items=list(ledger.get("items") or []),
+        )
+        return response
+
     def kernel_end_session(self, request: Dict[str, Any]) -> Dict[str, Any]:
         return self.kernel_gateway_facade.end_session(request)
+
+    async def kernel_end_session_async(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        response = self.kernel_gateway_facade.end_session(request)
+        ledger = self.kernel_gateway_facade.list_ledger_events(
+            {
+                "contract_version": "kernel_api/v1",
+                "session_id": request.get("session_id"),
+                "trace_id": request.get("trace_id"),
+                "limit": 200,
+            }
+        )
+        closed = await self.kernel_action_control_plane.record_session_end(
+            request=request,
+            response=response,
+            ledger_items=list(ledger.get("items") or []),
+        )
+        operator_actor_ref = str(request.get("operator_actor_ref") or "").strip()
+        if closed is not None and operator_actor_ref:
+            run, _attempt, _final_truth = closed
+            session_end_timestamp = next(
+                (
+                    str(item.get("created_at") or "").strip()
+                    for item in reversed(list(ledger.get("items") or []))
+                    if str(item.get("event_type") or "") == "session.ended"
+                ),
+                "",
+            )
+            await self.kernel_action_control_plane_operator.publish_cancel_run_command(
+                actor_ref=operator_actor_ref,
+                session_id=str(request.get("session_id") or ""),
+                trace_id=str(request.get("trace_id") or ""),
+                timestamp=session_end_timestamp or str(run.creation_timestamp),
+                receipt_ref=f"kernel-ledger-event:{response.get('event_digest')}",
+                reason=str(request.get("reason") or "").strip() or None,
+            )
+        return response
 
     def kernel_list_ledger_events(self, request: Dict[str, Any]) -> Dict[str, Any]:
         return self.kernel_gateway_facade.list_ledger_events(request)

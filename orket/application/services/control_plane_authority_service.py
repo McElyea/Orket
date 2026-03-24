@@ -11,6 +11,7 @@ from orket.core.contracts import (
     OperatorActionRecord,
     ReconciliationRecord,
     RecoveryDecisionRecord,
+    ReservationRecord,
 )
 from orket.core.domain import (
     AuthoritySourceClass,
@@ -27,6 +28,7 @@ from orket.core.domain import (
     SideEffectBoundaryClass,
     build_lease_record,
     build_final_truth_record,
+    build_reservation_record,
     build_recovery_decision,
     create_effect_journal_entry,
     validate_checkpoint_acceptance,
@@ -77,6 +79,13 @@ class ControlPlaneAuthorityService:
         entries: Iterable[EffectJournalEntryRecord],
     ) -> tuple[EffectJournalEntryRecord, ...]:
         return validate_effect_journal_chain(entries)
+
+    def publish_checkpoint(
+        self,
+        *,
+        checkpoint: CheckpointRecord,
+    ) -> CheckpointRecord:
+        return checkpoint
 
     def accept_checkpoint(
         self,
@@ -210,6 +219,35 @@ class ControlPlaneAuthorityService:
             operator_requirement=operator_requirement,
         )
 
+    def publish_reservation(
+        self,
+        *,
+        reservation_id: str,
+        holder_ref: str,
+        reservation_kind,
+        target_scope_ref: str,
+        creation_timestamp: str,
+        expiry_or_invalidation_basis: str,
+        status,
+        supervisor_authority_ref: str,
+        promotion_rule: str | None = None,
+        promoted_lease_id: str | None = None,
+        previous_record: ReservationRecord | None = None,
+    ) -> ReservationRecord:
+        return build_reservation_record(
+            reservation_id=reservation_id,
+            holder_ref=holder_ref,
+            reservation_kind=reservation_kind,
+            target_scope_ref=target_scope_ref,
+            creation_timestamp=creation_timestamp,
+            expiry_or_invalidation_basis=expiry_or_invalidation_basis,
+            status=status,
+            supervisor_authority_ref=supervisor_authority_ref,
+            promotion_rule=promotion_rule,
+            promoted_lease_id=promoted_lease_id,
+            previous_record=previous_record,
+        )
+
     def publish_lease(
         self,
         *,
@@ -268,6 +306,41 @@ class ControlPlaneAuthorityService:
             authority_sources=authority_sources,
             authoritative_result_ref=authoritative_result_ref,
             operator_action=operator_action,
+        )
+
+    def publish_operator_action(
+        self,
+        *,
+        action_id: str,
+        actor_ref: str,
+        input_class,
+        target_ref: str,
+        timestamp: str,
+        precondition_basis_ref: str,
+        result: str,
+        command_class=None,
+        risk_acceptance_scope: str | None = None,
+        attestation_scope: str | None = None,
+        attestation_payload: dict[str, object] | None = None,
+        affected_transition_refs: list[str] | None = None,
+        affected_resource_refs: list[str] | None = None,
+        receipt_refs: list[str] | None = None,
+    ) -> OperatorActionRecord:
+        return OperatorActionRecord(
+            action_id=action_id,
+            actor_ref=actor_ref,
+            input_class=input_class,
+            target_ref=target_ref,
+            timestamp=timestamp,
+            precondition_basis_ref=precondition_basis_ref,
+            result=result,
+            command_class=command_class,
+            risk_acceptance_scope=risk_acceptance_scope,
+            attestation_scope=attestation_scope,
+            attestation_payload=dict(attestation_payload or {}),
+            affected_transition_refs=list(affected_transition_refs or ()),
+            affected_resource_refs=list(affected_resource_refs or ()),
+            receipt_refs=list(receipt_refs or ()),
         )
 
 
