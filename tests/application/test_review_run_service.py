@@ -104,6 +104,9 @@ def test_run_diff_defaults_to_code_only_scope(tmp_path: Path) -> None:
 
 def test_run_pr_fetches_snapshot_once_in_code_only_mode(monkeypatch, tmp_path: Path) -> None:
     """Layer: contract. Verifies code-only PR reviews filter the fetched snapshot locally instead of reloading it."""
+    repo = tmp_path / "repo"
+    _init_repo(repo)
+    _git(repo, "remote", "add", "origin", "https://example.test/org/repo.git")
     workspace = tmp_path / "workspace" / "default"
     service = ReviewRunService(workspace=workspace)
     calls: list[set[str] | None] = []
@@ -172,7 +175,7 @@ def test_run_pr_fetches_snapshot_once_in_code_only_mode(monkeypatch, tmp_path: P
         remote="https://example.test",
         repo="org/repo",
         pr=7,
-        repo_root=tmp_path,
+        repo_root=repo,
         bounds=SnapshotBounds(),
     )
 

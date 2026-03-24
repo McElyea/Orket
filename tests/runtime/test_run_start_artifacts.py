@@ -172,7 +172,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert "explorer_path_traversal_blocked" in ui_boundary_check_ids
     assert payload["degradation_first_ui_standard"]["schema_version"] == "1.0"
     degradation_check_ids = [row["check_id"] for row in payload["degradation_first_ui_standard"]["checks"]]
-    assert "companion_models_fallback_marks_degraded_true" in degradation_check_ids
+    assert "companion_models_unavailable_returns_truthful_degraded_failure" in degradation_check_ids
     assert payload["decision_record_operating_principles_contract"]["schema_version"] == "1.0"
     decision_check_ids = [
         row["check_id"] for row in payload["decision_record_operating_principles_contract"]["checks"]

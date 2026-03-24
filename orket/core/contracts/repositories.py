@@ -3,6 +3,11 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 
+from orket.core.contracts.control_plane_effect_journal_models import (
+    CheckpointAcceptanceRecord,
+    EffectJournalEntryRecord,
+)
+from orket.core.contracts.control_plane_models import FinalTruthRecord, RecoveryDecisionRecord
 from orket.schema import CardStatus
 
 
@@ -43,3 +48,48 @@ class SnapshotRepository(ABC):
 
     @abstractmethod
     async def get(self, session_id: str) -> Optional[Dict]: ...
+
+
+class ControlPlaneRecordRepository(ABC):
+    """Port for durable ControlPlane record publication and lookup."""
+
+    @abstractmethod
+    async def append_effect_journal_entry(
+        self,
+        *,
+        run_id: str,
+        entry: EffectJournalEntryRecord,
+    ) -> EffectJournalEntryRecord: ...
+
+    @abstractmethod
+    async def list_effect_journal_entries(self, *, run_id: str) -> list[EffectJournalEntryRecord]: ...
+
+    @abstractmethod
+    async def save_checkpoint_acceptance(
+        self,
+        *,
+        acceptance: CheckpointAcceptanceRecord,
+    ) -> CheckpointAcceptanceRecord: ...
+
+    @abstractmethod
+    async def get_checkpoint_acceptance(
+        self,
+        *,
+        checkpoint_id: str,
+    ) -> CheckpointAcceptanceRecord | None: ...
+
+    @abstractmethod
+    async def save_recovery_decision(
+        self,
+        *,
+        decision: RecoveryDecisionRecord,
+    ) -> RecoveryDecisionRecord: ...
+
+    @abstractmethod
+    async def get_recovery_decision(self, *, decision_id: str) -> RecoveryDecisionRecord | None: ...
+
+    @abstractmethod
+    async def save_final_truth(self, *, record: FinalTruthRecord) -> FinalTruthRecord: ...
+
+    @abstractmethod
+    async def get_final_truth(self, *, run_id: str) -> FinalTruthRecord | None: ...

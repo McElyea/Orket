@@ -54,7 +54,11 @@ class SandboxRuntimeCleanupService:
             updates={"cleanup_attempts": record.cleanup_attempts + 1},
             expected_cleanup_state=CleanupState.IN_PROGRESS,
         )
-        observed_before = await self.lifecycle_service._observe_project_resources(current.compose_project)
+        try:
+            observed_before = await self.lifecycle_service._observe_project_resources(current.compose_project)
+        except RuntimeError as exc:
+            await self.lifecycle_service._mark_cleanup_failed(current, str(exc))
+            raise RuntimeError(f"Failed to observe sandbox resources before cleanup: {exc}") from exc
         if not current.managed_resource_inventory.containers and observed_before:
             current = await self.lifecycle_service._apply_record_copy(
                 record=current,
@@ -96,17 +100,33 @@ class SandboxRuntimeCleanupService:
                 error="cleanup authority blocked",
             )
             raise RuntimeError(f"Cleanup authority blocked for sandbox {current.sandbox_id}")
-        observed_after = await self.lifecycle_service._observe_project_resources(current.compose_project)
+        try:
+            observed_after = await self.lifecycle_service._observe_project_resources(current.compose_project)
+        except RuntimeError as exc:
+            error = f"cleanup observation unavailable: {exc}"
+            await self.lifecycle_service._mark_cleanup_failed(current, error)
+            await self.decision_service.emit_execution_result(
+                decision=decision,
+                observed_at=self.lifecycle_service._now(),
+                cleanup_result="failed",
+                error=error,
+            )
+            raise RuntimeError(f"Failed to observe sandbox cleanup state: {exc}") from exc
         verification = self.lifecycle_service.cleanup_verifier.verify_absence(
             record=current,
             observed_resources=observed_after,
         )
-        if observed_after or not verification.success:
+        if not verification.observation_complete or observed_after or not verification.success:
             error = (
                 "; ".join(
                     token
                     for token in [
                         ", ".join(errors) if errors else "",
+                        (
+                            f"observation_incomplete:{','.join(verification.unverified_expected)}"
+                            if not verification.observation_complete
+                            else ""
+                        ),
                         ",".join(verification.remaining_expected),
                         ",".join(verification.unexpected_managed_present),
                         ",".join(sorted(resource.name for resource in observed_after)),

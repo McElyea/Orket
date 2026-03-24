@@ -116,10 +116,10 @@ def test_kernel_operator_surfaces_cover_one_action_lifecycle(monkeypatch) -> Non
         "admission.decided",
         "approval.requested",
         "approval.decided",
-        "action.executed",
-        "action.result_validated",
         "commit.recorded",
     }.issubset(event_types)
+    assert "action.executed" not in event_types
+    assert "action.result_validated" not in event_types
 
     assert rebuild.json()["count"] == 0
 
@@ -127,6 +127,10 @@ def test_kernel_operator_surfaces_cover_one_action_lifecycle(monkeypatch) -> Non
     assert replay_payload["decision_summary"]["admission_decision"] == "NEEDS_APPROVAL"
     assert replay_payload["decision_summary"]["approval_status"] == "APPROVED"
     assert replay_payload["decision_summary"]["commit_status"] == "COMMITTED"
+    assert replay_payload["execution_summary"]["execution_claimed"] is True
+    assert replay_payload["execution_summary"]["executed"] is False
+    assert replay_payload["execution_summary"]["validated"] is False
+    assert replay_payload["execution_summary"]["evidence_status"] == "claimed_only"
 
     audit_payload = audit.json()
     checks = {str(row.get("check") or ""): bool(row.get("ok")) for row in list(audit_payload.get("checks") or [])}

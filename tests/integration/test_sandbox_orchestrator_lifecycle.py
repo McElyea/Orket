@@ -23,12 +23,14 @@ class FakeLifecycleRunner:
         run_id: str,
         down_returncode: int = 0,
         container_state: str = "running",
+        list_returncode: int = 0,
     ):
         self.compose_project = compose_project
         self.sandbox_id = sandbox_id
         self.run_id = run_id
         self.down_returncode = down_returncode
         self.container_state = container_state
+        self.list_returncode = list_returncode
         self.resources_present = True
         self.async_calls: list[tuple[str, ...]] = []
 
@@ -50,11 +52,23 @@ class FakeLifecycleRunner:
         if cmd[:2] == ("docker", "inspect"):
             return CommandResult(returncode=0, stdout=self._inspect_payload(), stderr="")
         if cmd[:3] == ("docker", "ps", "-a"):
-            return CommandResult(returncode=0, stdout=self._container_rows(), stderr="")
+            return CommandResult(
+                returncode=self.list_returncode,
+                stdout=self._container_rows() if self.list_returncode == 0 else "",
+                stderr="" if self.list_returncode == 0 else "docker ps unavailable",
+            )
         if cmd[:3] == ("docker", "network", "ls"):
-            return CommandResult(returncode=0, stdout=self._network_rows(), stderr="")
+            return CommandResult(
+                returncode=self.list_returncode,
+                stdout=self._network_rows() if self.list_returncode == 0 else "",
+                stderr="" if self.list_returncode == 0 else "docker network ls unavailable",
+            )
         if cmd[:3] == ("docker", "volume", "ls"):
-            return CommandResult(returncode=0, stdout=self._volume_rows(), stderr="")
+            return CommandResult(
+                returncode=self.list_returncode,
+                stdout=self._volume_rows() if self.list_returncode == 0 else "",
+                stderr="" if self.list_returncode == 0 else "docker volume ls unavailable",
+            )
         raise AssertionError(f"Unexpected command: {cmd}")
 
     def run_sync(self, *cmd: str, timeout=None) -> CommandResult:
@@ -211,6 +225,36 @@ async def test_delete_sandbox_retries_terminal_records_after_a_failed_cleanup_at
     assert stored is not None
     assert stored.state.value == "cleaned"
     assert stored.cleanup_state.value == "completed"
+
+
+@pytest.mark.asyncio
+async def test_delete_sandbox_fails_closed_when_cleanup_observation_is_unavailable(tmp_path) -> None:
+    sandbox_id = "sandbox-rock-2c"
+    compose_project = "orket-sandbox-rock-2c"
+    runner = FakeLifecycleRunner(
+        compose_project=compose_project,
+        sandbox_id=sandbox_id,
+        run_id="rock-2c",
+    )
+    orchestrator = _orchestrator(tmp_path, runner)
+
+    await orchestrator.create_sandbox(
+        rock_id="rock-2c",
+        project_name="Cleanup Observation Failure Sandbox",
+        tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+        workspace_path=str(tmp_path),
+    )
+    runner.list_returncode = 1
+
+    with pytest.raises(RuntimeError, match="Failed to observe sandbox resources before cleanup"):
+        await orchestrator.delete_sandbox(sandbox_id)
+
+    record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+
+    assert record is not None
+    assert record.state.value == "terminal"
+    assert record.cleanup_state.value == "failed"
+    assert "Failed to observe container resources" in str(record.cleanup_last_error or "")
 
 
 @pytest.mark.asyncio

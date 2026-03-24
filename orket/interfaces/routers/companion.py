@@ -100,17 +100,16 @@ def build_companion_router(*, service_getter: Callable[[], Any]) -> APIRouter:
                 "companion_model_catalog_unavailable",
                 {"provider": requested, "error": str(exc)},
             )
-            default_model = "Command-R:35B" if requested == "ollama" else ""
-            fallback_models = [default_model] if default_model else []
-            return {
-                "ok": True,
-                "requested_provider": requested,
-                "canonical_provider": "openai_compat" if requested in {"lmstudio", "openai_compat"} else "ollama",
-                "base_url": "",
-                "models": fallback_models,
-                "default_model": default_model,
-                "degraded": True,
-            }
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "ok": False,
+                    "code": "E_COMPANION_MODEL_CATALOG_UNAVAILABLE",
+                    "message": f"Companion model catalog unavailable for provider '{requested}'.",
+                    "requested_provider": requested,
+                    "degraded": True,
+                },
+            ) from exc
 
     @router.post("/companion/chat")
     async def companion_chat(req: CompanionChatRequest):

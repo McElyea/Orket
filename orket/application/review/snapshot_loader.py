@@ -245,11 +245,14 @@ def load_from_files(
         path = raw_path.strip().replace("\\", "/")
         if not path:
             continue
-        changed_files.append(ChangedFile(path=path, status="selected", additions=0, deletions=0))
         try:
             content = _run_git(repo_root, ["show", f"{ref}:{path}"])
-        except subprocess.CalledProcessError:
-            content = ""
+        except subprocess.CalledProcessError as exc:
+            detail = exc.stderr.decode("utf-8", errors="replace").strip() if exc.stderr else ""
+            raise FileNotFoundError(
+                f"Requested review file '{path}' could not be loaded from ref '{ref}': {detail or 'git show failed'}"
+            ) from exc
+        changed_files.append(ChangedFile(path=path, status="selected", additions=0, deletions=0))
         context_blobs.append(ContextBlob(path=path, content=content))
         diff_blocks.append(f"*** FILE {path} @ {ref}\n{content}")
 

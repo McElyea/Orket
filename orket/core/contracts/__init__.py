@@ -1,5 +1,25 @@
 """Core contracts/ports."""
 
+from .control_plane_models import (
+    CONTROL_PLANE_CONTRACT_VERSION_V1,
+    CONTROL_PLANE_SNAPSHOT_VERSION_V1,
+    AttemptRecord,
+    CheckpointRecord,
+    EffectRecord,
+    FinalTruthRecord,
+    LeaseRecord,
+    OperatorActionRecord,
+    ReconciliationRecord,
+    RecoveryDecisionRecord,
+    ReservationRecord,
+    ResolvedConfigurationSnapshot,
+    ResolvedPolicySnapshot,
+    ResourceRecord,
+    RunRecord,
+    StepRecord,
+    WorkloadRecord,
+)
+from .control_plane_effect_journal_models import CheckpointAcceptanceRecord, EffectJournalEntryRecord
 from .memory_models import DeterminismTraceContract, RetrievalTraceEventContract
 from .skills_models import SkillManifestContract
 from .state_backend import StateBackendContract
@@ -13,6 +33,25 @@ from .workload_contract import (
 
 __all__ = [
     "StateBackendContract",
+    "CONTROL_PLANE_CONTRACT_VERSION_V1",
+    "CONTROL_PLANE_SNAPSHOT_VERSION_V1",
+    "ResolvedPolicySnapshot",
+    "ResolvedConfigurationSnapshot",
+    "WorkloadRecord",
+    "RunRecord",
+    "AttemptRecord",
+    "StepRecord",
+    "EffectRecord",
+    "EffectJournalEntryRecord",
+    "ResourceRecord",
+    "ReservationRecord",
+    "LeaseRecord",
+    "CheckpointRecord",
+    "CheckpointAcceptanceRecord",
+    "RecoveryDecisionRecord",
+    "ReconciliationRecord",
+    "OperatorActionRecord",
+    "FinalTruthRecord",
     "DeterminismTraceContract",
     "RetrievalTraceEventContract",
     "SkillManifestContract",

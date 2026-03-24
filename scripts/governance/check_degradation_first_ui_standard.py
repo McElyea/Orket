@@ -86,7 +86,7 @@ def _structured_warning_policy_declares_runtime_degraded() -> dict[str, Any]:
     }
 
 
-def _companion_models_fallback_marks_degraded_true() -> dict[str, Any]:
+def _companion_models_unavailable_returns_truthful_degraded_failure() -> dict[str, Any]:
     class _Service:
         async def list_models(self, *, provider: str) -> dict[str, Any]:
             raise RuntimeError(f"simulated-failure:{provider}")
@@ -95,10 +95,15 @@ def _companion_models_fallback_marks_degraded_true() -> dict[str, Any]:
     app.include_router(build_companion_router(service_getter=lambda: _Service()))
     with TestClient(app) as client:
         response = client.get("/companion/models", params={"provider": "ollama"})
-    payload = response.json()
+    payload = response.json().get("detail", {})
     return {
-        "check": "companion_models_fallback_marks_degraded_true",
-        "ok": int(response.status_code) == 200 and bool(payload.get("degraded")) is True,
+        "check": "companion_models_unavailable_returns_truthful_degraded_failure",
+        "ok": (
+            int(response.status_code) == 503
+            and bool(payload.get("degraded")) is True
+            and bool(payload.get("ok")) is False
+            and str(payload.get("code") or "") == "E_COMPANION_MODEL_CATALOG_UNAVAILABLE"
+        ),
         "status_code": int(response.status_code),
     }
 
@@ -119,7 +124,7 @@ def evaluate_degradation_first_ui_standard() -> dict[str, Any]:
         "runtime_status_vocabulary_includes_degraded": _runtime_status_vocabulary_includes_degraded,
         "ui_state_registry_includes_degraded_state": _ui_state_registry_includes_degraded_state,
         "structured_warning_policy_declares_runtime_degraded": _structured_warning_policy_declares_runtime_degraded,
-        "companion_models_fallback_marks_degraded_true": _companion_models_fallback_marks_degraded_true,
+        "companion_models_unavailable_returns_truthful_degraded_failure": _companion_models_unavailable_returns_truthful_degraded_failure,
     }
     checks = [check_map[check_id]() for check_id in check_ids]
     return {

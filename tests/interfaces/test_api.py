@@ -383,7 +383,7 @@ def test_model_assignments_endpoint_returns_selector_decisions(monkeypatch):
     monkeypatch.setattr(api_module, "_discover_active_roles", lambda _root: ["coder", "reviewer"])
     monkeypatch.setattr(api_module, "load_user_preferences", lambda: {"models": {"coder": "qwen2.5-coder:14b"}})
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
-    monkeypatch.setattr(api_module.engine, "_engine", type("FakeEngine", (), {"org": object()})())
+    monkeypatch.setattr(api_module.engine, "org", object())
 
     class FakeSelector:
         def __init__(self, organization=None, preferences=None, user_settings=None):
@@ -432,7 +432,7 @@ def test_model_assignments_endpoint_respects_role_filter(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(api_module, "load_user_preferences", lambda: {})
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
-    monkeypatch.setattr(api_module.engine, "_engine", type("FakeEngine", (), {"org": object()})())
+    monkeypatch.setattr(api_module.engine, "org", object())
 
     class FakeSelector:
         def __init__(self, organization=None, preferences=None, user_settings=None):
@@ -488,17 +488,11 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {"architecture_mode": "force_monolith"})
     monkeypatch.setattr(
         api_module.engine,
-        "_engine",
+        "org",
         type(
-            "FakeEngine",
+            "Org",
             (),
-            {
-                "org": type(
-                    "Org",
-                    (),
-                    {"process_rules": {"architecture_mode": "force_monolith", "frontend_framework_mode": "force_vue"}},
-                )(),
-            },
+            {"process_rules": {"architecture_mode": "force_monolith", "frontend_framework_mode": "force_vue"}},
         )(),
     )
 

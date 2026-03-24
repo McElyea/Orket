@@ -5,6 +5,7 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
+from urllib import parse
 
 from orket.application.review.artifacts import write_review_run_bundle
 from orket.application.review.lanes.deterministic import run_deterministic_lane
@@ -93,6 +94,92 @@ def _resolve_token(cli_token: str) -> tuple[str, Literal["token_flag", "token_en
     return "", "none"
 
 
+def _normalize_repo_slug(repo: str) -> str:
+    return str(repo or "").strip().strip("/").removesuffix(".git")
+
+
+def _normalize_host_port(hostname: str | None, port: int | None) -> str:
+    host = str(hostname or "").strip().lower()
+    if not host:
+        return ""
+    return f"{host}:{int(port)}" if port else host
+
+
+def _parse_repo_remote_binding(raw_url: str, *, repo: str) -> tuple[str, str] | None:
+    token = str(raw_url or "").strip()
+    if not token:
+        return None
+
+    repo_slug = _normalize_repo_slug(repo)
+    host = ""
+    repo_path = ""
+
+    if "://" in token:
+        parsed = parse.urlparse(token)
+        host = _normalize_host_port(parsed.hostname, parsed.port)
+        repo_path = str(parsed.path or "").strip().strip("/")
+    elif "@" in token and ":" in token.split("@", 1)[-1]:
+        authority, _, repo_path = token.partition(":")
+        host = str(authority.split("@", 1)[-1] or "").strip().lower()
+        repo_path = str(repo_path or "").strip().strip("/")
+    else:
+        return None
+
+    normalized_repo_path = repo_path.removesuffix(".git").strip("/")
+    if not host or not normalized_repo_path:
+        return None
+    if normalized_repo_path == repo_slug:
+        return host, ""
+    suffix = f"/{repo_slug}"
+    if normalized_repo_path.endswith(suffix):
+        return host, normalized_repo_path[: -len(suffix)].strip("/")
+    return None
+
+
+def _configured_review_remote_bindings(repo_root: Path, *, repo: str) -> set[tuple[str, str]]:
+    proc = subprocess.run(
+        ["git", "config", "--get-regexp", r"^remote\..*\.url$"],
+        cwd=str(repo_root),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode not in {0, 1}:
+        detail = str(proc.stderr or "").strip() or "git remote lookup failed"
+        raise ValueError(f"Review PR mode requires a git repo with configured remotes: {detail}")
+
+    bindings: set[tuple[str, str]] = set()
+    for line in proc.stdout.splitlines():
+        _, _, raw_url = line.partition(" ")
+        binding = _parse_repo_remote_binding(raw_url.strip(), repo=repo)
+        if binding is not None:
+            bindings.add(binding)
+    return bindings
+
+
+def _resolve_bound_pr_remote(*, remote: str, repo_root: Path, repo: str) -> str:
+    parsed = parse.urlparse(str(remote or "").strip())
+    scheme = str(parsed.scheme or "").strip().lower()
+    if scheme not in {"http", "https"}:
+        raise ValueError("Review PR remote must be an http(s) base URL.")
+    host = _normalize_host_port(parsed.hostname, parsed.port)
+    if not host:
+        raise ValueError("Review PR remote must include a hostname.")
+    base_path = str(parsed.path or "").strip().strip("/")
+    normalized_remote = f"{scheme}://{host}"
+    if base_path:
+        normalized_remote = f"{normalized_remote}/{base_path}"
+
+    configured = _configured_review_remote_bindings(repo_root, repo=repo)
+    if not configured:
+        raise ValueError(f"Review PR remote is unbound: no configured git remote matches repo '{repo}'.")
+    if (host, base_path) not in configured:
+        raise ValueError(
+            f"Review PR remote '{normalized_remote}' is not bound to a configured git remote for repo '{repo}'."
+        )
+    return normalized_remote
+
+
 class ReviewRunService:
     def __init__(self, *, workspace: Path):
         self.workspace = workspace
@@ -119,9 +206,10 @@ class ReviewRunService:
         scope = dict(resolved_policy.payload.get("input_scope") or {})
         scope_mode = str(scope.get("mode") or "code_only").strip().lower()
         ext_set = _normalize_extensions(list(scope.get("code_extensions") or []))
+        bound_remote = _resolve_bound_pr_remote(remote=remote, repo_root=repo_root, repo=repo)
         resolved_token, auth_source = _resolve_token(token)
         snapshot = load_from_pr(
-            remote=remote,
+            remote=bound_remote,
             repo=repo,
             pr_number=pr,
             bounds=bounds,

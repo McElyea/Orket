@@ -151,3 +151,24 @@ def test_companion_router_models_catalog_endpoint(companion_client: TestClient) 
     assert payload["requested_provider"] in {"ollama", "openai_compat", "lmstudio"}
     assert "models" in payload
     assert "default_model" in payload
+
+
+def test_companion_router_models_catalog_failure_returns_truthful_degraded_error() -> None:
+    """Layer: contract. Verifies model-catalog failures stay degraded but do not fabricate success payloads."""
+
+    class _FailingService:
+        async def list_models(self, *, provider: str) -> dict[str, object]:
+            raise RuntimeError(f"catalog unavailable:{provider}")
+
+    app = FastAPI()
+    app.include_router(build_companion_router(service_getter=lambda: _FailingService()), prefix="/v1")
+    client = TestClient(app)
+
+    response = client.get("/v1/companion/models", params={"provider": "ollama"})
+
+    assert response.status_code == 503
+    detail = response.json()["detail"]
+    assert detail["ok"] is False
+    assert detail["degraded"] is True
+    assert detail["code"] == "E_COMPANION_MODEL_CATALOG_UNAVAILABLE"
+    assert detail["requested_provider"] == "ollama"

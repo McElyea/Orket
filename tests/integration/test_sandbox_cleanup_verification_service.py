@@ -61,10 +61,21 @@ def test_cleanup_verification_detects_partial_cleanup_and_unexpected_managed_res
     assert result.unexpected_managed_present == ["sb-1-extra"]
 
 
-def test_cleanup_verification_marks_success_when_inventory_is_absent() -> None:
+def test_cleanup_verification_marks_success_when_observation_is_complete_and_inventory_is_absent() -> None:
     service = SandboxCleanupVerificationService()
     result = service.verify_absence(record=_record(), observed_resources=[])
 
     assert result.success is True
     assert result.remaining_expected == []
     assert result.absent_expected == ["sb-1-api", "sb-1-db", "sb-1-frontend", "sb-1-net"]
+    assert result.observation_complete is True
+
+
+def test_cleanup_verification_blocks_success_when_observation_is_incomplete() -> None:
+    service = SandboxCleanupVerificationService()
+    result = service.verify_absence(record=_record(), observed_resources=[], observation_complete=False)
+
+    assert result.success is False
+    assert result.observation_complete is False
+    assert result.unverified_expected == ["sb-1-api", "sb-1-db", "sb-1-frontend", "sb-1-net"]
+    assert result.absent_expected == []

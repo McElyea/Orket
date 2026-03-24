@@ -9,7 +9,7 @@ _EXPECTED_CHECK_IDS = {
     "runtime_status_vocabulary_includes_degraded",
     "ui_state_registry_includes_degraded_state",
     "structured_warning_policy_declares_runtime_degraded",
-    "companion_models_fallback_marks_degraded_true",
+    "companion_models_unavailable_returns_truthful_degraded_failure",
 }
 
 
@@ -33,9 +33,9 @@ def degradation_first_ui_standard_snapshot() -> dict[str, Any]:
                 "expected_behavior": "warning policy includes W_RUNTIME_DEGRADED code",
             },
             {
-                "check_id": "companion_models_fallback_marks_degraded_true",
+                "check_id": "companion_models_unavailable_returns_truthful_degraded_failure",
                 "surface": "orket.interfaces.routers.companion.build_companion_router",
-                "expected_behavior": "companion models fallback payload includes degraded=true",
+                "expected_behavior": "companion models failures return ok=false, degraded=true, and an unavailable error",
             },
         ],
     }

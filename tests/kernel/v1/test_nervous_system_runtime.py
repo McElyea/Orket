@@ -9,6 +9,7 @@ from orket.kernel.v1.nervous_system_runtime import (
     end_session_v1,
     projection_pack_v1,
 )
+from orket.kernel.v1.nervous_system_runtime_extensions import get_session_ledger_events_v1
 
 
 def _base_request(*, session_id: str, trace_id: str) -> dict[str, str]:
@@ -173,6 +174,33 @@ def test_commit_is_idempotent_for_identical_tuple() -> None:
     second = commit_proposal_v1(payload)
     assert first["status"] == "COMMITTED"
     assert second == first
+
+
+def test_commit_with_digest_only_does_not_narrate_execution() -> None:
+    admitted = admit_proposal_v1(
+        {
+            **_base_request(session_id="sess-commit-digest-only", trace_id="trace-commit-digest-only"),
+            "proposal": {"proposal_type": "action.tool_call", "payload": {}},
+        }
+    )
+
+    response = commit_proposal_v1(
+        {
+            **_base_request(session_id="sess-commit-digest-only", trace_id="trace-commit-digest-only"),
+            "proposal_digest": admitted["proposal_digest"],
+            "admission_decision_digest": admitted["decision_digest"],
+            "execution_result_digest": "f" * 64,
+        }
+    )
+
+    assert response["status"] == "COMMITTED"
+    event_types = {
+        str(event.get("event_type") or "")
+        for event in get_session_ledger_events_v1("sess-commit-digest-only")
+    }
+    assert "commit.recorded" in event_types
+    assert "action.executed" not in event_types
+    assert "action.result_validated" not in event_types
 
 
 def test_end_session_emits_ended_status_and_event_digest() -> None:

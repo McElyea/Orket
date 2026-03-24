@@ -117,6 +117,13 @@ def replay_action_lifecycle_v1(*, session_id: str, trace_id: str) -> dict[str, A
     approval_decided_body = _event_body(approval_decided_event)
     commit_body = _event_body(commit_event)
     validation_body = _event_body(validation_event)
+    execution_result_digest = str(
+        _event_body(execution_event).get("execution_result_digest")
+        or validation_body.get("execution_result_digest")
+        or commit_body.get("execution_result_digest")
+        or ""
+    )
+    execution_claimed = bool(str(commit_body.get("execution_result_digest") or "").strip())
 
     return {
         "contract_version": "kernel_api/v1",
@@ -145,9 +152,15 @@ def replay_action_lifecycle_v1(*, session_id: str, trace_id: str) -> dict[str, A
             ),
         },
         "execution_summary": {
+            "execution_claimed": execution_claimed,
             "executed": execution_event is not None,
             "validated": validation_event is not None,
-            "execution_result_digest": str(_event_body(execution_event).get("execution_result_digest") or ""),
+            "evidence_status": _execution_evidence_status(
+                execution_claimed=execution_claimed,
+                executed=execution_event is not None,
+                validated=validation_event is not None,
+            ),
+            "execution_result_digest": execution_result_digest,
             "sanitization_digest": str(validation_body.get("sanitization_digest") or ""),
         },
         "events": [
@@ -322,9 +335,25 @@ def _approval_path_complete(*, admission_decision: str, event_digests_by_type: d
 def _execution_path_consistent(*, commit_status: str, event_digests_by_type: dict[str, list[str]]) -> bool:
     executed = bool(event_digests_by_type.get("action.executed"))
     validated = bool(event_digests_by_type.get("action.result_validated"))
-    if commit_status == "COMMITTED":
-        return executed and validated
-    return not executed and not validated
+    if commit_status != "COMMITTED" and (executed or validated):
+        return False
+    if executed and not validated:
+        return False
+    return True
+
+
+def _execution_evidence_status(*, execution_claimed: bool, executed: bool, validated: bool) -> str:
+    if executed and validated:
+        return "validated_execution"
+    if executed:
+        return "execution_observed_only"
+    if execution_claimed and validated:
+        return "claimed_result_validated_only"
+    if execution_claimed:
+        return "claimed_only"
+    if validated:
+        return "result_validated_without_execution_claim"
+    return "absent"
 
 
 def _approval_queue_rebuild_consistent(

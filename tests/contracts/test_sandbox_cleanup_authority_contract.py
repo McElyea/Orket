@@ -75,6 +75,20 @@ def test_fallback_cleanup_rejects_prefix_only_unlabeled_resources() -> None:
     assert "missing_positive_authority" in decision.reason_codes
 
 
+def test_compose_cleanup_is_blocked_when_observed_resources_lack_positive_authority() -> None:
+    service = SandboxCleanupAuthorityService()
+    decision = service.decide(
+        record=_record(),
+        observed_resources=[_resource("orket-sandbox-sb-1_api_1")],
+        compose_path_available=True,
+    )
+
+    assert decision.compose_cleanup_allowed is False
+    assert decision.blocked_resource_names == ["orket-sandbox-sb-1_api_1"]
+    assert "missing_positive_authority" in decision.reason_codes
+    assert "compose_cleanup_blocked" in decision.reason_codes
+
+
 def test_cleanup_is_blocked_on_cross_daemon_or_context_mismatch() -> None:
     service = SandboxCleanupAuthorityService()
     decision = service.decide(

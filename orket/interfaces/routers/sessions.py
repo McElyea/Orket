@@ -8,13 +8,7 @@ from typing import Any, Callable, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
-from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
-from orket.adapters.storage.protocol_append_only_ledger import LedgerFramingError
-from orket.runtime.protocol_determinism_campaign import compare_protocol_determinism_campaign
-from orket.runtime.protocol_ledger_parity_campaign import compare_protocol_ledger_parity_campaign
-from orket.runtime.protocol_replay import ProtocolReplayEngine
-from orket.runtime.run_ledger_parity import compare_run_ledger_rows
+from orket.application.services.protocol_replay_service import LedgerFramingError, ProtocolReplayService
 
 
 class InteractionSessionStartRequest(BaseModel):
@@ -46,6 +40,7 @@ def build_sessions_router(
     run_builtin_workload: Callable[..., Any],
     commit_intent_factory: Callable[[str], Any],
     workspace_root_getter: Callable[[], Path] = lambda: Path(".").resolve(),
+    protocol_replay_service_getter: Callable[[], Any] | None = None,
 ) -> APIRouter:
     router = APIRouter()
 
@@ -62,12 +57,10 @@ def build_sessions_router(
             raise HTTPException(status_code=400, detail=f"Invalid {field_name}: path escapes workspace root.")
         return resolved
 
-    def _resolve_protocol_run_root(run_id: str) -> Path:
-        base = (_workspace_root() / "runs").resolve()
-        candidate = (base / str(run_id).strip()).resolve()
-        if not candidate.is_relative_to(base):
-            raise HTTPException(status_code=400, detail="Invalid run_id")
-        return candidate
+    def _get_protocol_replay_service() -> Any:
+        if protocol_replay_service_getter is not None:
+            return protocol_replay_service_getter()
+        return ProtocolReplayService(workspace_root=_workspace_root())
 
     @router.post("/interactions/sessions")
     async def start_interaction_session(req: InteractionSessionStartRequest):
@@ -212,46 +205,26 @@ def build_sessions_router(
 
     @router.get("/protocol/runs/{run_id}/replay")
     async def replay_protocol_run(run_id: str):
-        run_root = _resolve_protocol_run_root(run_id)
-        events_path = run_root / "events.log"
-        if not events_path.exists():
-            raise HTTPException(status_code=404, detail=f"Protocol events log not found for run '{run_id}'.")
-        artifact_root = run_root / "artifacts"
-        engine = ProtocolReplayEngine()
         try:
-            replay = await asyncio.to_thread(
-                engine.replay_from_ledger,
-                events_log_path=events_path,
-                artifact_root=artifact_root if artifact_root.exists() else None,
-            )
+            replay = await _get_protocol_replay_service().replay_protocol_run(run_id=run_id)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
         except LedgerFramingError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
         return replay
 
     @router.get("/protocol/replay/compare")
     async def compare_protocol_replays(run_a: str, run_b: str):
-        run_a_root = _resolve_protocol_run_root(run_a)
-        run_b_root = _resolve_protocol_run_root(run_b)
-        run_a_events = run_a_root / "events.log"
-        run_b_events = run_b_root / "events.log"
-        if not run_a_events.exists():
-            raise HTTPException(status_code=404, detail=f"Protocol events log not found for run '{run_a}'.")
-        if not run_b_events.exists():
-            raise HTTPException(status_code=404, detail=f"Protocol events log not found for run '{run_b}'.")
-
-        run_a_artifacts = run_a_root / "artifacts"
-        run_b_artifacts = run_b_root / "artifacts"
-        engine = ProtocolReplayEngine()
         try:
-            comparison = await asyncio.to_thread(
-                engine.compare_replays,
-                run_a_events_path=run_a_events,
-                run_b_events_path=run_b_events,
-                run_a_artifact_root=run_a_artifacts if run_a_artifacts.exists() else None,
-                run_b_artifact_root=run_b_artifacts if run_b_artifacts.exists() else None,
-            )
+            comparison = await _get_protocol_replay_service().compare_protocol_replays(run_a=run_a, run_b=run_b)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
         except LedgerFramingError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
         return comparison
 
     @router.get("/protocol/replay/campaign")
@@ -260,44 +233,30 @@ def build_sessions_router(
         baseline_run: Optional[str] = None,
         runs_root: Optional[str] = None,
     ):
-        root = (
-            _resolve_workspace_path(runs_root, field_name="runs_root")
-            if str(runs_root or "").strip()
-            else (_workspace_root() / "runs").resolve()
-        )
-        if not root.exists():
-            raise HTTPException(status_code=404, detail=f"Runs root not found: {root}")
         try:
-            return await asyncio.to_thread(
-                compare_protocol_determinism_campaign,
-                runs_root=root,
+            return await _get_protocol_replay_service().compare_protocol_determinism_campaign(
                 run_ids=list(run_id or []),
-                baseline_run_id=str(baseline_run or "").strip() or None,
+                baseline_run=baseline_run,
+                runs_root=runs_root,
             )
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.get("/protocol/runs/{run_id}/ledger-parity")
     async def compare_protocol_and_sqlite_run_ledgers(run_id: str, sqlite_db_path: Optional[str] = None):
-        _ = _resolve_protocol_run_root(run_id)
-        sqlite_path = (
-            _resolve_workspace_path(sqlite_db_path, field_name="sqlite_db_path")
-            if str(sqlite_db_path or "").strip()
-            else (_workspace_root() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
-        )
-        if not sqlite_path.exists():
-            raise HTTPException(status_code=404, detail=f"SQLite run ledger database not found: {sqlite_path}")
-        protocol_root = _workspace_root()
-        sqlite_repo = AsyncRunLedgerRepository(sqlite_path)
-        protocol_repo = AsyncProtocolRunLedgerRepository(protocol_root)
         try:
-            return await compare_run_ledger_rows(
-                sqlite_repo=sqlite_repo,
-                protocol_repo=protocol_repo,
-                session_id=str(run_id),
+            return await _get_protocol_replay_service().compare_protocol_and_sqlite_run_ledgers(
+                run_id=run_id,
+                sqlite_db_path=sqlite_db_path,
             )
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
         except LedgerFramingError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.get("/protocol/ledger-parity/campaign")
     async def campaign_protocol_ledger_parity(
@@ -305,20 +264,14 @@ def build_sessions_router(
         sqlite_db_path: Optional[str] = None,
         discover_limit: int = 200,
     ):
-        sqlite_path = (
-            _resolve_workspace_path(sqlite_db_path, field_name="sqlite_db_path")
-            if str(sqlite_db_path or "").strip()
-            else (_workspace_root() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
-        )
-        if not sqlite_path.exists():
-            raise HTTPException(status_code=404, detail=f"SQLite run ledger database not found: {sqlite_path}")
         try:
-            return await compare_protocol_ledger_parity_campaign(
-                sqlite_db=sqlite_path,
-                protocol_root=_workspace_root(),
+            return await _get_protocol_replay_service().compare_protocol_ledger_parity_campaign(
                 session_ids=list(session_id or []),
-                discover_limit=max(0, int(discover_limit)),
+                sqlite_db_path=sqlite_db_path,
+                discover_limit=discover_limit,
             )
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

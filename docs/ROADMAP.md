@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-03-22
+Last updated: 2026-03-23
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-No active implementation lanes.
+1. control-plane -- authority-first implementation lane for the accepted ControlPlane packet v2, including first-class reservation and final-truth surfaces, supervisor guard enforcement, effect journal and checkpoint authority, slim namespace rules, and safe tooling integration. Plan: `docs/projects/ControlPlane/orket_control_plane_packet/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`.
 
 ## Maintenance (Non-Priority)
 
@@ -28,6 +28,7 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
+| ControlPlane | active-lane | P1-authority-first | `docs/projects/ControlPlane/` | Orket Core | Active implementation lane authority lives in `docs/projects/ControlPlane/orket_control_plane_packet/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`; `09_OS_MASTER_PLAN.md` remains architecture direction only. |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | techdebt | maintenance only | P2-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance continues through `Recurring-Maintenance-Checklist.md` and `README.md`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane. |

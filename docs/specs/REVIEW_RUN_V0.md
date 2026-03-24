@@ -1,6 +1,6 @@
 # ReviewRun v0 Contract
 
-Last reviewed: 2026-03-01
+Last reviewed: 2026-03-23
 
 ## Summary
 `ReviewRun` is a manual, snapshot-driven review primitive.
@@ -35,6 +35,11 @@ v0 requirements:
 8. `context_blobs[]`
 9. `metadata`
 10. `snapshot_digest`
+
+Input truth requirements:
+1. `review pr` must bind the requested `--remote` base URL to a configured git remote for the local `repo_root` and target `owner/name` repo before any authenticated request is sent.
+2. `review pr` only accepts `http` or `https` remote base URLs.
+3. `review files` must fail closed when any requested path cannot be loaded from the requested ref; missing files are not represented as empty blobs.
 
 ## Policy Resolution
 Precedence:

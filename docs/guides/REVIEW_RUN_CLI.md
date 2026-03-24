@@ -1,6 +1,6 @@
 # ReviewRun CLI Guide
 
-Last reviewed: 2026-03-01
+Last reviewed: 2026-03-23
 
 ## Purpose
 Run manual snapshot-driven reviews without webhook automation.
@@ -22,6 +22,14 @@ Precedence:
 3. `GITEA_TOKEN`
 
 Token values are never persisted in ReviewRun artifacts.
+
+PR remote truth rules:
+1. `--remote` must be an `http` or `https` base URL.
+2. `--remote` must match a configured git remote for `--repo-root` and the requested `--repo` before any authenticated request is sent.
+3. An unbound remote fails the run before any outbound PR API request is made.
+
+Files mode truth rule:
+1. `orket review files` fails closed when any requested path is missing at the requested ref.
 
 ## Common Flags
 1. `--policy <path>`: override default repo policy file.

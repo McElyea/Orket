@@ -3,7 +3,6 @@ import json
 from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import datetime, UTC
-from functools import lru_cache
 from typing import Any, Optional
 
 from fastapi import FastAPI, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query, Request
@@ -59,38 +58,8 @@ from orket.application.services.runtime_policy import (
 )
 
 
-@lru_cache(maxsize=1)
-def _get_api_runtime_node():
+def _resolve_api_runtime_node() -> Any:
     return DecisionNodeRegistry().resolve_api_runtime()
-
-
-class _ApiRuntimeNodeProxy:
-    def __getattr__(self, name):
-        return getattr(_get_api_runtime_node(), name)
-
-    def __setattr__(self, name, value):
-        setattr(_get_api_runtime_node(), name, value)
-
-
-api_runtime_node = _ApiRuntimeNodeProxy()
-
-
-class _EngineProxy:
-    def __init__(self, factory):
-        self._factory = factory
-        self._engine = None
-
-    def _get_engine(self):
-        if self._engine is None:
-            self._engine = self._factory()
-        return self._engine
-
-    def reset(self, factory):
-        self._factory = factory
-        self._engine = None
-
-    def __getattr__(self, item):
-        return getattr(self._get_engine(), item)
 
 
 def _validate_session_path(session_id: str) -> Path:
@@ -578,6 +547,8 @@ app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_api_key)])
 companion_api_router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_api_key)])
 
+PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
+api_runtime_node = _resolve_api_runtime_node()
 origins_str = os.getenv("ORKET_ALLOWED_ORIGINS", api_runtime_node.default_allowed_origins_value())
 origins = api_runtime_node.parse_allowed_origins(origins_str)
 
@@ -588,8 +559,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
 
-PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
-engine = _EngineProxy(lambda: api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT)))
+engine = api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT))
 stream_bus: StreamBus | None = None
 interaction_manager: InteractionManager | None = None
 extension_manager: ExtensionManager | None = None
@@ -1640,7 +1610,7 @@ def create_api_app(project_root: Optional[Path] = None) -> FastAPI:
     global PROJECT_ROOT, engine, interaction_manager, extension_manager, stream_bus, companion_service
     if project_root is not None:
         PROJECT_ROOT = Path(project_root).resolve()
-    engine.reset(lambda: api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT)))
+    engine = api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT))
     stream_bus = _build_stream_bus_from_env()
     interaction_manager = InteractionManager(
         bus=stream_bus,

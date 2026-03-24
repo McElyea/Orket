@@ -294,6 +294,10 @@ def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
     status = "COMMITTED"
     result_reason_codes: list[str] = []
     reported_sanitization_digest = normalized_optional_str(request.get("sanitization_digest"))
+    execution_result_payload = request.get("execution_result_payload")
+    execution_result_schema_valid = request.get("execution_result_schema_valid")
+    execution_error_reason_code = normalized_optional_str(request.get("execution_error_reason_code")).upper()
+    result_validation_performed = False
     # Top-level entry point: return explicit ERROR only for internal failures.
     try:
         admission = _ADMISSIONS_BY_PROPOSAL.get((session_id, proposal_digest))
@@ -318,7 +322,13 @@ def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
             if status == "COMMITTED" and bool(request.get("revalidate_policy_forbidden")):
                 status = "REJECTED_POLICY"
 
-            execution_result_payload = request.get("execution_result_payload")
+            if execution_result_payload is not None:
+                result_validation_performed = True
+            if execution_result_schema_valid is not None:
+                result_validation_performed = True
+            if reported_sanitization_digest:
+                result_validation_performed = True
+
             if status == "COMMITTED" and execution_result_payload is not None:
                 leak_hits = find_leak_hits(execution_result_payload)
                 if leak_hits:
@@ -339,12 +349,12 @@ def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
                         status = "REJECTED_POLICY"
                     elif not reported_sanitization_digest and isinstance(execution_result_payload, str):
                         reported_sanitization_digest = digest_of({"sanitized": sanitize_text(execution_result_payload)})
+                        result_validation_performed = True
 
-            if status == "COMMITTED" and request.get("execution_result_schema_valid") is False:
+            if status == "COMMITTED" and execution_result_schema_valid is False:
                 result_reason_codes.append("RESULT_SCHEMA_INVALID")
                 status = "REJECTED_POLICY"
 
-            execution_error_reason_code = normalized_optional_str(request.get("execution_error_reason_code")).upper()
             if status == "COMMITTED" and execution_error_reason_code in {
                 "TOKEN_INVALID",
                 "TOKEN_EXPIRED",
@@ -358,20 +368,7 @@ def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
     if status not in COMMIT_STATUSES_V1:
         status = "ERROR"
 
-    executed = status == "COMMITTED" and bool(execution_result_digest)
-    if executed:
-        append_event(
-            session_id=session_id,
-            trace_id=trace_id,
-            request_id=request_id,
-            event_type="action.executed",
-            body={
-                "proposal_digest": proposal_digest,
-                "execution_result_digest": execution_result_digest,
-            },
-        )
-
-    if executed:
+    if result_validation_performed and status != "ERROR":
         append_event(
             session_id=session_id,
             trace_id=trace_id,

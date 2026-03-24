@@ -367,7 +367,10 @@ class SandboxRuntimeLifecycleService:
             "{{json .}}",
         )
         if result.returncode != 0:
-            return []
+            detail = result.stderr.strip() or f"returncode={result.returncode}"
+            raise RuntimeError(
+                f"Failed to observe {resource_type.value} resources for compose project '{compose_project}': {detail}"
+            )
         return [
             ObservedDockerResource(
                 resource_type=resource_type,

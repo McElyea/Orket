@@ -12,6 +12,8 @@ class CleanupVerificationResult:
     remaining_expected: list[str]
     unexpected_managed_present: list[str]
     absent_expected: list[str] = field(default_factory=list)
+    observation_complete: bool = True
+    unverified_expected: list[str] = field(default_factory=list)
 
 
 class SandboxCleanupVerificationService:
@@ -22,12 +24,23 @@ class SandboxCleanupVerificationService:
         *,
         record: SandboxLifecycleRecord,
         observed_resources: list[ObservedDockerResource],
+        observation_complete: bool = True,
     ) -> CleanupVerificationResult:
         expected = {
             DockerResourceType.CONTAINER: set(record.managed_resource_inventory.containers),
             DockerResourceType.NETWORK: set(record.managed_resource_inventory.networks),
             DockerResourceType.MANAGED_VOLUME: set(record.managed_resource_inventory.managed_volumes),
         }
+        expected_names = sorted(name for names in expected.values() for name in names)
+        if not observation_complete:
+            return CleanupVerificationResult(
+                success=False,
+                remaining_expected=[],
+                unexpected_managed_present=[],
+                absent_expected=[],
+                observation_complete=False,
+                unverified_expected=expected_names,
+            )
         observed_by_type = {
             DockerResourceType.CONTAINER: set(),
             DockerResourceType.NETWORK: set(),
@@ -55,4 +68,5 @@ class SandboxCleanupVerificationService:
             remaining_expected=remaining_expected,
             unexpected_managed_present=sorted(set(unexpected_managed_present)),
             absent_expected=absent_expected,
+            observation_complete=True,
         )

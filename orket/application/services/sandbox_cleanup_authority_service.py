@@ -61,7 +61,7 @@ class SandboxCleanupAuthorityService:
             compose_path_available
             and host_context_match
             and record.compose_project.startswith("orket-sandbox-")
-            and (positive_authority_present or bool(record.compose_project))
+            and (positive_authority_present or not observed_resources)
         )
         if compose_cleanup_allowed:
             reasons.append("compose_project_authority")
