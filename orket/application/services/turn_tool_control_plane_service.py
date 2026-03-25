@@ -1,17 +1,23 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
-from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
-from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.turn_tool_control_plane_closeout import (
     ensure_begin_execution_allowed,
     ensure_current_execution_target,
     finalize_turn_execution,
 )
+from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
+    ensure_active_execution_lease,
+    ensure_admission_reservation,
+    invalidate_admission_reservation_if_present,
+)
 from orket.application.services.turn_tool_control_plane_recovery import recover_pre_effect_attempt_for_resume_mode
+from orket.application.services.turn_tool_control_plane_state_gate import (
+    ensure_existing_run_allows_execution,
+    existing_effect_for_operation,
+)
 from orket.application.services.turn_tool_control_plane_support import (
     attempt_id_for,
     capability_for,
@@ -43,7 +49,6 @@ from orket.core.domain import (
     validate_attempt_state_transition,
     validate_run_state_transition,
 )
-from orket.runtime_paths import resolve_control_plane_db_path
 
 
 class TurnToolControlPlaneError(ValueError):
@@ -109,6 +114,11 @@ class TurnToolControlPlaneService:
             }
         )
         await self.execution_repository.save_run_record(record=updated_run)
+        await invalidate_admission_reservation_if_present(
+            publication=self.publication,
+            run=updated_run,
+            invalidation_basis="turn_tool_preflight_terminal_stop",
+        )
         return updated_run, truth
 
     async def begin_execution(
@@ -128,7 +138,12 @@ class TurnToolControlPlaneService:
             turn_index=turn_index,
             proposal_hash=proposal_hash,
         )
-        existing_truth = await self._ensure_existing_run_allows_execution(run=run)
+        existing_truth = await ensure_existing_run_allows_execution(
+            execution_repository=self.execution_repository,
+            publication=self.publication,
+            run=run,
+            error_type=TurnToolControlPlaneError,
+        )
         if existing_truth is not None:
             truth = await self.publication.repository.get_final_truth(run_id=run.run_id)
             if truth is None:
@@ -153,12 +168,18 @@ class TurnToolControlPlaneService:
             current_attempt=current_attempt,
             error_type=TurnToolControlPlaneError,
         )
-        attempt = await self._ensure_attempt(run=run)
+        attempt = current_attempt or await self._ensure_attempt(run=run)
         if run.lifecycle_state is RunState.ADMISSION_PENDING:
+            await ensure_admission_reservation(publication=self.publication, run=run)
             validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.ADMITTED)
             run = run.model_copy(update={"lifecycle_state": RunState.ADMITTED})
             await self.execution_repository.save_run_record(record=run)
         if run.lifecycle_state is RunState.ADMITTED:
+            await ensure_active_execution_lease(
+                publication=self.publication,
+                run=run,
+                publication_timestamp=utc_now(),
+            )
             validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.EXECUTING)
             run = run.model_copy(update={"lifecycle_state": RunState.EXECUTING})
             await self.execution_repository.save_run_record(record=run)
@@ -183,7 +204,11 @@ class TurnToolControlPlaneService:
     ) -> tuple[StepRecord, EffectJournalEntryRecord]:
         run = await self._require_run(run_id=run_id)
         existing = await self.execution_repository.get_step_record(step_id=step_id)
-        existing_effect = await self._existing_effect(run_id=run_id, operation_id=operation_id)
+        existing_effect = await existing_effect_for_operation(
+            publication=self.publication,
+            run_id=run_id,
+            effect_id=effect_id_for(operation_id=operation_id),
+        )
         if run.final_truth_record_id is not None:
             if existing is not None and existing_effect is not None:
                 return existing, existing_effect
@@ -289,6 +314,7 @@ class TurnToolControlPlaneService:
         run_id = run_id_for(session_id=session_id, issue_id=issue_id, role_name=role_name, turn_index=turn_index)
         run = await self.execution_repository.get_run_record(run_id=run_id)
         if run is not None:
+            await ensure_admission_reservation(publication=self.publication, run=run)
             return run
         record = RunRecord(
             run_id=run_id,
@@ -313,7 +339,9 @@ class TurnToolControlPlaneService:
             lifecycle_state=RunState.ADMISSION_PENDING,
             current_attempt_id=attempt_id_for(run_id=run_id),
         )
-        return await self.execution_repository.save_run_record(record=record)
+        run = await self.execution_repository.save_run_record(record=record)
+        await ensure_admission_reservation(publication=self.publication, run=run)
+        return run
 
     async def ensure_reentry_allowed(
         self,
@@ -327,7 +355,12 @@ class TurnToolControlPlaneService:
         run = await self.execution_repository.get_run_record(run_id=run_id)
         if run is None:
             return
-        await self._ensure_existing_run_allows_execution(run=run)
+        await ensure_existing_run_allows_execution(
+            execution_repository=self.execution_repository,
+            publication=self.publication,
+            run=run,
+            error_type=TurnToolControlPlaneError,
+        )
 
     async def _ensure_attempt(self, *, run: RunRecord) -> AttemptRecord:
         attempt_id = attempt_id_for(run_id=run.run_id)
@@ -359,66 +392,6 @@ class TurnToolControlPlaneService:
         if attempt is None:
             raise TurnToolControlPlaneError(f"governed turn-tool attempt not found: {attempt_id}")
         return attempt
+from .turn_tool_control_plane_factory import build_turn_tool_control_plane_service
 
-    async def _ensure_existing_run_allows_execution(self, *, run: RunRecord) -> FinalTruthRecord | None:
-        if run.final_truth_record_id is not None:
-            truth = await self.publication.repository.get_final_truth(run_id=run.run_id)
-            if truth is None:
-                raise TurnToolControlPlaneError(
-                    f"governed turn run {run.run_id} carries final_truth_record_id without durable final truth"
-                )
-            if run.final_truth_record_id != truth.final_truth_record_id:
-                run = run.model_copy(update={"final_truth_record_id": truth.final_truth_record_id})
-                await self.execution_repository.save_run_record(record=run)
-            if truth.result_class is ResultClass.SUCCESS and run.lifecycle_state is RunState.COMPLETED:
-                return truth
-            raise TurnToolControlPlaneError(
-                f"governed turn run {run.run_id} already closed with "
-                f"{truth.result_class.value} via {truth.closure_basis.value}; execution cannot continue"
-            )
-        if run.lifecycle_state in {
-            RunState.RECOVERY_PENDING,
-            RunState.RECONCILING,
-            RunState.RECOVERING,
-            RunState.OPERATOR_BLOCKED,
-            RunState.QUARANTINED,
-            RunState.FAILED_TERMINAL,
-            RunState.CANCELLED,
-            RunState.COMPLETED,
-        }:
-            raise TurnToolControlPlaneError(
-                f"governed turn run {run.run_id} is in {run.lifecycle_state.value}; "
-                "explicit recovery or closure is required before execution can continue"
-            )
-        return None
-
-    async def _existing_effect(
-        self,
-        *,
-        run_id: str,
-        operation_id: str,
-    ) -> EffectJournalEntryRecord | None:
-        effect_id = effect_id_for(operation_id=operation_id)
-        entries = await self.publication.repository.list_effect_journal_entries(run_id=run_id)
-        for entry in entries:
-            if entry.effect_id == effect_id:
-                return entry
-        return None
-
-
-def build_turn_tool_control_plane_service(
-    db_path: str | Path | None = None,
-) -> TurnToolControlPlaneService:
-    resolved_db_path = resolve_control_plane_db_path(db_path)
-    publication = ControlPlanePublicationService(repository=AsyncControlPlaneRecordRepository(resolved_db_path))
-    return TurnToolControlPlaneService(
-        execution_repository=AsyncControlPlaneExecutionRepository(resolved_db_path),
-        publication=publication,
-    )
-
-
-__all__ = [
-    "TurnToolControlPlaneError",
-    "TurnToolControlPlaneService",
-    "build_turn_tool_control_plane_service",
-]
+__all__ = ["TurnToolControlPlaneError", "TurnToolControlPlaneService", "build_turn_tool_control_plane_service"]

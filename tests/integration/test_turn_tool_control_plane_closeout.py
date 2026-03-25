@@ -6,6 +6,10 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
+    lease_id_for_run,
+    reservation_id_for_run,
+)
 from orket.application.services.turn_tool_control_plane_service import (
     TurnToolControlPlaneError,
     build_turn_tool_control_plane_service,
@@ -17,7 +21,9 @@ from orket.core.domain import (
     CapabilityClass,
     ClosureBasisClassification,
     DivergenceClass,
+    LeaseStatus,
     RecoveryActionClass,
+    ReservationStatus,
     ResultClass,
     RunState,
     SafeContinuationClass,
@@ -156,6 +162,12 @@ async def test_turn_executor_post_effect_tool_failure_publishes_terminal_recover
     attempt = await control_plane.execution_repository.get_attempt_record(attempt_id=_attempt_id())
     truth = await control_plane.publication.repository.get_final_truth(run_id=_run_id())
     decision = await _recovery_decision(control_plane, _attempt_id())
+    reservation = await control_plane.publication.repository.get_latest_reservation_record(
+        reservation_id=reservation_id_for_run(run_id=_run_id())
+    )
+    lease = await control_plane.publication.repository.get_latest_lease_record(
+        lease_id=lease_id_for_run(run_id=_run_id())
+    )
 
     assert result.success is False
     assert toolbox.calls == 1
@@ -163,6 +175,8 @@ async def test_turn_executor_post_effect_tool_failure_publishes_terminal_recover
     assert attempt is not None
     assert truth is not None
     assert decision is not None
+    assert reservation is not None
+    assert lease is not None
     assert run.lifecycle_state is RunState.FAILED_TERMINAL
     assert attempt.attempt_state.value == "attempt_failed"
     assert attempt.side_effect_boundary_class is SideEffectBoundaryClass.POST_EFFECT_OBSERVED
@@ -172,6 +186,8 @@ async def test_turn_executor_post_effect_tool_failure_publishes_terminal_recover
     assert RecoveryActionClass.REQUIRE_RECONCILIATION_THEN_DECIDE.value in decision.blocked_actions
     assert truth.result_class is ResultClass.FAILED
     assert truth.closure_basis is ClosureBasisClassification.NORMAL_EXECUTION
+    assert reservation.status is ReservationStatus.PROMOTED_TO_LEASE
+    assert lease.status is LeaseStatus.RELEASED
 
 
 @pytest.mark.asyncio
@@ -385,7 +401,7 @@ async def test_turn_executor_recovery_pending_run_fails_before_model_and_checkpo
 
 
 @pytest.mark.asyncio
-async def test_turn_control_plane_rejects_stale_attempt_writes_after_checkpoint_recovery(tmp_path: Path) -> None:
+async def test_turn_control_plane_allows_same_attempt_writes_after_checkpoint_recovery(tmp_path: Path) -> None:
     control_plane, executor = _executor(tmp_path)
     turn = ExecutionTurn(
         role="developer",
@@ -407,24 +423,28 @@ async def test_turn_control_plane_rejects_stale_attempt_writes_after_checkpoint_
         proposal_hash="sha256:proposal",
         resume_mode=True,
     )
+    step, effect = await control_plane.publish_step_result(
+        run_id=_run_id(),
+        attempt_id=_attempt_id(),
+        step_id="op-same-attempt",
+        tool_name="write_file",
+        tool_args={"path": "agent_output/out.txt", "content": "ok"},
+        result={"ok": True, "touched_paths": ["agent_output/out.txt"]},
+        binding=None,
+        operation_id="op-same-attempt",
+        replayed=False,
+    )
+    run, attempt, truth = await control_plane.finalize_execution(
+        run_id=_run_id(),
+        attempt_id=_attempt_id(),
+        authoritative_result_ref="turn-tool-result:op-same-attempt",
+        violation_reasons=[],
+        executed_step_count=1,
+    )
 
-    with pytest.raises(TurnToolControlPlaneError, match="current governed attempt"):
-        await control_plane.publish_step_result(
-            run_id=_run_id(),
-            attempt_id=_attempt_id(),
-            step_id="op-stale",
-            tool_name="write_file",
-            tool_args={"path": "agent_output/out.txt", "content": "ok"},
-            result={"ok": True, "touched_paths": ["agent_output/out.txt"]},
-            binding=None,
-            operation_id="op-stale",
-            replayed=False,
-        )
-    with pytest.raises(TurnToolControlPlaneError, match="current governed attempt"):
-        await control_plane.finalize_execution(
-            run_id=_run_id(),
-            attempt_id=_attempt_id(),
-            authoritative_result_ref="turn-tool-result:op-stale",
-            violation_reasons=[],
-            executed_step_count=0,
-        )
+    assert step.attempt_id == _attempt_id()
+    assert effect.attempt_id == _attempt_id()
+    assert attempt.attempt_id == _attempt_id()
+    assert attempt.attempt_state.value == "attempt_completed"
+    assert run.lifecycle_state is RunState.COMPLETED
+    assert truth.result_class is ResultClass.SUCCESS

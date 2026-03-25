@@ -5,12 +5,17 @@ from typing import Any
 
 import pytest
 
+from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
+    lease_id_for_run,
+    reservation_id_for_run,
+)
 from orket.application.services.turn_tool_control_plane_service import (
     TurnToolControlPlaneService,
     build_turn_tool_control_plane_service,
 )
 from orket.application.middleware import MiddlewareOutcome, TurnLifecycleInterceptors
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
+from orket.core.domain import LeaseStatus, ReservationStatus
 from orket.core.policies.tool_gate import ToolGate
 from orket.domain.execution import ExecutionTurn, ToolCall
 
@@ -773,9 +778,16 @@ async def test_tool_dispatcher_preflight_failure_publishes_control_plane_final_t
     run_id = "turn-tool-run:s1:ISSUE-1:coder:0001"
     run = await control_plane.execution_repository.get_run_record(run_id=run_id)
     truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
+    reservation = await control_plane.publication.repository.get_latest_reservation_record(
+        reservation_id=reservation_id_for_run(run_id=run_id)
+    )
+    lease = await control_plane.publication.repository.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run_id))
 
     assert toolbox.calls == 0
     assert run is not None
     assert truth is not None
+    assert reservation is not None
+    assert lease is None
     assert run.lifecycle_state.value == "failed_terminal"
     assert truth.result_class.value == "blocked"
+    assert reservation.status is ReservationStatus.INVALIDATED

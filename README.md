@@ -1,82 +1,82 @@
 # Orket
 
-Orket is a local-first workflow runtime that executes card-based work with LLM turns, guard checks, and persistent state.
+Orket is a local-first workflow runtime for card-based execution with persistent state, tool gating, and multiple operator surfaces.
 
-## Current Focus
-1. Quantization diagnostics and sweep operations for live/local model runs.
-2. Deterministic telemetry contracts and run-validity policy.
-3. Guarded workflow execution through state and tool gates.
+This README is intentionally narrow. It describes the repo entrypoints and current truths only.
 
-## Runtime Model
+## Current Repo Truth
 
-### Card Lifecycle
+- Default runtime entrypoint: `python main.py`
+- Named rock runtime entrypoint: `python main.py --rock <rock_name>`
+- API runtime entrypoint: `python server.py`
+- Canonical test command: `python -m pytest -q`
+- Active docs index: [docs/README.md](docs/README.md)
+- Active roadmap: [docs/ROADMAP.md](docs/ROADMAP.md)
+- Current high-impact authority snapshot: [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
 
-```text
-OPEN -> CLAIMED -> IN_PROGRESS -> REVIEW -> DONE
-  |        |           |            |
-  |        |           |            +--> BLOCKED (guard/rule failure)
-  |        |           +--> FAILED (execution failure)
-  |        +--> OPEN (lease/claim released)
-  +--> ARCHIVED (operator action)
-```
+## What Exists Today
 
-### Turn Execution and Guard Flow
+- A runtime and API for orchestration, turns, cards, and workflow state.
+- Governed turn-tool execution with fail-closed namespace enforcement on the governed path.
+- Control-plane persistence for selected live lanes, including sandbox orchestration, governed turn-tool execution, governed kernel actions, approval-gated reservation and operator flows, coordinator reservation and lease flows, and the Gitea state worker path.
+- Deterministic and observability-oriented runtime artifacts under the normal workspace and durable `.orket/` paths.
 
-```text
-[Planner/Selector]
-      |
-      v
-[Turn Executor] --tool calls--> [Tool Gate] ----deny----> [Violation + Blocked]
-      |                              |
-      |                              +--allow--> [Action]
-      v
-[State Transition Request] --> [State Machine Gate] --deny--> [Violation + Blocked]
-      |                                  |
-      +-------------allow----------------+
-                     |
-                     v
-               [Persist + Emit Telemetry]
-```
+## What Is Not Universally True Yet
 
-## Repository Map
-1. `orket/core`: contracts, state rules, policy types.
-2. `orket/application`: orchestration services and workflow logic.
-3. `orket/adapters`: model/storage/tool integrations.
-4. `orket/interfaces`: API/CLI surfaces.
-5. `scripts/`: operational and benchmark tooling.
-6. `benchmarks/`: task banks, runs, and diagnostics artifacts.
-7. `docs/`: architecture, security, runbooks, and active roadmap.
+- Control-plane authority is not universal across all admission, scheduling, workload execution, and operator surfaces.
+- Effect-journal publication is not yet the default truth path for all workload and tool execution.
+- Namespace and safe-tooling enforcement are stronger on the governed turn-tool path than on the rest of the runtime.
+- Broader supervisor-owned checkpoint creation is still partial.
+
+For the exact current boundary, use [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md) instead of inferring from older docs or broad product language.
 
 ## Quick Start
+
 1. Install dependencies:
+
 ```bash
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
-2. Configure environment:
+
+2. Optional local environment file:
+
 ```bash
 cp .env.example .env
 ```
-3. Start the local CLI:
+
+3. Start the default runtime:
+
 ```bash
 python main.py
 ```
+
 4. Start the API server:
+
 ```bash
 python server.py
 ```
-5. Dev-only API reload profile (explicit opt-in):
+
+## Verification
+
+- Canonical test command:
+
 ```bash
-python server.py --profile dev
+python -m pytest -q
 ```
 
-CLI note:
-1. Running `python main.py` with no `--epic`, `--card`, or `--rock` enters interactive driver mode for local conversation with your configured model.
+- Routine proof that is not explicit sandbox acceptance should set `ORKET_DISABLE_SANDBOX=1`.
+- Real sandbox creation is intentionally fail-closed in the normal pytest suite. See [docs/CONTRIBUTOR.md](docs/CONTRIBUTOR.md) and [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md) for the current testing policy.
 
 ## Documentation
-Start with `docs/README.md` for a source-of-truth index.
+
+- Start with [docs/README.md](docs/README.md)
+- Contributor workflow: [docs/CONTRIBUTOR.md](docs/CONTRIBUTOR.md)
+- Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Active execution priorities: [docs/ROADMAP.md](docs/ROADMAP.md)
 
 ## License
+
 Orket is source-available, not open source, under the Business Source License 1.1 in [LICENSE](LICENSE).
 
 Commercial uses outside the Additional Use Grant are described in [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md).

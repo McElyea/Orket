@@ -7,15 +7,24 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.services.turn_tool_control_plane_recovery import recover_pre_effect_attempt_for_resume_mode
+from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
+    lease_id_for_run,
+    reservation_id_for_run,
+)
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor_control_plane import write_turn_checkpoint_and_publish_if_needed
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts import StepRecord
 from orket.core.domain import (
+    CapabilityClass,
     CheckpointAcceptanceOutcome,
     CheckpointResumabilityClass,
     ClosureBasisClassification,
     DivergenceClass,
+    LeaseStatus,
     RecoveryActionClass,
+    ReservationStatus,
     ResultClass,
     RunState,
     SafeContinuationClass,
@@ -109,6 +118,10 @@ async def test_turn_executor_publishes_control_plane_run_attempt_step_effect_and
         checkpoint_id=checkpoint.checkpoint_id
     )
     truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
+    reservations = await control_plane.publication.repository.list_reservation_records(
+        reservation_id=reservation_id_for_run(run_id=run_id)
+    )
+    leases = await control_plane.publication.repository.list_lease_records(lease_id=lease_id_for_run(run_id=run_id))
     turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
     snapshot_files = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
 
@@ -133,17 +146,23 @@ async def test_turn_executor_publishes_control_plane_run_attempt_step_effect_and
     assert len(effects) == 1
     assert effects[0].step_id == steps[0].step_id
     assert effects[0].observed_result_ref == steps[0].output_ref
-    assert checkpoint.resumability_class is CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT
+    assert checkpoint.resumability_class is CheckpointResumabilityClass.RESUME_SAME_ATTEMPT
     assert checkpoint_acceptance.outcome is CheckpointAcceptanceOutcome.ACCEPTED
-    assert checkpoint_acceptance.resumability_class is CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT
+    assert checkpoint_acceptance.resumability_class is CheckpointResumabilityClass.RESUME_SAME_ATTEMPT
+    assert checkpoint_acceptance.dependent_reservation_refs == [reservation_id_for_run(run_id=run_id)]
+    assert checkpoint_acceptance.dependent_lease_refs == [lease_id_for_run(run_id=run_id)]
     assert checkpoint.state_snapshot_ref.startswith("turn-tool-checkpoint-snapshot:")
     assert len(snapshot_files) == 1
     assert snapshot_payload["namespace_scope"] == "issue:ISSUE-1"
     assert (
         snapshot_payload["control_plane"]["resumability_class"]
-        == CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT.value
+        == CheckpointResumabilityClass.RESUME_SAME_ATTEMPT.value
     )
     assert truth.result_class.value == "success"
+    assert [record.status for record in reservations] == [ReservationStatus.ACTIVE, ReservationStatus.PROMOTED_TO_LEASE]
+    assert reservations[-1].target_scope_ref == "namespace:issue:ISSUE-1"
+    assert [record.status for record in leases] == [LeaseStatus.ACTIVE, LeaseStatus.RELEASED]
+    assert leases[-1].resource_id == "namespace:issue:ISSUE-1"
 
 
 @pytest.mark.asyncio
@@ -171,6 +190,10 @@ async def test_turn_executor_publishes_control_plane_for_non_protocol_tool_execu
         checkpoint_id=checkpoint.checkpoint_id
     )
     truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
+    reservations = await control_plane.publication.repository.list_reservation_records(
+        reservation_id=reservation_id_for_run(run_id=run_id)
+    )
+    leases = await control_plane.publication.repository.list_lease_records(lease_id=lease_id_for_run(run_id=run_id))
     operation_record = executor.artifact_writer.load_operation_result(
         session_id="run-1",
         issue_id="ISSUE-1",
@@ -197,9 +220,11 @@ async def test_turn_executor_publishes_control_plane_for_non_protocol_tool_execu
     assert len(effects) == 1
     assert effects[0].authorization_basis_ref.startswith("turn-tool-authorization:")
     assert effects[0].observed_result_ref == steps[0].output_ref
-    assert checkpoint.resumability_class is CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT
+    assert checkpoint.resumability_class is CheckpointResumabilityClass.RESUME_SAME_ATTEMPT
     assert checkpoint_acceptance.outcome is CheckpointAcceptanceOutcome.ACCEPTED
     assert truth.result_class.value == "success"
+    assert [record.status for record in reservations] == [ReservationStatus.ACTIVE, ReservationStatus.PROMOTED_TO_LEASE]
+    assert [record.status for record in leases] == [LeaseStatus.ACTIVE, LeaseStatus.RELEASED]
 
 
 @pytest.mark.asyncio
@@ -217,6 +242,7 @@ async def test_turn_executor_resume_mode_reuses_control_plane_checkpoint_and_eff
     first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
     snapshot_files_before = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
+    snapshot_payload = json.loads(snapshot_files_before[0].read_text(encoding="utf-8"))
     second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
     snapshot_files_after = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
 
@@ -236,6 +262,9 @@ async def test_turn_executor_resume_mode_reuses_control_plane_checkpoint_and_eff
     assert toolbox.calls == 1
     assert second.turn is not None
     assert second.turn.note == "control_plane_completed_replay"
+    assert second.turn.raw["prompt_hash"] == snapshot_payload["prompt_hash"]
+    assert second.turn.raw["model"] == snapshot_payload["model"]
+    assert second.turn.raw["control_plane_replay"]["checkpoint_id"] == checkpoints[0].checkpoint_id
     assert snapshot_files_after == snapshot_files_before
     assert len(attempts) == 1
     assert len(steps) == 1
@@ -243,7 +272,7 @@ async def test_turn_executor_resume_mode_reuses_control_plane_checkpoint_and_eff
     assert len(checkpoints) == 1
     assert checkpoint_acceptance is not None
     assert checkpoint_acceptance.outcome is CheckpointAcceptanceOutcome.ACCEPTED
-    assert checkpoint_acceptance.resumability_class is CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT
+    assert checkpoint_acceptance.resumability_class is CheckpointResumabilityClass.RESUME_SAME_ATTEMPT
 
 
 @pytest.mark.asyncio
@@ -278,13 +307,70 @@ async def test_turn_executor_completed_governed_reentry_reuses_artifacts_before_
     assert second.turn.note == "control_plane_completed_replay"
     assert second.turn.tool_calls[0].result is not None
     assert second.turn.tool_calls[0].result.get("call_count") == 1
+    assert second.turn.raw["control_plane_replay"]["artifact_reused"] is True
     assert snapshot_files_after == snapshot_files_before
     assert len(attempts) == 1
     assert len(effects) == 1
 
 
 @pytest.mark.asyncio
-async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_via_new_attempt_checkpoint(
+async def test_turn_executor_completed_governed_reentry_requires_snapshot_artifact(tmp_path: Path) -> None:
+    control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+        control_plane_service=control_plane,
+    )
+    model = _Model()
+    toolbox = _Toolbox()
+
+    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    snapshot_path = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))[0]
+    snapshot_path.unlink()
+
+    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+
+    assert first.success is True
+    assert second.success is False
+    assert second.error is not None
+    assert "missing immutable checkpoint snapshot artifact" in second.error
+    assert model.calls == 1
+    assert toolbox.calls == 1
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_completed_governed_reentry_requires_checkpoint_plan_alignment(tmp_path: Path) -> None:
+    control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+        control_plane_service=control_plane,
+    )
+    model = _Model()
+    toolbox = _Toolbox()
+
+    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    snapshot_path = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))[0]
+    snapshot_payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    snapshot_payload["tool_calls"][0]["args"] = {"path": "agent_output/other.txt", "content": "wrong"}
+    snapshot_path.write_text(json.dumps(snapshot_payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
+
+    assert first.success is True
+    assert second.success is False
+    assert second.error is not None
+    assert "arguments do not match checkpoint tool plan" in second.error
+    assert model.calls == 1
+    assert toolbox.calls == 1
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_via_same_attempt_checkpoint(
     tmp_path: Path,
 ) -> None:
     control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
@@ -309,8 +395,13 @@ async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_
         prompt_hash="prompt-hash-1",
     )
 
+    model = _Model()
     toolbox = _Toolbox()
-    result = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context(resume_mode=True))
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    first_snapshot_path = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))[0]
+    first_snapshot_payload = json.loads(first_snapshot_path.read_text(encoding="utf-8"))
+    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    snapshot_files_after = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
 
     run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
     run = await control_plane.execution_repository.get_run_record(run_id=run_id)
@@ -321,30 +412,37 @@ async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_
     second_checkpoint = await control_plane.publication.repository.get_checkpoint(
         checkpoint_id=f"turn-tool-checkpoint:{run_id}:attempt:0002"
     )
-    decision = (
-        None
-        if not attempts or attempts[0].recovery_decision_id is None
-        else await control_plane.publication.repository.get_recovery_decision(
-            decision_id=attempts[0].recovery_decision_id
-        )
+    decision = await control_plane.publication.repository.get_recovery_decision(
+        decision_id=f"turn-tool-recovery:{run_id}:same-attempt:0001"
     )
 
     assert result.success is True
+    assert model.calls == 0
     assert toolbox.calls == 1
+    assert result.turn is not None
+    assert result.turn.note == "control_plane_checkpoint_resume"
     assert run is not None
-    assert len(attempts) == 2
-    assert attempts[0].attempt_state.value == "attempt_interrupted"
-    assert attempts[1].attempt_state.value == "attempt_completed"
+    assert len(attempts) == 1
+    assert attempts[0].attempt_state.value == "attempt_completed"
     assert first_checkpoint is not None
-    assert first_checkpoint.resumability_class is CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT
-    assert second_checkpoint is not None
-    assert second_checkpoint.resumability_class is CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT
+    assert first_checkpoint.resumability_class is CheckpointResumabilityClass.RESUME_SAME_ATTEMPT
+    assert second_checkpoint is None
     assert decision is not None
     assert decision.authorized_next_action is RecoveryActionClass.RESUME_FROM_CHECKPOINT
     assert decision.failed_attempt_id == attempts[0].attempt_id
-    assert decision.new_attempt_id == attempts[1].attempt_id
+    assert decision.resumed_attempt_id == attempts[0].attempt_id
+    assert decision.new_attempt_id is None
     assert decision.target_checkpoint_id == first_checkpoint.checkpoint_id
     assert first_checkpoint.state_snapshot_ref in decision.required_precondition_refs
+    assert snapshot_files_after == [first_snapshot_path]
+    assert result.turn.raw["prompt_hash"] == first_snapshot_payload["prompt_hash"]
+    assert result.turn.raw["model"] == first_snapshot_payload["model"]
+    assert result.turn.raw["prompt_metadata"] == first_snapshot_payload["prompt_metadata"]
+    assert result.turn.raw["state_delta"] == first_snapshot_payload["state_delta"]
+    assert (
+        result.turn.raw["control_plane_resume"]["resumability_class"]
+        == CheckpointResumabilityClass.RESUME_SAME_ATTEMPT.value
+    )
 
 
 @pytest.mark.asyncio
@@ -426,3 +524,155 @@ async def test_turn_executor_resume_mode_rejects_post_effect_unfinished_attempt(
     assert truth.result_class is ResultClass.BLOCKED
     assert truth.closure_basis is ClosureBasisClassification.RECONCILIATION_CLOSED
     assert truth.authoritative_result_ref == reconciliation.reconciliation_id
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_resume_mode_rejects_post_effect_truth_on_resumed_attempt_before_model(
+    tmp_path: Path,
+) -> None:
+    control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+        control_plane_service=control_plane,
+    )
+    tool_args = {"path": "agent_output/out.txt", "content": "ok"}
+    pre_effect_turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[ToolCall(tool="write_file", args=tool_args)],
+    )
+
+    await write_turn_checkpoint_and_publish_if_needed(
+        executor=executor,
+        turn=pre_effect_turn,
+        context=_context(),
+        prompt_hash="prompt-hash-3",
+    )
+
+    run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
+    initial_run = await control_plane.execution_repository.get_run_record(run_id=run_id)
+    initial_attempt = await control_plane.execution_repository.get_attempt_record(
+        attempt_id=f"{run_id}:attempt:0001"
+    )
+    assert initial_run is not None
+    assert initial_attempt is not None
+    _, resumed_attempt = await recover_pre_effect_attempt_for_resume_mode(
+        execution_repository=control_plane.execution_repository,
+        publication=control_plane.publication,
+        run=initial_run,
+        current_attempt=initial_attempt,
+    )
+    assert resumed_attempt.attempt_id == initial_attempt.attempt_id
+    await control_plane.publish_step_result(
+        run_id=run_id,
+        attempt_id=resumed_attempt.attempt_id,
+        step_id="op-resumed-post-effect",
+        tool_name="write_file",
+        tool_args=tool_args,
+        result={"ok": True, "touched_paths": [tool_args["path"]]},
+        binding=None,
+        operation_id="op-resumed-post-effect",
+        replayed=False,
+    )
+
+    model = _Model()
+    toolbox = _Toolbox()
+    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    run = await control_plane.execution_repository.get_run_record(run_id=run_id)
+    attempts = await control_plane.execution_repository.list_attempt_records(run_id=run_id)
+    truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
+
+    assert result.success is False
+    assert result.error is not None
+    assert "run was closed from reconciliation evidence" in result.error
+    assert model.calls == 0
+    assert toolbox.calls == 0
+    assert run is not None
+    assert truth is not None
+    assert run.lifecycle_state is RunState.FAILED_TERMINAL
+    assert len(attempts) == 1
+    assert attempts[0].attempt_state.value == "attempt_interrupted"
+    assert attempts[0].side_effect_boundary_class is SideEffectBoundaryClass.POST_EFFECT_OBSERVED
+    assert truth.result_class is ResultClass.BLOCKED
+    assert truth.closure_basis is ClosureBasisClassification.RECONCILIATION_CLOSED
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_resume_mode_rejects_step_only_truth_on_resumed_attempt_before_model(
+    tmp_path: Path,
+) -> None:
+    control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+        control_plane_service=control_plane,
+    )
+    tool_args = {"path": "agent_output/out.txt", "content": "ok"}
+    pre_effect_turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[ToolCall(tool="write_file", args=tool_args)],
+    )
+
+    await write_turn_checkpoint_and_publish_if_needed(
+        executor=executor,
+        turn=pre_effect_turn,
+        context=_context(),
+        prompt_hash="prompt-hash-4",
+    )
+
+    run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
+    initial_run = await control_plane.execution_repository.get_run_record(run_id=run_id)
+    initial_attempt = await control_plane.execution_repository.get_attempt_record(
+        attempt_id=f"{run_id}:attempt:0001"
+    )
+    assert initial_run is not None
+    assert initial_attempt is not None
+    _, resumed_attempt = await recover_pre_effect_attempt_for_resume_mode(
+        execution_repository=control_plane.execution_repository,
+        publication=control_plane.publication,
+        run=initial_run,
+        current_attempt=initial_attempt,
+    )
+    assert resumed_attempt.attempt_id == initial_attempt.attempt_id
+    await control_plane.execution_repository.save_step_record(
+        record=StepRecord(
+            step_id="op-resumed-uncertain",
+            attempt_id=resumed_attempt.attempt_id,
+            step_kind="governed_tool_operation",
+            namespace_scope="issue:ISSUE-1",
+            input_ref="turn-tool-call:resumed-uncertain",
+            output_ref="turn-tool-result:op-resumed-uncertain",
+            capability_used=CapabilityClass.BOUNDED_LOCAL_MUTATION,
+            resources_touched=["tool:write_file", "workspace:agent_output/out.txt", "namespace:issue:ISSUE-1"],
+            observed_result_classification="tool_succeeded",
+            receipt_refs=["turn-tool-operation:op-resumed-uncertain"],
+            closure_classification="step_completed",
+        )
+    )
+
+    model = _Model()
+    toolbox = _Toolbox()
+    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    run = await control_plane.execution_repository.get_run_record(run_id=run_id)
+    attempts = await control_plane.execution_repository.list_attempt_records(run_id=run_id)
+    truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
+
+    assert result.success is False
+    assert result.error is not None
+    assert "run was closed from reconciliation evidence" in result.error
+    assert model.calls == 0
+    assert toolbox.calls == 0
+    assert run is not None
+    assert truth is not None
+    assert run.lifecycle_state is RunState.FAILED_TERMINAL
+    assert len(attempts) == 1
+    assert attempts[0].attempt_state.value == "attempt_interrupted"
+    assert attempts[0].side_effect_boundary_class is SideEffectBoundaryClass.EFFECT_BOUNDARY_UNCERTAIN
+    assert truth.result_class is ResultClass.BLOCKED
+    assert truth.closure_basis is ClosureBasisClassification.RECONCILIATION_CLOSED

@@ -423,6 +423,15 @@ async def _request_issue_transition(
             assignee=assignee,
             wait_reason=wait_reason,
         )
+        await _publish_issue_control_plane_transition(
+            self,
+            issue=issue,
+            current_status=current_status,
+            target_status=target_status,
+            reason=reason,
+            assignee=assignee,
+            metadata_payload=metadata_payload,
+        )
         return
 
     transition_service = WorkItemTransitionService(
@@ -462,7 +471,56 @@ async def _request_issue_transition(
         assignee=assignee,
         wait_reason=wait_reason,
     )
+    await _publish_issue_control_plane_transition(
+        self,
+        issue=issue,
+        current_status=current_status,
+        target_status=target_status,
+        reason=reason,
+        assignee=assignee,
+        metadata_payload=metadata_payload,
+    )
     issue.status = target_status
+
+
+async def _publish_issue_control_plane_transition(
+    self,
+    *,
+    issue: IssueConfig,
+    current_status: CardStatus,
+    target_status: CardStatus,
+    reason: str,
+    assignee: Optional[str],
+    metadata_payload: Dict[str, Any],
+) -> None:
+    session_id = str(metadata_payload.get("run_id") or "").strip()
+    if not session_id:
+        return
+    handled_by_dispatch = False
+    issue_control_plane = getattr(self, "issue_control_plane", None)
+    if issue_control_plane is not None:
+        handled_by_dispatch = await issue_control_plane.publish_issue_transition(
+            session_id=session_id,
+            issue_id=issue.id,
+            current_status=current_status,
+            target_status=target_status,
+            reason=reason,
+            assignee=assignee,
+            turn_index=metadata_payload.get("turn_index"),
+            review_turn=bool(metadata_payload.get("review_turn", False)),
+        )
+    scheduler_control_plane = getattr(self, "scheduler_control_plane", None)
+    if scheduler_control_plane is None or handled_by_dispatch or str(reason or "").strip().lower() == "turn_dispatch":
+        return
+    await scheduler_control_plane.publish_scheduler_transition(
+        session_id=session_id,
+        issue_id=issue.id,
+        current_status=current_status,
+        target_status=target_status,
+        reason=reason,
+        assignee=assignee,
+        metadata=metadata_payload,
+    )
 
 
 def _small_project_issue_threshold(self) -> int:
@@ -1176,6 +1234,17 @@ async def _maybe_schedule_team_replan(
             },
         }
     )
+    scheduler_control_plane = getattr(self, "scheduler_control_plane", None)
+    if scheduler_control_plane is not None:
+        await scheduler_control_plane.publish_child_issue_creation(
+            session_id=run_id,
+            issue_id=replan_issue_id,
+            active_build=active_build,
+            seat_name=replan_seat,
+            relationship_class="team_replan",
+            trigger_issue_ids=[str(getattr(item, "id", "") or "").strip() for item in triggering_issues],
+            metadata={"replan_count": next_count},
+        )
     for issue in triggering_issues:
         params = getattr(issue, "params", None)
         if isinstance(params, dict):
@@ -1414,6 +1483,7 @@ async def _execute_issue_turn(
 
     is_guard_turn = is_review_turn and ("integrity_guard" in list(seat_obj.roles))
     turn_status = self.loop_policy_node.turn_status_for_issue(is_review_turn)
+    turn_index = len(self.transcript) + 1
     if is_guard_turn:
         turn_status = CardStatus.AWAITING_GUARD_REVIEW
     await self._request_issue_transition(
@@ -1421,7 +1491,7 @@ async def _execute_issue_turn(
         target_status=turn_status,
         assignee=seat_name,
         reason="turn_dispatch",
-        metadata={"run_id": run_id, "review_turn": is_review_turn},
+        metadata={"run_id": run_id, "review_turn": is_review_turn, "turn_index": turn_index},
         roles=list(seat_obj.roles),
     )
 
@@ -1435,7 +1505,7 @@ async def _execute_issue_turn(
             issue=issue,
             target_status=CardStatus.IN_PROGRESS,
             reason="missing_role_asset",
-            metadata={"role": roles_to_load[0], "run_id": run_id},
+            metadata={"role": roles_to_load[0], "run_id": run_id, "turn_index": turn_index},
             roles=roles_to_load,
         )
         log_event(
@@ -1694,7 +1764,13 @@ async def _execute_issue_turn(
                             ),
                             violations=[],
                         )
-                        await self._handle_failure(issue, failure_result, run_id, roles_to_load)
+                        await self._handle_failure(
+                            issue,
+                            failure_result,
+                            run_id,
+                            roles_to_load,
+                            turn_index=turn_index,
+                        )
                         return
                 if guard_event:
                     log_event(
@@ -1754,14 +1830,33 @@ async def _execute_issue_turn(
                         issue=issue,
                         target_status=next_status,
                         reason="post_success_evaluator",
-                        metadata={"run_id": run_id, "seat": seat_name},
+                        metadata={"run_id": run_id, "seat": seat_name, "turn_index": turn_index},
                         roles=roles_to_load,
                     )
 
             await provider.clear_context()
             await self._save_checkpoint(run_id, epic, team, env, active_build)
+            issue_control_plane = getattr(self, "issue_control_plane", None)
+            if issue_control_plane is not None:
+                latest_issue = await self.async_cards.get_by_id(issue.id)
+                observed_status = issue.status
+                if isinstance(latest_issue, dict):
+                    observed_status = latest_issue.get("status", observed_status)
+                elif latest_issue is not None:
+                    observed_status = getattr(latest_issue, "status", observed_status)
+                await issue_control_plane.close_from_observed_status(
+                    session_id=run_id,
+                    issue_id=issue.id,
+                    observed_status=observed_status,
+                )
         else:
-            await self._handle_failure(issue, result, run_id, roles_to_load)
+            await self._handle_failure(
+                issue,
+                result,
+                run_id,
+                roles_to_load,
+                turn_index=turn_index,
+            )
     finally:
         await _close_provider_transport(provider)
 
@@ -2345,7 +2440,15 @@ async def _save_checkpoint(
     await self.snapshots.record(run_id, snapshot_data, legacy_transcript)
 
 
-async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, roles: List[str]):
+async def _handle_failure(
+    self,
+    issue: IssueConfig,
+    result: Any,
+    run_id: str,
+    roles: List[str],
+    *,
+    turn_index: int | None = None,
+):
     from orket.domain.failure_reporter import FailureReporter
 
     await FailureReporter.generate_report(
@@ -2365,11 +2468,14 @@ async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, ro
     # Mechanical governance violations are terminal for the issue.
     if action == "governance_violation":
         failure_status = self.evaluator_node.status_for_failure_action(action)
+        metadata = {"run_id": run_id, "error": result.error}
+        if turn_index is not None:
+            metadata["turn_index"] = turn_index
         await self._request_issue_transition(
             issue=issue,
             target_status=failure_status,
             reason="governance_violation",
-            metadata={"run_id": run_id, "error": result.error},
+            metadata=metadata,
             roles=roles,
         )
         await self.async_cards.save(issue.model_dump())
@@ -2387,11 +2493,14 @@ async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, ro
                 self.workspace,
             )
         failure_status = self.evaluator_node.status_for_failure_action(action)
+        metadata = {"run_id": run_id, "error": result.error}
+        if turn_index is not None:
+            metadata["turn_index"] = turn_index
         await self._request_issue_transition(
             issue=issue,
             target_status=failure_status,
             reason="catastrophic_failure",
-            metadata={"run_id": run_id, "error": result.error},
+            metadata=metadata,
             roles=roles,
         )
         await self.async_cards.save(issue.model_dump())
@@ -2426,16 +2535,19 @@ async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, ro
             self.workspace,
         )
 
+    metadata = {
+        "run_id": run_id,
+        "retry_count": issue.retry_count,
+        "max_retries": issue.max_retries,
+        "error": result.error,
+    }
+    if turn_index is not None:
+        metadata["turn_index"] = turn_index
     await self._request_issue_transition(
         issue=issue,
         target_status=self.evaluator_node.status_for_failure_action(action),
         reason="retry_scheduled",
-        metadata={
-            "run_id": run_id,
-            "retry_count": issue.retry_count,
-            "max_retries": issue.max_retries,
-            "error": result.error,
-        },
+        metadata=metadata,
         roles=roles,
     )
     await self.async_cards.save(issue.model_dump())

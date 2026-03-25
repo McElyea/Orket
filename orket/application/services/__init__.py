@@ -26,6 +26,8 @@ from .gitea_state_control_plane_reservation_service import (
 from .kernel_action_control_plane_service import KernelActionControlPlaneService
 from .kernel_action_control_plane_operator_service import KernelActionControlPlaneOperatorService
 from .kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
+from .orchestrator_issue_control_plane_service import OrchestratorIssueControlPlaneService
+from .orchestrator_scheduler_control_plane_service import OrchestratorSchedulerControlPlaneService
 from .pending_gate_control_plane_operator_service import PendingGateControlPlaneOperatorService
 from .sandbox_control_plane_checkpoint_service import SandboxControlPlaneCheckpointService
 from .sandbox_control_plane_closure_service import SandboxControlPlaneClosureService
@@ -54,6 +56,8 @@ __all__ = [
     "KernelActionControlPlaneService",
     "KernelActionControlPlaneOperatorService",
     "KernelActionControlPlaneViewService",
+    "OrchestratorIssueControlPlaneService",
+    "OrchestratorSchedulerControlPlaneService",
     "PendingGateControlPlaneOperatorService",
     "SandboxControlPlaneCheckpointService",
     "SandboxControlPlaneClosureService",

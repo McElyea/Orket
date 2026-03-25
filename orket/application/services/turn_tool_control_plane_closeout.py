@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
+    release_execution_authority_if_present,
+)
 from orket.application.services.turn_tool_control_plane_support import utc_now
 from orket.core.contracts import AttemptRecord, FinalTruthRecord, ReconciliationRecord, RecoveryDecisionRecord, RunRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
@@ -167,6 +170,12 @@ async def finalize_turn_execution(
             update={"lifecycle_state": RunState.COMPLETED, "final_truth_record_id": truth.final_truth_record_id}
         )
         await execution_repository.save_run_record(record=run)
+        await release_execution_authority_if_present(
+            publication=publication,
+            run=run,
+            release_basis="turn_tool_execution_completed",
+            publication_timestamp=closed_at,
+        )
         return run, attempt, truth
 
     pre_effect_failure = executed_step_count == 0
@@ -230,6 +239,12 @@ async def finalize_turn_execution(
         update={"lifecycle_state": RunState.FAILED_TERMINAL, "final_truth_record_id": truth.final_truth_record_id}
     )
     await execution_repository.save_run_record(record=run)
+    await release_execution_authority_if_present(
+        publication=publication,
+        run=run,
+        release_basis=f"turn_tool_execution_terminal:{failure_class}",
+        publication_timestamp=closed_at,
+    )
     return run, attempt, truth
 
 
@@ -279,6 +294,12 @@ async def close_reconciliation_required_resume_mode(
         update={"lifecycle_state": RunState.FAILED_TERMINAL, "final_truth_record_id": truth.final_truth_record_id}
     )
     await execution_repository.save_run_record(record=updated_run)
+    await release_execution_authority_if_present(
+        publication=publication,
+        run=updated_run,
+        release_basis=f"turn_tool_reconciliation_closed:{failure_classification_basis}",
+        publication_timestamp=utc_now(),
+    )
     return updated_run, updated_attempt, decision, truth
 
 

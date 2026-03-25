@@ -20,8 +20,9 @@ async def publish_resume_reconciliation(
     acceptance: CheckpointAcceptanceRecord,
     step_refs: Sequence[str],
     effect_refs: Sequence[str],
+    operation_refs: Sequence[str] = (),
 ) -> tuple[object, list[str]]:
-    observed_refs = list(effect_refs) if effect_refs else list(step_refs)
+    observed_refs = list(effect_refs) if effect_refs else (list(step_refs) if step_refs else list(operation_refs))
     intended_refs = [
         checkpoint.checkpoint_id,
         acceptance.acceptance_id,

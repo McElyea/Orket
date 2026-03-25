@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.23] - 2026-03-24 - "The Same-Attempt Recovery And Issue Control Plane Cut"
+
+### Added
+- **Orchestrator Issue And Scheduler Control Plane**: Added first-class control-plane publication for default orchestrator issue dispatch, scheduler-owned issue mutations, and team-replan child issue creation, including namespace reservations, lease promotion, step/effect publication, and terminal closeout truth.
+- **Governed Turn Replay Guards**: Added dedicated governed-turn replay and evidence helpers plus deeper integration coverage for immutable checkpoint snapshot alignment, missing snapshot artifacts, resumed-attempt dirty truth, and orphan operation evidence on resume.
+
+### Changed
+- **Governed Turn Resume Semantics**: New governed pre-effect checkpoints now publish `resume_same_attempt`, safe `resume_mode` continues on the current attempt before prompt/model work, existing older new-attempt checkpoint lineage remains consumable, and same-attempt or replacement-attempt resumes fail closed once durable step, effect, or orphan operation truth already exists.
+- **Turn Tool Execution Closeout**: Governed turn closeout now releases execution reservation and lease authority on successful completion, terminal failure, and reconciliation-closed unsafe resume.
+- **Authority Docs And README**: Updated `CURRENT_AUTHORITY.md`, `README.md`, and the active ControlPlane packet docs so current repo entrypoints and the live control-plane boundary match runtime behavior.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use the updated governed turn and orchestrator control-plane authority docs as the source of truth for same-attempt governed resume and default issue/scheduler publication; no manual migration is required.
+
 ## [0.4.22] - 2026-03-24 - "The Governed Turn Artifact Replay Cut"
 
 ### Added

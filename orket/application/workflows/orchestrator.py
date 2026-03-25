@@ -9,6 +9,12 @@ from orket.adapters.storage.async_control_plane_execution_repository import Asyn
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.orchestrator_issue_control_plane_service import (
+    OrchestratorIssueControlPlaneService,
+)
+from orket.application.services.orchestrator_scheduler_control_plane_service import (
+    OrchestratorSchedulerControlPlaneService,
+)
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
@@ -101,6 +107,14 @@ class Orchestrator:
         self.control_plane_repository = AsyncControlPlaneRecordRepository(control_plane_db_path)
         self.control_plane_execution_repository = AsyncControlPlaneExecutionRepository(control_plane_db_path)
         self.control_plane_publication = ControlPlanePublicationService(repository=self.control_plane_repository)
+        self.issue_control_plane = OrchestratorIssueControlPlaneService(
+            execution_repository=self.control_plane_execution_repository,
+            publication=self.control_plane_publication,
+        )
+        self.scheduler_control_plane = OrchestratorSchedulerControlPlaneService(
+            execution_repository=self.control_plane_execution_repository,
+            publication=self.control_plane_publication,
+        )
         self.tool_approval_control_plane_reservation = ToolApprovalControlPlaneReservationService(
             publication=self.control_plane_publication
         )
