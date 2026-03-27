@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orket.core.contracts import WORKLOAD_CONTRACT_VERSION_V1, parse_workload_contract
-from orket.runtime.workload_adapters import build_cards_workload_contract
+from orket.core.contracts import WORKLOAD_CONTRACT_VERSION_V1, WorkloadRecord, parse_workload_contract
+from orket.runtime.workload_adapters import (
+    CARDS_CONTROL_PLANE_WORKLOAD_ID,
+    build_cards_control_plane_workload_record,
+    build_cards_workload_contract,
+)
 from orket.schema import ArchitectureGovernance, EpicConfig, IssueConfig
 
 
@@ -37,3 +41,25 @@ def test_build_cards_workload_contract_v1_shape(tmp_path: Path) -> None:
     assert len(model.units) == 2
     assert any(unit.get("card_id") == "ISSUE-1" for unit in model.units)
     assert any(item.get("kind") == "asset" for item in model.required_materials)
+
+
+def test_build_cards_control_plane_workload_record_projects_shared_contract(tmp_path: Path) -> None:
+    contract_payload = build_cards_workload_contract(
+        epic=_epic(),
+        run_id="sess-2",
+        build_id="build-2",
+        workspace=tmp_path,
+        department="core",
+    )
+
+    record = build_cards_control_plane_workload_record(
+        contract_payload=contract_payload,
+        department="core",
+    )
+
+    assert isinstance(record, WorkloadRecord)
+    assert record.workload_id == CARDS_CONTROL_PLANE_WORKLOAD_ID
+    assert record.workload_version == WORKLOAD_CONTRACT_VERSION_V1
+    assert record.input_contract_ref == "docs/specs/WORKLOAD_CONTRACT_V1.md"
+    assert record.output_contract_ref == "control_plane.contract.v1:RunRecord"
+    assert record.workload_digest.startswith("sha256:")

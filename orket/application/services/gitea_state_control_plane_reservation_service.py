@@ -110,7 +110,7 @@ class GiteaStateControlPlaneReservationService:
                 if observed_at >= lease.publication_timestamp
                 else lease.publication_timestamp
             )
-            await self.publication.publish_lease(
+            released_lease = await self.publication.publish_lease(
                 lease_id=lease.lease_id,
                 resource_id=lease.resource_id,
                 holder_ref=lease.holder_ref,
@@ -125,6 +125,10 @@ class GiteaStateControlPlaneReservationService:
                 last_confirmed_observation=lease.last_confirmed_observation,
                 cleanup_eligibility_rule=lease.cleanup_eligibility_rule,
                 source_reservation_id=lease.source_reservation_id,
+            )
+            await GiteaStateControlPlaneLeaseService(publication=self.publication).publish_resource_snapshot(
+                card_id=card_id,
+                lease=released_lease,
             )
         reservation_id = self.reservation_id_for(card_id, lease_epoch)
         reservation = await self.publication.repository.get_latest_reservation_record(

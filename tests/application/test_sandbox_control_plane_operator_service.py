@@ -60,4 +60,5 @@ async def test_sandbox_operator_service_publishes_cancel_run_command() -> None:
     assert stored is not None
     assert stored.command_class is OperatorCommandClass.CANCEL_RUN
     assert stored.target_ref == "run-1"
+    assert stored.affected_resource_refs == ["sandbox-scope:sb-1"]
     assert stored.receipt_refs == ["evidence/sb-1.json"]

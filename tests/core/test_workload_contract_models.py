@@ -5,6 +5,8 @@ import pytest
 from orket.core.contracts import (
     WORKLOAD_CONTRACT_VERSION_V1,
     WorkloadContractV1,
+    WorkloadRecord,
+    build_control_plane_workload_record_from_workload_contract,
     missing_required_workload_keys,
     parse_workload_contract,
 )
@@ -51,3 +53,19 @@ def test_workload_contract_rejects_extra_fields() -> None:
     payload["legacy_fallback"] = True
     with pytest.raises(ValueError):
         WorkloadContractV1.model_validate(payload)
+
+
+def test_workload_contract_projects_into_control_plane_workload_record() -> None:
+    record = build_control_plane_workload_record_from_workload_contract(
+        workload_id="odr-run-arbiter",
+        contract_payload=_valid_payload(),
+        output_contract_ref="benchmarks/published/ODR/index.json",
+        definition_payload={"runner": "run_odr_quant_sweep.py"},
+    )
+
+    assert isinstance(record, WorkloadRecord)
+    assert record.workload_id == "odr-run-arbiter"
+    assert record.workload_version == WORKLOAD_CONTRACT_VERSION_V1
+    assert record.input_contract_ref == "docs/specs/WORKLOAD_CONTRACT_V1.md"
+    assert record.output_contract_ref == "benchmarks/published/ODR/index.json"
+    assert record.workload_digest.startswith("sha256:")

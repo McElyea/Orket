@@ -7,6 +7,9 @@ import pytest
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
+from orket.application.services.control_plane_workload_catalog import (
+    sandbox_runtime_workload_for_tech_stack,
+)
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.sandbox_control_plane_execution_service import SandboxControlPlaneExecutionService
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
@@ -67,8 +70,7 @@ async def test_reconciliation_transitions_active_missing_runtime_to_terminal_los
     await execution_service.initialize_execution(
         sandbox_id="sb-1",
         run_id="run-1",
-        workload_id="sandbox-workload:fastapi-react-postgres",
-        workload_version="docker_sandbox_runtime.v1",
+        workload=sandbox_runtime_workload_for_tech_stack("fastapi-react-postgres"),
         compose_project="orket-sandbox-sb-1",
         workspace_path="workspace/sb-1",
         configuration_payload={"tech_stack": "fastapi-react-postgres"},
@@ -96,6 +98,7 @@ async def test_reconciliation_transitions_active_missing_runtime_to_terminal_los
     )
     final_truth = await control_plane_repo.get_final_truth(run_id="run-1")
     lease = await control_plane_repo.get_latest_lease_record(lease_id="sandbox-lease:sb-1")
+    resource = await control_plane_repo.get_latest_resource_record(resource_id="sandbox-scope:sb-1")
     run = await execution_repo.get_run_record(run_id="run-1")
     attempts = await execution_repo.list_attempt_records(run_id="run-1")
     decision = await control_plane_repo.get_recovery_decision(
@@ -109,6 +112,9 @@ async def test_reconciliation_transitions_active_missing_runtime_to_terminal_los
     assert reconciliation is not None
     assert lease is not None
     assert lease.status is LeaseStatus.UNCERTAIN
+    assert resource is not None
+    assert resource.current_observed_state.startswith("sandbox_state:terminal")
+    assert resource.orphan_classification.value == "suspected_orphan"
     assert final_truth is not None
     assert final_truth.result_class is ResultClass.BLOCKED
     assert final_truth.closure_basis is ClosureBasisClassification.RECONCILIATION_CLOSED
@@ -133,8 +139,7 @@ async def test_reconciliation_transitions_expired_active_record_to_reclaimable(t
     await execution_service.initialize_execution(
         sandbox_id="sb-1",
         run_id="run-1",
-        workload_id="sandbox-workload:fastapi-react-postgres",
-        workload_version="docker_sandbox_runtime.v1",
+        workload=sandbox_runtime_workload_for_tech_stack("fastapi-react-postgres"),
         compose_project="orket-sandbox-sb-1",
         workspace_path="workspace/sb-1",
         configuration_payload={"tech_stack": "fastapi-react-postgres"},
@@ -168,6 +173,7 @@ async def test_reconciliation_transitions_expired_active_record_to_reclaimable(t
     )
     snapshot = await repo.get_snapshot("sandbox-lifecycle-snapshot:sb-1:00000004")
     lease = await control_plane_repo.get_latest_lease_record(lease_id="sandbox-lease:sb-1")
+    resource = await control_plane_repo.get_latest_resource_record(resource_id="sandbox-scope:sb-1")
     run = await execution_repo.get_run_record(run_id="run-1")
     attempts = await execution_repo.list_attempt_records(run_id="run-1")
 
@@ -178,6 +184,9 @@ async def test_reconciliation_transitions_expired_active_record_to_reclaimable(t
     assert reconciliation is not None
     assert lease is not None
     assert lease.status is LeaseStatus.EXPIRED
+    assert resource is not None
+    assert resource.current_observed_state.startswith("sandbox_state:reclaimable")
+    assert resource.orphan_classification.value == "not_orphaned"
     assert reconciliation.divergence_class is DivergenceClass.OWNERSHIP_DIVERGED
     assert reconciliation.safe_continuation_class is SafeContinuationClass.UNSAFE_TO_CONTINUE
     assert checkpoint is not None
@@ -261,6 +270,7 @@ async def test_reconciliation_marks_terminal_absent_record_as_cleaned_externally
         reconciliation_id="sandbox-reconciliation:run-1:00000004"
     )
     lease = await control_plane_repo.get_latest_lease_record(lease_id="sandbox-lease:sb-1")
+    resource = await control_plane_repo.get_latest_resource_record(resource_id="sandbox-scope:sb-1")
 
     assert result is not None
     assert result.record.state is SandboxState.CLEANED
@@ -269,6 +279,9 @@ async def test_reconciliation_marks_terminal_absent_record_as_cleaned_externally
     assert reconciliation is not None
     assert lease is not None
     assert lease.status is LeaseStatus.RELEASED
+    assert resource is not None
+    assert resource.current_observed_state.startswith("sandbox_state:cleaned")
+    assert resource.orphan_classification.value == "not_orphaned"
     assert reconciliation.divergence_class is DivergenceClass.EXPECTED_EFFECT_OBSERVED
     assert reconciliation.safe_continuation_class is SafeContinuationClass.TERMINAL_WITHOUT_CLEANUP
 

@@ -30,6 +30,10 @@ from .workload_contract import (
     missing_required_workload_keys,
     parse_workload_contract,
 )
+from .workload_identity import (
+    build_control_plane_workload_record,
+    build_control_plane_workload_record_from_workload_contract,
+)
 
 __all__ = [
     "StateBackendContract",
@@ -60,4 +64,6 @@ __all__ = [
     "WorkloadContractV1",
     "missing_required_workload_keys",
     "parse_workload_contract",
+    "build_control_plane_workload_record",
+    "build_control_plane_workload_record_from_workload_contract",
 ]

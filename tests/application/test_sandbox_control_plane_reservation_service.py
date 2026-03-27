@@ -18,6 +18,7 @@ from orket.core.contracts import (
     ReconciliationRecord,
     RecoveryDecisionRecord,
     ReservationRecord,
+    ResourceRecord,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 from orket.core.domain import ReservationStatus
@@ -30,6 +31,7 @@ pytestmark = pytest.mark.unit
 class ReservationOnlyRepository(ControlPlaneRecordRepository):
     def __init__(self) -> None:
         self.reservations_by_id: dict[str, list[ReservationRecord]] = {}
+        self.resources_by_id: dict[str, list[ResourceRecord]] = {}
 
     async def save_reservation_record(
         self,
@@ -51,6 +53,21 @@ class ReservationOnlyRepository(ControlPlaneRecordRepository):
 
     async def get_latest_reservation_record_for_holder_ref(self, *, holder_ref: str) -> ReservationRecord | None:
         return None
+
+    async def save_resource_record(
+        self,
+        *,
+        record: ResourceRecord,
+    ) -> ResourceRecord:
+        self.resources_by_id.setdefault(record.resource_id, []).append(record)
+        return record
+
+    async def list_resource_records(self, *, resource_id: str) -> list[ResourceRecord]:
+        return list(self.resources_by_id.get(resource_id, ()))
+
+    async def get_latest_resource_record(self, *, resource_id: str) -> ResourceRecord | None:
+        records = self.resources_by_id.get(resource_id, ())
+        return records[-1] if records else None
 
     async def append_effect_journal_entry(
         self,

@@ -1,5 +1,8 @@
+# Layer: integration
+
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
@@ -13,6 +16,8 @@ import orket.interfaces.api as api_module
 from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+
+pytestmark = pytest.mark.integration
 
 
 client = TestClient(app)
@@ -149,6 +154,10 @@ def test_kernel_operator_surfaces_cover_one_action_lifecycle(monkeypatch) -> Non
     assert approval_rows
     assert approval_rows[0]["status"] == "APPROVED"
     assert approval_rows[0]["control_plane_operator_action"]["input_class"] == "operator_risk_acceptance"
+    assert approval_rows[0]["control_plane_operator_action"]["affected_resource_refs"] == [
+        f"session:{session_id}",
+        f"kernel-action-scope:session:{session_id}",
+    ]
     assert approval_rows[0]["control_plane_reservation"]["status"] == "reservation_released"
     assert approval_rows[0]["control_plane_target_ref"] == (
         f"kernel-action-run:{session_id}:{trace_id}"
@@ -215,6 +224,11 @@ def test_kernel_operator_surfaces_cover_one_action_lifecycle(monkeypatch) -> Non
     assert approval_rows[0]["control_plane_target_operator_action"]["receipt_refs"] == [f"approval-request:{approval_id}"]
     assert approval_rows[0]["control_plane_target_operator_action"]["affected_transition_refs"] == [
         f"kernel-action-run:{session_id}:{trace_id}:approval:pending->approved"
+    ]
+    assert approval_rows[0]["control_plane_target_operator_action"]["affected_resource_refs"] == [
+        f"session:{session_id}",
+        f"kernel-action-scope:session:{session_id}",
+        f"kernel-action-run:{session_id}:{trace_id}",
     ]
     assert approval_rows[0]["control_plane_target_reservation"]["reservation_kind"] == "operator_hold_reservation"
     assert approval_rows[0]["control_plane_target_reservation"]["status"] == "reservation_released"

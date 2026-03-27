@@ -82,11 +82,27 @@ class CoordinatorLeaseSummary(BaseModel):
     source_reservation_id: str | None = None
 
 
+class CoordinatorResourceSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    resource_id: str
+    resource_kind: str
+    namespace_scope: str
+    ownership_class: str
+    current_observed_state: str
+    last_observed_timestamp: str
+    cleanup_authority_class: str
+    provenance_ref: str
+    reconciliation_status: str
+    orphan_classification: str
+
+
 class CoordinatorCardResponse(Card):
     model_config = ConfigDict(extra="forbid")
 
     control_plane_reservation: CoordinatorReservationSummary | None = None
     control_plane_lease: CoordinatorLeaseSummary | None = None
+    control_plane_resource: CoordinatorResourceSummary | None = None
 
 
 store = InMemoryCoordinatorStore()
@@ -125,6 +141,12 @@ def _snapshot_cards() -> list[Card]:
     return store.snapshot_cards()
 
 
+def _should_require_active_authority(*, card: Card | None, node_id: str) -> bool:
+    if card is None or card.state != "CLAIMED" or card.hedged_execution:
+        return False
+    return str(card.claimed_by or "").strip() == str(node_id).strip()
+
+
 def _reservation_summary(record) -> CoordinatorReservationSummary | None:
     if record is None:
         return None
@@ -159,9 +181,29 @@ def _lease_summary(record) -> CoordinatorLeaseSummary | None:
     )
 
 
+def _resource_summary(record) -> CoordinatorResourceSummary | None:
+    if record is None:
+        return None
+    return CoordinatorResourceSummary(
+        resource_id=record.resource_id,
+        resource_kind=record.resource_kind,
+        namespace_scope=record.namespace_scope,
+        ownership_class=record.ownership_class.value,
+        current_observed_state=record.current_observed_state,
+        last_observed_timestamp=record.last_observed_timestamp,
+        cleanup_authority_class=record.cleanup_authority_class.value,
+        provenance_ref=record.provenance_ref,
+        reconciliation_status=record.reconciliation_status,
+        orphan_classification=record.orphan_classification.value,
+    )
+
+
 async def _enrich_card_with_control_plane(card: Card) -> CoordinatorCardResponse:
     lease = await control_plane_repository.get_latest_lease_record(
         lease_id=control_plane_lease_service.lease_id_for(card.id)
+    )
+    resource = await control_plane_repository.get_latest_resource_record(
+        resource_id=control_plane_lease_service.resource_id_for(card.id)
     )
     reservation = None
     if lease is not None and lease.source_reservation_id is not None:
@@ -171,6 +213,7 @@ async def _enrich_card_with_control_plane(card: Card) -> CoordinatorCardResponse
     payload = card.model_dump()
     payload["control_plane_reservation"] = _reservation_summary(reservation)
     payload["control_plane_lease"] = _lease_summary(lease)
+    payload["control_plane_resource"] = _resource_summary(resource)
     return CoordinatorCardResponse.model_validate(payload)
 
 
@@ -179,26 +222,26 @@ async def get_cards(state: str = Query(default="open")) -> list[CoordinatorCardR
     if state.lower() != "open":
         raise HTTPException(status_code=400, detail='only "open" supported')
     previous_cards = await asyncio.to_thread(_snapshot_cards)
+    observed_at = _utc_now()
+    for previous_card in previous_cards:
+        await control_plane_lease_service.publish_expired_from_snapshot(card=previous_card, observed_at=observed_at)
     try:
         cards = await asyncio.to_thread(store.list_open_cards)
     except CoordinatorStoreError as exc:
         raise _http_exception_for_store_error(exc) from exc
-    observed_at = _utc_now()
-    for previous_card in previous_cards:
-        await control_plane_lease_service.publish_expired_from_snapshot(card=previous_card, observed_at=observed_at)
     return [await _enrich_card_with_control_plane(card) for card in cards]
 
 
 @app.post("/cards/{id}/claim", response_model=CoordinatorCardResponse)
 async def claim_card(id: str, request: ClaimRequest) -> CoordinatorCardResponse:
     previous_card = await asyncio.to_thread(_snapshot_card_or_none, id)
+    observed_at = _utc_now()
+    if previous_card is not None:
+        await control_plane_lease_service.publish_expired_from_snapshot(card=previous_card, observed_at=observed_at)
     try:
         card = await asyncio.to_thread(store.claim, id, request.node_id, request.lease_duration)
     except CoordinatorStoreError as exc:
         raise _http_exception_for_store_error(exc) from exc
-    observed_at = _utc_now()
-    if previous_card is not None:
-        await control_plane_lease_service.publish_expired_from_snapshot(card=previous_card, observed_at=observed_at)
     lease_epoch = await control_plane_lease_service.next_claim_epoch(card_id=card.id, node_id=request.node_id)
     reservation = await control_plane_reservation_service.publish_claim_reservation(
         card=card,
@@ -225,6 +268,12 @@ async def claim_card(id: str, request: ClaimRequest) -> CoordinatorCardResponse:
 
 @app.post("/cards/{id}/renew", response_model=CoordinatorCardResponse)
 async def renew_card(id: str, request: RenewRequest) -> CoordinatorCardResponse:
+    previous_card = await asyncio.to_thread(_snapshot_card_or_none, id)
+    if _should_require_active_authority(card=previous_card, node_id=request.node_id):
+        await control_plane_lease_service.require_active_authority(
+            card_id=id,
+            error_context="coordinator renew preflight",
+        )
     try:
         card = await asyncio.to_thread(store.renew, id, request.node_id, request.lease_duration)
     except CoordinatorStoreError as exc:
@@ -240,6 +289,12 @@ async def renew_card(id: str, request: RenewRequest) -> CoordinatorCardResponse:
 
 @app.post("/cards/{id}/complete", response_model=CoordinatorCardResponse)
 async def complete_card(id: str, request: CompleteRequest) -> CoordinatorCardResponse:
+    previous_card = await asyncio.to_thread(_snapshot_card_or_none, id)
+    if _should_require_active_authority(card=previous_card, node_id=request.node_id):
+        await control_plane_lease_service.require_active_authority(
+            card_id=id,
+            error_context="coordinator complete preflight",
+        )
     try:
         card = await asyncio.to_thread(store.complete, id, request.node_id, request.result)
     except CoordinatorStoreError as exc:
@@ -255,6 +310,12 @@ async def complete_card(id: str, request: CompleteRequest) -> CoordinatorCardRes
 
 @app.post("/cards/{id}/fail", response_model=CoordinatorCardResponse)
 async def fail_card(id: str, request: FailRequest) -> CoordinatorCardResponse:
+    previous_card = await asyncio.to_thread(_snapshot_card_or_none, id)
+    if _should_require_active_authority(card=previous_card, node_id=request.node_id):
+        await control_plane_lease_service.require_active_authority(
+            card_id=id,
+            error_context="coordinator fail preflight",
+        )
     try:
         card = await asyncio.to_thread(store.fail, id, request.node_id, request.result)
     except CoordinatorStoreError as exc:

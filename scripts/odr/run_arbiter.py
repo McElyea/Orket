@@ -12,7 +12,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.core.contracts import WORKLOAD_CONTRACT_VERSION_V1, parse_workload_contract
+from orket.core.contracts import (
+    WORKLOAD_CONTRACT_VERSION_V1,
+    build_control_plane_workload_record_from_workload_contract,
+    parse_workload_contract,
+)
 
 
 ERROR_PREFLIGHT = "E_ARB_PREFLIGHT_MISSING_MATERIAL"
@@ -116,6 +120,12 @@ class RunArbiter:
                 "provenance_targets": provenance_targets,
             }
         ).model_dump()
+        control_plane_workload_record = build_control_plane_workload_record_from_workload_contract(
+            workload_id="odr-run-arbiter",
+            contract_payload=workload_contract,
+            output_contract_ref=str(index_out.as_posix()),
+            definition_payload={"runner": "run_odr_quant_sweep.py"},
+        ).model_dump(mode="json")
 
         return {
             "schema_version": "odr.run_arbiter.plan.v1",
@@ -124,6 +134,7 @@ class RunArbiter:
             "run_pairs": run_pairs,
             "expected_artifacts": sorted(expected_artifacts),
             "workload_contract": workload_contract,
+            "control_plane_workload_record": control_plane_workload_record,
         }
 
     def write_plan(self, plan: dict[str, Any]) -> None:

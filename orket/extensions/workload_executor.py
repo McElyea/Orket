@@ -44,19 +44,19 @@ class WorkloadExecutor:
         self,
         *,
         extension: ExtensionRecord,
-        workload_id: str,
+        workload: WorkloadRecord,
         input_config: dict[str, Any],
         workspace: Path,
         department: str,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
-        workload = self.loader.load_legacy_workload(extension, workload_id)
-        run_plan = self._compile_workload(workload, input_config, interaction_context)
-        if run_plan.workload_id != workload_id:
+        loaded_workload = self.loader.load_legacy_workload(extension, workload.workload_id)
+        run_plan = self._compile_workload(loaded_workload, input_config, interaction_context)
+        if run_plan.workload_id != workload.workload_id:
             raise ValueError("RunPlan workload_id mismatch")
 
         if self.artifacts.reproducibility.reliable_mode_enabled():
-            self.artifacts.reproducibility.validate_required_materials(workload.required_materials())
+            self.artifacts.reproducibility.validate_required_materials(loaded_workload.required_materials())
             self.artifacts.reproducibility.validate_clean_git_if_required()
 
         plan_hash = run_plan.plan_hash()
@@ -71,18 +71,20 @@ class WorkloadExecutor:
             department=department,
             interaction_context=interaction_context,
         )
-        validation_errors = self.artifacts.run_validators(workload, run_result, artifact_root)
+        validation_errors = self.artifacts.run_validators(loaded_workload, run_result, artifact_root)
         if validation_errors:
             raise RuntimeError("Post-run validation failed: " + "; ".join(validation_errors))
 
-        summary = workload.summarize({"run_result": run_result, "artifact_root": str(artifact_root)})
+        summary = loaded_workload.summarize({"run_result": run_result, "artifact_root": str(artifact_root)})
         if not isinstance(summary, dict):
             raise TypeError("summarize(run_artifacts) must return a dict")
         if interaction_context is not None:
             await interaction_context.emit_event(
                 StreamEventType.TURN_FINAL, {"authoritative": False, "summary": summary}
             )
-            await interaction_context.request_commit(CommitIntent(type="turn_finalize", ref=workload_id))
+            await interaction_context.request_commit(
+                CommitIntent(type="turn_finalize", ref=workload.workload_id)
+            )
 
         governed_identity = self._build_governed_identity(
             extension=extension,
@@ -106,7 +108,8 @@ class WorkloadExecutor:
         provenance = await asyncio.to_thread(
             self.artifacts.build_provenance,
             extension=extension,
-            workload=workload,
+            workload=loaded_workload,
+            manifest_workload=workload,
             input_config=input_config,
             run_plan=run_plan,
             plan_hash=plan_hash,

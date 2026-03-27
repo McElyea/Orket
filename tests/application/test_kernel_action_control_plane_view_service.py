@@ -129,6 +129,12 @@ async def test_kernel_action_control_plane_view_service_summarizes_run_effect_an
     assert summary["latest_operator_action"]["attestation_payload"] == {}
     assert summary["latest_operator_action"]["precondition_basis_ref"] == "kernel-session-end:manual-close"
     assert summary["latest_operator_action"]["receipt_refs"] == ["kernel-ledger-event:8"]
+    assert summary["latest_operator_action"]["affected_transition_refs"] == [
+        f"kernel-action-run:{session_id}:{trace_id}"
+    ]
+    assert summary["latest_operator_action"]["affected_resource_refs"] == [
+        f"kernel-action-scope:session:{session_id}"
+    ]
 
 
 @pytest.mark.asyncio
@@ -312,3 +318,9 @@ async def test_kernel_action_control_plane_view_service_surfaces_latest_attestat
     assert summary["latest_operator_action"]["risk_acceptance_scope"] is None
     assert summary["latest_operator_action"]["attestation_scope"] == "run_scope"
     assert summary["latest_operator_action"]["attestation_payload"] == {"checkpoint_verified": True}
+    assert summary["latest_operator_action"]["affected_transition_refs"] == [
+        f"kernel-action-run:{session_id}:{trace_id}"
+    ]
+    assert summary["latest_operator_action"]["affected_resource_refs"] == [
+        f"kernel-action-scope:session:{session_id}"
+    ]

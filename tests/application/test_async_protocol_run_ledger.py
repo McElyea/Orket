@@ -456,6 +456,15 @@ async def test_async_protocol_run_ledger_get_run_returns_none_without_run_starte
 async def test_async_protocol_run_ledger_adds_tool_invocation_manifest_for_tool_events(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
     call_payload = _tool_call_payload(session_id="sess-manifest", operation_id="op-1")
+    call_payload["tool_invocation_manifest"] = build_tool_invocation_manifest(
+        run_id="sess-manifest",
+        tool_name="write_file",
+        control_plane_run_id="turn-tool-run:sess-manifest:ISSUE-1:coder:0001",
+        control_plane_attempt_id="turn-tool-run:sess-manifest:ISSUE-1:coder:0001:attempt:0001",
+        control_plane_reservation_id="turn-tool-reservation:turn-tool-run:sess-manifest:ISSUE-1:coder:0001",
+        control_plane_lease_id="turn-tool-lease:turn-tool-run:sess-manifest:ISSUE-1:coder:0001",
+        control_plane_resource_id="namespace:issue:ISSUE-1",
+    )
     appended = await repo.append_event(
         session_id="sess-manifest",
         kind="tool_call",
@@ -466,6 +475,14 @@ async def test_async_protocol_run_ledger_adds_tool_invocation_manifest_for_tool_
     assert manifest["tool_name"] == "write_file"
     assert manifest["run_id"] == "sess-manifest"
     assert manifest["determinism_class"] == "workspace"
+    assert manifest["control_plane_run_id"] == "turn-tool-run:sess-manifest:ISSUE-1:coder:0001"
+    assert manifest["control_plane_attempt_id"] == "turn-tool-run:sess-manifest:ISSUE-1:coder:0001:attempt:0001"
+    assert (
+        manifest["control_plane_reservation_id"]
+        == "turn-tool-reservation:turn-tool-run:sess-manifest:ISSUE-1:coder:0001"
+    )
+    assert manifest["control_plane_lease_id"] == "turn-tool-lease:turn-tool-run:sess-manifest:ISSUE-1:coder:0001"
+    assert manifest["control_plane_resource_id"] == "namespace:issue:ISSUE-1"
     assert len(str(manifest["manifest_hash"])) == 64
     assert len(str(appended["tool_call_hash"])) == 64
 

@@ -117,6 +117,7 @@ class ArtifactProvenanceBuilder:
         *,
         extension: ExtensionRecord,
         workload: Workload,
+        manifest_workload: WorkloadRecord,
         input_config: dict[str, Any],
         run_plan: RunPlan,
         plan_hash: str,
@@ -168,6 +169,9 @@ class ArtifactProvenanceBuilder:
                 "compat_fallbacks": list(extension.compat_fallbacks),
             },
             "workload": {"workload_id": workload.workload_id, "workload_version": workload.workload_version},
+            "control_plane_workload_record": manifest_workload.to_control_plane_workload_record(
+                extension=extension
+            ).model_dump(mode="json"),
             "input_config": input_config if verbose else {},
             "input_config_digest": input_digest,
             "input_config_redacted": self._redacted_snapshot(input_config),
@@ -238,6 +242,9 @@ class ArtifactProvenanceBuilder:
                 "entrypoint": workload.entrypoint,
                 "required_capabilities": list(workload.required_capabilities),
             },
+            "control_plane_workload_record": workload.to_control_plane_workload_record(
+                extension=extension
+            ).model_dump(mode="json"),
             "department": department,
             "input_config": input_config if verbose else {},
             "input_config_digest": input_digest,

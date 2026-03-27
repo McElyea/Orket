@@ -32,6 +32,7 @@ async def test_kernel_action_operator_service_publishes_cancel_command() -> None
 
     assert record.command_class.value == "cancel_run"
     assert record.result == "accepted_cancel"
+    assert record.affected_resource_refs == ["kernel-action-scope:session:sess-kernel-op-1"]
     assert record.receipt_refs == ["kernel-ledger-event:abc"]
 
 
@@ -59,3 +60,4 @@ async def test_kernel_action_operator_service_publishes_attestation() -> None:
     assert record.attestation_scope == "run_scope"
     assert record.attestation_payload == {"observation": "manual_verification"}
     assert record.result == "recorded_attestation"
+    assert record.affected_resource_refs == ["kernel-action-scope:session:sess-kernel-op-2"]

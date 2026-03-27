@@ -47,6 +47,10 @@ def test_compile_plan_emits_workload_contract(tmp_path: Path) -> None:
     assert "shape" in workload.validators
     assert "trace" in workload.validators
     assert "leak" in workload.validators
+    control_plane_workload_record = plan["control_plane_workload_record"]
+    assert control_plane_workload_record["workload_id"] == "odr-run-arbiter"
+    assert control_plane_workload_record["input_contract_ref"] == "docs/specs/WORKLOAD_CONTRACT_V1.md"
+    assert control_plane_workload_record["workload_digest"].startswith("sha256:")
 
 
 def test_compile_plan_workload_contract_omits_provenance_target_when_disabled(tmp_path: Path) -> None:

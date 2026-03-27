@@ -57,6 +57,9 @@
     },
     "truthful_runtime_artifact_provenance": {
       "type": "object"
+    },
+    "control_plane": {
+      "type": "object"
     }
   },
   "additionalProperties": true

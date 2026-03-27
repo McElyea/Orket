@@ -8,9 +8,10 @@ from orket.application.services.control_plane_publication_service import Control
 from orket.application.services.kernel_action_control_plane_resource_lifecycle import (
     lease_id_for_run,
     reservation_id_for_run,
+    resource_id_for_run,
 )
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
-from orket.core.domain import LeaseStatus, ReservationKind, ReservationStatus, RunState
+from orket.core.domain import LeaseStatus, OrphanClassification, ReservationKind, ReservationStatus, RunState
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
 
@@ -99,14 +100,22 @@ async def test_kernel_action_commit_promotes_reservation_and_releases_lease_on_t
     reservation = await record_repo.get_latest_reservation_record(reservation_id=reservation_id)
     lease = await record_repo.get_latest_lease_record(lease_id=lease_id)
     lease_history = await record_repo.list_lease_records(lease_id=lease_id)
+    resource_history = await record_repo.list_resource_records(resource_id=resource_id_for_run(run=run))
+    latest_resource = await record_repo.get_latest_resource_record(resource_id=resource_id_for_run(run=run))
 
     assert reservation is not None
     assert reservation.status is ReservationStatus.PROMOTED_TO_LEASE
     assert lease is not None
+    assert latest_resource is not None
     assert lease.status is LeaseStatus.RELEASED
     assert len(lease_history) == 2
     assert lease_history[0].status is LeaseStatus.ACTIVE
     assert lease_history[-1].status is LeaseStatus.RELEASED
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]
+    assert latest_resource.orphan_classification is OrphanClassification.NOT_ORPHANED
 
 
 @pytest.mark.asyncio
@@ -193,10 +202,13 @@ async def test_kernel_action_policy_reject_with_observed_execution_releases_term
     assert run.lifecycle_state is RunState.FAILED_TERMINAL
     reservation = await record_repo.get_latest_reservation_record(reservation_id=reservation_id_for_run(run_id=run.run_id))
     lease = await record_repo.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run.run_id))
+    resource = await record_repo.get_latest_resource_record(resource_id=resource_id_for_run(run=run))
     assert reservation is not None
     assert reservation.status is ReservationStatus.PROMOTED_TO_LEASE
     assert lease is not None
     assert lease.status is LeaseStatus.RELEASED
+    assert resource is not None
+    assert resource.current_observed_state.split(";")[0] == "lease_status:lease_released"
 
 
 @pytest.mark.asyncio
@@ -292,6 +304,9 @@ async def test_kernel_action_execution_activation_fail_closes_reservation_and_le
     run = await execution_repo.get_run_record(run_id=run_id)
     reservation = await record_repo.get_latest_reservation_record(reservation_id=reservation_id_for_run(run_id=run_id))
     lease = await record_repo.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run_id))
+    resource_history = await record_repo.list_resource_records(
+        resource_id=resource_id_for_run(run=run) if run is not None else f"kernel-action-scope:{run_id}"
+    )
 
     assert run is not None
     assert run.lifecycle_state is RunState.EXECUTING
@@ -299,3 +314,7 @@ async def test_kernel_action_execution_activation_fail_closes_reservation_and_le
     assert reservation.status is ReservationStatus.INVALIDATED
     assert lease is not None
     assert lease.status is LeaseStatus.RELEASED
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]

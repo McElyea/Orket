@@ -33,6 +33,18 @@ def normalize_tool_invocation_manifest(
     candidate["declared_namespace_scopes"] = [
         str(token).strip() for token in list(candidate.get("declared_namespace_scopes") or []) if str(token).strip()
     ]
+    for field in (
+        "control_plane_run_id",
+        "control_plane_attempt_id",
+        "control_plane_reservation_id",
+        "control_plane_lease_id",
+        "control_plane_resource_id",
+    ):
+        token = str(candidate.get(field) or "").strip()
+        if token:
+            candidate[field] = token
+        else:
+            candidate.pop(field, None)
 
     if not candidate["tool_name"]:
         return None
@@ -64,6 +76,11 @@ def build_tool_invocation_manifest(
     namespace_scope: str = "",
     namespace_scope_rule: str = "run_scope_only",
     declared_namespace_scopes: list[str] | None = None,
+    control_plane_run_id: str | None = None,
+    control_plane_attempt_id: str | None = None,
+    control_plane_reservation_id: str | None = None,
+    control_plane_lease_id: str | None = None,
+    control_plane_resource_id: str | None = None,
 ) -> dict[str, Any]:
     normalized = normalize_tool_invocation_manifest(
         manifest={
@@ -78,6 +95,17 @@ def build_tool_invocation_manifest(
             "namespace_scope": str(namespace_scope),
             "namespace_scope_rule": str(namespace_scope_rule),
             "declared_namespace_scopes": list(declared_namespace_scopes or []),
+            "control_plane_run_id": None if control_plane_run_id is None else str(control_plane_run_id),
+            "control_plane_attempt_id": None
+            if control_plane_attempt_id is None
+            else str(control_plane_attempt_id),
+            "control_plane_reservation_id": None
+            if control_plane_reservation_id is None
+            else str(control_plane_reservation_id),
+            "control_plane_lease_id": None if control_plane_lease_id is None else str(control_plane_lease_id),
+            "control_plane_resource_id": None
+            if control_plane_resource_id is None
+            else str(control_plane_resource_id),
         },
         run_id=str(run_id),
         tool_name_fallback=str(tool_name),

@@ -99,3 +99,17 @@ Files:
 6. `model_lane_contract_version: review_critique_v0` (if enabled)
 7. bounds and truncation summary
 8. `auth_source: token_flag|token_env|none`
+9. `execution_state_authority: control_plane_records`
+10. `lane_outputs_execution_state_authoritative: false`
+
+`run_manifest.json` optional control-plane refs:
+1. `control_plane_run_id`
+2. `control_plane_attempt_id`
+3. `control_plane_step_id`
+
+When durable control-plane publication is enabled for manual review runs, those refs must name the first-class `RunRecord`, initial `AttemptRecord`, and start `StepRecord` published for that review invocation.
+
+Result projection requirement:
+1. The returned review result and CLI JSON surface may include a `control_plane` summary projection.
+2. That projection is read from durable control-plane records and is not a second authority surface.
+3. Review-lane artifacts remain review evidence and decision input/output only; they are not execution-state authority.

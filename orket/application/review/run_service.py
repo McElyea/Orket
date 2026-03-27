@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import secrets
 import subprocess
 import time
@@ -17,12 +18,20 @@ from orket.application.review.models import (
     SnapshotBounds,
 )
 from orket.application.review.policy_resolver import resolve_review_policy
+from orket.application.services.review_run_control_plane_service import (
+    ReviewRunControlPlaneService,
+    build_review_run_control_plane_service,
+)
+from orket.capabilities.sync_bridge import run_coro_sync
 from orket.application.review.snapshot_loader import (
     filter_snapshot_paths,
     load_from_diff,
     load_from_files,
     load_from_pr,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def _ulid() -> str:
@@ -181,8 +190,17 @@ def _resolve_bound_pr_remote(*, remote: str, repo_root: Path, repo: str) -> str:
 
 
 class ReviewRunService:
-    def __init__(self, *, workspace: Path):
+    def __init__(
+        self,
+        *,
+        workspace: Path,
+        control_plane_db_path: Optional[Path] = None,
+        review_control_plane_service: ReviewRunControlPlaneService | None = None,
+    ):
         self.workspace = workspace
+        self.review_control_plane_service = review_control_plane_service or build_review_run_control_plane_service(
+            db_path=control_plane_db_path
+        )
 
     def run_pr(
         self,
@@ -338,54 +356,88 @@ class ReviewRunService:
     ) -> ReviewRunResult:
         run_id = _ulid()
         artifact_dir = self.workspace / "review_runs" / run_id
-
-        deterministic = run_deterministic_lane(
-            snapshot=snapshot,
-            resolved_policy=resolved_policy.payload,
-            run_id=run_id,
-            policy_digest=resolved_policy.policy_digest,
-        )
-        model_cfg = dict(resolved_policy.payload.get("model_assisted") or {})
-        model_enabled = bool(model_cfg.get("enabled") or False)
-        model_result = None
-        if model_enabled:
-            model_result = run_model_assisted_lane(
+        control_plane_attempt_id = ""
+        control_plane_step_id = ""
+        try:
+            _, control_plane_attempt, control_plane_step = run_coro_sync(
+                self.review_control_plane_service.begin_execution(
+                    run_id=run_id,
+                    snapshot=snapshot,
+                    resolved_policy_payload=resolved_policy.payload,
+                    auth_source=auth_source,
+                    model_assisted_enabled=bool((resolved_policy.payload.get("model_assisted") or {}).get("enabled")),
+                )
+            )
+            control_plane_attempt_id = control_plane_attempt.attempt_id
+            control_plane_step_id = control_plane_step.step_id
+            deterministic = run_deterministic_lane(
                 snapshot=snapshot,
                 resolved_policy=resolved_policy.payload,
                 run_id=run_id,
                 policy_digest=resolved_policy.policy_digest,
-                provider=model_provider,
             )
+            model_cfg = dict(resolved_policy.payload.get("model_assisted") or {})
+            model_enabled = bool(model_cfg.get("enabled") or False)
+            model_result = None
+            if model_enabled:
+                model_result = run_model_assisted_lane(
+                    snapshot=snapshot,
+                    resolved_policy=resolved_policy.payload,
+                    run_id=run_id,
+                    policy_digest=resolved_policy.policy_digest,
+                    provider=model_provider,
+                )
 
-        manifest = ReviewRunManifest(
-            run_id=run_id,
-            snapshot_digest=snapshot.snapshot_digest,
-            policy_digest=resolved_policy.policy_digest,
-            review_run_contract_version="review_run_v0",
-            deterministic_lane_version="deterministic_v0",
-            model_lane_contract_version="review_critique_v0" if model_enabled else "",
-            bounds=snapshot.bounds.to_dict(),
-            truncation=snapshot.truncation.to_dict(),
-            auth_source=auth_source,
-        )
-        write_review_run_bundle(
-            artifact_dir=artifact_dir,
-            snapshot=snapshot,
-            resolved_policy=resolved_policy,
-            deterministic=deterministic,
-            model_assisted=model_result,
-            manifest=manifest,
-        )
-        exit_code = _decision_exit_code(deterministic.decision, fail_on_blocked)
-        return ReviewRunResult(
-            ok=True,
-            run_id=run_id,
-            artifact_dir=str(artifact_dir),
-            snapshot_digest=snapshot.snapshot_digest,
-            policy_digest=resolved_policy.policy_digest,
-            deterministic_decision=deterministic.decision,
-            deterministic_findings=len(deterministic.findings),
-            model_assisted_enabled=model_enabled,
-            manifest=manifest.to_dict(),
-            exit_code=exit_code,
-        )
+            manifest = ReviewRunManifest(
+                run_id=run_id,
+                snapshot_digest=snapshot.snapshot_digest,
+                policy_digest=resolved_policy.policy_digest,
+                review_run_contract_version="review_run_v0",
+                deterministic_lane_version="deterministic_v0",
+                model_lane_contract_version="review_critique_v0" if model_enabled else "",
+                bounds=snapshot.bounds.to_dict(),
+                truncation=snapshot.truncation.to_dict(),
+                auth_source=auth_source,
+                execution_state_authority="control_plane_records",
+                lane_outputs_execution_state_authoritative=False,
+                control_plane_run_id=run_id,
+                control_plane_attempt_id=control_plane_attempt_id,
+                control_plane_step_id=control_plane_step_id,
+            )
+            write_review_run_bundle(
+                artifact_dir=artifact_dir,
+                snapshot=snapshot,
+                resolved_policy=resolved_policy,
+                deterministic=deterministic,
+                model_assisted=model_result,
+                manifest=manifest,
+            )
+            run_coro_sync(self.review_control_plane_service.finalize_completed(run_id=run_id))
+            control_plane_summary = run_coro_sync(
+                self.review_control_plane_service.read_execution_summary(run_id=run_id)
+            )
+            exit_code = _decision_exit_code(deterministic.decision, fail_on_blocked)
+            return ReviewRunResult(
+                ok=True,
+                run_id=run_id,
+                artifact_dir=str(artifact_dir),
+                snapshot_digest=snapshot.snapshot_digest,
+                policy_digest=resolved_policy.policy_digest,
+                deterministic_decision=deterministic.decision,
+                deterministic_findings=len(deterministic.findings),
+                model_assisted_enabled=model_enabled,
+                manifest=manifest.to_dict(),
+                control_plane=control_plane_summary,
+                exit_code=exit_code,
+            )
+        except Exception as exc:
+            failure_class = f"review_run_{type(exc).__name__}"[:200]
+            finalized = run_coro_sync(
+                self.review_control_plane_service.finalize_failed_if_started(
+                    run_id=run_id,
+                    failure_class=failure_class,
+                )
+            )
+            if control_plane_attempt_id and finalized is None:
+                logger.error("Review run control-plane closeout was skipped after begin_execution: run_id=%s", run_id)
+            raise

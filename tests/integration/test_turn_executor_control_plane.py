@@ -7,9 +7,11 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.services.control_plane_workload_catalog import TURN_TOOL_WORKLOAD
 from orket.application.services.turn_tool_control_plane_recovery import recover_pre_effect_attempt_for_resume_mode
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run,
+    namespace_resource_id_for_run,
     reservation_id_for_run,
 )
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
@@ -122,8 +124,16 @@ async def test_turn_executor_publishes_control_plane_run_attempt_step_effect_and
         reservation_id=reservation_id_for_run(run_id=run_id)
     )
     leases = await control_plane.publication.repository.list_lease_records(lease_id=lease_id_for_run(run_id=run_id))
+    resources = [] if run is None else await control_plane.publication.repository.list_resource_records(
+        resource_id=namespace_resource_id_for_run(run=run)
+    )
     turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
     snapshot_files = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
+    receipt_rows = [
+        json.loads(line)
+        for line in (turn_dir / "protocol_receipts.log").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
     assert result.success is True
     assert toolbox.calls == 1
@@ -163,6 +173,17 @@ async def test_turn_executor_publishes_control_plane_run_attempt_step_effect_and
     assert reservations[-1].target_scope_ref == "namespace:issue:ISSUE-1"
     assert [record.status for record in leases] == [LeaseStatus.ACTIVE, LeaseStatus.RELEASED]
     assert leases[-1].resource_id == "namespace:issue:ISSUE-1"
+    assert len(receipt_rows) == 1
+    manifest = receipt_rows[0]["tool_invocation_manifest"]
+    assert manifest["control_plane_run_id"] == run_id
+    assert manifest["control_plane_attempt_id"] == attempt_id
+    assert manifest["control_plane_reservation_id"] == reservation_id_for_run(run_id=run_id)
+    assert manifest["control_plane_lease_id"] == lease_id_for_run(run_id=run_id)
+    assert manifest["control_plane_resource_id"] == "namespace:issue:ISSUE-1"
+    assert [record.current_observed_state.split(";")[0] for record in resources] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]
 
 
 @pytest.mark.asyncio
@@ -194,6 +215,9 @@ async def test_turn_executor_publishes_control_plane_for_non_protocol_tool_execu
         reservation_id=reservation_id_for_run(run_id=run_id)
     )
     leases = await control_plane.publication.repository.list_lease_records(lease_id=lease_id_for_run(run_id=run_id))
+    resources = [] if run is None else await control_plane.publication.repository.list_resource_records(
+        resource_id=namespace_resource_id_for_run(run=run)
+    )
     operation_record = executor.artifact_writer.load_operation_result(
         session_id="run-1",
         issue_id="ISSUE-1",
@@ -208,7 +232,8 @@ async def test_turn_executor_publishes_control_plane_for_non_protocol_tool_execu
     assert checkpoint_acceptance is not None
     assert truth is not None
     assert operation_record is not None
-    assert run.workload_id == "governed-turn-tools"
+    assert run.workload_id == TURN_TOOL_WORKLOAD.workload_id
+    assert run.workload_version == TURN_TOOL_WORKLOAD.workload_version
     assert run.lifecycle_state.value == "completed"
     assert run.namespace_scope == "issue:ISSUE-1"
     assert attempt.attempt_state.value == "attempt_completed"
@@ -225,6 +250,10 @@ async def test_turn_executor_publishes_control_plane_for_non_protocol_tool_execu
     assert truth.result_class.value == "success"
     assert [record.status for record in reservations] == [ReservationStatus.ACTIVE, ReservationStatus.PROMOTED_TO_LEASE]
     assert [record.status for record in leases] == [LeaseStatus.ACTIVE, LeaseStatus.RELEASED]
+    assert [record.current_observed_state.split(";")[0] for record in resources] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]
 
 
 @pytest.mark.asyncio

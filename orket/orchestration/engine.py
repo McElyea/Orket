@@ -11,6 +11,9 @@ from orket.logging import log_event
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 from orket.application.services.kernel_action_control_plane_operator_service import KernelActionControlPlaneOperatorService
+from orket.application.services.kernel_action_pending_approval_reservation import (
+    publish_pending_kernel_approval_hold_if_needed,
+)
 from orket.application.services.kernel_action_control_plane_resource_lifecycle import reservation_id_for_run
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.application.services.kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
@@ -375,11 +378,29 @@ class OrchestrationEngine:
             response=response,
             ledger_items=list(ledger.get("items") or []),
         )
+        await publish_pending_kernel_approval_hold_if_needed(
+            engine=self,
+            session_id=str(request.get("session_id") or ""),
+            trace_id=str(request.get("trace_id") or ""),
+            proposal=dict(request.get("proposal") or {}),
+            response=response,
+        )
+        view_service = getattr(self, "kernel_action_control_plane_view", None)
+        if view_service is not None:
+            return await view_service.augment_kernel_response(
+                response=response,
+                session_id=str(request.get("session_id") or ""),
+                trace_id=str(request.get("trace_id") or ""),
+            )
         reservation = await self.control_plane_repository.get_latest_reservation_record(
             reservation_id=reservation_id_for_run(run_id=run.run_id)
         )
         if reservation is not None:
-            response = {**response, "control_plane_run_id": run.run_id, "control_plane_reservation_id": reservation.reservation_id}
+            return {
+                **response,
+                "control_plane_run_id": run.run_id,
+                "control_plane_reservation_id": reservation.reservation_id,
+            }
         return response
 
     def kernel_commit_proposal(self, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -400,7 +421,14 @@ class OrchestrationEngine:
             response=response,
             ledger_items=list(ledger.get("items") or []),
         )
-        return response
+        view_service = getattr(self, "kernel_action_control_plane_view", None)
+        if view_service is None:
+            return response
+        return await view_service.augment_kernel_response(
+            response=response,
+            session_id=str(request.get("session_id") or ""),
+            trace_id=str(request.get("trace_id") or ""),
+        )
 
     def kernel_end_session(self, request: Dict[str, Any]) -> Dict[str, Any]:
         return self.kernel_gateway_facade.end_session(request)
@@ -462,7 +490,14 @@ class OrchestrationEngine:
                     attestation_scope=attestation_scope,
                     attestation_payload=attestation_payload,
                 )
-        return response
+        view_service = getattr(self, "kernel_action_control_plane_view", None)
+        if view_service is None:
+            return response
+        return await view_service.augment_kernel_response(
+            response=response,
+            session_id=str(request.get("session_id") or ""),
+            trace_id=str(request.get("trace_id") or ""),
+        )
 
     def kernel_list_ledger_events(self, request: Dict[str, Any]) -> Dict[str, Any]:
         return self.kernel_gateway_facade.list_ledger_events(request)

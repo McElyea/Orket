@@ -6,6 +6,9 @@ from typing import TYPE_CHECKING
 from orket.application.services.sandbox_control_plane_reconciliation_service import (
     SandboxControlPlaneReconciliationService,
 )
+from orket.application.services.sandbox_control_plane_resource_service import (
+    SandboxControlPlaneResourceService,
+)
 from orket.application.services.sandbox_lifecycle_mutation_service import (
     SandboxLifecycleMutationResult,
     SandboxLifecycleMutationService,
@@ -105,6 +108,7 @@ class SandboxLifecycleReconciliationService:
                 next_lease_epoch=record.lease_epoch,
                 cleanup_due_at=plan.cleanup_due_at,
             )
+            await self._publish_resource_state_change(record=result.record, observed_at=observation.observed_at)
             await self._publish_reconciliation_state_change(
                 classification=plan.classification,
                 record=result.record,
@@ -125,6 +129,7 @@ class SandboxLifecycleReconciliationService:
                 terminal_reason=TerminalReason.LOST_RUNTIME,
                 cleanup_due_at=plan.cleanup_due_at,
             )
+            await self._publish_resource_state_change(record=result.record, observed_at=observation.observed_at)
             await self._publish_lost_runtime_control_plane_closure(
                 record=result.record,
                 observed_at=observation.observed_at,
@@ -140,6 +145,7 @@ class SandboxLifecycleReconciliationService:
                 terminal_reason=TerminalReason.CLEANED_EXTERNALLY,
                 cleanup_state=CleanupState.COMPLETED,
             )
+            await self._publish_resource_state_change(record=result.record, observed_at=observation.observed_at)
             await self._publish_reconciliation_state_change(
                 classification=plan.classification,
                 record=result.record,
@@ -323,6 +329,17 @@ class SandboxLifecycleReconciliationService:
             await publisher.publish_reclaimable_reconciliation(record=record, observed_at=observed_at)
         elif classification is ReconciliationClassification.CLEANED_EXTERNALLY:
             await publisher.publish_cleaned_externally_reconciliation(record=record, observed_at=observed_at)
+
+    async def _publish_resource_state_change(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+        observed_at: str,
+    ) -> None:
+        if self.control_plane_publication is None:
+            return
+        publisher = SandboxControlPlaneResourceService(publication=self.control_plane_publication)
+        await publisher.publish_from_record(record=record, observed_at=observed_at)
 
     async def _publish_execution_waiting_on_resource(
         self,

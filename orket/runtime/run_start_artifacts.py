@@ -123,7 +123,7 @@ def _resolve_run_identity(
     run_id: str,
     workload: str,
     now: datetime | None,
-) -> dict[str, str]:
+) -> dict[str, Any]:
     existing = _load_json_dict(path)
     if existing is not None:
         existing_run_id = str(existing.get("run_id") or "").strip()
@@ -135,17 +135,26 @@ def _resolve_run_identity(
             raise ValueError("E_RUN_IDENTITY_IMMUTABLE:workload_mismatch")
         if not existing_start:
             raise ValueError("E_RUN_IDENTITY_SCHEMA:start_time_required")
-        return {
+        payload: dict[str, Any] = {
             "run_id": existing_run_id,
             "workload": existing_workload,
             "start_time": existing_start,
         }
+        identity_scope = str(existing.get("identity_scope") or "").strip()
+        if identity_scope:
+            payload["identity_scope"] = identity_scope
+        projection_only = existing.get("projection_only")
+        if isinstance(projection_only, bool):
+            payload["projection_only"] = projection_only
+        return payload
 
     start_time = (now or datetime.now(UTC)).isoformat()
-    payload = {
+    payload: dict[str, Any] = {
         "run_id": run_id,
         "workload": workload,
         "start_time": start_time,
+        "identity_scope": "session_bootstrap",
+        "projection_only": True,
     }
     _write_json(path, payload)
     return payload

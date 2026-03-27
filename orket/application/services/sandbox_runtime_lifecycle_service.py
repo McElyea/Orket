@@ -19,6 +19,9 @@ from orket.application.services.sandbox_control_plane_lease_service import (
     SandboxControlPlaneLeaseError,
     SandboxControlPlaneLeaseService,
 )
+from orket.application.services.sandbox_control_plane_resource_service import (
+    SandboxControlPlaneResourceService,
+)
 from orket.application.services.sandbox_lifecycle_event_publisher import SandboxLifecycleEventPublisher
 from orket.application.services.sandbox_lifecycle_mutation_service import SandboxLifecycleMutationService
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
@@ -69,6 +72,11 @@ class SandboxRuntimeLifecycleService:
         self.control_plane_publication = control_plane_publication
         self.control_plane_execution = control_plane_execution
         self.control_plane_effects = control_plane_effects
+        self.control_plane_resources = (
+            None
+            if self.control_plane_publication is None
+            else SandboxControlPlaneResourceService(publication=self.control_plane_publication)
+        )
         self.control_plane_checkpoints = (
             None
             if self.control_plane_publication is None or self.control_plane_execution is None
@@ -131,6 +139,7 @@ class SandboxRuntimeLifecycleService:
             docker_host_id=self.docker_host_id,
         )
         await self.repository.save_record(record)
+        await self._publish_control_plane_resource(record=record, observed_at=created_at)
         await self._publish_control_plane_lease(
             record=record,
             publication_timestamp=created_at,
@@ -146,7 +155,7 @@ class SandboxRuntimeLifecycleService:
         return record
 
     async def mark_create_accepted(self, *, sandbox_id: str) -> SandboxLifecycleRecord:
-        return (
+        record = (
             await self.mutations.transition_state(
                 sandbox_id=sandbox_id,
                 operation_id=f"create-accepted:{sandbox_id}",
@@ -157,6 +166,8 @@ class SandboxRuntimeLifecycleService:
                 expected_lease_epoch=1,
             )
         ).record
+        await self._publish_control_plane_resource(record=record, observed_at=self._now())
+        return record
 
     async def mark_deployment_verified(
         self,
@@ -186,6 +197,7 @@ class SandboxRuntimeLifecycleService:
                 expected_lease_epoch=1,
             )
         ).record
+        await self._publish_control_plane_resource(record=record, observed_at=observed_at)
         await self._publish_control_plane_lease(record=record, publication_timestamp=observed_at)
         await self._publish_control_plane_deploy_effect(record=record, publication_timestamp=observed_at)
         return record
@@ -218,7 +230,7 @@ class SandboxRuntimeLifecycleService:
 
     async def mark_requires_reconciliation(self, *, sandbox_id: str, reason: str) -> SandboxLifecycleRecord:
         record = await self._require_record(sandbox_id)
-        return (
+        updated = (
             await self.mutations.set_requires_reconciliation(
                 sandbox_id=sandbox_id,
                 operation_id=f"requires-reconciliation:{sandbox_id}:{record.record_version}",
@@ -227,6 +239,8 @@ class SandboxRuntimeLifecycleService:
                 requires_reconciliation=True,
             )
         ).record
+        await self._publish_control_plane_resource(record=updated, observed_at=self._now())
+        return updated
 
     async def delete_sandbox(self, *, sandbox_id: str, compose_path: Path) -> SandboxLifecycleRecord:
         current = await self._require_record(sandbox_id)
@@ -290,7 +304,8 @@ class SandboxRuntimeLifecycleService:
     async def handle_healthy(self, *, sandbox_id: str) -> SandboxLifecycleRecord:
         record = await self._require_record(sandbox_id)
         if record.state is SandboxState.STARTING:
-            return (
+            observed_at = self._now()
+            record = (
                 await self.mutations.transition_state(
                     sandbox_id=sandbox_id,
                     operation_id=f"health-verified:{sandbox_id}:{record.record_version}",
@@ -301,6 +316,10 @@ class SandboxRuntimeLifecycleService:
                     expected_lease_epoch=record.lease_epoch,
                 )
             ).record
+            await self._publish_control_plane_resource(record=record, observed_at=observed_at)
+            await self._publish_control_plane_lease(record=record, publication_timestamp=observed_at)
+            await self._publish_control_plane_deploy_effect(record=record, publication_timestamp=observed_at)
+            return record
         if record.state is SandboxState.ACTIVE:
             if record.owner_instance_id != self.instance_id:
                 raise SandboxLifecycleError("Sandbox heartbeat rejected for non-owner instance.")
@@ -318,6 +337,10 @@ class SandboxRuntimeLifecycleService:
             await self._publish_control_plane_lease(
                 record=record,
                 publication_timestamp=record.last_heartbeat_at or self._now(),
+            )
+            await self._publish_control_plane_resource(
+                record=record,
+                observed_at=record.last_heartbeat_at or self._now(),
             )
             return record
         return record
@@ -345,6 +368,10 @@ class SandboxRuntimeLifecycleService:
                 lease_expires_at=self._lease_expires_at(self._now()),
             )
         ).record
+        await self._publish_control_plane_resource(
+            record=record,
+            observed_at=record.last_heartbeat_at or self._now(),
+        )
         await self._publish_control_plane_lease(
             record=record,
             publication_timestamp=record.last_heartbeat_at or self._now(),
@@ -505,6 +532,16 @@ class SandboxRuntimeLifecycleService:
             )
         except SandboxControlPlaneLeaseError:
             return
+
+    async def _publish_control_plane_resource(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+        observed_at: str,
+    ) -> None:
+        if self.control_plane_resources is None:
+            return
+        await self.control_plane_resources.publish_from_record(record=record, observed_at=observed_at)
 
     async def _publish_control_plane_deploy_effect(
         self,

@@ -6,6 +6,7 @@ from orket.application.services.kernel_action_control_plane_resource_lifecycle i
     holder_ref_for_run,
     lease_id_for_run,
     reservation_id_for_run,
+    resource_id_for_run,
 )
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 
@@ -41,6 +42,7 @@ class KernelActionControlPlaneViewService:
         effects = await self.record_repository.list_effect_journal_entries(run_id=run_id)
         operator_actions = await self.record_repository.list_operator_actions(target_ref=run_id)
         lease = await self.record_repository.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run_id))
+        resource = await self.record_repository.get_latest_resource_record(resource_id=resource_id_for_run(run=run))
         reservations = await _reservation_candidates(record_repository=self.record_repository, run_id=run_id)
         reservation = _select_reservation_summary_candidate(reservations)
         latest_operator_action = operator_actions[-1] if operator_actions else None
@@ -66,6 +68,7 @@ class KernelActionControlPlaneViewService:
             else recovery_decision.authorized_next_action.value,
             "latest_reservation": None if reservation is None else _reservation_summary(reservation),
             "latest_lease": None if lease is None else _lease_summary(lease),
+            "latest_resource": None if resource is None else _resource_summary(resource),
             "step_count": len(steps),
             "latest_step": None
             if latest_step is None
@@ -110,8 +113,49 @@ class KernelActionControlPlaneViewService:
                 "actor_ref": latest_operator_action.actor_ref,
                 "timestamp": latest_operator_action.timestamp,
                 "receipt_refs": list(latest_operator_action.receipt_refs),
+                "affected_transition_refs": list(latest_operator_action.affected_transition_refs),
+                "affected_resource_refs": list(latest_operator_action.affected_resource_refs),
             },
         }
+
+    async def augment_kernel_response(
+        self,
+        *,
+        response: dict[str, Any],
+        session_id: str,
+        trace_id: str,
+    ) -> dict[str, Any]:
+        summary = await self.build_summary(session_id=session_id, trace_id=trace_id)
+        return _augment_kernel_response(response=response, summary=summary)
+
+
+def _augment_kernel_response(*, response: dict[str, Any], summary: dict[str, Any] | None) -> dict[str, Any]:
+    if summary is None:
+        return dict(response)
+    augmented = dict(response)
+    augmented["control_plane_run_id"] = summary.get("run_id")
+    augmented["control_plane_attempt_id"] = summary.get("current_attempt_id")
+    augmented["control_plane_attempt_state"] = summary.get("current_attempt_state")
+    reservation = summary.get("latest_reservation")
+    if isinstance(reservation, dict):
+        augmented["control_plane_reservation_id"] = reservation.get("reservation_id")
+    lease = summary.get("latest_lease")
+    if isinstance(lease, dict):
+        augmented["control_plane_lease_id"] = lease.get("lease_id")
+    resource = summary.get("latest_resource")
+    if isinstance(resource, dict):
+        augmented["control_plane_resource_id"] = resource.get("resource_id")
+    final_truth = summary.get("final_truth")
+    if isinstance(final_truth, dict):
+        augmented["control_plane_final_truth_record_id"] = final_truth.get("final_truth_record_id")
+    if summary.get("current_recovery_decision_id") is not None:
+        augmented["control_plane_recovery_decision_id"] = summary.get("current_recovery_decision_id")
+    if summary.get("current_recovery_action") is not None:
+        augmented["control_plane_recovery_action"] = summary.get("current_recovery_action")
+    operator_action = summary.get("latest_operator_action")
+    if isinstance(operator_action, dict):
+        augmented["control_plane_operator_action_id"] = operator_action.get("action_id")
+    return augmented
 
 
 def _reservation_summary(record: Any) -> dict[str, Any]:
@@ -138,6 +182,21 @@ def _lease_summary(record: Any) -> dict[str, Any]:
         "cleanup_eligibility_rule": record.cleanup_eligibility_rule,
         "source_reservation_id": record.source_reservation_id,
         "last_confirmed_observation": record.last_confirmed_observation,
+    }
+
+
+def _resource_summary(record: Any) -> dict[str, Any]:
+    return {
+        "resource_id": record.resource_id,
+        "resource_kind": record.resource_kind,
+        "namespace_scope": record.namespace_scope,
+        "ownership_class": record.ownership_class.value,
+        "current_observed_state": record.current_observed_state,
+        "last_observed_timestamp": record.last_observed_timestamp,
+        "cleanup_authority_class": record.cleanup_authority_class.value,
+        "provenance_ref": record.provenance_ref,
+        "reconciliation_status": record.reconciliation_status,
+        "orphan_classification": record.orphan_classification.value,
     }
 
 

@@ -138,6 +138,7 @@ class SandboxTerminalOutcomeService:
                 cleanup_due_at=due_at,
             )
         ).record
+        await self.lifecycle_service._publish_control_plane_resource(record=terminal, observed_at=observed_at)
         publication = self.lifecycle_service.control_plane_publication
         final_truth = None
         if publication is not None:

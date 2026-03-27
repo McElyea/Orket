@@ -19,6 +19,7 @@ from orket.core.contracts.control_plane_models import (
     ReservationRecord,
     ResolvedConfigurationSnapshot,
     ResolvedPolicySnapshot,
+    ResourceRecord,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 
@@ -69,6 +70,23 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             """
             CREATE INDEX IF NOT EXISTS idx_reservation_records_creation
             ON reservation_records (creation_timestamp)
+            """
+        )
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS resource_records (
+                resource_id TEXT NOT NULL,
+                last_observed_timestamp TEXT NOT NULL,
+                current_observed_state TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                PRIMARY KEY (resource_id, last_observed_timestamp, current_observed_state)
+            )
+            """
+        )
+        await conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_resource_records_latest
+            ON resource_records (resource_id, last_observed_timestamp DESC, current_observed_state DESC)
             """
         )
         await conn.execute(
@@ -430,6 +448,86 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
     async def get_latest_reservation_record_for_holder_ref(self, *, holder_ref: str) -> ReservationRecord | None:
         records = await self.list_reservation_records_for_holder_ref(holder_ref=holder_ref)
         return records[-1] if records else None
+
+    async def save_resource_record(
+        self,
+        *,
+        record: ResourceRecord,
+    ) -> ResourceRecord:
+        payload_json = record.model_dump_json()
+
+        async def _op(conn: aiosqlite.Connection) -> ResourceRecord:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM resource_records
+                WHERE resource_id = ? AND last_observed_timestamp = ? AND current_observed_state = ?
+                """,
+                (
+                    record.resource_id,
+                    record.last_observed_timestamp,
+                    record.current_observed_state,
+                ),
+            )
+            existing = await cursor.fetchone()
+            if existing is not None:
+                existing_payload = str(existing["payload_json"] if isinstance(existing, aiosqlite.Row) else existing[0])
+                if existing_payload != payload_json:
+                    raise ControlPlaneRecordConflictError(
+                        "resource_records composite key reused with different payload"
+                    )
+                return ResourceRecord.model_validate_json(existing_payload)
+            await conn.execute(
+                """
+                INSERT INTO resource_records (
+                    resource_id, last_observed_timestamp, current_observed_state, payload_json
+                ) VALUES (?, ?, ?, ?)
+                """,
+                (
+                    record.resource_id,
+                    record.last_observed_timestamp,
+                    record.current_observed_state,
+                    payload_json,
+                ),
+            )
+            return record
+
+        return await self._execute(_op, row_factory=True, commit=True)
+
+    async def list_resource_records(self, *, resource_id: str) -> list[ResourceRecord]:
+        async def _op(conn: aiosqlite.Connection) -> list[ResourceRecord]:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM resource_records
+                WHERE resource_id = ?
+                ORDER BY rowid ASC
+                """,
+                (resource_id,),
+            )
+            rows = await cursor.fetchall()
+            return [ResourceRecord.model_validate_json(str(row["payload_json"])) for row in rows]
+
+        return await self._execute(_op, row_factory=True)
+
+    async def get_latest_resource_record(self, *, resource_id: str) -> ResourceRecord | None:
+        async def _op(conn: aiosqlite.Connection) -> ResourceRecord | None:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM resource_records
+                WHERE resource_id = ?
+                ORDER BY rowid DESC
+                LIMIT 1
+                """,
+                (resource_id,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                return None
+            return ResourceRecord.model_validate_json(str(row["payload_json"]))
+
+        return await self._execute(_op, row_factory=True)
 
     async def append_effect_journal_entry(
         self,

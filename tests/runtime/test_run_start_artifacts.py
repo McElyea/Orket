@@ -24,6 +24,8 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["run_identity"]["run_id"] == "run-1"
     assert payload["run_identity"]["workload"] == "core_epic"
     assert payload["run_identity"]["start_time"].startswith("2026-03-06T17:00:00")
+    assert payload["run_identity"]["identity_scope"] == "session_bootstrap"
+    assert payload["run_identity"]["projection_only"] is True
     assert payload["run_determinism_class"] == "workspace"
     assert payload["run_phase_contract"]["schema_version"] == "1.0"
     assert payload["run_phase_contract"]["entry_phase"] == "input_normalize"
@@ -81,6 +83,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     interrupt_surfaces = [row["surface"] for row in payload["interrupt_semantics_policy"]["rows"]]
     assert "run_execution" in interrupt_surfaces
     assert payload["retry_classification_policy"]["schema_version"] == "1.0"
+    assert payload["retry_classification_policy"]["attempt_history_authoritative"] is False
     retry_signals = [row["signal"] for row in payload["retry_classification_policy"]["rows"]]
     assert "model_timeout_retry" in retry_signals
     assert payload["runtime_boundary_audit_checklist"]["schema_version"] == "1.0"
@@ -264,6 +267,8 @@ def test_capture_run_start_artifacts_emits_v0_boundary_artifacts_only(tmp_path: 
     assert Path(payload["run_identity_path"]) == runtime_root / "run_identity.json"
     assert Path(payload["capability_manifest_path"]) == runtime_root / "capability_manifest.json"
     assert payload["run_identity"]["workload"] == "core_epic"
+    assert payload["run_identity"]["identity_scope"] == "session_bootstrap"
+    assert payload["run_identity"]["projection_only"] is True
     assert payload["capability_manifest"]["capabilities_used"] == []
     assert payload["run_determinism_class"] == payload["capability_manifest"]["run_determinism_class"]
     assert "capability_profile" not in payload

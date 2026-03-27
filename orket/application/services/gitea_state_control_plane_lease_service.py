@@ -7,9 +7,21 @@ from typing import Any
 
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.control_plane_resource_authority_checks import (
+    require_resource_snapshot_matches_lease,
+)
 from orket.core.contracts import LeaseRecord
-from orket.core.domain import LeaseStatus
+from orket.core.domain import (
+    CleanupAuthorityClass,
+    LeaseStatus,
+    OrphanClassification,
+    OwnershipClass,
+)
 from orket.runtime_paths import resolve_control_plane_db_path
+
+
+class GiteaStateControlPlaneAuthorityError(ValueError):
+    """Raised when Gitea worker lease/resource authority has drifted."""
 
 
 class GiteaStateControlPlaneLeaseService:
@@ -43,7 +55,7 @@ class GiteaStateControlPlaneLeaseService:
     ) -> LeaseRecord:
         publication_timestamp = self._utc_now()
         lease_payload = self._lease_payload(lease_observation)
-        return await self.publication.publish_lease(
+        lease = await self.publication.publish_lease(
             lease_id=self.lease_id_for(card_id),
             resource_id=self.resource_id_for(card_id),
             holder_ref=self.holder_ref_for(worker_id),
@@ -60,6 +72,8 @@ class GiteaStateControlPlaneLeaseService:
             cleanup_eligibility_rule=self.CLEANUP_ELIGIBILITY_RULE,
             source_reservation_id=None if source_reservation_id is None else str(source_reservation_id).strip(),
         )
+        await self.publish_resource_snapshot(card_id=card_id, lease=lease)
+        return lease
 
     async def publish_renewed_lease(
         self,
@@ -69,9 +83,13 @@ class GiteaStateControlPlaneLeaseService:
         lease_observation: Mapping[str, object],
         lease_seconds: int,
     ) -> LeaseRecord:
+        latest = await self.require_active_authority(
+            card_id=card_id,
+            error_context="gitea worker renew publication",
+        )
         publication_timestamp = self._utc_now()
         lease_payload = self._lease_payload(lease_observation)
-        return await self.publication.publish_lease(
+        lease = await self.publication.publish_lease(
             lease_id=self.lease_id_for(card_id),
             resource_id=self.resource_id_for(card_id),
             holder_ref=self.holder_ref_for(worker_id),
@@ -83,10 +101,12 @@ class GiteaStateControlPlaneLeaseService:
                 lease_seconds=lease_seconds,
             ),
             status=LeaseStatus.ACTIVE,
-            granted_timestamp=str(lease_payload.get("acquired_at") or publication_timestamp),
+            granted_timestamp=latest.granted_timestamp,
             last_confirmed_observation=self._observation_ref(card_id=card_id, lease_observation=lease_observation),
             cleanup_eligibility_rule=self.CLEANUP_ELIGIBILITY_RULE,
         )
+        await self.publish_resource_snapshot(card_id=card_id, lease=lease)
+        return lease
 
     async def publish_expired_lease(
         self,
@@ -96,7 +116,7 @@ class GiteaStateControlPlaneLeaseService:
         lease_observation: Mapping[str, object],
         reason: str,
     ) -> LeaseRecord:
-        return await self.publication.publish_lease(
+        lease = await self.publication.publish_lease(
             lease_id=self.lease_id_for(card_id),
             resource_id=self.resource_id_for(card_id),
             holder_ref=self.holder_ref_for(worker_id),
@@ -108,6 +128,8 @@ class GiteaStateControlPlaneLeaseService:
             last_confirmed_observation=self._observation_ref(card_id=card_id, lease_observation=lease_observation),
             cleanup_eligibility_rule=self.CLEANUP_ELIGIBILITY_RULE,
         )
+        await self.publish_resource_snapshot(card_id=card_id, lease=lease)
+        return lease
 
     async def publish_uncertain_lease(
         self,
@@ -117,7 +139,7 @@ class GiteaStateControlPlaneLeaseService:
         lease_observation: Mapping[str, object],
         reason: str,
     ) -> LeaseRecord:
-        return await self.publication.publish_lease(
+        lease = await self.publication.publish_lease(
             lease_id=self.lease_id_for(card_id),
             resource_id=self.resource_id_for(card_id),
             holder_ref=self.holder_ref_for(worker_id),
@@ -129,6 +151,8 @@ class GiteaStateControlPlaneLeaseService:
             last_confirmed_observation=self._observation_ref(card_id=card_id, lease_observation=lease_observation),
             cleanup_eligibility_rule=self.CLEANUP_ELIGIBILITY_RULE,
         )
+        await self.publish_resource_snapshot(card_id=card_id, lease=lease)
+        return lease
 
     async def publish_released_lease(
         self,
@@ -138,7 +162,7 @@ class GiteaStateControlPlaneLeaseService:
         lease_observation: Mapping[str, object],
         final_state: str,
     ) -> LeaseRecord:
-        return await self.publication.publish_lease(
+        lease = await self.publication.publish_lease(
             lease_id=self.lease_id_for(card_id),
             resource_id=self.resource_id_for(card_id),
             holder_ref=self.holder_ref_for(worker_id),
@@ -150,6 +174,8 @@ class GiteaStateControlPlaneLeaseService:
             last_confirmed_observation=self._observation_ref(card_id=card_id, lease_observation=lease_observation),
             cleanup_eligibility_rule=self.CLEANUP_ELIGIBILITY_RULE,
         )
+        await self.publish_resource_snapshot(card_id=card_id, lease=lease)
+        return lease
 
     @staticmethod
     def _lease_payload(lease_observation: Mapping[str, object]) -> Mapping[str, object]:
@@ -192,6 +218,54 @@ class GiteaStateControlPlaneLeaseService:
             f";snapshot_version={version}"
         )
 
+    async def publish_resource_snapshot(self, *, card_id: str, lease: LeaseRecord) -> None:
+        await self.publication.publish_resource(
+            resource_id=self.resource_id_for(card_id),
+            resource_kind="gitea_card",
+            namespace_scope=self.namespace_scope_for(card_id),
+            ownership_class=OwnershipClass.SHARED_GOVERNED,
+            current_observed_state=f"lease_status:{lease.status.value};observation:{lease.last_confirmed_observation}",
+            last_observed_timestamp=lease.publication_timestamp,
+            cleanup_authority_class=CleanupAuthorityClass.CLEANUP_FORBIDDEN_WITHOUT_EXTERNAL_CONFIRMATION,
+            provenance_ref=lease.last_confirmed_observation or f"gitea-card:{str(card_id).strip()}",
+            reconciliation_status="external_state_authoritative",
+            orphan_classification=(
+                OrphanClassification.OWNERSHIP_CONFLICT
+                if lease.status is LeaseStatus.UNCERTAIN
+                else OrphanClassification.NOT_ORPHANED
+            ),
+        )
+
+    async def require_active_authority(self, *, card_id: str, error_context: str) -> LeaseRecord:
+        latest = await self.publication.repository.get_latest_lease_record(lease_id=self.lease_id_for(card_id))
+        if latest is None:
+            raise GiteaStateControlPlaneAuthorityError(
+                f"{error_context} missing lease authority: {self.lease_id_for(card_id)}"
+            )
+        if latest.status is not LeaseStatus.ACTIVE:
+            raise GiteaStateControlPlaneAuthorityError(
+                f"{error_context} expected active lease authority: {self.lease_id_for(card_id)}"
+            )
+        expected_resource_id = self.resource_id_for(card_id)
+        if str(latest.resource_id or "").strip() != expected_resource_id:
+            raise GiteaStateControlPlaneAuthorityError(
+                f"{error_context} lease resource id drift: {latest.resource_id!r} != {expected_resource_id!r}"
+            )
+        resource = await self.publication.repository.get_latest_resource_record(resource_id=expected_resource_id)
+        require_resource_snapshot_matches_lease(
+            resource=resource,
+            lease=latest,
+            expected_resource_kind="gitea_card",
+            expected_namespace_scope=self.namespace_scope_for(card_id),
+            error_context=error_context,
+            error_factory=GiteaStateControlPlaneAuthorityError,
+        )
+        return latest
+
+    @staticmethod
+    def namespace_scope_for(card_id: str) -> str:
+        return f"issue:{str(card_id).strip()}"
+
     @staticmethod
     def _utc_now() -> str:
         return datetime.now(UTC).isoformat()
@@ -206,6 +280,7 @@ def build_gitea_state_control_plane_lease_service(
 
 
 __all__ = [
+    "GiteaStateControlPlaneAuthorityError",
     "GiteaStateControlPlaneLeaseService",
     "build_gitea_state_control_plane_lease_service",
 ]

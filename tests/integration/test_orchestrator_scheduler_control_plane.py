@@ -86,6 +86,9 @@ async def _assert_scheduler_truth(
             reservation_id=f"orchestrator-child-workload-composition-reservation:{run_id}"
         )
     leases = await orch.control_plane_repository.list_lease_records(lease_id=lease_id_for_run(run_id=run_id))
+    resources = await orch.control_plane_repository.list_resource_records(
+        resource_id=f"namespace:issue:{expected_issue_id}"
+    )
 
     assert run is not None
     assert run.namespace_scope == f"issue:{expected_issue_id}"
@@ -107,6 +110,10 @@ async def _assert_scheduler_truth(
     assert reservations[-1].target_scope_ref == f"namespace:issue:{expected_issue_id}"
     assert [record.status for record in leases] == [LeaseStatus.ACTIVE, LeaseStatus.RELEASED]
     assert leases[-1].resource_id == f"namespace:issue:{expected_issue_id}"
+    assert [record.current_observed_state.split(";")[0] for record in resources] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]
 
 
 @pytest.mark.asyncio

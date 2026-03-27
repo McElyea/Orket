@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.application.services.control_plane_workload_catalog import TURN_TOOL_WORKLOAD
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots
 from orket.application.services.turn_tool_control_plane_closeout import (
@@ -63,7 +64,8 @@ class TurnToolControlPlaneError(ValueError):
 class TurnToolControlPlaneService:
     """Publishes governed turn-tool execution into first-class ControlPlane records."""
 
-    WORKLOAD_ID, WORKLOAD_VERSION = "governed-turn-tools", "turn_executor.governed.v1"
+    WORKLOAD = TURN_TOOL_WORKLOAD
+    WORKLOAD_ID, WORKLOAD_VERSION = WORKLOAD.workload_id, WORKLOAD.workload_version
 
     def __init__(
         self,

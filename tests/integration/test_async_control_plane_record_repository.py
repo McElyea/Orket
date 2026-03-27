@@ -14,6 +14,7 @@ from orket.application.services.control_plane_publication_service import Control
 from orket.core.contracts import CheckpointRecord, ResolvedConfigurationSnapshot, ResolvedPolicySnapshot
 from orket.core.domain import (
     AuthoritySourceClass,
+    CleanupAuthorityClass,
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
     ClosureBasisClassification,
@@ -24,6 +25,8 @@ from orket.core.domain import (
     LeaseStatus,
     OperatorCommandClass,
     OperatorInputClass,
+    OrphanClassification,
+    OwnershipClass,
     ReservationKind,
     ReservationStatus,
     RecoveryActionClass,
@@ -210,6 +213,45 @@ async def test_async_control_plane_record_repository_persists_operator_action_fl
     assert loaded is not None
     assert loaded.action_id == action.action_id
     assert listed == [action]
+
+
+@pytest.mark.asyncio
+async def test_async_control_plane_record_repository_persists_resource_history(tmp_path: Path) -> None:
+    repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
+    service = ControlPlanePublicationService(repository=repository)
+
+    first = await service.publish_resource(
+        resource_id="sandbox-scope:sb-1",
+        resource_kind="sandbox_runtime",
+        namespace_scope="sandbox-scope:sb-1",
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state="sandbox_state:creating;cleanup_state:none;lease_epoch:1;terminal_reason:none;reconciliation_not_required",
+        last_observed_timestamp="2026-03-24T01:00:00+00:00",
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_AFTER_RECONCILIATION,
+        provenance_ref="sandbox-lifecycle:sb-1:creating:1",
+        reconciliation_status="reconciliation_not_required",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+    second = await service.publish_resource(
+        resource_id="sandbox-scope:sb-1",
+        resource_kind="sandbox_runtime",
+        namespace_scope="sandbox-scope:sb-1",
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state="sandbox_state:active;cleanup_state:none;lease_epoch:1;terminal_reason:none;reconciliation_not_required",
+        last_observed_timestamp="2026-03-24T01:01:00+00:00",
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_AFTER_RECONCILIATION,
+        provenance_ref="sandbox-lifecycle:sb-1:active:2",
+        reconciliation_status="reconciliation_not_required",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+
+    history = await repository.list_resource_records(resource_id="sandbox-scope:sb-1")
+    latest = await repository.get_latest_resource_record(resource_id="sandbox-scope:sb-1")
+
+    assert history == [first, second]
+    assert latest is not None
+    assert latest.current_observed_state.startswith("sandbox_state:active")
+    assert latest.provenance_ref == "sandbox-lifecycle:sb-1:active:2"
 
 
 @pytest.mark.asyncio

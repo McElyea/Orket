@@ -6,6 +6,9 @@ from pathlib import Path
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.application.services.control_plane_workload_catalog import (
+    GITEA_STATE_WORKER_EXECUTION_WORKLOAD,
+)
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots, snapshot_digest
 from orket.core.contracts import AttemptRecord, EffectJournalEntryRecord, FinalTruthRecord, RunRecord, StepRecord
@@ -36,8 +39,9 @@ class GiteaStateControlPlaneExecutionError(ValueError):
 class GiteaStateControlPlaneExecutionService:
     """Publishes lease-backed Gitea worker execution into first-class control-plane records."""
 
-    WORKLOAD_ID = "gitea-state-worker-card-execution"
-    WORKLOAD_VERSION = "gitea_state_worker.v1"
+    WORKLOAD = GITEA_STATE_WORKER_EXECUTION_WORKLOAD
+    WORKLOAD_ID = WORKLOAD.workload_id
+    WORKLOAD_VERSION = WORKLOAD.workload_version
 
     def __init__(
         self,
@@ -223,7 +227,9 @@ class GiteaStateControlPlaneExecutionService:
             card_id=card_id,
         )
 
-        lease_expired = str(error or "").strip().upper() == "E_LEASE_EXPIRED"
+        normalized_error = str(error or "").strip().upper()
+        lease_expired = normalized_error == "E_LEASE_EXPIRED"
+        control_plane_resource_drift = normalized_error == "E_CONTROL_PLANE_RESOURCE_DRIFT"
         if existing_truth is None:
             if not error and final_state == str(success_state).strip():
                 validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.COMPLETED)
@@ -245,14 +251,20 @@ class GiteaStateControlPlaneExecutionService:
                     authoritative_result_ref=step.output_ref,
                 )
             else:
-                target_attempt_state = AttemptState.INTERRUPTED if lease_expired else AttemptState.FAILED
-                failure_class = "lease_expired" if lease_expired else "gitea_state_worker_failure"
+                resource_blocked = lease_expired or control_plane_resource_drift
+                target_attempt_state = AttemptState.INTERRUPTED if resource_blocked else AttemptState.FAILED
+                if lease_expired:
+                    failure_class = "lease_expired"
+                elif control_plane_resource_drift:
+                    failure_class = "control_plane_resource_drift"
+                else:
+                    failure_class = "gitea_state_worker_failure"
                 closure_basis = (
                     ClosureBasisClassification.POLICY_TERMINAL_STOP
-                    if lease_expired
+                    if resource_blocked
                     else ClosureBasisClassification.NORMAL_EXECUTION
                 )
-                result_class = ResultClass.BLOCKED if lease_expired else ResultClass.FAILED
+                result_class = ResultClass.BLOCKED if resource_blocked else ResultClass.FAILED
                 validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=target_attempt_state)
                 validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.FAILED_TERMINAL)
                 attempt = attempt.model_copy(

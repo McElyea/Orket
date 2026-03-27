@@ -26,6 +26,7 @@ from orket.application.services.gitea_state_pilot import (
 from orket.application.services.gitea_state_control_plane_checkpoint_service import (
     build_gitea_state_control_plane_checkpoint_service,
 )
+from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
 from orket.application.services.gitea_state_control_plane_execution_service import (
     build_gitea_state_control_plane_execution_service,
 )
@@ -68,7 +69,10 @@ from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 from orket.runtime.deterministic_mode_contract import deterministic_mode_contract_snapshot
 from orket.runtime.settings import resolve_str
 from orket.runtime.state_transition_registry import validate_state_token
-from orket.runtime.workload_adapters import build_cards_workload_contract
+from orket.runtime.workload_adapters import (
+    build_cards_control_plane_workload_record,
+    build_cards_workload_contract,
+)
 from orket.runtime.workload_shell import SharedWorkloadShell
 from orket.runtime_paths import resolve_control_plane_db_path, resolve_runtime_db_path
 from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, summarize_cards_runtime_issues
@@ -158,6 +162,10 @@ class ExecutionPipeline:
             sandbox_orchestrator=self.sandbox_orchestrator,
         )
         setattr(self.orchestrator, "run_ledger", self.run_ledger)
+        self.cards_epic_control_plane = CardsEpicControlPlaneService(
+            execution_repository=self.orchestrator.control_plane_execution_repository,
+            publication=self.orchestrator.control_plane_publication,
+        )
         self.workload_shell = SharedWorkloadShell()
 
     def _process_rules_value(self, key: str) -> str:
@@ -428,6 +436,10 @@ class ExecutionPipeline:
             workspace=self.workspace,
             department=self.department,
         )
+        control_plane_workload_record = build_cards_control_plane_workload_record(
+            contract_payload=cards_workload_contract,
+            department=self.department,
+        )
 
         if not await self.sessions.get_session(run_id):
             await self.sessions.start_session(
@@ -485,6 +497,15 @@ class ExecutionPipeline:
             target_issue_id=target_issue_id,
             resume_mode=resume_mode,
             deterministic_mode_enabled=bool(deterministic_mode_contract.get("deterministic_mode_enabled")),
+        )
+        control_plane_run, control_plane_attempt, control_plane_start_step = await self.cards_epic_control_plane.begin_execution(
+            session_id=run_id,
+            build_id=active_build,
+            epic_name=epic.name,
+            department=self.department,
+            workload=control_plane_workload_record,
+            resume_mode=resume_mode,
+            target_issue_id=target_issue_id,
         )
 
         log_event(
@@ -547,6 +568,10 @@ class ExecutionPipeline:
                 **dict(run_contract_artifacts),
                 "deterministic_mode_contract": dict(deterministic_mode_contract),
                 "route_decision_artifact": dict(route_decision_artifact),
+                "control_plane_workload_record": control_plane_workload_record.model_dump(mode="json"),
+                "control_plane_run_record": control_plane_run.model_dump(mode="json"),
+                "control_plane_attempt_record": control_plane_attempt.model_dump(mode="json"),
+                "control_plane_step_record": control_plane_start_step.model_dump(mode="json"),
                 "packet1_facts": self._build_packet1_facts(intended_model=env.model),
             },
         )
@@ -688,6 +713,14 @@ class ExecutionPipeline:
                 log_event("success_recorded", {"run_id": run_id, "type": "EPIC_COMPLETED"}, workspace=self.workspace)
 
             summary_finalized_at = datetime.now(UTC).isoformat()
+            control_plane_run, control_plane_attempt = await self.cards_epic_control_plane.finalize_execution(
+                run_id=control_plane_run.run_id,
+                session_status=session_status,
+                failure_reason=failure_reason,
+            )
+            artifacts["control_plane_run_record"] = control_plane_run.model_dump(mode="json")
+            artifacts["control_plane_attempt_record"] = control_plane_attempt.model_dump(mode="json")
+            artifacts["control_plane_step_record"] = control_plane_start_step.model_dump(mode="json")
             run_summary, artifacts = await self._materialize_run_summary(
                 run_id=run_id,
                 session_status=session_status,
@@ -750,6 +783,14 @@ class ExecutionPipeline:
             artifacts["deterministic_mode_contract"] = dict(deterministic_mode_contract)
             artifacts["route_decision_artifact"] = dict(route_decision_artifact)
             artifacts["packet1_facts"] = self._build_packet1_facts(intended_model=env.model)
+            control_plane_run, control_plane_attempt = await self.cards_epic_control_plane.finalize_execution(
+                run_id=control_plane_run.run_id,
+                session_status=failed_status,
+                failure_reason=str(exc)[:2000],
+            )
+            artifacts["control_plane_run_record"] = control_plane_run.model_dump(mode="json")
+            artifacts["control_plane_attempt_record"] = control_plane_attempt.model_dump(mode="json")
+            artifacts["control_plane_step_record"] = control_plane_start_step.model_dump(mode="json")
             receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
             if receipt_projection:
                 artifacts["protocol_receipts"] = receipt_projection

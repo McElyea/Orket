@@ -89,7 +89,15 @@ def test_turn_artifact_writer_operation_result_round_trip(tmp_path: Path) -> Non
 # Layer: integration
 def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
-    manifest = build_tool_invocation_manifest(run_id="s1", tool_name="write_file")
+    manifest = build_tool_invocation_manifest(
+        run_id="s1",
+        tool_name="write_file",
+        control_plane_run_id="turn-tool-run:s1:ISSUE-1:coder:0004",
+        control_plane_attempt_id="turn-tool-run:s1:ISSUE-1:coder:0004:attempt:0001",
+        control_plane_reservation_id="turn-tool-reservation:turn-tool-run:s1:ISSUE-1:coder:0004",
+        control_plane_lease_id="turn-tool-lease:turn-tool-run:s1:ISSUE-1:coder:0004",
+        control_plane_resource_id="namespace:issue:ISSUE-1",
+    )
     tool_args = {"path": "agent_output/main.py"}
     tool_call_hash = compute_tool_call_hash(
         tool_name="write_file",
@@ -126,6 +134,17 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Pa
     assert manifest_payload["determinism_class"] == "workspace"
     assert manifest_payload["capability_profile"] == "workspace"
     assert manifest_payload["tool_contract_version"] == "1.0.0"
+    assert manifest_payload["control_plane_run_id"] == "turn-tool-run:s1:ISSUE-1:coder:0004"
+    assert (
+        manifest_payload["control_plane_attempt_id"]
+        == "turn-tool-run:s1:ISSUE-1:coder:0004:attempt:0001"
+    )
+    assert (
+        manifest_payload["control_plane_reservation_id"]
+        == "turn-tool-reservation:turn-tool-run:s1:ISSUE-1:coder:0004"
+    )
+    assert manifest_payload["control_plane_lease_id"] == "turn-tool-lease:turn-tool-run:s1:ISSUE-1:coder:0004"
+    assert manifest_payload["control_plane_resource_id"] == "namespace:issue:ISSUE-1"
     assert "input_schema" not in manifest_payload
     assert "output_schema" not in manifest_payload
     assert "error_schema" not in manifest_payload

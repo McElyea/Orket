@@ -56,12 +56,15 @@ _RETRY_ROWS: tuple[dict[str, Any], ...] = (
 def retry_classification_policy_snapshot() -> dict[str, Any]:
     return {
         "schema_version": "1.0",
+        "attempt_history_authoritative": False,
         "rows": [dict(row) for row in _RETRY_ROWS],
     }
 
 
 def validate_retry_classification_policy(payload: dict[str, Any] | None = None) -> tuple[str, ...]:
     policy = dict(payload or retry_classification_policy_snapshot())
+    if policy.get("attempt_history_authoritative") is not False:
+        raise ValueError("E_RETRY_POLICY_ATTEMPT_AUTHORITY_INVALID")
     rows = list(policy.get("rows") or [])
     if not rows:
         raise ValueError("E_RETRY_POLICY_EMPTY")

@@ -19,6 +19,7 @@ from orket.runtime.run_summary_packet2 import (
     build_packet2_extension,
     normalize_packet2_facts,
 )
+from orket.runtime.run_summary_control_plane import build_control_plane_summary_projection
 
 _EXCLUDED_ARTIFACT_IDS = {"gitea_export", "run_summary", "run_summary_path"}
 _PACKET1_SCHEMA_VERSION = "1.0"
@@ -76,6 +77,9 @@ def validate_run_summary_payload(payload: dict[str, Any]) -> None:
     artifact_provenance = payload.get(ARTIFACT_PROVENANCE_KEY)
     if artifact_provenance is not None and not isinstance(artifact_provenance, dict):
         raise ValueError("run_summary_truthful_runtime_artifact_provenance_invalid")
+    control_plane = payload.get("control_plane")
+    if control_plane is not None and not isinstance(control_plane, dict):
+        raise ValueError("run_summary_control_plane_invalid")
 
 
 def build_run_summary_payload(
@@ -111,6 +115,9 @@ def build_run_summary_payload(
     artifact_provenance = build_artifact_provenance_extension(artifacts=artifacts)
     if artifact_provenance is not None:
         payload[ARTIFACT_PROVENANCE_KEY] = artifact_provenance
+    control_plane = build_control_plane_summary_projection(artifacts=artifacts)
+    if control_plane is not None:
+        payload["control_plane"] = control_plane
     cards_runtime = _build_cards_runtime_extension(artifacts=artifacts)
     if cards_runtime:
         payload["cards_runtime"] = cards_runtime

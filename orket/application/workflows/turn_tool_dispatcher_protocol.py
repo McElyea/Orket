@@ -16,6 +16,11 @@ from orket.runtime.protocol_error_codes import (
 from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
 from .turn_tool_dispatcher_control_plane import publish_step_if_needed
 from .turn_path_resolver import PathResolver
+from ..services.turn_tool_control_plane_resource_lifecycle import (
+    lease_id_for_run,
+    namespace_resource_id_for_scope,
+    reservation_id_for_run,
+)
 from .turn_tool_dispatcher_support import (
     required_sequence_violation,
     resolved_declared_namespace_scopes,
@@ -259,6 +264,7 @@ async def persist_protocol_operation(
     retry_count: int,
     validator_duration_ms: int,
 ) -> str | None:
+    namespace_scope = resolved_tool_namespace_scope(binding=binding, context=context, issue_id=issue_id)
     invocation_manifest = build_tool_invocation_manifest(
         run_id=session_id,
         tool_name=tool_name,
@@ -267,12 +273,29 @@ async def persist_protocol_operation(
         determinism_class=str((binding or {}).get("determinism_class") or "workspace"),
         capability_profile=str((binding or {}).get("capability_profile") or "workspace"),
         tool_contract_version=str((binding or {}).get("tool_contract_version") or "1.0.0"),
-        namespace_scope=resolved_tool_namespace_scope(binding=binding, context=context, issue_id=issue_id),
+        namespace_scope=namespace_scope,
         namespace_scope_rule=str((binding or {}).get("namespace_scope_rule") or "run_scope_only"),
         declared_namespace_scopes=resolved_declared_namespace_scopes(
             binding=binding,
             context=context,
             issue_id=issue_id,
+        ),
+        control_plane_run_id=control_plane_run_id,
+        control_plane_attempt_id=control_plane_attempt_id,
+        control_plane_reservation_id=(
+            None
+            if control_plane_run_id is None
+            else reservation_id_for_run(run_id=control_plane_run_id)
+        ),
+        control_plane_lease_id=(
+            None
+            if control_plane_run_id is None
+            else lease_id_for_run(run_id=control_plane_run_id)
+        ),
+        control_plane_resource_id=(
+            None
+            if control_plane_run_id is None
+            else namespace_resource_id_for_scope(namespace_scope=namespace_scope)
         ),
     )
     tool_call_hash = compute_tool_call_hash(

@@ -20,12 +20,18 @@ from orket.adapters.storage.async_control_plane_record_repository import AsyncCo
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandRunner
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.control_plane_workload_catalog import (
+    sandbox_runtime_workload_for_tech_stack,
+)
 from orket.application.services.sandbox_control_plane_effect_service import SandboxControlPlaneEffectService
 from orket.application.services.sandbox_control_plane_execution_service import SandboxControlPlaneExecutionService
 from orket.application.services.sandbox_control_plane_reservation_service import (
     SandboxControlPlaneReservationService,
 )
 from orket.application.services.sandbox_control_plane_operator_service import SandboxControlPlaneOperatorService
+from orket.application.services.sandbox_control_plane_resource_service import (
+    SandboxControlPlaneResourceService,
+)
 from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
 from orket.application.services.sandbox_runtime_inspection_service import SandboxRuntimeInspectionService
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
@@ -173,8 +179,7 @@ class SandboxOrchestrator:
             await self.control_plane_execution.initialize_execution(
                 sandbox_id=sandbox_id,
                 run_id=rock_id,
-                workload_id=f"sandbox-workload:{tech_stack.value}",
-                workload_version="docker_sandbox_runtime.v1",
+                workload=sandbox_runtime_workload_for_tech_stack(tech_stack),
                 compose_project=sandbox.compose_project,
                 workspace_path=workspace_path,
                 configuration_payload={
@@ -198,7 +203,7 @@ class SandboxOrchestrator:
                     release_timestamp = self._now()
                     if release_timestamp < latest_lease.publication_timestamp:
                         release_timestamp = latest_lease.publication_timestamp
-                    await self.control_plane_publication.publish_lease(
+                    released_lease = await self.control_plane_publication.publish_lease(
                         lease_id=latest_lease.lease_id,
                         resource_id=latest_lease.resource_id,
                         holder_ref=latest_lease.holder_ref,
@@ -210,6 +215,14 @@ class SandboxOrchestrator:
                         last_confirmed_observation=latest_lease.last_confirmed_observation,
                         cleanup_eligibility_rule=latest_lease.cleanup_eligibility_rule,
                         source_reservation_id=latest_lease.source_reservation_id,
+                    )
+                    await SandboxControlPlaneResourceService(
+                        publication=self.control_plane_publication
+                    ).publish_from_lease_closeout(
+                        sandbox_id=sandbox_id,
+                        lease=released_lease,
+                        observed_at=release_timestamp,
+                        closeout_basis="sandbox_create_record_failed",
                     )
                 latest_reservation = await self.control_plane_repository.get_latest_reservation_record(
                     reservation_id=reservation_id

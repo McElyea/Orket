@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.application.services.control_plane_target_resource_refs import resource_id_for_supported_run
+
 
 def operator_action_summary(record: Any) -> dict[str, Any]:
     return {
@@ -32,6 +34,21 @@ def reservation_summary(record: Any) -> dict[str, Any]:
         "supervisor_authority_ref": record.supervisor_authority_ref,
         "promotion_rule": record.promotion_rule,
         "promoted_lease_id": record.promoted_lease_id,
+    }
+
+
+def resource_summary(record: Any) -> dict[str, Any]:
+    return {
+        "resource_id": record.resource_id,
+        "resource_kind": record.resource_kind,
+        "namespace_scope": record.namespace_scope,
+        "ownership_class": record.ownership_class.value,
+        "current_observed_state": record.current_observed_state,
+        "last_observed_timestamp": record.last_observed_timestamp,
+        "cleanup_authority_class": record.cleanup_authority_class.value,
+        "provenance_ref": record.provenance_ref,
+        "reconciliation_status": record.reconciliation_status,
+        "orphan_classification": record.orphan_classification.value,
     }
 
 
@@ -74,6 +91,24 @@ async def target_run_summary(*, execution_repository: Any, run_id: str) -> dict[
         "creation_timestamp": run.creation_timestamp,
         "attempt_count": len(attempts),
     }
+
+
+async def target_resource_summary(
+    *,
+    repository: Any,
+    execution_repository: Any,
+    run_id: str,
+) -> dict[str, Any] | None:
+    run = await execution_repository.get_run_record(run_id=run_id)
+    if run is None:
+        return None
+    resource_id = _target_resource_id(run)
+    if resource_id is None:
+        return None
+    resource = await repository.get_latest_resource_record(resource_id=resource_id)
+    if resource is None:
+        return None
+    return resource_summary(resource)
 
 
 async def target_checkpoint_summary(*, repository: Any, attempt_id: str | None) -> dict[str, Any] | None:
@@ -163,12 +198,18 @@ async def target_effect_journal_summary(*, repository: Any, run_id: str) -> dict
     }
 
 
+def _target_resource_id(run: Any) -> str | None:
+    return resource_id_for_supported_run(run=run)
+
+
 __all__ = [
     "final_truth_summary",
     "operator_action_summary",
+    "resource_summary",
     "reservation_summary",
     "target_checkpoint_summary",
     "target_effect_journal_summary",
+    "target_resource_summary",
     "target_run_summary",
     "target_step_summary",
 ]

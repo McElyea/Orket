@@ -336,7 +336,12 @@ class ReviewRunManifest:
     bounds: Dict[str, Any]
     truncation: Dict[str, Any]
     auth_source: Literal["token_flag", "token_env", "none"]
+    execution_state_authority: str = "control_plane_records"
+    lane_outputs_execution_state_authoritative: bool = False
     model_lane_contract_version: str = ""
+    control_plane_run_id: str = ""
+    control_plane_attempt_id: str = ""
+    control_plane_step_id: str = ""
     timings_ms: Dict[str, int] | None = None
 
     def to_dict(self) -> Dict[str, Any]:
@@ -349,10 +354,18 @@ class ReviewRunManifest:
             "bounds": dict(self.bounds),
             "truncation": dict(self.truncation),
             "auth_source": self.auth_source,
+            "execution_state_authority": self.execution_state_authority,
+            "lane_outputs_execution_state_authoritative": bool(self.lane_outputs_execution_state_authoritative),
             "timings_ms": dict(self.timings_ms or {}),
         }
         if self.model_lane_contract_version:
             payload["model_lane_contract_version"] = self.model_lane_contract_version
+        if self.control_plane_run_id:
+            payload["control_plane_run_id"] = self.control_plane_run_id
+        if self.control_plane_attempt_id:
+            payload["control_plane_attempt_id"] = self.control_plane_attempt_id
+        if self.control_plane_step_id:
+            payload["control_plane_step_id"] = self.control_plane_step_id
         return payload
 
 
@@ -367,6 +380,7 @@ class ReviewRunResult:
     deterministic_findings: int
     model_assisted_enabled: bool
     manifest: Dict[str, Any]
+    control_plane: Dict[str, Any] | None = None
     exit_code: int = 0
     error: str = ""
 
@@ -383,6 +397,8 @@ class ReviewRunResult:
             "manifest": dict(self.manifest),
             "exit_code": int(self.exit_code),
         }
+        if self.control_plane:
+            payload["control_plane"] = dict(self.control_plane)
         if self.error:
             payload["error"] = self.error
         return payload

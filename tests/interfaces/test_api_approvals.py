@@ -1,5 +1,8 @@
+# Layer: integration
+
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
@@ -31,11 +34,14 @@ from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for
 from tests.application.test_engine_approvals import (
     _FakePendingGates,
     _guard_review_row,
+    _seed_target_resource,
     _seed_target_step_and_effect_journal,
     _tool_approval_row,
 )
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+
+pytestmark = pytest.mark.integration
 
 
 client = TestClient(app)
@@ -296,6 +302,7 @@ def test_tool_approval_api_exposes_target_ref_and_target_operator_action(monkeyp
             )
         )
     )
+    asyncio.run(_seed_target_resource(api_module.engine))
     journal_entries = asyncio.run(_seed_target_step_and_effect_journal(api_module.engine))
     asyncio.run(
         publication.accept_checkpoint(
@@ -366,6 +373,11 @@ def test_tool_approval_api_exposes_target_ref_and_target_operator_action(monkeyp
     assert approval["control_plane_target_run"]["configuration_snapshot_id"] == "config-snapshot-1"
     assert approval["control_plane_target_run"]["creation_timestamp"] == "2026-03-03T11:59:00+00:00"
     assert approval["control_plane_target_run"]["attempt_count"] == 1
+    assert approval["control_plane_target_resource"]["resource_id"] == "namespace:issue:ISS-1"
+    assert approval["control_plane_target_resource"]["resource_kind"] == "turn_tool_namespace"
+    assert approval["control_plane_target_resource"]["current_observed_state"].startswith(
+        "lease_status:lease_active;"
+    )
     assert approval["control_plane_target_step"]["latest_step_id"] == "turn-tool-step:sess-1:ISS-1:coder:0001:0001"
     assert approval["control_plane_target_step"]["latest_capability_used"] == "destructive_mutation"
     assert approval["control_plane_target_step"]["latest_output_ref"] == (
@@ -433,6 +445,12 @@ def test_tool_approval_api_exposes_target_ref_and_target_operator_action(monkeyp
     assert approval["control_plane_target_operator_action"]["receipt_refs"] == ["approval-request:apr-1"]
     assert approval["control_plane_target_operator_action"]["affected_transition_refs"] == [
         "turn-tool-run:sess-1:ISS-1:coder:0001:approval:pending->approved"
+    ]
+    assert approval["control_plane_target_operator_action"]["affected_resource_refs"] == [
+        "session:sess-1",
+        "issue:ISS-1",
+        "namespace:issue:ISS-1",
+        "turn-tool-run:sess-1:ISS-1:coder:0001",
     ]
     assert approval["control_plane_target_reservation"]["reservation_kind"] == "operator_hold_reservation"
     assert approval["control_plane_target_reservation"]["status"] == "reservation_released"

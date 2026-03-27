@@ -12,6 +12,7 @@ from orket.core.contracts import (
     ReconciliationRecord,
     RecoveryDecisionRecord,
     ReservationRecord,
+    ResourceRecord,
 )
 from orket.core.domain import (
     AuthoritySourceClass,
@@ -294,6 +295,33 @@ class ControlPlaneAuthorityService:
             last_confirmed_observation=last_confirmed_observation,
             source_reservation_id=source_reservation_id,
             previous_record=previous_record,
+        )
+
+    def publish_resource(
+        self,
+        *,
+        resource_id: str,
+        resource_kind: str,
+        namespace_scope: str,
+        ownership_class,
+        current_observed_state: str,
+        last_observed_timestamp: str,
+        cleanup_authority_class,
+        provenance_ref: str,
+        reconciliation_status: str,
+        orphan_classification,
+    ) -> ResourceRecord:
+        return ResourceRecord(
+            resource_id=resource_id,
+            resource_kind=resource_kind,
+            namespace_scope=namespace_scope,
+            ownership_class=ownership_class,
+            current_observed_state=current_observed_state,
+            last_observed_timestamp=last_observed_timestamp,
+            cleanup_authority_class=cleanup_authority_class,
+            provenance_ref=provenance_ref,
+            reconciliation_status=reconciliation_status,
+            orphan_classification=orphan_classification,
         )
 
     def publish_final_truth(

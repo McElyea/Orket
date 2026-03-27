@@ -8,6 +8,9 @@ Last updated: 2026-02-27
 ## Purpose
 Define one shared plan shape that both ODR and Cards emit before execution. This is the unification seam for MR-1.
 
+This contract is now also the shared projection input for the control-plane `WorkloadRecord` family on cards and ODR paths.
+It remains a workload-plan contract, not the full control-plane workload authority by itself.
+
 ## Required Top-Level Keys
 1. `workload_contract_version`
 2. `workload_type`
@@ -40,6 +43,11 @@ Define one shared plan shape that both ODR and Cards emit before execution. This
    - runtime inputs/dependencies/models -> `required_materials`
    - card logs/results/state snapshots -> `expected_artifacts`
 3. No implicit contract fallback. Unknown contract versions must fail closed.
+
+## Control-Plane Projection
+1. `workload.contract.v1` may be projected into `orket.core.contracts.WorkloadRecord` when a runtime path needs one canonical governed workload object before run publication.
+2. The projection must preserve the exact parsed workload contract payload in its digest basis; callers must not invent a second workload noun beside the parsed contract.
+3. Projection into `WorkloadRecord` does not by itself close workload convergence. Extension-manifest and other non-`workload.contract.v1` entrypoints still need to project into the same control-plane workload family.
 
 ## Schema
 - JSON Schema: `docs/specs/workload-contract-v1.schema.json`

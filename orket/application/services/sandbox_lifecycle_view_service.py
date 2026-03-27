@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from orket.application.services.sandbox_control_plane_resource_service import (
+    SandboxControlPlaneResourceService,
+)
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
 
@@ -35,6 +38,10 @@ class SandboxLifecycleOperatorView:
     control_plane_safe_continuation_class: str | None = None
     control_plane_reservation_status: str | None = None
     control_plane_lease_status: str | None = None
+    control_plane_resource_id: str | None = None
+    control_plane_resource_kind: str | None = None
+    control_plane_resource_state: str | None = None
+    control_plane_resource_orphan_classification: str | None = None
     final_truth_record_id: str | None = None
     control_plane_final_result_class: str | None = None
     control_plane_final_closure_basis: str | None = None
@@ -148,6 +155,16 @@ class SandboxLifecycleViewService:
             if control_plane_summary is None
             else control_plane_summary["reservation_status"],
             control_plane_lease_status=None if control_plane_summary is None else control_plane_summary["lease_status"],
+            control_plane_resource_id=None if control_plane_summary is None else control_plane_summary["resource_id"],
+            control_plane_resource_kind=None
+            if control_plane_summary is None
+            else control_plane_summary["resource_kind"],
+            control_plane_resource_state=None
+            if control_plane_summary is None
+            else control_plane_summary["resource_state"],
+            control_plane_resource_orphan_classification=None
+            if control_plane_summary is None
+            else control_plane_summary["resource_orphan_classification"],
             final_truth_record_id=None if run_record is None else run_record.final_truth_record_id,
             control_plane_final_result_class=None
             if control_plane_summary is None
@@ -255,6 +272,10 @@ class SandboxLifecycleViewService:
                 "safe_continuation_class": None,
                 "reservation_status": None,
                 "lease_status": None,
+                "resource_id": None,
+                "resource_kind": None,
+                "resource_state": None,
+                "resource_orphan_classification": None,
                 "final_result_class": None,
                 "final_closure_basis": None,
                 "final_terminality_basis": None,
@@ -314,6 +335,9 @@ class SandboxLifecycleViewService:
         lease = await self.control_plane_repository.get_latest_lease_record(
             lease_id=f"sandbox-lease:{record.sandbox_id}"
         )
+        resource = await self.control_plane_repository.get_latest_resource_record(
+            resource_id=SandboxControlPlaneResourceService.resource_id_for_sandbox(record.sandbox_id)
+        )
         reconciliation = None if record.run_id is None else await self.control_plane_repository.get_latest_reconciliation_record(
             target_ref=record.run_id
         )
@@ -338,6 +362,12 @@ class SandboxLifecycleViewService:
             else reconciliation.safe_continuation_class.value,
             "reservation_status": None if reservation is None else reservation.status.value,
             "lease_status": None if lease is None else lease.status.value,
+            "resource_id": None if resource is None else resource.resource_id,
+            "resource_kind": None if resource is None else resource.resource_kind,
+            "resource_state": None if resource is None else resource.current_observed_state,
+            "resource_orphan_classification": None
+            if resource is None
+            else resource.orphan_classification.value,
             "final_result_class": None if final_truth is None else final_truth.result_class.value,
             "final_closure_basis": None if final_truth is None else final_truth.closure_basis.value,
             "final_terminality_basis": None if final_truth is None else final_truth.terminality_basis.value,
@@ -384,4 +414,6 @@ class SandboxLifecycleViewService:
             "timestamp": latest.timestamp,
             "actor_ref": latest.actor_ref,
             "receipt_refs": list(latest.receipt_refs),
+            "affected_transition_refs": list(latest.affected_transition_refs),
+            "affected_resource_refs": list(latest.affected_resource_refs),
         }

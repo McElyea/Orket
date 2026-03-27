@@ -13,6 +13,7 @@ from orket.core.contracts import (
     ReconciliationRecord,
     RecoveryDecisionRecord,
     ReservationRecord,
+    ResourceRecord,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 from orket.core.domain import (
@@ -393,6 +394,34 @@ class ControlPlanePublicationService:
             previous_record=previous_record,
         )
         return await self.repository.append_lease_record(record=record)
+
+    async def publish_resource(
+        self,
+        *,
+        resource_id: str,
+        resource_kind: str,
+        namespace_scope: str,
+        ownership_class,
+        current_observed_state: str,
+        last_observed_timestamp: str,
+        cleanup_authority_class,
+        provenance_ref: str,
+        reconciliation_status: str,
+        orphan_classification,
+    ) -> ResourceRecord:
+        record = self.authority.publish_resource(
+            resource_id=resource_id,
+            resource_kind=resource_kind,
+            namespace_scope=namespace_scope,
+            ownership_class=ownership_class,
+            current_observed_state=current_observed_state,
+            last_observed_timestamp=last_observed_timestamp,
+            cleanup_authority_class=cleanup_authority_class,
+            provenance_ref=provenance_ref,
+            reconciliation_status=reconciliation_status,
+            orphan_classification=orphan_classification,
+        )
+        return await self.repository.save_resource_record(record=record)
 
     async def publish_final_truth(
         self,

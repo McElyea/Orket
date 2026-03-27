@@ -157,6 +157,7 @@ class SandboxRuntimeCleanupService:
             )
         ).record
         cleaned_at = self.lifecycle_service._now()
+        await self.lifecycle_service._publish_control_plane_resource(record=cleaned, observed_at=cleaned_at)
         await self.lifecycle_service._publish_control_plane_lease(
             record=cleaned,
             publication_timestamp=cleaned_at,

@@ -12,6 +12,7 @@ from orket.runtime.retry_classification_policy import (
 def test_retry_classification_policy_snapshot_contains_expected_signals() -> None:
     payload = retry_classification_policy_snapshot()
     assert payload["schema_version"] == "1.0"
+    assert payload["attempt_history_authoritative"] is False
     signals = {row["signal"] for row in payload["rows"]}
     assert "model_timeout_retry" in signals
     assert "unexpected_runtime_exception" in signals
@@ -28,4 +29,12 @@ def test_validate_retry_classification_policy_rejects_dangerous_retry_count() ->
     payload = retry_classification_policy_snapshot()
     payload["rows"][2]["max_attempts"] = 2
     with pytest.raises(ValueError, match="E_RETRY_POLICY_DANGEROUS_RETRY_COUNT:openai_http_status_error"):
+        _ = validate_retry_classification_policy(payload)
+
+
+# Layer: contract
+def test_validate_retry_classification_policy_rejects_attempt_history_authority_claim() -> None:
+    payload = retry_classification_policy_snapshot()
+    payload["attempt_history_authoritative"] = True
+    with pytest.raises(ValueError, match="E_RETRY_POLICY_ATTEMPT_AUTHORITY_INVALID"):
         _ = validate_retry_classification_policy(payload)

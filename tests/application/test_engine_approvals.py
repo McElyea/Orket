@@ -1,3 +1,5 @@
+# Layer: unit
+
 from __future__ import annotations
 
 import pytest
@@ -16,10 +18,13 @@ from orket.core.domain import (
     CapabilityClass,
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
+    CleanupAuthorityClass,
     ClosureBasisClassification,
     CompletionClassification,
     DegradationClassification,
     EvidenceSufficiencyClassification,
+    OrphanClassification,
+    OwnershipClass,
     ReservationStatus,
     ResidualUncertaintyClassification,
     ResultClass,
@@ -30,6 +35,8 @@ from orket.kernel.v1.nervous_system_runtime import admit_proposal_v1
 from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+
+pytestmark = pytest.mark.unit
 
 
 class _FakePendingGates:
@@ -168,6 +175,21 @@ async def _seed_target_run_execution(engine: OrchestrationEngine) -> None:
     )
 
 
+async def _seed_target_resource(engine: OrchestrationEngine) -> None:
+    await engine.control_plane_publication.publish_resource(
+        resource_id="namespace:issue:ISS-1",
+        resource_kind="turn_tool_namespace",
+        namespace_scope="issue:ISS-1",
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state="lease_status:lease_active;namespace:issue:ISS-1",
+        last_observed_timestamp="2026-03-03T11:59:05+00:00",
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+        provenance_ref="turn-tool-lease:sess-1:ISS-1:coder:0001",
+        reconciliation_status="governed_execution_authority",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+
+
 async def _seed_target_step_and_effect_journal(engine: OrchestrationEngine) -> list[object]:
     await engine.control_plane_execution_repository.save_step_record(
         record=StepRecord(
@@ -263,6 +285,7 @@ async def test_engine_list_approvals_normalizes_rows() -> None:
     engine = _make_engine()
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine)
+    await _seed_target_resource(engine)
     journal_entries = await _seed_target_step_and_effect_journal(engine)
     await _seed_target_checkpoint(engine, journal_entries=journal_entries)
     await _seed_target_final_truth(engine)
@@ -279,6 +302,11 @@ async def test_engine_list_approvals_normalizes_rows() -> None:
     assert items[0]["control_plane_target_run"]["configuration_snapshot_id"] == "config-snapshot-1"
     assert items[0]["control_plane_target_run"]["creation_timestamp"] == "2026-03-03T11:59:00+00:00"
     assert items[0]["control_plane_target_run"]["attempt_count"] == 1
+    assert items[0]["control_plane_target_resource"]["resource_id"] == "namespace:issue:ISS-1"
+    assert items[0]["control_plane_target_resource"]["resource_kind"] == "turn_tool_namespace"
+    assert items[0]["control_plane_target_resource"]["current_observed_state"].startswith(
+        "lease_status:lease_active;"
+    )
     assert items[0]["control_plane_target_step"]["latest_step_id"] == (
         "turn-tool-step:sess-1:ISS-1:coder:0001:0001"
     )
@@ -389,6 +417,7 @@ async def test_engine_decide_approval_resolves_pending_item() -> None:
     engine = _make_engine()
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine)
+    await _seed_target_resource(engine)
     await _seed_target_checkpoint(engine)
     await _seed_target_final_truth(engine)
     result = await engine.decide_approval(
@@ -410,6 +439,8 @@ async def test_engine_decide_approval_resolves_pending_item() -> None:
     assert result["approval"]["control_plane_target_run"]["configuration_snapshot_id"] == "config-snapshot-1"
     assert result["approval"]["control_plane_target_run"]["creation_timestamp"] == "2026-03-03T11:59:00+00:00"
     assert result["approval"]["control_plane_target_run"]["attempt_count"] == 1
+    assert result["approval"]["control_plane_target_resource"]["resource_id"] == "namespace:issue:ISS-1"
+    assert result["approval"]["control_plane_target_resource"]["resource_kind"] == "turn_tool_namespace"
     assert result["approval"]["control_plane_target_step"] is None
     assert result["approval"]["control_plane_target_checkpoint"]["checkpoint_id"] == (
         "turn-tool-checkpoint:sess-1:ISS-1:coder:0001:0001"
@@ -439,12 +470,19 @@ async def test_engine_decide_approval_resolves_pending_item() -> None:
     assert result["approval"]["control_plane_operator_action"]["affected_resource_refs"] == [
         "session:sess-1",
         "issue:ISS-1",
+        "namespace:issue:ISS-1",
     ]
     assert result["approval"]["control_plane_target_operator_action"]["input_class"] == "operator_risk_acceptance"
     assert result["approval"]["control_plane_target_operator_action"]["result"] == "approved"
     assert result["approval"]["control_plane_target_operator_action"]["receipt_refs"] == ["approval-request:apr-1"]
     assert result["approval"]["control_plane_target_operator_action"]["affected_transition_refs"] == [
         "turn-tool-run:sess-1:ISS-1:coder:0001:approval:pending->approved"
+    ]
+    assert result["approval"]["control_plane_target_operator_action"]["affected_resource_refs"] == [
+        "session:sess-1",
+        "issue:ISS-1",
+        "namespace:issue:ISS-1",
+        "turn-tool-run:sess-1:ISS-1:coder:0001",
     ]
     assert result["approval"]["control_plane_target_reservation"]["reservation_kind"] == "operator_hold_reservation"
     assert result["approval"]["control_plane_target_reservation"]["status"] == ReservationStatus.RELEASED.value
@@ -496,6 +534,7 @@ async def test_engine_decide_approval_publishes_terminal_operator_command_for_de
     engine = _make_engine()
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine)
+    await _seed_target_resource(engine)
     await _seed_target_checkpoint(engine)
     await _seed_target_final_truth(engine)
     result = await engine.decide_approval(
@@ -511,6 +550,8 @@ async def test_engine_decide_approval_publishes_terminal_operator_command_for_de
     assert result["approval"]["control_plane_target_run"]["configuration_snapshot_id"] == "config-snapshot-1"
     assert result["approval"]["control_plane_target_run"]["creation_timestamp"] == "2026-03-03T11:59:00+00:00"
     assert result["approval"]["control_plane_target_run"]["attempt_count"] == 1
+    assert result["approval"]["control_plane_target_resource"]["resource_id"] == "namespace:issue:ISS-1"
+    assert result["approval"]["control_plane_target_resource"]["resource_kind"] == "turn_tool_namespace"
     assert result["approval"]["control_plane_target_step"] is None
     assert result["approval"]["control_plane_target_checkpoint"]["checkpoint_id"] == (
         "turn-tool-checkpoint:sess-1:ISS-1:coder:0001:0001"
@@ -542,6 +583,12 @@ async def test_engine_decide_approval_publishes_terminal_operator_command_for_de
     assert result["approval"]["control_plane_target_operator_action"]["receipt_refs"] == ["approval-request:apr-1"]
     assert result["approval"]["control_plane_target_operator_action"]["affected_transition_refs"] == [
         "turn-tool-run:sess-1:ISS-1:coder:0001:approval:pending->denied"
+    ]
+    assert result["approval"]["control_plane_target_operator_action"]["affected_resource_refs"] == [
+        "session:sess-1",
+        "issue:ISS-1",
+        "namespace:issue:ISS-1",
+        "turn-tool-run:sess-1:ISS-1:coder:0001",
     ]
     assert result["approval"]["control_plane_target_reservation"]["reservation_kind"] == "operator_hold_reservation"
     assert result["approval"]["control_plane_target_reservation"]["status"] == ReservationStatus.INVALIDATED.value

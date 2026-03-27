@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.sandbox_control_plane_resource_service import (
+    SandboxControlPlaneResourceService,
+)
 from orket.core.contracts import FinalTruthRecord, OperatorActionRecord
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
@@ -50,8 +53,7 @@ class SandboxControlPlaneOperatorService:
             command_class=OperatorCommandClass.CANCEL_RUN,
             affected_transition_refs=[transition_ref],
             affected_resource_refs=[
-                f"sandbox-runtime:{before_record.sandbox_id}",
-                f"sandbox-lease:{before_record.sandbox_id}",
+                SandboxControlPlaneResourceService.resource_id_for_sandbox(before_record.sandbox_id),
             ],
             receipt_refs=receipt_refs,
         )

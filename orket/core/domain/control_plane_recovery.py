@@ -68,6 +68,7 @@ _FAILURE_CLASSIFICATION_ALIASES: dict[str, tuple[FailurePlane, FailureClassifica
     "gitea_state_worker_failure": (FailurePlane.EXECUTION, ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE),
     "gitea_state_claim_failure": (FailurePlane.EXECUTION, ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE),
     "lease_expired": (FailurePlane.RESOURCE, ResourceFailureClass.RESOURCE_UNAVAILABLE),
+    "control_plane_resource_drift": (FailurePlane.RESOURCE, ResourceFailureClass.RESOURCE_STATE_UNCERTAIN),
     "lost_runtime": (FailurePlane.RESOURCE, ResourceFailureClass.RESOURCE_STATE_UNCERTAIN),
     "unfinished_pre_effect_attempt": (
         FailurePlane.CONTROL_PLANE,

@@ -782,6 +782,12 @@ def _render_human(result: Dict[str, Any]) -> str:
             f"deterministic decision: {result.get('deterministic_decision', '')}",
             f"artifact path: {result.get('artifact_dir', '')}",
         ]
+        control_plane = result.get("control_plane")
+        if isinstance(control_plane, dict):
+            run_state = str(control_plane.get("run_state") or "").strip()
+            attempt_state = str(control_plane.get("attempt_state") or "").strip()
+            if run_state or attempt_state:
+                lines.append(f"control-plane: run={run_state} attempt={attempt_state}".strip())
         if bool(result.get("verbose")):
             lines.append(f"snapshot_digest: {result.get('snapshot_digest', '')}")
             lines.append(f"policy_digest: {result.get('policy_digest', '')}")

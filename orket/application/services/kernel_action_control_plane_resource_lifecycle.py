@@ -1,8 +1,15 @@
 from __future__ import annotations
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
-from orket.core.contracts import LeaseRecord, ReservationRecord, RunRecord
-from orket.core.domain import LeaseStatus, ReservationKind, ReservationStatus
+from orket.core.contracts import LeaseRecord, ReservationRecord, ResourceRecord, RunRecord
+from orket.core.domain import (
+    CleanupAuthorityClass,
+    LeaseStatus,
+    OrphanClassification,
+    OwnershipClass,
+    ReservationKind,
+    ReservationStatus,
+)
 
 
 class KernelActionControlPlaneResourceError(ValueError):
@@ -30,6 +37,10 @@ def target_scope_ref_for_run(*, run: RunRecord) -> str:
     if namespace_scope:
         return f"kernel-action-scope:{namespace_scope}"
     return f"kernel-action-scope:{run.run_id}"
+
+
+def resource_id_for_run(*, run: RunRecord) -> str:
+    return target_scope_ref_for_run(run=run)
 
 
 async def ensure_admission_reservation(
@@ -70,7 +81,7 @@ async def ensure_active_execution_lease(
     if lease is None:
         lease = await publication.publish_lease(
             lease_id=lease_id,
-            resource_id=target_scope_ref_for_run(run=run),
+            resource_id=resource_id_for_run(run=run),
             holder_ref=holder_ref_for_run(run_id=run.run_id),
             lease_epoch=1,
             publication_timestamp=publication_timestamp,
@@ -83,6 +94,7 @@ async def ensure_active_execution_lease(
         raise KernelActionControlPlaneResourceError(
             f"kernel-action run {run.run_id} cannot continue from non-active execution lease"
         )
+    await publish_resource_snapshot(publication=publication, run=run, lease=lease)
     if reservation.status is ReservationStatus.PROMOTED_TO_LEASE:
         return reservation, lease
     try:
@@ -135,7 +147,7 @@ async def _release_lease_if_present(
     existing = await publication.repository.get_latest_lease_record(lease_id=lease_id)
     if existing is None or existing.status in {LeaseStatus.RELEASED, LeaseStatus.REVOKED, LeaseStatus.EXPIRED}:
         return existing
-    return await publication.publish_lease(
+    released = await publication.publish_lease(
         lease_id=existing.lease_id,
         resource_id=existing.resource_id,
         holder_ref=existing.holder_ref,
@@ -147,6 +159,8 @@ async def _release_lease_if_present(
         last_confirmed_observation=existing.last_confirmed_observation,
         source_reservation_id=existing.source_reservation_id,
     )
+    await publish_resource_snapshot(publication=publication, run=run, lease=released)
+    return released
 
 
 async def _release_reservation_if_present(
@@ -180,7 +194,7 @@ async def _rollback_execution_activation_failure(
     publication_timestamp: str,
 ) -> None:
     if lease.status is LeaseStatus.ACTIVE:
-        await publication.publish_lease(
+        released = await publication.publish_lease(
             lease_id=lease.lease_id,
             resource_id=lease.resource_id,
             holder_ref=lease.holder_ref,
@@ -192,6 +206,7 @@ async def _rollback_execution_activation_failure(
             last_confirmed_observation=lease.last_confirmed_observation,
             source_reservation_id=lease.source_reservation_id,
         )
+        await publish_resource_snapshot(publication=publication, run=run, lease=released)
     reservation = await publication.repository.get_latest_reservation_record(
         reservation_id=reservation_id_for_run(run_id=run.run_id)
     )
@@ -203,12 +218,35 @@ async def _rollback_execution_activation_failure(
         )
 
 
+async def publish_resource_snapshot(
+    *,
+    publication: ControlPlanePublicationService,
+    run: RunRecord,
+    lease: LeaseRecord,
+) -> ResourceRecord:
+    target_scope = target_scope_ref_for_run(run=run)
+    namespace_scope = str(run.namespace_scope or "").strip() or target_scope
+    return await publication.publish_resource(
+        resource_id=resource_id_for_run(run=run),
+        resource_kind="kernel_action_scope",
+        namespace_scope=namespace_scope,
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state=f"lease_status:{lease.status.value};scope:{target_scope}",
+        last_observed_timestamp=lease.publication_timestamp,
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+        provenance_ref=lease.last_confirmed_observation or lease.lease_id,
+        reconciliation_status="governed_execution_authority",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+
+
 __all__ = [
     "KernelActionControlPlaneResourceError",
     "ensure_active_execution_lease",
     "ensure_admission_reservation",
     "holder_ref_for_run",
     "lease_id_for_run",
+    "resource_id_for_run",
     "release_execution_authority_if_present",
     "reservation_id_for_run",
     "target_scope_ref_for_run",

@@ -17,10 +17,12 @@ from orket.core.contracts import (
     ReservationRecord,
     ResolvedConfigurationSnapshot,
     ResolvedPolicySnapshot,
+    ResourceRecord,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 from orket.core.domain import (
     AuthoritySourceClass,
+    CleanupAuthorityClass,
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
     ClosureBasisClassification,
@@ -31,6 +33,8 @@ from orket.core.domain import (
     LeaseStatus,
     OperatorCommandClass,
     OperatorInputClass,
+    OrphanClassification,
+    OwnershipClass,
     ReservationKind,
     ReservationStatus,
     RecoveryActionClass,
@@ -49,6 +53,7 @@ class InMemoryControlPlaneRecordRepository(ControlPlaneRecordRepository):
         self.policy_snapshots_by_id: dict[str, ResolvedPolicySnapshot] = {}
         self.configuration_snapshots_by_id: dict[str, ResolvedConfigurationSnapshot] = {}
         self.reservations_by_id: dict[str, list[ReservationRecord]] = {}
+        self.resources_by_id: dict[str, list[ResourceRecord]] = {}
         self.journal_by_run: dict[str, list[EffectJournalEntryRecord]] = {}
         self.checkpoint_by_id: dict[str, CheckpointRecord] = {}
         self.acceptance_by_checkpoint: dict[str, CheckpointAcceptanceRecord] = {}
@@ -115,6 +120,21 @@ class InMemoryControlPlaneRecordRepository(ControlPlaneRecordRepository):
     async def get_latest_reservation_record_for_holder_ref(self, *, holder_ref: str) -> ReservationRecord | None:
         matches = await self.list_reservation_records_for_holder_ref(holder_ref=holder_ref)
         return matches[-1] if matches else None
+
+    async def save_resource_record(
+        self,
+        *,
+        record: ResourceRecord,
+    ) -> ResourceRecord:
+        self.resources_by_id.setdefault(record.resource_id, []).append(record)
+        return record
+
+    async def list_resource_records(self, *, resource_id: str) -> list[ResourceRecord]:
+        return list(self.resources_by_id.get(resource_id, ()))
+
+    async def get_latest_resource_record(self, *, resource_id: str) -> ResourceRecord | None:
+        records = self.resources_by_id.get(resource_id, ())
+        return records[-1] if records else None
 
     async def append_effect_journal_entry(
         self,
@@ -448,6 +468,44 @@ async def test_control_plane_publication_service_persists_append_only_lease_hist
     assert second.granted_timestamp == first.granted_timestamp
     assert len(history) == 2
     assert history[-1].history_refs
+
+
+@pytest.mark.asyncio
+async def test_control_plane_publication_service_persists_resource_history() -> None:
+    repository = InMemoryControlPlaneRecordRepository()
+    service = ControlPlanePublicationService(repository=repository)
+
+    first = await service.publish_resource(
+        resource_id="sandbox-scope:sb-1",
+        resource_kind="sandbox_runtime",
+        namespace_scope="sandbox-scope:sb-1",
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state="sandbox_state:creating;cleanup_state:none;lease_epoch:1;terminal_reason:none;reconciliation_not_required",
+        last_observed_timestamp="2026-03-24T00:00:00+00:00",
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_AFTER_RECONCILIATION,
+        provenance_ref="sandbox-lifecycle:sb-1:creating:1",
+        reconciliation_status="reconciliation_not_required",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+    second = await service.publish_resource(
+        resource_id="sandbox-scope:sb-1",
+        resource_kind="sandbox_runtime",
+        namespace_scope="sandbox-scope:sb-1",
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state="sandbox_state:active;cleanup_state:none;lease_epoch:1;terminal_reason:none;reconciliation_not_required",
+        last_observed_timestamp="2026-03-24T00:01:00+00:00",
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_AFTER_RECONCILIATION,
+        provenance_ref="sandbox-lifecycle:sb-1:active:2",
+        reconciliation_status="reconciliation_not_required",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+
+    history = await repository.list_resource_records(resource_id="sandbox-scope:sb-1")
+    latest = await repository.get_latest_resource_record(resource_id="sandbox-scope:sb-1")
+
+    assert history == [first, second]
+    assert latest is not None
+    assert latest.current_observed_state.startswith("sandbox_state:active")
 
 
 @pytest.mark.asyncio

@@ -10,8 +10,11 @@ from pathlib import Path
 
 import pytest
 
+from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.application.review.models import SnapshotBounds
 from orket.application.review.run_service import ReviewRunService
+from orket.capabilities.sync_bridge import run_coro_sync
+from orket.core.domain import RunState
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -125,7 +128,8 @@ def test_review_run_pr_sends_token_only_to_bound_live_remote(tmp_path: Path) -> 
     repo = tmp_path / "repo"
     _init_repo(repo)
     workspace = tmp_path / "workspace" / "default"
-    service = ReviewRunService(workspace=workspace)
+    control_plane_db = tmp_path / "control_plane.sqlite3"
+    service = ReviewRunService(workspace=workspace, control_plane_db_path=control_plane_db)
 
     with _StubGiteaServer() as server:
         _git(repo, "remote", "add", "origin", f"{server.base_url}/org/repo.git")
@@ -141,6 +145,10 @@ def test_review_run_pr_sends_token_only_to_bound_live_remote(tmp_path: Path) -> 
 
     assert result.ok is True
     assert result.manifest["auth_source"] == "token_flag"
+    assert result.manifest["control_plane_run_id"] == result.run_id
+    assert result.control_plane is not None
+    assert result.control_plane["run_state"] == "completed"
+    assert result.control_plane["attempt_state"] == "attempt_completed"
     snapshot_payload = json.loads((Path(result.artifact_dir) / "snapshot.json").read_text(encoding="utf-8"))
     assert snapshot_payload["repo"]["remote"] == server.base_url
     assert [row["path"] for row in snapshot_payload["changed_files"]] == ["orket/demo.py"]
@@ -150,6 +158,10 @@ def test_review_run_pr_sends_token_only_to_bound_live_remote(tmp_path: Path) -> 
         "/api/v1/repos/org/repo/pulls/7.diff",
     ]
     assert {request["authorization"] for request in server.requests} == {"token live-secret"}
+    execution_repo = AsyncControlPlaneExecutionRepository(control_plane_db)
+    persisted_run = run_coro_sync(execution_repo.get_run_record(run_id=result.run_id))
+    assert persisted_run is not None
+    assert persisted_run.lifecycle_state is RunState.COMPLETED
 
 
 def test_review_run_pr_blocks_unbound_live_remote_before_request(tmp_path: Path) -> None:
@@ -158,7 +170,7 @@ def test_review_run_pr_blocks_unbound_live_remote_before_request(tmp_path: Path)
     _init_repo(repo)
     _git(repo, "remote", "add", "origin", "https://trusted.example/org/repo.git")
     workspace = tmp_path / "workspace" / "default"
-    service = ReviewRunService(workspace=workspace)
+    service = ReviewRunService(workspace=workspace, control_plane_db_path=tmp_path / "control_plane.sqlite3")
 
     with _StubGiteaServer() as server:
         with pytest.raises(ValueError, match="not bound to a configured git remote"):
@@ -184,7 +196,7 @@ def test_review_run_files_missing_ref_path_fails_closed_live(tmp_path: Path) -> 
     ref = _git(repo, "rev-parse", "HEAD")
 
     workspace = tmp_path / "workspace" / "default"
-    service = ReviewRunService(workspace=workspace)
+    service = ReviewRunService(workspace=workspace, control_plane_db_path=tmp_path / "control_plane.sqlite3")
 
     with pytest.raises(FileNotFoundError, match="missing.py"):
         service.run_files(

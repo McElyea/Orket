@@ -4,8 +4,12 @@ from __future__ import annotations
 
 import pytest
 
+from orket.application.services.control_plane_workload_catalog import (
+    sandbox_runtime_workload_for_tech_stack,
+)
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.sandbox_control_plane_execution_service import (
+    SandboxControlPlaneExecutionError,
     SandboxControlPlaneExecutionService,
 )
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
@@ -79,8 +83,7 @@ async def test_execution_service_initializes_and_rolls_new_attempt_after_reacqui
     run, attempt = await service.initialize_execution(
         sandbox_id="sb-1",
         run_id="run-1",
-        workload_id="sandbox-workload:fastapi-react-postgres",
-        workload_version="docker_sandbox_runtime.v1",
+        workload=sandbox_runtime_workload_for_tech_stack("fastapi-react-postgres"),
         compose_project="orket-sandbox-sb-1",
         workspace_path="workspace/sb-1",
         configuration_payload={"tech_stack": "fastapi-react-postgres"},
@@ -129,6 +132,8 @@ async def test_execution_service_initializes_and_rolls_new_attempt_after_reacqui
     )
 
     assert run.lifecycle_state is RunState.EXECUTING
+    assert run.workload_id == "sandbox-workload:fastapi-react-postgres"
+    assert run.workload_version == "docker_sandbox_runtime.v1"
     assert attempt.attempt_state is AttemptState.EXECUTING
     assert policy_snapshot is not None
     assert configuration_snapshot is not None
@@ -165,8 +170,7 @@ async def test_execution_service_finalizes_terminal_run_and_attempt() -> None:
     await service.initialize_execution(
         sandbox_id="sb-2",
         run_id="run-2",
-        workload_id="sandbox-workload:fastapi-react-postgres",
-        workload_version="docker_sandbox_runtime.v1",
+        workload=sandbox_runtime_workload_for_tech_stack("fastapi-react-postgres"),
         compose_project="orket-sandbox-sb-2",
         workspace_path="workspace/sb-2",
         configuration_payload={"tech_stack": "fastapi-react-postgres"},
@@ -210,8 +214,7 @@ async def test_execution_service_finalizes_hard_max_age_with_resource_failure_ta
     await service.initialize_execution(
         sandbox_id="sb-3",
         run_id="run-3",
-        workload_id="sandbox-workload:fastapi-react-postgres",
-        workload_version="docker_sandbox_runtime.v1",
+        workload=sandbox_runtime_workload_for_tech_stack("fastapi-react-postgres"),
         compose_project="orket-sandbox-sb-3",
         workspace_path="workspace/sb-3",
         configuration_payload={"tech_stack": "fastapi-react-postgres"},
@@ -239,3 +242,26 @@ async def test_execution_service_finalizes_hard_max_age_with_resource_failure_ta
     assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
     assert decision.failure_plane is FailurePlane.RESOURCE
     assert decision.failure_classification is ResourceFailureClass.RESOURCE_UNAVAILABLE
+
+
+@pytest.mark.asyncio
+async def test_execution_service_fails_closed_on_mismatched_sandbox_workload_authority() -> None:
+    execution_repo = InMemoryControlPlaneExecutionRepository()
+    publication_repo: ControlPlaneRecordRepository = InMemoryControlPlaneRecordRepository()
+    service = SandboxControlPlaneExecutionService(
+        repository=execution_repo,
+        publication=ControlPlanePublicationService(repository=publication_repo),
+    )
+
+    with pytest.raises(SandboxControlPlaneExecutionError, match="sandbox workload authority mismatch"):
+        await service.initialize_execution(
+            sandbox_id="sb-mismatch",
+            run_id="run-mismatch",
+            workload=sandbox_runtime_workload_for_tech_stack("fastapi-vue-mongo"),
+            compose_project="orket-sandbox-sb-mismatch",
+            workspace_path="workspace/sb-mismatch",
+            configuration_payload={"tech_stack": "fastapi-react-postgres"},
+            creation_timestamp="2026-03-24T00:00:00+00:00",
+            admission_decision_receipt_ref="sandbox-reservation:sb-mismatch",
+            policy=SandboxLifecyclePolicy(),
+        )

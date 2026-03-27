@@ -18,6 +18,7 @@ from orket.core.contracts.control_plane_models import (
     ReservationRecord,
     ResolvedConfigurationSnapshot,
     ResolvedPolicySnapshot,
+    ResourceRecord,
     RunRecord,
     StepRecord,
 )
@@ -112,6 +113,19 @@ class ControlPlaneRecordRepository(ABC):
 
     @abstractmethod
     async def get_latest_reservation_record_for_holder_ref(self, *, holder_ref: str) -> ReservationRecord | None: ...
+
+    @abstractmethod
+    async def save_resource_record(
+        self,
+        *,
+        record: ResourceRecord,
+    ) -> ResourceRecord: ...
+
+    @abstractmethod
+    async def list_resource_records(self, *, resource_id: str) -> list[ResourceRecord]: ...
+
+    @abstractmethod
+    async def get_latest_resource_record(self, *, resource_id: str) -> ResourceRecord | None: ...
 
     @abstractmethod
     async def append_effect_journal_entry(

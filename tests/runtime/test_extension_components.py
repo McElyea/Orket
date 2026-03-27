@@ -45,6 +45,39 @@ def test_extension_catalog_load_and_list(tmp_path: Path) -> None:
     assert records[0].workloads[0].workload_id == "demo_v1"
 
 
+def test_extension_catalog_workload_projects_into_control_plane_workload_record(tmp_path: Path) -> None:
+    catalog_path = tmp_path / "catalog.json"
+    payload = {
+        "extensions": [
+            {
+                "extension_id": "demo.ext",
+                "extension_version": "1.2.3",
+                "source": "git+demo",
+                "manifest_digest_sha256": "f" * 64,
+                "workloads": [
+                    {
+                        "workload_id": "demo_v1",
+                        "workload_version": "1.0.0",
+                        "entrypoint": "demo:run",
+                        "required_capabilities": ["workspace.root"],
+                        "contract_style": "sdk_v0",
+                    }
+                ],
+            }
+        ]
+    }
+    catalog_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    catalog = ExtensionCatalog(catalog_path)
+    extension = catalog.list_extensions()[0]
+    record = extension.workloads[0].to_control_plane_workload_record(extension=extension)
+
+    assert record.workload_id == "demo_v1"
+    assert record.input_contract_ref == "extension_manifest:sdk_v0"
+    assert record.output_contract_ref == "extension_run_result_identity_v1"
+    assert record.workload_digest.startswith("sha256:")
+
+
 def test_manifest_parser_load_manifest_legacy(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()

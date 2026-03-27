@@ -8,6 +8,9 @@ import aiofiles
 import pytest
 
 from orket.adapters.storage.command_runner import CommandResult
+from orket.application.services.control_plane_workload_catalog import (
+    sandbox_runtime_workload_for_tech_stack,
+)
 from orket.core.domain import AttemptState, ClosureBasisClassification, LeaseStatus, ReservationStatus, ResultClass, RunState
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
@@ -146,6 +149,9 @@ async def test_create_sandbox_persists_active_lifecycle_and_operator_view(tmp_pa
     lease = await orchestrator.control_plane_repository.get_latest_lease_record(
         lease_id=f"sandbox-lease:{sandbox_id}"
     )
+    resource = await orchestrator.control_plane_repository.get_latest_resource_record(
+        resource_id=f"sandbox-scope:{sandbox_id}"
+    )
     views = await orchestrator.list_sandboxes()
     workspace_token = str(tmp_path).replace("\\", "/").strip("/")
 
@@ -162,6 +168,12 @@ async def test_create_sandbox_persists_active_lifecycle_and_operator_view(tmp_pa
         ReservationStatus.PROMOTED_TO_LEASE,
     ]
     assert run is not None
+    assert run.workload_id == sandbox_runtime_workload_for_tech_stack(
+        TechStack.FASTAPI_REACT_POSTGRES
+    ).workload_id
+    assert run.workload_version == sandbox_runtime_workload_for_tech_stack(
+        TechStack.FASTAPI_REACT_POSTGRES
+    ).workload_version
     assert run.lifecycle_state is RunState.EXECUTING
     assert run.current_attempt_id == f"sandbox-attempt:{sandbox_id}:00000001"
     assert len(attempts) == 1
@@ -174,6 +186,9 @@ async def test_create_sandbox_persists_active_lifecycle_and_operator_view(tmp_pa
     assert lease.status is LeaseStatus.ACTIVE
     assert lease.lease_epoch == 1
     assert lease.source_reservation_id == reservation.reservation_id
+    assert resource is not None
+    assert resource.resource_id == f"sandbox-scope:{sandbox_id}"
+    assert resource.current_observed_state.startswith("sandbox_state:active")
     assert views[0]["sandbox_id"] == sandbox_id
     assert views[0]["compose_project"] == compose_project
     assert views[0]["state"] == "active"
@@ -190,6 +205,10 @@ async def test_create_sandbox_persists_active_lifecycle_and_operator_view(tmp_pa
     assert views[0]["control_plane_safe_continuation_class"] is None
     assert views[0]["control_plane_reservation_status"] == "reservation_promoted_to_lease"
     assert views[0]["control_plane_lease_status"] == "lease_active"
+    assert views[0]["control_plane_resource_id"] == f"sandbox-scope:{sandbox_id}"
+    assert views[0]["control_plane_resource_kind"] == "sandbox_runtime"
+    assert views[0]["control_plane_resource_state"].startswith("sandbox_state:active")
+    assert views[0]["control_plane_resource_orphan_classification"] == "not_orphaned"
     assert views[0]["final_truth_record_id"] is None
     assert views[0]["control_plane_final_result_class"] is None
     assert views[0]["control_plane_final_closure_basis"] is None
@@ -247,6 +266,9 @@ async def test_delete_sandbox_marks_cleaned_after_live_absence_even_if_down_warn
     lease = await orchestrator.control_plane_repository.get_latest_lease_record(
         lease_id=f"sandbox-lease:{sandbox_id}"
     )
+    resource = await orchestrator.control_plane_repository.get_latest_resource_record(
+        resource_id=f"sandbox-scope:{sandbox_id}"
+    )
     final_truth = await orchestrator.control_plane_repository.get_final_truth(run_id="rock-2")
     operator_actions = await orchestrator.control_plane_repository.list_operator_actions(target_ref="rock-2")
     journal_entries = await orchestrator.control_plane_repository.list_effect_journal_entries(run_id="rock-2")
@@ -261,6 +283,8 @@ async def test_delete_sandbox_marks_cleaned_after_live_absence_even_if_down_warn
     assert record.required_evidence_ref is not None
     assert lease is not None
     assert lease.status is LeaseStatus.RELEASED
+    assert resource is not None
+    assert resource.current_observed_state.startswith("sandbox_state:cleaned")
     async with aiofiles.open(record.required_evidence_ref, "r", encoding="utf-8") as handle:
         evidence = await handle.read()
     assert "sandbox_cancellation_receipt" in evidence
@@ -280,6 +304,10 @@ async def test_delete_sandbox_marks_cleaned_after_live_absence_even_if_down_warn
     assert views[0]["control_plane_safe_continuation_class"] is None
     assert views[0]["control_plane_reservation_status"] == "reservation_promoted_to_lease"
     assert views[0]["control_plane_lease_status"] == "lease_released"
+    assert views[0]["control_plane_resource_id"] == f"sandbox-scope:{sandbox_id}"
+    assert views[0]["control_plane_resource_kind"] == "sandbox_runtime"
+    assert views[0]["control_plane_resource_state"].startswith("sandbox_state:cleaned")
+    assert views[0]["control_plane_resource_orphan_classification"] == "not_orphaned"
     assert views[0]["final_truth_record_id"] == final_truth.final_truth_record_id
     assert views[0]["control_plane_final_result_class"] == "blocked"
     assert views[0]["control_plane_final_closure_basis"] == "cancelled_by_authority"
@@ -311,6 +339,10 @@ async def test_delete_sandbox_marks_cleaned_after_live_absence_even_if_down_warn
     assert views[0]["operator_action_count"] == 1
     assert views[0]["latest_operator_action"]["command_class"] == "cancel_run"
     assert views[0]["latest_operator_action"]["receipt_refs"] == operator_actions[0].receipt_refs
+    assert views[0]["latest_operator_action"]["affected_transition_refs"] == [
+        f"sandbox-lifecycle:{sandbox_id}:active->cleaned:{record.record_version}"
+    ]
+    assert views[0]["latest_operator_action"]["affected_resource_refs"] == [f"sandbox-scope:{sandbox_id}"]
     assert [entry.effect_id for entry in journal_entries] == [
         f"sandbox-effect:{sandbox_id}:deploy:lease_epoch:00000001",
         f"sandbox-effect:{sandbox_id}:cleanup:lease_epoch:00000001",
@@ -477,7 +509,7 @@ async def test_create_sandbox_releases_active_lease_when_create_record_fails_aft
         source_reservation_id = str(kwargs["source_reservation_id"])
         await orchestrator.control_plane_publication.publish_lease(
             lease_id=orchestrator.control_plane_reservations.lease_id_for_sandbox(sandbox_id),
-            resource_id=f"sandbox-allocation:{sandbox_id}",
+            resource_id=f"sandbox-scope:{sandbox_id}",
             holder_ref="sandbox-run:rock-3b",
             lease_epoch=1,
             publication_timestamp="2026-03-26T12:00:00+00:00",
@@ -504,11 +536,17 @@ async def test_create_sandbox_releases_active_lease_when_create_record_fails_aft
     lease = await orchestrator.control_plane_repository.get_latest_lease_record(
         lease_id=f"sandbox-lease:{sandbox_id}"
     )
+    resource = await orchestrator.control_plane_repository.get_latest_resource_record(
+        resource_id=f"sandbox-scope:{sandbox_id}"
+    )
 
     assert reservation is not None
     assert reservation.status is ReservationStatus.INVALIDATED
     assert lease is not None
     assert lease.status is LeaseStatus.RELEASED
+    assert resource is not None
+    assert resource.current_observed_state.startswith("lease_status:lease_released;")
+    assert resource.reconciliation_status == "lifecycle_record_unavailable"
     assert runner.async_calls == []
     assert orchestrator.registry.get(sandbox_id) is None
     assert sandbox_id not in orchestrator.registry.port_allocator.allocated_ports

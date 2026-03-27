@@ -6,7 +6,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. (none)
+1. ControlPlane convergence hardening -- Plan: `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`.
 
 ## Maintenance (Non-Priority)
 
@@ -28,7 +28,7 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| ControlPlane | packet-authority | P1-reference | `docs/projects/ControlPlane/` | Orket Core | Control-plane packet requirements remain active authority; implementation lane closed and archived at `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md` with closeout in `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`. |
+| ControlPlane | active-implementation | P1-active | `docs/projects/ControlPlane/` | Orket Core | Control-plane packet requirements remain active scoped requirements authority; active convergence implementation lane is `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`; prior packet-v2 implementation lane remains archived at `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md` with closeout in `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`. |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | techdebt | maintenance only | P2-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance continues through `Recurring-Maintenance-Checklist.md` and `README.md`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane. |

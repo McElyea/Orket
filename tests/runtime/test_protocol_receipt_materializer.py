@@ -22,7 +22,15 @@ def _write_turn_receipts(path: Path, rows: list[dict]) -> None:
 
 
 def _receipt_row(*, run_id: str, step_id: str, operation_id: str, tool_index: int = 0) -> dict:
-    manifest = build_tool_invocation_manifest(run_id=run_id, tool_name="write_file")
+    manifest = build_tool_invocation_manifest(
+        run_id=run_id,
+        tool_name="write_file",
+        control_plane_run_id=f"turn-tool-run:{run_id}:ISSUE-1:architect:0001",
+        control_plane_attempt_id=f"turn-tool-run:{run_id}:ISSUE-1:architect:0001:attempt:0001",
+        control_plane_reservation_id=f"turn-tool-reservation:turn-tool-run:{run_id}:ISSUE-1:architect:0001",
+        control_plane_lease_id=f"turn-tool-lease:turn-tool-run:{run_id}:ISSUE-1:architect:0001",
+        control_plane_resource_id="namespace:issue:ISSUE-1",
+    )
     tool_args = {"path": f"agent_output/{operation_id}.txt", "content": "ok"}
     return {
         "run_id": run_id,
@@ -69,6 +77,20 @@ async def test_materialize_protocol_receipts_writes_run_level_receipts_and_event
     assert [row["operation_id"] for row in events] == ["op-1", "op-1", "op-2", "op-2"]
     assert [row["receipt_seq"] for row in events] == [1, 1, 2, 2]
     assert [row["call_sequence_number"] for row in events if row["kind"] == "operation_result"] == [1, 3]
+    assert events[0]["projection_source"] == "observability.protocol_receipts.log"
+    assert events[0]["projection_only"] is True
+    assert events[0]["tool_invocation_manifest"]["control_plane_resource_id"] == "namespace:issue:ISSUE-1"
+    assert (
+        events[0]["tool_invocation_manifest"]["control_plane_reservation_id"]
+        == "turn-tool-reservation:turn-tool-run:sess-1:ISSUE-1:architect:0001"
+    )
+    assert events[1]["control_plane_effect_projection"] == {
+        "projection_only": True,
+        "authority_surface": "control_plane_effect_journal",
+        "run_id": "turn-tool-run:sess-1:ISSUE-1:architect:0001",
+        "attempt_id": "turn-tool-run:sess-1:ISSUE-1:architect:0001:attempt:0001",
+        "effect_id": "turn-tool-effect:op-1",
+    }
 
     receipts = await repo.list_receipts("sess-1")
     assert [row["receipt_seq"] for row in receipts] == [1, 2]
@@ -101,5 +123,8 @@ async def test_materialize_protocol_receipts_is_idempotent_on_repeated_runs(tmp_
     assert first["materialized_receipts"] == 1
     assert second["materialized_receipts"] == 0
     assert second["reused_receipts"] == 1
+    events = await repo.list_events("sess-2")
+    assert events[0]["projection_only"] is True
+    assert events[1]["control_plane_effect_projection"]["effect_id"] == "turn-tool-effect:op-1"
     receipts = await repo.list_receipts("sess-2")
     assert len(receipts) == 1

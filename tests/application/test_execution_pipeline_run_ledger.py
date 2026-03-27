@@ -286,6 +286,13 @@ async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, 
     assert ledger["summary_json"]["status"] == "incomplete"
     assert ledger["summary_json"]["failure_reason"] is None
     assert ledger["summary_json"]["duration_ms"] >= 0
+    assert ledger["summary_json"]["control_plane"]["projection_source"] == "control_plane_records"
+    assert ledger["summary_json"]["control_plane"]["projection_only"] is True
+    assert ledger["summary_json"]["control_plane"]["run_id"] == ledger["artifact_json"]["control_plane_run_record"]["run_id"]
+    assert ledger["summary_json"]["control_plane"]["run_state"] == "waiting_on_observation"
+    assert ledger["summary_json"]["control_plane"]["attempt_id"] == ledger["artifact_json"]["control_plane_attempt_record"]["attempt_id"]
+    assert ledger["summary_json"]["control_plane"]["attempt_state"] == "attempt_waiting"
+    assert ledger["summary_json"]["control_plane"]["step_id"] == ledger["artifact_json"]["control_plane_step_record"]["step_id"]
     packet1 = ledger["summary_json"]["truthful_runtime_packet1"]
     assert packet1["provenance"]["primary_output_kind"] == "artifact"
     assert packet1["classification"]["truth_classification"] == "direct"
@@ -345,6 +352,11 @@ async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monk
     assert ledger["summary_json"]["status"] == "failed"
     assert "forced failure for ledger" in str(ledger["summary_json"]["failure_reason"] or "")
     assert ledger["summary_json"]["duration_ms"] >= 0
+    assert ledger["summary_json"]["control_plane"]["run_id"] == ledger["artifact_json"]["control_plane_run_record"]["run_id"]
+    assert ledger["summary_json"]["control_plane"]["run_state"] == "failed_terminal"
+    assert ledger["summary_json"]["control_plane"]["attempt_id"] == ledger["artifact_json"]["control_plane_attempt_record"]["attempt_id"]
+    assert ledger["summary_json"]["control_plane"]["attempt_state"] == "attempt_failed"
+    assert ledger["summary_json"]["control_plane"]["failure_class"] == "forced failure for ledger"
     assert ledger["artifact_json"]["gitea_export"]["provider"] == "gitea"
     assert ledger["artifact_json"]["gitea_export"]["commit"] == "def456"
     assert _read_json(Path(ledger["artifact_json"]["run_summary_path"])) == ledger["summary_json"]
@@ -397,6 +409,10 @@ async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_
     assert ledger["summary_json"]["status"] == "terminal_failure"
     assert ledger["summary_json"]["failure_reason"] is None
     assert ledger["summary_json"]["duration_ms"] >= 0
+    assert ledger["summary_json"]["control_plane"]["run_id"] == ledger["artifact_json"]["control_plane_run_record"]["run_id"]
+    assert ledger["summary_json"]["control_plane"]["run_state"] == "failed_terminal"
+    assert ledger["summary_json"]["control_plane"]["attempt_id"] == ledger["artifact_json"]["control_plane_attempt_record"]["attempt_id"]
+    assert ledger["summary_json"]["control_plane"]["attempt_state"] == "attempt_failed"
     assert _read_json(Path(ledger["artifact_json"]["run_summary_path"])) == ledger["summary_json"]
 
 
@@ -1157,6 +1173,8 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     assert artifact_json["compatibility_map_snapshot"]["mapping_count"] >= 1
     assert artifact_json["run_identity"]["run_id"] == "sess-ledger-contract-bootstrap"
     assert artifact_json["run_identity"]["workload"] == "ledger_epic_contract_bootstrap"
+    assert artifact_json["run_identity"]["identity_scope"] == "session_bootstrap"
+    assert artifact_json["run_identity"]["projection_only"] is True
     assert artifact_json["run_determinism_class"] == "workspace"
     assert artifact_json["run_phase_contract"]["schema_version"] == "1.0"
     assert artifact_json["run_phase_contract"]["entry_phase"] == "input_normalize"
@@ -1204,6 +1222,10 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     assert artifact_json["route_decision_artifact"]["route_target"] == "epic"
     assert artifact_json["route_decision_artifact"]["reason_code"] == "default_epic_route"
     assert artifact_json["route_decision_artifact"]["deterministic_mode_enabled"] is False
+    assert artifact_json["retry_classification_policy"]["schema_version"] == "1.0"
+    assert artifact_json["retry_classification_policy"]["attempt_history_authoritative"] is False
+    retry_signals = [row["signal"] for row in artifact_json["retry_classification_policy"]["rows"]]
+    assert "model_timeout_retry" in retry_signals
     assert artifact_json["capability_manifest"]["run_id"] == "sess-ledger-contract-bootstrap"
     assert artifact_json["workspace_state_snapshot"]["workspace_type"] == "filesystem"
     assert len(str(artifact_json["workspace_state_snapshot"]["workspace_hash"])) == 64

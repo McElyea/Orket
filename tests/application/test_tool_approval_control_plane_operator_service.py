@@ -11,8 +11,10 @@ from orket.application.services.tool_approval_control_plane_operator_service imp
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
+from orket.core.contracts.control_plane_models import RunRecord
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
+from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
 
 
 pytestmark = pytest.mark.unit
@@ -95,8 +97,26 @@ async def test_tool_approval_operator_service_publishes_terminal_command_for_den
 @pytest.mark.asyncio
 async def test_tool_approval_operator_service_publishes_secondary_action_for_control_plane_run_target() -> None:
     repository = InMemoryControlPlaneRecordRepository()
+    execution_repository = InMemoryControlPlaneExecutionRepository()
     service = ToolApprovalControlPlaneOperatorService(
-        publication=ControlPlanePublicationService(repository=repository)
+        publication=ControlPlanePublicationService(repository=repository),
+        execution_repository=execution_repository,
+    )
+    await execution_repository.save_run_record(
+        record=RunRecord(
+            run_id="turn-tool-run:sess-3:ISS-3:coder:0001",
+            workload_id="turn-tool",
+            workload_version="v1",
+            policy_snapshot_id="policy-1",
+            policy_digest="sha256:policy-1",
+            configuration_snapshot_id="config-1",
+            configuration_digest="sha256:config-1",
+            creation_timestamp="2026-03-24T02:11:00+00:00",
+            admission_decision_receipt_ref="approval-reservation:apr-3",
+            namespace_scope="issue:ISS-3",
+            lifecycle_state="executing",
+            current_attempt_id="turn-tool-run:sess-3:ISS-3:coder:0001:attempt:0001",
+        )
     )
 
     await service.publish_resolution_operator_action(
@@ -129,15 +149,46 @@ async def test_tool_approval_operator_service_publishes_secondary_action_for_con
     assert len(approval_actions) == 1
     assert len(run_actions) == 1
     assert run_actions[0].input_class is OperatorInputClass.RISK_ACCEPTANCE
+    assert approval_actions[0].affected_resource_refs == [
+        "session:sess-3",
+        "issue:ISS-3",
+        "namespace:issue:ISS-3",
+    ]
+    assert run_actions[0].affected_resource_refs == [
+        "session:sess-3",
+        "issue:ISS-3",
+        "namespace:issue:ISS-3",
+        "turn-tool-run:sess-3:ISS-3:coder:0001",
+    ]
     assert run_actions[0].receipt_refs == ["approval-request:apr-3"]
 
 
 @pytest.mark.asyncio
 async def test_tool_approval_operator_service_falls_back_to_reservation_target_when_payload_omits_it() -> None:
     repository = InMemoryControlPlaneRecordRepository()
+    execution_repository = InMemoryControlPlaneExecutionRepository()
     publication = ControlPlanePublicationService(repository=repository)
     reservations = ToolApprovalControlPlaneReservationService(publication=publication)
-    service = ToolApprovalControlPlaneOperatorService(publication=publication)
+    service = ToolApprovalControlPlaneOperatorService(
+        publication=publication,
+        execution_repository=execution_repository,
+    )
+    await execution_repository.save_run_record(
+        record=RunRecord(
+            run_id="kernel-action-run:sess-4:trace-4",
+            workload_id="kernel-action",
+            workload_version="v1",
+            policy_snapshot_id="policy-1",
+            policy_digest="sha256:policy-1",
+            configuration_snapshot_id="config-1",
+            configuration_digest="sha256:config-1",
+            creation_timestamp="2026-03-24T02:12:00+00:00",
+            admission_decision_receipt_ref="approval-reservation:apr-4",
+            namespace_scope="session:sess-4",
+            lifecycle_state="executing",
+            current_attempt_id="kernel-action-run:sess-4:trace-4:attempt:0001",
+        )
+    )
 
     await reservations.publish_pending_tool_approval_hold(
         approval_id="apr-4",
@@ -176,4 +227,13 @@ async def test_tool_approval_operator_service_falls_back_to_reservation_target_w
     assert len(approval_actions) == 1
     assert len(run_actions) == 1
     assert run_actions[0].input_class is OperatorInputClass.RISK_ACCEPTANCE
+    assert approval_actions[0].affected_resource_refs == [
+        "session:sess-4",
+        "kernel-action-scope:session:sess-4",
+    ]
+    assert run_actions[0].affected_resource_refs == [
+        "session:sess-4",
+        "kernel-action-scope:session:sess-4",
+        "kernel-action-run:sess-4:trace-4",
+    ]
     assert run_actions[0].receipt_refs == ["approval-request:apr-4"]

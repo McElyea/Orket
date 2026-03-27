@@ -3,6 +3,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
+from orket.application.services.control_plane_workload_catalog import KERNEL_ACTION_WORKLOAD
+from orket.application.services.control_plane_resource_authority_checks import (
+    require_resource_snapshot_matches_lease,
+)
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.kernel_action_control_plane_failure import (
     publish_failed_commit_recovery_decision,
@@ -15,6 +19,9 @@ from orket.application.services.kernel_action_control_plane_outcome import (
 )
 from orket.application.services.kernel_action_control_plane_resource_lifecycle import (
     ensure_active_execution_lease,
+    lease_id_for_run,
+    reservation_id_for_run,
+    resource_id_for_run,
     ensure_admission_reservation,
     release_execution_authority_if_present,
 )
@@ -66,8 +73,9 @@ class KernelActionControlPlaneError(ValueError):
 class KernelActionControlPlaneService:
     """Publishes per-trace governed kernel actions into the control-plane store."""
 
-    WORKLOAD_ID = "kernel-action-path"
-    WORKLOAD_VERSION = "kernel_api.v1"
+    WORKLOAD = KERNEL_ACTION_WORKLOAD
+    WORKLOAD_ID = WORKLOAD.workload_id
+    WORKLOAD_VERSION = WORKLOAD.workload_version
     ALLOWED_COMMIT_STATUSES = frozenset({"COMMITTED", "REJECTED_POLICY", "ERROR"})
     run_id_for = staticmethod(run_id_for)
     attempt_id_for = staticmethod(attempt_id_for)
@@ -209,7 +217,35 @@ class KernelActionControlPlaneService:
             raise KernelActionControlPlaneError(
                 f"kernel-action active run has terminal attempt drift: {run.run_id}:{resolved_attempt.attempt_id}"
             )
+        await self._require_existing_resource_authority(run=run)
         return resolved_attempt
+
+    async def _require_existing_resource_authority(self, *, run: RunRecord) -> None:
+        reservation = await self.publication.repository.get_latest_reservation_record(
+            reservation_id=reservation_id_for_run(run_id=run.run_id)
+        )
+        lease = await self.publication.repository.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run.run_id))
+        if lease is None:
+            return
+        if reservation is None:
+            raise KernelActionControlPlaneError(
+                f"kernel-action run has lease authority without reservation: {run.run_id}"
+            )
+        if lease.source_reservation_id != reservation.reservation_id:
+            raise KernelActionControlPlaneError(
+                f"kernel-action run lease source mismatch: {run.run_id}"
+            )
+        resource = await self.publication.repository.get_latest_resource_record(
+            resource_id=resource_id_for_run(run=run)
+        )
+        require_resource_snapshot_matches_lease(
+            resource=resource,
+            lease=lease,
+            expected_resource_kind="kernel_action_scope",
+            expected_namespace_scope=str(run.namespace_scope or "").strip(),
+            error_context=f"kernel-action run {run.run_id}",
+            error_factory=KernelActionControlPlaneError,
+        )
 
     async def record_commit(
         self,

@@ -50,6 +50,8 @@ def test_review_diff_cli_emits_bundle(tmp_path: Path, capsys) -> None:
     assert code == 0
     assert payload["ok"] is True
     assert Path(payload["artifact_dir"]).is_dir()
+    assert payload["control_plane"]["run_state"] == "completed"
+    assert payload["control_plane"]["attempt_state"] == "attempt_completed"
 
 
 def test_review_replay_cli_requires_inputs(tmp_path: Path, capsys) -> None:

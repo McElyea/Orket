@@ -86,6 +86,7 @@ def test_kernel_api_observed_policy_reject_returns_post_effect_recovery_and_leas
     assert committed_payload["status"] == "REJECTED_POLICY"
     assert committed_payload["control_plane_attempt_state"] == "attempt_failed"
     assert committed_payload["control_plane_lease_id"].startswith("kernel-action-lease:")
+    assert committed_payload["control_plane_resource_id"] == f"kernel-action-scope:session:{session_id}"
     assert committed_payload["control_plane_recovery_decision_id"].startswith("kernel-action-recovery:")
     assert committed_payload["control_plane_recovery_action"] == "terminate_run"
 
@@ -99,6 +100,9 @@ def test_kernel_api_observed_policy_reject_returns_post_effect_recovery_and_leas
     assert control_plane["current_attempt_state"] == "attempt_failed"
     assert control_plane["current_attempt_side_effect_boundary_class"] == "post_effect_observed"
     assert control_plane["latest_lease"]["status"] == "lease_released"
+    assert control_plane["latest_resource"]["resource_id"] == f"kernel-action-scope:session:{session_id}"
+    assert control_plane["latest_resource"]["current_observed_state"].startswith("lease_status:lease_released;")
+    assert control_plane["latest_resource"]["resource_kind"] == "kernel_action_scope"
 
 
 def test_kernel_api_pre_effect_policy_reject_returns_abandoned_attempt_and_recovery_refs(monkeypatch) -> None:
@@ -136,6 +140,7 @@ def test_kernel_api_pre_effect_policy_reject_returns_abandoned_attempt_and_recov
     committed_payload = committed.json()
     assert committed_payload["status"] == "REJECTED_POLICY"
     assert committed_payload.get("control_plane_lease_id") is None
+    assert committed_payload.get("control_plane_resource_id") is None
     assert committed_payload["control_plane_attempt_state"] == "attempt_abandoned"
     assert committed_payload["control_plane_reservation_id"].startswith("kernel-action-reservation:")
     assert committed_payload["control_plane_recovery_decision_id"].startswith("kernel-action-recovery:")
@@ -157,6 +162,7 @@ def test_kernel_api_pre_effect_policy_reject_returns_abandoned_attempt_and_recov
     assert control_plane["current_recovery_decision_id"].startswith("kernel-action-recovery:")
     assert control_plane["current_recovery_action"] == "terminate_run"
     assert control_plane["latest_lease"] is None
+    assert control_plane["latest_resource"] is None
     assert control_plane["latest_reservation"]["status"] == "reservation_released"
 
 
@@ -217,6 +223,11 @@ def test_kernel_api_commit_fail_closes_authority_on_execution_promotion_failure(
         LeaseStatus.RELEASED,
     ]
     assert lease[-1].expiry_basis == "kernel_action_execution_activation_failed"
+    resources = record_repo.resources_by_id[f"kernel-action-scope:session:{session_id}"]
+    assert [record.current_observed_state.split(";")[0] for record in resources] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]
 
 
 def test_kernel_api_admit_fails_closed_on_namespace_scope_escalation(monkeypatch) -> None:

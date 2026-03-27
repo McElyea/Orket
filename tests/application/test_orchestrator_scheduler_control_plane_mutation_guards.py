@@ -129,6 +129,7 @@ async def test_activate_namespace_authority_fail_closes_reservation_and_lease_on
         reservation_id="orchestrator-scheduler-mutation-reservation:scheduler-run-guard-2"
     )
     lease = await record_repo.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run.run_id))
+    resource_history = await record_repo.list_resource_records(resource_id="namespace:issue:ISSUE-2")
     updated_run = await execution_repo.get_run_record(run_id=run.run_id)
 
     assert updated_run is not None
@@ -137,3 +138,7 @@ async def test_activate_namespace_authority_fail_closes_reservation_and_lease_on
     assert reservation.status is ReservationStatus.INVALIDATED
     assert lease is not None
     assert lease.status is LeaseStatus.RELEASED
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]

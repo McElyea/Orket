@@ -93,7 +93,79 @@ def test_run_summary_schema_contract_is_canonical() -> None:
         "failure_reason",
     ]
     assert "truthful_runtime_artifact_provenance" in schema["properties"]
+    assert "control_plane" in schema["properties"]
     assert payload["duration_ms"] == 5000
+
+
+# Layer: contract
+def test_run_summary_emits_control_plane_projection() -> None:
+    payload = build_run_summary_payload(
+        run_id="sess-summary-control-plane",
+        status="done",
+        failure_reason=None,
+        started_at=_STARTED_AT,
+        ended_at=_FINALIZED_AT,
+        tool_names=["workspace.read"],
+        artifacts={
+            "run_identity": {"run_id": "sess-summary-control-plane"},
+            "control_plane_run_record": {
+                "contract_version": "control_plane.contract.v1",
+                "run_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z",
+                "workload_id": "cards-epic",
+                "workload_version": "1.0",
+                "policy_snapshot_id": "policy-1",
+                "policy_digest": "sha256:policy-1",
+                "configuration_snapshot_id": "config-1",
+                "configuration_digest": "sha256:config-1",
+                "creation_timestamp": _STARTED_AT,
+                "admission_decision_receipt_ref": "admission-1",
+                "lifecycle_state": "waiting_on_observation",
+                "current_attempt_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z:attempt:0001",
+            },
+            "control_plane_attempt_record": {
+                "contract_version": "control_plane.contract.v1",
+                "attempt_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z:attempt:0001",
+                "run_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z",
+                "attempt_ordinal": 1,
+                "attempt_state": "attempt_waiting",
+                "starting_state_snapshot_ref": "admission-1",
+                "start_timestamp": _STARTED_AT,
+            },
+            "control_plane_step_record": {
+                "contract_version": "control_plane.contract.v1",
+                "step_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z:step:start",
+                "attempt_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z:attempt:0001",
+                "step_kind": "cards_epic_session_start",
+                "input_ref": "admission-1",
+                "output_ref": "admission-1",
+                "capability_used": "deterministic_compute",
+                "resources_touched": ["epic:summary", "build:build-1"],
+                "observed_result_classification": "cards_epic_run_started",
+                "receipt_refs": ["admission-1"],
+                "closure_classification": "step_completed",
+            },
+        },
+    )
+
+    assert payload["control_plane"] == {
+        "projection_source": "control_plane_records",
+        "projection_only": True,
+        "run_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z",
+        "run_state": "waiting_on_observation",
+        "workload_id": "cards-epic",
+        "workload_version": "1.0",
+        "policy_snapshot_id": "policy-1",
+        "configuration_snapshot_id": "config-1",
+        "current_attempt_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z:attempt:0001",
+        "attempt_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z:attempt:0001",
+        "attempt_state": "attempt_waiting",
+        "attempt_ordinal": 1,
+        "step_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z:step:start",
+        "step_kind": "cards_epic_session_start",
+        "step_capability_used": "deterministic_compute",
+        "step_resources_touched": ["epic:summary", "build:build-1"],
+        "step_receipt_refs": ["admission-1"],
+    }
 
 
 # Layer: contract

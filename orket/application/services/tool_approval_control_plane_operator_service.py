@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from orket.application.services.control_plane_target_resource_refs import resource_id_for_supported_run
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.core.contracts import OperatorActionRecord
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
@@ -10,8 +11,9 @@ from orket.core.domain import OperatorCommandClass, OperatorInputClass
 class ToolApprovalControlPlaneOperatorService:
     """Publishes approval resolutions as control-plane risk acceptance or terminal commands."""
 
-    def __init__(self, *, publication: ControlPlanePublicationService) -> None:
+    def __init__(self, *, publication: ControlPlanePublicationService, execution_repository=None) -> None:
         self.publication = publication
+        self.execution_repository = execution_repository
 
     @staticmethod
     def target_ref(approval_id: str) -> str:
@@ -69,6 +71,9 @@ class ToolApprovalControlPlaneOperatorService:
             affected_resource_refs.append(f"session:{session_id}")
         if issue_id:
             affected_resource_refs.append(f"issue:{issue_id}")
+        for resource_ref in await self._target_resource_refs(control_plane_target_ref=control_plane_target_ref):
+            if resource_ref not in affected_resource_refs:
+                affected_resource_refs.append(resource_ref)
 
         if status_token in {"denied", "expired"}:
             action = await self.publication.publish_operator_action(
@@ -199,6 +204,21 @@ class ToolApprovalControlPlaneOperatorService:
         if holder_ref == self.target_ref(approval_id):
             return ""
         return holder_ref
+
+    async def _target_resource_refs(self, *, control_plane_target_ref: str) -> list[str]:
+        execution_repository = self.execution_repository
+        if execution_repository is None:
+            return []
+        target_ref = str(control_plane_target_ref or "").strip()
+        if not target_ref:
+            return []
+        run = await execution_repository.get_run_record(run_id=target_ref)
+        if run is None:
+            return []
+        resource_id = resource_id_for_supported_run(run=run)
+        if not resource_id:
+            return []
+        return [resource_id]
 
     @staticmethod
     def _mapping_or_empty(value: object) -> Mapping[str, object]:

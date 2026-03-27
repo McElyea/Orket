@@ -144,27 +144,16 @@ async def _seed_checkpoint_only(tmp_path: Path):
 
 
 async def _mark_completed_success(control_plane, run, attempt, authoritative_result_ref: str) -> None:
-    truth = await control_plane.publication.publish_final_truth(
-        final_truth_record_id=f"turn-tool-final-truth:{run.run_id}",
+    completed_run, completed_attempt, truth = await control_plane.finalize_execution(
         run_id=run.run_id,
-        result_class=ResultClass.SUCCESS,
-        completion_classification=CompletionClassification.SATISFIED,
-        evidence_sufficiency_classification=EvidenceSufficiencyClassification.SUFFICIENT,
-        residual_uncertainty_classification=ResidualUncertaintyClassification.NONE,
-        degradation_classification=DegradationClassification.NONE,
-        closure_basis=ClosureBasisClassification.NORMAL_EXECUTION,
-        authority_sources=[
-            AuthoritySourceClass.RECEIPT_EVIDENCE,
-            AuthoritySourceClass.VALIDATED_ARTIFACT,
-        ],
+        attempt_id=attempt.attempt_id,
         authoritative_result_ref=authoritative_result_ref,
+        violation_reasons=[],
+        executed_step_count=1,
     )
-    await control_plane.execution_repository.save_attempt_record(
-        record=attempt.model_copy(update={"attempt_state": AttemptState.COMPLETED, "end_timestamp": attempt.start_timestamp})
-    )
-    await control_plane.execution_repository.save_run_record(
-        record=run.model_copy(update={"lifecycle_state": RunState.COMPLETED, "final_truth_record_id": truth.final_truth_record_id})
-    )
+    assert completed_run.lifecycle_state is RunState.COMPLETED
+    assert completed_attempt.attempt_state is AttemptState.COMPLETED
+    assert truth.result_class is ResultClass.SUCCESS
 
 
 async def _seed_completed_run_without_effect(tmp_path: Path):

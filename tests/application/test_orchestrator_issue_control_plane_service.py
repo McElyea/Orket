@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from orket.application.services.control_plane_workload_catalog import (
+    ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD,
+)
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.orchestrator_issue_control_plane_service import (
     OrchestratorIssueControlPlaneError,
@@ -18,7 +21,10 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
 from orket.core.contracts import AttemptRecord, RunRecord
 from orket.core.domain import (
     AttemptState,
+    CleanupAuthorityClass,
     LeaseStatus,
+    OrphanClassification,
+    OwnershipClass,
     RecoveryActionClass,
     ReservationKind,
     ReservationStatus,
@@ -70,9 +76,21 @@ async def _seed_dispatch_resource_authority(
         supervisor_authority_ref=f"orchestrator-issue-supervisor:{run_id}:seed_promote",
         promotion_basis="seed_dispatch_resource_authority",
     )
+    await service.publication.publish_resource(
+        resource_id=lease.resource_id,
+        resource_kind="issue_dispatch_slot",
+        namespace_scope=f"issue:{issue_id}",
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state=f"lease_status:{lease.status.value};namespace:issue:{issue_id}",
+        last_observed_timestamp=lease.publication_timestamp,
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+        provenance_ref=lease.lease_id,
+        reconciliation_status="governed_execution_authority",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
     if active_lease:
         return
-    await service.publication.publish_lease(
+    released = await service.publication.publish_lease(
         lease_id=lease.lease_id,
         resource_id=lease.resource_id,
         holder_ref=lease.holder_ref,
@@ -82,6 +100,18 @@ async def _seed_dispatch_resource_authority(
         status=LeaseStatus.RELEASED,
         cleanup_eligibility_rule=lease.cleanup_eligibility_rule,
         source_reservation_id=lease.source_reservation_id,
+    )
+    await service.publication.publish_resource(
+        resource_id=released.resource_id,
+        resource_kind="issue_dispatch_slot",
+        namespace_scope=f"issue:{issue_id}",
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state=f"lease_status:{released.status.value};namespace:issue:{issue_id}",
+        last_observed_timestamp=released.publication_timestamp,
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+        provenance_ref=released.lease_id,
+        reconciliation_status="governed_execution_authority",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
     )
 
 
@@ -121,6 +151,8 @@ async def test_orchestrator_issue_dispatch_publishes_durable_snapshots() -> None
 
     assert published is True
     assert run is not None
+    assert run.workload_id == ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD.workload_id
+    assert run.workload_version == ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD.workload_version
     assert run.namespace_scope == "issue:ISSUE-1"
     assert policy_snapshot is not None
     assert configuration_snapshot is not None
@@ -169,6 +201,9 @@ async def test_orchestrator_issue_dispatch_fail_closed_on_promotion_error() -> N
         reservation_id=reservation_id_for_run(run_id=run_id)
     )
     lease = await record_repo.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run_id))
+    resource_history = await record_repo.list_resource_records(
+        resource_id="issue-dispatch-slot:sess-issue-fail-closeout-1:ISSUE-FAIL-CLOSEOUT-1"
+    )
 
     assert run is not None
     assert run.lifecycle_state is RunState.ADMITTED
@@ -176,6 +211,10 @@ async def test_orchestrator_issue_dispatch_fail_closed_on_promotion_error() -> N
     assert reservation.status is ReservationStatus.INVALIDATED
     assert lease is not None
     assert lease.status is LeaseStatus.RELEASED
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]
 
 
 @pytest.mark.asyncio
@@ -610,6 +649,58 @@ async def test_orchestrator_issue_closeout_fail_closed_on_non_active_lease_drift
         await service.publish_issue_transition(
             session_id="sess-issue-closeout-lease-drift",
             issue_id="ISSUE-CLOSEOUT-LEASE-DRIFT",
+            current_status=CardStatus.IN_PROGRESS,
+            target_status=CardStatus.BLOCKED,
+            reason="dependency_blocked",
+            assignee=None,
+            turn_index=None,
+            review_turn=False,
+        )
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_issue_closeout_fail_closed_on_resource_state_drift() -> None:
+    execution_repo = InMemoryControlPlaneExecutionRepository()
+    record_repo = InMemoryControlPlaneRecordRepository()
+    service = OrchestratorIssueControlPlaneService(
+        execution_repository=execution_repo,
+        publication=ControlPlanePublicationService(repository=record_repo),
+    )
+    await service.publish_issue_transition(
+        session_id="sess-issue-closeout-resource-drift",
+        issue_id="ISSUE-CLOSEOUT-RESOURCE-DRIFT",
+        current_status=CardStatus.READY,
+        target_status=CardStatus.IN_PROGRESS,
+        reason="turn_dispatch",
+        assignee="coder",
+        turn_index=1,
+        review_turn=False,
+    )
+    run_id = run_id_for_dispatch(
+        session_id="sess-issue-closeout-resource-drift",
+        issue_id="ISSUE-CLOSEOUT-RESOURCE-DRIFT",
+        seat_name="coder",
+        turn_index=1,
+    )
+    lease = await record_repo.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run_id))
+    assert lease is not None
+    await service.publication.publish_resource(
+        resource_id=lease.resource_id,
+        resource_kind="issue_dispatch_slot",
+        namespace_scope="issue:ISSUE-CLOSEOUT-RESOURCE-DRIFT",
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state="lease_status:lease_released;namespace:issue:ISSUE-CLOSEOUT-RESOURCE-DRIFT",
+        last_observed_timestamp="9999-12-31T23:59:59+00:00",
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+        provenance_ref="seed_resource_state_drift",
+        reconciliation_status="governed_execution_authority",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+
+    with pytest.raises(OrchestratorIssueControlPlaneError, match="resource state drift"):
+        await service.publish_issue_transition(
+            session_id="sess-issue-closeout-resource-drift",
+            issue_id="ISSUE-CLOSEOUT-RESOURCE-DRIFT",
             current_status=CardStatus.IN_PROGRESS,
             target_status=CardStatus.BLOCKED,
             reason="dependency_blocked",

@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from orket.application.services.control_plane_workload_catalog import (
+    sandbox_runtime_workload_for_tech_stack,
+)
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.sandbox_control_plane_effect_service import SandboxControlPlaneEffectService
 from orket.application.services.sandbox_control_plane_execution_service import SandboxControlPlaneExecutionService
@@ -75,8 +78,7 @@ async def test_effect_service_publishes_deploy_and_cleanup_entries_in_order() ->
     await execution.initialize_execution(
         sandbox_id="sb-1",
         run_id="run-1",
-        workload_id="sandbox-workload:fastapi-react-postgres",
-        workload_version="docker_sandbox_runtime.v1",
+        workload=sandbox_runtime_workload_for_tech_stack("fastapi-react-postgres"),
         compose_project="orket-sandbox-sb-1",
         workspace_path="workspace/sb-1",
         configuration_payload={"tech_stack": "fastapi-react-postgres"},
@@ -140,8 +142,7 @@ async def test_effect_service_is_idempotent_for_duplicate_deploy_publication() -
     await execution.initialize_execution(
         sandbox_id="sb-2",
         run_id="run-2",
-        workload_id="sandbox-workload:fastapi-react-postgres",
-        workload_version="docker_sandbox_runtime.v1",
+        workload=sandbox_runtime_workload_for_tech_stack("fastapi-react-postgres"),
         compose_project="orket-sandbox-sb-2",
         workspace_path="workspace/sb-2",
         configuration_payload={"tech_stack": "fastapi-react-postgres"},

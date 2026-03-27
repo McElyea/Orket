@@ -226,7 +226,7 @@ class ExtensionManager:
             )
         return await self._run_legacy_workload(
             extension=extension,
-            workload_id=workload_id,
+            workload=workload_record,
             input_config=input_config,
             workspace=workspace,
             department=department,

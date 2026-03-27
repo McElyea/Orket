@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Any, Protocol
 
+from orket.application.services.turn_tool_control_plane_support import effect_id_for
 from orket.application.workflows.tool_invocation_contracts import (
     compute_tool_call_hash,
     normalize_tool_invocation_manifest,
@@ -120,6 +121,8 @@ def _tool_call_payload_for_receipt(
         "tool_call_hash": str(tool_call_hash),
         "receipt_seq": int(receipt_seq),
         "replayed": bool(receipt.get("replayed", False)),
+        "projection_source": "observability.protocol_receipts.log",
+        "projection_only": True,
     }
 
 
@@ -131,7 +134,7 @@ def _tool_result_payload_for_receipt(
     manifest: dict[str, Any],
     tool_call_hash: str,
 ) -> dict[str, Any]:
-    return {
+    payload = {
         "operation_id": str(receipt.get("operation_id") or "").strip(),
         "step_id": str(receipt.get("step_id") or "").strip(),
         "tool": str(receipt.get("tool") or "").strip(),
@@ -142,7 +145,34 @@ def _tool_result_payload_for_receipt(
         "tool_call_hash": str(tool_call_hash),
         "receipt_seq": int(receipt_seq),
         "replayed": bool(receipt.get("replayed", False)),
+        "projection_source": "observability.protocol_receipts.log",
+        "projection_only": True,
     }
+    effect_projection = _control_plane_effect_projection(receipt=receipt, manifest=manifest)
+    if effect_projection is not None:
+        payload["control_plane_effect_projection"] = effect_projection
+    return payload
+
+
+def _control_plane_effect_projection(
+    *,
+    receipt: dict[str, Any],
+    manifest: dict[str, Any],
+) -> dict[str, Any] | None:
+    control_plane_run_id = str(manifest.get("control_plane_run_id") or "").strip()
+    operation_id = str(receipt.get("operation_id") or "").strip()
+    if not control_plane_run_id.startswith("turn-tool-run:") or not operation_id:
+        return None
+    payload: dict[str, Any] = {
+        "projection_only": True,
+        "authority_surface": "control_plane_effect_journal",
+        "run_id": control_plane_run_id,
+        "effect_id": effect_id_for(operation_id=operation_id),
+    }
+    control_plane_attempt_id = str(manifest.get("control_plane_attempt_id") or "").strip()
+    if control_plane_attempt_id:
+        payload["attempt_id"] = control_plane_attempt_id
+    return payload
 
 
 def _clean_receipt_payload(

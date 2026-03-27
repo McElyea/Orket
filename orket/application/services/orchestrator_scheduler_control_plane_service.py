@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+from orket.application.services.control_plane_workload_catalog import (
+    ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD,
+    ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD,
+)
+from orket.application.services.control_plane_resource_authority_checks import (
+    require_resource_snapshot_matches_lease,
+)
 from orket.core.domain.control_plane_lifecycle import is_terminal_attempt_state
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.orchestrator_issue_control_plane_support import (
@@ -40,10 +47,12 @@ from .orchestrator_scheduler_control_plane_mutation import (
 class OrchestratorSchedulerControlPlaneService:
     """Publishes scheduler-owned namespace authority for orchestrator issue mutations."""
 
-    TRANSITION_WORKLOAD_ID = "orchestrator-issue-scheduler"
-    TRANSITION_WORKLOAD_VERSION = "orchestrator.issue_scheduler.v1"
-    CHILD_WORKLOAD_ID = "orchestrator-child-workload-composition"
-    CHILD_WORKLOAD_VERSION = "orchestrator.child_workload_composition.v1"
+    TRANSITION_WORKLOAD = ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD
+    TRANSITION_WORKLOAD_ID = TRANSITION_WORKLOAD.workload_id
+    TRANSITION_WORKLOAD_VERSION = TRANSITION_WORKLOAD.workload_version
+    CHILD_WORKLOAD = ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD
+    CHILD_WORKLOAD_ID = CHILD_WORKLOAD.workload_id
+    CHILD_WORKLOAD_VERSION = CHILD_WORKLOAD.workload_version
     PROMOTION_RULE = "promote_on_scheduler_mutation_start"
     CLEANUP_RULE = "release_on_scheduler_mutation_closeout"
 
@@ -382,6 +391,16 @@ class OrchestratorSchedulerControlPlaneService:
         if lease is not None and lease.source_reservation_id != reservation.reservation_id:
             raise OrchestratorSchedulerControlPlaneError(
                 f"orchestrator scheduler mutation closed run lease source mismatch: {run_id}"
+            )
+        if lease is not None:
+            resource = await self.publication.repository.get_latest_resource_record(resource_id=lease.resource_id)
+            require_resource_snapshot_matches_lease(
+                resource=resource,
+                lease=lease,
+                expected_resource_kind="scheduler_namespace",
+                expected_namespace_scope=str(run.namespace_scope or "").strip(),
+                error_context=f"orchestrator scheduler mutation closed run {run_id}",
+                error_factory=OrchestratorSchedulerControlPlaneError,
             )
 
 

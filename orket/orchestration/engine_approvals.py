@@ -21,6 +21,7 @@ from orket.orchestration.approval_control_plane_read_model import (
     final_truth_summary,
     operator_action_summary,
     reservation_summary,
+    target_resource_summary,
     target_checkpoint_summary,
     target_effect_journal_summary,
     target_run_summary,
@@ -93,12 +94,20 @@ def _approval_reservation_publisher(engine: Any) -> ToolApprovalControlPlaneRese
 
 def _tool_approval_operator_publisher(engine: Any) -> ToolApprovalControlPlaneOperatorService | None:
     publication = getattr(engine, "control_plane_publication", None)
+    execution_repository = getattr(engine, "control_plane_execution_repository", None)
     publisher = getattr(engine, "tool_approval_control_plane_operator", None)
-    if publisher is not None and getattr(publisher, "publication", None) is publication:
+    if (
+        publisher is not None
+        and getattr(publisher, "publication", None) is publication
+        and getattr(publisher, "execution_repository", None) is execution_repository
+    ):
         return publisher
     if publication is None:
         return None
-    publisher = ToolApprovalControlPlaneOperatorService(publication=publication)
+    publisher = ToolApprovalControlPlaneOperatorService(
+        publication=publication,
+        execution_repository=execution_repository,
+    )
     setattr(engine, "tool_approval_control_plane_operator", publisher)
     return publisher
 
@@ -286,6 +295,7 @@ async def _enrich_approval_row(engine: Any, approval: dict[str, Any]) -> dict[st
     enriched["control_plane_target_checkpoint"] = None
     enriched["control_plane_target_effect_journal"] = None
     enriched["control_plane_target_operator_action"] = None
+    enriched["control_plane_target_resource"] = None
     enriched["control_plane_target_reservation"] = None
     enriched["control_plane_target_final_truth"] = None
     approval_id = str(enriched.get("approval_id") or "").strip()
@@ -320,6 +330,11 @@ async def _enrich_approval_row(engine: Any, approval: dict[str, Any]) -> dict[st
             target_run = await target_run_summary(execution_repository=execution_repository, run_id=target_ref)
             if target_run is not None:
                 enriched["control_plane_target_run"] = target_run
+                enriched["control_plane_target_resource"] = await target_resource_summary(
+                    repository=repository,
+                    execution_repository=execution_repository,
+                    run_id=target_ref,
+                )
                 enriched["control_plane_target_step"] = await target_step_summary(
                     execution_repository=execution_repository,
                     attempt_id=target_run["current_attempt_id"],

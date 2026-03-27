@@ -344,6 +344,7 @@ def test_kernel_api_real_engine_flow_publishes_control_plane_governed_action_tru
     assert committed.json()["control_plane_attempt_state"] == "attempt_completed"
     assert committed.json()["control_plane_reservation_id"].startswith("kernel-action-reservation:")
     assert committed.json()["control_plane_lease_id"].startswith("kernel-action-lease:")
+    assert committed.json()["control_plane_resource_id"] == f"kernel-action-scope:session:{session_id}"
     assert committed.json()["control_plane_final_truth_record_id"].startswith("kernel-action-final-truth:")
 
     run = execution_repo.run_by_id[KernelActionControlPlaneService.run_id_for(session_id=session_id, trace_id=trace_id)]
@@ -532,6 +533,12 @@ def test_kernel_api_end_session_publishes_operator_cancel_for_unfinished_trace(m
     assert audit.json()["control_plane"]["latest_operator_action"]["receipt_refs"] == [
         f"kernel-ledger-event:{ended.json()['event_digest']}"
     ]
+    assert audit.json()["control_plane"]["latest_operator_action"]["affected_transition_refs"] == [
+        f"kernel-action-run:{session_id}:{trace_id}"
+    ]
+    assert audit.json()["control_plane"]["latest_operator_action"]["affected_resource_refs"] == [
+        f"kernel-action-scope:session:{session_id}"
+    ]
 
 
 def test_kernel_api_end_session_publishes_attestation_when_requested(monkeypatch) -> None:
@@ -612,6 +619,12 @@ def test_kernel_api_end_session_publishes_attestation_when_requested(monkeypatch
     assert audit.json()["control_plane"]["latest_operator_action"]["attestation_payload"] == {
         "operator_note": "manual_state_check"
     }
+    assert audit.json()["control_plane"]["latest_operator_action"]["affected_transition_refs"] == [
+        f"kernel-action-run:{session_id}:{trace_id}"
+    ]
+    assert audit.json()["control_plane"]["latest_operator_action"]["affected_resource_refs"] == [
+        f"kernel-action-scope:session:{session_id}"
+    ]
 
 
 def test_kernel_projection_pack_returns_400_when_nervous_system_flag_off(monkeypatch) -> None:

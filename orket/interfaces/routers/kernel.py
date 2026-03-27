@@ -4,10 +4,9 @@ from typing import Any, Callable, List, Optional
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
-from orket.application.services.tool_approval_control_plane_reservation_service import (
-    ToolApprovalControlPlaneReservationService,
+from orket.application.services.kernel_action_pending_approval_reservation import (
+    publish_pending_kernel_approval_hold_if_needed,
 )
-from orket.application.services.kernel_action_control_plane_support import run_id_for as kernel_action_run_id_for
 from orket.interfaces.routers.approvals import build_approvals_router
 
 
@@ -88,30 +87,11 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
         view_service = getattr(engine, "kernel_action_control_plane_view", None)
         if view_service is None:
             return response
-        summary = await view_service.build_summary(session_id=session_id, trace_id=trace_id)
-        if summary is None:
-            return response
-        augmented = dict(response)
-        augmented["control_plane_run_id"] = summary.get("run_id")
-        augmented["control_plane_attempt_id"] = summary.get("current_attempt_id")
-        augmented["control_plane_attempt_state"] = summary.get("current_attempt_state")
-        reservation = summary.get("latest_reservation")
-        if isinstance(reservation, dict):
-            augmented["control_plane_reservation_id"] = reservation.get("reservation_id")
-        lease = summary.get("latest_lease")
-        if isinstance(lease, dict):
-            augmented["control_plane_lease_id"] = lease.get("lease_id")
-        final_truth = summary.get("final_truth")
-        if isinstance(final_truth, dict):
-            augmented["control_plane_final_truth_record_id"] = final_truth.get("final_truth_record_id")
-        if summary.get("current_recovery_decision_id") is not None:
-            augmented["control_plane_recovery_decision_id"] = summary.get("current_recovery_decision_id")
-        if summary.get("current_recovery_action") is not None:
-            augmented["control_plane_recovery_action"] = summary.get("current_recovery_action")
-        operator_action = summary.get("latest_operator_action")
-        if isinstance(operator_action, dict):
-            augmented["control_plane_operator_action_id"] = operator_action.get("action_id")
-        return augmented
+        return await view_service.augment_kernel_response(
+            response=response,
+            session_id=session_id,
+            trace_id=trace_id,
+        )
 
     @router.post("/kernel/lifecycle")
     async def kernel_lifecycle(req: KernelLifecycleRequest):
@@ -177,14 +157,13 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
                 "proposal": req.proposal,
             }
             if callable(handler):
-                response = await handler(payload)
-            else:
-                response = engine.kernel_admit_proposal(
-                    {
-                        **payload,
-                    }
-                )
-            await _publish_kernel_approval_reservation_if_needed(
+                return await handler(payload)
+            response = engine.kernel_admit_proposal(
+                {
+                    **payload,
+                }
+            )
+            await publish_pending_kernel_approval_hold_if_needed(
                 engine=engine,
                 session_id=req.session_id,
                 trace_id=req.trace_id,
@@ -199,46 +178,6 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    async def _publish_kernel_approval_reservation_if_needed(
-        *,
-        engine: Any,
-        session_id: str,
-        trace_id: str,
-        proposal: dict[str, Any],
-        response: dict[str, Any],
-    ) -> None:
-        admission_decision = response.get("admission_decision")
-        if not isinstance(admission_decision, dict):
-            return
-        if str(admission_decision.get("decision") or "").strip() != "NEEDS_APPROVAL":
-            return
-        approval_id = str(response.get("approval_id") or "").strip()
-        if not approval_id:
-            return
-        publication = getattr(engine, "control_plane_publication", None)
-        if publication is None:
-            return
-        approval = await engine.get_approval(approval_id)
-        if not isinstance(approval, dict):
-            return
-        payload = proposal.get("payload")
-        proposal_payload = payload if isinstance(payload, dict) else {}
-        tool_name = str(proposal_payload.get("tool_name") or proposal.get("proposal_type") or "governed_action").strip()
-        publisher = getattr(engine, "tool_approval_control_plane_reservation", None)
-        if publisher is None or getattr(publisher, "publication", None) is not publication:
-            publisher = ToolApprovalControlPlaneReservationService(publication=publication)
-            setattr(engine, "tool_approval_control_plane_reservation", publisher)
-        await publisher.publish_pending_tool_approval_hold(
-            approval_id=approval_id,
-            session_id=session_id,
-            issue_id="",
-            seat_name="kernel_action",
-            tool_name=tool_name,
-            turn_index=None,
-            created_at=str(approval.get("created_at") or ""),
-            control_plane_target_ref=kernel_action_run_id_for(session_id=session_id, trace_id=trace_id),
-        )
 
     @router.post("/kernel/commit-proposal")
     async def kernel_commit_proposal(req: KernelCommitProposalRequest):
@@ -263,13 +202,12 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
                 "block_result_leaks": req.block_result_leaks,
             }
             if callable(handler):
-                response = await handler(payload)
-            else:
-                response = engine.kernel_commit_proposal(
-                    {
-                        **payload,
-                    }
-                )
+                return await handler(payload)
+            response = engine.kernel_commit_proposal(
+                {
+                    **payload,
+                }
+            )
             return await _augment_kernel_response_with_control_plane_refs(
                 engine=engine,
                 response=response,
@@ -295,13 +233,12 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
                 "operator_actor_ref": getattr(request.state, "authenticated_actor_ref", None),
             }
             if callable(handler):
-                response = await handler(payload)
-            else:
-                response = engine.kernel_end_session(
-                    {
-                        **payload,
-                    }
-                )
+                return await handler(payload)
+            response = engine.kernel_end_session(
+                {
+                    **payload,
+                }
+            )
             return await _augment_kernel_response_with_control_plane_refs(
                 engine=engine,
                 response=response,

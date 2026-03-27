@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from orket.application.services.control_plane_workload_catalog import (
+    ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD,
+    ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD,
+)
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.orchestrator_issue_control_plane_support import (
     attempt_id_for_run,
@@ -17,7 +21,10 @@ from orket.application.services.orchestrator_scheduler_control_plane_service imp
 from orket.core.contracts import AttemptRecord, RunRecord
 from orket.core.domain import (
     AttemptState,
+    CleanupAuthorityClass,
     LeaseStatus,
+    OrphanClassification,
+    OwnershipClass,
     RecoveryActionClass,
     ReservationKind,
     ReservationStatus,
@@ -69,9 +76,21 @@ async def _seed_scheduler_resource_authority(
         supervisor_authority_ref=f"{workload_id}-supervisor:{run_id}:seed_promote",
         promotion_basis="seed_scheduler_resource_authority",
     )
+    await service.publication.publish_resource(
+        resource_id=lease.resource_id,
+        resource_kind="scheduler_namespace",
+        namespace_scope=f"issue:{issue_id}",
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state=f"lease_status:{lease.status.value};namespace:issue:{issue_id}",
+        last_observed_timestamp=lease.publication_timestamp,
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+        provenance_ref=lease.lease_id,
+        reconciliation_status="governed_execution_authority",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
     if active_lease:
         return
-    await service.publication.publish_lease(
+    released = await service.publication.publish_lease(
         lease_id=lease.lease_id,
         resource_id=lease.resource_id,
         holder_ref=lease.holder_ref,
@@ -81,6 +100,18 @@ async def _seed_scheduler_resource_authority(
         status=LeaseStatus.RELEASED,
         cleanup_eligibility_rule=lease.cleanup_eligibility_rule,
         source_reservation_id=lease.source_reservation_id,
+    )
+    await service.publication.publish_resource(
+        resource_id=released.resource_id,
+        resource_kind="scheduler_namespace",
+        namespace_scope=f"issue:{issue_id}",
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state=f"lease_status:{released.status.value};namespace:issue:{issue_id}",
+        last_observed_timestamp=released.publication_timestamp,
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+        provenance_ref=released.lease_id,
+        reconciliation_status="governed_execution_authority",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
     )
 
 
@@ -124,6 +155,8 @@ async def test_orchestrator_scheduler_transition_publishes_durable_snapshots() -
 
     assert run_id == expected_run_id
     assert run is not None
+    assert run.workload_id == ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD.workload_id
+    assert run.workload_version == ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD.workload_version
     assert attempt is not None
     assert attempt.attempt_state is AttemptState.FAILED
     assert attempt.recovery_decision_id is not None
@@ -171,6 +204,8 @@ async def test_orchestrator_child_issue_creation_publishes_durable_snapshots() -
 
     assert run_id is not None
     assert run is not None
+    assert run.workload_id == ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD.workload_id
+    assert run.workload_version == ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD.workload_version
     assert run.final_truth_record_id is not None
     assert policy_snapshot is not None
     assert configuration_snapshot is not None
@@ -429,4 +464,83 @@ async def test_orchestrator_scheduler_transition_fail_closed_when_closed_run_has
             target_status=CardStatus.READY,
             reason="retry_scheduled",
             metadata={"retry_count": 3},
+        )
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_scheduler_transition_fail_closed_when_closed_run_resource_state_drifts() -> None:
+    execution_repo = InMemoryControlPlaneExecutionRepository()
+    record_repo = InMemoryControlPlaneRecordRepository()
+    service = OrchestratorSchedulerControlPlaneService(
+        execution_repository=execution_repo,
+        publication=ControlPlanePublicationService(repository=record_repo),
+    )
+    run_id = scheduler_run_id_for_transition(
+        session_id="sess-scheduler-resource-drift",
+        issue_id="ISSUE-RESOURCE-DRIFT",
+        current_status=CardStatus.IN_PROGRESS,
+        target_status=CardStatus.READY,
+        reason="retry_scheduled",
+        metadata={"retry_count": 4},
+    )
+    attempt_id = attempt_id_for_run(run_id=run_id)
+    await execution_repo.save_run_record(
+        record=RunRecord(
+            run_id=run_id,
+            workload_id=service.TRANSITION_WORKLOAD_ID,
+            workload_version=service.TRANSITION_WORKLOAD_VERSION,
+            policy_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-policy:{run_id}",
+            policy_digest="sha256:policy-resource-drift",
+            configuration_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-config:{run_id}",
+            configuration_digest="sha256:config-resource-drift",
+            creation_timestamp="2026-03-26T16:30:00+00:00",
+            admission_decision_receipt_ref=(
+                "issue-transition:sess-scheduler-resource-drift:ISSUE-RESOURCE-DRIFT:in_progress->ready:retry_scheduled"
+            ),
+            namespace_scope="issue:ISSUE-RESOURCE-DRIFT",
+            lifecycle_state=RunState.COMPLETED,
+            current_attempt_id=attempt_id,
+            final_truth_record_id=f"{service.TRANSITION_WORKLOAD_ID}-final-truth:{run_id}",
+        )
+    )
+    await execution_repo.save_attempt_record(
+        record=AttemptRecord(
+            attempt_id=attempt_id,
+            run_id=run_id,
+            attempt_ordinal=1,
+            attempt_state=AttemptState.COMPLETED,
+            starting_state_snapshot_ref=(
+                "issue-transition:sess-scheduler-resource-drift:ISSUE-RESOURCE-DRIFT:in_progress->ready:retry_scheduled"
+            ),
+            start_timestamp="2026-03-26T16:30:00+00:00",
+            end_timestamp="2026-03-26T16:30:30+00:00",
+        )
+    )
+    await _seed_scheduler_resource_authority(
+        service=service,
+        run_id=run_id,
+        issue_id="ISSUE-RESOURCE-DRIFT",
+        active_lease=False,
+    )
+    await service.publication.publish_resource(
+        resource_id="namespace:issue:ISSUE-RESOURCE-DRIFT",
+        resource_kind="scheduler_namespace",
+        namespace_scope="issue:ISSUE-RESOURCE-DRIFT",
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state="lease_status:lease_active;namespace:issue:ISSUE-RESOURCE-DRIFT",
+        last_observed_timestamp="9999-12-31T23:59:59+00:00",
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+        provenance_ref="seed_resource_state_drift",
+        reconciliation_status="governed_execution_authority",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+
+    with pytest.raises(OrchestratorSchedulerControlPlaneError, match="resource state drift"):
+        await service.publish_scheduler_transition(
+            session_id="sess-scheduler-resource-drift",
+            issue_id="ISSUE-RESOURCE-DRIFT",
+            current_status=CardStatus.IN_PROGRESS,
+            target_status=CardStatus.READY,
+            reason="retry_scheduled",
+            metadata={"retry_count": 4},
         )

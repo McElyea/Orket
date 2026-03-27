@@ -49,6 +49,7 @@ Each run prints:
 1. `run_id`
 2. deterministic decision
 3. artifact path
+4. control-plane run and attempt state when durable control-plane publication is available
 
 Default artifact root:
 `workspace/default/review_runs/<run_id>/`

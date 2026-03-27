@@ -1,8 +1,15 @@
 from __future__ import annotations
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
-from orket.core.contracts import LeaseRecord, ReservationRecord, RunRecord
-from orket.core.domain import LeaseStatus, ReservationKind, ReservationStatus
+from orket.core.contracts import LeaseRecord, ReservationRecord, ResourceRecord, RunRecord
+from orket.core.domain import (
+    CleanupAuthorityClass,
+    LeaseStatus,
+    OrphanClassification,
+    OwnershipClass,
+    ReservationKind,
+    ReservationStatus,
+)
 
 
 class TurnToolControlPlaneResourceError(ValueError):
@@ -21,8 +28,15 @@ def lease_id_for_run(*, run_id: str) -> str:
     return f"turn-tool-lease:{run_id}"
 
 
+def namespace_resource_id_for_scope(*, namespace_scope: str) -> str:
+    scope = str(namespace_scope).strip()
+    if not scope:
+        raise TurnToolControlPlaneResourceError("namespace scope is required for turn-tool resource authority")
+    return f"namespace:{scope}"
+
+
 def namespace_resource_id_for_run(*, run: RunRecord) -> str:
-    return f"namespace:{_namespace_scope(run)}"
+    return namespace_resource_id_for_scope(namespace_scope=_namespace_scope(run))
 
 
 def holder_ref_for_run(*, run_id: str) -> str:
@@ -80,6 +94,7 @@ async def ensure_active_execution_lease(
         raise TurnToolControlPlaneResourceError(
             f"governed turn run {run.run_id} cannot resume from non-active namespace lease"
         )
+    await publish_resource_snapshot(publication=publication, run=run, lease=lease)
     if reservation.status is ReservationStatus.PROMOTED_TO_LEASE:
         return reservation, lease
     try:
@@ -162,7 +177,7 @@ async def _release_execution_lease_if_present(
         LeaseStatus.EXPIRED,
     }:
         return existing
-    return await publication.publish_lease(
+    released = await publication.publish_lease(
         lease_id=existing.lease_id,
         resource_id=existing.resource_id,
         holder_ref=existing.holder_ref,
@@ -174,6 +189,8 @@ async def _release_execution_lease_if_present(
         last_confirmed_observation=existing.last_confirmed_observation,
         source_reservation_id=existing.source_reservation_id,
     )
+    await publish_resource_snapshot(publication=publication, run=run, lease=released)
+    return released
 
 
 async def _release_reservation_if_present(
@@ -217,7 +234,7 @@ async def _rollback_execution_activation_failure(
     publication_timestamp: str,
 ) -> None:
     if lease.status is LeaseStatus.ACTIVE:
-        await publication.publish_lease(
+        released = await publication.publish_lease(
             lease_id=lease.lease_id,
             resource_id=lease.resource_id,
             holder_ref=lease.holder_ref,
@@ -229,6 +246,7 @@ async def _rollback_execution_activation_failure(
             last_confirmed_observation=lease.last_confirmed_observation,
             source_reservation_id=lease.source_reservation_id,
         )
+        await publish_resource_snapshot(publication=publication, run=run, lease=released)
     reservation = await publication.repository.get_latest_reservation_record(
         reservation_id=reservation_id_for_run(run_id=run.run_id)
     )
@@ -240,6 +258,27 @@ async def _rollback_execution_activation_failure(
         )
 
 
+async def publish_resource_snapshot(
+    *,
+    publication: ControlPlanePublicationService,
+    run: RunRecord,
+    lease: LeaseRecord,
+) -> ResourceRecord:
+    namespace_scope = _namespace_scope(run)
+    return await publication.publish_resource(
+        resource_id=namespace_resource_id_for_run(run=run),
+        resource_kind="turn_tool_namespace",
+        namespace_scope=namespace_scope,
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state=f"lease_status:{lease.status.value};namespace:{namespace_scope}",
+        last_observed_timestamp=lease.publication_timestamp,
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+        provenance_ref=lease.last_confirmed_observation or lease.lease_id,
+        reconciliation_status="governed_execution_authority",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+
+
 __all__ = [
     "TurnToolControlPlaneResourceError",
     "ensure_active_execution_lease",
@@ -247,6 +286,7 @@ __all__ = [
     "holder_ref_for_run",
     "invalidate_admission_reservation_if_present",
     "lease_id_for_run",
+    "namespace_resource_id_for_scope",
     "namespace_resource_id_for_run",
     "release_execution_authority_if_present",
     "reservation_id_for_run",

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
+from orket.application.services.kernel_action_control_plane_support import default_namespace_scope_for_session
 from orket.core.contracts import OperatorActionRecord
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
 
@@ -23,6 +24,7 @@ class KernelActionControlPlaneOperatorService:
         reason: str | None = None,
     ) -> OperatorActionRecord:
         run_id = KernelActionControlPlaneService.run_id_for(session_id=session_id, trace_id=trace_id)
+        resource_id = f"kernel-action-scope:{default_namespace_scope_for_session(session_id=session_id)}"
         return await self.publication.publish_operator_action(
             action_id=f"kernel-action-operator:{session_id}:{trace_id}:cancel",
             actor_ref=actor_ref,
@@ -33,6 +35,7 @@ class KernelActionControlPlaneOperatorService:
             result="accepted_cancel",
             command_class=OperatorCommandClass.CANCEL_RUN,
             affected_transition_refs=[run_id],
+            affected_resource_refs=[resource_id],
             receipt_refs=[receipt_ref],
         )
 
@@ -50,6 +53,7 @@ class KernelActionControlPlaneOperatorService:
         request_id: str | None = None,
     ) -> OperatorActionRecord:
         run_id = KernelActionControlPlaneService.run_id_for(session_id=session_id, trace_id=trace_id)
+        resource_id = f"kernel-action-scope:{default_namespace_scope_for_session(session_id=session_id)}"
         scope = str(attestation_scope or "").strip()
         if not scope:
             raise ValueError("kernel-action operator attestation requires non-empty attestation_scope")
@@ -65,6 +69,7 @@ class KernelActionControlPlaneOperatorService:
             attestation_scope=scope,
             attestation_payload=dict(attestation_payload or {}),
             affected_transition_refs=[run_id],
+            affected_resource_refs=[resource_id],
             receipt_refs=[receipt_ref],
         )
 

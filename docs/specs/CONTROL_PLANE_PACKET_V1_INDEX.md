@@ -31,7 +31,8 @@ Supporting but non-overriding planning documents:
 1. [docs/projects/ControlPlane/orket_control_plane_packet/00_CONTROL_PLANE_FOUNDATION_PACKET.md](docs/projects/ControlPlane/orket_control_plane_packet/00_CONTROL_PLANE_FOUNDATION_PACKET.md)
 2. [docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md](docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md)
 3. [docs/projects/ControlPlane/orket_control_plane_packet/09_OS_MASTER_PLAN.md](docs/projects/ControlPlane/orket_control_plane_packet/09_OS_MASTER_PLAN.md)
-4. [docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md)
+4. [docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md](docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md)
+5. [docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md)
 
 ## Authority precedence
 
@@ -39,8 +40,9 @@ When multiple docs touch the same topic, precedence is:
 
 1. [docs/projects/ControlPlane/orket_control_plane_packet/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/projects/ControlPlane/orket_control_plane_packet/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md) for shared nouns and enums
 2. the specific requirement document for semantic rules and acceptance criteria
-3. [docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md) for archived execution order only
-4. [docs/projects/ControlPlane/orket_control_plane_packet/09_OS_MASTER_PLAN.md](docs/projects/ControlPlane/orket_control_plane_packet/09_OS_MASTER_PLAN.md) for architecture rationale only
+3. [docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md](docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md) for active convergence execution order
+4. [docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md) for archived packet-v2 execution order only
+5. [docs/projects/ControlPlane/orket_control_plane_packet/09_OS_MASTER_PLAN.md](docs/projects/ControlPlane/orket_control_plane_packet/09_OS_MASTER_PLAN.md) for architecture rationale only
 
 ## Architecture alignment
 

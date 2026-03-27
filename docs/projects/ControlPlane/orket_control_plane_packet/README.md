@@ -19,6 +19,7 @@ This packet now represents the accepted authority set required to move from arch
 - `10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md`
 - `11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md`
 - `12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md`
+- `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
 - `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`
 
 ## Authority posture
@@ -34,7 +35,8 @@ This packet is now split into four roles:
    - `10` through `12`
 4. planning:
    - `09_OS_MASTER_PLAN.md` for architecture direction only
-   - `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md` for archived execution sequencing
+   - `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md` for active convergence execution sequencing
+   - `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md` for archived packet-v2 execution sequencing
 
 ## Important guardrails
 
@@ -56,12 +58,14 @@ The accepted packet is indexed for planning under:
 
 The packet remains the active requirements authority.
 
-The implementation lane is closed and archived at:
+The active convergence implementation lane is:
+
+- `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+
+The prior packet-v2 implementation lane remains archived at:
 
 - `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`
 
 The architecture-direction companion remains:
 
 - `09_OS_MASTER_PLAN.md`
-
-Staging-only convergence drafts may exist under `docs/projects/ControlPlane/`, but they do not reopen implementation authority unless `docs/ROADMAP.md` adds a new explicit ControlPlane lane that points to their canonical implementation plan path.

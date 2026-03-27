@@ -1,22 +1,18 @@
 # Control-Plane Convergence Implementation Plan
 Last updated: 2026-03-26
-Status: Draft (staging only; not active implementation authority)
+Status: Active implementation authority
 Owner: Orket Core
 Lane type: Control-plane convergence / implementation plan
 
 ## Authority posture
 
-This document is a staging draft.
-It is not active implementation authority.
+This document is the active implementation authority for the ControlPlane convergence lane opened in `docs/ROADMAP.md`.
 
 The active ControlPlane requirements authority remains the accepted packet under `docs/projects/ControlPlane/orket_control_plane_packet/`.
 The last accepted ControlPlane implementation sequencing lane remains archived under `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/`.
 
-This plan does not reopen execution on its own.
-Code work may claim this plan as canonical execution authority only after:
-1. `docs/ROADMAP.md` opens a new explicit ControlPlane lane pointing to this file
-2. the ControlPlane project index and `docs/projects/ControlPlane/orket_control_plane_packet/README.md` tell the same authority story as the roadmap and archive
-3. the paired requirements doc and this plan remain aligned on workstream scope, proof commands, crosswalk updates, and compatibility exits
+The paired requirements companion is `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_HARDENING_REQUIREMENTS.md`.
+The packet README, project index, and archived lane material must continue to tell the same authority story as this plan.
 
 ## Purpose
 
@@ -53,15 +49,15 @@ The following remain frozen:
 8. slim namespace semantics exist now and are not deferred
 9. terminal commands may stop continuation but may not rewrite truth
 
-## Activation gate
+## Activation status
 
-Until this plan is activated through `docs/ROADMAP.md`, it remains staging-only and may not be cited as active implementation authority in code, docs, proofs, or closeout material.
+This lane is now opened through `docs/ROADMAP.md`.
 
-If the lane is activated later, the activation change must do all of the following together:
-1. add the roadmap lane pointing to this plan
-2. update the ControlPlane README and project-index wording in the same change
-3. keep the archived `CP03262026-LANE-CLOSEOUT` material historical only
-4. preserve this plan's workstream-level code bindings, proof commands, crosswalk gates, and compatibility exits rather than reopening the lane abstractly
+The opening change must keep all of the following true together:
+1. the roadmap points to this plan as the active implementation lane
+2. the ControlPlane README and project-index wording match the roadmap and archive
+3. the archived `CP03262026-LANE-CLOSEOUT` material stays historical only
+4. this plan's workstream-level code bindings, proof commands, crosswalk gates, and compatibility exits remain the active sequencing surface
 
 ## Execution strategy
 
@@ -159,7 +155,12 @@ Compatibility exits consumed:
 1. `CE-01`
 2. `CE-02`
 
+Closeout artifact:
+1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`
+
 ## Workstream 2 - Reservation, lease, and resource universalization
+Closeout artifact:
+1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_2_CLOSEOUT.md`
 
 Objective:
 1. make reservation and lease truth the default admission and ownership discipline everywhere it matters
@@ -178,8 +179,8 @@ Required deliverables:
 
 Authority map:
 1. canonical reservation and lease contracts: `orket/core/contracts/control_plane_models.py`; `orket/core/domain/control_plane_reservations.py`; `orket/core/contracts/state_backend.py`; `orket/core/domain/coordinator_card.py`
-2. publication and lifecycle services: `orket/application/services/sandbox_control_plane_reservation_service.py`; `orket/application/services/sandbox_control_plane_lease_service.py`; `orket/application/services/tool_approval_control_plane_reservation_service.py`; `orket/application/services/coordinator_control_plane_reservation_service.py`; `orket/application/services/coordinator_control_plane_lease_service.py`; `orket/application/services/orchestrator_issue_control_plane_service.py`; `orket/application/services/orchestrator_scheduler_control_plane_service.py`; `orket/application/services/orchestrator_scheduler_control_plane_mutation.py`; `orket/application/services/turn_tool_control_plane_resource_lifecycle.py`; `orket/application/services/gitea_state_control_plane_reservation_service.py`; `orket/application/services/gitea_state_control_plane_lease_service.py`
-3. resource-model surfaces to generalize: `orket/application/services/sandbox_runtime_lifecycle_service.py`; `orket/application/services/sandbox_runtime_inspection_service.py`; `orket/application/services/sandbox_lifecycle_view_service.py`
+2. publication and lifecycle services: `orket/application/services/sandbox_control_plane_reservation_service.py`; `orket/application/services/sandbox_control_plane_lease_service.py`; `orket/application/services/sandbox_control_plane_resource_service.py`; `orket/application/services/tool_approval_control_plane_reservation_service.py`; `orket/application/services/coordinator_control_plane_reservation_service.py`; `orket/application/services/coordinator_control_plane_lease_service.py`; `orket/application/services/orchestrator_issue_control_plane_service.py`; `orket/application/services/orchestrator_scheduler_control_plane_service.py`; `orket/application/services/orchestrator_scheduler_control_plane_mutation.py`; `orket/application/services/turn_tool_control_plane_resource_lifecycle.py`; `orket/application/services/gitea_state_control_plane_reservation_service.py`; `orket/application/services/gitea_state_control_plane_lease_service.py`; `orket/application/services/control_plane_publication_service.py`
+3. resource-model surfaces to generalize: `orket/core/contracts/control_plane_models.py`; `orket/adapters/storage/async_control_plane_record_repository.py`; `orket/application/services/sandbox_runtime_lifecycle_service.py`; `orket/application/services/sandbox_lifecycle_reconciliation_service.py`; `orket/application/services/sandbox_terminal_outcome_service.py`; `orket/application/services/sandbox_runtime_cleanup_service.py`; `orket/application/services/sandbox_runtime_inspection_service.py`; `orket/application/services/sandbox_lifecycle_view_service.py`
 4. runtime entrypoints that must share the same admission and ownership rules: `orket/runtime/execution_pipeline.py`; `orket/interfaces/coordinator_api.py`; `orket/application/workflows/turn_executor_control_plane.py`; `orket/application/workflows/orchestrator_ops.py`; `orket/services/sandbox_orchestrator.py`
 
 Acceptance criteria:
@@ -202,6 +203,8 @@ Compatibility exits consumed:
 1. `CE-03`
 
 ## Workstream 3 - Effect journal default-path convergence
+Closeout artifact:
+1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_3_CLOSEOUT.md`
 
 Objective:
 1. make the effect journal the universal authoritative write path for governed mutation and closure-relevant events
@@ -428,11 +431,11 @@ Objective:
 1. ensure code, packet, plan, closeout, and roadmap tell one story
 
 Required deliverables:
-1. staging drafts remain explicitly non-authoritative until roadmap activation
+1. active implementation authority remains explicit across roadmap, packet README, project index, and archive wording
 2. current-state crosswalk updates land in the same changes as converged code slices
-3. README / project index / roadmap wording changes together only when a new convergence lane is explicitly activated
+3. README / project index / roadmap wording change together whenever lane status changes again
 4. deprecation notes exist for superseded surfaces and compatibility exits
-5. explicit statement of what remains open after convergence or what remains staged if the lane is not yet activated
+5. explicit statement of what remains open after convergence
 6. each workstream has a stable closeout artifact that records crosswalk deltas, compatibility exits, surviving projection-only surfaces, proofs, and remaining gaps
 
 Authority map:
@@ -442,8 +445,8 @@ Authority map:
 4. execution rule: no workstream may be marked complete unless its closeout artifact, crosswalk rows, compatibility exits, and proof commands already tell the same story as the code
 
 Acceptance criteria:
-1. while this lane is still staged, no live doc claims it is active implementation authority
-2. if this lane is activated later, roadmap, project index, README, and archive wording change together in one authority-safe update
+1. no live doc claims a different active implementation authority than the roadmap, packet README, and archive story
+2. any future lane-status change updates roadmap, project index, README, and archive wording together in one authority-safe update
 3. crosswalk rows move only with explicit code and proof evidence
 4. compatibility exit ledger entries close or narrow in the same changes that reduce their authority risk
 5. no workstream is marked complete without a closeout artifact that records surviving projection-only surfaces and remaining gaps explicitly

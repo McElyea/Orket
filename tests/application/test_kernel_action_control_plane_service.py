@@ -4,16 +4,20 @@ from __future__ import annotations
 
 import pytest
 
+from orket.application.services.control_plane_workload_catalog import KERNEL_ACTION_WORKLOAD
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 from orket.application.services.kernel_action_control_plane_support import KernelActionControlPlaneSupportError
 from orket.core.domain import (
     AttemptState,
+    CleanupAuthorityClass,
     ClosureBasisClassification,
     CompletionClassification,
     EvidenceSufficiencyClassification,
     ExecutionFailureClass,
     FailurePlane,
+    OrphanClassification,
+    OwnershipClass,
     RecoveryActionClass,
     ResidualUncertaintyClassification,
     ResultClass,
@@ -112,6 +116,8 @@ async def test_kernel_action_control_plane_service_records_committed_trace_with_
     )
 
     assert run.lifecycle_state is RunState.COMPLETED
+    assert run.workload_id == KERNEL_ACTION_WORKLOAD.workload_id
+    assert run.workload_version == KERNEL_ACTION_WORKLOAD.workload_version
     assert run.namespace_scope == "session:sess-kernel-cp-1"
     assert attempt.attempt_state is AttemptState.COMPLETED
     assert final_truth.result_class is ResultClass.SUCCESS
@@ -368,6 +374,87 @@ async def test_kernel_action_control_plane_service_preserves_effect_truth_on_pol
     assert step.closure_classification == "step_failed"
     assert effect is not None
     assert effect.observed_result_ref == "kernel-execution-result:" + ("d1" * 32)
+
+
+@pytest.mark.asyncio
+async def test_kernel_action_control_plane_service_rejects_existing_run_when_resource_truth_drifts() -> None:
+    execution_repo = InMemoryControlPlaneExecutionRepository()
+    record_repo = InMemoryControlPlaneRecordRepository()
+    service = KernelActionControlPlaneService(
+        execution_repository=execution_repo,
+        publication=ControlPlanePublicationService(repository=record_repo),
+    )
+
+    request = {
+        "contract_version": "kernel_api/v1",
+        "session_id": "sess-kernel-cp-resource-drift",
+        "trace_id": "trace-kernel-cp-resource-drift",
+        "proposal": {"proposal_type": "action.tool_call", "payload": {"tool_name": "write_file"}},
+    }
+    admission_response = {
+        "proposal_digest": "11" * 32,
+        "decision_digest": "22" * 32,
+        "event_digest": "33" * 32,
+        "admission_decision": {"decision": "ACCEPT_TO_UNIFY"},
+    }
+    admission_items = [
+        {
+            "event_type": "admission.decided",
+            "created_at": "2026-03-27T10:00:00+00:00",
+            "event_digest": "33" * 32,
+        }
+    ]
+    await service.record_admission(request=request, response=admission_response, ledger_items=admission_items)
+    run, _attempt, truth, _effect = await service.record_commit(
+        request={
+            "contract_version": "kernel_api/v1",
+            "session_id": "sess-kernel-cp-resource-drift",
+            "trace_id": "trace-kernel-cp-resource-drift",
+            "proposal_digest": "11" * 32,
+            "admission_decision_digest": "22" * 32,
+            "execution_result_digest": "44" * 32,
+            "execution_result_payload": {"ok": True, "path": "workspace/file.txt"},
+        },
+        response={"status": "COMMITTED", "commit_event_digest": "55" * 32},
+        ledger_items=[
+            *admission_items,
+            {
+                "event_type": "action.executed",
+                "created_at": "2026-03-27T10:00:01+00:00",
+                "event_digest": "66" * 32,
+            },
+            {
+                "event_type": "action.result_validated",
+                "created_at": "2026-03-27T10:00:02+00:00",
+                "event_digest": "77" * 32,
+            },
+            {
+                "event_type": "commit.recorded",
+                "created_at": "2026-03-27T10:00:03+00:00",
+                "event_digest": "55" * 32,
+            },
+        ],
+    )
+    assert truth.result_class is ResultClass.SUCCESS
+    await service.publication.publish_resource(
+        resource_id=f"kernel-action-scope:{run.namespace_scope}",
+        resource_kind="kernel_action_scope",
+        namespace_scope=str(run.namespace_scope),
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state=f"lease_status:lease_active;scope:{run.namespace_scope}",
+        last_observed_timestamp="9999-12-31T23:59:59+00:00",
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+        provenance_ref="seed_resource_drift",
+        reconciliation_status="governed_execution_authority",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+
+    with pytest.raises(ValueError, match="resource state drift"):
+        await service.record_admission(
+            request=request,
+            response=admission_response,
+            ledger_items=admission_items,
+        )
 
 
 @pytest.mark.asyncio

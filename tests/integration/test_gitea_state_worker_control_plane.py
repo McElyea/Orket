@@ -9,6 +9,9 @@ import pytest
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.application.services.control_plane_workload_catalog import (
+    GITEA_STATE_WORKER_EXECUTION_WORKLOAD,
+)
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.gitea_state_control_plane_checkpoint_service import (
     GiteaStateControlPlaneCheckpointService,
@@ -27,11 +30,14 @@ from orket.core.domain import (
     AttemptState,
     CheckpointAcceptanceOutcome,
     CheckpointResumabilityClass,
+    CleanupAuthorityClass,
     ClosureBasisClassification,
     DivergenceClass,
     ExecutionFailureClass,
     FailurePlane,
     LeaseStatus,
+    OrphanClassification,
+    OwnershipClass,
     RecoveryActionClass,
     ResourceFailureClass,
     ReservationStatus,
@@ -139,6 +145,12 @@ async def test_gitea_state_worker_publishes_non_sandbox_lease_history_on_success
     latest = await repository.get_latest_lease_record(
         lease_id=GiteaStateControlPlaneLeaseService.lease_id_for("7")
     )
+    resource_history = await repository.list_resource_records(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("7")
+    )
+    latest_resource = await repository.get_latest_resource_record(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("7")
+    )
     run_id = GiteaStateControlPlaneExecutionService.run_id_for(card_id="7", lease_epoch=1)
     attempt_id = GiteaStateControlPlaneExecutionService.attempt_id_for(run_id=run_id)
     run = await execution_repository.get_run_record(run_id=run_id)
@@ -162,6 +174,7 @@ async def test_gitea_state_worker_publishes_non_sandbox_lease_history_on_success
 
     assert consumed is True
     assert latest is not None
+    assert latest_resource is not None
     assert run is not None
     assert attempt is not None
     assert policy_snapshot is not None
@@ -172,9 +185,18 @@ async def test_gitea_state_worker_publishes_non_sandbox_lease_history_on_success
     assert history[0].status is LeaseStatus.ACTIVE
     assert history[-1].status is LeaseStatus.RELEASED
     assert any(record.status is LeaseStatus.ACTIVE and record.last_confirmed_observation.endswith("version:5") for record in history)
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]
     assert latest.resource_id == "gitea-card:7"
     assert latest.holder_ref == "gitea-worker:worker-a"
+    assert latest_resource.resource_kind == "gitea_card"
+    assert latest_resource.orphan_classification is OrphanClassification.NOT_ORPHANED
     assert run.lifecycle_state is RunState.COMPLETED
+    assert run.workload_id == GITEA_STATE_WORKER_EXECUTION_WORKLOAD.workload_id
+    assert run.workload_version == GITEA_STATE_WORKER_EXECUTION_WORKLOAD.workload_version
     assert run.namespace_scope == "issue:7"
     assert attempt.attempt_state is AttemptState.COMPLETED
     assert checkpoint.resumability_class is CheckpointResumabilityClass.RESUME_FORBIDDEN
@@ -240,6 +262,12 @@ async def test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_m
     history = await repository.list_lease_records(
         lease_id=GiteaStateControlPlaneLeaseService.lease_id_for("7")
     )
+    resource_history = await repository.list_resource_records(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("7")
+    )
+    latest_resource = await repository.get_latest_resource_record(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("7")
+    )
     run_id = GiteaStateControlPlaneExecutionService.run_id_for(card_id="7", lease_epoch=7)
     attempt_id = GiteaStateControlPlaneExecutionService.attempt_id_for(run_id=run_id)
     run = await execution_repository.get_run_record(run_id=run_id)
@@ -261,6 +289,7 @@ async def test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_m
     assert consumed is True
     assert run is not None
     assert attempt is not None
+    assert latest_resource is not None
     assert checkpoint is not None
     assert checkpoint_acceptance is not None
     assert truth is not None
@@ -269,6 +298,11 @@ async def test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_m
         LeaseStatus.ACTIVE,
         LeaseStatus.EXPIRED,
     ]
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_expired",
+    ]
+    assert latest_resource.orphan_classification is OrphanClassification.NOT_ORPHANED
     assert run.lifecycle_state is RunState.FAILED_TERMINAL
     assert attempt.attempt_state is AttemptState.INTERRUPTED
     assert attempt.failure_plane is FailurePlane.RESOURCE
@@ -330,6 +364,12 @@ async def test_gitea_state_worker_publishes_terminal_recovery_decision_on_runtim
     attempt_id = GiteaStateControlPlaneExecutionService.attempt_id_for(run_id=run_id)
     run = await execution_repository.get_run_record(run_id=run_id)
     attempt = await execution_repository.get_attempt_record(attempt_id=attempt_id)
+    resource_history = await repository.list_resource_records(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("9")
+    )
+    latest_resource = await repository.get_latest_resource_record(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("9")
+    )
     truth = await repository.get_final_truth(run_id=run_id)
     decision = None if attempt is None or attempt.recovery_decision_id is None else await repository.get_recovery_decision(
         decision_id=attempt.recovery_decision_id
@@ -341,6 +381,7 @@ async def test_gitea_state_worker_publishes_terminal_recovery_decision_on_runtim
     assert consumed is True
     assert run is not None
     assert attempt is not None
+    assert latest_resource is not None
     assert truth is not None
     assert decision is not None
     assert run.lifecycle_state is RunState.FAILED_TERMINAL
@@ -352,6 +393,11 @@ async def test_gitea_state_worker_publishes_terminal_recovery_decision_on_runtim
         ReservationStatus.ACTIVE,
         ReservationStatus.PROMOTED_TO_LEASE,
     ]
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]
+    assert latest_resource.orphan_classification is OrphanClassification.NOT_ORPHANED
     assert attempt.recovery_decision_id == decision.decision_id
     assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
     assert decision.failure_classification_basis == "gitea_state_worker_failure"
@@ -411,6 +457,12 @@ async def test_gitea_state_worker_closes_pre_effect_claim_failure_without_fake_r
     latest_lease = await repository.get_latest_lease_record(
         lease_id=GiteaStateControlPlaneLeaseService.lease_id_for("11")
     )
+    resource_history = await repository.list_resource_records(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("11")
+    )
+    latest_resource = await repository.get_latest_resource_record(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("11")
+    )
     truth = await repository.get_final_truth(run_id=run_id)
     reconciliation = await repository.get_reconciliation_record(
         reconciliation_id=f"gitea-state-reconciliation:{run_id}:claim_failure"
@@ -428,6 +480,7 @@ async def test_gitea_state_worker_closes_pre_effect_claim_failure_without_fake_r
     assert checkpoint is not None
     assert checkpoint_acceptance is not None
     assert latest_lease is not None
+    assert latest_resource is not None
     assert truth is not None
     assert reconciliation is not None
     assert decision is not None
@@ -439,6 +492,11 @@ async def test_gitea_state_worker_closes_pre_effect_claim_failure_without_fake_r
     assert checkpoint.resumability_class is CheckpointResumabilityClass.RESUME_FORBIDDEN
     assert checkpoint_acceptance.outcome is CheckpointAcceptanceOutcome.ACCEPTED
     assert latest_lease.status is LeaseStatus.UNCERTAIN
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_uncertain",
+    ]
+    assert latest_resource.orphan_classification is OrphanClassification.OWNERSHIP_CONFLICT
     assert [record.status for record in reservation_history] == [
         ReservationStatus.ACTIVE,
         ReservationStatus.INVALIDATED,
@@ -506,6 +564,12 @@ async def test_gitea_state_worker_closes_claim_stage_runtime_error_then_reraises
     latest_lease = await repository.get_latest_lease_record(
         lease_id=GiteaStateControlPlaneLeaseService.lease_id_for("12")
     )
+    resource_history = await repository.list_resource_records(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("12")
+    )
+    latest_resource = await repository.get_latest_resource_record(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("12")
+    )
     truth = await repository.get_final_truth(run_id=run_id)
     reconciliation = await repository.get_reconciliation_record(
         reconciliation_id=f"gitea-state-reconciliation:{run_id}:claim_failure"
@@ -520,6 +584,7 @@ async def test_gitea_state_worker_closes_claim_stage_runtime_error_then_reraises
     assert run is not None
     assert attempt is not None
     assert latest_lease is not None
+    assert latest_resource is not None
     assert truth is not None
     assert reconciliation is not None
     assert decision is not None
@@ -528,6 +593,11 @@ async def test_gitea_state_worker_closes_claim_stage_runtime_error_then_reraises
     assert attempt.failure_plane is FailurePlane.EXECUTION
     assert attempt.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
     assert latest_lease.status is LeaseStatus.UNCERTAIN
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_uncertain",
+    ]
+    assert latest_resource.orphan_classification is OrphanClassification.OWNERSHIP_CONFLICT
     assert [record.status for record in reservation_history] == [
         ReservationStatus.ACTIVE,
         ReservationStatus.INVALIDATED,
@@ -590,6 +660,12 @@ async def test_gitea_state_worker_fail_closes_authority_on_claim_promotion_failu
     lease_history = await repository.list_lease_records(
         lease_id=GiteaStateControlPlaneLeaseService.lease_id_for("13")
     )
+    resource_history = await repository.list_resource_records(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("13")
+    )
+    latest_resource = await repository.get_latest_resource_record(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("13")
+    )
 
     assert [record.status for record in reservation_history] == [
         ReservationStatus.ACTIVE,
@@ -603,5 +679,265 @@ async def test_gitea_state_worker_fail_closes_authority_on_claim_promotion_failu
         LeaseStatus.ACTIVE,
         LeaseStatus.RELEASED,
     ]
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]
+    assert latest_resource is not None
+    assert latest_resource.orphan_classification is OrphanClassification.NOT_ORPHANED
     assert lease_history[-1].expiry_basis == "gitea_state_worker_claim_promotion_failed;lease_epoch=00000005"
     assert ("release_or_fail", "13", "blocked", "promote failed") not in adapter.calls
+
+
+@pytest.mark.asyncio
+async def test_gitea_state_worker_republishes_released_lease_when_resource_truth_drifted(tmp_path: Path) -> None:
+    repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
+    publication = ControlPlanePublicationService(repository=repository)
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
+    worker = GiteaStateWorker(
+        adapter=_FakeAdapter(),
+        worker_id="worker-heal-release",
+        control_plane_lease_service=control_plane,
+    )
+    lease_observation = _lease_response(
+        card_id="21",
+        worker_id="worker-heal-release",
+        epoch=2,
+        version=4,
+        expires_at="2026-03-24T01:00:30+00:00",
+    )
+
+    await control_plane.publish_claimed_lease(
+        card_id="21",
+        worker_id="worker-heal-release",
+        lease_observation=lease_observation,
+        lease_seconds=30,
+    )
+    await control_plane.publish_released_lease(
+        card_id="21",
+        worker_id="worker-heal-release",
+        lease_observation=lease_observation,
+        final_state="code_review",
+    )
+    await publication.publish_resource(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("21"),
+        resource_kind="gitea_card",
+        namespace_scope="issue:21",
+        ownership_class=OwnershipClass.SHARED_GOVERNED,
+        current_observed_state="lease_status:lease_active;observation:drifted",
+        last_observed_timestamp="2026-03-24T01:02:00+00:00",
+        cleanup_authority_class=CleanupAuthorityClass.CLEANUP_FORBIDDEN_WITHOUT_EXTERNAL_CONFIRMATION,
+        provenance_ref="gitea-card-snapshot:21:version:999",
+        reconciliation_status="external_state_authoritative",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+
+    await worker._publish_released_lease_if_enabled(
+        card_id="21",
+        lease_observation=lease_observation,
+        final_state="code_review",
+    )
+
+    lease_history = await repository.list_lease_records(
+        lease_id=GiteaStateControlPlaneLeaseService.lease_id_for("21")
+    )
+    resource_history = await repository.list_resource_records(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("21")
+    )
+    latest_resource = await repository.get_latest_resource_record(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("21")
+    )
+
+    assert [record.status for record in lease_history] == [
+        LeaseStatus.ACTIVE,
+        LeaseStatus.RELEASED,
+        LeaseStatus.RELEASED,
+    ]
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]
+    assert latest_resource is not None
+    assert latest_resource.current_observed_state.startswith("lease_status:lease_released;")
+
+
+@pytest.mark.asyncio
+async def test_gitea_state_worker_republishes_expired_lease_when_resource_truth_drifted(tmp_path: Path) -> None:
+    repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
+    publication = ControlPlanePublicationService(repository=repository)
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
+    worker = GiteaStateWorker(
+        adapter=_FakeAdapter(),
+        worker_id="worker-heal-expiry",
+        control_plane_lease_service=control_plane,
+    )
+    lease_observation = _lease_response(
+        card_id="22",
+        worker_id="worker-heal-expiry",
+        epoch=3,
+        version=5,
+        expires_at="2026-03-24T01:00:30+00:00",
+    )
+
+    await control_plane.publish_claimed_lease(
+        card_id="22",
+        worker_id="worker-heal-expiry",
+        lease_observation=lease_observation,
+        lease_seconds=30,
+    )
+    await control_plane.publish_expired_lease(
+        card_id="22",
+        worker_id="worker-heal-expiry",
+        lease_observation=lease_observation,
+        reason="E_LEASE_EXPIRED",
+    )
+    await publication.publish_resource(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("22"),
+        resource_kind="gitea_card",
+        namespace_scope="issue:22",
+        ownership_class=OwnershipClass.SHARED_GOVERNED,
+        current_observed_state="lease_status:lease_active;observation:drifted",
+        last_observed_timestamp="2026-03-24T01:02:00+00:00",
+        cleanup_authority_class=CleanupAuthorityClass.CLEANUP_FORBIDDEN_WITHOUT_EXTERNAL_CONFIRMATION,
+        provenance_ref="gitea-card-snapshot:22:version:999",
+        reconciliation_status="external_state_authoritative",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+
+    await worker._publish_expired_lease_if_enabled(
+        card_id="22",
+        lease_observation=lease_observation,
+        reason="E_LEASE_EXPIRED",
+    )
+
+    lease_history = await repository.list_lease_records(
+        lease_id=GiteaStateControlPlaneLeaseService.lease_id_for("22")
+    )
+    resource_history = await repository.list_resource_records(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("22")
+    )
+    latest_resource = await repository.get_latest_resource_record(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("22")
+    )
+
+    assert [record.status for record in lease_history] == [
+        LeaseStatus.ACTIVE,
+        LeaseStatus.EXPIRED,
+        LeaseStatus.EXPIRED,
+    ]
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_expired",
+        "lease_status:lease_active",
+        "lease_status:lease_expired",
+    ]
+    assert latest_resource is not None
+    assert latest_resource.current_observed_state.startswith("lease_status:lease_expired;")
+
+
+@pytest.mark.asyncio
+async def test_gitea_state_worker_blocks_before_backend_renew_on_active_resource_drift(tmp_path: Path) -> None:
+    execution_repository = AsyncControlPlaneExecutionRepository(tmp_path / "control_plane.sqlite3")
+    repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
+    publication = ControlPlanePublicationService(repository=repository)
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
+    control_plane_execution = GiteaStateControlPlaneExecutionService(
+        execution_repository=execution_repository,
+        publication=publication,
+    )
+    control_plane_checkpoint = GiteaStateControlPlaneCheckpointService(publication=publication)
+    control_plane_reservation = GiteaStateControlPlaneReservationService(publication=publication)
+    adapter = _FakeAdapter()
+    adapter.cards = [{"issue_number": 23, "state": "ready"}]
+    adapter.acquire_result = _lease_response(
+        card_id="23",
+        worker_id="worker-renew-drift",
+        epoch=6,
+        version=4,
+        expires_at="2026-03-24T01:00:30+00:00",
+    )
+    adapter.renew_results = [
+        _lease_response(
+            card_id="23",
+            worker_id="worker-renew-drift",
+            epoch=6,
+            version=5,
+            expires_at="2026-03-24T01:01:00+00:00",
+        )
+    ]
+    worker = GiteaStateWorker(
+        adapter=adapter,
+        worker_id="worker-renew-drift",
+        lease_seconds=1,
+        renew_interval_seconds=0.05,
+        control_plane_checkpoint_service=control_plane_checkpoint,
+        control_plane_execution_service=control_plane_execution,
+        control_plane_lease_service=control_plane,
+        control_plane_reservation_service=control_plane_reservation,
+    )
+
+    async def _work(_card):
+        await asyncio.sleep(0.02)
+        await publication.publish_resource(
+            resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("23"),
+            resource_kind="gitea_card",
+            namespace_scope=GiteaStateControlPlaneLeaseService.namespace_scope_for("23"),
+            ownership_class=OwnershipClass.SHARED_GOVERNED,
+            current_observed_state="lease_status:lease_released;observation:drifted",
+            last_observed_timestamp="2026-03-24T01:00:10+00:00",
+            cleanup_authority_class=CleanupAuthorityClass.CLEANUP_FORBIDDEN_WITHOUT_EXTERNAL_CONFIRMATION,
+            provenance_ref="gitea-card-snapshot:23:version:999",
+            reconciliation_status="external_state_authoritative",
+            orphan_classification=OrphanClassification.NOT_ORPHANED,
+        )
+        await asyncio.sleep(0.12)
+        return {"ok": True}
+
+    consumed = await worker.run_once(work_fn=_work)
+    run_id = GiteaStateControlPlaneExecutionService.run_id_for(card_id="23", lease_epoch=6)
+    attempt_id = GiteaStateControlPlaneExecutionService.attempt_id_for(run_id=run_id)
+    run = await execution_repository.get_run_record(run_id=run_id)
+    attempt = await execution_repository.get_attempt_record(attempt_id=attempt_id)
+    truth = await repository.get_final_truth(run_id=run_id)
+    decision = None if attempt is None or attempt.recovery_decision_id is None else await repository.get_recovery_decision(
+        decision_id=attempt.recovery_decision_id
+    )
+    lease_history = await repository.list_lease_records(
+        lease_id=GiteaStateControlPlaneLeaseService.lease_id_for("23")
+    )
+    resource_history = await repository.list_resource_records(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("23")
+    )
+    latest_resource = await repository.get_latest_resource_record(
+        resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("23")
+    )
+
+    assert consumed is True
+    assert run is not None
+    assert attempt is not None
+    assert truth is not None
+    assert decision is not None
+    assert run.lifecycle_state is RunState.FAILED_TERMINAL
+    assert attempt.attempt_state is AttemptState.INTERRUPTED
+    assert attempt.failure_class == "control_plane_resource_drift"
+    assert attempt.failure_plane is FailurePlane.RESOURCE
+    assert attempt.failure_classification is ResourceFailureClass.RESOURCE_STATE_UNCERTAIN
+    assert decision.failure_classification_basis == "control_plane_resource_drift"
+    assert decision.failure_plane is FailurePlane.RESOURCE
+    assert decision.failure_classification is ResourceFailureClass.RESOURCE_STATE_UNCERTAIN
+    assert truth.result_class is ResultClass.BLOCKED
+    assert [record.status for record in lease_history] == [
+        LeaseStatus.ACTIVE,
+        LeaseStatus.RELEASED,
+    ]
+    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+        "lease_status:lease_released",
+    ]
+    assert latest_resource is not None
+    assert latest_resource.current_observed_state.startswith("lease_status:lease_released;")
+    assert not any(call[0] == "renew_lease" for call in adapter.calls)
+    assert ("release_or_fail", "23", "blocked", "E_CONTROL_PLANE_RESOURCE_DRIFT") in adapter.calls

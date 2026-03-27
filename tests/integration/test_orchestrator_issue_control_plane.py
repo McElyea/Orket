@@ -202,6 +202,9 @@ async def test_orchestrator_issue_turn_publishes_issue_dispatch_and_non_protocol
     issue_leases = await orch.control_plane_repository.list_lease_records(
         lease_id=lease_id_for_run(run_id=issue_run_id)
     )
+    issue_resources = await orch.control_plane_repository.list_resource_records(
+        resource_id="issue-dispatch-slot:run-1:ISSUE-1"
+    )
 
     tool_run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
     tool_run = await orch.control_plane_execution_repository.get_run_record(run_id=tool_run_id)
@@ -236,6 +239,10 @@ async def test_orchestrator_issue_turn_publishes_issue_dispatch_and_non_protocol
     assert issue_reservations[-1].target_scope_ref == "issue-dispatch-slot:run-1:ISSUE-1"
     assert [record.status for record in issue_leases] == [LeaseStatus.ACTIVE, LeaseStatus.RELEASED]
     assert issue_leases[-1].source_reservation_id == issue_reservations[-1].reservation_id
+    assert [record.current_observed_state.split(";")[0] for record in issue_resources] == [
+        "lease_status:lease_active",
+        "lease_status:lease_released",
+    ]
 
     assert tool_run is not None
     assert tool_run.namespace_scope == "issue:ISSUE-1"

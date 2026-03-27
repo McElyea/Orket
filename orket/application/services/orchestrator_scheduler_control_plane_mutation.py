@@ -17,11 +17,14 @@ from orket.core.domain import (
     AttemptState,
     AuthoritySourceClass,
     CapabilityClass,
+    CleanupAuthorityClass,
     ClosureBasisClassification,
     CompletionClassification,
     DegradationClassification,
     EvidenceSufficiencyClassification,
     LeaseStatus,
+    OrphanClassification,
+    OwnershipClass,
     RecoveryActionClass,
     ReservationKind,
     ReservationStatus,
@@ -122,6 +125,12 @@ async def activate_namespace_authority(
             cleanup_eligibility_rule=cleanup_rule,
             source_reservation_id=reservation.reservation_id,
         )
+        await _publish_resource_snapshot(
+            publication=publication,
+            namespace_scope_value=str(run.namespace_scope or "").strip() or namespace_scope(issue_id=issue_id),
+            resource_id=lease.resource_id,
+            lease=lease,
+        )
         await publication.promote_reservation_to_lease(
             reservation_id=reservation.reservation_id,
             promoted_lease_id=lease.lease_id,
@@ -157,7 +166,7 @@ async def _rollback_namespace_authority_activation(
     failed_at = utc_now()
     lease = await publication.repository.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run_id))
     if lease is not None and lease.status is LeaseStatus.ACTIVE:
-        await publication.publish_lease(
+        released = await publication.publish_lease(
             lease_id=lease.lease_id,
             resource_id=lease.resource_id,
             holder_ref=lease.holder_ref,
@@ -168,6 +177,12 @@ async def _rollback_namespace_authority_activation(
             cleanup_eligibility_rule=lease.cleanup_eligibility_rule,
             last_confirmed_observation=lease.last_confirmed_observation,
             source_reservation_id=lease.source_reservation_id,
+        )
+        await _publish_resource_snapshot(
+            publication=publication,
+            namespace_scope_value=_resource_namespace_scope(resource_id=lease.resource_id),
+            resource_id=lease.resource_id,
+            lease=released,
         )
     reservation = await publication.repository.get_latest_reservation_record(reservation_id=reservation_id)
     if reservation is not None and reservation.status is ReservationStatus.ACTIVE:
@@ -289,7 +304,7 @@ async def close_namespace_mutation(
     await execution_repository.save_run_record(
         record=run.model_copy(update={"lifecycle_state": run_state, "final_truth_record_id": truth.final_truth_record_id})
     )
-    await publication.publish_lease(
+    released = await publication.publish_lease(
         lease_id=lease.lease_id,
         resource_id=lease.resource_id,
         holder_ref=lease.holder_ref,
@@ -301,6 +316,40 @@ async def close_namespace_mutation(
         last_confirmed_observation=output_ref,
         source_reservation_id=lease.source_reservation_id,
     )
+    await _publish_resource_snapshot(
+        publication=publication,
+        namespace_scope_value=str(run.namespace_scope or "").strip() or _resource_namespace_scope(resource_id=lease.resource_id),
+        resource_id=lease.resource_id,
+        lease=released,
+    )
+
+
+async def _publish_resource_snapshot(
+    *,
+    publication: ControlPlanePublicationService,
+    namespace_scope_value: str,
+    resource_id: str,
+    lease: LeaseRecord,
+) -> None:
+    await publication.publish_resource(
+        resource_id=resource_id,
+        resource_kind="scheduler_namespace",
+        namespace_scope=namespace_scope_value,
+        ownership_class=OwnershipClass.RUN_OWNED,
+        current_observed_state=f"lease_status:{lease.status.value};namespace:{namespace_scope_value}",
+        last_observed_timestamp=lease.publication_timestamp,
+        cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+        provenance_ref=lease.last_confirmed_observation or lease.lease_id,
+        reconciliation_status="governed_execution_authority",
+        orphan_classification=OrphanClassification.NOT_ORPHANED,
+    )
+
+
+def _resource_namespace_scope(*, resource_id: str) -> str:
+    normalized = str(resource_id or "").strip()
+    if normalized.startswith("namespace:"):
+        return normalized.split("namespace:", 1)[1]
+    return normalized
 
 
 def _attempt_state_for(result_class: ResultClass) -> AttemptState:

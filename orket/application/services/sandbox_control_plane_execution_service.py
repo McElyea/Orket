@@ -4,6 +4,10 @@ import hashlib
 import json
 from dataclasses import asdict
 
+from orket.application.services.control_plane_workload_catalog import (
+    CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF,
+    sandbox_runtime_workload_for_tech_stack,
+)
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
@@ -12,6 +16,7 @@ from orket.core.contracts import (
     CheckpointAcceptanceRecord,
     RecoveryDecisionRecord,
     RunRecord,
+    WorkloadRecord,
 )
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
@@ -47,8 +52,7 @@ class SandboxControlPlaneExecutionService:
         *,
         sandbox_id: str,
         run_id: str,
-        workload_id: str,
-        workload_version: str,
+        workload: WorkloadRecord,
         compose_project: str,
         workspace_path: str,
         configuration_payload: dict[str, object],
@@ -58,19 +62,23 @@ class SandboxControlPlaneExecutionService:
     ) -> tuple[RunRecord, AttemptRecord]:
         attempt_id = self.attempt_id_for_epoch(sandbox_id=sandbox_id, lease_epoch=1)
         policy_payload = asdict(policy)
-        configuration_payload = {
+        normalized_configuration_payload = {
             "compose_project": compose_project,
             "workspace_path": workspace_path,
             **configuration_payload,
         }
+        self._validate_workload_authority(
+            workload=workload,
+            configuration_payload=normalized_configuration_payload,
+        )
         run = RunRecord(
             run_id=run_id,
-            workload_id=workload_id,
-            workload_version=workload_version,
+            workload_id=workload.workload_id,
+            workload_version=workload.workload_version,
             policy_snapshot_id=f"sandbox-policy:{sandbox_id}",
             policy_digest=self._sha256_digest(policy_payload),
             configuration_snapshot_id=f"sandbox-config:{sandbox_id}",
-            configuration_digest=self._sha256_digest(configuration_payload),
+            configuration_digest=self._sha256_digest(normalized_configuration_payload),
             creation_timestamp=creation_timestamp,
             admission_decision_receipt_ref=admission_decision_receipt_ref,
             lifecycle_state=RunState.EXECUTING,
@@ -81,7 +89,7 @@ class SandboxControlPlaneExecutionService:
             run=run,
             policy_payload=policy_payload,
             policy_source_refs=[admission_decision_receipt_ref],
-            configuration_payload=configuration_payload,
+            configuration_payload=normalized_configuration_payload,
             configuration_source_refs=[admission_decision_receipt_ref],
         )
         attempt = AttemptRecord(
@@ -99,6 +107,27 @@ class SandboxControlPlaneExecutionService:
         await self.repository.save_run_record(record=run)
         await self.repository.save_attempt_record(record=attempt)
         return run, attempt
+
+    @staticmethod
+    def _validate_workload_authority(
+        *,
+        workload: WorkloadRecord,
+        configuration_payload: dict[str, object],
+    ) -> None:
+        if workload.output_contract_ref != CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF:
+            raise SandboxControlPlaneExecutionError(
+                "sandbox workload output_contract_ref must target ControlPlane run authority"
+            )
+        tech_stack = str(configuration_payload.get("tech_stack") or "").strip().lower()
+        if not tech_stack:
+            return
+        expected = sandbox_runtime_workload_for_tech_stack(tech_stack)
+        if workload.workload_id != expected.workload_id or workload.workload_version != expected.workload_version:
+            raise SandboxControlPlaneExecutionError(
+                "sandbox workload authority mismatch for tech_stack: "
+                f"expected={expected.workload_id}@{expected.workload_version} "
+                f"got={workload.workload_id}@{workload.workload_version}"
+            )
 
     async def mark_waiting_on_observation(
         self,

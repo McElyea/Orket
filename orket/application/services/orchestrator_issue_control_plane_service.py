@@ -1,6 +1,12 @@
 from __future__ import annotations
 
+from orket.application.services.control_plane_workload_catalog import (
+    ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD,
+)
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.control_plane_resource_authority_checks import (
+    require_resource_snapshot_matches_lease,
+)
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots
 from orket.application.services.orchestrator_issue_control_plane_support import (
     attempt_id_for_run,
@@ -27,9 +33,12 @@ from orket.core.domain import (
     AttemptState,
     AuthoritySourceClass,
     CapabilityClass,
+    CleanupAuthorityClass,
     DegradationClassification,
     EvidenceSufficiencyClassification,
     LeaseStatus,
+    OrphanClassification,
+    OwnershipClass,
     RecoveryActionClass,
     ReservationKind,
     ReservationStatus,
@@ -50,8 +59,9 @@ class OrchestratorIssueControlPlaneError(ValueError):
 class OrchestratorIssueControlPlaneService:
     """Publishes shared issue-dispatch reservation, lease, step, effect, and closeout truth."""
 
-    WORKLOAD_ID = "orchestrator-issue-dispatch"
-    WORKLOAD_VERSION = "orchestrator.issue_dispatch.v1"
+    WORKLOAD = ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD
+    WORKLOAD_ID = WORKLOAD.workload_id
+    WORKLOAD_VERSION = WORKLOAD.workload_version
     PROMOTION_RULE = "promote_on_issue_turn_dispatch"
     CLEANUP_RULE = "release_on_issue_dispatch_closeout"
 
@@ -228,6 +238,7 @@ class OrchestratorIssueControlPlaneService:
                 cleanup_eligibility_rule=self.CLEANUP_RULE,
                 source_reservation_id=reservation_id_for_run(run_id=run_id),
             )
+            await self._publish_resource_snapshot(run=run, lease=lease)
             await self.publication.promote_reservation_to_lease(
                 reservation_id=reservation.reservation_id,
                 promoted_lease_id=lease.lease_id,
@@ -399,7 +410,7 @@ class OrchestratorIssueControlPlaneService:
         )
         lease = await self.publication.repository.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run_id))
         if lease is not None and lease.status is LeaseStatus.ACTIVE:
-            await self.publication.publish_lease(
+            released = await self.publication.publish_lease(
                 lease_id=lease.lease_id,
                 resource_id=lease.resource_id,
                 holder_ref=lease.holder_ref,
@@ -411,6 +422,7 @@ class OrchestratorIssueControlPlaneService:
                 last_confirmed_observation=lease.last_confirmed_observation,
                 source_reservation_id=lease.source_reservation_id,
             )
+            await self._publish_resource_snapshot(run=run, lease=released)
         return True
 
     async def _require_closed_existing_dispatch_run(
@@ -515,6 +527,15 @@ class OrchestratorIssueControlPlaneService:
             raise OrchestratorIssueControlPlaneError(
                 f"orchestrator issue dispatch active run lease source mismatch: {run.run_id}"
             )
+        resource = await self.publication.repository.get_latest_resource_record(resource_id=lease.resource_id)
+        require_resource_snapshot_matches_lease(
+            resource=resource,
+            lease=lease,
+            expected_resource_kind="issue_dispatch_slot",
+            expected_namespace_scope=str(run.namespace_scope or "").strip(),
+            error_context=f"orchestrator issue dispatch active run {run.run_id}",
+            error_factory=OrchestratorIssueControlPlaneError,
+        )
 
     async def _require_closed_dispatch_resource_authority(self, *, run: RunRecord) -> None:
         reservation_id = reservation_id_for_run(run_id=run.run_id)
@@ -540,6 +561,16 @@ class OrchestratorIssueControlPlaneService:
             raise OrchestratorIssueControlPlaneError(
                 f"orchestrator issue dispatch closed run lease source mismatch: {run.run_id}"
             )
+        if lease is not None:
+            resource = await self.publication.repository.get_latest_resource_record(resource_id=lease.resource_id)
+            require_resource_snapshot_matches_lease(
+                resource=resource,
+                lease=lease,
+                expected_resource_kind="issue_dispatch_slot",
+                expected_namespace_scope=str(run.namespace_scope or "").strip(),
+                error_context=f"orchestrator issue dispatch closed run {run.run_id}",
+                error_factory=OrchestratorIssueControlPlaneError,
+            )
 
     async def _append_closeout_effect(self, *, run_id: str, attempt_id: str, step: StepRecord, issue_id: str) -> None:
         existing = await self.publication.repository.list_effect_journal_entries(run_id=run_id)
@@ -561,9 +592,10 @@ class OrchestratorIssueControlPlaneService:
 
     async def _rollback_begin_dispatch_authority(self, *, run_id: str, reservation_id: str) -> None:
         failed_at = utc_now()
+        run = await self.execution_repository.get_run_record(run_id=run_id)
         lease = await self.publication.repository.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run_id))
         if lease is not None and lease.status is LeaseStatus.ACTIVE:
-            await self.publication.publish_lease(
+            released = await self.publication.publish_lease(
                 lease_id=lease.lease_id,
                 resource_id=lease.resource_id,
                 holder_ref=lease.holder_ref,
@@ -575,6 +607,8 @@ class OrchestratorIssueControlPlaneService:
                 last_confirmed_observation=lease.last_confirmed_observation,
                 source_reservation_id=lease.source_reservation_id,
             )
+            if run is not None:
+                await self._publish_resource_snapshot(run=run, lease=released)
         reservation = await self.publication.repository.get_latest_reservation_record(reservation_id=reservation_id)
         if reservation is not None and reservation.status is ReservationStatus.ACTIVE:
             await self.publication.invalidate_reservation(
@@ -582,5 +616,20 @@ class OrchestratorIssueControlPlaneService:
                 supervisor_authority_ref=f"orchestrator-issue-supervisor:{run_id}:dispatch_fail_closeout",
                 invalidation_basis="issue_turn_dispatch_begin_failed",
             )
+
+    async def _publish_resource_snapshot(self, *, run: RunRecord, lease) -> None:
+        namespace = str(run.namespace_scope or "").strip() or lease.resource_id
+        await self.publication.publish_resource(
+            resource_id=str(lease.resource_id),
+            resource_kind="issue_dispatch_slot",
+            namespace_scope=namespace,
+            ownership_class=OwnershipClass.RUN_OWNED,
+            current_observed_state=f"lease_status:{lease.status.value};namespace:{namespace}",
+            last_observed_timestamp=lease.publication_timestamp,
+            cleanup_authority_class=CleanupAuthorityClass.RUNTIME_CLEANUP_ALLOWED,
+            provenance_ref=lease.last_confirmed_observation or lease.lease_id,
+            reconciliation_status="governed_execution_authority",
+            orphan_classification=OrphanClassification.NOT_ORPHANED,
+        )
 
 __all__ = ["OrchestratorIssueControlPlaneError", "OrchestratorIssueControlPlaneService"]

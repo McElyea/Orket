@@ -3,6 +3,9 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Awaitable, Callable, Dict
 
+from orket.application.services.control_plane_resource_authority_checks import (
+    require_resource_snapshot_matches_lease,
+)
 from orket.application.services.gitea_state_control_plane_checkpoint_service import GiteaStateControlPlaneCheckpointService
 from orket.application.services.gitea_state_control_plane_claim_failure_service import close_gitea_state_claim_failure
 from orket.application.services.gitea_state_control_plane_execution_service import GiteaStateControlPlaneExecutionService
@@ -17,6 +20,8 @@ class LeaseExpiredError(RuntimeError):
 
 class GiteaStateWorker:
     """Lightweight multi-runner worker loop over GiteaStateAdapter semantics."""
+
+    CONTROL_PLANE_RESOURCE_DRIFT_REASON = "E_CONTROL_PLANE_RESOURCE_DRIFT"
 
     def __init__(
         self,
@@ -131,7 +136,12 @@ class GiteaStateWorker:
             reservation_id=control_plane_reservation_id,
         )
         stop_event = asyncio.Event()
-        lease_state = {"expired": False, "reason": "", "lease_observation": lease_observation}
+        lease_state = {
+            "expired": False,
+            "authority_drift": False,
+            "reason": "",
+            "lease_observation": lease_observation,
+        }
         renew_task = asyncio.create_task(self._renew_loop(card_id=card_id, stop_event=stop_event, lease_epoch=lease_epoch, lease_state=lease_state))
         try:
             await work_fn(card)
@@ -142,6 +152,26 @@ class GiteaStateWorker:
                     reason=lease_state["reason"] or "E_LEASE_EXPIRED",
                 )
                 raise LeaseExpiredError(lease_state["reason"] or "E_LEASE_EXPIRED")
+            if lease_state["authority_drift"]:
+                drift_reason = lease_state["reason"] or self.CONTROL_PLANE_RESOURCE_DRIFT_REASON
+                await self.adapter.release_or_fail(
+                    card_id,
+                    final_state=self.failure_state,
+                    error=drift_reason,
+                )
+                await self._publish_release_transition_if_enabled(
+                    card_id=card_id,
+                    final_state=self.failure_state,
+                    error=drift_reason,
+                    control_plane_run_id=control_plane_run_id,
+                    control_plane_attempt_id=control_plane_attempt_id,
+                )
+                await self._publish_released_lease_if_enabled(
+                    card_id=card_id,
+                    lease_observation=lease_state["lease_observation"],
+                    final_state=self.failure_state,
+                )
+                return
             await self.adapter.release_or_fail(
                 card_id,
                 final_state=self.success_state,
@@ -179,15 +209,20 @@ class GiteaStateWorker:
                 control_plane_attempt_id=control_plane_attempt_id,
             )
         except (RuntimeError, ValueError, TypeError, OSError, TimeoutError, asyncio.TimeoutError) as exc:
+            effective_error = (
+                lease_state["reason"]
+                if lease_state.get("authority_drift")
+                else str(exc)
+            )
             await self.adapter.release_or_fail(
                 card_id,
                 final_state=self.failure_state,
-                error=str(exc),
+                error=effective_error,
             )
             await self._publish_release_transition_if_enabled(
                 card_id=card_id,
                 final_state=self.failure_state,
-                error=str(exc),
+                error=effective_error,
                 control_plane_run_id=control_plane_run_id,
                 control_plane_attempt_id=control_plane_attempt_id,
             )
@@ -195,7 +230,7 @@ class GiteaStateWorker:
                 await self._publish_expired_lease_if_enabled(
                     card_id=card_id,
                     lease_observation=lease_state["lease_observation"],
-                    reason=lease_state["reason"] or str(exc) or "E_LEASE_EXPIRED",
+                    reason=lease_state["reason"] or effective_error or "E_LEASE_EXPIRED",
                 )
             else:
                 await self._publish_released_lease_if_enabled(
@@ -223,6 +258,11 @@ class GiteaStateWorker:
                 await asyncio.wait_for(stop_event.wait(), timeout=self.renew_interval_seconds)
                 break
             except (TimeoutError, asyncio.TimeoutError):
+                if await self._control_plane_renewal_authority_drifted(card_id=card_id):
+                    lease_state["authority_drift"] = True
+                    lease_state["reason"] = self.CONTROL_PLANE_RESOURCE_DRIFT_REASON
+                    stop_event.set()
+                    break
                 renewed = await self._renew_lease(card_id=card_id, lease_epoch=lease_epoch)
                 if self._is_lease_expired(renewed, expected_epoch=lease_epoch):
                     lease_state["expired"] = True
@@ -231,7 +271,13 @@ class GiteaStateWorker:
                     break
                 if isinstance(renewed, dict) and self._lease_epoch(renewed) is not None:
                     lease_state["lease_observation"] = renewed
-                    await self._publish_renewed_lease_if_enabled(card_id=card_id, lease_observation=renewed)
+                    try:
+                        await self._publish_renewed_lease_if_enabled(card_id=card_id, lease_observation=renewed)
+                    except ValueError:
+                        lease_state["authority_drift"] = True
+                        lease_state["reason"] = self.CONTROL_PLANE_RESOURCE_DRIFT_REASON
+                        stop_event.set()
+                        break
 
     async def _renew_lease(self, *, card_id: str, lease_epoch: int | None) -> Any:
         try:
@@ -338,6 +384,18 @@ class GiteaStateWorker:
             lease_seconds=self.lease_seconds,
         )
 
+    async def _control_plane_renewal_authority_drifted(self, *, card_id: str) -> bool:
+        if self.control_plane_lease_service is None:
+            return False
+        try:
+            await self.control_plane_lease_service.require_active_authority(
+                card_id=card_id,
+                error_context=f"gitea-state worker renew preflight:{card_id}",
+            )
+        except ValueError:
+            return True
+        return False
+
     async def _publish_expired_lease_if_enabled(
         self,
         *,
@@ -351,7 +409,8 @@ class GiteaStateWorker:
             lease_id=self.control_plane_lease_service.lease_id_for(card_id)
         )
         if latest is not None and latest.status.value == "lease_expired":
-            return
+            if await self._latest_resource_matches_lease(card_id=card_id, lease=latest):
+                return
         await self.control_plane_lease_service.publish_expired_lease(
             card_id=card_id,
             worker_id=self.worker_id,
@@ -372,13 +431,33 @@ class GiteaStateWorker:
             lease_id=self.control_plane_lease_service.lease_id_for(card_id)
         )
         if latest is not None and latest.status.value == "lease_released":
-            return
+            if await self._latest_resource_matches_lease(card_id=card_id, lease=latest):
+                return
         await self.control_plane_lease_service.publish_released_lease(
             card_id=card_id,
             worker_id=self.worker_id,
             lease_observation=lease_observation,
             final_state=final_state,
         )
+
+    async def _latest_resource_matches_lease(self, *, card_id: str, lease: Any) -> bool:
+        if self.control_plane_lease_service is None:
+            return False
+        latest_resource = await self.control_plane_lease_service.publication.repository.get_latest_resource_record(
+            resource_id=self.control_plane_lease_service.resource_id_for(card_id)
+        )
+        try:
+            require_resource_snapshot_matches_lease(
+                resource=latest_resource,
+                lease=lease,
+                expected_resource_kind="gitea_card",
+                expected_namespace_scope=GiteaStateControlPlaneExecutionService.namespace_scope_for(card_id=card_id),
+                error_context=f"gitea-state worker card {card_id}",
+                error_factory=ValueError,
+            )
+        except ValueError:
+            return False
+        return True
 
     async def _begin_claimed_execution_if_enabled(
         self,
