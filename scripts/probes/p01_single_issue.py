@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -48,20 +49,26 @@ def _safe_token(value: str) -> str:
     return "".join(ch.lower() if ch.isalnum() else "-" for ch in str(value or "").strip()).strip("-") or "probe"
 
 
+def _workspace_token(workspace: Path) -> str:
+    resolved = str(workspace.resolve())
+    digest = hashlib.sha1(resolved.encode("utf-8")).hexdigest()[:10]
+    return f"{_safe_token(workspace.name)}-{digest}"
+
+
 def _effective_session_id(args: argparse.Namespace, workspace: Path) -> str:
     if str(args.session_id) != DEFAULT_SESSION_ID:
         return str(args.session_id)
-    return f"{DEFAULT_SESSION_ID}-{_safe_token(workspace.name)}-{_safe_token(args.execution_profile)}"
+    return f"{DEFAULT_SESSION_ID}-{_workspace_token(workspace)}-{_safe_token(args.execution_profile)}"
 
 
 def _effective_build_id(args: argparse.Namespace, workspace: Path) -> str:
     if str(args.build_id) != DEFAULT_BUILD_ID:
         return str(args.build_id)
-    return f"{DEFAULT_BUILD_ID}-{_safe_token(workspace.name)}-{_safe_token(args.execution_profile)}"
+    return f"{DEFAULT_BUILD_ID}-{_workspace_token(workspace)}-{_safe_token(args.execution_profile)}"
 
 
 def _effective_issue_id(args: argparse.Namespace, workspace: Path) -> str:
-    return f"{ISSUE_ID}-{_safe_token(workspace.name)}-{_safe_token(args.execution_profile)}"
+    return f"{ISSUE_ID}-{_workspace_token(workspace)}-{_safe_token(args.execution_profile)}"
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:

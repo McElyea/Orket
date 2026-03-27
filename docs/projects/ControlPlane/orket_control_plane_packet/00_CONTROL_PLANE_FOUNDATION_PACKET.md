@@ -90,7 +90,7 @@ Cross-coupled design that allows later surfaces to redefine earlier nouns is pro
 ### Planning companions
 
 1. `09_OS_MASTER_PLAN.md`
-2. `13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`
 
 ## Cross-packet invariants
 
@@ -188,7 +188,7 @@ This packet is ready for implementation planning because it now includes:
 
 ## Active implementation authority
 
-The active implementation authority for this lane is:
-1. `13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`
+The archived implementation authority for this lane is:
+1. `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`
 
 `09_OS_MASTER_PLAN.md` remains architecture direction and planning rationale only.

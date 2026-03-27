@@ -6,14 +6,20 @@ import pytest
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
+from orket.application.services.kernel_action_control_plane_support import KernelActionControlPlaneSupportError
 from orket.core.domain import (
     AttemptState,
     ClosureBasisClassification,
     CompletionClassification,
     EvidenceSufficiencyClassification,
+    ExecutionFailureClass,
+    FailurePlane,
+    RecoveryActionClass,
     ResidualUncertaintyClassification,
     ResultClass,
     RunState,
+    SideEffectBoundaryClass,
+    TruthFailureClass,
 )
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
@@ -51,6 +57,18 @@ async def test_kernel_action_control_plane_service_records_committed_trace_with_
         }
     ]
     await service.record_admission(request=request, response=response, ledger_items=ledger_items)
+    policy_snapshot = await record_repo.get_resolved_policy_snapshot(
+        snapshot_id=KernelActionControlPlaneService.policy_snapshot_id_for(
+            session_id="sess-kernel-cp-1",
+            trace_id="trace-kernel-cp-1",
+        )
+    )
+    configuration_snapshot = await record_repo.get_resolved_configuration_snapshot(
+        snapshot_id=KernelActionControlPlaneService.configuration_snapshot_id_for(
+            session_id="sess-kernel-cp-1",
+            trace_id="trace-kernel-cp-1",
+        )
+    )
 
     commit_request = {
         "contract_version": "kernel_api/v1",
@@ -94,8 +112,13 @@ async def test_kernel_action_control_plane_service_records_committed_trace_with_
     )
 
     assert run.lifecycle_state is RunState.COMPLETED
+    assert run.namespace_scope == "session:sess-kernel-cp-1"
     assert attempt.attempt_state is AttemptState.COMPLETED
     assert final_truth.result_class is ResultClass.SUCCESS
+    assert policy_snapshot is not None
+    assert configuration_snapshot is not None
+    assert policy_snapshot.snapshot_digest == "b" * 64
+    assert configuration_snapshot.snapshot_digest == "a" * 64
     assert final_truth.completion_classification is CompletionClassification.SATISFIED
     assert final_truth.evidence_sufficiency_classification is EvidenceSufficiencyClassification.SUFFICIENT
     assert step is not None
@@ -103,8 +126,44 @@ async def test_kernel_action_control_plane_service_records_committed_trace_with_
     assert step.closure_classification == "step_completed"
     assert effect is not None
     assert effect.step_id == step.step_id
+    assert step.namespace_scope == "session:sess-kernel-cp-1"
     assert effect.uncertainty_classification is ResidualUncertaintyClassification.NONE
     assert effect.observed_result_ref == "kernel-execution-result:" + ("d" * 64)
+
+
+@pytest.mark.asyncio
+async def test_kernel_action_control_plane_service_rejects_namespace_scope_escalation() -> None:
+    execution_repo = InMemoryControlPlaneExecutionRepository()
+    record_repo = InMemoryControlPlaneRecordRepository()
+    service = KernelActionControlPlaneService(
+        execution_repository=execution_repo,
+        publication=ControlPlanePublicationService(repository=record_repo),
+    )
+
+    with pytest.raises(KernelActionControlPlaneSupportError, match="namespace scope escalation"):
+        await service.record_admission(
+            request={
+                "contract_version": "kernel_api/v1",
+                "session_id": "sess-kernel-cp-scope-1",
+                "trace_id": "trace-kernel-cp-scope-1",
+                "proposal": {
+                    "proposal_type": "action.tool_call",
+                    "payload": {"tool_name": "write_file", "namespace_scope": "issue:ISSUE-1"},
+                },
+            },
+            response={
+                "proposal_digest": "f1" * 32,
+                "decision_digest": "f2" * 32,
+                "event_digest": "f3" * 32,
+            },
+            ledger_items=[
+                {
+                    "event_type": "admission.decided",
+                    "created_at": "2026-03-26T15:00:00+00:00",
+                    "event_digest": "f3" * 32,
+                }
+            ],
+        )
 
 
 @pytest.mark.asyncio
@@ -289,12 +348,95 @@ async def test_kernel_action_control_plane_service_preserves_effect_truth_on_pol
     step = await execution_repo.get_step_record(
         step_id=KernelActionControlPlaneService.step_id_for(run_id=run.run_id)
     )
+    decision = None if attempt.recovery_decision_id is None else await record_repo.get_recovery_decision(
+        decision_id=attempt.recovery_decision_id
+    )
 
     assert run.lifecycle_state is RunState.FAILED_TERMINAL
     assert attempt.attempt_state is AttemptState.FAILED
+    assert attempt.side_effect_boundary_class is SideEffectBoundaryClass.POST_EFFECT_OBSERVED
+    assert attempt.failure_class == "kernel_action_policy_rejected"
+    assert attempt.failure_plane is FailurePlane.TRUTH
+    assert attempt.failure_classification is TruthFailureClass.CLAIM_EXCEEDS_AUTHORITY
     assert final_truth.result_class is ResultClass.FAILED
+    assert decision is not None
+    assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
+    assert decision.failure_plane is FailurePlane.TRUTH
+    assert decision.failure_classification is TruthFailureClass.CLAIM_EXCEEDS_AUTHORITY
     assert step is not None
     assert step.observed_result_classification == "kernel_action_observed_policy_reject"
     assert step.closure_classification == "step_failed"
     assert effect is not None
     assert effect.observed_result_ref == "kernel-execution-result:" + ("d1" * 32)
+
+
+@pytest.mark.asyncio
+async def test_kernel_action_control_plane_service_publishes_recovery_for_error_with_observed_execution() -> None:
+    execution_repo = InMemoryControlPlaneExecutionRepository()
+    record_repo = InMemoryControlPlaneRecordRepository()
+    service = KernelActionControlPlaneService(
+        execution_repository=execution_repo,
+        publication=ControlPlanePublicationService(repository=record_repo),
+    )
+
+    await service.record_admission(
+        request={
+            "contract_version": "kernel_api/v1",
+            "session_id": "sess-kernel-cp-5",
+            "trace_id": "trace-kernel-cp-5",
+            "proposal": {"proposal_type": "action.tool_call", "payload": {}},
+        },
+        response={
+            "proposal_digest": "aa" * 32,
+            "decision_digest": "bb" * 32,
+            "event_digest": "cc" * 32,
+        },
+        ledger_items=[
+            {
+                "event_type": "admission.decided",
+                "created_at": "2026-03-24T10:40:00+00:00",
+                "event_digest": "cc" * 32,
+            }
+        ],
+    )
+
+    run, attempt, final_truth, effect = await service.record_commit(
+        request={
+            "contract_version": "kernel_api/v1",
+            "session_id": "sess-kernel-cp-5",
+            "trace_id": "trace-kernel-cp-5",
+            "proposal_digest": "aa" * 32,
+            "admission_decision_digest": "bb" * 32,
+            "execution_result_payload": {"ok": False, "error": "boom"},
+        },
+        response={"status": "ERROR", "commit_event_digest": "dd" * 32},
+        ledger_items=[
+            {
+                "event_type": "action.executed",
+                "created_at": "2026-03-24T10:40:01+00:00",
+                "event_digest": "ee" * 32,
+            },
+            {
+                "event_type": "commit.recorded",
+                "created_at": "2026-03-24T10:40:02+00:00",
+                "event_digest": "dd" * 32,
+            },
+        ],
+    )
+    decision = None if attempt.recovery_decision_id is None else await record_repo.get_recovery_decision(
+        decision_id=attempt.recovery_decision_id
+    )
+
+    assert run.lifecycle_state is RunState.FAILED_TERMINAL
+    assert attempt.attempt_state is AttemptState.FAILED
+    assert attempt.side_effect_boundary_class is SideEffectBoundaryClass.POST_EFFECT_OBSERVED
+    assert attempt.failure_class == "kernel_action_error"
+    assert attempt.failure_plane is FailurePlane.EXECUTION
+    assert attempt.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
+    assert decision is not None
+    assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
+    assert decision.failure_plane is FailurePlane.EXECUTION
+    assert decision.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
+    assert final_truth.result_class is ResultClass.FAILED
+    assert final_truth.closure_basis is ClosureBasisClassification.POLICY_TERMINAL_STOP
+    assert effect is None

@@ -5,6 +5,7 @@ import json
 from dataclasses import asdict
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
 from orket.core.contracts import (
     AttemptRecord,
@@ -18,6 +19,7 @@ from orket.core.domain import (
     RecoveryActionClass,
     RunState,
     SideEffectBoundaryClass,
+    infer_failure_taxonomy,
     validate_attempt_state_transition,
     validate_run_state_transition,
 )
@@ -55,24 +57,32 @@ class SandboxControlPlaneExecutionService:
         policy: SandboxLifecyclePolicy,
     ) -> tuple[RunRecord, AttemptRecord]:
         attempt_id = self.attempt_id_for_epoch(sandbox_id=sandbox_id, lease_epoch=1)
+        policy_payload = asdict(policy)
+        configuration_payload = {
+            "compose_project": compose_project,
+            "workspace_path": workspace_path,
+            **configuration_payload,
+        }
         run = RunRecord(
             run_id=run_id,
             workload_id=workload_id,
             workload_version=workload_version,
             policy_snapshot_id=f"sandbox-policy:{sandbox_id}",
-            policy_digest=self._sha256_digest(asdict(policy)),
+            policy_digest=self._sha256_digest(policy_payload),
             configuration_snapshot_id=f"sandbox-config:{sandbox_id}",
-            configuration_digest=self._sha256_digest(
-                {
-                    "compose_project": compose_project,
-                    "workspace_path": workspace_path,
-                    **configuration_payload,
-                }
-            ),
+            configuration_digest=self._sha256_digest(configuration_payload),
             creation_timestamp=creation_timestamp,
             admission_decision_receipt_ref=admission_decision_receipt_ref,
             lifecycle_state=RunState.EXECUTING,
             current_attempt_id=attempt_id,
+        )
+        await publish_run_snapshots(
+            publication=self.publication,
+            run=run,
+            policy_payload=policy_payload,
+            policy_source_refs=[admission_decision_receipt_ref],
+            configuration_payload=configuration_payload,
+            configuration_source_refs=[admission_decision_receipt_ref],
         )
         attempt = AttemptRecord(
             attempt_id=attempt_id,
@@ -133,12 +143,15 @@ class SandboxControlPlaneExecutionService:
         run, attempt = await self._require_current_execution(run_id=run_id)
         validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.WAITING_ON_RESOURCE)
         validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.INTERRUPTED)
+        failure_plane, failure_classification = infer_failure_taxonomy(failure_classification_basis="lease_expired")
         updated_attempt = attempt.model_copy(
             update={
                 "attempt_state": AttemptState.INTERRUPTED,
                 "end_timestamp": observed_at,
                 "side_effect_boundary_class": SideEffectBoundaryClass.POST_EFFECT_OBSERVED,
                 "failure_class": "lease_expired",
+                "failure_plane": failure_plane,
+                "failure_classification": failure_classification,
             }
         )
         updated_run = run.model_copy(update={"lifecycle_state": RunState.WAITING_ON_RESOURCE})
@@ -238,12 +251,18 @@ class SandboxControlPlaneExecutionService:
                 terminal_reason
             )
             validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=target_attempt_state)
+            failure_basis = failure_class or terminal_reason.value
+            failure_plane, failure_classification = infer_failure_taxonomy(
+                failure_classification_basis=failure_basis
+            )
             updated_attempt = attempt.model_copy(
                 update={
                     "attempt_state": target_attempt_state,
                     "end_timestamp": observed_at,
                     "side_effect_boundary_class": side_effect_boundary_class,
                     "failure_class": failure_class,
+                    "failure_plane": failure_plane,
+                    "failure_classification": failure_classification,
                 }
             )
             await self.repository.save_attempt_record(record=updated_attempt)
@@ -256,13 +275,19 @@ class SandboxControlPlaneExecutionService:
                     decision_id=f"sandbox-recovery:{run_id}:terminal:{terminal_reason.value}:{observed_at}",
                     run_id=run_id,
                     failed_attempt_id=attempt.attempt_id,
-                    failure_classification_basis=failure_class or terminal_reason.value,
+                    failure_classification_basis=failure_basis,
                     side_effect_boundary_class=side_effect_boundary_class,
                     recovery_policy_ref=f"sandbox_lifecycle_policy:{policy_version}",
                     authorized_next_action=RecoveryActionClass.TERMINATE_RUN,
                     rationale_ref=recovery_rationale_ref or rationale_ref,
                 )
-                updated_attempt = updated_attempt.model_copy(update={"recovery_decision_id": decision.decision_id})
+                updated_attempt = updated_attempt.model_copy(
+                    update={
+                        "recovery_decision_id": decision.decision_id,
+                        "failure_plane": decision.failure_plane,
+                        "failure_classification": decision.failure_classification,
+                    }
+                )
                 await self.repository.save_attempt_record(record=updated_attempt)
 
         updated_run = run.model_copy(

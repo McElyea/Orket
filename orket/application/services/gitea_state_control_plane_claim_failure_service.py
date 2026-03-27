@@ -124,6 +124,8 @@ async def close_gitea_state_claim_failure(
             "end_timestamp": _utc_now(),
             "side_effect_boundary_class": SideEffectBoundaryClass.PRE_EFFECT_FAILURE,
             "failure_class": CLAIM_FAILURE_CLASS,
+            "failure_plane": decision.failure_plane,
+            "failure_classification": decision.failure_classification,
             "recovery_decision_id": decision.decision_id,
         }
     )

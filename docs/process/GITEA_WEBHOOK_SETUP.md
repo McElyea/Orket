@@ -16,6 +16,8 @@ Set in `.env`:
 
 ```bash
 GITEA_WEBHOOK_SECRET=<random hex secret>
+GITEA_ADMIN_USER=admin
+GITEA_ADMIN_PASSWORD=<gitea-admin-password>
 GITEA_URL=http://localhost:3000
 ```
 

@@ -3,6 +3,7 @@ import inspect
 import json
 import re
 import os
+from pathlib import Path
 from types import SimpleNamespace
 from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
@@ -61,6 +62,7 @@ from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
 from orket.core.domain.verification_scope import build_verification_scope
 from orket.runtime.truthful_memory_policy import render_reference_context_rows
 from orket.runtime.settings import resolve_bool, resolve_str
+from orket.runtime_paths import resolve_control_plane_db_path
 from orket.utils import sanitize_name
 from orket.settings import load_user_settings, load_user_preferences
 from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, resolve_cards_runtime
@@ -125,9 +127,10 @@ def _apply_issue_transition_locally(
     wait_reason: str | None,
 ) -> None:
     issue.status = target_status
-    if assignee is not None:
+    if assignee is not None and hasattr(issue, "assignee"):
         issue.assignee = assignee
-    issue.wait_reason = WaitReason(wait_reason) if wait_reason else None
+    if hasattr(issue, "wait_reason"):
+        issue.wait_reason = WaitReason(wait_reason) if wait_reason else None
 
 
 def _resolve_architecture_mode(self) -> str:
@@ -1004,12 +1007,18 @@ async def execute_epic(
 
     tool_gate = ToolGate(organization=self.org, workspace_root=self.workspace)
     from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
+    runtime_db_path = Path(self.db_path)
+    if not runtime_db_path.is_absolute():
+        runtime_db_path = Path(self.workspace) / runtime_db_path
+    turn_tool_control_plane_db_path = resolve_control_plane_db_path(
+        runtime_db_path.with_name("control_plane_records.sqlite3")
+    )
 
     executor = TurnExecutor(
         StateMachine(),
         tool_gate,
         self.workspace,
-        control_plane_service=build_turn_tool_control_plane_service(),
+        control_plane_service=build_turn_tool_control_plane_service(turn_tool_control_plane_db_path),
     )
 
     from orket.policy import create_session_policy
@@ -1426,13 +1435,17 @@ async def _execute_issue_turn(
                 )
             return
 
-    # RUN EMPIRICAL VERIFICATION (FIT) for review turns
+    # RUN EMPIRICAL VERIFICATION (FIT) for review turns when a contract exists.
     if is_review_turn:
-        verification_result = await self.verify_issue(issue.id, run_id=run_id)
-        v_msg = (
-            f"EMPIRICAL VERIFICATION RESULT: {verification_result.passed}/{verification_result.total_scenarios} Passed."
-        )
-        self.notes.add(Note(from_role="system", content=v_msg, step_index=len(self.transcript)))
+        verification_contract = getattr(issue, "verification", None)
+        fixture_path = str(getattr(verification_contract, "fixture_path", "") or "").strip()
+        scenarios = getattr(verification_contract, "scenarios", None) or []
+        if fixture_path or scenarios:
+            verification_result = await self.verify_issue(issue.id, run_id=run_id)
+            v_msg = (
+                f"EMPIRICAL VERIFICATION RESULT: {verification_result.passed}/{verification_result.total_scenarios} Passed."
+            )
+            self.notes.add(Note(from_role="system", content=v_msg, step_index=len(self.transcript)))
 
     # Select Seat via router decision node
     seat_name = self.router_node.route(issue, team, is_review_turn)
@@ -1444,7 +1457,7 @@ async def _execute_issue_turn(
     cards_runtime = resolve_cards_runtime(
         issue=issue,
         builder_seat=str(small_policy.get("builder_seat") or issue.seat),
-        reviewer_seat="integrity_guard",
+        reviewer_seat=str(small_policy.get("reviewer_seat") or "integrity_guard"),
     )
     invalid_profile_reason = str(cards_runtime.get("invalid_profile_reason") or "").strip()
     if invalid_profile_reason:
@@ -1498,8 +1511,18 @@ async def _execute_issue_turn(
     # Prepare Role & Model
     roles_to_load = self.loop_policy_node.role_order_for_turn(list(seat_obj.roles), is_review_turn)
 
+    async def _load_asset(category: str, name: str, model_type: Any) -> Any:
+        async_loader = getattr(self.loader, "load_asset_async", None)
+        if callable(async_loader):
+            try:
+                return await async_loader(category, name, model_type)
+            except TypeError:
+                # Backward compatibility for legacy loader stubs used in focused tests.
+                pass
+        return self.loader.load_asset(category, name, model_type)
+
     try:
-        role_config = self.loader.load_asset("roles", roles_to_load[0], RoleConfig)
+        role_config = await _load_asset("roles", roles_to_load[0], RoleConfig)
     except CardNotFound:
         await self._request_issue_transition(
             issue=issue,
@@ -1532,7 +1555,7 @@ async def _execute_issue_turn(
             self.workspace,
         )
     dialect_name = prompt_strategy_node.select_dialect(selected_model)
-    dialect = self.loader.load_asset("dialects", dialect_name, DialectConfig)
+    dialect = await _load_asset("dialects", dialect_name, DialectConfig)
     provider = self.model_client_node.create_provider(selected_model, env)
     client = self.model_client_node.create_client(provider)
     if bool(cards_runtime.get("odr_active")) and not is_review_turn:
@@ -1564,7 +1587,7 @@ async def _execute_issue_turn(
         cards_runtime = resolve_cards_runtime(
             issue=issue,
             builder_seat=str(small_policy.get("builder_seat") or issue.seat),
-            reviewer_seat="integrity_guard",
+            reviewer_seat=str(small_policy.get("reviewer_seat") or "integrity_guard"),
         )
         await provider.clear_context()
         if not bool(odr_result.get("odr_accepted")):
@@ -2221,6 +2244,26 @@ def _build_turn_context(
         str(process_rules.get("prompt_budget_policy_path") or "core/policies/prompt_budget.yaml").strip()
         or "core/policies/prompt_budget.yaml"
     )
+    available_required_read_paths: List[str] = []
+    for raw_path in required_read_paths:
+        path_token = str(raw_path).strip()
+        if not path_token:
+            continue
+        candidate = (self.workspace / path_token).resolve()
+        if candidate.exists():
+            available_required_read_paths.append(path_token)
+
+    declared_interfaces = list(required_action_tools) + list(approval_required_tools)
+    if not required_action_tools:
+        for fallback_interface in ("read_file", "write_file", "update_issue_status"):
+            if fallback_interface not in declared_interfaces:
+                declared_interfaces.append(fallback_interface)
+    if available_required_read_paths and "read_file" not in declared_interfaces:
+        declared_interfaces.append("read_file")
+    if required_write_paths and "write_file" not in declared_interfaces:
+        declared_interfaces.append("write_file")
+    if required_statuses and "update_issue_status" not in declared_interfaces:
+        declared_interfaces.append("update_issue_status")
 
     return {
         "session_id": run_id,
@@ -2255,11 +2298,11 @@ def _build_turn_context(
         "odr_artifact_path": str(cards_runtime.get("odr_artifact_path") or ""),
         "odr_requirement": str(cards_runtime.get("odr_requirement") or ""),
         "verification_scope": build_verification_scope(
-            workspace=list(required_read_paths) + list(required_write_paths),
-            active_context=list(required_read_paths or []),
+            workspace=list(available_required_read_paths) + list(required_write_paths),
+            active_context=list(available_required_read_paths),
             passive_context=[],
             archived_context=[],
-            declared_interfaces=list(required_action_tools) + list(approval_required_tools),
+            declared_interfaces=declared_interfaces,
             strict_grounding=True,
             forbidden_phrases=[],
             enforce_path_hardening=True,

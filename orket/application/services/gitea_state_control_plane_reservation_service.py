@@ -9,7 +9,7 @@ from orket.application.services.gitea_state_control_plane_lease_service import (
     GiteaStateControlPlaneLeaseService,
 )
 from orket.core.contracts import ReservationRecord
-from orket.core.domain import ReservationKind, ReservationStatus
+from orket.core.domain import LeaseStatus, ReservationKind, ReservationStatus
 from orket.runtime_paths import resolve_control_plane_db_path
 
 
@@ -58,15 +58,24 @@ class GiteaStateControlPlaneReservationService:
         lease_epoch: int,
         observed_at: str | None = None,
     ) -> ReservationRecord:
-        return await self.publication.promote_reservation_to_lease(
-            reservation_id=self.reservation_id_for(card_id, lease_epoch),
-            promoted_lease_id=GiteaStateControlPlaneLeaseService.lease_id_for(card_id),
-            supervisor_authority_ref=f"gitea-state-worker:claim-transition:{str(card_id).strip()}:promote",
-            promotion_basis=(
-                "gitea_state_worker_claim_transition_succeeded"
-                f";publication_timestamp={str(observed_at or self._utc_now()).strip()}"
-            ),
-        )
+        timestamp = str(observed_at or self._utc_now()).strip()
+        try:
+            return await self.publication.promote_reservation_to_lease(
+                reservation_id=self.reservation_id_for(card_id, lease_epoch),
+                promoted_lease_id=GiteaStateControlPlaneLeaseService.lease_id_for(card_id),
+                supervisor_authority_ref=f"gitea-state-worker:claim-transition:{str(card_id).strip()}:promote",
+                promotion_basis=(
+                    "gitea_state_worker_claim_transition_succeeded"
+                    f";publication_timestamp={timestamp}"
+                ),
+            )
+        except Exception:
+            await self._rollback_failed_promotion(
+                card_id=card_id,
+                lease_epoch=lease_epoch,
+                observed_at=timestamp,
+            )
+            raise
 
     async def invalidate_claim_reservation(
         self,
@@ -84,6 +93,54 @@ class GiteaStateControlPlaneReservationService:
     @staticmethod
     def _utc_now() -> str:
         return datetime.now(UTC).isoformat()
+
+    async def _rollback_failed_promotion(
+        self,
+        *,
+        card_id: str,
+        lease_epoch: int,
+        observed_at: str,
+    ) -> None:
+        lease = await self.publication.repository.get_latest_lease_record(
+            lease_id=GiteaStateControlPlaneLeaseService.lease_id_for(card_id)
+        )
+        if lease is not None and lease.status is LeaseStatus.ACTIVE:
+            rollback_timestamp = (
+                observed_at
+                if observed_at >= lease.publication_timestamp
+                else lease.publication_timestamp
+            )
+            await self.publication.publish_lease(
+                lease_id=lease.lease_id,
+                resource_id=lease.resource_id,
+                holder_ref=lease.holder_ref,
+                lease_epoch=lease.lease_epoch,
+                publication_timestamp=rollback_timestamp,
+                expiry_basis=(
+                    "gitea_state_worker_claim_promotion_failed"
+                    f";lease_epoch={int(lease_epoch):08d}"
+                ),
+                status=LeaseStatus.RELEASED,
+                granted_timestamp=lease.granted_timestamp,
+                last_confirmed_observation=lease.last_confirmed_observation,
+                cleanup_eligibility_rule=lease.cleanup_eligibility_rule,
+                source_reservation_id=lease.source_reservation_id,
+            )
+        reservation_id = self.reservation_id_for(card_id, lease_epoch)
+        reservation = await self.publication.repository.get_latest_reservation_record(
+            reservation_id=reservation_id
+        )
+        if reservation is not None and reservation.status is ReservationStatus.ACTIVE:
+            await self.publication.invalidate_reservation(
+                reservation_id=reservation.reservation_id,
+                supervisor_authority_ref=(
+                    f"gitea-state-worker:claim-transition:{str(card_id).strip()}:promote_fail_closeout"
+                ),
+                invalidation_basis=(
+                    "gitea_state_worker_claim_promotion_failed"
+                    f";lease_epoch={int(lease_epoch):08d}"
+                ),
+            )
 
 
 def build_gitea_state_control_plane_reservation_service(

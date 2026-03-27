@@ -11,8 +11,8 @@ Describe the serious architecture target from the current Orket runtime toward a
 This document is planning rationale and architecture direction.
 It is not the active implementation authority for the lane.
 
-The active implementation authority is:
-1. [13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md](docs/projects/ControlPlane/orket_control_plane_packet/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md)
+The archived implementation authority is:
+1. [docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md)
 
 ## Target statement
 
@@ -144,8 +144,8 @@ The missing companion contracts that previously blocked implementation planning 
 2. [11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md)
 3. [12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md)
 
-The lane's active implementation sequencing now lives in:
-1. [13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md](docs/projects/ControlPlane/orket_control_plane_packet/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md)
+The lane's implementation sequencing archive lives in:
+1. [docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md)
 
 ## Final framing
 

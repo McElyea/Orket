@@ -9,12 +9,17 @@ from orket.core.domain import (
     CheckpointAcceptanceOutcome,
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
+    ControlPlaneFailureClass,
     ControlPlaneRecoveryError,
     DivergenceClass,
+    ExecutionFailureClass,
+    FailurePlane,
     RecoveryActionClass,
+    ResourceFailureClass,
     ResidualUncertaintyClassification,
     SafeContinuationClass,
     SideEffectBoundaryClass,
+    TruthFailureClass,
     build_recovery_decision,
     validate_recovery_decision_authority,
 )
@@ -124,6 +129,73 @@ def test_build_recovery_decision_accepts_resume_new_attempt_from_checkpoint() ->
     )
 
     assert decision.new_attempt_id == "attempt-2"
+    assert decision.failure_plane is FailurePlane.EXECUTION
+    assert decision.failure_classification is ExecutionFailureClass.TOOL_TIMEOUT
+
+
+def test_build_recovery_decision_keeps_failure_taxonomy_empty_for_unknown_basis() -> None:
+    decision = build_recovery_decision(
+        decision_id="rd-unknown-basis",
+        run_id="run-1",
+        failed_attempt_id="attempt-1",
+        failure_classification_basis="not_mapped_failure_basis",
+        side_effect_boundary_class=SideEffectBoundaryClass.PRE_EFFECT_FAILURE,
+        recovery_policy_ref="policy-1",
+        authorized_next_action=RecoveryActionClass.TERMINATE_RUN,
+        rationale_ref="recovery-receipt-unknown",
+    )
+
+    assert decision.failure_plane is None
+    assert decision.failure_classification is None
+
+
+def test_build_recovery_decision_maps_legacy_alias_basis_to_failure_taxonomy() -> None:
+    decision = build_recovery_decision(
+        decision_id="rd-legacy-basis",
+        run_id="run-1",
+        failed_attempt_id="attempt-1",
+        failure_classification_basis="sandbox_create_failed",
+        side_effect_boundary_class=SideEffectBoundaryClass.PRE_EFFECT_FAILURE,
+        recovery_policy_ref="policy-1",
+        authorized_next_action=RecoveryActionClass.TERMINATE_RUN,
+        rationale_ref="recovery-receipt-legacy",
+    )
+
+    assert decision.failure_plane is FailurePlane.EXECUTION
+    assert decision.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
+
+
+@pytest.mark.parametrize(
+    ("basis", "expected_plane", "expected_classification"),
+    [
+        ("hard_max_age", FailurePlane.RESOURCE, ResourceFailureClass.RESOURCE_UNAVAILABLE),
+        ("orphan_detected", FailurePlane.RESOURCE, ResourceFailureClass.ORPHAN_RESOURCE_DETECTED),
+        (
+            "restart_loop",
+            FailurePlane.CONTROL_PLANE,
+            ControlPlaneFailureClass.SUPERVISORY_INVARIANT_VIOLATION,
+        ),
+        ("blocked", FailurePlane.TRUTH, TruthFailureClass.CLAIM_EXCEEDS_AUTHORITY),
+    ],
+)
+def test_build_recovery_decision_maps_sandbox_terminal_aliases(
+    basis: str,
+    expected_plane: FailurePlane,
+    expected_classification: object,
+) -> None:
+    decision = build_recovery_decision(
+        decision_id=f"rd-alias-{basis}",
+        run_id="run-1",
+        failed_attempt_id="attempt-1",
+        failure_classification_basis=basis,
+        side_effect_boundary_class=SideEffectBoundaryClass.POST_EFFECT_OBSERVED,
+        recovery_policy_ref="policy-1",
+        authorized_next_action=RecoveryActionClass.TERMINATE_RUN,
+        rationale_ref="recovery-receipt-alias",
+    )
+
+    assert decision.failure_plane is expected_plane
+    assert decision.failure_classification is expected_classification
 
 
 def test_effect_boundary_uncertain_continuation_requires_reconciliation_without_idempotent_retry() -> None:

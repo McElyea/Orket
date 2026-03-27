@@ -16,6 +16,8 @@ from orket.core.contracts.control_plane_models import (
     ReconciliationRecord,
     RecoveryDecisionRecord,
     ReservationRecord,
+    ResolvedConfigurationSnapshot,
+    ResolvedPolicySnapshot,
     RunRecord,
     StepRecord,
 )
@@ -63,6 +65,34 @@ class SnapshotRepository(ABC):
 
 class ControlPlaneRecordRepository(ABC):
     """Port for durable ControlPlane record publication and lookup."""
+
+    async def save_resolved_policy_snapshot(
+        self,
+        *,
+        snapshot: ResolvedPolicySnapshot,
+    ) -> ResolvedPolicySnapshot:
+        raise NotImplementedError
+
+    async def get_resolved_policy_snapshot(
+        self,
+        *,
+        snapshot_id: str,
+    ) -> ResolvedPolicySnapshot | None:
+        raise NotImplementedError
+
+    async def save_resolved_configuration_snapshot(
+        self,
+        *,
+        snapshot: ResolvedConfigurationSnapshot,
+    ) -> ResolvedConfigurationSnapshot:
+        raise NotImplementedError
+
+    async def get_resolved_configuration_snapshot(
+        self,
+        *,
+        snapshot_id: str,
+    ) -> ResolvedConfigurationSnapshot | None:
+        raise NotImplementedError
 
     @abstractmethod
     async def save_reservation_record(

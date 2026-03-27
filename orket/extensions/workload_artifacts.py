@@ -127,6 +127,10 @@ class WorkloadArtifacts:
     def build_artifact_manifest(self, artifact_root: Path, **kwargs: Any) -> dict[str, Any]:
         return self._artifacts.build_artifact_manifest(artifact_root, **kwargs)
 
+    @staticmethod
+    def _redacted_snapshot(payload: dict[str, Any]) -> dict[str, Any]:
+        return ArtifactProvenanceBuilder._redacted_snapshot(payload)
+
     def artifact_file_size_cap_bytes(self) -> int:
         return self._artifacts._artifact_file_size_cap_bytes()
 

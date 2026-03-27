@@ -112,6 +112,8 @@ class MessageBuilder:
         required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if t]
         if "read_file" in required_action_tools and not required_read_paths:
             required_action_tools = [tool for tool in required_action_tools if tool != "read_file"]
+        read_path_contract_required = "read_file" in required_action_tools
+        write_path_contract_required = "write_file" in required_action_tools
         required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
         if required_action_tools or required_statuses:
             contract_lines = []
@@ -126,7 +128,7 @@ class MessageBuilder:
             contract_lines.append("- A response containing only get_issue_context/add_issue_comment is invalid.")
             messages.append({"role": "user", "content": "Turn Success Contract:\n" + "\n".join(contract_lines)})
 
-        if required_write_paths:
+        if required_write_paths and write_path_contract_required:
             write_lines = [
                 "- Required write_file paths this turn:",
                 *[f"  - {path}" for path in required_write_paths],
@@ -134,7 +136,7 @@ class MessageBuilder:
             ]
             messages.append({"role": "user", "content": "Write Path Contract:\n" + "\n".join(write_lines)})
 
-        if required_read_paths:
+        if required_read_paths and read_path_contract_required:
             read_lines = [
                 "- Required read_file paths this turn:",
                 *[f"  - {path}" for path in required_read_paths],
@@ -142,7 +144,8 @@ class MessageBuilder:
             ]
             messages.append({"role": "user", "content": "Read Path Contract:\n" + "\n".join(read_lines)})
 
-        if missing_required_read_paths:
+        should_emit_missing_read_notice = bool(missing_required_read_paths) and read_path_contract_required
+        if should_emit_missing_read_notice:
             log_event(
                 "preflight_missing_read_paths",
                 {
@@ -225,19 +228,28 @@ class MessageBuilder:
                 runtime_line = "- Runtime verifier passed for this issue."
             elif runtime_ok is False:
                 runtime_line = "- Runtime verifier failed for this issue."
-            guard_contract_lines = [
-                "Guard Rejection Contract:",
-                (
-                    "- If you set update_issue_status.status to blocked, "
-                    "include a second JSON object in the same response."
-                ),
-                '- Required payload schema: {"rationale":"...", "violations":[...], "remediation_actions":[...]}.',
-                "- rationale must be non-empty.",
-                "- violations must contain at least one concrete defect.",
-                "- remediation_actions must contain at least one concrete action.",
-                runtime_line,
-                ("- If runtime verifier passed and no concrete defect is present, choose status=done."),
-            ]
+            blocked_allowed = "blocked" in required_statuses
+            if blocked_allowed:
+                guard_contract_lines = [
+                    "Guard Rejection Contract:",
+                    (
+                        "- If you set update_issue_status.status to blocked, "
+                        "include a second JSON object in the same response."
+                    ),
+                    '- Required payload schema: {"rationale":"...", "violations":[...], "remediation_actions":[...]}.',
+                    "- rationale must be non-empty.",
+                    "- violations must contain at least one concrete defect.",
+                    "- remediation_actions must contain at least one concrete action.",
+                    runtime_line,
+                    ("- If runtime verifier passed and no concrete defect is present, choose status=done."),
+                ]
+            else:
+                guard_contract_lines = [
+                    "Guard Decision Contract:",
+                    runtime_line,
+                    "- This turn only allows update_issue_status.status=done.",
+                    "- Do not emit blocked for this turn.",
+                ]
             messages.append(
                 {
                     "role": "user",

@@ -222,8 +222,9 @@ async def test_orchestrator_issue_turn_publishes_issue_dispatch_and_non_protocol
     assert steps_by_id["dispatch"].capability_used is CapabilityClass.BOUNDED_LOCAL_MUTATION
     assert steps_by_id["closeout"].capability_used is CapabilityClass.OBSERVE
     assert steps_by_id["closeout"].step_kind == "issue_status_observation"
-    assert len(issue_effects) == 1
+    assert len(issue_effects) == 2
     assert issue_effects[0].step_id == steps_by_id["dispatch"].step_id
+    assert issue_effects[-1].step_id == steps_by_id["closeout"].step_id
     assert issue_truth is not None
     assert issue_truth.result_class.value == "success"
     assert issue_truth.authoritative_result_ref.startswith("issue-observation:run-1:ISSUE-1:in_progress")

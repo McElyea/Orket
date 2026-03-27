@@ -57,6 +57,7 @@ product/**/*.log
 project_dump*
 project_dump.py
 .tmp
+.tmp_*
 _review_stage/
 model/core/rocks/run_the_business.json
 docs/projects/OS/archive/idea.md

@@ -315,9 +315,11 @@ def main(argv: list[str] | None = None) -> int:
                 ]
             )
         )
-    observed = str(persisted.get("probe_status") or "") == "observed"
-    success = str(persisted.get("observed_result") or "") == "success"
-    return 0 if observed and success else 1
+    probe_status = str(persisted.get("probe_status") or "").strip().lower()
+    observed_result = str(persisted.get("observed_result") or "").strip().lower()
+    if probe_status != "observed":
+        return 1
+    return 0 if observed_result == "success" else 1
 
 
 if __name__ == "__main__":

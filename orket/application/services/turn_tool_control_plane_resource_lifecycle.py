@@ -82,12 +82,21 @@ async def ensure_active_execution_lease(
         )
     if reservation.status is ReservationStatus.PROMOTED_TO_LEASE:
         return reservation, lease
-    reservation = await publication.promote_reservation_to_lease(
-        reservation_id=reservation.reservation_id,
-        promoted_lease_id=lease.lease_id,
-        supervisor_authority_ref=f"turn-tool-supervisor:{run.run_id}:promote_namespace_lease",
-        promotion_basis="turn_tool_execution_started",
-    )
+    try:
+        reservation = await publication.promote_reservation_to_lease(
+            reservation_id=reservation.reservation_id,
+            promoted_lease_id=lease.lease_id,
+            supervisor_authority_ref=f"turn-tool-supervisor:{run.run_id}:promote_namespace_lease",
+            promotion_basis="turn_tool_execution_started",
+        )
+    except Exception:
+        await _rollback_execution_activation_failure(
+            publication=publication,
+            run=run,
+            lease=lease,
+            publication_timestamp=publication_timestamp,
+        )
+        raise
     return reservation, lease
 
 
@@ -198,6 +207,37 @@ def _namespace_scope(run: RunRecord) -> str:
             f"governed turn run {run.run_id} is missing namespace scope for reservation or lease authority"
         )
     return namespace_scope
+
+
+async def _rollback_execution_activation_failure(
+    *,
+    publication: ControlPlanePublicationService,
+    run: RunRecord,
+    lease: LeaseRecord,
+    publication_timestamp: str,
+) -> None:
+    if lease.status is LeaseStatus.ACTIVE:
+        await publication.publish_lease(
+            lease_id=lease.lease_id,
+            resource_id=lease.resource_id,
+            holder_ref=lease.holder_ref,
+            lease_epoch=lease.lease_epoch,
+            publication_timestamp=publication_timestamp,
+            expiry_basis="turn_tool_execution_activation_failed",
+            status=LeaseStatus.RELEASED,
+            cleanup_eligibility_rule=lease.cleanup_eligibility_rule,
+            last_confirmed_observation=lease.last_confirmed_observation,
+            source_reservation_id=lease.source_reservation_id,
+        )
+    reservation = await publication.repository.get_latest_reservation_record(
+        reservation_id=reservation_id_for_run(run_id=run.run_id)
+    )
+    if reservation is not None and reservation.status is ReservationStatus.ACTIVE:
+        await publication.invalidate_reservation(
+            reservation_id=reservation.reservation_id,
+            supervisor_authority_ref=f"turn-tool-supervisor:{run.run_id}:activation_fail_closeout",
+            invalidation_basis="turn_tool_execution_activation_failed",
+        )
 
 
 __all__ = [

@@ -775,6 +775,7 @@ v1_router.include_router(
         validate_builtin_workload_start=lambda **kwargs: validate_builtin_workload_start(**kwargs),
         run_builtin_workload=lambda **kwargs: run_builtin_workload(**kwargs),
         commit_intent_factory=lambda reason: CommitIntent(type="decision", ref=f"fail_closed:{reason}"),
+        control_plane_publication_getter=lambda: engine.control_plane_publication,
     )
 )
 v1_router.include_router(build_companion_router(service_getter=lambda: _get_companion_service()))
@@ -1240,11 +1241,14 @@ async def get_session_status(session_id: str):
 
 
 @v1_router.post("/sessions/{session_id}/halt")
-async def halt_session(session_id: str):
+async def halt_session(session_id: str, request: Request):
     run_record = await engine.run_ledger.get_run(session_id)
     if run_record is None:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found.")
-    await engine.halt_session(session_id)
+    await engine.halt_session(
+        session_id,
+        operator_actor_ref=getattr(request.state, "authenticated_actor_ref", None),
+    )
     task = await runtime_state.get_task(session_id)
     return {
         "ok": True,

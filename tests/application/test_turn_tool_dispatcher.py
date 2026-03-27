@@ -778,6 +778,16 @@ async def test_tool_dispatcher_preflight_failure_publishes_control_plane_final_t
     run_id = "turn-tool-run:s1:ISSUE-1:coder:0001"
     run = await control_plane.execution_repository.get_run_record(run_id=run_id)
     truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
+    policy_snapshot = None if run is None else await control_plane.publication.repository.get_resolved_policy_snapshot(
+        snapshot_id=run.policy_snapshot_id
+    )
+    configuration_snapshot = (
+        None
+        if run is None
+        else await control_plane.publication.repository.get_resolved_configuration_snapshot(
+            snapshot_id=run.configuration_snapshot_id
+        )
+    )
     reservation = await control_plane.publication.repository.get_latest_reservation_record(
         reservation_id=reservation_id_for_run(run_id=run_id)
     )
@@ -786,6 +796,8 @@ async def test_tool_dispatcher_preflight_failure_publishes_control_plane_final_t
     assert toolbox.calls == 0
     assert run is not None
     assert truth is not None
+    assert policy_snapshot is not None
+    assert configuration_snapshot is not None
     assert reservation is not None
     assert lease is None
     assert run.lifecycle_state.value == "failed_terminal"

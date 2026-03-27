@@ -155,7 +155,9 @@ def test_kernel_operator_surfaces_cover_one_action_lifecycle(monkeypatch) -> Non
     )
     assert approval_rows[0]["control_plane_target_run"]["run_state"] == "completed"
     assert approval_rows[0]["control_plane_target_run"]["current_attempt_state"] == "attempt_completed"
-    assert approval_rows[0]["control_plane_target_run"]["namespace_scope"] is None
+    assert approval_rows[0]["control_plane_target_run"]["namespace_scope"] == (
+        f"session:{session_id}"
+    )
     assert approval_rows[0]["control_plane_target_run"]["policy_snapshot_id"] == (
         f"kernel-admission-decision:{session_id}:{trace_id}"
     )
@@ -168,7 +170,9 @@ def test_kernel_operator_surfaces_cover_one_action_lifecycle(monkeypatch) -> Non
     assert approval_rows[0]["control_plane_target_step"]["latest_step_id"] == (
         f"kernel-action-step:kernel-action-run:{session_id}:{trace_id}:commit"
     )
-    assert approval_rows[0]["control_plane_target_step"]["latest_namespace_scope"] is None
+    assert approval_rows[0]["control_plane_target_step"]["latest_namespace_scope"] == (
+        f"session:{session_id}"
+    )
     assert approval_rows[0]["control_plane_target_step"]["latest_capability_used"] is None
     assert approval_rows[0]["control_plane_target_step"]["latest_output_ref"] == (
         f"kernel-execution-result:{'2' * 64}"

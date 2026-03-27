@@ -480,7 +480,7 @@ async def run_cli():
             print(json.dumps(replay, indent=2, ensure_ascii=False))
             return
 
-        print_orket_manifest(args.department)
+        await asyncio.to_thread(print_orket_manifest, args.department)
 
         if args.rock:
             print(f"Running Orket Rock: {args.rock}")
@@ -498,7 +498,7 @@ async def run_cli():
             from orket.driver import OrketDriver
 
             print(f"\n{'=' * 60}\n ORKET DRIVER (Interactive)\n{'=' * 60}")
-            driver = OrketDriver(model=args.model)
+            driver = await asyncio.to_thread(OrketDriver, model=args.model)
             while True:
                 try:
                     user_input = await asyncio.to_thread(input, "Driver> ")

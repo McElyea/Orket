@@ -17,6 +17,7 @@ _PREFERENCES_CACHE: Optional[Dict[str, Any]] = None
 _PREFERENCES_META_KEY = "_meta"
 _PREFERENCES_MIGRATION_MARKERS_KEY = "migration_markers"
 _LEGACY_MODEL_PREFERENCES_MIGRATION_KEY = "legacy_model_preferences_v1"
+_ENV_LOADED = False
 
 
 def set_settings_file(path: Path):
@@ -88,19 +89,22 @@ def _write_json_sync(path: Path, payload: Dict[str, Any], *, operation: str) -> 
 
 def load_env() -> None:
     """Simple .env loader to avoid extra dependencies."""
+    global _ENV_LOADED
     # Keep tests hermetic: avoid re-injecting host .env values after monkeypatch.delenv.
     if os.environ.get("PYTEST_CURRENT_TEST"):
+        return
+    if _ENV_LOADED:
         return
     if _is_running_in_event_loop():
         raise AssertionError("load_env must run before the event loop starts.")
     content = _run_async_settings_call(_read_text_async(ENV_FILE), operation="load_env")
-    if content is None:
-        return
-    for line in content.splitlines():
-        line = line.strip()
-        if line and not line.startswith("#"):
-            key, _, value = line.partition("=")
-            os.environ.setdefault(key.strip(), value.strip())
+    if content is not None:
+        for line in content.splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                key, _, value = line.partition("=")
+                os.environ.setdefault(key.strip(), value.strip())
+    _ENV_LOADED = True
 
 
 def _get_settings_file() -> Path:

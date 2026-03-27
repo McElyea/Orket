@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.24] - 2026-03-26 - "The Control Plane Archive And Runtime Guard Cut"
+
+### Added
+- **Kernel And Orchestrator Guard Surfaces**: Added dedicated kernel-action failure, outcome, and resource-lifecycle support seams plus deeper orchestrator, scheduler, session-status, and preflight guard coverage across the control-plane runtime.
+- **ControlPlane Archive And Convergence Drafts**: Added the archived ControlPlane lane closeout packet under `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/` and added staging-only convergence requirements and implementation-plan drafts with explicit activation gates, workstream bindings, and compatibility-exit tracking.
+
+### Changed
+- **Control-Plane Runtime Publication**: Expanded reservation, recovery, operator, checkpoint, target-ref, and final-truth publication/read-model behavior across kernel-action, coordinator, Gitea worker, orchestrator issue/scheduler, sandbox, and governed turn-tool paths.
+- **Authority And Entry-Point Truth**: Updated `CURRENT_AUTHORITY.md`, roadmap and packet authority docs, `main.py`, `server.py`, `orket/webhook_server.py`, runtime settings, runbook guidance, and webhook setup docs so startup order, webhook requirements, and archived ControlPlane authority match current behavior.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use the archived ControlPlane lane closeout as the historical implementation authority, treat the new convergence docs as staging-only until roadmap activation, and configure required webhook environment variables before starting the webhook runtime; no code migration is otherwise required.
+
 ## [0.4.23] - 2026-03-24 - "The Same-Attempt Recovery And Issue Control Plane Cut"
 
 ### Added

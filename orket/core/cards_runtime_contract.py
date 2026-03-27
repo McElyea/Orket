@@ -10,6 +10,7 @@ DEFAULT_APP_PRIMARY_OUTPUT = "agent_output/main.py"
 DEFAULT_REQUIREMENTS_PATH = "agent_output/requirements.txt"
 DEFAULT_ARCHITECTURE_PATH = "agent_output/design.txt"
 DEFAULT_SOURCE_ATTRIBUTION_PATH = "agent_output/source_attribution_receipt.json"
+DEFAULT_RUNTIME_VERIFICATION_PATH = "agent_output/verification/runtime_verification.json"
 
 _RUNTIME_PARAM_KEYS = (
     "cards_runtime",
@@ -106,17 +107,25 @@ def required_read_paths_for_seat(*, seat_name: str, issue: Any) -> List[str]:
     seat = str(seat_name or "").strip().lower()
     runtime = resolve_cards_runtime(issue=issue)
     artifact_contract = dict(runtime.get("artifact_contract") or {})
-    if seat in {"coder", "developer", str(runtime.get("builder_seat_choice") or "").strip().lower()}:
-        return list(artifact_contract.get("required_read_paths") or [])
-    if seat in {
-        "code_reviewer",
-        "reviewer",
-        "integrity_guard",
-        str(runtime.get("reviewer_seat_choice") or "").strip().lower(),
-    }:
-        return list(artifact_contract.get("review_read_paths") or [])
+    review_paths = list(artifact_contract.get("review_read_paths") or [])
+    issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
+    reviewer_seat = str(runtime.get("reviewer_seat_choice") or "").strip().lower()
+
     if seat == "architect":
         return [DEFAULT_REQUIREMENTS_PATH]
+    if seat == "integrity_guard":
+        if issue_seat in {"code_reviewer", "reviewer"}:
+            return _normalize_paths(
+                DEFAULT_REQUIREMENTS_PATH,
+                DEFAULT_ARCHITECTURE_PATH,
+                review_paths,
+                DEFAULT_RUNTIME_VERIFICATION_PATH,
+            )
+        return review_paths
+    if seat in {"code_reviewer", "reviewer", reviewer_seat}:
+        return _normalize_paths(DEFAULT_REQUIREMENTS_PATH, review_paths)
+    if seat in {"coder", "developer", str(runtime.get("builder_seat_choice") or "").strip().lower()}:
+        return list(artifact_contract.get("required_read_paths") or [])
     return []
 
 
@@ -124,14 +133,17 @@ def required_write_paths_for_seat(*, seat_name: str, issue: Any) -> List[str]:
     seat = str(seat_name or "").strip().lower()
     runtime = resolve_cards_runtime(issue=issue)
     artifact_contract = dict(runtime.get("artifact_contract") or {})
-    if seat in {"coder", "developer", str(runtime.get("builder_seat_choice") or "").strip().lower()}:
-        return list(artifact_contract.get("required_write_paths") or [])
+    builder_seat = str(runtime.get("builder_seat_choice") or "").strip().lower()
     if seat == "requirements_analyst":
         return [DEFAULT_REQUIREMENTS_PATH]
     if seat == "architect":
         return [DEFAULT_ARCHITECTURE_PATH]
     if seat == "evidence_reviewer":
         return [DEFAULT_SOURCE_ATTRIBUTION_PATH]
+    if seat in {"code_reviewer", "reviewer", "integrity_guard"}:
+        builder_seat = ""
+    if seat in {"coder", "developer", builder_seat}:
+        return list(artifact_contract.get("required_write_paths") or [])
     return []
 
 

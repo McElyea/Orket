@@ -120,6 +120,12 @@ class ToolDispatcher:
         protocol_enabled = bool(context.get("protocol_governed_enabled", False))
         protocol_replay_mode = bool(context.get("protocol_replay_mode"))
         control_plane_enabled = not protocol_replay_mode and self.control_plane_service is not None
+        if control_plane_enabled and turn.tool_calls:
+            tool_names = [str(call.tool or "").strip() for call in turn.tool_calls if str(call.tool or "").strip()]
+            # Status-only turns do not produce side-effecting tool evidence, so skip
+            # governed turn-tool publication to keep that hot path lightweight.
+            if tool_names and all(name == "update_issue_status" for name in tool_names):
+                control_plane_enabled = False
         execution_capsule = build_execution_capsule(context)
         approval_required_tools = {
             str(tool).strip() for tool in (context.get("approval_required_tools") or []) if str(tool).strip()

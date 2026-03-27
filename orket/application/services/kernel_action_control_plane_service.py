@@ -4,24 +4,36 @@ from collections.abc import Sequence
 from typing import Any
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.kernel_action_control_plane_failure import (
+    publish_failed_commit_recovery_decision,
+    publish_pre_effect_terminal_commit_recovery_decision,
+)
+from orket.application.services.kernel_action_control_plane_outcome import (
+    enter_attempt_execution_if_needed,
+    finalize_attempt_from_commit,
+    publish_final_truth_for_commit,
+)
+from orket.application.services.kernel_action_control_plane_resource_lifecycle import (
+    ensure_active_execution_lease,
+    ensure_admission_reservation,
+    release_execution_authority_if_present,
+)
+from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots
 from orket.application.services.kernel_action_control_plane_support import (
     admission_receipt_ref,
     attempt_id_for,
-    authority_sources_for_commit,
-    authorization_basis_ref,
     configuration_snapshot_id_for,
     event_digest_for,
     event_result_ref,
     event_timestamp_for,
-    final_truth_projection_for_commit,
     has_observed_execution,
-    has_validation_evidence,
     optional_text,
     policy_snapshot_id_for,
     proposal_digest_for,
     publish_effect_from_commit_if_missing,
     publish_step_from_commit_if_missing,
     required_text,
+    resolve_namespace_scope_for_request,
     run_id_for,
     should_publish_step_for_commit,
     starting_snapshot_ref_for,
@@ -40,6 +52,8 @@ from orket.core.domain import (
     ResidualUncertaintyClassification,
     ResultClass,
     RunState,
+    is_terminal_attempt_state,
+    is_terminal_run_state,
     validate_attempt_state_transition,
     validate_run_state_transition,
 )
@@ -54,6 +68,7 @@ class KernelActionControlPlaneService:
 
     WORKLOAD_ID = "kernel-action-path"
     WORKLOAD_VERSION = "kernel_api.v1"
+    ALLOWED_COMMIT_STATUSES = frozenset({"COMMITTED", "REJECTED_POLICY", "ERROR"})
     run_id_for = staticmethod(run_id_for)
     attempt_id_for = staticmethod(attempt_id_for)
     policy_snapshot_id_for = staticmethod(policy_snapshot_id_for)
@@ -84,10 +99,23 @@ class KernelActionControlPlaneService:
         created_at = event_timestamp_for(ledger_items, "admission.decided") or utc_now()
         run_id = self.run_id_for(session_id=session_id, trace_id=trace_id)
         attempt_id = self.attempt_id_for(session_id=session_id, trace_id=trace_id)
+        namespace_scope = resolve_namespace_scope_for_request(request=request)
 
         run = await self.execution_repository.get_run_record(run_id=run_id)
         attempt = await self.execution_repository.get_attempt_record(attempt_id=attempt_id)
         if run is None:
+            policy_payload = {
+                "decision_digest": decision_digest,
+                "admission_decision": dict(response.get("admission_decision") or {}),
+                "namespace_scope_rule": "session_scoped_kernel_action",
+            }
+            configuration_payload = {
+                "proposal_digest": proposal_digest,
+                "proposal": dict(request.get("proposal") or {}),
+                "session_id": session_id,
+                "trace_id": trace_id,
+                "namespace_scope": namespace_scope,
+            }
             run = RunRecord(
                 run_id=run_id,
                 workload_id=self.WORKLOAD_ID,
@@ -101,10 +129,36 @@ class KernelActionControlPlaneService:
                     response=response,
                     ledger_items=ledger_items,
                 ),
+                namespace_scope=namespace_scope,
                 lifecycle_state=RunState.ADMITTED,
                 current_attempt_id=attempt_id,
             )
+            await publish_run_snapshots(
+                publication=self.publication,
+                run=run,
+                policy_payload=policy_payload,
+                policy_source_refs=[run.admission_decision_receipt_ref],
+                configuration_payload=configuration_payload,
+                configuration_source_refs=[run.admission_decision_receipt_ref],
+            )
             await self.execution_repository.save_run_record(record=run)
+        else:
+            attempt = await self._require_consistent_existing_run_attempt(
+                run=run,
+                attempt=attempt,
+                expected_attempt_id=attempt_id,
+            )
+            existing_scope = str(run.namespace_scope or "").strip()
+            if existing_scope and existing_scope != namespace_scope:
+                raise KernelActionControlPlaneError(
+                    "kernel-action run namespace scope mismatch for existing run: "
+                    f"run_scope={existing_scope!r} request_scope={namespace_scope!r}"
+                )
+            if not existing_scope:
+                run = run.model_copy(update={"namespace_scope": namespace_scope})
+                await self.execution_repository.save_run_record(record=run)
+        if run is not None:
+            await ensure_admission_reservation(publication=self.publication, run=run)
         if attempt is None:
             attempt = AttemptRecord(
                 attempt_id=attempt_id,
@@ -120,6 +174,42 @@ class KernelActionControlPlaneService:
             )
             await self.execution_repository.save_attempt_record(record=attempt)
         return run, attempt
+
+    async def _require_consistent_existing_run_attempt(
+        self,
+        *,
+        run: RunRecord,
+        attempt: AttemptRecord | None,
+        expected_attempt_id: str,
+    ) -> AttemptRecord:
+        current_attempt_id = str(run.current_attempt_id or "").strip()
+        if not current_attempt_id:
+            raise KernelActionControlPlaneError(f"kernel-action run missing current attempt id: {run.run_id}")
+        if current_attempt_id != expected_attempt_id:
+            raise KernelActionControlPlaneError(
+                "kernel-action run current attempt mismatch: "
+                f"run_current_attempt={current_attempt_id!r} expected={expected_attempt_id!r}"
+            )
+        resolved_attempt = attempt
+        if resolved_attempt is None:
+            resolved_attempt = await self.execution_repository.get_attempt_record(attempt_id=current_attempt_id)
+        if resolved_attempt is None:
+            raise KernelActionControlPlaneError(
+                f"kernel-action run current attempt record missing: {run.run_id}:{current_attempt_id}"
+            )
+        run_terminal = is_terminal_run_state(run.lifecycle_state)
+        attempt_terminal = is_terminal_attempt_state(resolved_attempt.attempt_state)
+        if run_terminal and run.final_truth_record_id is None:
+            raise KernelActionControlPlaneError(f"kernel-action terminal run missing final truth: {run.run_id}")
+        if run_terminal and not attempt_terminal:
+            raise KernelActionControlPlaneError(
+                f"kernel-action terminal run has non-terminal attempt: {run.run_id}:{resolved_attempt.attempt_id}"
+            )
+        if not run_terminal and attempt_terminal:
+            raise KernelActionControlPlaneError(
+                f"kernel-action active run has terminal attempt drift: {run.run_id}:{resolved_attempt.attempt_id}"
+            )
+        return resolved_attempt
 
     async def record_commit(
         self,
@@ -138,6 +228,10 @@ class KernelActionControlPlaneService:
             ledger_items=ledger_items,
         )
         status = required_text(response, "status")
+        if status not in self.ALLOWED_COMMIT_STATUSES:
+            raise KernelActionControlPlaneError(
+                f"unsupported governed action commit status for control-plane publication: {status}"
+            )
         committed_at = event_timestamp_for(ledger_items, "commit.recorded") or utc_now()
         observed_execution = has_observed_execution(request=request, ledger_items=ledger_items)
         claimed_result = bool(optional_text(request, "execution_result_digest"))
@@ -145,9 +239,18 @@ class KernelActionControlPlaneService:
         if run.final_truth_record_id is not None and existing_final_truth is not None:
             existing_effects = await self.publication.repository.list_effect_journal_entries(run_id=run.run_id)
             return run, attempt, existing_final_truth, (existing_effects[-1] if existing_effects else None)
-
-        run = await self._move_run_to_executing(run=run)
-        attempt = await self._enter_attempt_execution_if_needed(
+        if run.lifecycle_state is not RunState.EXECUTING:
+            validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.EXECUTING)
+            run = run.model_copy(update={"lifecycle_state": RunState.EXECUTING})
+            await self.execution_repository.save_run_record(record=run)
+        if status == "COMMITTED" or observed_execution:
+            await ensure_active_execution_lease(
+                publication=self.publication,
+                run=run,
+                publication_timestamp=committed_at,
+            )
+        attempt = await enter_attempt_execution_if_needed(
+            execution_repository=self.execution_repository,
             attempt=attempt,
             run_id=run.run_id,
             execution_timestamp=committed_at,
@@ -165,6 +268,7 @@ class KernelActionControlPlaneService:
                 execution_repository=self.execution_repository,
                 run_id=run.run_id,
                 attempt_id=attempt.attempt_id,
+                namespace_scope=str(run.namespace_scope or "").strip() or None,
                 request=request,
                 response=response,
                 ledger_items=ledger_items,
@@ -189,24 +293,51 @@ class KernelActionControlPlaneService:
                 ledger_items=ledger_items,
             )
 
-        terminal_attempt = await self._finalize_attempt_from_commit(
+        terminal_attempt = await finalize_attempt_from_commit(
+            execution_repository=self.execution_repository,
             attempt=attempt,
             run_id=run.run_id,
             status=status,
             committed_at=committed_at,
             observed_execution=observed_execution,
         )
-        final_truth = await self._publish_final_truth_for_commit(
+        if terminal_attempt.attempt_state is AttemptState.FAILED:
+            terminal_attempt = await publish_failed_commit_recovery_decision(
+                execution_repository=self.execution_repository,
+                publication=self.publication,
+                run=run,
+                attempt=terminal_attempt,
+                status=status,
+                rationale_ref=event_result_ref(ledger_items, "commit.recorded", response),
+            )
+        elif status != "COMMITTED" and terminal_attempt.attempt_state is AttemptState.ABANDONED:
+            terminal_attempt = await publish_pre_effect_terminal_commit_recovery_decision(
+                execution_repository=self.execution_repository,
+                publication=self.publication,
+                run=run,
+                attempt=terminal_attempt,
+                status=status,
+                rationale_ref=event_result_ref(ledger_items, "commit.recorded", response),
+            )
+        final_truth = await publish_final_truth_for_commit(
+            publication=self.publication,
             run_id=run.run_id,
             request=request,
             response=response,
             status=status,
             observed_execution=observed_execution,
         )
-        terminal_run = await self._finalize_run_from_commit(
-            run=run,
-            status=status,
-            final_truth_record_id=final_truth.final_truth_record_id,
+        next_state = RunState.COMPLETED if status == "COMMITTED" else RunState.FAILED_TERMINAL
+        validate_run_state_transition(current_state=run.lifecycle_state, next_state=next_state)
+        terminal_run = run.model_copy(
+            update={"lifecycle_state": next_state, "final_truth_record_id": final_truth.final_truth_record_id}
+        )
+        await self.execution_repository.save_run_record(record=terminal_run)
+        await release_execution_authority_if_present(
+            publication=self.publication,
+            run=terminal_run,
+            release_basis=f"kernel_action_commit_terminal:{status.lower()}",
+            publication_timestamp=committed_at,
         )
         return terminal_run, terminal_attempt, final_truth, effect_entry
 
@@ -229,7 +360,7 @@ class KernelActionControlPlaneService:
             attempt_id=self.attempt_id_for(session_id=session_id, trace_id=trace_id)
         )
         updated_attempt = attempt
-        if attempt is not None and attempt.attempt_state is AttemptState.CREATED:
+        if attempt is not None and not is_terminal_attempt_state(attempt.attempt_state):
             validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.ABANDONED)
             updated_attempt = attempt.model_copy(update={"attempt_state": AttemptState.ABANDONED, "end_timestamp": ended_at})
             await self.execution_repository.save_attempt_record(record=updated_attempt)
@@ -253,124 +384,13 @@ class KernelActionControlPlaneService:
             }
         )
         await self.execution_repository.save_run_record(record=updated_run)
+        await release_execution_authority_if_present(
+            publication=self.publication,
+            run=updated_run,
+            release_basis="kernel_action_session_end_cancelled",
+            publication_timestamp=ended_at,
+        )
         return updated_run, updated_attempt, final_truth
-
-    async def _move_run_to_executing(self, *, run: RunRecord) -> RunRecord:
-        if run.lifecycle_state is RunState.EXECUTING:
-            return run
-        validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.EXECUTING)
-        updated = run.model_copy(update={"lifecycle_state": RunState.EXECUTING})
-        await self.execution_repository.save_run_record(record=updated)
-        return updated
-
-    async def _enter_attempt_execution_if_needed(
-        self,
-        *,
-        attempt: AttemptRecord,
-        run_id: str,
-        execution_timestamp: str,
-        allow_claim_only: bool,
-        observed_execution: bool,
-    ) -> AttemptRecord:
-        if attempt.attempt_state is AttemptState.EXECUTING:
-            return attempt
-        if attempt.attempt_state is not AttemptState.CREATED:
-            raise KernelActionControlPlaneError(f"unexpected attempt state for governed action {run_id}")
-        if not allow_claim_only and not observed_execution:
-            return attempt
-        validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.EXECUTING)
-        updated = attempt.model_copy(update={"attempt_state": AttemptState.EXECUTING, "start_timestamp": execution_timestamp})
-        await self.execution_repository.save_attempt_record(record=updated)
-        return updated
-
-    async def _finalize_attempt_from_commit(
-        self,
-        *,
-        attempt: AttemptRecord,
-        run_id: str,
-        status: str,
-        committed_at: str,
-        observed_execution: bool,
-    ) -> AttemptRecord:
-        if status == "COMMITTED":
-            if attempt.attempt_state is AttemptState.CREATED:
-                attempt = await self._enter_attempt_execution_if_needed(
-                    attempt=attempt,
-                    run_id=run_id,
-                    execution_timestamp=committed_at,
-                    allow_claim_only=True,
-                    observed_execution=observed_execution,
-                )
-            validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.COMPLETED)
-            updated = attempt.model_copy(update={"attempt_state": AttemptState.COMPLETED, "end_timestamp": committed_at})
-            await self.execution_repository.save_attempt_record(record=updated)
-            return updated
-        if observed_execution:
-            if attempt.attempt_state is AttemptState.CREATED:
-                attempt = await self._enter_attempt_execution_if_needed(
-                    attempt=attempt,
-                    run_id=run_id,
-                    execution_timestamp=committed_at,
-                    allow_claim_only=False,
-                    observed_execution=True,
-                )
-            validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.FAILED)
-            updated = attempt.model_copy(update={"attempt_state": AttemptState.FAILED, "end_timestamp": committed_at})
-            await self.execution_repository.save_attempt_record(record=updated)
-            return updated
-        validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.ABANDONED)
-        updated = attempt.model_copy(update={"attempt_state": AttemptState.ABANDONED, "end_timestamp": committed_at})
-        await self.execution_repository.save_attempt_record(record=updated)
-        return updated
-
-    async def _finalize_run_from_commit(
-        self,
-        *,
-        run: RunRecord,
-        status: str,
-        final_truth_record_id: str,
-    ) -> RunRecord:
-        next_state = RunState.COMPLETED if status == "COMMITTED" else RunState.FAILED_TERMINAL
-        validate_run_state_transition(current_state=run.lifecycle_state, next_state=next_state)
-        updated = run.model_copy(update={"lifecycle_state": next_state, "final_truth_record_id": final_truth_record_id})
-        await self.execution_repository.save_run_record(record=updated)
-        return updated
-
-    async def _publish_final_truth_for_commit(
-        self,
-        *,
-        run_id: str,
-        request: dict[str, Any],
-        response: dict[str, Any],
-        status: str,
-        observed_execution: bool,
-    ) -> FinalTruthRecord:
-        existing = await self.publication.repository.get_final_truth(run_id=run_id)
-        if existing is not None:
-            return existing
-        result_class, completion, evidence, residual, closure = final_truth_projection_for_commit(
-            status=status,
-            observed_execution=observed_execution,
-            validated=has_validation_evidence(request=request, response=response, ledger_items=()),
-            claimed_result=bool(optional_text(request, "execution_result_digest")),
-        )
-        authoritative_result_ref = optional_text(request, "execution_result_digest")
-        if authoritative_result_ref:
-            authoritative_result_ref = f"kernel-execution-result:{authoritative_result_ref}"
-        else:
-            authoritative_result_ref = required_text(response, "commit_event_digest")
-        return await self.publication.publish_final_truth(
-            final_truth_record_id=f"kernel-action-final-truth:{run_id}",
-            run_id=run_id,
-            result_class=result_class,
-            completion_classification=completion,
-            evidence_sufficiency_classification=evidence,
-            residual_uncertainty_classification=residual,
-            degradation_classification=DegradationClassification.NONE,
-            closure_basis=closure,
-            authority_sources=authority_sources_for_commit(evidence=evidence),
-            authoritative_result_ref=authoritative_result_ref,
-        )
 
 __all__ = [
     "KernelActionControlPlaneError",

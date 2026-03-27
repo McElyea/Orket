@@ -24,6 +24,7 @@ import uvicorn
 from orket import __version__
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 from orket.logging import log_event
+from orket.settings import load_env
 
 app = FastAPI(
     title="Orket Webhook Server",
@@ -76,6 +77,20 @@ def _resolve_webhook_secret(required: bool = False) -> bytes | None:
             "GITEA_WEBHOOK_SECRET environment variable is not set. Configure it before starting the webhook server."
         )
     return None
+
+
+def _validate_required_webhook_environment() -> None:
+    missing: list[str] = []
+    if not os.getenv("GITEA_WEBHOOK_SECRET", "").strip():
+        missing.append("GITEA_WEBHOOK_SECRET")
+    if not os.getenv("GITEA_ADMIN_PASSWORD", "").strip():
+        missing.append("GITEA_ADMIN_PASSWORD")
+    if missing:
+        missing_list = ", ".join(missing)
+        raise RuntimeError(
+            f"Missing required webhook environment variable(s): {missing_list}. "
+            "Configure them in environment or .env before starting the webhook server."
+        )
 
 
 def _is_truthy(value: str | None) -> bool:
@@ -301,6 +316,8 @@ def start_server(host: str = "127.0.0.1", port: int = 8080):
 
 def create_webhook_app(require_config: bool = False) -> FastAPI:
     if require_config:
+        load_env()
+        _validate_required_webhook_environment()
         _resolve_webhook_secret(required=True)
         webhook_handler._get()
     return app

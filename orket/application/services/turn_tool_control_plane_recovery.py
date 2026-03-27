@@ -137,7 +137,7 @@ async def recover_pre_effect_attempt_for_resume_mode(
         ],
         checkpoint_acceptance=acceptance,
     )
-    interrupted_attempt = interrupted_attempt.model_copy(update={"recovery_decision_id": decision.decision_id})
+    interrupted_attempt = interrupted_attempt.model_copy(update={"recovery_decision_id": decision.decision_id, "failure_plane": decision.failure_plane, "failure_classification": decision.failure_classification})
     await execution_repository.save_attempt_record(record=interrupted_attempt)
 
     validate_run_state_transition(current_state=recovery_pending_run.lifecycle_state, next_state=RunState.RECOVERING)
@@ -386,7 +386,7 @@ async def _escalate_reconciliation_required_resume_mode(
         ],
         reconciliation_record=reconciliation,
     )
-    interrupted_attempt = interrupted_attempt.model_copy(update={"recovery_decision_id": decision.decision_id})
+    interrupted_attempt = interrupted_attempt.model_copy(update={"recovery_decision_id": decision.decision_id, "failure_plane": decision.failure_plane, "failure_classification": decision.failure_classification})
     await execution_repository.save_attempt_record(record=interrupted_attempt)
     terminal_failure_basis = (
         "reconciliation_closed_unexpected_effect_observed"

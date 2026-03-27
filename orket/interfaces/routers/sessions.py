@@ -3,12 +3,14 @@ from __future__ import annotations
 import asyncio
 import logging
 from pathlib import Path
+from datetime import UTC, datetime
 from typing import Any, Callable, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from orket.application.services.protocol_replay_service import LedgerFramingError, ProtocolReplayService
+from orket.core.domain import OperatorCommandClass, OperatorInputClass
 
 
 class InteractionSessionStartRequest(BaseModel):
@@ -41,6 +43,7 @@ def build_sessions_router(
     commit_intent_factory: Callable[[str], Any],
     workspace_root_getter: Callable[[], Path] = lambda: Path(".").resolve(),
     protocol_replay_service_getter: Callable[[], Any] | None = None,
+    control_plane_publication_getter: Callable[[], Any] | None = None,
 ) -> APIRouter:
     router = APIRouter()
 
@@ -170,7 +173,7 @@ def build_sessions_router(
         return handle.model_dump()
 
     @router.post("/interactions/{session_id}/cancel")
-    async def cancel_interaction(session_id: str, req: InteractionCancelRequest):
+    async def cancel_interaction(session_id: str, req: InteractionCancelRequest, request: Request):
         interaction_manager = interaction_manager_getter()
         if not interaction_manager.stream_enabled():
             raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
@@ -179,6 +182,27 @@ def build_sessions_router(
             await interaction_manager.cancel(target)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+        actor_ref = str(getattr(request.state, "authenticated_actor_ref", "") or "").strip()
+        if actor_ref and control_plane_publication_getter is not None:
+            timestamp = datetime.now(UTC).isoformat()
+            target_ref = f"interaction-turn:{target}" if req.turn_id else f"interaction-session:{session_id}"
+            affected_resource_refs = [f"interaction-session:{session_id}"]
+            if req.turn_id:
+                affected_resource_refs.append(target_ref)
+            publication = control_plane_publication_getter()
+            await publication.publish_operator_action(
+                action_id=f"interaction-operator-action:{session_id}:{target}:{timestamp}",
+                actor_ref=actor_ref,
+                input_class=OperatorInputClass.COMMAND,
+                target_ref=target_ref,
+                timestamp=timestamp,
+                precondition_basis_ref=f"{target_ref}:cancel_requested",
+                result="accepted_cancel",
+                command_class=OperatorCommandClass.CANCEL_RUN,
+                affected_transition_refs=[f"{target_ref}:cancel_requested"],
+                affected_resource_refs=affected_resource_refs,
+                receipt_refs=[f"interaction-cancel:{target}"],
+            )
         return {"ok": True, "target": target}
 
     @router.get("/marshaller/runs")

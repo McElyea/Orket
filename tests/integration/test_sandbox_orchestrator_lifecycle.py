@@ -464,6 +464,57 @@ async def test_create_sandbox_fails_closed_before_docker_when_lifecycle_store_is
 
 
 @pytest.mark.asyncio
+async def test_create_sandbox_releases_active_lease_when_create_record_fails_after_lease_publish(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    sandbox_id = "sandbox-rock-3b"
+    compose_project = "orket-sandbox-rock-3b"
+    runner = FakeLifecycleRunner(compose_project=compose_project, sandbox_id=sandbox_id, run_id="rock-3b")
+    orchestrator = _orchestrator(tmp_path, runner)
+
+    async def _publish_lease_then_fail(**kwargs):
+        source_reservation_id = str(kwargs["source_reservation_id"])
+        await orchestrator.control_plane_publication.publish_lease(
+            lease_id=orchestrator.control_plane_reservations.lease_id_for_sandbox(sandbox_id),
+            resource_id=f"sandbox-allocation:{sandbox_id}",
+            holder_ref="sandbox-run:rock-3b",
+            lease_epoch=1,
+            publication_timestamp="2026-03-26T12:00:00+00:00",
+            expiry_basis="sandbox_lifecycle_record_creation_started",
+            status=LeaseStatus.ACTIVE,
+            cleanup_eligibility_rule="sandbox_cleanup_post_terminal",
+            source_reservation_id=source_reservation_id,
+        )
+        raise OSError("sandbox lifecycle store unavailable after lease publication")
+
+    monkeypatch.setattr(orchestrator.lifecycle_service, "create_record", _publish_lease_then_fail)
+
+    with pytest.raises(OSError, match="store unavailable after lease publication"):
+        await orchestrator.create_sandbox(
+            rock_id="rock-3b",
+            project_name="Store Outage After Lease",
+            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+            workspace_path=str(tmp_path),
+        )
+
+    reservation = await orchestrator.control_plane_repository.get_latest_reservation_record(
+        reservation_id=f"sandbox-reservation:{sandbox_id}"
+    )
+    lease = await orchestrator.control_plane_repository.get_latest_lease_record(
+        lease_id=f"sandbox-lease:{sandbox_id}"
+    )
+
+    assert reservation is not None
+    assert reservation.status is ReservationStatus.INVALIDATED
+    assert lease is not None
+    assert lease.status is LeaseStatus.RELEASED
+    assert runner.async_calls == []
+    assert orchestrator.registry.get(sandbox_id) is None
+    assert sandbox_id not in orchestrator.registry.port_allocator.allocated_ports
+
+
+@pytest.mark.asyncio
 async def test_create_sandbox_terminalizes_when_initial_runtime_never_reaches_running_state(tmp_path) -> None:
     sandbox_id = "sandbox-rock-4"
     compose_project = "orket-sandbox-rock-4"

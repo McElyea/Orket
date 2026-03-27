@@ -8,6 +8,18 @@ from orket.kernel.v1.canonical import canonical_json_bytes
 from .scoring import aggregate_pairing
 
 
+def _canonicalize_digest_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {str(key): _canonicalize_digest_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_canonicalize_digest_value(item) for item in value]
+    if isinstance(value, float):
+        # Experiments keep float metrics for runtime consumers; digest material normalizes
+        # them into typed strings so strict canonical_json_bytes can remain float-free.
+        return {"__float__": format(value, ".17g")}
+    return value
+
+
 def build_report(*, spec_hash: str, spec: Dict[str, Any], run_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     ranking = sorted(
         run_rows,
@@ -56,4 +68,4 @@ def build_report(*, spec_hash: str, spec: Dict[str, Any], run_rows: List[Dict[st
 
 
 def report_canonical_bytes(report: Dict[str, Any]) -> bytes:
-    return canonical_json_bytes(report)
+    return canonical_json_bytes(_canonicalize_digest_value(report))

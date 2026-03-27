@@ -206,6 +206,9 @@ class ContractValidator:
         return True
 
     def meets_write_path_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
+        required_tools = {str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()}
+        if "write_file" not in required_tools:
+            return True
         required_paths = self.required_write_paths(context)
         if not required_paths:
             return True
@@ -244,6 +247,9 @@ class ContractValidator:
         return bool(rationale and violations and actions)
 
     def meets_read_path_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
+        required_tools = {str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()}
+        if "read_file" not in required_tools:
+            return True
         required_paths = self.required_read_paths(context)
         if not required_paths:
             return True

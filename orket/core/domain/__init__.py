@@ -87,6 +87,7 @@ from .control_plane_recovery import (
     CONTINUATION_ACTIONS,
     ControlPlaneRecoveryError,
     build_recovery_decision,
+    infer_failure_taxonomy,
     validate_recovery_decision_authority,
 )
 
@@ -148,6 +149,7 @@ __all__ = [
     "build_lease_record",
     "build_reservation_record",
     "build_recovery_decision",
+    "infer_failure_taxonomy",
     "compute_effect_journal_entry_digest",
     "create_effect_journal_entry",
     "get_run_transition_requirement",

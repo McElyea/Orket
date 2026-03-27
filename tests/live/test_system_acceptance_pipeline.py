@@ -36,9 +36,12 @@ def _run_roots(workspace):
 
 class MultiRoleAcceptanceProvider:
     async def complete(self, messages):
-        prompt_blob = "\n".join((m.get("content") or "").lower() for m in messages)
         active_seat = None
         active_issue_id = None
+        required_read_paths: list[str] = []
+        required_write_paths: list[str] = []
+        required_statuses: list[str] = []
+        missing_required_read_paths: set[str] = set()
         for msg in messages:
             content = msg.get("content") or ""
             if "execution context json:" in content.lower():
@@ -47,49 +50,135 @@ class MultiRoleAcceptanceProvider:
                     parsed = json.loads(payload)
                     active_seat = (parsed.get("seat") or "").lower()
                     active_issue_id = (parsed.get("issue_id") or "").lower()
+                    required_read_paths = [
+                        str(path).strip()
+                        for path in (parsed.get("required_read_paths") or [])
+                        if str(path).strip()
+                    ]
+                    required_write_paths = [
+                        str(path).strip()
+                        for path in (parsed.get("required_write_paths") or [])
+                        if str(path).strip()
+                    ]
+                    required_statuses = [
+                        str(status).strip()
+                        for status in (parsed.get("required_statuses") or [])
+                        if str(status).strip()
+                    ]
+                    missing_required_read_paths = {
+                        str(path).strip()
+                        for path in (parsed.get("missing_required_read_paths") or [])
+                        if str(path).strip()
+                    }
                 except (json.JSONDecodeError, TypeError):
                     active_seat = None
                     active_issue_id = None
+                    required_read_paths = []
+                    required_write_paths = []
+                    required_statuses = []
+                    missing_required_read_paths = set()
                 break
 
-        # Guard oversight: final review issue requires artifact reads before decision.
-        if active_seat == "integrity_guard" and active_issue_id == "rev-1":
-            return ModelResponse(
-                content='```json\n{"tool": "read_file", "args": {"path": "agent_output/requirements.txt"}}\n```\n```json\n{"tool": "read_file", "args": {"path": "agent_output/design.txt"}}\n```\n```json\n{"tool": "read_file", "args": {"path": "agent_output/main.py"}}\n```\n```json\n{"tool": "read_file", "args": {"path": "agent_output/verification/runtime_verification.json"}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "done"}}\n```',
-                raw={"model": "dummy", "total_tokens": 90},
-            )
+        def _render_calls(calls: list[dict]) -> str:
+            return "\n".join(f"```json\n{json.dumps(call)}\n```" for call in calls)
 
-        # Guard oversight: upstream handoff issues are finalized with a done decision.
-        if active_seat == "integrity_guard" or active_issue_id in {"guard-1"} or "integrity_guard" in prompt_blob:
-            return ModelResponse(
-                content='```json\n{"tool": "update_issue_status", "args": {"status": "done"}}\n```',
-                raw={"model": "dummy", "total_tokens": 40},
-            )
+        def _status_or(default_status: str) -> str:
+            return required_statuses[0] if required_statuses else default_status
+
+        readable_paths = [path for path in required_read_paths if path not in missing_required_read_paths]
 
         # Route by active seat/role first; issue-id fallback handles prompt format drift.
-        if active_seat == "requirements_analyst" or active_issue_id == "req-1":
+        if active_seat == "requirements_analyst" or (not active_seat and active_issue_id == "req-1"):
+            target_path = required_write_paths[0] if required_write_paths else "agent_output/requirements.txt"
+            calls = [
+                {
+                    "tool": "write_file",
+                    "args": {
+                        "path": target_path,
+                        "content": "Program shall sum two integers from CLI args and print result.",
+                    },
+                },
+                {"tool": "update_issue_status", "args": {"status": _status_or("code_review")}},
+            ]
             return ModelResponse(
-                content='```json\n{"tool": "write_file", "args": {"path": "agent_output/requirements.txt", "content": "Program shall sum two integers from CLI args and print result."}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
+                content=_render_calls(calls),
                 raw={"model": "dummy", "total_tokens": 80},
             )
 
-        if active_seat == "coder" or active_issue_id == "cod-1":
+        if active_seat == "coder" or (not active_seat and active_issue_id == "cod-1"):
+            target_path = required_write_paths[0] if required_write_paths else "agent_output/main.py"
+            calls = [
+                {
+                    "tool": "write_file",
+                    "args": {
+                        "path": target_path,
+                        "content": (
+                            "class SummationApp:\n"
+                            "    def run(self, args):\n"
+                            "        a = int(args[0]); b = int(args[1])\n"
+                            "        print(a + b)\n\n"
+                            'if __name__ == "__main__":\n'
+                            "    import sys\n"
+                            "    SummationApp().run(sys.argv[1:])\n"
+                        ),
+                    },
+                },
+                {"tool": "update_issue_status", "args": {"status": _status_or("code_review")}},
+            ]
             return ModelResponse(
-                content='```json\n{"tool": "write_file", "args": {"path": "agent_output/main.py", "content": "class SummationApp:\\n    def run(self, args):\\n        a = int(args[0]); b = int(args[1])\\n        print(a + b)\\n\\nif __name__ == \\"__main__\\":\\n    import sys\\n    SummationApp().run(sys.argv[1:])\\n"}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
+                content=_render_calls(calls),
                 raw={"model": "dummy", "total_tokens": 140},
             )
 
-        if active_seat == "architect" or active_issue_id == "arc-1":
+        if active_seat == "architect" or (not active_seat and active_issue_id == "arc-1"):
+            target_path = required_write_paths[0] if required_write_paths else "agent_output/design.txt"
+            calls = [{"tool": "read_file", "args": {"path": path}} for path in readable_paths]
+            calls.append(
+                {
+                    "tool": "write_file",
+                    "args": {
+                        "path": target_path,
+                        "content": json.dumps(
+                            {
+                                "recommendation": "monolith",
+                                "frontend_framework": "vue",
+                                "confidence": 0.88,
+                                "evidence": {
+                                    "estimated_domains": 1,
+                                    "external_integrations": 0,
+                                    "independent_scaling_needs": "low",
+                                    "deployment_complexity": "low",
+                                    "team_parallelism": "single",
+                                    "operational_maturity": "low",
+                                },
+                                "notes": "Single class SummationApp with one run(args) method.",
+                            }
+                        ),
+                    },
+                }
+            )
+            calls.append({"tool": "update_issue_status", "args": {"status": _status_or("code_review")}})
             return ModelResponse(
-                content='```json\n{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"monolith\\", \\"frontend_framework\\": \\"vue\\", \\"confidence\\": 0.88, \\"evidence\\": {\\"estimated_domains\\": 1, \\"external_integrations\\": 0, \\"independent_scaling_needs\\": \\"low\\", \\"deployment_complexity\\": \\"low\\", \\"team_parallelism\\": \\"single\\", \\"operational_maturity\\": \\"low\\"}, \\"notes\\": \\"Single class SummationApp with one run(args) method.\\"}"}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
+                content=_render_calls(calls),
                 raw={"model": "dummy", "total_tokens": 90},
             )
 
         # code_reviewer seat: check outputs then send to guard for final approval.
-        if active_seat == "code_reviewer" or active_issue_id == "rev-1":
+        if active_seat == "code_reviewer" or (not active_seat and active_issue_id == "rev-1"):
+            review_paths = readable_paths or ["agent_output/requirements.txt", "agent_output/main.py"]
+            calls = [{"tool": "read_file", "args": {"path": path}} for path in review_paths]
+            calls.append({"tool": "update_issue_status", "args": {"status": _status_or("code_review")}})
             return ModelResponse(
-                content='```json\n{"tool": "read_file", "args": {"path": "agent_output/requirements.txt"}}\n```\n```json\n{"tool": "read_file", "args": {"path": "agent_output/main.py"}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
+                content=_render_calls(calls),
                 raw={"model": "dummy", "total_tokens": 120},
+            )
+
+        if active_seat == "integrity_guard" or active_issue_id in {"guard-1"}:
+            calls = [{"tool": "read_file", "args": {"path": path}} for path in readable_paths]
+            calls.append({"tool": "update_issue_status", "args": {"status": _status_or("done")}})
+            return ModelResponse(
+                content=_render_calls(calls),
+                raw={"model": "dummy", "total_tokens": 40},
             )
 
         return ModelResponse(content="No-op", raw={"model": "dummy", "total_tokens": 1})

@@ -29,8 +29,11 @@ from orket.core.domain import (
     CheckpointResumabilityClass,
     ClosureBasisClassification,
     DivergenceClass,
+    ExecutionFailureClass,
+    FailurePlane,
     LeaseStatus,
     RecoveryActionClass,
+    ResourceFailureClass,
     ReservationStatus,
     ResultClass,
     RunState,
@@ -140,6 +143,12 @@ async def test_gitea_state_worker_publishes_non_sandbox_lease_history_on_success
     attempt_id = GiteaStateControlPlaneExecutionService.attempt_id_for(run_id=run_id)
     run = await execution_repository.get_run_record(run_id=run_id)
     attempt = await execution_repository.get_attempt_record(attempt_id=attempt_id)
+    policy_snapshot = None if run is None else await repository.get_resolved_policy_snapshot(
+        snapshot_id=run.policy_snapshot_id
+    )
+    configuration_snapshot = None if run is None else await repository.get_resolved_configuration_snapshot(
+        snapshot_id=run.configuration_snapshot_id
+    )
     steps = await execution_repository.list_step_records(attempt_id=attempt_id)
     effects = await repository.list_effect_journal_entries(run_id=run_id)
     checkpoint = await repository.get_checkpoint(checkpoint_id=f"gitea-state-checkpoint:{attempt_id}")
@@ -155,6 +164,8 @@ async def test_gitea_state_worker_publishes_non_sandbox_lease_history_on_success
     assert latest is not None
     assert run is not None
     assert attempt is not None
+    assert policy_snapshot is not None
+    assert configuration_snapshot is not None
     assert checkpoint is not None
     assert checkpoint_acceptance is not None
     assert truth is not None
@@ -177,6 +188,8 @@ async def test_gitea_state_worker_publishes_non_sandbox_lease_history_on_success
     assert truth.result_class is ResultClass.SUCCESS
     assert truth.authoritative_result_ref == steps[-1].output_ref
     assert history[0].source_reservation_id == "gitea-claim-reservation:7:lease_epoch:00000001"
+    assert policy_snapshot.snapshot_digest == run.policy_digest
+    assert configuration_snapshot.snapshot_digest == run.configuration_digest
 
 
 @pytest.mark.asyncio
@@ -258,6 +271,8 @@ async def test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_m
     ]
     assert run.lifecycle_state is RunState.FAILED_TERMINAL
     assert attempt.attempt_state is AttemptState.INTERRUPTED
+    assert attempt.failure_plane is FailurePlane.RESOURCE
+    assert attempt.failure_classification is ResourceFailureClass.RESOURCE_UNAVAILABLE
     assert attempt.recovery_decision_id == decision.decision_id
     assert checkpoint.resumability_class is CheckpointResumabilityClass.RESUME_FORBIDDEN
     assert checkpoint_acceptance.outcome is CheckpointAcceptanceOutcome.ACCEPTED
@@ -269,6 +284,8 @@ async def test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_m
     assert len(effects) == 2
     assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
     assert decision.failure_classification_basis == "lease_expired"
+    assert decision.failure_plane is FailurePlane.RESOURCE
+    assert decision.failure_classification is ResourceFailureClass.RESOURCE_UNAVAILABLE
     assert truth.result_class is ResultClass.BLOCKED
     assert ("release_or_fail", "7", "blocked", "E_LEASE_EXPIRED") in adapter.calls
 
@@ -329,6 +346,8 @@ async def test_gitea_state_worker_publishes_terminal_recovery_decision_on_runtim
     assert run.lifecycle_state is RunState.FAILED_TERMINAL
     assert attempt.attempt_state is AttemptState.FAILED
     assert attempt.failure_class == "gitea_state_worker_failure"
+    assert attempt.failure_plane is FailurePlane.EXECUTION
+    assert attempt.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
     assert [record.status for record in reservation_history] == [
         ReservationStatus.ACTIVE,
         ReservationStatus.PROMOTED_TO_LEASE,
@@ -336,6 +355,8 @@ async def test_gitea_state_worker_publishes_terminal_recovery_decision_on_runtim
     assert attempt.recovery_decision_id == decision.decision_id
     assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
     assert decision.failure_classification_basis == "gitea_state_worker_failure"
+    assert decision.failure_plane is FailurePlane.EXECUTION
+    assert decision.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
     assert truth.result_class is ResultClass.FAILED
     assert ("release_or_fail", "9", "blocked", "boom") in adapter.calls
 
@@ -413,6 +434,8 @@ async def test_gitea_state_worker_closes_pre_effect_claim_failure_without_fake_r
     assert run.lifecycle_state is RunState.FAILED_TERMINAL
     assert attempt.attempt_state is AttemptState.FAILED
     assert attempt.failure_class == "gitea_state_claim_failure"
+    assert attempt.failure_plane is FailurePlane.EXECUTION
+    assert attempt.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
     assert checkpoint.resumability_class is CheckpointResumabilityClass.RESUME_FORBIDDEN
     assert checkpoint_acceptance.outcome is CheckpointAcceptanceOutcome.ACCEPTED
     assert latest_lease.status is LeaseStatus.UNCERTAIN
@@ -427,6 +450,8 @@ async def test_gitea_state_worker_closes_pre_effect_claim_failure_without_fake_r
     assert reconciliation.divergence_class is DivergenceClass.INSUFFICIENT_OBSERVATION
     assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
     assert decision.failure_classification_basis == "gitea_state_claim_failure"
+    assert decision.failure_plane is FailurePlane.EXECUTION
+    assert decision.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
     assert truth.result_class is ResultClass.BLOCKED
     assert truth.closure_basis is ClosureBasisClassification.RECONCILIATION_CLOSED
     assert truth.authoritative_result_ref == steps[0].output_ref
@@ -485,6 +510,9 @@ async def test_gitea_state_worker_closes_claim_stage_runtime_error_then_reraises
     reconciliation = await repository.get_reconciliation_record(
         reconciliation_id=f"gitea-state-reconciliation:{run_id}:claim_failure"
     )
+    decision = None if attempt is None or attempt.recovery_decision_id is None else await repository.get_recovery_decision(
+        decision_id=attempt.recovery_decision_id
+    )
     reservation_history = await repository.list_reservation_records(
         reservation_id=GiteaStateControlPlaneReservationService.reservation_id_for("12", 4)
     )
@@ -494,8 +522,11 @@ async def test_gitea_state_worker_closes_claim_stage_runtime_error_then_reraises
     assert latest_lease is not None
     assert truth is not None
     assert reconciliation is not None
+    assert decision is not None
     assert run.lifecycle_state is RunState.FAILED_TERMINAL
     assert attempt.attempt_state is AttemptState.FAILED
+    assert attempt.failure_plane is FailurePlane.EXECUTION
+    assert attempt.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
     assert latest_lease.status is LeaseStatus.UNCERTAIN
     assert [record.status for record in reservation_history] == [
         ReservationStatus.ACTIVE,
@@ -505,4 +536,72 @@ async def test_gitea_state_worker_closes_claim_stage_runtime_error_then_reraises
     assert effects == []
     assert truth.result_class is ResultClass.BLOCKED
     assert truth.closure_basis is ClosureBasisClassification.RECONCILIATION_CLOSED
+    assert decision.failure_plane is FailurePlane.EXECUTION
+    assert decision.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
     assert ("release_or_fail", "12", "blocked", "gitea backend unavailable") not in adapter.calls
+
+
+@pytest.mark.asyncio
+async def test_gitea_state_worker_fail_closes_authority_on_claim_promotion_failure(tmp_path: Path) -> None:
+    execution_repository = AsyncControlPlaneExecutionRepository(tmp_path / "control_plane.sqlite3")
+    repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
+    publication = ControlPlanePublicationService(repository=repository)
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
+    control_plane_execution = GiteaStateControlPlaneExecutionService(
+        execution_repository=execution_repository,
+        publication=publication,
+    )
+    control_plane_checkpoint = GiteaStateControlPlaneCheckpointService(publication=publication)
+    control_plane_reservation = GiteaStateControlPlaneReservationService(publication=publication)
+    adapter = _FakeAdapter()
+    adapter.cards = [{"issue_number": 13, "state": "ready"}]
+    adapter.acquire_result = _lease_response(
+        card_id="13",
+        worker_id="worker-z",
+        epoch=5,
+        version=3,
+        expires_at="2026-03-24T01:00:30+00:00",
+    )
+    worker = GiteaStateWorker(
+        adapter=adapter,
+        worker_id="worker-z",
+        lease_seconds=1,
+        renew_interval_seconds=0.05,
+        control_plane_checkpoint_service=control_plane_checkpoint,
+        control_plane_execution_service=control_plane_execution,
+        control_plane_lease_service=control_plane,
+        control_plane_reservation_service=control_plane_reservation,
+    )
+
+    async def _raise_promote_failure(**_kwargs):
+        raise RuntimeError("promote failed")
+
+    publication.promote_reservation_to_lease = _raise_promote_failure  # type: ignore[method-assign]
+
+    async def _work(_card):
+        raise AssertionError("work_fn should not run after claim-promotion failure")
+
+    with pytest.raises(RuntimeError, match="promote failed"):
+        await worker.run_once(work_fn=_work)
+
+    reservation_history = await repository.list_reservation_records(
+        reservation_id=GiteaStateControlPlaneReservationService.reservation_id_for("13", 5)
+    )
+    lease_history = await repository.list_lease_records(
+        lease_id=GiteaStateControlPlaneLeaseService.lease_id_for("13")
+    )
+
+    assert [record.status for record in reservation_history] == [
+        ReservationStatus.ACTIVE,
+        ReservationStatus.INVALIDATED,
+    ]
+    assert (
+        reservation_history[-1].expiry_or_invalidation_basis
+        == "gitea_state_worker_claim_promotion_failed;lease_epoch=00000005"
+    )
+    assert [record.status for record in lease_history] == [
+        LeaseStatus.ACTIVE,
+        LeaseStatus.RELEASED,
+    ]
+    assert lease_history[-1].expiry_basis == "gitea_state_worker_claim_promotion_failed;lease_epoch=00000005"
+    assert ("release_or_fail", "13", "blocked", "promote failed") not in adapter.calls

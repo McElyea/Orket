@@ -8,6 +8,7 @@ from orket.core.domain.control_plane_enums import (
     AttemptState,
     AuthoritySourceClass,
     CapabilityClass,
+    ControlPlaneFailureClass,
     CheckpointResumabilityClass,
     CleanupAuthorityClass,
     ClosureBasisClassification,
@@ -16,21 +17,26 @@ from orket.core.domain.control_plane_enums import (
     DivergenceClass,
     EffectClass,
     EvidenceSufficiencyClassification,
+    ExecutionFailureClass,
+    FailurePlane,
     IdempotencyClass,
     LeaseStatus,
     OperatorCommandClass,
     OperatorInputClass,
     OrphanClassification,
     OwnershipClass,
+    ProtocolFailureClass,
     ReservationKind,
     ReservationStatus,
     RecoveryActionClass,
+    ResourceFailureClass,
     ResidualUncertaintyClassification,
     ResultClass,
     RunState,
     SafeContinuationClass,
     SideEffectBoundaryClass,
     TerminalityBasisClassification,
+    TruthFailureClass,
 )
 from orket.core.domain.control_plane_final_truth import terminality_basis_for_closure
 from orket.core.domain.control_plane_lifecycle import is_terminal_attempt_state
@@ -39,10 +45,28 @@ from orket.core.domain.control_plane_lifecycle import is_terminal_attempt_state
 CONTROL_PLANE_CONTRACT_VERSION_V1 = "control_plane.contract.v1"
 CONTROL_PLANE_SNAPSHOT_VERSION_V1 = "control_plane.snapshot.v1"
 NonEmptyStr = Annotated[str, Field(min_length=1)]
+FailureClassification = (
+    ExecutionFailureClass
+    | ProtocolFailureClass
+    | TruthFailureClass
+    | ResourceFailureClass
+    | ControlPlaneFailureClass
+)
 
 
 class _ControlPlaneBaseModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+    @model_validator(mode="after")
+    def _validate_contract_version(self) -> "_ControlPlaneBaseModel":
+        if hasattr(self, "contract_version"):
+            contract_version = str(getattr(self, "contract_version") or "").strip()
+            if contract_version != CONTROL_PLANE_CONTRACT_VERSION_V1:
+                raise ValueError(
+                    f"unsupported control-plane contract_version={contract_version!r}; "
+                    f"expected {CONTROL_PLANE_CONTRACT_VERSION_V1!r}"
+                )
+        return self
 
 
 class ResolvedPolicySnapshot(_ControlPlaneBaseModel):
@@ -123,6 +147,8 @@ class AttemptRecord(_ControlPlaneBaseModel):
     start_timestamp: NonEmptyStr
     end_timestamp: NonEmptyStr | None = None
     side_effect_boundary_class: SideEffectBoundaryClass | None = None
+    failure_plane: FailurePlane | None = None
+    failure_classification: FailureClassification | None = None
     failure_class: NonEmptyStr | None = None
     recovery_decision_id: NonEmptyStr | None = None
 
@@ -143,6 +169,13 @@ class AttemptRecord(_ControlPlaneBaseModel):
             AttemptState.INTERRUPTED,
         }:
             raise ValueError("recovery_decision_id is only valid for failed or interrupted attempts")
+        if (self.failure_plane is None) != (self.failure_classification is None):
+            raise ValueError("failure_plane and failure_classification must be set together")
+        if self.failure_classification is not None and self.attempt_state not in {
+            AttemptState.FAILED,
+            AttemptState.INTERRUPTED,
+        }:
+            raise ValueError("failure_classification is only valid for failed or interrupted attempts")
         return self
 
 
@@ -248,6 +281,8 @@ class RecoveryDecisionRecord(_ControlPlaneBaseModel):
     run_id: NonEmptyStr
     failed_attempt_id: NonEmptyStr
     failure_classification_basis: NonEmptyStr
+    failure_plane: FailurePlane | None = None
+    failure_classification: FailureClassification | None = None
     side_effect_boundary_class: SideEffectBoundaryClass
     recovery_policy_ref: NonEmptyStr
     authorized_next_action: RecoveryActionClass
@@ -263,6 +298,8 @@ class RecoveryDecisionRecord(_ControlPlaneBaseModel):
     def _validate_execution_target(self) -> "RecoveryDecisionRecord":
         if self.resumed_attempt_id and self.new_attempt_id:
             raise ValueError("recovery decision cannot both resume an attempt and start a new attempt")
+        if (self.failure_plane is None) != (self.failure_classification is None):
+            raise ValueError("failure_plane and failure_classification must be set together")
         return self
 
 

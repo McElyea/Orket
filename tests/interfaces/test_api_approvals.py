@@ -192,7 +192,9 @@ def test_approvals_endpoints_real_nervous_system_flow(monkeypatch) -> None:
     assert decided.json()["approval"]["control_plane_target_ref"] == (
         "kernel-action-run:sess-api-approvals-real-1:trace-api-approvals-real-1"
     )
-    assert decided.json()["approval"]["control_plane_target_run"]["namespace_scope"] is None
+    assert decided.json()["approval"]["control_plane_target_run"]["namespace_scope"] == (
+        "session:sess-api-approvals-real-1"
+    )
     assert decided.json()["approval"]["control_plane_target_run"]["policy_snapshot_id"] == (
         "kernel-admission-decision:sess-api-approvals-real-1:trace-api-approvals-real-1"
     )

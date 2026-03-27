@@ -15,7 +15,9 @@ from orket.core.domain import (
     AttemptState,
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
+    FailurePlane,
     RecoveryActionClass,
+    ResourceFailureClass,
     RunState,
 )
 from orket.core.domain.sandbox_lifecycle import TerminalReason
@@ -86,6 +88,10 @@ async def test_execution_service_initializes_and_rolls_new_attempt_after_reacqui
         admission_decision_receipt_ref="sandbox-reservation:sb-1",
         policy=SandboxLifecyclePolicy(),
     )
+    policy_snapshot = await publication_repo.get_resolved_policy_snapshot(snapshot_id=run.policy_snapshot_id)
+    configuration_snapshot = await publication_repo.get_resolved_configuration_snapshot(
+        snapshot_id=run.configuration_snapshot_id
+    )
 
     waiting_run, waiting_attempt = await service.mark_waiting_on_resource(
         run_id="run-1",
@@ -124,13 +130,21 @@ async def test_execution_service_initializes_and_rolls_new_attempt_after_reacqui
 
     assert run.lifecycle_state is RunState.EXECUTING
     assert attempt.attempt_state is AttemptState.EXECUTING
+    assert policy_snapshot is not None
+    assert configuration_snapshot is not None
+    assert policy_snapshot.snapshot_digest == run.policy_digest
+    assert configuration_snapshot.snapshot_digest == run.configuration_digest
     assert waiting_run.lifecycle_state is RunState.WAITING_ON_RESOURCE
     assert waiting_attempt.attempt_state is AttemptState.INTERRUPTED
+    assert waiting_attempt.failure_plane is FailurePlane.RESOURCE
+    assert waiting_attempt.failure_classification is ResourceFailureClass.RESOURCE_UNAVAILABLE
     assert resumed_run.lifecycle_state is RunState.EXECUTING
     assert resumed_run.current_attempt_id == resumed_attempt.attempt_id
     assert resumed_attempt.attempt_state is AttemptState.EXECUTING
     assert decision is not None
     assert decision.authorized_next_action is RecoveryActionClass.RESUME_FROM_CHECKPOINT
+    assert decision.failure_plane is FailurePlane.RESOURCE
+    assert decision.failure_classification is ResourceFailureClass.RESOURCE_UNAVAILABLE
     assert decision.new_attempt_id == resumed_attempt.attempt_id
     assert decision.target_checkpoint_id == checkpoint.checkpoint_id
     assert decision.required_precondition_refs == [checkpoint.checkpoint_id, acceptance.acceptance_id]
@@ -175,6 +189,53 @@ async def test_execution_service_finalizes_terminal_run_and_attempt() -> None:
     assert run.final_truth_record_id == "truth-2"
     assert attempt is not None
     assert attempt.attempt_state is AttemptState.INTERRUPTED
+    assert attempt.failure_plane is FailurePlane.RESOURCE
+    assert attempt.failure_classification is ResourceFailureClass.RESOURCE_STATE_UNCERTAIN
     assert attempt.recovery_decision_id is not None
     assert decision is not None
     assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
+    assert decision.failure_plane is FailurePlane.RESOURCE
+    assert decision.failure_classification is ResourceFailureClass.RESOURCE_STATE_UNCERTAIN
+
+
+@pytest.mark.asyncio
+async def test_execution_service_finalizes_hard_max_age_with_resource_failure_taxonomy() -> None:
+    execution_repo = InMemoryControlPlaneExecutionRepository()
+    publication_repo: ControlPlaneRecordRepository = InMemoryControlPlaneRecordRepository()
+    service = SandboxControlPlaneExecutionService(
+        repository=execution_repo,
+        publication=ControlPlanePublicationService(repository=publication_repo),
+    )
+
+    await service.initialize_execution(
+        sandbox_id="sb-3",
+        run_id="run-3",
+        workload_id="sandbox-workload:fastapi-react-postgres",
+        workload_version="docker_sandbox_runtime.v1",
+        compose_project="orket-sandbox-sb-3",
+        workspace_path="workspace/sb-3",
+        configuration_payload={"tech_stack": "fastapi-react-postgres"},
+        creation_timestamp="2026-03-24T00:00:00+00:00",
+        admission_decision_receipt_ref="sandbox-reservation:sb-3",
+        policy=SandboxLifecyclePolicy(),
+    )
+
+    run, attempt, decision = await service.finalize_terminal_execution(
+        run_id="run-3",
+        observed_at="2026-03-24T00:09:00+00:00",
+        terminal_reason=TerminalReason.HARD_MAX_AGE,
+        policy_version="docker_sandbox_lifecycle.v1",
+        final_truth_record_id="truth-3",
+        rationale_ref="sandbox-reconciliation:run-3:00000009",
+    )
+
+    assert run.lifecycle_state is RunState.FAILED_TERMINAL
+    assert run.final_truth_record_id == "truth-3"
+    assert attempt is not None
+    assert attempt.attempt_state is AttemptState.FAILED
+    assert attempt.failure_plane is FailurePlane.RESOURCE
+    assert attempt.failure_classification is ResourceFailureClass.RESOURCE_UNAVAILABLE
+    assert decision is not None
+    assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
+    assert decision.failure_plane is FailurePlane.RESOURCE
+    assert decision.failure_classification is ResourceFailureClass.RESOURCE_UNAVAILABLE

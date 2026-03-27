@@ -103,6 +103,11 @@ def _resource_dependencies(tool_calls: list[dict[str, Any]]) -> list[str]:
     return deduped
 
 
+def _status_only_tool_calls(tool_calls: list[dict[str, Any]]) -> bool:
+    tool_names = [str(call.get("tool") or "").strip() for call in tool_calls if str(call.get("tool") or "").strip()]
+    return bool(tool_names) and all(name == "update_issue_status" for name in tool_names)
+
+
 def _checkpoint_turn_metadata(
     *,
     executor: Any,
@@ -141,12 +146,23 @@ async def write_turn_checkpoint_and_publish_if_needed(
     tool_calls = _tool_calls_payload(turn)
     captured_at = utc_now()
     namespace_scope = run_namespace_scope(issue_id=issue_id, context=context)
-    await ensure_turn_control_plane_reentry_allowed_if_needed(
-        executor=executor,
-        issue_id=issue_id,
-        role_name=role_name,
-        context=context,
+    control_plane_service = _control_plane_service(executor)
+    status_only_without_protocol = _status_only_tool_calls(tool_calls) and not bool(
+        context.get("protocol_governed_enabled")
     )
+    control_plane_publish_enabled = (
+        control_plane_service is not None
+        and bool(tool_calls)
+        and not bool(context.get("protocol_replay_mode"))
+        and not status_only_without_protocol
+    )
+    if control_plane_publish_enabled:
+        await ensure_turn_control_plane_reentry_allowed_if_needed(
+            executor=executor,
+            issue_id=issue_id,
+            role_name=role_name,
+            context=context,
+        )
 
     await asyncio.to_thread(
         executor._write_turn_checkpoint,
@@ -161,8 +177,7 @@ async def write_turn_checkpoint_and_publish_if_needed(
         prompt_metadata=prompt_metadata,
     )
 
-    control_plane_service = _control_plane_service(executor)
-    if control_plane_service is None or not tool_calls or bool(context.get("protocol_replay_mode")):
+    if not control_plane_publish_enabled or control_plane_service is None:
         return
 
     run, attempt = await control_plane_service.begin_execution(

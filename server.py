@@ -24,8 +24,13 @@ def main(argv: list[str] | None = None) -> int:
         if settings.reload:
             run_kwargs["reload"] = True
             run_kwargs["reload_excludes"] = get_reload_excludes()
+            uvicorn_target = "server:app"
+        else:
+            # Avoid a second module import during uvicorn startup; importing via
+            # string in non-reload mode can happen after loop start.
+            uvicorn_target = app
 
-        uvicorn.run("server:app", **run_kwargs)
+        uvicorn.run(uvicorn_target, **run_kwargs)
         return 0
     except LauncherConfigError as exc:
         print(f"[CONFIG ERROR] {exc}", file=sys.stderr)

@@ -119,6 +119,32 @@ def run_id_for(*, session_id: str, trace_id: str) -> str:
     return f"kernel-action-run:{session_id}:{trace_id}"
 
 
+def default_namespace_scope_for_session(*, session_id: str) -> str:
+    normalized = str(session_id or "").strip()
+    if not normalized:
+        raise KernelActionControlPlaneSupportError("governed action namespace scope requires session_id")
+    return f"session:{normalized}"
+
+
+def resolve_namespace_scope_for_request(*, request: dict[str, Any]) -> str:
+    session_id = required_text(request, "session_id")
+    allowed_scope = default_namespace_scope_for_session(session_id=session_id)
+    explicit_scope = optional_text(request, "namespace_scope")
+    if explicit_scope is None:
+        proposal = request.get("proposal")
+        payload = proposal.get("payload") if isinstance(proposal, dict) else None
+        if isinstance(payload, dict):
+            explicit_scope = optional_text(payload, "namespace_scope")
+    if explicit_scope is None:
+        return allowed_scope
+    if explicit_scope != allowed_scope:
+        raise KernelActionControlPlaneSupportError(
+            "kernel-action namespace scope escalation is not permitted: "
+            f"requested={explicit_scope!r}; allowed={allowed_scope!r}"
+        )
+    return explicit_scope
+
+
 def attempt_id_for(*, session_id: str, trace_id: str) -> str:
     return f"kernel-action-attempt:{session_id}:{trace_id}:0001"
 
@@ -224,6 +250,7 @@ def build_step_record_for_commit(
     *,
     run_id: str,
     attempt_id: str,
+    namespace_scope: str | None,
     request: dict[str, Any],
     response: dict[str, Any],
     ledger_items: Sequence[dict[str, Any]],
@@ -248,6 +275,7 @@ def build_step_record_for_commit(
         step_id=step_id_for(run_id=run_id),
         attempt_id=attempt_id,
         step_kind="governed_kernel_commit_execution",
+        namespace_scope=namespace_scope,
         input_ref=authorization_basis_ref(request=request),
         output_ref=output_ref,
         capability_used=None,
@@ -263,6 +291,7 @@ async def publish_step_from_commit_if_missing(
     execution_repository,
     run_id: str,
     attempt_id: str,
+    namespace_scope: str | None,
     request: dict[str, Any],
     response: dict[str, Any],
     ledger_items: Sequence[dict[str, Any]],
@@ -277,6 +306,7 @@ async def publish_step_from_commit_if_missing(
         record=build_step_record_for_commit(
             run_id=run_id,
             attempt_id=attempt_id,
+            namespace_scope=namespace_scope,
             request=request,
             response=response,
             ledger_items=ledger_items,
@@ -352,6 +382,7 @@ __all__ = [
     "authorization_basis_ref",
     "build_step_record_for_commit",
     "configuration_snapshot_id_for",
+    "default_namespace_scope_for_session",
     "event_digest_for",
     "event_result_ref",
     "event_timestamp_for",
@@ -365,6 +396,7 @@ __all__ = [
     "publish_step_from_commit_if_missing",
     "proposal_digest_for",
     "receipt_refs_for_commit",
+    "resolve_namespace_scope_for_request",
     "required_text",
     "run_id_for",
     "should_publish_step_for_commit",

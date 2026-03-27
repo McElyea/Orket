@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import json
+from datetime import UTC, datetime
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
@@ -10,9 +11,11 @@ from orket.logging import log_event
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 from orket.application.services.kernel_action_control_plane_operator_service import KernelActionControlPlaneOperatorService
+from orket.application.services.kernel_action_control_plane_resource_lifecycle import reservation_id_for_run
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.application.services.kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
 from orket.application.services.tool_approval_control_plane_operator_service import ToolApprovalControlPlaneOperatorService
+from orket.core.domain import OperatorCommandClass, OperatorInputClass
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
 from orket.runtime_paths import resolve_control_plane_db_path, resolve_runtime_db_path
@@ -204,9 +207,25 @@ class OrchestrationEngine:
         """Stops and deletes a sandbox."""
         await self.sandbox_manager.stop(sandbox_id, operator_actor_ref=operator_actor_ref)
 
-    async def halt_session(self, session_id: str):
+    async def halt_session(self, session_id: str, *, operator_actor_ref: str | None = None):
         """Halts an active session by signaling the runtime state."""
-        await self.session_controller.halt(session_id)
+        cancelled_active_task = await self.session_controller.halt(session_id)
+        if operator_actor_ref:
+            timestamp = datetime.now(UTC).isoformat()
+            target_ref = f"session:{session_id}"
+            await self.control_plane_publication.publish_operator_action(
+                action_id=f"session-operator-action:{session_id}:halt:{timestamp}",
+                actor_ref=operator_actor_ref,
+                input_class=OperatorInputClass.COMMAND,
+                target_ref=target_ref,
+                timestamp=timestamp,
+                precondition_basis_ref=f"{target_ref}:halt",
+                result="accepted_cancel" if cancelled_active_task else "accepted_no_active_runtime_task",
+                command_class=OperatorCommandClass.CANCEL_RUN,
+                affected_transition_refs=[f"{target_ref}:runtime_task:{'cancelled' if cancelled_active_task else 'none'}"],
+                affected_resource_refs=[target_ref],
+                receipt_refs=[f"runtime-task:{session_id}"],
+            )
 
     async def list_approvals(
         self,
@@ -351,11 +370,16 @@ class OrchestrationEngine:
                 "limit": 200,
             }
         )
-        await self.kernel_action_control_plane.record_admission(
+        run, _attempt = await self.kernel_action_control_plane.record_admission(
             request=request,
             response=response,
             ledger_items=list(ledger.get("items") or []),
         )
+        reservation = await self.control_plane_repository.get_latest_reservation_record(
+            reservation_id=reservation_id_for_run(run_id=run.run_id)
+        )
+        if reservation is not None:
+            response = {**response, "control_plane_run_id": run.run_id, "control_plane_reservation_id": reservation.reservation_id}
         return response
 
     def kernel_commit_proposal(self, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -397,6 +421,17 @@ class OrchestrationEngine:
             ledger_items=list(ledger.get("items") or []),
         )
         operator_actor_ref = str(request.get("operator_actor_ref") or "").strip()
+        attestation_scope = str(request.get("attestation_scope") or "").strip()
+        attestation_payload_raw = request.get("attestation_payload")
+        attestation_payload = (
+            dict(attestation_payload_raw)
+            if isinstance(attestation_payload_raw, dict)
+            else {}
+        )
+        if attestation_scope and not operator_actor_ref:
+            raise ValueError(
+                "kernel end-session attestation requires authenticated operator actor reference"
+            )
         if closed is not None and operator_actor_ref:
             run, _attempt, _final_truth = closed
             session_end_timestamp = next(
@@ -415,6 +450,18 @@ class OrchestrationEngine:
                 receipt_ref=f"kernel-ledger-event:{response.get('event_digest')}",
                 reason=str(request.get("reason") or "").strip() or None,
             )
+            if attestation_scope:
+                await self.kernel_action_control_plane_operator.publish_run_attestation(
+                    actor_ref=operator_actor_ref,
+                    session_id=str(request.get("session_id") or ""),
+                    trace_id=str(request.get("trace_id") or ""),
+                    timestamp=session_end_timestamp or str(run.creation_timestamp),
+                    receipt_ref=f"kernel-ledger-event:{response.get('event_digest')}",
+                    request_id=str(request.get("request_id") or "").strip() or None,
+                    precondition_basis_ref=f"kernel-session-end:{str(request.get('reason') or '').strip() or 'unspecified'}",
+                    attestation_scope=attestation_scope,
+                    attestation_payload=attestation_payload,
+                )
         return response
 
     def kernel_list_ledger_events(self, request: Dict[str, Any]) -> Dict[str, Any]:

@@ -210,11 +210,15 @@ def test_kernel_end_session_endpoint_routes_to_engine(monkeypatch) -> None:
             "session_id": "sess-api-4",
             "trace_id": "trace-api-4",
             "reason": "manual-close",
+            "attestation_scope": "run_scope",
+            "attestation_payload": {"operator_note": "confirmed"},
         },
     )
     assert response.status_code == 200
     assert response.json()["status"] == "ENDED"
     assert captured["request"]["contract_version"] == "kernel_api/v1"
+    assert captured["request"]["attestation_scope"] == "run_scope"
+    assert captured["request"]["attestation_payload"] == {"operator_note": "confirmed"}
     assert captured["request"]["operator_actor_ref"].startswith("api_key_fingerprint:sha256:")
 
 
@@ -318,6 +322,7 @@ def test_kernel_api_real_engine_flow_publishes_control_plane_governed_action_tru
     )
     assert admitted.status_code == 200
     admitted_payload = admitted.json()
+    assert admitted_payload["control_plane_reservation_id"].startswith("kernel-action-reservation:")
 
     committed = client.post(
         "/v1/kernel/commit-proposal",
@@ -334,6 +339,12 @@ def test_kernel_api_real_engine_flow_publishes_control_plane_governed_action_tru
     )
     assert committed.status_code == 200
     assert committed.json()["status"] == "COMMITTED"
+    assert committed.json()["control_plane_run_id"].startswith("kernel-action-run:")
+    assert committed.json()["control_plane_attempt_id"].startswith("kernel-action-attempt:")
+    assert committed.json()["control_plane_attempt_state"] == "attempt_completed"
+    assert committed.json()["control_plane_reservation_id"].startswith("kernel-action-reservation:")
+    assert committed.json()["control_plane_lease_id"].startswith("kernel-action-lease:")
+    assert committed.json()["control_plane_final_truth_record_id"].startswith("kernel-action-final-truth:")
 
     run = execution_repo.run_by_id[KernelActionControlPlaneService.run_id_for(session_id=session_id, trace_id=trace_id)]
     attempt = execution_repo.attempt_by_id[
@@ -357,8 +368,13 @@ def test_kernel_api_real_engine_flow_publishes_control_plane_governed_action_tru
     assert replay.json()["control_plane"]["run_state"] == "completed"
     assert replay.json()["control_plane"]["step_count"] == 1
     assert replay.json()["control_plane"]["effect_entry_count"] == 1
-    assert replay.json()["control_plane"]["latest_reservation"] is None
-    assert replay.json()["control_plane"]["latest_step"]["namespace_scope"] is None
+    reservation = replay.json()["control_plane"]["latest_reservation"]
+    assert reservation is not None
+    assert reservation["reservation_kind"] == "concurrency_reservation"
+    assert reservation["status"] == "reservation_promoted_to_lease"
+    assert reservation["expiry_or_invalidation_basis"] == "kernel_action_execution_started"
+    assert replay.json()["control_plane"]["latest_lease"]["status"] == "lease_released"
+    assert replay.json()["control_plane"]["latest_step"]["namespace_scope"] == f"session:{session_id}"
     assert replay.json()["control_plane"]["latest_step"]["resources_touched"] == [
         f"kernel-action-target:{session_id}:{trace_id}"
     ]
@@ -425,6 +441,7 @@ def test_kernel_api_replay_exposes_active_reservation_for_needs_approval_trace(m
     admitted_payload = admitted.json()
     assert admitted_payload["admission_decision"]["decision"] == "NEEDS_APPROVAL"
     assert admitted_payload["approval_id"]
+    assert admitted_payload["control_plane_reservation_id"].startswith("approval-reservation:")
 
     replay = client.get(
         "/v1/kernel/action-lifecycle/replay",
@@ -443,6 +460,7 @@ def test_kernel_api_replay_exposes_active_reservation_for_needs_approval_trace(m
     assert control_plane["latest_reservation"]["supervisor_authority_ref"] == (
         f"tool-approval-gate:{admitted_payload['approval_id']}:create"
     )
+    assert control_plane["latest_lease"] is None
 
 
 def test_kernel_api_end_session_publishes_operator_cancel_for_unfinished_trace(monkeypatch) -> None:
@@ -496,6 +514,9 @@ def test_kernel_api_end_session_publishes_operator_cancel_for_unfinished_trace(m
         json={"session_id": session_id, "trace_id": trace_id, "reason": "manual-close"},
     )
     assert ended.status_code == 200
+    assert ended.json()["control_plane_run_id"].startswith("kernel-action-run:")
+    assert ended.json()["control_plane_final_truth_record_id"].startswith("kernel-action-final-truth:")
+    assert ended.json()["control_plane_operator_action_id"].startswith("kernel-action-operator:")
     run_id = KernelActionControlPlaneService.run_id_for(session_id=session_id, trace_id=trace_id)
     actions = [record for record in record_repo.operator_action_by_id.values() if record.target_ref == run_id]
     assert len(actions) == 1
@@ -511,6 +532,86 @@ def test_kernel_api_end_session_publishes_operator_cancel_for_unfinished_trace(m
     assert audit.json()["control_plane"]["latest_operator_action"]["receipt_refs"] == [
         f"kernel-ledger-event:{ended.json()['event_digest']}"
     ]
+
+
+def test_kernel_api_end_session_publishes_attestation_when_requested(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
+    monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
+    execution_repo = InMemoryControlPlaneExecutionRepository()
+    record_repo = InMemoryControlPlaneRecordRepository()
+    publication = ControlPlanePublicationService(repository=record_repo)
+    monkeypatch.setattr(api_module.engine, "control_plane_execution_repository", execution_repo)
+    monkeypatch.setattr(api_module.engine, "control_plane_repository", record_repo)
+    monkeypatch.setattr(api_module.engine, "control_plane_publication", publication)
+    monkeypatch.setattr(
+        api_module.engine,
+        "kernel_action_control_plane",
+        KernelActionControlPlaneService(
+            execution_repository=execution_repo,
+            publication=publication,
+        ),
+    )
+    monkeypatch.setattr(
+        api_module.engine,
+        "kernel_action_control_plane_operator",
+        KernelActionControlPlaneOperatorService(publication=publication),
+    )
+    monkeypatch.setattr(
+        api_module.engine,
+        "kernel_action_control_plane_view",
+        KernelActionControlPlaneViewService(
+            record_repository=record_repo,
+            execution_repository=execution_repo,
+        ),
+    )
+
+    session_id = "sess-real-kernel-cp-attestation"
+    trace_id = "trace-real-kernel-cp-attestation"
+    admitted = client.post(
+        "/v1/kernel/admit-proposal",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": session_id,
+            "trace_id": trace_id,
+            "proposal": {"proposal_type": "action.tool_call", "payload": {}},
+        },
+    )
+    assert admitted.status_code == 200
+
+    ended = client.post(
+        "/v1/kernel/end-session",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": session_id,
+            "trace_id": trace_id,
+            "reason": "manual-close",
+            "attestation_scope": "run_scope",
+            "attestation_payload": {"operator_note": "manual_state_check"},
+            "request_id": "req-kernel-attestation-1",
+        },
+    )
+    assert ended.status_code == 200
+    run_id = KernelActionControlPlaneService.run_id_for(session_id=session_id, trace_id=trace_id)
+    actions = [record for record in record_repo.operator_action_by_id.values() if record.target_ref == run_id]
+    assert len(actions) == 2
+    input_classes = sorted(record.input_class.value for record in actions)
+    assert input_classes == ["operator_attestation", "operator_command"]
+    attestation = next(record for record in actions if record.input_class.value == "operator_attestation")
+    assert attestation.attestation_scope == "run_scope"
+    assert attestation.attestation_payload == {"operator_note": "manual_state_check"}
+
+    audit = client.get(
+        "/v1/kernel/action-lifecycle/audit",
+        headers={"X-API-Key": "test-key"},
+        params={"session_id": session_id, "trace_id": trace_id},
+    )
+    assert audit.status_code == 200
+    assert audit.json()["control_plane"]["latest_operator_action"]["input_class"] == "operator_attestation"
+    assert audit.json()["control_plane"]["latest_operator_action"]["attestation_scope"] == "run_scope"
+    assert audit.json()["control_plane"]["latest_operator_action"]["attestation_payload"] == {
+        "operator_note": "manual_state_check"
+    }
 
 
 def test_kernel_projection_pack_returns_400_when_nervous_system_flag_off(monkeypatch) -> None:

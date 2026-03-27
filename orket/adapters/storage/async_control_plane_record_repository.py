@@ -17,6 +17,8 @@ from orket.core.contracts.control_plane_models import (
     ReconciliationRecord,
     RecoveryDecisionRecord,
     ReservationRecord,
+    ResolvedConfigurationSnapshot,
+    ResolvedPolicySnapshot,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 
@@ -31,8 +33,27 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
     def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
         self._lock = asyncio.Lock()
+        self._initialized = False
 
     async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS resolved_policy_snapshots (
+                snapshot_id TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL,
+                payload_json TEXT NOT NULL
+            )
+            """
+        )
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS resolved_configuration_snapshots (
+                snapshot_id TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL,
+                payload_json TEXT NOT NULL
+            )
+            """
+        )
         await conn.execute(
             """
             CREATE TABLE IF NOT EXISTS reservation_records (
@@ -186,7 +207,9 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             async with aiosqlite.connect(self.db_path) as conn:
                 if row_factory:
                     conn.row_factory = aiosqlite.Row
-                await self._ensure_initialized(conn)
+                if not self._initialized:
+                    await self._ensure_initialized(conn)
+                    self._initialized = True
                 result = await operation(conn)
                 if commit:
                     await conn.commit()
@@ -213,6 +236,102 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             return await insert_op(conn)
 
         return await self._execute(_op, row_factory=True, commit=True)
+
+    async def save_resolved_policy_snapshot(
+        self,
+        *,
+        snapshot: ResolvedPolicySnapshot,
+    ) -> ResolvedPolicySnapshot:
+        payload_json = snapshot.model_dump_json()
+
+        async def _insert(conn: aiosqlite.Connection) -> ResolvedPolicySnapshot:
+            await conn.execute(
+                """
+                INSERT INTO resolved_policy_snapshots (
+                    snapshot_id, created_at, payload_json
+                ) VALUES (?, ?, ?)
+                """,
+                (
+                    snapshot.snapshot_id,
+                    snapshot.created_at,
+                    payload_json,
+                ),
+            )
+            return snapshot
+
+        return await self._insert_or_return_existing(
+            table="resolved_policy_snapshots",
+            id_field="snapshot_id",
+            id_value=snapshot.snapshot_id,
+            payload_json=payload_json,
+            insert_op=_insert,
+            parse_existing=ResolvedPolicySnapshot.model_validate_json,
+        )
+
+    async def get_resolved_policy_snapshot(
+        self,
+        *,
+        snapshot_id: str,
+    ) -> ResolvedPolicySnapshot | None:
+        async def _op(conn: aiosqlite.Connection) -> ResolvedPolicySnapshot | None:
+            cursor = await conn.execute(
+                "SELECT payload_json FROM resolved_policy_snapshots WHERE snapshot_id = ?",
+                (snapshot_id,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                return None
+            return ResolvedPolicySnapshot.model_validate_json(str(row["payload_json"]))
+
+        return await self._execute(_op, row_factory=True)
+
+    async def save_resolved_configuration_snapshot(
+        self,
+        *,
+        snapshot: ResolvedConfigurationSnapshot,
+    ) -> ResolvedConfigurationSnapshot:
+        payload_json = snapshot.model_dump_json()
+
+        async def _insert(conn: aiosqlite.Connection) -> ResolvedConfigurationSnapshot:
+            await conn.execute(
+                """
+                INSERT INTO resolved_configuration_snapshots (
+                    snapshot_id, created_at, payload_json
+                ) VALUES (?, ?, ?)
+                """,
+                (
+                    snapshot.snapshot_id,
+                    snapshot.created_at,
+                    payload_json,
+                ),
+            )
+            return snapshot
+
+        return await self._insert_or_return_existing(
+            table="resolved_configuration_snapshots",
+            id_field="snapshot_id",
+            id_value=snapshot.snapshot_id,
+            payload_json=payload_json,
+            insert_op=_insert,
+            parse_existing=ResolvedConfigurationSnapshot.model_validate_json,
+        )
+
+    async def get_resolved_configuration_snapshot(
+        self,
+        *,
+        snapshot_id: str,
+    ) -> ResolvedConfigurationSnapshot | None:
+        async def _op(conn: aiosqlite.Connection) -> ResolvedConfigurationSnapshot | None:
+            cursor = await conn.execute(
+                "SELECT payload_json FROM resolved_configuration_snapshots WHERE snapshot_id = ?",
+                (snapshot_id,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                return None
+            return ResolvedConfigurationSnapshot.model_validate_json(str(row["payload_json"]))
+
+        return await self._execute(_op, row_factory=True)
 
     async def save_reservation_record(
         self,

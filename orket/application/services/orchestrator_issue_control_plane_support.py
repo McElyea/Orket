@@ -9,7 +9,11 @@ from orket.core.domain import (
     AttemptState,
     ClosureBasisClassification,
     CompletionClassification,
+    ExecutionFailureClass,
+    FailurePlane,
     ResultClass,
+    SideEffectBoundaryClass,
+    TruthFailureClass,
     RunState,
 )
 
@@ -224,9 +228,37 @@ def classify_closeout(
     )
 
 
+def classify_terminal_recovery_failure(
+    *,
+    result_class: ResultClass,
+    closure_basis: ClosureBasisClassification,
+    reason: str,
+) -> tuple[
+    str,
+    FailurePlane,
+    ExecutionFailureClass | TruthFailureClass,
+    SideEffectBoundaryClass,
+]:
+    normalized_reason = str(reason or "").strip().lower() or "unknown"
+    if result_class is ResultClass.BLOCKED or closure_basis is ClosureBasisClassification.POLICY_TERMINAL_STOP:
+        return (
+            f"orchestrator_issue_blocked:{normalized_reason}",
+            FailurePlane.TRUTH,
+            TruthFailureClass.CLAIM_EXCEEDS_AUTHORITY,
+            SideEffectBoundaryClass.POST_EFFECT_OBSERVED,
+        )
+    return (
+        f"orchestrator_issue_failed:{normalized_reason}",
+        FailurePlane.EXECUTION,
+        ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE,
+        SideEffectBoundaryClass.POST_EFFECT_OBSERVED,
+    )
+
+
 __all__ = [
     "attempt_id_for_run",
     "classify_closeout",
+    "classify_terminal_recovery_failure",
     "child_workload_holder_ref_for_issue",
     "child_workload_run_id_for_issue_creation",
     "digest",

@@ -67,6 +67,8 @@ class KernelEndSessionRequest(BaseModel):
     trace_id: str
     request_id: Optional[str] = None
     reason: Optional[str] = None
+    attestation_scope: Optional[str] = None
+    attestation_payload: dict[str, Any] = Field(default_factory=dict)
 
 
 class KernelRebuildPendingApprovalsRequest(BaseModel):
@@ -75,6 +77,41 @@ class KernelRebuildPendingApprovalsRequest(BaseModel):
 
 def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
     router = APIRouter()
+
+    async def _augment_kernel_response_with_control_plane_refs(
+        *,
+        engine: Any,
+        response: dict[str, Any],
+        session_id: str,
+        trace_id: str,
+    ) -> dict[str, Any]:
+        view_service = getattr(engine, "kernel_action_control_plane_view", None)
+        if view_service is None:
+            return response
+        summary = await view_service.build_summary(session_id=session_id, trace_id=trace_id)
+        if summary is None:
+            return response
+        augmented = dict(response)
+        augmented["control_plane_run_id"] = summary.get("run_id")
+        augmented["control_plane_attempt_id"] = summary.get("current_attempt_id")
+        augmented["control_plane_attempt_state"] = summary.get("current_attempt_state")
+        reservation = summary.get("latest_reservation")
+        if isinstance(reservation, dict):
+            augmented["control_plane_reservation_id"] = reservation.get("reservation_id")
+        lease = summary.get("latest_lease")
+        if isinstance(lease, dict):
+            augmented["control_plane_lease_id"] = lease.get("lease_id")
+        final_truth = summary.get("final_truth")
+        if isinstance(final_truth, dict):
+            augmented["control_plane_final_truth_record_id"] = final_truth.get("final_truth_record_id")
+        if summary.get("current_recovery_decision_id") is not None:
+            augmented["control_plane_recovery_decision_id"] = summary.get("current_recovery_decision_id")
+        if summary.get("current_recovery_action") is not None:
+            augmented["control_plane_recovery_action"] = summary.get("current_recovery_action")
+        operator_action = summary.get("latest_operator_action")
+        if isinstance(operator_action, dict):
+            augmented["control_plane_operator_action_id"] = operator_action.get("action_id")
+        return augmented
 
     @router.post("/kernel/lifecycle")
     async def kernel_lifecycle(req: KernelLifecycleRequest):
@@ -154,7 +191,12 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
                 proposal=req.proposal,
                 response=response,
             )
-            return response
+            return await _augment_kernel_response_with_control_plane_refs(
+                engine=engine,
+                response=response,
+                session_id=req.session_id,
+                trace_id=req.trace_id,
+            )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -221,11 +263,18 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
                 "block_result_leaks": req.block_result_leaks,
             }
             if callable(handler):
-                return await handler(payload)
-            return engine.kernel_commit_proposal(
-                {
-                    **payload,
-                }
+                response = await handler(payload)
+            else:
+                response = engine.kernel_commit_proposal(
+                    {
+                        **payload,
+                    }
+                )
+            return await _augment_kernel_response_with_control_plane_refs(
+                engine=engine,
+                response=response,
+                session_id=req.session_id,
+                trace_id=req.trace_id,
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -241,14 +290,23 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
                 "trace_id": req.trace_id,
                 "request_id": req.request_id,
                 "reason": req.reason,
+                "attestation_scope": req.attestation_scope,
+                "attestation_payload": req.attestation_payload,
                 "operator_actor_ref": getattr(request.state, "authenticated_actor_ref", None),
             }
             if callable(handler):
-                return await handler(payload)
-            return engine.kernel_end_session(
-                {
-                    **payload,
-                }
+                response = await handler(payload)
+            else:
+                response = engine.kernel_end_session(
+                    {
+                        **payload,
+                    }
+                )
+            return await _augment_kernel_response_with_control_plane_refs(
+                engine=engine,
+                response=response,
+                session_id=req.session_id,
+                trace_id=req.trace_id,
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc

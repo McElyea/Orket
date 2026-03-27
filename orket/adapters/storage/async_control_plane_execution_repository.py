@@ -19,6 +19,7 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
     def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
         self._lock = asyncio.Lock()
+        self._initialized = False
 
     async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
         await conn.execute(
@@ -66,7 +67,9 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
             async with aiosqlite.connect(self.db_path) as conn:
                 if row_factory:
                     conn.row_factory = aiosqlite.Row
-                await self._ensure_initialized(conn)
+                if not self._initialized:
+                    await self._ensure_initialized(conn)
+                    self._initialized = True
                 result = await operation(conn)
                 if commit:
                     await conn.commit()

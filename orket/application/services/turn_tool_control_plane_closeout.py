@@ -210,6 +210,8 @@ async def finalize_turn_execution(
             "end_timestamp": closed_at,
             "side_effect_boundary_class": boundary,
             "failure_class": failure_class,
+            "failure_plane": decision.failure_plane,
+            "failure_classification": decision.failure_classification,
             "recovery_decision_id": decision.decision_id,
         }
     )
@@ -276,7 +278,13 @@ async def close_reconciliation_required_resume_mode(
         blocked_actions=terminal_blocked_actions(),
         reconciliation_record=reconciliation,
     )
-    updated_attempt = attempt.model_copy(update={"recovery_decision_id": decision.decision_id})
+    updated_attempt = attempt.model_copy(
+        update={
+            "recovery_decision_id": decision.decision_id,
+            "failure_plane": decision.failure_plane,
+            "failure_classification": decision.failure_classification,
+        }
+    )
     await execution_repository.save_attempt_record(record=updated_attempt)
     truth = await publication.publish_final_truth(
         final_truth_record_id=f"turn-tool-final-truth:{run.run_id}",

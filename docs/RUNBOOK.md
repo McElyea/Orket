@@ -31,6 +31,9 @@ python server.py --profile dev
 ```bash
 python -m orket.webhook_server
 ```
+Requires webhook credentials in environment or `.env`:
+1. `GITEA_WEBHOOK_SECRET`
+2. `GITEA_ADMIN_PASSWORD`
 
 ## API Launcher Precedence
 1. CLI arguments (`--host`, `--port`, `--profile`, `--reload/--no-reload`)
@@ -214,6 +217,7 @@ Workspace/log paths:
    - Verify `ORKET_API_KEY` posture and `/health`.
 2. Webhook failures:
    - Verify `GITEA_WEBHOOK_SECRET`.
+   - Verify `GITEA_ADMIN_PASSWORD`.
    - Verify `X-Gitea-Signature` is present.
    - Confirm webhook receiver is on `:8080`.
 3. Stalled run:

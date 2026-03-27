@@ -3,15 +3,19 @@ from __future__ import annotations
 from typing import Any
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots
 from orket.application.services.turn_tool_control_plane_closeout import (
     ensure_begin_execution_allowed,
     ensure_current_execution_target,
     finalize_turn_execution,
+    terminal_blocked_actions,
 )
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
+    TurnToolControlPlaneResourceError,
     ensure_active_execution_lease,
     ensure_admission_reservation,
     invalidate_admission_reservation_if_present,
+    release_execution_authority_if_present,
 )
 from orket.application.services.turn_tool_control_plane_recovery import recover_pre_effect_attempt_for_resume_mode
 from orket.application.services.turn_tool_control_plane_state_gate import (
@@ -43,23 +47,23 @@ from orket.core.domain import (
     CompletionClassification,
     DegradationClassification,
     EvidenceSufficiencyClassification,
+    RecoveryActionClass,
     ResidualUncertaintyClassification,
     ResultClass,
     RunState,
+    SideEffectBoundaryClass,
+    is_terminal_attempt_state,
     validate_attempt_state_transition,
     validate_run_state_transition,
 )
 
-
 class TurnToolControlPlaneError(ValueError):
     """Raised when governed turn-tool control-plane truth cannot be published honestly."""
-
 
 class TurnToolControlPlaneService:
     """Publishes governed turn-tool execution into first-class ControlPlane records."""
 
-    WORKLOAD_ID = "governed-turn-tools"
-    WORKLOAD_VERSION = "turn_executor.governed.v1"
+    WORKLOAD_ID, WORKLOAD_VERSION = "governed-turn-tools", "turn_executor.governed.v1"
 
     def __init__(
         self,
@@ -80,20 +84,54 @@ class TurnToolControlPlaneService:
         proposal_hash: str,
         violation_reasons: list[str],
     ) -> tuple[RunRecord, FinalTruthRecord]:
-        run = await self._ensure_admission_pending_run(
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
-            proposal_hash=proposal_hash,
-        )
+        run = await self._ensure_admission_pending_run(session_id=session_id, issue_id=issue_id, role_name=role_name, turn_index=turn_index, proposal_hash=proposal_hash)
         existing_truth = await self.publication.repository.get_final_truth(run_id=run.run_id)
         if existing_truth is not None:
             if run.final_truth_record_id != existing_truth.final_truth_record_id:
                 run = run.model_copy(update={"final_truth_record_id": existing_truth.final_truth_record_id})
                 await self.execution_repository.save_run_record(record=run)
             return run, existing_truth
-
+        preflight_ref = preflight_result_ref(run_id=run.run_id, violation_reasons=violation_reasons)
+        current_attempt = await self._current_attempt_for_run(run=run)
+        if current_attempt is None:
+            current_attempt = await self._ensure_attempt(run=run)
+        if current_attempt is not None and not is_terminal_attempt_state(current_attempt.attempt_state):
+            closed_at = utc_now()
+            decision = None
+            if current_attempt.recovery_decision_id is None:
+                decision = await self.publication.publish_recovery_decision(
+                    decision_id=f"turn-tool-recovery:{run.run_id}:preflight:{current_attempt.attempt_ordinal:04d}",
+                    run_id=run.run_id,
+                    failed_attempt_id=current_attempt.attempt_id,
+                    failure_classification_basis="tool_execution_blocked",
+                    side_effect_boundary_class=SideEffectBoundaryClass.PRE_EFFECT_FAILURE,
+                    recovery_policy_ref=run.policy_snapshot_id,
+                    authorized_next_action=RecoveryActionClass.TERMINATE_RUN,
+                    rationale_ref=preflight_ref,
+                    required_precondition_refs=[preflight_ref],
+                    blocked_actions=terminal_blocked_actions(),
+                )
+            validate_attempt_state_transition(current_state=current_attempt.attempt_state, next_state=AttemptState.ABANDONED)
+            current_attempt = current_attempt.model_copy(
+                update={
+                    "attempt_state": AttemptState.ABANDONED,
+                    "end_timestamp": closed_at,
+                    "side_effect_boundary_class": SideEffectBoundaryClass.PRE_EFFECT_FAILURE,
+                    "failure_class": "tool_execution_blocked",
+                    "failure_plane": current_attempt.failure_plane if decision is None else decision.failure_plane,
+                    "failure_classification": (
+                        current_attempt.failure_classification
+                        if decision is None
+                        else decision.failure_classification
+                    ),
+                    "recovery_decision_id": (
+                        current_attempt.recovery_decision_id
+                        if decision is None
+                        else decision.decision_id
+                    ),
+                }
+            )
+            await self.execution_repository.save_attempt_record(record=current_attempt)
         truth = await self.publication.publish_final_truth(
             final_truth_record_id=f"turn-tool-final-truth:{run.run_id}",
             run_id=run.run_id,
@@ -104,21 +142,15 @@ class TurnToolControlPlaneService:
             degradation_classification=DegradationClassification.NONE,
             closure_basis=ClosureBasisClassification.POLICY_TERMINAL_STOP,
             authority_sources=[AuthoritySourceClass.RECEIPT_EVIDENCE],
-            authoritative_result_ref=preflight_result_ref(run_id=run.run_id, violation_reasons=violation_reasons),
+            authoritative_result_ref=preflight_ref,
         )
         validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.FAILED_TERMINAL)
-        updated_run = run.model_copy(
-            update={
-                "lifecycle_state": RunState.FAILED_TERMINAL,
-                "final_truth_record_id": truth.final_truth_record_id,
-            }
-        )
+        updated_run = run.model_copy(update={"lifecycle_state": RunState.FAILED_TERMINAL, "final_truth_record_id": truth.final_truth_record_id})
         await self.execution_repository.save_run_record(record=updated_run)
-        await invalidate_admission_reservation_if_present(
-            publication=self.publication,
-            run=updated_run,
-            invalidation_basis="turn_tool_preflight_terminal_stop",
-        )
+        try:
+            await invalidate_admission_reservation_if_present(publication=self.publication, run=updated_run, invalidation_basis="turn_tool_preflight_terminal_stop")
+        except TurnToolControlPlaneResourceError:
+            await release_execution_authority_if_present(publication=self.publication, run=updated_run, release_basis="turn_tool_preflight_terminal_stop", publication_timestamp=utc_now())
         return updated_run, truth
 
     async def begin_execution(
@@ -316,28 +348,36 @@ class TurnToolControlPlaneService:
         if run is not None:
             await ensure_admission_reservation(publication=self.publication, run=run)
             return run
+        policy_payload = {"proposal_hash": proposal_hash, "governed": True}
+        configuration_payload = {
+            "session_id": session_id,
+            "issue_id": issue_id,
+            "role_name": role_name,
+            "turn_index": turn_index,
+            "proposal_hash": proposal_hash,
+            "namespace_scope": run_namespace_scope(issue_id=issue_id),
+        }
         record = RunRecord(
             run_id=run_id,
             workload_id=self.WORKLOAD_ID,
             workload_version=self.WORKLOAD_VERSION,
             policy_snapshot_id=f"turn-tool-policy:{run_id}",
-            policy_digest=digest({"proposal_hash": proposal_hash, "governed": True}),
+            policy_digest=digest(policy_payload),
             configuration_snapshot_id=f"turn-tool-config:{run_id}",
-            configuration_digest=digest(
-                {
-                    "session_id": session_id,
-                    "issue_id": issue_id,
-                    "role_name": role_name,
-                    "turn_index": turn_index,
-                    "proposal_hash": proposal_hash,
-                    "namespace_scope": run_namespace_scope(issue_id=issue_id),
-                }
-            ),
+            configuration_digest=digest(configuration_payload),
             creation_timestamp=utc_now(),
             admission_decision_receipt_ref=f"turn-tool-proposal:{proposal_hash}",
             namespace_scope=run_namespace_scope(issue_id=issue_id),
             lifecycle_state=RunState.ADMISSION_PENDING,
             current_attempt_id=attempt_id_for(run_id=run_id),
+        )
+        await publish_run_snapshots(
+            publication=self.publication,
+            run=record,
+            policy_payload=policy_payload,
+            policy_source_refs=[record.admission_decision_receipt_ref],
+            configuration_payload=configuration_payload,
+            configuration_source_refs=[record.admission_decision_receipt_ref],
         )
         run = await self.execution_repository.save_run_record(record=record)
         await ensure_admission_reservation(publication=self.publication, run=run)

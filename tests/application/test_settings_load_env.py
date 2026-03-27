@@ -24,6 +24,7 @@ def _unset_pytest_marker():
 
 def test_load_env_parses_values_before_event_loop(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Layer: unit. Verifies load_env parses real .env content, ignores comments/blanks, and preserves existing vars."""
+    monkeypatch.setattr(settings_module, "_ENV_LOADED", False)
     env_file = tmp_path / ".env"
     env_file.write_text(
         "# comment\nFOO=from-file\n\nBAR=from-bar\nEXISTING=from-file\n",
@@ -44,6 +45,7 @@ def test_load_env_parses_values_before_event_loop(monkeypatch: pytest.MonkeyPatc
 
 def test_load_env_rejects_running_event_loop(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Layer: unit. Verifies load_env fails closed in async contexts instead of tripping a sync-bridge RuntimeError."""
+    monkeypatch.setattr(settings_module, "_ENV_LOADED", False)
     env_file = tmp_path / ".env"
     env_file.write_text("FOO=from-file\n", encoding="utf-8")
     monkeypatch.setattr(settings_module, "ENV_FILE", env_file)
@@ -54,3 +56,25 @@ def test_load_env_rejects_running_event_loop(monkeypatch: pytest.MonkeyPatch, tm
     with _unset_pytest_marker():
         with pytest.raises(AssertionError, match="before the event loop starts"):
             asyncio.run(_invoke())
+
+
+def test_load_env_is_noop_after_preloop_load_even_if_called_in_event_loop(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Layer: unit. Verifies repeated load_env calls are no-ops after a successful pre-loop bootstrap."""
+    monkeypatch.setattr(settings_module, "_ENV_LOADED", False)
+    env_file = tmp_path / ".env"
+    env_file.write_text("FOO=from-file\n", encoding="utf-8")
+    monkeypatch.setattr(settings_module, "ENV_FILE", env_file)
+    monkeypatch.delenv("FOO", raising=False)
+
+    with _unset_pytest_marker():
+        settings_module.load_env()
+
+    async def _invoke() -> None:
+        settings_module.load_env()
+
+    with _unset_pytest_marker():
+        asyncio.run(_invoke())
+
+    assert os.environ["FOO"] == "from-file"

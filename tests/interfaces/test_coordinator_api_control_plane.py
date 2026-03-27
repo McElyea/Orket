@@ -21,8 +21,11 @@ from tests.application.test_control_plane_publication_service import InMemoryCon
 pytestmark = pytest.mark.integration
 
 
-def _client() -> TestClient:
-    return TestClient(coordinator_api_module.app)
+def _client(*, raise_server_exceptions: bool = True) -> TestClient:
+    return TestClient(
+        coordinator_api_module.app,
+        raise_server_exceptions=raise_server_exceptions,
+    )
 
 
 def _card(*, state: str, claimed_by: str | None = None, lease_expires_at: float | None = None) -> Card:
@@ -304,3 +307,39 @@ def test_coordinator_api_fail_returns_release_state_control_plane_summary(monkey
         LeaseStatus.ACTIVE,
         LeaseStatus.RELEASED,
     ]
+
+
+def test_coordinator_api_claim_fail_closes_authority_on_promotion_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = _install_in_memory_control_plane(monkeypatch)
+    coordinator_api_module.store.reset([_card(state="OPEN")])
+
+    async def _raise_promote_failure(**_kwargs):
+        raise RuntimeError("promote failed")
+
+    monkeypatch.setattr(
+        coordinator_api_module.control_plane_publication,
+        "promote_reservation_to_lease",
+        _raise_promote_failure,
+    )
+
+    claimed = _client(raise_server_exceptions=False).post(
+        "/cards/card-1/claim",
+        json={"node_id": "worker-a", "lease_duration": 5.0},
+    )
+
+    assert claimed.status_code == 500
+    assert claimed.text == "Internal Server Error"
+    reservations = repository.reservations_by_id["coordinator-reservation:card-1:lease_epoch:00000001"]
+    leases = repository.leases_by_id["coordinator-lease:card-1"]
+    assert [record.status for record in reservations] == [
+        ReservationStatus.ACTIVE,
+        ReservationStatus.INVALIDATED,
+    ]
+    assert reservations[-1].expiry_or_invalidation_basis == "coordinator_claim_promotion_failed;lease_epoch=00000001"
+    assert [record.status for record in leases] == [
+        LeaseStatus.ACTIVE,
+        LeaseStatus.RELEASED,
+    ]
+    assert leases[-1].expiry_basis == "coordinator_claim_promotion_failed;lease_epoch=00000001"

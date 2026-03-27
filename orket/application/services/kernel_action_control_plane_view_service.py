@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.application.services.kernel_action_control_plane_resource_lifecycle import (
+    holder_ref_for_run,
+    lease_id_for_run,
+    reservation_id_for_run,
+)
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 
 
@@ -27,10 +32,17 @@ class KernelActionControlPlaneViewService:
                 attempt = attempts[-1]
         if attempt is not None:
             steps = await self.execution_repository.list_step_records(attempt_id=attempt.attempt_id)
+        recovery_decision = None
+        if attempt is not None and attempt.recovery_decision_id is not None:
+            recovery_decision = await self.record_repository.get_recovery_decision(
+                decision_id=attempt.recovery_decision_id
+            )
         final_truth = await self.record_repository.get_final_truth(run_id=run_id)
         effects = await self.record_repository.list_effect_journal_entries(run_id=run_id)
         operator_actions = await self.record_repository.list_operator_actions(target_ref=run_id)
-        reservation = await self.record_repository.get_latest_reservation_record_for_holder_ref(holder_ref=run_id)
+        lease = await self.record_repository.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run_id))
+        reservations = await _reservation_candidates(record_repository=self.record_repository, run_id=run_id)
+        reservation = _select_reservation_summary_candidate(reservations)
         latest_operator_action = operator_actions[-1] if operator_actions else None
         latest_step = steps[-1] if steps else None
         return {
@@ -38,7 +50,22 @@ class KernelActionControlPlaneViewService:
             "run_state": run.lifecycle_state.value,
             "current_attempt_id": None if attempt is None else attempt.attempt_id,
             "current_attempt_state": None if attempt is None else attempt.attempt_state.value,
+            "current_attempt_side_effect_boundary_class": None
+            if attempt is None or attempt.side_effect_boundary_class is None
+            else attempt.side_effect_boundary_class.value,
+            "current_attempt_failure_class": None if attempt is None else attempt.failure_class,
+            "current_attempt_failure_plane": None
+            if attempt is None or attempt.failure_plane is None
+            else attempt.failure_plane.value,
+            "current_attempt_failure_classification": None
+            if attempt is None or attempt.failure_classification is None
+            else attempt.failure_classification.value,
+            "current_recovery_decision_id": None if attempt is None else attempt.recovery_decision_id,
+            "current_recovery_action": None
+            if recovery_decision is None
+            else recovery_decision.authorized_next_action.value,
             "latest_reservation": None if reservation is None else _reservation_summary(reservation),
+            "latest_lease": None if lease is None else _lease_summary(lease),
             "step_count": len(steps),
             "latest_step": None
             if latest_step is None
@@ -75,6 +102,10 @@ class KernelActionControlPlaneViewService:
                 "command_class": None
                 if latest_operator_action.command_class is None
                 else latest_operator_action.command_class.value,
+                "risk_acceptance_scope": latest_operator_action.risk_acceptance_scope,
+                "attestation_scope": latest_operator_action.attestation_scope,
+                "attestation_payload": dict(latest_operator_action.attestation_payload),
+                "precondition_basis_ref": latest_operator_action.precondition_basis_ref,
                 "result": latest_operator_action.result,
                 "actor_ref": latest_operator_action.actor_ref,
                 "timestamp": latest_operator_action.timestamp,
@@ -94,6 +125,61 @@ def _reservation_summary(record: Any) -> dict[str, Any]:
         "supervisor_authority_ref": record.supervisor_authority_ref,
         "promoted_lease_id": record.promoted_lease_id,
     }
+
+
+def _lease_summary(record: Any) -> dict[str, Any]:
+    return {
+        "lease_id": record.lease_id,
+        "resource_id": record.resource_id,
+        "holder_ref": record.holder_ref,
+        "lease_epoch": record.lease_epoch,
+        "status": record.status.value,
+        "expiry_basis": record.expiry_basis,
+        "cleanup_eligibility_rule": record.cleanup_eligibility_rule,
+        "source_reservation_id": record.source_reservation_id,
+        "last_confirmed_observation": record.last_confirmed_observation,
+    }
+
+
+async def _reservation_candidates(*, record_repository: Any, run_id: str) -> list[Any]:
+    candidates: list[Any] = []
+    direct_target = await record_repository.get_latest_reservation_record_for_holder_ref(holder_ref=run_id)
+    if direct_target is not None:
+        candidates.append(direct_target)
+    run_owned = await record_repository.get_latest_reservation_record_for_holder_ref(
+        holder_ref=holder_ref_for_run(run_id=run_id)
+    )
+    if run_owned is not None:
+        candidates.append(run_owned)
+    canonical = await record_repository.get_latest_reservation_record(reservation_id=reservation_id_for_run(run_id=run_id))
+    if canonical is not None:
+        candidates.append(canonical)
+    deduped: dict[tuple[str, str, str, str | None], Any] = {}
+    for record in candidates:
+        deduped[(record.reservation_id, record.status.value, record.expiry_or_invalidation_basis, record.promoted_lease_id)] = record
+    return list(deduped.values())
+
+
+def _select_reservation_summary_candidate(records: list[Any]) -> Any | None:
+    if not records:
+        return None
+    rank_by_status = {
+        "reservation_promoted_to_lease": 4,
+        "reservation_active": 3,
+        "reservation_released": 2,
+        "reservation_cancelled": 1,
+        "reservation_invalidated": 1,
+        "reservation_expired": 1,
+    }
+    return max(
+        records,
+        key=lambda record: (
+            rank_by_status.get(record.status.value, 0),
+            2 if record.reservation_kind.value == "operator_hold_reservation" else 1,
+            str(record.creation_timestamp),
+            str(record.reservation_id),
+        ),
+    )
 
 
 __all__ = ["KernelActionControlPlaneViewService"]

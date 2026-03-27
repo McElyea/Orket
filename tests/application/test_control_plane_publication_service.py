@@ -15,6 +15,8 @@ from orket.core.contracts import (
     ReconciliationRecord,
     RecoveryDecisionRecord,
     ReservationRecord,
+    ResolvedConfigurationSnapshot,
+    ResolvedPolicySnapshot,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 from orket.core.domain import (
@@ -44,6 +46,8 @@ pytestmark = pytest.mark.unit
 
 class InMemoryControlPlaneRecordRepository(ControlPlaneRecordRepository):
     def __init__(self) -> None:
+        self.policy_snapshots_by_id: dict[str, ResolvedPolicySnapshot] = {}
+        self.configuration_snapshots_by_id: dict[str, ResolvedConfigurationSnapshot] = {}
         self.reservations_by_id: dict[str, list[ReservationRecord]] = {}
         self.journal_by_run: dict[str, list[EffectJournalEntryRecord]] = {}
         self.checkpoint_by_id: dict[str, CheckpointRecord] = {}
@@ -53,6 +57,36 @@ class InMemoryControlPlaneRecordRepository(ControlPlaneRecordRepository):
         self.reconciliation_by_id: dict[str, ReconciliationRecord] = {}
         self.operator_action_by_id: dict[str, OperatorActionRecord] = {}
         self.final_truth_by_run: dict[str, FinalTruthRecord] = {}
+
+    async def save_resolved_policy_snapshot(
+        self,
+        *,
+        snapshot: ResolvedPolicySnapshot,
+    ) -> ResolvedPolicySnapshot:
+        self.policy_snapshots_by_id[snapshot.snapshot_id] = snapshot
+        return snapshot
+
+    async def get_resolved_policy_snapshot(
+        self,
+        *,
+        snapshot_id: str,
+    ) -> ResolvedPolicySnapshot | None:
+        return self.policy_snapshots_by_id.get(snapshot_id)
+
+    async def save_resolved_configuration_snapshot(
+        self,
+        *,
+        snapshot: ResolvedConfigurationSnapshot,
+    ) -> ResolvedConfigurationSnapshot:
+        self.configuration_snapshots_by_id[snapshot.snapshot_id] = snapshot
+        return snapshot
+
+    async def get_resolved_configuration_snapshot(
+        self,
+        *,
+        snapshot_id: str,
+    ) -> ResolvedConfigurationSnapshot | None:
+        return self.configuration_snapshots_by_id.get(snapshot_id)
 
     async def save_reservation_record(
         self,
@@ -517,3 +551,28 @@ async def test_control_plane_publication_service_persists_operator_action() -> N
     assert loaded is not None
     assert loaded.command_class is OperatorCommandClass.CANCEL_RUN
     assert listed == [action]
+
+
+@pytest.mark.asyncio
+async def test_control_plane_publication_service_persists_operator_attestation() -> None:
+    repository = InMemoryControlPlaneRecordRepository()
+    service = ControlPlanePublicationService(repository=repository)
+
+    action = await service.publish_operator_action(
+        action_id="op-attest-1",
+        actor_ref="api_key_fingerprint:sha256:test",
+        input_class=OperatorInputClass.ATTESTATION,
+        target_ref="run-1",
+        timestamp="2026-03-26T10:00:00+00:00",
+        precondition_basis_ref="reconciliation:run-1:checkpoint",
+        result="recorded_attestation",
+        attestation_scope="run_scope",
+        attestation_payload={"resource_observation": "operator_confirmed"},
+        receipt_refs=["kernel-ledger-event:attestation"],
+    )
+
+    loaded = await repository.get_operator_action(action_id="op-attest-1")
+    assert loaded is not None
+    assert action.input_class is OperatorInputClass.ATTESTATION
+    assert loaded.attestation_scope == "run_scope"
+    assert loaded.attestation_payload == {"resource_observation": "operator_confirmed"}

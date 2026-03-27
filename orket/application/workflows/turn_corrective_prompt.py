@@ -82,8 +82,11 @@ class CorrectivePromptBuilder:
             for hint in rule_hints:
                 lines.append(f"  - {hint}")
 
-        required_read_paths = PathResolver.required_read_paths(context, self.workspace)
-        required_write_paths = PathResolver.required_write_paths(context)
+        required_action_tools = {str(t).strip() for t in (context.get("required_action_tools") or []) if str(t).strip()}
+        required_read_paths = (
+            PathResolver.required_read_paths(context, self.workspace) if "read_file" in required_action_tools else []
+        )
+        required_write_paths = PathResolver.required_write_paths(context) if "write_file" in required_action_tools else []
         required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if str(s).strip()]
         if required_read_paths or required_write_paths or required_statuses:
             if protocol_governed_enabled:

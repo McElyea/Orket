@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from orket.core.domain.control_plane_lifecycle import is_terminal_attempt_state
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.orchestrator_issue_control_plane_support import (
     child_workload_holder_ref_for_issue,
     child_workload_run_id_for_issue_creation,
     classify_closeout,
     issue_creation_ref,
+    lease_id_for_run,
     namespace_scope,
     resources_touched,
     scheduler_holder_ref_for_issue,
@@ -14,8 +16,17 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
     transition_ref,
     utc_now,
 )
+from orket.core.contracts import RunRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
-from orket.core.domain import CapabilityClass, ClosureBasisClassification, CompletionClassification, ResultClass
+from orket.core.domain import (
+    CapabilityClass,
+    ClosureBasisClassification,
+    CompletionClassification,
+    LeaseStatus,
+    ReservationStatus,
+    ResultClass,
+    RunState,
+)
 from orket.schema import CardStatus
 
 from .orchestrator_scheduler_control_plane_mutation import (
@@ -247,10 +258,15 @@ class OrchestratorSchedulerControlPlaneService:
     ) -> str:
         existing_run = await self.execution_repository.get_run_record(run_id=run_id)
         if existing_run is not None:
+            await self._require_closed_existing_run(
+                run_id=run_id,
+                expected_namespace_scope=namespace_scope(issue_id=issue_id),
+            )
             return run_id
         created_at = utc_now()
         run, attempt = await create_namespace_execution(
             execution_repository=self.execution_repository,
+            publication=self.publication,
             run_id=run_id,
             workload_id=workload_id,
             workload_version=workload_version,
@@ -261,7 +277,7 @@ class OrchestratorSchedulerControlPlaneService:
             created_at=created_at,
         )
         attempt_id = attempt.attempt_id
-        _reservation, lease = await activate_namespace_authority(
+        run, attempt, _reservation, lease = await activate_namespace_authority(
             execution_repository=self.execution_repository,
             publication=self.publication,
             promotion_rule=self.PROMOTION_RULE,
@@ -306,5 +322,71 @@ class OrchestratorSchedulerControlPlaneService:
         )
         return run_id
 
+    async def _require_closed_existing_run(self, *, run_id: str, expected_namespace_scope: str) -> None:
+        run = await self.execution_repository.get_run_record(run_id=run_id)
+        if run is None:
+            return
+        if run.final_truth_record_id is None:
+            raise OrchestratorSchedulerControlPlaneError(
+                f"orchestrator scheduler mutation already has active control-plane truth: {run_id}"
+            )
+        await self._require_closed_run_resource_authority(run=run)
+        run_scope = str(run.namespace_scope or "").strip()
+        expected_scope = str(expected_namespace_scope or "").strip()
+        if not run_scope or run_scope != expected_scope:
+            raise OrchestratorSchedulerControlPlaneError(
+                "orchestrator scheduler mutation closed run namespace scope drift: "
+                f"{run_id};run_scope={run_scope!r};expected_scope={expected_scope!r}"
+            )
+        if run.lifecycle_state not in {RunState.COMPLETED, RunState.FAILED_TERMINAL, RunState.CANCELLED}:
+            raise OrchestratorSchedulerControlPlaneError(
+                f"orchestrator scheduler mutation closed run has non-terminal lifecycle: {run_id}"
+            )
+        current_attempt_id = str(run.current_attempt_id or "").strip()
+        if not current_attempt_id:
+            raise OrchestratorSchedulerControlPlaneError(
+                f"orchestrator scheduler mutation closed run missing current attempt id: {run_id}"
+            )
+        attempt = await self.execution_repository.get_attempt_record(attempt_id=current_attempt_id)
+        if attempt is None:
+            raise OrchestratorSchedulerControlPlaneError(
+                f"orchestrator scheduler mutation closed run missing attempt: {run_id}"
+            )
+        if not is_terminal_attempt_state(attempt.attempt_state):
+            raise OrchestratorSchedulerControlPlaneError(
+                f"orchestrator scheduler mutation closed run has non-terminal attempt: {run_id}"
+            )
 
-__all__ = ["OrchestratorSchedulerControlPlaneService"]
+    async def _require_closed_run_resource_authority(self, *, run: RunRecord) -> None:
+        workload_id = str(run.workload_id or "").strip()
+        run_id = str(run.run_id or "").strip()
+        reservation_id = f"{workload_id}-reservation:{run_id}"
+        reservation = await self.publication.repository.get_latest_reservation_record(reservation_id=reservation_id)
+        if reservation is None:
+            raise OrchestratorSchedulerControlPlaneError(
+                f"orchestrator scheduler mutation closed run missing reservation authority: {run_id}"
+            )
+        if reservation.status is ReservationStatus.ACTIVE:
+            raise OrchestratorSchedulerControlPlaneError(
+                f"orchestrator scheduler mutation closed run has active reservation drift: {run_id}"
+            )
+        lease = await self.publication.repository.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run_id))
+        if lease is not None and lease.status is LeaseStatus.ACTIVE:
+            raise OrchestratorSchedulerControlPlaneError(
+                f"orchestrator scheduler mutation closed run has active lease drift: {run_id}"
+            )
+        if reservation.status is ReservationStatus.PROMOTED_TO_LEASE and lease is None:
+            raise OrchestratorSchedulerControlPlaneError(
+                f"orchestrator scheduler mutation closed run missing lease authority for promoted reservation: {run_id}"
+            )
+        if lease is not None and lease.source_reservation_id != reservation.reservation_id:
+            raise OrchestratorSchedulerControlPlaneError(
+                f"orchestrator scheduler mutation closed run lease source mismatch: {run_id}"
+            )
+
+
+class OrchestratorSchedulerControlPlaneError(ValueError):
+    """Raised when scheduler-owned control-plane publication detects non-terminal run-state drift."""
+
+
+__all__ = ["OrchestratorSchedulerControlPlaneError", "OrchestratorSchedulerControlPlaneService"]

@@ -11,7 +11,7 @@ from orket.adapters.storage.async_control_plane_record_repository import (
     ControlPlaneRecordConflictError,
 )
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
-from orket.core.contracts import CheckpointRecord
+from orket.core.contracts import CheckpointRecord, ResolvedConfigurationSnapshot, ResolvedPolicySnapshot
 from orket.core.domain import (
     AuthoritySourceClass,
     CheckpointReobservationClass,
@@ -245,3 +245,33 @@ async def test_async_control_plane_record_repository_rejects_conflicting_record_
             uncertainty_classification=ResidualUncertaintyClassification.NONE,
             integrity_verification_ref="integrity-2",
         )
+
+
+@pytest.mark.asyncio
+async def test_async_control_plane_record_repository_persists_resolved_snapshots(tmp_path: Path) -> None:
+    repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
+    policy_snapshot = ResolvedPolicySnapshot(
+        snapshot_id="policy-1",
+        snapshot_digest="sha256:policy-1",
+        created_at="2026-03-25T01:00:00+00:00",
+        source_refs=["admission-ref-1"],
+        policy_payload={"mode": "strict"},
+    )
+    configuration_snapshot = ResolvedConfigurationSnapshot(
+        snapshot_id="config-1",
+        snapshot_digest="sha256:config-1",
+        created_at="2026-03-25T01:00:00+00:00",
+        source_refs=["admission-ref-1"],
+        configuration_payload={"session_id": "sess-1"},
+    )
+
+    await repository.save_resolved_policy_snapshot(snapshot=policy_snapshot)
+    await repository.save_resolved_configuration_snapshot(snapshot=configuration_snapshot)
+
+    loaded_policy = await repository.get_resolved_policy_snapshot(snapshot_id=policy_snapshot.snapshot_id)
+    loaded_configuration = await repository.get_resolved_configuration_snapshot(
+        snapshot_id=configuration_snapshot.snapshot_id
+    )
+
+    assert loaded_policy == policy_snapshot
+    assert loaded_configuration == configuration_snapshot

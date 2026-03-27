@@ -30,7 +30,7 @@ from orket.application.services.sandbox_restart_policy_service import SandboxRes
 from orket.application.services.sandbox_runtime_inspection_service import SandboxRuntimeInspectionService
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
 from orket.application.services.sandbox_runtime_recovery_service import SandboxRuntimeRecoveryService
-from orket.core.domain import ReservationStatus
+from orket.core.domain import LeaseStatus, ReservationStatus
 from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError, SandboxState as LifecycleState
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.domain.sandbox import PortAllocation, Sandbox, SandboxRegistry, SandboxStatus, TechStack
@@ -187,6 +187,30 @@ class SandboxOrchestrator:
             )
         except (ValueError, OSError, json.JSONDecodeError, subprocess.SubprocessError):
             if reservation_id is not None:
+                latest_lease = await self.control_plane_repository.get_latest_lease_record(
+                    lease_id=self.control_plane_reservations.lease_id_for_sandbox(sandbox_id)
+                )
+                if (
+                    latest_lease is not None
+                    and latest_lease.status is LeaseStatus.ACTIVE
+                    and latest_lease.source_reservation_id == reservation_id
+                ):
+                    release_timestamp = self._now()
+                    if release_timestamp < latest_lease.publication_timestamp:
+                        release_timestamp = latest_lease.publication_timestamp
+                    await self.control_plane_publication.publish_lease(
+                        lease_id=latest_lease.lease_id,
+                        resource_id=latest_lease.resource_id,
+                        holder_ref=latest_lease.holder_ref,
+                        lease_epoch=latest_lease.lease_epoch,
+                        publication_timestamp=release_timestamp,
+                        expiry_basis="sandbox_create_record_failed",
+                        status=LeaseStatus.RELEASED,
+                        granted_timestamp=latest_lease.granted_timestamp,
+                        last_confirmed_observation=latest_lease.last_confirmed_observation,
+                        cleanup_eligibility_rule=latest_lease.cleanup_eligibility_rule,
+                        source_reservation_id=latest_lease.source_reservation_id,
+                    )
                 latest_reservation = await self.control_plane_repository.get_latest_reservation_record(
                     reservation_id=reservation_id
                 )

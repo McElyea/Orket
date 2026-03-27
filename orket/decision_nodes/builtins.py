@@ -636,9 +636,6 @@ class DefaultOrchestrationLoopPolicyNode:
         resolved = list(seat_requirements.get(seat, []))
         if seat == "integrity_guard" and issue_seat in {"code_reviewer", "reviewer"}:
             return ["read_file", "update_issue_status"]
-        if issue is not None and resolve_cards_required_read_paths(seat_name=seat_name, issue=issue):
-            if "read_file" not in resolved:
-                resolved.insert(0, "read_file")
         return resolved
 
     def required_statuses_for_seat(self, seat_name: str, **_kwargs) -> List[str]:

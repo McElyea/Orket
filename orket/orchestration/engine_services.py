@@ -37,13 +37,15 @@ class SessionController:
     def __init__(self, workspace_root: Path) -> None:
         self.workspace_root = workspace_root
 
-    async def halt(self, session_id: str) -> None:
+    async def halt(self, session_id: str) -> bool:
         from orket.state import runtime_state
 
         task = await runtime_state.get_task(session_id)
         if task:
             task.cancel()
             log_event("session_halted", {"session_id": session_id}, self.workspace_root)
+            return True
+        return False
 
 
 class CardArchiver:

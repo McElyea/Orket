@@ -1580,7 +1580,7 @@ async def test_run_detail_and_session_status_real_runtime(monkeypatch, tmp_path)
 
 @pytest.mark.asyncio
 async def test_session_halt_endpoint_cancels_runtime_task(monkeypatch, tmp_path):
-    """Layer: integration. Verifies session halt succeeds for an existing run-backed session and cancels the runtime task."""
+    """Layer: integration. Verifies session halt cancels the runtime task and publishes durable operator command truth."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     from orket.orchestration.engine import OrchestrationEngine
     from orket.state import runtime_state
@@ -1597,7 +1597,7 @@ async def test_session_halt_endpoint_cancels_runtime_task(monkeypatch, tmp_path)
         await asyncio.sleep(30)
 
     task = asyncio.create_task(_sleepy())
-    session_id = "HALT-REAL-1"
+    session_id = f"HALT-REAL-{tmp_path.parent.name}-{tmp_path.name}"
     await real_engine.run_ledger.start_run(
         session_id=session_id,
         run_type="epic",
@@ -1616,8 +1616,52 @@ async def test_session_halt_endpoint_cancels_runtime_task(monkeypatch, tmp_path)
     assert response.json()["ok"] is True
     assert response.json()["session_id"] == session_id
     assert task.cancelled() or task.done()
+    operator_actions = await real_engine.control_plane_repository.list_operator_actions(target_ref=f"session:{session_id}")
+    assert operator_actions
+    latest = operator_actions[-1]
+    assert latest.actor_ref == api_module._api_key_actor_ref("test-key")
+    assert latest.input_class.value == "operator_command"
+    assert latest.command_class.value == "cancel_run"
+    assert latest.result == "accepted_cancel"
 
     await runtime_state.remove_task(session_id)
+
+
+@pytest.mark.asyncio
+async def test_session_halt_endpoint_publishes_operator_command_without_active_task(monkeypatch, tmp_path):
+    """Layer: integration. Verifies session halt still publishes operator command truth when no active runtime task exists."""
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    from orket.orchestration.engine import OrchestrationEngine
+
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+
+    session_id = f"HALT-REAL-NO-TASK-{tmp_path.parent.name}-{tmp_path.name}"
+    await real_engine.run_ledger.start_run(
+        session_id=session_id,
+        run_type="epic",
+        run_name="halt-test-no-task",
+        department="core",
+        build_id="BUILD-HALT-NO-TASK",
+        summary={"phase": "execute"},
+        artifacts={},
+    )
+
+    response = client.post(f"/v1/sessions/{session_id}/halt", headers={"X-API-Key": "test-key"})
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert response.json()["active"] is False
+    operator_actions = await real_engine.control_plane_repository.list_operator_actions(target_ref=f"session:{session_id}")
+    assert operator_actions
+    latest = operator_actions[-1]
+    assert latest.result == "accepted_no_active_runtime_task"
+    assert latest.command_class.value == "cancel_run"
 
 
 @pytest.mark.asyncio
@@ -1638,6 +1682,104 @@ async def test_session_halt_endpoint_returns_404_for_missing_session(monkeypatch
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Session 'NOPE-HALT' not found."
+
+
+@pytest.mark.asyncio
+async def test_interaction_cancel_endpoint_publishes_operator_action_for_session_scope(monkeypatch, tmp_path):
+    """Layer: integration. Verifies authenticated interaction-session cancel publishes durable operator command truth."""
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_DURABLE_ROOT", str(Path(tmp_path) / "durable"))
+    from orket.orchestration.engine import OrchestrationEngine
+
+    class _FakeInteractionManager:
+        def __init__(self) -> None:
+            self.cancelled_targets: list[str] = []
+
+        def stream_enabled(self) -> bool:
+            return True
+
+        async def cancel(self, target: str) -> None:
+            self.cancelled_targets.append(target)
+
+    fake_interaction_manager = _FakeInteractionManager()
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+    monkeypatch.setattr(api_module, "interaction_manager", fake_interaction_manager)
+
+    session_id = f"INT-CANCEL-SESSION-{tmp_path.parent.name}-{tmp_path.name}"
+    response = client.post(
+        f"/v1/interactions/{session_id}/cancel",
+        json={},
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True, "target": session_id}
+    assert fake_interaction_manager.cancelled_targets == [session_id]
+    operator_actions = await real_engine.control_plane_repository.list_operator_actions(
+        target_ref=f"interaction-session:{session_id}"
+    )
+    assert operator_actions
+    latest = operator_actions[-1]
+    assert latest.actor_ref == api_module._api_key_actor_ref("test-key")
+    assert latest.input_class.value == "operator_command"
+    assert latest.command_class.value == "cancel_run"
+    assert latest.result == "accepted_cancel"
+    assert latest.affected_resource_refs == [f"interaction-session:{session_id}"]
+
+
+@pytest.mark.asyncio
+async def test_interaction_cancel_endpoint_publishes_operator_action_for_turn_scope(monkeypatch, tmp_path):
+    """Layer: integration. Verifies authenticated interaction-turn cancel publishes durable operator command truth."""
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_DURABLE_ROOT", str(Path(tmp_path) / "durable"))
+    from orket.orchestration.engine import OrchestrationEngine
+
+    class _FakeInteractionManager:
+        def __init__(self) -> None:
+            self.cancelled_targets: list[str] = []
+
+        def stream_enabled(self) -> bool:
+            return True
+
+        async def cancel(self, target: str) -> None:
+            self.cancelled_targets.append(target)
+
+    fake_interaction_manager = _FakeInteractionManager()
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+    monkeypatch.setattr(api_module, "interaction_manager", fake_interaction_manager)
+
+    session_id = f"INT-CANCEL-TURN-{tmp_path.parent.name}-{tmp_path.name}"
+    turn_id = "turn-42"
+    response = client.post(
+        f"/v1/interactions/{session_id}/cancel",
+        json={"turn_id": turn_id},
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True, "target": turn_id}
+    assert fake_interaction_manager.cancelled_targets == [turn_id]
+    operator_actions = await real_engine.control_plane_repository.list_operator_actions(
+        target_ref=f"interaction-turn:{turn_id}"
+    )
+    assert operator_actions
+    latest = operator_actions[-1]
+    assert latest.actor_ref == api_module._api_key_actor_ref("test-key")
+    assert latest.command_class.value == "cancel_run"
+    assert latest.result == "accepted_cancel"
+    assert latest.affected_resource_refs == [f"interaction-session:{session_id}", f"interaction-turn:{turn_id}"]
 
 
 @pytest.mark.asyncio

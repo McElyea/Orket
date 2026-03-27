@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
@@ -9,6 +7,7 @@ from pathlib import Path
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots, snapshot_digest
 from orket.core.contracts import AttemptRecord, EffectJournalEntryRecord, FinalTruthRecord, RunRecord, StepRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
@@ -71,34 +70,40 @@ class GiteaStateControlPlaneExecutionService:
             return existing_run, attempt
 
         creation_timestamp = str(self._lease_payload(lease_observation).get("acquired_at") or self._utc_now())
+        policy_payload = {
+            "success_state": str(success_state),
+            "failure_state": str(failure_state),
+            "lease_epoch": lease_epoch,
+        }
+        configuration_payload = {
+            "card_id": str(card_id),
+            "worker_id": str(worker_id),
+            "from_state": str(from_state),
+            "success_state": str(success_state),
+            "failure_state": str(failure_state),
+            "lease_observation": dict(lease_observation),
+        }
         run = RunRecord(
             run_id=run_id,
             workload_id=self.WORKLOAD_ID,
             workload_version=self.WORKLOAD_VERSION,
             policy_snapshot_id=f"gitea-state-worker-policy:{card_id}",
-            policy_digest=self._digest(
-                {
-                    "success_state": str(success_state),
-                    "failure_state": str(failure_state),
-                    "lease_epoch": lease_epoch,
-                }
-            ),
+            policy_digest=snapshot_digest(policy_payload),
             configuration_snapshot_id=f"gitea-state-worker-config:{run_id}",
-            configuration_digest=self._digest(
-                {
-                    "card_id": str(card_id),
-                    "worker_id": str(worker_id),
-                    "from_state": str(from_state),
-                    "success_state": str(success_state),
-                    "failure_state": str(failure_state),
-                    "lease_observation": dict(lease_observation),
-                }
-            ),
+            configuration_digest=snapshot_digest(configuration_payload),
             creation_timestamp=creation_timestamp,
             admission_decision_receipt_ref=self.lease_observation_ref(card_id=card_id, lease_observation=lease_observation),
             namespace_scope=self.namespace_scope_for(card_id=card_id),
             lifecycle_state=RunState.EXECUTING,
             current_attempt_id=self.attempt_id_for(run_id=run_id),
+        )
+        await publish_run_snapshots(
+            publication=self.publication,
+            run=run,
+            policy_payload=policy_payload,
+            policy_source_refs=[run.admission_decision_receipt_ref],
+            configuration_payload=configuration_payload,
+            configuration_source_refs=[run.admission_decision_receipt_ref],
         )
         attempt = AttemptRecord(
             attempt_id=self.attempt_id_for(run_id=run_id),
@@ -268,7 +273,7 @@ class GiteaStateControlPlaneExecutionService:
                     authorized_next_action=RecoveryActionClass.TERMINATE_RUN,
                     rationale_ref=effect.journal_entry_id,
                 )
-                attempt = attempt.model_copy(update={"recovery_decision_id": decision.decision_id})
+                attempt = attempt.model_copy(update={"recovery_decision_id": decision.decision_id, "failure_plane": decision.failure_plane, "failure_classification": decision.failure_classification})
                 run = run.model_copy(update={"lifecycle_state": RunState.FAILED_TERMINAL})
                 truth = await self.publication.publish_final_truth(
                     final_truth_record_id=f"gitea-state-final-truth:{run.run_id}",
@@ -411,25 +416,16 @@ class GiteaStateControlPlaneExecutionService:
             raise GiteaStateControlPlaneExecutionError("gitea worker execution publication requires lease epoch") from exc
 
     @staticmethod
-    def _digest(payload: object) -> str:
-        raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True, default=str).encode("ascii")
-        return f"sha256:{hashlib.sha256(raw).hexdigest()}"
-
-    @staticmethod
     def _utc_now() -> str:
         return datetime.now(UTC).isoformat()
 
-
-def build_gitea_state_control_plane_execution_service(
-    db_path: str | Path | None = None,
-) -> GiteaStateControlPlaneExecutionService:
+def build_gitea_state_control_plane_execution_service(db_path: str | Path | None = None) -> GiteaStateControlPlaneExecutionService:
     resolved_db_path = resolve_control_plane_db_path(db_path)
     publication = ControlPlanePublicationService(repository=AsyncControlPlaneRecordRepository(resolved_db_path))
     return GiteaStateControlPlaneExecutionService(
         execution_repository=AsyncControlPlaneExecutionRepository(resolved_db_path),
         publication=publication,
     )
-
 
 __all__ = [
     "GiteaStateControlPlaneExecutionError",

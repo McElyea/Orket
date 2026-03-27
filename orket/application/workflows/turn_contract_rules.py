@@ -201,6 +201,7 @@ def hallucination_scope_diagnostics(
             }
         )
 
+    written_paths_in_turn: set[str] = set()
     for call in turn.tool_calls or []:
         tool_name = str(call.tool or "").strip()
         if declared_interfaces_scope and tool_name and tool_name not in declared_interfaces_scope:
@@ -212,9 +213,14 @@ def hallucination_scope_diagnostics(
                 }
             )
 
-        if tool_name in {"read_file", "write_file"}:
+        if tool_name == "write_file":
+            written_path = str(call.args.get("path", "")).strip()
+            if written_path:
+                written_paths_in_turn.add(written_path)
+
+        if tool_name == "read_file":
             path = str(call.args.get("path", "")).strip()
-            if workspace_scope and path and path not in workspace_scope:
+            if workspace_scope and path and path not in workspace_scope and path not in written_paths_in_turn:
                 violations.append(
                     {
                         "rule_id": "HALLUCINATION.FILE_NOT_FOUND",

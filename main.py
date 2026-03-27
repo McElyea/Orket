@@ -5,9 +5,11 @@ import traceback
 
 from orket.logging import log_crash
 from orket.runtime import create_cli_runtime
+from orket.settings import load_env
 
 if __name__ == "__main__":
     try:
+        load_env()
         run_cli = create_cli_runtime()
         asyncio.run(run_cli())
     except KeyboardInterrupt:

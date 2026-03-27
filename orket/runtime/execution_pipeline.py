@@ -450,8 +450,12 @@ class ExecutionPipeline:
 
         if existing:
             if target_issue_id:
-                if any(ex.id == target_issue_id for ex in existing):
-                    await self.async_cards.update_status(target_issue_id, CardStatus.READY)
+                await self._resume_target_issue_if_existing(
+                    issues=existing,
+                    target_issue_id=target_issue_id,
+                    run_id=run_id,
+                    active_build=active_build,
+                )
             else:
                 await self.async_cards.reset_build(active_build)
 
@@ -1771,15 +1775,84 @@ class ExecutionPipeline:
                 continue
         return None, None, None
 
+    async def _resume_target_issue_if_existing(
+        self,
+        *,
+        issues: List[Any],
+        target_issue_id: str,
+        run_id: str,
+        active_build: str,
+    ) -> None:
+        target_issue = next(
+            (issue for issue in issues if str(getattr(issue, "id", "")).strip() == str(target_issue_id).strip()),
+            None,
+        )
+        if target_issue is None:
+            return
+        current_status = getattr(target_issue, "status", None)
+        current_status_token = str(
+            current_status.value if hasattr(current_status, "value") else current_status
+        ).strip() or "unknown"
+        metadata = {
+            "run_id": run_id,
+            "build_id": active_build,
+            "target_issue_id": str(target_issue_id).strip(),
+            "previous_status": current_status_token,
+        }
+        await self.async_cards.update_status(
+            str(getattr(target_issue, "id", "")).strip(),
+            CardStatus.READY,
+            reason="resume_target_issue",
+            metadata=metadata,
+        )
+        setattr(target_issue, "status", CardStatus.READY)
+        await self._publish_resume_transition_control_plane(
+            issue=target_issue,
+            current_status=current_status,
+            target_status=CardStatus.READY,
+            run_id=run_id,
+            reason="resume_target_issue",
+            metadata=metadata,
+        )
+        log_event(
+            "resume_target_issue_requeued",
+            {
+                "run_id": run_id,
+                "build_id": active_build,
+                "issue_id": str(getattr(target_issue, "id", "")).strip(),
+                "previous_status": current_status_token,
+                "new_status": CardStatus.READY.value,
+            },
+            workspace=self.workspace,
+        )
+
     async def _resume_stalled_issues(self, issues: List[Any], run_id: str, active_build: str) -> None:
         stalled_states = {CardStatus.IN_PROGRESS, CardStatus.CODE_REVIEW, CardStatus.AWAITING_GUARD_REVIEW}
         for issue in issues:
             if issue.status in stalled_states:
+                current_status = issue.status
+                current_status_token = str(
+                    current_status.value if hasattr(current_status, "value") else current_status
+                ).strip() or "unknown"
+                metadata = {
+                    "run_id": run_id,
+                    "build_id": active_build,
+                    "previous_status": current_status_token,
+                }
                 await self.async_cards.update_status(
                     issue.id,
                     CardStatus.READY,
                     reason="resume_requeue",
-                    metadata={"run_id": run_id, "build_id": active_build, "previous_status": issue.status.value},
+                    metadata=metadata,
+                )
+                issue.status = CardStatus.READY
+                await self._publish_resume_transition_control_plane(
+                    issue=issue,
+                    current_status=current_status,
+                    target_status=CardStatus.READY,
+                    run_id=run_id,
+                    reason="resume_requeue",
+                    metadata=metadata,
                 )
                 log_event(
                     "resume_requeue_issue",
@@ -1787,11 +1860,52 @@ class ExecutionPipeline:
                         "run_id": run_id,
                         "build_id": active_build,
                         "issue_id": issue.id,
-                        "previous_status": issue.status.value,
+                        "previous_status": current_status_token,
                         "new_status": CardStatus.READY.value,
                     },
                     workspace=self.workspace,
                 )
+
+    async def _publish_resume_transition_control_plane(
+        self,
+        *,
+        issue: Any,
+        current_status: CardStatus | str | None,
+        target_status: CardStatus,
+        run_id: str,
+        reason: str,
+        metadata: Dict[str, Any],
+    ) -> None:
+        issue_id = str(getattr(issue, "id", "")).strip()
+        if not issue_id or not str(run_id or "").strip():
+            return
+        assignee = getattr(issue, "assignee", None)
+        normalized_reason = str(reason or "").strip().lower()
+        issue_control_plane = getattr(self.orchestrator, "issue_control_plane", None)
+        handled_by_dispatch = False
+        if issue_control_plane is not None:
+            handled_by_dispatch = await issue_control_plane.publish_issue_transition(
+                session_id=run_id,
+                issue_id=issue_id,
+                current_status=current_status or "unknown",
+                target_status=target_status,
+                reason=normalized_reason,
+                assignee=assignee,
+                turn_index=metadata.get("turn_index"),
+                review_turn=bool(metadata.get("review_turn", False)),
+            )
+        scheduler_control_plane = getattr(self.orchestrator, "scheduler_control_plane", None)
+        if scheduler_control_plane is None or handled_by_dispatch or normalized_reason == "turn_dispatch":
+            return
+        await scheduler_control_plane.publish_scheduler_transition(
+            session_id=run_id,
+            issue_id=issue_id,
+            current_status=current_status or "unknown",
+            target_status=target_status,
+            reason=normalized_reason,
+            assignee=assignee,
+            metadata=dict(metadata),
+        )
 
     async def verify_issue(self, issue_id: str) -> Any:
         return await self.orchestrator.verify_issue(issue_id)

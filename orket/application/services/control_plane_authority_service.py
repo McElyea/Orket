@@ -26,6 +26,12 @@ from orket.core.domain import (
     ResidualUncertaintyClassification,
     ResultClass,
     SideEffectBoundaryClass,
+    FailurePlane,
+    ExecutionFailureClass,
+    ProtocolFailureClass,
+    TruthFailureClass,
+    ResourceFailureClass,
+    ControlPlaneFailureClass,
     build_lease_record,
     build_final_truth_record,
     build_reservation_record,
@@ -158,6 +164,15 @@ class ControlPlaneAuthorityService:
         run_id: str,
         failed_attempt_id: str,
         failure_classification_basis: str,
+        failure_plane: FailurePlane | None = None,
+        failure_classification: (
+            ExecutionFailureClass
+            | ProtocolFailureClass
+            | TruthFailureClass
+            | ResourceFailureClass
+            | ControlPlaneFailureClass
+            | None
+        ) = None,
         side_effect_boundary_class: SideEffectBoundaryClass,
         recovery_policy_ref: str,
         authorized_next_action: RecoveryActionClass,
@@ -177,6 +192,8 @@ class ControlPlaneAuthorityService:
             run_id=run_id,
             failed_attempt_id=failed_attempt_id,
             failure_classification_basis=failure_classification_basis,
+            failure_plane=failure_plane,
+            failure_classification=failure_classification,
             side_effect_boundary_class=side_effect_boundary_class,
             recovery_policy_ref=recovery_policy_ref,
             authorized_next_action=authorized_next_action,
