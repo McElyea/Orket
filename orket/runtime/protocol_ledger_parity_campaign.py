@@ -89,6 +89,8 @@ def _campaign_summary_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "protocol_digest": row["protocol_digest"],
                 "sqlite_status": row["sqlite_status"],
                 "protocol_status": row["protocol_status"],
+                "sqlite_invalid_projection_fields": list(row["sqlite_invalid_projection_fields"]),
+                "protocol_invalid_projection_fields": list(row["protocol_invalid_projection_fields"]),
             }
         )
     return summary
@@ -122,6 +124,8 @@ async def compare_protocol_ledger_parity_campaign(
     field_delta_counts: dict[str, int] = {}
     delta_signature_counts: dict[str, int] = {}
     status_delta_counts: dict[str, int] = {}
+    sqlite_invalid_projection_field_counts: dict[str, int] = {}
+    protocol_invalid_projection_field_counts: dict[str, int] = {}
     mismatch_rows: list[dict[str, Any]] = []
     total_rows: list[dict[str, Any]] = []
 
@@ -136,6 +140,8 @@ async def compare_protocol_ledger_parity_campaign(
         sqlite_row = parity.get("sqlite_row") if isinstance(parity.get("sqlite_row"), dict) else {}
         protocol_row = parity.get("protocol_row") if isinstance(parity.get("protocol_row"), dict) else {}
         parity_ok = bool(parity.get("parity_ok", False))
+        sqlite_invalid_projection_fields = list(parity.get("sqlite_invalid_projection_fields") or [])
+        protocol_invalid_projection_fields = list(parity.get("protocol_invalid_projection_fields") or [])
 
         row = {
             "session_id": str(session_id),
@@ -147,6 +153,8 @@ async def compare_protocol_ledger_parity_campaign(
             "protocol_digest": parity.get("protocol_digest"),
             "sqlite_status": str(sqlite_row.get("status") or ""),
             "protocol_status": str(protocol_row.get("status") or ""),
+            "sqlite_invalid_projection_fields": sqlite_invalid_projection_fields,
+            "protocol_invalid_projection_fields": protocol_invalid_projection_fields,
         }
         total_rows.append(row)
 
@@ -154,6 +162,10 @@ async def compare_protocol_ledger_parity_campaign(
             continue
 
         mismatch_rows.append(row)
+        for invalid_field in sqlite_invalid_projection_fields:
+            _append_count(sqlite_invalid_projection_field_counts, invalid_field)
+        for invalid_field in protocol_invalid_projection_fields:
+            _append_count(protocol_invalid_projection_field_counts, invalid_field)
         for difference in differences:
             field = str(difference.get("field") or "")
             _append_count(field_delta_counts, field)
@@ -200,5 +212,7 @@ async def compare_protocol_ledger_parity_campaign(
             "field_delta_counts": _sorted_counts(field_delta_counts),
             "delta_signature_counts": _sorted_counts(delta_signature_counts),
             "status_delta_counts": _sorted_counts(status_delta_counts),
+            "sqlite_invalid_projection_field_counts": _sorted_counts(sqlite_invalid_projection_field_counts),
+            "protocol_invalid_projection_field_counts": _sorted_counts(protocol_invalid_projection_field_counts),
         },
     }

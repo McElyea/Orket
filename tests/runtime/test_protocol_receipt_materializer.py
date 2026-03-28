@@ -27,6 +27,7 @@ def _receipt_row(*, run_id: str, step_id: str, operation_id: str, tool_index: in
         tool_name="write_file",
         control_plane_run_id=f"turn-tool-run:{run_id}:ISSUE-1:architect:0001",
         control_plane_attempt_id=f"turn-tool-run:{run_id}:ISSUE-1:architect:0001:attempt:0001",
+        control_plane_step_id=operation_id,
         control_plane_reservation_id=f"turn-tool-reservation:turn-tool-run:{run_id}:ISSUE-1:architect:0001",
         control_plane_lease_id=f"turn-tool-lease:turn-tool-run:{run_id}:ISSUE-1:architect:0001",
         control_plane_resource_id="namespace:issue:ISSUE-1",
@@ -80,6 +81,7 @@ async def test_materialize_protocol_receipts_writes_run_level_receipts_and_event
     assert events[0]["projection_source"] == "observability.protocol_receipts.log"
     assert events[0]["projection_only"] is True
     assert events[0]["tool_invocation_manifest"]["control_plane_resource_id"] == "namespace:issue:ISSUE-1"
+    assert events[0]["tool_invocation_manifest"]["control_plane_step_id"] == "op-1"
     assert (
         events[0]["tool_invocation_manifest"]["control_plane_reservation_id"]
         == "turn-tool-reservation:turn-tool-run:sess-1:ISSUE-1:architect:0001"

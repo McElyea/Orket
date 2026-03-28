@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 from typing import Any
 import asyncio
@@ -349,6 +350,34 @@ def test_sessions_router_protocol_ledger_parity_campaign_endpoint_reports_mismat
     assert payload["all_match"] is False
     assert payload["mismatch_count"] == 1
     assert payload["compatibility_telemetry_delta"]["field_delta_counts"]["status"] >= 1
+
+
+def test_sessions_router_protocol_ledger_parity_campaign_preserves_invalid_projection_fields(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
+    _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True)
+    asyncio.run(_seed_sqlite_run(sqlite_db=sqlite_db, session_id="run-a", status="incomplete"))
+    with sqlite3.connect(sqlite_db) as conn:
+        conn.execute(
+            "UPDATE run_ledger SET summary_json = ?, artifact_json = ? WHERE session_id = ?",
+            ("{not-json", "[1,2,3]", "run-a"),
+        )
+        conn.commit()
+    client = _build_client(workspace_root)
+
+    response = client.get(
+        "/v1/protocol/ledger-parity/campaign"
+        f"?sqlite_db_path={sqlite_db}&session_id=run-a&discover_limit=10"
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["all_match"] is False
+    assert payload["rows"][0]["sqlite_invalid_projection_fields"] == ["summary_json", "artifact_json"]
+    assert payload["rows"][0]["protocol_invalid_projection_fields"] == []
+    assert payload["compatibility_telemetry_delta"]["sqlite_invalid_projection_field_counts"] == {
+        "artifact_json": 1,
+        "summary_json": 1,
+    }
 
 
 def test_sessions_router_protocol_ledger_parity_campaign_rejects_sqlite_outside_workspace(tmp_path: Path) -> None:

@@ -19,6 +19,7 @@ _DETERMINISM_RANK = {
     "workspace": 1,
     "external": 2,
 }
+_RUN_IDENTITY_SCOPE = "session_bootstrap"
 
 
 def capture_run_start_artifacts(
@@ -126,38 +127,59 @@ def _resolve_run_identity(
 ) -> dict[str, Any]:
     existing = _load_json_dict(path)
     if existing is not None:
-        existing_run_id = str(existing.get("run_id") or "").strip()
-        existing_workload = str(existing.get("workload") or "").strip()
-        existing_start = str(existing.get("start_time") or "").strip()
-        if existing_run_id != run_id:
+        existing_identity = validate_run_identity_projection(
+            existing,
+            error_prefix="E_RUN_IDENTITY_SCHEMA",
+        )
+        if existing_identity["run_id"] != run_id:
             raise ValueError("E_RUN_IDENTITY_IMMUTABLE:run_id_mismatch")
-        if existing_workload != workload:
+        if existing_identity["workload"] != workload:
             raise ValueError("E_RUN_IDENTITY_IMMUTABLE:workload_mismatch")
-        if not existing_start:
-            raise ValueError("E_RUN_IDENTITY_SCHEMA:start_time_required")
-        payload: dict[str, Any] = {
-            "run_id": existing_run_id,
-            "workload": existing_workload,
-            "start_time": existing_start,
-        }
-        identity_scope = str(existing.get("identity_scope") or "").strip()
-        if identity_scope:
-            payload["identity_scope"] = identity_scope
-        projection_only = existing.get("projection_only")
-        if isinstance(projection_only, bool):
-            payload["projection_only"] = projection_only
-        return payload
+        return existing_identity
 
     start_time = (now or datetime.now(UTC)).isoformat()
     payload: dict[str, Any] = {
         "run_id": run_id,
         "workload": workload,
         "start_time": start_time,
-        "identity_scope": "session_bootstrap",
+        "identity_scope": _RUN_IDENTITY_SCOPE,
         "projection_only": True,
     }
     _write_json(path, payload)
     return payload
+
+
+def validate_run_identity_projection(
+    value: Any,
+    *,
+    error_prefix: str = "run_identity",
+) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ValueError(_run_identity_error(error_prefix, "invalid"))
+
+    run_id = str(value.get("run_id") or "").strip()
+    workload = str(value.get("workload") or "").strip()
+    start_time = str(value.get("start_time") or "").strip()
+    identity_scope = str(value.get("identity_scope") or "").strip()
+
+    if not run_id:
+        raise ValueError(_run_identity_error(error_prefix, "run_id_required"))
+    if not workload:
+        raise ValueError(_run_identity_error(error_prefix, "workload_required"))
+    if not start_time:
+        raise ValueError(_run_identity_error(error_prefix, "start_time_required"))
+    if identity_scope != _RUN_IDENTITY_SCOPE:
+        raise ValueError(_run_identity_error(error_prefix, "identity_scope_invalid"))
+    if value.get("projection_only") is not True:
+        raise ValueError(_run_identity_error(error_prefix, "projection_only_invalid"))
+
+    return {
+        "run_id": run_id,
+        "workload": workload,
+        "start_time": start_time,
+        "identity_scope": _RUN_IDENTITY_SCOPE,
+        "projection_only": True,
+    }
 
 
 def _capability_manifest_payload(
@@ -230,3 +252,8 @@ def _load_json_dict(path: Path) -> dict[str, Any] | None:
     if not isinstance(payload, dict):
         raise ValueError(f"E_RUN_ARTIFACT_SCHEMA:{path}:root payload must be object")
     return dict(payload)
+
+
+def _run_identity_error(prefix: str, detail: str) -> str:
+    separator = ":" if prefix.startswith("E_") else "_"
+    return f"{prefix}{separator}{detail}"

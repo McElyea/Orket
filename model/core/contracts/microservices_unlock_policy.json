@@ -10,7 +10,8 @@
       "min_project_surface_profiles": 2,
       "min_pass_rate": 0.8,
       "max_runtime_failure_rate": 0.25,
-      "max_reviewer_rejection_rate": 0.4
+      "max_reviewer_rejection_rate": 0.4,
+      "max_invalid_payload_signals": 0
     },
     "governance_stability": {
       "required": true,

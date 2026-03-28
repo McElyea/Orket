@@ -26,6 +26,16 @@ def _sample_events() -> list[dict[str, Any]]:
         "mapped_core_tools": ["workspace.search", "file.patch"],
         "translation_hash": "a" * 64,
     }
+    manifest = build_tool_invocation_manifest(
+        run_id="sess-graph",
+        tool_name="openclaw.file_edit",
+        control_plane_run_id="turn-tool-run:sess-graph:ISSUE-1:architect:0001",
+        control_plane_attempt_id="turn-tool-run:sess-graph:ISSUE-1:architect:0001:attempt:0001",
+        control_plane_step_id="op-1",
+        control_plane_reservation_id="turn-tool-reservation:turn-tool-run:sess-graph:ISSUE-1:architect:0001",
+        control_plane_lease_id="turn-tool-lease:turn-tool-run:sess-graph:ISSUE-1:architect:0001",
+        control_plane_resource_id="namespace:issue:ISSUE-1",
+    )
     return [
         {
             "event_seq": 1,
@@ -46,6 +56,7 @@ def _sample_events() -> list[dict[str, Any]]:
             "operation_id": "op-1",
             "tool_name": "openclaw.file_edit",
             "tool_call_hash": "b" * 64,
+            "tool_invocation_manifest": manifest,
         },
         {
             "event_seq": 3,
@@ -60,6 +71,8 @@ def _sample_events() -> list[dict[str, Any]]:
                 "ok": True,
                 "compat_translation": compat_translation,
             },
+            "tool_invocation_manifest": manifest,
+            "tool_call_hash": "b" * 64,
         },
         {
             "event_seq": 4,
@@ -81,7 +94,16 @@ def _tool_call_payload(
     tool_args: dict[str, Any],
     replayed: bool = False,
 ) -> dict[str, Any]:
-    manifest = build_tool_invocation_manifest(run_id=session_id, tool_name=tool_name)
+    manifest = build_tool_invocation_manifest(
+        run_id=session_id,
+        tool_name=tool_name,
+        control_plane_run_id=f"turn-tool-run:{session_id}:ISSUE-1:architect:0001",
+        control_plane_attempt_id=f"turn-tool-run:{session_id}:ISSUE-1:architect:0001:attempt:0001",
+        control_plane_step_id=operation_id,
+        control_plane_reservation_id=f"turn-tool-reservation:turn-tool-run:{session_id}:ISSUE-1:architect:0001",
+        control_plane_lease_id=f"turn-tool-lease:turn-tool-run:{session_id}:ISSUE-1:architect:0001",
+        control_plane_resource_id="namespace:issue:ISSUE-1",
+    )
     return {
         "operation_id": operation_id,
         "step_id": "ISSUE-1:1",
@@ -169,6 +191,24 @@ def test_run_graph_reconstruction_builds_compatibility_expansion_edges() -> None
     assert str(compat_artifact_edge["target"]).startswith("artifact:compat_translation:")
 
 
+# Layer: contract
+def test_run_graph_reconstruction_preserves_canonical_control_plane_refs_on_tool_call_nodes() -> None:
+    graph = reconstruct_run_graph(_sample_events(), session_id="sess-graph")
+
+    call_node = next(node for node in graph["nodes"] if node.get("type") == "tool_call")
+
+    assert call_node["step_id"] == "ISSUE-1:1"
+    assert call_node["control_plane_run_id"] == "turn-tool-run:sess-graph:ISSUE-1:architect:0001"
+    assert call_node["control_plane_attempt_id"] == "turn-tool-run:sess-graph:ISSUE-1:architect:0001:attempt:0001"
+    assert call_node["control_plane_step_id"] == "op-1"
+    assert (
+        call_node["control_plane_reservation_id"]
+        == "turn-tool-reservation:turn-tool-run:sess-graph:ISSUE-1:architect:0001"
+    )
+    assert call_node["control_plane_lease_id"] == "turn-tool-lease:turn-tool-run:sess-graph:ISSUE-1:architect:0001"
+    assert call_node["control_plane_resource_id"] == "namespace:issue:ISSUE-1"
+
+
 async def _record_protocol_run(
     *,
     root: Path,
@@ -225,7 +265,13 @@ async def test_protocol_run_graph_reconstruction_writes_golden_artifact(tmp_path
 
     assert graph["run_graph_schema_version"] == "1.0"
     assert graph["run_id"] == session_id
-    assert any(node.get("type") == "tool_call" for node in graph["nodes"])
+    tool_call_node = next(node for node in graph["nodes"] if node.get("type") == "tool_call")
+    assert tool_call_node["control_plane_run_id"] == "turn-tool-run:sess-run-graph-golden:ISSUE-1:architect:0001"
+    assert tool_call_node["control_plane_attempt_id"] == (
+        "turn-tool-run:sess-run-graph-golden:ISSUE-1:architect:0001:attempt:0001"
+    )
+    assert tool_call_node["control_plane_step_id"] == "op-1"
+    assert tool_call_node["control_plane_resource_id"] == "namespace:issue:ISSUE-1"
     assert any(node.get("type") == "artifact" for node in graph["nodes"])
     assert any(edge.get("type") == "call_result" for edge in graph["edges"])
 

@@ -94,6 +94,7 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Pa
         tool_name="write_file",
         control_plane_run_id="turn-tool-run:s1:ISSUE-1:coder:0004",
         control_plane_attempt_id="turn-tool-run:s1:ISSUE-1:coder:0004:attempt:0001",
+        control_plane_step_id="op-1",
         control_plane_reservation_id="turn-tool-reservation:turn-tool-run:s1:ISSUE-1:coder:0004",
         control_plane_lease_id="turn-tool-lease:turn-tool-run:s1:ISSUE-1:coder:0004",
         control_plane_resource_id="namespace:issue:ISSUE-1",
@@ -139,6 +140,7 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Pa
         manifest_payload["control_plane_attempt_id"]
         == "turn-tool-run:s1:ISSUE-1:coder:0004:attempt:0001"
     )
+    assert manifest_payload["control_plane_step_id"] == "op-1"
     assert (
         manifest_payload["control_plane_reservation_id"]
         == "turn-tool-reservation:turn-tool-run:s1:ISSUE-1:coder:0004"

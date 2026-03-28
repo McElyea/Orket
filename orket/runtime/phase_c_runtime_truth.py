@@ -140,6 +140,14 @@ async def collect_source_attribution_facts(
         operation_id = str(provenance_entry.get("operation_id") or "").strip()
         if operation_id:
             facts["receipt_operation_id"] = operation_id
+        for field in (
+            "control_plane_run_id",
+            "control_plane_attempt_id",
+            "control_plane_step_id",
+        ):
+            token = str(provenance_entry.get(field) or "").strip()
+            if token:
+                facts[field] = token
     return facts
 
 
@@ -227,6 +235,7 @@ def _collect_idempotency_facts(*, receipts: list[dict[str, Any]]) -> dict[str, A
         turn_index = _normalize_turn_index(receipt.get("_turn_index"))
         if turn_index > 0:
             row["turn_index"] = turn_index
+        _apply_control_plane_manifest_refs(entry=row, receipt=receipt)
         surfaces.append(row)
     if not surfaces:
         return {}
@@ -486,7 +495,24 @@ def _base_audit_entry(*, receipt: dict[str, Any], effect_target: str, tool: str)
     step_id = str(receipt.get("step_id") or "").strip()
     if step_id:
         entry["step_id"] = step_id
+    _apply_control_plane_manifest_refs(entry=entry, receipt=receipt)
     return entry
+
+
+def _apply_control_plane_manifest_refs(*, entry: dict[str, Any], receipt: dict[str, Any]) -> None:
+    manifest = (
+        dict(receipt.get("tool_invocation_manifest") or {})
+        if isinstance(receipt.get("tool_invocation_manifest"), dict)
+        else {}
+    )
+    for field in (
+        "control_plane_run_id",
+        "control_plane_attempt_id",
+        "control_plane_step_id",
+    ):
+        token = str(manifest.get(field) or "").strip()
+        if token:
+            entry[field] = token
 
 
 def _source_receipt_provenance_entry(artifact_provenance_facts: dict[str, Any] | None) -> dict[str, Any] | None:

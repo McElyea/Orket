@@ -83,6 +83,17 @@ def reconstruct_run_graph(
             if isinstance(manifest, dict):
                 call_node["manifest_hash"] = str(manifest.get("manifest_hash") or "").strip()
                 call_node["determinism_class"] = str(manifest.get("determinism_class") or "").strip()
+                for field in (
+                    "control_plane_run_id",
+                    "control_plane_attempt_id",
+                    "control_plane_step_id",
+                    "control_plane_reservation_id",
+                    "control_plane_lease_id",
+                    "control_plane_resource_id",
+                ):
+                    token = str(manifest.get(field) or "").strip()
+                    if token:
+                        call_node[field] = token
             nodes[call_id] = call_node
             call_nodes[event_seq] = call_id
             call_sequences.append(event_seq)

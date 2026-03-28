@@ -18,6 +18,7 @@ from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedg
 from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
+from scripts.common.run_summary_support import load_validated_run_summary
 
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
@@ -143,7 +144,7 @@ def _build_success_payload(
     if len(run_roots) != 1:
         raise ValueError(f"E_PACKET1_RUN_ROOTS_INVALID:{len(run_roots)}")
     run_root = run_roots[0]
-    run_summary = _read_json(run_root / "run_summary.json")
+    run_summary = load_validated_run_summary(run_root / "run_summary.json")
     run_id = str(run_summary.get("run_id") or "").strip()
     if not run_id:
         raise ValueError("E_PACKET1_RUN_ID_MISSING")

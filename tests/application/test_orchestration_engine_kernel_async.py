@@ -210,6 +210,7 @@ async def test_orchestration_engine_kernel_commit_async_returns_resource_and_fin
         "kernel-action-lease:kernel-action-run:sess-engine-kernel-2:trace-engine-kernel-2"
     )
     assert committed["control_plane_resource_id"] == "kernel-action-scope:session:sess-engine-kernel-2"
+    assert committed["control_plane_step_id"].startswith("kernel-action-step:")
     assert committed["control_plane_final_truth_record_id"] == (
         "kernel-action-final-truth:kernel-action-run:sess-engine-kernel-2:trace-engine-kernel-2"
     )

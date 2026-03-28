@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.kernel.v1.canon import canonicalize
+from scripts.common.run_summary_support import load_validated_run_summary_or_empty
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 REQUIRED_TURN_FILES = ("messages.json", "model_response.txt", "checkpoint.json")
@@ -46,6 +47,10 @@ def load_json_object(path: Path) -> dict[str, Any]:
     except json.JSONDecodeError:
         return {}
     return payload if isinstance(payload, dict) else {}
+
+
+def load_run_summary_object(path: Path) -> dict[str, Any]:
+    return load_validated_run_summary_or_empty(path)
 
 
 def normalize_text(value: str) -> str:
@@ -165,10 +170,12 @@ def contract_verdict_candidates(summary: dict[str, Any]) -> list[dict[str, Any]]
 def evaluate_run_completeness(*, workspace: Path, session_id: str) -> dict[str, Any]:
     workspace_root = Path(workspace).resolve()
     run_summary_path = workspace_root / "runs" / str(session_id).strip() / "run_summary.json"
-    summary = load_json_object(run_summary_path)
+    summary = load_run_summary_object(run_summary_path)
     run_outcome_missing: list[str] = []
     if not run_summary_path.exists():
         run_outcome_missing.append("runs/<session_id>/run_summary.json")
+    elif not summary:
+        run_outcome_missing.append("run_summary.invalid_or_untrusted")
     required_run_fields = ("run_id", "status", "artifact_ids", "failure_reason")
     for key in required_run_fields:
         if key not in summary:

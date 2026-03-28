@@ -177,6 +177,7 @@ async def test_turn_executor_publishes_control_plane_run_attempt_step_effect_and
     manifest = receipt_rows[0]["tool_invocation_manifest"]
     assert manifest["control_plane_run_id"] == run_id
     assert manifest["control_plane_attempt_id"] == attempt_id
+    assert manifest["control_plane_step_id"] == steps[0].step_id
     assert manifest["control_plane_reservation_id"] == reservation_id_for_run(run_id=run_id)
     assert manifest["control_plane_lease_id"] == lease_id_for_run(run_id=run_id)
     assert manifest["control_plane_resource_id"] == "namespace:issue:ISSUE-1"

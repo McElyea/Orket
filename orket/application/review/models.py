@@ -5,6 +5,9 @@ import json
 from dataclasses import dataclass
 from typing import Any, Dict, List, Literal, Optional
 
+from orket.application.review.control_plane_projection import (
+    validate_review_control_plane_summary, validate_review_execution_authority_markers, validate_review_execution_state_payload)
+
 
 DigestAlgorithm = Literal["sha256"]
 ReviewSource = Literal["pr", "diff", "files"]
@@ -252,9 +255,15 @@ class DeterministicReviewDecisionPayload:
     policy_digest: str
     run_id: str
     deterministic_lane_version: str = "deterministic_v0"
+    execution_state_authority: str = "control_plane_records"
+    lane_output_execution_state_authoritative: bool = False
+    control_plane_run_id: str = ""
+    control_plane_attempt_id: str = ""
+    control_plane_step_id: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        validate_review_execution_authority_markers(execution_state_authority=self.execution_state_authority, execution_state_authoritative=self.lane_output_execution_state_authoritative, field_name="deterministic_review_decision")
+        payload: Dict[str, Any] = {
             "decision": self.decision,
             "findings": [finding.to_dict() for finding in self.findings],
             "executed_checks": list(self.executed_checks),
@@ -262,7 +271,16 @@ class DeterministicReviewDecisionPayload:
             "policy_digest": self.policy_digest,
             "run_id": self.run_id,
             "deterministic_lane_version": self.deterministic_lane_version,
+            "execution_state_authority": self.execution_state_authority,
+            "lane_output_execution_state_authoritative": bool(self.lane_output_execution_state_authoritative),
         }
+        if self.control_plane_run_id:
+            payload["control_plane_run_id"] = self.control_plane_run_id
+        if self.control_plane_attempt_id:
+            payload["control_plane_attempt_id"] = self.control_plane_attempt_id
+        if self.control_plane_step_id:
+            payload["control_plane_step_id"] = self.control_plane_step_id
+        return payload
 
 
 @dataclass(slots=True)
@@ -298,9 +316,15 @@ class ModelAssistedCritiquePayload:
     policy_digest: str
     run_id: str
     advisory_errors: List[str] | None = None
+    execution_state_authority: str = "control_plane_records"
+    lane_output_execution_state_authoritative: bool = False
+    control_plane_run_id: str = ""
+    control_plane_attempt_id: str = ""
+    control_plane_step_id: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        validate_review_execution_authority_markers(execution_state_authority=self.execution_state_authority, execution_state_authoritative=self.lane_output_execution_state_authoritative, field_name="model_assisted_critique")
+        payload: Dict[str, Any] = {
             "summary": list(self.summary),
             "high_risk_issues": [item.to_dict() for item in self.high_risk_issues],
             "missing_tests": list(self.missing_tests),
@@ -314,7 +338,16 @@ class ModelAssistedCritiquePayload:
             "policy_digest": self.policy_digest,
             "run_id": self.run_id,
             "advisory_errors": list(self.advisory_errors or []),
+            "execution_state_authority": self.execution_state_authority,
+            "lane_output_execution_state_authoritative": bool(self.lane_output_execution_state_authoritative),
         }
+        if self.control_plane_run_id:
+            payload["control_plane_run_id"] = self.control_plane_run_id
+        if self.control_plane_attempt_id:
+            payload["control_plane_attempt_id"] = self.control_plane_attempt_id
+        if self.control_plane_step_id:
+            payload["control_plane_step_id"] = self.control_plane_step_id
+        return payload
 
 
 @dataclass(slots=True)
@@ -345,6 +378,7 @@ class ReviewRunManifest:
     timings_ms: Dict[str, int] | None = None
 
     def to_dict(self) -> Dict[str, Any]:
+        validate_review_execution_authority_markers(execution_state_authority=self.execution_state_authority, execution_state_authoritative=self.lane_outputs_execution_state_authoritative, field_name="review_run_manifest")
         payload: Dict[str, Any] = {
             "run_id": self.run_id,
             "snapshot_digest": self.snapshot_digest,
@@ -394,11 +428,11 @@ class ReviewRunResult:
             "deterministic_decision": self.deterministic_decision,
             "deterministic_findings": int(self.deterministic_findings),
             "model_assisted_enabled": bool(self.model_assisted_enabled),
-            "manifest": dict(self.manifest),
+            "manifest": validate_review_execution_state_payload(self.manifest, field_name="review_run_manifest", authoritative_flag_field="lane_outputs_execution_state_authoritative"),
             "exit_code": int(self.exit_code),
         }
         if self.control_plane:
-            payload["control_plane"] = dict(self.control_plane)
+            payload["control_plane"] = validate_review_control_plane_summary(self.control_plane)
         if self.error:
             payload["error"] = self.error
         return payload

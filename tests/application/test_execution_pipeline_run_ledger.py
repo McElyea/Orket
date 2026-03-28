@@ -6,6 +6,7 @@ import pytest
 
 import orket.runtime.execution_pipeline as execution_pipeline_module
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+from orket.application.services.turn_tool_control_plane_support import attempt_id_for, run_id_for
 from orket.application.workflows.protocol_hashing import hash_framed_fields
 from orket.exceptions import ExecutionFailed
 from orket.logging import log_event
@@ -71,12 +72,30 @@ def _write_protocol_write_receipts(
     *,
     session_id: str,
     rows: list[tuple[str, str, int, str, str]],
+    governed_turn_tool: bool = False,
 ) -> None:
     for issue_id, role_name, turn_index, artifact_path, operation_id in rows:
         resolved_artifact_path = workspace / artifact_path
         resolved_artifact_path.parent.mkdir(parents=True, exist_ok=True)
         resolved_artifact_path.write_text(f"artifact:{artifact_path}", encoding="utf-8")
-        manifest = build_tool_invocation_manifest(run_id=session_id, tool_name="write_file")
+        control_plane_manifest: dict[str, str] = {}
+        if governed_turn_tool:
+            control_plane_run_id = run_id_for(
+                session_id=session_id,
+                issue_id=issue_id,
+                role_name=role_name,
+                turn_index=turn_index,
+            )
+            control_plane_manifest = {
+                "control_plane_run_id": control_plane_run_id,
+                "control_plane_attempt_id": attempt_id_for(run_id=control_plane_run_id),
+                "control_plane_step_id": operation_id,
+            }
+        manifest = build_tool_invocation_manifest(
+            run_id=session_id,
+            tool_name="write_file",
+            **control_plane_manifest,
+        )
         tool_args = {"path": artifact_path, "content": f"artifact:{artifact_path}"}
         receipt_path = (
             workspace
@@ -123,6 +142,7 @@ def _write_protocol_receipt(
     execution_result: dict[str, object],
     operation_id: str,
     materialize_artifact: bool = True,
+    control_plane_manifest: dict[str, str] | None = None,
 ) -> None:
     artifact_path = str(tool_args.get("path") or execution_result.get("path") or "").strip()
     if materialize_artifact and tool == "write_file" and artifact_path:
@@ -130,7 +150,11 @@ def _write_protocol_receipt(
         resolved_artifact_path.parent.mkdir(parents=True, exist_ok=True)
         if "content" in tool_args:
             resolved_artifact_path.write_text(str(tool_args.get("content") or ""), encoding="utf-8")
-    manifest = build_tool_invocation_manifest(run_id=session_id, tool_name=tool)
+    manifest = build_tool_invocation_manifest(
+        run_id=session_id,
+        tool_name=tool,
+        **dict(control_plane_manifest or {}),
+    )
     receipt_path = (
         workspace
         / "observability"
@@ -614,6 +638,60 @@ async def test_run_ledger_records_artifact_provenance_for_generated_files(
 
 # Layer: integration
 @pytest.mark.asyncio
+async def test_run_ledger_records_control_plane_refs_in_artifact_provenance_when_receipts_are_governed(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_artifact_provenance_governed")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
+    )
+
+    async def _execute_with_governed_artifacts(**kwargs):
+        run_id = str(kwargs["run_id"])
+        _write_protocol_write_receipts(
+            workspace,
+            session_id=run_id,
+            rows=[("ISSUE-1", "lead_architect", 1, "agent_output/main.py", "op-main")],
+            governed_turn_tool=True,
+        )
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_with_governed_artifacts)
+
+    await pipeline.run_epic(
+        "ledger_epic_artifact_provenance_governed",
+        build_id="build-ledger-epic-artifact-provenance-governed",
+        session_id="sess-ledger-artifact-provenance-governed",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-artifact-provenance-governed")
+    assert ledger is not None
+    entry = ledger["summary_json"]["truthful_runtime_artifact_provenance"]["artifacts"][0]
+    assert entry["control_plane_run_id"] == "turn-tool-run:sess-ledger-artifact-provenance-governed:ISSUE-1:lead_architect:0001"
+    assert entry["control_plane_attempt_id"] == (
+        "turn-tool-run:sess-ledger-artifact-provenance-governed:ISSUE-1:lead_architect:0001:attempt:0001"
+    )
+    assert entry["control_plane_step_id"] == "op-main"
+    packet1 = ledger["summary_json"]["truthful_runtime_packet1"]
+    assert packet1["provenance"]["control_plane_run_id"] == (
+        "turn-tool-run:sess-ledger-artifact-provenance-governed:ISSUE-1:lead_architect:0001"
+    )
+    assert packet1["provenance"]["control_plane_attempt_id"] == (
+        "turn-tool-run:sess-ledger-artifact-provenance-governed:ISSUE-1:lead_architect:0001:attempt:0001"
+    )
+    assert packet1["provenance"]["control_plane_step_id"] == "op-main"
+
+
+# Layer: integration
+@pytest.mark.asyncio
 async def test_run_ledger_falls_back_to_tool_event_provenance_when_receipts_are_absent(
     test_root,
     workspace,
@@ -697,6 +775,12 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_for_required_source_a
 
     async def _execute_phase_c_verified(**kwargs):
         run_id = str(kwargs["run_id"])
+        control_plane_run_id = run_id_for(
+            session_id=run_id,
+            issue_id="ISSUE-1",
+            role_name="lead_architect",
+            turn_index=1,
+        )
         _write_protocol_write_receipts(
             workspace,
             session_id=run_id,
@@ -780,6 +864,11 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_for_required_source_a
             execution_result={"ok": True, "path": str(workspace / "agent_output" / "source_attribution_receipt.json")},
             operation_id="op-source-receipt",
             materialize_artifact=False,
+            control_plane_manifest={
+                "control_plane_run_id": control_plane_run_id,
+                "control_plane_attempt_id": attempt_id_for(run_id=control_plane_run_id),
+                "control_plane_step_id": "op-source-receipt",
+            },
         )
         _write_protocol_receipt(
             workspace,
@@ -814,11 +903,40 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_for_required_source_a
     assert packet2["source_attribution"]["synthesis_status"] == "verified"
     assert packet2["source_attribution"]["claim_count"] == 1
     assert packet2["source_attribution"]["source_count"] == 3
+    assert packet2["source_attribution"]["control_plane_run_id"] == (
+        "turn-tool-run:sess-ledger-phase-c-verified:ISSUE-1:lead_architect:0001"
+    )
+    assert packet2["source_attribution"]["control_plane_attempt_id"] == (
+        "turn-tool-run:sess-ledger-phase-c-verified:ISSUE-1:lead_architect:0001:attempt:0001"
+    )
+    assert packet2["source_attribution"]["control_plane_step_id"] == "op-source-receipt"
     assert packet2["narration_to_effect_audit"]["missing_effect_count"] == 0
+    source_receipt_audit = next(
+        row
+        for row in packet2["narration_to_effect_audit"]["entries"]
+        if row["effect_target"] == "agent_output/source_attribution_receipt.json"
+    )
+    assert source_receipt_audit["control_plane_run_id"] == (
+        "turn-tool-run:sess-ledger-phase-c-verified:ISSUE-1:lead_architect:0001"
+    )
+    assert source_receipt_audit["control_plane_attempt_id"] == (
+        "turn-tool-run:sess-ledger-phase-c-verified:ISSUE-1:lead_architect:0001:attempt:0001"
+    )
+    assert source_receipt_audit["control_plane_step_id"] == "op-source-receipt"
     surfaces = {row["surface"] for row in packet2["idempotency"]["surfaces"]}
     assert "artifact_write" in surfaces
     assert "status_update" in surfaces
     assert "source_attribution_receipt" in surfaces
+    source_receipt_surface = next(
+        row for row in packet2["idempotency"]["surfaces"] if row["surface"] == "source_attribution_receipt"
+    )
+    assert source_receipt_surface["control_plane_run_id"] == (
+        "turn-tool-run:sess-ledger-phase-c-verified:ISSUE-1:lead_architect:0001"
+    )
+    assert source_receipt_surface["control_plane_attempt_id"] == (
+        "turn-tool-run:sess-ledger-phase-c-verified:ISSUE-1:lead_architect:0001:attempt:0001"
+    )
+    assert source_receipt_surface["control_plane_step_id"] == "op-source-receipt"
 
 
 # Layer: integration

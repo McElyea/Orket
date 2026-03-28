@@ -135,3 +135,46 @@ def test_compare_run_ledger_backends_non_strict_returns_zero_on_mismatch(tmp_pat
         ]
     )
     assert exit_code == 0
+
+
+def test_compare_run_ledger_backends_strict_fails_on_invalid_projection_payload(tmp_path: Path) -> None:
+    sqlite_db = tmp_path / "runtime.db"
+    protocol_root = tmp_path / "protocol"
+    out_path = tmp_path / "parity-invalid.json"
+    asyncio.run(
+        _seed_ledgers(
+            sqlite_db=sqlite_db,
+            protocol_root=protocol_root,
+            session_id="sess-invalid",
+            sqlite_status="incomplete",
+            protocol_status="incomplete",
+        )
+    )
+
+    import sqlite3
+
+    with sqlite3.connect(sqlite_db) as conn:
+        conn.execute(
+            "UPDATE run_ledger SET summary_json = ?, artifact_json = ? WHERE session_id = ?",
+            ("{not-json", "[1,2,3]", "sess-invalid"),
+        )
+        conn.commit()
+
+    exit_code = main(
+        [
+            "--session-id",
+            "sess-invalid",
+            "--sqlite-db",
+            str(sqlite_db),
+            "--protocol-root",
+            str(protocol_root),
+            "--out",
+            str(out_path),
+            "--strict",
+        ]
+    )
+    assert exit_code == 1
+    payload = json.loads(out_path.read_text(encoding="utf-8"))
+    assert payload["parity_ok"] is False
+    assert payload["sqlite_invalid_projection_fields"] == ["summary_json", "artifact_json"]
+    assert any(row["field"] == "__projection_validation__" for row in payload["differences"])

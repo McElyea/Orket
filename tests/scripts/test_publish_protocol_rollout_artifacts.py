@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sqlite3
 from pathlib import Path
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
@@ -176,3 +177,49 @@ def test_publish_protocol_rollout_artifacts_strict_fails_on_mismatch(tmp_path: P
         ]
     )
     assert exit_code == 1
+
+
+def test_publish_protocol_rollout_artifacts_markdown_surfaces_invalid_projection_counts(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
+    out_dir = tmp_path / "artifacts"
+    asyncio.run(
+        _seed_run(
+            workspace_root=workspace_root,
+            sqlite_db=sqlite_db,
+            run_id="run-a",
+            session_id="run-a",
+            sqlite_status="incomplete",
+            protocol_status="incomplete",
+            operation_ok=True,
+        )
+    )
+    with sqlite3.connect(sqlite_db) as conn:
+        conn.execute(
+            "UPDATE run_ledger SET summary_json = ?, artifact_json = ? WHERE session_id = ?",
+            ("{not-json", "[1,2,3]", "run-a"),
+        )
+        conn.commit()
+
+    exit_code = main(
+        [
+            "--workspace-root",
+            str(workspace_root),
+            "--out-dir",
+            str(out_dir),
+            "--run-id",
+            "run-a",
+            "--session-id",
+            "run-a",
+        ]
+    )
+    assert exit_code == 0
+
+    bundle = json.loads((out_dir / "protocol_rollout_bundle.latest.json").read_text(encoding="utf-8"))
+    markdown = (out_dir / "protocol_rollout_bundle.latest.md").read_text(encoding="utf-8")
+    assert bundle["ledger_parity_campaign"]["rows"][0]["sqlite_invalid_projection_fields"] == [
+        "summary_json",
+        "artifact_json",
+    ]
+    assert '`{"artifact_json": 1, "summary_json": 1}`' in markdown
+    assert "`{}`" in markdown

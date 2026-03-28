@@ -1,6 +1,6 @@
 # Truthful Runtime Source Attribution Contract
 
-Last updated: 2026-03-16
+Last updated: 2026-03-27
 Status: Active
 Owner: Orket Core
 Phase closeout authority: `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`
@@ -28,6 +28,9 @@ Out of scope:
 
 Packet-2 additive key:
 1. `truthful_runtime_packet2.source_attribution`
+2. The enclosing `truthful_runtime_packet2` block is a projection surface inside `run_summary.json`, not a standalone authority surface.
+3. `truthful_runtime_packet2.projection_source` must be `packet2_facts`.
+4. `truthful_runtime_packet2.projection_only` must be `true`.
 
 Minimum emitted shape:
 
@@ -48,6 +51,9 @@ Optional additive fields:
 1. `claims`
 2. `sources`
 3. `receipt_operation_id`
+4. `control_plane_run_id`
+5. `control_plane_attempt_id`
+6. `control_plane_step_id`
 
 ## Mode Rules
 
@@ -99,7 +105,8 @@ Stable `missing_requirements` values:
 
 1. `artifact_provenance_verified` is `true` only when `truthful_runtime_artifact_provenance` includes the receipt artifact path.
 2. `receipt_operation_id` is emitted only when the authoritative artifact-provenance entry exposes a stable `operation_id`.
-3. Source attribution does not replace artifact provenance; it layers claim/source structure on top of it.
+3. `control_plane_run_id`, `control_plane_attempt_id`, and `control_plane_step_id` are emitted only when the authoritative artifact-provenance entry for the receipt artifact exposes those durable governed execution refs.
+4. Source attribution does not replace artifact provenance; it layers claim/source structure on top of it.
 
 ## Gate Rule
 

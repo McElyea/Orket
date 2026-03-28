@@ -23,6 +23,16 @@ _STARTED_AT = "2036-03-05T12:00:00+00:00"
 _FINALIZED_AT = "2036-03-05T12:00:05+00:00"
 
 
+def _run_identity(*, run_id: str, workload: str = "run-summary-test") -> dict[str, str | bool]:
+    return {
+        "run_id": run_id,
+        "workload": workload,
+        "start_time": _STARTED_AT,
+        "identity_scope": "session_bootstrap",
+        "projection_only": True,
+    }
+
+
 def _read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_bytes().decode("utf-8"))
 
@@ -70,6 +80,50 @@ def _tool_result_payload(
     }
 
 
+def _control_plane_summary_artifacts(*, session_id: str) -> dict[str, Any]:
+    run_id = f"cards-epic-run:{session_id}:build-1:20360305T120000000000Z"
+    attempt_id = f"{run_id}:attempt:0001"
+    return {
+        "run_identity": _run_identity(run_id=session_id, workload="cards-epic"),
+        "control_plane_run_record": {
+            "contract_version": "control_plane.contract.v1",
+            "run_id": run_id,
+            "workload_id": "cards-epic",
+            "workload_version": "1.0",
+            "policy_snapshot_id": "policy-1",
+            "policy_digest": "sha256:policy-1",
+            "configuration_snapshot_id": "config-1",
+            "configuration_digest": "sha256:config-1",
+            "creation_timestamp": _STARTED_AT,
+            "admission_decision_receipt_ref": "admission-1",
+            "lifecycle_state": "waiting_on_observation",
+            "current_attempt_id": attempt_id,
+        },
+        "control_plane_attempt_record": {
+            "contract_version": "control_plane.contract.v1",
+            "attempt_id": attempt_id,
+            "run_id": run_id,
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_waiting",
+            "starting_state_snapshot_ref": "admission-1",
+            "start_timestamp": _STARTED_AT,
+        },
+        "control_plane_step_record": {
+            "contract_version": "control_plane.contract.v1",
+            "step_id": f"{run_id}:step:start",
+            "attempt_id": attempt_id,
+            "step_kind": "cards_epic_session_start",
+            "input_ref": "admission-1",
+            "output_ref": "admission-1",
+            "capability_used": "deterministic_compute",
+            "resources_touched": ["epic:summary", "build:build-1"],
+            "observed_result_classification": "cards_epic_run_started",
+            "receipt_refs": ["admission-1"],
+            "closure_classification": "step_completed",
+        },
+    }
+
+
 # Layer: contract
 def test_run_summary_schema_contract_is_canonical() -> None:
     payload = build_run_summary_payload(
@@ -79,7 +133,7 @@ def test_run_summary_schema_contract_is_canonical() -> None:
         started_at=_STARTED_AT,
         ended_at=_FINALIZED_AT,
         tool_names=["workspace.read"],
-        artifacts={"run_identity": {"run_id": "sess-summary-contract"}},
+        artifacts={"run_identity": _run_identity(run_id="sess-summary-contract")},
     )
 
     validate_run_summary_payload(payload)
@@ -106,45 +160,7 @@ def test_run_summary_emits_control_plane_projection() -> None:
         started_at=_STARTED_AT,
         ended_at=_FINALIZED_AT,
         tool_names=["workspace.read"],
-        artifacts={
-            "run_identity": {"run_id": "sess-summary-control-plane"},
-            "control_plane_run_record": {
-                "contract_version": "control_plane.contract.v1",
-                "run_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z",
-                "workload_id": "cards-epic",
-                "workload_version": "1.0",
-                "policy_snapshot_id": "policy-1",
-                "policy_digest": "sha256:policy-1",
-                "configuration_snapshot_id": "config-1",
-                "configuration_digest": "sha256:config-1",
-                "creation_timestamp": _STARTED_AT,
-                "admission_decision_receipt_ref": "admission-1",
-                "lifecycle_state": "waiting_on_observation",
-                "current_attempt_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z:attempt:0001",
-            },
-            "control_plane_attempt_record": {
-                "contract_version": "control_plane.contract.v1",
-                "attempt_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z:attempt:0001",
-                "run_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z",
-                "attempt_ordinal": 1,
-                "attempt_state": "attempt_waiting",
-                "starting_state_snapshot_ref": "admission-1",
-                "start_timestamp": _STARTED_AT,
-            },
-            "control_plane_step_record": {
-                "contract_version": "control_plane.contract.v1",
-                "step_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z:step:start",
-                "attempt_id": "cards-epic-run:sess-summary-control-plane:build-1:20360305T120000000000Z:attempt:0001",
-                "step_kind": "cards_epic_session_start",
-                "input_ref": "admission-1",
-                "output_ref": "admission-1",
-                "capability_used": "deterministic_compute",
-                "resources_touched": ["epic:summary", "build:build-1"],
-                "observed_result_classification": "cards_epic_run_started",
-                "receipt_refs": ["admission-1"],
-                "closure_classification": "step_completed",
-            },
-        },
+        artifacts=_control_plane_summary_artifacts(session_id="sess-summary-control-plane"),
     )
 
     assert payload["control_plane"] == {
@@ -168,6 +184,45 @@ def test_run_summary_emits_control_plane_projection() -> None:
     }
 
 
+# Layer: integration
+def test_control_plane_reconstruction_matches_emitted_summary() -> None:
+    artifacts = _control_plane_summary_artifacts(session_id="sess-summary-control-plane-reconstruct")
+    events = [
+        {
+            "kind": "run_started",
+            "event_seq": 1,
+            "run_id": "sess-summary-control-plane-reconstruct",
+            "timestamp": _STARTED_AT,
+            "artifacts": artifacts,
+        },
+        {
+            "kind": "tool_call",
+            "event_seq": 2,
+            "tool_name": "workspace.read",
+        },
+        {
+            "kind": "run_finalized",
+            "event_seq": 3,
+            "run_id": "sess-summary-control-plane-reconstruct",
+            "status": "done",
+            "timestamp": _FINALIZED_AT,
+        },
+    ]
+
+    reconstructed = reconstruct_run_summary(events, session_id="sess-summary-control-plane-reconstruct")
+    emitted = build_run_summary_payload(
+        run_id="sess-summary-control-plane-reconstruct",
+        status="done",
+        failure_reason=None,
+        started_at=_STARTED_AT,
+        ended_at=_FINALIZED_AT,
+        tool_names=["workspace.read"],
+        artifacts=artifacts,
+    )
+
+    assert reconstructed == emitted
+
+
 # Layer: contract
 def test_run_summary_emits_odr_cards_runtime_fields() -> None:
     payload = build_run_summary_payload(
@@ -178,7 +233,7 @@ def test_run_summary_emits_odr_cards_runtime_fields() -> None:
         ended_at=_FINALIZED_AT,
         tool_names=["workspace.read"],
         artifacts={
-            "run_identity": {"run_id": "sess-summary-odr"},
+            "run_identity": _run_identity(run_id="sess-summary-odr", workload="cards-runtime"),
             "cards_runtime_facts": {
                 "execution_profile": "odr_prebuild_builder_guard_v1",
                 "stop_reason": "completed",
@@ -226,7 +281,7 @@ async def test_generate_run_summary_for_finalize_uses_receipts_and_filtered_arti
         started_at=_STARTED_AT,
         ended_at=_FINALIZED_AT,
         artifacts={
-            "run_identity": {"run_id": "sess-summary-generate", "start_time": _STARTED_AT},
+            "run_identity": _run_identity(run_id="sess-summary-generate"),
             "route_decision_artifact": {"route_target": "epic"},
             "tool_registry_snapshot": {"tool_registry_version": "1.2.0"},
             "run_summary": {"ignored": True},
@@ -251,11 +306,7 @@ async def _record_protocol_run(
     replayed: bool,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     repo = AsyncProtocolRunLedgerRepository(root)
-    run_identity = {
-        "run_id": session_id,
-        "workload": "run-summary-test",
-        "start_time": _STARTED_AT,
-    }
+    run_identity = _run_identity(run_id=session_id)
     await repo.start_run(
         session_id=session_id,
         run_type="epic",

@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List
 
+from orket.application.services.microservices_acceptance_reports import normalize_microservices_unlock_report
+
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
@@ -53,12 +55,21 @@ def _load_json(path: Path) -> Dict[str, Any]:
     return payload
 
 
+def _normalize_unlock_report(payload: Dict[str, Any]) -> Dict[str, Any]:
+    normalized = normalize_microservices_unlock_report(payload)
+    return {"valid": bool(normalized), **normalized}
+
+
 def decide_from_unlock_report(payload: Dict[str, Any]) -> Dict[str, Any]:
-    unlocked = bool(payload.get("unlocked"))
-    failures = payload.get("failures", [])
-    if not isinstance(failures, list):
-        failures = []
-    normalized_failures: List[str] = [str(item) for item in failures]
+    normalized_report = _normalize_unlock_report(payload)
+    if not bool(normalized_report.get("valid")):
+        unlocked = False
+        normalized_failures = ["unlock report missing or invalid"]
+        recommended_default_builder_variant = None
+    else:
+        unlocked = bool(normalized_report.get("unlocked"))
+        normalized_failures = list(normalized_report.get("failures", []))
+        recommended_default_builder_variant = normalized_report.get("recommended_default_builder_variant")
     decision = {
         "enable_microservices": unlocked,
         "recommended_env": {
@@ -70,7 +81,7 @@ def decide_from_unlock_report(payload: Dict[str, Any]) -> Dict[str, Any]:
             else "unlock criteria not satisfied; keep microservices locked"
         ),
         "unlock_failures": normalized_failures,
-        "recommended_default_builder_variant": payload.get("recommended_default_builder_variant"),
+        "recommended_default_builder_variant": recommended_default_builder_variant,
     }
     return decision
 

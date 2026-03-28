@@ -5,6 +5,10 @@ import os
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List
 
+from orket.application.services.microservices_acceptance_reports import (
+    normalize_microservices_pilot_stability_report,
+    normalize_microservices_unlock_report,
+)
 from orket.runtime.determinism_controls import (
     build_determinism_controls,
     resolve_clock_artifact_ref as resolve_protocol_clock_artifact_ref,
@@ -37,8 +41,8 @@ DEFAULT_SMALL_PROJECT_BUILDER_VARIANT = "auto"
 DEFAULT_STATE_BACKEND_MODE = "local"
 DEFAULT_RUN_LEDGER_MODE = "sqlite"
 DEFAULT_GITEA_STATE_PILOT_ENABLED = False
-DEFAULT_MICROSERVICES_UNLOCK_REPORT = "benchmarks/results/microservices_unlock_check.json"
-DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT = "benchmarks/results/microservices_pilot_stability_check.json"
+DEFAULT_MICROSERVICES_UNLOCK_REPORT = "benchmarks/results/acceptance/microservices_unlock_check.json"
+DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT = "benchmarks/results/acceptance/microservices_pilot_stability_check.json"
 DEFAULT_GITEA_WORKER_MAX_ITERATIONS = 100
 DEFAULT_GITEA_WORKER_MAX_IDLE_STREAK = 10
 DEFAULT_GITEA_WORKER_MAX_DURATION_SECONDS = 60.0
@@ -99,7 +103,7 @@ def _pick_first_non_empty(values: Iterable[Any]) -> str:
     return ""
 
 
-def _read_unlock_report(path: Path) -> Dict[str, Any]:
+def _read_json_object(path: Path) -> Dict[str, Any]:
     if not path.exists():
         return {}
     try:
@@ -107,6 +111,14 @@ def _read_unlock_report(path: Path) -> Dict[str, Any]:
     except json.JSONDecodeError:
         return {}
     return payload if isinstance(payload, dict) else {}
+
+
+def _read_unlock_report(path: Path) -> Dict[str, Any]:
+    return normalize_microservices_unlock_report(_read_json_object(path))
+
+
+def _read_pilot_stability_report(path: Path) -> Dict[str, Any]:
+    return normalize_microservices_pilot_stability_report(_read_json_object(path))
 
 
 def _env_bool(name: str) -> bool | None:
@@ -133,7 +145,7 @@ def is_microservices_pilot_stable() -> bool:
             os.environ.get("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT") or DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT
         )
     )
-    report = _read_unlock_report(report_path)
+    report = _read_pilot_stability_report(report_path)
     return bool(report.get("stable"))
 
 

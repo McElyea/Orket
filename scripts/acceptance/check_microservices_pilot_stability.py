@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List
 
+from orket.application.services.microservices_acceptance_reports import normalize_architecture_pilot_comparison
+
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
@@ -54,9 +56,13 @@ def _load_json(path: Path) -> Dict[str, Any]:
 
 
 def _check_artifact(payload: Dict[str, Any]) -> Dict[str, Any]:
-    comparison = payload.get("comparison") or {}
-    available = bool(comparison.get("available"))
+    comparison = normalize_architecture_pilot_comparison(payload.get("comparison"))
     failures: List[str] = []
+    if comparison is None:
+        failures.append("comparison missing or invalid")
+        return {"stable": False, "failures": failures}
+
+    available = bool(comparison.get("available"))
     if not available:
         failures.append("comparison unavailable")
         return {"stable": False, "failures": failures}
@@ -64,6 +70,13 @@ def _check_artifact(payload: Dict[str, Any]) -> Dict[str, Any]:
     pass_delta = float(comparison.get("pass_rate_delta_microservices_minus_monolith", 0.0) or 0.0)
     runtime_delta = float(comparison.get("runtime_failure_rate_delta_microservices_minus_monolith", 0.0) or 0.0)
     reviewer_delta = float(comparison.get("reviewer_rejection_rate_delta_microservices_minus_monolith", 0.0) or 0.0)
+    invalid_payload_totals = dict(comparison.get("invalid_payload_signal_totals_by_architecture") or {})
+    invalid_payload_failures = list(comparison.get("invalid_payload_failures") or [])
+    failures.extend([f"invalid_payload: {item}" for item in invalid_payload_failures])
+
+    for mode, total in sorted(invalid_payload_totals.items()):
+        if total > 0:
+            failures.append(f"invalid_payload_signals[{mode}] {total} > 0")
 
     if pass_delta < 0.0:
         failures.append(f"pass_rate_delta {pass_delta:.3f} < 0.000")
@@ -78,7 +91,9 @@ def _check_artifact(payload: Dict[str, Any]) -> Dict[str, Any]:
             "pass_rate_delta_microservices_minus_monolith": pass_delta,
             "runtime_failure_rate_delta_microservices_minus_monolith": runtime_delta,
             "reviewer_rejection_rate_delta_microservices_minus_monolith": reviewer_delta,
+            "invalid_payload_signal_totals_by_architecture": invalid_payload_totals,
         },
+        "invalid_payload_failures": invalid_payload_failures,
         "failures": failures,
     }
 

@@ -345,6 +345,7 @@ def test_kernel_api_real_engine_flow_publishes_control_plane_governed_action_tru
     assert committed.json()["control_plane_reservation_id"].startswith("kernel-action-reservation:")
     assert committed.json()["control_plane_lease_id"].startswith("kernel-action-lease:")
     assert committed.json()["control_plane_resource_id"] == f"kernel-action-scope:session:{session_id}"
+    assert committed.json()["control_plane_step_id"].startswith("kernel-action-step:")
     assert committed.json()["control_plane_final_truth_record_id"].startswith("kernel-action-final-truth:")
 
     run = execution_repo.run_by_id[KernelActionControlPlaneService.run_id_for(session_id=session_id, trace_id=trace_id)]

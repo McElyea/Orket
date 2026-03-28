@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.application.review.control_plane_projection import REVIEW_EXECUTION_STATE_AUTHORITY
 from scripts.reviewrun.score_answer_key import score_answer_key
 from scripts.workloads.code_review_probe_support import sha256_text
 
@@ -25,6 +26,8 @@ def build_model_assisted_payload(
         "snapshot_digest": sha256_text(source_text),
         "policy_digest": str(policy_digest),
         "run_id": str(run_id),
+        "execution_state_authority": REVIEW_EXECUTION_STATE_AUTHORITY,
+        "lane_output_execution_state_authoritative": False,
     }
 
 

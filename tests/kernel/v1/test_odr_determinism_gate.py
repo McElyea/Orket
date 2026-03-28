@@ -507,15 +507,8 @@ def _run_gate(permutations: int, repeats: int, *, include_scale: bool = False) -
 def test_odr_determinism_gate_pr() -> None:
     permutations = int(os.getenv("ODR_PERMUTATIONS", "10"))
     repeats = int(os.getenv("ODR_REPEATS", "5"))
-    _run_gate(permutations=permutations, repeats=repeats)
-
-
-def test_odr_determinism_gate_nightly() -> None:
-    if os.getenv("ODR_GATE_NIGHTLY", "0") != "1":
-        pytest.skip("nightly ODR gate disabled")
-    permutations = int(os.getenv("ODR_PERMUTATIONS", "50"))
-    repeats = int(os.getenv("ODR_REPEATS", "20"))
-    _run_gate(permutations=permutations, repeats=repeats, include_scale=True)
+    include_scale = os.getenv("ODR_INCLUDE_SCALE", "0") == "1"
+    _run_gate(permutations=permutations, repeats=repeats, include_scale=include_scale)
 
 
 def test_odr_determinism_gate_imports_odr_canonicalizer_only() -> None:

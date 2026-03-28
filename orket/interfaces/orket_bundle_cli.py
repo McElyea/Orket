@@ -24,6 +24,7 @@ from orket.interfaces.api_generation import run_api_add_transaction
 from orket.interfaces.refactor_transaction import run_refactor_transaction
 from orket.interfaces.scaffold_init import run_scaffold_init
 from orket.application.review.models import ReviewSnapshot, SnapshotBounds
+from orket.application.review.bundle_validation import load_review_replay_artifacts
 from orket.application.review.run_service import ReviewRunService
 from orket.reforger.cli import add_reforge_subparser, handle_reforge
 
@@ -786,8 +787,23 @@ def _render_human(result: Dict[str, Any]) -> str:
         if isinstance(control_plane, dict):
             run_state = str(control_plane.get("run_state") or "").strip()
             attempt_state = str(control_plane.get("attempt_state") or "").strip()
-            if run_state or attempt_state:
-                lines.append(f"control-plane: run={run_state} attempt={attempt_state}".strip())
+            step_kind = str(control_plane.get("step_kind") or "").strip()
+            summary_parts = []
+            if run_state:
+                summary_parts.append(f"run={run_state}")
+            if attempt_state:
+                summary_parts.append(f"attempt={attempt_state}")
+            if step_kind:
+                summary_parts.append(f"step={step_kind}")
+            if summary_parts:
+                lines.append(f"control-plane: {' '.join(summary_parts)}")
+            ref_parts = []
+            for field in ("run_id", "attempt_id", "step_id"):
+                token = str(control_plane.get(field) or "").strip()
+                if token:
+                    ref_parts.append(f"{field}={token}")
+            if ref_parts:
+                lines.append(f"control-plane refs: {' '.join(ref_parts)}")
         if bool(result.get("verbose")):
             lines.append(f"snapshot_digest: {result.get('snapshot_digest', '')}")
             lines.append(f"policy_digest: {result.get('policy_digest', '')}")
@@ -1020,14 +1036,10 @@ def main(argv: List[str] | None = None) -> int:
                 )
             elif review_command == "replay":
                 run_dir_raw = str(args.run_dir or "").strip()
-                if run_dir_raw:
-                    run_dir = Path(run_dir_raw).resolve()
-                    snapshot_path = run_dir / "snapshot.json"
-                    policy_source_path = run_dir / "policy_resolved.json"
-                else:
-                    snapshot_path = Path(str(args.snapshot)).resolve() if str(args.snapshot).strip() else None
-                    policy_source_path = Path(str(args.policy)).resolve() if str(args.policy).strip() else None
-                if not snapshot_path or not policy_source_path:
+                run_dir = Path(run_dir_raw).resolve() if run_dir_raw else None
+                snapshot_path = Path(str(args.snapshot)).resolve() if str(args.snapshot).strip() else None
+                policy_source_path = Path(str(args.policy)).resolve() if str(args.policy).strip() else None
+                if run_dir is None and (snapshot_path is None or policy_source_path is None):
                     result = {
                         "ok": False,
                         "error_count": 1,
@@ -1045,8 +1057,13 @@ def main(argv: List[str] | None = None) -> int:
                     else:
                         print(_render_human(result))
                     return 2
-                snapshot_payload = json.loads(Path(snapshot_path).read_text(encoding="utf-8"))
-                policy_payload = json.loads(Path(policy_source_path).read_text(encoding="utf-8"))
+                replay_bundle = load_review_replay_artifacts(
+                    run_dir=run_dir,
+                    snapshot_path=snapshot_path,
+                    policy_path=policy_source_path,
+                )
+                snapshot_payload = dict(replay_bundle.get("snapshot") or {})
+                policy_payload = dict(replay_bundle.get("policy_resolved") or {})
                 snapshot = ReviewSnapshot.from_dict(snapshot_payload)
                 policy_only = dict(policy_payload)
                 policy_only.pop("policy_digest", None)

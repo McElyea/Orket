@@ -1,6 +1,6 @@
 # Protocol Ledger Parity Campaign Schema (v1)
 
-Last updated: 2026-03-06  
+Last updated: 2026-03-27  
 Status: Active (schema contract)  
 Owner: Orket Core
 
@@ -42,6 +42,8 @@ Each row in `rows` and `mismatches` contains:
 6. `protocol_digest` (string|null)
 7. `sqlite_status` (string)
 8. `protocol_status` (string)
+9. `sqlite_invalid_projection_fields` (array[string])
+10. `protocol_invalid_projection_fields` (array[string])
 
 ## Compatibility Telemetry Delta
 
@@ -53,6 +55,10 @@ Each row in `rows` and `mismatches` contains:
    key: `<field>:<sqlite_value>-><protocol_value>`, value: count
 3. `status_delta_counts`  
    key: `status:<sqlite_status>-><protocol_status>`, value: count
+4. `sqlite_invalid_projection_field_counts`
+   key: invalid SQLite projection field name, value: mismatch count
+5. `protocol_invalid_projection_field_counts`
+   key: invalid protocol projection field name, value: mismatch count
 
 ## Strict Gate Guidance
 

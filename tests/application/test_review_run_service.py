@@ -10,8 +10,9 @@ import pytest
 import orket.application.review.run_service as run_service_module
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.application.review.control_plane_projection import REVIEW_CONTROL_PLANE_PROJECTION_SOURCE
+from orket.application.review.models import ChangedFile, DeterministicReviewDecisionPayload, ModelAssistedCritiquePayload, ReviewRunManifest, ReviewRunResult, ReviewSnapshot, SnapshotBounds, TruncationReport
 from orket.application.review.run_service import ReviewRunService, _resolve_token
-from orket.application.review.models import ChangedFile, ReviewSnapshot, SnapshotBounds, TruncationReport
 from orket.capabilities.sync_bridge import run_coro_sync
 from orket.core.domain import AttemptState, RunState
 
@@ -60,9 +61,17 @@ def test_review_run_diff_writes_bundle_and_replay(tmp_path: Path) -> None:
     assert run.manifest["control_plane_attempt_id"].startswith(f"{run.run_id}:attempt:")
     assert run.manifest["control_plane_step_id"].startswith(f"{run.run_id}:step:")
     assert run.control_plane is not None
+    assert run.control_plane["projection_source"] == REVIEW_CONTROL_PLANE_PROJECTION_SOURCE
+    assert run.control_plane["projection_only"] is True
     assert run.control_plane["run_state"] == "completed"
     assert run.control_plane["attempt_state"] == "attempt_completed"
     assert run.control_plane["step_kind"] == "review_run_start"
+    deterministic_payload = json.loads((run_dir / "deterministic_decision.json").read_text(encoding="utf-8"))
+    assert deterministic_payload["execution_state_authority"] == "control_plane_records"
+    assert deterministic_payload["lane_output_execution_state_authoritative"] is False
+    assert deterministic_payload["control_plane_run_id"] == run.run_id
+    assert deterministic_payload["control_plane_attempt_id"] == run.manifest["control_plane_attempt_id"]
+    assert deterministic_payload["control_plane_step_id"] == run.manifest["control_plane_step_id"]
 
     execution_repo = AsyncControlPlaneExecutionRepository(control_plane_db)
     record_repo = AsyncControlPlaneRecordRepository(control_plane_db)
@@ -94,12 +103,54 @@ def test_review_run_diff_writes_bundle_and_replay(tmp_path: Path) -> None:
         resolved_policy_payload={k: v for k, v in policy.items() if k != "policy_digest"},
     )
     assert replay.control_plane is not None
+    assert replay.control_plane["projection_source"] == REVIEW_CONTROL_PLANE_PROJECTION_SOURCE
+    assert replay.control_plane["projection_only"] is True
     assert replay.control_plane["run_state"] == "completed"
     replay_dir = Path(replay.artifact_dir)
     first_decision = json.loads((run_dir / "deterministic_decision.json").read_text(encoding="utf-8"))
     replay_decision = json.loads((replay_dir / "deterministic_decision.json").read_text(encoding="utf-8"))
     assert first_decision["decision"] == replay_decision["decision"]
     assert first_decision["findings"] == replay_decision["findings"]
+
+
+def test_review_run_model_assisted_artifact_marks_execution_state_non_authoritative(tmp_path: Path) -> None:
+    """Layer: integration. Verifies advisory review-lane artifacts point back to durable control-plane execution truth."""
+    repo = tmp_path / "repo"
+    _init_repo(repo)
+    (repo / "a.py").write_text("print('one')\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "init")
+    base = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+    (repo / "a.py").write_text("print('two')\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "change")
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+
+    workspace = tmp_path / "workspace" / "default"
+    service = ReviewRunService(workspace=workspace, control_plane_db_path=tmp_path / "control_plane.sqlite3")
+    run = service.run_diff(
+        repo_root=repo,
+        base_ref=base,
+        head_ref=head,
+        bounds=SnapshotBounds(),
+        cli_policy_overrides={"model_assisted": {"enabled": True, "model_id": "test-model"}},
+        model_provider=lambda _request: {
+            "summary": ["Advisory only."],
+            "high_risk_issues": [],
+            "missing_tests": [],
+            "questions_for_author": [],
+            "nits": [],
+            "refs": [],
+        },
+    )
+
+    critique_payload = json.loads((Path(run.artifact_dir) / "model_assisted_critique.json").read_text(encoding="utf-8"))
+    assert critique_payload["execution_state_authority"] == "control_plane_records"
+    assert critique_payload["lane_output_execution_state_authoritative"] is False
+    assert critique_payload["control_plane_run_id"] == run.run_id
+    assert critique_payload["control_plane_attempt_id"] == run.manifest["control_plane_attempt_id"]
+    assert critique_payload["control_plane_step_id"] == run.manifest["control_plane_step_id"]
+    assert critique_payload["summary"] == ["Advisory only."]
 
 
 def test_token_resolution_precedence(monkeypatch) -> None:
@@ -264,3 +315,85 @@ def test_review_run_failure_closes_control_plane_run_failed(tmp_path: Path, monk
     assert persisted_attempt is not None
     assert persisted_attempt.attempt_state is AttemptState.FAILED
     assert persisted_attempt.failure_class == "review_run_RuntimeError"
+
+
+def test_review_run_result_rejects_malformed_control_plane_projection() -> None:
+    """Layer: contract. Verifies review result JSON fail-closes if control-plane projection framing drifts."""
+    result = ReviewRunResult(
+        ok=True,
+        run_id="run-1",
+        artifact_dir="workspace/default/review_runs/run-1",
+        snapshot_digest="sha256:snapshot",
+        policy_digest="sha256:policy",
+        deterministic_decision="pass",
+        deterministic_findings=0,
+        model_assisted_enabled=False,
+        manifest={
+            "execution_state_authority": "control_plane_records",
+            "lane_outputs_execution_state_authoritative": False,
+        },
+        control_plane={
+            "projection_source": "wrong_source",
+            "projection_only": True,
+            "run_id": "run-1",
+            "run_state": "completed",
+        },
+    )
+
+    with pytest.raises(ValueError, match="review_control_plane_projection_source_invalid"):
+        result.to_dict()
+
+
+@pytest.mark.parametrize(
+    ("factory", "expected_error"),
+    [
+        (
+            lambda: DeterministicReviewDecisionPayload(
+                decision="pass",
+                findings=[],
+                executed_checks=[],
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="run-1",
+                execution_state_authority="wrong_source",
+            ),
+            "deterministic_review_decision_execution_state_authority_invalid",
+        ),
+        (
+            lambda: ModelAssistedCritiquePayload(
+                summary=[],
+                high_risk_issues=[],
+                missing_tests=[],
+                questions_for_author=[],
+                nits=[],
+                refs=[],
+                model_id="test-model",
+                prompt_profile="review",
+                contract_version="review_critique_v0",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="run-1",
+                lane_output_execution_state_authoritative=True,
+            ),
+            "model_assisted_critique_execution_state_authoritative_invalid",
+        ),
+        (
+            lambda: ReviewRunManifest(
+                run_id="run-1",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                review_run_contract_version="review_run_v0",
+                deterministic_lane_version="deterministic_v0",
+                bounds={},
+                truncation={},
+                auth_source="none",
+                lane_outputs_execution_state_authoritative=True,
+            ),
+            "review_run_manifest_execution_state_authoritative_invalid",
+        ),
+    ],
+)
+def test_review_artifact_models_reject_execution_authority_drift(factory, expected_error: str) -> None:
+    """Layer: contract. Verifies review artifact surfaces fail closed on execution-authority marker drift."""
+    with pytest.raises(ValueError, match=expected_error):
+        factory().to_dict()

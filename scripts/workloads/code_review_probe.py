@@ -21,6 +21,7 @@ from scripts.workloads.code_review_probe_support import (
     DEFAULT_PROMPT_PROFILE,
     DEFAULT_REVIEW_METHOD,
     artifact_inventory,
+    build_run_manifest_payload,
     build_governed_claim_payload,
     build_deterministic_payload,
     build_guard_messages,
@@ -134,10 +135,22 @@ def _write_artifacts(
             "review_method": review_method,
         },
     )
+    snapshot_payload = build_snapshot_payload(fixture_path=fixture_path, source_text=source_text)
+    write_json(
+        artifact_dir / "run_manifest.json",
+        build_run_manifest_payload(
+            run_id=run_id,
+            snapshot_digest=str(snapshot_payload.get("snapshot_digest") or ""),
+            policy_digest=policy_digest,
+            deterministic_lane_version=str(deterministic_payload.get("deterministic_lane_version") or ""),
+            prompt_profile=prompt_profile,
+            review_method=review_method,
+        ),
+    )
     write_json(artifact_dir / "messages.json", initial_messages)
     if guard_messages is not None:
         write_json(artifact_dir / "guard_messages.json", guard_messages)
-    write_json(artifact_dir / "snapshot.json", build_snapshot_payload(fixture_path=fixture_path, source_text=source_text))
+    write_json(artifact_dir / "snapshot.json", snapshot_payload)
     write_json(artifact_dir / "deterministic_decision.json", deterministic_payload)
     write_json(artifact_dir / "model_assisted_critique.json", critique_payload)
     write_json(artifact_dir / "parsed_review.json", critique_payload)

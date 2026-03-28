@@ -15,6 +15,8 @@ def build_artifact_provenance_extension(*, artifacts: dict[str, Any]) -> dict[st
         return None
     return {
         "schema_version": ARTIFACT_PROVENANCE_SCHEMA_VERSION,
+        "projection_source": "artifact_provenance_facts",
+        "projection_only": True,
         "artifacts": entries,
     }
 
@@ -76,6 +78,15 @@ def _normalize_entries(value: Any) -> list[dict[str, Any]]:
         turn_index = _normalize_turn_index(item.get("turn_index"))
         if turn_index > 0:
             entry["turn_index"] = turn_index
+        control_plane_run_id = str(item.get("control_plane_run_id") or "").strip()
+        if control_plane_run_id:
+            entry["control_plane_run_id"] = control_plane_run_id
+        control_plane_attempt_id = str(item.get("control_plane_attempt_id") or "").strip()
+        if control_plane_attempt_id:
+            entry["control_plane_attempt_id"] = control_plane_attempt_id
+        control_plane_step_id = str(item.get("control_plane_step_id") or "").strip()
+        if control_plane_step_id:
+            entry["control_plane_step_id"] = control_plane_step_id
         tool_call_hash = str(item.get("tool_call_hash") or "").strip()
         if tool_call_hash:
             entry["tool_call_hash"] = tool_call_hash

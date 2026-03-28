@@ -19,6 +19,7 @@ from scripts.audit.audit_support import (
     contract_verdict_candidates,
     evaluate_run_completeness,
     load_json_object,
+    load_run_summary_object,
     normalize_json_surface,
     normalize_text,
     now_utc_iso,
@@ -85,7 +86,7 @@ def _required_surface_records(
 ) -> tuple[list[dict[str, Any]], list[str]]:
     rows: list[dict[str, Any]] = []
     missing: list[str] = []
-    summary = load_json_object(workspace / "runs" / str(session_id).strip() / "run_summary.json")
+    summary = load_run_summary_object(workspace / "runs" / str(session_id).strip() / "run_summary.json")
     rows.append(
         {
             "group": "run_summary",
@@ -185,8 +186,8 @@ def build_report(
 
     left_turns = collect_turn_records(workspace_a, session_id_a)
     right_turns = collect_turn_records(workspace_b, session_id_b)
-    left_summary = load_json_object(Path(workspace_a) / "runs" / str(session_id_a).strip() / "run_summary.json")
-    right_summary = load_json_object(Path(workspace_b) / "runs" / str(session_id_b).strip() / "run_summary.json")
+    left_summary = load_run_summary_object(Path(workspace_a) / "runs" / str(session_id_a).strip() / "run_summary.json")
+    right_summary = load_run_summary_object(Path(workspace_b) / "runs" / str(session_id_b).strip() / "run_summary.json")
     left_replacements = build_identity_replacements(
         workspace=workspace_a,
         session_id=session_id_a,

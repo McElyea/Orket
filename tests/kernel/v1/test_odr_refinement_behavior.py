@@ -28,6 +28,14 @@ def _load_scenarios() -> List[Dict[str, Any]]:
     return json.loads((FIXTURE_ROOT / "scenarios.json").read_text(encoding="utf-8"))
 
 
+def _decision_requirement_scenarios() -> List[Dict[str, Any]]:
+    return [
+        scenario
+        for scenario in _load_scenarios()
+        if list(scenario.get("require_decision_required_for_missing_values") or [])
+    ]
+
+
 def _read_markdown(scenario_path: str, name: str) -> str:
     return (FIXTURE_ROOT / scenario_path / name).read_text(encoding="utf-8")
 
@@ -132,12 +140,9 @@ def test_refinement_structural_checklist(scenario: Dict[str, Any]) -> None:
     assert missing == [], f"missing required sections: {missing}"
 
 
-@pytest.mark.parametrize("scenario", _load_scenarios(), ids=lambda row: row["id"])
+@pytest.mark.parametrize("scenario", _decision_requirement_scenarios(), ids=lambda row: row["id"])
 def test_refinement_missing_seed_values_require_decisions(scenario: Dict[str, Any]) -> None:
     required = scenario.get("require_decision_required_for_missing_values", [])
-    if not required:
-        pytest.skip("scenario has no missing-seed decision requirement assertions")
-
     seed = _read_seed(scenario)
     decisions = seed.get("decisions", {}) if isinstance(seed, dict) else {}
     r1 = _read_markdown(scenario["path"], "R1.md")

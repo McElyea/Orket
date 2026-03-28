@@ -15,6 +15,7 @@ if str(REPO_ROOT) not in sys.path:
 from orket.application.workflows.protocol_hashing import hash_canonical_json
 from orket.runtime.protocol_determinism_campaign import compare_protocol_determinism_campaign
 from orket.runtime.protocol_ledger_parity_campaign import compare_protocol_ledger_parity_campaign
+from scripts.protocol.parity_projection_support import extract_campaign_invalid_projection_field_counts
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -43,6 +44,7 @@ def _write_markdown(path: Path, *, bundle: dict[str, Any]) -> None:
     replay = dict(bundle.get("replay_campaign") or {})
     parity = dict(bundle.get("ledger_parity_campaign") or {})
     parity_status = str(parity.get("status") or "ok")
+    invalid_counts = extract_campaign_invalid_projection_field_counts(parity)
     lines = [
         "# Protocol Rollout Evidence Bundle",
         "",
@@ -53,6 +55,8 @@ def _write_markdown(path: Path, *, bundle: dict[str, Any]) -> None:
         f"- parity_status: `{parity_status}`",
         f"- parity_all_match: `{parity.get('all_match')}`",
         f"- parity_mismatch_count: `{parity.get('mismatch_count')}`",
+        f"- parity_sqlite_invalid_projection_field_counts: `{json.dumps(invalid_counts.get('sqlite') or {}, sort_keys=True)}`",
+        f"- parity_protocol_invalid_projection_field_counts: `{json.dumps(invalid_counts.get('protocol') or {}, sort_keys=True)}`",
     ]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

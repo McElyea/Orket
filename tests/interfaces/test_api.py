@@ -534,11 +534,101 @@ def test_runtime_policy_get_falls_back_to_monolith_when_microservices_locked(mon
     assert response.json()["microservices_unlocked"] is False
 
 
+# Layer: contract
+def test_runtime_policy_reports_unlock_from_valid_unlock_report(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.delenv("ORKET_ENABLE_MICROSERVICES", raising=False)
+    report_path = tmp_path / "unlock_report.json"
+    report_path.write_text(
+        json.dumps(
+            {
+                "unlocked": True,
+                "criteria": {
+                    "monolith_readiness_gate": {"ok": True, "failures": []},
+                    "matrix_stability": {"ok": True, "failures": []},
+                    "governance_stability": {"ok": True, "failures": []},
+                },
+                "failures": [],
+                "recommended_default_builder_variant": "coder",
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("ORKET_MICROSERVICES_UNLOCK_REPORT", str(report_path))
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+
+    response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json()["microservices_unlocked"] is True
+    assert response.json()["allowed_architecture_patterns"] == ["monolith", "microservices"]
+
+
+# Layer: contract
+def test_runtime_policy_rejects_malformed_unlock_report(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.delenv("ORKET_ENABLE_MICROSERVICES", raising=False)
+    report_path = tmp_path / "unlock_report.json"
+    report_path.write_text(json.dumps({"unlocked": True}), encoding="utf-8")
+    monkeypatch.setenv("ORKET_MICROSERVICES_UNLOCK_REPORT", str(report_path))
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+
+    response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json()["microservices_unlocked"] is False
+    assert response.json()["allowed_architecture_patterns"] == ["monolith"]
+
+
+# Layer: contract
+def test_runtime_policy_rejects_internally_inconsistent_unlock_report(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.delenv("ORKET_ENABLE_MICROSERVICES", raising=False)
+    report_path = tmp_path / "unlock_report.json"
+    report_path.write_text(
+        json.dumps(
+            {
+                "unlocked": False,
+                "criteria": {
+                    "monolith_readiness_gate": {"ok": True, "failures": []},
+                    "matrix_stability": {"ok": True, "failures": []},
+                    "governance_stability": {"ok": True, "failures": []},
+                },
+                "failures": ["matrix_stability: pass_rate below threshold"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("ORKET_MICROSERVICES_UNLOCK_REPORT", str(report_path))
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+
+    response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json()["microservices_unlocked"] is False
+    assert response.json()["allowed_architecture_patterns"] == ["monolith"]
+
+
+# Layer: contract
 def test_runtime_policy_reports_pilot_stability(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
     report_path = tmp_path / "pilot_stability.json"
-    report_path.write_text('{"stable": true}', encoding="utf-8")
+    report_path.write_text(
+        json.dumps(
+            {
+                "stable": True,
+                "required_consecutive": 2,
+                "artifact_count": 2,
+                "checks": [
+                    {"stable": True, "failures": []},
+                    {"stable": True, "failures": []},
+                ],
+                "failures": [],
+            }
+        ),
+        encoding="utf-8",
+    )
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", str(report_path))
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
     monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
@@ -546,6 +636,50 @@ def test_runtime_policy_reports_pilot_stability(monkeypatch, tmp_path):
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
     assert response.json()["microservices_pilot_stable"] is True
+
+
+# Layer: contract
+def test_runtime_policy_rejects_malformed_pilot_stability_report(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
+    report_path = tmp_path / "pilot_stability.json"
+    report_path.write_text(json.dumps({"stable": True}), encoding="utf-8")
+    monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", str(report_path))
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+
+    response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json()["microservices_pilot_stable"] is False
+
+
+# Layer: contract
+def test_runtime_policy_rejects_internally_inconsistent_pilot_stability_report(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
+    report_path = tmp_path / "pilot_stability.json"
+    report_path.write_text(
+        json.dumps(
+            {
+                "stable": True,
+                "required_consecutive": 2,
+                "artifact_count": 1,
+                "checks": [
+                    {"stable": True, "failures": []},
+                    {"stable": False, "failures": ["unexpected tail failure"]},
+                ],
+                "failures": ["unexpected top-level failure"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", str(report_path))
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+
+    response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json()["microservices_pilot_stable"] is False
 
 
 def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
@@ -1518,6 +1652,7 @@ def test_cards_detail_history_comments_missing_card(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_run_detail_and_session_status_real_runtime(monkeypatch, tmp_path):
+    """Layer: integration. Verifies run detail and session-status surfaces expose validated run-summary truth."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     from orket.orchestration.engine import OrchestrationEngine
 
@@ -1556,7 +1691,15 @@ async def test_run_detail_and_session_status_real_runtime(monkeypatch, tmp_path)
     await real_engine.run_ledger.finalize_run(
         session_id=session_id,
         status="done",
-        summary={"result": "ok"},
+        summary={
+            "run_id": session_id,
+            "status": "done",
+            "duration_ms": 5,
+            "failure_reason": None,
+            "tools_used": [],
+            "artifact_ids": ["bundle"],
+            "result": "ok",
+        },
         artifacts={"bundle": "artifact.zip"},
     )
 
@@ -1568,6 +1711,7 @@ async def test_run_detail_and_session_status_real_runtime(monkeypatch, tmp_path)
     assert detail_payload["session_id"] == session_id
     assert detail_payload["status"] == "done"
     assert detail_payload["summary"]["result"] == "ok"
+    assert detail_payload["run_ledger"]["summary_json"]["result"] == "ok"
     assert detail_payload["artifacts"]["bundle"] == "artifact.zip"
     assert detail_payload["issue_count"] >= 1
 
@@ -1575,7 +1719,96 @@ async def test_run_detail_and_session_status_real_runtime(monkeypatch, tmp_path)
     status_payload = status_response.json()
     assert status_payload["session_id"] == session_id
     assert status_payload["status"] == "done"
+    assert status_payload["artifacts"]["bundle"] == "artifact.zip"
     assert status_payload["backlog"]["count"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_run_detail_and_session_status_drop_invalid_run_summary_payload(monkeypatch, tmp_path):
+    """Layer: integration. Verifies malformed run-ledger summary payloads fail closed on API read surfaces."""
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    from orket.orchestration.engine import OrchestrationEngine
+
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+
+    session_id = "RUN-INVALID-SUMMARY-1"
+    await real_engine.sessions.start_session(
+        session_id,
+        {"type": "epic", "name": "real-run", "department": "core", "task_input": "demo"},
+    )
+    await real_engine.run_ledger.start_run(
+        session_id=session_id,
+        run_type="epic",
+        run_name="real-run",
+        department="core",
+        build_id="BUILD-RUN",
+        summary={"phase": "execute"},
+        artifacts={"report_path": "runs/report.json"},
+    )
+    await real_engine.run_ledger.finalize_run(
+        session_id=session_id,
+        status="done",
+        summary={"result": "ok"},
+        artifacts={"bundle": "artifact.zip"},
+    )
+
+    detail_response = client.get(f"/v1/runs/{session_id}", headers={"X-API-Key": "test-key"})
+    status_response = client.get(f"/v1/sessions/{session_id}/status", headers={"X-API-Key": "test-key"})
+
+    assert detail_response.status_code == 200
+    assert detail_response.json()["summary"] == {}
+    assert detail_response.json()["run_ledger"]["summary_json"] == {}
+    assert detail_response.json()["status"] == "done"
+
+    assert status_response.status_code == 200
+    assert status_response.json()["summary"] == {}
+    assert status_response.json()["status"] == "done"
+
+
+def test_run_detail_and_session_status_drop_invalid_run_artifact_projection(monkeypatch):
+    """Layer: contract. Verifies malformed run-ledger artifact projections fail closed on API read surfaces."""
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def fake_get_run(session_id):
+        return {
+            "session_id": session_id,
+            "status": "done",
+            "summary_json": {
+                "run_id": session_id,
+                "status": "done",
+                "duration_ms": 1,
+                "failure_reason": None,
+                "tools_used": [],
+                "artifact_ids": [],
+            },
+            "artifact_json": ["not-a-dict"],
+        }
+
+    async def fake_get_session(session_id):
+        return {"id": session_id, "status": "done"}
+
+    async def fake_get_backlog(_session_id):
+        return []
+
+    monkeypatch.setattr(api_module.engine.run_ledger, "get_run", fake_get_run)
+    monkeypatch.setattr(api_module.engine.sessions, "get_session", fake_get_session)
+    monkeypatch.setattr(api_module.engine.sessions, "get_session_issues", fake_get_backlog, raising=False)
+
+    detail_response = client.get("/v1/runs/RUN-INVALID-ARTIFACT-1", headers={"X-API-Key": "test-key"})
+    status_response = client.get("/v1/sessions/RUN-INVALID-ARTIFACT-1/status", headers={"X-API-Key": "test-key"})
+
+    assert detail_response.status_code == 200
+    assert detail_response.json()["artifacts"] == {}
+    assert detail_response.json()["run_ledger"]["artifact_json"] == {}
+
+    assert status_response.status_code == 200
+    assert status_response.json()["artifacts"] == {}
 
 
 @pytest.mark.asyncio

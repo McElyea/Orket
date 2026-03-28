@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Literal, Optional
 from urllib import parse
 
 from orket.application.review.artifacts import write_review_run_bundle
+from orket.application.review.control_plane_projection import validate_review_control_plane_summary
 from orket.application.review.lanes.deterministic import run_deterministic_lane
 from orket.application.review.lanes.model_assisted import ModelProvider, run_model_assisted_lane
 from orket.application.review.models import (
@@ -376,6 +377,9 @@ class ReviewRunService:
                 run_id=run_id,
                 policy_digest=resolved_policy.policy_digest,
             )
+            deterministic.control_plane_run_id = run_id
+            deterministic.control_plane_attempt_id = control_plane_attempt_id
+            deterministic.control_plane_step_id = control_plane_step_id
             model_cfg = dict(resolved_policy.payload.get("model_assisted") or {})
             model_enabled = bool(model_cfg.get("enabled") or False)
             model_result = None
@@ -387,6 +391,9 @@ class ReviewRunService:
                     policy_digest=resolved_policy.policy_digest,
                     provider=model_provider,
                 )
+                model_result.control_plane_run_id = run_id
+                model_result.control_plane_attempt_id = control_plane_attempt_id
+                model_result.control_plane_step_id = control_plane_step_id
 
             manifest = ReviewRunManifest(
                 run_id=run_id,
@@ -413,8 +420,8 @@ class ReviewRunService:
                 manifest=manifest,
             )
             run_coro_sync(self.review_control_plane_service.finalize_completed(run_id=run_id))
-            control_plane_summary = run_coro_sync(
-                self.review_control_plane_service.read_execution_summary(run_id=run_id)
+            control_plane_summary = validate_review_control_plane_summary(
+                run_coro_sync(self.review_control_plane_service.read_execution_summary(run_id=run_id))
             )
             exit_code = _decision_exit_code(deterministic.decision, fail_on_blocked)
             return ReviewRunResult(

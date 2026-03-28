@@ -1,6 +1,6 @@
 # Truthful Runtime Artifact Provenance Contract
 
-Last updated: 2026-03-16
+Last updated: 2026-03-27
 Status: Active
 Owner: Orket Core
 Phase authority: `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
@@ -34,6 +34,8 @@ Canonical shape:
 ```json
 {
   "schema_version": "1.0",
+  "projection_source": "artifact_provenance_facts",
+  "projection_only": true,
   "artifacts": [
     {
       "artifact_path": "agent_output/requirements.txt",
@@ -47,7 +49,10 @@ Canonical shape:
       "operation_id": "<operation_id>",
       "issue_id": "REQ-1",
       "role_name": "requirements_analyst",
-      "turn_index": 1
+      "turn_index": 1,
+      "control_plane_run_id": "<durable_run_id>",
+      "control_plane_attempt_id": "<durable_attempt_id>",
+      "control_plane_step_id": "<durable_step_id>"
     }
   ]
 }
@@ -72,6 +77,9 @@ Optional additive fields:
 5. `turn_index`
 6. `tool_call_hash`
 7. `receipt_digest`
+8. `control_plane_run_id`
+9. `control_plane_attempt_id`
+10. `control_plane_step_id`
 
 Field semantics:
 1. `artifact_path` is workspace-relative and uses `/` separators.
@@ -80,6 +88,10 @@ Field semantics:
 4. `source_hash` is the digest of the authoritative source record used for provenance attribution.
 5. `produced_at` is the observed artifact production timestamp recorded at finalize time.
 6. `truth_classification` reports the provenance truth class for the artifact record. Current bounded value: `direct`.
+7. `control_plane_run_id`, `control_plane_attempt_id`, and `control_plane_step_id` are additive durable execution refs projected from authoritative receipt manifest evidence when that governed control-plane truth exists. They are absent on the log-fallback path.
+8. The enclosing `truthful_runtime_artifact_provenance` block is a projection surface inside `run_summary.json`, not a standalone execution or effect authority surface.
+9. `projection_source` must be `artifact_provenance_facts`.
+10. `projection_only` must be `true`.
 
 ## 5. Emission Rules
 

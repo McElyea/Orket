@@ -22,11 +22,13 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
 
 try:
     from scripts.acceptance.run_monolith_variant_matrix import summarize_report
+    from scripts.acceptance.check_monolith_readiness_gate import aggregate_invalid_payload_signals
 except ModuleNotFoundError:
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from acceptance.run_monolith_variant_matrix import summarize_report
+    from acceptance.check_monolith_readiness_gate import aggregate_invalid_payload_signals
 
 
 @dataclass(frozen=True)
@@ -156,6 +158,7 @@ def run_matrix_combo(combo: PilotCombo, args: argparse.Namespace) -> Dict[str, A
             "pass_rate": 0.0,
             "runtime_failure_rate": 0.0,
             "reviewer_rejection_rate": 0.0,
+            "invalid_payload_signals": None,
         },
     }
     if not args.execute:
@@ -187,7 +190,7 @@ def run_matrix_combo(combo: PilotCombo, args: argparse.Namespace) -> Dict[str, A
     return entry
 
 
-def _aggregate_by_architecture(entries: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
+def _aggregate_by_architecture(entries: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     buckets: Dict[str, List[Dict[str, Any]]] = {}
     for entry in entries:
         if not entry.get("executed"):
@@ -197,11 +200,12 @@ def _aggregate_by_architecture(entries: List[Dict[str, Any]]) -> Dict[str, Dict[
             continue
         buckets.setdefault(mode, []).append(entry)
 
-    result: Dict[str, Dict[str, float]] = {}
+    result: Dict[str, Dict[str, Any]] = {}
     for mode, grouped in buckets.items():
         run_count = sum(int(e.get("summary", {}).get("run_count", 0) or 0) for e in grouped)
         passed = sum(int(e.get("summary", {}).get("passed", 0) or 0) for e in grouped)
         failed = sum(int(e.get("summary", {}).get("failed", 0) or 0) for e in grouped)
+        invalid_payload_signals, invalid_payload_failures = aggregate_invalid_payload_signals(grouped)
         runtime_failure_rate = (
             sum(float(e.get("summary", {}).get("runtime_failure_rate", 0.0) or 0.0) for e in grouped) / max(1, len(grouped))
         )
@@ -216,6 +220,8 @@ def _aggregate_by_architecture(entries: List[Dict[str, Any]]) -> Dict[str, Dict[
             "pass_rate": float(passed) / float(max(1, run_count)),
             "runtime_failure_rate": runtime_failure_rate,
             "reviewer_rejection_rate": reviewer_rejection_rate,
+            "invalid_payload_signals": invalid_payload_signals,
+            "invalid_payload_failures": invalid_payload_failures,
         }
     return result
 
@@ -226,6 +232,18 @@ def _build_comparison(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
     micro = by_arch.get("force_microservices")
     if not mono or not micro:
         return {"available": False}
+    invalid_payload_signals_by_architecture = {
+        "force_monolith": dict(mono.get("invalid_payload_signals", {})),
+        "force_microservices": dict(micro.get("invalid_payload_signals", {})),
+    }
+    invalid_payload_signal_totals_by_architecture = {
+        mode: sum(int(value) for value in signals.values())
+        for mode, signals in invalid_payload_signals_by_architecture.items()
+    }
+    invalid_payload_failures = [
+        *[f"force_monolith: {item}" for item in mono.get("invalid_payload_failures", [])],
+        *[f"force_microservices: {item}" for item in micro.get("invalid_payload_failures", [])],
+    ]
     return {
         "available": True,
         "pass_rate_delta_microservices_minus_monolith": float(micro["pass_rate"]) - float(mono["pass_rate"]),
@@ -233,6 +251,9 @@ def _build_comparison(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
         - float(mono["runtime_failure_rate"]),
         "reviewer_rejection_rate_delta_microservices_minus_monolith": float(micro["reviewer_rejection_rate"])
         - float(mono["reviewer_rejection_rate"]),
+        "invalid_payload_signals_by_architecture": invalid_payload_signals_by_architecture,
+        "invalid_payload_signal_totals_by_architecture": invalid_payload_signal_totals_by_architecture,
+        "invalid_payload_failures": invalid_payload_failures,
     }
 
 

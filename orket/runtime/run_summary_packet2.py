@@ -16,7 +16,11 @@ def build_packet2_extension(*, artifacts: dict[str, Any]) -> dict[str, Any] | No
     if not facts:
         return None
 
-    payload: dict[str, Any] = {"schema_version": PACKET2_SCHEMA_VERSION}
+    payload: dict[str, Any] = {
+        "schema_version": PACKET2_SCHEMA_VERSION,
+        "projection_source": "packet2_facts",
+        "projection_only": True,
+    }
     repair_ledger = _build_repair_ledger(facts)
     if repair_ledger is not None:
         payload["repair_ledger"] = repair_ledger
@@ -157,6 +161,7 @@ def _normalize_narration_entries(value: Any) -> list[dict[str, Any]]:
         step_id = str(item.get("step_id") or "").strip()
         if step_id:
             entry["step_id"] = step_id
+        _copy_control_plane_refs(entry=entry, source=item)
         deduped[(tool, operation_id, effect_target)] = entry
     return [deduped[key] for key in sorted(deduped)]
 
@@ -214,6 +219,7 @@ def _normalize_idempotency_surfaces(value: Any) -> list[dict[str, Any]]:
         turn_index = _normalize_turn_index(item.get("turn_index"))
         if turn_index > 0:
             entry["turn_index"] = turn_index
+        _copy_control_plane_refs(entry=entry, source=item)
         deduped[(surface, operation_id)] = entry
     return [deduped[key] for key in sorted(deduped)]
 
@@ -245,6 +251,14 @@ def _normalize_source_attribution(value: Any) -> dict[str, Any]:
     receipt_operation_id = str(value.get("receipt_operation_id") or "").strip()
     if receipt_operation_id:
         payload["receipt_operation_id"] = receipt_operation_id
+    for field in (
+        "control_plane_run_id",
+        "control_plane_attempt_id",
+        "control_plane_step_id",
+    ):
+        token = str(value.get(field) or "").strip()
+        if token:
+            payload[field] = token
     return payload
 
 
@@ -303,6 +317,17 @@ def _normalize_reasons(value: Any) -> list[str]:
         rows.append(token)
     rows.sort()
     return rows
+
+
+def _copy_control_plane_refs(*, entry: dict[str, Any], source: dict[str, Any]) -> None:
+    for field in (
+        "control_plane_run_id",
+        "control_plane_attempt_id",
+        "control_plane_step_id",
+    ):
+        token = str(source.get(field) or "").strip()
+        if token:
+            entry[field] = token
 
 
 def _normalize_turn_index(value: Any) -> int:

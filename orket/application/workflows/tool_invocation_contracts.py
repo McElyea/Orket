@@ -36,6 +36,7 @@ def normalize_tool_invocation_manifest(
     for field in (
         "control_plane_run_id",
         "control_plane_attempt_id",
+        "control_plane_step_id",
         "control_plane_reservation_id",
         "control_plane_lease_id",
         "control_plane_resource_id",
@@ -78,6 +79,7 @@ def build_tool_invocation_manifest(
     declared_namespace_scopes: list[str] | None = None,
     control_plane_run_id: str | None = None,
     control_plane_attempt_id: str | None = None,
+    control_plane_step_id: str | None = None,
     control_plane_reservation_id: str | None = None,
     control_plane_lease_id: str | None = None,
     control_plane_resource_id: str | None = None,
@@ -99,6 +101,7 @@ def build_tool_invocation_manifest(
             "control_plane_attempt_id": None
             if control_plane_attempt_id is None
             else str(control_plane_attempt_id),
+            "control_plane_step_id": None if control_plane_step_id is None else str(control_plane_step_id),
             "control_plane_reservation_id": None
             if control_plane_reservation_id is None
             else str(control_plane_reservation_id),

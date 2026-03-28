@@ -11,6 +11,7 @@ from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
 from orket.schema import CardStatus
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
+from tests.live.run_summary_support import read_validated_run_summary
 
 pytestmark = pytest.mark.end_to_end
 
@@ -300,7 +301,7 @@ async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path, monkeyp
     run_root = run_roots[0]
     run_summary_path = run_root / "run_summary.json"
     assert run_summary_path.exists(), "run_summary.json missing from live run root"
-    run_summary = _read_json(run_summary_path)
+    run_summary = read_validated_run_summary(run_summary_path)
     assert run_summary.get("run_id") == run_root.name
     assert run_summary.get("status") == "done"
     assert "workspace_state_snapshot" in list(run_summary.get("artifact_ids") or [])

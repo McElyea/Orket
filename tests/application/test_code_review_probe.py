@@ -40,9 +40,52 @@ def test_build_deterministic_payload_tracks_fixture_findings() -> None:
     hit_ids = {row["issue_id"] for row in payload["findings"]}
 
     assert payload["deterministic_lane_version"] == "s04_static_fingerprint_v1"
+    assert payload["execution_state_authority"] == "control_plane_records"
+    assert payload["lane_output_execution_state_authoritative"] is False
     assert "RAW_PAYLOAD_EVAL" in hit_ids
     assert "DEBUG_PAYLOAD_LEAK" in hit_ids
     assert "VERIFY_SIGNATURE_ALWAYS_TRUE" in hit_ids
+
+
+def test_build_run_manifest_payload_marks_outputs_non_authoritative() -> None:
+    module = _load_module(Path("scripts/workloads/code_review_probe_support.py"))
+
+    payload = module.build_run_manifest_payload(
+        run_id="probe-run",
+        snapshot_digest="sha256:test",
+        policy_digest="sha256:policy",
+        deterministic_lane_version="s04_static_fingerprint_v1",
+        prompt_profile="baseline_v2",
+        review_method="single_pass",
+    )
+
+    assert payload["bundle_kind"] == "code_review_probe"
+    assert payload["execution_state_authority"] == "control_plane_records"
+    assert payload["lane_outputs_execution_state_authoritative"] is False
+
+
+def test_build_model_assisted_payload_marks_outputs_non_authoritative() -> None:
+    module = _load_module(Path("scripts/workloads/code_review_probe_reporting.py"))
+
+    payload = module.build_model_assisted_payload(
+        review_payload={
+            "summary": ["summary"],
+            "high_risk_issues": [],
+            "missing_tests": [],
+            "questions_for_author": [],
+            "nits": [],
+            "refs": [],
+        },
+        run_id="probe-run",
+        model="local-model",
+        source_text="print('hello')",
+        prompt_profile="baseline_v2",
+        review_method="single_pass",
+        policy_digest="sha256:policy",
+    )
+
+    assert payload["execution_state_authority"] == "control_plane_records"
+    assert payload["lane_output_execution_state_authoritative"] is False
 
 
 def test_build_guard_messages_includes_coverage_checklist() -> None:
@@ -126,6 +169,8 @@ def test_score_review_bundle_tracks_model_must_catch_hits(tmp_path: Path) -> Non
                 "findings": [],
                 "executed_checks": [],
                 "deterministic_lane_version": "not_applicable",
+                "execution_state_authority": "control_plane_records",
+                "lane_output_execution_state_authoritative": False,
             }
         ),
         encoding="utf-8",
@@ -147,6 +192,25 @@ def test_score_review_bundle_tracks_model_must_catch_hits(tmp_path: Path) -> Non
                 "questions_for_author": [],
                 "nits": [],
                 "refs": [],
+                "execution_state_authority": "control_plane_records",
+                "lane_output_execution_state_authoritative": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (artifact_dir / "run_manifest.json").write_text(
+        json.dumps(
+            {
+                "bundle_kind": "code_review_probe",
+                "run_id": "probe-run",
+                "snapshot_digest": "sha256:test",
+                "policy_digest": "sha256:test",
+                "deterministic_lane_version": "not_applicable",
+                "model_lane_contract_version": "review_critique_v0",
+                "prompt_profile": "baseline_v2",
+                "review_method": "single_pass",
+                "execution_state_authority": "control_plane_records",
+                "lane_outputs_execution_state_authoritative": False,
             }
         ),
         encoding="utf-8",

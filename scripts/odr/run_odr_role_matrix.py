@@ -82,13 +82,13 @@ def _run_pairing(
     env["ORKET_MODEL_INTEGRITY_GUARD"] = pairing.auditor
     env["ORKET_MODEL_REVIEWER"] = pairing.auditor
     if nightly:
-        env["ODR_GATE_NIGHTLY"] = "1"
         env["ODR_PERMUTATIONS"] = str(permutations)
         env["ODR_REPEATS"] = str(repeats)
+        env["ODR_INCLUDE_SCALE"] = "1"
     else:
-        env.pop("ODR_GATE_NIGHTLY", None)
         env.pop("ODR_PERMUTATIONS", None)
         env.pop("ODR_REPEATS", None)
+        env.pop("ODR_INCLUDE_SCALE", None)
 
     cmd = [python_exe, "-m", "pytest", "-q", *tests]
     started = time.monotonic()

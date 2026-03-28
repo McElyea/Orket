@@ -117,3 +117,69 @@ def test_record_protocol_enforce_window_signoff_blocks_unapproved_error_families
         ]
     )
     assert exit_code == 1
+
+
+def test_record_protocol_enforce_window_signoff_preserves_invalid_projection_counts(tmp_path: Path) -> None:
+    replay = tmp_path / "replay.json"
+    parity = tmp_path / "parity.json"
+    rollout = tmp_path / "rollout.json"
+    summary = tmp_path / "summary.json"
+    out = tmp_path / "signoff.json"
+    _write(replay, {"all_match": True})
+    _write(
+        parity,
+        {
+            "all_match": False,
+            "compatibility_telemetry_delta": {
+                "sqlite_invalid_projection_field_counts": {"artifact_json": 1, "summary_json": 1},
+                "protocol_invalid_projection_field_counts": {},
+            },
+        },
+    )
+    _write(
+        rollout,
+        {
+            "strict_ok": False,
+            "schema_version": "protocol_rollout_bundle.v1",
+            "ledger_parity_campaign": {
+                "compatibility_telemetry_delta": {
+                    "sqlite_invalid_projection_field_counts": {"artifact_json": 1, "summary_json": 1},
+                    "protocol_invalid_projection_field_counts": {},
+                }
+            },
+        },
+    )
+    _write(summary, {"unregistered_count": 0, "family_counts": {}})
+
+    exit_code = main(
+        [
+            "--window-id",
+            "window_d",
+            "--window-date",
+            "2026-03-05",
+            "--replay-campaign",
+            str(replay),
+            "--parity-campaign",
+            str(parity),
+            "--rollout-bundle",
+            str(rollout),
+            "--error-summary",
+            str(summary),
+            "--retry-spike-status",
+            "pass",
+            "--approver",
+            "Orket Core",
+            "--out",
+            str(out),
+        ]
+    )
+    assert exit_code == 0
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["parity_invalid_projection_field_counts"]["sqlite"] == {"artifact_json": 1, "summary_json": 1}
+    assert payload["rollout_parity_invalid_projection_field_counts"]["sqlite"] == {
+        "artifact_json": 1,
+        "summary_json": 1,
+    }
+    assert "sqlite_invalid_projection_field_counts={'artifact_json': 1, 'summary_json': 1}" in payload["gates"][
+        "parity_all_match"
+    ]["detail"]

@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 
@@ -90,6 +90,18 @@ def _load_json(path: Path) -> Dict[str, Any]:
         return {}
 
 
+def _normalize_invalid_payload_signals(report: Dict[str, Any]) -> Optional[Dict[str, int]]:
+    raw = report.get("invalid_payload_signals")
+    if not isinstance(raw, dict):
+        return None
+    normalized: Dict[str, int] = {}
+    for key, value in raw.items():
+        if not isinstance(value, int) or value < 0:
+            return None
+        normalized[str(key)] = int(value)
+    return dict(sorted(normalized.items()))
+
+
 def summarize_report(report: Dict[str, Any]) -> Dict[str, Any]:
     completion_by_model = report.get("completion_by_model", {})
     run_count = int(report.get("run_count", 0) or 0)
@@ -111,6 +123,7 @@ def summarize_report(report: Dict[str, Any]) -> Dict[str, Any]:
         "pass_rate": passed / denominator,
         "runtime_failure_rate": runtime_failures / denominator,
         "reviewer_rejection_rate": guard_retries / denominator,
+        "invalid_payload_signals": _normalize_invalid_payload_signals(report),
     }
 
 
@@ -134,6 +147,7 @@ def run_matrix_combo(combo: MatrixCombo, args: argparse.Namespace) -> Dict[str, 
             "pass_rate": 0.0,
             "runtime_failure_rate": 0.0,
             "reviewer_rejection_rate": 0.0,
+            "invalid_payload_signals": None,
         },
     }
 

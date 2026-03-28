@@ -69,6 +69,28 @@ def _latest_batch_id(conn: sqlite3.Connection) -> Optional[str]:
     return row[0] if row else None
 
 
+def _load_json_object(raw: Any) -> tuple[Dict[str, Any], bool]:
+    if not isinstance(raw, str) or not raw.strip():
+        return {}, False
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return {}, False
+    return (payload, True) if isinstance(payload, dict) else ({}, False)
+
+
+def _normalize_db_summary(payload: Dict[str, Any]) -> tuple[Dict[str, Any], bool]:
+    issue_statuses = payload.get("issue_statuses")
+    if issue_statuses is None:
+        return dict(payload), True
+    if not isinstance(issue_statuses, dict):
+        return {}, False
+    normalized = {str(issue_id): str(status) for issue_id, status in issue_statuses.items()}
+    if not all(issue_id.strip() and status.strip() for issue_id, status in normalized.items()):
+        return {}, False
+    return {**payload, "issue_statuses": normalized}, True
+
+
 def _load_runs(conn: sqlite3.Connection, batch_id: str) -> List[Dict[str, Any]]:
     cur = conn.cursor()
     cur.execute("PRAGMA table_info(live_acceptance_runs)")
@@ -88,22 +110,20 @@ def _load_runs(conn: sqlite3.Connection, batch_id: str) -> List[Dict[str, Any]]:
     for row in cur.fetchall():
         model, iteration, passed, session_status, metrics_raw, db_summary_raw = row[:6]
         chain_complete = bool(row[6]) if has_chain_complete and len(row) > 6 else None
-        try:
-            metrics = json.loads(metrics_raw or "{}")
-        except json.JSONDecodeError:
-            metrics = {}
-        try:
-            db_summary = json.loads(db_summary_raw or "{}")
-        except json.JSONDecodeError:
-            db_summary = {}
+        metrics, metrics_json_valid = _load_json_object(metrics_raw)
+        db_summary, db_summary_json_valid = _load_json_object(db_summary_raw)
+        if db_summary_json_valid:
+            db_summary, db_summary_json_valid = _normalize_db_summary(db_summary)
         runs.append(
             {
                 "model": model,
                 "iteration": int(iteration),
                 "passed": bool(passed),
                 "session_status": session_status or "",
-                "metrics": metrics if isinstance(metrics, dict) else {},
-                "db_summary": db_summary if isinstance(db_summary, dict) else {},
+                "metrics": metrics,
+                "db_summary": db_summary,
+                "metrics_json_valid": metrics_json_valid,
+                "db_summary_json_valid": db_summary_json_valid,
                 "chain_complete": chain_complete,
             }
         )
@@ -306,6 +326,10 @@ def _build_report(batch_id: str, runs: List[Dict[str, Any]]) -> Dict[str, Any]:
         "guard_rule_violation_counts": _sum_dict_metric(runs, "turn_non_progress_rule_counts"),
         "schema_health": {
             "runtime_event_schema_v1_coverage": runtime_event_schema_v1_coverage,
+        },
+        "invalid_payload_signals": {
+            "metrics_json": sum(1 for run in runs if not bool(run.get("metrics_json_valid", True))),
+            "db_summary_json": sum(1 for run in runs if not bool(run.get("db_summary_json_valid", True))),
         },
         "issue_status_totals": _issue_end_states(runs),
     }

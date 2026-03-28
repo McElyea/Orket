@@ -13,6 +13,16 @@ _FINALIZED_AT = "2036-03-05T12:00:05+00:00"
 _PACKET1_KEY = "truthful_runtime_packet1"
 
 
+def _run_identity(*, run_id: str) -> dict[str, str | bool]:
+    return {
+        "run_id": run_id,
+        "workload": "packet1-summary",
+        "start_time": _STARTED_AT,
+        "identity_scope": "session_bootstrap",
+        "projection_only": True,
+    }
+
+
 def _packet1_payload(*, packet1_facts: dict) -> dict:
     return build_run_summary_payload(
         run_id="sess-packet1",
@@ -22,7 +32,7 @@ def _packet1_payload(*, packet1_facts: dict) -> dict:
         ended_at=_FINALIZED_AT,
         tool_names=["workspace.read"],
         artifacts={
-            "run_identity": {"run_id": "sess-packet1", "start_time": _STARTED_AT},
+            "run_identity": _run_identity(run_id="sess-packet1"),
             "packet1_facts": packet1_facts,
         },
     )[_PACKET1_KEY]
@@ -96,6 +106,32 @@ def test_packet1_primary_output_prefers_work_artifact_before_runtime_verificatio
     )
     assert packet1["provenance"]["primary_output_kind"] == "artifact"
     assert packet1["provenance"]["primary_output_id"] == "agent_output/main.py"
+
+
+# Layer: contract
+def test_packet1_provenance_preserves_control_plane_refs_from_primary_output() -> None:
+    packet1 = _packet1_payload(
+        packet1_facts={
+            "primary_work_artifact_output": {
+                "id": "agent_output/main.py",
+                "kind": "artifact",
+                "control_plane_run_id": "turn-tool-run:sess-packet1:ISSUE-1:lead_architect:0001",
+                "control_plane_attempt_id": (
+                    "turn-tool-run:sess-packet1:ISSUE-1:lead_architect:0001:attempt:0001"
+                ),
+                "control_plane_step_id": "op-main",
+            }
+        }
+    )
+    assert packet1["projection_source"] == "packet1_facts"
+    assert packet1["projection_only"] is True
+    assert packet1["provenance"]["control_plane_run_id"] == (
+        "turn-tool-run:sess-packet1:ISSUE-1:lead_architect:0001"
+    )
+    assert packet1["provenance"]["control_plane_attempt_id"] == (
+        "turn-tool-run:sess-packet1:ISSUE-1:lead_architect:0001:attempt:0001"
+    )
+    assert packet1["provenance"]["control_plane_step_id"] == "op-main"
 
 
 # Layer: contract
@@ -192,21 +228,33 @@ def test_packet1_reconstruction_matches_emitted_summary() -> None:
             "run_id": "sess-packet1-reconstruct",
             "timestamp": _STARTED_AT,
             "artifacts": {
-                "run_identity": {"run_id": "sess-packet1-reconstruct", "start_time": _STARTED_AT},
-                "packet1_facts": {
-                    "primary_artifact_output": {"id": "agent_output/runtime_verification.json", "kind": "artifact"},
-                    "inferred_output": True,
+                "run_identity": _run_identity(run_id="sess-packet1-reconstruct"),
+            },
+        },
+        {
+            "kind": "packet1_fact",
+            "event_seq": 2,
+            "packet1_facts": {
+                "primary_artifact_output": {
+                    "id": "agent_output/runtime_verification.json",
+                    "kind": "artifact",
+                    "control_plane_run_id": "turn-tool-run:sess-packet1-reconstruct:ISSUE-1:lead_architect:0001",
+                    "control_plane_attempt_id": (
+                        "turn-tool-run:sess-packet1-reconstruct:ISSUE-1:lead_architect:0001:attempt:0001"
+                    ),
+                    "control_plane_step_id": "op-main",
                 },
+                "inferred_output": True,
             },
         },
         {
             "kind": "tool_call",
-            "event_seq": 2,
+            "event_seq": 3,
             "tool_name": "workspace.read",
         },
         {
             "kind": "run_finalized",
-            "event_seq": 3,
+            "event_seq": 4,
             "run_id": "sess-packet1-reconstruct",
             "status": "done",
             "timestamp": _FINALIZED_AT,
@@ -221,9 +269,17 @@ def test_packet1_reconstruction_matches_emitted_summary() -> None:
         ended_at=_FINALIZED_AT,
         tool_names=["workspace.read"],
         artifacts={
-            "run_identity": {"run_id": "sess-packet1-reconstruct", "start_time": _STARTED_AT},
+            "run_identity": _run_identity(run_id="sess-packet1-reconstruct"),
             "packet1_facts": {
-                "primary_artifact_output": {"id": "agent_output/runtime_verification.json", "kind": "artifact"},
+                "primary_artifact_output": {
+                    "id": "agent_output/runtime_verification.json",
+                    "kind": "artifact",
+                    "control_plane_run_id": "turn-tool-run:sess-packet1-reconstruct:ISSUE-1:lead_architect:0001",
+                    "control_plane_attempt_id": (
+                        "turn-tool-run:sess-packet1-reconstruct:ISSUE-1:lead_architect:0001:attempt:0001"
+                    ),
+                    "control_plane_step_id": "op-main",
+                },
                 "inferred_output": True,
             },
         },

@@ -19,6 +19,7 @@ from orket.runtime.run_summary_packet2 import (
     build_packet2_extension,
     normalize_packet2_facts,
 )
+from orket.runtime.run_start_artifacts import validate_run_identity_projection
 from orket.runtime.run_summary_control_plane import build_control_plane_summary_projection
 
 _EXCLUDED_ARTIFACT_IDS = {"gitea_export", "run_summary", "run_summary_path"}
@@ -69,17 +70,33 @@ def validate_run_summary_payload(payload: dict[str, Any]) -> None:
     _validate_token_list(tools_used, field_name="tools_used")
     _validate_token_list(artifact_ids, field_name="artifact_ids")
     packet1 = payload.get(_PACKET1_KEY)
-    if packet1 is not None and not isinstance(packet1, dict):
-        raise ValueError("run_summary_truthful_runtime_packet1_invalid")
+    if packet1 is not None:
+        _validate_projection_block(
+            packet1,
+            field_name="run_summary_truthful_runtime_packet1",
+            expected_source="packet1_facts",
+        )
     packet2 = payload.get(PACKET2_KEY)
-    if packet2 is not None and not isinstance(packet2, dict):
-        raise ValueError("run_summary_truthful_runtime_packet2_invalid")
+    if packet2 is not None:
+        _validate_projection_block(
+            packet2,
+            field_name="run_summary_truthful_runtime_packet2",
+            expected_source="packet2_facts",
+        )
     artifact_provenance = payload.get(ARTIFACT_PROVENANCE_KEY)
-    if artifact_provenance is not None and not isinstance(artifact_provenance, dict):
-        raise ValueError("run_summary_truthful_runtime_artifact_provenance_invalid")
+    if artifact_provenance is not None:
+        _validate_projection_block(
+            artifact_provenance,
+            field_name="run_summary_truthful_runtime_artifact_provenance",
+            expected_source="artifact_provenance_facts",
+        )
     control_plane = payload.get("control_plane")
-    if control_plane is not None and not isinstance(control_plane, dict):
-        raise ValueError("run_summary_control_plane_invalid")
+    if control_plane is not None:
+        _validate_projection_block(
+            control_plane,
+            field_name="run_summary_control_plane",
+            expected_source="control_plane_records",
+        )
 
 
 def build_run_summary_payload(
@@ -101,6 +118,12 @@ def build_run_summary_payload(
         "artifact_ids": _artifact_ids(artifacts),
         "failure_reason": _normalize_failure_reason(failure_reason),
     }
+    run_identity = artifacts.get("run_identity")
+    if run_identity is not None:
+        validate_run_identity_projection(
+            run_identity,
+            error_prefix="run_summary_run_identity",
+        )
     packet1 = _build_packet1_extension(
         run_id=str(run_id).strip(),
         status=str(status).strip(),
@@ -212,10 +235,11 @@ def reconstruct_run_summary(
         if isinstance(event_artifacts, dict):
             artifacts.update(dict(event_artifacts))
         run_identity = artifacts.get("run_identity")
-        if isinstance(run_identity, dict) and not started_at:
-            identity_start = str(run_identity.get("start_time") or "").strip()
-            if identity_start:
-                started_at = identity_start
+        if run_identity is not None and not started_at:
+            started_at = validate_run_identity_projection(
+                run_identity,
+                error_prefix="run_summary_run_identity",
+            )["start_time"]
         if kind == "run_started" and not started_at:
             started_at = str(event.get("timestamp") or "").strip() or None
             continue
@@ -375,6 +399,15 @@ def _validate_token_list(value: Any, *, field_name: str) -> None:
         raise ValueError(f"run_summary_{field_name}_not_canonical")
 
 
+def _validate_projection_block(value: Any, *, field_name: str, expected_source: str) -> None:
+    if not isinstance(value, dict):
+        raise ValueError(f"{field_name}_invalid")
+    if str(value.get("projection_source") or "").strip() != expected_source:
+        raise ValueError(f"{field_name}_projection_source_invalid")
+    if value.get("projection_only") is not True:
+        raise ValueError(f"{field_name}_projection_only_invalid")
+
+
 def _build_packet1_extension(
     *,
     run_id: str,
@@ -427,6 +460,15 @@ def _build_packet1_extension(
     }
     if primary_id:
         provenance["primary_output_id"] = primary_id
+    if isinstance(selection, dict):
+        for field in (
+            "control_plane_run_id",
+            "control_plane_attempt_id",
+            "control_plane_step_id",
+        ):
+            token = str(selection.get(field) or "").strip()
+            if token:
+                provenance[field] = token
 
     classification: dict[str, Any] = {"classification_applicable": classification_applicable}
     if classification_applicable:
@@ -439,6 +481,8 @@ def _build_packet1_extension(
 
     return {
         "schema_version": _PACKET1_SCHEMA_VERSION,
+        "projection_source": "packet1_facts",
+        "projection_only": True,
         "provenance": provenance,
         "classification": classification,
         "defects": {
@@ -505,7 +549,16 @@ def _select_primary_output(facts: dict[str, Any]) -> dict[str, str]:
         candidate_id = str(candidate.get("id") or "").strip()
         candidate_kind = str(candidate.get("kind") or "").strip()
         if candidate_kind in {"response", "artifact"}:
-            return {"kind": candidate_kind, "id": candidate_id}
+            selected = {"kind": candidate_kind, "id": candidate_id}
+            for field in (
+                "control_plane_run_id",
+                "control_plane_attempt_id",
+                "control_plane_step_id",
+            ):
+                token = str(candidate.get(field) or "").strip()
+                if token:
+                    selected[field] = token
+            return selected
     return {"kind": "none", "id": ""}
 
 

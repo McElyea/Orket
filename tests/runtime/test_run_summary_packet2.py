@@ -7,6 +7,22 @@ _FINALIZED_AT = "2036-03-05T12:00:05+00:00"
 _PACKET2_KEY = "truthful_runtime_packet2"
 
 
+def _run_identity(*, run_id: str) -> dict[str, str | bool]:
+    return {
+        "run_id": run_id,
+        "workload": "packet2-summary",
+        "start_time": _STARTED_AT,
+        "identity_scope": "session_bootstrap",
+        "projection_only": True,
+    }
+
+
+def _control_plane_refs(*, session_id: str, role_name: str) -> dict[str, str]:
+    return {
+        "control_plane_run_id": f"turn-tool-run:{session_id}:ISSUE-1:{role_name}:0001",
+        "control_plane_attempt_id": f"turn-tool-run:{session_id}:ISSUE-1:{role_name}:0001:attempt:0001",
+        "control_plane_step_id": "op-source-receipt",
+    }
 def _packet2_payload(*, packet2_facts: dict) -> dict:
     return build_run_summary_payload(
         run_id="sess-packet2",
@@ -16,7 +32,7 @@ def _packet2_payload(*, packet2_facts: dict) -> dict:
         ended_at=_FINALIZED_AT,
         tool_names=["workspace.read"],
         artifacts={
-            "run_identity": {"run_id": "sess-packet2", "start_time": _STARTED_AT},
+            "run_identity": _run_identity(run_id="sess-packet2"),
             "packet2_facts": packet2_facts,
         },
     )[_PACKET2_KEY]
@@ -78,6 +94,10 @@ def test_packet2_phase_c_contract_allows_non_repair_sections() -> None:
                         "issue_id": "EVD-1",
                         "role_name": "evidence_reviewer",
                         "turn_index": 1,
+                        **_control_plane_refs(
+                            session_id="sess-packet2-audit",
+                            role_name="evidence_reviewer",
+                        ),
                     }
                 ]
             },
@@ -91,6 +111,10 @@ def test_packet2_phase_c_contract_allows_non_repair_sections() -> None:
                         "dedupe_status": "single_delivery",
                         "conflict_action": "reuse",
                         "replay_allowed": True,
+                        **_control_plane_refs(
+                            session_id="sess-packet2-audit",
+                            role_name="evidence_reviewer",
+                        ),
                     }
                 ]
             },
@@ -104,12 +128,84 @@ def test_packet2_phase_c_contract_allows_non_repair_sections() -> None:
             },
         }
     )
+    assert (packet2["projection_source"], packet2["projection_only"]) == ("packet2_facts", True)
     assert "repair_ledger" not in packet2
     assert packet2["narration_to_effect_audit"]["missing_effect_count"] == 1
     assert packet2["idempotency"]["observed_surface_count"] == 1
+    audit_entry = packet2["narration_to_effect_audit"]["entries"][0]
+    assert audit_entry["control_plane_run_id"] == (
+        "turn-tool-run:sess-packet2-audit:ISSUE-1:evidence_reviewer:0001"
+    )
+    assert audit_entry["control_plane_attempt_id"] == (
+        "turn-tool-run:sess-packet2-audit:ISSUE-1:evidence_reviewer:0001:attempt:0001"
+    )
+    assert audit_entry["control_plane_step_id"] == "op-source-receipt"
+    idempotency_surface = packet2["idempotency"]["surfaces"][0]
+    assert idempotency_surface["control_plane_run_id"] == (
+        "turn-tool-run:sess-packet2-audit:ISSUE-1:evidence_reviewer:0001"
+    )
+    assert idempotency_surface["control_plane_attempt_id"] == (
+        "turn-tool-run:sess-packet2-audit:ISSUE-1:evidence_reviewer:0001:attempt:0001"
+    )
+    assert idempotency_surface["control_plane_step_id"] == "op-source-receipt"
     assert packet2["source_attribution"]["synthesis_status"] == "blocked"
     assert packet2["source_attribution"]["missing_requirements"] == ["source_attribution_receipt_missing"]
 
+
+# Layer: contract
+def test_packet2_source_attribution_preserves_control_plane_refs() -> None:
+    packet2 = _packet2_payload(
+        packet2_facts={
+            "source_attribution": {
+                "mode": "required",
+                "high_stakes": True,
+                "synthesis_status": "verified",
+                "artifact_provenance_verified": True,
+                "receipt_artifact_path": "agent_output/source_attribution_receipt.json",
+                "receipt_operation_id": "op-source-receipt",
+                **_control_plane_refs(
+                    session_id="sess-packet2-source",
+                    role_name="lead_architect",
+                ),
+                "claims": [
+                    {
+                        "claim_id": "claim-1",
+                        "claim": "The implementation is supported by workspace artifacts.",
+                        "source_ids": ["design", "implementation", "requirements"],
+                    }
+                ],
+                "sources": [
+                    {
+                        "source_id": "design",
+                        "title": "Design",
+                        "uri": "agent_output/design.txt",
+                        "kind": "workspace_artifact",
+                    },
+                    {
+                        "source_id": "implementation",
+                        "title": "Implementation",
+                        "uri": "agent_output/main.py",
+                        "kind": "workspace_artifact",
+                    },
+                    {
+                        "source_id": "requirements",
+                        "title": "Requirements",
+                        "uri": "agent_output/requirements.txt",
+                        "kind": "workspace_artifact",
+                    },
+                ],
+                "missing_requirements": [],
+            }
+        }
+    )
+    assert packet2["source_attribution"]["receipt_operation_id"] == "op-source-receipt"
+    assert packet2["source_attribution"]["control_plane_run_id"] == (
+        "turn-tool-run:sess-packet2-source:ISSUE-1:lead_architect:0001"
+    )
+    assert packet2["source_attribution"]["control_plane_attempt_id"] == (
+        "turn-tool-run:sess-packet2-source:ISSUE-1:lead_architect:0001:attempt:0001"
+    )
+    assert packet2["source_attribution"]["control_plane_step_id"] == "op-source-receipt"
 
 # Layer: contract
 def test_packet2_extension_is_omitted_without_repair_entries() -> None:
@@ -120,7 +216,7 @@ def test_packet2_extension_is_omitted_without_repair_entries() -> None:
         started_at=_STARTED_AT,
         ended_at=_FINALIZED_AT,
         tool_names=["workspace.read"],
-        artifacts={"run_identity": {"run_id": "sess-packet2-none", "start_time": _STARTED_AT}},
+        artifacts={"run_identity": _run_identity(run_id="sess-packet2-none")},
     )
     assert _PACKET2_KEY not in payload
 
@@ -134,7 +230,7 @@ def test_packet2_reconstruction_matches_emitted_summary_for_phase_c_sections() -
             "run_id": "sess-packet2-phase-c",
             "timestamp": _STARTED_AT,
             "artifacts": {
-                "run_identity": {"run_id": "sess-packet2-phase-c", "start_time": _STARTED_AT},
+                "run_identity": _run_identity(run_id="sess-packet2-phase-c"),
             },
         },
         {
@@ -149,6 +245,10 @@ def test_packet2_reconstruction_matches_emitted_summary_for_phase_c_sections() -
                             "effect_target": "agent_output/main.py",
                             "audit_status": "verified",
                             "failure_reason": "none",
+                            **_control_plane_refs(
+                                session_id="sess-packet2-phase-c",
+                                role_name="evidence_reviewer",
+                            ),
                         }
                     ]
                 },
@@ -162,6 +262,10 @@ def test_packet2_reconstruction_matches_emitted_summary_for_phase_c_sections() -
                             "dedupe_status": "single_delivery",
                             "conflict_action": "reuse",
                             "replay_allowed": True,
+                            **_control_plane_refs(
+                                session_id="sess-packet2-phase-c",
+                                role_name="evidence_reviewer",
+                            ),
                         }
                     ]
                 },
@@ -171,6 +275,11 @@ def test_packet2_reconstruction_matches_emitted_summary_for_phase_c_sections() -
                     "synthesis_status": "verified",
                     "artifact_provenance_verified": True,
                     "receipt_artifact_path": "agent_output/source_attribution_receipt.json",
+                    "receipt_operation_id": "op-source-receipt",
+                    **_control_plane_refs(
+                        session_id="sess-packet2-phase-c",
+                        role_name="evidence_reviewer",
+                    ),
                     "claims": [
                         {
                             "claim_id": "claim-1",
@@ -224,12 +333,11 @@ def test_packet2_reconstruction_matches_emitted_summary_for_phase_c_sections() -
         ended_at=_FINALIZED_AT,
         tool_names=["write_file"],
         artifacts={
-            "run_identity": {"run_id": "sess-packet2-phase-c", "start_time": _STARTED_AT},
+            "run_identity": _run_identity(run_id="sess-packet2-phase-c"),
             "packet2_facts": events[1]["packet2_facts"],
         },
     )
     assert reconstructed == emitted
-
 
 # Layer: integration
 def test_packet2_reconstruction_matches_emitted_summary() -> None:
@@ -240,7 +348,7 @@ def test_packet2_reconstruction_matches_emitted_summary() -> None:
             "run_id": "sess-packet2-reconstruct",
             "timestamp": _STARTED_AT,
             "artifacts": {
-                "run_identity": {"run_id": "sess-packet2-reconstruct", "start_time": _STARTED_AT},
+                "run_identity": _run_identity(run_id="sess-packet2-reconstruct"),
             },
         },
         {
@@ -283,7 +391,7 @@ def test_packet2_reconstruction_matches_emitted_summary() -> None:
         ended_at=_FINALIZED_AT,
         tool_names=["workspace.read"],
         artifacts={
-            "run_identity": {"run_id": "sess-packet2-reconstruct", "start_time": _STARTED_AT},
+            "run_identity": _run_identity(run_id="sess-packet2-reconstruct"),
             "packet2_facts": {
                 "repair_entries": [
                     {

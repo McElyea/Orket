@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -136,7 +137,7 @@ async def test_compare_run_ledger_rows_missing_both_is_clean() -> None:
 
 
 @pytest.mark.asyncio
-async def test_compare_run_ledger_rows_normalizes_sparse_shapes() -> None:
+async def test_compare_run_ledger_rows_rejects_invalid_projection_shapes() -> None:
     sqlite_row = {
         "id": "sess-alt",
         "run_type": "epic",
@@ -144,8 +145,8 @@ async def test_compare_run_ledger_rows_normalizes_sparse_shapes() -> None:
         "department": "core",
         "build_id": "build-alt",
         "status": "incomplete",
-        "summary_json": '{"ignored":"string-shape"}',
-        "artifact_json": '{"ignored":"string-shape"}',
+        "summary_json": "{not-json",
+        "artifact_json": "[1,2,3]",
     }
     protocol_row = {
         "session_id": "sess-alt",
@@ -162,7 +163,49 @@ async def test_compare_run_ledger_rows_normalizes_sparse_shapes() -> None:
         protocol_repo=_Repo(protocol_row),
         session_id="sess-alt",
     )
+    assert result["parity_ok"] is False
+    assert result["sqlite_invalid_projection_fields"] == ["summary_json", "artifact_json"]
+    assert result["protocol_invalid_projection_fields"] == []
+    assert any(row["field"] == "__projection_validation__" for row in result["differences"])
+
+
+@pytest.mark.asyncio
+async def test_compare_run_ledger_rows_accepts_valid_json_string_payloads() -> None:
+    summary = {
+        "run_id": "sess-json",
+        "status": "incomplete",
+        "artifact_ids": [],
+        "failure_reason": None,
+    }
+    artifacts = {"workspace": "workspace/default"}
+    sqlite_row = {
+        "session_id": "sess-json",
+        "run_type": "epic",
+        "run_name": "Alt",
+        "department": "core",
+        "build_id": "build-json",
+        "status": "incomplete",
+        "summary_json": json.dumps(summary),
+        "artifact_json": json.dumps(artifacts),
+    }
+    protocol_row = {
+        "session_id": "sess-json",
+        "run_type": "epic",
+        "run_name": "Alt",
+        "department": "core",
+        "build_id": "build-json",
+        "status": "incomplete",
+        "summary_json": dict(summary),
+        "artifact_json": dict(artifacts),
+    }
+    result = await compare_run_ledger_rows(
+        sqlite_repo=_Repo(sqlite_row),
+        protocol_repo=_Repo(protocol_row),
+        session_id="sess-json",
+    )
     assert result["parity_ok"] is True
+    assert result["sqlite_invalid_projection_fields"] == []
+    assert result["protocol_invalid_projection_fields"] == []
     assert result["differences"] == []
 
 

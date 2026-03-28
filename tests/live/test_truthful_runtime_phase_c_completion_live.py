@@ -8,6 +8,7 @@ import pytest
 from orket.adapters.tools.families.filesystem import FileSystemTools
 from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
+from tests.live.run_summary_support import read_validated_run_summary
 from tests.live.test_runtime_stability_closeout_live import _live_enabled, _live_model
 
 pytestmark = pytest.mark.end_to_end
@@ -52,7 +53,7 @@ async def test_phase_c_live_required_source_attribution_blocks_missing_receipt(
 
     run_roots = _run_roots(workspace)
     assert len(run_roots) == 1
-    run_summary = _read_json(run_roots[0] / "run_summary.json")
+    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
     packet2 = run_summary["truthful_runtime_packet2"]
 
     print(
@@ -94,7 +95,7 @@ async def test_phase_c_live_required_source_attribution_verifies_receipt(
 
     run_roots = _run_roots(workspace)
     assert len(run_roots) == 1
-    run_summary = _read_json(run_roots[0] / "run_summary.json")
+    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
     packet1 = run_summary["truthful_runtime_packet1"]
     packet2 = run_summary["truthful_runtime_packet2"]
 
@@ -153,7 +154,7 @@ async def test_phase_c_live_narration_effect_audit_detects_missing_source_receip
 
     run_roots = _run_roots(workspace)
     assert len(run_roots) == 1
-    run_summary = _read_json(run_roots[0] / "run_summary.json")
+    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
     packet2 = run_summary["truthful_runtime_packet2"]
     missing_entry = next(
         row

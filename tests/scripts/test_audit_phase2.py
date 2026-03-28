@@ -96,6 +96,7 @@ def _build_cards_run(
         {
             "run_id": session_id,
             "status": "done",
+            "tools_used": [],
             "artifact_ids": ["cards_runtime_facts"],
             "failure_reason": None,
             "execution_profile": "builder_guard_app_v1",
@@ -107,6 +108,8 @@ def _build_cards_run(
             },
             "truthful_runtime_artifact_provenance": {
                 "schema_version": "1.0",
+                "projection_source": "artifact_provenance_facts",
+                "projection_only": True,
                 "artifacts": [
                     {
                         "artifact_path": output_path,
@@ -118,6 +121,8 @@ def _build_cards_run(
                 ],
             },
             "truthful_runtime_packet2": {
+                "projection_source": "packet2_facts",
+                "projection_only": True,
                 "idempotency": {
                     "surfaces": [
                         {
@@ -152,6 +157,7 @@ def _build_odr_run(workspace: Path, *, session_id: str, issue_id: str) -> None:
         {
             "run_id": session_id,
             "status": "terminal_failure",
+            "tools_used": [],
             "artifact_ids": ["cards_runtime_facts"],
             "failure_reason": None,
             "execution_profile": "odr_prebuild_builder_guard_v1",
@@ -207,6 +213,27 @@ def test_verify_run_completeness_accepts_odr_only_run_surface(tmp_path: Path) ->
     assert payload["mar_complete"] is True
     assert payload["replay_ready"] is True
     assert payload["evidence_groups"]["turn_capture"]["turn_count"] == 0
+
+
+# Layer: contract
+@pytest.mark.contract
+def test_verify_run_completeness_rejects_untrusted_run_summary_projection(tmp_path: Path) -> None:
+    workspace = tmp_path / "cards-untrusted-summary"
+    session_id = "run-untrusted"
+    _build_cards_run(workspace, session_id=session_id, issue_id="ISSUE-UNTRUSTED")
+
+    run_summary_path = workspace / "runs" / session_id / "run_summary.json"
+    payload = json.loads(run_summary_path.read_text(encoding="utf-8"))
+    payload["control_plane"] = {
+        "projection_source": "legacy_cards_summary",
+        "projection_only": True,
+    }
+    _write_json(run_summary_path, payload)
+
+    report = build_verify_report(workspace=workspace, session_id=session_id)
+
+    assert report["mar_complete"] is False
+    assert "run_summary.invalid_or_untrusted" in report["missing_evidence"]
 
 
 # Layer: integration

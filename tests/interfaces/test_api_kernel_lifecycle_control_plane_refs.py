@@ -87,6 +87,7 @@ def test_kernel_api_observed_policy_reject_returns_post_effect_recovery_and_leas
     assert committed_payload["control_plane_attempt_state"] == "attempt_failed"
     assert committed_payload["control_plane_lease_id"].startswith("kernel-action-lease:")
     assert committed_payload["control_plane_resource_id"] == f"kernel-action-scope:session:{session_id}"
+    assert committed_payload["control_plane_step_id"].startswith("kernel-action-step:")
     assert committed_payload["control_plane_recovery_decision_id"].startswith("kernel-action-recovery:")
     assert committed_payload["control_plane_recovery_action"] == "terminate_run"
 

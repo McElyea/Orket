@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sqlite3
 from pathlib import Path
 import sys
 import pytest
@@ -274,6 +275,84 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
     assert compliance["m1"]["guard_pass_rate"] == 1.0
     assert compliance["m2"]["terminal_failure_rate"] == 1.0
     assert compliance["m2"]["compliance_score"] < compliance["m1"]["compliance_score"]
+
+
+# Layer: contract
+@pytest.mark.contract
+def test_report_live_acceptance_patterns_counts_invalid_row_payloads(tmp_path: Path) -> None:
+    reporter = _load_script_module(
+        "report_live_acceptance_patterns_invalid_rows",
+        "scripts/acceptance/report_live_acceptance_patterns.py",
+    )
+    db_path = tmp_path / "live_acceptance.sqlite3"
+    conn = sqlite3.connect(str(db_path))
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            CREATE TABLE live_acceptance_runs (
+                id INTEGER PRIMARY KEY,
+                batch_id TEXT,
+                model TEXT,
+                iteration INTEGER,
+                passed INTEGER,
+                session_status TEXT,
+                metrics_json TEXT,
+                db_summary_json TEXT,
+                chain_complete INTEGER
+            )
+            """
+        )
+        cur.execute(
+            """
+            INSERT INTO live_acceptance_runs (
+                batch_id, model, iteration, passed, session_status, metrics_json, db_summary_json, chain_complete
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "batch-1",
+                "valid-model",
+                1,
+                1,
+                "done",
+                json.dumps({"prompt_turn_start_total": 2}),
+                json.dumps({"issue_statuses": {"REQ-1": "done"}}),
+                1,
+            ),
+        )
+        cur.execute(
+            """
+            INSERT INTO live_acceptance_runs (
+                batch_id, model, iteration, passed, session_status, metrics_json, db_summary_json, chain_complete
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "batch-1",
+                "invalid-model",
+                2,
+                0,
+                "terminal_failure",
+                json.dumps(["bad-metrics-shape"]),
+                json.dumps({"issue_statuses": ["bad-summary-shape"]}),
+                0,
+            ),
+        )
+        conn.commit()
+
+        runs = reporter._load_runs(conn, "batch-1")
+    finally:
+        conn.close()
+
+    assert runs[0]["metrics_json_valid"] is True
+    assert runs[0]["db_summary_json_valid"] is True
+    assert runs[1]["metrics_json_valid"] is False
+    assert runs[1]["db_summary_json_valid"] is False
+
+    report = reporter._build_report("batch-1", runs)
+
+    assert report["pattern_counters"]["prompt_turn_start_total"] == 2
+    assert report["issue_status_totals"] == {"done": 1}
+    assert report["invalid_payload_signals"] == {"metrics_json": 1, "db_summary_json": 1}
 
 
 def test_report_live_acceptance_patterns_loads_monolith_matrix_summary(tmp_path: Path) -> None:

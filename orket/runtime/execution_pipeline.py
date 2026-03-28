@@ -65,7 +65,10 @@ from orket.runtime.run_summary import (
     write_run_summary_artifact,
 )
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
-from orket.runtime.run_start_artifacts import capture_run_start_artifacts
+from orket.runtime.run_start_artifacts import (
+    capture_run_start_artifacts,
+    validate_run_identity_projection,
+)
 from orket.runtime.deterministic_mode_contract import deterministic_mode_contract_snapshot
 from orket.runtime.settings import resolve_str
 from orket.runtime.state_transition_registry import validate_state_token
@@ -946,7 +949,16 @@ class ExecutionPipeline:
         artifact_path = str(selected.get("artifact_path") or "").strip()
         if not artifact_path:
             return {}
-        return {"id": artifact_path, "kind": "artifact"}
+        output: Dict[str, str] = {"id": artifact_path, "kind": "artifact"}
+        for field in (
+            "control_plane_run_id",
+            "control_plane_attempt_id",
+            "control_plane_step_id",
+        ):
+            token = str(selected.get(field) or "").strip()
+            if token:
+                output[field] = token
+        return output
 
     async def _export_run_artifacts(
         self,
@@ -1056,8 +1068,11 @@ class ExecutionPipeline:
             resolved_artifacts["runtime_verification_path"] = runtime_verification_path
         run_identity = resolved_artifacts.get("run_identity")
         started_at = None
-        if isinstance(run_identity, dict):
-            started_at = str(run_identity.get("start_time") or "").strip() or None
+        if run_identity is not None:
+            started_at = validate_run_identity_projection(
+                run_identity,
+                error_prefix="run_summary_run_identity",
+            )["start_time"]
         try:
             run_summary = await generate_run_summary_for_finalize(
                 workspace=self.workspace,
@@ -1481,6 +1496,14 @@ class ExecutionPipeline:
             "tool_call_hash": str(receipt.get("tool_call_hash") or "").strip(),
             "receipt_digest": str(receipt.get("receipt_digest") or "").strip(),
         }
+        for field in (
+            "control_plane_run_id",
+            "control_plane_attempt_id",
+            "control_plane_step_id",
+        ):
+            token = str(manifest.get(field) or "").strip()
+            if token:
+                entry[field] = token
         return entry
 
     async def _artifact_provenance_entry_from_log_pair(

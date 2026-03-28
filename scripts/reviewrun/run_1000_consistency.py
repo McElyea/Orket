@@ -8,11 +8,10 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Any, Dict
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-
+from orket.application.review.bundle_validation import load_validated_review_run_bundle_artifacts
 from orket.application.review.models import ReviewSnapshot, SnapshotBounds
 from orket.application.review.run_service import ReviewRunService
 
@@ -207,8 +206,9 @@ def _seed_repo_for_math_parse_int_diff(repo: Path) -> tuple[str, str]:
 
 
 def _signature_from_run(run_dir: Path, run_result: Dict[str, Any]) -> Dict[str, Any]:
-    deterministic = json.loads((run_dir / "deterministic_decision.json").read_text(encoding="utf-8"))
-    snapshot = json.loads((run_dir / "snapshot.json").read_text(encoding="utf-8"))
+    bundle_artifacts = load_validated_review_run_bundle_artifacts(run_dir)
+    deterministic = dict(bundle_artifacts.get("deterministic") or {})
+    snapshot = dict(bundle_artifacts.get("snapshot") or {})
     return {
         "snapshot_digest": str(run_result.get("snapshot_digest") or ""),
         "policy_digest": str(run_result.get("policy_digest") or ""),
@@ -219,6 +219,10 @@ def _signature_from_run(run_dir: Path, run_result: Dict[str, Any]) -> Dict[str, 
         "truncation": dict(snapshot.get("truncation") or {}),
     }
 
+
+def _snapshot_truncation_from_run(run_dir: Path) -> Dict[str, Any]:
+    snapshot = dict(load_validated_review_run_bundle_artifacts(run_dir).get("snapshot") or {})
+    return dict(snapshot.get("truncation") or {})
 
 def _strict_policy_for_scenario(scenario: str) -> Dict[str, Any]:
     if scenario == "secrets_sha1":
@@ -325,10 +329,7 @@ def main() -> int:
             head_ref=head_ref,
             bounds=SnapshotBounds(max_diff_bytes=300),
         ).to_dict()
-        truncated_snapshot = json.loads(
-            (Path(str(truncated_run["artifact_dir"])) / "snapshot.json").read_text(encoding="utf-8")
-        )
-        truncation = dict(truncated_snapshot.get("truncation") or {})
+        truncation = _snapshot_truncation_from_run(Path(str(truncated_run["artifact_dir"])))
         truncation_check = {
             "unbounded_snapshot_digest": str(unbounded_run.get("snapshot_digest") or ""),
             "truncated_snapshot_digest": str(truncated_run.get("snapshot_digest") or ""),
@@ -368,8 +369,12 @@ def main() -> int:
     ).to_dict()
     strict_run_dir = Path(str(strict_run["artifact_dir"]))
     strict_signature = _signature_from_run(run_dir=strict_run_dir, run_result=strict_run)
-    strict_snapshot = json.loads((strict_run_dir / "snapshot.json").read_text(encoding="utf-8"))
-    strict_policy_payload = json.loads((strict_run_dir / "policy_resolved.json").read_text(encoding="utf-8"))
+    strict_bundle_artifacts = load_validated_review_run_bundle_artifacts(
+        strict_run_dir,
+        require_policy_resolved=True,
+    )
+    strict_snapshot = dict(strict_bundle_artifacts.get("snapshot") or {})
+    strict_policy_payload = dict(strict_bundle_artifacts.get("policy_resolved") or {})
     strict_replay_run = service.replay(
         repo_root=fixture_repo,
         snapshot=ReviewSnapshot.from_dict(strict_snapshot),

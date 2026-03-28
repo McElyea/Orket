@@ -3,51 +3,33 @@ from __future__ import annotations
 from typing import Any, Protocol
 
 from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.runtime.run_ledger_projection import project_run_ledger_record
 
 
 class _RunLedgerRepository(Protocol):
     async def get_run(self, session_id: str) -> dict[str, Any] | None: ...
 
 
-def _normalize_summary(value: Any) -> dict[str, Any]:
-    if isinstance(value, dict):
-        return dict(value)
-    if isinstance(value, str):
-        return {}
-    return {}
-
-
-def _normalize_artifacts(value: Any) -> dict[str, Any]:
-    if isinstance(value, dict):
-        return dict(value)
-    if isinstance(value, str):
-        return {}
-    return {}
-
-
-def _normalize_run_row(row: dict[str, Any] | None) -> dict[str, Any] | None:
-    if not isinstance(row, dict):
-        return None
-
-    # SQLite repository shape uses summary_json/artifact_json.
-    summary_json = row.get("summary_json")
-    artifact_json = row.get("artifact_json")
+def _normalize_run_row(row: dict[str, Any] | None) -> tuple[dict[str, Any] | None, list[str]]:
+    projected_row, invalid_projection_fields = project_run_ledger_record(row)
+    if projected_row is None:
+        return None, []
 
     normalized = {
-        "session_id": str(row.get("session_id") or row.get("id") or ""),
-        "run_type": str(row.get("run_type") or ""),
-        "run_name": str(row.get("run_name") or ""),
-        "department": str(row.get("department") or ""),
-        "build_id": str(row.get("build_id") or ""),
-        "status": str(row.get("status") or ""),
-        "failure_class": row.get("failure_class"),
-        "failure_reason": row.get("failure_reason"),
-        "summary_json": _normalize_summary(summary_json),
-        "artifact_json": _normalize_artifacts(artifact_json),
+        "session_id": str(projected_row.get("session_id") or projected_row.get("id") or ""),
+        "run_type": str(projected_row.get("run_type") or ""),
+        "run_name": str(projected_row.get("run_name") or ""),
+        "department": str(projected_row.get("department") or ""),
+        "build_id": str(projected_row.get("build_id") or ""),
+        "status": str(projected_row.get("status") or ""),
+        "failure_class": projected_row.get("failure_class"),
+        "failure_reason": projected_row.get("failure_reason"),
+        "summary_json": dict(projected_row.get("summary_json") or {}),
+        "artifact_json": dict(projected_row.get("artifact_json") or {}),
     }
     if not normalized["session_id"]:
-        normalized["session_id"] = str(row.get("session_id") or "")
-    return normalized
+        normalized["session_id"] = str(projected_row.get("session_id") or "")
+    return normalized, invalid_projection_fields
 
 
 def _field_differences(
@@ -93,9 +75,17 @@ async def compare_run_ledger_rows(
     normalized_session_id = str(session_id or "").strip()
     sqlite_raw = await sqlite_repo.get_run(normalized_session_id)
     protocol_raw = await protocol_repo.get_run(normalized_session_id)
-    sqlite_row = _normalize_run_row(sqlite_raw)
-    protocol_row = _normalize_run_row(protocol_raw)
+    sqlite_row, sqlite_invalid_projection_fields = _normalize_run_row(sqlite_raw)
+    protocol_row, protocol_invalid_projection_fields = _normalize_run_row(protocol_raw)
     differences = _field_differences(sqlite_row=sqlite_row, protocol_row=protocol_row)
+    if sqlite_invalid_projection_fields or protocol_invalid_projection_fields:
+        differences.append(
+            {
+                "field": "__projection_validation__",
+                "sqlite": list(sqlite_invalid_projection_fields),
+                "protocol": list(protocol_invalid_projection_fields),
+            }
+        )
 
     sqlite_digest = hash_canonical_json(sqlite_row) if sqlite_row is not None else None
     protocol_digest = hash_canonical_json(protocol_row) if protocol_row is not None else None
@@ -107,4 +97,6 @@ async def compare_run_ledger_rows(
         "protocol_digest": protocol_digest,
         "sqlite_row": sqlite_row,
         "protocol_row": protocol_row,
+        "sqlite_invalid_projection_fields": list(sqlite_invalid_projection_fields),
+        "protocol_invalid_projection_fields": list(protocol_invalid_projection_fields),
     }

@@ -3,7 +3,12 @@ from __future__ import annotations
 import pytest
 
 from scripts.acceptance.run_monolith_variant_matrix import build_combos, choose_default_variant, summarize_report
-from scripts.acceptance.check_monolith_readiness_gate import aggregate_metrics, _missing_required_combinations, _resolve_thresholds
+from scripts.acceptance.check_monolith_readiness_gate import (
+    _missing_required_combinations,
+    _resolve_thresholds,
+    aggregate_invalid_payload_signals,
+    aggregate_metrics,
+)
 
 
 def test_build_combos_cartesian_product():
@@ -32,6 +37,20 @@ def test_summarize_report_extracts_rates():
     assert summary["pass_rate"] == 0.75
     assert summary["runtime_failure_rate"] == 0.25
     assert summary["reviewer_rejection_rate"] == 0.5
+    assert summary["invalid_payload_signals"] is None
+
+
+# Layer: contract
+@pytest.mark.contract
+def test_summarize_report_preserves_invalid_payload_signals():
+    report = {
+        "run_count": 2,
+        "completion_by_model": {"m1": {"passed": 1, "failed": 1}},
+        "pattern_counters": {},
+        "invalid_payload_signals": {"metrics_json": 1, "db_summary_json": 0},
+    }
+    summary = summarize_report(report)
+    assert summary["invalid_payload_signals"] == {"db_summary_json": 0, "metrics_json": 1}
 
 
 def test_choose_default_variant_prefers_higher_pass_rate():
@@ -80,6 +99,49 @@ def test_aggregate_metrics_preserves_zero_values():
     assert metrics["reviewer_rejection_rate"] == pytest.approx(0.0)
 
 
+# Layer: contract
+@pytest.mark.contract
+def test_aggregate_invalid_payload_signals_sums_counts():
+    entries = [
+        {
+            "builder_variant": "coder",
+            "project_surface_profile": "backend_only",
+            "summary": {"invalid_payload_signals": {"metrics_json": 1, "db_summary_json": 0}},
+        },
+        {
+            "builder_variant": "architect",
+            "project_surface_profile": "api_vue",
+            "summary": {"invalid_payload_signals": {"metrics_json": 0, "db_summary_json": 2}},
+        },
+    ]
+    signals, failures = aggregate_invalid_payload_signals(entries)
+    assert failures == []
+    assert signals == {"db_summary_json": 2, "metrics_json": 1}
+
+
+# Layer: contract
+@pytest.mark.contract
+def test_aggregate_invalid_payload_signals_rejects_missing_or_malformed_values():
+    entries = [
+        {
+            "builder_variant": "coder",
+            "project_surface_profile": "backend_only",
+            "summary": {},
+        },
+        {
+            "builder_variant": "architect",
+            "project_surface_profile": "api_vue",
+            "summary": {"invalid_payload_signals": {"metrics_json": -1}},
+        },
+    ]
+    signals, failures = aggregate_invalid_payload_signals(entries)
+    assert signals == {}
+    assert failures == [
+        "invalid_payload_signals missing or invalid for coder/backend_only",
+        "invalid_payload_signals missing or invalid for architect/api_vue",
+    ]
+
+
 def test_missing_required_combinations_detected():
     entries = [{"builder_variant": "coder", "project_surface_profile": "backend_only"}]
     policy = {
@@ -106,6 +168,7 @@ def test_policy_thresholds_override_args():
                 "min_pass_rate": 0.8,
                 "max_runtime_failure_rate": 0.3,
                 "max_reviewer_rejection_rate": 0.4,
+                "max_invalid_payload_signals": 0,
                 "min_executed_entries": 2,
             }
         },
@@ -113,4 +176,5 @@ def test_policy_thresholds_override_args():
     assert thresholds["min_pass_rate"] == 0.8
     assert thresholds["max_runtime_failure_rate"] == 0.3
     assert thresholds["max_reviewer_rejection_rate"] == 0.4
+    assert thresholds["max_invalid_payload_signals"] == 0
     assert thresholds["min_executed_entries"] == 2

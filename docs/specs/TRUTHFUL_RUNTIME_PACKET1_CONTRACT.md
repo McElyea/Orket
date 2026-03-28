@@ -1,6 +1,6 @@
 # Truthful Runtime Packet-1 Contract
 
-Last updated: 2026-03-16
+Last updated: 2026-03-27
 Status: Active
 Owner: Orket Core
 Canonical requirements source: `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
@@ -48,12 +48,17 @@ Out of scope:
 
 1. Packet 1 uses one canonical runtime-owned storage surface: a `run_summary.json` extension.
 2. Packet-1 additions must live under one additive extension object and must not break readers that ignore unknown fields.
-3. Minimum packet-1 extension shape is:
+3. The `truthful_runtime_packet1` extension is a projection surface inside `run_summary.json`, not a standalone final-truth authority surface.
+4. Minimum packet-1 extension shape is:
    1. `schema_version`
-   2. `provenance`
-   3. `classification`
-   4. `defects`
-   5. `packet1_conformance`
+   2. `projection_source`
+   3. `projection_only`
+   4. `provenance`
+   5. `classification`
+   6. `defects`
+   7. `packet1_conformance`
+5. `projection_source` must be `packet1_facts`.
+6. `projection_only` must be `true`.
 
 ## Reconstruction Rule
 
@@ -116,6 +121,10 @@ Out of scope:
    15. `fallback_occurred`
    16. `execution_profile`
    17. final truth classification when classification is applicable
+3. Optional additive provenance fields are:
+   1. `control_plane_run_id`
+   2. `control_plane_attempt_id`
+   3. `control_plane_step_id`
 3. `execution_profile` must be one of:
    1. `normal`
    2. `fallback`
@@ -125,6 +134,7 @@ Out of scope:
 6. Provenance facts must not exist only as prose in logs, prompts, or operator commentary.
 7. When required intended-path provenance data is absent, the runtime must emit the stable token `missing`.
 8. Required provenance fields must not emit implementation placeholder values such as `None` or `unknown`.
+9. `control_plane_run_id`, `control_plane_attempt_id`, and `control_plane_step_id` are emitted only when the selected primary output boundary is backed by authoritative control-plane-linked runtime evidence, such as governed artifact provenance.
 
 ## Truth-Classification Contract
 

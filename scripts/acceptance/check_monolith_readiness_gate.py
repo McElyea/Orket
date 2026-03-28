@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def _parse_args() -> argparse.Namespace:
@@ -23,6 +23,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--min-pass-rate", type=float, default=0.85)
     parser.add_argument("--max-runtime-failure-rate", type=float, default=0.20)
     parser.add_argument("--max-reviewer-rejection-rate", type=float, default=0.40)
+    parser.add_argument("--max-invalid-payload-signals", type=int, default=0)
     parser.add_argument("--min-executed-entries", type=int, default=2)
     parser.add_argument(
         "--allow-plan-only",
@@ -92,6 +93,40 @@ def aggregate_metrics(entries: List[Dict[str, Any]]) -> Dict[str, float]:
     }
 
 
+def _normalize_invalid_payload_signals(summary: Dict[str, Any]) -> Optional[Dict[str, int]]:
+    raw = summary.get("invalid_payload_signals")
+    if not isinstance(raw, dict):
+        return None
+    normalized: Dict[str, int] = {}
+    for key, value in raw.items():
+        if not isinstance(value, int) or value < 0:
+            return None
+        normalized[str(key)] = int(value)
+    return dict(sorted(normalized.items()))
+
+
+def _entry_label(entry: Dict[str, Any]) -> str:
+    builder = str(entry.get("builder_variant") or "").strip() or "unknown-builder"
+    profile = str(entry.get("project_surface_profile") or "").strip() or "unknown-profile"
+    return f"{builder}/{profile}"
+
+
+def aggregate_invalid_payload_signals(entries: List[Dict[str, Any]]) -> Tuple[Dict[str, int], List[str]]:
+    aggregated: Dict[str, int] = {}
+    failures: List[str] = []
+    for entry in entries:
+        summary = entry.get("summary", {})
+        if not isinstance(summary, dict):
+            summary = {}
+        normalized = _normalize_invalid_payload_signals(summary)
+        if normalized is None:
+            failures.append(f"invalid_payload_signals missing or invalid for {_entry_label(entry)}")
+            continue
+        for key, value in normalized.items():
+            aggregated[key] = aggregated.get(key, 0) + int(value)
+    return dict(sorted(aggregated.items())), failures
+
+
 def _combination_key(entry: Dict[str, Any]) -> tuple[str, str]:
     return (
         str(entry.get("builder_variant") or "").strip(),
@@ -121,6 +156,7 @@ def _resolve_thresholds(args: argparse.Namespace, policy: Dict[str, Any]) -> Dic
     thresholds = policy.get("thresholds", {})
     if not isinstance(thresholds, dict):
         thresholds = {}
+    max_invalid_payload_signals = int(getattr(args, "max_invalid_payload_signals", 0))
     return {
         "min_pass_rate": float(thresholds.get("min_pass_rate", args.min_pass_rate)),
         "max_runtime_failure_rate": float(
@@ -130,6 +166,9 @@ def _resolve_thresholds(args: argparse.Namespace, policy: Dict[str, Any]) -> Dic
             thresholds.get("max_reviewer_rejection_rate", args.max_reviewer_rejection_rate)
         ),
         "min_executed_entries": int(thresholds.get("min_executed_entries", args.min_executed_entries)),
+        "max_invalid_payload_signals": int(
+            thresholds.get("max_invalid_payload_signals", max_invalid_payload_signals)
+        ),
     }
 
 
@@ -164,6 +203,7 @@ def main() -> int:
                     "runtime_failure_rate": None,
                     "reviewer_rejection_rate": None,
                 },
+                "invalid_payload_signals": {},
                 "recommended_default_builder_variant": artifact.get("recommended_default_builder_variant"),
                 "failures": failures,
                 "mode": "plan_only",
@@ -174,6 +214,9 @@ def main() -> int:
             return 0
 
     metrics = aggregate_metrics(executed)
+    invalid_payload_signals, invalid_payload_failures = aggregate_invalid_payload_signals(executed)
+    failures.extend(invalid_payload_failures)
+    invalid_payload_total = sum(int(value) for value in invalid_payload_signals.values())
     if metrics["pass_rate"] < float(thresholds["min_pass_rate"]):
         failures.append(
             f"pass_rate {metrics['pass_rate']:.3f} < min_pass_rate {float(thresholds['min_pass_rate']):.3f}"
@@ -188,11 +231,17 @@ def main() -> int:
             "reviewer_rejection_rate "
             f"{metrics['reviewer_rejection_rate']:.3f} > max_reviewer_rejection_rate {float(thresholds['max_reviewer_rejection_rate']):.3f}"
         )
+    if invalid_payload_total > int(thresholds["max_invalid_payload_signals"]):
+        failures.append(
+            "invalid_payload_signals "
+            f"{invalid_payload_total} > max_invalid_payload_signals {int(thresholds['max_invalid_payload_signals'])}"
+        )
 
     report = {
         "ok": len(failures) == 0,
         "executed_entries": len(executed),
         "metrics": metrics,
+        "invalid_payload_signals": invalid_payload_signals,
         "recommended_default_builder_variant": artifact.get("recommended_default_builder_variant"),
         "failures": failures,
         "mode": "executed",

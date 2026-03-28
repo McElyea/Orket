@@ -7,6 +7,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.run_ledger_summary_projection import (
+    coerce_run_ledger_json_object,
+    validated_run_ledger_record_projection,
+)
+
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build runtime truth dashboard seed metrics from run ledger data.")
@@ -29,17 +34,6 @@ def _load_run_rows(db_path: Path) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
-def _json_dict(raw: Any) -> dict[str, Any]:
-    text = str(raw or "").strip()
-    if not text:
-        return {}
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        return {}
-    return dict(parsed) if isinstance(parsed, dict) else {}
-
-
 def build_runtime_truth_dashboard_seed(*, db_path: Path) -> dict[str, Any]:
     rows = _load_run_rows(db_path)
     total_runs = len(rows)
@@ -55,12 +49,19 @@ def build_runtime_truth_dashboard_seed(*, db_path: Path) -> dict[str, Any]:
         status_counts[status] = status_counts.get(status, 0) + 1
         failure_reason = str(row.get("failure_reason") or "").strip().lower()
         failure_class = str(row.get("failure_class") or "").strip()
-        summary = _json_dict(row.get("summary_json"))
-        artifacts = _json_dict(row.get("artifact_json"))
+        projected_row = validated_run_ledger_record_projection(row) or {}
+        summary = dict(projected_row.get("summary_json") or {})
+        artifacts = dict(projected_row.get("artifact_json") or {})
 
         if "timeout" in failure_reason:
             timeout_signals += 1
-        if any(token in failure_reason for token in ("parse", "schema", "invalid", "json")):
+        invalid_payload_signal = any(token in failure_reason for token in ("parse", "schema", "invalid", "json"))
+        if str(row.get("summary_json") or "").strip() and not summary:
+            invalid_payload_signal = True
+        _, artifacts_json_valid = coerce_run_ledger_json_object(row.get("artifact_json"))
+        if str(row.get("artifact_json") or "").strip() and not artifacts_json_valid:
+            invalid_payload_signal = True
+        if invalid_payload_signal:
             invalid_payload_signals += 1
         if "repair" in failure_reason:
             repair_signals += 1
@@ -99,7 +100,7 @@ def build_runtime_truth_dashboard_seed(*, db_path: Path) -> dict[str, Any]:
         },
         "notes": [
             "Seed metrics are heuristic until dedicated fallback/repair ledgers are promoted.",
-            "Counts are derived from run_ledger status/failure and artifact summaries.",
+            "Counts are derived from run_ledger status/failure, validated run-summary payloads, and artifact summaries.",
         ],
     }
 

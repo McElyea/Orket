@@ -13,6 +13,7 @@ from scripts.governance.generate_runtime_truth_evidence_package import (
 from scripts.governance.run_runtime_truth_acceptance_gate import (
     evaluate_runtime_truth_acceptance_gate,
 )
+from tests.live.run_summary_support import read_validated_run_summary
 from tests.live.test_runtime_stability_closeout_live import _live_enabled, _live_model
 from tests.live.test_system_acceptance_pipeline import _write_core_assets
 
@@ -53,7 +54,7 @@ async def test_phase_e_live_acceptance_gate_and_evidence_package_closeout(tmp_pa
     run_roots = _run_roots(workspace)
     assert len(run_roots) == 1
     run_root = run_roots[0]
-    run_summary = _read_json(run_root / "run_summary.json")
+    run_summary = read_validated_run_summary(run_root / "run_summary.json")
     runtime_contracts = workspace / "observability" / run_root.name / "runtime_contracts"
 
     assert run_summary["status"] == "done"

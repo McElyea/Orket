@@ -50,6 +50,7 @@ def test_build_env_sets_microservices_toggle_from_architecture_mode() -> None:
     assert micro_env["ORKET_ENABLE_MICROSERVICES"] == "true"
 
 
+# Layer: contract
 def test_aggregate_and_comparison_metrics() -> None:
     entries = [
         {
@@ -62,6 +63,7 @@ def test_aggregate_and_comparison_metrics() -> None:
                 "pass_rate": 1.0,
                 "runtime_failure_rate": 0.0,
                 "reviewer_rejection_rate": 0.0,
+                "invalid_payload_signals": {"metrics_json": 0, "db_summary_json": 0},
             },
         },
         {
@@ -74,16 +76,76 @@ def test_aggregate_and_comparison_metrics() -> None:
                 "pass_rate": 0.5,
                 "runtime_failure_rate": 0.0,
                 "reviewer_rejection_rate": 0.25,
+                "invalid_payload_signals": {"metrics_json": 0, "db_summary_json": 0},
             },
         },
     ]
     aggregate = _aggregate_by_architecture(entries)
     assert aggregate["force_monolith"]["pass_rate"] == 1.0
     assert aggregate["force_microservices"]["pass_rate"] == 0.5
+    assert aggregate["force_monolith"]["invalid_payload_signals"] == {"db_summary_json": 0, "metrics_json": 0}
+    assert aggregate["force_monolith"]["invalid_payload_failures"] == []
     comparison = _build_comparison(entries)
     assert comparison["available"] is True
     assert comparison["pass_rate_delta_microservices_minus_monolith"] == -0.5
     assert comparison["reviewer_rejection_rate_delta_microservices_minus_monolith"] == 0.25
+    assert comparison["invalid_payload_signals_by_architecture"] == {
+        "force_microservices": {"db_summary_json": 0, "metrics_json": 0},
+        "force_monolith": {"db_summary_json": 0, "metrics_json": 0},
+    }
+    assert comparison["invalid_payload_signal_totals_by_architecture"] == {
+        "force_microservices": 0,
+        "force_monolith": 0,
+    }
+    assert comparison["invalid_payload_failures"] == []
+
+
+# Layer: contract
+def test_aggregate_and_comparison_preserve_invalid_payload_drift() -> None:
+    entries = [
+        {
+            "architecture_mode": "force_monolith",
+            "executed": True,
+            "summary": {
+                "run_count": 1,
+                "passed": 1,
+                "failed": 0,
+                "pass_rate": 1.0,
+                "runtime_failure_rate": 0.0,
+                "reviewer_rejection_rate": 0.0,
+                "invalid_payload_signals": {"metrics_json": 1, "db_summary_json": 0},
+            },
+        },
+        {
+            "architecture_mode": "force_microservices",
+            "executed": True,
+            "summary": {
+                "run_count": 1,
+                "passed": 1,
+                "failed": 0,
+                "pass_rate": 1.0,
+                "runtime_failure_rate": 0.0,
+                "reviewer_rejection_rate": 0.0,
+            },
+        },
+    ]
+    aggregate = _aggregate_by_architecture(entries)
+    assert aggregate["force_monolith"]["invalid_payload_signals"] == {"db_summary_json": 0, "metrics_json": 1}
+    assert aggregate["force_microservices"]["invalid_payload_failures"] == [
+        "invalid_payload_signals missing or invalid for unknown-builder/unknown-profile"
+    ]
+    comparison = _build_comparison(entries)
+    assert comparison["invalid_payload_signals_by_architecture"] == {
+        "force_microservices": {},
+        "force_monolith": {"db_summary_json": 0, "metrics_json": 1},
+    }
+    assert comparison["invalid_payload_signal_totals_by_architecture"] == {
+        "force_microservices": 0,
+        "force_monolith": 1,
+    }
+    assert comparison["invalid_payload_failures"] == [
+        "force_microservices: invalid_payload_signals missing or invalid for unknown-builder/unknown-profile"
+    ]
 
 
 def test_rotate_previous_artifact_copies_existing_output(tmp_path) -> None:

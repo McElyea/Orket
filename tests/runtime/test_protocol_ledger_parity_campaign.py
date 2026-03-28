@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -109,6 +110,42 @@ def test_protocol_ledger_parity_campaign_detects_mismatch_and_reports_deltas(tmp
     assert signatures.get("status:incomplete->failed", 0) >= 1
 
 
+def test_protocol_ledger_parity_campaign_preserves_invalid_projection_fields(tmp_path: Path) -> None:
+    sqlite_db = tmp_path / "runtime.db"
+    protocol_root = tmp_path / "workspace"
+    asyncio.run(
+        _seed_run(
+            sqlite_db=sqlite_db,
+            protocol_root=protocol_root,
+            session_id="sess-invalid",
+            sqlite_status="incomplete",
+            protocol_status="incomplete",
+        )
+    )
+    with sqlite3.connect(sqlite_db) as conn:
+        conn.execute(
+            "UPDATE run_ledger SET summary_json = ?, artifact_json = ? WHERE session_id = ?",
+            ("{not-json", "[1,2,3]", "sess-invalid"),
+        )
+        conn.commit()
+
+    payload = asyncio.run(
+        compare_protocol_ledger_parity_campaign(
+            sqlite_db=sqlite_db,
+            protocol_root=protocol_root,
+            session_ids=["sess-invalid"],
+            discover_limit=50,
+        )
+    )
+    assert payload["all_match"] is False
+    assert payload["rows"][0]["sqlite_invalid_projection_fields"] == ["summary_json", "artifact_json"]
+    assert payload["rows"][0]["protocol_invalid_projection_fields"] == []
+    assert payload["mismatches"][0]["sqlite_invalid_projection_fields"] == ["summary_json", "artifact_json"]
+    telemetry = payload["compatibility_telemetry_delta"]["sqlite_invalid_projection_field_counts"]
+    assert telemetry == {"artifact_json": 1, "summary_json": 1}
+    assert payload["compatibility_telemetry_delta"]["protocol_invalid_projection_field_counts"] == {}
+
+
 def test_protocol_ledger_parity_campaign_filters_to_requested_session_ids(tmp_path: Path) -> None:
     sqlite_db = tmp_path / "runtime.db"
     protocol_root = tmp_path / "workspace"
@@ -156,4 +193,3 @@ def test_protocol_ledger_parity_campaign_raises_when_no_sessions_available(tmp_p
             )
         )
     assert "No session ids available" in str(exc.value)
-

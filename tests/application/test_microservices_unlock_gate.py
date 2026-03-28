@@ -18,6 +18,7 @@ def _unlock_policy() -> dict:
                 "min_pass_rate": 0.7,
                 "max_runtime_failure_rate": 0.3,
                 "max_reviewer_rejection_rate": 0.5,
+                "max_invalid_payload_signals": 0,
             },
             "governance_stability": {
                 "required": True,
@@ -36,12 +37,22 @@ def test_check_matrix_stability_passes_with_coverage_and_rates() -> None:
             {
                 "executed": True,
                 "project_surface_profile": "backend_only",
-                "summary": {"pass_rate": 0.8, "runtime_failure_rate": 0.2, "reviewer_rejection_rate": 0.3},
+                "summary": {
+                    "pass_rate": 0.8,
+                    "runtime_failure_rate": 0.2,
+                    "reviewer_rejection_rate": 0.3,
+                    "invalid_payload_signals": {"metrics_json": 0, "db_summary_json": 0},
+                },
             },
             {
                 "executed": True,
                 "project_surface_profile": "api_vue",
-                "summary": {"pass_rate": 0.9, "runtime_failure_rate": 0.1, "reviewer_rejection_rate": 0.2},
+                "summary": {
+                    "pass_rate": 0.9,
+                    "runtime_failure_rate": 0.1,
+                    "reviewer_rejection_rate": 0.2,
+                    "invalid_payload_signals": {"metrics_json": 0, "db_summary_json": 0},
+                },
             },
         ]
     }
@@ -49,12 +60,45 @@ def test_check_matrix_stability_passes_with_coverage_and_rates() -> None:
     assert result["ok"] is True
     assert result["executed_entries"] == 2
     assert result["profile_count"] == 2
+    assert result["invalid_payload_signals"] == {"db_summary_json": 0, "metrics_json": 0}
+
+
+def test_check_matrix_stability_rejects_invalid_payload_signals() -> None:
+    matrix = {
+        "entries": [
+            {
+                "executed": True,
+                "project_surface_profile": "backend_only",
+                "summary": {
+                    "pass_rate": 0.9,
+                    "runtime_failure_rate": 0.0,
+                    "reviewer_rejection_rate": 0.0,
+                    "invalid_payload_signals": {"metrics_json": 1, "db_summary_json": 0},
+                },
+            },
+            {
+                "executed": True,
+                "project_surface_profile": "api_vue",
+                "summary": {
+                    "pass_rate": 0.9,
+                    "runtime_failure_rate": 0.0,
+                    "reviewer_rejection_rate": 0.0,
+                    "invalid_payload_signals": {"metrics_json": 0, "db_summary_json": 0},
+                },
+            },
+        ]
+    }
+    result = _check_matrix_stability(matrix, _unlock_policy())
+    assert result["ok"] is False
+    assert result["invalid_payload_signals"] == {"db_summary_json": 0, "metrics_json": 1}
+    assert any("invalid_payload_signals" in item for item in result["failures"])
 
 
 def test_check_governance_stability_detects_done_chain_mismatch() -> None:
     report = {
         "run_count": 4,
         "session_status_counts": {"done": 3, "terminal_failure": 1},
+        "invalid_payload_signals": {},
         "pattern_counters": {
             "guard_retry_scheduled": 2,
             "done_chain_mismatch": 1,
@@ -63,6 +107,62 @@ def test_check_governance_stability_detects_done_chain_mismatch() -> None:
     result = _check_governance_stability(report, _unlock_policy())
     assert result["ok"] is False
     assert any("done_chain_mismatch" in item for item in result["failures"])
+
+
+def test_check_governance_stability_rejects_invalid_payload_signals() -> None:
+    report = {
+        "run_count": 4,
+        "session_status_counts": {"done": 4},
+        "invalid_payload_signals": {"metrics_json": 1, "db_summary_json": 0},
+        "pattern_counters": {
+            "guard_retry_scheduled": 0,
+            "done_chain_mismatch": 0,
+        },
+    }
+    result = _check_governance_stability(report, _unlock_policy())
+    assert result["ok"] is False
+    assert any("invalid_payload_signals" in item for item in result["failures"])
+
+
+def test_check_governance_stability_requires_invalid_payload_signal_contract() -> None:
+    report = {
+        "run_count": 4,
+        "session_status_counts": {"done": 4},
+        "pattern_counters": {
+            "guard_retry_scheduled": 0,
+            "done_chain_mismatch": 0,
+        },
+    }
+    result = _check_governance_stability(report, _unlock_policy())
+    assert result["ok"] is False
+    assert any("live acceptance report missing or invalid" in item for item in result["failures"])
+
+
+def test_check_governance_stability_requires_status_count_contract() -> None:
+    report = {
+        "run_count": 4,
+        "session_status_counts": {"done": 3},
+        "invalid_payload_signals": {"db_summary_json": 0, "metrics_json": 0},
+        "pattern_counters": {
+            "guard_retry_scheduled": 0,
+            "done_chain_mismatch": 0,
+        },
+    }
+    result = _check_governance_stability(report, _unlock_policy())
+    assert result["ok"] is False
+    assert any("live acceptance report missing or invalid" in item for item in result["failures"])
+
+
+def test_check_governance_stability_requires_pattern_counter_contract() -> None:
+    report = {
+        "run_count": 4,
+        "session_status_counts": {"done": 4},
+        "invalid_payload_signals": {"db_summary_json": 0, "metrics_json": 0},
+        "pattern_counters": ["bad-shape"],
+    }
+    result = _check_governance_stability(report, _unlock_policy())
+    assert result["ok"] is False
+    assert any("live acceptance report missing or invalid" in item for item in result["failures"])
 
 
 def test_evaluate_unlock_requires_live_report_when_governance_required() -> None:

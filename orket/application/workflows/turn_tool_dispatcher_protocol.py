@@ -282,6 +282,7 @@ async def persist_protocol_operation(
         ),
         control_plane_run_id=control_plane_run_id,
         control_plane_attempt_id=control_plane_attempt_id,
+        control_plane_step_id=operation_id if control_plane_run_id is not None else None,
         control_plane_reservation_id=(
             None
             if control_plane_run_id is None

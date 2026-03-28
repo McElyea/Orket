@@ -8,6 +8,7 @@ import pytest
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
+from tests.live.run_summary_support import read_validated_run_summary
 from tests.live.test_runtime_stability_closeout_live import _live_enabled, _live_model
 
 pytestmark = pytest.mark.end_to_end
@@ -49,7 +50,7 @@ async def test_artifact_provenance_live_acceptance_run_records_generated_files(t
     run_roots = _run_roots(workspace)
     assert len(run_roots) == 1
     run_root = run_roots[0]
-    run_summary = _read_json(run_root / "run_summary.json")
+    run_summary = read_validated_run_summary(run_root / "run_summary.json")
     artifact_provenance = run_summary["truthful_runtime_artifact_provenance"]
     entries = artifact_provenance["artifacts"]
     paths = [entry["artifact_path"] for entry in entries]

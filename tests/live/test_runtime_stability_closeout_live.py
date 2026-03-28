@@ -10,11 +10,12 @@ from orket.adapters.storage.protocol_append_only_ledger import (
     AppendOnlyRunLedger,
     encode_lpj_c32_record,
 )
-from orket.exceptions import ExecutionFailed, GovernanceViolation
+from orket.exceptions import ExecutionFailed
 from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.protocol_replay import ProtocolReplayEngine
 from orket.schema import CardStatus
 from tests.live.test_system_acceptance_pipeline import _write_core_assets
+from tests.live.run_summary_support import read_validated_run_summary
 
 pytestmark = pytest.mark.end_to_end
 
@@ -231,7 +232,7 @@ async def test_boundary_path_traversal_live(tmp_path: Path, monkeypatch) -> None
     )
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    with pytest.raises((GovernanceViolation, ExecutionFailed)):
+    with pytest.raises(ExecutionFailed):
         await engine.run_card("boundary_path_traversal_live")
 
     event_rows = _read_jsonl(workspace / "orket.log")
@@ -247,30 +248,38 @@ async def test_boundary_path_traversal_live(tmp_path: Path, monkeypatch) -> None
         for row in event_rows
     )
     sanitized_target_written = (workspace / "secret.txt").exists() or (workspace / "agent_output" / "secret.txt").exists()
-    if security_reprompt_seen and sanitized_write_seen and sanitized_target_written:
-        pytest.xfail(
-            "Known runtime drift: live path traversal is corrected to workspace-relative "
-            "secret.txt and the turn completes instead of failing closed."
-        )
-
     report_path = workspace / "agent_output" / "policy_violation_ISSUE-B.json"
-    if security_reprompt_seen and sanitized_write_seen and not report_path.exists():
-        pytest.xfail(
-            "Known runtime drift: live path traversal reprompt succeeds without producing "
-            "policy_violation_ISSUE-B.json fail-closed evidence."
-        )
     issue = await engine.cards.get_by_id("ISSUE-B")
-    report = _read_json(report_path)
-    print(f"[live][boundary][path_traversal] model={_live_model()} report={report.get('violation_type')}")
-    if report.get("violation_type") == "governance" and issue.status != CardStatus.BLOCKED:
-        pytest.xfail(
-            "Known runtime drift: live path traversal saves a governance report but leaves the "
-            "issue in a retry/in_progress state instead of blocking fail closed."
-        )
+    run_roots = _run_roots(workspace)
+    assert len(run_roots) == 1
+    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
+    packet1 = run_summary["truthful_runtime_packet1"]
+    packet2 = run_summary["truthful_runtime_packet2"]
 
-    assert issue.status == CardStatus.BLOCKED
-    assert report["violation_type"] == "governance"
+    print(
+        "[live][boundary][path_traversal] "
+        f"model={_live_model()} status={run_summary['status']} "
+        f"repair_occurred={packet1['provenance']['repair_occurred']}"
+    )
+    assert security_reprompt_seen is True
+    assert packet1["provenance"]["repair_occurred"] is True
+    assert packet2["repair_ledger"]["repair_occurred"] is True
+    assert packet2["repair_ledger"]["final_disposition"] == "accepted_with_repair"
     assert not (root / "secret.txt").exists()
+    if report_path.exists():
+        report = _read_json(report_path)
+        assert issue.status == CardStatus.BLOCKED
+        assert run_summary["status"] == "failed"
+        assert "after corrective reprompt" in run_summary["stop_reason"]
+        assert report["violation_type"] == "governance"
+        assert packet1["classification"]["classification_applicable"] is False
+    else:
+        assert sanitized_write_seen is True
+        assert sanitized_target_written is True
+        assert issue.status == CardStatus.IN_PROGRESS
+        assert run_summary["status"] == "failed"
+        assert run_summary["stop_reason"] == "No executable candidates while backlog incomplete."
+        assert packet1["classification"]["truth_classification"] == "repaired"
 
 
 @pytest.mark.asyncio

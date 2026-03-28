@@ -7,6 +7,16 @@ _STARTED_AT = "2036-03-05T12:00:00+00:00"
 _FINALIZED_AT = "2036-03-05T12:00:05+00:00"
 
 
+def _run_identity(*, run_id: str) -> dict[str, str | bool]:
+    return {
+        "run_id": run_id,
+        "workload": "artifact-provenance-summary",
+        "start_time": _STARTED_AT,
+        "identity_scope": "session_bootstrap",
+        "projection_only": True,
+    }
+
+
 def _artifact_provenance_payload(*, artifact_provenance_facts: dict) -> dict:
     return build_run_summary_payload(
         run_id="sess-artifact-provenance",
@@ -16,7 +26,7 @@ def _artifact_provenance_payload(*, artifact_provenance_facts: dict) -> dict:
         ended_at=_FINALIZED_AT,
         tool_names=["write_file"],
         artifacts={
-            "run_identity": {"run_id": "sess-artifact-provenance", "start_time": _STARTED_AT},
+            "run_identity": _run_identity(run_id="sess-artifact-provenance"),
             "artifact_provenance_facts": artifact_provenance_facts,
         },
     )[ARTIFACT_PROVENANCE_KEY]
@@ -40,12 +50,17 @@ def test_artifact_provenance_contract() -> None:
                     "issue_id": "COD-1",
                     "role_name": "coder",
                     "turn_index": 1,
+                    "control_plane_run_id": "turn-tool-run:sess-artifact-provenance:COD-1:coder:0001",
+                    "control_plane_attempt_id": "turn-tool-run:sess-artifact-provenance:COD-1:coder:0001:attempt:0001",
+                    "control_plane_step_id": "op-main",
                     "tool_call_hash": "b" * 64,
                     "receipt_digest": "c" * 64,
                 }
             ]
         }
     )
+    assert artifact_provenance["projection_source"] == "artifact_provenance_facts"
+    assert artifact_provenance["projection_only"] is True
     assert artifact_provenance["artifacts"] == [
         {
             "artifact_path": "agent_output/main.py",
@@ -60,6 +75,9 @@ def test_artifact_provenance_contract() -> None:
             "issue_id": "COD-1",
             "role_name": "coder",
             "turn_index": 1,
+            "control_plane_run_id": "turn-tool-run:sess-artifact-provenance:COD-1:coder:0001",
+            "control_plane_attempt_id": "turn-tool-run:sess-artifact-provenance:COD-1:coder:0001:attempt:0001",
+            "control_plane_step_id": "op-main",
             "tool_call_hash": "b" * 64,
             "receipt_digest": "c" * 64,
         }
@@ -75,7 +93,7 @@ def test_artifact_provenance_extension_is_omitted_without_artifacts() -> None:
         started_at=_STARTED_AT,
         ended_at=_FINALIZED_AT,
         tool_names=["write_file"],
-        artifacts={"run_identity": {"run_id": "sess-artifact-provenance-none", "start_time": _STARTED_AT}},
+        artifacts={"run_identity": _run_identity(run_id="sess-artifact-provenance-none")},
     )
     assert ARTIFACT_PROVENANCE_KEY not in payload
 
@@ -89,7 +107,7 @@ def test_artifact_provenance_reconstruction_matches_emitted_summary() -> None:
             "run_id": "sess-artifact-provenance-reconstruct",
             "timestamp": _STARTED_AT,
             "artifacts": {
-                "run_identity": {"run_id": "sess-artifact-provenance-reconstruct", "start_time": _STARTED_AT},
+                "run_identity": _run_identity(run_id="sess-artifact-provenance-reconstruct"),
             },
         },
         {
@@ -110,6 +128,9 @@ def test_artifact_provenance_reconstruction_matches_emitted_summary() -> None:
                         "issue_id": "REQ-1",
                         "role_name": "requirements_analyst",
                         "turn_index": 1,
+                        "control_plane_run_id": "turn-tool-run:sess-artifact-provenance-reconstruct:REQ-1:requirements_analyst:0001",
+                        "control_plane_attempt_id": "turn-tool-run:sess-artifact-provenance-reconstruct:REQ-1:requirements_analyst:0001:attempt:0001",
+                        "control_plane_step_id": "op-req",
                     }
                 ]
             },
@@ -136,7 +157,7 @@ def test_artifact_provenance_reconstruction_matches_emitted_summary() -> None:
         ended_at=_FINALIZED_AT,
         tool_names=["write_file"],
         artifacts={
-            "run_identity": {"run_id": "sess-artifact-provenance-reconstruct", "start_time": _STARTED_AT},
+            "run_identity": _run_identity(run_id="sess-artifact-provenance-reconstruct"),
             "artifact_provenance_facts": {
                 "artifacts": [
                     {
@@ -152,6 +173,9 @@ def test_artifact_provenance_reconstruction_matches_emitted_summary() -> None:
                         "issue_id": "REQ-1",
                         "role_name": "requirements_analyst",
                         "turn_index": 1,
+                        "control_plane_run_id": "turn-tool-run:sess-artifact-provenance-reconstruct:REQ-1:requirements_analyst:0001",
+                        "control_plane_attempt_id": "turn-tool-run:sess-artifact-provenance-reconstruct:REQ-1:requirements_analyst:0001:attempt:0001",
+                        "control_plane_step_id": "op-req",
                     }
                 ]
             },

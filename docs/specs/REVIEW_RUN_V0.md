@@ -1,6 +1,6 @@
 # ReviewRun v0 Contract
 
-Last reviewed: 2026-03-23
+Last reviewed: 2026-03-27
 
 ## Summary
 `ReviewRun` is a manual, snapshot-driven review primitive.
@@ -75,8 +75,10 @@ Model-assisted lane:
 ## Replay Contract
 `orket review replay`:
 1. Never re-fetches PR/diff/files state.
-2. Consumes only `snapshot.json` and `policy_resolved.json`.
-3. Produces a new `run_id` and new artifact directory.
+2. Replay execution consumes only `snapshot.json` and `policy_resolved.json`.
+3. When `--run-dir` is used, or when direct `--snapshot` and `--policy` inputs point at canonical bundle files from the same review run directory, the CLI must consume `snapshot.json` and `policy_resolved.json` through the shared validated review-bundle artifact loader, and that same loader must also validate persisted `run_manifest.json`, `deterministic_decision.json`, and optional `model_assisted_critique.json` execution-authority markers before replay.
+4. Missing or malformed persisted review bundle artifacts or authority markers fail closed before replay.
+5. Produces a new `run_id` and new artifact directory.
 
 ## Artifact Bundle
 Base path:
@@ -109,7 +111,18 @@ Files:
 
 When durable control-plane publication is enabled for manual review runs, those refs must name the first-class `RunRecord`, initial `AttemptRecord`, and start `StepRecord` published for that review invocation.
 
+Review-lane artifact authority markers:
+1. `deterministic_decision.json` and `model_assisted_critique.json` must include `execution_state_authority: control_plane_records`.
+2. Those same lane payloads must include `lane_output_execution_state_authoritative: false`.
+3. When durable control-plane publication is enabled for the review run, those same lane payloads must also carry `control_plane_run_id`, `control_plane_attempt_id`, and `control_plane_step_id`.
+4. `run_manifest.json` must include `execution_state_authority: control_plane_records` and `lane_outputs_execution_state_authoritative: false`.
+5. These review artifact surfaces must fail closed if those execution-authority markers drift.
+6. Those markers do not change deterministic review-decision authority; they only make execution-state authority explicit and non-local.
+7. Review evidence consumers that score, inspect, compare, or replay persisted review bundles must use the shared validated review-bundle loader or artifact loader before treating lane JSON, snapshot, or resolved policy as trustworthy evidence.
+
 Result projection requirement:
 1. The returned review result and CLI JSON surface may include a `control_plane` summary projection.
-2. That projection is read from durable control-plane records and is not a second authority surface.
-3. Review-lane artifacts remain review evidence and decision input/output only; they are not execution-state authority.
+2. When present, that projection must declare `projection_source: control_plane_records` and `projection_only: true`.
+3. That projection is read from durable control-plane records and is not a second authority surface.
+4. The embedded `manifest` returned through review result and CLI JSON must also fail closed if its persisted execution-authority markers drift.
+5. Review-lane artifacts remain review evidence and decision input/output only; they are not execution-state authority.

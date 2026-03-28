@@ -12,6 +12,7 @@ from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelRes
 from orket.exceptions import ExecutionFailed
 from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.run_summary import PACKET1_MISSING_TOKEN
+from tests.live.run_summary_support import read_validated_run_summary
 from tests.live.test_runtime_stability_closeout_live import _live_enabled, _live_model
 from tests.live.test_system_acceptance_pipeline import _write_core_assets
 
@@ -174,7 +175,7 @@ async def test_packet1_live_failure_run_omits_classification_without_primary_out
 
     run_roots = _run_roots(workspace)
     assert len(run_roots) == 1
-    run_summary = _read_json(run_roots[0] / "run_summary.json")
+    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
     packet1 = run_summary["truthful_runtime_packet1"]
 
     print(
@@ -218,7 +219,7 @@ async def test_packet1_live_emission_failure_uses_runtime_event_fallback(tmp_pat
 
     run_roots = _run_roots(workspace)
     assert len(run_roots) == 1
-    run_summary = _read_json(run_roots[0] / "run_summary.json")
+    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
     runtime_events = _read_jsonl(workspace / "agent_output" / "observability" / "runtime_events.jsonl")
     packet1_failure = next(event for event in runtime_events if event.get("event") == "packet1_emission_failure")
 
@@ -262,7 +263,7 @@ async def test_packet1_live_fallback_profile_marks_degraded_truth(tmp_path: Path
 
         run_roots = _run_roots(workspace)
         assert len(run_roots) == 1
-        run_summary = _read_json(run_roots[0] / "run_summary.json")
+        run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
         packet1 = run_summary["truthful_runtime_packet1"]
 
         print(
@@ -324,7 +325,7 @@ async def test_packet1_live_corrective_reprompt_marks_repaired_truth(tmp_path: P
 
     run_roots = _run_roots(workspace)
     assert len(run_roots) == 1
-    run_summary = _read_json(run_roots[0] / "run_summary.json")
+    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
     packet1 = run_summary["truthful_runtime_packet1"]
     packet2 = run_summary["truthful_runtime_packet2"]
     event_rows = _read_jsonl(workspace / "orket.log")

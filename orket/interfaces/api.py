@@ -10,7 +10,6 @@ from fastapi import FastAPI, WebSocketDisconnect, HTTPException, APIRouter, Depe
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 import os
-
 from orket import __version__
 from orket.logging import subscribe_to_events, unsubscribe_from_events, log_event
 from orket.state import runtime_state
@@ -36,6 +35,7 @@ from orket.interfaces.routers.sessions import build_sessions_router
 from orket.interfaces.routers.companion import build_companion_router
 from orket.interfaces.routers.streaming import register_streaming_routes
 from orket.application.services.companion_runtime_service import CompanionRuntimeService
+from orket.application.services.run_ledger_summary_projection import validated_run_ledger_record_projection, validated_run_ledger_summary
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     is_microservices_pilot_stable,
@@ -57,7 +57,6 @@ from orket.application.services.runtime_policy import (
     resolve_state_backend_mode,
     runtime_policy_options,
 )
-
 
 def _resolve_api_runtime_node() -> Any:
     return DecisionNodeRegistry().resolve_api_runtime()
@@ -918,10 +917,11 @@ async def get_run_detail(session_id: str):
     summary = {}
     artifacts = {}
     status = None
-    if isinstance(run_record, dict):
-        summary = dict(run_record.get("summary_json") or {})
-        artifacts = dict(run_record.get("artifact_json") or {})
-        status = run_record.get("status")
+    projected_run_record = validated_run_ledger_record_projection(run_record)
+    if isinstance(projected_run_record, dict):
+        summary = dict(projected_run_record.get("summary_json") or {})
+        artifacts = dict(projected_run_record.get("artifact_json") or {})
+        status = projected_run_record.get("status")
     if status is None and isinstance(session, dict):
         status = session.get("status")
 
@@ -932,7 +932,7 @@ async def get_run_detail(session_id: str):
         "artifacts": artifacts,
         "issue_count": len(backlog),
         "session": session,
-        "run_ledger": run_record,
+        "run_ledger": projected_run_record,
     }
 
 
@@ -1209,6 +1209,7 @@ async def get_session_status(session_id: str):
         raise HTTPException(**api_runtime_node.session_detail_not_found_error(session_id))
 
     run_record = await engine.run_ledger.get_run(session_id)
+    projected_run_record = validated_run_ledger_record_projection(run_record)
     backlog = await engine.sessions.get_session_issues(session_id)
     task = await runtime_state.get_task(session_id)
     is_active = bool(task and not task.done())
@@ -1221,7 +1222,7 @@ async def get_session_status(session_id: str):
     return {
         "session_id": session_id,
         "active": is_active,
-        "status": (run_record or {}).get("status", session.get("status")),
+        "status": (projected_run_record or {}).get("status", session.get("status")),
         "task_state": (
             "running"
             if is_active
@@ -1235,8 +1236,8 @@ async def get_session_status(session_id: str):
             "count": len(backlog),
             "by_status": backlog_counts,
         },
-        "summary": dict((run_record or {}).get("summary_json") or {}),
-        "artifacts": dict((run_record or {}).get("artifact_json") or {}),
+        "summary": dict((projected_run_record or {}).get("summary_json") or {}),
+        "artifacts": dict((projected_run_record or {}).get("artifact_json") or {}),
     }
 
 

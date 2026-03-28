@@ -147,6 +147,8 @@ def test_review_run_pr_sends_token_only_to_bound_live_remote(tmp_path: Path) -> 
     assert result.manifest["auth_source"] == "token_flag"
     assert result.manifest["control_plane_run_id"] == result.run_id
     assert result.control_plane is not None
+    assert result.control_plane["projection_source"] == "control_plane_records"
+    assert result.control_plane["projection_only"] is True
     assert result.control_plane["run_state"] == "completed"
     assert result.control_plane["attempt_state"] == "attempt_completed"
     snapshot_payload = json.loads((Path(result.artifact_dir) / "snapshot.json").read_text(encoding="utf-8"))

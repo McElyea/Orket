@@ -5,6 +5,29 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.25] - 2026-03-28 - "The Run Projection And Test Truth Cut"
+
+### Added
+- **Validated Review And Run Projection Seams**: Added shared review-bundle validation, control-plane projection, run-ledger summary projection, and microservices acceptance report helpers plus new contract coverage around those normalized truth surfaces.
+- **Protocol And Rollout Proof Coverage**: Added deeper protocol parity, capture, signoff, cutover-readiness, runtime-summary, and live-proof validation coverage for malformed or drifted projection payloads.
+
+### Changed
+- **Review Run And Operator Surfaces**: Hardened review-run models, CLI/API surfaces, runtime summaries, and training or audit helpers so control-plane execution authority, run-state projections, and packet-1 or packet-2 provenance now fail closed on malformed or contradictory persisted payloads instead of silently flattening them.
+- **Acceptance And Runtime Policy Decisions**: Tightened monolith or microservices readiness, pilot stability, unlock, live acceptance, and dashboard/reporting logic so invalid payload signals propagate through gates and decision paths truthfully.
+- **ControlPlane Authority Docs**: Updated `CURRENT_AUTHORITY.md`, the active ControlPlane convergence plan and closeouts, and the packet or runtime-truth specs so the documented authority matches the shipped projection and control-plane behavior.
+- **Test And Proof Hygiene**: Removed a redundant benchmark wrapper test, replaced the nightly ODR skip wrapper with an env-driven scale path, eliminated the ODR scenario skip-at-runtime pattern, and rewrote stale live assertions to accept the truthful repaired-versus-fail-closed branches now produced by provider-backed runs.
+
+### Removed
+- **Redundant Benchmark Pytest Wrapper**: Removed `tests/live/test_benchmark_task_bank_live.py`, which only launched the standalone live benchmark job and added skip noise without distinct correctness coverage.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use the updated review-run, run-summary, acceptance, and ControlPlane authority docs as the current source of truth, and use `ODR_INCLUDE_SCALE=1` with the ODR role-matrix runner when you want the heavier scale checks that were previously hidden behind the nightly-only pytest wrapper.
+
 ## [0.4.24] - 2026-03-26 - "The Control Plane Archive And Runtime Guard Cut"
 
 ### Added

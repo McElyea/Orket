@@ -8,9 +8,19 @@ from typing import Any
 
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+    from scripts.protocol.parity_projection_support import (
+        invalid_projection_field_counts_present,
+        merge_invalid_projection_field_counts,
+        normalize_invalid_projection_field_counts,
+    )
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
+    from protocol.parity_projection_support import (
+        invalid_projection_field_counts_present,
+        merge_invalid_projection_field_counts,
+        normalize_invalid_projection_field_counts,
+    )
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -62,6 +72,10 @@ def _window_row(*, path: Path, payload: dict[str, Any]) -> dict[str, Any]:
     status = str(payload.get("status") or "").strip().upper()
     schema = str(payload.get("schema_version") or "").strip()
     signoff_pass = bool(signoff.get("all_gates_passed", False))
+    parity_invalid_counts = normalize_invalid_projection_field_counts(signoff.get("parity_invalid_projection_field_counts"))
+    rollout_invalid_counts = normalize_invalid_projection_field_counts(
+        signoff.get("rollout_parity_invalid_projection_field_counts")
+    )
     row = {
         "path": str(path).replace("\\", "/"),
         "schema_version": schema,
@@ -71,6 +85,8 @@ def _window_row(*, path: Path, payload: dict[str, Any]) -> dict[str, Any]:
         "failed_steps": [str(item) for item in failed_steps],
         "failed_step_count": len(failed_steps),
         "signoff_all_gates_passed": signoff_pass,
+        "parity_invalid_projection_field_counts": parity_invalid_counts,
+        "rollout_parity_invalid_projection_field_counts": rollout_invalid_counts,
         "passes": status == "PASS" and signoff_pass and len(failed_steps) == 0,
     }
     return row
@@ -85,6 +101,16 @@ def _evaluate_rows(
     passing = [row for row in rows if bool(row.get("passes"))]
     passing_ids = [str(row.get("window_id") or "") for row in passing if str(row.get("window_id") or "").strip()]
     distinct_ids = sorted({token for token in passing_ids if token})
+    invalid_projection_rows = [
+        row
+        for row in rows
+        if invalid_projection_field_counts_present(
+            normalize_invalid_projection_field_counts(row.get("parity_invalid_projection_field_counts"))
+        )
+        or invalid_projection_field_counts_present(
+            normalize_invalid_projection_field_counts(row.get("rollout_parity_invalid_projection_field_counts"))
+        )
+    ]
     errors: list[str] = []
     if len(passing) < int(min_pass_windows):
         errors.append(f"passing_windows={len(passing)} < min_pass_windows={int(min_pass_windows)}")
@@ -102,6 +128,13 @@ def _evaluate_rows(
         "passing_windows": len(passing),
         "distinct_passing_window_ids": len(distinct_ids),
         "passing_window_ids": distinct_ids,
+        "windows_with_invalid_projection_counts": len(invalid_projection_rows),
+        "parity_invalid_projection_field_counts": merge_invalid_projection_field_counts(
+            rows, "parity_invalid_projection_field_counts"
+        ),
+        "rollout_parity_invalid_projection_field_counts": merge_invalid_projection_field_counts(
+            rows, "rollout_parity_invalid_projection_field_counts"
+        ),
     }
 
 
@@ -128,6 +161,11 @@ def evaluate_cutover_readiness(
         "passing_windows": int(verdict["passing_windows"]),
         "distinct_passing_window_ids": int(verdict["distinct_passing_window_ids"]),
         "passing_window_ids": list(verdict["passing_window_ids"]),
+        "windows_with_invalid_projection_counts": int(verdict["windows_with_invalid_projection_counts"]),
+        "parity_invalid_projection_field_counts": dict(verdict["parity_invalid_projection_field_counts"]),
+        "rollout_parity_invalid_projection_field_counts": dict(
+            verdict["rollout_parity_invalid_projection_field_counts"]
+        ),
     }
 
 

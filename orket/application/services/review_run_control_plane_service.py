@@ -5,6 +5,7 @@ from pathlib import Path
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.application.review.control_plane_projection import REVIEW_CONTROL_PLANE_PROJECTION_SOURCE
 from orket.application.review.models import ReviewSnapshot
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots, snapshot_digest
@@ -142,6 +143,8 @@ class ReviewRunControlPlaneService:
         attempt = await self._require_attempt(attempt_id=run.current_attempt_id)
         step = await self.execution_repository.get_step_record(step_id=self.start_step_id_for(run_id=run_id))
         summary: dict[str, object] = {
+            "projection_source": REVIEW_CONTROL_PLANE_PROJECTION_SOURCE,
+            "projection_only": True,
             "run_id": run.run_id,
             "run_state": run.lifecycle_state.value,
             "workload_id": run.workload_id,

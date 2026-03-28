@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from orket.application.review.control_plane_projection import REVIEW_EXECUTION_STATE_AUTHORITY
 from pydantic import BaseModel, Field, ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -253,6 +254,29 @@ def build_snapshot_payload(*, fixture_path: Path, source_text: str) -> dict[str,
     }
 
 
+def build_run_manifest_payload(
+    *,
+    run_id: str,
+    snapshot_digest: str,
+    policy_digest: str,
+    deterministic_lane_version: str,
+    prompt_profile: str,
+    review_method: str,
+) -> dict[str, Any]:
+    return {
+        "bundle_kind": "code_review_probe",
+        "run_id": str(run_id),
+        "snapshot_digest": str(snapshot_digest),
+        "policy_digest": str(policy_digest),
+        "deterministic_lane_version": str(deterministic_lane_version),
+        "model_lane_contract_version": "review_critique_v0",
+        "prompt_profile": str(prompt_profile),
+        "review_method": str(review_method),
+        "execution_state_authority": REVIEW_EXECUTION_STATE_AUTHORITY,
+        "lane_outputs_execution_state_authoritative": False,
+    }
+
+
 def _compile_patterns(raw_patterns: list[Any]) -> list[re.Pattern[str]]:
     compiled: list[re.Pattern[str]] = []
     for item in raw_patterns:
@@ -303,6 +327,8 @@ def build_deterministic_payload(*, source_text: str, answer_key: dict[str, Any])
         "findings": findings,
         "executed_checks": executed_checks,
         "deterministic_lane_version": "s04_static_fingerprint_v1",
+        "execution_state_authority": REVIEW_EXECUTION_STATE_AUTHORITY,
+        "lane_output_execution_state_authoritative": False,
     }
 
 

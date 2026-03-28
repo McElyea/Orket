@@ -1,6 +1,6 @@
 # ReviewRun CLI Guide
 
-Last reviewed: 2026-03-23
+Last reviewed: 2026-03-27
 
 ## Purpose
 Run manual snapshot-driven reviews without webhook automation.
@@ -14,6 +14,8 @@ Run manual snapshot-driven reviews without webhook automation.
    - `orket review files --repo-root . --ref <ref> --paths a.py b.py`
 4. Replay offline:
    - `orket review replay --run-dir workspace/default/review_runs/<run_id>/`
+   - `--run-dir` replay consumes snapshot/policy through the shared validated review-bundle artifact loader, which also validates persisted review manifest and lane-artifact execution-authority markers before replaying
+   - direct `--snapshot snapshot.json --policy policy_resolved.json` replay also reuses that shared loader when those files are the canonical bundle artifacts from one review run directory
 
 ## Auth (PR command)
 Precedence:
@@ -49,7 +51,10 @@ Each run prints:
 1. `run_id`
 2. deterministic decision
 3. artifact path
-4. control-plane run and attempt state when durable control-plane publication is available
+4. control-plane run/attempt state and start-step kind when durable control-plane publication is available
+5. durable control-plane run/attempt/step refs when that publication exists
 
 Default artifact root:
 `workspace/default/review_runs/<run_id>/`
+
+When JSON output includes a `control_plane` summary, it is a projection from durable control-plane records and declares `projection_source: control_plane_records` plus `projection_only: true`.

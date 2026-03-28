@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List
 
+from orket.application.review.bundle_validation import load_validated_review_run_bundle_artifacts
 _STOPWORDS = {
     "a",
     "an",
@@ -274,10 +275,10 @@ def score_answer_key(
     run_dir: Path,
     answer_key_path: Path,
 ) -> Dict[str, Any]:
-    snapshot = _load_json(run_dir / "snapshot.json")
-    deterministic = _load_json(run_dir / "deterministic_decision.json")
-    model_path = run_dir / "model_assisted_critique.json"
-    model = _load_json(model_path) if model_path.is_file() else None
+    bundle_artifacts = load_validated_review_run_bundle_artifacts(run_dir)
+    snapshot = dict(bundle_artifacts.get("snapshot") or {})
+    deterministic = dict(bundle_artifacts.get("deterministic") or {})
+    model = dict(model_payload) if isinstance((model_payload := bundle_artifacts.get("model_assisted")), dict) else None
     key = _load_json(answer_key_path)
 
     changed_paths = [str(item.get("path") or "") for item in list(snapshot.get("changed_files") or [])]

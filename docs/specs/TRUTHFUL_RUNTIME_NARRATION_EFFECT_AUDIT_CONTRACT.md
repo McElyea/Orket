@@ -1,6 +1,6 @@
 # Truthful Runtime Narration-Effect Audit Contract
 
-Last updated: 2026-03-16
+Last updated: 2026-03-27
 Status: Active
 Owner: Orket Core
 Phase closeout authority: `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`
@@ -31,6 +31,9 @@ Out of scope:
 
 Packet-2 additive key:
 1. `truthful_runtime_packet2.narration_to_effect_audit`
+2. The enclosing `truthful_runtime_packet2` block is a projection surface inside `run_summary.json`, not a standalone authority surface.
+3. `truthful_runtime_packet2.projection_source` must be `packet2_facts`.
+4. `truthful_runtime_packet2.projection_only` must be `true`.
 
 Minimum emitted shape:
 
@@ -65,6 +68,9 @@ Optional additive fields:
 2. `role_name`
 3. `turn_index`
 4. `step_id`
+5. `control_plane_run_id`
+6. `control_plane_attempt_id`
+7. `control_plane_step_id`
 
 Stable `audit_status` values:
 1. `verified`
@@ -96,6 +102,9 @@ For `update_issue_status`:
 4. failures must use:
    1. `card_status_target_missing` when issue or status cannot be resolved
    2. `card_status_transition_missing` when the target transition is absent from card history
+
+Governed ref coupling:
+1. `control_plane_run_id`, `control_plane_attempt_id`, and `control_plane_step_id` are emitted only when the authoritative protocol receipt manifest for the narrated effect exposes those durable governed execution refs.
 
 ## Emission Rules
 

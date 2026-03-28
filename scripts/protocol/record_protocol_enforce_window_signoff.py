@@ -9,9 +9,17 @@ from typing import Any
 
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+    from scripts.protocol.parity_projection_support import (
+        extract_campaign_invalid_projection_field_counts,
+        render_invalid_projection_field_counts_detail,
+    )
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
+    from protocol.parity_projection_support import (
+        extract_campaign_invalid_projection_field_counts,
+        render_invalid_projection_field_counts_detail,
+    )
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -54,10 +62,6 @@ def _gate(*, passed: bool, detail: str) -> dict[str, Any]:
     return {"passed": bool(passed), "detail": str(detail)}
 
 
-def _sorted_counts(counter: dict[str, int]) -> dict[str, int]:
-    return {key: int(counter[key]) for key in sorted(counter)}
-
-
 def _error_gate(
     *,
     error_summary: dict[str, Any],
@@ -82,7 +86,7 @@ def _error_gate(
         return (
             False,
             f"unregistered_count={unregistered_count}, blocking_families={sorted(blocking)}",
-            _sorted_counts(blocking),
+            {key: int(blocking[key]) for key in sorted(blocking)},
         )
     return True, "no blocking or unregistered error families", {}
 
@@ -104,6 +108,10 @@ def build_signoff_payload(
     parity_campaign = _load_json_object(parity_campaign_path, label="parity campaign")
     rollout_bundle = _load_json_object(rollout_bundle_path, label="rollout bundle")
     error_summary = _load_json_object(error_summary_path, label="error summary")
+    parity_invalid_projection_field_counts = extract_campaign_invalid_projection_field_counts(parity_campaign)
+    rollout_parity_invalid_projection_field_counts = extract_campaign_invalid_projection_field_counts(
+        dict(rollout_bundle.get("ledger_parity_campaign") or {})
+    )
 
     replay_ok = bool(replay_campaign.get("all_match") is True)
     parity_ok = bool(parity_campaign.get("all_match") is True)
@@ -117,8 +125,22 @@ def build_signoff_payload(
 
     gates = {
         "replay_all_match": _gate(passed=replay_ok, detail=f"all_match={replay_campaign.get('all_match')}"),
-        "parity_all_match": _gate(passed=parity_ok, detail=f"all_match={parity_campaign.get('all_match')}"),
-        "rollout_bundle_strict_ok": _gate(passed=rollout_ok, detail=f"strict_ok={rollout_bundle.get('strict_ok')}"),
+        "parity_all_match": _gate(
+            passed=parity_ok,
+            detail=render_invalid_projection_field_counts_detail(
+                prefix="all_match",
+                value=parity_campaign.get("all_match"),
+                counts=parity_invalid_projection_field_counts,
+            ),
+        ),
+        "rollout_bundle_strict_ok": _gate(
+            passed=rollout_ok,
+            detail=render_invalid_projection_field_counts_detail(
+                prefix="strict_ok",
+                value=rollout_bundle.get("strict_ok"),
+                counts=rollout_parity_invalid_projection_field_counts,
+            ),
+        ),
         "error_summary_clean": _gate(passed=error_ok, detail=error_detail),
         "retry_spike_check": _gate(passed=retry_ok, detail=f"retry_spike_status={retry_spike_status}"),
         "approver_present": _gate(passed=approver_ok, detail="approver supplied" if approver_ok else "approver missing"),
@@ -139,6 +161,8 @@ def build_signoff_payload(
         },
         "allowed_error_families": sorted(allowed_error_families),
         "blocking_error_families": blocking_families,
+        "parity_invalid_projection_field_counts": parity_invalid_projection_field_counts,
+        "rollout_parity_invalid_projection_field_counts": rollout_parity_invalid_projection_field_counts,
         "retry_spike_status": str(retry_spike_status),
         "approver": str(approver or ""),
         "notes": str(notes or ""),

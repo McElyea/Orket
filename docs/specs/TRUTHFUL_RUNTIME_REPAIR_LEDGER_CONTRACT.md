@@ -1,6 +1,6 @@
 # Truthful Runtime Repair Ledger Contract
 
-Last updated: 2026-03-16
+Last updated: 2026-03-27
 Status: Active
 Owner: Orket Core
 Canonical packet authority: `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
@@ -37,17 +37,22 @@ Out of scope:
 ## Canonical Surface
 
 1. Packet 2 uses one canonical runtime-owned storage surface: a `run_summary.json` additive extension.
-2. Packet-2 repair-ledger additions must live under the `truthful_runtime_packet2` extension object and must not break readers that ignore unknown fields.
-3. Minimum packet-2 extension shape is:
+2. Packet-2 repair-ledger additions must live under the `truthful_runtime_packet2` projection extension object and must not break readers that ignore unknown fields.
+3. The enclosing `truthful_runtime_packet2` block is a projection surface inside `run_summary.json`, not a standalone closure or effect authority surface.
+4. Minimum packet-2 extension shape is:
    1. `schema_version`
-   2. `repair_ledger`
-4. `repair_ledger` must include:
+   2. `projection_source`
+   3. `projection_only`
+   4. `repair_ledger`
+5. `projection_source` must be `packet2_facts`.
+6. `projection_only` must be `true`.
+7. `repair_ledger` must include:
    1. `repair_occurred`
    2. `repair_count`
    3. `final_disposition`
    4. `entries`
-5. Packet-2 repair-ledger fields are omitted rather than set to `null`.
-6. The `truthful_runtime_packet2` extension is omitted when no runtime-owned repair entries exist for the finalized run.
+8. Packet-2 repair-ledger fields are omitted rather than set to `null`.
+9. The `truthful_runtime_packet2` extension is omitted when no runtime-owned repair entries exist for the finalized run.
 
 ## Repair Ledger Contract
 

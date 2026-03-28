@@ -461,6 +461,7 @@ async def test_async_protocol_run_ledger_adds_tool_invocation_manifest_for_tool_
         tool_name="write_file",
         control_plane_run_id="turn-tool-run:sess-manifest:ISSUE-1:coder:0001",
         control_plane_attempt_id="turn-tool-run:sess-manifest:ISSUE-1:coder:0001:attempt:0001",
+        control_plane_step_id="op-1",
         control_plane_reservation_id="turn-tool-reservation:turn-tool-run:sess-manifest:ISSUE-1:coder:0001",
         control_plane_lease_id="turn-tool-lease:turn-tool-run:sess-manifest:ISSUE-1:coder:0001",
         control_plane_resource_id="namespace:issue:ISSUE-1",
@@ -477,6 +478,7 @@ async def test_async_protocol_run_ledger_adds_tool_invocation_manifest_for_tool_
     assert manifest["determinism_class"] == "workspace"
     assert manifest["control_plane_run_id"] == "turn-tool-run:sess-manifest:ISSUE-1:coder:0001"
     assert manifest["control_plane_attempt_id"] == "turn-tool-run:sess-manifest:ISSUE-1:coder:0001:attempt:0001"
+    assert manifest["control_plane_step_id"] == "op-1"
     assert (
         manifest["control_plane_reservation_id"]
         == "turn-tool-reservation:turn-tool-run:sess-manifest:ISSUE-1:coder:0001"

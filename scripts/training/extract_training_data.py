@@ -67,6 +67,8 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from scripts.common.run_summary_support import load_first_validated_run_summary
+
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 except ModuleNotFoundError:
@@ -229,11 +231,7 @@ def _load_run_summary(workspace_run_dir: Path) -> dict[str, Any] | None:
         workspace_run_dir / "runs" / run_id / "run_summary.json",
         workspace_run_dir / "run_summary.json",
     ]
-    for path in candidates:
-        data = _load_json(path)
-        if isinstance(data, dict):
-            return data
-    return None
+    return load_first_validated_run_summary(candidates)
 
 
 def _run_is_complete(summary: dict[str, Any]) -> bool:

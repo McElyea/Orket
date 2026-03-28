@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -73,3 +74,39 @@ async def test_cli_protocol_parity_campaign_strict_reports_mismatch(monkeypatch,
     out = capsys.readouterr().out
     assert '"all_match": false' in out.lower()
     assert "Run ledger parity campaign mismatch detected under --protocol-strict." in out
+
+
+@pytest.mark.asyncio
+async def test_cli_protocol_parity_campaign_prints_invalid_projection_fields(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies parity-campaign output preserves invalid projection detail."""
+    workspace = tmp_path / "workspace" / "default"
+    sqlite_db = workspace / ".orket" / "durable" / "db" / "orket_persistence.db"
+    _write_run(workspace, "run-a", status="incomplete", ok=True)
+    await _write_sqlite_run(sqlite_db, "run-a", status="incomplete")
+    with sqlite3.connect(sqlite_db) as conn:
+        conn.execute(
+            "UPDATE run_ledger SET summary_json = ?, artifact_json = ? WHERE session_id = ?",
+            ("{not-json", "[1,2,3]", "run-a"),
+        )
+        conn.commit()
+
+    _bypass_startup_for_protocol_path_test(monkeypatch)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: _args(
+            command="protocol",
+            subcommand="parity-campaign",
+            workspace=str(workspace),
+            protocol_sqlite_db=str(sqlite_db),
+            protocol_parity_session_id=["run-a"],
+        ),
+    )
+
+    await cli_module.run_cli()
+    out = capsys.readouterr().out
+    assert '"sqlite_invalid_projection_fields": [' in out
+    assert '"summary_json"' in out
+    assert '"artifact_json"' in out

@@ -395,7 +395,7 @@ class AsyncRunLedgerRepository:
                         try:
                             data[field] = json.loads(data[field])
                         except json.JSONDecodeError:
-                            data[field] = {}
+                            data[field] = str(data[field])
                     else:
                         data[field] = {}
                 return data

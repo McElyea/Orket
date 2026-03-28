@@ -5,6 +5,10 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List
 
+from orket.application.services.microservices_acceptance_reports import (
+    normalize_live_acceptance_pattern_report,
+)
+
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
@@ -17,6 +21,7 @@ try:
     from scripts.acceptance.check_monolith_readiness_gate import (
         _missing_required_combinations,
         _resolve_thresholds,
+        aggregate_invalid_payload_signals,
         aggregate_metrics,
     )
 except ModuleNotFoundError:
@@ -26,6 +31,7 @@ except ModuleNotFoundError:
     from check_monolith_readiness_gate import (  # type: ignore[no-redef]
         _missing_required_combinations,
         _resolve_thresholds,
+        aggregate_invalid_payload_signals,
         aggregate_metrics,
     )
 
@@ -92,6 +98,7 @@ def _check_monolith_readiness(
             min_pass_rate=0.85,
             max_runtime_failure_rate=0.20,
             max_reviewer_rejection_rate=0.40,
+            max_invalid_payload_signals=0,
             min_executed_entries=2,
         ),
         readiness_policy,
@@ -108,6 +115,9 @@ def _check_monolith_readiness(
             f"executed entries {len(executed)} < required {int(thresholds['min_executed_entries'])}"
         )
     metrics = aggregate_metrics(executed)
+    invalid_payload_signals, invalid_payload_failures = aggregate_invalid_payload_signals(executed)
+    failures.extend(invalid_payload_failures)
+    invalid_payload_total = sum(int(value) for value in invalid_payload_signals.values())
     if metrics["pass_rate"] < float(thresholds["min_pass_rate"]):
         failures.append(
             f"pass_rate {metrics['pass_rate']:.3f} < min_pass_rate {float(thresholds['min_pass_rate']):.3f}"
@@ -122,10 +132,16 @@ def _check_monolith_readiness(
             "reviewer_rejection_rate "
             f"{metrics['reviewer_rejection_rate']:.3f} > max_reviewer_rejection_rate {float(thresholds['max_reviewer_rejection_rate']):.3f}"
         )
+    if invalid_payload_total > int(thresholds["max_invalid_payload_signals"]):
+        failures.append(
+            "invalid_payload_signals "
+            f"{invalid_payload_total} > max_invalid_payload_signals {int(thresholds['max_invalid_payload_signals'])}"
+        )
     return {
         "ok": len(failures) == 0,
         "executed_entries": len(executed),
         "metrics": metrics,
+        "invalid_payload_signals": invalid_payload_signals,
         "failures": failures,
     }
 
@@ -156,6 +172,7 @@ def _check_matrix_stability(
     min_pass_rate = float(criteria.get("min_pass_rate", 0.8))
     max_runtime_failure_rate = float(criteria.get("max_runtime_failure_rate", 0.25))
     max_reviewer_rejection_rate = float(criteria.get("max_reviewer_rejection_rate", 0.4))
+    max_invalid_payload_signals = int(criteria.get("max_invalid_payload_signals", 0))
 
     failures: List[str] = []
     if len(executed) < min_executed_entries:
@@ -165,6 +182,9 @@ def _check_matrix_stability(
         failures.append(f"project surface profiles {profile_count} < required {min_profiles}")
 
     metrics = aggregate_metrics(executed)
+    invalid_payload_signals, invalid_payload_failures = aggregate_invalid_payload_signals(executed)
+    failures.extend(invalid_payload_failures)
+    invalid_payload_total = sum(int(value) for value in invalid_payload_signals.values())
     if metrics["pass_rate"] < min_pass_rate:
         failures.append(f"pass_rate {metrics['pass_rate']:.3f} < min_pass_rate {min_pass_rate:.3f}")
     if metrics["runtime_failure_rate"] > max_runtime_failure_rate:
@@ -176,11 +196,17 @@ def _check_matrix_stability(
             "reviewer_rejection_rate "
             f"{metrics['reviewer_rejection_rate']:.3f} > max_reviewer_rejection_rate {max_reviewer_rejection_rate:.3f}"
         )
+    if invalid_payload_total > max_invalid_payload_signals:
+        failures.append(
+            "invalid_payload_signals "
+            f"{invalid_payload_total} > max_invalid_payload_signals {max_invalid_payload_signals}"
+        )
     return {
         "ok": len(failures) == 0,
         "executed_entries": len(executed),
         "profile_count": profile_count,
         "metrics": metrics,
+        "invalid_payload_signals": invalid_payload_signals,
         "failures": failures,
     }
 
@@ -196,17 +222,28 @@ def _check_governance_stability(
     max_terminal_failure_rate = float(criteria.get("max_terminal_failure_rate", 0.25))
     max_guard_retry_rate = float(criteria.get("max_guard_retry_rate", 0.75))
     max_done_chain_mismatch = int(criteria.get("max_done_chain_mismatch", 0))
+    max_invalid_payload_signals = int(criteria.get("max_invalid_payload_signals", 0))
 
-    run_count = int(live_report.get("run_count", 0) or 0)
-    status_counts = live_report.get("session_status_counts", {})
-    if not isinstance(status_counts, dict):
-        status_counts = {}
-    counters = live_report.get("pattern_counters", {})
-    if not isinstance(counters, dict):
-        counters = {}
+    normalized_live_report = normalize_live_acceptance_pattern_report(live_report)
+    if not normalized_live_report:
+        return {
+            "ok": False,
+            "run_count": 0,
+            "terminal_failure_rate": 0.0,
+            "guard_retry_rate": 0.0,
+            "done_chain_mismatch": 0,
+            "invalid_payload_signals": {},
+            "failures": ["live acceptance report missing or invalid"],
+        }
+
+    run_count = int(normalized_live_report["run_count"])
+    status_counts = normalized_live_report["session_status_counts"]
+    counters = normalized_live_report["pattern_counters"]
+    invalid_payload_signals = normalized_live_report["invalid_payload_signals"]
     terminal_failure_runs = int(status_counts.get("terminal_failure", 0) or 0)
     guard_retry_total = int(counters.get("guard_retry_scheduled", 0) or 0)
     done_chain_mismatch = int(counters.get("done_chain_mismatch", 0) or 0)
+    invalid_payload_total = sum(invalid_payload_signals.values())
     denom = max(1, run_count)
     terminal_failure_rate = terminal_failure_runs / denom
     guard_retry_rate = guard_retry_total / denom
@@ -222,12 +259,17 @@ def _check_governance_stability(
         failures.append(f"guard_retry_rate {guard_retry_rate:.3f} > max_guard_retry_rate {max_guard_retry_rate:.3f}")
     if done_chain_mismatch > max_done_chain_mismatch:
         failures.append(f"done_chain_mismatch {done_chain_mismatch} > max_done_chain_mismatch {max_done_chain_mismatch}")
+    if invalid_payload_total > max_invalid_payload_signals:
+        failures.append(
+            f"invalid_payload_signals {invalid_payload_total} > max_invalid_payload_signals {max_invalid_payload_signals}"
+        )
     return {
         "ok": len(failures) == 0,
         "run_count": run_count,
         "terminal_failure_rate": terminal_failure_rate,
         "guard_retry_rate": guard_retry_rate,
         "done_chain_mismatch": done_chain_mismatch,
+        "invalid_payload_signals": invalid_payload_signals,
         "failures": failures,
     }
 

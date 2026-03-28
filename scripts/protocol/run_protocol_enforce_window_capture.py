@@ -300,6 +300,12 @@ def main(argv: list[str] | None = None) -> int:
         "signoff": {
             "gate_status": str(signoff_payload.get("gate_status") or ""),
             "all_gates_passed": bool(signoff_payload.get("all_gates_passed", False)),
+            "parity_invalid_projection_field_counts": dict(
+                signoff_payload.get("parity_invalid_projection_field_counts") or {}
+            ),
+            "rollout_parity_invalid_projection_field_counts": dict(
+                signoff_payload.get("rollout_parity_invalid_projection_field_counts") or {}
+            ),
         },
         "status": "PASS" if not failed_steps and bool(signoff_payload.get("all_gates_passed", False)) else "FAIL",
     }

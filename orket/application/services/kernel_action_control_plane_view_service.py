@@ -145,6 +145,9 @@ def _augment_kernel_response(*, response: dict[str, Any], summary: dict[str, Any
     resource = summary.get("latest_resource")
     if isinstance(resource, dict):
         augmented["control_plane_resource_id"] = resource.get("resource_id")
+    latest_step = summary.get("latest_step")
+    if isinstance(latest_step, dict):
+        augmented["control_plane_step_id"] = latest_step.get("step_id")
     final_truth = summary.get("final_truth")
     if isinstance(final_truth, dict):
         augmented["control_plane_final_truth_record_id"] = final_truth.get("final_truth_record_id")
