@@ -10,6 +10,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.runtime.retry_classification_policy import (
+    retry_classification_policy_snapshot,
+    validate_retry_classification_policy,
+)
 from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_drift_report
 from scripts.governance.check_artifact_provenance_block_policy import (
     evaluate_artifact_provenance_block_policy,
@@ -142,7 +146,10 @@ from scripts.governance.check_operator_override_logging_policy import (
     evaluate_operator_override_logging_policy,
 )
 from scripts.governance.check_runtime_boundary_audit_checklist import evaluate_runtime_boundary_audit_checklist
-from scripts.governance.check_retry_classification_policy import evaluate_retry_classification_policy
+from scripts.governance.check_retry_classification_policy import (
+    evaluate_retry_classification_policy,
+    validate_retry_classification_policy_report,
+)
 from scripts.governance.check_structured_warning_policy import evaluate_structured_warning_policy
 from scripts.governance.check_unreachable_branches import (
     DEFAULT_SCAN_ROOTS as DEFAULT_UNREACHABLE_SCAN_ROOTS,
@@ -537,6 +544,7 @@ def evaluate_runtime_truth_acceptance_gate(
         contracts_dir = _runtime_contracts_dir(workspace, normalized_run_id)
         missing_files: list[str] = []
         invalid_json_files: list[str] = []
+        parsed_contract_files: dict[str, dict[str, Any]] = {}
         for filename in REQUIRED_RUNTIME_CONTRACT_FILES:
             path = contracts_dir / filename
             if not path.exists():
@@ -549,6 +557,8 @@ def evaluate_runtime_truth_acceptance_gate(
                 continue
             if not isinstance(parsed, dict):
                 invalid_json_files.append(filename)
+                continue
+            parsed_contract_files[filename] = dict(parsed)
         details["runtime_contracts_dir"] = str(contracts_dir)
         details["missing_files"] = missing_files
         details["invalid_json_files"] = invalid_json_files
@@ -556,6 +566,29 @@ def evaluate_runtime_truth_acceptance_gate(
             failures.append("runtime_contract_files_missing")
         if invalid_json_files:
             failures.append("runtime_contract_files_invalid_json")
+
+        retry_policy_artifact = parsed_contract_files.get("retry_classification_policy.json")
+        if retry_policy_artifact is not None:
+            try:
+                persisted_signals = validate_retry_classification_policy(retry_policy_artifact)
+            except ValueError as exc:
+                details["retry_classification_policy_artifact_check"] = {
+                    "ok": False,
+                    "signal_count": 0,
+                    "matches_current_snapshot": False,
+                    "error": str(exc),
+                }
+                failures.append("retry_classification_policy_artifact_check_failed")
+            else:
+                current_retry_policy = retry_classification_policy_snapshot()
+                matches_current_snapshot = retry_policy_artifact == current_retry_policy
+                details["retry_classification_policy_artifact_check"] = {
+                    "ok": matches_current_snapshot,
+                    "signal_count": len(persisted_signals),
+                    "matches_current_snapshot": matches_current_snapshot,
+                }
+                if not matches_current_snapshot:
+                    failures.append("retry_classification_policy_artifact_check_failed")
 
     if check_unreachable_branches:
         roots = [workspace / path for path in DEFAULT_UNREACHABLE_SCAN_ROOTS]
@@ -655,12 +688,23 @@ def evaluate_runtime_truth_acceptance_gate(
 
     if check_retry_policy:
         retry_policy_payload = evaluate_retry_classification_policy()
-        details["retry_classification_policy_check"] = {
-            "ok": bool(retry_policy_payload.get("ok")),
-            "signal_count": int(retry_policy_payload.get("signal_count") or 0),
-        }
-        if not bool(retry_policy_payload.get("ok")):
+        try:
+            validated_retry_policy = validate_retry_classification_policy_report(retry_policy_payload)
+        except ValueError as exc:
+            details["retry_classification_policy_check"] = {
+                "ok": False,
+                "signal_count": 0,
+                "error": str(exc),
+            }
             failures.append("retry_classification_policy_check_failed")
+        else:
+            details["retry_classification_policy_check"] = {
+                "ok": bool(validated_retry_policy.get("ok")),
+                "signal_count": int(validated_retry_policy.get("signal_count") or 0),
+            }
+            if not bool(validated_retry_policy.get("ok")):
+                details["retry_classification_policy_check"]["error"] = str(validated_retry_policy.get("error") or "")
+                failures.append("retry_classification_policy_check_failed")
 
     if check_provider_quarantine_policy:
         quarantine_policy_payload = evaluate_provider_quarantine_policy()

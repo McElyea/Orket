@@ -12,6 +12,8 @@ from orket.runtime.retry_classification_policy import (
 def test_retry_classification_policy_snapshot_contains_expected_signals() -> None:
     payload = retry_classification_policy_snapshot()
     assert payload["schema_version"] == "1.0"
+    assert payload["projection_only"] is True
+    assert payload["projection_source"] == "retry_classification_rules"
     assert payload["attempt_history_authoritative"] is False
     signals = {row["signal"] for row in payload["rows"]}
     assert "model_timeout_retry" in signals
@@ -37,4 +39,31 @@ def test_validate_retry_classification_policy_rejects_attempt_history_authority_
     payload = retry_classification_policy_snapshot()
     payload["attempt_history_authoritative"] = True
     with pytest.raises(ValueError, match="E_RETRY_POLICY_ATTEMPT_AUTHORITY_INVALID"):
+        _ = validate_retry_classification_policy(payload)
+
+
+# Layer: contract
+def test_validate_retry_classification_policy_rejects_empty_payload_instead_of_falling_back() -> None:
+    with pytest.raises(ValueError, match="E_RETRY_POLICY_SCHEMA_VERSION_INVALID"):
+        _ = validate_retry_classification_policy({})
+
+
+# Layer: contract
+@pytest.mark.parametrize(
+    ("field_name", "field_value", "expected_error"),
+    [
+        ("schema_version", "999.0", "E_RETRY_POLICY_SCHEMA_VERSION_INVALID"),
+        ("projection_only", False, "E_RETRY_POLICY_PROJECTION_ONLY_INVALID"),
+        ("projection_source", "runtime_attempt_history", "E_RETRY_POLICY_PROJECTION_SOURCE_INVALID"),
+    ],
+)
+def test_validate_retry_classification_policy_rejects_projection_framing_drift(
+    field_name: str,
+    field_value: object,
+    expected_error: str,
+) -> None:
+    payload = retry_classification_policy_snapshot()
+    payload[field_name] = field_value
+
+    with pytest.raises(ValueError, match=expected_error):
         _ = validate_retry_classification_policy(payload)

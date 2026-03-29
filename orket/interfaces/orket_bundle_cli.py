@@ -1091,6 +1091,8 @@ def main(argv: List[str] | None = None) -> int:
                 else:
                     print(_render_human(result))
                 return 2
+            result = run_result.to_dict()
+            result["verbose"] = bool(getattr(args, "verbose", False))
         except (RuntimeError, ValueError, TypeError, OSError, json.JSONDecodeError, httpx.HTTPError) as exc:
             result = {
                 "ok": False,
@@ -1109,9 +1111,6 @@ def main(argv: List[str] | None = None) -> int:
             else:
                 print(_render_human(result))
             return 1
-
-        result = run_result.to_dict()
-        result["verbose"] = bool(getattr(args, "verbose", False))
     elif args.command == "reforge":
         return handle_reforge(args)
     else:

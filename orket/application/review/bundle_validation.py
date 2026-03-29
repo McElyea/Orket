@@ -4,7 +4,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-from orket.application.review.control_plane_projection import validate_review_execution_state_payload
+from orket.application.review.control_plane_projection import (
+    validate_review_control_plane_ref_hierarchy,
+    validate_review_control_plane_ref_run_lineage,
+    validate_review_execution_state_payload,
+    validate_review_matching_identifier,
+    validate_review_required_identifier,
+)
 
 
 def _load_review_json(path: Path) -> Any:
@@ -35,6 +41,98 @@ def _load_required_review_json_object(path: Path, *, field_name: str) -> dict[st
         raise ValueError(f"{field_name}_json_object_required")
     return dict(payload)
 
+def _validate_review_bundle_identity_alignment(
+    manifest: dict[str, Any],
+    payload: dict[str, Any],
+    *,
+    field_name: str,
+) -> dict[str, Any]:
+    normalized_manifest = dict(manifest)
+    normalized_payload = dict(payload)
+
+    manifest_run_id = validate_review_required_identifier(
+        normalized_manifest.get("run_id"),
+        error="review_run_manifest_run_id_missing",
+    )
+    manifest_control_plane_run_id = str(normalized_manifest.get("control_plane_run_id") or "").strip()
+    manifest_control_plane_attempt_id = str(normalized_manifest.get("control_plane_attempt_id") or "").strip()
+    manifest_control_plane_step_id = str(normalized_manifest.get("control_plane_step_id") or "").strip()
+
+    validate_review_control_plane_ref_hierarchy(
+        control_plane_run_id=manifest_control_plane_run_id,
+        control_plane_attempt_id=manifest_control_plane_attempt_id,
+        control_plane_step_id=manifest_control_plane_step_id,
+        run_id_error="review_run_manifest_control_plane_run_id_missing",
+        attempt_id_error="review_run_manifest_control_plane_attempt_id_missing",
+    )
+
+    validate_review_matching_identifier(
+        manifest_control_plane_run_id,
+        expected=manifest_run_id,
+        error="review_run_manifest_control_plane_run_id_mismatch",
+    )
+    if manifest_control_plane_run_id:
+        validate_review_control_plane_ref_run_lineage(
+            control_plane_run_id=manifest_control_plane_run_id,
+            control_plane_attempt_id=manifest_control_plane_attempt_id,
+            control_plane_step_id=manifest_control_plane_step_id,
+            attempt_id_error="review_run_manifest_control_plane_attempt_id_run_lineage_mismatch",
+            step_id_error="review_run_manifest_control_plane_step_id_run_lineage_mismatch",
+        )
+
+    payload_run_id = validate_review_required_identifier(
+        normalized_payload.get("run_id"),
+        error=f"{field_name}_run_id_missing",
+    )
+    if payload_run_id != manifest_run_id:
+        raise ValueError(f"{field_name}_run_id_mismatch")
+
+    expected_control_plane_run_id = manifest_control_plane_run_id or manifest_run_id
+    payload_control_plane_run_id = str(normalized_payload.get("control_plane_run_id") or "").strip()
+    if manifest_control_plane_run_id and not payload_control_plane_run_id:
+        raise ValueError(f"{field_name}_control_plane_run_id_missing")
+    if expected_control_plane_run_id and payload_control_plane_run_id:
+        validate_review_matching_identifier(
+            payload_control_plane_run_id,
+            expected=expected_control_plane_run_id,
+            error=f"{field_name}_control_plane_run_id_mismatch",
+        )
+    elif payload_run_id and payload_control_plane_run_id and payload_control_plane_run_id != payload_run_id:
+        raise ValueError(f"{field_name}_control_plane_run_id_mismatch")
+
+    payload_control_plane_attempt_id = str(normalized_payload.get("control_plane_attempt_id") or "").strip()
+    payload_control_plane_step_id = str(normalized_payload.get("control_plane_step_id") or "").strip()
+
+    validate_review_control_plane_ref_hierarchy(
+        control_plane_run_id=payload_control_plane_run_id,
+        control_plane_attempt_id=payload_control_plane_attempt_id,
+        control_plane_step_id=payload_control_plane_step_id,
+        run_id_error=f"{field_name}_control_plane_run_id_missing",
+        attempt_id_error=f"{field_name}_control_plane_attempt_id_missing",
+    )
+    if payload_control_plane_run_id:
+        validate_review_control_plane_ref_run_lineage(
+            control_plane_run_id=payload_control_plane_run_id,
+            control_plane_attempt_id=payload_control_plane_attempt_id,
+            control_plane_step_id=payload_control_plane_step_id,
+            attempt_id_error=f"{field_name}_control_plane_attempt_id_run_lineage_mismatch",
+            step_id_error=f"{field_name}_control_plane_step_id_run_lineage_mismatch",
+        )
+
+    if manifest_control_plane_attempt_id and not payload_control_plane_attempt_id:
+        raise ValueError(f"{field_name}_control_plane_attempt_id_missing")
+    if manifest_control_plane_attempt_id and payload_control_plane_attempt_id:
+        if payload_control_plane_attempt_id != manifest_control_plane_attempt_id:
+            raise ValueError(f"{field_name}_control_plane_attempt_id_mismatch")
+
+    if manifest_control_plane_step_id and not payload_control_plane_step_id:
+        raise ValueError(f"{field_name}_control_plane_step_id_missing")
+    if manifest_control_plane_step_id and payload_control_plane_step_id:
+        if payload_control_plane_step_id != manifest_control_plane_step_id:
+            raise ValueError(f"{field_name}_control_plane_step_id_mismatch")
+
+    return normalized_payload
+
 
 def load_validated_review_run_bundle_payloads(run_dir: Path) -> dict[str, dict[str, Any] | None]:
     manifest = _load_validated_review_payload(
@@ -47,6 +145,11 @@ def load_validated_review_run_bundle_payloads(run_dir: Path) -> dict[str, dict[s
         field_name="deterministic_review_decision",
         authoritative_flag_field="lane_output_execution_state_authoritative",
     )
+    deterministic = _validate_review_bundle_identity_alignment(
+        manifest,
+        deterministic,
+        field_name="deterministic_review_decision",
+    )
     model_payload: dict[str, Any] | None = None
     model_path = run_dir / "model_assisted_critique.json"
     if model_path.is_file():
@@ -54,6 +157,11 @@ def load_validated_review_run_bundle_payloads(run_dir: Path) -> dict[str, dict[s
             model_path,
             field_name="model_assisted_critique",
             authoritative_flag_field="lane_output_execution_state_authoritative",
+        )
+        model_payload = _validate_review_bundle_identity_alignment(
+            manifest,
+            model_payload,
+            field_name="model_assisted_critique",
         )
     return {
         "manifest": manifest,

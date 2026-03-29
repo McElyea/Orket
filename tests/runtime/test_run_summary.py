@@ -223,6 +223,31 @@ def test_control_plane_reconstruction_matches_emitted_summary() -> None:
     assert reconstructed == emitted
 
 
+# Layer: integration
+def test_reconstruct_run_summary_rejects_run_identity_run_id_mismatch() -> None:
+    events = [
+        {
+            "kind": "run_started",
+            "event_seq": 1,
+            "run_id": "sess-summary-reconstruct-mismatch",
+            "timestamp": _STARTED_AT,
+            "artifacts": {
+                "run_identity": _run_identity(run_id="sess-summary-other"),
+            },
+        },
+        {
+            "kind": "run_finalized",
+            "event_seq": 2,
+            "run_id": "sess-summary-reconstruct-mismatch",
+            "status": "done",
+            "timestamp": _FINALIZED_AT,
+        },
+    ]
+
+    with pytest.raises(ValueError, match="run_summary_run_identity_run_id_mismatch"):
+        reconstruct_run_summary(events, session_id="sess-summary-reconstruct-mismatch")
+
+
 # Layer: contract
 def test_run_summary_emits_odr_cards_runtime_fields() -> None:
     payload = build_run_summary_payload(

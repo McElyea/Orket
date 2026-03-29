@@ -59,8 +59,82 @@ def evaluate_retry_classification_policy() -> dict[str, Any]:
         }
 
 
+def validate_retry_classification_policy_report(payload: Any) -> dict[str, Any]:
+    if not isinstance(payload, dict):
+        raise ValueError("E_RETRY_POLICY_REPORT_INVALID")
+    if str(payload.get("schema_version") or "").strip() != "1.0":
+        raise ValueError("E_RETRY_POLICY_REPORT_SCHEMA_VERSION_INVALID")
+
+    ok = payload.get("ok")
+    if not isinstance(ok, bool):
+        raise ValueError("E_RETRY_POLICY_REPORT_OK_INVALID")
+
+    snapshot = payload.get("snapshot")
+    if not isinstance(snapshot, dict):
+        raise ValueError("E_RETRY_POLICY_REPORT_SNAPSHOT_INVALID")
+    try:
+        expected_signals = list(validate_retry_classification_policy(snapshot))
+    except ValueError as exc:
+        raise ValueError(f"E_RETRY_POLICY_REPORT_SNAPSHOT_INVALID:{exc}") from exc
+
+    if ok:
+        signal_count = payload.get("signal_count")
+        if not isinstance(signal_count, int):
+            raise ValueError("E_RETRY_POLICY_REPORT_SIGNAL_COUNT_INVALID")
+        signals_value = payload.get("signals")
+        if not isinstance(signals_value, list):
+            raise ValueError("E_RETRY_POLICY_REPORT_SIGNALS_INVALID")
+        signals = [str(token).strip() for token in signals_value]
+        if any(not signal for signal in signals):
+            raise ValueError("E_RETRY_POLICY_REPORT_SIGNALS_INVALID")
+        if signal_count != len(signals) or signal_count < 1:
+            raise ValueError("E_RETRY_POLICY_REPORT_SIGNAL_COUNT_INVALID")
+        if signals != expected_signals:
+            raise ValueError("E_RETRY_POLICY_REPORT_SIGNAL_SET_INVALID")
+        return {
+            "schema_version": "1.0",
+            "ok": True,
+            "signal_count": signal_count,
+            "signals": signals,
+            "snapshot": dict(snapshot),
+        }
+
+    error = str(payload.get("error") or "").strip()
+    if not error:
+        raise ValueError("E_RETRY_POLICY_REPORT_ERROR_REQUIRED")
+    return {
+        "schema_version": "1.0",
+        "ok": False,
+        "error": error,
+        "snapshot": dict(snapshot),
+    }
+
+
+def _normalized_retry_policy_report_failure(raw_payload: Any, error: str) -> dict[str, Any]:
+    snapshot = retry_classification_policy_snapshot()
+    if isinstance(raw_payload, dict) and isinstance(raw_payload.get("snapshot"), dict):
+        raw_snapshot = dict(raw_payload["snapshot"])
+        try:
+            validate_retry_classification_policy(raw_snapshot)
+        except ValueError:
+            pass
+        else:
+            snapshot = raw_snapshot
+    return {
+        "schema_version": "1.0",
+        "ok": False,
+        "error": error,
+        "snapshot": snapshot,
+    }
+
+
 def check_retry_classification_policy(*, out_path: Path | None = None) -> tuple[int, dict[str, Any]]:
-    payload = evaluate_retry_classification_policy()
+    raw_payload = evaluate_retry_classification_policy()
+    try:
+        payload = validate_retry_classification_policy_report(raw_payload)
+    except ValueError as exc:
+        payload = _normalized_retry_policy_report_failure(raw_payload, str(exc))
+        payload = validate_retry_classification_policy_report(payload)
     if out_path is not None:
         write_payload_with_diff_ledger(out_path, payload)
     return (0 if bool(payload.get("ok")) else 1), payload

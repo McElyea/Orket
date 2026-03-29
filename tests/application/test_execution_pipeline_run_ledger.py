@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 import orket.runtime.execution_pipeline as execution_pipeline_module
+import orket.runtime.run_summary as run_summary_module
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.services.turn_tool_control_plane_support import attempt_id_for, run_id_for
 from orket.application.workflows.protocol_hashing import hash_framed_fields
@@ -1256,6 +1257,612 @@ async def test_run_ledger_emits_degraded_run_summary_when_canonical_generation_f
 
 # Layer: integration
 @pytest.mark.asyncio
+async def test_run_ledger_degrades_when_finalize_run_identity_validation_fails(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_invalid_run_identity_finalize")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    original_validate = execution_pipeline_module.validate_run_identity_projection
+
+    def _raise_finalize_run_identity_error(value, *, error_prefix: str = "run_identity"):
+        if error_prefix == "run_summary_run_identity":
+            raise ValueError("run_summary_run_identity_identity_scope_invalid")
+        return original_validate(value, error_prefix=error_prefix)
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+    monkeypatch.setattr(
+        execution_pipeline_module,
+        "validate_run_identity_projection",
+        _raise_finalize_run_identity_error,
+    )
+
+    await pipeline.run_epic(
+        "ledger_epic_invalid_run_identity_finalize",
+        build_id="build-ledger-epic-invalid-run-identity-finalize",
+        session_id="sess-ledger-invalid-run-identity-finalize",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-invalid-run-identity-finalize")
+    assert ledger is not None
+    assert ledger["summary_json"]["status"] == "incomplete"
+    assert ledger["summary_json"]["duration_ms"] is None
+    assert "run_identity" not in ledger["summary_json"].get("artifact_ids", [])
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
+    assert (
+        ledger["artifact_json"]["run_summary_generation_error"]["error"]
+        == "run_summary_run_identity_identity_scope_invalid"
+    )
+    assert ledger["artifact_json"]["run_identity"]["projection_only"] is True
+    summary_path = Path(ledger["artifact_json"]["run_summary_path"])
+    assert summary_path.exists()
+    assert _read_json(summary_path) == ledger["summary_json"]
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_degrades_when_finalize_control_plane_projection_attempt_alignment_drifts(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_finalize")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    original_build_control_plane = run_summary_module.build_control_plane_summary_projection
+
+    def _drifted_control_plane_projection(*, artifacts):  # type: ignore[no-untyped-def]
+        projection = original_build_control_plane(artifacts=artifacts)
+        assert projection is not None
+        projection["current_attempt_id"] = f"{projection['run_id']}:attempt:9999"
+        return projection
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+    monkeypatch.setattr(
+        run_summary_module,
+        "build_control_plane_summary_projection",
+        _drifted_control_plane_projection,
+    )
+
+    await pipeline.run_epic(
+        "ledger_epic_invalid_control_plane_finalize",
+        build_id="build-ledger-epic-invalid-control-plane-finalize",
+        session_id="sess-ledger-invalid-control-plane-finalize",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-invalid-control-plane-finalize")
+    assert ledger is not None
+    assert ledger["summary_json"]["status"] == "incomplete"
+    assert ledger["summary_json"]["duration_ms"] is None
+    assert "control_plane" not in ledger["summary_json"]
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
+    assert (
+        ledger["artifact_json"]["run_summary_generation_error"]["error"]
+        == "run_summary_control_plane_current_attempt_id_mismatch"
+    )
+    assert (
+        ledger["artifact_json"]["control_plane_run_record"]["current_attempt_id"]
+        == ledger["artifact_json"]["control_plane_attempt_record"]["attempt_id"]
+    )
+    summary_path = Path(ledger["artifact_json"]["run_summary_path"])
+    assert summary_path.exists()
+    assert _read_json(summary_path) == ledger["summary_json"]
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_degrades_when_finalize_control_plane_attempt_lineage_drifts(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_attempt_lineage")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    original_build_control_plane = run_summary_module.build_control_plane_summary_projection
+
+    def _drifted_control_plane_projection(*, artifacts):  # type: ignore[no-untyped-def]
+        projection = original_build_control_plane(artifacts=artifacts)
+        assert projection is not None
+        projection["attempt_id"] = (
+            "cards-epic-run:sess-ledger-invalid-control-plane-other:"
+            "build-ledger-epic-invalid-control-plane-other:"
+            "20360305T120000000000Z:attempt:0001"
+        )
+        return projection
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+    monkeypatch.setattr(
+        run_summary_module,
+        "build_control_plane_summary_projection",
+        _drifted_control_plane_projection,
+    )
+
+    await pipeline.run_epic(
+        "ledger_epic_invalid_control_plane_attempt_lineage",
+        build_id="build-ledger-epic-invalid-control-plane-attempt-lineage",
+        session_id="sess-ledger-invalid-control-plane-attempt-lineage",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-invalid-control-plane-attempt-lineage")
+    assert ledger is not None
+    assert ledger["summary_json"]["status"] == "incomplete"
+    assert ledger["summary_json"]["duration_ms"] is None
+    assert "control_plane" not in ledger["summary_json"]
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
+    assert (
+        ledger["artifact_json"]["run_summary_generation_error"]["error"]
+        == "run_summary_control_plane_attempt_id_run_lineage_mismatch"
+    )
+    assert (
+        ledger["artifact_json"]["control_plane_run_record"]["current_attempt_id"]
+        == ledger["artifact_json"]["control_plane_attempt_record"]["attempt_id"]
+    )
+    summary_path = Path(ledger["artifact_json"]["run_summary_path"])
+    assert summary_path.exists()
+    assert _read_json(summary_path) == ledger["summary_json"]
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_degrades_when_finalize_control_plane_step_lineage_drifts(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_step_lineage")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    original_build_control_plane = run_summary_module.build_control_plane_summary_projection
+
+    def _drifted_control_plane_projection(*, artifacts):  # type: ignore[no-untyped-def]
+        projection = original_build_control_plane(artifacts=artifacts)
+        assert projection is not None
+        projection["step_id"] = (
+            "cards-epic-run:sess-ledger-invalid-control-plane-other:"
+            "build-ledger-epic-invalid-control-plane-other:"
+            "20360305T120000000000Z:step:start"
+        )
+        return projection
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+    monkeypatch.setattr(
+        run_summary_module,
+        "build_control_plane_summary_projection",
+        _drifted_control_plane_projection,
+    )
+
+    await pipeline.run_epic(
+        "ledger_epic_invalid_control_plane_step_lineage",
+        build_id="build-ledger-epic-invalid-control-plane-step-lineage",
+        session_id="sess-ledger-invalid-control-plane-step-lineage",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-invalid-control-plane-step-lineage")
+    assert ledger is not None
+    assert ledger["summary_json"]["status"] == "incomplete"
+    assert ledger["summary_json"]["duration_ms"] is None
+    assert "control_plane" not in ledger["summary_json"]
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
+    assert (
+        ledger["artifact_json"]["run_summary_generation_error"]["error"]
+        == "run_summary_control_plane_step_id_run_lineage_mismatch"
+    )
+    assert (
+        ledger["artifact_json"]["control_plane_step_record"]["step_id"]
+        == f"{ledger['artifact_json']['control_plane_run_record']['run_id']}:step:start"
+    )
+    summary_path = Path(ledger["artifact_json"]["run_summary_path"])
+    assert summary_path.exists()
+    assert _read_json(summary_path) == ledger["summary_json"]
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_degrades_when_finalize_control_plane_run_projection_drops_workload_metadata(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_run_projection")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    original_build_control_plane = run_summary_module.build_control_plane_summary_projection
+
+    def _projection_without_workload_id(*, artifacts):  # type: ignore[no-untyped-def]
+        projection = original_build_control_plane(artifacts=artifacts)
+        assert projection is not None
+        projection.pop("workload_id", None)
+        return projection
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+    monkeypatch.setattr(
+        run_summary_module,
+        "build_control_plane_summary_projection",
+        _projection_without_workload_id,
+    )
+
+    await pipeline.run_epic(
+        "ledger_epic_invalid_control_plane_run_projection",
+        build_id="build-ledger-epic-invalid-control-plane-run-projection",
+        session_id="sess-ledger-invalid-control-plane-run-projection",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-invalid-control-plane-run-projection")
+    assert ledger is not None
+    assert ledger["summary_json"]["status"] == "incomplete"
+    assert ledger["summary_json"]["duration_ms"] is None
+    assert "control_plane" not in ledger["summary_json"]
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
+    assert (
+        ledger["artifact_json"]["run_summary_generation_error"]["error"]
+        == "run_summary_control_plane_workload_id_required"
+    )
+    assert str(ledger["artifact_json"]["control_plane_run_record"]["workload_id"]).strip()
+    assert str(ledger["artifact_json"]["control_plane_run_record"]["policy_snapshot_id"]).strip()
+    assert str(ledger["artifact_json"]["control_plane_run_record"]["configuration_snapshot_id"]).strip()
+    summary_path = Path(ledger["artifact_json"]["run_summary_path"])
+    assert summary_path.exists()
+    assert _read_json(summary_path) == ledger["summary_json"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("field_name", "expected_error"),
+    [
+        ("attempt_state", "run_summary_control_plane_attempt_state_required"),
+        ("attempt_ordinal", "run_summary_control_plane_attempt_ordinal_required"),
+        ("step_kind", "run_summary_control_plane_step_kind_required"),
+    ],
+)
+async def test_run_ledger_degrades_when_finalize_control_plane_attempt_or_step_projection_drops_metadata(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+    field_name: str,
+    expected_error: str,
+):
+    _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_metadata")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    original_build_control_plane = run_summary_module.build_control_plane_summary_projection
+
+    def _projection_without_required_field(*, artifacts):  # type: ignore[no-untyped-def]
+        projection = original_build_control_plane(artifacts=artifacts)
+        assert projection is not None
+        projection.pop(field_name, None)
+        return projection
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+    monkeypatch.setattr(
+        run_summary_module,
+        "build_control_plane_summary_projection",
+        _projection_without_required_field,
+    )
+
+    await pipeline.run_epic(
+        "ledger_epic_invalid_control_plane_projection_metadata",
+        build_id="build-ledger-epic-invalid-control-plane-projection-metadata",
+        session_id="sess-ledger-invalid-control-plane-projection-metadata",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-invalid-control-plane-projection-metadata")
+    assert ledger is not None
+    assert ledger["summary_json"]["status"] == "incomplete"
+    assert ledger["summary_json"]["duration_ms"] is None
+    assert "control_plane" not in ledger["summary_json"]
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error"] == expected_error
+    assert int(ledger["artifact_json"]["control_plane_attempt_record"]["attempt_ordinal"]) > 0
+    assert str(ledger["artifact_json"]["control_plane_attempt_record"]["attempt_state"]).strip()
+    assert str(ledger["artifact_json"]["control_plane_step_record"]["step_kind"]).strip()
+    summary_path = Path(ledger["artifact_json"]["run_summary_path"])
+    assert summary_path.exists()
+    assert _read_json(summary_path) == ledger["summary_json"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("missing_field", "expected_error"),
+    [
+        ("run_id", "run_summary_control_plane_run_id_required"),
+        ("attempt_id", "run_summary_control_plane_attempt_id_required"),
+    ],
+)
+async def test_run_ledger_degrades_when_finalize_control_plane_identity_hierarchy_drops_parent_refs(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+    missing_field: str,
+    expected_error: str,
+):
+    _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_identity_hierarchy")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    original_build_control_plane = run_summary_module.build_control_plane_summary_projection
+
+    def _projection_without_parent_identity(*, artifacts):  # type: ignore[no-untyped-def]
+        projection = original_build_control_plane(artifacts=artifacts)
+        assert projection is not None
+        projection.pop(missing_field, None)
+        return projection
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+    monkeypatch.setattr(
+        run_summary_module,
+        "build_control_plane_summary_projection",
+        _projection_without_parent_identity,
+    )
+
+    await pipeline.run_epic(
+        "ledger_epic_invalid_control_plane_projection_identity_hierarchy",
+        build_id="build-ledger-epic-invalid-control-plane-projection-identity-hierarchy",
+        session_id="sess-ledger-invalid-control-plane-projection-identity-hierarchy",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-invalid-control-plane-projection-identity-hierarchy")
+    assert ledger is not None
+    assert ledger["summary_json"]["status"] == "incomplete"
+    assert ledger["summary_json"]["duration_ms"] is None
+    assert "control_plane" not in ledger["summary_json"]
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error"] == expected_error
+    assert str(ledger["artifact_json"]["control_plane_run_record"]["run_id"]).strip()
+    assert int(ledger["artifact_json"]["control_plane_attempt_record"]["attempt_ordinal"]) > 0
+    assert str(ledger["artifact_json"]["control_plane_step_record"]["step_kind"]).strip()
+    summary_path = Path(ledger["artifact_json"]["run_summary_path"])
+    assert summary_path.exists()
+    assert _read_json(summary_path) == ledger["summary_json"]
+
+
+@pytest.mark.asyncio
+async def test_run_ledger_degrades_when_finalize_control_plane_current_attempt_outlives_attempt_projection(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_identity_hierarchy")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    original_build_control_plane = run_summary_module.build_control_plane_summary_projection
+
+    def _projection_without_attempt_identity(*, artifacts):  # type: ignore[no-untyped-def]
+        projection = original_build_control_plane(artifacts=artifacts)
+        assert projection is not None
+        projection.pop("attempt_id", None)
+        projection.pop("step_id", None)
+        projection.pop("step_kind", None)
+        projection.pop("attempt_state", None)
+        projection.pop("attempt_ordinal", None)
+        return projection
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+    monkeypatch.setattr(
+        run_summary_module,
+        "build_control_plane_summary_projection",
+        _projection_without_attempt_identity,
+    )
+
+    await pipeline.run_epic(
+        "ledger_epic_invalid_control_plane_projection_identity_hierarchy",
+        build_id="build-ledger-epic-invalid-control-plane-current-attempt-only",
+        session_id="sess-ledger-invalid-control-plane-current-attempt-only",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-invalid-control-plane-current-attempt-only")
+    assert ledger is not None
+    assert ledger["summary_json"]["status"] == "incomplete"
+    assert ledger["summary_json"]["duration_ms"] is None
+    assert "control_plane" not in ledger["summary_json"]
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
+    assert (
+        ledger["artifact_json"]["run_summary_generation_error"]["error"]
+        == "run_summary_control_plane_attempt_id_required"
+    )
+    assert str(ledger["artifact_json"]["control_plane_run_record"]["current_attempt_id"]).strip()
+    assert str(ledger["artifact_json"]["control_plane_attempt_record"]["attempt_id"]).strip()
+    summary_path = Path(ledger["artifact_json"]["run_summary_path"])
+    assert summary_path.exists()
+    assert _read_json(summary_path) == ledger["summary_json"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("orphaned_field", "expected_error"),
+    [
+        ("attempt_state", "run_summary_control_plane_attempt_id_required"),
+        ("attempt_ordinal", "run_summary_control_plane_attempt_id_required"),
+        ("step_kind", "run_summary_control_plane_step_id_required"),
+    ],
+)
+async def test_run_ledger_degrades_when_finalize_control_plane_orphaned_projection_metadata_survives(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+    orphaned_field: str,
+    expected_error: str,
+):
+    _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_identity_hierarchy")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    original_build_control_plane = run_summary_module.build_control_plane_summary_projection
+
+    def _projection_with_orphaned_metadata(*, artifacts):  # type: ignore[no-untyped-def]
+        projection = original_build_control_plane(artifacts=artifacts)
+        assert projection is not None
+        if orphaned_field == "attempt_state":
+            projection.pop("current_attempt_id", None)
+            projection.pop("attempt_id", None)
+            projection.pop("attempt_ordinal", None)
+            projection.pop("step_id", None)
+            projection.pop("step_kind", None)
+        elif orphaned_field == "attempt_ordinal":
+            projection.pop("current_attempt_id", None)
+            projection.pop("attempt_id", None)
+            projection.pop("attempt_state", None)
+            projection.pop("step_id", None)
+            projection.pop("step_kind", None)
+        else:
+            projection.pop("step_id", None)
+        return projection
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+    monkeypatch.setattr(
+        run_summary_module,
+        "build_control_plane_summary_projection",
+        _projection_with_orphaned_metadata,
+    )
+
+    await pipeline.run_epic(
+        "ledger_epic_invalid_control_plane_projection_identity_hierarchy",
+        build_id=f"build-ledger-epic-invalid-control-plane-orphaned-{orphaned_field}",
+        session_id=f"sess-ledger-invalid-control-plane-orphaned-{orphaned_field}",
+    )
+
+    ledger = await pipeline.run_ledger.get_run(
+        f"sess-ledger-invalid-control-plane-orphaned-{orphaned_field}"
+    )
+    assert ledger is not None
+    assert ledger["summary_json"]["status"] == "incomplete"
+    assert ledger["summary_json"]["duration_ms"] is None
+    assert "control_plane" not in ledger["summary_json"]
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error"] == expected_error
+    summary_path = Path(ledger["artifact_json"]["run_summary_path"])
+    assert summary_path.exists()
+    assert _read_json(summary_path) == ledger["summary_json"]
+
+
+# Layer: integration
+@pytest.mark.asyncio
 async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_contract_bootstrap")
 
@@ -1341,6 +1948,8 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     assert artifact_json["route_decision_artifact"]["reason_code"] == "default_epic_route"
     assert artifact_json["route_decision_artifact"]["deterministic_mode_enabled"] is False
     assert artifact_json["retry_classification_policy"]["schema_version"] == "1.0"
+    assert artifact_json["retry_classification_policy"]["projection_only"] is True
+    assert artifact_json["retry_classification_policy"]["projection_source"] == "retry_classification_rules"
     assert artifact_json["retry_classification_policy"]["attempt_history_authoritative"] is False
     retry_signals = [row["signal"] for row in artifact_json["retry_classification_policy"]["rows"]]
     assert "model_timeout_retry" in retry_signals

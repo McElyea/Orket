@@ -6,7 +6,11 @@ import re
 from pathlib import Path
 from typing import Any
 
-from orket.application.review.control_plane_projection import REVIEW_EXECUTION_STATE_AUTHORITY
+from orket.application.review.control_plane_projection import (
+    REVIEW_EXECUTION_STATE_AUTHORITY,
+    validate_review_execution_authority_markers,
+    validate_review_required_identifier,
+)
 from pydantic import BaseModel, Field, ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -263,9 +267,18 @@ def build_run_manifest_payload(
     prompt_profile: str,
     review_method: str,
 ) -> dict[str, Any]:
+    normalized_run_id = validate_review_required_identifier(
+        run_id,
+        error="code_review_probe_run_manifest_run_id_required",
+    )
+    validate_review_execution_authority_markers(
+        execution_state_authority=REVIEW_EXECUTION_STATE_AUTHORITY,
+        execution_state_authoritative=False,
+        field_name="code_review_probe_run_manifest",
+    )
     return {
         "bundle_kind": "code_review_probe",
-        "run_id": str(run_id),
+        "run_id": normalized_run_id,
         "snapshot_digest": str(snapshot_digest),
         "policy_digest": str(policy_digest),
         "deterministic_lane_version": str(deterministic_lane_version),
@@ -290,7 +303,16 @@ def _compile_patterns(raw_patterns: list[Any]) -> list[re.Pattern[str]]:
     return compiled
 
 
-def build_deterministic_payload(*, source_text: str, answer_key: dict[str, Any]) -> dict[str, Any]:
+def build_deterministic_payload(*, source_text: str, answer_key: dict[str, Any], run_id: str) -> dict[str, Any]:
+    normalized_run_id = validate_review_required_identifier(
+        run_id,
+        error="code_review_probe_deterministic_run_id_required",
+    )
+    validate_review_execution_authority_markers(
+        execution_state_authority=REVIEW_EXECUTION_STATE_AUTHORITY,
+        execution_state_authoritative=False,
+        field_name="code_review_probe_deterministic",
+    )
     findings: list[dict[str, Any]] = []
     executed_checks: list[dict[str, Any]] = []
     for issue in list(answer_key.get("issues") or []):
@@ -323,6 +345,7 @@ def build_deterministic_payload(*, source_text: str, answer_key: dict[str, Any])
             }
         )
     return {
+        "run_id": normalized_run_id,
         "policy_digest": sha256_text("workloads.s04_code_review_probe.static_patterns_v1"),
         "findings": findings,
         "executed_checks": executed_checks,

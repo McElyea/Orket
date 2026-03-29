@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.26] - 2026-03-29 - "The ControlPlane Review Truth And Live Proof Cut"
+
+### Added
+- **ControlPlane Contract Delta Pack**: Added contract-delta records for review-run control-plane identity, review-bundle identity, cards run-summary attempt identity, retry-policy report snapshot validation, answer-key score-report provenance and aggregate coherence, and review consistency-report validation.
+- **Review Truth Regression Expansion**: Added deeper contract and integration coverage for review bundle validation, answer-key scoring, consistency reporting, code-review probe consumers, retry-policy acceptance gates, cards run-summary projection validation, and the previously gated live/sandbox proof buckets now exercised together in one full local pass.
+
+### Changed
+- **ReviewRun Authority Surfaces**: Hardened review manifests, deterministic/model-assisted lane artifacts, result and CLI control-plane projections, replay/scoring/consistency consumers, and workload-side probe emitters so run identity, control-plane lineage, lifecycle metadata, and score-report provenance now fail closed before serialization or trust.
+- **Runtime Projection And Retry Truth**: Tightened cards `run_summary.json` projection validation, run-start retry-classification projection framing, retry-policy report normalization and acceptance-gate validation, and persisted review consistency/score report validation so malformed or contradictory projection data no longer reads as authoritative evidence.
+- **Authority Docs And Closeouts**: Updated `CURRENT_AUTHORITY.md`, the active ControlPlane convergence plan/closeout/crosswalk docs, and the review-run spec/CLI guides so documented authority matches the shipped fail-closed runtime and report behavior.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use the updated ControlPlane and review-run authority docs as the source of truth for replay, scoring, consistency, and runtime-truth validation behavior; no manual migration step is required.
+
 ## [0.4.25] - 2026-03-28 - "The Run Projection And Test Truth Cut"
 
 ### Added

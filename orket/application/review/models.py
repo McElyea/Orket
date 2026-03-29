@@ -6,7 +6,14 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Literal, Optional
 
 from orket.application.review.control_plane_projection import (
-    validate_review_control_plane_summary, validate_review_execution_authority_markers, validate_review_execution_state_payload)
+    validate_review_control_plane_ref_hierarchy,
+    validate_review_control_plane_ref_run_lineage,
+    validate_review_control_plane_summary,
+    validate_review_execution_authority_markers,
+    validate_review_execution_state_payload,
+    validate_review_matching_identifier,
+    validate_review_required_identifier,
+)
 
 
 DigestAlgorithm = Literal["sha256"]
@@ -262,14 +269,38 @@ class DeterministicReviewDecisionPayload:
     control_plane_step_id: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
+        run_id = validate_review_required_identifier(
+            self.run_id,
+            error="deterministic_review_decision_run_id_required",
+        )
         validate_review_execution_authority_markers(execution_state_authority=self.execution_state_authority, execution_state_authoritative=self.lane_output_execution_state_authoritative, field_name="deterministic_review_decision")
+        validate_review_control_plane_ref_hierarchy(
+            control_plane_run_id=str(self.control_plane_run_id or "").strip(),
+            control_plane_attempt_id=str(self.control_plane_attempt_id or "").strip(),
+            control_plane_step_id=str(self.control_plane_step_id or "").strip(),
+            run_id_error="deterministic_review_decision_control_plane_run_id_required",
+            attempt_id_error="deterministic_review_decision_control_plane_attempt_id_required",
+        )
+        validate_review_matching_identifier(
+            self.control_plane_run_id,
+            expected=run_id,
+            error="deterministic_review_decision_control_plane_run_id_mismatch",
+        )
+        if self.control_plane_run_id:
+            validate_review_control_plane_ref_run_lineage(
+                control_plane_run_id=str(self.control_plane_run_id or "").strip(),
+                control_plane_attempt_id=str(self.control_plane_attempt_id or "").strip(),
+                control_plane_step_id=str(self.control_plane_step_id or "").strip(),
+                attempt_id_error="deterministic_review_decision_control_plane_attempt_id_run_lineage_mismatch",
+                step_id_error="deterministic_review_decision_control_plane_step_id_run_lineage_mismatch",
+            )
         payload: Dict[str, Any] = {
             "decision": self.decision,
             "findings": [finding.to_dict() for finding in self.findings],
             "executed_checks": list(self.executed_checks),
             "snapshot_digest": self.snapshot_digest,
             "policy_digest": self.policy_digest,
-            "run_id": self.run_id,
+            "run_id": run_id,
             "deterministic_lane_version": self.deterministic_lane_version,
             "execution_state_authority": self.execution_state_authority,
             "lane_output_execution_state_authoritative": bool(self.lane_output_execution_state_authoritative),
@@ -323,7 +354,31 @@ class ModelAssistedCritiquePayload:
     control_plane_step_id: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
+        run_id = validate_review_required_identifier(
+            self.run_id,
+            error="model_assisted_critique_run_id_required",
+        )
         validate_review_execution_authority_markers(execution_state_authority=self.execution_state_authority, execution_state_authoritative=self.lane_output_execution_state_authoritative, field_name="model_assisted_critique")
+        validate_review_control_plane_ref_hierarchy(
+            control_plane_run_id=str(self.control_plane_run_id or "").strip(),
+            control_plane_attempt_id=str(self.control_plane_attempt_id or "").strip(),
+            control_plane_step_id=str(self.control_plane_step_id or "").strip(),
+            run_id_error="model_assisted_critique_control_plane_run_id_required",
+            attempt_id_error="model_assisted_critique_control_plane_attempt_id_required",
+        )
+        validate_review_matching_identifier(
+            self.control_plane_run_id,
+            expected=run_id,
+            error="model_assisted_critique_control_plane_run_id_mismatch",
+        )
+        if self.control_plane_run_id:
+            validate_review_control_plane_ref_run_lineage(
+                control_plane_run_id=str(self.control_plane_run_id or "").strip(),
+                control_plane_attempt_id=str(self.control_plane_attempt_id or "").strip(),
+                control_plane_step_id=str(self.control_plane_step_id or "").strip(),
+                attempt_id_error="model_assisted_critique_control_plane_attempt_id_run_lineage_mismatch",
+                step_id_error="model_assisted_critique_control_plane_step_id_run_lineage_mismatch",
+            )
         payload: Dict[str, Any] = {
             "summary": list(self.summary),
             "high_risk_issues": [item.to_dict() for item in self.high_risk_issues],
@@ -336,7 +391,7 @@ class ModelAssistedCritiquePayload:
             "contract_version": self.contract_version,
             "snapshot_digest": self.snapshot_digest,
             "policy_digest": self.policy_digest,
-            "run_id": self.run_id,
+            "run_id": run_id,
             "advisory_errors": list(self.advisory_errors or []),
             "execution_state_authority": self.execution_state_authority,
             "lane_output_execution_state_authoritative": bool(self.lane_output_execution_state_authoritative),
@@ -378,9 +433,33 @@ class ReviewRunManifest:
     timings_ms: Dict[str, int] | None = None
 
     def to_dict(self) -> Dict[str, Any]:
+        run_id = validate_review_required_identifier(
+            self.run_id,
+            error="review_run_manifest_run_id_required",
+        )
         validate_review_execution_authority_markers(execution_state_authority=self.execution_state_authority, execution_state_authoritative=self.lane_outputs_execution_state_authoritative, field_name="review_run_manifest")
+        validate_review_control_plane_ref_hierarchy(
+            control_plane_run_id=str(self.control_plane_run_id or "").strip(),
+            control_plane_attempt_id=str(self.control_plane_attempt_id or "").strip(),
+            control_plane_step_id=str(self.control_plane_step_id or "").strip(),
+            run_id_error="review_run_manifest_control_plane_run_id_required",
+            attempt_id_error="review_run_manifest_control_plane_attempt_id_required",
+        )
+        validate_review_matching_identifier(
+            self.control_plane_run_id,
+            expected=run_id,
+            error="review_run_manifest_control_plane_run_id_mismatch",
+        )
+        if self.control_plane_run_id:
+            validate_review_control_plane_ref_run_lineage(
+                control_plane_run_id=str(self.control_plane_run_id or "").strip(),
+                control_plane_attempt_id=str(self.control_plane_attempt_id or "").strip(),
+                control_plane_step_id=str(self.control_plane_step_id or "").strip(),
+                attempt_id_error="review_run_manifest_control_plane_attempt_id_run_lineage_mismatch",
+                step_id_error="review_run_manifest_control_plane_step_id_run_lineage_mismatch",
+            )
         payload: Dict[str, Any] = {
-            "run_id": self.run_id,
+            "run_id": run_id,
             "snapshot_digest": self.snapshot_digest,
             "policy_digest": self.policy_digest,
             "review_run_contract_version": self.review_run_contract_version,
@@ -419,20 +498,70 @@ class ReviewRunResult:
     error: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
+        run_id = validate_review_required_identifier(
+            self.run_id,
+            error="review_run_result_run_id_required",
+        )
+        manifest_payload = validate_review_execution_state_payload(
+            self.manifest,
+            field_name="review_run_manifest",
+            authoritative_flag_field="lane_outputs_execution_state_authoritative",
+        )
+        manifest_run_id = validate_review_required_identifier(
+            manifest_payload.get("run_id"),
+            error="review_run_manifest_run_id_required",
+        )
+        if manifest_run_id != run_id:
+            raise ValueError("review_run_manifest_run_id_mismatch")
+        manifest_control_plane_run_id = validate_review_matching_identifier(
+            manifest_payload.get("control_plane_run_id"),
+            expected=run_id,
+            error="review_run_manifest_control_plane_run_id_mismatch",
+        )
+        manifest_control_plane_attempt_id = str(manifest_payload.get("control_plane_attempt_id") or "").strip()
+        manifest_control_plane_step_id = str(manifest_payload.get("control_plane_step_id") or "").strip()
+        validate_review_control_plane_ref_hierarchy(
+            control_plane_run_id=manifest_control_plane_run_id,
+            control_plane_attempt_id=manifest_control_plane_attempt_id,
+            control_plane_step_id=manifest_control_plane_step_id,
+            run_id_error="review_run_manifest_control_plane_run_id_required",
+            attempt_id_error="review_run_manifest_control_plane_attempt_id_required",
+        )
+        if manifest_control_plane_run_id:
+            validate_review_control_plane_ref_run_lineage(
+                control_plane_run_id=manifest_control_plane_run_id,
+                control_plane_attempt_id=manifest_control_plane_attempt_id,
+                control_plane_step_id=manifest_control_plane_step_id,
+                attempt_id_error="review_run_manifest_control_plane_attempt_id_run_lineage_mismatch",
+                step_id_error="review_run_manifest_control_plane_step_id_run_lineage_mismatch",
+            )
+
         payload = {
             "ok": bool(self.ok),
-            "run_id": self.run_id,
+            "run_id": run_id,
             "artifact_dir": self.artifact_dir,
             "snapshot_digest": self.snapshot_digest,
             "policy_digest": self.policy_digest,
             "deterministic_decision": self.deterministic_decision,
             "deterministic_findings": int(self.deterministic_findings),
             "model_assisted_enabled": bool(self.model_assisted_enabled),
-            "manifest": validate_review_execution_state_payload(self.manifest, field_name="review_run_manifest", authoritative_flag_field="lane_outputs_execution_state_authoritative"),
+            "manifest": manifest_payload,
             "exit_code": int(self.exit_code),
         }
         if self.control_plane:
-            payload["control_plane"] = validate_review_control_plane_summary(self.control_plane)
+            normalized_control_plane = validate_review_control_plane_summary(
+                self.control_plane,
+                expected_run_id=self.run_id,
+                expected_attempt_id=manifest_control_plane_attempt_id,
+                expected_step_id=manifest_control_plane_step_id,
+            )
+            if not manifest_control_plane_run_id:
+                raise ValueError("review_run_manifest_control_plane_run_id_missing")
+            if str(normalized_control_plane.get("attempt_id") or "").strip() and not manifest_control_plane_attempt_id:
+                raise ValueError("review_run_manifest_control_plane_attempt_id_missing")
+            if str(normalized_control_plane.get("step_id") or "").strip() and not manifest_control_plane_step_id:
+                raise ValueError("review_run_manifest_control_plane_step_id_missing")
+            payload["control_plane"] = normalized_control_plane
         if self.error:
             payload["error"] = self.error
         return payload

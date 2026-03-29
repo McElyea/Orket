@@ -421,7 +421,10 @@ class ReviewRunService:
             )
             run_coro_sync(self.review_control_plane_service.finalize_completed(run_id=run_id))
             control_plane_summary = validate_review_control_plane_summary(
-                run_coro_sync(self.review_control_plane_service.read_execution_summary(run_id=run_id))
+                run_coro_sync(self.review_control_plane_service.read_execution_summary(run_id=run_id)),
+                expected_run_id=run_id,
+                expected_attempt_id=control_plane_attempt_id,
+                expected_step_id=control_plane_step_id,
             )
             exit_code = _decision_exit_code(deterministic.decision, fail_on_blocked)
             return ReviewRunResult(

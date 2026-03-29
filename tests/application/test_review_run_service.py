@@ -317,6 +317,274 @@ def test_review_run_failure_closes_control_plane_run_failed(tmp_path: Path, monk
     assert persisted_attempt.failure_class == "review_run_RuntimeError"
 
 
+def test_review_run_service_rejects_control_plane_summary_identifier_drift(tmp_path: Path, monkeypatch) -> None:
+    """Layer: integration. Verifies review-run execution fails closed if projected control-plane ids drift."""
+    repo = tmp_path / "repo"
+    _init_repo(repo)
+    (repo / "a.txt").write_text("one\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "init")
+    base = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+    (repo / "a.txt").write_text("one\ntwo\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "change")
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+
+    run_id = "01TESTREVIEWRUNDRIFT0000000000"
+    monkeypatch.setattr(run_service_module, "_ulid", lambda: run_id)
+
+    control_plane_db = tmp_path / "control_plane.sqlite3"
+    service = ReviewRunService(workspace=tmp_path / "workspace" / "default", control_plane_db_path=control_plane_db)
+
+    async def _drifted_summary(*, run_id: str) -> dict[str, object]:
+        return {
+            "projection_source": "control_plane_records",
+            "projection_only": True,
+            "run_id": run_id,
+            "run_state": "completed",
+            "workload_id": "review.run",
+            "workload_version": "v0",
+            "attempt_id": f"{run_id}:attempt:9999",
+            "attempt_state": "attempt_completed",
+            "attempt_ordinal": 1,
+            "policy_snapshot_id": f"review-run-policy:{run_id}",
+            "configuration_snapshot_id": f"review-run-config:{run_id}",
+            "step_id": f"{run_id}:step:start",
+            "step_kind": "review_run_start",
+        }
+
+    monkeypatch.setattr(service.review_control_plane_service, "read_execution_summary", _drifted_summary)
+
+    with pytest.raises(ValueError, match="review_control_plane_attempt_id_mismatch"):
+        service.run_diff(repo_root=repo, base_ref=base, head_ref=head, bounds=SnapshotBounds())
+
+    execution_repo = AsyncControlPlaneExecutionRepository(control_plane_db)
+    persisted_run = run_coro_sync(execution_repo.get_run_record(run_id=run_id))
+    assert persisted_run is not None
+    assert persisted_run.lifecycle_state is RunState.COMPLETED
+
+
+@pytest.mark.parametrize(
+    ("summary_overrides", "expected_error"),
+    [
+        ({"workload_id": ""}, "review_control_plane_workload_id_required"),
+        ({"attempt_ordinal": None}, "review_control_plane_attempt_ordinal_required"),
+    ],
+)
+def test_review_run_service_rejects_incomplete_control_plane_lifecycle_projection(
+    tmp_path: Path,
+    monkeypatch,
+    summary_overrides: dict[str, object],
+    expected_error: str,
+) -> None:
+    """Layer: integration. Verifies review-run execution fails closed if projected lifecycle state is incomplete."""
+    repo = tmp_path / "repo"
+    _init_repo(repo)
+    (repo / "a.txt").write_text("one\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "init")
+    base = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+    (repo / "a.txt").write_text("one\ntwo\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "change")
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+
+    run_id = "01TESTREVIEWRUNSTATE0000000000"
+    monkeypatch.setattr(run_service_module, "_ulid", lambda: run_id)
+
+    control_plane_db = tmp_path / "control_plane.sqlite3"
+    service = ReviewRunService(workspace=tmp_path / "workspace" / "default", control_plane_db_path=control_plane_db)
+
+    async def _incomplete_summary(*, run_id: str) -> dict[str, object]:
+        summary = {
+            "projection_source": "control_plane_records",
+            "projection_only": True,
+            "run_id": run_id,
+            "run_state": "completed",
+            "workload_id": "review.run",
+            "workload_version": "v0",
+            "attempt_id": f"{run_id}:attempt:0001",
+            "attempt_state": "attempt_completed",
+            "attempt_ordinal": 1,
+            "policy_snapshot_id": f"review-run-policy:{run_id}",
+            "configuration_snapshot_id": f"review-run-config:{run_id}",
+            "step_id": f"{run_id}:step:start",
+            "step_kind": "review_run_start",
+        }
+        summary.update(summary_overrides)
+        return summary
+
+    monkeypatch.setattr(service.review_control_plane_service, "read_execution_summary", _incomplete_summary)
+
+    with pytest.raises(ValueError, match=expected_error):
+        service.run_diff(repo_root=repo, base_ref=base, head_ref=head, bounds=SnapshotBounds())
+
+    execution_repo = AsyncControlPlaneExecutionRepository(control_plane_db)
+    persisted_run = run_coro_sync(execution_repo.get_run_record(run_id=run_id))
+    assert persisted_run is not None
+    assert persisted_run.lifecycle_state is RunState.COMPLETED
+
+
+@pytest.mark.parametrize(
+    ("summary_overrides", "expected_error"),
+    [
+        (
+            {
+                "run_id": "",
+                "attempt_id": "01TESTREVIEWRUNHIER0000000000:attempt:0001",
+                "step_id": "01TESTREVIEWRUNHIER0000000000:step:start",
+            },
+            "review_control_plane_run_id_required",
+        ),
+        (
+            {
+                "attempt_id": "",
+                "step_id": "01TESTREVIEWRUNHIER0000000000:step:start",
+            },
+            "review_control_plane_attempt_id_required",
+        ),
+    ],
+)
+def test_review_run_service_rejects_orphaned_control_plane_identifier_hierarchy(
+    tmp_path: Path,
+    monkeypatch,
+    summary_overrides: dict[str, object],
+    expected_error: str,
+) -> None:
+    """Layer: integration. Verifies review-run execution fails closed if lower-level projected ids outlive their parent ids."""
+    repo = tmp_path / "repo"
+    _init_repo(repo)
+    (repo / "a.txt").write_text("one\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "init")
+    base = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+    (repo / "a.txt").write_text("one\ntwo\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "change")
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+
+    run_id = "01TESTREVIEWRUNHIER0000000000"
+    monkeypatch.setattr(run_service_module, "_ulid", lambda: run_id)
+
+    control_plane_db = tmp_path / "control_plane.sqlite3"
+    service = ReviewRunService(workspace=tmp_path / "workspace" / "default", control_plane_db_path=control_plane_db)
+
+    async def _orphaned_summary(*, run_id: str) -> dict[str, object]:
+        summary = {
+            "projection_source": "control_plane_records",
+            "projection_only": True,
+            "run_id": run_id,
+            "run_state": "completed",
+            "workload_id": "review.run",
+            "workload_version": "v0",
+            "attempt_id": f"{run_id}:attempt:0001",
+            "attempt_state": "attempt_completed",
+            "attempt_ordinal": 1,
+            "policy_snapshot_id": f"review-run-policy:{run_id}",
+            "configuration_snapshot_id": f"review-run-config:{run_id}",
+            "step_id": f"{run_id}:step:start",
+            "step_kind": "review_run_start",
+        }
+        summary.update(summary_overrides)
+        return summary
+
+    monkeypatch.setattr(service.review_control_plane_service, "read_execution_summary", _orphaned_summary)
+
+    with pytest.raises(ValueError, match=expected_error):
+        service.run_diff(repo_root=repo, base_ref=base, head_ref=head, bounds=SnapshotBounds())
+
+    execution_repo = AsyncControlPlaneExecutionRepository(control_plane_db)
+    persisted_run = run_coro_sync(execution_repo.get_run_record(run_id=run_id))
+    assert persisted_run is not None
+    assert persisted_run.lifecycle_state is RunState.COMPLETED
+
+
+@pytest.mark.parametrize(
+    ("summary_overrides", "expected_error"),
+    [
+        (
+            {
+                "attempt_id": "",
+                "attempt_state": "attempt_completed",
+                "attempt_ordinal": "",
+                "step_id": "",
+                "step_kind": "",
+            },
+            "review_control_plane_attempt_id_required",
+        ),
+        (
+            {
+                "attempt_id": "",
+                "attempt_state": "",
+                "attempt_ordinal": 1,
+                "step_id": "",
+                "step_kind": "",
+            },
+            "review_control_plane_attempt_id_required",
+        ),
+        (
+            {
+                "step_id": "",
+                "step_kind": "review_run_start",
+            },
+            "review_control_plane_step_id_required",
+        ),
+    ],
+)
+def test_review_run_service_rejects_orphaned_control_plane_projection_metadata(
+    tmp_path: Path,
+    monkeypatch,
+    summary_overrides: dict[str, object],
+    expected_error: str,
+) -> None:
+    """Layer: integration. Verifies review-run execution fails closed if attempt or step metadata survives after its projected id drops."""
+    repo = tmp_path / "repo"
+    _init_repo(repo)
+    (repo / "a.txt").write_text("one\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "init")
+    base = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+    (repo / "a.txt").write_text("one\ntwo\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "change")
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+
+    run_id = "01TESTREVIEWRUNMETA0000000000"
+    monkeypatch.setattr(run_service_module, "_ulid", lambda: run_id)
+
+    control_plane_db = tmp_path / "control_plane.sqlite3"
+    service = ReviewRunService(workspace=tmp_path / "workspace" / "default", control_plane_db_path=control_plane_db)
+
+    async def _orphaned_metadata_summary(*, run_id: str) -> dict[str, object]:
+        summary = {
+            "projection_source": "control_plane_records",
+            "projection_only": True,
+            "run_id": run_id,
+            "run_state": "completed",
+            "workload_id": "review.run",
+            "workload_version": "v0",
+            "attempt_id": f"{run_id}:attempt:0001",
+            "attempt_state": "attempt_completed",
+            "attempt_ordinal": 1,
+            "policy_snapshot_id": f"review-run-policy:{run_id}",
+            "configuration_snapshot_id": f"review-run-config:{run_id}",
+            "step_id": f"{run_id}:step:start",
+            "step_kind": "review_run_start",
+        }
+        summary.update(summary_overrides)
+        return summary
+
+    monkeypatch.setattr(service.review_control_plane_service, "read_execution_summary", _orphaned_metadata_summary)
+
+    with pytest.raises(ValueError, match=expected_error):
+        service.run_diff(repo_root=repo, base_ref=base, head_ref=head, bounds=SnapshotBounds())
+
+    execution_repo = AsyncControlPlaneExecutionRepository(control_plane_db)
+    persisted_run = run_coro_sync(execution_repo.get_run_record(run_id=run_id))
+    assert persisted_run is not None
+    assert persisted_run.lifecycle_state is RunState.COMPLETED
+
+
 def test_review_run_result_rejects_malformed_control_plane_projection() -> None:
     """Layer: contract. Verifies review result JSON fail-closes if control-plane projection framing drifts."""
     result = ReviewRunResult(
@@ -329,6 +597,7 @@ def test_review_run_result_rejects_malformed_control_plane_projection() -> None:
         deterministic_findings=0,
         model_assisted_enabled=False,
         manifest={
+            "run_id": "run-1",
             "execution_state_authority": "control_plane_records",
             "lane_outputs_execution_state_authoritative": False,
         },
@@ -390,6 +659,238 @@ def test_review_run_result_rejects_malformed_control_plane_projection() -> None:
                 lane_outputs_execution_state_authoritative=True,
             ),
             "review_run_manifest_execution_state_authoritative_invalid",
+        ),
+        (
+            lambda: DeterministicReviewDecisionPayload(
+                decision="pass",
+                findings=[],
+                executed_checks=[],
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="",
+            ),
+            "deterministic_review_decision_run_id_required",
+        ),
+        (
+            lambda: DeterministicReviewDecisionPayload(
+                decision="pass",
+                findings=[],
+                executed_checks=[],
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="run-1",
+                control_plane_run_id="",
+                control_plane_attempt_id="run-1:attempt:0001",
+                control_plane_step_id="run-1:step:start",
+            ),
+            "deterministic_review_decision_control_plane_run_id_required",
+        ),
+        (
+            lambda: DeterministicReviewDecisionPayload(
+                decision="pass",
+                findings=[],
+                executed_checks=[],
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="run-1",
+                control_plane_run_id="run-2",
+            ),
+            "deterministic_review_decision_control_plane_run_id_mismatch",
+        ),
+        (
+            lambda: DeterministicReviewDecisionPayload(
+                decision="pass",
+                findings=[],
+                executed_checks=[],
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="run-1",
+                control_plane_run_id="run-1",
+                control_plane_attempt_id="run-2:attempt:0001",
+            ),
+            "deterministic_review_decision_control_plane_attempt_id_run_lineage_mismatch",
+        ),
+        (
+            lambda: DeterministicReviewDecisionPayload(
+                decision="pass",
+                findings=[],
+                executed_checks=[],
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="run-1",
+                control_plane_run_id="run-1",
+                control_plane_attempt_id="run-1:attempt:0001",
+                control_plane_step_id="run-2:step:start",
+            ),
+            "deterministic_review_decision_control_plane_step_id_run_lineage_mismatch",
+        ),
+        (
+            lambda: ModelAssistedCritiquePayload(
+                summary=[],
+                high_risk_issues=[],
+                missing_tests=[],
+                questions_for_author=[],
+                nits=[],
+                refs=[],
+                model_id="test-model",
+                prompt_profile="review",
+                contract_version="review_critique_v0",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="",
+            ),
+            "model_assisted_critique_run_id_required",
+        ),
+        (
+            lambda: ModelAssistedCritiquePayload(
+                summary=[],
+                high_risk_issues=[],
+                missing_tests=[],
+                questions_for_author=[],
+                nits=[],
+                refs=[],
+                model_id="test-model",
+                prompt_profile="review",
+                contract_version="review_critique_v0",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="run-1",
+                control_plane_run_id="run-1",
+                control_plane_attempt_id="",
+                control_plane_step_id="run-1:step:start",
+            ),
+            "model_assisted_critique_control_plane_attempt_id_required",
+        ),
+        (
+            lambda: ModelAssistedCritiquePayload(
+                summary=[],
+                high_risk_issues=[],
+                missing_tests=[],
+                questions_for_author=[],
+                nits=[],
+                refs=[],
+                model_id="test-model",
+                prompt_profile="review",
+                contract_version="review_critique_v0",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="run-1",
+                control_plane_run_id="run-2",
+            ),
+            "model_assisted_critique_control_plane_run_id_mismatch",
+        ),
+        (
+            lambda: ModelAssistedCritiquePayload(
+                summary=[],
+                high_risk_issues=[],
+                missing_tests=[],
+                questions_for_author=[],
+                nits=[],
+                refs=[],
+                model_id="test-model",
+                prompt_profile="review",
+                contract_version="review_critique_v0",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="run-1",
+                control_plane_run_id="run-1",
+                control_plane_attempt_id="run-2:attempt:0001",
+            ),
+            "model_assisted_critique_control_plane_attempt_id_run_lineage_mismatch",
+        ),
+        (
+            lambda: ModelAssistedCritiquePayload(
+                summary=[],
+                high_risk_issues=[],
+                missing_tests=[],
+                questions_for_author=[],
+                nits=[],
+                refs=[],
+                model_id="test-model",
+                prompt_profile="review",
+                contract_version="review_critique_v0",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                run_id="run-1",
+                control_plane_run_id="run-1",
+                control_plane_attempt_id="run-1:attempt:0001",
+                control_plane_step_id="run-2:step:start",
+            ),
+            "model_assisted_critique_control_plane_step_id_run_lineage_mismatch",
+        ),
+        (
+            lambda: ReviewRunManifest(
+                run_id="",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                review_run_contract_version="review_run_v0",
+                deterministic_lane_version="deterministic_v0",
+                bounds={},
+                truncation={},
+                auth_source="none",
+            ),
+            "review_run_manifest_run_id_required",
+        ),
+        (
+            lambda: ReviewRunManifest(
+                run_id="run-1",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                review_run_contract_version="review_run_v0",
+                deterministic_lane_version="deterministic_v0",
+                bounds={},
+                truncation={},
+                auth_source="none",
+                control_plane_run_id="run-1",
+                control_plane_attempt_id="",
+                control_plane_step_id="run-1:step:start",
+            ),
+            "review_run_manifest_control_plane_attempt_id_required",
+        ),
+        (
+            lambda: ReviewRunManifest(
+                run_id="run-1",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                review_run_contract_version="review_run_v0",
+                deterministic_lane_version="deterministic_v0",
+                bounds={},
+                truncation={},
+                auth_source="none",
+                control_plane_run_id="run-2",
+            ),
+            "review_run_manifest_control_plane_run_id_mismatch",
+        ),
+        (
+            lambda: ReviewRunManifest(
+                run_id="run-1",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                review_run_contract_version="review_run_v0",
+                deterministic_lane_version="deterministic_v0",
+                bounds={},
+                truncation={},
+                auth_source="none",
+                control_plane_run_id="run-1",
+                control_plane_attempt_id="run-2:attempt:0001",
+            ),
+            "review_run_manifest_control_plane_attempt_id_run_lineage_mismatch",
+        ),
+        (
+            lambda: ReviewRunManifest(
+                run_id="run-1",
+                snapshot_digest="sha256:snapshot",
+                policy_digest="sha256:policy",
+                review_run_contract_version="review_run_v0",
+                deterministic_lane_version="deterministic_v0",
+                bounds={},
+                truncation={},
+                auth_source="none",
+                control_plane_run_id="run-1",
+                control_plane_attempt_id="run-1:attempt:0001",
+                control_plane_step_id="run-2:step:start",
+            ),
+            "review_run_manifest_control_plane_step_id_run_lineage_mismatch",
         ),
     ],
 )

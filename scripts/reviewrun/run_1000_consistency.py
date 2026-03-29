@@ -12,8 +12,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from orket.application.review.bundle_validation import load_validated_review_run_bundle_artifacts
+from orket.application.review.control_plane_projection import validate_review_required_identifier
 from orket.application.review.models import ReviewSnapshot, SnapshotBounds
 from orket.application.review.run_service import ReviewRunService
+from scripts.reviewrun.check_1000_consistency import REPORT_CONTRACT_VERSION, evaluate_consistency_report
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -224,6 +226,13 @@ def _snapshot_truncation_from_run(run_dir: Path) -> Dict[str, Any]:
     snapshot = dict(load_validated_review_run_bundle_artifacts(run_dir).get("snapshot") or {})
     return dict(snapshot.get("truncation") or {})
 
+
+def _validated_report_run_id(run_result: Dict[str, Any], *, field_name: str) -> str:
+    return validate_review_required_identifier(
+        run_result.get("run_id"),
+        error=f"{field_name}_run_id_required",
+    )
+
 def _strict_policy_for_scenario(scenario: str) -> Dict[str, Any]:
     if scenario == "secrets_sha1":
         patterns = [
@@ -356,6 +365,7 @@ def main() -> int:
         head_ref=head_ref,
         bounds=bounds,
     ).to_dict()
+    default_run_id = _validated_report_run_id(default_run, field_name="reviewrun_consistency_default")
     default_run_dir = Path(str(default_run["artifact_dir"]))
     default_signature = _signature_from_run(run_dir=default_run_dir, run_result=default_run)
 
@@ -367,6 +377,7 @@ def main() -> int:
         bounds=bounds,
         cli_policy_overrides=strict_policy,
     ).to_dict()
+    strict_run_id = _validated_report_run_id(strict_run, field_name="reviewrun_consistency_strict")
     strict_run_dir = Path(str(strict_run["artifact_dir"]))
     strict_signature = _signature_from_run(run_dir=strict_run_dir, run_result=strict_run)
     strict_bundle_artifacts = load_validated_review_run_bundle_artifacts(
@@ -380,6 +391,10 @@ def main() -> int:
         snapshot=ReviewSnapshot.from_dict(strict_snapshot),
         resolved_policy_payload={k: v for k, v in strict_policy_payload.items() if k != "policy_digest"},
     ).to_dict()
+    strict_replay_run_id = _validated_report_run_id(
+        strict_replay_run,
+        field_name="reviewrun_consistency_strict_replay",
+    )
     strict_replay_dir = Path(str(strict_replay_run["artifact_dir"]))
     strict_replay_signature = _signature_from_run(run_dir=strict_replay_dir, run_result=strict_replay_run)
 
@@ -392,15 +407,16 @@ def main() -> int:
             head_ref=head_ref,
             bounds=bounds,
         ).to_dict()
+        run_id = _validated_report_run_id(run, field_name="reviewrun_consistency_iteration")
         run_dir = Path(str(run["artifact_dir"]))
         signature = _signature_from_run(run_dir=run_dir, run_result=run)
         if baseline_signature is None:
             baseline_signature = signature
-            baseline_run_id = str(run["run_id"])
+            baseline_run_id = run_id
         elif signature != baseline_signature:
             mismatch = {
                 "iteration": iteration,
-                "run_id": str(run["run_id"]),
+                "run_id": run_id,
                 "expected": baseline_signature,
                 "actual": signature,
             }
@@ -418,18 +434,18 @@ def main() -> int:
             "mismatch": mismatch,
         },
         "default_run": {
-            "run_id": str(default_run.get("run_id") or ""),
+            "run_id": default_run_id,
             "artifact_dir": str(default_run.get("artifact_dir") or ""),
             "signature": default_signature,
         },
         "strict_run": {
-            "run_id": str(strict_run.get("run_id") or ""),
+            "run_id": strict_run_id,
             "artifact_dir": str(strict_run.get("artifact_dir") or ""),
             "signature": strict_signature,
             "strict_policy": strict_policy,
         },
         "strict_replay": {
-            "run_id": str(strict_replay_run.get("run_id") or ""),
+            "run_id": strict_replay_run_id,
             "artifact_dir": str(strict_replay_run.get("artifact_dir") or ""),
             "signature": strict_replay_signature,
             "parity_with_strict": strict_replay_parity,
@@ -440,10 +456,18 @@ def main() -> int:
         "scenario": args.scenario,
         "fixture_repo": str(fixture_repo),
         "workspace": str(workspace),
-        "contract_version": "reviewrun_consistency_check_v1",
+        "contract_version": REPORT_CONTRACT_VERSION,
     }
 
     out_path = Path(args.out).resolve()
+    validation = evaluate_consistency_report(
+        payload=report,
+        report_path=out_path,
+        expected_runs=int(args.runs),
+        require_success=False,
+    )
+    if not validation["ok"]:
+        raise ValueError("; ".join(str(item) for item in list(validation.get("issues") or [])))
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))

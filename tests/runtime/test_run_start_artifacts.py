@@ -83,6 +83,8 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     interrupt_surfaces = [row["surface"] for row in payload["interrupt_semantics_policy"]["rows"]]
     assert "run_execution" in interrupt_surfaces
     assert payload["retry_classification_policy"]["schema_version"] == "1.0"
+    assert payload["retry_classification_policy"]["projection_only"] is True
+    assert payload["retry_classification_policy"]["projection_source"] == "retry_classification_rules"
     assert payload["retry_classification_policy"]["attempt_history_authoritative"] is False
     retry_signals = [row["signal"] for row in payload["retry_classification_policy"]["rows"]]
     assert "model_timeout_retry" in retry_signals
@@ -1063,3 +1065,39 @@ def test_capture_run_start_artifacts_fails_closed_on_truth_contract_drift(
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
         )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_before_persisting_invalid_retry_projection(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    monkeypatch.setattr(
+        run_start_contract_artifacts,
+        "retry_classification_policy_snapshot",
+        lambda: {
+            "schema_version": "999.0",
+            "projection_only": True,
+            "projection_source": "retry_classification_rules",
+            "attempt_history_authoritative": False,
+            "rows": [],
+        },
+    )
+
+    with pytest.raises(ValueError, match="E_RETRY_POLICY_SCHEMA_VERSION_INVALID"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-invalid-retry-policy",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+        )
+
+    retry_policy_path = (
+        workspace
+        / "observability"
+        / "run-invalid-retry-policy"
+        / "runtime_contracts"
+        / "retry_classification_policy.json"
+    )
+    assert retry_policy_path.exists() is False

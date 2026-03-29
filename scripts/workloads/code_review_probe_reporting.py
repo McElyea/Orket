@@ -2,8 +2,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.application.review.control_plane_projection import REVIEW_EXECUTION_STATE_AUTHORITY
+from orket.application.review.control_plane_projection import (
+    REVIEW_EXECUTION_STATE_AUTHORITY,
+    validate_review_execution_authority_markers,
+    validate_review_required_identifier,
+)
 from scripts.reviewrun.score_answer_key import score_answer_key
+from scripts.reviewrun.score_answer_key_contract import validate_answer_key_score_report
 from scripts.workloads.code_review_probe_support import sha256_text
 
 
@@ -17,6 +22,15 @@ def build_model_assisted_payload(
     review_method: str,
     policy_digest: str,
 ) -> dict[str, Any]:
+    normalized_run_id = validate_review_required_identifier(
+        run_id,
+        error="code_review_probe_model_assisted_run_id_required",
+    )
+    validate_review_execution_authority_markers(
+        execution_state_authority=REVIEW_EXECUTION_STATE_AUTHORITY,
+        execution_state_authoritative=False,
+        field_name="code_review_probe_model_assisted",
+    )
     return {
         **review_payload,
         "model_id": str(model),
@@ -25,7 +39,7 @@ def build_model_assisted_payload(
         "contract_version": "review_critique_v0",
         "snapshot_digest": sha256_text(source_text),
         "policy_digest": str(policy_digest),
-        "run_id": str(run_id),
+        "run_id": normalized_run_id,
         "execution_state_authority": REVIEW_EXECUTION_STATE_AUTHORITY,
         "lane_output_execution_state_authoritative": False,
     }
@@ -68,7 +82,9 @@ def quality_summary(score: dict[str, Any], *, contract_valid: bool) -> dict[str,
 
 
 def score_review_bundle(*, artifact_dir: Any, answer_key_path: Any) -> dict[str, Any]:
-    score = score_answer_key(run_dir=artifact_dir, answer_key_path=answer_key_path)
+    score = validate_answer_key_score_report(
+        score_answer_key(run_dir=artifact_dir, answer_key_path=answer_key_path)
+    )
     score["model_missed_must_catch"] = [
         str(row.get("issue_id") or "")
         for row in list(score.get("issues") or [])

@@ -90,6 +90,18 @@ from orket.schema import (
 from orket.utils import get_eos_sprint, sanitize_name
 from orket.settings import load_user_settings
 
+_RUN_SUMMARY_RUN_IDENTITY_ERROR_PREFIX = "run_summary_run_identity_"
+_TRANSIENT_RUN_IDENTITY_ARTIFACT_KEYS = ("run_identity", "run_identity_path")
+
+
+def _is_run_summary_run_identity_error(exc: Exception) -> bool:
+    return str(exc).strip().startswith(_RUN_SUMMARY_RUN_IDENTITY_ERROR_PREFIX)
+
+
+def _strip_transient_run_identity_artifacts(artifacts: Dict[str, Any]) -> None:
+    for key in _TRANSIENT_RUN_IDENTITY_ARTIFACT_KEYS:
+        artifacts.pop(key, None)
+
 
 class ExecutionPipeline:
     """
@@ -1066,14 +1078,14 @@ class ExecutionPipeline:
         runtime_verification_path = str(packet1_artifacts.get("runtime_verification_path") or "").strip()
         if runtime_verification_path:
             resolved_artifacts["runtime_verification_path"] = runtime_verification_path
-        run_identity = resolved_artifacts.get("run_identity")
-        started_at = None
-        if run_identity is not None:
-            started_at = validate_run_identity_projection(
-                run_identity,
-                error_prefix="run_summary_run_identity",
-            )["start_time"]
         try:
+            run_identity = resolved_artifacts.get("run_identity")
+            started_at = None
+            if run_identity is not None:
+                started_at = validate_run_identity_projection(
+                    run_identity,
+                    error_prefix="run_summary_run_identity",
+                )["start_time"]
             run_summary = await generate_run_summary_for_finalize(
                 workspace=self.workspace,
                 run_id=run_id,
@@ -1084,6 +1096,9 @@ class ExecutionPipeline:
                 artifacts=resolved_artifacts,
             )
         except (RuntimeError, ValueError, TypeError, OSError) as exc:
+            if _is_run_summary_run_identity_error(exc):
+                # Do not let invalid bootstrap identity shape degraded summary output.
+                _strip_transient_run_identity_artifacts(resolved_artifacts)
             resolved_artifacts["run_summary_generation_error"] = {
                 "error_type": type(exc).__name__,
                 "error": str(exc),

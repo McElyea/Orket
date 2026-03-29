@@ -36,7 +36,10 @@ from orket.runtime.provider_quarantine_policy_contract import provider_quarantin
 from orket.runtime.release_confidence_scorecard import release_confidence_scorecard_snapshot
 from orket.runtime.result_error_invariants import result_error_invariant_contract_snapshot
 from orket.runtime.resource_pressure_simulation_lane import resource_pressure_simulation_lane_snapshot
-from orket.runtime.retry_classification_policy import retry_classification_policy_snapshot
+from orket.runtime.retry_classification_policy import (
+    retry_classification_policy_snapshot,
+    validate_retry_classification_policy,
+)
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
 from orket.runtime.runtime_boundary_audit_checklist import runtime_boundary_audit_checklist_snapshot
 from orket.runtime.runtime_config_ownership_map import runtime_config_ownership_map_snapshot
@@ -112,6 +115,12 @@ def _checked_runtime_truth_contract_drift_report() -> dict[str, Any]:
     if not bool(report.get("ok")):
         raise ValueError("E_RUN_TRUTH_CONTRACT_DRIFT")
     return report
+
+
+def _checked_retry_classification_policy_payload() -> dict[str, Any]:
+    payload = retry_classification_policy_snapshot()
+    _ = validate_retry_classification_policy(payload)
+    return payload
 
 
 CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
@@ -227,7 +236,7 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
     (
         "retry_classification_policy",
         "retry_classification_policy.json",
-        retry_classification_policy_snapshot,
+        _checked_retry_classification_policy_payload,
         "E_RUN_RETRY_CLASSIFICATION_POLICY_IMMUTABLE",
     ),
     (

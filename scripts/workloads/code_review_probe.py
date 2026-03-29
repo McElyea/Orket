@@ -185,7 +185,8 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         source_text=source_text,
         prompt_profile=str(args.prompt_profile),
     )
-    deterministic_payload = build_deterministic_payload(source_text=source_text, answer_key=answer_key)
+    run_id = _run_id()
+    deterministic_payload = build_deterministic_payload(source_text=source_text, answer_key=answer_key, run_id=run_id)
     governed_claim = build_governed_claim_payload(
         provider=str(args.provider),
         model=str(args.model),
@@ -197,7 +198,6 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         fixture_path=fixture_display_path,
         answer_key_path=answer_key_path,
     )
-    run_id = _run_id()
     artifact_dir = workspace / "workloads" / "s04_code_review_probe" / run_id
     artifact_dir.mkdir(parents=True, exist_ok=True)
 

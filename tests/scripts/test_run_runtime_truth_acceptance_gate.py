@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from orket.runtime.retry_classification_policy import retry_classification_policy_snapshot
 from scripts.governance.run_runtime_truth_acceptance_gate import (
     REQUIRED_RUNTIME_CONTRACT_FILES,
     evaluate_runtime_truth_acceptance_gate,
@@ -16,8 +17,11 @@ def _write_contract_set(workspace: Path, run_id: str) -> Path:
     contracts_dir = workspace / "observability" / run_id / "runtime_contracts"
     contracts_dir.mkdir(parents=True, exist_ok=True)
     for filename in REQUIRED_RUNTIME_CONTRACT_FILES:
+        payload = {"schema_version": "1.0"}
+        if filename == "retry_classification_policy.json":
+            payload = retry_classification_policy_snapshot()
         (contracts_dir / filename).write_text(
-            json.dumps({"schema_version": "1.0"}, ensure_ascii=True) + "\n",
+            json.dumps(payload, ensure_ascii=True) + "\n",
             encoding="utf-8",
         )
     return contracts_dir
@@ -42,6 +46,64 @@ def test_runtime_truth_acceptance_gate_fails_when_required_contract_file_missing
     )
     assert payload["ok"] is False
     assert "runtime_contract_files_missing" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_retry_policy_artifact_is_invalid(
+    tmp_path: Path,
+) -> None:
+    contracts_dir = _write_contract_set(tmp_path, "run-bad-retry-artifact")
+    (contracts_dir / "retry_classification_policy.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "999.0",
+                "projection_only": True,
+                "projection_source": "retry_classification_rules",
+                "attempt_history_authoritative": False,
+                "rows": [],
+            },
+            ensure_ascii=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="run-bad-retry-artifact",
+        check_drift=False,
+    )
+
+    assert payload["ok"] is False
+    assert payload["details"]["retry_classification_policy_artifact_check"]["ok"] is False
+    assert payload["details"]["retry_classification_policy_artifact_check"]["error"] == "E_RETRY_POLICY_SCHEMA_VERSION_INVALID"
+    assert "retry_classification_policy_artifact_check_failed" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_retry_policy_artifact_drifts_from_current_snapshot(
+    tmp_path: Path,
+) -> None:
+    contracts_dir = _write_contract_set(tmp_path, "run-drifted-retry-artifact")
+    drifted_payload = retry_classification_policy_snapshot()
+    drifted_payload["rows"] = list(drifted_payload["rows"])
+    drifted_payload["rows"][0] = dict(drifted_payload["rows"][0])
+    drifted_payload["rows"][0]["terminal_behavior"] = "drifted_terminal_behavior"
+    (contracts_dir / "retry_classification_policy.json").write_text(
+        json.dumps(drifted_payload, ensure_ascii=True) + "\n",
+        encoding="utf-8",
+    )
+
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="run-drifted-retry-artifact",
+        check_drift=False,
+    )
+
+    assert payload["ok"] is False
+    assert payload["details"]["retry_classification_policy_artifact_check"]["ok"] is False
+    assert payload["details"]["retry_classification_policy_artifact_check"]["matches_current_snapshot"] is False
+    assert "retry_classification_policy_artifact_check_failed" in payload["failures"]
 
 
 # Layer: contract
@@ -102,6 +164,21 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["decision_record_operating_principles_contract_check"]["ok"] is True
     assert payload["details"]["naming_discipline_policy_check"]["ok"] is True
     assert payload["details"]["promotion_rollback_criteria_check"]["ok"] is True
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_passes_with_valid_retry_policy_artifact(tmp_path: Path) -> None:
+    _write_contract_set(tmp_path, "run-valid-retry-artifact")
+
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="run-valid-retry-artifact",
+        check_drift=False,
+    )
+
+    assert payload["ok"] is True
+    assert payload["details"]["retry_classification_policy_artifact_check"]["ok"] is True
+    assert payload["details"]["retry_classification_policy_artifact_check"]["matches_current_snapshot"] is True
 
 
 # Layer: contract
@@ -378,6 +455,94 @@ def test_runtime_truth_acceptance_gate_fails_when_retry_policy_check_fails(
         check_drift=False,
     )
     assert payload["ok"] is False
+    assert "retry_classification_policy_check_failed" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_retry_policy_report_is_malformed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_retry_classification_policy",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": True,
+            "signal_count": 0,
+            "snapshot": retry_classification_policy_snapshot(),
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert payload["details"]["retry_classification_policy_check"]["ok"] is False
+    assert payload["details"]["retry_classification_policy_check"]["error"] == "E_RETRY_POLICY_REPORT_SIGNALS_INVALID"
+    assert "retry_classification_policy_check_failed" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_retry_policy_report_snapshot_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_retry_classification_policy",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "error": "E_RETRY_POLICY_REPORT_SIGNALS_INVALID",
+            "snapshot": {},
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert payload["details"]["retry_classification_policy_check"]["ok"] is False
+    assert (
+        payload["details"]["retry_classification_policy_check"]["error"]
+        == "E_RETRY_POLICY_REPORT_SNAPSHOT_INVALID:E_RETRY_POLICY_SCHEMA_VERSION_INVALID"
+    )
+    assert "retry_classification_policy_check_failed" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_preserves_valid_retry_policy_failure_detail(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_retry_classification_policy",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "error": "E_RETRY_POLICY_REPORT_SIGNALS_INVALID",
+            "snapshot": retry_classification_policy_snapshot(),
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert payload["details"]["retry_classification_policy_check"]["ok"] is False
+    assert payload["details"]["retry_classification_policy_check"]["error"] == "E_RETRY_POLICY_REPORT_SIGNALS_INVALID"
+    assert payload["details"]["retry_classification_policy_check"]["signal_count"] == 0
     assert "retry_classification_policy_check_failed" in payload["failures"]
 
 

@@ -5,6 +5,8 @@ from typing import Any
 
 _ALLOWED_CLASSES = {"safe_transient", "dangerous_non_retryable"}
 _ALLOWED_BACKOFF = {"none", "exponential"}
+_SCHEMA_VERSION = "1.0"
+_PROJECTION_SOURCE = "retry_classification_rules"
 
 _RETRY_ROWS: tuple[dict[str, Any], ...] = (
     {
@@ -55,14 +57,22 @@ _RETRY_ROWS: tuple[dict[str, Any], ...] = (
 
 def retry_classification_policy_snapshot() -> dict[str, Any]:
     return {
-        "schema_version": "1.0",
+        "schema_version": _SCHEMA_VERSION,
+        "projection_only": True,
+        "projection_source": _PROJECTION_SOURCE,
         "attempt_history_authoritative": False,
         "rows": [dict(row) for row in _RETRY_ROWS],
     }
 
 
 def validate_retry_classification_policy(payload: dict[str, Any] | None = None) -> tuple[str, ...]:
-    policy = dict(payload or retry_classification_policy_snapshot())
+    policy = dict(retry_classification_policy_snapshot() if payload is None else payload)
+    if str(policy.get("schema_version") or "").strip() != _SCHEMA_VERSION:
+        raise ValueError("E_RETRY_POLICY_SCHEMA_VERSION_INVALID")
+    if policy.get("projection_only") is not True:
+        raise ValueError("E_RETRY_POLICY_PROJECTION_ONLY_INVALID")
+    if str(policy.get("projection_source") or "").strip() != _PROJECTION_SOURCE:
+        raise ValueError("E_RETRY_POLICY_PROJECTION_SOURCE_INVALID")
     if policy.get("attempt_history_authoritative") is not False:
         raise ValueError("E_RETRY_POLICY_ATTEMPT_AUTHORITY_INVALID")
     rows = list(policy.get("rows") or [])

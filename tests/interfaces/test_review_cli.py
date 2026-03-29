@@ -4,6 +4,9 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+from orket.application.review.models import ReviewRunResult
 from orket.interfaces.orket_bundle_cli import main
 
 
@@ -232,6 +235,273 @@ def test_review_replay_cli_snapshot_policy_bundle_paths_reject_drifted_review_ma
     assert replay_code == 1
     assert replay_payload["ok"] is False
     assert "review_run_manifest_execution_state_authoritative_invalid" in replay_payload["errors"][0]["message"]
+
+
+def test_review_replay_cli_run_dir_rejects_missing_bundle_control_plane_ref(tmp_path: Path, capsys) -> None:
+    """contract: run-dir replay must fail closed when canonical lane control-plane refs are missing."""
+    workspace, payload = _create_review_bundle(tmp_path, capsys)
+
+    run_dir = Path(str(payload["artifact_dir"]))
+    deterministic = json.loads((run_dir / "deterministic_decision.json").read_text(encoding="utf-8"))
+    deterministic.pop("control_plane_step_id", None)
+    (run_dir / "deterministic_decision.json").write_text(json.dumps(deterministic), encoding="utf-8")
+
+    replay_code = main(
+        [
+            "review",
+            "replay",
+            "--run-dir",
+            str(run_dir),
+            "--workspace",
+            str(workspace),
+            "--json",
+        ]
+    )
+    replay_payload = json.loads(capsys.readouterr().out)
+    assert replay_code == 1
+    assert replay_payload["ok"] is False
+    assert "deterministic_review_decision_control_plane_step_id_missing" in replay_payload["errors"][0]["message"]
+
+
+def test_review_diff_cli_returns_structured_error_on_result_manifest_control_plane_drift(tmp_path: Path, capsys, monkeypatch) -> None:
+    """contract: diff CLI must surface structured failure when result serialization detects embedded manifest/control-plane drift."""
+
+    def _fake_run_diff(self, **_kwargs):  # type: ignore[no-untyped-def]
+        return ReviewRunResult(
+            ok=True,
+            run_id="run-1",
+            artifact_dir=str(tmp_path / "workspace" / "default" / "review_runs" / "run-1"),
+            snapshot_digest="sha256:snapshot",
+            policy_digest="sha256:policy",
+            deterministic_decision="pass",
+            deterministic_findings=0,
+            model_assisted_enabled=False,
+            manifest={
+                "run_id": "run-1",
+                "execution_state_authority": "control_plane_records",
+                "lane_outputs_execution_state_authoritative": False,
+                "control_plane_run_id": "run-1",
+                "control_plane_attempt_id": "run-1:attempt:0001",
+            },
+            control_plane={
+                "projection_source": "control_plane_records",
+                "projection_only": True,
+                "run_id": "run-1",
+                "attempt_id": "run-1:attempt:0001",
+                "attempt_ordinal": 1,
+                "step_id": "run-1:step:start",
+                "run_state": "completed",
+                "workload_id": "review.run",
+                "workload_version": "v0",
+                "attempt_state": "attempt_completed",
+                "policy_snapshot_id": "review-run-policy:run-1",
+                "configuration_snapshot_id": "review-run-config:run-1",
+                "step_kind": "review_run_start",
+            },
+        )
+
+    monkeypatch.setattr("orket.interfaces.orket_bundle_cli.ReviewRunService.run_diff", _fake_run_diff)
+
+    code = main(
+        [
+            "review",
+            "diff",
+            "--repo-root",
+            str(tmp_path),
+            "--base",
+            "base",
+            "--head",
+            "head",
+            "--workspace",
+            str(tmp_path / "workspace" / "default"),
+            "--json",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload["ok"] is False
+    assert payload["errors"][0]["code"] == "E_REVIEW_RUN_FAILED"
+    assert "review_run_manifest_control_plane_step_id_missing" in payload["errors"][0]["message"]
+
+
+def test_review_diff_cli_returns_structured_error_on_result_manifest_missing_run_id(tmp_path: Path, capsys, monkeypatch) -> None:
+    """contract: diff CLI must surface structured failure when result serialization detects missing manifest run identity."""
+
+    def _fake_run_diff(self, **_kwargs):  # type: ignore[no-untyped-def]
+        return ReviewRunResult(
+            ok=True,
+            run_id="run-1",
+            artifact_dir=str(tmp_path / "workspace" / "default" / "review_runs" / "run-1"),
+            snapshot_digest="sha256:snapshot",
+            policy_digest="sha256:policy",
+            deterministic_decision="pass",
+            deterministic_findings=0,
+            model_assisted_enabled=False,
+            manifest={
+                "execution_state_authority": "control_plane_records",
+                "lane_outputs_execution_state_authoritative": False,
+            },
+        )
+
+    monkeypatch.setattr("orket.interfaces.orket_bundle_cli.ReviewRunService.run_diff", _fake_run_diff)
+
+    code = main(
+        [
+            "review",
+            "diff",
+            "--repo-root",
+            str(tmp_path),
+            "--base",
+            "base",
+            "--head",
+            "head",
+            "--workspace",
+            str(tmp_path / "workspace" / "default"),
+            "--json",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload["ok"] is False
+    assert payload["errors"][0]["code"] == "E_REVIEW_RUN_FAILED"
+    assert "review_run_manifest_run_id_required" in payload["errors"][0]["message"]
+
+
+@pytest.mark.parametrize(
+    ("control_plane_overrides", "expected_error"),
+    [
+        (
+            {
+                "attempt_id": "",
+                "attempt_ordinal": 1,
+                "step_id": "run-1:step:start",
+            },
+            "review_control_plane_attempt_id_required",
+        ),
+        (
+            {
+                "step_id": "",
+                "step_kind": "review_run_start",
+            },
+            "review_control_plane_step_id_required",
+        ),
+    ],
+)
+def test_review_diff_cli_returns_structured_error_on_orphaned_control_plane_projection(
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+    control_plane_overrides: dict[str, object],
+    expected_error: str,
+) -> None:
+    """contract: diff CLI must surface structured failure when result serialization detects orphaned projected ids or metadata."""
+
+    def _fake_run_diff(self, **_kwargs):  # type: ignore[no-untyped-def]
+        control_plane = {
+            "projection_source": "control_plane_records",
+            "projection_only": True,
+            "run_id": "run-1",
+            "attempt_id": "run-1:attempt:0001",
+            "attempt_ordinal": 1,
+            "step_id": "run-1:step:start",
+            "run_state": "completed",
+            "workload_id": "review.run",
+            "workload_version": "v0",
+            "attempt_state": "attempt_completed",
+            "policy_snapshot_id": "review-run-policy:run-1",
+            "configuration_snapshot_id": "review-run-config:run-1",
+            "step_kind": "review_run_start",
+        }
+        control_plane.update(control_plane_overrides)
+        return ReviewRunResult(
+            ok=True,
+            run_id="run-1",
+            artifact_dir=str(tmp_path / "workspace" / "default" / "review_runs" / "run-1"),
+            snapshot_digest="sha256:snapshot",
+            policy_digest="sha256:policy",
+            deterministic_decision="pass",
+            deterministic_findings=0,
+            model_assisted_enabled=False,
+            manifest={
+                "run_id": "run-1",
+                "execution_state_authority": "control_plane_records",
+                "lane_outputs_execution_state_authoritative": False,
+                "control_plane_run_id": "run-1",
+                "control_plane_attempt_id": "run-1:attempt:0001",
+                "control_plane_step_id": "run-1:step:start",
+            },
+            control_plane=control_plane,
+        )
+
+    monkeypatch.setattr("orket.interfaces.orket_bundle_cli.ReviewRunService.run_diff", _fake_run_diff)
+
+    code = main(
+        [
+            "review",
+            "diff",
+            "--repo-root",
+            str(tmp_path),
+            "--base",
+            "base",
+            "--head",
+            "head",
+            "--workspace",
+            str(tmp_path / "workspace" / "default"),
+            "--json",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload["ok"] is False
+    assert payload["errors"][0]["code"] == "E_REVIEW_RUN_FAILED"
+    assert expected_error in payload["errors"][0]["message"]
+
+
+def test_review_diff_cli_returns_structured_error_on_orphaned_manifest_control_plane_refs(tmp_path: Path, capsys, monkeypatch) -> None:
+    """contract: diff CLI must surface structured failure when result serialization detects orphaned manifest ids."""
+
+    def _fake_run_diff(self, **_kwargs):  # type: ignore[no-untyped-def]
+        return ReviewRunResult(
+            ok=True,
+            run_id="run-1",
+            artifact_dir=str(tmp_path / "workspace" / "default" / "review_runs" / "run-1"),
+            snapshot_digest="sha256:snapshot",
+            policy_digest="sha256:policy",
+            deterministic_decision="pass",
+            deterministic_findings=0,
+            model_assisted_enabled=False,
+            manifest={
+                "run_id": "run-1",
+                "execution_state_authority": "control_plane_records",
+                "lane_outputs_execution_state_authoritative": False,
+                "control_plane_run_id": "run-1",
+                "control_plane_attempt_id": "",
+                "control_plane_step_id": "run-1:step:start",
+            },
+        )
+
+    monkeypatch.setattr("orket.interfaces.orket_bundle_cli.ReviewRunService.run_diff", _fake_run_diff)
+
+    code = main(
+        [
+            "review",
+            "diff",
+            "--repo-root",
+            str(tmp_path),
+            "--base",
+            "base",
+            "--head",
+            "head",
+            "--workspace",
+            str(tmp_path / "workspace" / "default"),
+            "--json",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload["ok"] is False
+    assert payload["errors"][0]["code"] == "E_REVIEW_RUN_FAILED"
+    assert "review_run_manifest_control_plane_attempt_id_required" in payload["errors"][0]["message"]
 
 
 def test_review_cli_rejects_conflicting_scope_flags(tmp_path: Path, capsys) -> None:

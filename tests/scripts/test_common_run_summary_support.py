@@ -38,6 +38,56 @@ def test_load_validated_run_summary_accepts_projection_framed_payload(tmp_path: 
 
 
 @pytest.mark.contract
+def test_load_validated_run_summary_rejects_drifted_run_identity_projection(tmp_path: Path) -> None:
+    path = tmp_path / "run_summary.json"
+    _write_json(
+        path,
+        {
+            "run_id": "run-invalid-identity",
+            "status": "done",
+            "tools_used": [],
+            "artifact_ids": ["run_identity"],
+            "failure_reason": None,
+            "run_identity": {
+                "run_id": "run-invalid-identity",
+                "workload": "summary-test",
+                "start_time": "2036-03-05T12:00:00+00:00",
+                "identity_scope": "invocation_scope",
+                "projection_only": True,
+            },
+        },
+    )
+
+    with pytest.raises(ValueError, match="run_summary_run_identity_identity_scope_invalid"):
+        load_validated_run_summary(path)
+
+
+@pytest.mark.contract
+def test_load_validated_run_summary_rejects_run_identity_run_id_mismatch(tmp_path: Path) -> None:
+    path = tmp_path / "run_summary.json"
+    _write_json(
+        path,
+        {
+            "run_id": "run-summary-a",
+            "status": "done",
+            "tools_used": [],
+            "artifact_ids": ["run_identity"],
+            "failure_reason": None,
+            "run_identity": {
+                "run_id": "run-summary-b",
+                "workload": "summary-test",
+                "start_time": "2036-03-05T12:00:00+00:00",
+                "identity_scope": "session_bootstrap",
+                "projection_only": True,
+            },
+        },
+    )
+
+    with pytest.raises(ValueError, match="run_summary_run_identity_run_id_mismatch"):
+        load_validated_run_summary(path)
+
+
+@pytest.mark.contract
 def test_load_first_validated_run_summary_skips_invalid_candidates(tmp_path: Path) -> None:
     invalid = tmp_path / "invalid" / "run_summary.json"
     valid = tmp_path / "valid" / "run_summary.json"

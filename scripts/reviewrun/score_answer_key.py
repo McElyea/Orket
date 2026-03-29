@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from orket.application.review.bundle_validation import load_validated_review_run_bundle_artifacts
+from orket.application.review.control_plane_projection import validate_review_required_identifier
+from scripts.reviewrun.score_answer_key_contract import REPORT_CONTRACT_VERSION, validate_answer_key_score_report
 _STOPWORDS = {
     "a",
     "an",
@@ -276,10 +278,15 @@ def score_answer_key(
     answer_key_path: Path,
 ) -> Dict[str, Any]:
     bundle_artifacts = load_validated_review_run_bundle_artifacts(run_dir)
+    manifest = dict(bundle_artifacts.get("manifest") or {})
     snapshot = dict(bundle_artifacts.get("snapshot") or {})
     deterministic = dict(bundle_artifacts.get("deterministic") or {})
     model = dict(model_payload) if isinstance((model_payload := bundle_artifacts.get("model_assisted")), dict) else None
     key = _load_json(answer_key_path)
+    run_id = validate_review_required_identifier(
+        deterministic.get("run_id") or manifest.get("run_id"),
+        error="reviewrun_answer_key_score_run_id_required",
+    )
 
     changed_paths = [str(item.get("path") or "") for item in list(snapshot.get("changed_files") or [])]
     diff_unified = str(snapshot.get("diff_unified") or "")
@@ -387,7 +394,9 @@ def score_answer_key(
     unexpected_hits = [row["issue_id"] for row in rows if not row["present"] and row["deterministic_hit"]]
 
     summary = {
+        "contract_version": REPORT_CONTRACT_VERSION,
         "fixture_id": str(key.get("fixture_id") or ""),
+        "run_id": run_id,
         "run_dir": str(run_dir),
         "answer_key": str(answer_key_path),
         "snapshot_digest": str(snapshot.get("snapshot_digest") or ""),
@@ -409,10 +418,12 @@ def score_answer_key(
             "reasoning_max_score": model_reasoning_max,
             "fix_score": model_fix_score,
             "fix_max_score": model_fix_max,
+            "reasoning_weight": reasoning_weight,
+            "fix_weight": fix_weight,
         },
         "issues": rows,
     }
-    return summary
+    return validate_answer_key_score_report(summary)
 
 
 def main() -> int:

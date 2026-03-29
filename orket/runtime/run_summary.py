@@ -90,6 +90,13 @@ def validate_run_summary_payload(payload: dict[str, Any]) -> None:
             field_name="run_summary_truthful_runtime_artifact_provenance",
             expected_source="artifact_provenance_facts",
         )
+    run_identity = payload.get("run_identity")
+    if run_identity is not None:
+        _validate_run_identity_for_run(
+            run_identity,
+            run_id=run_id,
+            error_prefix="run_summary_run_identity",
+        )
     control_plane = payload.get("control_plane")
     if control_plane is not None:
         _validate_projection_block(
@@ -97,6 +104,7 @@ def validate_run_summary_payload(payload: dict[str, Any]) -> None:
             field_name="run_summary_control_plane",
             expected_source="control_plane_records",
         )
+        _validate_control_plane_projection_for_run(control_plane)
 
 
 def build_run_summary_payload(
@@ -120,8 +128,9 @@ def build_run_summary_payload(
     }
     run_identity = artifacts.get("run_identity")
     if run_identity is not None:
-        validate_run_identity_projection(
+        _validate_run_identity_for_run(
             run_identity,
+            run_id=str(run_id).strip(),
             error_prefix="run_summary_run_identity",
         )
     packet1 = _build_packet1_extension(
@@ -406,6 +415,78 @@ def _validate_projection_block(value: Any, *, field_name: str, expected_source: 
         raise ValueError(f"{field_name}_projection_source_invalid")
     if value.get("projection_only") is not True:
         raise ValueError(f"{field_name}_projection_only_invalid")
+
+
+def _validate_run_identity_for_run(
+    value: Any,
+    *,
+    run_id: str,
+    error_prefix: str,
+) -> dict[str, Any]:
+    normalized_run_identity = validate_run_identity_projection(
+        value,
+        error_prefix=error_prefix,
+    )
+    if normalized_run_identity["run_id"] != run_id:
+        raise ValueError("run_summary_run_identity_run_id_mismatch")
+    return normalized_run_identity
+
+
+def _validate_control_plane_projection_for_run(
+    value: Any,
+) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ValueError("run_summary_control_plane_invalid")
+    normalized_control_plane = dict(value)
+    projected_run_id = str(normalized_control_plane.get("run_id") or "").strip()
+    current_attempt_id = str(normalized_control_plane.get("current_attempt_id") or "").strip()
+    projected_attempt_id = str(normalized_control_plane.get("attempt_id") or "").strip()
+    projected_step_id = str(normalized_control_plane.get("step_id") or "").strip()
+    projected_attempt_state = str(normalized_control_plane.get("attempt_state") or "").strip()
+    projected_step_kind = str(normalized_control_plane.get("step_kind") or "").strip()
+    projected_attempt_ordinal = normalized_control_plane.get("attempt_ordinal")
+    if (current_attempt_id or projected_attempt_id or projected_step_id) and not projected_run_id:
+        raise ValueError("run_summary_control_plane_run_id_required")
+    if current_attempt_id and not projected_attempt_id:
+        raise ValueError("run_summary_control_plane_attempt_id_required")
+    if projected_step_id and not projected_attempt_id:
+        raise ValueError("run_summary_control_plane_attempt_id_required")
+    if (projected_attempt_state or projected_attempt_ordinal not in (None, "")) and not projected_attempt_id:
+        raise ValueError("run_summary_control_plane_attempt_id_required")
+    if projected_step_kind and not projected_step_id:
+        raise ValueError("run_summary_control_plane_step_id_required")
+    if projected_run_id:
+        for field_name in (
+            "run_state",
+            "workload_id",
+            "workload_version",
+            "policy_snapshot_id",
+            "configuration_snapshot_id",
+        ):
+            if not str(normalized_control_plane.get(field_name) or "").strip():
+                raise ValueError(f"run_summary_control_plane_{field_name}_required")
+        attempt_prefix = f"{projected_run_id}:attempt:"
+        step_prefix = f"{projected_run_id}:step:"
+        if current_attempt_id and not current_attempt_id.startswith(attempt_prefix):
+            raise ValueError("run_summary_control_plane_current_attempt_id_run_lineage_mismatch")
+        if projected_attempt_id and not projected_attempt_id.startswith(attempt_prefix):
+            raise ValueError("run_summary_control_plane_attempt_id_run_lineage_mismatch")
+        if projected_step_id and not projected_step_id.startswith(step_prefix):
+            raise ValueError("run_summary_control_plane_step_id_run_lineage_mismatch")
+    if projected_attempt_id:
+        if not projected_attempt_state:
+            raise ValueError("run_summary_control_plane_attempt_state_required")
+        try:
+            attempt_ordinal = int(projected_attempt_ordinal)
+        except (TypeError, ValueError):
+            raise ValueError("run_summary_control_plane_attempt_ordinal_required") from None
+        if attempt_ordinal <= 0:
+            raise ValueError("run_summary_control_plane_attempt_ordinal_required")
+    if projected_step_id and not projected_step_kind:
+        raise ValueError("run_summary_control_plane_step_kind_required")
+    if current_attempt_id and projected_attempt_id and current_attempt_id != projected_attempt_id:
+        raise ValueError("run_summary_control_plane_current_attempt_id_mismatch")
+    return normalized_control_plane
 
 
 def _build_packet1_extension(
