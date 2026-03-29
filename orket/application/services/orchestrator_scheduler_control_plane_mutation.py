@@ -11,7 +11,7 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
     namespace_scope,
     utc_now,
 )
-from orket.core.contracts import AttemptRecord, LeaseRecord, ReservationRecord, RunRecord, StepRecord
+from orket.core.contracts import AttemptRecord, LeaseRecord, ReservationRecord, RunRecord, StepRecord, WorkloadRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AttemptState,
@@ -41,8 +41,7 @@ async def create_namespace_execution(
     execution_repository: ControlPlaneExecutionRepository,
     publication: ControlPlanePublicationService,
     run_id: str,
-    workload_id: str,
-    workload_version: str,
+    workload: WorkloadRecord,
     issue_id: str,
     admission_ref: str,
     policy_payload: dict[str, object],
@@ -50,10 +49,11 @@ async def create_namespace_execution(
     created_at: str,
 ) -> tuple[RunRecord, AttemptRecord]:
     attempt_id = attempt_id_for_run(run_id=run_id)
+    workload_id = workload.workload_id
     run = RunRecord(
         run_id=run_id,
-        workload_id=workload_id,
-        workload_version=workload_version,
+        workload_id=workload.workload_id,
+        workload_version=workload.workload_version,
         policy_snapshot_id=f"{workload_id}-policy:{run_id}",
         policy_digest=digest(policy_payload),
         configuration_snapshot_id=f"{workload_id}-config:{run_id}",
@@ -93,12 +93,13 @@ async def activate_namespace_authority(
     cleanup_rule: str,
     run: RunRecord,
     attempt: AttemptRecord,
-    workload_id: str,
+    workload: WorkloadRecord,
     holder_ref: str,
     issue_id: str,
     step_kind: str,
     created_at: str,
 ) -> tuple[RunRecord, AttemptRecord, ReservationRecord, LeaseRecord]:
+    workload_id = workload.workload_id
     reservation = await publication.publish_reservation(
         reservation_id=f"{workload_id}-reservation:{run.run_id}",
         holder_ref=holder_ref,
@@ -198,7 +199,7 @@ async def publish_mutation_step_and_effect(
     execution_repository: ControlPlaneExecutionRepository,
     publication: ControlPlanePublicationService,
     run: RunRecord,
-    workload_id: str,
+    workload: WorkloadRecord,
     admission_ref: str,
     attempt_id: str,
     step_kind: str,
@@ -210,6 +211,7 @@ async def publish_mutation_step_and_effect(
     intended_target_ref: str,
     created_at: str,
 ) -> StepRecord:
+    workload_id = workload.workload_id
     step = await execution_repository.save_step_record(
         record=StepRecord(
             step_id=f"{run.run_id}:step:mutate",
@@ -248,7 +250,7 @@ async def close_namespace_mutation(
     run: RunRecord,
     attempt: AttemptRecord,
     lease,
-    workload_id: str,
+    workload: WorkloadRecord,
     step_kind: str,
     output_ref: str,
     result_class: ResultClass,
@@ -256,6 +258,7 @@ async def close_namespace_mutation(
     closure_basis: ClosureBasisClassification,
     ended_at: str,
 ) -> None:
+    workload_id = workload.workload_id
     attempt_state = _attempt_state_for(result_class)
     run_state = _run_state_for(result_class)
     validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=attempt_state)

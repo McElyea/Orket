@@ -47,7 +47,7 @@ async def _seed_scheduler_resource_authority(
     issue_id: str,
     active_lease: bool,
 ) -> None:
-    workload_id = service.TRANSITION_WORKLOAD_ID
+    workload_id = service.TRANSITION_WORKLOAD.workload_id
     reservation = await service.publication.publish_reservation(
         reservation_id=f"{workload_id}-reservation:{run_id}",
         holder_ref=f"orchestrator-issue-scheduler:sess:{issue_id}",
@@ -236,11 +236,11 @@ async def test_orchestrator_scheduler_transition_fail_closed_when_active_run_exi
     await execution_repo.save_run_record(
         record=RunRecord(
             run_id=run_id,
-            workload_id=service.TRANSITION_WORKLOAD_ID,
-            workload_version=service.TRANSITION_WORKLOAD_VERSION,
-            policy_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-policy:{run_id}",
+            workload_id=service.TRANSITION_WORKLOAD.workload_id,
+            workload_version=service.TRANSITION_WORKLOAD.workload_version,
+            policy_snapshot_id=f"{service.TRANSITION_WORKLOAD.workload_id}-policy:{run_id}",
             policy_digest="sha256:policy-active",
-            configuration_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-config:{run_id}",
+            configuration_snapshot_id=f"{service.TRANSITION_WORKLOAD.workload_id}-config:{run_id}",
             configuration_digest="sha256:config-active",
             creation_timestamp="2026-03-26T14:00:00+00:00",
             admission_decision_receipt_ref="issue-transition:sess-scheduler-active:ISSUE-ACTIVE:in_progress->ready:retry_scheduled",
@@ -291,18 +291,18 @@ async def test_orchestrator_scheduler_transition_fail_closed_when_closed_run_att
     await execution_repo.save_run_record(
         record=RunRecord(
             run_id=run_id,
-            workload_id=service.TRANSITION_WORKLOAD_ID,
-            workload_version=service.TRANSITION_WORKLOAD_VERSION,
-            policy_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-policy:{run_id}",
+            workload_id=service.TRANSITION_WORKLOAD.workload_id,
+            workload_version=service.TRANSITION_WORKLOAD.workload_version,
+            policy_snapshot_id=f"{service.TRANSITION_WORKLOAD.workload_id}-policy:{run_id}",
             policy_digest="sha256:policy-drift",
-            configuration_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-config:{run_id}",
+            configuration_snapshot_id=f"{service.TRANSITION_WORKLOAD.workload_id}-config:{run_id}",
             configuration_digest="sha256:config-drift",
             creation_timestamp="2026-03-26T14:05:00+00:00",
             admission_decision_receipt_ref="issue-transition:sess-scheduler-drift:ISSUE-DRIFT:in_progress->blocked:dependency_blocked",
             namespace_scope="issue:ISSUE-DRIFT",
             lifecycle_state=RunState.FAILED_TERMINAL,
             current_attempt_id=attempt_id,
-            final_truth_record_id=f"{service.TRANSITION_WORKLOAD_ID}-final-truth:{run_id}",
+            final_truth_record_id=f"{service.TRANSITION_WORKLOAD.workload_id}-final-truth:{run_id}",
         )
     )
     await execution_repo.save_attempt_record(
@@ -353,11 +353,11 @@ async def test_orchestrator_scheduler_transition_fail_closed_when_closed_run_nam
     await execution_repo.save_run_record(
         record=RunRecord(
             run_id=run_id,
-            workload_id=service.TRANSITION_WORKLOAD_ID,
-            workload_version=service.TRANSITION_WORKLOAD_VERSION,
-            policy_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-policy:{run_id}",
+            workload_id=service.TRANSITION_WORKLOAD.workload_id,
+            workload_version=service.TRANSITION_WORKLOAD.workload_version,
+            policy_snapshot_id=f"{service.TRANSITION_WORKLOAD.workload_id}-policy:{run_id}",
             policy_digest="sha256:policy-scope-drift",
-            configuration_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-config:{run_id}",
+            configuration_snapshot_id=f"{service.TRANSITION_WORKLOAD.workload_id}-config:{run_id}",
             configuration_digest="sha256:config-scope-drift",
             creation_timestamp="2026-03-26T16:15:00+00:00",
             admission_decision_receipt_ref=(
@@ -366,7 +366,7 @@ async def test_orchestrator_scheduler_transition_fail_closed_when_closed_run_nam
             namespace_scope="issue:DIFFERENT-ISSUE",
             lifecycle_state=RunState.COMPLETED,
             current_attempt_id=attempt_id,
-            final_truth_record_id=f"{service.TRANSITION_WORKLOAD_ID}-final-truth:{run_id}",
+            final_truth_record_id=f"{service.TRANSITION_WORKLOAD.workload_id}-final-truth:{run_id}",
         )
     )
     await execution_repo.save_attempt_record(
@@ -420,11 +420,11 @@ async def test_orchestrator_scheduler_transition_fail_closed_when_closed_run_has
     await execution_repo.save_run_record(
         record=RunRecord(
             run_id=run_id,
-            workload_id=service.TRANSITION_WORKLOAD_ID,
-            workload_version=service.TRANSITION_WORKLOAD_VERSION,
-            policy_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-policy:{run_id}",
+            workload_id=service.TRANSITION_WORKLOAD.workload_id,
+            workload_version=service.TRANSITION_WORKLOAD.workload_version,
+            policy_snapshot_id=f"{service.TRANSITION_WORKLOAD.workload_id}-policy:{run_id}",
             policy_digest="sha256:policy-lease-drift",
-            configuration_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-config:{run_id}",
+            configuration_snapshot_id=f"{service.TRANSITION_WORKLOAD.workload_id}-config:{run_id}",
             configuration_digest="sha256:config-lease-drift",
             creation_timestamp="2026-03-26T16:25:00+00:00",
             admission_decision_receipt_ref=(
@@ -433,7 +433,7 @@ async def test_orchestrator_scheduler_transition_fail_closed_when_closed_run_has
             namespace_scope="issue:ISSUE-LEASE-DRIFT",
             lifecycle_state=RunState.COMPLETED,
             current_attempt_id=attempt_id,
-            final_truth_record_id=f"{service.TRANSITION_WORKLOAD_ID}-final-truth:{run_id}",
+            final_truth_record_id=f"{service.TRANSITION_WORKLOAD.workload_id}-final-truth:{run_id}",
         )
     )
     await execution_repo.save_attempt_record(
@@ -487,11 +487,11 @@ async def test_orchestrator_scheduler_transition_fail_closed_when_closed_run_res
     await execution_repo.save_run_record(
         record=RunRecord(
             run_id=run_id,
-            workload_id=service.TRANSITION_WORKLOAD_ID,
-            workload_version=service.TRANSITION_WORKLOAD_VERSION,
-            policy_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-policy:{run_id}",
+            workload_id=service.TRANSITION_WORKLOAD.workload_id,
+            workload_version=service.TRANSITION_WORKLOAD.workload_version,
+            policy_snapshot_id=f"{service.TRANSITION_WORKLOAD.workload_id}-policy:{run_id}",
             policy_digest="sha256:policy-resource-drift",
-            configuration_snapshot_id=f"{service.TRANSITION_WORKLOAD_ID}-config:{run_id}",
+            configuration_snapshot_id=f"{service.TRANSITION_WORKLOAD.workload_id}-config:{run_id}",
             configuration_digest="sha256:config-resource-drift",
             creation_timestamp="2026-03-26T16:30:00+00:00",
             admission_decision_receipt_ref=(
@@ -500,7 +500,7 @@ async def test_orchestrator_scheduler_transition_fail_closed_when_closed_run_res
             namespace_scope="issue:ISSUE-RESOURCE-DRIFT",
             lifecycle_state=RunState.COMPLETED,
             current_attempt_id=attempt_id,
-            final_truth_record_id=f"{service.TRANSITION_WORKLOAD_ID}-final-truth:{run_id}",
+            final_truth_record_id=f"{service.TRANSITION_WORKLOAD.workload_id}-final-truth:{run_id}",
         )
     )
     await execution_repo.save_attempt_record(

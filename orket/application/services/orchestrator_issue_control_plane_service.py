@@ -60,8 +60,6 @@ class OrchestratorIssueControlPlaneService:
     """Publishes shared issue-dispatch reservation, lease, step, effect, and closeout truth."""
 
     WORKLOAD = ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD
-    WORKLOAD_ID = WORKLOAD.workload_id
-    WORKLOAD_VERSION = WORKLOAD.workload_version
     PROMOTION_RULE = "promote_on_issue_turn_dispatch"
     CLEANUP_RULE = "release_on_issue_dispatch_closeout"
 
@@ -182,8 +180,8 @@ class OrchestratorIssueControlPlaneService:
         }
         run = RunRecord(
             run_id=run_id,
-            workload_id=self.WORKLOAD_ID,
-            workload_version=self.WORKLOAD_VERSION,
+            workload_id=self.WORKLOAD.workload_id,
+            workload_version=self.WORKLOAD.workload_version,
             policy_snapshot_id=f"orchestrator-issue-policy:{run_id}",
             policy_digest=digest(policy_payload),
             configuration_snapshot_id=f"orchestrator-issue-config:{run_id}",

@@ -15,6 +15,59 @@ class _DummyExtensionManager:
         return []
 
 
+def _cli_args(**overrides) -> SimpleNamespace:
+    base = {
+        "command": None,
+        "subcommand": None,
+        "target": None,
+        "seed": None,
+        "ref": None,
+        "epic": None,
+        "card": None,
+        "rock": None,
+        "department": "core",
+        "workspace": "workspace/default",
+        "model": None,
+        "build_id": None,
+        "interactive_conductor": False,
+        "driver_steered": False,
+        "resume": None,
+        "task": None,
+        "board": False,
+        "loop": False,
+        "archive_card": [],
+        "archive_build": None,
+        "archive_related": [],
+        "archive_reason": "manual archive",
+        "replay_turn": None,
+        "marshaller_request": None,
+        "marshaller_proposal": [],
+        "marshaller_run_id": None,
+        "marshaller_allow_path": [],
+        "marshaller_promote": False,
+        "marshaller_actor_id": None,
+        "marshaller_actor_source": "cli",
+        "marshaller_branch": "main",
+        "marshaller_inspect_attempt": None,
+        "marshaller_list_limit": 20,
+        "protocol_run_b": None,
+        "protocol_events_a": None,
+        "protocol_events_b": None,
+        "protocol_artifacts_a": None,
+        "protocol_artifacts_b": None,
+        "protocol_runs_root": None,
+        "protocol_campaign_run_id": [],
+        "protocol_baseline_run_id": None,
+        "protocol_parity_session_id": [],
+        "protocol_parity_discover_limit": 200,
+        "protocol_max_parity_mismatches": 0,
+        "protocol_sqlite_db": None,
+        "protocol_strict": False,
+    }
+    base.update(overrides)
+    return SimpleNamespace(**base)
+
+
 @pytest.mark.asyncio
 async def test_cli_startup_runs_reconciliation_without_bypass(monkeypatch, capsys) -> None:
     """Layer: integration. Verifies CLI startup executes reconciliation and emits path markers."""
@@ -114,3 +167,39 @@ async def test_cli_startup_warns_when_reconciliation_failed(monkeypatch, capsys)
 
     assert "No extensions installed." in captured.out
     assert "Structural reconciliation failed; continuing in degraded mode." in captured.err
+
+
+@pytest.mark.asyncio
+async def test_cli_rock_runtime_uses_explicit_run_rock_entrypoint(monkeypatch, capsys) -> None:
+    """Layer: integration. Verifies named rock runtime does not route through run_card heuristics."""
+
+    calls: list[tuple[str, object, object, object]] = []
+
+    class _FakeEngine:
+        def __init__(self, *_args, **_kwargs) -> None:
+            pass
+
+        async def run_rock(self, rock_id, build_id=None, driver_steered=False):
+            calls.append(("run_rock", rock_id, build_id, driver_steered))
+            return {"rock": rock_id}
+
+        async def run_card(self, *_args, **_kwargs):
+            raise AssertionError("run_card should not handle --rock CLI entry")
+
+    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module, "OrchestrationEngine", _FakeEngine)
+    monkeypatch.setattr(cli_module, "print_orket_manifest", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: _cli_args(rock="demo-rock", build_id="build-7", driver_steered=True),
+    )
+
+    await cli_module.run_cli()
+    out = capsys.readouterr().out
+
+    assert ("run_rock", "demo-rock", "build-7", True) in calls
+    assert "Running Orket Rock: demo-rock" in out
+    assert "=== Rock demo-rock Complete ===" in out

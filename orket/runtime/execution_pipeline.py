@@ -27,6 +27,11 @@ from orket.application.services.gitea_state_control_plane_checkpoint_service imp
     build_gitea_state_control_plane_checkpoint_service,
 )
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
+from orket.application.services.control_plane_workload_catalog import (
+    build_cards_workload_contract,
+    resolve_control_plane_workload,
+    WorkloadAuthorityInput,
+)
 from orket.application.services.gitea_state_control_plane_execution_service import (
     build_gitea_state_control_plane_execution_service,
 )
@@ -72,10 +77,6 @@ from orket.runtime.run_start_artifacts import (
 from orket.runtime.deterministic_mode_contract import deterministic_mode_contract_snapshot
 from orket.runtime.settings import resolve_str
 from orket.runtime.state_transition_registry import validate_state_token
-from orket.runtime.workload_adapters import (
-    build_cards_control_plane_workload_record,
-    build_cards_workload_contract,
-)
 from orket.runtime.workload_shell import SharedWorkloadShell
 from orket.runtime_paths import resolve_control_plane_db_path, resolve_runtime_db_path
 from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, summarize_cards_runtime_issues
@@ -451,9 +452,14 @@ class ExecutionPipeline:
             workspace=self.workspace,
             department=self.department,
         )
-        control_plane_workload_record = build_cards_control_plane_workload_record(
-            contract_payload=cards_workload_contract,
-            department=self.department,
+        control_plane_workload_record = resolve_control_plane_workload(
+            WorkloadAuthorityInput(
+                kind="workload_contract_v1",
+                workload_id="cards-epic-execution",
+                contract_payload=cards_workload_contract,
+                output_contract_ref="control_plane.contract.v1:RunRecord",
+                definition_payload={"department": self.department},
+            )
         )
 
         if not await self.sessions.get_session(run_id):

@@ -296,6 +296,7 @@ def _assert_governed_identity(result) -> None:
     assert provenance["determinism_class"] == result.determinism_class
     assert provenance["control_bundle"]["input_identity"] == result.plan_hash
     control_plane_workload_record = provenance["control_plane_workload_record"]
+    assert result.control_plane_workload_record == control_plane_workload_record
     assert control_plane_workload_record["workload_id"] == result.workload_id
     assert control_plane_workload_record["output_contract_ref"] == "extension_run_result_identity_v1"
     assert control_plane_workload_record["workload_digest"].startswith("sha256:")

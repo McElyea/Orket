@@ -40,8 +40,6 @@ class GiteaStateControlPlaneExecutionService:
     """Publishes lease-backed Gitea worker execution into first-class control-plane records."""
 
     WORKLOAD = GITEA_STATE_WORKER_EXECUTION_WORKLOAD
-    WORKLOAD_ID = WORKLOAD.workload_id
-    WORKLOAD_VERSION = WORKLOAD.workload_version
 
     def __init__(
         self,
@@ -89,8 +87,8 @@ class GiteaStateControlPlaneExecutionService:
         }
         run = RunRecord(
             run_id=run_id,
-            workload_id=self.WORKLOAD_ID,
-            workload_version=self.WORKLOAD_VERSION,
+            workload_id=self.WORKLOAD.workload_id,
+            workload_version=self.WORKLOAD.workload_version,
             policy_snapshot_id=f"gitea-state-worker-policy:{card_id}",
             policy_digest=snapshot_digest(policy_payload),
             configuration_snapshot_id=f"gitea-state-worker-config:{run_id}",

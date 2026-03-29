@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import orket.runtime.workload_adapters as workload_adapters
 from pathlib import Path
 
 from orket.core.contracts import WORKLOAD_CONTRACT_VERSION_V1, WorkloadRecord, parse_workload_contract
+from orket.application.services.control_plane_workload_catalog import (
+    CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF,
+    WorkloadAuthorityInput,
+    resolve_control_plane_workload,
+)
 from orket.runtime.workload_adapters import (
     CARDS_CONTROL_PLANE_WORKLOAD_ID,
-    build_cards_control_plane_workload_record,
     build_cards_workload_contract,
 )
 from orket.schema import ArchitectureGovernance, EpicConfig, IssueConfig
@@ -43,7 +48,11 @@ def test_build_cards_workload_contract_v1_shape(tmp_path: Path) -> None:
     assert any(item.get("kind") == "asset" for item in model.required_materials)
 
 
-def test_build_cards_control_plane_workload_record_projects_shared_contract(tmp_path: Path) -> None:
+def test_cards_workload_adapter_does_not_export_workload_record_authority() -> None:
+    assert not hasattr(workload_adapters, "build_cards_control_plane_workload_record")
+
+
+def test_cards_workload_adapter_stays_raw_and_routes_authority_through_resolver(tmp_path: Path) -> None:
     contract_payload = build_cards_workload_contract(
         epic=_epic(),
         run_id="sess-2",
@@ -52,14 +61,19 @@ def test_build_cards_control_plane_workload_record_projects_shared_contract(tmp_
         department="core",
     )
 
-    record = build_cards_control_plane_workload_record(
-        contract_payload=contract_payload,
-        department="core",
+    record = resolve_control_plane_workload(
+        WorkloadAuthorityInput(
+            kind="workload_contract_v1",
+            workload_id=CARDS_CONTROL_PLANE_WORKLOAD_ID,
+            contract_payload=contract_payload,
+            output_contract_ref=CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF,
+            definition_payload={"department": "core"},
+        )
     )
 
     assert isinstance(record, WorkloadRecord)
     assert record.workload_id == CARDS_CONTROL_PLANE_WORKLOAD_ID
     assert record.workload_version == WORKLOAD_CONTRACT_VERSION_V1
     assert record.input_contract_ref == "docs/specs/WORKLOAD_CONTRACT_V1.md"
-    assert record.output_contract_ref == "control_plane.contract.v1:RunRecord"
+    assert record.output_contract_ref == CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF
     assert record.workload_digest.startswith("sha256:")

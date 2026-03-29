@@ -10,6 +10,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+from orket.application.services.control_plane_workload_catalog import (
+    WorkloadAuthorityInput,
+    resolve_control_plane_workload,
+)
 from orket.runtime_paths import durable_root
 
 from .catalog import ExtensionCatalog
@@ -155,6 +159,26 @@ class ExtensionManager:
     def resolve_workload(self, workload_id: str) -> tuple[ExtensionRecord, WorkloadRecord] | None:
         return self.catalog.resolve_workload(workload_id, entry_point_rows=self._discover_entry_point_rows())
 
+    def _resolve_control_plane_workload_record(
+        self,
+        *,
+        extension: ExtensionRecord,
+        workload: WorkloadRecord,
+    ) -> dict[str, Any]:
+        return resolve_control_plane_workload(
+            WorkloadAuthorityInput(
+                kind="extension_manifest_workload",
+                workload_id=workload.workload_id,
+                workload_version=workload.workload_version,
+                extension_id=extension.extension_id,
+                extension_version=extension.extension_version,
+                entrypoint=workload.entrypoint,
+                required_capabilities=workload.required_capabilities,
+                contract_style=workload.contract_style or extension.contract_style,
+                manifest_digest_sha256=extension.manifest_digest_sha256,
+            )
+        ).model_dump(mode="json")
+
     def install_from_repo(self, repo: str, ref: str | None = None) -> ExtensionRecord:
         repo_value = str(repo or "").strip()
         if not repo_value:
@@ -214,11 +238,16 @@ class ExtensionManager:
             raise ValueError(f"Unknown workload '{workload_id}'")
         extension, workload_record = resolved
         self._verify_extension_integrity(extension)
+        control_plane_workload_record = self._resolve_control_plane_workload_record(
+            extension=extension,
+            workload=workload_record,
+        )
 
         if workload_record.contract_style == CONTRACT_STYLE_SDK_V0 or extension.contract_style == CONTRACT_STYLE_SDK_V0:
             return await self._run_sdk_workload(
                 extension=extension,
                 workload=workload_record,
+                control_plane_workload_record=control_plane_workload_record,
                 input_config=input_config,
                 workspace=workspace,
                 department=department,
@@ -227,6 +256,7 @@ class ExtensionManager:
         return await self._run_legacy_workload(
             extension=extension,
             workload=workload_record,
+            control_plane_workload_record=control_plane_workload_record,
             input_config=input_config,
             workspace=workspace,
             department=department,

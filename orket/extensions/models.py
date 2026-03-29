@@ -1,17 +1,11 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
+from typing import Any
 from orket.runtime_paths import durable_root
-
-from .governed_identity import EXTENSION_WORKLOAD_OPERATOR_SURFACE_RESULT
-
-if TYPE_CHECKING:
-    from orket.core.contracts.control_plane_models import WorkloadRecord as ControlPlaneWorkloadRecord
 
 RELIABLE_MODE_ENV = "ORKET_RELIABLE_MODE"
 RELIABLE_REQUIRE_CLEAN_GIT_ENV = "ORKET_RELIABLE_REQUIRE_CLEAN_GIT"
@@ -35,24 +29,6 @@ class WorkloadRecord:
     entrypoint: str = ""
     required_capabilities: tuple[str, ...] = ()
     contract_style: str = CONTRACT_STYLE_LEGACY
-
-    def to_control_plane_workload_record(self, *, extension: "ExtensionRecord") -> "ControlPlaneWorkloadRecord":
-        from orket.core.contracts import build_control_plane_workload_record
-
-        return build_control_plane_workload_record(
-            workload_id=self.workload_id,
-            workload_version=self.workload_version,
-            input_contract_ref=f"extension_manifest:{self.contract_style or extension.contract_style}",
-            output_contract_ref=EXTENSION_WORKLOAD_OPERATOR_SURFACE_RESULT,
-            definition_payload={
-                "extension_id": extension.extension_id,
-                "extension_version": extension.extension_version,
-                "entrypoint": self.entrypoint,
-                "required_capabilities": list(self.required_capabilities),
-                "contract_style": self.contract_style or extension.contract_style,
-                "manifest_digest_sha256": extension.manifest_digest_sha256,
-            },
-        )
 
 
 @dataclass(frozen=True)
@@ -97,6 +73,7 @@ class ExtensionRunResult:
     artifact_manifest_hash: str = ""
     provenance_hash: str = ""
     determinism_class: str = ""
+    control_plane_workload_record: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

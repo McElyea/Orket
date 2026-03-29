@@ -12,6 +12,10 @@ from orket_extension_sdk.llm import LLMProvider
 from orket_extension_sdk.memory import MemoryWriteRequest
 from orket_extension_sdk.result import ArtifactRef, WorkloadResult
 
+from orket.application.services.control_plane_workload_catalog import (
+    WorkloadAuthorityInput,
+    resolve_control_plane_workload,
+)
 from orket.extensions.catalog import ExtensionCatalog
 from orket.extensions.manifest_parser import ManifestParser
 from orket.extensions.models import CONTRACT_STYLE_LEGACY
@@ -70,7 +74,20 @@ def test_extension_catalog_workload_projects_into_control_plane_workload_record(
 
     catalog = ExtensionCatalog(catalog_path)
     extension = catalog.list_extensions()[0]
-    record = extension.workloads[0].to_control_plane_workload_record(extension=extension)
+    workload = extension.workloads[0]
+    record = resolve_control_plane_workload(
+        WorkloadAuthorityInput(
+            kind="extension_manifest_workload",
+            workload_id=workload.workload_id,
+            workload_version=workload.workload_version,
+            extension_id=extension.extension_id,
+            extension_version=extension.extension_version,
+            entrypoint=workload.entrypoint,
+            required_capabilities=workload.required_capabilities,
+            contract_style=workload.contract_style or extension.contract_style,
+            manifest_digest_sha256=extension.manifest_digest_sha256,
+        )
+    )
 
     assert record.workload_id == "demo_v1"
     assert record.input_contract_ref == "extension_manifest:sdk_v0"

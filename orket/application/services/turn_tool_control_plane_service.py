@@ -65,7 +65,6 @@ class TurnToolControlPlaneService:
     """Publishes governed turn-tool execution into first-class ControlPlane records."""
 
     WORKLOAD = TURN_TOOL_WORKLOAD
-    WORKLOAD_ID, WORKLOAD_VERSION = WORKLOAD.workload_id, WORKLOAD.workload_version
 
     def __init__(
         self,
@@ -361,8 +360,8 @@ class TurnToolControlPlaneService:
         }
         record = RunRecord(
             run_id=run_id,
-            workload_id=self.WORKLOAD_ID,
-            workload_version=self.WORKLOAD_VERSION,
+            workload_id=self.WORKLOAD.workload_id,
+            workload_version=self.WORKLOAD.workload_version,
             policy_snapshot_id=f"turn-tool-policy:{run_id}",
             policy_digest=digest(policy_payload),
             configuration_snapshot_id=f"turn-tool-config:{run_id}",

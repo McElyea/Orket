@@ -484,7 +484,7 @@ async def run_cli():
 
         if args.rock:
             print(f"Running Orket Rock: {args.rock}")
-            await engine.run_card(args.rock, build_id=args.build_id)
+            await engine.run_rock(args.rock, build_id=args.build_id, driver_steered=args.driver_steered)
             print(f"\n=== Rock {args.rock} Complete ===")
             return
 

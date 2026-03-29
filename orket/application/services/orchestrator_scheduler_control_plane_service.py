@@ -23,7 +23,7 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
     transition_ref,
     utc_now,
 )
-from orket.core.contracts import RunRecord
+from orket.core.contracts import RunRecord, WorkloadRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     CapabilityClass,
@@ -48,11 +48,7 @@ class OrchestratorSchedulerControlPlaneService:
     """Publishes scheduler-owned namespace authority for orchestrator issue mutations."""
 
     TRANSITION_WORKLOAD = ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD
-    TRANSITION_WORKLOAD_ID = TRANSITION_WORKLOAD.workload_id
-    TRANSITION_WORKLOAD_VERSION = TRANSITION_WORKLOAD.workload_version
     CHILD_WORKLOAD = ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD
-    CHILD_WORKLOAD_ID = CHILD_WORKLOAD.workload_id
-    CHILD_WORKLOAD_VERSION = CHILD_WORKLOAD.workload_version
     PROMOTION_RULE = "promote_on_scheduler_mutation_start"
     CLEANUP_RULE = "release_on_scheduler_mutation_closeout"
 
@@ -151,8 +147,7 @@ class OrchestratorSchedulerControlPlaneService:
                 reason=reason,
                 metadata=metadata,
             ),
-            "workload_id": self.TRANSITION_WORKLOAD_ID,
-            "workload_version": self.TRANSITION_WORKLOAD_VERSION,
+            "workload": self.TRANSITION_WORKLOAD,
             "holder_ref": holder_ref,
             "issue_id": issue_id,
             "admission_ref": admission_ref,
@@ -211,8 +206,7 @@ class OrchestratorSchedulerControlPlaneService:
                     **metadata,
                 },
             ),
-            "workload_id": self.CHILD_WORKLOAD_ID,
-            "workload_version": self.CHILD_WORKLOAD_VERSION,
+            "workload": self.CHILD_WORKLOAD,
             "holder_ref": holder_ref,
             "issue_id": issue_id,
             "admission_ref": creation_receipt_ref,
@@ -247,8 +241,7 @@ class OrchestratorSchedulerControlPlaneService:
         self,
         *,
         run_id: str,
-        workload_id: str,
-        workload_version: str,
+        workload: WorkloadRecord,
         holder_ref: str,
         issue_id: str,
         admission_ref: str,
@@ -277,8 +270,7 @@ class OrchestratorSchedulerControlPlaneService:
             execution_repository=self.execution_repository,
             publication=self.publication,
             run_id=run_id,
-            workload_id=workload_id,
-            workload_version=workload_version,
+            workload=workload,
             issue_id=issue_id,
             admission_ref=admission_ref,
             policy_payload=policy_payload,
@@ -293,7 +285,7 @@ class OrchestratorSchedulerControlPlaneService:
             cleanup_rule=self.CLEANUP_RULE,
             run=run,
             attempt=attempt,
-            workload_id=workload_id,
+            workload=workload,
             holder_ref=holder_ref,
             issue_id=issue_id,
             step_kind=step_kind,
@@ -303,7 +295,7 @@ class OrchestratorSchedulerControlPlaneService:
             execution_repository=self.execution_repository,
             publication=self.publication,
             run=run,
-            workload_id=workload_id,
+            workload=workload,
             admission_ref=admission_ref,
             attempt_id=attempt_id,
             step_kind=step_kind,
@@ -321,7 +313,7 @@ class OrchestratorSchedulerControlPlaneService:
             run=run,
             attempt=attempt,
             lease=lease,
-            workload_id=workload_id,
+            workload=workload,
             step_kind=step_kind,
             output_ref=output_ref,
             result_class=result_class,

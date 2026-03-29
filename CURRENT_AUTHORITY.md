@@ -8,6 +8,7 @@ It is intentionally narrow:
 1. Agent behavior rules remain in `AGENTS.md`.
 2. Contributor workflow rules remain in `docs/CONTRIBUTOR.md`.
 3. This file tracks what is authoritative right now.
+4. Control-plane convergence sequencing stays in `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`; this file should name the live authority seams, not reproduce lane closeout detail.
 
 This file does not define:
 1. all supported features,
@@ -292,6 +293,47 @@ It defines only the currently authoritative paths that agents and contributors m
         "orket/core/contracts/control_plane_models.py",
         "orket/core/domain/control_plane_enums.py",
         "docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md"
+      ]
+    },
+    "control_plane_workload_authority": {
+      "canonical_catalog": "orket/application/services/control_plane_workload_catalog.py",
+      "external_authority_seam": "orket/application/services/control_plane_workload_catalog.py::resolve_control_plane_workload",
+      "matrix_gate_doc": "docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md",
+      "authority_inputs": [
+        "catalog_workload",
+        "workload_contract_v1",
+        "extension_manifest_workload"
+      ],
+      "internal_helpers_not_authority": [
+        "orket/application/services/control_plane_workload_catalog.py::build_cards_workload_contract"
+      ],
+      "compatibility_adapters": [
+        "orket/runtime/workload_adapters.py"
+      ],
+      "status": "partial",
+      "governance_tests": [
+        "tests/application/test_control_plane_workload_authority_governance.py",
+        "tests/runtime/test_cards_workload_adapter.py"
+      ],
+      "note": "Only resolve_control_plane_workload(...) is an externally blessed workload-authority seam. The governed start-path matrix in the Workstream 1 closeout is now a closure gate, so governance fails if a non-test module consumes workload authority from the catalog without explicit matrix coverage, if touched catalog-resolved publishers reintroduce local workload_id/workload_version string-pair aliases, or if run_rock stops delegating while the rock row still reads delegated. The canonical CLI --rock path now reaches run_rock(...) explicitly instead of run_card(...) heuristics. Cards, ODR, and extension workload execution now resolve through that seam, touched catalog-resolved publishers now carry canonical WorkloadRecord objects through their publication helpers instead of restating authority locally, and extension provenance reuses the already-built canonical record instead of minting it later, but broader runtime start-path workload authority is still not universal.",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "orket/application/services/control_plane_workload_catalog.py",
+        "orket/application/services/kernel_action_control_plane_service.py",
+        "orket/application/services/review_run_control_plane_service.py",
+        "orket/application/services/turn_tool_control_plane_service.py",
+        "orket/application/services/orchestrator_issue_control_plane_service.py",
+        "orket/application/services/orchestrator_scheduler_control_plane_service.py",
+        "orket/application/services/orchestrator_scheduler_control_plane_mutation.py",
+        "orket/application/services/gitea_state_control_plane_execution_service.py",
+        "orket/runtime/workload_adapters.py",
+        "orket/extensions/manager.py",
+        "orket/extensions/artifact_provenance.py",
+        "orket/runtime/execution_pipeline.py",
+        "scripts/odr/run_arbiter.py",
+        "tests/application/test_control_plane_workload_authority_governance.py",
+        "docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md",
+        "docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md"
       ]
     },
     "governed_turn_tool_namespace_policy": {

@@ -45,6 +45,7 @@ class WorkloadExecutor:
         *,
         extension: ExtensionRecord,
         workload: WorkloadRecord,
+        control_plane_workload_record: dict[str, Any],
         input_config: dict[str, Any],
         workspace: Path,
         department: str,
@@ -118,6 +119,7 @@ class WorkloadExecutor:
             artifact_manifest=artifact_manifest,
             artifact_root=artifact_root,
             department=department,
+            control_plane_workload_record=control_plane_workload_record,
         )
         provenance_path = artifact_root / "provenance.json"
         await asyncio.to_thread(self._write_json_file, provenance_path, provenance)
@@ -142,6 +144,7 @@ class WorkloadExecutor:
             artifact_manifest_hash=artifact_manifest_hash,
             provenance_hash=provenance_hash,
             determinism_class=governed_identity["determinism_class"],
+            control_plane_workload_record=dict(control_plane_workload_record),
         )
 
     async def run_sdk_workload(
@@ -149,6 +152,7 @@ class WorkloadExecutor:
         *,
         extension: ExtensionRecord,
         workload: WorkloadRecord,
+        control_plane_workload_record: dict[str, Any],
         input_config: dict[str, Any],
         workspace: Path,
         department: str,
@@ -232,6 +236,7 @@ class WorkloadExecutor:
             artifact_manifest=artifact_manifest,
             artifact_root=artifact_root,
             department=department,
+            control_plane_workload_record=control_plane_workload_record,
         )
         provenance_path = artifact_root / "provenance.json"
         await asyncio.to_thread(self._write_json_file, provenance_path, provenance)
@@ -256,6 +261,7 @@ class WorkloadExecutor:
             artifact_manifest_hash=artifact_manifest_hash,
             provenance_hash=provenance_hash,
             determinism_class=governed_identity["determinism_class"],
+            control_plane_workload_record=dict(control_plane_workload_record),
         )
 
     def _compile_workload(

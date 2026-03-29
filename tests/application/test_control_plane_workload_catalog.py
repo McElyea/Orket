@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from orket.application.services.control_plane_workload_catalog import (
+    CARDS_CONTROL_PLANE_WORKLOAD_ID,
     CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF,
     GITEA_STATE_WORKER_EXECUTION_WORKLOAD,
     KERNEL_ACTION_WORKLOAD,
@@ -12,7 +15,11 @@ from orket.application.services.control_plane_workload_catalog import (
     REVIEW_RUN_WORKLOAD,
     SANDBOX_RUNTIME_WORKLOAD_VERSION,
     TURN_TOOL_WORKLOAD,
+    WorkloadAuthorityInput,
+    build_cards_workload_contract,
+    control_plane_workload_for_key,
     governed_control_plane_workloads,
+    resolve_control_plane_workload,
     sandbox_runtime_workload_for_tech_stack,
 )
 from orket.application.services.gitea_state_control_plane_execution_service import (
@@ -33,7 +40,25 @@ from orket.application.services.sandbox_control_plane_execution_service import (
 from orket.application.services.turn_tool_control_plane_service import (
     TurnToolControlPlaneService,
 )
+from orket.core.contracts import WORKLOAD_CONTRACT_VERSION_V1, parse_workload_contract
 from orket.domain.sandbox import TechStack
+from orket.schema import ArchitectureGovernance, EpicConfig, IssueConfig
+
+
+def _epic() -> EpicConfig:
+    return EpicConfig(
+        id="epic-1",
+        name="epic-1",
+        type="epic",
+        team="standard",
+        environment="standard",
+        description="catalog test",
+        architecture_governance=ArchitectureGovernance(idesign=False, pattern="Standard"),
+        issues=[
+            IssueConfig(id="ISSUE-1", summary="A", seat="lead_architect", priority="High", depends_on=[]),
+            IssueConfig(id="ISSUE-2", summary="B", seat="lead_architect", priority="Medium", depends_on=["ISSUE-1"]),
+        ],
+    )
 
 
 def test_governed_control_plane_workload_catalog_exposes_stable_workload_records() -> None:
@@ -61,6 +86,86 @@ def test_sandbox_runtime_workload_catalog_resolves_supported_tech_stacks() -> No
     assert workload.workload_version == SANDBOX_RUNTIME_WORKLOAD_VERSION
     assert workload.output_contract_ref == CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF
     assert workload.workload_digest.startswith("sha256:")
+
+
+def test_workload_authority_resolver_supports_catalog_and_contract_modes(tmp_path: Path) -> None:
+    assert control_plane_workload_for_key("kernel_action") == KERNEL_ACTION_WORKLOAD
+    assert (
+        resolve_control_plane_workload(
+            WorkloadAuthorityInput(
+                kind="catalog_workload",
+                workload_key="sandbox-workload:fastapi-react-postgres",
+            )
+        )
+        == sandbox_runtime_workload_for_tech_stack("fastapi-react-postgres")
+    )
+
+    contract_payload = build_cards_workload_contract(
+        epic=_epic(),
+        run_id="sess-2",
+        build_id="build-2",
+        workspace=tmp_path,
+        department="core",
+    )
+    record = resolve_control_plane_workload(
+        WorkloadAuthorityInput(
+            kind="workload_contract_v1",
+            workload_id=CARDS_CONTROL_PLANE_WORKLOAD_ID,
+            contract_payload=contract_payload,
+            output_contract_ref=CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF,
+            definition_payload={"department": "core"},
+        )
+    )
+
+    assert record.workload_id == CARDS_CONTROL_PLANE_WORKLOAD_ID
+    assert record.workload_version == WORKLOAD_CONTRACT_VERSION_V1
+
+
+def test_cards_workload_builders_route_through_shared_catalog(tmp_path: Path) -> None:
+    contract_payload = build_cards_workload_contract(
+        epic=_epic(),
+        run_id="sess-1",
+        build_id="build-1",
+        workspace=tmp_path,
+        department="core",
+    )
+
+    assert parse_workload_contract(contract_payload).workload_contract_version == WORKLOAD_CONTRACT_VERSION_V1
+
+    record = resolve_control_plane_workload(
+        WorkloadAuthorityInput(
+            kind="workload_contract_v1",
+            workload_id=CARDS_CONTROL_PLANE_WORKLOAD_ID,
+            contract_payload=contract_payload,
+            output_contract_ref=CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF,
+            definition_payload={"department": "core"},
+        )
+    )
+
+    assert record.workload_id == CARDS_CONTROL_PLANE_WORKLOAD_ID
+    assert record.workload_version == WORKLOAD_CONTRACT_VERSION_V1
+    assert record.output_contract_ref == CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF
+
+
+def test_extension_manifest_workload_projection_uses_shared_builder() -> None:
+    record = resolve_control_plane_workload(
+        WorkloadAuthorityInput(
+            kind="extension_manifest_workload",
+            workload_id="demo_v1",
+            workload_version="1.0.0",
+            extension_id="demo.ext",
+            extension_version="1.2.3",
+            entrypoint="demo:run",
+            required_capabilities=("workspace.root",),
+            contract_style="sdk_v0",
+            manifest_digest_sha256="f" * 64,
+        )
+    )
+
+    assert record.workload_id == "demo_v1"
+    assert record.input_contract_ref == "extension_manifest:sdk_v0"
+    assert record.output_contract_ref == "extension_run_result_identity_v1"
+    assert record.workload_digest.startswith("sha256:")
 
 
 def test_governed_control_plane_services_alias_the_shared_workload_catalog() -> None:

@@ -335,8 +335,8 @@ async def test_orchestrator_issue_dispatch_fail_closed_when_active_run_exists() 
     await execution_repo.save_run_record(
         record=RunRecord(
             run_id=run_id,
-            workload_id=service.WORKLOAD_ID,
-            workload_version=service.WORKLOAD_VERSION,
+            workload_id=service.WORKLOAD.workload_id,
+            workload_version=service.WORKLOAD.workload_version,
             policy_snapshot_id=f"orchestrator-issue-policy:{run_id}",
             policy_digest="sha256:policy-active",
             configuration_snapshot_id=f"orchestrator-issue-config:{run_id}",
@@ -390,8 +390,8 @@ async def test_orchestrator_issue_dispatch_fail_closed_when_closed_run_attempt_i
     await execution_repo.save_run_record(
         record=RunRecord(
             run_id=run_id,
-            workload_id=service.WORKLOAD_ID,
-            workload_version=service.WORKLOAD_VERSION,
+            workload_id=service.WORKLOAD.workload_id,
+            workload_version=service.WORKLOAD.workload_version,
             policy_snapshot_id=f"orchestrator-issue-policy:{run_id}",
             policy_digest="sha256:policy-drift",
             configuration_snapshot_id=f"orchestrator-issue-config:{run_id}",
@@ -453,8 +453,8 @@ async def test_orchestrator_issue_dispatch_fail_closed_when_closed_run_namespace
     await execution_repo.save_run_record(
         record=RunRecord(
             run_id=run_id,
-            workload_id=service.WORKLOAD_ID,
-            workload_version=service.WORKLOAD_VERSION,
+            workload_id=service.WORKLOAD.workload_id,
+            workload_version=service.WORKLOAD.workload_version,
             policy_snapshot_id=f"orchestrator-issue-policy:{run_id}",
             policy_digest="sha256:policy-scope-drift",
             configuration_snapshot_id=f"orchestrator-issue-config:{run_id}",
@@ -514,8 +514,8 @@ async def test_orchestrator_issue_dispatch_fail_closed_when_closed_run_has_activ
     await execution_repo.save_run_record(
         record=RunRecord(
             run_id=run_id,
-            workload_id=service.WORKLOAD_ID,
-            workload_version=service.WORKLOAD_VERSION,
+            workload_id=service.WORKLOAD.workload_id,
+            workload_version=service.WORKLOAD.workload_version,
             policy_snapshot_id=f"orchestrator-issue-policy:{run_id}",
             policy_digest="sha256:policy-lease-drift",
             configuration_snapshot_id=f"orchestrator-issue-config:{run_id}",

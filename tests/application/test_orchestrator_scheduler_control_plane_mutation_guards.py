@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from orket.application.services.control_plane_workload_catalog import ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.orchestrator_issue_control_plane_support import lease_id_for_run
 from orket.application.services.orchestrator_scheduler_control_plane_mutation import (
@@ -39,8 +40,8 @@ async def test_close_namespace_mutation_uses_current_lifecycle_state_guards() ->
     run = await execution_repo.save_run_record(
         record=RunRecord(
             run_id="scheduler-run-guard-1",
-            workload_id="orchestrator-scheduler-mutation",
-            workload_version="orchestrator.scheduler_mutation.v1",
+            workload_id=ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD.workload_id,
+            workload_version=ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD.workload_version,
             policy_snapshot_id="scheduler-policy-guard-1",
             policy_digest="sha256:scheduler-policy-guard-1",
             configuration_snapshot_id="scheduler-config-guard-1",
@@ -77,7 +78,7 @@ async def test_close_namespace_mutation_uses_current_lifecycle_state_guards() ->
                 cleanup_eligibility_rule="release_on_closeout",
                 source_reservation_id="scheduler-reservation-guard-1",
             ),
-            workload_id="orchestrator-scheduler-mutation",
+            workload=ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD,
             step_kind="scheduler_guard_test",
             output_ref="scheduler-guard-output-ref",
             result_class=ResultClass.SUCCESS,
@@ -96,8 +97,7 @@ async def test_activate_namespace_authority_fail_closes_reservation_and_lease_on
         execution_repository=execution_repo,
         publication=publication,
         run_id="scheduler-run-guard-2",
-        workload_id="orchestrator-scheduler-mutation",
-        workload_version="orchestrator.scheduler_mutation.v1",
+        workload=ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD,
         issue_id="ISSUE-2",
         admission_ref="scheduler-admission-guard-2",
         policy_payload={"reason": "dependency_blocked"},
@@ -118,7 +118,7 @@ async def test_activate_namespace_authority_fail_closes_reservation_and_lease_on
             cleanup_rule="release_on_scheduler_mutation_closeout",
             run=run,
             attempt=attempt,
-            workload_id="orchestrator-scheduler-mutation",
+            workload=ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD,
             holder_ref="orchestrator:scheduler:issue:ISSUE-2",
             issue_id="ISSUE-2",
             step_kind="issue_status_transition",
@@ -126,7 +126,9 @@ async def test_activate_namespace_authority_fail_closes_reservation_and_lease_on
         )
 
     reservation = await record_repo.get_latest_reservation_record(
-        reservation_id="orchestrator-scheduler-mutation-reservation:scheduler-run-guard-2"
+        reservation_id=(
+            f"{ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD.workload_id}-reservation:scheduler-run-guard-2"
+        )
     )
     lease = await record_repo.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run.run_id))
     resource_history = await record_repo.list_resource_records(resource_id="namespace:issue:ISSUE-2")

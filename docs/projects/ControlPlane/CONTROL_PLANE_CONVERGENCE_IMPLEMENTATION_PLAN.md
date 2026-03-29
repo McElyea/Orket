@@ -60,6 +60,12 @@ The following remain frozen:
 7. the effect journal is a normative authority surface
 8. slim namespace semantics exist now and are not deferred
 9. terminal commands may stop continuation but may not rewrite truth
+10. `orket/application/services/control_plane_workload_catalog.py` is the only governed start-path seam that may mint `WorkloadRecord` objects
+11. other workload surfaces may only provide raw input data, call that seam, or read/project already-built canonical workload records
+12. runtime-local adapters, extension models, and workload-specific entrypoints must not import low-level workload builders directly
+13. a negative governance test must fail if non-allowed modules import or call `build_control_plane_workload_record(...)` or `build_control_plane_workload_record_from_workload_contract(...)`
+14. the governed start-path matrix in `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md` is a closure gate, not passive inventory; any non-test module that directly consumes workload authority from `control_plane_workload_catalog.py` must be represented there with a truthful classification, and delegated rock entrypoints must fail governance if they stop delegating before `CE-01` closes
+15. touched catalog-resolved publishers must carry canonical `WorkloadRecord` objects through run publication and mutation helpers instead of restating workload authority as local `workload_id` / `workload_version` string-pair aliases
 
 ## Activation status
 
@@ -79,6 +85,7 @@ The strongest already-converged surfaces are:
 3. effect-journal publication already covers sandbox deploy and cleanup, governed kernel commit behavior, default orchestrator issue-dispatch, scheduler-owned mutation and child-workload composition, governed turn-tool execution, and Gitea worker state transitions
 4. checkpoint and recovery-decision truth already exist on the sandbox reclaimable path, the governed turn pre-effect same-attempt path, and the Gitea worker pre-effect claimed-card path
 5. first-class operator-action, reconciliation, and final-truth publication already exist on selected sandbox, approval, governed turn-tool, governed kernel, and Gitea worker closure paths
+6. cards, ODR, and extension workload execution now route through `orket/application/services/control_plane_workload_catalog.py`, with `orket/runtime/workload_adapters.py` reduced to a compatibility shim, extension models reduced to raw manifest data only, extension workload start now resolving one canonical `WorkloadRecord` before execution and then reusing that record in provenance instead of minting it later, the named CLI rock runtime now entering `run_rock(...)` explicitly instead of passing through `run_card(...)` heuristics, touched catalog-resolved publishers now carrying canonical `WorkloadRecord` objects through their run-publication and namespace-mutation helpers instead of restating authority as local string-pair aliases, and the workload-authority governance tests now forbidding direct low-level workload-builder use outside the canonical seam, unclassified direct workload-authority consumers outside the governed start-path matrix, and alias drift on those touched catalog-resolved publishers
 
 The highest-risk open gaps remain:
 1. `Workload` still reads `conflicting` in the crosswalk because broader runtime start paths still do not share one universal governed workload authority surface
@@ -133,7 +140,7 @@ Status terms in this snapshot:
 
 | Workstream | Snapshot status | Canonical closeout artifact path | Truthful current note |
 | --- | --- | --- | --- |
-| 1 | `partial artifact recorded` | `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md` | Canonical workload, run, attempt, and step slices are already recorded, but `CE-01` and `CE-02` remain open and the `Workload`, `Run`, `Attempt`, and `Step` rows still need more convergence proof before this workstream can close. |
+| 1 | `partial artifact recorded` | `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md` | Canonical workload, run, attempt, and step slices are already recorded, including cards, ODR, and extension workload execution now routing through the shared workload resolver, touched catalog-resolved publishers now carrying canonical `WorkloadRecord` objects instead of local workload string-pair aliases, and governance tests guarding direct low-level builder use, start-path matrix drift, delegated rock-entrypoint drift, and string-alias drift on those touched publishers, but `CE-01` and `CE-02` remain open and the `Workload`, `Run`, `Attempt`, and `Step` rows still need more convergence proof before this workstream can close. |
 | 2 | `partial artifact recorded` | `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_2_CLOSEOUT.md` | Reservation, lease, and shared resource slices are already recorded, but `CE-03` remains open and broader read-side adoption plus any still-uncovered ownership paths remain outside the closeout claim. |
 | 3 | `partial artifact recorded` | `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_3_CLOSEOUT.md` | Projection-only demotion of legacy receipt and summary-backed effect surfaces is already recorded, but `CE-04` remains open and broader default-path effect-journal publication still needs additional convergence slices. |
 | 4 | `partial artifact recorded` | `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_4_CLOSEOUT.md` | Checkpoint and recovery slices are now recorded for the sandbox reclaimable path, the governed turn pre-effect recovery path, and the Gitea worker claimed-card path, but `CE-05` remains open and broader supervisor-owned checkpoint and recovery authority is still not universal. |

@@ -126,6 +126,7 @@ class ArtifactProvenanceBuilder:
         artifact_manifest: dict[str, Any],
         artifact_root: Path,
         department: str,
+        control_plane_workload_record: dict[str, Any],
     ) -> dict[str, Any]:
         input_digest = hashlib.sha256(
             json.dumps(input_config, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -169,9 +170,7 @@ class ArtifactProvenanceBuilder:
                 "compat_fallbacks": list(extension.compat_fallbacks),
             },
             "workload": {"workload_id": workload.workload_id, "workload_version": workload.workload_version},
-            "control_plane_workload_record": manifest_workload.to_control_plane_workload_record(
-                extension=extension
-            ).model_dump(mode="json"),
+            "control_plane_workload_record": dict(control_plane_workload_record),
             "input_config": input_config if verbose else {},
             "input_config_digest": input_digest,
             "input_config_redacted": self._redacted_snapshot(input_config),
@@ -196,6 +195,7 @@ class ArtifactProvenanceBuilder:
         artifact_manifest: dict[str, Any],
         artifact_root: Path,
         department: str,
+        control_plane_workload_record: dict[str, Any],
     ) -> dict[str, Any]:
         verbose = self._provenance_verbose_enabled()
         governed_identity = build_extension_governed_identity(
@@ -242,9 +242,7 @@ class ArtifactProvenanceBuilder:
                 "entrypoint": workload.entrypoint,
                 "required_capabilities": list(workload.required_capabilities),
             },
-            "control_plane_workload_record": workload.to_control_plane_workload_record(
-                extension=extension
-            ).model_dump(mode="json"),
+            "control_plane_workload_record": dict(control_plane_workload_record),
             "department": department,
             "input_config": input_config if verbose else {},
             "input_config_digest": input_digest,

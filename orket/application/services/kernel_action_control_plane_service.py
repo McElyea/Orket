@@ -74,8 +74,6 @@ class KernelActionControlPlaneService:
     """Publishes per-trace governed kernel actions into the control-plane store."""
 
     WORKLOAD = KERNEL_ACTION_WORKLOAD
-    WORKLOAD_ID = WORKLOAD.workload_id
-    WORKLOAD_VERSION = WORKLOAD.workload_version
     ALLOWED_COMMIT_STATUSES = frozenset({"COMMITTED", "REJECTED_POLICY", "ERROR"})
     run_id_for = staticmethod(run_id_for)
     attempt_id_for = staticmethod(attempt_id_for)
@@ -126,8 +124,8 @@ class KernelActionControlPlaneService:
             }
             run = RunRecord(
                 run_id=run_id,
-                workload_id=self.WORKLOAD_ID,
-                workload_version=self.WORKLOAD_VERSION,
+                workload_id=self.WORKLOAD.workload_id,
+                workload_version=self.WORKLOAD.workload_version,
                 policy_snapshot_id=self.policy_snapshot_id_for(session_id=session_id, trace_id=trace_id),
                 policy_digest=decision_digest,
                 configuration_snapshot_id=self.configuration_snapshot_id_for(session_id=session_id, trace_id=trace_id),

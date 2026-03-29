@@ -30,8 +30,6 @@ class ReviewRunControlPlaneService:
     """Publishes first-class run, attempt, step, and snapshot truth for manual review runs."""
 
     WORKLOAD = REVIEW_RUN_WORKLOAD
-    WORKLOAD_ID = WORKLOAD.workload_id
-    WORKLOAD_VERSION = WORKLOAD.workload_version
 
     def __init__(
         self,
@@ -67,8 +65,8 @@ class ReviewRunControlPlaneService:
         }
         run = RunRecord(
             run_id=run_id,
-            workload_id=self.WORKLOAD_ID,
-            workload_version=self.WORKLOAD_VERSION,
+            workload_id=self.WORKLOAD.workload_id,
+            workload_version=self.WORKLOAD.workload_version,
             policy_snapshot_id=f"review-run-policy:{run_id}",
             policy_digest=snapshot_digest(policy_payload),
             configuration_snapshot_id=f"review-run-config:{run_id}",
