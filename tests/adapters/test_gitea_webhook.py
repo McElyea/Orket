@@ -116,6 +116,7 @@ async def test_auto_reject_after_4_cycles(monkeypatch, tmp_path):
 
 @pytest.mark.asyncio
 async def test_pr_opened_updates_status_with_cardstatus_enum(monkeypatch, tmp_path):
+    """Layer: integration. Verifies PR-opened issue routing updates status and resumes through the canonical card surface."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
     from orket.schema import CardStatus

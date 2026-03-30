@@ -3,7 +3,6 @@ from orket.runtime.execution_pipeline import (
     ExecutionPipeline,
     orchestrate,
     orchestrate_card,
-    orchestrate_rock,
 )
 from orket.runtime.composition import (
     CompositionConfig,
@@ -18,7 +17,6 @@ __all__ = [
     "ExecutionPipeline",
     "orchestrate",
     "orchestrate_card",
-    "orchestrate_rock",
     "CompositionConfig",
     "create_engine",
     "create_api_app",

@@ -6,10 +6,10 @@ from orket.core.contracts import (
     WORKLOAD_CONTRACT_VERSION_V1,
     WorkloadContractV1,
     WorkloadRecord,
-    build_control_plane_workload_record_from_workload_contract,
     missing_required_workload_keys,
     parse_workload_contract,
 )
+from orket.core.contracts.workload_identity import _build_control_plane_workload_record_from_workload_contract
 
 
 def _valid_payload() -> dict:
@@ -56,7 +56,7 @@ def test_workload_contract_rejects_extra_fields() -> None:
 
 
 def test_workload_contract_projects_into_control_plane_workload_record() -> None:
-    record = build_control_plane_workload_record_from_workload_contract(
+    record = _build_control_plane_workload_record_from_workload_contract(
         workload_id="odr-run-arbiter",
         contract_payload=_valid_payload(),
         output_contract_ref="benchmarks/published/ODR/index.json",

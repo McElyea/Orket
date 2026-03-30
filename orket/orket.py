@@ -8,7 +8,6 @@ from orket.runtime import (
     ExecutionPipeline,
     orchestrate,
     orchestrate_card,
-    orchestrate_rock,
 )
 
 __all__ = [
@@ -16,5 +15,4 @@ __all__ = [
     "ExecutionPipeline",
     "orchestrate",
     "orchestrate_card",
-    "orchestrate_rock",
 ]

@@ -23,7 +23,7 @@ def default_extensions_catalog_path() -> Path:
 
 
 @dataclass(frozen=True)
-class WorkloadRecord:
+class _ExtensionManifestEntry:
     workload_id: str
     workload_version: str
     entrypoint: str = ""
@@ -40,7 +40,7 @@ class ExtensionRecord:
     path: str
     module: str
     register_callable: str
-    workloads: tuple[WorkloadRecord, ...]
+    manifest_entries: tuple[_ExtensionManifestEntry, ...]
     contract_style: str = CONTRACT_STYLE_LEGACY
     manifest_path: str = ""
     resolved_commit_sha: str = ""
@@ -81,7 +81,6 @@ class LoadedManifest:
     payload: dict[str, Any]
     manifest_path: Path
     contract_style: str
-
 
 def utc_now_iso() -> str:
     return datetime.now(UTC).isoformat()

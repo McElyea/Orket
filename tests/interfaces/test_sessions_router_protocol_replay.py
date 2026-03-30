@@ -42,10 +42,8 @@ class _StubInteractionManager:
 
 
 class _StubExtensionManager:
-    def resolve_workload(self, workload_id: str) -> object | None:
-        if workload_id == "ext-workload":
-            return object()
-        return None
+    def has_manifest_entry(self, workload_id: str) -> bool:
+        return workload_id == "ext-workload"
 
     async def run_workload(self, **_kwargs: Any) -> None:
         return None

@@ -11,7 +11,7 @@ from .control_plane_models import WorkloadRecord
 from .workload_contract import WORKLOAD_CONTRACT_VERSION_V1, WorkloadContractV1, parse_workload_contract
 
 
-def build_control_plane_workload_record(
+def _build_control_plane_workload_record(
     *,
     workload_id: str,
     workload_version: str,
@@ -63,7 +63,7 @@ def build_control_plane_workload_record(
     )
 
 
-def build_control_plane_workload_record_from_workload_contract(
+def _build_control_plane_workload_record_from_workload_contract(
     *,
     workload_id: str,
     contract_payload: WorkloadContractV1 | Mapping[str, Any],
@@ -85,7 +85,7 @@ def build_control_plane_workload_record_from_workload_contract(
         "workload_contract": contract.model_dump(mode="json"),
         **dict(definition_payload or {}),
     }
-    return build_control_plane_workload_record(
+    return _build_control_plane_workload_record(
         workload_id=workload_id,
         workload_version=WORKLOAD_CONTRACT_VERSION_V1,
         input_contract_ref="docs/specs/WORKLOAD_CONTRACT_V1.md",
@@ -112,7 +112,4 @@ def _normalize_strings(values: Sequence[str]) -> list[str]:
     return sorted({str(value).strip() for value in values if str(value).strip()})
 
 
-__all__ = [
-    "build_control_plane_workload_record",
-    "build_control_plane_workload_record_from_workload_contract",
-]
+__all__: list[str] = []

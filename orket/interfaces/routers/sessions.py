@@ -82,8 +82,8 @@ def build_sessions_router(
         workload_id = str(req.workload_id or "").strip()
         if not workload_id:
             raise HTTPException(status_code=400, detail="workload_id is required")
-        extension_match = extension_manager.resolve_workload(workload_id)
-        if not is_builtin_workload(workload_id) and extension_match is None:
+        has_extension_manifest_entry = extension_manager.has_manifest_entry(workload_id)
+        if not is_builtin_workload(workload_id) and not has_extension_manifest_entry:
             raise HTTPException(
                 status_code=400,
                 detail=(

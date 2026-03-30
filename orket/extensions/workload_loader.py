@@ -12,7 +12,7 @@ from orket_extension_sdk.workload import Workload as SDKWorkload
 from orket_extension_sdk.workload import WorkloadContext as SDKWorkloadContext
 
 from .contracts import ExtensionRegistry, Workload
-from .models import ExtensionRecord, WorkloadRecord
+from .models import ExtensionRecord, _ExtensionManifestEntry
 
 
 class WorkloadLoader:
@@ -52,7 +52,7 @@ class WorkloadLoader:
                 except ValueError:
                     pass
 
-    def load_sdk_workload(self, extension: ExtensionRecord, workload: WorkloadRecord) -> SDKWorkload:
+    def load_sdk_workload(self, extension: ExtensionRecord, workload: _ExtensionManifestEntry) -> SDKWorkload:
         extension_path = Path(extension.path).resolve()
         if not extension_path.exists():
             raise FileNotFoundError(f"Extension path missing: {extension.path}")

@@ -7,13 +7,13 @@ from pathlib import Path
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run benchmark tasks through live Orket rock execution and score the results."
+        description="Run benchmark tasks through live Orket collection assets via the canonical card runtime and score the results."
     )
     parser.add_argument("--task-bank", default="benchmarks/task_bank/v2_realworld/tasks.json")
     parser.add_argument("--policy", default="model/core/contracts/benchmark_scoring_policy.json")
     parser.add_argument("--runs", type=int, default=1)
     parser.add_argument("--runtime-target", "--venue", dest="runtime_target", default="local-hardware")
-    parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="live-rock")
+    parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="live-card")
     parser.add_argument("--task-id-min", type=int, default=1)
     parser.add_argument("--task-id-max", type=int, default=40)
     parser.add_argument("--raw-out", default="benchmarks/results/benchmarks/live_rock_v2_001_040_determinism_report.json")

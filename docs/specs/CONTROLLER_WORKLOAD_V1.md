@@ -24,7 +24,7 @@ Owner: Orket Core
 1. SDK exposes controller orchestration as an optional layer at `orket_extension_sdk.workloads.controller`.
 2. Host runtime remains authoritative for child dispatch, policy gates, and observability emission.
 3. Extension entrypoints may remain as compatibility adapters that delegate to this SDK layer.
-4. Runtime import guard policy allows the audited compatibility bridge import `orket.extensions.controller_workload_runtime` for controller workload adapters; other internal `orket.*` surfaces remain blocked unless explicitly allowlisted.
+4. Runtime import guard policy allows the audited controller compatibility bridge imports `orket.extensions.controller_workload_runtime`, `orket.extensions.controller_dispatcher`, `orket.extensions.controller_dispatcher_contract`, and `orket.extensions.controller_observability` for controller workload adapters; other internal `orket.*` surfaces remain blocked unless explicitly allowlisted.
 
 ## Envelope Contract
 

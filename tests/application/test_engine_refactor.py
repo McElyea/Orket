@@ -13,8 +13,8 @@ class _FakePipeline:
         self.calls.append(("run_epic", epic_id, build_id, session_id, driver_steered))
         return []
 
-    async def run_rock(self, rock_id, build_id=None, session_id=None, driver_steered=False):
-        self.calls.append(("run_rock", rock_id, build_id, session_id, driver_steered))
+    async def run_issue(self, issue_id, build_id=None, session_id=None, driver_steered=False):
+        self.calls.append(("run_issue", issue_id, build_id, session_id, driver_steered))
         return {}
 
     async def run_card(self, card_id, build_id=None, session_id=None, driver_steered=False, target_issue_id=None):
@@ -65,6 +65,7 @@ class _FakeKernelGateway:
 
 @pytest.mark.asyncio
 async def test_engine_explicit_calls(monkeypatch):
+    """Layer: unit. Verifies the surviving compatibility wrappers collapse back to the canonical engine run_card surface."""
     workspace = Path("./test_workspace")
     fake_pipeline = _FakePipeline()
 
@@ -74,17 +75,21 @@ async def test_engine_explicit_calls(monkeypatch):
 
     engine = OrchestrationEngine(workspace)
 
-    await engine.run_epic("my-epic")
-    await engine.run_rock("my-rock")
+    await engine.run_epic("my-epic", target_issue_id="ISSUE-1")
     await engine.run_issue("my-issue")
+    await engine.run_rock("my-rock")
 
-    assert ("run_epic", "my-epic", None, None, False) in fake_pipeline.calls
-    assert ("run_rock", "my-rock", None, None, False) in fake_pipeline.calls
+    assert ("run_card", "my-epic", None, None, False, "ISSUE-1") in fake_pipeline.calls
     assert ("run_card", "my-issue", None, None, False, None) in fake_pipeline.calls
+    assert ("run_card", "my-rock", None, None, False, None) in fake_pipeline.calls
+    assert not any(call[0] == "run_epic" for call in fake_pipeline.calls)
+    assert not any(call[0] == "run_issue" for call in fake_pipeline.calls)
+    assert not any(call[0] == "run_rock" for call in fake_pipeline.calls)
 
 
 @pytest.mark.asyncio
-async def test_engine_run_card_deprecated(monkeypatch):
+async def test_engine_run_card_is_canonical_public_surface(monkeypatch):
+    """Layer: unit. Verifies the canonical card path reaches the generic pipeline surface."""
     workspace = Path("./test_workspace")
     fake_pipeline = _FakePipeline()
 

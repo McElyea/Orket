@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
-from orket.discovery import discover_project_assets, get_engine_recommendations
+from orket.discovery import discover_project_assets, get_engine_recommendations, perform_first_run_onboarding
 
 
 def _patch_engine_registry(monkeypatch, payload: dict) -> None:
@@ -109,3 +109,18 @@ def test_discover_project_assets_anchors_model_root_to_project_root(monkeypatch,
         "epics": ["epics-fixture"],
         "teams": ["teams-fixture"],
     }
+
+
+def test_perform_first_run_onboarding_recommends_canonical_card_entrypoint(monkeypatch, capsys):
+    """Layer: unit. Verifies onboarding recommends the canonical `--card` command instead of blessing rock execution."""
+    monkeypatch.setattr("orket.discovery.load_user_settings", lambda: {})
+    monkeypatch.setattr("orket.discovery.save_user_settings", lambda _payload: None)
+    monkeypatch.setattr("orket.discovery.log_event", lambda *_args, **_kwargs: None)
+
+    result = perform_first_run_onboarding()
+    out = capsys.readouterr().out
+
+    assert result == "first_run_setup"
+    assert "canonical card entrypoint" in out
+    assert "python main.py --card initialize_orket" in out
+    assert "initialization rock" not in out

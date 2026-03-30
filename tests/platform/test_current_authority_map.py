@@ -82,6 +82,7 @@ def test_contract_current_authority_summary_matches_json() -> None:
     expected_values = (
         authority["dependency_authority"]["install_command"],
         authority["runtime_entrypoints"]["cli_default"],
+        authority["runtime_entrypoints"]["cli_named_card"],
         authority["runtime_entrypoints"]["cli_named_rock"],
         authority["runtime_entrypoints"]["api"],
         authority["canonical_test_command"]["command"],

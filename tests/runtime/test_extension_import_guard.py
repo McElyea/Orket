@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from orket.extensions.import_guard import ExtensionImportGuard
-from orket.extensions.models import CONTRACT_STYLE_SDK_V0, ExtensionRecord, WorkloadRecord
+from orket.extensions.models import CONTRACT_STYLE_SDK_V0, ExtensionRecord, _ExtensionManifestEntry
 from orket.extensions.reproducibility import ReproducibilityEnforcer
 from orket.extensions.workload_executor import WorkloadExecutor
 
@@ -28,8 +28,10 @@ def _build_executor(project_root: Path) -> WorkloadExecutor:
     )
 
 
-def _sdk_records(*, extension_root: Path, module_name: str, workload_id: str) -> tuple[ExtensionRecord, WorkloadRecord]:
-    workload = WorkloadRecord(
+def _sdk_records(
+    *, extension_root: Path, module_name: str, workload_id: str
+) -> tuple[ExtensionRecord, _ExtensionManifestEntry]:
+    workload = _ExtensionManifestEntry(
         workload_id=workload_id,
         workload_version="0.1.0",
         entrypoint=f"{module_name}:run_workload",
@@ -44,7 +46,7 @@ def _sdk_records(*, extension_root: Path, module_name: str, workload_id: str) ->
         path=str(extension_root),
         module="",
         register_callable="",
-        workloads=(workload,),
+        manifest_entries=(workload,),
         contract_style=CONTRACT_STYLE_SDK_V0,
     )
     return extension, workload
@@ -56,6 +58,9 @@ def test_extension_import_guard_prefix_policy() -> None:
     assert guard.is_blocked("orket.runtime.provider_runtime_target") is True
     assert guard.is_blocked("orket.interfaces.api") is True
     assert guard.is_blocked("orket.extensions.controller_workload_runtime") is False
+    assert guard.is_blocked("orket.extensions.controller_dispatcher") is False
+    assert guard.is_blocked("orket.extensions.controller_dispatcher_contract") is False
+    assert guard.is_blocked("orket.extensions.controller_observability") is False
     assert guard.is_blocked("orket_extension_sdk") is False
     assert guard.is_blocked("orket_extension_sdk.result") is False
     assert guard.is_blocked("json") is False
@@ -96,6 +101,7 @@ async def test_sdk_run_blocks_dynamic_internal_orket_import_and_does_not_leak_gu
         await executor.run_sdk_workload(
             extension=extension,
             workload=workload,
+            control_plane_workload_record={},
             input_config={},
             workspace=workspace,
             department="core",
@@ -140,6 +146,7 @@ async def test_sdk_run_allows_dynamic_sdk_imports(tmp_path: Path) -> None:
     result = await executor.run_sdk_workload(
         extension=extension,
         workload=workload,
+        control_plane_workload_record={},
         input_config={},
         workspace=workspace,
         department="core",

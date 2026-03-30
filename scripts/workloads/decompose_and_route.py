@@ -315,7 +315,7 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
                 config_root=workspace,
                 run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
             )
-            pipeline_result = await pipeline.run_epic(EPIC_ID, session_id=session_id, build_id=build_id)
+            pipeline_result = await pipeline.run_card(EPIC_ID, session_id=session_id, build_id=build_id)
 
     summary = run_summary(workspace, session_id)
     runtime_rows = runtime_events(workspace, session_id)

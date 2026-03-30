@@ -18,7 +18,12 @@ from orket.extensions.controller_dispatcher import (
     ERROR_RECURSION_DENIED,
 )
 from orket.extensions.manager import ExtensionManager
-from orket.extensions.models import CONTRACT_STYLE_SDK_V0, ExtensionRecord, ExtensionRunResult, WorkloadRecord
+from orket.extensions.models import (
+    CONTRACT_STYLE_SDK_V0,
+    ExtensionRecord,
+    ExtensionRunResult,
+    _ExtensionManifestEntry,
+)
 from orket_extension_sdk.controller import ControllerPolicyCaps
 
 
@@ -46,7 +51,7 @@ class _StubExtensionManager:
         self._outcomes = outcomes
         self.calls: list[str] = []
 
-    def resolve_workload(self, workload_id: str) -> tuple[ExtensionRecord, WorkloadRecord] | None:
+    def _resolve_manifest_entry(self, workload_id: str) -> tuple[ExtensionRecord, _ExtensionManifestEntry] | None:
         style = self._workload_styles.get(workload_id)
         if style is None:
             return None
@@ -58,10 +63,10 @@ class _StubExtensionManager:
             path=".",
             module="",
             register_callable="",
-            workloads=(),
+            manifest_entries=(),
             contract_style=style,
         )
-        workload = WorkloadRecord(
+        workload = _ExtensionManifestEntry(
             workload_id=workload_id,
             workload_version="0.1.0",
             contract_style=style,

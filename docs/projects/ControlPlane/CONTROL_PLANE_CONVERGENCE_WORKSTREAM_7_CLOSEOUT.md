@@ -78,8 +78,8 @@ Workstream 7 compatibility exits affected by the slices recorded here:
 ## Surviving projection-only or still-temporary surfaces
 
 Surviving surfaces that remain allowed for now:
-1. `orket/runtime/workload_adapters.py` and extension-manifest entrypoints
-   Reason: the covered governed paths now share explicit namespace authority, but broader runtime start paths still keep multiple workload entry surfaces alive.
+1. extension-manifest entrypoints and metadata-facing extension workload surfaces under `orket/extensions/`
+   Reason: the covered governed paths now share explicit namespace authority, the former runtime workload-adapter shim is retired entirely, but broader runtime start paths still keep extension-manifest-facing workload surfaces alive as temporary compatibility debt.
 2. governed and non-governed mutation paths outside the covered turn-tool and scheduler slices
    Reason: safe-tooling and namespace fail-closed behavior now exists on the covered paths, but it is not yet universal across every workload and resource-targeting family.
 

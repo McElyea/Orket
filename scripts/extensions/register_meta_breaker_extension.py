@@ -9,6 +9,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from orket.extensions.catalog import ExtensionCatalog
+from orket.extensions.manifest_parser import ManifestParser
 from orket.runtime_paths import durable_root
 
 EXTENSION_ID = "meta.breaker.extension"
@@ -172,6 +174,17 @@ def _catalog_path() -> Path:
     return path
 
 
+def _catalog_row(*, extension_dir: Path, manifest_path: Path, manifest: dict[str, Any]) -> dict[str, Any]:
+    record = ManifestParser().record_from_manifest(
+        manifest,
+        source="workspace/live_ext/meta_breaker",
+        path=extension_dir,
+        contract_style="sdk_v0",
+        manifest_path=manifest_path,
+    )
+    return ExtensionCatalog.row_from_record(record)
+
+
 def main() -> int:
     extension_dir = _extension_dir(PROJECT_ROOT)
     extension_dir.mkdir(parents=True, exist_ok=True)
@@ -199,26 +212,7 @@ def main() -> int:
     payload = json.loads(catalog_path.read_text(encoding="utf-8"))
     rows = payload.get("extensions") if isinstance(payload.get("extensions"), list) else []
     rows = [row for row in rows if not (isinstance(row, dict) and str(row.get("extension_id")) == EXTENSION_ID)]
-    rows.append(
-        {
-            "extension_id": EXTENSION_ID,
-            "extension_version": "0.1.0",
-            "extension_api_version": "v0",
-            "contract_style": "sdk_v0",
-            "source": "workspace/live_ext/meta_breaker",
-            "path": str(extension_dir),
-            "manifest_path": str(manifest_path),
-            "workloads": [
-                {
-                    "workload_id": WORKLOAD_ID,
-                    "workload_version": "0.1.0",
-                    "entrypoint": "meta_breaker_extension:run_workload",
-                    "required_capabilities": [],
-                    "contract_style": "sdk_v0",
-                }
-            ],
-        }
-    )
+    rows.append(_catalog_row(extension_dir=extension_dir, manifest_path=manifest_path, manifest=manifest))
     payload["extensions"] = rows
     catalog_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 

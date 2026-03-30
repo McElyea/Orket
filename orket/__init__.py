@@ -1,4 +1,4 @@
-from .orket import orchestrate, orchestrate_rock, ConfigLoader
+from .orket import orchestrate, ConfigLoader
 from pathlib import Path
 from importlib.metadata import version, PackageNotFoundError
 import tomllib
@@ -31,7 +31,6 @@ __version__ = _resolve_runtime_version()
 
 __all__ = [
     "orchestrate",
-    "orchestrate_rock",
     "ConfigLoader",
     "__version__",
 ]

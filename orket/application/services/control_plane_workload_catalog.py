@@ -8,8 +8,10 @@ from typing import Any, Literal
 from orket.core.contracts import (
     WORKLOAD_CONTRACT_VERSION_V1,
     WorkloadRecord,
-    build_control_plane_workload_record,
-    build_control_plane_workload_record_from_workload_contract,
+)
+from orket.core.contracts.workload_identity import (
+    _build_control_plane_workload_record,
+    _build_control_plane_workload_record_from_workload_contract,
 )
 from orket.core.domain import CapabilityClass
 from orket.schema import EpicConfig
@@ -29,14 +31,14 @@ _SUPPORTED_SANDBOX_TECH_STACKS = (
     "django-react-postgres",
 )
 
-KERNEL_ACTION_WORKLOAD = build_control_plane_workload_record(
+KERNEL_ACTION_WORKLOAD = _build_control_plane_workload_record(
     workload_id="kernel-action-path",
     workload_version="kernel_api.v1",
     input_contract_ref="kernel_api/v1",
     output_contract_ref=CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF,
 )
 
-ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD = build_control_plane_workload_record(
+ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD = _build_control_plane_workload_record(
     workload_id="orchestrator-issue-dispatch",
     workload_version="orchestrator.issue_dispatch.v1",
     input_contract_ref="orchestrator.issue_dispatch.transition",
@@ -44,7 +46,7 @@ ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD = build_control_plane_workload_record(
     declared_capabilities=[CapabilityClass.BOUNDED_LOCAL_MUTATION],
 )
 
-ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD = build_control_plane_workload_record(
+ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD = _build_control_plane_workload_record(
     workload_id="orchestrator-issue-scheduler",
     workload_version="orchestrator.issue_scheduler.v1",
     input_contract_ref="orchestrator.issue_scheduler.transition",
@@ -52,7 +54,7 @@ ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD = build_control_plane_workload_record
     declared_capabilities=[CapabilityClass.BOUNDED_LOCAL_MUTATION],
 )
 
-ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD = build_control_plane_workload_record(
+ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD = _build_control_plane_workload_record(
     workload_id="orchestrator-child-workload-composition",
     workload_version="orchestrator.child_workload_composition.v1",
     input_contract_ref="orchestrator.child_workload_composition.issue_creation",
@@ -60,14 +62,14 @@ ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD = build_control_plane_workload_
     declared_capabilities=[CapabilityClass.BOUNDED_LOCAL_MUTATION],
 )
 
-TURN_TOOL_WORKLOAD = build_control_plane_workload_record(
+TURN_TOOL_WORKLOAD = _build_control_plane_workload_record(
     workload_id="governed-turn-tools",
     workload_version="turn_executor.governed.v1",
     input_contract_ref="turn_executor.governed.input.v1",
     output_contract_ref=CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF,
 )
 
-GITEA_STATE_WORKER_EXECUTION_WORKLOAD = build_control_plane_workload_record(
+GITEA_STATE_WORKER_EXECUTION_WORKLOAD = _build_control_plane_workload_record(
     workload_id="gitea-state-worker-card-execution",
     workload_version="gitea_state_worker.v1",
     input_contract_ref="gitea.state_backend.claimed_card.v1",
@@ -75,7 +77,7 @@ GITEA_STATE_WORKER_EXECUTION_WORKLOAD = build_control_plane_workload_record(
     declared_capabilities=[CapabilityClass.EXTERNAL_MUTATION],
 )
 
-REVIEW_RUN_WORKLOAD = build_control_plane_workload_record(
+REVIEW_RUN_WORKLOAD = _build_control_plane_workload_record(
     workload_id="review-run-manual",
     workload_version="review_run.v0",
     input_contract_ref="docs/specs/REVIEW_RUN_V0.md",
@@ -84,7 +86,7 @@ REVIEW_RUN_WORKLOAD = build_control_plane_workload_record(
 )
 
 _SANDBOX_RUNTIME_WORKLOADS = {
-    tech_stack: build_control_plane_workload_record(
+    tech_stack: _build_control_plane_workload_record(
         workload_id=f"sandbox-workload:{tech_stack}",
         workload_version=SANDBOX_RUNTIME_WORKLOAD_VERSION,
         input_contract_ref="sandbox.lifecycle.create.v1",
@@ -155,7 +157,7 @@ def resolve_control_plane_workload(authority_input: WorkloadAuthorityInput) -> W
             authority_input.output_contract_ref,
             field_name="output_contract_ref",
         )
-        return build_control_plane_workload_record_from_workload_contract(
+        return _build_control_plane_workload_record_from_workload_contract(
             workload_id=workload_id,
             contract_payload=dict(authority_input.contract_payload or {}),
             output_contract_ref=output_contract_ref,
@@ -167,7 +169,7 @@ def resolve_control_plane_workload(authority_input: WorkloadAuthorityInput) -> W
         extension_id = _require_token(authority_input.extension_id, field_name="extension_id")
         extension_version = _require_token(authority_input.extension_version, field_name="extension_version")
         contract_style = _require_token(authority_input.contract_style, field_name="contract_style")
-        return build_control_plane_workload_record(
+        return _build_control_plane_workload_record(
             workload_id=workload_id,
             workload_version=workload_version,
             input_contract_ref=f"extension_manifest:{contract_style}",
@@ -193,6 +195,65 @@ def control_plane_workload_for_key(workload_key: str) -> WorkloadRecord:
         WorkloadAuthorityInput(
             kind="catalog_workload",
             workload_key=workload_key,
+        )
+    )
+
+
+def _resolve_cards_control_plane_workload_from_contract(
+    *,
+    contract_payload: Mapping[str, Any],
+    department: str,
+) -> WorkloadRecord:
+    return resolve_control_plane_workload(
+        WorkloadAuthorityInput(
+            kind="workload_contract_v1",
+            workload_id=CARDS_CONTROL_PLANE_WORKLOAD_ID,
+            contract_payload=dict(contract_payload),
+            output_contract_ref=CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF,
+            definition_payload={"department": str(department)},
+        )
+    )
+
+
+def _resolve_odr_arbiter_control_plane_workload_from_contract(
+    *,
+    contract_payload: Mapping[str, Any],
+    output_contract_ref: str,
+    runner: str,
+) -> WorkloadRecord:
+    return resolve_control_plane_workload(
+        WorkloadAuthorityInput(
+            kind="workload_contract_v1",
+            workload_id="odr-run-arbiter",
+            contract_payload=dict(contract_payload),
+            output_contract_ref=output_contract_ref,
+            definition_payload={"runner": str(runner)},
+        )
+    )
+
+
+def _resolve_extension_control_plane_workload(
+    *,
+    workload_id: str,
+    workload_version: str,
+    extension_id: str,
+    extension_version: str,
+    entrypoint: str,
+    required_capabilities: Sequence[str],
+    contract_style: str,
+    manifest_digest_sha256: str,
+) -> WorkloadRecord:
+    return resolve_control_plane_workload(
+        WorkloadAuthorityInput(
+            kind="extension_manifest_workload",
+            workload_id=workload_id,
+            workload_version=workload_version,
+            extension_id=extension_id,
+            extension_version=extension_version,
+            entrypoint=entrypoint,
+            required_capabilities=tuple(required_capabilities),
+            contract_style=contract_style,
+            manifest_digest_sha256=manifest_digest_sha256,
         )
     )
 

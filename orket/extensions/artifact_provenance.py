@@ -18,7 +18,7 @@ from .governed_identity import (
     build_extension_governed_identity,
     validate_governed_identity,
 )
-from .models import CONTRACT_STYLE_SDK_V0, ExtensionRecord, WorkloadRecord
+from .models import CONTRACT_STYLE_SDK_V0, ExtensionRecord, _ExtensionManifestEntry
 from .reproducibility import ReproducibilityEnforcer
 
 
@@ -117,7 +117,7 @@ class ArtifactProvenanceBuilder:
         *,
         extension: ExtensionRecord,
         workload: Workload,
-        manifest_workload: WorkloadRecord,
+        manifest_entry: _ExtensionManifestEntry,
         input_config: dict[str, Any],
         run_plan: RunPlan,
         plan_hash: str,
@@ -187,7 +187,7 @@ class ArtifactProvenanceBuilder:
         self,
         *,
         extension: ExtensionRecord,
-        workload: WorkloadRecord,
+        workload: _ExtensionManifestEntry,
         input_config: dict[str, Any],
         input_digest: str,
         run_result: dict[str, Any],

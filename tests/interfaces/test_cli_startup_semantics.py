@@ -110,7 +110,7 @@ async def test_cli_startup_runs_reconciliation_without_bypass(monkeypatch, capsy
     assert ("discovery_startup_path", {"path": "no_op", "reason": "setup_complete"}) in startup_events
 
 
-def test_perform_first_run_onboarding_marks_first_run(monkeypatch) -> None:
+def test_perform_first_run_onboarding_marks_first_run(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies first-run onboarding status, persistence, and telemetry."""
     startup_events = []
     saved_settings = []
@@ -123,10 +123,13 @@ def test_perform_first_run_onboarding_marks_first_run(monkeypatch) -> None:
     monkeypatch.setattr(discovery_module, "log_event", _capture_event)
 
     result = discovery_module.perform_first_run_onboarding()
+    out = capsys.readouterr().out
 
     assert result == "first_run_setup"
     assert saved_settings == [{"setup_complete": True, "hardware_profile": "auto-detected"}]
     assert ("discovery_startup_path", {"path": "first_run_setup", "result": "completed"}) in startup_events
+    assert "python main.py --card initialize_orket" in out
+    assert "python main.py --rock initialize_orket" not in out
 
 
 def test_perform_first_run_onboarding_no_op_when_complete(monkeypatch) -> None:
@@ -170,8 +173,8 @@ async def test_cli_startup_warns_when_reconciliation_failed(monkeypatch, capsys)
 
 
 @pytest.mark.asyncio
-async def test_cli_rock_runtime_uses_explicit_run_rock_entrypoint(monkeypatch, capsys) -> None:
-    """Layer: integration. Verifies named rock runtime does not route through run_card heuristics."""
+async def test_cli_rock_runtime_preserves_flag_but_uses_thin_wrapper(monkeypatch, capsys) -> None:
+    """Layer: integration. Verifies the `--rock` CLI flag routes through the thin wrapper over the canonical card surface."""
 
     calls: list[tuple[str, object, object, object]] = []
 
@@ -179,12 +182,13 @@ async def test_cli_rock_runtime_uses_explicit_run_rock_entrypoint(monkeypatch, c
         def __init__(self, *_args, **_kwargs) -> None:
             pass
 
-        async def run_rock(self, rock_id, build_id=None, driver_steered=False):
-            calls.append(("run_rock", rock_id, build_id, driver_steered))
-            return {"rock": rock_id}
+        async def run_card(self, card_id, build_id=None, driver_steered=False):
+            calls.append(("run_card", card_id, build_id, driver_steered))
+            return {"card": card_id}
 
-        async def run_card(self, *_args, **_kwargs):
-            raise AssertionError("run_card should not handle --rock CLI entry")
+        async def run_rock(self, rock_name, build_id=None, driver_steered=False):
+            calls.append(("run_rock", rock_name, build_id, driver_steered))
+            return {"card": rock_name}
 
     monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
@@ -201,5 +205,6 @@ async def test_cli_rock_runtime_uses_explicit_run_rock_entrypoint(monkeypatch, c
     out = capsys.readouterr().out
 
     assert ("run_rock", "demo-rock", "build-7", True) in calls
-    assert "Running Orket Rock: demo-rock" in out
-    assert "=== Rock demo-rock Complete ===" in out
+    assert ("run_card", "demo-rock", "build-7", True) not in calls
+    assert "Running Orket Card via legacy --rock alias: demo-rock" in out
+    assert "=== Card demo-rock Complete (legacy --rock alias) ===" in out

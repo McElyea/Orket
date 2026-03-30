@@ -27,13 +27,13 @@ class ExtensionEngineAdapter:
         if not target:
             raise ValueError("RunAction target is required")
 
-        if op == "run_card":
-            return await self.engine.run_card(target, **params)
-        if op == "run_epic":
-            return {"transcript": await self.engine.run_epic(target, **params)}
-        if op == "run_rock":
-            return await self.engine.run_rock(target, **params)
-        if op == "run_issue":
-            return {"transcript": await self.engine.run_issue(target, **params)}
+        canonical_op = "run_card" if op in {"run_epic", "run_issue", "run_rock"} else op
+
+        # Legacy action ops normalize onto the canonical card surface.
+        if canonical_op == "run_card":
+            result = await self.engine.run_card(target, **params)
+            if op in {"run_epic", "run_issue"}:
+                return {"transcript": result}
+            return result
 
         raise ValueError(f"Unsupported run action op '{action.op}'")

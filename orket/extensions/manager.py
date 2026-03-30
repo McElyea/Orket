@@ -7,12 +7,11 @@ import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from orket.application.services.control_plane_workload_catalog import (
-    WorkloadAuthorityInput,
-    resolve_control_plane_workload,
+    _resolve_extension_control_plane_workload,
 )
 from orket.runtime_paths import durable_root
 
@@ -29,12 +28,14 @@ from .models import (
     ExtensionRecord,
     ExtensionRunResult,
     LoadedManifest,
-    WorkloadRecord,
     default_extensions_catalog_path,
     utc_now_iso,
 )
 from .reproducibility import ReproducibilityEnforcer
 from .workload_executor import WorkloadExecutor
+
+if TYPE_CHECKING:
+    from .models import _ExtensionManifestEntry
 
 _LoadedManifest = LoadedManifest
 
@@ -156,27 +157,27 @@ class ExtensionManager:
         rows = self._discover_entry_point_rows()
         return self.catalog.list_extensions(entry_point_rows=rows)
 
-    def resolve_workload(self, workload_id: str) -> tuple[ExtensionRecord, WorkloadRecord] | None:
-        return self.catalog.resolve_workload(workload_id, entry_point_rows=self._discover_entry_point_rows())
+    def has_manifest_entry(self, workload_id: str) -> bool:
+        return self._resolve_manifest_entry(workload_id) is not None
+
+    def _resolve_manifest_entry(self, workload_id: str) -> tuple[ExtensionRecord, _ExtensionManifestEntry] | None:
+        return self.catalog._resolve_manifest_entry(workload_id, entry_point_rows=self._discover_entry_point_rows())
 
     def _resolve_control_plane_workload_record(
         self,
         *,
         extension: ExtensionRecord,
-        workload: WorkloadRecord,
+        workload: _ExtensionManifestEntry,
     ) -> dict[str, Any]:
-        return resolve_control_plane_workload(
-            WorkloadAuthorityInput(
-                kind="extension_manifest_workload",
-                workload_id=workload.workload_id,
-                workload_version=workload.workload_version,
-                extension_id=extension.extension_id,
-                extension_version=extension.extension_version,
-                entrypoint=workload.entrypoint,
-                required_capabilities=workload.required_capabilities,
-                contract_style=workload.contract_style or extension.contract_style,
-                manifest_digest_sha256=extension.manifest_digest_sha256,
-            )
+        return _resolve_extension_control_plane_workload(
+            workload_id=workload.workload_id,
+            workload_version=workload.workload_version,
+            extension_id=extension.extension_id,
+            extension_version=extension.extension_version,
+            entrypoint=workload.entrypoint,
+            required_capabilities=workload.required_capabilities,
+            contract_style=workload.contract_style or extension.contract_style,
+            manifest_digest_sha256=extension.manifest_digest_sha256,
         ).model_dump(mode="json")
 
     def install_from_repo(self, repo: str, ref: str | None = None) -> ExtensionRecord:
@@ -233,7 +234,7 @@ class ExtensionManager:
         department: str,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
-        resolved = self.resolve_workload(workload_id)
+        resolved = self._resolve_manifest_entry(workload_id)
         if resolved is None:
             raise ValueError(f"Unknown workload '{workload_id}'")
         extension, workload_record = resolved
@@ -390,6 +391,5 @@ __all__ = [
     "ExtensionManager",
     "ExtensionRecord",
     "ExtensionRunResult",
-    "WorkloadRecord",
     "_LoadedManifest",
 ]

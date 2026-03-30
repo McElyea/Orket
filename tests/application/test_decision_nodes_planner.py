@@ -699,6 +699,10 @@ def test_registry_resolves_default_execution_runtime():
     assert isinstance(node, DefaultExecutionRuntimeStrategyNode)
     assert len(node.select_run_id(None)) == 8
     assert node.select_epic_build_id(None, "My Epic", lambda s: s.lower().replace(" ", "-")) == "build-my-epic"
+    assert (
+        node.select_epic_collection_build_id(None, "My Collection", lambda s: s.lower().replace(" ", "-"))
+        == "epic-collection-build-my-collection"
+    )
 
 
 def test_registry_execution_runtime_env_override_wins(monkeypatch):
@@ -709,10 +713,10 @@ def test_registry_execution_runtime_env_override_wins(monkeypatch):
         def select_epic_build_id(self, build_id, epic_name, sanitize_name):
             return "BUILDX"
 
-        def select_rock_session_id(self, session_id):
+        def select_epic_collection_session_id(self, session_id):
             return "ROCKRUNX"
 
-        def select_rock_build_id(self, build_id, rock_name, sanitize_name):
+        def select_epic_collection_build_id(self, build_id, collection_name, sanitize_name):
             return "ROCKBUILDX"
 
     monkeypatch.setenv("ORKET_EXECUTION_RUNTIME_NODE", "custom-runtime")

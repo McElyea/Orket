@@ -26,10 +26,12 @@ card_runner = _load_card_runner()
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run one benchmark task through live Orket rock execution.")
+    parser = argparse.ArgumentParser(
+        description="Run one benchmark task through live Orket collection assets via the canonical card runtime."
+    )
     parser.add_argument("--task", required=True, help="Path to benchmark task JSON.")
     parser.add_argument("--runtime-target", "--venue", dest="runtime_target", default="local-hardware")
-    parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="live-rock")
+    parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="live-card")
     parser.add_argument("--run-dir", default="", help="Workspace/run directory.")
     parser.add_argument("--runs-root", default="workspace/runs", help="Durable root for indexed run artifacts.")
     parser.add_argument("--department", default="core")
@@ -99,7 +101,7 @@ def main() -> int:
     run_dir.mkdir(parents=True, exist_ok=True)
     runs_root = Path(args.runs_root)
     runs_root.mkdir(parents=True, exist_ok=True)
-    canonical_name = f"{started_at.strftime('%Y%m%d_%H%M%S')}_task{task_id_padded}_{run_id}_rock"
+    canonical_name = f"{started_at.strftime('%Y%m%d_%H%M%S')}_task{task_id_padded}_{run_id}_card"
     canonical_run_dir = runs_root / canonical_name
     canonical_run_dir.mkdir(parents=True, exist_ok=True)
     run_manifest_path = runs_root.parent / "run_manifest.jsonl"
@@ -128,9 +130,9 @@ def main() -> int:
     )
 
     epic_name = f"benchmark_live_{task_id}_{uuid.uuid4().hex[:8]}"
-    rock_name = f"benchmark_live_rock_{task_id}_{uuid.uuid4().hex[:8]}"
+    entry_card_name = f"benchmark_live_collection_{task_id}_{uuid.uuid4().hex[:8]}"
     epic_path = Path("model") / str(args.department) / "epics" / f"{epic_name}.json"
-    rock_path = Path("model") / str(args.department) / "rocks" / f"{rock_name}.json"
+    collection_path = Path("model") / str(args.department) / "rocks" / f"{entry_card_name}.json"
 
     epic_payload = card_runner._build_epic(  # noqa: SLF001 - intentional reuse of tested helper
         task=task,
@@ -138,18 +140,18 @@ def main() -> int:
         output_file=output_file,
     )
     epic_payload["name"] = epic_name
-    rock_payload = {
-        "name": rock_name,
-        "description": f"Live benchmark rock for task {task_id}",
+    collection_payload = {
+        "name": entry_card_name,
+        "description": f"Live benchmark collection asset for task {task_id}",
         "status": "ready",
         "owner_department": str(args.department),
         "epics": [{"department": str(args.department), "epic": epic_name}],
     }
 
     epic_path.parent.mkdir(parents=True, exist_ok=True)
-    rock_path.parent.mkdir(parents=True, exist_ok=True)
+    collection_path.parent.mkdir(parents=True, exist_ok=True)
     epic_path.write_text(json.dumps(epic_payload, indent=2) + "\n", encoding="utf-8")
-    rock_path.write_text(json.dumps(rock_payload, indent=2) + "\n", encoding="utf-8")
+    collection_path.write_text(json.dumps(collection_payload, indent=2) + "\n", encoding="utf-8")
 
     _append_jsonl(
         canonical_run_dir / "runtime_lifecycle.jsonl",
@@ -159,7 +161,8 @@ def main() -> int:
             "run_id": run_id,
             "task_id": task_id,
             "workspace": str(run_dir).replace("\\", "/"),
-            "rock": rock_name,
+            "entry_card": entry_card_name,
+            "asset_kind": "epic_collection",
             "epic": epic_name,
         },
     )
@@ -167,8 +170,8 @@ def main() -> int:
     cmd = [
         "python",
         "main.py",
-        "--rock",
-        rock_name,
+        "--card",
+        entry_card_name,
         "--department",
         str(args.department),
         "--workspace",
@@ -185,7 +188,7 @@ def main() -> int:
         except OSError:
             pass
         try:
-            rock_path.unlink(missing_ok=True)
+            collection_path.unlink(missing_ok=True)
         except OSError:
             pass
 
@@ -292,8 +295,9 @@ def main() -> int:
         if session_id
         else "",
         "epic": epic_name,
-        "rock": rock_name,
-        "run_mode": "rock",
+        "entry_card": entry_card_name,
+        "asset_kind": "epic_collection",
+        "run_mode": "card",
         "runtime_roles": sorted(runtime_roles),
         "model_map": {},
         "prompt_checksum": "",
@@ -321,7 +325,7 @@ def main() -> int:
                 "run_manifest": str(run_manifest_path).replace("\\", "/"),
                 "run_id": run_id,
                 "session_id": session_id,
-                "rock": rock_name,
+                "entry_card": entry_card_name,
                 "epic": epic_name,
                 "output_file": output_file,
                 "validation_passed": validation_passed,

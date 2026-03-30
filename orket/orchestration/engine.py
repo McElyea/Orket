@@ -136,10 +136,7 @@ class OrchestrationEngine:
         driver_steered: bool = False,
         target_issue_id: str = None,
     ) -> Dict[str, Any]:
-        """
-        [DEPRECATED] Generic card runner.
-        Use run_epic, run_rock, or run_issue for explicit intent.
-        """
+        """Canonical public runtime entrypoint for epic, rock, and issue execution."""
         return await self._pipeline.run_card(
             card_id,
             build_id=build_id,
@@ -149,27 +146,36 @@ class OrchestrationEngine:
         )
 
     async def run_epic(
-        self, epic_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False
+        self,
+        epic_id: str,
+        build_id: str = None,
+        session_id: str = None,
+        driver_steered: bool = False,
+        target_issue_id: str = None,
     ) -> List[Dict]:
-        """Executes a full epic orchestration."""
-        return await self._pipeline.run_epic(
-            epic_id, build_id=build_id, session_id=session_id, driver_steered=driver_steered
-        )
-
-    async def run_rock(
-        self, rock_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False
-    ) -> Dict:
-        """Executes a multi-epic rock orchestration."""
-        return await self._pipeline.run_rock(
-            rock_id, build_id=build_id, session_id=session_id, driver_steered=driver_steered
+        """Compatibility wrapper over the canonical run_card surface."""
+        return await self.run_card(
+            epic_id,
+            build_id=build_id,
+            session_id=session_id,
+            driver_steered=driver_steered,
+            target_issue_id=target_issue_id,
         )
 
     async def run_issue(
         self, issue_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False
     ) -> Dict[str, Any]:
-        """Resumes or executes a single atomic issue."""
-        return await self._pipeline.run_card(
+        """Compatibility wrapper over the canonical run_card surface."""
+        return await self.run_card(
             issue_id, build_id=build_id, session_id=session_id, driver_steered=driver_steered
+        )
+
+    async def run_rock(
+        self, rock_name: str, build_id: str = None, session_id: str = None, driver_steered: bool = False
+    ) -> Dict[str, Any]:
+        """Compatibility wrapper over the canonical run_card surface."""
+        return await self.run_card(
+            rock_name, build_id=build_id, session_id=session_id, driver_steered=driver_steered
         )
 
     async def run_gitea_state_loop(

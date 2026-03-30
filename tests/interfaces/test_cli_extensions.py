@@ -60,6 +60,7 @@ def _init_test_extension_repo(repo_root):
 
 
 def test_print_extensions_list_shows_installed_extensions(tmp_path, capsys):
+    """Layer: integration. Verifies extension CLI lists current manifest-entry catalog rows."""
     catalog = tmp_path / "extensions_catalog.json"
     catalog.write_text(
         json.dumps(
@@ -69,7 +70,7 @@ def test_print_extensions_list_shows_installed_extensions(tmp_path, capsys):
                         "extension_id": "mystery.extension",
                         "extension_version": "1.0.0",
                         "source": "git+https://example/repo.git",
-                        "workloads": [
+                        "manifest_entries": [
                             {"workload_id": "mystery_v1", "workload_version": "1.0.0"},
                         ],
                     }
@@ -99,6 +100,7 @@ async def test_run_extension_workload_requires_registered_workload(tmp_path):
 
 @pytest.mark.asyncio
 async def test_run_extension_workload_executes_installed_workload(tmp_path, capsys):
+    """Layer: integration. Verifies CLI install output and workload execution use manifest-entry-backed records."""
     repo = tmp_path / "ext_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(repo)
@@ -115,4 +117,6 @@ async def test_run_extension_workload_executes_installed_workload(tmp_path, caps
     )
     await _run_extension_workload(args, manager)
     out = capsys.readouterr().out
+    assert "Registered workloads:" in out
+    assert "- mystery_v1 (1.0.0)" in out
     assert "Executed workload: mystery_v1 (1.0.0)" in out

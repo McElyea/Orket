@@ -5,7 +5,7 @@ from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any
 
-from .models import CONTRACT_STYLE_LEGACY, ExtensionRecord, WorkloadRecord
+from .models import CONTRACT_STYLE_LEGACY, ExtensionRecord, _ExtensionManifestEntry
 
 
 class ExtensionCatalog:
@@ -45,16 +45,21 @@ class ExtensionCatalog:
                 continue
             seen_ids.add(extension_id)
 
-            workloads: list[WorkloadRecord] = []
-            for item in row.get("workloads", []):
+            manifest_entries: list[_ExtensionManifestEntry] = []
+            raw_manifest_entries = row.get("manifest_entries")
+            if not isinstance(raw_manifest_entries, list):
+                raw_manifest_entries = row.get("workloads", [])
+            if not isinstance(raw_manifest_entries, list):
+                raw_manifest_entries = []
+            for item in raw_manifest_entries:
                 workload_id = str(item.get("workload_id", "")).strip()
                 if not workload_id:
                     continue
                 required_capabilities = tuple(
                     str(cap).strip() for cap in item.get("required_capabilities", []) if str(cap).strip()
                 )
-                workloads.append(
-                    WorkloadRecord(
+                manifest_entries.append(
+                    _ExtensionManifestEntry(
                         workload_id=workload_id,
                         workload_version=str(item.get("workload_version", "")).strip() or "0.0.0",
                         entrypoint=str(item.get("entrypoint", "")).strip(),
@@ -72,7 +77,7 @@ class ExtensionCatalog:
                     path=path,
                     module=module,
                     register_callable=register_callable,
-                    workloads=tuple(workloads),
+                    manifest_entries=tuple(manifest_entries),
                     contract_style=contract_style,
                     manifest_path=manifest_path,
                     resolved_commit_sha=resolved_commit_sha,
@@ -88,16 +93,16 @@ class ExtensionCatalog:
             )
         return records
 
-    def resolve_workload(
+    def _resolve_manifest_entry(
         self, workload_id: str, entry_point_rows: list[dict[str, Any]] | None = None
-    ) -> tuple[ExtensionRecord, WorkloadRecord] | None:
+    ) -> tuple[ExtensionRecord, _ExtensionManifestEntry] | None:
         target = str(workload_id or "").strip()
         if not target:
             return None
         for extension in self.list_extensions(entry_point_rows=entry_point_rows):
-            for workload in extension.workloads:
-                if workload.workload_id == target:
-                    return extension, workload
+            for manifest_entry in extension.manifest_entries:
+                if manifest_entry.workload_id == target:
+                    return extension, manifest_entry
         return None
 
     def load_catalog_payload(self) -> dict[str, Any]:
@@ -136,7 +141,7 @@ class ExtensionCatalog:
             "security_profile": record.security_profile,
             "security_policy_version": record.security_policy_version,
             "compat_fallbacks": list(record.compat_fallbacks),
-            "workloads": [
+            "manifest_entries": [
                 {
                     "workload_id": workload.workload_id,
                     "workload_version": workload.workload_version,
@@ -144,7 +149,7 @@ class ExtensionCatalog:
                     "required_capabilities": list(workload.required_capabilities),
                     "contract_style": workload.contract_style,
                 }
-                for workload in record.workloads
+                for workload in record.manifest_entries
             ],
         }
 

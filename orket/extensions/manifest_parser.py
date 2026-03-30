@@ -13,7 +13,7 @@ from .models import (
     SDK_MANIFEST_FILENAMES,
     ExtensionRecord,
     LoadedManifest,
-    WorkloadRecord,
+    _ExtensionManifestEntry,
 )
 
 
@@ -125,13 +125,13 @@ class ManifestParser:
         if not module:
             raise ValueError("module is required in manifest")
 
-        workloads: list[WorkloadRecord] = []
+        manifest_entries: list[_ExtensionManifestEntry] = []
         for item in manifest.get("workloads", []):
             workload_id = str(item.get("workload_id", "")).strip()
             workload_version = str(item.get("workload_version", "")).strip() or "0.0.0"
             if workload_id:
-                workloads.append(
-                    WorkloadRecord(
+                manifest_entries.append(
+                    _ExtensionManifestEntry(
                         workload_id=workload_id,
                         workload_version=workload_version,
                         contract_style=CONTRACT_STYLE_LEGACY,
@@ -146,7 +146,7 @@ class ManifestParser:
             path=str(path),
             module=module,
             register_callable=register_callable,
-            workloads=tuple(workloads),
+            manifest_entries=tuple(manifest_entries),
             contract_style=CONTRACT_STYLE_LEGACY,
             manifest_path=str(manifest_path),
             resolved_commit_sha=resolved_commit_sha,
@@ -185,7 +185,7 @@ class ManifestParser:
         if not extension_version:
             raise ValueError("extension_version is required in manifest")
 
-        workloads: list[WorkloadRecord] = []
+        manifest_entries: list[_ExtensionManifestEntry] = []
         for item in manifest.get("workloads", []):
             workload_id = str(item.get("workload_id", "")).strip()
             if not workload_id:
@@ -193,8 +193,8 @@ class ManifestParser:
             required_capabilities = tuple(
                 str(cap).strip() for cap in item.get("required_capabilities", []) if str(cap).strip()
             )
-            workloads.append(
-                WorkloadRecord(
+            manifest_entries.append(
+                _ExtensionManifestEntry(
                     workload_id=workload_id,
                     workload_version=extension_version,
                     entrypoint=str(item.get("entrypoint", "")).strip(),
@@ -211,7 +211,7 @@ class ManifestParser:
             path=str(path),
             module="",
             register_callable="",
-            workloads=tuple(workloads),
+            manifest_entries=tuple(manifest_entries),
             contract_style=CONTRACT_STYLE_SDK_V0,
             manifest_path=str(manifest_path),
             resolved_commit_sha=resolved_commit_sha,

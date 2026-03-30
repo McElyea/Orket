@@ -165,8 +165,8 @@ def perform_first_run_onboarding() -> str:
         log_event("discovery_startup_path", {"path": "no_op", "reason": "setup_complete"})
         return "no_op"
     print("\n[FIRST RUN] Orket EOS Orkestrated.")
-    print("  Recommendation: Orkestrate the initialization rock to optimize your models.")
-    print("  Command: python main.py --rock initialize_orket")
+    print("  Recommendation: Use the canonical card entrypoint for initialization to optimize your models.")
+    print("  Command: python main.py --card initialize_orket")
     save_user_settings({"setup_complete": True, "hardware_profile": "auto-detected"})
     log_event("discovery_startup_path", {"path": "first_run_setup", "result": "completed"})
     return "first_run_setup"
@@ -252,4 +252,4 @@ def print_orket_manifest(department: str = "core"):
             print(f"  - {e}")
 
     suggestion_rock = assets["rocks"][0] if assets["rocks"] else "..."
-    print(f"\n[COMMAND SUGGESTION]\n  python main.py --rock {suggestion_rock} --department {department}\n{'=' * 60}\n")
+    print(f"\n[COMMAND SUGGESTION]\n  python main.py --card {suggestion_rock} --department {department}\n{'=' * 60}\n")

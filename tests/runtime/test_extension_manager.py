@@ -312,6 +312,7 @@ def _assert_governed_identity(result) -> None:
 
 
 def test_list_extensions_from_catalog(tmp_path):
+    """Layer: unit. Verifies installed extension catalog rows are read from manifest-entry storage."""
     catalog = tmp_path / "extensions_catalog.json"
     catalog.write_text(
         json.dumps(
@@ -321,7 +322,7 @@ def test_list_extensions_from_catalog(tmp_path):
                         "extension_id": "mystery.extension",
                         "extension_version": "1.0.0",
                         "source": "git+https://example/repo.git",
-                        "workloads": [
+                        "manifest_entries": [
                             {"workload_id": "mystery_v1", "workload_version": "1.0.0"},
                         ],
                     }
@@ -336,10 +337,11 @@ def test_list_extensions_from_catalog(tmp_path):
 
     assert len(extensions) == 1
     assert extensions[0].extension_id == "mystery.extension"
-    assert extensions[0].workloads[0].workload_id == "mystery_v1"
+    assert extensions[0].manifest_entries[0].workload_id == "mystery_v1"
 
 
-def test_resolve_workload_returns_extension_and_workload(tmp_path):
+def test_resolve_manifest_entry_returns_extension_and_workload(tmp_path):
+    """Layer: unit. Verifies manifest-entry lookup works against installed catalog rows."""
     catalog = tmp_path / "extensions_catalog.json"
     catalog.write_text(
         json.dumps(
@@ -349,7 +351,7 @@ def test_resolve_workload_returns_extension_and_workload(tmp_path):
                         "extension_id": "mystery.extension",
                         "extension_version": "1.0.0",
                         "source": "git+https://example/repo.git",
-                        "workloads": [
+                        "manifest_entries": [
                             {"workload_id": "mystery_v1", "workload_version": "1.0.0"},
                         ],
                     }
@@ -360,7 +362,7 @@ def test_resolve_workload_returns_extension_and_workload(tmp_path):
     )
 
     manager = ExtensionManager(catalog_path=catalog)
-    resolved = manager.resolve_workload("mystery_v1")
+    resolved = manager._resolve_manifest_entry("mystery_v1")
 
     assert resolved is not None
     extension, workload = resolved
@@ -377,7 +379,7 @@ def test_install_from_repo_registers_extension(tmp_path):
     record = manager.install_from_repo(str(repo))
 
     assert record.extension_id == "mystery.extension"
-    assert record.workloads[0].workload_id == "mystery_v1"
+    assert record.manifest_entries[0].workload_id == "mystery_v1"
     assert len(record.resolved_commit_sha) == 40
     assert len(record.manifest_digest_sha256) == 64
     assert record.trust_profile == "production"
@@ -385,7 +387,7 @@ def test_install_from_repo_registers_extension(tmp_path):
     assert record.security_profile == "production"
     assert len(record.security_policy_version) == 64
     assert record.installed_at_utc
-    assert manager.resolve_workload("mystery_v1") is not None
+    assert manager._resolve_manifest_entry("mystery_v1") is not None
 
 
 def test_install_from_repo_registers_sdk_extension(tmp_path):
@@ -398,8 +400,8 @@ def test_install_from_repo_registers_sdk_extension(tmp_path):
 
     assert record.extension_id == "sdk.extension"
     assert record.contract_style == "sdk_v0"
-    assert record.workloads[0].workload_id == "sdk_v1"
-    assert record.workloads[0].entrypoint == "sdk_extension:run_workload"
+    assert record.manifest_entries[0].workload_id == "sdk_v1"
+    assert record.manifest_entries[0].entrypoint == "sdk_extension:run_workload"
     assert len(record.resolved_commit_sha) == 40
     assert len(record.manifest_digest_sha256) == 64
     assert len(record.security_policy_version) == 64
@@ -415,8 +417,8 @@ def test_install_from_repo_registers_sdk_json_manifest_extension(tmp_path):
 
     assert record.extension_id == "sdk.json.extension"
     assert record.contract_style == "sdk_v0"
-    assert record.workloads[0].workload_id == "sdk_json_v1"
-    assert record.workloads[0].entrypoint == "sdk_json_extension:JsonWorkload"
+    assert record.manifest_entries[0].workload_id == "sdk_json_v1"
+    assert record.manifest_entries[0].entrypoint == "sdk_json_extension:JsonWorkload"
 
 
 def test_list_extensions_includes_entry_point_discovery(monkeypatch, tmp_path):
@@ -440,7 +442,7 @@ def test_list_extensions_includes_entry_point_discovery(monkeypatch, tmp_path):
     rows = manager.list_extensions()
     assert len(rows) == 1
     assert rows[0].extension_id == "entrypoint.extension"
-    assert rows[0].workloads[0].workload_id == "demo_v1"
+    assert rows[0].manifest_entries[0].workload_id == "demo_v1"
 
 
 def test_extension_manager_exposes_helper_methods_explicitly():
@@ -451,6 +453,7 @@ def test_extension_manager_exposes_helper_methods_explicitly():
         "_record_from_manifest",
         "_run_legacy_workload",
         "_run_sdk_workload",
+        "_resolve_manifest_entry",
         "_validate_extension_imports",
     }
     assert explicit_helpers.issubset(ExtensionManager.__dict__)
@@ -552,8 +555,8 @@ async def test_run_sdk_workload_emits_provenance(tmp_path):
     assert (Path(result.artifact_root) / "result.txt").exists()
     assert (Path(result.artifact_root) / "artifact_manifest.json").exists()
     provenance = json.loads(Path(result.provenance_path).read_text(encoding="utf-8"))
-    assert provenance["extension"]["resolved_commit_sha"] == manager.resolve_workload("sdk_v1")[0].resolved_commit_sha
-    assert provenance["extension"]["manifest_digest_sha256"] == manager.resolve_workload("sdk_v1")[0].manifest_digest_sha256
+    assert provenance["extension"]["resolved_commit_sha"] == manager._resolve_manifest_entry("sdk_v1")[0].resolved_commit_sha
+    assert provenance["extension"]["manifest_digest_sha256"] == manager._resolve_manifest_entry("sdk_v1")[0].manifest_digest_sha256
     assert provenance["security"]["mode"] == "compat"
     assert provenance["security"]["profile"] == "production"
     assert isinstance(provenance["security"]["policy_version"], str)

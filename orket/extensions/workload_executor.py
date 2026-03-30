@@ -20,7 +20,7 @@ from .governed_identity import (
     digest_prefixed,
 )
 from .import_guard import ImportGuardContext
-from .models import ExtensionRecord, ExtensionRunResult, WorkloadRecord
+from .models import ExtensionRecord, ExtensionRunResult, _ExtensionManifestEntry
 from .reproducibility import ReproducibilityEnforcer
 from .runtime import ExtensionEngineAdapter, RunContext
 from .workload_artifacts import WorkloadArtifacts
@@ -44,7 +44,7 @@ class WorkloadExecutor:
         self,
         *,
         extension: ExtensionRecord,
-        workload: WorkloadRecord,
+        workload: _ExtensionManifestEntry,
         control_plane_workload_record: dict[str, Any],
         input_config: dict[str, Any],
         workspace: Path,
@@ -110,7 +110,7 @@ class WorkloadExecutor:
             self.artifacts.build_provenance,
             extension=extension,
             workload=loaded_workload,
-            manifest_workload=workload,
+            manifest_entry=workload,
             input_config=input_config,
             run_plan=run_plan,
             plan_hash=plan_hash,
@@ -151,7 +151,7 @@ class WorkloadExecutor:
         self,
         *,
         extension: ExtensionRecord,
-        workload: WorkloadRecord,
+        workload: _ExtensionManifestEntry,
         control_plane_workload_record: dict[str, Any],
         input_config: dict[str, Any],
         workspace: Path,
@@ -321,7 +321,7 @@ class WorkloadExecutor:
     @staticmethod
     def _build_sdk_context(
         extension: ExtensionRecord,
-        workload: WorkloadRecord,
+        workload: _ExtensionManifestEntry,
         input_config: dict[str, Any],
         workspace: Path,
         artifact_root: Path,

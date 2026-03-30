@@ -16,6 +16,7 @@ def _load_script_module():
 
 
 def test_register_textmystery_bridge_extension_writes_sdk_manifest_and_catalog(tmp_path, monkeypatch):
+    """Layer: integration. Verifies extension registration writes manifest-entry catalog rows, not generic workload rows."""
     module = _load_script_module()
     monkeypatch.setattr(module, "PROJECT_ROOT", tmp_path)
     durable_root = tmp_path / ".orket_durable"
@@ -42,6 +43,7 @@ def test_register_textmystery_bridge_extension_writes_sdk_manifest_and_catalog(t
     assert len(match) == 1
     row = match[0]
     assert row["contract_style"] == "sdk_v0"
-    assert row["workloads"][0]["workload_id"] == module.WORKLOAD_ID
-    assert row["workloads"][0]["entrypoint"] == "textmystery_bridge_extension:run_workload"
-    assert row["workloads"][0]["required_capabilities"] == ["tts.speak"]
+    assert "workloads" not in row
+    assert row["manifest_entries"][0]["workload_id"] == module.WORKLOAD_ID
+    assert row["manifest_entries"][0]["entrypoint"] == "textmystery_bridge_extension:run_workload"
+    assert row["manifest_entries"][0]["required_capabilities"] == ["tts.speak"]

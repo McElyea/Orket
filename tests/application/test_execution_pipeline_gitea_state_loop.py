@@ -20,6 +20,7 @@ async def test_run_gitea_state_loop_requires_gitea_mode():
 
 @pytest.mark.asyncio
 async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeypatch, tmp_path):
+    """Layer: unit. Verifies the Gitea state loop dispatches claimed cards through the canonical card surface."""
     pipeline = object.__new__(ExecutionPipeline)
     pipeline.state_backend_mode = "gitea"
     pipeline.org = SimpleNamespace(process_rules={})
@@ -63,7 +64,7 @@ async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeyp
             seen["coordinator"] = kwargs
 
         async def run(self, *, work_fn, summary_out=None):
-            await work_fn({"card_id": "ISSUE-77"})
+            await work_fn({"card_id": "ISSUE-77", "issue_number": 77})
             summary = {
                 "iterations": 1,
                 "consumed_count": 1,

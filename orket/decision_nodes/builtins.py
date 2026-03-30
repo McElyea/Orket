@@ -522,11 +522,13 @@ class DefaultExecutionRuntimeStrategyNode:
     def select_epic_build_id(self, build_id: str | None, epic_name: str, sanitize_name: Any) -> str:
         return build_id or f"build-{sanitize_name(epic_name)}"
 
-    def select_rock_session_id(self, session_id: str | None) -> str:
+    def select_epic_collection_session_id(self, session_id: str | None) -> str:
         return session_id or str(uuid.uuid4())[:8]
 
-    def select_rock_build_id(self, build_id: str | None, rock_name: str, sanitize_name: Any) -> str:
-        return build_id or f"rock-build-{sanitize_name(rock_name)}"
+    def select_epic_collection_build_id(
+        self, build_id: str | None, collection_name: str, sanitize_name: Any
+    ) -> str:
+        return build_id or f"epic-collection-build-{sanitize_name(collection_name)}"
 
 
 class DefaultPipelineWiringStrategyNode:

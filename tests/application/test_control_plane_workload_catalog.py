@@ -15,6 +15,9 @@ from orket.application.services.control_plane_workload_catalog import (
     REVIEW_RUN_WORKLOAD,
     SANDBOX_RUNTIME_WORKLOAD_VERSION,
     TURN_TOOL_WORKLOAD,
+    _resolve_cards_control_plane_workload_from_contract,
+    _resolve_extension_control_plane_workload,
+    _resolve_odr_arbiter_control_plane_workload_from_contract,
     WorkloadAuthorityInput,
     build_cards_workload_contract,
     control_plane_workload_for_key,
@@ -122,6 +125,7 @@ def test_workload_authority_resolver_supports_catalog_and_contract_modes(tmp_pat
 
 
 def test_cards_workload_builders_route_through_shared_catalog(tmp_path: Path) -> None:
+    """Layer: unit. Verifies cards workload contract building and authority resolution now live only on the shared catalog."""
     contract_payload = build_cards_workload_contract(
         epic=_epic(),
         run_id="sess-1",
@@ -145,6 +149,29 @@ def test_cards_workload_builders_route_through_shared_catalog(tmp_path: Path) ->
     assert record.workload_id == CARDS_CONTROL_PLANE_WORKLOAD_ID
     assert record.workload_version == WORKLOAD_CONTRACT_VERSION_V1
     assert record.output_contract_ref == CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF
+    assert record.input_contract_ref == "docs/specs/WORKLOAD_CONTRACT_V1.md"
+    assert record.workload_digest.startswith("sha256:")
+
+
+def test_cards_workload_record_helper_keeps_runtime_entrypoints_out_of_authority_input_shape(tmp_path: Path) -> None:
+    """Layer: unit. Verifies cards runtime entrypoints can resolve their workload record through one catalog-local helper."""
+    contract_payload = build_cards_workload_contract(
+        epic=_epic(),
+        run_id="sess-3",
+        build_id="build-3",
+        workspace=tmp_path,
+        department="core",
+    )
+
+    record = _resolve_cards_control_plane_workload_from_contract(
+        contract_payload=contract_payload,
+        department="core",
+    )
+
+    assert record.workload_id == CARDS_CONTROL_PLANE_WORKLOAD_ID
+    assert record.workload_version == WORKLOAD_CONTRACT_VERSION_V1
+    assert record.output_contract_ref == CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF
+    assert record.workload_digest.startswith("sha256:")
 
 
 def test_extension_manifest_workload_projection_uses_shared_builder() -> None:
@@ -165,6 +192,48 @@ def test_extension_manifest_workload_projection_uses_shared_builder() -> None:
     assert record.workload_id == "demo_v1"
     assert record.input_contract_ref == "extension_manifest:sdk_v0"
     assert record.output_contract_ref == "extension_run_result_identity_v1"
+    assert record.workload_digest.startswith("sha256:")
+
+
+def test_extension_workload_record_helper_keeps_manager_out_of_authority_input_shape() -> None:
+    """Layer: unit. Verifies extension workload start can resolve one workload record through a catalog-local helper."""
+    record = _resolve_extension_control_plane_workload(
+        workload_id="demo_v1",
+        workload_version="1.0.0",
+        extension_id="demo.ext",
+        extension_version="1.2.3",
+        entrypoint="demo:run",
+        required_capabilities=("workspace.root",),
+        contract_style="sdk_v0",
+        manifest_digest_sha256="f" * 64,
+    )
+
+    assert record.workload_id == "demo_v1"
+    assert record.input_contract_ref == "extension_manifest:sdk_v0"
+    assert record.output_contract_ref == "extension_run_result_identity_v1"
+    assert record.workload_digest.startswith("sha256:")
+
+
+def test_odr_workload_record_helper_keeps_run_arbiter_out_of_authority_input_shape() -> None:
+    """Layer: unit. Verifies the ODR arbiter start path resolves its workload record through one catalog-local helper."""
+    record = _resolve_odr_arbiter_control_plane_workload_from_contract(
+        contract_payload={
+            "workload_contract_version": WORKLOAD_CONTRACT_VERSION_V1,
+            "workload_type": "odr",
+            "units": [{"unit_id": "pair:1"}],
+            "required_materials": [],
+            "expected_artifacts": ["out/index.json"],
+            "validators": ["shape", "trace"],
+            "summary_targets": ["out/index.json"],
+            "provenance_targets": [],
+        },
+        output_contract_ref="out/index.json",
+        runner="run_odr_quant_sweep.py",
+    )
+
+    assert record.workload_id == "odr-run-arbiter"
+    assert record.workload_version == WORKLOAD_CONTRACT_VERSION_V1
+    assert record.output_contract_ref == "out/index.json"
     assert record.workload_digest.startswith("sha256:")
 
 

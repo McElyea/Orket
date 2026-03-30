@@ -5,6 +5,9 @@ import json
 from pathlib import Path
 
 import pytest
+import orket.extensions as extensions_package
+import orket.extensions.manager as extension_manager_module
+import orket.extensions.models as extension_models
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
@@ -20,6 +23,8 @@ from orket.extensions.catalog import ExtensionCatalog
 from orket.extensions.manifest_parser import ManifestParser
 from orket.extensions.models import CONTRACT_STYLE_LEGACY
 from orket.extensions.reproducibility import ReproducibilityEnforcer
+from orket.extensions.runtime import ExtensionEngineAdapter, RunContext
+from orket.extensions.contracts import RunAction
 from orket.extensions.workload_artifacts import WorkloadArtifacts
 from orket.extensions.workload_executor import WorkloadExecutor
 from orket.extensions.workload_loader import WorkloadLoader
@@ -28,6 +33,30 @@ from orket.extensions.governed_identity import build_governed_identity
 
 
 def test_extension_catalog_load_and_list(tmp_path: Path) -> None:
+    """Layer: unit. Verifies installed extension catalog rows use manifest-entry storage."""
+    catalog_path = tmp_path / "catalog.json"
+    payload = {
+        "extensions": [
+            {
+                "extension_id": "demo.ext",
+                "extension_version": "1.2.3",
+                "source": "git+demo",
+                "manifest_entries": [{"workload_id": "demo_v1", "workload_version": "1.0.0"}],
+            }
+        ]
+    }
+    catalog_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    catalog = ExtensionCatalog(catalog_path)
+    records = catalog.list_extensions()
+
+    assert len(records) == 1
+    assert records[0].extension_id == "demo.ext"
+    assert records[0].manifest_entries[0].workload_id == "demo_v1"
+
+
+def test_extension_catalog_load_and_list_supports_legacy_workloads_key(tmp_path: Path) -> None:
+    """Layer: unit. Verifies installed catalog reads remain backward-compatible with legacy workload rows."""
     catalog_path = tmp_path / "catalog.json"
     payload = {
         "extensions": [
@@ -46,10 +75,11 @@ def test_extension_catalog_load_and_list(tmp_path: Path) -> None:
 
     assert len(records) == 1
     assert records[0].extension_id == "demo.ext"
-    assert records[0].workloads[0].workload_id == "demo_v1"
+    assert records[0].manifest_entries[0].workload_id == "demo_v1"
 
 
 def test_extension_catalog_workload_projects_into_control_plane_workload_record(tmp_path: Path) -> None:
+    """Layer: unit. Verifies persisted extension catalog manifest entries still resolve canonical workload authority."""
     catalog_path = tmp_path / "catalog.json"
     payload = {
         "extensions": [
@@ -58,7 +88,7 @@ def test_extension_catalog_workload_projects_into_control_plane_workload_record(
                 "extension_version": "1.2.3",
                 "source": "git+demo",
                 "manifest_digest_sha256": "f" * 64,
-                "workloads": [
+                "manifest_entries": [
                     {
                         "workload_id": "demo_v1",
                         "workload_version": "1.0.0",
@@ -74,7 +104,7 @@ def test_extension_catalog_workload_projects_into_control_plane_workload_record(
 
     catalog = ExtensionCatalog(catalog_path)
     extension = catalog.list_extensions()[0]
-    workload = extension.workloads[0]
+    workload = extension.manifest_entries[0]
     record = resolve_control_plane_workload(
         WorkloadAuthorityInput(
             kind="extension_manifest_workload",
@@ -341,3 +371,66 @@ def test_workload_executor_compile_workload() -> None:
     )
     run_plan = executor._compile_workload(_Workload(), {"seed": 1}, None)
     assert run_plan.workload_id == "demo_v1"
+
+
+@pytest.mark.asyncio
+async def test_extension_engine_adapter_normalizes_legacy_run_ops_to_run_card(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Layer: unit. Verifies extension run actions normalize compatibility ops onto the canonical card surface."""
+    calls: list[tuple[str, dict[str, object]]] = []
+
+    class _FakeEngine:
+        def __init__(self, *_args, **_kwargs) -> None:
+            pass
+
+        async def run_card(self, card_id: str, **kwargs: object) -> dict[str, object]:
+            calls.append((card_id, dict(kwargs)))
+            return {"card_id": card_id, "kwargs": dict(kwargs)}
+
+    monkeypatch.setattr("orket.extensions.runtime.OrchestrationEngine", _FakeEngine)
+
+    adapter = ExtensionEngineAdapter(RunContext(workspace=tmp_path, department="core"))
+
+    epic_result = await adapter.execute_action(
+        RunAction(op="run_epic", target="demo-epic", params={"build_id": "build-1"})
+    )
+    rock_result = await adapter.execute_action(
+        RunAction(op="run_rock", target="demo-rock", params={"build_id": "build-2"})
+    )
+    issue_result = await adapter.execute_action(
+        RunAction(op="run_issue", target="ISSUE-7", params={"session_id": "session-7"})
+    )
+
+    assert calls == [
+        ("demo-epic", {"build_id": "build-1"}),
+        ("demo-rock", {"build_id": "build-2"}),
+        ("ISSUE-7", {"session_id": "session-7"}),
+    ]
+    assert epic_result == {"transcript": {"card_id": "demo-epic", "kwargs": {"build_id": "build-1"}}}
+    assert rock_result == {"card_id": "demo-rock", "kwargs": {"build_id": "build-2"}}
+    assert issue_result == {"transcript": {"card_id": "ISSUE-7", "kwargs": {"session_id": "session-7"}}}
+
+
+def test_extension_engine_adapter_treats_run_rock_as_legacy_alias_only() -> None:
+    """Layer: unit. Verifies extension runtime keeps `run_rock` as explicit alias normalization, not a primary op set member."""
+    runtime_text = (Path("orket/extensions/runtime.py")).read_text(encoding="utf-8-sig")
+
+    assert 'if op in {"run_card", "run_epic", "run_rock", "run_issue"}:' not in runtime_text
+    assert 'canonical_op = "run_card" if op in {"run_epic", "run_issue", "run_rock"} else op' in runtime_text
+
+
+def test_extensions_package_root_does_not_export_manifest_workload_alias() -> None:
+    """Layer: unit. Verifies package-root extension exports do not bless workload metadata authority nouns."""
+    assert not hasattr(extensions_package, "WorkloadRecord")
+    assert not hasattr(extensions_package, "ExtensionManifestWorkload")
+    assert not hasattr(extension_manager_module, "ExtensionManifestWorkload")
+    assert not hasattr(extension_models, "ExtensionManifestWorkload")
+    assert not hasattr(extension_models, "ExtensionWorkloadDescriptor")
+    assert not hasattr(extension_models, "WorkloadRecord")
+
+
+def test_extension_catalog_manifest_lookup_is_internal_only() -> None:
+    """Layer: unit. Verifies extension catalog no longer exposes a public-looking manifest lookup method."""
+    assert not hasattr(ExtensionCatalog, "resolve_manifest_entry")
+    assert hasattr(ExtensionCatalog, "_resolve_manifest_entry")

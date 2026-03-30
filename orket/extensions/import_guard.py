@@ -7,7 +7,13 @@ from types import TracebackType
 from typing import Iterable
 
 DEFAULT_BLOCKED_PREFIXES: tuple[str, ...] = ("orket",)
-DEFAULT_ALLOWED_PREFIXES: tuple[str, ...] = ("orket_extension_sdk", "orket.extensions.controller_workload_runtime")
+DEFAULT_ALLOWED_PREFIXES: tuple[str, ...] = (
+    "orket_extension_sdk",
+    "orket.extensions.controller_workload_runtime",
+    "orket.extensions.controller_dispatcher",
+    "orket.extensions.controller_dispatcher_contract",
+    "orket.extensions.controller_observability",
+)
 
 
 def _matches_module_prefix(module_name: str, prefix: str) -> bool:

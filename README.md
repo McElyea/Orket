@@ -7,7 +7,8 @@ This README is intentionally narrow. It describes the repo entrypoints and curre
 ## Current Repo Truth
 
 - Default runtime entrypoint: `python main.py`
-- Named rock runtime entrypoint: `python main.py --rock <rock_name>`
+- Named card runtime entrypoint: `python main.py --card <card_id>`
+- Legacy named rock alias: `python main.py --rock <rock_name>`
 - API runtime entrypoint: `python server.py`
 - Canonical test command: `python -m pytest -q`
 - Active docs index: [docs/README.md](docs/README.md)

@@ -60,8 +60,8 @@ def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
         {
             "select_run_id": lambda self, session_id: "RUN",
             "select_epic_build_id": lambda self, build_id, epic_name, sanitize_name: "BUILD",
-            "select_rock_session_id": lambda self, session_id: "ROCKRUN",
-            "select_rock_build_id": lambda self, build_id, rock_name, sanitize_name: "ROCKBUILD",
+            "select_epic_collection_session_id": lambda self, session_id: "COLLECTIONRUN",
+            "select_epic_collection_build_id": lambda self, build_id, collection_name, sanitize_name: "COLLECTIONBUILD",
         },
     )()
     pipeline_custom = type(

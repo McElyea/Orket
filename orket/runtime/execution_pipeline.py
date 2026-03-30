@@ -28,9 +28,8 @@ from orket.application.services.gitea_state_control_plane_checkpoint_service imp
 )
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
 from orket.application.services.control_plane_workload_catalog import (
+    _resolve_cards_control_plane_workload_from_contract,
     build_cards_workload_contract,
-    resolve_control_plane_workload,
-    WorkloadAuthorityInput,
 )
 from orket.application.services.gitea_state_control_plane_execution_service import (
     build_gitea_state_control_plane_execution_service,
@@ -262,23 +261,91 @@ class ExecutionPipeline:
         return bool(resolve_gitea_state_pilot_enabled(raw, "", ""))
 
     async def run_card(self, card_id: str, **kwargs) -> Any:
+        """Canonical public runtime dispatcher over normalized card facts."""
+        target_kind, parent_epic_name = await self._resolve_run_card_target(card_id)
+        if target_kind == "epic":
+            return await self._run_epic_entry(card_id, **kwargs)
+        if target_kind == "epic_collection":
+            return await self._run_epic_collection_entry(card_id, **kwargs)
+        return await self._run_issue_entry(card_id, parent_epic_name=parent_epic_name, **kwargs)
+
+    async def _resolve_run_card_target(self, card_id: str) -> tuple[str, str | None]:
+        """Resolve one normalized runtime target kind from explicit asset facts."""
         epics = await self.loader.list_assets_async("epics")
         if card_id in epics:
-            return await self.run_epic(card_id, **kwargs)
+            return "epic", None
 
         rocks = await self.loader.list_assets_async("rocks")
         if card_id in rocks:
-            return await self.run_rock(card_id, **kwargs)
+            return "epic_collection", None
 
         parent_epic, parent_ename, _ = await self._find_parent_epic(card_id)
-        if not parent_epic:
-            raise CardNotFound(f"Card {card_id} not found.")
+        if parent_epic and parent_ename:
+            return "issue", parent_ename
+
+        raise CardNotFound(f"Card {card_id} not found.")
+
+    async def run_issue(
+        self,
+        issue_id: str,
+        build_id: str = None,
+        session_id: str = None,
+        driver_steered: bool = False,
+        **kwargs,
+    ) -> Any:
+        """Compatibility wrapper over the canonical run_card surface."""
+        return await self.run_card(
+            issue_id,
+            build_id=build_id,
+            session_id=session_id,
+            driver_steered=driver_steered,
+            **kwargs,
+        )
+
+    async def run_rock(
+        self,
+        rock_name: str,
+        build_id: str = None,
+        session_id: str = None,
+        driver_steered: bool = False,
+        **kwargs,
+    ) -> Any:
+        """Compatibility wrapper over the canonical run_card surface."""
+        return await self.run_card(
+            rock_name,
+            build_id=build_id,
+            session_id=session_id,
+            driver_steered=driver_steered,
+            **kwargs,
+        )
+
+    async def _run_issue_entry(
+        self,
+        issue_id: str,
+        build_id: str = None,
+        session_id: str = None,
+        driver_steered: bool = False,
+        parent_epic_name: str | None = None,
+        **kwargs,
+    ) -> Any:
+        parent_ename = parent_epic_name
+        if parent_ename is None:
+            parent_epic, parent_ename, _ = await self._find_parent_epic(issue_id)
+            if not parent_epic:
+                raise CardNotFound(f"Card {issue_id} not found.")
         log_event(
             "pipeline_atomic_issue",
-            {"card_id": card_id, "parent_epic": parent_epic.name},
+            {"card_id": issue_id, "parent_epic": parent_ename},
             workspace=self.workspace,
         )
-        return await self.run_epic(parent_ename, target_issue_id=card_id, **kwargs)
+        return await self._run_epic_entry(
+            parent_ename,
+            build_id=build_id,
+            session_id=session_id,
+            driver_steered=driver_steered,
+            target_issue_id=issue_id,
+            **kwargs,
+        )
 
     async def run_gitea_state_loop(
         self,
@@ -412,6 +479,25 @@ class ExecutionPipeline:
         target_issue_id: str = None,
         **kwargs,
     ) -> List[Dict]:
+        """Compatibility wrapper over the canonical run_card surface."""
+        return await self.run_card(
+            epic_name,
+            build_id=build_id,
+            session_id=session_id,
+            driver_steered=driver_steered,
+            target_issue_id=target_issue_id,
+            **kwargs,
+        )
+
+    async def _run_epic_entry(
+        self,
+        epic_name: str,
+        build_id: str = None,
+        session_id: str = None,
+        driver_steered: bool = False,
+        target_issue_id: str = None,
+        **kwargs,
+    ) -> List[Dict]:
         epic = await self.loader.load_asset_async("epics", epic_name, EpicConfig)
         team = await self.loader.load_asset_async("teams", epic.team, TeamConfig)
         env = await self.loader.load_asset_async("environments", epic.environment, EnvironmentConfig)
@@ -452,14 +538,9 @@ class ExecutionPipeline:
             workspace=self.workspace,
             department=self.department,
         )
-        control_plane_workload_record = resolve_control_plane_workload(
-            WorkloadAuthorityInput(
-                kind="workload_contract_v1",
-                workload_id="cards-epic-execution",
-                contract_payload=cards_workload_contract,
-                output_contract_ref="control_plane.contract.v1:RunRecord",
-                definition_payload={"department": self.department},
-            )
+        control_plane_workload_record = _resolve_cards_control_plane_workload_from_contract(
+            contract_payload=cards_workload_contract,
+            department=self.department,
         )
 
         if not await self.sessions.get_session(run_id):
@@ -1813,26 +1894,28 @@ class ExecutionPipeline:
             )
             return None
 
-    async def run_rock(
+    async def _run_epic_collection_entry(
         self,
-        rock_name: str,
+        collection_name: str,
         build_id: str = None,
         session_id: str = None,
         driver_steered: bool = False,
         **kwargs,
     ) -> Dict:
-        rock = await self.loader.load_asset_async("rocks", rock_name, RockConfig)
-        sid = self.execution_runtime_node.select_rock_session_id(session_id)
-        active_build = self.execution_runtime_node.select_rock_build_id(build_id, rock_name, sanitize_name)
+        collection = await self.loader.load_asset_async("rocks", collection_name, RockConfig)
+        sid = self.execution_runtime_node.select_epic_collection_session_id(session_id)
+        active_build = self.execution_runtime_node.select_epic_collection_build_id(
+            build_id, collection_name, sanitize_name
+        )
         results = []
-        for entry in rock.epics:
+        for entry in collection.epics:
             epic_ws = self.workspace / entry["epic"]
             sub_pipeline = self.pipeline_wiring_node.create_sub_pipeline(
                 parent_pipeline=self,
                 epic_workspace=epic_ws,
                 department=entry["department"],
             )
-            res = await sub_pipeline.run_epic(
+            res = await sub_pipeline.run_card(
                 entry["epic"],
                 build_id=active_build,
                 session_id=sid,
@@ -1841,13 +1924,13 @@ class ExecutionPipeline:
             results.append({"epic": entry["epic"], "transcript": res})
 
         log_event(
-            "rock_phase_transition",
-            {"rock": rock.name, "phase": "bug_fix"},
+            "epic_collection_phase_transition",
+            {"collection": collection.name, "phase": "bug_fix"},
             workspace=self.workspace,
         )
-        await self.bug_fix_manager.start_phase(rock.id)
+        await self.bug_fix_manager.start_phase(collection.id)
 
-        return {"rock": rock.name, "results": results}
+        return {"collection": collection.name, "results": results}
 
     async def _find_parent_epic(self, issue_id: str) -> tuple[EpicConfig | None, str | None, IssueConfig | None]:
         for ename in await self.loader.list_assets_async("epics"):
@@ -2001,8 +2084,4 @@ async def orchestrate_card(card_id: str, workspace: Path, **kwargs) -> Any:
 
 
 async def orchestrate(epic_name: str, workspace: Path, **kwargs) -> Any:
-    return await ExecutionPipeline(workspace, kwargs.get("department", "core")).run_epic(epic_name, **kwargs)
-
-
-async def orchestrate_rock(rock_name: str, workspace: Path, **kwargs) -> Dict[str, Any]:
-    return await ExecutionPipeline(workspace, kwargs.get("department", "core")).run_rock(rock_name, **kwargs)
+    return await ExecutionPipeline(workspace, kwargs.get("department", "core")).run_card(epic_name, **kwargs)

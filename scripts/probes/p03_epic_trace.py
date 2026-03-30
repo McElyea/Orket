@@ -352,7 +352,7 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
             run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
         )
         try:
-            pipeline_result = await pipeline.run_epic(
+            pipeline_result = await pipeline.run_card(
                 EPIC_ID,
                 session_id=session_id,
                 build_id=build_id,

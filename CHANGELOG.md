@@ -5,6 +5,23 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.27] - 2026-03-29 - "The Canonical Card Dispatcher And Full Proof Cut"
+
+### Added
+- **Full Local Proof Sweep**: Executed the full local pytest surface, the live Docker sandbox acceptance bucket, and the provider-backed live acceptance plus live role buckets together on one machine, then re-ran the entire gated suite in one pass with those gates enabled for a final `3614 passed, 2 warnings` release proof snapshot and no remaining skipped tests.
+
+### Changed
+- **Canonical Runtime Entry Truth**: Re-established `run_card(...)` as the truthful public runtime and engine dispatcher, kept `run_issue(...)`, `run_epic(...)`, and `run_rock(...)` as thin convenience wrappers only, and routed CLI `--epic` plus legacy `--rock` through those wrappers without changing the control-plane workload authority seam.
+- **Governance And Authority Alignment**: Narrowed the workload-authority governance rule so only the CLI ergonomic owner may call runtime wrapper verbs, kept `resolve_control_plane_workload(...)` as the sole workload-authority seam, and updated `CURRENT_AUTHORITY.md` plus the active ControlPlane implementation plan, closeout, and crosswalk so the docs match the shipped runtime truth.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use `python main.py --card <card_id>` as the canonical runtime entrypoint. `--epic` and legacy `--rock` remain available as thin ergonomic wrappers, and no manual migration step is required.
+
 ## [0.4.26] - 2026-03-29 - "The ControlPlane Review Truth And Live Proof Cut"
 
 ### Added

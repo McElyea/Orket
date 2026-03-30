@@ -203,7 +203,7 @@ class ControllerDispatcher:
                 error_code=guard_error,
             )
 
-        resolved = self._extension_manager.resolve_workload(child.target_workload)
+        resolved = self._extension_manager._resolve_manifest_entry(child.target_workload)
         if resolved is None:
             return _ChildOutcome(
                 result=failed_child_result(
