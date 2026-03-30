@@ -154,11 +154,16 @@ class ExtensionManager:
         self.reproducibility.validate_clean_git_if_required(*args, **kwargs)
 
     def list_extensions(self) -> list[ExtensionRecord]:
-        rows = self._discover_entry_point_rows()
-        return self.catalog.list_extensions(entry_point_rows=rows)
+        return self.catalog.list_extensions(entry_point_rows=self._discover_entry_point_rows())
 
     def has_manifest_entry(self, workload_id: str) -> bool:
         return self._resolve_manifest_entry(workload_id) is not None
+
+    def uses_sdk_contract(self, workload_id: str) -> bool:
+        return bool(
+            (resolved := self._resolve_manifest_entry(workload_id))
+            and CONTRACT_STYLE_SDK_V0 in {resolved[0].contract_style, resolved[1].contract_style}
+        )
 
     def _resolve_manifest_entry(self, workload_id: str) -> tuple[ExtensionRecord, _ExtensionManifestEntry] | None:
         return self.catalog._resolve_manifest_entry(workload_id, entry_point_rows=self._discover_entry_point_rows())

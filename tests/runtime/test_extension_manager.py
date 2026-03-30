@@ -370,6 +370,43 @@ def test_resolve_manifest_entry_returns_extension_and_workload(tmp_path):
     assert workload.workload_id == "mystery_v1"
 
 
+def test_uses_sdk_contract_reflects_manifest_style(tmp_path):
+    """Layer: unit. Verifies manager exposes SDK eligibility as a boolean probe instead of leaking manifest metadata."""
+    catalog = tmp_path / "extensions_catalog.json"
+    catalog.write_text(
+        json.dumps(
+            {
+                "extensions": [
+                    {
+                        "extension_id": "legacy.extension",
+                        "extension_version": "1.0.0",
+                        "source": "git+https://example/legacy.git",
+                        "contract_style": "legacy_v1",
+                        "manifest_entries": [{"workload_id": "legacy_v1", "workload_version": "1.0.0"}],
+                    },
+                    {
+                        "extension_id": "sdk.extension",
+                        "extension_version": "1.0.0",
+                        "source": "git+https://example/sdk.git",
+                        "contract_style": "sdk_v0",
+                        "manifest_entries": [{"workload_id": "sdk_v1", "workload_version": "1.0.0"}],
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    manager = ExtensionManager(catalog_path=catalog)
+
+    assert manager.has_manifest_entry("legacy_v1") is True
+    assert manager.uses_sdk_contract("legacy_v1") is False
+    assert manager.has_manifest_entry("sdk_v1") is True
+    assert manager.uses_sdk_contract("sdk_v1") is True
+    assert manager.has_manifest_entry("missing_v1") is False
+    assert manager.uses_sdk_contract("missing_v1") is False
+
+
 def test_install_from_repo_registers_extension(tmp_path):
     repo = tmp_path / "ext_repo"
     repo.mkdir(parents=True, exist_ok=True)
@@ -455,6 +492,7 @@ def test_extension_manager_exposes_helper_methods_explicitly():
         "_run_sdk_workload",
         "_resolve_manifest_entry",
         "_validate_extension_imports",
+        "uses_sdk_contract",
     }
     assert explicit_helpers.issubset(ExtensionManager.__dict__)
 

@@ -510,6 +510,7 @@ def test_extension_manager_class_no_longer_exposes_generic_workload_lookup() -> 
 
     assert _class_has_method(manager_path, class_name="ExtensionManager", method_name="resolve_workload") is False
     assert _class_has_method(manager_path, class_name="ExtensionManager", method_name="has_manifest_entry") is True
+    assert _class_has_method(manager_path, class_name="ExtensionManager", method_name="uses_sdk_contract") is True
     assert _class_has_method(manager_path, class_name="ExtensionManager", method_name="_resolve_manifest_workload") is False
     assert _class_has_method(manager_path, class_name="ExtensionManager", method_name="_resolve_manifest_entry") is True
 
@@ -528,6 +529,17 @@ def test_sessions_router_uses_manifest_presence_probe_instead_of_metadata_lookup
 
     assert ".has_manifest_entry(" in router_text
     assert ".resolve_workload(" not in router_text
+
+
+def test_controller_dispatcher_uses_manager_sdk_probe_instead_of_private_manifest_tuple() -> None:
+    """Layer: unit. Verifies controller dispatch uses boolean manager probes instead of resolving private manifest metadata."""
+    dispatcher_text = (REPO_ROOT / "orket" / "extensions" / "controller_dispatcher.py").read_text(
+        encoding="utf-8-sig"
+    )
+
+    assert ".has_manifest_entry(" in dispatcher_text
+    assert ".uses_sdk_contract(" in dispatcher_text
+    assert "._resolve_manifest_entry(" not in dispatcher_text
 
 
 def test_extension_models_do_not_define_manifest_workload_alias() -> None:

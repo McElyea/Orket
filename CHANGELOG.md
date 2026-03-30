@@ -5,6 +5,20 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.28] - 2026-03-29 - "The Manager-Owned Extension Eligibility Cut"
+
+### Added
+- **Focused ControlPlane Proof Slice**: Proved the extension-manager and controller-dispatch boundary with a focused governance/runtime test slice plus docs hygiene, covering the manager-owned SDK eligibility probe and the matching authority-doc sync.
+
+### Changed
+- **Extension Child Eligibility Boundary**: Added `ExtensionManager.uses_sdk_contract(...)` and moved controller child eligibility checks onto the manager-owned boolean probes `has_manifest_entry(...)` and `uses_sdk_contract(...)` instead of resolving private manifest-entry tuples directly inside controller dispatch.
+- **Authority Story Alignment**: Updated `CURRENT_AUTHORITY.md` and the active ControlPlane implementation plan, closeout, and crosswalk so they now record the same narrower truth: controller dispatch no longer reaches into private extension manifest metadata.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
 ## [0.4.27] - 2026-03-29 - "The Canonical Card Dispatcher And Full Proof Cut"
 
 ### Added

@@ -15,7 +15,6 @@ from orket_extension_sdk.controller import (
 )
 
 from .manager import ExtensionManager
-from .models import CONTRACT_STYLE_SDK_V0
 from .controller_dispatcher_contract import (
     DEFAULT_CHILD_TIMEOUT_SECONDS,
     DEFAULT_MAX_DEPTH,
@@ -203,8 +202,7 @@ class ControllerDispatcher:
                 error_code=guard_error,
             )
 
-        resolved = self._extension_manager._resolve_manifest_entry(child.target_workload)
-        if resolved is None:
+        if not self._extension_manager.has_manifest_entry(child.target_workload):
             return _ChildOutcome(
                 result=failed_child_result(
                     child=child,
@@ -216,11 +214,7 @@ class ControllerDispatcher:
                 ),
                 error_code=ERROR_CHILD_EXECUTION_FAILED,
             )
-        extension_record, workload_record = resolved
-        if (
-            workload_record.contract_style != CONTRACT_STYLE_SDK_V0
-            and extension_record.contract_style != CONTRACT_STYLE_SDK_V0
-        ):
+        if not self._extension_manager.uses_sdk_contract(child.target_workload):
             return _ChildOutcome(
                 result=failed_child_result(
                     child=child,

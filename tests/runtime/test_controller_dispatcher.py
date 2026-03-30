@@ -18,12 +18,7 @@ from orket.extensions.controller_dispatcher import (
     ERROR_RECURSION_DENIED,
 )
 from orket.extensions.manager import ExtensionManager
-from orket.extensions.models import (
-    CONTRACT_STYLE_SDK_V0,
-    ExtensionRecord,
-    ExtensionRunResult,
-    _ExtensionManifestEntry,
-)
+from orket.extensions.models import CONTRACT_STYLE_SDK_V0, ExtensionRunResult
 from orket_extension_sdk.controller import ControllerPolicyCaps
 
 
@@ -51,27 +46,11 @@ class _StubExtensionManager:
         self._outcomes = outcomes
         self.calls: list[str] = []
 
-    def _resolve_manifest_entry(self, workload_id: str) -> tuple[ExtensionRecord, _ExtensionManifestEntry] | None:
-        style = self._workload_styles.get(workload_id)
-        if style is None:
-            return None
-        extension = ExtensionRecord(
-            extension_id=f"ext.{workload_id}",
-            extension_version="0.1.0",
-            source="local",
-            extension_api_version="v0",
-            path=".",
-            module="",
-            register_callable="",
-            manifest_entries=(),
-            contract_style=style,
-        )
-        workload = _ExtensionManifestEntry(
-            workload_id=workload_id,
-            workload_version="0.1.0",
-            contract_style=style,
-        )
-        return extension, workload
+    def has_manifest_entry(self, workload_id: str) -> bool:
+        return workload_id in self._workload_styles
+
+    def uses_sdk_contract(self, workload_id: str) -> bool:
+        return self._workload_styles.get(workload_id) == CONTRACT_STYLE_SDK_V0
 
     async def run_workload(
         self,
