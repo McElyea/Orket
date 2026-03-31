@@ -91,6 +91,7 @@ class LocalModelProvider:
             )
         else:
             self.client = ollama.AsyncClient(host=self.ollama_host) if self.ollama_host else ollama.AsyncClient()
+        self._provider_managed_client_id = id(self.client)
         self._closed = False
         self._openai_session_epoch = 0
         self._runtime_target: ProviderRuntimeTarget | None = None

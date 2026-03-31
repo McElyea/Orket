@@ -14,7 +14,7 @@
 ## Work Selection
 
 1. Default to the highest-priority active roadmap item.
-2. If `Priority Now` is empty, take the highest-priority active non-recurring item in `Maintenance (Non-Priority)`.
+2. If `Priority Now` is empty or contains only a maintenance-only posture marker, take the highest-priority active non-recurring item in `Maintenance (Non-Priority)`.
 3. Standing recurring maintenance is fallback work unless the user explicitly asks for it or it is the only active maintenance item.
 4. Do not reopen staged, deferred, or paused work without an explicit request.
 
@@ -24,7 +24,7 @@
 
 1. Keep entries terse, execution-only, and non-journaled.
 2. Active lane entries point to the canonical implementation plan path, not requirement docs.
-3. Staged / Waiting entries include only the canonical lane authority path and the smallest valid reopen trigger.
+3. Staged / Waiting and Paused / Checkpointed entries include only the canonical lane authority path and the smallest valid reopen trigger.
 4. Keep detailed reentry criteria, missing-proof status, and historical execution detail in the canonical lane file, not in separate reentry docs.
 5. Do not create parallel active backlog or handoff docs.
 6. Update the roadmap at handoff to remove completed or obsolete items.

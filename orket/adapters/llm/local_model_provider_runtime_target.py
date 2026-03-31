@@ -14,12 +14,27 @@ from orket.runtime.provider_runtime_target import (
 )
 
 
-def uses_runtime_managed_client(*, provider_backend: str, client: Any) -> bool:
+def _uses_httpx_mock_transport(client: Any) -> bool:
+    transport = getattr(client, "_transport", None)
+    return (
+        transport is not None
+        and str(transport.__class__.__name__ or "") == "MockTransport"
+        and str(transport.__class__.__module__ or "").startswith("httpx")
+    )
+
+
+def uses_runtime_managed_client(
+    *,
+    provider_backend: str,
+    client: Any,
+    provider_managed_client_id: int | None = None,
+) -> bool:
     if provider_backend == "openai_compat":
         return (
             client is not None
             and str(client.__class__.__name__ or "") == "AsyncClient"
             and str(client.__class__.__module__ or "").startswith("httpx")
+            and (not _uses_httpx_mock_transport(client) or id(client) == provider_managed_client_id)
         )
     return bool(client) and str(client.__class__.__module__ or "").startswith("ollama")
 
@@ -30,6 +45,7 @@ async def ensure_provider_runtime_target(provider: Any) -> str:
     if not uses_runtime_managed_client(
         provider_backend=str(provider.provider_backend),
         client=getattr(provider, "client", None),
+        provider_managed_client_id=getattr(provider, "_provider_managed_client_id", None),
     ):
         return str(provider.model)
     try:

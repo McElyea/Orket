@@ -1,0 +1,116 @@
+flowchart TD
+%% run_id: kernel-action-run:sess-graph-complete:trace-1
+%% graph_result: complete
+  subgraph view_full_lineage["Full Lineage | What authoritative run-evidence lineage exists for the selected run?"]
+    node_full_lineage_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0001["[attempt] kernel-action-run:sess-graph-complete:trace-1:attempt:0001"]
+    node_full_lineage_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002["[attempt] kernel-action-run:sess-graph-complete:trace-1:attempt:0002"]
+    node_full_lineage_checkpoint_checkpoint_1["[checkpoint] checkpoint-1"]
+    node_full_lineage_checkpoint_acceptance_checkpoint_acceptance_1["[checkpoint_acceptance] checkpoint-acceptance-1"]
+    node_full_lineage_effect_journal_1["[effect] journal-1"]
+    node_full_lineage_final_truth_truth_1["[final_truth] truth-1"]
+    node_full_lineage_lease_kernel_action_lease_kernel_action_run_sess_graph_complete_trace_1["[lease] kernel-action-lease:kernel-action-run:sess-graph-complete:trace-1"]
+    node_full_lineage_observation_receipt_commit_output["[observation] receipt:commit-output"]
+    node_full_lineage_observation_receipt_effect_1["[observation] receipt:effect-1"]
+    node_full_lineage_observation_resource_state_kernel_action_scope_session_sess_graph_complete["[observation] lease_status:lease_active;scope:kernel-action-scope:session:sess-graph-complete"]
+    node_full_lineage_operator_action_op_1["[operator_action] op-1"]
+    node_full_lineage_recovery_decision_rd_1["[recovery_decision] rd-1"]
+    node_full_lineage_reservation_kernel_action_reservation_kernel_action_run_sess_graph_complete_trace_1["[reservation] kernel-action-reservation:kernel-action-run:sess-graph-complete:trace-1"]
+    node_full_lineage_resource_kernel_action_scope_session_sess_graph_complete["[resource] kernel-action-scope:session:sess-graph-complete"]
+    node_full_lineage_run_kernel_action_run_sess_graph_complete_trace_1["[run] kernel-action-run:sess-graph-complete:trace-1"]
+    node_full_lineage_step_kernel_action_run_sess_graph_complete_trace_1_step_checkpoint["[step] kernel-action-run:sess-graph-complete:trace-1:step:checkpoint"]
+    node_full_lineage_step_kernel_action_run_sess_graph_complete_trace_1_step_commit["[step] kernel-action-run:sess-graph-complete:trace-1:step:commit"]
+    node_full_lineage_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0001 -->|attempt_to_checkpoint| node_full_lineage_checkpoint_checkpoint_1
+    node_full_lineage_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0001 -->|attempt_to_recovery_decision| node_full_lineage_recovery_decision_rd_1
+    node_full_lineage_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0001 -->|attempt_to_step| node_full_lineage_step_kernel_action_run_sess_graph_complete_trace_1_step_checkpoint
+    node_full_lineage_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002 -->|attempt_to_step| node_full_lineage_step_kernel_action_run_sess_graph_complete_trace_1_step_commit
+    node_full_lineage_checkpoint_checkpoint_1 -->|checkpoint_to_checkpoint_acceptance| node_full_lineage_checkpoint_acceptance_checkpoint_acceptance_1
+    node_full_lineage_final_truth_truth_1 -->|final_truth_to_run| node_full_lineage_run_kernel_action_run_sess_graph_complete_trace_1
+    node_full_lineage_lease_kernel_action_lease_kernel_action_run_sess_graph_complete_trace_1 -->|lease_to_resource_authority| node_full_lineage_resource_kernel_action_scope_session_sess_graph_complete
+    node_full_lineage_observation_receipt_effect_1 -->|observation_to_effect| node_full_lineage_effect_journal_1
+    node_full_lineage_observation_receipt_commit_output -->|observation_to_final_truth| node_full_lineage_final_truth_truth_1
+    node_full_lineage_observation_resource_state_kernel_action_scope_session_sess_graph_complete -->|observation_to_resource| node_full_lineage_resource_kernel_action_scope_session_sess_graph_complete
+    node_full_lineage_operator_action_op_1 -->|operator_action_to_affected_resource| node_full_lineage_resource_kernel_action_scope_session_sess_graph_complete
+    node_full_lineage_operator_action_op_1 -->|operator_action_to_affected_transition| node_full_lineage_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002
+    node_full_lineage_reservation_kernel_action_reservation_kernel_action_run_sess_graph_complete_trace_1 -->|reservation_to_lease_promotion| node_full_lineage_lease_kernel_action_lease_kernel_action_run_sess_graph_complete_trace_1
+    node_full_lineage_run_kernel_action_run_sess_graph_complete_trace_1 -->|run_to_attempt| node_full_lineage_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0001
+    node_full_lineage_run_kernel_action_run_sess_graph_complete_trace_1 -->|run_to_attempt| node_full_lineage_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002
+    node_full_lineage_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_effect| node_full_lineage_effect_journal_1
+    node_full_lineage_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_observation| node_full_lineage_observation_receipt_commit_output
+    node_full_lineage_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_observation| node_full_lineage_observation_receipt_effect_1
+  end
+  subgraph view_failure_path["Failure Path | Where did failure, interruption, or recovery change the path?"]
+    node_failure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0001["[attempt] kernel-action-run:sess-graph-complete:trace-1:attempt:0001"]
+    node_failure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002["[attempt] kernel-action-run:sess-graph-complete:trace-1:attempt:0002"]
+    node_failure_path_checkpoint_checkpoint_1["[checkpoint] checkpoint-1"]
+    node_failure_path_checkpoint_acceptance_checkpoint_acceptance_1["[checkpoint_acceptance] checkpoint-acceptance-1"]
+    node_failure_path_effect_journal_1["[effect] journal-1"]
+    node_failure_path_final_truth_truth_1["[final_truth] truth-1"]
+    node_failure_path_observation_receipt_commit_output["[observation] receipt:commit-output"]
+    node_failure_path_observation_receipt_effect_1["[observation] receipt:effect-1"]
+    node_failure_path_operator_action_op_1["[operator_action] op-1"]
+    node_failure_path_recovery_decision_rd_1["[recovery_decision] rd-1"]
+    node_failure_path_run_kernel_action_run_sess_graph_complete_trace_1["[run] kernel-action-run:sess-graph-complete:trace-1"]
+    node_failure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_checkpoint["[step] kernel-action-run:sess-graph-complete:trace-1:step:checkpoint"]
+    node_failure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit["[step] kernel-action-run:sess-graph-complete:trace-1:step:commit"]
+    node_failure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0001 -->|attempt_to_checkpoint| node_failure_path_checkpoint_checkpoint_1
+    node_failure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0001 -->|attempt_to_recovery_decision| node_failure_path_recovery_decision_rd_1
+    node_failure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0001 -->|attempt_to_step| node_failure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_checkpoint
+    node_failure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002 -->|attempt_to_step| node_failure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit
+    node_failure_path_checkpoint_checkpoint_1 -->|checkpoint_to_checkpoint_acceptance| node_failure_path_checkpoint_acceptance_checkpoint_acceptance_1
+    node_failure_path_final_truth_truth_1 -->|final_truth_to_run| node_failure_path_run_kernel_action_run_sess_graph_complete_trace_1
+    node_failure_path_observation_receipt_effect_1 -->|observation_to_effect| node_failure_path_effect_journal_1
+    node_failure_path_observation_receipt_commit_output -->|observation_to_final_truth| node_failure_path_final_truth_truth_1
+    node_failure_path_operator_action_op_1 -->|operator_action_to_affected_transition| node_failure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002
+    node_failure_path_run_kernel_action_run_sess_graph_complete_trace_1 -->|run_to_attempt| node_failure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0001
+    node_failure_path_run_kernel_action_run_sess_graph_complete_trace_1 -->|run_to_attempt| node_failure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002
+    node_failure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_effect| node_failure_path_effect_journal_1
+    node_failure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_observation| node_failure_path_observation_receipt_commit_output
+    node_failure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_observation| node_failure_path_observation_receipt_effect_1
+  end
+  subgraph view_resource_authority_path["Resource Authority Path | What ownership path governed reservation, lease, resource, and mutation authority?"]
+    node_resource_authority_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002["[attempt] kernel-action-run:sess-graph-complete:trace-1:attempt:0002"]
+    node_resource_authority_path_effect_journal_1["[effect] journal-1"]
+    node_resource_authority_path_final_truth_truth_1["[final_truth] truth-1"]
+    node_resource_authority_path_lease_kernel_action_lease_kernel_action_run_sess_graph_complete_trace_1["[lease] kernel-action-lease:kernel-action-run:sess-graph-complete:trace-1"]
+    node_resource_authority_path_observation_receipt_commit_output["[observation] receipt:commit-output"]
+    node_resource_authority_path_observation_receipt_effect_1["[observation] receipt:effect-1"]
+    node_resource_authority_path_observation_resource_state_kernel_action_scope_session_sess_graph_complete["[observation] lease_status:lease_active;scope:kernel-action-scope:session:sess-graph-complete"]
+    node_resource_authority_path_operator_action_op_1["[operator_action] op-1"]
+    node_resource_authority_path_reservation_kernel_action_reservation_kernel_action_run_sess_graph_complete_trace_1["[reservation] kernel-action-reservation:kernel-action-run:sess-graph-complete:trace-1"]
+    node_resource_authority_path_resource_kernel_action_scope_session_sess_graph_complete["[resource] kernel-action-scope:session:sess-graph-complete"]
+    node_resource_authority_path_run_kernel_action_run_sess_graph_complete_trace_1["[run] kernel-action-run:sess-graph-complete:trace-1"]
+    node_resource_authority_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit["[step] kernel-action-run:sess-graph-complete:trace-1:step:commit"]
+    node_resource_authority_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002 -->|attempt_to_step| node_resource_authority_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit
+    node_resource_authority_path_final_truth_truth_1 -->|final_truth_to_run| node_resource_authority_path_run_kernel_action_run_sess_graph_complete_trace_1
+    node_resource_authority_path_lease_kernel_action_lease_kernel_action_run_sess_graph_complete_trace_1 -->|lease_to_resource_authority| node_resource_authority_path_resource_kernel_action_scope_session_sess_graph_complete
+    node_resource_authority_path_observation_receipt_effect_1 -->|observation_to_effect| node_resource_authority_path_effect_journal_1
+    node_resource_authority_path_observation_receipt_commit_output -->|observation_to_final_truth| node_resource_authority_path_final_truth_truth_1
+    node_resource_authority_path_observation_resource_state_kernel_action_scope_session_sess_graph_complete -->|observation_to_resource| node_resource_authority_path_resource_kernel_action_scope_session_sess_graph_complete
+    node_resource_authority_path_operator_action_op_1 -->|operator_action_to_affected_resource| node_resource_authority_path_resource_kernel_action_scope_session_sess_graph_complete
+    node_resource_authority_path_operator_action_op_1 -->|operator_action_to_affected_transition| node_resource_authority_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002
+    node_resource_authority_path_reservation_kernel_action_reservation_kernel_action_run_sess_graph_complete_trace_1 -->|reservation_to_lease_promotion| node_resource_authority_path_lease_kernel_action_lease_kernel_action_run_sess_graph_complete_trace_1
+    node_resource_authority_path_run_kernel_action_run_sess_graph_complete_trace_1 -->|run_to_attempt| node_resource_authority_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002
+    node_resource_authority_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_effect| node_resource_authority_path_effect_journal_1
+    node_resource_authority_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_observation| node_resource_authority_path_observation_receipt_commit_output
+    node_resource_authority_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_observation| node_resource_authority_path_observation_receipt_effect_1
+  end
+  subgraph view_closure_path["Closure Path | What exact chain closed the run?"]
+    node_closure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002["[attempt] kernel-action-run:sess-graph-complete:trace-1:attempt:0002"]
+    node_closure_path_effect_journal_1["[effect] journal-1"]
+    node_closure_path_final_truth_truth_1["[final_truth] truth-1"]
+    node_closure_path_observation_receipt_commit_output["[observation] receipt:commit-output"]
+    node_closure_path_observation_receipt_effect_1["[observation] receipt:effect-1"]
+    node_closure_path_operator_action_op_1["[operator_action] op-1"]
+    node_closure_path_recovery_decision_rd_1["[recovery_decision] rd-1"]
+    node_closure_path_run_kernel_action_run_sess_graph_complete_trace_1["[run] kernel-action-run:sess-graph-complete:trace-1"]
+    node_closure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit["[step] kernel-action-run:sess-graph-complete:trace-1:step:commit"]
+    node_closure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002 -->|attempt_to_step| node_closure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit
+    node_closure_path_final_truth_truth_1 -->|final_truth_to_run| node_closure_path_run_kernel_action_run_sess_graph_complete_trace_1
+    node_closure_path_observation_receipt_effect_1 -->|observation_to_effect| node_closure_path_effect_journal_1
+    node_closure_path_observation_receipt_commit_output -->|observation_to_final_truth| node_closure_path_final_truth_truth_1
+    node_closure_path_operator_action_op_1 -->|operator_action_to_affected_transition| node_closure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002
+    node_closure_path_run_kernel_action_run_sess_graph_complete_trace_1 -->|run_to_attempt| node_closure_path_attempt_kernel_action_run_sess_graph_complete_trace_1_attempt_0002
+    node_closure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_effect| node_closure_path_effect_journal_1
+    node_closure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_observation| node_closure_path_observation_receipt_commit_output
+    node_closure_path_step_kernel_action_run_sess_graph_complete_trace_1_step_commit -->|step_to_observation| node_closure_path_observation_receipt_effect_1
+  end

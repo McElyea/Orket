@@ -1,0 +1,158 @@
+{
+  "schema_version": "techdebt.recurring_cycle.v1",
+  "cycle_id": "2026-03-30_cycle-a",
+  "status": "pass",
+  "generated_on": "2026-03-30",
+  "sections_executed": [
+    "A",
+    "D"
+  ],
+  "sections_skipped": [
+    {
+      "section": "B",
+      "reason": "not a release-candidate or enforce-window refresh cycle"
+    },
+    {
+      "section": "C",
+      "reason": "no provider/model/template-local-prompting promotion campaign in this cycle"
+    }
+  ],
+  "evidence": {
+    "commands": [
+      "python scripts/governance/check_td03052026_gate_audit.py --require-ready --out benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+      "python scripts/governance/check_docs_project_hygiene.py",
+      "python -m pytest -q"
+    ],
+    "results": {
+      "td03052026_gate_audit": "PASS",
+      "docs_project_hygiene": "PASS",
+      "pytest": "PASS (3599 passed, 37 skipped in 263.04s (0:04:23))"
+    },
+    "cycle_root": "benchmarks/results/techdebt/recurring/2026-03-30_cycle-a",
+    "tracked_artifact": "benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+    "stdout_log": "benchmarks/results/techdebt/recurring/2026-03-30_cycle-a/stdout.log",
+    "stderr_log": "benchmarks/results/techdebt/recurring/2026-03-30_cycle-a/stderr.log",
+    "environment": "benchmarks/results/techdebt/recurring/2026-03-30_cycle-a/environment.json",
+    "report": "tests/reports/techdebt_recurring_cycle_2026-03-30_a_report.json"
+  },
+  "sections": {
+    "A": {
+      "status": "PASS",
+      "command_results": [
+        {
+          "id": "td03052026_gate_audit",
+          "command": "python scripts/governance/check_td03052026_gate_audit.py --require-ready --out benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+          "returncode": 0,
+          "status": "PASS",
+          "detail": "TD03052026 gate audit passed.",
+          "duration_seconds": 0.071
+        },
+        {
+          "id": "docs_project_hygiene",
+          "command": "python scripts/governance/check_docs_project_hygiene.py",
+          "returncode": 0,
+          "status": "PASS",
+          "detail": "Non-archive project folders: ControlPlane, future, marshaller, techdebt",
+          "duration_seconds": 0.06
+        },
+        {
+          "id": "pytest",
+          "command": "python -m pytest -q",
+          "returncode": 0,
+          "status": "PASS",
+          "detail": "3599 passed, 37 skipped in 263.04s (0:04:23)",
+          "duration_seconds": 265.097
+        }
+      ]
+    },
+    "B": {
+      "status": "SKIPPED",
+      "reason": "not a release-candidate or enforce-window refresh cycle"
+    },
+    "C": {
+      "status": "SKIPPED",
+      "reason": "no provider/model/template-local-prompting promotion campaign in this cycle"
+    },
+    "D": {
+      "status": "PASS",
+      "note": "No recurring checklist curation changes were required in this cycle."
+    }
+  },
+  "assertions": [
+    {
+      "id": "section_a_td03052026_gate_audit_passed",
+      "passed": true,
+      "detail": "status=PASS; detail=TD03052026 gate audit passed."
+    },
+    {
+      "id": "section_a_docs_project_hygiene_passed",
+      "passed": true,
+      "detail": "status=PASS; detail=Non-archive project folders: ControlPlane, future, marshaller, techdebt"
+    },
+    {
+      "id": "section_a_canonical_pytest_passed",
+      "passed": true,
+      "detail": "status=PASS; detail=3599 passed, 37 skipped in 263.04s (0:04:23)"
+    },
+    {
+      "id": "section_d_review_note_recorded",
+      "passed": true,
+      "detail": "No recurring checklist curation changes were required in this cycle."
+    }
+  ],
+  "notes": [
+    "Section A remains green (G1-G7).",
+    "No recurring checklist curation changes were required in this cycle."
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-03-31T01:08:38.210019Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:8695033553e37632c526c8c80b56f90281e7967d09cb5f6ed1dbfb1a47e869c9",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 144,
+        "paths_total_reference": 144,
+        "churn_paths": 144,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-03-31T01:15:17.449990Z",
+      "changed": true,
+      "before_digest": "sha256:8695033553e37632c526c8c80b56f90281e7967d09cb5f6ed1dbfb1a47e869c9",
+      "after_digest": "sha256:c18bc9ab460835083238a53d9ecd882fce2ffe54b04336ccec762eb1ec6af124",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 12,
+        "initial_write": false,
+        "paths_total_previous": 144,
+        "paths_total_current": 144,
+        "paths_total_reference": 144,
+        "churn_paths": 12,
+        "churn_ratio": 0.083333,
+        "sample_paths": [
+          "$.assertions[2].detail",
+          "$.assertions[2].passed",
+          "$.evidence.results.pytest",
+          "$.notes[0]",
+          "$.sections.A.command_results[0].duration_seconds",
+          "$.sections.A.command_results[1].duration_seconds",
+          "$.sections.A.command_results[2].detail",
+          "$.sections.A.command_results[2].duration_seconds",
+          "$.sections.A.command_results[2].returncode",
+          "$.sections.A.command_results[2].status",
+          "$.sections.A.status",
+          "$.status"
+        ]
+      }
+    }
+  ]
+}

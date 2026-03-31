@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-03-29
+Last updated: 2026-03-30
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -8,7 +8,9 @@ It is intentionally narrow:
 1. Agent behavior rules remain in `AGENTS.md`.
 2. Contributor workflow rules remain in `docs/CONTRIBUTOR.md`.
 3. This file tracks what is authoritative right now.
-4. Control-plane convergence sequencing stays in `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`; this file should name the live authority seams, not reproduce lane closeout detail.
+4. Control-plane convergence checkpoint and any explicit reopen sequencing stay in `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`; this file should name the live authority seams, not reproduce lane closeout detail.
+
+ControlPlane is currently paused after a truthful partial-convergence checkpoint. This file records only live seams and does not imply an active convergence queue.
 
 This file does not define:
 1. all supported features,
@@ -83,13 +85,16 @@ It defines only the currently authoritative paths that agents and contributors m
 60. Canonical runtime-policy microservices unlock reads now fail closed on malformed persisted unlock artifacts, reuse the same structural unlock-report validator as microservices pilot decision, and default to the canonical acceptance artifact paths instead of stale pre-acceptance output paths via `orket/application/services/microservices_acceptance_reports.py`, `orket/application/services/runtime_policy.py`, and `tests/interfaces/test_api.py`
 61. Canonical runtime-policy pilot-stability reads now also fail closed on internally inconsistent persisted pilot-stability artifacts, with the shared acceptance-report validator rejecting drift between `stable`, `failures`, `checks`, and `artifact_count` instead of trusting top-level fields alone via `orket/application/services/microservices_acceptance_reports.py`, `orket/application/services/runtime_policy.py`, `tests/application/test_microservices_acceptance_reports.py`, and `tests/interfaces/test_api.py`
 62. Canonical runtime-policy microservices unlock reads and microservices pilot decision now also fail closed on internally inconsistent persisted unlock artifacts, with the shared acceptance-report validator rejecting drift between top-level `unlocked` or `failures` and per-criterion `ok` or `failures` detail instead of trusting top-level unlock state alone via `orket/application/services/microservices_acceptance_reports.py`, `tests/application/test_microservices_acceptance_reports.py`, `tests/application/test_microservices_pilot_decision.py`, and `tests/interfaces/test_api.py`
+63. Canonical run-evidence graph operator path: `python scripts/observability/emit_run_evidence_graph.py --run-id <run_id>`
+64. Canonical run-evidence graph artifact family: `runs/<session_id>/run_evidence_graph.json`, `runs/<session_id>/run_evidence_graph.mmd`, and `runs/<session_id>/run_evidence_graph.html` emitted by `scripts/observability/emit_run_evidence_graph.py`
+65. Canonical run-evidence graph contract spec: `docs/specs/RUN_EVIDENCE_GRAPH_V1.md`
 
 ## Machine-Readable Authority Map (v1)
 
 ```json
 {
   "version": 1,
-  "last_updated": "2026-03-29",
+  "last_updated": "2026-03-30",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -173,6 +178,7 @@ It defines only the currently authoritative paths that agents and contributors m
       "determinism_gate_policy_source": "docs/specs/ORKET_DETERMINISM_GATE_POLICY.md",
       "terraform_plan_reviewer_v1_contract_source": "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md",
       "local_prompting_contract_source": "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
+      "run_evidence_graph_contract_source": "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
       "sources": [
         "docs/README.md",
         "docs/ROADMAP.md",
@@ -185,13 +191,19 @@ It defines only the currently authoritative paths that agents and contributors m
       "published_artifacts_index": "benchmarks/published/index.json",
       "published_artifacts_readme": "benchmarks/published/README.md",
       "runtime_event_artifact_path": "agent_output/observability/runtime_events.jsonl",
+      "run_evidence_graph_operator_path": "python scripts/observability/emit_run_evidence_graph.py --run-id <run_id>",
+      "run_evidence_graph_json_path": "runs/<session_id>/run_evidence_graph.json",
+      "run_evidence_graph_mermaid_path": "runs/<session_id>/run_evidence_graph.mmd",
+      "run_evidence_graph_rendered_path": "runs/<session_id>/run_evidence_graph.html",
       "terraform_plan_review_live_smoke_output_path": ".orket/durable/observability/terraform_plan_review_live_smoke.json",
       "artifact_review_policy": "docs/process/PUBLISHED_ARTIFACTS_POLICY.md",
       "sources": [
         "CURRENT_AUTHORITY.md",
         "docs/CONTRIBUTOR.md",
+        "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
         "docs/architecture/event_taxonomy.md",
         "docs/process/PUBLISHED_ARTIFACTS_POLICY.md",
+        "scripts/observability/emit_run_evidence_graph.py",
         "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md"
       ]
     },

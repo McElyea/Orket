@@ -1,12 +1,12 @@
 # Control-Plane Convergence Implementation Plan
 Last updated: 2026-03-29
-Status: Active implementation authority
+Status: Paused partial-convergence checkpoint
 Owner: Orket Core
-Lane type: Control-plane convergence / implementation plan
+Lane type: Control-plane convergence / paused checkpoint
 
 ## Authority posture
 
-This document is the active implementation authority for the ControlPlane convergence lane opened in `docs/ROADMAP.md`.
+This document is the canonical paused-checkpoint and explicit-reopen authority for the ControlPlane convergence lane recorded in `docs/ROADMAP.md`.
 
 The active ControlPlane requirements authority remains the accepted packet under `docs/projects/ControlPlane/orket_control_plane_packet/`.
 The last accepted ControlPlane implementation sequencing lane remains archived under `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/`.
@@ -69,15 +69,28 @@ The following remain frozen:
 16. `run_card(...)` is the sole public runtime execution surface; `run_issue(...)`, `run_epic(...)`, and `run_rock(...)` may remain only as thin compatibility wrappers that normalize inputs and delegate to `run_card(...)`, and rock execution may remain only as routing-only retirement debt rather than a standalone workload-authority surface
 17. `run_card(...)` must dispatch through explicit card fields or one normalized resolver; wrapper logic and dispatch branches may not mint workload authority
 
-## Activation status
+## Pause status
 
-This lane is now opened through `docs/ROADMAP.md`.
+This lane is paused in `docs/ROADMAP.md` after a truthful partial-convergence checkpoint.
 
-The opening change must keep all of the following true together:
-1. the roadmap points to this plan as the active implementation lane
-2. the ControlPlane README and project-index wording match the roadmap and archive
-3. the archived `CP03262026-LANE-CLOSEOUT` material stays historical only
-4. this plan's workstream-level code bindings, proof commands, crosswalk gates, and compatibility exits remain the active sequencing surface
+While paused, all of the following must remain true together:
+1. the roadmap does not present this plan as the active primary implementation lane
+2. this plan remains the canonical checkpoint and explicit-reopen authority for the recorded open gaps
+3. the ControlPlane README, project index, `CURRENT_AUTHORITY.md`, and Workstream 8 closeout match the paused-checkpoint story
+4. the archived `CP03262026-LANE-CLOSEOUT` material stays historical only
+5. the remaining workstream queue, compatibility exits, and completion gate below stay recorded as deferred work, not active roadmap execution
+
+Freeze rules while paused:
+1. no new control-plane nouns
+2. no new workstreams
+3. no more API-shape arguments inside `CE-01`
+4. only bug fixes, proof repairs, and same-change authority-story sync may land without an explicit reopen
+
+Reentry rule:
+1. authority drift bugs
+2. proof failures
+3. same-change doc sync required by touched runtime slices
+4. an explicitly reopened convergence packet or roadmap lane
 
 ## Current truthful starting point
 
@@ -99,7 +112,7 @@ The highest-risk open gaps remain:
 
 ## Execution strategy
 
-This lane should proceed in convergence order, not in fresh-design order.
+If this lane is explicitly reopened, it should proceed in convergence order, not in fresh-design order.
 
 The rule is:
 1. promote missing nouns,
@@ -117,6 +130,8 @@ No executable slice under this plan is specific enough unless it names:
 4. the exact proof commands that must pass
 5. the compatibility exit ledger entries it narrows or closes
 6. the crosswalk and doc updates that land in the same change
+
+The remaining slice queue, compatibility-exit ledger, convergence snapshot, and completion gate stay below as deferred checkpoint state. They do not reopen the lane on their own.
 
 ## Compatibility exit ledger
 
@@ -608,7 +623,7 @@ Crosswalk rows:
 1. any row changed by the converged code slices recorded in the same change
 
 Required deliverables:
-1. active implementation authority remains explicit across roadmap, packet README, project index, and archive wording
+1. paused-checkpoint authority remains explicit across roadmap, packet README, project index, and archive wording
 2. current-state crosswalk updates land in the same changes as converged code slices
 3. README / project index / roadmap wording change together whenever lane status changes again
 4. deprecation notes exist for superseded surfaces and compatibility exits
@@ -622,7 +637,7 @@ Authority map:
 4. execution rule: no workstream may be marked complete unless its closeout artifact, crosswalk rows, compatibility exits, and proof commands already tell the same story as the code
 
 Acceptance criteria:
-1. no live doc claims a different active implementation authority than the roadmap, packet README, and archive story
+1. no live doc claims a different paused-checkpoint or active-lane story than the roadmap, packet README, and archive story
 2. any future lane-status change updates roadmap, project index, README, and archive wording together in one authority-safe update
 3. crosswalk rows move only with explicit code and proof evidence
 4. compatibility exit ledger entries close or narrow in the same changes that reduce their authority risk
@@ -679,7 +694,7 @@ Live:
 
 ## Execution order
 
-Execution order is authoritative.
+If this lane is explicitly reopened, execution order is authoritative.
 Workstream numbering stays stable to avoid unnecessary reference churn.
 
 1. workload, run, and attempt promotion
@@ -704,4 +719,3 @@ This lane is complete only when:
 8. every workstream has a closeout artifact that records touched crosswalk rows, compatibility exits, surviving projection-only surfaces, proofs, and remaining gaps truthfully
 9. every compatibility exit ledger entry is either closed or explicitly reduced to projection-only status with a surviving non-authority note
 10. crosswalk, docs, code, and proofs tell the same story
-

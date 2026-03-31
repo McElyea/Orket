@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.29] - 2026-03-31 - "The Run Evidence Graph And Maintenance Truth Cut"
+
+### Added
+- **Run Evidence Graph V1 Surface**: Added the run-evidence graph runtime, projection, rendering, operator CLI, schema registration, fixtures, and contract/runtime/script proof coverage for canonical `run_evidence_graph.json`, `.mmd`, and `.html` artifacts.
+- **Graphs And Archive Authority Packets**: Added the current Graphs checkpoint authority under `docs/projects/Graphs/` plus the matching archived Graph/Graphs/LocalPrompting closeout packets that preserve the March 30 graph-family and local-prompting maintenance decisions.
+
+### Changed
+- **Authority And Operator Docs**: Updated `CURRENT_AUTHORITY.md`, `docs/RUNBOOK.md`, `docs/README.md`, roadmap/checkpoint docs, and maintenance guidance so the active operator path, maintenance-only posture, paused checkpoints, and local-prompting promotion readiness command now match the shipped runtime and evidence roots.
+- **Provider Runtime Target Truth**: Hardened local-model provider runtime-target detection so `httpx.MockTransport` clients only count as runtime-managed OpenAI-compatible targets when the provider actually owns that client instance.
+- **Parallel Execution Test Stability**: Reworked the parallel orchestration throughput proof to compare parallel versus serial baselines under the same local conditions and labeled the affected tests as integration coverage instead of relying on a brittle fixed wall-clock threshold.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use `python scripts/observability/emit_run_evidence_graph.py --run-id <run_id>` as the canonical operator path for run-evidence graph emission; no other manual migration is required.
+
 ## [0.4.28] - 2026-03-29 - "The Manager-Owned Extension Eligibility Cut"
 
 ### Added

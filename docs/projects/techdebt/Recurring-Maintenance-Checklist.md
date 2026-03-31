@@ -1,6 +1,6 @@
 # Tech Debt Recurring Maintenance Checklist
 
-Last updated: 2026-03-13  
+Last updated: 2026-03-30  
 Status: Active (living document)  
 Owner: Orket Core
 
@@ -90,7 +90,9 @@ Objective:
 1. Revalidate promotion thresholds and template/drift gates for active provider profiles.
 
 Commands:
-1. `python scripts/protocol/check_local_prompting_promotion_readiness.py --profile-root <profile_root_1> --profile-root <profile_root_2> --drift-report benchmarks/results/protocol/local_prompting/live_verification/drift/profile_delta_report.json --template-audit-root benchmarks/results/protocol/local_prompting/live_verification/template_audit --out benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json --strict`
+1. `python scripts/protocol/check_local_prompting_promotion_readiness.py --profile-root benchmarks/results/protocol/local_prompting/ollama_promotion_2026-03-06/conformance/ollama/ollama.qwen.chatml.v1 --profile-root benchmarks/results/protocol/local_prompting/lmstudio_cache_study/none/promotion/conformance/openai_compat/openai_compat.qwen.openai_messages.v1 --drift-report benchmarks/results/protocol/local_prompting/live_verification/drift/profile_delta_report.json --template-audit-root benchmarks/results/protocol/local_prompting/live_verification/template_audit --out benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json --strict`
+
+Use the promotion-suite roots above for Section C. Do not substitute `live_verification/conformance/...` spot-check roots; those artifacts prove live verification surfaces but do not satisfy the promotion-suite volume gates.
 
 Pass criteria:
 1. Readiness output is `ready=true`.

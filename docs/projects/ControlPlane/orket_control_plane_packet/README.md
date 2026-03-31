@@ -35,7 +35,7 @@ This packet is now split into four roles:
    - `10` through `12`
 4. planning:
    - `09_OS_MASTER_PLAN.md` for architecture direction only
-   - `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md` for active convergence execution sequencing
+   - `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md` for the paused partial-convergence checkpoint and any explicit reopen sequencing
    - `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md` for archived packet-v2 execution sequencing
 
 ## Important guardrails
@@ -58,9 +58,11 @@ The accepted packet is indexed for planning under:
 
 The packet remains the active requirements authority.
 
-The active convergence implementation lane is:
+The convergence checkpoint and explicit-reopen authority is:
 
 - `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+
+That lane is currently paused after a truthful partial-convergence checkpoint. It reopens only by explicit roadmap or packet choice.
 
 The prior packet-v2 implementation lane remains archived at:
 

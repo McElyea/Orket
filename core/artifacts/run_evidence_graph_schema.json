@@ -1,0 +1,342 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "orket://core/artifacts/run_evidence_graph_schema.json",
+  "title": "Run Evidence Graph Artifact",
+  "type": "object",
+  "required": [
+    "run_evidence_graph_schema_version",
+    "run_id",
+    "projection_only",
+    "graph_result",
+    "projection_framing",
+    "generation_timestamp",
+    "selected_views",
+    "source_summaries",
+    "issues",
+    "node_count",
+    "edge_count",
+    "nodes",
+    "edges"
+  ],
+  "properties": {
+    "run_evidence_graph_schema_version": {
+      "const": "1.0"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "projection_only": {
+      "const": true
+    },
+    "graph_result": {
+      "enum": [
+        "complete",
+        "degraded",
+        "blocked"
+      ]
+    },
+    "projection_framing": {
+      "$ref": "#/$defs/projection_framing"
+    },
+    "generation_timestamp": {
+      "type": "string",
+      "minLength": 1
+    },
+    "selected_views": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "full_lineage",
+          "failure_path",
+          "resource_authority_path",
+          "closure_path"
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "source_summaries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source_summary"
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/issue"
+      }
+    },
+    "node_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "edge_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "graph_result": {
+            "const": "blocked"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "node_count": {
+            "const": 0
+          },
+          "edge_count": {
+            "const": 0
+          },
+          "nodes": {
+            "maxItems": 0
+          },
+          "edges": {
+            "maxItems": 0
+          },
+          "issues": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "graph_result": {
+            "const": "complete"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "issues": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "projection_framing": {
+      "type": "object",
+      "required": [
+        "artifact_family",
+        "scope",
+        "lineage_rule"
+      ],
+      "properties": {
+        "artifact_family": {
+          "const": "run_evidence_graph"
+        },
+        "scope": {
+          "const": "single_selected_run"
+        },
+        "lineage_rule": {
+          "const": "primary_lineage_with_bounded_supplemental_annotation"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source_summary": {
+      "type": "object",
+      "required": [
+        "source_id",
+        "authority_level",
+        "source_kind",
+        "status"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authority_level": {
+          "enum": [
+            "primary",
+            "supplemental"
+          ]
+        },
+        "source_kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "present",
+            "missing",
+            "contradictory",
+            "unused"
+          ]
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attributes": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "issue": {
+      "type": "object",
+      "required": [
+        "code",
+        "detail"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attributes": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "node": {
+      "type": "object",
+      "required": [
+        "id",
+        "family",
+        "source_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "family": {
+          "enum": [
+            "run",
+            "attempt",
+            "step",
+            "reservation",
+            "lease",
+            "resource",
+            "observation",
+            "checkpoint",
+            "checkpoint_acceptance",
+            "effect",
+            "recovery_decision",
+            "reconciliation",
+            "operator_action",
+            "final_truth"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "attributes": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "edge": {
+      "type": "object",
+      "required": [
+        "id",
+        "family",
+        "source",
+        "target",
+        "source_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "family": {
+          "enum": [
+            "run_to_attempt",
+            "attempt_to_step",
+            "attempt_to_checkpoint",
+            "reservation_to_lease_promotion",
+            "lease_to_resource_authority",
+            "step_to_checkpoint",
+            "checkpoint_to_checkpoint_acceptance",
+            "step_to_effect",
+            "attempt_to_recovery_decision",
+            "step_to_observation",
+            "observation_to_effect",
+            "observation_to_resource",
+            "observation_to_final_truth",
+            "reconciliation_to_final_truth",
+            "operator_action_to_affected_transition",
+            "operator_action_to_affected_resource",
+            "final_truth_to_run"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "attributes": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
