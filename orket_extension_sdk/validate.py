@@ -204,6 +204,7 @@ def validate_extension(
         "ok": ok,
         "target": str(target),
         "manifest_path": str(manifest_path),
+        "manifest_version": manifest.manifest_version,
         "extension_id": manifest.extension_id,
         "workload_count": len(manifest.workloads),
         "error_count": len(errors),

@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-03-30
+Last reviewed: 2026-04-01
 
 This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 
@@ -61,6 +61,10 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 34. `docs/specs/TRUTHFUL_RUNTIME_CONFORMANCE_GOVERNANCE_CONTRACT.md`
 35. `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`
 36. `docs/specs/RUN_EVIDENCE_GRAPH_V1.md`
+37. `docs/specs/SUPERVISOR_RUNTIME_APPROVAL_CHECKPOINT_V1.md`
+38. `docs/specs/SUPERVISOR_RUNTIME_SESSION_BOUNDARY_V1.md`
+39. `docs/specs/SUPERVISOR_RUNTIME_OPERATOR_APPROVAL_SURFACE_V1.md`
+40. `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_VALIDATION_V1.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -102,8 +106,10 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 10. `docs/architecture/CONTRACT_DELTA_TERRAFORM_PLAN_REVIEWER_V1_2026-03-22.md`
 11. `docs/architecture/CONTRACT_DELTA_RUN_EVIDENCE_GRAPH_V1_CLOSEOUT_2026-03-30.md`
 12. `docs/architecture/CONTRACT_DELTA_RUN_EVIDENCE_GRAPH_V1_APPENDIX_SYNC_2026-03-30.md`
-13. `docs/architecture/dependency_graph_snapshot.md`
-14. `docs/architecture/VOLATILITY_BASELINE.md`
+13. `docs/architecture/CONTRACT_DELTA_SUPERVISOR_RUNTIME_PACKET1_APPROVAL_SLICE_REALIGNMENT_2026-03-31.md`
+14. `docs/architecture/dependency_graph_snapshot.md`
+15. `docs/architecture/VOLATILITY_BASELINE.md`
+16. `docs/architecture/CONTRACT_DELTA_SUPERVISOR_RUNTIME_SESSION_CONTINUITY_CLOSEOUT_2026-04-01.md`
 
 ## Projects
 1. Active plans: `docs/projects/<project>/`

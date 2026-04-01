@@ -73,7 +73,7 @@ def test_approval_decision_idempotent_and_conflict_behavior() -> None:
         decide_approval_v1(approval_id=approval_id, decision="deny", edited_proposal=None, notes=None)
 
 
-def test_approval_with_edits_creates_followup_admission_and_does_not_execute_original() -> None:
+def test_approval_decision_rejects_non_packet1_lifecycle_tokens() -> None:
     admitted = admit_proposal_v1(
         {
             **_base_request(session_id="sess-approval-c", trace_id="trace-approval-c"),
@@ -84,15 +84,17 @@ def test_approval_with_edits_creates_followup_admission_and_does_not_execute_ori
         }
     )
 
-    decided = decide_approval_v1(
-        approval_id=str(admitted["approval_id"]),
-        decision="edit",
-        edited_proposal={"target": "local/path.txt"},
-        notes="narrow scope",
-    )
-    assert decided["status"] == "resolved"
-    assert decided["approval"]["status"] == "APPROVED_WITH_EDITS"
-    assert decided["next_admission"]["admission_decision"]["decision"] == "ACCEPT_TO_UNIFY"
+    for decision in ("edit", "expire"):
+        with pytest.raises(ValueError, match="approve, deny"):
+            decide_approval_v1(
+                approval_id=str(admitted["approval_id"]),
+                decision=decision,
+                edited_proposal={"target": "local/path.txt"},
+                notes="narrow scope",
+            )
+
+    items = list_approvals_v1(status="PENDING", session_id="sess-approval-c", request_id=None, limit=50)
+    assert any(item["approval_id"] == admitted["approval_id"] for item in items)
 
     commit = commit_proposal_v1(
         {

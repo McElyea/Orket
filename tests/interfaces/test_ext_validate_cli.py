@@ -55,3 +55,29 @@ def test_ext_validate_blocks_internal_orket_imports(tmp_path: Path, capsys) -> N
     assert code == 2
     assert payload["ok"] is False
     assert any(item["code"] == "E_SDK_IMPORT_FORBIDDEN" for item in payload["errors"])
+
+
+def test_ext_validate_rejects_unsupported_manifest_version(tmp_path: Path, capsys) -> None:
+    _write_extension(tmp_path, workload_source="def run(ctx, payload):\n    return payload\n")
+    (tmp_path / "extension.yaml").write_text(
+        "\n".join(
+            [
+                "manifest_version: v1",
+                "extension_id: demo",
+                "extension_version: 1.0.0",
+                "workloads:",
+                "  - workload_id: w1",
+                "    entrypoint: demo_workload:run",
+                "    required_capabilities: []",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    code = main(["ext", "validate", str(tmp_path), "--strict", "--json"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 2
+    assert payload["ok"] is False
+    assert payload["error_count"] == 1
+    assert payload["errors"][0]["code"] == "E_SDK_MANIFEST_VERSION_UNSUPPORTED"

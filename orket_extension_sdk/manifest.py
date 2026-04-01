@@ -6,6 +6,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
 
+SUPPORTED_MANIFEST_VERSION = "v0"
+
 
 class WorkloadManifest(BaseModel):
     workload_id: str = Field(min_length=1)
@@ -23,9 +25,15 @@ class ExtensionManifest(BaseModel):
 def load_manifest(path: Path) -> ExtensionManifest:
     payload = _load_payload(path)
     try:
-        return ExtensionManifest.model_validate(payload)
+        manifest = ExtensionManifest.model_validate(payload)
     except ValidationError as exc:  # pragma: no cover - exercised by tests
         raise ValueError(f"E_SDK_MANIFEST_SCHEMA: {exc}") from exc
+    if manifest.manifest_version != SUPPORTED_MANIFEST_VERSION:
+        raise ValueError(
+            "E_SDK_MANIFEST_VERSION_UNSUPPORTED: "
+            f"manifest_version must be '{SUPPORTED_MANIFEST_VERSION}'"
+        )
+    return manifest
 
 
 def _load_payload(path: Path) -> dict[str, Any]:
@@ -51,4 +59,3 @@ def _load_payload(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError("E_SDK_MANIFEST_SCHEMA: root must be object")
     return payload
-

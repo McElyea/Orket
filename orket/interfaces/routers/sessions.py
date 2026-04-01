@@ -83,6 +83,7 @@ def build_sessions_router(
         if not workload_id:
             raise HTTPException(status_code=400, detail="workload_id is required")
         has_extension_manifest_entry = extension_manager.has_manifest_entry(workload_id)
+        required_capabilities: list[str] = []
         if not is_builtin_workload(workload_id) and not has_extension_manifest_entry:
             raise HTTPException(
                 status_code=400,
@@ -102,12 +103,27 @@ def build_sessions_router(
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
             except RuntimeError as exc:
                 raise HTTPException(status_code=503, detail=str(exc)) from exc
+        else:
+            try:
+                required_capabilities = list(extension_manager.required_capabilities_for_workload(workload_id))
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
         workspace = _resolve_workspace_path(req.workspace, field_name="workspace")
+        context_inputs: dict[str, Any] = {
+            "input_config": dict(req.input_config),
+            "turn_params": dict(req.turn_params),
+            "workload_id": workload_id,
+            "department": str(req.department),
+            "workspace": str(workspace),
+        }
+        if has_extension_manifest_entry:
+            context_inputs["required_capabilities"] = list(required_capabilities)
         try:
             turn_id = await interaction_manager.begin_turn(
                 session_id=session_id,
                 input_payload=req.input_config,
                 turn_params=req.turn_params,
+                context_inputs=context_inputs,
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc

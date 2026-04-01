@@ -33,8 +33,8 @@ class PendingGateControlPlaneOperatorService:
 
         approval_id = self._approval_id(resolved_approval)
         status_token = self._status_token(resolved_approval)
-        if status_token not in {"approved", "approved_with_edits", "denied", "expired"}:
-            raise ValueError("resolved approval must be approved, approved_with_edits, denied, or expired")
+        if status_token not in {"approved", "denied"}:
+            raise ValueError("resolved approval must be approved or denied")
 
         before_status = self._status_token(previous_approval)
         timestamp = self._timestamp(resolved_approval)
@@ -49,7 +49,7 @@ class PendingGateControlPlaneOperatorService:
 
         command_class = (
             OperatorCommandClass.APPROVE_CONTINUE
-            if status_token in {"approved", "approved_with_edits"}
+            if status_token == "approved"
             else OperatorCommandClass.MARK_TERMINAL
         )
         return await self.publication.publish_operator_action(

@@ -1,6 +1,6 @@
 # External Extension Authoring Guide
 
-Last updated: 2026-03-20
+Last updated: 2026-03-31
 Status: Active
 Owner: Orket Core
 
@@ -63,12 +63,14 @@ For `src/` layouts, entrypoints in `extension.yaml` should use package-module no
 ## Manifest and Capability Rules
 
 1. `extension.yaml` is required at repository root.
-2. Every workload must declare:
+2. `manifest_version: v0` is the only admitted Packet 1 manifest family.
+3. Unsupported manifest families fail closed during host-side validation before extension execution authority is considered.
+4. Every workload must declare:
    1. `workload_id`
    2. `entrypoint`
    3. `required_capabilities`
-3. Unknown capabilities are warnings by default and errors under strict validation.
-4. Runtime authority capabilities must be requested, not reimplemented in extension code.
+5. Unknown capabilities are warnings by default and errors under strict validation.
+6. Runtime authority capabilities must be requested, not reimplemented in extension code.
 
 ## Validation Workflow
 
@@ -86,6 +88,10 @@ Strict mode:
 1. `python -m orket_extension_sdk.validate . --strict --json`
 2. `orket ext validate . --strict --json`
 
+Host validation interpretation:
+1. `manifest_version` other than `v0` must fail closed with `E_SDK_MANIFEST_VERSION_UNSUPPORTED`.
+2. `--strict` promotes unknown capability declarations from warnings to errors.
+
 ## Testing Guidance by Layer
 
 1. `unit`: config parsing, helper functions, deterministic transforms
@@ -101,6 +107,7 @@ Prefer real validation commands over mocks when asserting extension readiness.
 3. `E_SDK_ENTRYPOINT_MISSING`: module file or exported symbol could not be resolved
 4. `E_SDK_CAPABILITY_UNKNOWN`: required capability is outside current vocabulary
 5. `E_SDK_IMPORT_FORBIDDEN`: extension source imports internal `orket.*` modules
+6. `E_SDK_MANIFEST_VERSION_UNSUPPORTED`: manifest uses an unsupported contract family
 
 ## CI Baseline
 

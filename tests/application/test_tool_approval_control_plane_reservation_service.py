@@ -73,7 +73,7 @@ async def test_tool_approval_reservation_service_releases_hold_on_approval() -> 
 
 
 @pytest.mark.asyncio
-async def test_tool_approval_reservation_service_invalidates_or_expires_terminal_hold() -> None:
+async def test_tool_approval_reservation_service_invalidates_terminal_hold_and_rejects_non_packet1_status() -> None:
     repository = InMemoryControlPlaneRecordRepository()
     service = ToolApprovalControlPlaneReservationService(
         publication=ControlPlanePublicationService(repository=repository)
@@ -106,18 +106,20 @@ async def test_tool_approval_reservation_service_invalidates_or_expires_terminal
         created_at="2026-03-24T05:03:00+00:00",
         control_plane_target_ref="turn-tool-run:sess-4:ISS-4:coder:0001",
     )
-    expired = await service.publish_resolved_tool_approval_hold(
-        resolved_approval={
-            "approval_id": "apr-4",
-            "request_type": "tool_approval",
-            "status": "EXPIRED",
-        }
-    )
+    with pytest.raises(ValueError, match="approved or denied"):
+        await service.publish_resolved_tool_approval_hold(
+            resolved_approval={
+                "approval_id": "apr-4",
+                "request_type": "tool_approval",
+                "status": "EXPIRED",
+            }
+        )
+    still_pending = await repository.get_latest_reservation_record(reservation_id="approval-reservation:apr-4")
 
     assert invalidated is not None
-    assert expired is not None
     assert invalidated.status is ReservationStatus.INVALIDATED
-    assert expired.status is ReservationStatus.EXPIRED
+    assert still_pending is not None
+    assert still_pending.status is ReservationStatus.ACTIVE
 
 
 @pytest.mark.asyncio

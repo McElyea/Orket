@@ -50,3 +50,21 @@ def test_load_manifest_schema_error(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="E_SDK_MANIFEST_SCHEMA"):
         load_manifest(manifest_path)
+
+
+def test_load_manifest_rejects_unsupported_manifest_version(tmp_path: Path) -> None:
+    manifest_path = tmp_path / "extension.yaml"
+    manifest_path.write_text(
+        """
+manifest_version: v1
+extension_id: demo
+extension_version: 1.0.0
+workloads:
+  - workload_id: w1
+    entrypoint: pkg.mod:run
+    required_capabilities: []
+""".strip()
+    )
+
+    with pytest.raises(ValueError, match="E_SDK_MANIFEST_VERSION_UNSUPPORTED"):
+        load_manifest(manifest_path)

@@ -49,8 +49,8 @@ class ToolApprovalControlPlaneOperatorService:
             raise ValueError("resolved approval is not a supported tool approval row")
         approval_id = self._approval_id(resolved_approval)
         status_token = self._status_token(resolved_approval)
-        if status_token not in {"approved", "approved_with_edits", "denied", "expired"}:
-            raise ValueError("resolved approval must be approved, approved_with_edits, denied, or expired")
+        if status_token not in {"approved", "denied"}:
+            raise ValueError("resolved approval must be approved or denied")
 
         resolution = self._mapping_or_empty(resolved_approval.get("resolution"))
         payload = self._mapping_or_empty(resolved_approval.get("payload"))
@@ -75,7 +75,7 @@ class ToolApprovalControlPlaneOperatorService:
             if resource_ref not in affected_resource_refs:
                 affected_resource_refs.append(resource_ref)
 
-        if status_token in {"denied", "expired"}:
+        if status_token == "denied":
             action = await self.publication.publish_operator_action(
                 action_id=f"approval-operator-action:{approval_id}:{decision_token}:{timestamp}",
                 actor_ref=actor_ref,
@@ -162,7 +162,7 @@ class ToolApprovalControlPlaneOperatorService:
             return None
         action_id = f"approval-run-operator-action:{approval_id}:{decision_token}:{timestamp}"
         precondition_basis_ref = f"{self.target_ref(approval_id)}:status:{before_status}"
-        if status_token in {"denied", "expired"}:
+        if status_token == "denied":
             return await self.publication.publish_operator_action(
                 action_id=action_id,
                 actor_ref=actor_ref,

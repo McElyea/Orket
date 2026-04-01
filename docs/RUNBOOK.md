@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-03-31
+Last reviewed: 2026-04-01
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -59,6 +59,96 @@ curl http://localhost:8082/health
 curl http://localhost:8080/health
 ```
 
+## Approval Decisions
+1. Inspect one approval:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/approvals/<approval_id>
+```
+2. Resolve one approval on the canonical Packet 1 path:
+```bash
+curl -X POST http://127.0.0.1:8082/v1/approvals/<approval_id>/decision -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"decision\":\"approve\",\"notes\":\"operator-reviewed\"}"
+```
+3. The completed SupervisorRuntime Packet 1 approval-checkpoint slice is the governed kernel `NEEDS_APPROVAL` lifecycle on the default `session:<session_id>` namespace scope.
+4. Packet 1 admits `approve` and `deny` only on this surface.
+5. `notes` and `edited_proposal` may be sent as optional payload members, but they remain operator metadata and do not create an alternate resume or execution path.
+6. Approval list and detail inspection fail closed if the Packet 1 row carries an unsupported legacy lifecycle status or if payload-versus-reservation/operator-action projection truth drifts.
+7. Canonical live proof for the shipped approval slice:
+```bash
+ORKET_DISABLE_SANDBOX=1 python scripts/nervous_system/run_nervous_system_live_evidence.py
+```
+
+## RuntimeOS Session Continuity
+Authority: `docs/specs/SUPERVISOR_RUNTIME_SESSION_BOUNDARY_V1.md`
+
+1. Start one host-owned interaction session:
+```bash
+curl -X POST http://127.0.0.1:8082/v1/interactions/sessions -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"session_params\":{\"reason\":\"operator-start\"}}"
+```
+2. Begin one subordinate turn on that session:
+```bash
+curl -X POST http://127.0.0.1:8082/v1/interactions/<session_id>/turns -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"workload_id\":\"stream_test_v1\",\"input_config\":{\"prompt\":\"hello\"},\"department\":\"core\",\"workspace\":\"workspace/default\",\"turn_params\":{}}"
+```
+3. Admitted Packet 1 context-provider inputs on this boundary remain limited to `session_params`, `input_config`, `turn_params`, `workload_id`, `department`, `workspace`, and host-resolved extension-manifest `required_capabilities`.
+4. The requested `workspace` must remain under the configured workspace root or the turn request fails closed.
+5. Inspect the host-owned session state:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>
+```
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>/status
+```
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>/snapshot
+```
+6. Inspect replay without claiming continuation authority:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>/replay
+```
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/sessions/<session_id>/replay?issue_id=<issue_id>&turn_index=<turn_index>&role=<role>"
+```
+7. Halt one session on the admitted cleanup-adjacent operator path:
+```bash
+curl -X POST http://127.0.0.1:8082/v1/sessions/<session_id>/halt -H "X-API-Key: <api_key>"
+```
+8. Cancel one interaction session or one subordinate turn:
+```bash
+curl -X POST http://127.0.0.1:8082/v1/interactions/<session_id>/cancel -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{}"
+```
+```bash
+curl -X POST http://127.0.0.1:8082/v1/interactions/<session_id>/cancel -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"turn_id\":\"<turn_id>\"}"
+```
+9. Operator interpretation:
+   - session detail, status, snapshot, and replay remain inspection-only surfaces
+   - halt and cancel remain cleanup-adjacent operator commands only; they do not imply deletion or workspace cleanup
+
+## Protocol Replay and Ledger Parity
+Authority: `docs/specs/SUPERVISOR_RUNTIME_SESSION_BOUNDARY_V1.md`
+
+1. Replay one protocol run for inspection:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/protocol/runs/<run_id>/replay
+```
+2. Compare two protocol runs:
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/protocol/replay/compare?run_a=<run_a>&run_b=<run_b>"
+```
+3. Run one protocol replay campaign:
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/protocol/replay/campaign?run_id=<run_a>&run_id=<run_b>&baseline_run=<run_a>"
+```
+4. Compare one protocol run against one SQLite ledger:
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/protocol/runs/<run_id>/ledger-parity?sqlite_db_path=<workspace_relative_sqlite_path>"
+```
+5. Run one protocol ledger-parity campaign:
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/protocol/ledger-parity/campaign?session_id=<session_a>&session_id=<session_b>&sqlite_db_path=<workspace_relative_sqlite_path>"
+```
+6. Operator interpretation:
+   - these replay, comparison, and parity surfaces remain reconstruction or comparison views only
+   - caller-provided `runs_root` and `sqlite_db_path` must remain under the configured workspace root or the request fails closed
+
 ## CLI Commands
 Use `python main.py` for runtime commands.
 
@@ -82,6 +172,17 @@ python main.py --replay-turn <session_id>:<issue_id>:<turn_index>[:role]
 ```bash
 python main.py --archive-related <token> --archive-reason "manual archive"
 ```
+
+## External Extension Validation
+Authority: `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_VALIDATION_V1.md`
+
+1. Canonical host-side Packet 1 validation path:
+```bash
+orket ext validate <extension_root> --strict --json
+```
+2. Packet 1 admits only `manifest_version: v0`.
+3. Any other manifest family must fail closed with `E_SDK_MANIFEST_VERSION_UNSUPPORTED`.
+4. Validation success is installability evidence only; it does not grant runtime authority.
 
 ## Core Validation Commands
 1. Full test sweep:

@@ -521,6 +521,23 @@ async def test_engine_decide_approval_resolves_pending_item() -> None:
 
 
 @pytest.mark.asyncio
+async def test_engine_decide_approval_rejects_non_packet1_decision_token() -> None:
+    engine = _make_engine()
+    await _seed_tool_approval_reservation(engine)
+
+    with pytest.raises(ValueError, match="approve, deny"):
+        await engine.decide_approval(
+            approval_id="apr-1",
+            decision="edit",
+            edited_proposal={"path": "notes.md"},
+        )
+
+    approval = await engine.get_approval("apr-1")
+    assert approval is not None
+    assert approval["status"] == "PENDING"
+
+
+@pytest.mark.asyncio
 async def test_engine_decide_approval_conflict_after_resolution_raises() -> None:
     engine = _make_engine()
     await _seed_tool_approval_reservation(engine)

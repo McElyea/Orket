@@ -9,7 +9,6 @@ from .nervous_system_approvals import (
     rebuild_pending_approvals,
 )
 from .nervous_system_policy import require_nervous_system_enabled
-from .nervous_system_runtime import _admit_proposal_internal
 from .nervous_system_runtime_state import _ADMISSIONS_BY_PROPOSAL, get_str, list_events_for_session
 from .nervous_system_tokens import (
     consume_credential_token,
@@ -29,17 +28,6 @@ def get_approval_v1(approval_id: str) -> dict[str, Any] | None:
     return get_approval(approval_id)
 
 
-def _readmit_edited_proposal(
-    session_id: str, trace_id: str, request_id: str | None, edited_proposal: dict[str, Any]
-) -> dict[str, Any]:
-    return _admit_proposal_internal(
-        session_id=session_id,
-        trace_id=trace_id,
-        request_id=request_id,
-        proposal={"proposal_type": "action.tool_call", "payload": dict(edited_proposal)},
-    )
-
-
 def decide_approval_v1(
     *,
     approval_id: str,
@@ -52,11 +40,10 @@ def decide_approval_v1(
         decision=decision,
         edited_proposal=edited_proposal,
         notes=notes,
-        readmit_edited_proposal=_readmit_edited_proposal,
     )
     approval = result.get("approval") or {}
     status = str(approval.get("status") or "")
-    if status in {"DENIED", "EXPIRED", "APPROVED_WITH_EDITS"}:
+    if status == "DENIED":
         invalidate_tokens_for_proposal(
             session_id=str(approval.get("session_id") or ""),
             proposal_digest=str(approval.get("proposal_digest") or ""),

@@ -5,7 +5,9 @@ import hashlib
 import json
 import os
 import uuid
+from copy import deepcopy
 from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
@@ -27,6 +29,7 @@ class TurnState:
     canceled: asyncio.Event
     terminal_event: str | None = None
     commit_started: bool = False
+    context_inputs: dict[str, Any] = field(default_factory=dict)
 
 
 class InteractionContext:
@@ -35,12 +38,16 @@ class InteractionContext:
         *,
         session_id: str,
         turn_id: str,
+        session_params: dict[str, Any],
+        packet1_context_inputs: dict[str, Any],
         bus: StreamBus,
         cancel_event: asyncio.Event,
         commit_sink: Callable[[CommitIntent], Awaitable[None]],
     ) -> None:
         self.session_id = session_id
         self.turn_id = turn_id
+        self._session_params = deepcopy(session_params)
+        self._packet1_context_inputs = deepcopy(packet1_context_inputs)
         self._bus = bus
         self._cancel_event = cancel_event
         self._commit_sink = commit_sink
@@ -55,6 +62,14 @@ class InteractionContext:
 
     async def request_commit(self, intent: CommitIntent) -> None:
         await self._commit_sink(intent)
+
+    def session_params(self) -> dict[str, Any]:
+        return deepcopy(self._session_params)
+
+    def packet1_context(self) -> dict[str, Any]:
+        payload = {"session_params": self.session_params()}
+        payload.update(deepcopy(self._packet1_context_inputs))
+        return payload
 
     def is_canceled(self) -> bool:
         return self._cancel_event.is_set()
@@ -144,7 +159,12 @@ class InteractionManager:
         return session_id
 
     async def begin_turn(
-        self, session_id: str, input_payload: dict[str, Any] | None = None, turn_params: dict[str, Any] | None = None
+        self,
+        session_id: str,
+        input_payload: dict[str, Any] | None = None,
+        turn_params: dict[str, Any] | None = None,
+        *,
+        context_inputs: dict[str, Any] | None = None,
     ) -> str:
         async with self._lock:
             session = self._require_session(session_id)
@@ -152,7 +172,11 @@ class InteractionManager:
                 raise ValueError("Linear turn policy enforced: active turn already exists")
             turn_id = str(uuid.uuid4())
             session.active_turn_id = turn_id
-            self._turns[(session_id, turn_id)] = TurnState(turn_id=turn_id, canceled=asyncio.Event())
+            self._turns[(session_id, turn_id)] = TurnState(
+                turn_id=turn_id,
+                canceled=asyncio.Event(),
+                context_inputs=deepcopy(dict(context_inputs or {})),
+            )
             self._pending_commit_intents[(session_id, turn_id)] = []
 
         await self.bus.publish(
@@ -248,6 +272,7 @@ class InteractionManager:
 
     async def create_context(self, session_id: str, turn_id: str) -> InteractionContext:
         async with self._lock:
+            session = self._require_session(session_id)
             turn_state = self._require_turn(session_id, turn_id)
 
         async def _sink(intent: CommitIntent) -> None:
@@ -257,6 +282,8 @@ class InteractionManager:
         return InteractionContext(
             session_id=session_id,
             turn_id=turn_id,
+            session_params=session.params,
+            packet1_context_inputs=turn_state.context_inputs,
             bus=self.bus,
             cancel_event=turn_state.canceled,
             commit_sink=_sink,

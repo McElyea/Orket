@@ -93,3 +93,28 @@ def test_validate_extension_resolves_src_layout_entrypoints(tmp_path: Path) -> N
     result = validate_extension(tmp_path)
     assert result["ok"] is True
     assert result["error_count"] == 0
+
+
+def test_validate_extension_rejects_unsupported_manifest_version(tmp_path: Path) -> None:
+    (tmp_path / "demo_workload.py").write_text("def run(ctx, payload):\n    return payload\n", encoding="utf-8")
+    (tmp_path / "extension.yaml").write_text(
+        "\n".join(
+            [
+                "manifest_version: v1",
+                "extension_id: demo",
+                "extension_version: 1.0.0",
+                "workloads:",
+                "  - workload_id: w1",
+                "    entrypoint: demo_workload:run",
+                "    required_capabilities: []",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = validate_extension(tmp_path, strict=True)
+
+    assert result["ok"] is False
+    assert result["error_count"] == 1
+    assert result["errors"][0]["code"] == "E_SDK_MANIFEST_VERSION_UNSUPPORTED"

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 from .canonical import digest_of
 from .nervous_system_runtime_state import (
@@ -23,8 +23,6 @@ APPROVAL_STATUSES = (
 _DECISION_TO_STATUS = {
     "approve": "APPROVED",
     "deny": "DENIED",
-    "edit": "APPROVED_WITH_EDITS",
-    "expire": "EXPIRED",
 }
 
 
@@ -52,7 +50,7 @@ def _normalize_decision(decision: str) -> str:
     key = str(decision or "").strip().lower()
     status = _DECISION_TO_STATUS.get(key)
     if not status:
-        raise ValueError("decision must be one of: approve, deny, edit, expire")
+        raise ValueError("decision must be one of: approve, deny")
     return status
 
 
@@ -219,7 +217,6 @@ def decide_approval(
     decision: str,
     edited_proposal: dict[str, Any] | None,
     notes: str | None,
-    readmit_edited_proposal: Callable[[str, str, str | None, dict[str, Any]], dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     normalized_id = str(approval_id or "").strip()
     if not normalized_id:
@@ -268,25 +265,8 @@ def decide_approval(
         },
     )
 
-    followup = None
-    if target_status == "APPROVED_WITH_EDITS":
-        if edited_proposal is None or not isinstance(edited_proposal, dict):
-            raise ValueError("edited_proposal is required when decision=edit")
-        if readmit_edited_proposal is not None:
-            followup = readmit_edited_proposal(
-                str(existing.get("session_id") or ""),
-                str(existing.get("trace_id") or ""),
-                existing.get("request_ref"),
-                edited_proposal,
-            )
-            if isinstance(followup, dict):
-                resolution["edited_proposal_digest"] = str(followup.get("proposal_digest") or "")
-
     rebuild_pending_approvals(str(existing.get("session_id") or ""))
-    response = {"status": "resolved", "approval": dict(_APPROVALS_BY_ID[normalized_id])}
-    if followup is not None:
-        response["next_admission"] = followup
-    return response
+    return {"status": "resolved", "approval": dict(_APPROVALS_BY_ID[normalized_id])}
 
 
 __all__ = [

@@ -147,6 +147,21 @@ def test_decide_approval_routes_to_engine(monkeypatch) -> None:
     }
 
 
+def test_decide_approval_rejects_non_packet1_decision(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.delenv("ORKET_ENABLE_NERVOUS_SYSTEM", raising=False)
+    monkeypatch.setattr(api_module.engine, "pending_gates", _FakePendingGates(rows=[_tool_approval_row()]), raising=False)
+
+    response = client.post(
+        "/v1/approvals/apr-1/decision",
+        headers={"X-API-Key": "test-key"},
+        json={"decision": "edit", "edited_proposal": {"path": "a.txt"}},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "decision must be one of: approve, deny"
+
+
 def test_approvals_endpoints_real_nervous_system_flow(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")

@@ -32,6 +32,8 @@ def build_approvals_router(engine_getter: Callable[[], Any]) -> APIRouter:
             )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except RuntimeError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
         return {
             "items": items,
             "count": len(items),
@@ -45,7 +47,14 @@ def build_approvals_router(engine_getter: Callable[[], Any]) -> APIRouter:
     @router.get("/approvals/{approval_id}")
     async def get_approval(approval_id: str):
         engine = engine_getter()
-        approval = await engine.get_approval(approval_id)
+        try:
+            approval = await engine.get_approval(approval_id)
+        except ValueError as exc:
+            detail = str(exc)
+            status_code = 404 if "not found" in detail else 422
+            raise HTTPException(status_code=status_code, detail=detail) from exc
+        except RuntimeError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
         if approval is None:
             raise HTTPException(status_code=404, detail=f"Approval '{approval_id}' not found")
         return approval

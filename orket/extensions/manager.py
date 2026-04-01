@@ -159,6 +159,13 @@ class ExtensionManager:
     def has_manifest_entry(self, workload_id: str) -> bool:
         return self._resolve_manifest_entry(workload_id) is not None
 
+    def required_capabilities_for_workload(self, workload_id: str) -> tuple[str, ...]:
+        resolved = self._resolve_manifest_entry(workload_id)
+        if resolved is None:
+            raise ValueError(f"Unknown workload '{workload_id}'")
+        _, workload = resolved
+        return tuple(workload.required_capabilities)
+
     def uses_sdk_contract(self, workload_id: str) -> bool:
         return bool(
             (resolved := self._resolve_manifest_entry(workload_id))

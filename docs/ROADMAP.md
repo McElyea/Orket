@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-03-31
+Last updated: 2026-04-01
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. supervisor-runtime foundations requirements -- Active requirements lane for approval-checkpoint runtime, sessions/context-provider pipeline, operator control surface, and host-owned extension contract. Authority: `docs/projects/SupervisorRuntime/SUPERVISOR_RUNTIME_FOUNDATIONS_IMPLEMENTATION_PLAN.md`.
+1. None.
 
 ## Maintenance (Non-Priority)
 
@@ -32,7 +32,6 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| SupervisorRuntime | active-requirements | P1-active | `docs/projects/SupervisorRuntime/` | Orket Core | Active requirements lane for approval-checkpoint runtime, sessions/context-provider pipeline, operator control surface, and host-owned extension contract. Canonical roadmap pointer: `docs/projects/SupervisorRuntime/SUPERVISOR_RUNTIME_FOUNDATIONS_IMPLEMENTATION_PLAN.md`. Paired requirements companion: `docs/projects/SupervisorRuntime/SUPERVISOR_RUNTIME_FOUNDATIONS_REQUIREMENTS.md`. Do not begin executable implementation until requirements are explicitly accepted or truthfully narrowed. |
 | ControlPlane | paused-checkpoint | paused | `docs/projects/ControlPlane/` | Orket Core | Control-plane packet requirements remain active scoped requirements authority; `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md` is the paused partial-convergence checkpoint and explicit-reopen authority; reopen only for authority drift bugs, proof failures, same-change doc sync required by touched runtime slices, or an explicitly reopened convergence packet or roadmap lane; prior packet-v2 implementation lane remains archived at `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md` with closeout in `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`. |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | techdebt | maintenance only | P2-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance continues through `Recurring-Maintenance-Checklist.md` and `README.md`. |

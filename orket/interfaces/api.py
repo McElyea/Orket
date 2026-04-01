@@ -774,6 +774,7 @@ v1_router.include_router(
         validate_builtin_workload_start=lambda **kwargs: validate_builtin_workload_start(**kwargs),
         run_builtin_workload=lambda **kwargs: run_builtin_workload(**kwargs),
         commit_intent_factory=lambda reason: CommitIntent(type="decision", ref=f"fail_closed:{reason}"),
+        workspace_root_getter=lambda: PROJECT_ROOT,
         control_plane_publication_getter=lambda: engine.control_plane_publication,
     )
 )

@@ -20,7 +20,15 @@ class _StubInteractionManager:
     async def start(self, _params: dict[str, Any]) -> str:
         return "session-1"
 
-    async def begin_turn(self, *, session_id: str, input_payload: dict[str, Any], turn_params: dict[str, Any]) -> str:
+    async def begin_turn(
+        self,
+        *,
+        session_id: str,
+        input_payload: dict[str, Any],
+        turn_params: dict[str, Any],
+        context_inputs: dict[str, Any] | None = None,
+    ) -> str:
+        _ = (session_id, input_payload, turn_params, context_inputs)
         return "turn-1"
 
     async def create_context(self, _session_id: str, _turn_id: str) -> Any:
@@ -44,6 +52,11 @@ class _StubInteractionManager:
 class _StubExtensionManager:
     def has_manifest_entry(self, workload_id: str) -> bool:
         return workload_id == "ext-workload"
+
+    def required_capabilities_for_workload(self, workload_id: str) -> tuple[str, ...]:
+        if workload_id != "ext-workload":
+            raise ValueError(f"Unknown workload '{workload_id}'")
+        return ()
 
     async def run_workload(self, **_kwargs: Any) -> None:
         return None

@@ -29,6 +29,13 @@ from orket.orchestration.approval_control_plane_read_model import (
 )
 
 
+class ApprovalProjectionConflictError(RuntimeError):
+    """Raised when the Packet 1 approval projection cannot be shaped truthfully."""
+
+
+_PACKET1_APPROVAL_STATUSES = {"PENDING", "APPROVED", "DENIED"}
+
+
 def _api_approval_status(value: Any) -> str:
     normalized = str(value or "").strip().lower()
     mapping = {
@@ -39,6 +46,15 @@ def _api_approval_status(value: Any) -> str:
         "expired": "EXPIRED",
     }
     return mapping.get(normalized, "PENDING")
+
+
+def _normalize_packet1_status_filter(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value or "").strip().upper()
+    if normalized not in _PACKET1_APPROVAL_STATUSES:
+        raise ValueError("status must be one of PENDING, APPROVED, DENIED")
+    return normalized
 
 
 def _repo_approval_status(value: str) -> str:
@@ -132,9 +148,10 @@ async def list_approvals(
     request_id: Optional[str] = None,
     limit: int = 100,
 ) -> list[dict[str, Any]]:
+    normalized_status = _normalize_packet1_status_filter(status)
     if _nervous_system_enabled():
         items = list_approvals_v1(
-            status=status,
+            status=normalized_status,
             session_id=session_id,
             request_id=request_id,
             limit=limit,
@@ -142,8 +159,8 @@ async def list_approvals(
         return [await _enrich_approval_row(engine, item) for item in items]
 
     repo_status = None
-    if status:
-        repo_status = _repo_approval_status(status)
+    if normalized_status:
+        repo_status = _repo_approval_status(normalized_status)
     rows = await engine.pending_gates.list_requests(
         session_id=session_id,
         status=repo_status,
@@ -209,12 +226,10 @@ async def decide_approval(
     decision_map = {
         "approve": "APPROVED",
         "deny": "DENIED",
-        "edit": "APPROVED_WITH_EDITS",
-        "expire": "EXPIRED",
     }
     target_status = decision_map.get(decision_token)
     if not target_status:
-        raise ValueError("decision must be one of: approve, deny, edit, expire")
+        raise ValueError("decision must be one of: approve, deny")
 
     resolution: dict[str, Any] = {"decision": decision_token}
     if edited_proposal is not None:
@@ -262,7 +277,7 @@ async def _publish_resolution_control_plane_side_effects(
     if not isinstance(approval, dict):
         return
     status = str(approval.get("status") or "").strip().upper()
-    if status not in {"APPROVED", "APPROVED_WITH_EDITS", "DENIED", "EXPIRED"}:
+    if status not in {"APPROVED", "DENIED"}:
         return
     reservation_publisher = _approval_reservation_publisher(engine)
     if reservation_publisher is not None:
@@ -302,6 +317,7 @@ async def _enrich_approval_row(engine: Any, approval: dict[str, Any]) -> dict[st
     if not approval_id:
         enriched["control_plane_operator_action"] = None
         return enriched
+    status = _require_packet1_approval_status(approval_id=approval_id, status=enriched.get("status"))
 
     repository = getattr(engine, "control_plane_repository", None)
     if repository is None:
@@ -314,6 +330,7 @@ async def _enrich_approval_row(engine: Any, approval: dict[str, Any]) -> dict[st
     )
     enriched["control_plane_target_ref"] = _approval_target_ref(
         enriched,
+        approval_id=approval_id,
         approval_target_ref=approval_target_ref,
         reservation=reservation,
     )
@@ -322,6 +339,12 @@ async def _enrich_approval_row(engine: Any, approval: dict[str, Any]) -> dict[st
         enriched["control_plane_operator_action"] = None
     else:
         enriched["control_plane_operator_action"] = operator_action_summary(actions[-1])
+        _validate_operator_action_projection(
+            approval_id=approval_id,
+            status=status,
+            field_name="control_plane_operator_action",
+            action=enriched["control_plane_operator_action"],
+        )
 
     target_ref = enriched["control_plane_target_ref"]
     if target_ref:
@@ -350,6 +373,12 @@ async def _enrich_approval_row(engine: Any, approval: dict[str, Any]) -> dict[st
         target_actions = await repository.list_operator_actions(target_ref=target_ref)
         if target_actions:
             enriched["control_plane_target_operator_action"] = operator_action_summary(target_actions[-1])
+            _validate_operator_action_projection(
+                approval_id=approval_id,
+                status=status,
+                field_name="control_plane_target_operator_action",
+                action=enriched["control_plane_target_operator_action"],
+            )
         target_reservation = await repository.get_latest_reservation_record_for_holder_ref(holder_ref=target_ref)
         if target_reservation is not None:
             enriched["control_plane_target_reservation"] = reservation_summary(target_reservation)
@@ -367,20 +396,52 @@ async def _enrich_approval_row(engine: Any, approval: dict[str, Any]) -> dict[st
 def _approval_target_ref(
     approval: dict[str, Any],
     *,
+    approval_id: str,
     approval_target_ref: str,
     reservation: Any | None,
 ) -> str | None:
     payload = approval.get("payload")
     if not isinstance(payload, dict):
         payload = {}
-    target_ref = str(payload.get("control_plane_target_ref") or "").strip()
-    if target_ref:
-        return target_ref
+    payload_target_ref = str(payload.get("control_plane_target_ref") or "").strip()
     if reservation is None:
-        return None
+        return payload_target_ref or None
     holder_ref = str(getattr(reservation, "holder_ref", "") or "").strip()
-    if not holder_ref or holder_ref == approval_target_ref:
-        return None
-    return holder_ref
+    reservation_target_ref = None if not holder_ref or holder_ref == approval_target_ref else holder_ref
+    if payload_target_ref and reservation_target_ref and payload_target_ref != reservation_target_ref:
+        raise ApprovalProjectionConflictError(
+            f"approval '{approval_id}' target projection drift between payload and reservation holder"
+        )
+    return payload_target_ref or reservation_target_ref
+
+
+def _require_packet1_approval_status(*, approval_id: str, status: Any) -> str:
+    normalized = str(status or "").strip().upper()
+    if normalized not in _PACKET1_APPROVAL_STATUSES:
+        raise ApprovalProjectionConflictError(
+            f"approval '{approval_id}' has unsupported Packet 1 status '{normalized or '<empty>'}'"
+        )
+    return normalized
+
+
+def _validate_operator_action_projection(
+    *,
+    approval_id: str,
+    status: str,
+    field_name: str,
+    action: dict[str, Any] | None,
+) -> None:
+    if action is None:
+        return
+    if status == "PENDING":
+        raise ApprovalProjectionConflictError(
+            f"approval '{approval_id}' has conflicting {field_name} while still pending"
+        )
+    expected_result = "approved" if status == "APPROVED" else "denied"
+    actual_result = str(action.get("result") or "").strip().lower()
+    if actual_result != expected_result:
+        raise ApprovalProjectionConflictError(
+            f"approval '{approval_id}' has conflicting {field_name} result '{actual_result or '<empty>'}'"
+        )
 
 __all__ = ["decide_approval", "get_approval", "list_approvals"]

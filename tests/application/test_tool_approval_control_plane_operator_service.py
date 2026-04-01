@@ -21,7 +21,7 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.asyncio
-async def test_tool_approval_operator_service_publishes_risk_acceptance_for_approved_edit() -> None:
+async def test_tool_approval_operator_service_publishes_risk_acceptance_for_approved_resolution() -> None:
     repository = InMemoryControlPlaneRecordRepository()
     service = ToolApprovalControlPlaneOperatorService(
         publication=ControlPlanePublicationService(repository=repository)
@@ -40,9 +40,9 @@ async def test_tool_approval_operator_service_publishes_risk_acceptance_for_appr
             "gate_mode": "approval_required",
             "request_type": "tool_approval",
             "reason": "approval_required_tool:write_file",
-            "status": "APPROVED_WITH_EDITS",
+            "status": "APPROVED",
             "resolution": {
-                "decision": "edit",
+                "decision": "approve",
             },
             "updated_at": "2026-03-24T02:10:00+00:00",
         },
@@ -53,9 +53,36 @@ async def test_tool_approval_operator_service_publishes_risk_acceptance_for_appr
     assert stored is not None
     assert stored.input_class is OperatorInputClass.RISK_ACCEPTANCE
     assert stored.target_ref == "approval-request:apr-1"
-    assert stored.result == "approved_with_edits"
+    assert stored.result == "approved"
     assert stored.risk_acceptance_scope is not None
-    assert "decision=edit" in stored.risk_acceptance_scope
+    assert "decision=approve" in stored.risk_acceptance_scope
+
+
+@pytest.mark.asyncio
+async def test_tool_approval_operator_service_rejects_non_packet1_status() -> None:
+    repository = InMemoryControlPlaneRecordRepository()
+    service = ToolApprovalControlPlaneOperatorService(
+        publication=ControlPlanePublicationService(repository=repository)
+    )
+
+    with pytest.raises(ValueError, match="approved or denied"):
+        await service.publish_resolution_operator_action(
+            actor_ref="api_key_fingerprint:sha256:test",
+            previous_approval={
+                "approval_id": "apr-unsupported",
+                "status": "PENDING",
+            },
+            resolved_approval={
+                "approval_id": "apr-unsupported",
+                "request_type": "tool_approval",
+                "reason": "approval_required_tool:write_file",
+                "status": "APPROVED_WITH_EDITS",
+                "resolution": {
+                    "decision": "edit",
+                },
+                "updated_at": "2026-03-24T02:10:30+00:00",
+            },
+        )
 
 
 @pytest.mark.asyncio

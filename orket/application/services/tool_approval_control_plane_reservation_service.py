@@ -112,7 +112,7 @@ class ToolApprovalControlPlaneReservationService:
         if existing is None:
             return None
         status_token = self._status_token(resolved_approval)
-        if status_token in {"approved", "approved_with_edits"}:
+        if status_token == "approved":
             return await self.publication.release_reservation(
                 reservation_id=existing.reservation_id,
                 supervisor_authority_ref=f"{request_type}-gate:{approval_id}:resolve",
@@ -124,13 +124,7 @@ class ToolApprovalControlPlaneReservationService:
                 supervisor_authority_ref=f"{request_type}-gate:{approval_id}:resolve",
                 invalidation_basis=self._invalidation_basis(request_type=request_type),
             )
-        if status_token == "expired":
-            return await self.publication.expire_reservation(
-                reservation_id=existing.reservation_id,
-                supervisor_authority_ref=f"{request_type}-gate:{approval_id}:resolve",
-                expiry_basis=self._expiry_basis(request_type=request_type),
-            )
-        return None
+        raise ValueError("resolved approval must be approved or denied")
 
     async def publish_resolved_tool_approval_hold(
         self,
@@ -186,12 +180,5 @@ class ToolApprovalControlPlaneReservationService:
         if request_type == "tool_approval":
             return "approval_denied_terminal_stop"
         return f"pending_gate_denied_terminal_stop:{request_type}"
-
-    @staticmethod
-    def _expiry_basis(*, request_type: str) -> str:
-        if request_type == "tool_approval":
-            return "approval_request_expired"
-        return f"pending_gate_request_expired:{request_type}"
-
 
 __all__ = ["ToolApprovalControlPlaneReservationService"]
