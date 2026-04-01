@@ -64,6 +64,9 @@ _MAX_CHAT_MESSAGE_BYTES = 8_000
 _MAX_AUDIO_B64_BYTES = 8_000_000
 _MAX_SYNTH_TEXT_BYTES = 4_000
 _MAX_CADENCE_TEXT_BYTES = 8_000
+_DEFAULT_HOST_API_BASE_URL = "http://127.0.0.1:8082"
+_DEFAULT_EXTENSION_ID = "orket.companion"
+_HOST_API_KEY_ENV_NAMES = ("COMPANION_API_KEY", "ORKET_API_KEY")
 
 
 def _flag_enabled(name: str, *, default: bool) -> bool:
@@ -146,23 +149,54 @@ def _enforce_text_size_limit(*, value: str, max_bytes: int, code: str, message: 
     )
 
 
+def _read_first_nonempty_env(*names: str) -> str:
+    for name in names:
+        value = str(os.getenv(name, "")).strip()
+        if value:
+            return value
+    return ""
+
+
+def _resolve_host_api_base_url() -> str:
+    return str(os.getenv("COMPANION_HOST_BASE_URL", _DEFAULT_HOST_API_BASE_URL)).strip()
+
+
+def _resolve_extension_id() -> str:
+    return str(os.getenv("COMPANION_EXTENSION_ID", _DEFAULT_EXTENSION_ID)).strip() or _DEFAULT_EXTENSION_ID
+
+
+def _resolve_host_api_key() -> str:
+    return _read_first_nonempty_env(*_HOST_API_KEY_ENV_NAMES)
+
+
 def _client() -> CompanionApiClient:
-    base_url = str(os.getenv("COMPANION_HOST_BASE_URL", "http://127.0.0.1:8000")).strip()
-    api_key = str(os.getenv("COMPANION_API_KEY", "")).strip()
+    base_url = _resolve_host_api_base_url()
+    api_key = _resolve_host_api_key()
     if not api_key:
         raise HTTPException(
             status_code=503,
             detail={
                 "ok": False,
                 "code": "E_COMPANION_GATEWAY_API_KEY_REQUIRED",
-                "message": "COMPANION_API_KEY is required for Companion host API access.",
+                "message": "COMPANION_API_KEY or ORKET_API_KEY is required for Companion host API access.",
             },
         )
     timeout_seconds = float(os.getenv("COMPANION_TIMEOUT_SECONDS", "45"))
-    return CompanionApiClient(base_url, timeout_seconds=timeout_seconds, api_key=api_key)
+    return CompanionApiClient(
+        base_url,
+        timeout_seconds=timeout_seconds,
+        api_key=api_key,
+        extension_id=_resolve_extension_id(),
+    )
 
 
-def _raise_gateway_error(exc: httpx.HTTPError) -> None:
+def _raise_gateway_error(exc: Exception) -> None:
+    if isinstance(exc, ValueError):
+        detail = str(exc or "").strip() or "Companion request failed."
+        code = detail.split(":", 1)[0].strip()
+        if not code.startswith("E_"):
+            code = "E_COMPANION_REQUEST_INVALID"
+        raise HTTPException(status_code=400, detail={"ok": False, "code": code, "message": detail}) from exc
     if isinstance(exc, httpx.HTTPStatusError):
         status_code = int(exc.response.status_code)
         detail: Any
@@ -189,7 +223,7 @@ async def status(request: Request) -> dict[str, Any]:
     _enforce_gateway_request_policy(request)
     try:
         return await _client().status()
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -198,7 +232,7 @@ async def models(request: Request, provider: str = "ollama") -> dict[str, Any]:
     _enforce_gateway_request_policy(request)
     try:
         return await _client().models(provider=provider)
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -207,7 +241,7 @@ async def get_config(session_id: str, request: Request) -> dict[str, Any]:
     _enforce_gateway_request_policy(request)
     try:
         return await _client().get_config(session_id=session_id)
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -217,7 +251,7 @@ async def update_config(req: ConfigUpdateRequest, request: Request) -> dict[str,
     _enforce_patch_size_limit(req.patch)
     try:
         return await _client().update_config(session_id=req.session_id, scope=req.scope, patch=req.patch)
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -226,7 +260,7 @@ async def history(session_id: str, request: Request, limit: int = 50) -> dict[st
     _enforce_gateway_request_policy(request)
     try:
         return await _client().history(session_id=session_id, limit=limit)
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -246,7 +280,7 @@ async def chat(req: ChatRequest, request: Request) -> dict[str, Any]:
             provider=req.provider,
             model=req.model,
         )
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -255,7 +289,7 @@ async def clear_memory(req: SessionRequest, request: Request) -> dict[str, Any]:
     _enforce_gateway_request_policy(request)
     try:
         return await _client().clear_session_memory(session_id=req.session_id)
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -264,7 +298,7 @@ async def voice_state(request: Request) -> dict[str, Any]:
     _enforce_gateway_request_policy(request)
     try:
         return await _client().voice_state()
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -273,7 +307,7 @@ async def voice_voices(request: Request) -> dict[str, Any]:
     _enforce_gateway_request_policy(request)
     try:
         return await _client().voice_voices()
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -282,7 +316,7 @@ async def voice_control(req: VoiceControlRequest, request: Request) -> dict[str,
     _enforce_gateway_request_policy(request)
     try:
         return await _client().voice_control(command=req.command, silence_delay_sec=req.silence_delay_sec)
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -301,7 +335,7 @@ async def voice_transcribe(req: TranscribeRequest, request: Request) -> dict[str
             mime_type=req.mime_type,
             language_hint=req.language_hint,
         )
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -321,7 +355,7 @@ async def voice_synthesize(req: SynthesizeRequest, request: Request) -> dict[str
             emotion_hint=req.emotion_hint,
             speed=req.speed,
         )
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)
 
 
@@ -336,5 +370,5 @@ async def voice_cadence_suggest(req: CadenceSuggestRequest, request: Request) ->
     )
     try:
         return await _client().voice_cadence_suggest(session_id=req.session_id, text=req.text)
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         _raise_gateway_error(exc)

@@ -9,6 +9,9 @@ on:
 jobs:
   validate-and-test:
     runs-on: ubuntu-latest
+    env:
+      ORKET_SDK_INSTALL_SPEC: ${{ vars.ORKET_SDK_INSTALL_SPEC }}
+      ORKET_HOST_INSTALL_SPEC: ${{ vars.ORKET_HOST_INSTALL_SPEC }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,23 +21,18 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Bootstrap extension environment
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          ./scripts/install.sh
 
-      - name: Validate extension manifest and entrypoints
+      - name: Validate and test
         run: |
-          python -m orket_extension_sdk.validate . --json
+          ./scripts/validate.sh
 
-      - name: Enforce import isolation
+      - name: Build authoritative source distribution
         run: |
-          python -m orket_extension_sdk.import_scan src --json
+          ./scripts/build-release.sh
 
-      - name: Validate via host CLI
+      - name: Verify authoritative source distribution
         run: |
-          orket ext validate . --json
-
-      - name: Run tests
-        run: |
-          python -m pytest -q tests/
+          ./scripts/verify-release.sh

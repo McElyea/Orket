@@ -14,15 +14,15 @@ def _validator_transport() -> httpx.MockTransport:
     memory_tokens: dict[str, str] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
-        if request.url.path == "/api/v1/companion/status":
+        if request.url.path == "/api/status":
             return httpx.Response(200, json={"ok": True, "stt_available": True})
-        if request.url.path == "/api/v1/companion/config":
+        if request.url.path == "/api/config":
             return httpx.Response(200, json={"ok": True})
-        if request.url.path == "/api/v1/companion/voice/control":
+        if request.url.path == "/api/voice/control":
             payload = json.loads(request.content.decode("utf-8"))
             state = {"start": "listening", "stop": "idle", "submit": "processing"}.get(str(payload.get("command") or ""), "idle")
             return httpx.Response(200, json={"ok": True, "state": state})
-        if request.url.path == "/api/v1/companion/chat":
+        if request.url.path == "/api/chat":
             payload = json.loads(request.content.decode("utf-8"))
             session_id = str(payload.get("session_id") or "")
             message = str(payload.get("message") or "")

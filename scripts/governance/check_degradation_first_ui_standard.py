@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.interfaces.routers.companion import build_companion_router
+from orket.interfaces.routers.extension_runtime import build_extension_runtime_router
 from orket.runtime.degradation_first_ui_standard import (
     degradation_first_ui_standard_snapshot,
     validate_degradation_first_ui_standard,
@@ -88,13 +88,14 @@ def _structured_warning_policy_declares_runtime_degraded() -> dict[str, Any]:
 
 def _companion_models_unavailable_returns_truthful_degraded_failure() -> dict[str, Any]:
     class _Service:
-        async def list_models(self, *, provider: str) -> dict[str, Any]:
+        async def list_models(self, *, extension_id: str, provider: str) -> dict[str, Any]:
+            del extension_id
             raise RuntimeError(f"simulated-failure:{provider}")
 
     app = FastAPI()
-    app.include_router(build_companion_router(service_getter=lambda: _Service()))
+    app.include_router(build_extension_runtime_router(service_getter=lambda: _Service()))
     with TestClient(app) as client:
-        response = client.get("/companion/models", params={"provider": "ollama"})
+        response = client.get("/extensions/orket.companion/runtime/models", params={"provider": "ollama"})
     payload = response.json().get("detail", {})
     return {
         "check": "companion_models_unavailable_returns_truthful_degraded_failure",

@@ -19,18 +19,18 @@ def _execution_transport(
 
     def handler(request: httpx.Request) -> httpx.Response:
         nonlocal config_calls
-        if request.url.path == "/api/v1/companion/status":
+        if request.url.path == "/api/status":
             if status_fails:
                 return httpx.Response(503, json={"detail": "status unavailable"})
             return httpx.Response(200, json={"ok": True, "stt_available": stt_available})
 
-        if request.url.path == "/api/v1/companion/config":
+        if request.url.path == "/api/config":
             config_calls += 1
             if mode_config_fails and config_calls > 1:
                 return httpx.Response(503, json={"detail": "mode config unavailable"})
             return httpx.Response(200, json={"ok": True})
 
-        if request.url.path == "/api/v1/companion/voice/control":
+        if request.url.path == "/api/voice/control":
             if voice_fails:
                 return httpx.Response(503, json={"detail": "voice offline"})
             payload = json.loads(request.content.decode("utf-8"))
@@ -43,7 +43,7 @@ def _execution_transport(
                 return httpx.Response(200, json={"ok": True, "state": "processing"})
             return httpx.Response(400, json={"detail": "invalid command"})
 
-        if request.url.path == "/api/v1/companion/chat":
+        if request.url.path == "/api/chat":
             payload = json.loads(request.content.decode("utf-8"))
             session_id = str(payload.get("session_id") or "")
             message = str(payload.get("message") or "")

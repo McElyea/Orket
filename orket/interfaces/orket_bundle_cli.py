@@ -544,6 +544,13 @@ def validate_external_extension(target: Path, *, strict: bool = False) -> Dict[s
     return validate_sdk_extension_tool(target, strict=strict, include_import_scan=True)
 
 
+_TRANSIENT_TEMPLATE_PARTS = {"node_modules", ".venv", "__pycache__", "dist", "build"}
+
+
+def _is_transient_template_path(relative: Path) -> bool:
+    return any(part in _TRANSIENT_TEMPLATE_PARTS for part in relative.parts)
+
+
 def init_external_extension(target: Path, *, force: bool = False) -> Dict[str, Any]:
     template_root = (Path(__file__).resolve().parents[2] / "docs" / "templates" / "external_extension").resolve()
     destination = target.resolve()
@@ -582,6 +589,8 @@ def init_external_extension(target: Path, *, force: bool = False) -> Dict[str, A
     copied_files = 0
     for source_path in sorted(template_root.rglob("*"), key=lambda item: item.as_posix()):
         relative = source_path.relative_to(template_root)
+        if _is_transient_template_path(relative):
+            continue
         destination_path = destination / relative
         if source_path.is_dir():
             destination_path.mkdir(parents=True, exist_ok=True)

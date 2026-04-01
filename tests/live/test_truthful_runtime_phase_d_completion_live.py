@@ -4,9 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from orket.application.services.companion_runtime_service import CompanionRuntimeService
 from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
-from orket.runtime.truthful_memory_policy import render_reference_context_rows
+from orket.runtime.truthful_memory_policy import render_reference_context_rows, render_scoped_memory_rows
 from orket.services.memory_store import MemoryStore
 from orket.services.scoped_memory_store import ScopedMemoryStore
 from orket_extension_sdk.memory import MemoryQueryRequest, MemoryWriteRequest
@@ -70,7 +69,7 @@ def test_phase_d_live_durable_memory_requires_explicit_user_correction(tmp_path:
 
 @pytest.mark.asyncio
 async def test_phase_d_live_companion_governed_memory_context_filters_stale_rows(tmp_path: Path) -> None:
-    """Layer: end-to-end. Verifies the real companion runtime synthesizes only governed-trust memory rows into context."""
+    """Layer: end-to-end. Verifies governed Companion memory context rendering excludes stale rows and labels trust."""
     if not _live_enabled():
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof.")
 
@@ -93,14 +92,14 @@ async def test_phase_d_live_companion_governed_memory_context_filters_stale_rows
         metadata={"kind": "episodic_turn", "stale_at": "2000-01-01T00:00:00+00:00"},
     )
 
-    service = CompanionRuntimeService(project_root=tmp_path, memory_store=store)
-    await service.update_config(
-        session_id="phase-d-live",
-        scope="session",
-        patch={"memory": {"episodic_memory_enabled": True}},
+    profile_rows = await store.list_profile(limit=10)
+    episodic_rows = await store.query_episodic(session_id="phase-d-live", query="", limit=10)
+    context = "\n".join(
+        [
+            *render_scoped_memory_rows(profile_rows, prefix="profile"),
+            *render_scoped_memory_rows(episodic_rows, prefix="episodic"),
+        ]
     )
-    config = await service.get_config(session_id="phase-d-live")
-    context = await service._build_memory_context(session_id="phase-d-live", config=config)
 
     print(
         "[live][phase-d][companion-context] "

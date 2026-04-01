@@ -2114,7 +2114,61 @@ def _build_turn_context(
     if approval_required_tools and gate_mode == "auto":
         gate_mode = "approval_required"
 
+    async def _find_existing_tool_approval_request(
+        *,
+        tool_name: str,
+        tool_args: Dict[str, Any],
+        allowed_statuses: set[str],
+    ) -> Dict[str, Any] | None:
+        list_requests = getattr(self.pending_gates, "list_requests", None)
+        if not callable(list_requests):
+            return None
+        from orket.application.services.turn_tool_control_plane_support import run_id_for as turn_tool_run_id_for
+
+        expected_target_ref = turn_tool_run_id_for(
+            session_id=run_id,
+            issue_id=issue.id,
+            role_name=seat_name,
+            turn_index=int(turn_index),
+        )
+        rows = await list_requests(session_id=run_id, limit=1000)
+        for row in rows:
+            status_token = str(row.get("status") or "").strip().lower()
+            if status_token not in allowed_statuses:
+                continue
+            if str(row.get("issue_id") or "").strip() != issue.id:
+                continue
+            if str(row.get("seat_name") or "").strip() != seat_name:
+                continue
+            if str(row.get("request_type") or "").strip() != "tool_approval":
+                continue
+            if str(row.get("reason") or "").strip() != f"approval_required_tool:{tool_name}":
+                continue
+            payload = row.get("payload_json")
+            if not isinstance(payload, dict):
+                continue
+            if str(payload.get("tool") or "").strip() != tool_name:
+                continue
+            if dict(payload.get("args") or {}) != dict(tool_args or {}):
+                continue
+            if payload.get("turn_index") != int(turn_index):
+                continue
+            target_ref = str(payload.get("control_plane_target_ref") or "").strip()
+            if target_ref != expected_target_ref:
+                raise RuntimeError(
+                    "approved write_file tool approval drifted from the admitted governed turn target"
+                )
+            return dict(row)
+        return None
+
     async def _pending_gate_request_writer(*, tool_name: str, tool_args: Dict[str, Any]) -> str:
+        existing = await _find_existing_tool_approval_request(
+            tool_name=tool_name,
+            tool_args=tool_args,
+            allowed_statuses={"pending"},
+        )
+        if existing is not None:
+            return str(existing.get("request_id") or "")
         return await self._create_pending_tool_approval_request(
             run_id=run_id,
             issue=issue,
@@ -2124,6 +2178,19 @@ def _build_turn_context(
             tool_name=tool_name,
             tool_args=tool_args,
         )
+
+    async def _approved_tool_request_lookup(*, tool_name: str, tool_args: Dict[str, Any]) -> str | None:
+        existing = await _find_existing_tool_approval_request(
+            tool_name=tool_name,
+            tool_args=tool_args,
+            allowed_statuses={"approved"},
+        )
+        if existing is None:
+            return None
+        resolution = existing.get("resolution_json")
+        if isinstance(resolution, dict) and str(resolution.get("decision") or "").strip().lower() != "approve":
+            return None
+        return str(existing.get("request_id") or "").strip() or None
 
     architecture_mode = self._resolve_architecture_mode()
     frontend_framework_mode = self._resolve_frontend_framework_mode()
@@ -2331,6 +2398,7 @@ def _build_turn_context(
         "frontend_framework_forced": forced_frontend_framework,
         "idesign_enabled": bool(idesign_enabled),
         "create_pending_gate_request": _pending_gate_request_writer,
+        "resolve_granted_tool_approval": _approved_tool_request_lookup,
         "resume_mode": bool(resume_mode),
         "history": self._history_context(seat_name=seat_name),
         "skill_contract_enforced": bool(resolved_skill_tool_bindings),
@@ -2526,6 +2594,27 @@ async def _handle_failure(
         if not self._is_issue_idesign_enabled(issue):
             message = self._normalize_governance_violation_message(message)
         raise failure_exception_class(message)
+
+    if action == "approval_pending":
+        event_name = self.evaluator_node.failure_event_name(action)
+        if event_name:
+            log_event(
+                event_name,
+                {"run_id": run_id, "issue_id": issue.id, "error": result.error},
+                self.workspace,
+            )
+        metadata = {"run_id": run_id, "error": result.error}
+        if turn_index is not None:
+            metadata["turn_index"] = turn_index
+        await self._request_issue_transition(
+            issue=issue,
+            target_status=self.evaluator_node.status_for_failure_action(action),
+            reason="approval_pending",
+            metadata=metadata,
+            roles=roles,
+        )
+        await self.async_cards.save(issue.model_dump())
+        raise failure_exception_class(str(result.error or "Approval required before execution."))
 
     if action == "catastrophic":
         event_name = self.evaluator_node.failure_event_name(action)

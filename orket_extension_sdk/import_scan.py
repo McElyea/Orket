@@ -11,15 +11,35 @@ ERROR_SCAN_TARGET_MISSING = "E_SDK_IMPORT_SCAN_TARGET_MISSING"
 ERROR_SCAN_TARGET_INVALID = "E_SDK_IMPORT_SCAN_TARGET_INVALID"
 ERROR_SCAN_PARSE = "E_SDK_IMPORT_SCAN_PARSE"
 
+_IGNORED_DIR_NAMES = {
+    "__pycache__",
+    ".git",
+    ".hg",
+    ".svn",
+    "node_modules",
+    "venv",
+    ".venv",
+    "env",
+    ".env",
+}
+
 
 def _is_forbidden_import(module_name: str) -> bool:
     return module_name == "orket" or module_name.startswith("orket.")
 
 
+def _is_ignored_path(path: Path) -> bool:
+    return any(part in _IGNORED_DIR_NAMES for part in path.parts)
+
+
 def _iter_python_files(target: Path) -> list[Path]:
     if target.is_file():
         return [target]
-    return sorted(path for path in target.rglob("*.py") if "__pycache__" not in path.parts)
+    return sorted(
+        path
+        for path in target.rglob("*.py")
+        if not _is_ignored_path(path.relative_to(target))
+    )
 
 
 def _scan_file(source_path: Path, *, root: Path) -> list[dict[str, str]]:

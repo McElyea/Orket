@@ -34,7 +34,7 @@ def degradation_first_ui_standard_snapshot() -> dict[str, Any]:
             },
             {
                 "check_id": "companion_models_unavailable_returns_truthful_degraded_failure",
-                "surface": "orket.interfaces.routers.companion.build_companion_router",
+                "surface": "orket.interfaces.routers.extension_runtime.build_extension_runtime_router",
                 "expected_behavior": "companion models failures return ok=false, degraded=true, and an unavailable error",
             },
         ],

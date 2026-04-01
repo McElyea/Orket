@@ -26,19 +26,27 @@ class ProfileWritePolicy:
 
     def validate(self, *, key: str, metadata: dict[str, Any] | None) -> None:
         key_name = str(key or "").strip()
+        logical_key_name = _logical_profile_key_name(key_name)
         if not key_name:
             raise ProfileWritePolicyError(
                 code="E_PROFILE_MEMORY_KEY_REQUIRED",
                 message="Profile memory writes require a non-empty key.",
             )
-        if not any(key_name.startswith(prefix) for prefix in self._allowed_prefixes):
+        if not any(logical_key_name.startswith(prefix) for prefix in self._allowed_prefixes):
             raise ProfileWritePolicyError(
                 code="E_PROFILE_MEMORY_KEY_FORBIDDEN",
                 message=f"Profile memory key '{key_name}' is outside the allowed prefix policy.",
             )
         payload = dict(metadata or {})
-        if key_name.startswith("user_fact.") and not bool(payload.get("user_confirmed")):
+        if logical_key_name.startswith("user_fact.") and not bool(payload.get("user_confirmed")):
             raise ProfileWritePolicyError(
                 code="E_PROFILE_MEMORY_CONFIRMATION_REQUIRED",
                 message=f"Profile memory key '{key_name}' requires metadata.user_confirmed=true.",
             )
+
+
+def _logical_profile_key_name(key_name: str) -> str:
+    parts = str(key_name or "").split(":", 2)
+    if len(parts) == 3 and parts[0] == "ext" and parts[1].strip() and parts[2].strip():
+        return parts[2].strip()
+    return str(key_name or "").strip()

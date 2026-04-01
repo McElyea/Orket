@@ -19,21 +19,47 @@ copy .env.example .env
 ```bash
 python main.py
 ```
-4. API runtime (safe default profile, local-only bind `http://127.0.0.1:8082`):
+4. Named card runtime:
+```bash
+python main.py --card <card_id>
+```
+5. Legacy named rock runtime alias:
+```bash
+python main.py --rock <rock_name>
+```
+6. API runtime (safe default profile, local-only bind `http://127.0.0.1:8082`):
 ```bash
 python server.py
 ```
-5. API dev runtime with reload (explicit opt-in):
+7. API dev runtime with reload (explicit opt-in):
 ```bash
 python server.py --profile dev
 ```
-6. Webhook runtime (default `http://127.0.0.1:8080`):
+8. Webhook runtime (default `http://127.0.0.1:8080`):
 ```bash
 python -m orket.webhook_server
 ```
 Requires webhook credentials in environment or `.env`:
 1. `GITEA_WEBHOOK_SECRET`
 2. `GITEA_ADMIN_PASSWORD`
+
+## Engine Launch Examples
+1. Default CLI runtime:
+```bash
+python main.py
+```
+2. Run one named card:
+```bash
+python main.py --card <card_id>
+```
+3. Run one named rock through the legacy alias:
+```bash
+python main.py --rock <rock_name>
+```
+4. API runtime:
+```bash
+python server.py
+```
 
 ## API Launcher Precedence
 1. CLI arguments (`--host`, `--port`, `--profile`, `--reload/--no-reload`)
@@ -54,9 +80,52 @@ Requires webhook credentials in environment or `.env`:
 ```bash
 curl http://localhost:8082/health
 ```
-2. Webhook server:
+2. API version:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/version
+```
+3. API heartbeat:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/system/heartbeat
+```
+4. API metrics:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/system/metrics
+```
+5. Webhook server:
 ```bash
 curl http://localhost:8080/health
+```
+
+## Runtime Control and Run Inspection
+1. Start one active run from an operator-selected path:
+```bash
+curl -X POST http://127.0.0.1:8082/v1/system/run-active -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"path\":\"<project_relative_path>\"}"
+```
+2. List known runs:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/runs
+```
+3. Inspect one run:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/runs/<session_id>
+```
+4. Inspect one run's metrics and token summary:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/runs/<session_id>/metrics
+```
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/runs/<session_id>/token-summary
+```
+5. Inspect replay, backlog, and execution graph:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/runs/<session_id>/replay
+```
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/runs/<session_id>/backlog
+```
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/runs/<session_id>/execution-graph
 ```
 
 ## Approval Decisions
@@ -68,11 +137,12 @@ curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/approvals/<approval_id>
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/approvals/<approval_id>/decision -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"decision\":\"approve\",\"notes\":\"operator-reviewed\"}"
 ```
-3. The completed SupervisorRuntime Packet 1 approval-checkpoint slice is the governed kernel `NEEDS_APPROVAL` lifecycle on the default `session:<session_id>` namespace scope.
+3. The active SupervisorRuntime approval-checkpoint family now admits two shipped bounded slices only: governed kernel `NEEDS_APPROVAL` on the default `session:<session_id>` namespace scope, and governed turn-tool `write_file` approval-required continuation on the default `issue:<issue_id>` namespace scope using the existing `tool_approval` plus `approval_required_tool:write_file` request shape.
 4. Packet 1 admits `approve` and `deny` only on this surface.
 5. `notes` and `edited_proposal` may be sent as optional payload members, but they remain operator metadata and do not create an alternate resume or execution path.
-6. Approval list and detail inspection fail closed if the Packet 1 row carries an unsupported legacy lifecycle status or if payload-versus-reservation/operator-action projection truth drifts.
-7. Canonical live proof for the shipped approval slice:
+6. On the bounded turn-tool `write_file` slice, `approve` triggers one runtime-owned same-governed-run continuation on the already-selected `control_plane_target_ref`, while `deny` terminal-stops that same governed turn-tool run; operators do not call a separate resume API.
+7. Approval list and detail inspection fail closed if the Packet 1 row carries an unsupported legacy lifecycle status or if payload-versus-reservation/operator-action projection truth drifts.
+8. Canonical live proof for the shipped approval slice:
 ```bash
 ORKET_DISABLE_SANDBOX=1 python scripts/nervous_system/run_nervous_system_live_evidence.py
 ```
@@ -88,9 +158,13 @@ curl -X POST http://127.0.0.1:8082/v1/interactions/sessions -H "Content-Type: ap
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/interactions/<session_id>/turns -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"workload_id\":\"stream_test_v1\",\"input_config\":{\"prompt\":\"hello\"},\"department\":\"core\",\"workspace\":\"workspace/default\",\"turn_params\":{}}"
 ```
-3. Admitted Packet 1 context-provider inputs on this boundary remain limited to `session_params`, `input_config`, `turn_params`, `workload_id`, `department`, `workspace`, and host-resolved extension-manifest `required_capabilities`.
-4. The requested `workspace` must remain under the configured workspace root or the turn request fails closed.
-5. Inspect the host-owned session state:
+3. Finalize one subordinate turn when the host has not already finalized it:
+```bash
+curl -X POST http://127.0.0.1:8082/v1/interactions/<session_id>/finalize -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"turn_id\":\"<turn_id>\"}"
+```
+4. Admitted Packet 1 context-provider inputs on this boundary remain limited to `session_params`, `input_config`, `turn_params`, `workload_id`, `department`, `workspace`, and host-resolved extension-manifest `required_capabilities`.
+5. The requested `workspace` must remain under the configured workspace root or the turn request fails closed.
+6. Inspect the host-owned session state:
 ```bash
 curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>
 ```
@@ -100,27 +174,74 @@ curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>/st
 ```bash
 curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>/snapshot
 ```
-6. Inspect replay without claiming continuation authority:
+7. Inspect replay without claiming continuation authority:
 ```bash
 curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>/replay
 ```
 ```bash
 curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/sessions/<session_id>/replay?issue_id=<issue_id>&turn_index=<turn_index>&role=<role>"
 ```
-7. Halt one session on the admitted cleanup-adjacent operator path:
+8. Halt one session on the admitted cleanup-adjacent operator path:
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/sessions/<session_id>/halt -H "X-API-Key: <api_key>"
 ```
-8. Cancel one interaction session or one subordinate turn:
+9. Cancel one interaction session or one subordinate turn:
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/interactions/<session_id>/cancel -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{}"
 ```
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/interactions/<session_id>/cancel -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"turn_id\":\"<turn_id>\"}"
 ```
-9. Operator interpretation:
+10. Operator interpretation:
    - session detail, status, snapshot, and replay remain inspection-only surfaces
    - halt and cancel remain cleanup-adjacent operator commands only; they do not imply deletion or workspace cleanup
+
+## Companion Host API Examples
+1. Inspect Companion host status through the host API:
+```bash
+curl -H "X-API-Key: <companion_or_api_key>" http://127.0.0.1:8082/api/v1/companion/status
+```
+2. Read one Companion session config and history:
+```bash
+curl -H "X-API-Key: <companion_or_api_key>" "http://127.0.0.1:8082/api/v1/companion/config?session_id=<session_id>"
+```
+```bash
+curl -H "X-API-Key: <companion_or_api_key>" "http://127.0.0.1:8082/api/v1/companion/history?session_id=<session_id>&limit=20"
+```
+3. Update next-turn Companion config:
+```bash
+curl -X PATCH http://127.0.0.1:8082/api/v1/companion/config -H "Content-Type: application/json" -H "X-API-Key: <companion_or_api_key>" -d "{\"session_id\":\"<session_id>\",\"scope\":\"next_turn\",\"patch\":{\"mode\":{\"role_id\":\"general_assistant\"}}}"
+```
+4. List available models and send one chat turn:
+```bash
+curl -H "X-API-Key: <companion_or_api_key>" "http://127.0.0.1:8082/api/v1/companion/models?provider=ollama"
+```
+```bash
+curl -X POST http://127.0.0.1:8082/api/v1/companion/chat -H "Content-Type: application/json" -H "X-API-Key: <companion_or_api_key>" -d "{\"session_id\":\"<session_id>\",\"message\":\"hello\"}"
+```
+5. Voice examples:
+```bash
+curl -H "X-API-Key: <companion_or_api_key>" http://127.0.0.1:8082/api/v1/companion/voice/state
+```
+```bash
+curl -H "X-API-Key: <companion_or_api_key>" http://127.0.0.1:8082/api/v1/companion/voice/voices
+```
+```bash
+curl -X POST http://127.0.0.1:8082/api/v1/companion/voice/control -H "Content-Type: application/json" -H "X-API-Key: <companion_or_api_key>" -d "{\"command\":\"start\"}"
+```
+
+## Marshaller Inspection
+1. List marshaller runs:
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/marshaller/runs?limit=20"
+```
+2. Inspect one marshaller run or a specific attempt:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/marshaller/runs/<run_id>
+```
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/marshaller/runs/<run_id>?attempt_index=<attempt_index>"
+```
 
 ## Protocol Replay and Ledger Parity
 Authority: `docs/specs/SUPERVISOR_RUNTIME_SESSION_BOUNDARY_V1.md`
@@ -149,6 +270,77 @@ curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/protocol/ledger-parity/
    - these replay, comparison, and parity surfaces remain reconstruction or comparison views only
    - caller-provided `runs_root` and `sqlite_db_path` must remain under the configured workspace root or the request fails closed
 
+## Files and System Utilities
+1. Explore one allowed project path:
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/system/explorer?path=workspace/default"
+```
+2. Read one allowed file:
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/system/read?path=docs/RUNBOOK.md"
+```
+3. Save one allowed file:
+```bash
+curl -X POST http://127.0.0.1:8082/v1/system/save -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"path\":\"workspace/default/operator-note.txt\",\"content\":\"operator note\"}"
+```
+4. Inspect logs:
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/logs?session_id=<session_id>&limit=50"
+```
+
+## Cards and Sandboxes
+1. List cards and inspect one card:
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/cards?limit=20"
+```
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/cards/<card_id>
+```
+2. Inspect card history and comments:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/cards/<card_id>/history
+```
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/cards/<card_id>/guard-history
+```
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/cards/<card_id>/comments
+```
+3. Archive selected cards:
+```bash
+curl -X POST http://127.0.0.1:8082/v1/cards/archive -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"card_ids\":[\"<card_id>\"],\"reason\":\"manual archive\"}"
+```
+4. List sandboxes, inspect logs, and stop one sandbox:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sandboxes
+```
+```bash
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/sandboxes/<sandbox_id>/logs?service=<service_name>"
+```
+```bash
+curl -X POST http://127.0.0.1:8082/v1/sandboxes/<sandbox_id>/stop -H "X-API-Key: <api_key>"
+```
+
+## Runtime Policy and Settings
+1. Inspect runtime-policy options and the effective runtime policy:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/system/runtime-policy/options
+```
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/system/runtime-policy
+```
+2. Update one runtime-policy field:
+```bash
+curl -X POST http://127.0.0.1:8082/v1/system/runtime-policy -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"local_prompting_allow_fallback\":false}"
+```
+3. Inspect effective user settings and update one editable field:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/settings
+```
+```bash
+curl -X PATCH http://127.0.0.1:8082/v1/settings -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"local_prompting_allow_fallback\":false}"
+```
+
 ## CLI Commands
 Use `python main.py` for runtime commands.
 
@@ -173,8 +365,8 @@ python main.py --replay-turn <session_id>:<issue_id>:<turn_index>[:role]
 python main.py --archive-related <token> --archive-reason "manual archive"
 ```
 
-## External Extension Validation
-Authority: `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_VALIDATION_V1.md`
+## External Extension Package, Publish, and Validation
+Authority: `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_V1.md`, `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_V1.md`, `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_VALIDATION_V1.md`
 
 1. Canonical host-side Packet 1 validation path:
 ```bash
@@ -182,7 +374,29 @@ orket ext validate <extension_root> --strict --json
 ```
 2. Packet 1 admits only `manifest_version: v0`.
 3. Any other manifest family must fail closed with `E_SDK_MANIFEST_VERSION_UNSUPPORTED`.
-4. Validation success is installability evidence only; it does not grant runtime authority.
+4. When `src/` exists, host import-isolation scanning stays scoped to that source tree.
+5. Validation success is installability evidence only; it does not grant runtime authority.
+6. Canonical maintainer build path:
+```bash
+./scripts/build-release.sh
+```
+```powershell
+./scripts/build-release.ps1
+```
+7. Canonical release verification path:
+```bash
+./scripts/verify-release.sh v<extension_version>
+```
+```powershell
+./scripts/verify-release.ps1 v<extension_version>
+```
+8. The authoritative published artifact family is one source distribution: `dist/<normalized_project_name>-<version>.tar.gz`.
+9. The canonical release tag is `v<extension_version>`.
+10. Canonical operator intake from the published artifact:
+   - retrieve the tagged source distribution artifact produced by `.gitea/workflows/release.yml`
+   - extract the `.tar.gz` into a local staging directory
+   - run `orket ext validate <extracted_root> --strict --json`
+   - treat success as admissible for execution consideration only
 
 ## Core Validation Commands
 1. Full test sweep:
@@ -406,6 +620,8 @@ python scripts/replay/report_failure_modes.py --log workspace/default/orket.log 
 ## Companion Key Rotation
 1. Preconditions:
    - Companion host and gateway are running and healthy.
+   - This repo does not define a repo-level canonical Companion gateway startup command.
+   - If you are using the external extension template gateway, its local launchers live under `docs/templates/external_extension/scripts/`.
    - You can reach `GET /api/v1/companion/status` through the gateway.
 2. Stage new host keys first:
    - Set `ORKET_COMPANION_API_KEY=<new_companion_key>` on host.

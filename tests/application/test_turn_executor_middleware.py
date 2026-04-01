@@ -5,7 +5,9 @@ from pathlib import Path
 import pytest
 
 from orket.application.middleware import MiddlewareOutcome, TurnLifecycleInterceptors
+from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.domain import AttemptState, RunState
 from orket.core.domain.state_machine import StateMachine
 from orket.core.policies.tool_gate import ToolGate
 from orket.schema import CardStatus, IssueConfig, RoleConfig
@@ -335,6 +337,149 @@ async def test_turn_executor_blocks_approval_required_tool_and_persists_request(
     assert len(toolbox.calls) == 0
     assert len(request_calls) == 1
     assert request_calls[0]["tool_name"] == "write_file"
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_write_file_approval_resume_continues_same_governed_run(tmp_path):
+    control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+        control_plane_service=control_plane,
+    )
+    model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
+    toolbox = _ToolBox()
+
+    class _PendingRepo:
+        def __init__(self) -> None:
+            self.rows: list[dict[str, object]] = []
+
+        async def create_request(self, **kwargs):
+            request_id = f"REQ-{len(self.rows) + 1}"
+            self.rows.append(
+                {
+                    "request_id": request_id,
+                    "session_id": kwargs["session_id"],
+                    "issue_id": kwargs["issue_id"],
+                    "seat_name": kwargs["seat_name"],
+                    "gate_mode": kwargs["gate_mode"],
+                    "request_type": kwargs["request_type"],
+                    "reason": kwargs["reason"],
+                    "payload_json": dict(kwargs.get("payload") or {}),
+                    "status": "pending",
+                    "resolution_json": {},
+                }
+            )
+            return request_id
+
+        async def list_requests(self, *, session_id=None, status=None, limit=100):
+            rows = list(self.rows)
+            if session_id:
+                rows = [row for row in rows if row["session_id"] == session_id]
+            if status:
+                rows = [row for row in rows if row["status"] == status]
+            return rows[: max(1, int(limit))]
+
+        async def resolve_request(self, *, request_id: str, status: str, resolution=None) -> None:
+            for row in self.rows:
+                if row["request_id"] == request_id:
+                    row["status"] = status
+                    row["resolution_json"] = dict(resolution or {})
+                    return
+            raise RuntimeError("request not found")
+
+    repo = _PendingRepo()
+
+    async def _request_writer(*, tool_name, tool_args):
+        return await repo.create_request(
+            session_id="sess-1",
+            issue_id="ISSUE-1",
+            seat_name="developer",
+            gate_mode="approval_required",
+            request_type="tool_approval",
+            reason=f"approval_required_tool:{tool_name}",
+            payload={
+                "tool": tool_name,
+                "args": dict(tool_args or {}),
+                "role": "developer",
+                "turn_index": 1,
+                "control_plane_target_ref": "turn-tool-run:sess-1:ISSUE-1:developer:0001",
+            },
+        )
+
+    async def _approved_lookup(*, tool_name, tool_args):
+        rows = await repo.list_requests(session_id="sess-1", status="approved", limit=100)
+        for row in rows:
+            payload = row.get("payload_json")
+            if not isinstance(payload, dict):
+                continue
+            if str(payload.get("tool") or "").strip() != tool_name:
+                continue
+            if dict(payload.get("args") or {}) != dict(tool_args or {}):
+                continue
+            return str(row["request_id"])
+        return None
+
+    first_context = _context()
+    first_context["approval_required_tools"] = ["write_file"]
+    first_context["create_pending_gate_request"] = _request_writer
+    first_context["resolve_granted_tool_approval"] = _approved_lookup
+    first_context["stage_gate_mode"] = "approval_required"
+    first_context["run_namespace_scope"] = "issue:ISSUE-1"
+
+    first = await executor.execute_turn(_issue(), _role(), model, toolbox, first_context)
+
+    run_id = "turn-tool-run:sess-1:ISSUE-1:developer:0001"
+    run = await control_plane.execution_repository.get_run_record(run_id=run_id)
+    attempt = None if run is None else await control_plane.execution_repository.get_attempt_record(
+        attempt_id=str(run.current_attempt_id or "")
+    )
+    truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
+
+    assert first.success is False
+    assert "Approval required for tool 'write_file'" in (first.error or "")
+    assert model.calls == 1
+    assert len(toolbox.calls) == 0
+    assert len(repo.rows) == 1
+    assert run is not None
+    assert attempt is not None
+    assert run.lifecycle_state is RunState.EXECUTING
+    assert attempt.attempt_state is AttemptState.EXECUTING
+    assert truth is None
+
+    await repo.resolve_request(
+        request_id=str(repo.rows[0]["request_id"]),
+        status="approved",
+        resolution={"decision": "approve"},
+    )
+
+    second_context = _context()
+    second_context["approval_required_tools"] = ["write_file"]
+    second_context["create_pending_gate_request"] = _request_writer
+    second_context["resolve_granted_tool_approval"] = _approved_lookup
+    second_context["stage_gate_mode"] = "approval_required"
+    second_context["run_namespace_scope"] = "issue:ISSUE-1"
+    second_context["resume_mode"] = True
+
+    second = await executor.execute_turn(_issue(), _role(), model, toolbox, second_context)
+
+    run = await control_plane.execution_repository.get_run_record(run_id=run_id)
+    attempt = None if run is None else await control_plane.execution_repository.get_attempt_record(
+        attempt_id=str(run.current_attempt_id or "")
+    )
+    truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
+
+    assert second.success is True
+    assert model.calls == 1
+    assert toolbox.calls == [("write_file", {"path": "out.txt", "content": "ok"})]
+    assert len(repo.rows) == 1
+    assert run is not None
+    assert attempt is not None
+    assert truth is not None
+    assert run.lifecycle_state is RunState.COMPLETED
+    assert attempt.attempt_state is AttemptState.COMPLETED
+    assert truth.result_class.value == "success"
 
 
 @pytest.mark.asyncio

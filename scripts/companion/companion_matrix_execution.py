@@ -252,7 +252,7 @@ def evaluate_case(
     stability_attempts: int,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     try:
-        status_payload = request_json(client=client, method="GET", path="/api/v1/companion/status")
+        status_payload = request_json(client=client, method="GET", path="/api/status")
     except RuntimeError as exc:
         return _build_failure_case(provider=provider, model=model, step="status", error=str(exc))
 

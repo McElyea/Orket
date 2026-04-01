@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.31] - 2026-04-01 - "The Extension Publish Surface And Generic Runtime Cut"
+
+### Added
+- **Extension Publish Surface Packet 1**: Added the active Extensions publish-surface lane, the durable package/publish contract pair, contract deltas, template release scripts/workflows, and publish-surface proof coverage that standardize one tagged source-distribution release story for external extensions.
+- **Generic Extension Runtime Surface**: Added `ExtensionRuntimeService` plus the `/v1/extensions/{extension_id}/runtime/*` API/router/test surface so generic extensions now have one host-owned runtime status, model, LLM, memory, voice, and TTS integration path.
+- **Bounded `write_file` Approval Continuation**: Added the runtime-owned `write_file` approval continuation service and matching approval / turn-executor proof so the admitted same-governed-run continue-or-stop slice is explicit and fail-closed.
+
+### Changed
+- **Companion Runtime Consolidation**: Removed the companion-only runtime service and router aliases, routed the shipped runtime story through the generic extension-runtime surface, and aligned orchestration, approvals, scripts, and live/runtime tests with that authority.
+- **Extension Publish And Operator Authority**: Updated `CURRENT_AUTHORITY.md`, `docs/RUNBOOK.md`, `docs/ROADMAP.md`, the extension authoring guide, and the external-extension template so source version, manifest version, release tag, maintainer publish steps, and operator intake back to `orket ext validate <extension_root> --strict --json` now tell one story.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use the external-extension template release scripts or tagged release workflow to publish the authoritative source distribution, then extract that artifact and run `orket ext validate <extension_root> --strict --json` before runtime use. Treat `/v1/extensions/{extension_id}/runtime/*` as the canonical API runtime surface; the old companion-only aliases are no longer canonical.
+
 ## [0.4.30] - 2026-03-31 - "The Supervisor Runtime Foundations Requirements Cut"
 
 ### Added

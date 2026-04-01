@@ -42,6 +42,9 @@ from .turn_tool_dispatcher_support import (
     runtime_limit_violations,
     tool_policy_violation,
 )
+from ..services.write_file_tool_approval_continuation_service import (
+    supports_write_file_approval_continuation,
+)
 
 
 class ToolDispatcher:
@@ -64,7 +67,8 @@ class ToolDispatcher:
         load_operation_result: Callable[..., dict[str, Any] | None],
         persist_operation_result: Callable[..., None],
         append_protocol_receipt: Callable[..., dict[str, Any]],
-        tool_validation_error_factory: Callable[[list[str]], Exception],
+        tool_approval_pending_error_factory: Callable[[str], Exception] | None = None,
+        tool_validation_error_factory: Callable[[list[str]], Exception] | None = None,
         control_plane_service: TurnToolControlPlaneService | None = None,
     ) -> None:
         self.tool_gate = tool_gate
@@ -77,7 +81,12 @@ class ToolDispatcher:
         self.load_operation_result = load_operation_result
         self.persist_operation_result = persist_operation_result
         self.append_protocol_receipt = append_protocol_receipt
-        self.tool_validation_error_factory = tool_validation_error_factory
+        self.tool_approval_pending_error_factory = (
+            tool_approval_pending_error_factory or (lambda message: RuntimeError(str(message or "")))
+        )
+        self.tool_validation_error_factory = (
+            tool_validation_error_factory or (lambda violations: RuntimeError(str(list(violations or []))))
+        )
         self.control_plane_service = control_plane_service
 
     async def execute_tools(
@@ -131,6 +140,7 @@ class ToolDispatcher:
             str(tool).strip() for tool in (context.get("approval_required_tools") or []) if str(tool).strip()
         }
         request_writer = context.get("create_pending_gate_request")
+        approval_resolver = context.get("resolve_granted_tool_approval")
         control_plane_run_id: str | None = None
         control_plane_attempt_id: str | None = None
         executed_step_count = 0
@@ -301,29 +311,60 @@ class ToolDispatcher:
                         continue
 
                 if tool_name in approval_required_tools:
-                    request_id = None
-                    if callable(request_writer):
-                        maybe_request = request_writer(tool_name=tool_name, tool_args=tool_call.args)
+                    admitted_write_file_slice = supports_write_file_approval_continuation(
+                        tool_name=tool_name,
+                        context=context,
+                        issue_id=turn.issue_id,
+                    )
+                    granted_request_id = None
+                    if admitted_write_file_slice and callable(approval_resolver):
+                        maybe_request = approval_resolver(tool_name=tool_name, tool_args=dict(tool_call.args or {}))
                         if asyncio.iscoroutine(maybe_request):
-                            request_id = await maybe_request
+                            granted_request_id = await maybe_request
                         else:
-                            request_id = maybe_request
-                    if not protocol_replay_mode:
-                        log_event(
-                            "tool_approval_required",
-                            {
-                                "issue_id": turn.issue_id,
-                                "role": turn.role,
-                                "session_id": session_id,
-                                "turn_index": turn_index,
-                                "tool": tool_name,
-                                "request_id": request_id,
-                                "stage_gate_mode": context.get("stage_gate_mode"),
-                            },
-                            self.workspace,
-                        )
-                    violations.append(f"Approval required for tool '{tool_name}' before execution.")
-                    continue
+                            granted_request_id = maybe_request
+                    if admitted_write_file_slice and granted_request_id:
+                        if not protocol_replay_mode:
+                            log_event(
+                                "tool_approval_granted",
+                                {
+                                    "issue_id": turn.issue_id,
+                                    "role": turn.role,
+                                    "session_id": session_id,
+                                    "turn_index": turn_index,
+                                    "tool": tool_name,
+                                    "request_id": str(granted_request_id),
+                                    "stage_gate_mode": context.get("stage_gate_mode"),
+                                },
+                                self.workspace,
+                            )
+                    else:
+                        request_id = None
+                        if callable(request_writer):
+                            maybe_request = request_writer(tool_name=tool_name, tool_args=tool_call.args)
+                            if asyncio.iscoroutine(maybe_request):
+                                request_id = await maybe_request
+                            else:
+                                request_id = maybe_request
+                        message = f"Approval required for tool '{tool_name}' before execution."
+                        if not protocol_replay_mode:
+                            log_event(
+                                "tool_approval_required",
+                                {
+                                    "issue_id": turn.issue_id,
+                                    "role": turn.role,
+                                    "session_id": session_id,
+                                    "turn_index": turn_index,
+                                    "tool": tool_name,
+                                    "request_id": request_id,
+                                    "stage_gate_mode": context.get("stage_gate_mode"),
+                                },
+                                self.workspace,
+                            )
+                        if admitted_write_file_slice:
+                            raise self.tool_approval_pending_error_factory(message)
+                        violations.append(message)
+                        continue
 
                 compatibility_translation, compatibility_violation = resolve_compatibility_translation(
                     tool_name=tool_name,

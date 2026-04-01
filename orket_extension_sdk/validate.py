@@ -26,6 +26,13 @@ def _resolve_manifest_path(target: Path) -> Path | None:
     return None
 
 
+def _resolve_import_scan_target(extension_root: Path) -> Path:
+    source_root = extension_root / "src"
+    if source_root.is_dir():
+        return source_root
+    return extension_root
+
+
 def _parse_entrypoint(value: str) -> tuple[str, str]:
     module_name, sep, attr_name = str(value or "").strip().partition(":")
     if sep != ":" or not module_name.strip() or not attr_name.strip():
@@ -186,7 +193,7 @@ def validate_extension(
 
     import_scan_result: dict[str, Any] | None = None
     if include_import_scan:
-        scan_target = target if target.is_dir() else manifest_path.parent
+        scan_target = _resolve_import_scan_target(extension_root)
         import_scan_result = scan_extension_imports(scan_target)
         for item in import_scan_result["errors"]:
             errors.append(

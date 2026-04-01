@@ -15,7 +15,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from orket.decision_nodes.api_runtime_strategy_node import DefaultApiRuntimeStrategyNode
 from orket.interfaces import api as api_module
-from orket.interfaces.routers.companion import _raise_companion_http_error
+from orket.interfaces.routers.extension_runtime import _raise_extension_runtime_http_error
 from orket.runtime.state_transition_registry import state_transition_registry_snapshot
 from orket.runtime.ui_lane_security_boundary_test_contract import (
     ui_lane_security_boundary_test_contract_snapshot,
@@ -75,7 +75,7 @@ def _session_workspace_escape_blocked() -> dict[str, Any]:
 
 def _companion_error_mapping_is_structured() -> dict[str, Any]:
     try:
-        _raise_companion_http_error(ValueError("E_UI_BOUNDARY_TEST:blocked"))
+        _raise_extension_runtime_http_error(ValueError("E_UI_BOUNDARY_TEST:blocked"))
     except HTTPException as exc:
         detail = exc.detail
         detail_payload = detail if isinstance(detail, dict) else {}

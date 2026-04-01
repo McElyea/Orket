@@ -84,6 +84,7 @@ class TurnExecutor:
             load_operation_result=self.artifact_writer.load_operation_result,
             persist_operation_result=self.artifact_writer.persist_operation_result,
             append_protocol_receipt=self.artifact_writer.append_protocol_receipt,
+            tool_approval_pending_error_factory=lambda message: ToolApprovalPendingError(message),
             tool_validation_error_factory=lambda violations: ToolValidationError(violations),
             control_plane_service=control_plane_service,
         )
@@ -289,6 +290,14 @@ class ToolValidationError(Exception):
         super().__init__(f"Tool validation failed: {violations}")
 
 
+class ToolApprovalPendingError(Exception):
+    """Tool execution is paused on an admitted approval-required slice."""
+
+    def __init__(self, message: str):
+        self.message = str(message or "").strip() or "Approval required before execution."
+        super().__init__(self.message)
+
+
 __all__ = [
     "ContractValidator",
     "CorrectivePromptBuilder",
@@ -296,6 +305,7 @@ __all__ = [
     "ModelTimeoutError",
     "PathResolver",
     "ResponseParser",
+    "ToolApprovalPendingError",
     "ToolDispatcher",
     "ToolValidationError",
     "TurnArtifactWriter",

@@ -32,9 +32,9 @@ from orket.interfaces.routers.cards import build_cards_router
 from orket.interfaces.routers.settings import build_settings_router
 from orket.interfaces.routers.system import build_system_router
 from orket.interfaces.routers.sessions import build_sessions_router
-from orket.interfaces.routers.companion import build_companion_router
+from orket.interfaces.routers.extension_runtime import build_extension_runtime_router
 from orket.interfaces.routers.streaming import register_streaming_routes
-from orket.application.services.companion_runtime_service import CompanionRuntimeService
+from orket.application.services.extension_runtime_service import ExtensionRuntimeService
 from orket.application.services.run_ledger_summary_projection import validated_run_ledger_record_projection, validated_run_ledger_summary
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
@@ -388,60 +388,22 @@ def _read_api_key_env(name: str) -> str | None:
     return stripped or None
 
 
-def _is_companion_route(path: str) -> bool:
-    normalized_path = str(path or "").strip()
-    return normalized_path.startswith("/v1/companion") or normalized_path.startswith("/api/v1/companion")
-
-
-def _read_bool_env(name: str, *, default: bool) -> bool:
-    raw = os.getenv(name)
-    if raw is None:
-        return default
-    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _is_companion_key_strict_enabled() -> bool:
-    return _read_bool_env("ORKET_COMPANION_KEY_STRICT", default=False)
-
-
 def _log_api_auth_rejection(
     *,
     request_path: str,
-    route_class: str,
     reason: str,
     provided_key_present: bool,
-    companion_key_configured: bool,
-    companion_key_strict: bool,
 ) -> None:
     log_event(
         "api_auth_rejected",
         {
-            "route_class": route_class,
+            "route_class": "core",
             "reason": reason,
             "request_path": request_path,
             "provided_key_present": provided_key_present,
-            "companion_key_configured": companion_key_configured,
-            "companion_key_strict": companion_key_strict,
         },
         PROJECT_ROOT,
     )
-
-
-def _is_companion_key_valid(
-    *,
-    provided_key: str | None,
-    default_key: str | None,
-    companion_key: str | None,
-    companion_key_strict: bool,
-) -> bool:
-    if companion_key:
-        if provided_key == companion_key:
-            return True
-        # Allow primary host key for trusted operator/admin access.
-        if not companion_key_strict and default_key and provided_key == default_key:
-            return True
-        return False
-    return api_runtime_node.is_api_key_valid(default_key, provided_key)
 
 
 def _api_key_actor_ref(api_key_value: str | None) -> str | None:
@@ -454,46 +416,18 @@ def _api_key_actor_ref(api_key_value: str | None) -> str | None:
 
 async def get_api_key(request: Request, api_key_header: str | None = Security(api_key_header)):
     default_key = _read_api_key_env("ORKET_API_KEY")
-    companion_key = _read_api_key_env("ORKET_COMPANION_API_KEY")
-    companion_key_strict = _is_companion_key_strict_enabled()
     request_path = str(request.url.path or "")
     provided_key_present = bool(str(api_key_header or "").strip())
 
-    if _is_companion_route(request_path):
-        if _is_companion_key_valid(
-            provided_key=api_key_header,
-            default_key=default_key,
-            companion_key=companion_key,
-            companion_key_strict=companion_key_strict,
-        ):
-            request.state.authenticated_actor_ref = _api_key_actor_ref(api_key_header)
-            return api_key_header
-        reason = "invalid_or_missing_key_for_companion_route"
-        if companion_key and companion_key_strict and api_key_header and default_key and api_key_header == default_key:
-            reason = "default_key_rejected_on_companion_route_strict"
-        _log_api_auth_rejection(
-            request_path=request_path,
-            route_class="companion",
-            reason=reason,
-            provided_key_present=provided_key_present,
-            companion_key_configured=bool(companion_key),
-            companion_key_strict=companion_key_strict,
-        )
-    elif api_runtime_node.is_api_key_valid(default_key, api_key_header):
+    if api_runtime_node.is_api_key_valid(default_key, api_key_header):
         request.state.authenticated_actor_ref = _api_key_actor_ref(api_key_header)
         return api_key_header
-    else:
-        reason = "invalid_or_missing_key_for_core_route"
-        if companion_key and api_key_header == companion_key:
-            reason = "companion_key_rejected_on_core_route"
-        _log_api_auth_rejection(
-            request_path=request_path,
-            route_class="core",
-            reason=reason,
-            provided_key_present=provided_key_present,
-            companion_key_configured=bool(companion_key),
-            companion_key_strict=companion_key_strict,
-        )
+
+    _log_api_auth_rejection(
+        request_path=request_path,
+        reason="invalid_or_missing_key_for_core_route",
+        provided_key_present=provided_key_present,
+    )
 
     raise HTTPException(
         status_code=403,
@@ -521,16 +455,11 @@ async def lifespan(_app: FastAPI):
     log_subscriber = _on_log_record_factory(loop)
     subscribe_to_events(log_subscriber)
     expected_key = _read_api_key_env("ORKET_API_KEY")
-    companion_key = _read_api_key_env("ORKET_COMPANION_API_KEY")
-    companion_key_strict = _is_companion_key_strict_enabled()
     insecure_bypass = os.getenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "").strip().lower() in {"1", "true", "yes", "on"}
     log_event(
         "api_security_posture",
         {
             "api_key_configured": bool(expected_key),
-            "companion_api_key_configured": bool(companion_key),
-            "companion_api_key_scoped": bool(companion_key and companion_key != expected_key),
-            "companion_key_strict": companion_key_strict,
             "insecure_no_api_key_bypass": insecure_bypass,
         },
         PROJECT_ROOT,
@@ -555,7 +484,6 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
 # Apply auth to all v1 endpoints if configured
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_api_key)])
-companion_api_router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_api_key)])
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
 api_runtime_node = _resolve_api_runtime_node()
@@ -573,7 +501,7 @@ engine = api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(P
 stream_bus: StreamBus | None = None
 interaction_manager: InteractionManager | None = None
 extension_manager: ExtensionManager | None = None
-companion_service: CompanionRuntimeService | None = None
+extension_runtime_service: ExtensionRuntimeService | None = None
 
 
 def _build_stream_bus_from_env() -> StreamBus:
@@ -611,11 +539,11 @@ def _get_extension_manager() -> ExtensionManager:
     return extension_manager
 
 
-def _get_companion_service() -> CompanionRuntimeService:
-    global companion_service
-    if companion_service is None:
-        companion_service = CompanionRuntimeService(project_root=PROJECT_ROOT)
-    return companion_service
+def _get_extension_runtime_service() -> ExtensionRuntimeService:
+    global extension_runtime_service
+    if extension_runtime_service is None:
+        extension_runtime_service = ExtensionRuntimeService(project_root=PROJECT_ROOT)
+    return extension_runtime_service
 
 
 # --- System Endpoints ---
@@ -778,8 +706,7 @@ v1_router.include_router(
         control_plane_publication_getter=lambda: engine.control_plane_publication,
     )
 )
-v1_router.include_router(build_companion_router(service_getter=lambda: _get_companion_service()))
-companion_api_router.include_router(build_companion_router(service_getter=lambda: _get_companion_service()))
+v1_router.include_router(build_extension_runtime_router(service_getter=lambda: _get_extension_runtime_service()))
 
 
 def _normalize_setting_token(value: Any) -> str:
@@ -1629,11 +1556,10 @@ async def list_logs(
 
 
 app.include_router(v1_router)
-app.include_router(companion_api_router)
 
 
 def create_api_app(project_root: Optional[Path] = None) -> FastAPI:
-    global PROJECT_ROOT, engine, interaction_manager, extension_manager, stream_bus, companion_service
+    global PROJECT_ROOT, engine, interaction_manager, extension_manager, stream_bus, extension_runtime_service
     if project_root is not None:
         PROJECT_ROOT = Path(project_root).resolve()
     engine = api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT))
@@ -1644,7 +1570,7 @@ def create_api_app(project_root: Optional[Path] = None) -> FastAPI:
         project_root=PROJECT_ROOT,
     )
     extension_manager = ExtensionManager(project_root=PROJECT_ROOT)
-    companion_service = CompanionRuntimeService(project_root=PROJECT_ROOT)
+    extension_runtime_service = ExtensionRuntimeService(project_root=PROJECT_ROOT)
     return app
 
 

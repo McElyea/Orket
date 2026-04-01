@@ -12,6 +12,9 @@ from orket.application.services.tool_approval_control_plane_operator_service imp
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
+from orket.application.services.write_file_tool_approval_continuation_service import (
+    WriteFileToolApprovalContinuationService,
+)
 from orket.kernel.v1.nervous_system_runtime_extensions import (
     decide_approval_v1,
     get_approval_v1,
@@ -138,6 +141,26 @@ def _pending_gate_operator_publisher(engine: Any) -> PendingGateControlPlaneOper
     publisher = PendingGateControlPlaneOperatorService(publication=publication)
     setattr(engine, "pending_gate_control_plane_operator", publisher)
     return publisher
+
+
+def _write_file_approval_continuation_service(engine: Any) -> WriteFileToolApprovalContinuationService | None:
+    publication = getattr(engine, "control_plane_publication", None)
+    execution_repository = getattr(engine, "control_plane_execution_repository", None)
+    service = getattr(engine, "write_file_tool_approval_continuation", None)
+    if (
+        service is not None
+        and getattr(service, "publication", None) is publication
+        and getattr(service, "execution_repository", None) is execution_repository
+    ):
+        return service
+    if publication is None or execution_repository is None:
+        return None
+    service = WriteFileToolApprovalContinuationService(
+        execution_repository=execution_repository,
+        publication=publication,
+    )
+    setattr(engine, "write_file_tool_approval_continuation", service)
+    return service
 
 
 async def list_approvals(
@@ -282,22 +305,27 @@ async def _publish_resolution_control_plane_side_effects(
     reservation_publisher = _approval_reservation_publisher(engine)
     if reservation_publisher is not None:
         await reservation_publisher.publish_resolved_pending_gate_hold(resolved_approval=approval)
-    if not operator_actor_ref:
+    if operator_actor_ref:
+        tool_publisher = _tool_approval_operator_publisher(engine)
+        if tool_publisher is not None and tool_publisher.supports_resolution(approval):
+            await tool_publisher.publish_resolution_operator_action(
+                actor_ref=operator_actor_ref,
+                previous_approval=previous,
+                resolved_approval=approval,
+            )
+        else:
+            pending_gate_publisher = _pending_gate_operator_publisher(engine)
+            if pending_gate_publisher is not None and pending_gate_publisher.supports_resolution(approval):
+                await pending_gate_publisher.publish_resolution_operator_action(
+                    actor_ref=operator_actor_ref,
+                    previous_approval=previous,
+                    resolved_approval=approval,
+                )
+    continuation_service = _write_file_approval_continuation_service(engine)
+    if continuation_service is None or not continuation_service.supports_resolution(approval):
         return
-    tool_publisher = _tool_approval_operator_publisher(engine)
-    if tool_publisher is not None and tool_publisher.supports_resolution(approval):
-        await tool_publisher.publish_resolution_operator_action(
-            actor_ref=operator_actor_ref,
-            previous_approval=previous,
-            resolved_approval=approval,
-        )
-        return
-    pending_gate_publisher = _pending_gate_operator_publisher(engine)
-    if pending_gate_publisher is None or not pending_gate_publisher.supports_resolution(approval):
-        return
-    await pending_gate_publisher.publish_resolution_operator_action(
-        actor_ref=operator_actor_ref,
-        previous_approval=previous,
+    await continuation_service.continue_or_stop(
+        engine=engine,
         resolved_approval=approval,
     )
 

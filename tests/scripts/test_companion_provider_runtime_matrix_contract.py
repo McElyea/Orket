@@ -12,18 +12,18 @@ def _contract_transport(*, fail_status: bool = False) -> httpx.MockTransport:
     memory_tokens: dict[str, str] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
-        if request.url.path == "/api/v1/companion/status":
+        if request.url.path == "/api/status":
             if fail_status:
                 return httpx.Response(503, json={"detail": "status offline"})
             return httpx.Response(200, json={"ok": True, "stt_available": True})
-        if request.url.path == "/api/v1/companion/config":
+        if request.url.path == "/api/config":
             return httpx.Response(200, json={"ok": True})
-        if request.url.path == "/api/v1/companion/voice/control":
+        if request.url.path == "/api/voice/control":
             payload = json.loads(request.content.decode("utf-8"))
             command = str(payload.get("command") or "")
             state_map = {"start": "listening", "stop": "idle", "submit": "processing"}
             return httpx.Response(200, json={"ok": True, "state": state_map.get(command, "idle")})
-        if request.url.path == "/api/v1/companion/chat":
+        if request.url.path == "/api/chat":
             payload = json.loads(request.content.decode("utf-8"))
             message = str(payload.get("message") or "")
             session_id = str(payload.get("session_id") or "")

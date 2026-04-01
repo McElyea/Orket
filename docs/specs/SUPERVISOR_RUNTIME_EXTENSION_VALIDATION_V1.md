@@ -8,6 +8,8 @@ Implementation closeout authority: `docs/projects/archive/SupervisorRuntime/SRF0
 Related authority:
 1. `docs/guides/external-extension-authoring.md`
 2. `CURRENT_AUTHORITY.md`
+3. `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_V1.md`
+4. `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_V1.md`
 
 ## Authority posture
 
@@ -15,6 +17,7 @@ This document is the active durable contract authority for the completed Packet 
 
 It standardizes one manifest family and one host-side validation path for Packet 1.
 It does not authorize marketplace, cloud distribution, install-source plurality, or broader package-management behavior.
+Published source distributions must return to this same validation path after extraction.
 
 ## Purpose
 
@@ -68,10 +71,12 @@ That path must:
 1. parse the admitted manifest family
 2. validate workload entrypoint shape and importability
 3. validate required capability declarations under strict mode
-4. emit a machine-readable JSON result
-5. fail closed on invalid manifest, unsupported host contract family, or disallowed internal import behavior
+4. run import-isolation scanning against the extension source tree, using `src/` when present and otherwise the extension root Python files
+5. emit a machine-readable JSON result
+6. fail closed on invalid manifest, unsupported host contract family, or disallowed internal import behavior
 
 Non-strict validation may remain available for author ergonomics, but it is not the canonical Packet 1 host-admission path.
+The canonical publish contract does not widen this seam: tagged published source distributions must still return to this same command after extraction.
 
 ## Diagnostic contract
 
@@ -114,6 +119,7 @@ Current Packet 1 seam:
 Current proof entrypoints:
 1. `python -m pytest -q tests/interfaces/test_ext_validate_cli.py`
 2. `python -m pytest -q tests/sdk/test_validate_module.py`
+3. `python -m pytest -q tests/sdk/test_manifest.py tests/sdk/test_import_scan_module.py`
 
 ## Contract maintenance rules
 
@@ -122,3 +128,4 @@ If this contract changes materially, the same change must update:
 2. `docs/guides/external-extension-authoring.md` when the manifest or validation flow changes
 3. `CURRENT_AUTHORITY.md` when the active spec set or extension validation authority story changes
 4. `docs/API_FRONTEND_CONTRACT.md` when a future API surface exposes host-side extension validation or inspection behavior
+5. `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_V1.md` when the publish-to-validation relationship changes

@@ -1,0 +1,78 @@
+name: External Extension Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_override:
+        description: "Optional tag to validate (defaults to current ref name)."
+        required: false
+        default: ""
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    env:
+      ORKET_SDK_INSTALL_SPEC: ${{ vars.ORKET_SDK_INSTALL_SPEC }}
+      ORKET_HOST_INSTALL_SPEC: ${{ vars.ORKET_HOST_INSTALL_SPEC }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bootstrap extension environment
+        run: |
+          ./scripts/install.sh
+
+      - name: Validate and test
+        run: |
+          ./scripts/validate.sh
+
+      - name: Build authoritative source distribution
+        run: |
+          ./scripts/build-release.sh
+
+      - name: Verify release artifact and tag
+        env:
+          TAG_OVERRIDE: ${{ github.event.inputs.tag_override || '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${TAG_OVERRIDE:-${GITHUB_REF_NAME}}"
+          ./scripts/verify-release.sh "${TAG}"
+
+      - name: Prove operator intake from published source distribution
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARTIFACT="$(find dist -maxdepth 1 -type f -name '*.tar.gz' | head -n 1)"
+          test -n "${ARTIFACT}"
+          rm -rf .tmp/release-intake
+          mkdir -p .tmp/release-intake
+          tar -xzf "${ARTIFACT}" -C .tmp/release-intake
+          EXTRACTED_ROOT="$(find .tmp/release-intake -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          test -n "${EXTRACTED_ROOT}"
+          python -m venv .tmp/release-intake-venv
+          source .tmp/release-intake-venv/bin/activate
+          python -m pip install --upgrade pip
+          if [[ -n "${ORKET_SDK_INSTALL_SPEC:-}" ]]; then
+            python -m pip install "${ORKET_SDK_INSTALL_SPEC}"
+          fi
+          if [[ -n "${ORKET_HOST_INSTALL_SPEC:-}" ]]; then
+            python -m pip install "${ORKET_HOST_INSTALL_SPEC}"
+          fi
+          cd "${EXTRACTED_ROOT}"
+          orket ext validate . --strict --json
+
+      - name: Upload authoritative source distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-source-dist
+          path: dist/*.tar.gz
+          if-no-files-found: error

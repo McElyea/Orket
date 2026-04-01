@@ -18,13 +18,13 @@ def _build_matrix_transport(
     memory_tokens: dict[str, str] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
-        if request.url.path == "/api/v1/companion/status":
+        if request.url.path == "/api/status":
             return httpx.Response(200, json={"ok": True, "stt_available": stt_available})
 
-        if request.url.path == "/api/v1/companion/config":
+        if request.url.path == "/api/config":
             return httpx.Response(200, json={"ok": True})
 
-        if request.url.path == "/api/v1/companion/voice/control":
+        if request.url.path == "/api/voice/control":
             if fail_voice:
                 return httpx.Response(503, json={"detail": "voice unavailable"})
             payload = json.loads(request.content.decode("utf-8"))
@@ -37,7 +37,7 @@ def _build_matrix_transport(
                 return httpx.Response(200, json={"ok": True, "state": "processing"})
             return httpx.Response(400, json={"detail": "bad voice command"})
 
-        if request.url.path == "/api/v1/companion/chat":
+        if request.url.path == "/api/chat":
             payload = json.loads(request.content.decode("utf-8"))
             if capture is not None:
                 capture.append(payload)

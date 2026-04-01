@@ -11,6 +11,7 @@ def test_profile_write_policy_accepts_allowed_prefixes() -> None:
     policy.validate(key="companion_setting.role_id", metadata={})
     policy.validate(key="companion_mode.relationship_style", metadata={})
     policy.validate(key="user_preference.voice_enabled", metadata={})
+    policy.validate(key="ext:orket.companion:companion_setting.role_id", metadata={})
 
 
 def test_profile_write_policy_rejects_forbidden_prefix() -> None:

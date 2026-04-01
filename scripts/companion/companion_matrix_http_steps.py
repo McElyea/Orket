@@ -42,7 +42,7 @@ def chat(
     return request_json(
         client=client,
         method="POST",
-        path="/api/v1/companion/chat",
+        path="/api/chat",
         payload={
             "session_id": session_id,
             "message": message,
@@ -56,7 +56,7 @@ def apply_base_config(*, client: httpx.Client, session_id: str) -> dict[str, Any
     return request_json(
         client=client,
         method="PATCH",
-        path="/api/v1/companion/config",
+        path="/api/config",
         payload={
             "session_id": session_id,
             "scope": "next_turn",
@@ -73,7 +73,7 @@ def apply_mode_probe_config(*, client: httpx.Client, session_id: str) -> dict[st
     return request_json(
         client=client,
         method="PATCH",
-        path="/api/v1/companion/config",
+        path="/api/config",
         payload={
             "session_id": session_id,
             "scope": "next_turn",
@@ -126,7 +126,7 @@ def voice_probe(*, client: httpx.Client) -> tuple[int, int, list[str]]:
             payload = request_json(
                 client=client,
                 method="POST",
-                path="/api/v1/companion/voice/control",
+                path="/api/voice/control",
                 payload={"command": command, "silence_delay_sec": 1.0},
             )
         except RuntimeError as exc:

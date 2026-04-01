@@ -91,10 +91,10 @@ def test_companion_voice_truth_live_tts_generation_is_explicit(tmp_path: Path, m
     client = _build_client(tmp_path, monkeypatch, enable_piper=True)
     headers = _headers()
 
-    status = client.get("/api/v1/companion/status", headers=headers)
-    voices = client.get("/api/v1/companion/voice/voices", headers=headers)
+    status = client.get("/v1/extensions/orket.companion/runtime/status", headers=headers)
+    voices = client.get("/v1/extensions/orket.companion/runtime/tts/voices", headers=headers)
     synth = client.post(
-        "/api/v1/companion/voice/synthesize",
+        "/v1/extensions/orket.companion/runtime/tts/synthesize",
         headers=headers,
         json={"text": "hello world", "voice_id": _PIPER_VOICE_ID},
     )
@@ -130,8 +130,8 @@ def test_companion_voice_truth_live_tts_generation_is_explicit(tmp_path: Path, m
     assert synth_payload["error_message"] == ""
 
 
-def test_companion_voice_truth_live_text_chat_remains_distinct_from_tts(tmp_path: Path, monkeypatch) -> None:
-    """Layer: end-to-end. Verifies real provider-backed text chat remains distinct from the TTS generation surface."""
+def test_companion_voice_truth_live_text_generation_remains_distinct_from_tts(tmp_path: Path, monkeypatch) -> None:
+    """Layer: end-to-end. Verifies real provider-backed text generation remains distinct from the TTS surface."""
     if not _live_enabled():
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live companion voice proof.")
 
@@ -139,39 +139,37 @@ def test_companion_voice_truth_live_text_chat_remains_distinct_from_tts(tmp_path
     headers = _headers()
     session_id = "voice-truth-live"
 
-    chat = client.post(
-        "/api/v1/companion/chat",
+    generate = client.post(
+        "/v1/extensions/orket.companion/runtime/llm/generate",
         headers=headers,
         json={
-            "session_id": session_id,
-            "message": "Reply with OK exactly once.",
+            "system_prompt": "Reply with OK exactly once.",
+            "user_message": "Reply with OK exactly once.",
             "provider": "ollama",
             "model": _live_model(),
         },
     )
     synth = client.post(
-        "/api/v1/companion/voice/synthesize",
+        "/v1/extensions/orket.companion/runtime/tts/synthesize",
         headers=headers,
         json={"text": "OK", "voice_id": _PIPER_VOICE_ID},
     )
 
-    assert chat.status_code == 200
+    assert generate.status_code == 200
     assert synth.status_code == 200
 
-    chat_payload = chat.json()
+    generate_payload = generate.json()
     synth_payload = synth.json()
     audio_bytes = base64.b64decode(synth_payload["audio_b64"].encode("utf-8"), validate=True)
 
     print(
         "[live][companion][voice-truth][text-vs-tts] "
-        f"path=primary result=success "
-        f"session_id={chat_payload['session_id']} model={chat_payload['model']} "
+        f"path=primary result=success session_id={session_id} model={generate_payload['model']} "
         f"tts_voice={synth_payload['voice_id']} audio_bytes={len(audio_bytes)}"
     )
-    assert chat_payload["ok"] is True
-    assert chat_payload["session_id"] == session_id
-    assert str(chat_payload["message"]).strip()
-    assert "audio_b64" not in chat_payload
+    assert generate_payload["ok"] is True
+    assert str(generate_payload["text"]).strip()
+    assert "audio_b64" not in generate_payload
     assert synth_payload["ok"] is True
     assert synth_payload["voice_id"] == _PIPER_VOICE_ID
     assert len(audio_bytes) > 0
@@ -194,10 +192,8 @@ async def test_companion_voice_truth_live_gateway_playback_without_avatar(tmp_pa
     output_path = tmp_path / "gateway_playback_probe.json"
 
     monkeypatch.setenv("ORKET_API_KEY", "core-key")
-    monkeypatch.setenv("ORKET_COMPANION_API_KEY", "companion-key")
-    monkeypatch.setenv("ORKET_COMPANION_KEY_STRICT", "true")
     monkeypatch.setenv("COMPANION_HOST_BASE_URL", f"http://127.0.0.1:{host_port}")
-    monkeypatch.setenv("COMPANION_API_KEY", "companion-key")
+    monkeypatch.setenv("COMPANION_API_KEY", "core-key")
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
     monkeypatch.setenv("ORKET_TTS_BACKEND", "piper")
     monkeypatch.setenv("ORKET_TTS_PIPER_MODEL_PATH", _PIPER_MODEL_PATH)

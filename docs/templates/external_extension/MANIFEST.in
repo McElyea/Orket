@@ -1,0 +1,11 @@
+include README.md
+include pyproject.toml
+include extension.yaml
+include extension.yml
+include extension.json
+graft src
+graft scripts
+graft tests
+prune src/companion_app/frontend/node_modules
+global-exclude __pycache__
+global-exclude *.py[cod]

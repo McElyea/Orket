@@ -298,6 +298,23 @@ def test_default_evaluator_missing_read_file_error_only_is_retry():
     assert decision["next_retry_count"] == 1
 
 
+def test_default_evaluator_write_file_approval_pending_is_requeue_without_retry_increment():
+    evaluator = DefaultEvaluatorNode()
+    issue = SimpleNamespace(retry_count=2, max_retries=3)
+    result = SimpleNamespace(
+        violations=[],
+        error="Approval required for tool 'write_file' before execution.",
+    )
+
+    decision = evaluator.evaluate_failure(issue, result)
+
+    assert decision["action"] == "approval_pending"
+    assert decision["next_retry_count"] == 2
+    assert evaluator.status_for_failure_action(decision["action"]) == CardStatus.READY
+    assert evaluator.failure_event_name(decision["action"]) == "approval_pending"
+    assert evaluator.failure_exception_class(decision["action"]) is ExecutionFailed
+
+
 def test_default_evaluator_non_readfile_violation_remains_governance():
     evaluator = DefaultEvaluatorNode()
     issue = SimpleNamespace(retry_count=0, max_retries=3)

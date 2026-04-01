@@ -111,6 +111,9 @@ class DefaultEvaluatorNode:
                 return {"action": "catastrophic", "next_retry_count": next_retry_count}
             return {"action": "retry", "next_retry_count": next_retry_count}
 
+        if self._is_approval_required_pending(result):
+            return {"action": "approval_pending", "next_retry_count": issue.retry_count}
+
         if result.violations or self._is_governance_deterministic_failure(result):
             return {"action": "governance_violation", "next_retry_count": issue.retry_count}
 
@@ -147,6 +150,10 @@ class DefaultEvaluatorNode:
         error_text = str(getattr(result, "error", "") or "").strip().lower()
         return marker in error_text
 
+    def _is_approval_required_pending(self, result: Any) -> bool:
+        error_text = str(getattr(result, "error", "") or "").strip().lower()
+        return "approval required for tool 'write_file' before execution." in error_text
+
     def success_post_actions(self, success_eval: Dict[str, Any]) -> Dict[str, Any]:
         trigger_sandbox = bool(success_eval.get("trigger_sandbox"))
         next_status = None
@@ -162,6 +169,7 @@ class DefaultEvaluatorNode:
 
     def status_for_failure_action(self, action: str) -> Any:
         mapping = {
+            "approval_pending": CardStatus.READY,
             "governance_violation": CardStatus.BLOCKED,
             "catastrophic": CardStatus.BLOCKED,
             "retry": CardStatus.READY,
@@ -173,6 +181,7 @@ class DefaultEvaluatorNode:
 
     def failure_event_name(self, action: str) -> str | None:
         mapping = {
+            "approval_pending": "approval_pending",
             "catastrophic": "catastrophic_failure",
             "retry": "retry_triggered",
         }
@@ -198,6 +207,7 @@ class DefaultEvaluatorNode:
 
     def failure_exception_class(self, action: str) -> Any:
         mapping = {
+            "approval_pending": ExecutionFailed,
             "governance_violation": GovernanceViolation,
             "catastrophic": CatastrophicFailure,
             "retry": ExecutionFailed,

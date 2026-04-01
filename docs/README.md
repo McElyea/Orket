@@ -65,6 +65,8 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 38. `docs/specs/SUPERVISOR_RUNTIME_SESSION_BOUNDARY_V1.md`
 39. `docs/specs/SUPERVISOR_RUNTIME_OPERATOR_APPROVAL_SURFACE_V1.md`
 40. `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_VALIDATION_V1.md`
+41. `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_V1.md`
+42. `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_V1.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -110,6 +112,9 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 14. `docs/architecture/dependency_graph_snapshot.md`
 15. `docs/architecture/VOLATILITY_BASELINE.md`
 16. `docs/architecture/CONTRACT_DELTA_SUPERVISOR_RUNTIME_SESSION_CONTINUITY_CLOSEOUT_2026-04-01.md`
+17. `docs/architecture/CONTRACT_DELTA_SUPERVISOR_RUNTIME_WRITE_FILE_APPROVAL_CONTINUATION_2026-04-01.md`
+18. `docs/architecture/CONTRACT_DELTA_SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_HARDENING_2026-04-01.md`
+19. `docs/architecture/CONTRACT_DELTA_SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_HARDENING_2026-04-01.md`
 
 ## Projects
 1. Active plans: `docs/projects/<project>/`

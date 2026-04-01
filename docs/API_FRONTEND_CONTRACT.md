@@ -10,7 +10,7 @@ Last verified against `orket/interfaces/api.py`: 2026-04-01
    - Strict mode (`ORKET_COMPANION_KEY_STRICT=true`): Companion routes reject `ORKET_API_KEY` when `ORKET_COMPANION_API_KEY` is configured.
    - Non-Companion `/v1/*` routes do not accept `ORKET_COMPANION_API_KEY`.
    - Auth rejection telemetry is emitted via `api_auth_rejected` with `route_class` (`companion` or `core`) and reason code.
-3. Websocket endpoint `GET ws://<host>/ws/events` accepts API key via:
+3. Websocket endpoints `GET ws://<host>/ws/events` and `GET ws://<host>/ws/interactions/{session_id}` accept API key via:
    - `X-API-Key` header, or
    - `api_key` query parameter.
 4. Fail-closed default: requests are rejected when `ORKET_API_KEY` is unset.
@@ -61,6 +61,28 @@ Last verified against `orket/interfaces/api.py`: 2026-04-01
 2. `POST /v1/interactions/{session_id}/turns`
 3. `POST /v1/interactions/{session_id}/finalize`
 4. `POST /v1/interactions/{session_id}/cancel`
+5. `WS /ws/interactions/{session_id}`
+
+## Companion Host API
+Available under both `/v1/companion/*` and `/api/v1/companion/*`.
+
+1. `GET /v1/companion/status`
+2. `GET /v1/companion/config`
+3. `PATCH /v1/companion/config`
+4. `GET /v1/companion/history`
+5. `GET /v1/companion/models`
+6. `POST /v1/companion/chat`
+7. `GET /v1/companion/voice/state`
+8. `GET /v1/companion/voice/voices`
+9. `POST /v1/companion/voice/control`
+10. `POST /v1/companion/voice/transcribe`
+11. `POST /v1/companion/voice/synthesize`
+12. `POST /v1/companion/voice/cadence/suggest`
+13. `POST /v1/companion/session/clear-memory`
+
+## Marshaller Inspection
+1. `GET /v1/marshaller/runs`
+2. `GET /v1/marshaller/runs/{run_id}`
 
 ## Protocol Replay and Parity
 1. `GET /v1/protocol/runs/{run_id}/replay`
@@ -108,7 +130,7 @@ Last verified against `orket/interfaces/api.py`: 2026-04-01
 3. `GET /v1/approvals` supports: `status`, `session_id`, `request_id`, `limit`; Packet 1 admits `status` values `PENDING`, `APPROVED`, and `DENIED` only.
 4. `GET /v1/approvals` and `GET /v1/approvals/{approval_id}` fail closed with conflict when the Packet 1 approval row carries an unsupported legacy lifecycle status or when payload-versus-reservation/operator-action projection truth drifts.
 5. `POST /v1/approvals/{approval_id}/decision` body requires: `decision` with admitted values `approve` or `deny`; optional `edited_proposal`, `notes` are accepted as bounded operator metadata and do not create alternate execution authority.
-6. The completed SupervisorRuntime Packet 1 approval-checkpoint contract uses the approval endpoints above for the governed kernel `NEEDS_APPROVAL` lifecycle on the default `session:<session_id>` namespace scope; turn-tool approval-required requests may appear on these surfaces but do not form an approve-to-continue Packet 1 execution contract.
+6. The active SupervisorRuntime approval-checkpoint contract uses the approval endpoints above for two shipped bounded slices only: governed kernel `NEEDS_APPROVAL` on the default `session:<session_id>` namespace scope, and governed turn-tool `write_file` approval-required continuation on the default `issue:<issue_id>` namespace scope using `request_type=tool_approval`, `reason=approval_required_tool:write_file`, and the existing `control_plane_target_ref`; no broader approval-required tool family or manual resume API is admitted.
 7. `POST /v1/kernel/projection-pack` requires: `session_id`, `trace_id`; supports optional `request_id`, `canonical_state_digest`, `purpose`, `tool_context_summary`, `policy_context`.
 8. `POST /v1/kernel/admit-proposal` requires: `session_id`, `trace_id`, `proposal`.
 9. `POST /v1/kernel/commit-proposal` requires: `session_id`, `trace_id`, `proposal_digest`, `admission_decision_digest`; supports optional `approval_id`, `execution_result_digest`, `execution_result_payload`, `execution_result_schema_valid`, `execution_error_reason_code`, `sanitization_digest`, `revalidate_policy_forbidden`, `canonical_state_digest_after`, `block_result_leaks`.
@@ -134,6 +156,20 @@ Last verified against `orket/interfaces/api.py`: 2026-04-01
 29. `POST /v1/cards/archive` requires at least one selector: `card_ids`, `build_id`, or `related_tokens`.
 30. `POST /v1/system/run-active` body supports: `path`, `build_id`, `type`, `issue_id`.
 31. `PATCH /v1/settings` accepts runtime setting updates defined in `SETTINGS_SCHEMA`.
+32. Companion host routes are mounted under both `/v1/companion/*` and `/api/v1/companion/*`.
+33. `GET /v1/companion/config` requires: `session_id`.
+34. `PATCH /v1/companion/config` requires: `session_id`; supports optional `scope` with admitted values `profile`, `session`, or `next_turn`, plus `patch` keyed by admitted top-level sections `mode`, `memory`, or `voice`.
+35. `GET /v1/companion/history` requires: `session_id`; supports optional `limit`.
+36. `GET /v1/companion/models` supports optional `provider`.
+37. `POST /v1/companion/chat` requires: `session_id`, `message`; supports optional `provider`, `model`.
+38. `POST /v1/companion/voice/control` requires: `command` with admitted values `start`, `stop`, or `submit`; supports optional `silence_delay_sec`.
+39. `POST /v1/companion/voice/transcribe` requires: `audio_b64`; supports optional `mime_type`, `language_hint`.
+40. `POST /v1/companion/voice/synthesize` requires: `text`; supports optional `voice_id`, `emotion_hint`, `speed`.
+41. `POST /v1/companion/voice/cadence/suggest` requires: `session_id`, `text`.
+42. `POST /v1/companion/session/clear-memory` requires: `session_id`.
+43. `GET /v1/marshaller/runs` supports optional `limit`.
+44. `GET /v1/marshaller/runs/{run_id}` supports optional `attempt_index`.
+45. `WS /ws/interactions/{session_id}` is a session-scoped interaction event stream and fails closed when stream events v1 is disabled.
 
 ## Compatibility Rule
 When routes or payload shapes change, update this document in the same PR.

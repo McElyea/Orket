@@ -39,7 +39,7 @@ async def execute_turn(
     context: Dict[str, Any],
     system_prompt: Optional[str] = None,
 ):
-    from .turn_executor import ModelTimeoutError, ToolValidationError, TurnResult
+    from .turn_executor import ModelTimeoutError, ToolApprovalPendingError, ToolValidationError, TurnResult
 
     issue_id = issue.id
     role_name = role.name
@@ -240,6 +240,23 @@ async def execute_turn(
         )
         await emit_failure(str(exc), "tool_violation")
         return TurnResult.governance_violation(exc.violations)
+
+    except ToolApprovalPendingError as exc:
+        executor.middleware.apply_on_turn_failure(exc, issue=issue, role=role, context=context)
+        log_event(
+            "turn_failed",
+            {
+                "issue_id": issue_id,
+                "error": str(exc),
+                "type": "tool_approval_pending",
+                "session_id": session_id,
+                "turn_index": turn_index,
+                "turn_trace_id": turn_trace_id,
+            },
+            executor.workspace,
+        )
+        await emit_failure(str(exc), "tool_approval_pending")
+        return TurnResult.failed(str(exc), should_retry=True)
 
     except (TurnToolControlPlaneError, TurnToolCheckpointRecoveryError) as exc:
         executor.middleware.apply_on_turn_failure(exc, issue=issue, role=role, context=context)

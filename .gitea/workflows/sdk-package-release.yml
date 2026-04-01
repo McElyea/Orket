@@ -61,7 +61,9 @@ jobs:
           source .tmp/sdk-release-smoke/bin/activate
           python -m pip install --upgrade pip
           python -m pip install dist/orket_extension_sdk-*.whl
-          python -c "import orket_extension_sdk as sdk; print(sdk.__version__)"
+          mkdir -p .tmp/sdk-release-import-check
+          cd .tmp/sdk-release-import-check
+          python -c "import importlib.util, orket_extension_sdk as sdk; assert importlib.util.find_spec('orket') is None; print(sdk.__version__)"
 
       - name: Copy artifacts to optional wheelhouse
         if: ${{ vars.SDK_WHEELHOUSE_PATH != '' }}

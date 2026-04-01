@@ -11,10 +11,6 @@
 
 Exploratory work is not permission for low standards, duplicate authority, stale docs, false-green tests, unsafe fallbacks, or unclear entrypoints.
 
-## Maintenance Rule
-
-Any new AGENTS rule must replace or merge with an existing rule. Do not append overlapping policy.
-
 ## Scope
 
 These rules apply to all new and modified code and docs.

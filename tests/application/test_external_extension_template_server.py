@@ -255,13 +255,14 @@ def test_external_extension_template_server_proxies_chat_and_config(monkeypatch)
 
 
 def test_external_extension_template_server_requires_companion_api_key(monkeypatch) -> None:
-    """Layer: contract. Verifies gateway fails closed when COMPANION_API_KEY is missing."""
+    """Layer: contract. Verifies gateway fails closed when neither Companion nor host API key is present."""
     repo_root = Path(__file__).resolve().parents[2]
     template_root = repo_root / "docs" / "templates" / "external_extension"
     src_root = template_root / "src"
     sys.path.insert(0, str(src_root))
     try:
         monkeypatch.delenv("COMPANION_API_KEY", raising=False)
+        monkeypatch.delenv("ORKET_API_KEY", raising=False)
         import companion_app.server as server_module
 
         client = TestClient(server_module.app)

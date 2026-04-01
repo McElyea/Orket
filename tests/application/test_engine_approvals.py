@@ -521,6 +521,97 @@ async def test_engine_decide_approval_resolves_pending_item() -> None:
 
 
 @pytest.mark.asyncio
+async def test_engine_decide_approval_continues_write_file_slice_on_same_session_issue() -> None:
+    engine = _make_engine()
+    await _seed_tool_approval_reservation(engine)
+    await _seed_target_run_execution(engine)
+    engine._pipeline = object()
+    calls: list[dict[str, object]] = []
+
+    async def _run_issue(issue_id: str, *, session_id: str | None = None, **_kwargs):
+        calls.append({"issue_id": issue_id, "session_id": session_id})
+        return {"ok": True}
+
+    engine.run_issue = _run_issue
+
+    result = await engine.decide_approval(
+        approval_id="apr-1",
+        decision="approve",
+    )
+
+    assert result["status"] == "resolved"
+    assert result["approval"]["status"] == "APPROVED"
+    assert calls == [{"issue_id": "ISS-1", "session_id": "sess-1"}]
+
+
+@pytest.mark.asyncio
+async def test_engine_decide_approval_write_file_continuation_fails_closed_on_target_ref_drift() -> None:
+    row = _tool_approval_row()
+    row["payload_json"] = {
+        **dict(row["payload_json"]),
+        "control_plane_target_ref": "turn-tool-run:sess-1:ISS-1:coder:9999",
+    }
+    engine = _make_engine(rows=[row])
+    await _seed_tool_approval_reservation(engine)
+    engine._pipeline = object()
+
+    async def _run_issue(*args, **kwargs):
+        return {"ok": True}
+
+    engine.run_issue = _run_issue
+
+    with pytest.raises(RuntimeError, match="target projection drift"):
+        await engine.decide_approval(
+            approval_id="apr-1",
+            decision="approve",
+        )
+
+
+@pytest.mark.asyncio
+async def test_engine_decide_approval_write_file_continuation_fails_closed_on_namespace_drift() -> None:
+    engine = _make_engine()
+    await _seed_tool_approval_reservation(engine)
+    await engine.control_plane_execution_repository.save_run_record(
+        record=RunRecord(
+            run_id="turn-tool-run:sess-1:ISS-1:coder:0001",
+            workload_id="turn-tool-workload:coder",
+            workload_version="turn_tool_dispatcher.v1",
+            policy_snapshot_id="policy-snapshot-1",
+            policy_digest="sha256:policy-1",
+            configuration_snapshot_id="config-snapshot-1",
+            configuration_digest="sha256:config-1",
+            creation_timestamp="2026-03-03T11:59:00+00:00",
+            admission_decision_receipt_ref="approval-reservation:apr-1",
+            namespace_scope="issue:OTHER",
+            lifecycle_state=RunState.EXECUTING,
+            current_attempt_id="turn-tool-attempt:sess-1:ISS-1:coder:0001:0001",
+        )
+    )
+    await engine.control_plane_execution_repository.save_attempt_record(
+        record=AttemptRecord(
+            attempt_id="turn-tool-attempt:sess-1:ISS-1:coder:0001:0001",
+            run_id="turn-tool-run:sess-1:ISS-1:coder:0001",
+            attempt_ordinal=1,
+            attempt_state=AttemptState.EXECUTING,
+            starting_state_snapshot_ref="turn-tool-checkpoint:sess-1:ISS-1:coder:0001:0001",
+            start_timestamp="2026-03-03T11:59:00+00:00",
+        )
+    )
+    engine._pipeline = object()
+
+    async def _run_issue(*args, **kwargs):
+        return {"ok": True}
+
+    engine.run_issue = _run_issue
+
+    with pytest.raises(RuntimeError, match="namespace scope drifted"):
+        await engine.decide_approval(
+            approval_id="apr-1",
+            decision="approve",
+        )
+
+
+@pytest.mark.asyncio
 async def test_engine_decide_approval_rejects_non_packet1_decision_token() -> None:
     engine = _make_engine()
     await _seed_tool_approval_reservation(engine)
@@ -637,6 +728,36 @@ async def test_engine_decide_approval_publishes_terminal_operator_command_for_de
     assert reservation.status is ReservationStatus.INVALIDATED
     assert actions[0].result == "denied"
     assert run_actions[0].result == "denied"
+
+
+@pytest.mark.asyncio
+async def test_engine_decide_approval_denial_closes_open_write_file_governed_run() -> None:
+    engine = _make_engine()
+    await _seed_tool_approval_reservation(engine)
+    await _seed_target_run_execution(engine)
+
+    result = await engine.decide_approval(
+        approval_id="apr-1",
+        decision="deny",
+    )
+
+    run = await engine.control_plane_execution_repository.get_run_record(run_id="turn-tool-run:sess-1:ISS-1:coder:0001")
+    attempt = None if run is None else await engine.control_plane_execution_repository.get_attempt_record(
+        attempt_id=str(run.current_attempt_id or "")
+    )
+    truth = await engine.control_plane_publication.repository.get_final_truth(
+        run_id="turn-tool-run:sess-1:ISS-1:coder:0001"
+    )
+
+    assert result["status"] == "resolved"
+    assert result["approval"]["status"] == "DENIED"
+    assert run is not None
+    assert attempt is not None
+    assert truth is not None
+    assert run.lifecycle_state is RunState.FAILED_TERMINAL
+    assert attempt.attempt_state is AttemptState.FAILED
+    assert truth.result_class is ResultClass.BLOCKED
+    assert truth.authoritative_result_ref == "approval-request:apr-1:denied"
 
 
 @pytest.mark.asyncio

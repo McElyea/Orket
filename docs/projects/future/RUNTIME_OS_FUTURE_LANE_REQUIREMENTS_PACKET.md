@@ -18,6 +18,8 @@ It does not reopen any lane by itself.
 
 It now survives as the staging ancestor that fed the archived RuntimeOS meta-lane and the completed session-continuity follow-on lane.
 It should not compete with those archived lane records.
+The split child `Extension Publish Surface Hardening` has now been promoted into active roadmap authority at `docs/projects/Extensions/EXTENSION_PUBLISH_SURFACE_HARDENING_IMPLEMENTATION_PLAN.md`.
+This packet remains historical split context plus deferred-candidate staging for everything else.
 
 Roadmap hold rule for this file:
 1. do not copy these items into `docs/ROADMAP.md` yet
@@ -39,7 +41,7 @@ This packet narrows it into a future selection surface only.
 ## Purpose
 
 Define six grouped future-lane requirements candidates that fit the current repo posture:
-1. no active non-maintenance lane is open
+1. one extension publish split child is now active outside this packet
 2. SupervisorRuntime Packet 1 is closed
 3. the next good move should be a small number of bounded lanes rather than a broad roadmap explosion
 
@@ -141,16 +143,18 @@ Reduce change blast radius across the hottest orchestration seams without claimi
 3. proof coverage shows behavior parity for the touched seam family
 4. no new authority drift is introduced while extracting seams
 
-## Item 4 - Extension package / validate / publish hardening
+## Item 4 - Extension package surface hardening
 
 ### Purpose
 
 Promote extensions from mostly runtime-internal capability surfaces into one explicit operator-facing package contract without creating a second runtime authority center.
-This candidate may split later if package-surface hardening and publish-surface hardening prove to be different lane shapes.
+The combined package-plus-publish candidate is retired.
+Future extension reopen work must choose package-surface hardening or publish-surface hardening separately instead of reviving the old combined shape.
+The package-surface child of that split is complete and archived at `docs/projects/archive/Extensions/EX04012026-PACKAGE-SURFACE-HARDENING-CLOSEOUT/`.
 
 ### In scope
 
-1. one canonical install, validate, update, and publish story
+1. one canonical install and validate story
 2. manifest validation and explicit permission or capability declarations
 3. versioning and compatibility rules
 4. operator-facing inspect and audit expectations
@@ -161,11 +165,12 @@ This candidate may split later if package-surface hardening and publish-surface 
 1. public marketplace
 2. cloud-hosting platform work
 3. monetization or distribution strategy
-4. multiple competing package surfaces in parallel
+4. public release, registry, or discovery-flow expansion
+5. multiple competing package surfaces in parallel
 
 ### Acceptance boundary
 
-1. extension install or validate or publish has one canonical operator path
+1. extension install and validate have one canonical operator path
 2. capability and permission declarations are explicit
 3. extension failure modes are governed and inspectable
 4. host-owned runtime authority remains explicit
@@ -231,19 +236,21 @@ Define the narrowest future Graphs reopen worth considering after the runtime se
 
 ## Recommended sequence
 
-The strongest six-item order is:
+The strongest split sequence is:
 1. governed turn-tool approval continuation
 2. sessions plus context-provider pipeline
-3. extension package / validate / publish hardening
-4. runtime seam extraction and facade reduction
-5. canonical surface cold-down and identity alignment
-6. conditional Graphs reopen for authority and decision views only
+3. extension package surface hardening
+4. extension publish surface hardening
+5. runtime seam extraction and facade reduction
+6. canonical surface cold-down and identity alignment
+7. conditional Graphs reopen for authority and decision views only
 
 Why this order:
 1. it closes the most concrete remaining runtime-truth gap first
 2. it hardens continuity before broader surface expansion
-3. it keeps extension work subordinate to host-owned authority
-4. it delays graph-family work until the runtime seams beneath it are colder
+3. it lets package-surface hardening land before any publish or distribution reopen
+4. it keeps extension work subordinate to host-owned authority
+5. it delays graph-family work until the runtime seams beneath it are colder
 
 ## Draft Priority Now block
 
@@ -252,7 +259,7 @@ Do not copy this into `docs/ROADMAP.md` until requirements are accepted.
 
 1. governed turn-tool approval continuation -- Requirements candidate for one approval-required turn-tool lifecycle with explicit approve-or-deny continuation and real-path proof.
 2. sessions plus context-provider pipeline -- Requirements candidate for one canonical session model, provider injection boundary, and host-owned continuity story.
-3. extension package / validate / publish hardening -- Requirements candidate for one canonical extension package surface with explicit capability declarations and governed operator path.
+3. extension publish surface hardening -- Promoted out of this packet into active roadmap authority at `docs/projects/Extensions/EXTENSION_PUBLISH_SURFACE_HARDENING_IMPLEMENTATION_PLAN.md`; do not duplicate it from this packet.
 4. runtime seam extraction and facade reduction -- Requirements candidate for bounded hot-path seam extraction, explicit composition, and delegation reduction.
 5. canonical surface cold-down and identity alignment -- Requirements candidate for wrapper retirement, outward identity alignment, and clearer canonical runtime surfaces.
 6. conditional Graphs reopen for authority and decision views only -- Deferred requirements candidate that stays blocked until explicitly reopened after underlying runtime seams are colder.

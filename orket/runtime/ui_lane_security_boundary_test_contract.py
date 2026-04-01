@@ -31,7 +31,7 @@ def ui_lane_security_boundary_test_contract_snapshot() -> dict[str, Any]:
             },
             {
                 "check_id": "companion_error_mapping_is_structured",
-                "surface": "orket.interfaces.routers.companion._raise_companion_http_error",
+                "surface": "orket.interfaces.routers.extension_runtime._raise_extension_runtime_http_error",
                 "expected_behavior": "ValueError maps to HTTP 400 detail with code/message structure",
             },
             {
