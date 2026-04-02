@@ -96,6 +96,14 @@ def test_run_evidence_graph_schema_and_registry_pin_a_separate_artifact_family()
         "nodes",
         "edges",
     ]
+    assert schema["properties"]["selected_views"]["items"]["enum"] == [
+        "full_lineage",
+        "failure_path",
+        "authority",
+        "decision",
+        "resource_authority_path",
+        "closure_path",
+    ]
     assert registry["artifacts"]["run_evidence_graph.json"] == "1.0"
     assert registry["artifacts"]["run_graph.json"] == "1.0"
 

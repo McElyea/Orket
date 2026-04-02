@@ -4,16 +4,17 @@ This document defines security requirements for API/webhook boundaries, configur
 
 ## 1. API Auth Policy (`/v1/*`)
 1. `/v1/*` endpoints are protected by `X-API-Key`.
-2. Default behavior is fail-closed:
+2. Generic extension runtime routes under `/v1/extensions/{extension_id}/runtime/*` use the same core API key posture as the rest of `/v1/*`.
+3. Orket core does not admit Companion-scoped API keys or Companion-only host routes.
+4. Default behavior is fail-closed:
    - if `ORKET_API_KEY` is unset, requests are rejected.
-3. Companion route scoping:
-   - `ORKET_COMPANION_API_KEY` may be used for `/v1/companion/*` and `/api/v1/companion/*` only.
-   - non-Companion routes reject `ORKET_COMPANION_API_KEY`.
-   - `ORKET_COMPANION_KEY_STRICT=true` enforces companion-only key usage on Companion routes when scoped key is configured.
-4. Insecure local bypass is explicit and opt-in only:
+5. Insecure local bypass is explicit and opt-in only:
    - `ORKET_ALLOW_INSECURE_NO_API_KEY=true`
-5. Startup logs emit security posture and warn when insecure bypass is enabled.
-6. Auth rejection telemetry (`api_auth_rejected`) is emitted without credential material.
+6. Startup logs emit security posture and warn when insecure bypass is enabled.
+7. Auth rejection telemetry (`api_auth_rejected`) is emitted without credential material.
+8. Companion gateway/BFF auth is external to Orket core:
+   - the gateway sends the host credential through `COMPANION_API_KEY` or `ORKET_API_KEY`
+   - the gateway continues to enforce its own loopback and same-origin protections on `/api/*`
 
 ## 2. Webhook Trust Boundary (`/webhook/*`)
 1. `/webhook/gitea` requires:
@@ -32,6 +33,7 @@ This document defines security requirements for API/webhook boundaries, configur
 1. `ORKET_API_KEY` set (recommended), or explicit insecure bypass for temporary local debug.
 2. `ORKET_ENABLE_WEBHOOK_TEST_ENDPOINT` normally `false`.
 3. If enabling `/webhook/test`, set `ORKET_WEBHOOK_TEST_TOKEN`.
+4. If running the external Companion gateway, set `COMPANION_API_KEY` or `ORKET_API_KEY` in that process environment.
 
 ### CI
 1. Use strict auth posture (no insecure bypass).

@@ -61,7 +61,7 @@ class _FakePendingGates:
         raise RuntimeError("request not found")
 
 
-def _tool_approval_row() -> dict[str, object]:
+def _tool_approval_row(tool_name: str = "write_file") -> dict[str, object]:
     return {
         "request_id": "apr-1",
         "session_id": "sess-1",
@@ -69,9 +69,9 @@ def _tool_approval_row() -> dict[str, object]:
         "seat_name": "coder",
         "gate_mode": "approval_required",
         "request_type": "tool_approval",
-        "reason": "approval_required_tool:write_file",
+        "reason": f"approval_required_tool:{tool_name}",
         "payload_json": {
-            "tool": "write_file",
+            "tool": tool_name,
             "role": "coder",
             "turn_index": 1,
             "control_plane_target_ref": "turn-tool-run:sess-1:ISS-1:coder:0001",
@@ -117,14 +117,18 @@ def _make_engine(*, rows: list[dict[str, object]] | None = None) -> Orchestratio
     return engine
 
 
-async def _seed_tool_approval_reservation(engine: OrchestrationEngine, approval_id: str = "apr-1") -> None:
+async def _seed_tool_approval_reservation(
+    engine: OrchestrationEngine,
+    approval_id: str = "apr-1",
+    tool_name: str = "write_file",
+) -> None:
     service = ToolApprovalControlPlaneReservationService(publication=engine.control_plane_publication)
     await service.publish_pending_tool_approval_hold(
         approval_id=approval_id,
         session_id="sess-1",
         issue_id="ISS-1",
         seat_name="coder",
-        tool_name="write_file",
+        tool_name=tool_name,
         turn_index=1,
         created_at="2026-03-03T12:00:00+00:00",
         control_plane_target_ref="turn-tool-run:sess-1:ISS-1:coder:0001",
@@ -528,11 +532,11 @@ async def test_engine_decide_approval_continues_write_file_slice_on_same_session
     engine._pipeline = object()
     calls: list[dict[str, object]] = []
 
-    async def _run_issue(issue_id: str, *, session_id: str | None = None, **_kwargs):
-        calls.append({"issue_id": issue_id, "session_id": session_id})
+    async def _run_card(card_id: str, *, session_id: str | None = None, **_kwargs):
+        calls.append({"card_id": card_id, "session_id": session_id})
         return {"ok": True}
 
-    engine.run_issue = _run_issue
+    engine.run_card = _run_card
 
     result = await engine.decide_approval(
         approval_id="apr-1",
@@ -541,7 +545,32 @@ async def test_engine_decide_approval_continues_write_file_slice_on_same_session
 
     assert result["status"] == "resolved"
     assert result["approval"]["status"] == "APPROVED"
-    assert calls == [{"issue_id": "ISS-1", "session_id": "sess-1"}]
+    assert calls == [{"card_id": "ISS-1", "session_id": "sess-1"}]
+
+
+@pytest.mark.asyncio
+async def test_engine_decide_approval_continues_create_issue_slice_on_same_session_issue() -> None:
+    """Layer: unit."""
+    engine = _make_engine(rows=[_tool_approval_row("create_issue")])
+    await _seed_tool_approval_reservation(engine, tool_name="create_issue")
+    await _seed_target_run_execution(engine)
+    engine._pipeline = object()
+    calls: list[dict[str, object]] = []
+
+    async def _run_card(card_id: str, *, session_id: str | None = None, **_kwargs):
+        calls.append({"card_id": card_id, "session_id": session_id})
+        return {"ok": True}
+
+    engine.run_card = _run_card
+
+    result = await engine.decide_approval(
+        approval_id="apr-1",
+        decision="approve",
+    )
+
+    assert result["status"] == "resolved"
+    assert result["approval"]["status"] == "APPROVED"
+    assert calls == [{"card_id": "ISS-1", "session_id": "sess-1"}]
 
 
 @pytest.mark.asyncio
@@ -555,10 +584,10 @@ async def test_engine_decide_approval_write_file_continuation_fails_closed_on_ta
     await _seed_tool_approval_reservation(engine)
     engine._pipeline = object()
 
-    async def _run_issue(*args, **kwargs):
+    async def _run_card(*args, **kwargs):
         return {"ok": True}
 
-    engine.run_issue = _run_issue
+    engine.run_card = _run_card
 
     with pytest.raises(RuntimeError, match="target projection drift"):
         await engine.decide_approval(
@@ -599,10 +628,10 @@ async def test_engine_decide_approval_write_file_continuation_fails_closed_on_na
     )
     engine._pipeline = object()
 
-    async def _run_issue(*args, **kwargs):
+    async def _run_card(*args, **kwargs):
         return {"ok": True}
 
-    engine.run_issue = _run_issue
+    engine.run_card = _run_card
 
     with pytest.raises(RuntimeError, match="namespace scope drifted"):
         await engine.decide_approval(
@@ -734,6 +763,37 @@ async def test_engine_decide_approval_publishes_terminal_operator_command_for_de
 async def test_engine_decide_approval_denial_closes_open_write_file_governed_run() -> None:
     engine = _make_engine()
     await _seed_tool_approval_reservation(engine)
+    await _seed_target_run_execution(engine)
+
+    result = await engine.decide_approval(
+        approval_id="apr-1",
+        decision="deny",
+    )
+
+    run = await engine.control_plane_execution_repository.get_run_record(run_id="turn-tool-run:sess-1:ISS-1:coder:0001")
+    attempt = None if run is None else await engine.control_plane_execution_repository.get_attempt_record(
+        attempt_id=str(run.current_attempt_id or "")
+    )
+    truth = await engine.control_plane_publication.repository.get_final_truth(
+        run_id="turn-tool-run:sess-1:ISS-1:coder:0001"
+    )
+
+    assert result["status"] == "resolved"
+    assert result["approval"]["status"] == "DENIED"
+    assert run is not None
+    assert attempt is not None
+    assert truth is not None
+    assert run.lifecycle_state is RunState.FAILED_TERMINAL
+    assert attempt.attempt_state is AttemptState.FAILED
+    assert truth.result_class is ResultClass.BLOCKED
+    assert truth.authoritative_result_ref == "approval-request:apr-1:denied"
+
+
+@pytest.mark.asyncio
+async def test_engine_decide_approval_denial_closes_open_create_issue_governed_run() -> None:
+    """Layer: unit."""
+    engine = _make_engine(rows=[_tool_approval_row("create_issue")])
+    await _seed_tool_approval_reservation(engine, tool_name="create_issue")
     await _seed_target_run_execution(engine)
 
     result = await engine.decide_approval(

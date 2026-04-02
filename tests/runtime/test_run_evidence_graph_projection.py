@@ -27,7 +27,13 @@ async def test_project_run_evidence_graph_primary_lineage_emits_complete_determi
         generation_timestamp=GENERATED_AT,
         execution_repository=execution_repo,
         record_repository=record_repo,
-        selected_views=["resource_authority_path", "full_lineage", "closure_path"],
+        selected_views=[
+            "resource_authority_path",
+            "decision",
+            "full_lineage",
+            "authority",
+            "closure_path",
+        ],
     )
     replay = await project_run_evidence_graph_primary_lineage(
         root=tmp_path,
@@ -36,12 +42,24 @@ async def test_project_run_evidence_graph_primary_lineage_emits_complete_determi
         generation_timestamp=GENERATED_AT,
         execution_repository=execution_repo,
         record_repository=record_repo,
-        selected_views=["closure_path", "full_lineage", "resource_authority_path"],
+        selected_views=[
+            "closure_path",
+            "authority",
+            "full_lineage",
+            "resource_authority_path",
+            "decision",
+        ],
     )
 
     assert payload == replay
     assert payload["graph_result"] == "complete"
-    assert payload["selected_views"] == ["full_lineage", "resource_authority_path", "closure_path"]
+    assert payload["selected_views"] == [
+        "full_lineage",
+        "authority",
+        "decision",
+        "resource_authority_path",
+        "closure_path",
+    ]
     assert payload["node_count"] == len(payload["nodes"])
     assert payload["edge_count"] == len(payload["edges"])
     assert {node["family"] for node in payload["nodes"]} >= {

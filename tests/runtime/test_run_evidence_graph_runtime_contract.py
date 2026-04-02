@@ -96,6 +96,36 @@ def test_validate_run_evidence_graph_payload_rejects_noncanonical_view_order() -
         validate_run_evidence_graph_payload(payload)
 
 
+# Layer: contract
+def test_build_run_evidence_graph_payload_canonicalizes_authority_and_decision_view_order() -> None:
+    payload = build_run_evidence_graph_payload(
+        run_id="cards-epic-run:sess-graph-runtime:build-2:20360305T120000000000Z",
+        generation_timestamp=_GENERATED_AT,
+        graph_result="complete",
+        selected_views=["decision", "full_lineage", "authority"],
+        source_summaries=[
+            {
+                "source_id": "src-run",
+                "authority_level": "primary",
+                "source_kind": "RunRecord",
+                "status": "present",
+                "source_ref": "run-1",
+            }
+        ],
+        nodes=[
+            {
+                "id": "run:run-1",
+                "family": "run",
+                "label": "run-1",
+                "source_ids": ["src-run"],
+            }
+        ],
+        edges=[],
+    )
+
+    assert payload["selected_views"] == ["full_lineage", "authority", "decision"]
+
+
 # Layer: integration
 @pytest.mark.asyncio
 async def test_write_run_evidence_graph_artifact_writes_canonical_json(tmp_path: Path) -> None:

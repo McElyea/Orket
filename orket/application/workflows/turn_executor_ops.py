@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from orket.logging import log_event
 from orket.application.services.turn_tool_control_plane_recovery import TurnToolCheckpointRecoveryError
@@ -25,13 +25,16 @@ from .turn_executor_runtime import (
     synthesize_required_status_tool_call as _synthesize_required_status_tool_call,
 )
 
+if TYPE_CHECKING:
+    from .turn_executor import TurnExecutor
+
 runtime_tokens_payload = _runtime_tokens_payload
 state_delta_from_tool_calls = _state_delta_from_tool_calls
 synthesize_required_status_tool_call = _synthesize_required_status_tool_call
 
 
 async def execute_turn(
-    executor: Any,
+    executor: TurnExecutor,
     issue: IssueConfig,
     role: RoleConfig,
     model_client: Any,
@@ -66,7 +69,7 @@ async def execute_turn(
         )
 
     try:
-        if executor._memory_trace_enabled(context):
+        if executor.artifact_writer.memory_trace_enabled(context):
             context["_memory_trace_events"] = []
         executor._validate_preconditions(issue, role, context)
         await ensure_turn_control_plane_reentry_allowed_if_needed(
@@ -89,7 +92,7 @@ async def execute_turn(
                     "issue_id": issue_id,
                     "role": role_name,
                     "tool_calls": len(completed_replay_turn.tool_calls),
-                    "tokens": executor._runtime_tokens_payload(completed_replay_turn),
+                    "tokens": runtime_tokens_payload(completed_replay_turn),
                     "session_id": session_id,
                     "turn_index": turn_index,
                     "turn_trace_id": turn_trace_id,
@@ -99,7 +102,7 @@ async def execute_turn(
                 executor.workspace,
             )
             await asyncio.to_thread(
-                executor._emit_memory_traces,
+                executor.artifact_writer.emit_memory_traces,
                 session_id=session_id,
                 issue_id=issue_id,
                 role_name=role_name,
@@ -129,13 +132,13 @@ async def execute_turn(
         current_turn = turn
 
         await asyncio.to_thread(
-            executor._write_turn_artifact,
-            session_id,
-            issue_id,
-            role_name,
-            turn_index,
-            "parsed_tool_calls.json",
-            json.dumps(
+            executor.artifact_writer.write_turn_artifact,
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            filename="parsed_tool_calls.json",
+            content=json.dumps(
                 [{"tool": tool_call.tool, "args": tool_call.args} for tool_call in turn.tool_calls],
                 indent=2,
                 ensure_ascii=False,
@@ -149,7 +152,12 @@ async def execute_turn(
         )
 
         if turn.tool_calls:
-            await executor._execute_tools(turn, toolbox, context, issue=issue)
+            await executor.tool_dispatcher.execute_tools(
+                turn=turn,
+                toolbox=toolbox,
+                context=context,
+                issue=issue,
+            )
         else:
             log_event(
                 "turn_no_tool_calls",
@@ -170,7 +178,7 @@ async def execute_turn(
                 "issue_id": issue_id,
                 "role": role_name,
                 "tool_calls": len(turn.tool_calls),
-                "tokens": executor._runtime_tokens_payload(turn),
+                "tokens": runtime_tokens_payload(turn),
                 "session_id": session_id,
                 "turn_index": turn_index,
                 "turn_trace_id": turn_trace_id,
@@ -195,7 +203,7 @@ async def execute_turn(
             executor.workspace,
         )
         await asyncio.to_thread(
-            executor._emit_memory_traces,
+            executor.artifact_writer.emit_memory_traces,
             session_id=session_id,
             issue_id=issue_id,
             role_name=role_name,

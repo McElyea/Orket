@@ -34,20 +34,30 @@ async def test_build_run_evidence_graph_views_derives_required_filtered_views_fr
         generation_timestamp=GENERATED_AT,
         execution_repository=execution_repo,
         record_repository=record_repo,
-        selected_views=["closure_path", "resource_authority_path", "failure_path", "full_lineage"],
+        selected_views=[
+            "decision",
+            "closure_path",
+            "resource_authority_path",
+            "authority",
+            "failure_path",
+            "full_lineage",
+        ],
     )
 
     views = build_run_evidence_graph_views(payload)
+    view_by_name = {view["view"]: view for view in views}
 
     assert [view["view"] for view in views] == [
         "full_lineage",
         "failure_path",
+        "authority",
+        "decision",
         "resource_authority_path",
         "closure_path",
     ]
     assert views[0]["node_count"] == payload["node_count"]
     assert views[0]["edge_count"] == payload["edge_count"]
-    assert {node["family"] for node in views[1]["nodes"]} >= {
+    assert {node["family"] for node in view_by_name["failure_path"]["nodes"]} >= {
         "run",
         "attempt",
         "step",
@@ -56,8 +66,8 @@ async def test_build_run_evidence_graph_views_derives_required_filtered_views_fr
         "recovery_decision",
         "final_truth",
     }
-    assert "reservation" not in {node["family"] for node in views[1]["nodes"]}
-    assert {node["family"] for node in views[2]["nodes"]} >= {
+    assert "reservation" not in {node["family"] for node in view_by_name["failure_path"]["nodes"]}
+    assert {node["family"] for node in view_by_name["authority"]["nodes"]} >= {
         "run",
         "attempt",
         "step",
@@ -69,8 +79,41 @@ async def test_build_run_evidence_graph_views_derives_required_filtered_views_fr
         "operator_action",
         "final_truth",
     }
-    assert "checkpoint" not in {node["family"] for node in views[2]["nodes"]}
-    assert {node["family"] for node in views[3]["nodes"]} >= {
+    assert "checkpoint" not in {node["family"] for node in view_by_name["authority"]["nodes"]}
+    assert "checkpoint_acceptance" not in {
+        node["family"] for node in view_by_name["authority"]["nodes"]
+    }
+    assert "recovery_decision" not in {node["family"] for node in view_by_name["authority"]["nodes"]}
+    assert {node["family"] for node in view_by_name["decision"]["nodes"]} >= {
+        "run",
+        "attempt",
+        "step",
+        "checkpoint",
+        "checkpoint_acceptance",
+        "recovery_decision",
+        "observation",
+        "operator_action",
+        "final_truth",
+    }
+    assert "reservation" not in {node["family"] for node in view_by_name["decision"]["nodes"]}
+    assert "lease" not in {node["family"] for node in view_by_name["decision"]["nodes"]}
+    assert "resource" not in {node["family"] for node in view_by_name["decision"]["nodes"]}
+    assert {node["family"] for node in view_by_name["resource_authority_path"]["nodes"]} >= {
+        "run",
+        "attempt",
+        "step",
+        "reservation",
+        "lease",
+        "resource",
+        "observation",
+        "effect",
+        "operator_action",
+        "final_truth",
+    }
+    assert "checkpoint" not in {
+        node["family"] for node in view_by_name["resource_authority_path"]["nodes"]
+    }
+    assert {node["family"] for node in view_by_name["closure_path"]["nodes"]} >= {
         "run",
         "attempt",
         "step",
@@ -80,7 +123,7 @@ async def test_build_run_evidence_graph_views_derives_required_filtered_views_fr
         "operator_action",
         "final_truth",
     }
-    assert "reservation" not in {node["family"] for node in views[3]["nodes"]}
+    assert "reservation" not in {node["family"] for node in view_by_name["closure_path"]["nodes"]}
 
 
 # Layer: integration
@@ -98,7 +141,7 @@ async def test_write_run_evidence_graph_rendered_artifacts_writes_mermaid_and_ht
         generation_timestamp=GENERATED_AT,
         execution_repository=execution_repo,
         record_repository=record_repo,
-        selected_views=["full_lineage", "resource_authority_path", "closure_path"],
+        selected_views=["full_lineage", "authority", "decision"],
     )
 
     paths = await write_run_evidence_graph_rendered_artifacts(
@@ -115,11 +158,12 @@ async def test_write_run_evidence_graph_rendered_artifacts_writes_mermaid_and_ht
     assert paths["html_path"].read_text(encoding="utf-8") == html
     assert mermaid.startswith("flowchart TD\n")
     assert 'subgraph view_full_lineage["Full Lineage | ' in mermaid
-    assert "reservation_to_lease_promotion" in mermaid
-    assert "final_truth_to_run" in mermaid
+    assert 'subgraph view_authority["Authority | ' in mermaid
+    assert 'subgraph view_decision["Decision | ' in mermaid
+    assert "attempt_to_recovery_decision" in mermaid
     assert "<h1>Run Evidence Graph</h1>" in html
-    assert "Resource Authority Path" in html
-    assert "Closure Path" in html
+    assert "Authority" in html
+    assert "Decision" in html
     assert "events.log" in html
 
 

@@ -83,7 +83,6 @@ def test_contract_current_authority_summary_matches_json() -> None:
         authority["dependency_authority"]["install_command"],
         authority["runtime_entrypoints"]["cli_default"],
         authority["runtime_entrypoints"]["cli_named_card"],
-        authority["runtime_entrypoints"]["cli_named_rock"],
         authority["runtime_entrypoints"]["api"],
         authority["canonical_test_command"]["command"],
         authority["active_spec_index"]["root_docs_index"],
@@ -93,6 +92,7 @@ def test_contract_current_authority_summary_matches_json() -> None:
     )
     missing_values = [value for value in expected_values if value not in summary_block]
     assert not missing_values, "Current Canonical Paths summary is missing JSON values: " + ", ".join(missing_values)
+    assert authority["runtime_entrypoints"]["cli_legacy_named_rock_alias"] not in summary_block
 
 
 def test_contract_current_authority_paths_exist() -> None:
@@ -136,6 +136,26 @@ def test_contract_current_authority_paths_exist() -> None:
 
     missing_paths = [path_text for path_text in sorted(existing_paths) if not Path(path_text).exists()]
     assert not missing_paths, "CURRENT_AUTHORITY.md references missing paths: " + ", ".join(missing_paths)
+
+
+def test_contract_current_authority_run_evidence_graph_view_posture() -> None:
+    """Layer: contract."""
+    _, payload = _load_authority_payload()
+    script_outputs = payload["authority"]["canonical_script_output_locations"]
+    assert script_outputs["run_evidence_graph_default_views"] == [
+        "full_lineage",
+        "failure_path",
+        "resource_authority_path",
+        "closure_path",
+    ]
+    assert script_outputs["run_evidence_graph_admitted_view_tokens"] == [
+        "full_lineage",
+        "failure_path",
+        "authority",
+        "decision",
+        "resource_authority_path",
+        "closure_path",
+    ]
 
 
 def test_contract_agents_references_current_authority_map() -> None:

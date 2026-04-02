@@ -23,19 +23,15 @@ python main.py
 ```bash
 python main.py --card <card_id>
 ```
-5. Legacy named rock runtime alias:
-```bash
-python main.py --rock <rock_name>
-```
-6. API runtime (safe default profile, local-only bind `http://127.0.0.1:8082`):
+5. API runtime (safe default profile, local-only bind `http://127.0.0.1:8082`):
 ```bash
 python server.py
 ```
-7. API dev runtime with reload (explicit opt-in):
+6. API dev runtime with reload (explicit opt-in):
 ```bash
 python server.py --profile dev
 ```
-8. Webhook runtime (default `http://127.0.0.1:8080`):
+7. Webhook runtime (default `http://127.0.0.1:8080`):
 ```bash
 python -m orket.webhook_server
 ```
@@ -52,14 +48,13 @@ python main.py
 ```bash
 python main.py --card <card_id>
 ```
-3. Run one named rock through the legacy alias:
-```bash
-python main.py --rock <rock_name>
-```
-4. API runtime:
+3. API runtime:
 ```bash
 python server.py
 ```
+
+Compatibility-only CLI alias:
+`python main.py --rock <rock_name>` remains accepted for older callers, but it is hidden from `python main.py --help` and routes to the canonical named card runtime.
 
 ## API Launcher Precedence
 1. CLI arguments (`--host`, `--port`, `--profile`, `--reload/--no-reload`)
@@ -137,10 +132,10 @@ curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/approvals/<approval_id>
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/approvals/<approval_id>/decision -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"decision\":\"approve\",\"notes\":\"operator-reviewed\"}"
 ```
-3. The active SupervisorRuntime approval-checkpoint family now admits two shipped bounded slices only: governed kernel `NEEDS_APPROVAL` on the default `session:<session_id>` namespace scope, and governed turn-tool `write_file` approval-required continuation on the default `issue:<issue_id>` namespace scope using the existing `tool_approval` plus `approval_required_tool:write_file` request shape.
+3. The active SupervisorRuntime approval-checkpoint family now admits three shipped bounded slices only: governed kernel `NEEDS_APPROVAL` on the default `session:<session_id>` namespace scope, plus governed turn-tool `write_file` and `create_issue` approval-required continuation on the default `issue:<issue_id>` namespace scope using the existing `tool_approval` plus `approval_required_tool:<tool_name>` request shape.
 4. Packet 1 admits `approve` and `deny` only on this surface.
 5. `notes` and `edited_proposal` may be sent as optional payload members, but they remain operator metadata and do not create an alternate resume or execution path.
-6. On the bounded turn-tool `write_file` slice, `approve` triggers one runtime-owned same-governed-run continuation on the already-selected `control_plane_target_ref`, while `deny` terminal-stops that same governed turn-tool run; operators do not call a separate resume API.
+6. On the bounded turn-tool `write_file` and `create_issue` slices, `approve` triggers one runtime-owned same-governed-run continuation on the already-selected `control_plane_target_ref`, while `deny` terminal-stops that same governed turn-tool run; operators do not call a separate resume API.
 7. Approval list and detail inspection fail closed if the Packet 1 row carries an unsupported legacy lifecycle status or if payload-versus-reservation/operator-action projection truth drifts.
 8. Canonical live proof for the shipped approval slice:
 ```bash
@@ -164,7 +159,11 @@ curl -X POST http://127.0.0.1:8082/v1/interactions/<session_id>/finalize -H "Con
 ```
 4. Admitted Packet 1 context-provider inputs on this boundary remain limited to `session_params`, `input_config`, `turn_params`, `workload_id`, `department`, `workspace`, and host-resolved extension-manifest `required_capabilities`.
 5. The requested `workspace` must remain under the configured workspace root or the turn request fails closed.
-6. Inspect the host-owned session state:
+6. The canonical interaction-session context snapshot now exposes:
+   - `context_version=packet1_session_context_v1`
+   - ordered provider lineage: host continuity, host-validated turn request, and host-resolved extension capability metadata when present
+   - the latest inspection-only session-context envelope for the admitted Packet 1 vocabulary
+7. Inspect the host-owned session state:
 ```bash
 curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>
 ```
@@ -174,60 +173,113 @@ curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>/st
 ```bash
 curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>/snapshot
 ```
-7. Inspect replay without claiming continuation authority:
+8. Inspect replay without claiming continuation authority:
 ```bash
 curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/sessions/<session_id>/replay
 ```
 ```bash
 curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/sessions/<session_id>/replay?issue_id=<issue_id>&turn_index=<turn_index>&role=<role>"
 ```
-8. Halt one session on the admitted cleanup-adjacent operator path:
+9. Operator interpretation:
+   - interaction-session timeline replay is inspection-only lineage for subordinate turns
+   - targeted replay with `issue_id` plus `turn_index` remains run-session-only and fails closed on interaction sessions
+10. Halt one session on the admitted cleanup-adjacent operator path:
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/sessions/<session_id>/halt -H "X-API-Key: <api_key>"
 ```
-9. Cancel one interaction session or one subordinate turn:
+11. Cancel one interaction session or one subordinate turn:
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/interactions/<session_id>/cancel -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{}"
 ```
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/interactions/<session_id>/cancel -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"turn_id\":\"<turn_id>\"}"
 ```
-10. Operator interpretation:
+12. Operator interpretation:
    - session detail, status, snapshot, and replay remain inspection-only surfaces
    - halt and cancel remain cleanup-adjacent operator commands only; they do not imply deletion or workspace cleanup
 
-## Companion Host API Examples
-1. Inspect Companion host status through the host API:
+## Generic Extension Runtime Host API Examples
+1. Inspect generic runtime status for the Companion extension:
 ```bash
-curl -H "X-API-Key: <companion_or_api_key>" http://127.0.0.1:8082/api/v1/companion/status
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/extensions/orket.companion/runtime/status
 ```
-2. Read one Companion session config and history:
+2. List available models and run one generic generation call:
 ```bash
-curl -H "X-API-Key: <companion_or_api_key>" "http://127.0.0.1:8082/api/v1/companion/config?session_id=<session_id>"
-```
-```bash
-curl -H "X-API-Key: <companion_or_api_key>" "http://127.0.0.1:8082/api/v1/companion/history?session_id=<session_id>&limit=20"
-```
-3. Update next-turn Companion config:
-```bash
-curl -X PATCH http://127.0.0.1:8082/api/v1/companion/config -H "Content-Type: application/json" -H "X-API-Key: <companion_or_api_key>" -d "{\"session_id\":\"<session_id>\",\"scope\":\"next_turn\",\"patch\":{\"mode\":{\"role_id\":\"general_assistant\"}}}"
-```
-4. List available models and send one chat turn:
-```bash
-curl -H "X-API-Key: <companion_or_api_key>" "http://127.0.0.1:8082/api/v1/companion/models?provider=ollama"
+curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/extensions/orket.companion/runtime/models?provider=ollama"
 ```
 ```bash
-curl -X POST http://127.0.0.1:8082/api/v1/companion/chat -H "Content-Type: application/json" -H "X-API-Key: <companion_or_api_key>" -d "{\"session_id\":\"<session_id>\",\"message\":\"hello\"}"
+curl -X POST http://127.0.0.1:8082/v1/extensions/orket.companion/runtime/llm/generate -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"system_prompt\":\"You are a helpful assistant.\",\"user_message\":\"hello\"}"
 ```
-5. Voice examples:
+3. Query, write, and clear generic extension memory:
 ```bash
-curl -H "X-API-Key: <companion_or_api_key>" http://127.0.0.1:8082/api/v1/companion/voice/state
-```
-```bash
-curl -H "X-API-Key: <companion_or_api_key>" http://127.0.0.1:8082/api/v1/companion/voice/voices
+curl -X POST http://127.0.0.1:8082/v1/extensions/orket.companion/runtime/memory/query -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"scope\":\"profile_memory\",\"query\":\"key:companion_setting.config_json\",\"limit\":1}"
 ```
 ```bash
-curl -X POST http://127.0.0.1:8082/api/v1/companion/voice/control -H "Content-Type: application/json" -H "X-API-Key: <companion_or_api_key>" -d "{\"command\":\"start\"}"
+curl -X POST http://127.0.0.1:8082/v1/extensions/orket.companion/runtime/memory/write -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"scope\":\"session_memory\",\"session_id\":\"<session_id>\",\"key\":\"turn.000001.user\",\"value\":\"hello\",\"metadata\":{\"kind\":\"chat_input\"}}"
+```
+```bash
+curl -X POST http://127.0.0.1:8082/v1/extensions/orket.companion/runtime/memory/clear -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"scope\":\"session_memory\",\"session_id\":\"<session_id>\"}"
+```
+4. Voice and speech examples on the generic host seam:
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/extensions/orket.companion/runtime/voice/state
+```
+```bash
+curl -X POST http://127.0.0.1:8082/v1/extensions/orket.companion/runtime/voice/control -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"command\":\"start\"}"
+```
+```bash
+curl -X POST http://127.0.0.1:8082/v1/extensions/orket.companion/runtime/voice/transcribe -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"audio_b64\":\"UklGRg==\",\"mime_type\":\"audio/wav\"}"
+```
+```bash
+curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/extensions/orket.companion/runtime/tts/voices
+```
+```bash
+curl -X POST http://127.0.0.1:8082/v1/extensions/orket.companion/runtime/tts/synthesize -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"text\":\"hello\",\"voice_id\":\"\"}"
+```
+
+## Companion BFF Examples
+1. Companion product routes live in the external gateway/BFF, not in Orket core.
+2. Inspect BFF status, config, and history:
+```bash
+curl http://127.0.0.1:3000/api/status
+```
+```bash
+curl "http://127.0.0.1:3000/api/config?session_id=<session_id>"
+```
+```bash
+curl "http://127.0.0.1:3000/api/history?session_id=<session_id>&limit=20"
+```
+3. Mutating Companion BFF routes require an `Origin` header that matches the gateway origin by default:
+```bash
+curl -X PATCH http://127.0.0.1:3000/api/config -H "Origin: http://127.0.0.1:3000" -H "Content-Type: application/json" -d "{\"session_id\":\"<session_id>\",\"scope\":\"next_turn\",\"patch\":{\"mode\":{\"role_id\":\"general_assistant\"}}}"
+```
+```bash
+curl -X POST http://127.0.0.1:3000/api/chat -H "Origin: http://127.0.0.1:3000" -H "Content-Type: application/json" -d "{\"session_id\":\"<session_id>\",\"message\":\"hello\"}"
+```
+4. BFF model, voice, cadence, and clear-memory examples:
+```bash
+curl "http://127.0.0.1:3000/api/models?provider=ollama"
+```
+```bash
+curl http://127.0.0.1:3000/api/voice/state
+```
+```bash
+curl http://127.0.0.1:3000/api/voice/voices
+```
+```bash
+curl -X POST http://127.0.0.1:3000/api/voice/control -H "Origin: http://127.0.0.1:3000" -H "Content-Type: application/json" -d "{\"command\":\"start\"}"
+```
+```bash
+curl -X POST http://127.0.0.1:3000/api/voice/transcribe -H "Origin: http://127.0.0.1:3000" -H "Content-Type: application/json" -d "{\"audio_b64\":\"UklGRg==\",\"mime_type\":\"audio/wav\"}"
+```
+```bash
+curl -X POST http://127.0.0.1:3000/api/voice/synthesize -H "Origin: http://127.0.0.1:3000" -H "Content-Type: application/json" -d "{\"text\":\"hello\"}"
+```
+```bash
+curl -X POST http://127.0.0.1:3000/api/voice/cadence/suggest -H "Origin: http://127.0.0.1:3000" -H "Content-Type: application/json" -d "{\"session_id\":\"<session_id>\",\"text\":\"hello there\"}"
+```
+```bash
+curl -X POST http://127.0.0.1:3000/api/session/clear-memory -H "Origin: http://127.0.0.1:3000" -H "Content-Type: application/json" -d "{\"session_id\":\"<session_id>\"}"
 ```
 
 ## Marshaller Inspection
@@ -504,7 +556,7 @@ python scripts/observability/emit_run_evidence_graph.py --run-id <run_id>
 Optional flags:
 1. Limit rendered views:
 ```bash
-python scripts/observability/emit_run_evidence_graph.py --run-id <run_id> --view full_lineage --view closure_path
+python scripts/observability/emit_run_evidence_graph.py --run-id <run_id> --view authority --view decision
 ```
 2. Override workspace root:
 ```bash
@@ -523,7 +575,15 @@ python scripts/observability/emit_run_evidence_graph.py --run-id <run_id> --sess
 python scripts/observability/emit_run_evidence_graph.py --run-id <run_id> --generation-timestamp <iso_utc_timestamp>
 ```
 
-Shipped view tokens:
+Admitted view tokens:
+1. `full_lineage`
+2. `failure_path`
+3. `authority`
+4. `decision`
+5. `resource_authority_path`
+6. `closure_path`
+
+Default emitted views when `--view` is omitted:
 1. `full_lineage`
 2. `failure_path`
 3. `resource_authority_path`
@@ -539,13 +599,14 @@ Operator interpretation:
    - `blocked`
 5. If Orket cannot truthfully locate the selected run's `runs/<session_id>/` root, the command fails closed with `E_RUN_SESSION_NOT_LOCATED`.
 
-Named graph families that are not separately shipped today:
+Filtered-view vocabulary over the same semantic core, not separate artifact families:
 1. `authority`
 2. `decision`
 3. `closure`
 4. `resource-authority`
 
-These remain Graphs checkpoint vocabulary over the same semantic core, not separate shipped artifact families or dedicated operator CLIs.
+`authority` and `decision` are now admitted additional `run_evidence_graph` view tokens selected through `--view`.
+`closure` and `resource-authority` remain descriptive filtered-view labels for the shipped `closure_path` and `resource_authority_path` surfaces, not separate dedicated operator CLIs.
 
 Deferred graph families:
 1. `workload-composition`
@@ -617,27 +678,26 @@ Workspace/log paths:
 python scripts/replay/report_failure_modes.py --log workspace/default/orket.log --out benchmarks/results/replay/failure_modes.json
 ```
 
-## Companion Key Rotation
+## Companion Host Credential Rotation
 1. Preconditions:
-   - Companion host and gateway are running and healthy.
+   - Orket host and Companion gateway are running and healthy.
    - This repo does not define a repo-level canonical Companion gateway startup command.
    - If you are using the external extension template gateway, its local launchers live under `docs/templates/external_extension/scripts/`.
-   - You can reach `GET /api/v1/companion/status` through the gateway.
-2. Stage new host keys first:
-   - Set `ORKET_COMPANION_API_KEY=<new_companion_key>` on host.
-   - Keep old `ORKET_API_KEY` active during cutover.
-   - If enforcing strict least-privilege, set `ORKET_COMPANION_KEY_STRICT=true` only after gateway key update succeeds.
-3. Rotate gateway credential second:
-   - Update `COMPANION_API_KEY=<new_companion_key>` in extension gateway environment.
-   - Restart gateway and verify `GET /api/status` returns `200`.
+   - You can reach `GET /api/status` through the gateway.
+   - You can reach `GET /v1/extensions/orket.companion/runtime/status` on the host.
+2. Orket currently admits one host API key, not a Companion-scoped secondary key.
+3. Rotate host and gateway credentials together:
+   - Set `ORKET_API_KEY=<new_host_key>` on host.
+   - Set `COMPANION_API_KEY=<new_host_key>` in the Companion gateway environment, or set `ORKET_API_KEY=<new_host_key>` in that process and let the gateway reuse it.
+   - Restart host and gateway.
 4. Smoke checks after cutover:
    - `GET /api/status` through gateway is `200`.
-   - `POST /api/chat` through gateway returns `200`.
-   - `GET /v1/version` with Companion key returns `403` (proves Companion-key scope is preserved).
+   - `POST /api/chat` through gateway with `Origin: http://127.0.0.1:3000` returns `200`.
+   - `GET /v1/version` with the previous host key returns `403`.
 5. Rollback:
-   - Revert gateway `COMPANION_API_KEY` to previous value.
-   - If strict mode was enabled and rollback requires core key compatibility, set `ORKET_COMPANION_KEY_STRICT=false`.
-   - Re-run smoke checks and keep prior keys active until stability is confirmed.
+   - Revert `ORKET_API_KEY` on host to the previous value.
+   - Revert `COMPANION_API_KEY` or gateway-local `ORKET_API_KEY` to the previous value.
+   - Restart host and gateway, then re-run smoke checks.
 
 ## Related Docs
 1. `docs/SECURITY.md`

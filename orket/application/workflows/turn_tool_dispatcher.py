@@ -42,8 +42,8 @@ from .turn_tool_dispatcher_support import (
     runtime_limit_violations,
     tool_policy_violation,
 )
-from ..services.write_file_tool_approval_continuation_service import (
-    supports_write_file_approval_continuation,
+from ..services.governed_turn_tool_approval_continuation_service import (
+    supports_governed_turn_tool_approval_continuation,
 )
 
 
@@ -311,19 +311,19 @@ class ToolDispatcher:
                         continue
 
                 if tool_name in approval_required_tools:
-                    admitted_write_file_slice = supports_write_file_approval_continuation(
+                    admitted_continuation_slice = supports_governed_turn_tool_approval_continuation(
                         tool_name=tool_name,
                         context=context,
                         issue_id=turn.issue_id,
                     )
                     granted_request_id = None
-                    if admitted_write_file_slice and callable(approval_resolver):
+                    if admitted_continuation_slice and callable(approval_resolver):
                         maybe_request = approval_resolver(tool_name=tool_name, tool_args=dict(tool_call.args or {}))
                         if asyncio.iscoroutine(maybe_request):
                             granted_request_id = await maybe_request
                         else:
                             granted_request_id = maybe_request
-                    if admitted_write_file_slice and granted_request_id:
+                    if admitted_continuation_slice and granted_request_id:
                         if not protocol_replay_mode:
                             log_event(
                                 "tool_approval_granted",
@@ -361,7 +361,7 @@ class ToolDispatcher:
                                 },
                                 self.workspace,
                             )
-                        if admitted_write_file_slice:
+                        if admitted_continuation_slice:
                             raise self.tool_approval_pending_error_factory(message)
                         violations.append(message)
                         continue

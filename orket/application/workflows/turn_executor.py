@@ -89,64 +89,6 @@ class TurnExecutor:
             control_plane_service=control_plane_service,
         )
 
-    def __getattr__(self, name: str) -> Any:
-        delegated = {
-            "_non_json_residue": self.response_parser.non_json_residue,
-            "_extract_guard_review_payload": self.response_parser.extract_guard_review_payload,
-            "_resolve_skill_tool_binding": self.tool_dispatcher.resolve_skill_tool_binding,
-            "_missing_required_permissions": self.tool_dispatcher.missing_required_permissions,
-            "_permission_values": self.tool_dispatcher.permission_values,
-            "_runtime_limit_violations": self.tool_dispatcher.runtime_limit_violations,
-            "_as_positive_float": self.tool_dispatcher.as_positive_float,
-            "_collect_contract_violations": self.contract_validator.collect_contract_violations,
-            "_progress_contract_diagnostics": self.contract_validator.progress_contract_diagnostics,
-            "_meets_progress_contract": self.contract_validator.meets_progress_contract,
-            "_meets_write_path_contract": self.contract_validator.meets_write_path_contract,
-            "_meets_guard_rejection_payload_contract": self.contract_validator.meets_guard_rejection_payload_contract,
-            "_meets_read_path_contract": self.contract_validator.meets_read_path_contract,
-            "_meets_architecture_decision_contract": self.contract_validator.meets_architecture_decision_contract,
-            "_parse_architecture_decision_payload": self.contract_validator.parse_architecture_decision_payload,
-            "_hallucination_scope_diagnostics": self.contract_validator.hallucination_scope_diagnostics,
-            "_security_scope_diagnostics": self.contract_validator.security_scope_diagnostics,
-            "_consistency_scope_diagnostics": self.contract_validator.consistency_scope_diagnostics,
-            "_build_corrective_instruction": self.corrective_prompt_builder.build_corrective_instruction,
-            "_rule_specific_fix_hints": self.corrective_prompt_builder.rule_specific_fix_hints,
-            "_hint_for_rule_id": self.corrective_prompt_builder.hint_for_rule_id,
-            "_deterministic_failure_message": self.corrective_prompt_builder.deterministic_failure_message,
-            "_required_read_paths": lambda context: PathResolver.required_read_paths(context, self.workspace),
-            "_missing_required_read_paths": lambda context: PathResolver.missing_required_read_paths(
-                context, self.workspace
-            ),
-            "_partition_required_read_paths": lambda context: PathResolver.partition_required_read_paths(
-                context, self.workspace
-            ),
-            "_required_write_paths": PathResolver.required_write_paths,
-            "_observed_read_paths": PathResolver.observed_read_paths,
-            "_observed_write_paths": PathResolver.observed_write_paths,
-            "_message_hash": self.artifact_writer.message_hash,
-            "_memory_trace_enabled": self.artifact_writer.memory_trace_enabled,
-            "_hash_payload": self.artifact_writer.hash_payload,
-            "_append_memory_event": self.artifact_writer.append_memory_event,
-            "_emit_memory_traces": self.artifact_writer.emit_memory_traces,
-            "_tool_replay_key": self.artifact_writer.tool_replay_key,
-            "_tool_result_path": self.artifact_writer.tool_result_path,
-            "_load_replay_tool_result": self.artifact_writer.load_replay_tool_result,
-            "_persist_tool_result": self.artifact_writer.persist_tool_result,
-            "_load_operation_result": self.artifact_writer.load_operation_result,
-            "_persist_operation_result": self.artifact_writer.persist_operation_result,
-            "_append_protocol_receipt": self.artifact_writer.append_protocol_receipt,
-            "_state_delta_from_tool_calls": lambda context, turn: turn_executor_ops.state_delta_from_tool_calls(
-                context, turn
-            ),
-            "_synthesize_required_status_tool_call": lambda turn, context: (
-                turn_executor_ops.synthesize_required_status_tool_call(turn, context)
-            ),
-        }
-        target = delegated.get(name)
-        if target is not None:
-            return target
-        raise AttributeError(name)
-
     async def execute_turn(
         self,
         issue: IssueConfig,

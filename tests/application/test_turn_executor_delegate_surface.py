@@ -16,19 +16,32 @@ def _executor(tmp_path: Path) -> TurnExecutor:
 
 
 def test_turn_executor_direct_helpers_are_not_redelegated(tmp_path):
-    """Layer: unit. Verifies explicit helper methods are not also exposed through the `__getattr__` fallback."""
+    """Layer: unit. Verifies the coordinator keeps real helper methods without a magic delegate surface."""
+    executor = _executor(tmp_path)
+
+    assert callable(executor._prepare_messages)
+    assert callable(executor._parse_response)
+    assert callable(executor._execute_tools)
+
+
+def test_turn_executor_legacy_delegate_names_are_not_attributes(tmp_path):
+    """Layer: unit. Verifies former facade-only helper names are no longer hidden on the executor itself."""
     executor = _executor(tmp_path)
 
     with pytest.raises(AttributeError):
-        executor.__getattr__("_prepare_messages")
+        getattr(executor, "_non_json_residue")
     with pytest.raises(AttributeError):
-        executor.__getattr__("_parse_response")
+        getattr(executor, "_collect_contract_violations")
     with pytest.raises(AttributeError):
-        executor.__getattr__("_execute_tools")
+        getattr(executor, "_append_memory_event")
 
 
-def test_turn_executor_still_delegates_non_explicit_helpers(tmp_path):
-    """Layer: unit. Verifies `__getattr__` still exposes the non-explicit delegated helper surface."""
+def test_turn_executor_exposes_collaborators_explicitly(tmp_path):
+    """Layer: unit. Verifies the seam is inspectable through explicit collaborators."""
     executor = _executor(tmp_path)
 
-    assert callable(executor.__getattr__("_non_json_residue"))
+    assert not hasattr(TurnExecutor, "__getattr__")
+    assert callable(executor.response_parser.non_json_residue)
+    assert callable(executor.contract_validator.collect_contract_violations)
+    assert callable(executor.corrective_prompt_builder.build_corrective_instruction)
+    assert callable(executor.artifact_writer.append_memory_event)

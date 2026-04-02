@@ -69,9 +69,11 @@
 - Install: `python -m pip install --upgrade pip && python -m pip install -e ".[dev]"`
 - Default runtime: `python main.py`
 - Named card runtime: `python main.py --card <card_id>`
-- Legacy named rock alias: `python main.py --rock <rock_name>`
 - API runtime: `python server.py`
 - Test command: `python -m pytest -q`
+
+Compatibility-only CLI alias:
+`python main.py --rock <rock_name>` remains accepted for existing callers, but it is hidden from normal help and routes to the canonical named card runtime.
 
 ## Release and Versioning
 

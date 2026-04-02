@@ -1,6 +1,6 @@
 # Companion UI MVP Contract
 
-Last updated: 2026-03-09
+Last updated: 2026-04-01
 Status: Active
 Owner: Orket Core
 
@@ -44,20 +44,26 @@ Locked UI stack:
 
 ## 3. Runtime Boundary Contract
 
-Companion UI is thin. Presentation and UX state live in frontend code. Runtime authority remains host-owned behind the Host API seam.
+Companion UI remains thin at the browser layer. Presentation and UX state live in frontend code. Product routes and product orchestration live in the Companion gateway/BFF, while generic capability execution remains host-owned behind the Orket Host API.
 
 Companion UI must not:
 1. call provider runtime internals directly
-2. duplicate host orchestration, memory, or voice lifecycle logic
-3. create a hidden second backend authority in frontend code
+2. call the generic host runtime routes directly from frontend code
+3. duplicate BFF or host orchestration, memory, or voice lifecycle logic
+4. create a hidden second backend authority in frontend code
+
+Companion BFF-owned authority:
+1. outward Companion product routes under `/api/*`
+2. config validation and precedence rules
+3. product history shaping and chat orchestration
+4. adaptive cadence logic and product-facing degradation wording
 
 Orket/host-owned authority stays behind Host API:
 1. model execution and provider dispatch
-2. config validation and precedence rules
-3. memory capability behavior
-4. voice turn lifecycle and silence-delay enforcement
-5. runtime/import isolation and error behavior
-6. public Host API semantics
+2. generic memory capability behavior
+3. generic voice turn lifecycle and STT/TTS capability behavior
+4. runtime/import isolation and error behavior
+5. generic Host API semantics under `/v1/extensions/{extension_id}/runtime/*`
 
 Companion UI-owned scope:
 1. presentation and interaction flow
@@ -92,7 +98,7 @@ Avatar and chat areas must be swappable.
 
 MVP UI must deliver:
 1. real local Companion web experience
-2. chat flow through Host API
+2. chat flow through the Companion BFF over the generic host runtime seam
 3. role/style controls
 4. memory controls (`clear session`, profile settings edit, memory enable/disable)
 5. explicit manual silence-delay control

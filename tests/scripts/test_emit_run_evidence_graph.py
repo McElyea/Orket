@@ -80,3 +80,34 @@ def test_emit_run_evidence_graph_returns_blocked_when_selected_run_has_no_primar
     assert payload["nodes"] == []
     assert payload["edges"] == []
     assert "run_record_missing" in html_path.read_text(encoding="utf-8")
+
+
+# Layer: integration
+def test_emit_run_evidence_graph_accepts_authority_and_decision_views(tmp_path: Path) -> None:
+    _, _, db_path, session_id, run_id = asyncio.run(seed_complete_primary_lineage_sqlite(tmp_path=tmp_path))
+
+    exit_code = main(
+        [
+            "--run-id",
+            run_id,
+            "--workspace-root",
+            str(tmp_path),
+            "--control-plane-db",
+            str(db_path),
+            "--generation-timestamp",
+            GENERATED_AT,
+            "--view",
+            "decision",
+            "--view",
+            "authority",
+        ]
+    )
+
+    assert exit_code == 0
+    json_path = tmp_path / "runs" / session_id / "run_evidence_graph.json"
+    html_path = tmp_path / "runs" / session_id / "run_evidence_graph.html"
+    payload = json.loads(json_path.read_text(encoding="utf-8"))
+    assert payload["selected_views"] == ["authority", "decision"]
+    html = html_path.read_text(encoding="utf-8")
+    assert "Authority" in html
+    assert "Decision" in html

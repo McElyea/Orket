@@ -6,7 +6,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. extension publish surface hardening -- Active bounded lane to harden one canonical external-extension publish story on top of the fixed Packet 1 package surface, including one admitted publish artifact family, one version-and-release authority path, one maintainer publish path, and one operator intake path back to strict host validation, without reopening package validation, runtime authority, marketplace or catalog product work, or new manifest families. Authority: `docs/projects/Extensions/EXTENSION_PUBLISH_SURFACE_HARDENING_IMPLEMENTATION_PLAN.md`.
+1. maintenance-only posture -- No active non-recurring lane is open.
 
 ## Maintenance (Non-Priority)
 
@@ -33,7 +33,6 @@ Every non-archive project under `docs/projects/` must appear here.
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
 | ControlPlane | paused-checkpoint | paused | `docs/projects/ControlPlane/` | Orket Core | Control-plane packet requirements remain active scoped requirements authority; `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md` is the paused partial-convergence checkpoint and explicit-reopen authority; reopen only for authority drift bugs, proof failures, same-change doc sync required by touched runtime slices, or an explicitly reopened convergence packet or roadmap lane; prior packet-v2 implementation lane remains archived at `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md` with closeout in `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`. |
-| Extensions | active | P1-active | `docs/projects/Extensions/` | Orket Core | `docs/projects/Extensions/EXTENSION_PUBLISH_SURFACE_HARDENING_IMPLEMENTATION_PLAN.md` is the active bounded publish-surface lane. The Packet 1 package surface remains fixed by `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_V1.md`, and the completed package lane remains archived at `docs/projects/archive/Extensions/EX04012026-PACKAGE-SURFACE-HARDENING-CLOSEOUT/`. |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | techdebt | maintenance only | P2-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance continues through `Recurring-Maintenance-Checklist.md` and `README.md`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane. |

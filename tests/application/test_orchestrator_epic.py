@@ -2206,6 +2206,71 @@ async def test_build_turn_context_pending_gate_callback_creates_tool_approval_re
     assert reservation.holder_ref == "turn-tool-run:run-1:I1:coder:0001"
 
 
+@pytest.mark.asyncio
+async def test_build_turn_context_pending_gate_callback_creates_create_issue_tool_approval_request(orchestrator):
+    """Layer: unit."""
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(id="I1", seat="coder", summary="Code Work")
+
+    class _PendingRepo:
+        def __init__(self):
+            self.calls = []
+
+        async def create_request(self, **kwargs):
+            self.calls.append(kwargs)
+            return "REQ-TOOL-43"
+
+    class _LoopPolicy:
+        def required_action_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+            return ["create_issue", "update_issue_status"]
+
+        def required_statuses_for_seat(self, seat_name, issue=None, turn_status=None):
+            return ["code_review"]
+
+        def gate_mode_for_seat(self, seat_name, issue=None, turn_status=None):
+            return "auto"
+
+        def approval_required_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+            return ["create_issue"]
+
+    orch.pending_gates = _PendingRepo()
+    orch.loop_policy_node = _LoopPolicy()
+    context = orch._build_turn_context(
+        run_id="run-1",
+        issue=issue,
+        seat_name="coder",
+        roles_to_load=["coder"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+
+    request_id = await context["create_pending_gate_request"](
+        tool_name="create_issue",
+        tool_args={"seat": "reviewer", "summary": "Follow-up task"},
+    )
+
+    assert request_id == "REQ-TOOL-43"
+    assert len(orch.pending_gates.calls) == 1
+    req = orch.pending_gates.calls[0]
+    assert req["session_id"] == "run-1"
+    assert req["issue_id"] == "I1"
+    assert req["seat_name"] == "coder"
+    assert req["gate_mode"] == "approval_required"
+    assert req["request_type"] == "tool_approval"
+    assert req["reason"] == "approval_required_tool:create_issue"
+    assert req["payload"]["tool"] == "create_issue"
+    assert req["payload"]["role"] == "coder"
+    assert req["payload"]["turn_index"] == 1
+    assert req["payload"]["control_plane_target_ref"] == "turn-tool-run:run-1:I1:coder:0001"
+    reservation = await orch.control_plane_repository.get_latest_reservation_record(
+        reservation_id=f"approval-reservation:{request_id}"
+    )
+    assert reservation is not None
+    assert reservation.status is ReservationStatus.ACTIVE
+    assert reservation.holder_ref == "turn-tool-run:run-1:I1:coder:0001"
+
+
 def test_validate_guard_rejection_payload_default_logic(orchestrator):
     orch, _cards, _loader = orchestrator
 

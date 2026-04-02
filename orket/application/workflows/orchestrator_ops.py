@@ -2156,7 +2156,7 @@ def _build_turn_context(
             target_ref = str(payload.get("control_plane_target_ref") or "").strip()
             if target_ref != expected_target_ref:
                 raise RuntimeError(
-                    "approved write_file tool approval drifted from the admitted governed turn target"
+                    "approved governed turn-tool approval drifted from the admitted governed turn target"
                 )
             return dict(row)
         return None

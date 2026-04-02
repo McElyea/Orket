@@ -49,6 +49,8 @@
         "enum": [
           "full_lineage",
           "failure_path",
+          "authority",
+          "decision",
           "resource_authority_path",
           "closure_path"
         ]

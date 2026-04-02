@@ -1126,6 +1126,9 @@ async def get_session_detail(session_id: str):
     invocation = api_runtime_node.resolve_session_detail_invocation(session_id)
     session = await _invoke_async_method(engine.sessions, invocation, "session")
     if not session:
+        interaction_session = await _get_interaction_manager().get_session_detail(session_id)
+        if interaction_session is not None:
+            return interaction_session
         raise HTTPException(**api_runtime_node.session_detail_not_found_error(session_id))
     return session
 
@@ -1134,6 +1137,9 @@ async def get_session_detail(session_id: str):
 async def get_session_status(session_id: str):
     session = await engine.sessions.get_session(session_id)
     if not session:
+        interaction_status = await _get_interaction_manager().get_session_status(session_id)
+        if interaction_status is not None:
+            return interaction_status
         raise HTTPException(**api_runtime_node.session_detail_not_found_error(session_id))
 
     run_record = await engine.run_ledger.get_run(session_id)
@@ -1193,13 +1199,30 @@ async def replay_session_turn(
     turn_index: Optional[int] = Query(default=None, ge=1),
     role: Optional[str] = None,
 ):
+    run_record = await engine.run_ledger.get_run(session_id)
+    session = await engine.sessions.get_session(session_id)
     if not issue_id and turn_index is None:
+        if run_record is None and session is None:
+            interaction_timeline = await _get_interaction_manager().get_session_replay_timeline(
+                session_id,
+                role=role,
+            )
+            if interaction_timeline is not None:
+                return interaction_timeline
+            raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
         return await list_run_replay_turns(session_id=session_id, role=role)
     if bool(issue_id) != bool(turn_index):
         raise HTTPException(
             status_code=422,
             detail="Both 'issue_id' and 'turn_index' are required for targeted replay.",
         )
+    if run_record is None and session is None:
+        interaction_session = await _get_interaction_manager().get_session_detail(session_id)
+        if interaction_session is not None:
+            raise HTTPException(
+                status_code=422,
+                detail="Targeted replay is not supported for interaction sessions.",
+            )
     try:
         replay = engine.replay_turn(
             session_id=session_id,
@@ -1218,6 +1241,9 @@ async def get_session_snapshot(session_id: str):
     invocation = api_runtime_node.resolve_session_snapshot_invocation(session_id)
     snapshot = await _invoke_async_method(engine.snapshots, invocation, "snapshot")
     if not snapshot:
+        interaction_snapshot = await _get_interaction_manager().get_session_snapshot(session_id)
+        if interaction_snapshot is not None:
+            return interaction_snapshot
         raise HTTPException(**api_runtime_node.session_snapshot_not_found_error(session_id))
     return snapshot
 

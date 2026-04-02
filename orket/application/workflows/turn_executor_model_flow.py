@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import copy
 import json
-from typing import Any, Awaitable, Callable
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneError
 from orket.application.workflows.turn_executor_model_artifacts import (
@@ -12,10 +12,16 @@ from orket.application.workflows.turn_executor_model_artifacts import (
 )
 from orket.application.workflows.prompt_budget_guard import maybe_record_prompt_budget
 from orket.application.workflows.turn_executor_resume_replay import load_pre_effect_resume_turn_if_needed
-from orket.application.workflows.turn_executor_runtime import invoke_model_complete as _invoke_model_complete
+from orket.application.workflows.turn_executor_runtime import (
+    invoke_model_complete as _invoke_model_complete,
+    synthesize_required_status_tool_call,
+)
 from orket.domain.execution import ExecutionTurn
 from orket.logging import log_event
 from orket.schema import IssueConfig, RoleConfig
+
+if TYPE_CHECKING:
+    from .turn_executor import TurnExecutor
 
 
 FailureEmitter = Callable[[str, str, ExecutionTurn | None], Awaitable[None]]
@@ -24,7 +30,7 @@ FailedResultFactory = Callable[[str, bool], Any]
 
 async def prepare_turn_for_execution(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     issue: IssueConfig,
     role: RoleConfig,
     model_client: Any,
@@ -66,7 +72,7 @@ async def prepare_turn_for_execution(
 
 async def _generate_turn_via_model(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     issue: IssueConfig,
     role: RoleConfig,
     model_client: Any,
@@ -78,7 +84,12 @@ async def _generate_turn_via_model(
     emit_failure: FailureEmitter,
     turn_result_failed: FailedResultFactory,
 ) -> tuple[ExecutionTurn | None, str, Any | None]:
-    messages = await executor._prepare_messages(issue, role, context, system_prompt)
+    messages = await executor.message_builder.prepare_messages(
+        issue=issue,
+        role=role,
+        context=context,
+        system_prompt=system_prompt,
+    )
     messages, middleware_outcome = executor.middleware.apply_before_prompt(
         messages,
         issue=issue,
@@ -90,7 +101,7 @@ async def _generate_turn_via_model(
         await emit_failure(reason, "before_prompt_short_circuit", None)
         return None, "", turn_result_failed(reason, False)
 
-    executor._append_memory_event(
+    executor.artifact_writer.append_memory_event(
         context,
         role_name=role.name,
         interceptor="before_prompt",
@@ -127,7 +138,7 @@ async def _generate_turn_via_model(
     if early_result is not None or turn is None:
         return None, "", early_result
 
-    contract_violations = executor._collect_contract_violations(turn, role, context)
+    contract_violations = executor.contract_validator.collect_contract_violations(turn, role, context)
     if not contract_violations:
         return turn, prompt_hash, None
 
@@ -151,7 +162,7 @@ async def _generate_turn_via_model(
 
 async def _prepare_prompt_and_write_artifacts(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     issue: IssueConfig,
     role: RoleConfig,
     model_client: Any,
@@ -163,7 +174,7 @@ async def _prepare_prompt_and_write_artifacts(
     emit_failure: FailureEmitter,
     turn_result_failed: FailedResultFactory,
 ) -> tuple[str, Any | None]:
-    prompt_hash = executor._message_hash(messages)
+    prompt_hash = executor.artifact_writer.message_hash(messages)
     prompt_budget_result = await maybe_record_prompt_budget(
         workspace=executor.workspace,
         session_id=session_id,
@@ -206,29 +217,29 @@ async def _prepare_prompt_and_write_artifacts(
         prompt_budget_result=prompt_budget_result,
     )
     await asyncio.to_thread(
-        executor._write_turn_artifact,
-        session_id,
-        issue.id,
-        role.name,
-        turn_index,
-        "messages.json",
-        json.dumps(messages, indent=2, ensure_ascii=False),
+        executor.artifact_writer.write_turn_artifact,
+        session_id=session_id,
+        issue_id=issue.id,
+        role_name=role.name,
+        turn_index=turn_index,
+        filename="messages.json",
+        content=json.dumps(messages, indent=2, ensure_ascii=False),
     )
     await asyncio.to_thread(
-        executor._write_turn_artifact,
-        session_id,
-        issue.id,
-        role.name,
-        turn_index,
-        "prompt_layers.json",
-        json.dumps(context.get("prompt_layers", {}), indent=2, ensure_ascii=False, default=str),
+        executor.artifact_writer.write_turn_artifact,
+        session_id=session_id,
+        issue_id=issue.id,
+        role_name=role.name,
+        turn_index=turn_index,
+        filename="prompt_layers.json",
+        content=json.dumps(context.get("prompt_layers", {}), indent=2, ensure_ascii=False, default=str),
     )
     return prompt_hash, None
 
 
 async def _invoke_and_parse_turn(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     issue: IssueConfig,
     role: RoleConfig,
     model_client: Any,
@@ -251,7 +262,7 @@ async def _invoke_and_parse_turn(
         await emit_failure(reason, "after_model_short_circuit", None)
         return None, turn_result_failed(reason, False)
 
-    executor._append_memory_event(
+    executor.artifact_writer.append_memory_event(
         context,
         role_name=role.name,
         interceptor="after_model",
@@ -265,14 +276,19 @@ async def _invoke_and_parse_turn(
         turn_index=turn_index,
         response=response,
     )
-    turn = executor._parse_response(response=response, issue_id=issue.id, role_name=role.name, context=context)
-    executor._synthesize_required_status_tool_call(turn, context)
+    turn = executor.response_parser.parse_response(
+        response=response,
+        issue_id=issue.id,
+        role_name=role.name,
+        context=context,
+    )
+    synthesize_required_status_tool_call(turn, context)
     return turn, None
 
 
 async def _retry_after_contract_violations(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     issue: IssueConfig,
     role: RoleConfig,
     model_client: Any,
@@ -287,8 +303,8 @@ async def _retry_after_contract_violations(
     emit_failure: FailureEmitter,
     turn_result_failed: FailedResultFactory,
 ) -> tuple[ExecutionTurn | None, str, Any | None]:
-    corrective_prompt = executor._build_corrective_instruction(contract_violations, context)
-    rule_fix_hints = executor._rule_specific_fix_hints(contract_violations)
+    corrective_prompt = executor.corrective_prompt_builder.build_corrective_instruction(contract_violations, context)
+    rule_fix_hints = executor.corrective_prompt_builder.rule_specific_fix_hints(contract_violations)
     retry_messages = copy.deepcopy(messages)
     retry_messages.append({"role": "user", "content": corrective_prompt})
 
@@ -324,7 +340,7 @@ async def _retry_after_contract_violations(
     if early_result is not None or retry_turn is None:
         return None, "", early_result
 
-    remaining_violations = executor._collect_contract_violations(retry_turn, role, context)
+    remaining_violations = executor.contract_validator.collect_contract_violations(retry_turn, role, context)
     if not remaining_violations:
         return retry_turn, prompt_hash, None
 
@@ -345,7 +361,10 @@ async def _retry_after_contract_violations(
         executor.workspace,
     )
     await emit_failure(primary_reason, "contract_violation", retry_turn)
-    return None, "", turn_result_failed(executor._deterministic_failure_message(primary_reason), False)
+    return None, "", turn_result_failed(
+        executor.corrective_prompt_builder.deterministic_failure_message(primary_reason),
+        False,
+    )
 
 
 def _contract_reasons(contract_violations: list[dict[str, Any]]) -> list[str]:

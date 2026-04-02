@@ -12,6 +12,14 @@ _GRAPH_RESULTS = {"complete", "degraded", "blocked"}
 RUN_EVIDENCE_GRAPH_VIEW_ORDER = (
     "full_lineage",
     "failure_path",
+    "authority",
+    "decision",
+    "resource_authority_path",
+    "closure_path",
+)
+RUN_EVIDENCE_GRAPH_DEFAULT_VIEWS = (
+    "full_lineage",
+    "failure_path",
     "resource_authority_path",
     "closure_path",
 )

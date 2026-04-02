@@ -173,7 +173,7 @@ class OrchestrationEngine:
     async def run_rock(
         self, rock_name: str, build_id: str = None, session_id: str = None, driver_steered: bool = False
     ) -> Dict[str, Any]:
-        """Compatibility wrapper over the canonical run_card surface."""
+        """Legacy compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
             rock_name, build_id=build_id, session_id=session_id, driver_steered=driver_steered
         )

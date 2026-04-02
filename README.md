@@ -8,7 +8,6 @@ This README is intentionally narrow. It describes the repo entrypoints and curre
 
 - Default runtime entrypoint: `python main.py`
 - Named card runtime entrypoint: `python main.py --card <card_id>`
-- Legacy named rock alias: `python main.py --rock <rock_name>`
 - API runtime entrypoint: `python server.py`
 - Canonical test command: `python -m pytest -q`
 - Active docs index: [docs/README.md](docs/README.md)
@@ -18,6 +17,7 @@ This README is intentionally narrow. It describes the repo entrypoints and curre
 ## What Exists Today
 
 - A runtime and API for orchestration, turns, cards, and workflow state.
+- Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the named card runtime.
 - Governed turn-tool execution with fail-closed namespace enforcement on the governed path.
 - Control-plane persistence for selected live lanes, including sandbox orchestration, governed turn-tool execution, governed kernel actions, approval-gated reservation and operator flows, coordinator reservation and lease flows, and the Gitea state worker path.
 - Deterministic and observability-oriented runtime artifacts under the normal workspace and durable `.orket/` paths.

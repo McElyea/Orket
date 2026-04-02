@@ -11,7 +11,7 @@ from orket.extensions import ExtensionManager
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Run an Orket Card. The legacy --rock alias is preserved for compatibility."
+        description="Run an Orket Card. Use --card for the canonical named runtime surface."
     )
     parser.add_argument("command", nargs="?", help="Optional command group (e.g. extensions, run).")
     parser.add_argument("subcommand", nargs="?", help="Optional subcommand (e.g. list, install, <workload_id>).")
@@ -20,12 +20,8 @@ def parse_args():
     parser.add_argument("--ref", type=str, default=None, help="Optional git ref for extension install.")
     parser.add_argument("--epic", type=str, default=None, help="Name of the epic to run.")
     parser.add_argument("--card", type=str, default=None, help="ID or summary of a specific Card to run.")
-    parser.add_argument(
-        "--rock",
-        type=str,
-        default=None,
-        help="Legacy compatibility alias for a named rock; routes through the canonical card surface.",
-    )
+    # Preserve the legacy alias without advertising it as a canonical operator path.
+    parser.add_argument("--rock", type=str, default=None, help=argparse.SUPPRESS)
     parser.add_argument("--department", type=str, default="core", help="The department namespace.")
     parser.add_argument("--workspace", type=str, default="workspace/default", help="Workspace directory.")
     parser.add_argument("--model", type=str, default=None, help="Model override.")
@@ -490,9 +486,9 @@ async def run_cli():
         await asyncio.to_thread(print_orket_manifest, args.department)
 
         if args.rock:
-            print(f"Running Orket Card via legacy --rock alias: {args.rock}")
-            await engine.run_rock(args.rock, build_id=args.build_id, driver_steered=args.driver_steered)
-            print(f"\n=== Card {args.rock} Complete (legacy --rock alias) ===")
+            print(f"Running Orket Card via legacy compatibility alias --rock: {args.rock}")
+            await engine.run_card(args.rock, build_id=args.build_id, driver_steered=args.driver_steered)
+            print(f"\n=== Card {args.rock} Complete (legacy compatibility alias --rock) ===")
             return
 
         if args.card:

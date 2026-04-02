@@ -17,14 +17,14 @@ def test_degradation_first_ui_standard_snapshot_contains_expected_check_ids() ->
         "runtime_status_vocabulary_includes_degraded",
         "ui_state_registry_includes_degraded_state",
         "structured_warning_policy_declares_runtime_degraded",
-        "companion_models_unavailable_returns_truthful_degraded_failure",
+        "extension_runtime_models_unavailable_returns_truthful_degraded_failure",
     }
 
 
 # Layer: contract
 def test_validate_degradation_first_ui_standard_accepts_current_snapshot() -> None:
     check_ids = validate_degradation_first_ui_standard()
-    assert "companion_models_unavailable_returns_truthful_degraded_failure" in check_ids
+    assert "extension_runtime_models_unavailable_returns_truthful_degraded_failure" in check_ids
 
 
 # Layer: contract

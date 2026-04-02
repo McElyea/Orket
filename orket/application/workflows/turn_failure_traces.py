@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .turn_executor import TurnExecutor
 
 
 async def emit_turn_failure_traces(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     context: dict[str, Any],
     role_name: str,
     session_id: str,
@@ -18,14 +21,14 @@ async def emit_turn_failure_traces(
     error: str,
     failure_type: str,
 ) -> None:
-    executor._append_memory_event(
+    executor.artifact_writer.append_memory_event(
         context,
         role_name=role_name,
         interceptor="on_turn_failure",
         decision_type=str(failure_type).strip() or "turn_failed",
     )
     await asyncio.to_thread(
-        executor._emit_memory_traces,
+        executor.artifact_writer.emit_memory_traces,
         session_id=session_id,
         issue_id=issue_id,
         role_name=role_name,

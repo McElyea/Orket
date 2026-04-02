@@ -47,6 +47,7 @@ Governance proof:
 
 1. [docs/projects/archive/techdebt/DD03142026/DD03142026-deterministic-drift-requirements.md](docs/projects/archive/techdebt/DD03142026/DD03142026-deterministic-drift-requirements.md)
 2. [docs/projects/archive/techdebt/DD03142026/DD03142026-deterministic-drift-remediation-plan.md](docs/projects/archive/techdebt/DD03142026/DD03142026-deterministic-drift-remediation-plan.md)
+3. [docs/projects/archive/techdebt/DD03142026/RUNTIME-STABILITY-LIVE-COMPARE-HARDENING-PLAN.md](docs/projects/archive/techdebt/DD03142026/RUNTIME-STABILITY-LIVE-COMPARE-HARDENING-PLAN.md)
 
 ## Residual Risk
 

@@ -19,14 +19,12 @@ from orket.application.services.turn_tool_control_plane_resource_lifecycle impor
     reservation_id_for_run as turn_tool_reservation_id_for_run,
 )
 from orket.core.domain import RunState
-from orket.runtime.run_evidence_graph import build_blocked_run_evidence_graph_payload
+from orket.runtime.run_evidence_graph import (
+    RUN_EVIDENCE_GRAPH_DEFAULT_VIEWS,
+    build_blocked_run_evidence_graph_payload,
+)
 
-DEFAULT_VIEWS = [
-    "full_lineage",
-    "failure_path",
-    "resource_authority_path",
-    "closure_path",
-]
+DEFAULT_VIEWS = list(RUN_EVIDENCE_GRAPH_DEFAULT_VIEWS)
 TERMINAL_RUN_STATES = {
     RunState.COMPLETED,
     RunState.FAILED_TERMINAL,

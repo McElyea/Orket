@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
@@ -23,6 +23,10 @@ from orket.core.domain import (
     CheckpointResumabilityClass,
 )
 from orket.domain.execution import ExecutionTurn
+from .turn_executor_runtime import state_delta_from_tool_calls
+
+if TYPE_CHECKING:
+    from .turn_executor import TurnExecutor
 
 
 def _tool_calls_payload(turn: ExecutionTurn) -> list[dict[str, Any]]:
@@ -110,7 +114,7 @@ def _status_only_tool_calls(tool_calls: list[dict[str, Any]]) -> bool:
 
 def _checkpoint_turn_metadata(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     turn: ExecutionTurn,
     context: dict[str, Any],
 ) -> tuple[Any, dict[str, Any] | None, dict[str, Any]]:
@@ -122,13 +126,13 @@ def _checkpoint_turn_metadata(
         prompt_metadata = fallback_prompt_metadata if isinstance(fallback_prompt_metadata, dict) else None
     state_delta = raw.get("state_delta")
     if not isinstance(state_delta, dict):
-        state_delta = executor._state_delta_from_tool_calls(context, turn)
+        state_delta = state_delta_from_tool_calls(context, turn)
     return selected_model, prompt_metadata, state_delta
 
 
 async def write_turn_checkpoint_and_publish_if_needed(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     turn: ExecutionTurn,
     context: dict[str, Any],
     prompt_hash: str,
@@ -165,7 +169,7 @@ async def write_turn_checkpoint_and_publish_if_needed(
         )
 
     await asyncio.to_thread(
-        executor._write_turn_checkpoint,
+        executor.artifact_writer.write_turn_checkpoint,
         session_id=session_id,
         issue_id=issue_id,
         role_name=role_name,
@@ -218,13 +222,13 @@ async def write_turn_checkpoint_and_publish_if_needed(
         snapshot_ref = f"turn-tool-checkpoint-snapshot:{run.run_id}:{snapshot_hash[:16]}"
         integrity_ref = f"turn-tool-checkpoint-integrity:sha256:{snapshot_hash}"
         await asyncio.to_thread(
-            executor._write_turn_artifact,
-            session_id,
-            issue_id,
-            role_name,
-            turn_index,
-            f"control_plane_checkpoint_snapshot_{snapshot_hash[:16]}.json",
-            json.dumps(snapshot_payload, indent=2, ensure_ascii=False, default=str),
+            executor.artifact_writer.write_turn_artifact,
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            filename=f"control_plane_checkpoint_snapshot_{snapshot_hash[:16]}.json",
+            content=json.dumps(snapshot_payload, indent=2, ensure_ascii=False, default=str),
         )
         checkpoint = await control_plane_service.publication.publish_checkpoint(
             checkpoint=CheckpointRecord(
@@ -268,9 +272,8 @@ async def write_turn_checkpoint_and_publish_if_needed(
     )
 
 
-def _control_plane_service(executor: Any) -> TurnToolControlPlaneService | None:
-    dispatcher = getattr(executor, "tool_dispatcher", None)
-    service = getattr(dispatcher, "control_plane_service", None)
+def _control_plane_service(executor: TurnExecutor) -> TurnToolControlPlaneService | None:
+    service = getattr(executor.tool_dispatcher, "control_plane_service", None)
     if isinstance(service, TurnToolControlPlaneService):
         return service
     return None
@@ -278,7 +281,7 @@ def _control_plane_service(executor: Any) -> TurnToolControlPlaneService | None:
 
 async def ensure_turn_control_plane_reentry_allowed_if_needed(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     issue_id: str,
     role_name: str,
     context: dict[str, Any],

@@ -1,7 +1,7 @@
 # Runtime OS Future Lane Requirements Packet
 
-Last updated: 2026-04-01
-Status: Superseded staging ancestor for archived RuntimeOS lanes
+Last updated: 2026-04-02
+Status: Historical staging ancestor for archived RuntimeOS lanes, archived extension splits, and one archived Graphs child
 Owner: Orket Core
 Source brainstorm: `docs/projects/future/brainstorm/orket_brainstorm_runtime_os_extensions_2026-03-31_v5.md`
 Archived RuntimeOS lane records:
@@ -9,6 +9,21 @@ Archived RuntimeOS lane records:
 2. `docs/projects/archive/RuntimeOS/RTOS04012026-LANE-CLOSEOUT/RUNTIME_OS_REQUIREMENTS.md`
 3. `docs/projects/archive/RuntimeOS/RTOS04012026-SESSION-CONTINUITY-CLOSEOUT/SESSION_CONTINUITY_IMPLEMENTATION_PLAN.md`
 4. `docs/projects/archive/RuntimeOS/RTOS04012026-SESSION-CONTINUITY-CLOSEOUT/CLOSEOUT.md`
+5. `docs/projects/archive/RuntimeOS/RTOS04012026-SESSIONS-CONTEXT-PROVIDER-PIPELINE-CLOSEOUT/SESSIONS_CONTEXT_PROVIDER_PIPELINE_REQUIREMENTS.md`
+6. `docs/projects/archive/RuntimeOS/RTOS04012026-SESSIONS-CONTEXT-PROVIDER-PIPELINE-CLOSEOUT/SESSIONS_CONTEXT_PROVIDER_PIPELINE_IMPLEMENTATION_PLAN.md`
+7. `docs/projects/archive/RuntimeOS/RTOS04012026-SESSIONS-CONTEXT-PROVIDER-PIPELINE-CLOSEOUT/CLOSEOUT.md`
+8. `docs/projects/archive/RuntimeOS/RTOS04012026-CREATE-ISSUE-APPROVAL-CONTINUATION-CLOSEOUT/GOVERNED_TURN_TOOL_APPROVAL_CONTINUATION_REQUIREMENTS.md`
+9. `docs/projects/archive/RuntimeOS/RTOS04012026-CREATE-ISSUE-APPROVAL-CONTINUATION-CLOSEOUT/GOVERNED_TURN_TOOL_APPROVAL_CONTINUATION_IMPLEMENTATION_PLAN.md`
+10. `docs/projects/archive/RuntimeOS/RTOS04012026-CREATE-ISSUE-APPROVAL-CONTINUATION-CLOSEOUT/CLOSEOUT.md`
+11. `docs/projects/archive/RuntimeOS/RTOS04012026-TURN-EXECUTOR-SEAM-EXTRACTION-FACADE-REDUCTION-CLOSEOUT/TURN_EXECUTOR_SEAM_EXTRACTION_FACADE_REDUCTION_REQUIREMENTS.md`
+12. `docs/projects/archive/RuntimeOS/RTOS04012026-TURN-EXECUTOR-SEAM-EXTRACTION-FACADE-REDUCTION-CLOSEOUT/TURN_EXECUTOR_SEAM_EXTRACTION_FACADE_REDUCTION_IMPLEMENTATION_PLAN.md`
+13. `docs/projects/archive/RuntimeOS/RTOS04012026-TURN-EXECUTOR-SEAM-EXTRACTION-FACADE-REDUCTION-CLOSEOUT/CLOSEOUT.md`
+14. `docs/projects/archive/RuntimeOS/RTOS04012026-CANONICAL-SURFACE-COLD-DOWN-IDENTITY-ALIGNMENT-CLOSEOUT/CANONICAL_SURFACE_COLD_DOWN_IDENTITY_ALIGNMENT_REQUIREMENTS.md`
+15. `docs/projects/archive/RuntimeOS/RTOS04012026-CANONICAL-SURFACE-COLD-DOWN-IDENTITY-ALIGNMENT-CLOSEOUT/CANONICAL_SURFACE_COLD_DOWN_IDENTITY_ALIGNMENT_IMPLEMENTATION_PLAN.md`
+16. `docs/projects/archive/RuntimeOS/RTOS04012026-CANONICAL-SURFACE-COLD-DOWN-IDENTITY-ALIGNMENT-CLOSEOUT/CLOSEOUT.md`
+17. `docs/projects/archive/Graphs/GF04012026-AUTHORITY-DECISION-VIEWS-REOPEN-CLOSEOUT/GRAPH_AUTHORITY_DECISION_VIEWS_REOPEN_REQUIREMENTS.md`
+18. `docs/projects/archive/Graphs/GF04012026-AUTHORITY-DECISION-VIEWS-REOPEN-CLOSEOUT/GRAPH_AUTHORITY_DECISION_VIEWS_REOPEN_IMPLEMENTATION_PLAN.md`
+19. `docs/projects/archive/Graphs/GF04012026-AUTHORITY-DECISION-VIEWS-REOPEN-CLOSEOUT/CLOSEOUT.md`
 
 ## Authority posture
 
@@ -16,15 +31,28 @@ This file is not roadmap authority.
 It is not an active implementation plan.
 It does not reopen any lane by itself.
 
-It now survives as the staging ancestor that fed the archived RuntimeOS meta-lane and the completed session-continuity follow-on lane.
+It now survives as the staging ancestor that fed the archived RuntimeOS meta-lane and its completed follow-on children.
 It should not compete with those archived lane records.
-The split child `Extension Publish Surface Hardening` has now been promoted into active roadmap authority at `docs/projects/Extensions/EXTENSION_PUBLISH_SURFACE_HARDENING_IMPLEMENTATION_PLAN.md`.
-This packet remains historical split context plus deferred-candidate staging for everything else.
+The `governed turn-tool approval continuation` child is now complete and archived at `docs/projects/archive/RuntimeOS/RTOS04012026-CREATE-ISSUE-APPROVAL-CONTINUATION-CLOSEOUT/`.
+The split child `Extension Package Surface Hardening` is now complete and archived at `docs/projects/archive/Extensions/EX04012026-PACKAGE-SURFACE-HARDENING-CLOSEOUT/`.
+The split child `Extension Publish Surface Hardening` is now complete and archived at `docs/projects/archive/Extensions/EX04012026-PUBLISH-SURFACE-HARDENING-CLOSEOUT/`.
+The `sessions plus context-provider pipeline` child is now complete and archived at `docs/projects/archive/RuntimeOS/RTOS04012026-SESSIONS-CONTEXT-PROVIDER-PIPELINE-CLOSEOUT/`.
+The `runtime seam extraction and facade reduction` child is now complete and archived at `docs/projects/archive/RuntimeOS/RTOS04012026-TURN-EXECUTOR-SEAM-EXTRACTION-FACADE-REDUCTION-CLOSEOUT/`.
+The `canonical surface cold-down and identity alignment` child is now complete and archived at `docs/projects/archive/RuntimeOS/RTOS04012026-CANONICAL-SURFACE-COLD-DOWN-IDENTITY-ALIGNMENT-CLOSEOUT/`.
+The `conditional Graphs reopen for authority and decision views only` child is now complete and archived at `docs/projects/archive/Graphs/GF04012026-AUTHORITY-DECISION-VIEWS-REOPEN-CLOSEOUT/`.
+No item in this packet is currently accepted or queued for execution.
+This packet remains historical split context only, and the named staging ancestor referenced by archived closeouts when describing any future explicit RuntimeOS or Graphs reopen.
 
 Roadmap hold rule for this file:
-1. do not copy these items into `docs/ROADMAP.md` yet
-2. do not treat this packet as accepted requirements yet
-3. do not imply an active lane until one or more items below are explicitly accepted and promoted
+1. do not copy deferred items from this packet into `docs/ROADMAP.md` without explicit acceptance
+2. do not treat untouched deferred items in this packet as accepted requirements yet
+3. Item 1 is already complete and archived; do not duplicate it from this packet
+4. Item 2 is already complete and archived; do not duplicate it from this packet
+5. Item 3 is already complete and archived; do not duplicate it from this packet
+6. Item 5 is already complete and archived; do not duplicate it from this packet
+7. Item 6 is already complete and archived; do not duplicate it from this packet
+8. Item 4's old combined extension candidate is retired; do not revive it from this packet
+9. do not imply an active lane unless a newly bounded item is explicitly accepted and promoted
 
 ## Source authorities
 
@@ -36,14 +64,13 @@ This packet is bounded by:
 5. `docs/projects/future/brainstorm/orket_brainstorm_runtime_os_extensions_2026-03-31_v5.md`
 
 The brainstorm memo remains non-authority strategy input.
-This packet narrows it into a future selection surface only.
+This packet narrows it into a historical future-selection surface only.
 
 ## Purpose
 
-Define six grouped future-lane requirements candidates that fit the current repo posture:
-1. one extension publish split child is now active outside this packet
-2. SupervisorRuntime Packet 1 is closed
-3. the next good move should be a small number of bounded lanes rather than a broad roadmap explosion
+Preserve the historical RuntimeOS lane-candidate narrowing that fed the archived children below.
+No item in this packet is currently accepted or queued for execution.
+The only live authority it retains is as historical narrowing context and as the explicit named reopen source referenced by archived closeouts.
 
 ## Selection rules
 
@@ -55,20 +82,29 @@ The grouped items below must remain:
 
 ## Item 1 - Governed turn-tool approval continuation
 
+This item is now complete and archived.
+
+Archived lane authority:
+1. `docs/projects/archive/RuntimeOS/RTOS04012026-CREATE-ISSUE-APPROVAL-CONTINUATION-CLOSEOUT/GOVERNED_TURN_TOOL_APPROVAL_CONTINUATION_REQUIREMENTS.md`
+2. `docs/projects/archive/RuntimeOS/RTOS04012026-CREATE-ISSUE-APPROVAL-CONTINUATION-CLOSEOUT/GOVERNED_TURN_TOOL_APPROVAL_CONTINUATION_IMPLEMENTATION_PLAN.md`
+3. `docs/projects/archive/RuntimeOS/RTOS04012026-CREATE-ISSUE-APPROVAL-CONTINUATION-CLOSEOUT/CLOSEOUT.md`
+
+The staging bullets below remain historical narrowing input only.
+
 ### Purpose
 
-Finish the still-open approval gap left after SupervisorRuntime Packet 1.
+Finish the remaining approval-family gap left after SupervisorRuntime Packet 1 and the shipped RuntimeOS `write_file` continuation slice.
 
 The archived closeout already records the truth:
 1. governed turn-tool approval-required tool requests exist
-2. those requests are currently request-and-stop seams only
-3. the shipped approve-to-continue Packet 1 slice was narrowed to governed kernel `NEEDS_APPROVAL`
+2. the bounded governed turn-tool `write_file` and `create_issue` slices now continue on approval and stop on denial on the same governed run
+3. broader governed turn-tool approval-required families still do not have a promoted continuation contract
 
-This item exists to decide whether governed turn-tool approval continuation should become a real runtime contract.
+This item exists to decide whether any governed turn-tool approval continuation beyond the shipped `write_file` slice should become a real runtime contract.
 
 ### In scope
 
-1. one governed turn-tool approval-required capability class
+1. one governed turn-tool approval-required capability class beyond the already-shipped `write_file` slice
 2. one explicit approve-or-deny continuation lifecycle for that class
 3. one truthful target-run continuation rule
 4. one operator-visible lineage story from pending hold through continuation or terminal stop
@@ -83,12 +119,21 @@ This item exists to decide whether governed turn-tool approval continuation shou
 
 ### Acceptance boundary
 
-1. the selected turn-tool path no longer stops at request creation only
+1. the selected additional turn-tool path no longer stops at request creation only
 2. approval and denial both map to explicit runtime-owned outcomes
 3. continuation does not rely on hidden implied authority
 4. one live proof exists for the selected governed turn-tool slice
 
 ## Item 2 - Sessions plus context-provider pipeline
+
+This item is now complete and archived.
+
+Archived lane authority:
+1. `docs/projects/archive/RuntimeOS/RTOS04012026-SESSIONS-CONTEXT-PROVIDER-PIPELINE-CLOSEOUT/SESSIONS_CONTEXT_PROVIDER_PIPELINE_REQUIREMENTS.md`
+2. `docs/projects/archive/RuntimeOS/RTOS04012026-SESSIONS-CONTEXT-PROVIDER-PIPELINE-CLOSEOUT/SESSIONS_CONTEXT_PROVIDER_PIPELINE_IMPLEMENTATION_PLAN.md`
+3. `docs/projects/archive/RuntimeOS/RTOS04012026-SESSIONS-CONTEXT-PROVIDER-PIPELINE-CLOSEOUT/CLOSEOUT.md`
+
+The staging bullets below remain historical narrowing input only.
 
 ### Purpose
 
@@ -118,6 +163,15 @@ Turn continuity into a colder runtime primitive instead of glue spread across in
 
 ## Item 3 - Runtime seam extraction and facade reduction
 
+This item is now complete and archived.
+
+Archived lane authority:
+1. `docs/projects/archive/RuntimeOS/RTOS04012026-TURN-EXECUTOR-SEAM-EXTRACTION-FACADE-REDUCTION-CLOSEOUT/TURN_EXECUTOR_SEAM_EXTRACTION_FACADE_REDUCTION_REQUIREMENTS.md`
+2. `docs/projects/archive/RuntimeOS/RTOS04012026-TURN-EXECUTOR-SEAM-EXTRACTION-FACADE-REDUCTION-CLOSEOUT/TURN_EXECUTOR_SEAM_EXTRACTION_FACADE_REDUCTION_IMPLEMENTATION_PLAN.md`
+3. `docs/projects/archive/RuntimeOS/RTOS04012026-TURN-EXECUTOR-SEAM-EXTRACTION-FACADE-REDUCTION-CLOSEOUT/CLOSEOUT.md`
+
+The staging bullets below remain historical narrowing input only.
+
 ### Purpose
 
 Reduce change blast radius across the hottest orchestration seams without claiming a full architecture convergence finish.
@@ -145,12 +199,21 @@ Reduce change blast radius across the hottest orchestration seams without claimi
 
 ## Item 4 - Extension package surface hardening
 
+This combined extension-surface candidate is retired as a packet item.
+
+Archived split-lane authority:
+1. `docs/projects/archive/Extensions/EX04012026-PACKAGE-SURFACE-HARDENING-CLOSEOUT/CLOSEOUT.md`
+2. `docs/projects/archive/Extensions/EX04012026-PUBLISH-SURFACE-HARDENING-CLOSEOUT/CLOSEOUT.md`
+
+The staging bullets below remain historical narrowing input only.
+
 ### Purpose
 
 Promote extensions from mostly runtime-internal capability surfaces into one explicit operator-facing package contract without creating a second runtime authority center.
 The combined package-plus-publish candidate is retired.
 Future extension reopen work must choose package-surface hardening or publish-surface hardening separately instead of reviving the old combined shape.
 The package-surface child of that split is complete and archived at `docs/projects/archive/Extensions/EX04012026-PACKAGE-SURFACE-HARDENING-CLOSEOUT/`.
+The publish-surface child of that split is complete and archived at `docs/projects/archive/Extensions/EX04012026-PUBLISH-SURFACE-HARDENING-CLOSEOUT/`.
 
 ### In scope
 
@@ -176,6 +239,13 @@ The package-surface child of that split is complete and archived at `docs/projec
 4. host-owned runtime authority remains explicit
 
 ## Item 5 - Canonical surface cold-down and identity alignment
+
+This item is now complete and archived.
+
+Archived lane authority:
+1. `docs/projects/archive/RuntimeOS/RTOS04012026-CANONICAL-SURFACE-COLD-DOWN-IDENTITY-ALIGNMENT-CLOSEOUT/CANONICAL_SURFACE_COLD_DOWN_IDENTITY_ALIGNMENT_REQUIREMENTS.md`
+2. `docs/projects/archive/RuntimeOS/RTOS04012026-CANONICAL-SURFACE-COLD-DOWN-IDENTITY-ALIGNMENT-CLOSEOUT/CANONICAL_SURFACE_COLD_DOWN_IDENTITY_ALIGNMENT_IMPLEMENTATION_PLAN.md`
+3. `docs/projects/archive/RuntimeOS/RTOS04012026-CANONICAL-SURFACE-COLD-DOWN-IDENTITY-ALIGNMENT-CLOSEOUT/CLOSEOUT.md`
 
 ### Purpose
 
@@ -203,6 +273,13 @@ Reduce wrapper debt and outward identity drift so repo posture, supported surfac
 4. documentation and code no longer imply competing supported-surface stories
 
 ## Item 6 - Conditional Graphs reopen for authority and decision views only
+
+This item is now complete and archived.
+
+Archived lane authority:
+1. `docs/projects/archive/Graphs/GF04012026-AUTHORITY-DECISION-VIEWS-REOPEN-CLOSEOUT/GRAPH_AUTHORITY_DECISION_VIEWS_REOPEN_REQUIREMENTS.md`
+2. `docs/projects/archive/Graphs/GF04012026-AUTHORITY-DECISION-VIEWS-REOPEN-CLOSEOUT/GRAPH_AUTHORITY_DECISION_VIEWS_REOPEN_IMPLEMENTATION_PLAN.md`
+3. `docs/projects/archive/Graphs/GF04012026-AUTHORITY-DECISION-VIEWS-REOPEN-CLOSEOUT/CLOSEOUT.md`
 
 ### Purpose
 
@@ -236,14 +313,14 @@ Define the narrowest future Graphs reopen worth considering after the runtime se
 
 ## Recommended sequence
 
-The strongest split sequence is:
-1. governed turn-tool approval continuation
-2. sessions plus context-provider pipeline
-3. extension package surface hardening
-4. extension publish surface hardening
-5. runtime seam extraction and facade reduction
-6. canonical surface cold-down and identity alignment
-7. conditional Graphs reopen for authority and decision views only
+The strongest historical split sequence was:
+1. governed turn-tool approval continuation (complete and archived)
+2. sessions plus context-provider pipeline (complete and archived)
+3. extension package surface hardening (complete and archived)
+4. extension publish surface hardening (complete and archived)
+5. runtime seam extraction and facade reduction (complete and archived)
+6. canonical surface cold-down and identity alignment (complete and archived)
+7. conditional Graphs reopen for authority and decision views only (complete and archived)
 
 Why this order:
 1. it closes the most concrete remaining runtime-truth gap first
@@ -254,19 +331,20 @@ Why this order:
 
 ## Draft Priority Now block
 
-Hold only.
-Do not copy this into `docs/ROADMAP.md` until requirements are accepted.
+Historical only.
+Do not duplicate active or archived items from this block into `docs/ROADMAP.md`, and do not copy still-deferred items until requirements are accepted.
 
-1. governed turn-tool approval continuation -- Requirements candidate for one approval-required turn-tool lifecycle with explicit approve-or-deny continuation and real-path proof.
-2. sessions plus context-provider pipeline -- Requirements candidate for one canonical session model, provider injection boundary, and host-owned continuity story.
-3. extension publish surface hardening -- Promoted out of this packet into active roadmap authority at `docs/projects/Extensions/EXTENSION_PUBLISH_SURFACE_HARDENING_IMPLEMENTATION_PLAN.md`; do not duplicate it from this packet.
-4. runtime seam extraction and facade reduction -- Requirements candidate for bounded hot-path seam extraction, explicit composition, and delegation reduction.
-5. canonical surface cold-down and identity alignment -- Requirements candidate for wrapper retirement, outward identity alignment, and clearer canonical runtime surfaces.
-6. conditional Graphs reopen for authority and decision views only -- Deferred requirements candidate that stays blocked until explicitly reopened after underlying runtime seams are colder.
+1. governed turn-tool approval continuation -- Complete and archived at `docs/projects/archive/RuntimeOS/RTOS04012026-CREATE-ISSUE-APPROVAL-CONTINUATION-CLOSEOUT/`; do not duplicate it from this packet.
+2. sessions plus context-provider pipeline -- Complete and archived at `docs/projects/archive/RuntimeOS/RTOS04012026-SESSIONS-CONTEXT-PROVIDER-PIPELINE-CLOSEOUT/`; do not duplicate it from this packet.
+3. extension package surface hardening -- Complete and archived at `docs/projects/archive/Extensions/EX04012026-PACKAGE-SURFACE-HARDENING-CLOSEOUT/`; do not duplicate it from this packet.
+4. extension publish surface hardening -- Complete and archived at `docs/projects/archive/Extensions/EX04012026-PUBLISH-SURFACE-HARDENING-CLOSEOUT/`; do not duplicate it from this packet.
+5. runtime seam extraction and facade reduction -- Complete and archived at `docs/projects/archive/RuntimeOS/RTOS04012026-TURN-EXECUTOR-SEAM-EXTRACTION-FACADE-REDUCTION-CLOSEOUT/`; do not duplicate it from this packet.
+6. canonical surface cold-down and identity alignment -- Complete and archived at `docs/projects/archive/RuntimeOS/RTOS04012026-CANONICAL-SURFACE-COLD-DOWN-IDENTITY-ALIGNMENT-CLOSEOUT/`; do not duplicate it from this packet.
+7. conditional Graphs reopen for authority and decision views only -- Complete and archived at `docs/projects/archive/Graphs/GF04012026-AUTHORITY-DECISION-VIEWS-REOPEN-CLOSEOUT/`; do not duplicate it from this packet.
 
 ## Requirements completion gate
 
-Do not move any of the six items above into the roadmap until:
+Do not move any still-deferred item from this packet into the roadmap until:
 1. the selected item or items have explicit scope and non-goals written as requirements authority
 2. proof expectations are named truthfully
 3. same-change source-of-truth update targets are named

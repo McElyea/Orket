@@ -124,7 +124,7 @@ CATALOG_RESOLVED_IDENTITY_ALIAS_BANS = {
 }
 COMPATIBILITY_WRAPPER_CALLS = {"run_epic", "run_issue", "run_rock"}
 ALLOWED_COMPATIBILITY_WRAPPER_CALLERS = {
-    "orket/interfaces/cli.py": {"run_epic", "run_rock"},
+    "orket/interfaces/cli.py": {"run_epic"},
 }
 EXTENSION_MANIFEST_WORKLOAD_ALIAS = "WorkloadRecord"
 EXTENSION_MANIFEST_WORKLOAD_DESCRIPTOR = "ExtensionManifestWorkload"
@@ -694,7 +694,7 @@ def test_public_runtime_wrappers_collapse_to_run_card() -> None:
     assert {"run_epic", "run_issue", "run_rock"}.isdisjoint(runtime_orchestrate_targets)
     assert "run_card" in cli_targets
     assert "run_epic" in cli_targets
-    assert "run_rock" in cli_targets
+    assert "run_rock" not in cli_targets
     assert "run_issue" not in cli_targets
     assert "run_card" in gitea_loop_targets
     assert "run_issue" not in gitea_loop_targets
@@ -746,7 +746,7 @@ def test_run_arbiter_no_longer_assembles_odr_workload_authority_input_directly()
 
 
 def test_runtime_and_engine_expose_only_thin_run_rock_wrappers() -> None:
-    """Layer: unit. Verifies run_rock survives only as a thin public wrapper over run_card."""
+    """Layer: unit. Verifies run_rock survives only as a thin legacy public wrapper over run_card."""
     pipeline_path = REPO_ROOT / "orket" / "runtime" / "execution_pipeline.py"
     engine_path = REPO_ROOT / "orket" / "orchestration" / "engine.py"
 

@@ -93,11 +93,11 @@ Build Companion frontend (optional when editing UI source):
 Run local web app:
 1. Start Orket host API (`python -m orket.interfaces.api` or your standard host launch path).
 2. Set environment:
-   - `COMPANION_HOST_BASE_URL` (default `http://127.0.0.1:8000`)
-   - `COMPANION_API_KEY` (required; gateway fails closed when missing)
+   - `COMPANION_HOST_BASE_URL` (default `http://127.0.0.1:8082`)
+   - `COMPANION_API_KEY` or `ORKET_API_KEY` (one is required; gateway fails closed when neither is set)
+   - `COMPANION_EXTENSION_ID` (default `orket.companion`)
    - `COMPANION_UI_HOST` (default `127.0.0.1`)
    - `COMPANION_UI_PORT` (default `3000`; starting port)
-   - `COMPANION_UI_MAX_PORT` (default `COMPANION_UI_PORT + 20`; script auto-falls forward to the next open port)
    - `COMPANION_TIMEOUT_SECONDS` (default `45`)
    - `COMPANION_GATEWAY_REQUIRE_LOOPBACK` (default `true`)
    - `COMPANION_GATEWAY_REQUIRE_SAME_ORIGIN` (default `true` for mutating routes)
@@ -105,12 +105,13 @@ Run local web app:
    - Unix: `./scripts/run.sh`
    - PowerShell: `./scripts/run.ps1`
 4. Open `http://127.0.0.1:3000`.
+5. The Companion BFF owns outward `/api/*` product routes and calls the host only through `/v1/extensions/{extension_id}/runtime/*`.
 
 Gateway hardening notes:
 1. Mutating routes require same-origin requests by default and return `E_COMPANION_GATEWAY_CSRF_BLOCKED` when origin mismatches.
 2. Requests from non-loopback clients are rejected by default with `E_COMPANION_GATEWAY_LOOPBACK_REQUIRED`.
 3. Payload guardrails return `413` for oversized Companion config/chat/audio payloads.
-4. Keep host/API auth strict by setting `ORKET_API_KEY`, `ORKET_COMPANION_API_KEY`, and optionally `ORKET_COMPANION_KEY_STRICT=true`.
+4. Keep host/API auth strict by setting `ORKET_API_KEY` on the host and `COMPANION_API_KEY` or `ORKET_API_KEY` in the Companion process.
 
 ## CI and Release
 

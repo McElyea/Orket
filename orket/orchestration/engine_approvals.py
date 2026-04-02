@@ -12,8 +12,8 @@ from orket.application.services.tool_approval_control_plane_operator_service imp
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
-from orket.application.services.write_file_tool_approval_continuation_service import (
-    WriteFileToolApprovalContinuationService,
+from orket.application.services.governed_turn_tool_approval_continuation_service import (
+    GovernedTurnToolApprovalContinuationService,
 )
 from orket.kernel.v1.nervous_system_runtime_extensions import (
     decide_approval_v1,
@@ -143,10 +143,12 @@ def _pending_gate_operator_publisher(engine: Any) -> PendingGateControlPlaneOper
     return publisher
 
 
-def _write_file_approval_continuation_service(engine: Any) -> WriteFileToolApprovalContinuationService | None:
+def _governed_turn_tool_approval_continuation_service(
+    engine: Any,
+) -> GovernedTurnToolApprovalContinuationService | None:
     publication = getattr(engine, "control_plane_publication", None)
     execution_repository = getattr(engine, "control_plane_execution_repository", None)
-    service = getattr(engine, "write_file_tool_approval_continuation", None)
+    service = getattr(engine, "governed_turn_tool_approval_continuation", None)
     if (
         service is not None
         and getattr(service, "publication", None) is publication
@@ -155,11 +157,11 @@ def _write_file_approval_continuation_service(engine: Any) -> WriteFileToolAppro
         return service
     if publication is None or execution_repository is None:
         return None
-    service = WriteFileToolApprovalContinuationService(
+    service = GovernedTurnToolApprovalContinuationService(
         execution_repository=execution_repository,
         publication=publication,
     )
-    setattr(engine, "write_file_tool_approval_continuation", service)
+    setattr(engine, "governed_turn_tool_approval_continuation", service)
     return service
 
 
@@ -321,7 +323,7 @@ async def _publish_resolution_control_plane_side_effects(
                     previous_approval=previous,
                     resolved_approval=approval,
                 )
-    continuation_service = _write_file_approval_continuation_service(engine)
+    continuation_service = _governed_turn_tool_approval_continuation_service(engine)
     if continuation_service is None or not continuation_service.supports_resolution(approval):
         return
     await continuation_service.continue_or_stop(

@@ -20,7 +20,7 @@ equivalent fresh live runs still drift under the currently intended compare cont
 5. `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md`
 6. `docs/specs/PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md`
 7. `docs/projects/archive/runtime-stability-closeout/LIVE-RUNTIME-PROOF-RECOVERY-PLAN.md`
-8. `docs/projects/future/RUNTIME-STABILITY-LIVE-COMPARE-HARDENING-PLAN.md`
+8. `docs/projects/archive/techdebt/DD03142026/RUNTIME-STABILITY-LIVE-COMPARE-HARDENING-PLAN.md`
 9. `benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json`
 10. `benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_compare.json`
 11. `benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_operator_surface_diff_summary.json`

@@ -152,7 +152,7 @@ V1 pins the required top-level contract fields for `run_evidence_graph.json`:
 V1 also pins:
 1. `family` as the node and edge family field
 2. snake_case edge-family tokens such as `run_to_attempt` and `final_truth_to_run`
-3. view tokens `full_lineage`, `failure_path`, `resource_authority_path`, and `closure_path`
+3. view tokens `full_lineage`, `failure_path`, `authority`, `decision`, `resource_authority_path`, and `closure_path`
 
 ## Required reviewer questions
 
@@ -344,8 +344,10 @@ V1 must support multiple views over the same validated graph JSON.
 Required views:
 1. full lineage
 2. failure path
-3. resource authority path
-4. closure path
+3. authority
+4. decision
+5. resource authority path
+6. closure path
 
 These views may be:
 1. separate rendered files derived from one semantic graph JSON, or
@@ -574,9 +576,9 @@ Question answered:
 
 Posture:
 1. the archived 2026-03-30 Graphs requirements-hardening lane treated this as a filtered family or named view derived from the same semantic core as the run-evidence graph
-2. it remains non-normative until a later same-change promotion occurs
+2. V1 now admits `authority` as a normative filtered view token over that same semantic core
 3. it must not introduce different lineage rules from the run-evidence graph
-4. future promotion should keep the authority story anchored on existing `run`, `attempt`, `reservation`, `lease`, `resource`, `operator_action`, `reconciliation`, and `final_truth` lineage, using `step`, `effect`, or `observation` only when already-authoritative lineage makes them necessary to explain mutation or closure
+4. the authority story stays anchored on existing `run`, `attempt`, `reservation`, `lease`, `resource`, `operator_action`, `reconciliation`, and `final_truth` lineage, using `step`, `effect`, or `observation` only when already-authoritative lineage makes them necessary to explain mutation or closure
 
 Typical node emphasis:
 1. run
@@ -595,10 +597,10 @@ Question answered:
 
 Posture:
 1. the archived 2026-03-30 Graphs requirements-hardening lane treated this as a filtered view over the same semantic graph JSON rather than as a separate artifact family
-2. it remains non-normative until a later same-change promotion occurs
+2. V1 now admits `decision` as a normative filtered view token over that same semantic graph JSON
 3. V1 does not require a separate decision-graph artifact family
 4. decision-focused views must project from existing covered node families and validated sources rather than minting a new runtime noun by label alone
-5. future promotion should stay anchored on existing decision-bearing families such as `checkpoint_acceptance`, `recovery_decision`, `reconciliation`, `operator_action`, and `final_truth`, with only the supporting `attempt`, `step`, or `observation` lineage needed to show where the path changed
+5. the decision story stays anchored on existing decision-bearing families such as `checkpoint_acceptance`, `recovery_decision`, `reconciliation`, `operator_action`, and `final_truth`, with only the supporting `attempt`, `step`, or `observation` lineage needed to show where the path changed
 
 Typical node emphasis:
 1. step
@@ -615,9 +617,9 @@ Question answered:
 
 Posture:
 1. the archived 2026-03-30 Graphs requirements-hardening lane treated this as a filtered view over the same semantic graph JSON
-2. it remains non-normative until a later same-change promotion occurs
-3. V1 already requires a `closure_path` view, so later closure-focused work must reuse that same semantic core rather than fork it
-4. future promotion should stay anchored on `final_truth` plus only the directly supporting `reconciliation`, `recovery_decision`, `operator_action`, `effect`, `observation`, `step`, `attempt`, and `run` lineage tied to the closing chain
+2. V1 already requires `closure_path` as a normative filtered view token over that semantic core
+3. later closure-focused work must reuse that same semantic core rather than fork it
+4. the closure story stays anchored on `final_truth` plus only the directly supporting `reconciliation`, `recovery_decision`, `operator_action`, `effect`, `observation`, `step`, `attempt`, and `run` lineage tied to the closing chain
 
 Typical node emphasis:
 1. step
@@ -635,9 +637,9 @@ Question answered:
 
 Posture:
 1. the archived 2026-03-30 Graphs requirements-hardening lane treated this as a filtered view over the same semantic graph JSON
-2. it remains non-normative until a later same-change promotion occurs
-3. V1 already requires a `resource_authority_path` view, so later resource-focused work must reuse that same semantic core rather than fork it
-4. future promotion should stay anchored on `reservation`, `lease`, and `resource`, plus only directly linked `observation`, `effect`, `operator_action`, `reconciliation`, and `final_truth` lineage and the minimum supporting `run`, `attempt`, or `step` anchors needed to keep the authority story truthful
+2. V1 already requires `resource_authority_path` as a normative filtered view token over that semantic core
+3. later resource-focused work must reuse that same semantic core rather than fork it
+4. the resource-authority story stays anchored on `reservation`, `lease`, and `resource`, plus only directly linked `observation`, `effect`, `operator_action`, `reconciliation`, and `final_truth` lineage and the minimum supporting `run`, `attempt`, or `step` anchors needed to keep the authority story truthful
 
 Typical node emphasis:
 1. reservation

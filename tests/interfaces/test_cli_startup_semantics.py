@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from types import SimpleNamespace
 from pathlib import Path
 
@@ -149,6 +150,20 @@ def test_perform_first_run_onboarding_no_op_when_complete(monkeypatch) -> None:
     assert ("discovery_startup_path", {"path": "no_op", "reason": "setup_complete"}) in startup_events
 
 
+def test_parse_args_hides_legacy_rock_alias_from_help(monkeypatch, capsys) -> None:
+    """Layer: contract. Verifies `--rock` stays accepted as a hidden compatibility alias instead of a canonical help surface."""
+    monkeypatch.setattr(sys, "argv", ["main.py", "--help"])
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli_module.parse_args()
+
+    out = capsys.readouterr().out
+
+    assert excinfo.value.code == 0
+    assert "--card" in out
+    assert "--rock" not in out
+
+
 @pytest.mark.asyncio
 async def test_cli_startup_warns_when_reconciliation_failed(monkeypatch, capsys) -> None:
     """Layer: integration. Verifies CLI surfaces degraded startup when reconciliation fails."""
@@ -173,8 +188,8 @@ async def test_cli_startup_warns_when_reconciliation_failed(monkeypatch, capsys)
 
 
 @pytest.mark.asyncio
-async def test_cli_rock_runtime_preserves_flag_but_uses_thin_wrapper(monkeypatch, capsys) -> None:
-    """Layer: integration. Verifies the `--rock` CLI flag routes through the thin wrapper over the canonical card surface."""
+async def test_cli_rock_runtime_preserves_flag_but_routes_directly_to_run_card(monkeypatch, capsys) -> None:
+    """Layer: integration. Verifies the `--rock` CLI flag survives only as a hidden compatibility alias over the canonical card surface."""
 
     calls: list[tuple[str, object, object, object]] = []
 
@@ -204,7 +219,7 @@ async def test_cli_rock_runtime_preserves_flag_but_uses_thin_wrapper(monkeypatch
     await cli_module.run_cli()
     out = capsys.readouterr().out
 
-    assert ("run_rock", "demo-rock", "build-7", True) in calls
-    assert ("run_card", "demo-rock", "build-7", True) not in calls
-    assert "Running Orket Card via legacy --rock alias: demo-rock" in out
-    assert "=== Card demo-rock Complete (legacy --rock alias) ===" in out
+    assert ("run_card", "demo-rock", "build-7", True) in calls
+    assert ("run_rock", "demo-rock", "build-7", True) not in calls
+    assert "Running Orket Card via legacy compatibility alias --rock: demo-rock" in out
+    assert "=== Card demo-rock Complete (legacy compatibility alias --rock) ===" in out

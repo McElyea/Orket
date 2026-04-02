@@ -36,8 +36,8 @@ Claim E was revalidated on a fresh append-only live packet and remained red, so 
 
 ## Carry-Forward Authority
 
-Future hardening for Claim E now lives here:
-1. `docs/projects/future/RUNTIME-STABILITY-LIVE-COMPARE-HARDENING-PLAN.md`
+The original staged Claim E hardening ancestor now lives here:
+1. `docs/projects/archive/techdebt/DD03142026/RUNTIME-STABILITY-LIVE-COMPARE-HARDENING-PLAN.md`
 
 Canonical published proof:
 1. `benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json`

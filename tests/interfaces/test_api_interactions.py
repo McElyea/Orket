@@ -180,6 +180,7 @@ def test_builtin_hint_request_cancel_turn_emits_turn_interrupted(monkeypatch):
 
 
 def test_interaction_builtin_turn_exposes_bounded_packet1_context(monkeypatch, tmp_path):
+    """Layer: integration. Verifies built-in interaction turns expose the canonical packet1 session-context envelope."""
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(
@@ -194,10 +195,14 @@ def test_interaction_builtin_turn_exposes_bounded_packet1_context(monkeypatch, t
     )
 
     captured = {}
+    captured_envelope = {}
+    captured_lineage = []
 
     async def _capture_context(*, workload_id, input_config, turn_params, interaction_context):
         _ = (workload_id, input_config, turn_params)
         captured.update(interaction_context.packet1_context())
+        captured_envelope.update(interaction_context.packet1_context_envelope())
+        captured_lineage.extend(interaction_context.packet1_provider_lineage())
         return {"post_finalize_wait_ms": 0}
 
     monkeypatch.setattr(api_module, "run_builtin_workload", _capture_context)
@@ -236,9 +241,28 @@ def test_interaction_builtin_turn_exposes_bounded_packet1_context(monkeypatch, t
         "department": "core",
         "workspace": str((api_module.PROJECT_ROOT / "workspace" / "default").resolve()),
     }
+    assert captured_envelope["context_version"] == "packet1_session_context_v1"
+    assert captured_envelope["continuity"] == {
+        "session_id": session_id,
+        "session_params": {"npc": "innkeeper", "tone": "calm"},
+    }
+    assert captured_envelope["turn_request"] == {
+        "input_config": {"seed": 321, "mode": "basic"},
+        "turn_params": {"persona": "guard"},
+        "workload_id": "stream_test_v1",
+        "department": "core",
+        "workspace": str((api_module.PROJECT_ROOT / "workspace" / "default").resolve()),
+    }
+    assert [row["provider_id"] for row in captured_lineage] == [
+        "host_continuity",
+        "turn_request",
+        "extension_manifest_required_capabilities",
+    ]
+    assert captured_lineage[-1]["present"] is False
 
 
 def test_interaction_extension_turn_includes_manifest_required_capabilities(monkeypatch, tmp_path):
+    """Layer: integration. Verifies extension interaction turns preserve host-resolved capability metadata in the canonical envelope."""
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(
@@ -253,6 +277,8 @@ def test_interaction_extension_turn_includes_manifest_required_capabilities(monk
     )
 
     captured = {}
+    captured_envelope = {}
+    captured_lineage = []
 
     class _FakeExtensionManager:
         def has_manifest_entry(self, workload_id: str) -> bool:
@@ -274,6 +300,8 @@ def test_interaction_extension_turn_includes_manifest_required_capabilities(monk
         ) -> None:
             _ = (workload_id, input_config, workspace, department)
             captured.update(interaction_context.packet1_context())
+            captured_envelope.update(interaction_context.packet1_context_envelope())
+            captured_lineage.extend(interaction_context.packet1_provider_lineage())
 
     monkeypatch.setattr(api_module, "extension_manager", _FakeExtensionManager(), raising=False)
 
@@ -312,6 +340,140 @@ def test_interaction_extension_turn_includes_manifest_required_capabilities(monk
         "workspace": str((api_module.PROJECT_ROOT / "workspace" / "default").resolve()),
         "required_capabilities": ["workspace.root", "clock.now"],
     }
+    assert captured_envelope["context_version"] == "packet1_session_context_v1"
+    assert captured_envelope["extension_manifest"] == {
+        "required_capabilities": ["workspace.root", "clock.now"],
+    }
+    assert [row["provider_id"] for row in captured_lineage] == [
+        "host_continuity",
+        "turn_request",
+        "extension_manifest_required_capabilities",
+    ]
+    assert captured_lineage[-1]["present"] is True
+
+
+def test_interaction_session_inspection_surfaces_expose_context_lineage(monkeypatch, tmp_path):
+    """Layer: integration. Verifies interaction sessions use existing session inspection routes to expose context lineage truthfully."""
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(
+        api_module,
+        "interaction_manager",
+        InteractionManager(
+            bus=StreamBus(),
+            commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
+            project_root=tmp_path,
+        ),
+        raising=False,
+    )
+
+    async def _capture_context(*, workload_id, input_config, turn_params, interaction_context):
+        _ = (workload_id, input_config, turn_params, interaction_context)
+        return {"post_finalize_wait_ms": 0}
+
+    monkeypatch.setattr(api_module, "run_builtin_workload", _capture_context)
+
+    start = client.post(
+        "/v1/interactions/sessions",
+        headers={"X-API-Key": "test-key"},
+        json={"session_params": {"npc": "innkeeper", "tone": "calm"}},
+    )
+    assert start.status_code == 200
+    session_id = start.json()["session_id"]
+
+    turn = client.post(
+        f"/v1/interactions/{session_id}/turns",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "workload_id": "stream_test_v1",
+            "input_config": {"seed": 111, "mode": "basic"},
+            "department": "core",
+            "workspace": "workspace/default",
+            "turn_params": {"persona": "guard"},
+        },
+    )
+    assert turn.status_code == 200
+
+    detail = client.get(f"/v1/sessions/{session_id}", headers={"X-API-Key": "test-key"})
+    assert detail.status_code == 200
+    detail_payload = detail.json()
+    assert detail_payload["surface"] == "interaction_session"
+    assert detail_payload["continuity_identifier"] == "session_id"
+    assert detail_payload["inspection_only"] is True
+    assert detail_payload["turn_count"] == 1
+
+    status = client.get(f"/v1/sessions/{session_id}/status", headers={"X-API-Key": "test-key"})
+    assert status.status_code == 200
+    status_payload = status.json()
+    assert status_payload["surface"] == "interaction_session"
+    assert status_payload["summary"]["context_version"] == "packet1_session_context_v1"
+    assert status_payload["summary"]["continuity_identifier"] == "session_id"
+    assert status_payload["artifacts"]["targeted_replay"] == "run_session_only"
+
+    snapshot = client.get(f"/v1/sessions/{session_id}/snapshot", headers={"X-API-Key": "test-key"})
+    assert snapshot.status_code == 200
+    snapshot_payload = snapshot.json()
+    assert snapshot_payload["snapshot_kind"] == "interaction_session_context"
+    assert snapshot_payload["session_context_pipeline"]["context_version"] == "packet1_session_context_v1"
+    assert [row["provider_id"] for row in snapshot_payload["session_context_pipeline"]["provider_lineage"]] == [
+        "host_continuity",
+        "turn_request",
+        "extension_manifest_required_capabilities",
+    ]
+    assert snapshot_payload["session_context_pipeline"]["latest_context_envelope"]["continuity"] == {
+        "session_id": session_id,
+        "session_params": {"npc": "innkeeper", "tone": "calm"},
+    }
+    assert snapshot_payload["session_context_pipeline"]["latest_context_envelope"]["turn_request"] == {
+        "input_config": {"seed": 111, "mode": "basic"},
+        "turn_params": {"persona": "guard"},
+        "workload_id": "stream_test_v1",
+        "department": "core",
+        "workspace": str((api_module.PROJECT_ROOT / "workspace" / "default").resolve()),
+    }
+    assert snapshot_payload["replay_boundary"]["timeline_view"] == "inspection_only"
+    assert snapshot_payload["replay_boundary"]["targeted_replay"] == "run_session_only"
+
+    replay = client.get(f"/v1/sessions/{session_id}/replay", headers={"X-API-Key": "test-key"})
+    assert replay.status_code == 200
+    replay_payload = replay.json()
+    assert replay_payload["surface"] == "interaction_session"
+    assert replay_payload["inspection_only"] is True
+    assert replay_payload["turn_count"] == 1
+    assert replay_payload["turns"][0]["turn_index"] == 1
+    assert replay_payload["turns"][0]["context_version"] == "packet1_session_context_v1"
+    assert replay_payload["turns"][0]["context_envelope"]["turn_request"]["workload_id"] == "stream_test_v1"
+
+
+def test_interaction_session_targeted_replay_fails_closed(monkeypatch, tmp_path):
+    """Layer: integration. Verifies targeted replay stays run-oriented and rejects interaction sessions."""
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(
+        api_module,
+        "interaction_manager",
+        InteractionManager(
+            bus=StreamBus(),
+            commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
+            project_root=tmp_path,
+        ),
+        raising=False,
+    )
+
+    start = client.post(
+        "/v1/interactions/sessions",
+        headers={"X-API-Key": "test-key"},
+        json={"session_params": {"npc": "innkeeper"}},
+    )
+    assert start.status_code == 200
+    session_id = start.json()["session_id"]
+
+    response = client.get(
+        f"/v1/sessions/{session_id}/replay?issue_id=ISS-1&turn_index=1",
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Targeted replay is not supported for interaction sessions."
 
 
 def test_marshaller_runs_endpoint_returns_rows(monkeypatch):

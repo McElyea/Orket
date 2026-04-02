@@ -21,8 +21,8 @@ from ..services.turn_tool_control_plane_resource_lifecycle import (
     namespace_resource_id_for_scope,
     reservation_id_for_run,
 )
-from ..services.write_file_tool_approval_continuation_service import (
-    supports_write_file_approval_continuation,
+from ..services.governed_turn_tool_approval_continuation_service import (
+    supports_governed_turn_tool_approval_continuation,
 )
 from .turn_tool_dispatcher_support import (
     required_sequence_violation,
@@ -129,7 +129,7 @@ def collect_protocol_preflight_violations(
                 ]
 
         if tool_name in approval_required_tools:
-            if supports_write_file_approval_continuation(
+            if supports_governed_turn_tool_approval_continuation(
                 tool_name=tool_name,
                 context=context,
                 issue_id=turn.issue_id,

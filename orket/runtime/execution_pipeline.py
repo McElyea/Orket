@@ -310,7 +310,7 @@ class ExecutionPipeline:
         driver_steered: bool = False,
         **kwargs,
     ) -> Any:
-        """Compatibility wrapper over the canonical run_card surface."""
+        """Legacy compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
             rock_name,
             build_id=build_id,

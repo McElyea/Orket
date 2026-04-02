@@ -17,7 +17,7 @@ Drive Claim E from live red to truthful closure without broadening scope beyond 
 4. `docs/ROADMAP.md`
 5. `docs/projects/archive/techdebt/DD03142026/DD03142026-deterministic-drift-requirements.md`
 6. `docs/projects/archive/runtime-stability-closeout/LIVE-RUNTIME-PROOF-RECOVERY-PLAN.md`
-7. `docs/projects/future/RUNTIME-STABILITY-LIVE-COMPARE-HARDENING-PLAN.md`
+7. `docs/projects/archive/techdebt/DD03142026/RUNTIME-STABILITY-LIVE-COMPARE-HARDENING-PLAN.md`
 8. `benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json`
 9. `benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_compare.json`
 10. `benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_operator_surface_diff_summary.json`

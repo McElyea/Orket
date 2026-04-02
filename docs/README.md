@@ -115,6 +115,7 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 17. `docs/architecture/CONTRACT_DELTA_SUPERVISOR_RUNTIME_WRITE_FILE_APPROVAL_CONTINUATION_2026-04-01.md`
 18. `docs/architecture/CONTRACT_DELTA_SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_HARDENING_2026-04-01.md`
 19. `docs/architecture/CONTRACT_DELTA_SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_HARDENING_2026-04-01.md`
+20. `docs/architecture/CONTRACT_DELTA_COMPANION_BFF_BOUNDARY_REALIGNMENT_2026-04-01.md`
 
 ## Projects
 1. Active plans: `docs/projects/<project>/`

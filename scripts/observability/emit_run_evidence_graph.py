@@ -20,6 +20,7 @@ from orket.adapters.storage.async_control_plane_record_repository import (
 )
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.runtime.run_evidence_graph import (
+    RUN_EVIDENCE_GRAPH_DEFAULT_VIEWS,
     RUN_EVIDENCE_GRAPH_VIEW_ORDER,
     write_run_evidence_graph_artifact,
 )
@@ -141,7 +142,7 @@ async def _locate_session_id(
 def _selected_views(raw_views: list[str]) -> list[str]:
     normalized = [str(view or "").strip() for view in raw_views if str(view or "").strip()]
     if not normalized:
-        return list(RUN_EVIDENCE_GRAPH_VIEW_ORDER)
+        return list(RUN_EVIDENCE_GRAPH_DEFAULT_VIEWS)
     deduped = []
     seen: set[str] = set()
     for view in normalized:

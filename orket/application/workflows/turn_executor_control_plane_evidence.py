@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from orket.application.services.turn_tool_control_plane_service import (
     TurnToolControlPlaneError,
@@ -20,10 +20,13 @@ from orket.application.workflows.protocol_hashing import build_step_id, derive_o
 from orket.core.domain.control_plane_effect_journal import validate_effect_journal_chain
 from orket.domain.execution import ToolCall
 
+if TYPE_CHECKING:
+    from .turn_executor import TurnExecutor
+
 
 async def load_checkpoint_snapshot_payload(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     issue_id: str,
     role_name: str,
     context: dict[str, Any],
@@ -127,7 +130,7 @@ def expected_operation_ids(
 
 async def list_operation_artifact_ids(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     issue_id: str,
     role_name: str,
     context: dict[str, Any],
@@ -146,7 +149,7 @@ async def list_operation_artifact_ids(
 
 async def list_operation_artifact_refs(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     issue_id: str,
     role_name: str,
     context: dict[str, Any],
@@ -161,7 +164,7 @@ async def list_operation_artifact_refs(
 
 async def load_completed_replay_tool_calls(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     control_plane_service: TurnToolControlPlaneService,
     run_id: str,
     attempt_id: str,
@@ -222,7 +225,7 @@ async def load_completed_replay_tool_calls(
         step = steps_by_id[operation_id]
         effect = effects_by_id[effect_id_for(operation_id=operation_id)]
         operation_record = await asyncio.to_thread(
-            executor._load_operation_result,
+            executor.artifact_writer.load_operation_result,
             session_id=session_id,
             issue_id=issue_id,
             role_name=role_name,
@@ -267,13 +270,12 @@ async def load_completed_replay_tool_calls(
 
 def turn_output_dir(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     issue_id: str,
     role_name: str,
     context: dict[str, Any],
 ) -> Path:
-    artifact_writer = getattr(executor, "artifact_writer", None)
-    resolver = getattr(artifact_writer, "_turn_output_dir", None)
+    resolver = getattr(executor.artifact_writer, "_turn_output_dir", None)
     if not callable(resolver):
         raise TurnToolControlPlaneError("turn artifact writer does not expose turn output resolution")
     return resolver(

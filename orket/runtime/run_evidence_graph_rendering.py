@@ -1,13 +1,34 @@
 from __future__ import annotations
+
 import asyncio
 import html
 import re
 from pathlib import Path
 from typing import Any
+
 import aiofiles
+
 from orket.runtime.run_evidence_graph import validate_run_evidence_graph_payload
-_VIEW_TITLES = {"full_lineage": "Full Lineage", "failure_path": "Failure Path", "resource_authority_path": "Resource Authority Path", "closure_path": "Closure Path"}
-_VIEW_QUESTIONS = {"full_lineage": "What authoritative run-evidence lineage exists for the selected run?", "failure_path": "Where did failure, interruption, or recovery change the path?", "resource_authority_path": "What ownership path governed reservation, lease, resource, and mutation authority?", "closure_path": "What exact chain closed the run?"}
+
+_VIEW_TITLES = {
+    "full_lineage": "Full Lineage",
+    "failure_path": "Failure Path",
+    "authority": "Authority",
+    "decision": "Decision",
+    "resource_authority_path": "Resource Authority Path",
+    "closure_path": "Closure Path",
+}
+
+_VIEW_QUESTIONS = {
+    "full_lineage": "What authoritative run-evidence lineage exists for the selected run?",
+    "failure_path": "Where did failure, interruption, or recovery change the path?",
+    "authority": "What authority chain allowed or blocked mutation and closure?",
+    "decision": "Where did routing, policy, supervisor, recovery, or reconciliation decisions change the path?",
+    "resource_authority_path": "What ownership path governed reservation, lease, resource, and mutation authority?",
+    "closure_path": "What exact chain closed the run?",
+}
+
+
 def build_run_evidence_graph_views(payload: dict[str, Any]) -> list[dict[str, Any]]:
     validate_run_evidence_graph_payload(payload)
     nodes = [node for node in payload.get("nodes", []) if isinstance(node, dict)]
@@ -17,11 +38,32 @@ def build_run_evidence_graph_views(payload: dict[str, Any]) -> list[dict[str, An
 
     views: list[dict[str, Any]] = []
     for view_name in payload.get("selected_views", []):
-        node_ids = _select_view_node_ids(view_name=str(view_name), node_by_id=node_by_id, family_nodes=family_nodes)
+        view_token = str(view_name)
+        node_ids = _select_view_node_ids(
+            view_name=view_token,
+            node_by_id=node_by_id,
+            family_nodes=family_nodes,
+        )
         view_nodes = [node for node in nodes if str(node.get("id") or "") in node_ids]
-        view_edges = [edge for edge in edges if str(edge.get("source") or "") in node_ids and str(edge.get("target") or "") in node_ids]
-        views.append({"view": str(view_name), "title": _VIEW_TITLES[str(view_name)], "operator_question": _VIEW_QUESTIONS[str(view_name)], "node_count": len(view_nodes), "edge_count": len(view_edges), "nodes": view_nodes, "edges": view_edges})
+        view_edges = [
+            edge
+            for edge in edges
+            if str(edge.get("source") or "") in node_ids and str(edge.get("target") or "") in node_ids
+        ]
+        views.append(
+            {
+                "view": view_token,
+                "title": _VIEW_TITLES[view_token],
+                "operator_question": _VIEW_QUESTIONS[view_token],
+                "node_count": len(view_nodes),
+                "edge_count": len(view_edges),
+                "nodes": view_nodes,
+                "edges": view_edges,
+            }
+        )
     return views
+
+
 def build_run_evidence_graph_mermaid(payload: dict[str, Any]) -> str:
     validate_run_evidence_graph_payload(payload)
     views = build_run_evidence_graph_views(payload)
@@ -40,9 +82,7 @@ def build_run_evidence_graph_mermaid(payload: dict[str, Any]) -> str:
         if not view["nodes"]:
             lines.append(f"%% view {view['view']} has no semantic nodes")
             continue
-        lines.append(
-            f'  subgraph view_{view["view"]}["{view["title"]} | {view["operator_question"]}"]'
-        )
+        lines.append(f'  subgraph view_{view["view"]}["{view["title"]} | {view["operator_question"]}"]')
         for node in view["nodes"]:
             alias = _mermaid_alias(view=str(view["view"]), node_id=str(node.get("id") or ""))
             lines.append(f'    {alias}["{_mermaid_label(node)}"]')
@@ -54,11 +94,15 @@ def build_run_evidence_graph_mermaid(payload: dict[str, Any]) -> str:
             )
         lines.append("  end")
     return "\n".join(lines) + "\n"
+
+
 def build_run_evidence_graph_html(payload: dict[str, Any]) -> str:
     validate_run_evidence_graph_payload(payload)
     views = build_run_evidence_graph_views(payload)
     issues = [issue for issue in payload.get("issues", []) if isinstance(issue, dict)]
-    source_summaries = [summary for summary in payload.get("source_summaries", []) if isinstance(summary, dict)]
+    source_summaries = [
+        summary for summary in payload.get("source_summaries", []) if isinstance(summary, dict)
+    ]
     issue_rows = "".join(
         f"<li><strong>{html.escape(str(issue.get('code') or ''))}</strong>: "
         f"{html.escape(str(issue.get('detail') or ''))}</li>"
@@ -95,30 +139,59 @@ def build_run_evidence_graph_html(payload: dict[str, Any]) -> str:
 {view_rows}</body>
 </html>
 """
-async def write_run_evidence_graph_mermaid_artifact(*, root: Path, session_id: str, payload: dict[str, Any]) -> Path:
+
+
+async def write_run_evidence_graph_mermaid_artifact(
+    *,
+    root: Path,
+    session_id: str,
+    payload: dict[str, Any],
+) -> Path:
     return await _write_text_artifact(
         root=root,
         session_id=session_id,
         filename="run_evidence_graph.mmd",
         content=build_run_evidence_graph_mermaid(payload),
     )
-async def write_run_evidence_graph_html_artifact(*, root: Path, session_id: str, payload: dict[str, Any]) -> Path:
+
+
+async def write_run_evidence_graph_html_artifact(
+    *,
+    root: Path,
+    session_id: str,
+    payload: dict[str, Any],
+) -> Path:
     return await _write_text_artifact(
         root=root,
         session_id=session_id,
         filename="run_evidence_graph.html",
         content=build_run_evidence_graph_html(payload),
     )
-async def write_run_evidence_graph_rendered_artifacts(*, root: Path, session_id: str, payload: dict[str, Any]) -> dict[str, Path]:
-    mermaid_path = await write_run_evidence_graph_mermaid_artifact(root=root, session_id=session_id, payload=payload)
-    html_path = await write_run_evidence_graph_html_artifact(root=root, session_id=session_id, payload=payload)
+
+
+async def write_run_evidence_graph_rendered_artifacts(
+    *,
+    root: Path,
+    session_id: str,
+    payload: dict[str, Any],
+) -> dict[str, Path]:
+    mermaid_path = await write_run_evidence_graph_mermaid_artifact(
+        root=root, session_id=session_id, payload=payload
+    )
+    html_path = await write_run_evidence_graph_html_artifact(
+        root=root, session_id=session_id, payload=payload
+    )
     return {"mermaid_path": mermaid_path, "html_path": html_path}
+
+
 async def _write_text_artifact(*, root: Path, session_id: str, filename: str, content: str) -> Path:
     artifact_path = Path(root) / "runs" / str(session_id).strip() / filename
     await asyncio.to_thread(artifact_path.parent.mkdir, parents=True, exist_ok=True)
     async with aiofiles.open(artifact_path, mode="w", encoding="utf-8") as handle:
         await handle.write(content)
     return artifact_path
+
+
 def _build_html_view_section(view: dict[str, Any]) -> str:
     node_rows = "".join(
         f"<li><strong>{html.escape(str(node.get('family') or ''))}</strong>: "
@@ -149,6 +222,8 @@ def _build_html_view_section(view: dict[str, Any]) -> str:
         "    </div>\n"
         "  </section>\n"
     )
+
+
 def _select_view_node_ids(
     *,
     view_name: str,
@@ -159,9 +234,15 @@ def _select_view_node_ids(
         return set(node_by_id)
     if view_name == "failure_path":
         return _failure_path_node_ids(node_by_id=node_by_id, family_nodes=family_nodes)
+    if view_name == "authority":
+        return _authority_node_ids(node_by_id=node_by_id, family_nodes=family_nodes)
+    if view_name == "decision":
+        return _decision_node_ids(node_by_id=node_by_id, family_nodes=family_nodes)
     if view_name == "resource_authority_path":
         return _resource_authority_path_node_ids(node_by_id=node_by_id, family_nodes=family_nodes)
     return _closure_path_node_ids(node_by_id=node_by_id, family_nodes=family_nodes)
+
+
 def _failure_path_node_ids(
     *,
     node_by_id: dict[str, dict[str, Any]],
@@ -171,7 +252,8 @@ def _failure_path_node_ids(
     attempt_refs = {
         _record_ref(node)
         for node in family_nodes.get("attempt", [])
-        if str(_attr(node, "attempt_state")).strip() and str(_attr(node, "attempt_state")).strip() != "attempt_completed"
+        if str(_attr(node, "attempt_state")).strip()
+        and str(_attr(node, "attempt_state")).strip() != "attempt_completed"
     }
     for node in recovery_nodes:
         for field_name in ("failed_attempt_id", "new_attempt_id", "resumed_attempt_id"):
@@ -235,6 +317,181 @@ def _failure_path_node_ids(
         )
     )
     return {node_id for node_id in selected if node_id in node_by_id}
+
+
+def _authority_node_ids(
+    *,
+    node_by_id: dict[str, dict[str, Any]],
+    family_nodes: dict[str, list[dict[str, Any]]],
+) -> set[str]:
+    selected = _node_ids_for_family(family_nodes.get("reservation", []))
+    selected.update(_node_ids_for_family(family_nodes.get("lease", [])))
+    selected.update(_node_ids_for_family(family_nodes.get("resource", [])))
+    selected.update(_node_ids_for_family(family_nodes.get("reconciliation", [])))
+    selected.update(_node_ids_for_family(family_nodes.get("final_truth", [])))
+    selected.update(_node_ids_for_family(family_nodes.get("effect", [])))
+
+    effect_step_refs = {
+        str(_attr(node, "step_id")).strip()
+        for node in family_nodes.get("effect", [])
+        if str(_attr(node, "step_id")).strip()
+    }
+    authoritative_result_refs = {
+        str(_attr(node, "authoritative_result_ref")).strip()
+        for node in family_nodes.get("final_truth", [])
+        if str(_attr(node, "authoritative_result_ref")).strip()
+    }
+    authority_observation_nodes = [
+        node
+        for node in family_nodes.get("observation", [])
+        if str(_attr(node, "resource_id")).strip()
+        or str(_attr(node, "final_truth_record_id")).strip()
+        or str(_attr(node, "step_id")).strip() in effect_step_refs
+        or str(_attr(node, "observation_ref")).strip() in authoritative_result_refs
+    ]
+    selected.update(_node_ids_for_family(authority_observation_nodes))
+
+    step_refs = set(effect_step_refs)
+    step_refs.update(
+        str(_attr(node, "step_id")).strip()
+        for node in authority_observation_nodes
+        if str(_attr(node, "step_id")).strip()
+    )
+    step_refs.update(
+        _record_ref(node)
+        for node in family_nodes.get("step", [])
+        if str(_attr(node, "output_ref")).strip() in authoritative_result_refs
+    )
+    attempt_refs = {
+        str(_attr(node, "attempt_id")).strip()
+        for node in family_nodes.get("step", [])
+        if _record_ref(node) in step_refs and str(_attr(node, "attempt_id")).strip()
+    }
+    run_refs = {
+        str(_attr(node, "run_id")).strip()
+        for node in family_nodes.get("attempt", []) + family_nodes.get("final_truth", []) + family_nodes.get("reconciliation", [])
+        if (
+            _record_ref(node) in attempt_refs
+            or node in family_nodes.get("final_truth", [])
+            or node in family_nodes.get("reconciliation", [])
+        )
+        and str(_attr(node, "run_id")).strip()
+    }
+    resource_refs = {_record_ref(node) for node in family_nodes.get("resource", [])}
+
+    selected.update(_node_ids_for_refs("step", step_refs))
+    selected.update(_node_ids_for_refs("attempt", attempt_refs))
+    selected.update(_node_ids_for_refs("run", run_refs))
+    selected.update(
+        _matching_operator_action_node_ids(
+            operator_nodes=family_nodes.get("operator_action", []),
+            run_refs=run_refs,
+            transition_refs=attempt_refs | step_refs,
+            resource_refs=resource_refs,
+        )
+    )
+    return {node_id for node_id in selected if node_id in node_by_id}
+
+
+def _decision_node_ids(
+    *,
+    node_by_id: dict[str, dict[str, Any]],
+    family_nodes: dict[str, list[dict[str, Any]]],
+) -> set[str]:
+    checkpoint_acceptance_nodes = family_nodes.get("checkpoint_acceptance", [])
+    recovery_nodes = family_nodes.get("recovery_decision", [])
+    reconciliation_nodes = family_nodes.get("reconciliation", [])
+    final_truth_nodes = family_nodes.get("final_truth", [])
+
+    checkpoint_refs = {
+        str(_attr(node, "checkpoint_id")).strip()
+        for node in checkpoint_acceptance_nodes
+        if str(_attr(node, "checkpoint_id")).strip()
+    }
+    selected_checkpoint_nodes = [
+        node for node in family_nodes.get("checkpoint", []) if _record_ref(node) in checkpoint_refs
+    ]
+    selected = _node_ids_for_family(checkpoint_acceptance_nodes)
+    selected.update(_node_ids_for_family(selected_checkpoint_nodes))
+    selected.update(_node_ids_for_family(recovery_nodes))
+    selected.update(_node_ids_for_family(reconciliation_nodes))
+    selected.update(_node_ids_for_family(final_truth_nodes))
+
+    authoritative_result_refs = {
+        str(_attr(node, "authoritative_result_ref")).strip()
+        for node in final_truth_nodes
+        if str(_attr(node, "authoritative_result_ref")).strip()
+    }
+    step_refs = {
+        str(_attr(node, "parent_ref")).strip()
+        for node in selected_checkpoint_nodes
+        if str(_attr(node, "parent_ref")).strip().startswith("kernel-action-run:")
+        or ":step:" in str(_attr(node, "parent_ref")).strip()
+    }
+    step_refs.update(
+        _record_ref(node)
+        for node in family_nodes.get("step", [])
+        if str(_attr(node, "output_ref")).strip() in authoritative_result_refs
+    )
+    attempt_refs = {
+        str(_attr(node, "failed_attempt_id")).strip()
+        for node in recovery_nodes
+        if str(_attr(node, "failed_attempt_id")).strip()
+    }
+    attempt_refs.update(
+        str(_attr(node, "new_attempt_id")).strip()
+        for node in recovery_nodes
+        if str(_attr(node, "new_attempt_id")).strip()
+    )
+    attempt_refs.update(
+        str(_attr(node, "resumed_attempt_id")).strip()
+        for node in recovery_nodes
+        if str(_attr(node, "resumed_attempt_id")).strip()
+    )
+    attempt_refs.update(
+        str(_attr(node, "parent_ref")).strip()
+        for node in selected_checkpoint_nodes
+        if str(_attr(node, "parent_ref")).strip() and ":attempt:" in str(_attr(node, "parent_ref")).strip()
+    )
+    attempt_refs.update(
+        str(_attr(node, "attempt_id")).strip()
+        for node in family_nodes.get("step", [])
+        if _record_ref(node) in step_refs and str(_attr(node, "attempt_id")).strip()
+    )
+
+    decision_observation_nodes = [
+        node
+        for node in family_nodes.get("observation", [])
+        if str(_attr(node, "step_id")).strip() in step_refs
+        or str(_attr(node, "final_truth_record_id")).strip()
+        or str(_attr(node, "observation_ref")).strip() in authoritative_result_refs
+    ]
+    selected.update(_node_ids_for_family(decision_observation_nodes))
+    selected.update(_node_ids_for_refs("step", step_refs))
+    selected.update(_node_ids_for_refs("attempt", attempt_refs))
+
+    run_refs = {
+        str(_attr(node, "run_id")).strip()
+        for node in family_nodes.get("attempt", []) + final_truth_nodes + reconciliation_nodes
+        if (
+            _record_ref(node) in attempt_refs
+            or node in final_truth_nodes
+            or node in reconciliation_nodes
+        )
+        and str(_attr(node, "run_id")).strip()
+    }
+    selected.update(_node_ids_for_refs("run", run_refs))
+    selected.update(
+        _matching_operator_action_node_ids(
+            operator_nodes=family_nodes.get("operator_action", []),
+            run_refs=run_refs,
+            transition_refs=attempt_refs | step_refs | checkpoint_refs,
+            resource_refs=set(),
+        )
+    )
+    return {node_id for node_id in selected if node_id in node_by_id}
+
+
 def _resource_authority_path_node_ids(
     *,
     node_by_id: dict[str, dict[str, Any]],
@@ -276,6 +533,8 @@ def _resource_authority_path_node_ids(
         )
     )
     return {node_id for node_id in selected if node_id in node_by_id}
+
+
 def _closure_path_node_ids(
     *,
     node_by_id: dict[str, dict[str, Any]],
@@ -285,7 +544,9 @@ def _closure_path_node_ids(
     if not final_truth_nodes:
         return set()
     selected = _node_ids_for_family(final_truth_nodes)
-    run_refs = {str(_attr(node, "run_id")).strip() for node in final_truth_nodes if str(_attr(node, "run_id")).strip()}
+    run_refs = {
+        str(_attr(node, "run_id")).strip() for node in final_truth_nodes if str(_attr(node, "run_id")).strip()
+    }
     observation_refs = {
         str(_attr(node, "authoritative_result_ref")).strip()
         for node in final_truth_nodes
@@ -336,6 +597,8 @@ def _closure_path_node_ids(
         )
     )
     return {node_id for node_id in selected if node_id in node_by_id}
+
+
 def _matching_operator_action_node_ids(
     *,
     operator_nodes: list[dict[str, Any]],
@@ -345,8 +608,16 @@ def _matching_operator_action_node_ids(
 ) -> set[str]:
     selected: set[str] = set()
     for node in operator_nodes:
-        affected_transition_refs = {str(token).strip() for token in _attr(node, "affected_transition_refs", []) if str(token).strip()}
-        affected_resource_refs = {str(token).strip() for token in _attr(node, "affected_resource_refs", []) if str(token).strip()}
+        affected_transition_refs = {
+            str(token).strip()
+            for token in _attr(node, "affected_transition_refs", [])
+            if str(token).strip()
+        }
+        affected_resource_refs = {
+            str(token).strip()
+            for token in _attr(node, "affected_resource_refs", [])
+            if str(token).strip()
+        }
         target_ref = str(_attr(node, "target_ref")).strip()
         if (
             target_ref in run_refs
@@ -355,33 +626,60 @@ def _matching_operator_action_node_ids(
         ):
             selected.add(str(node.get("id") or ""))
     return selected
+
+
 def _nodes_by_family(nodes: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
     families: dict[str, list[dict[str, Any]]] = {}
     for node in nodes:
         family = str(node.get("family") or "").strip()
         families.setdefault(family, []).append(node)
     return families
+
+
 def _node_ids_for_family(nodes: list[dict[str, Any]] | None) -> set[str]:
     return {str(node.get("id") or "") for node in (nodes or []) if str(node.get("id") or "").strip()}
+
+
 def _node_ids_for_refs(family: str, refs: set[str]) -> set[str]:
     return {_node_id(family, ref) for ref in refs if ref}
+
+
 def _node_id(family: str, record_ref: str) -> str:
     return f"{family}:{record_ref}" if str(record_ref).strip() else ""
+
+
 def _record_ref(node: dict[str, Any]) -> str:
     node_id = str(node.get("id") or "").strip()
     return node_id.split(":", 1)[1] if ":" in node_id else ""
+
+
 def _attr(node: dict[str, Any], key: str, default: Any = "") -> Any:
     attributes = node.get("attributes")
     if not isinstance(attributes, dict):
         return default
     return attributes.get(key, default)
+
+
 def _mermaid_alias(*, view: str, node_id: str) -> str:
     token = re.sub(r"[^A-Za-z0-9_]+", "_", f"{view}_{node_id}")
     return f"node_{token.strip('_') or 'unknown'}"
+
+
 def _mermaid_label(node: dict[str, Any]) -> str:
     family = str(node.get("family") or "").strip()
     label = str(node.get("label") or node.get("id") or "").strip()
     return _escape_mermaid(f"[{family}] {label}")
+
+
 def _escape_mermaid(value: str) -> str:
     return str(value).replace("\\", "\\\\").replace('"', "&quot;")
-__all__ = ["build_run_evidence_graph_html", "build_run_evidence_graph_mermaid", "build_run_evidence_graph_views", "write_run_evidence_graph_html_artifact", "write_run_evidence_graph_mermaid_artifact", "write_run_evidence_graph_rendered_artifacts"]
+
+
+__all__ = [
+    "build_run_evidence_graph_html",
+    "build_run_evidence_graph_mermaid",
+    "build_run_evidence_graph_views",
+    "write_run_evidence_graph_html_artifact",
+    "write_run_evidence_graph_mermaid_artifact",
+    "write_run_evidence_graph_rendered_artifacts",
+]

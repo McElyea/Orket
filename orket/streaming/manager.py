@@ -8,11 +8,51 @@ import uuid
 from copy import deepcopy
 from dataclasses import dataclass
 from dataclasses import field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
 from .bus import StreamBus
 from .contracts import CommitHandle, CommitIntent, StreamEventType, mono_ts_ms_now
+from .session_context import (
+    SESSION_CONTEXT_VERSION,
+    build_packet1_context_envelope,
+    build_packet1_provider_lineage,
+    flatten_packet1_context,
+)
+
+
+_INTERACTION_MEMORY_SCOPE_BOUNDARY = {
+    "session_memory": "host_owned_session_continuity",
+    "profile_memory": "separate_profile_or_operator_scope",
+    "workspace_memory": "workspace_root_state_separate_from_session_identity",
+}
+
+_INTERACTION_REPLAY_BOUNDARY = {
+    "timeline_view": "inspection_only",
+    "targeted_replay": "run_session_only",
+    "execution_authority": "none",
+}
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+def _turn_status_from_terminal_event(terminal_event: str | None) -> str:
+    if terminal_event == StreamEventType.TURN_INTERRUPTED.value:
+        return "interrupted"
+    if terminal_event == StreamEventType.TURN_FINAL.value:
+        return "finalized"
+    return "accepted"
+
+
+def _session_status(session: "InteractionSessionState") -> str:
+    if session.closed:
+        return "closed"
+    if session.active_turn_id is not None:
+        return "active"
+    return "idle"
 
 
 @dataclass
@@ -21,6 +61,12 @@ class InteractionSessionState:
     params: dict[str, Any]
     active_turn_id: str | None = None
     closed: bool = False
+    created_at: str = ""
+    updated_at: str = ""
+    last_turn_id: str | None = None
+    latest_context_envelope: dict[str, Any] = field(default_factory=dict)
+    latest_provider_lineage: list[dict[str, Any]] = field(default_factory=list)
+    turn_history: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -29,7 +75,11 @@ class TurnState:
     canceled: asyncio.Event
     terminal_event: str | None = None
     commit_started: bool = False
-    context_inputs: dict[str, Any] = field(default_factory=dict)
+    turn_index: int = 0
+    accepted_at: str = ""
+    finalized_at: str | None = None
+    context_envelope: dict[str, Any] = field(default_factory=dict)
+    provider_lineage: list[dict[str, Any]] = field(default_factory=list)
 
 
 class InteractionContext:
@@ -39,7 +89,8 @@ class InteractionContext:
         session_id: str,
         turn_id: str,
         session_params: dict[str, Any],
-        packet1_context_inputs: dict[str, Any],
+        packet1_context_envelope: dict[str, Any],
+        packet1_provider_lineage: list[dict[str, Any]],
         bus: StreamBus,
         cancel_event: asyncio.Event,
         commit_sink: Callable[[CommitIntent], Awaitable[None]],
@@ -47,7 +98,8 @@ class InteractionContext:
         self.session_id = session_id
         self.turn_id = turn_id
         self._session_params = deepcopy(session_params)
-        self._packet1_context_inputs = deepcopy(packet1_context_inputs)
+        self._packet1_context_envelope = deepcopy(packet1_context_envelope)
+        self._packet1_provider_lineage = deepcopy(packet1_provider_lineage)
         self._bus = bus
         self._cancel_event = cancel_event
         self._commit_sink = commit_sink
@@ -67,9 +119,13 @@ class InteractionContext:
         return deepcopy(self._session_params)
 
     def packet1_context(self) -> dict[str, Any]:
-        payload = {"session_params": self.session_params()}
-        payload.update(deepcopy(self._packet1_context_inputs))
-        return payload
+        return flatten_packet1_context(self._packet1_context_envelope)
+
+    def packet1_context_envelope(self) -> dict[str, Any]:
+        return deepcopy(self._packet1_context_envelope)
+
+    def packet1_provider_lineage(self) -> list[dict[str, Any]]:
+        return deepcopy(self._packet1_provider_lineage)
 
     def is_canceled(self) -> bool:
         return self._cancel_event.is_set()
@@ -151,10 +207,13 @@ class InteractionManager:
 
     async def start(self, session_params: dict[str, Any] | None = None) -> str:
         session_id = str(uuid.uuid4())
+        now = _utc_now_iso()
         async with self._lock:
             self._sessions[session_id] = InteractionSessionState(
                 session_id=session_id,
                 params=dict(session_params or {}),
+                created_at=now,
+                updated_at=now,
             )
         return session_id
 
@@ -166,16 +225,46 @@ class InteractionManager:
         *,
         context_inputs: dict[str, Any] | None = None,
     ) -> str:
+        accepted_at = _utc_now_iso()
         async with self._lock:
             session = self._require_session(session_id)
             if session.active_turn_id is not None:
                 raise ValueError("Linear turn policy enforced: active turn already exists")
             turn_id = str(uuid.uuid4())
+            turn_index = len(session.turn_history) + 1
+            context_envelope = build_packet1_context_envelope(
+                session_id=session_id,
+                session_params=session.params,
+                context_inputs=dict(context_inputs or {}),
+            )
+            provider_lineage = build_packet1_provider_lineage(context_envelope)
             session.active_turn_id = turn_id
+            session.last_turn_id = turn_id
+            session.latest_context_envelope = deepcopy(context_envelope)
+            session.latest_provider_lineage = deepcopy(provider_lineage)
+            session.updated_at = accepted_at
+            session.turn_history.append(
+                {
+                    "turn_id": turn_id,
+                    "turn_index": turn_index,
+                    "status": "accepted",
+                    "accepted_at": accepted_at,
+                    "finalized_at": None,
+                    "terminal_event": None,
+                    "context_version": SESSION_CONTEXT_VERSION,
+                    "context_envelope": deepcopy(context_envelope),
+                    "provider_lineage": deepcopy(provider_lineage),
+                    "inspection_only": True,
+                    "role": None,
+                }
+            )
             self._turns[(session_id, turn_id)] = TurnState(
                 turn_id=turn_id,
                 canceled=asyncio.Event(),
-                context_inputs=deepcopy(dict(context_inputs or {})),
+                turn_index=turn_index,
+                accepted_at=accepted_at,
+                context_envelope=deepcopy(context_envelope),
+                provider_lineage=deepcopy(provider_lineage),
             )
             self._pending_commit_intents[(session_id, turn_id)] = []
 
@@ -195,6 +284,7 @@ class InteractionManager:
         return await self.bus.subscribe(session_id)
 
     async def cancel(self, target_id: str) -> None:
+        finalized_at = _utc_now_iso()
         async with self._lock:
             # target may be session_id or turn_id
             if target_id in self._sessions:
@@ -222,6 +312,15 @@ class InteractionManager:
                 return
             turn_state.canceled.set()
             turn_state.terminal_event = StreamEventType.TURN_INTERRUPTED.value
+            turn_state.finalized_at = finalized_at
+            session = self._sessions.get(session_id)
+            if session is not None:
+                session.updated_at = finalized_at
+                turn_record = self._find_turn_record(session, turn_id)
+                if turn_record is not None:
+                    turn_record["terminal_event"] = StreamEventType.TURN_INTERRUPTED.value
+                    turn_record["status"] = "interrupted"
+                    turn_record["finalized_at"] = finalized_at
 
         await self.bus.publish(
             session_id=session_id,
@@ -231,17 +330,25 @@ class InteractionManager:
         )
 
     async def finalize(self, session_id: str, turn_id: str) -> CommitHandle:
+        finalized_at = _utc_now_iso()
         async with self._lock:
-            self._require_session(session_id)
+            session = self._require_session(session_id)
             turn_state = self._require_turn(session_id, turn_id)
             if turn_state.terminal_event is None:
                 turn_state.terminal_event = StreamEventType.TURN_FINAL.value
+                turn_state.finalized_at = finalized_at
                 emit_turn_final = True
+                turn_record = self._find_turn_record(session, turn_id)
+                if turn_record is not None:
+                    turn_record["terminal_event"] = StreamEventType.TURN_FINAL.value
+                    turn_record["status"] = "finalized"
+                    turn_record["finalized_at"] = finalized_at
             else:
                 emit_turn_final = False
             start_commit = not turn_state.commit_started
             if start_commit:
                 turn_state.commit_started = True
+            session.updated_at = finalized_at
 
         if emit_turn_final:
             await self.bus.publish(
@@ -283,11 +390,86 @@ class InteractionManager:
             session_id=session_id,
             turn_id=turn_id,
             session_params=session.params,
-            packet1_context_inputs=turn_state.context_inputs,
+            packet1_context_envelope=turn_state.context_envelope,
+            packet1_provider_lineage=turn_state.provider_lineage,
             bus=self.bus,
             cancel_event=turn_state.canceled,
             commit_sink=_sink,
         )
+
+    async def get_session_detail(self, session_id: str) -> dict[str, Any] | None:
+        async with self._lock:
+            session = self._sessions.get(session_id)
+            if session is None or session.closed:
+                return None
+            return self._session_detail_payload(session)
+
+    async def get_session_status(self, session_id: str) -> dict[str, Any] | None:
+        async with self._lock:
+            session = self._sessions.get(session_id)
+            if session is None or session.closed:
+                return None
+            return {
+                "session_id": session.session_id,
+                "surface": "interaction_session",
+                "active": session.active_turn_id is not None,
+                "status": _session_status(session),
+                "task_state": "running" if session.active_turn_id is not None else "idle",
+                "backlog": {"count": 0, "by_status": {}},
+                "summary": {
+                    "continuity_identifier": "session_id",
+                    "context_version": SESSION_CONTEXT_VERSION,
+                    "latest_turn_id": session.last_turn_id,
+                    "turn_count": len(session.turn_history),
+                    "inspection_only": True,
+                },
+                "artifacts": {
+                    "session_snapshot_surface": "GET /v1/sessions/{session_id}/snapshot",
+                    "session_replay_surface": "GET /v1/sessions/{session_id}/replay",
+                    "targeted_replay": "run_session_only",
+                },
+            }
+
+    async def get_session_snapshot(self, session_id: str) -> dict[str, Any] | None:
+        async with self._lock:
+            session = self._sessions.get(session_id)
+            if session is None or session.closed:
+                return None
+            return {
+                **self._session_detail_payload(session),
+                "snapshot_kind": "interaction_session_context",
+                "captured_at": session.updated_at,
+                "memory_scope_boundary": deepcopy(_INTERACTION_MEMORY_SCOPE_BOUNDARY),
+                "replay_boundary": deepcopy(_INTERACTION_REPLAY_BOUNDARY),
+                "session_context_pipeline": {
+                    "context_version": SESSION_CONTEXT_VERSION,
+                    "provider_lineage": deepcopy(session.latest_provider_lineage),
+                    "latest_context_envelope": deepcopy(session.latest_context_envelope)
+                    if session.latest_context_envelope
+                    else None,
+                },
+            }
+
+    async def get_session_replay_timeline(self, session_id: str, *, role: str | None = None) -> dict[str, Any] | None:
+        async with self._lock:
+            session = self._sessions.get(session_id)
+            if session is None or session.closed:
+                return None
+            role_filter = str(role or "").strip().lower() or None
+            turns = [
+                deepcopy(turn)
+                for turn in session.turn_history
+                if role_filter is None or str(turn.get("role") or "").strip().lower() == role_filter
+            ]
+            return {
+                "session_id": session.session_id,
+                "surface": "interaction_session",
+                "inspection_only": True,
+                "turn_count": len(turns),
+                "filters": {"role": role_filter},
+                "replay_boundary": deepcopy(_INTERACTION_REPLAY_BOUNDARY),
+                "turns": turns,
+            }
 
     async def mark_tool_result(
         self,
@@ -339,6 +521,34 @@ class InteractionManager:
             session = self._sessions.get(session_id)
             if session is not None and session.active_turn_id == turn_id:
                 session.active_turn_id = None
+                session.updated_at = _utc_now_iso()
+            if session is not None:
+                turn_record = self._find_turn_record(session, turn_id)
+                if turn_record is not None:
+                    turn_record["commit_outcome"] = str(payload.get("commit_outcome") or "")
+                    turn_record["commit_id"] = str(payload.get("commit_id") or "")
+                    turn_record["authoritative_commit"] = bool(payload.get("authoritative", False))
+
+    def _find_turn_record(self, session: InteractionSessionState, turn_id: str) -> dict[str, Any] | None:
+        for turn in reversed(session.turn_history):
+            if str(turn.get("turn_id") or "") == turn_id:
+                return turn
+        return None
+
+    def _session_detail_payload(self, session: InteractionSessionState) -> dict[str, Any]:
+        return {
+            "session_id": session.session_id,
+            "surface": "interaction_session",
+            "continuity_identifier": "session_id",
+            "inspection_only": True,
+            "status": _session_status(session),
+            "active_turn_id": session.active_turn_id,
+            "latest_turn_id": session.last_turn_id,
+            "turn_count": len(session.turn_history),
+            "created_at": session.created_at,
+            "updated_at": session.updated_at,
+            "session_params": deepcopy(session.params),
+        }
 
     def _require_session(self, session_id: str) -> InteractionSessionState:
         session = self._sessions.get(session_id)

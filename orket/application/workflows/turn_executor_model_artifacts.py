@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from orket.logging import log_event
 from orket.schema import IssueConfig, RoleConfig
+
+if TYPE_CHECKING:
+    from .turn_executor import TurnExecutor
 
 
 def response_artifact_payload(response: Any) -> tuple[str, Any]:
@@ -17,7 +20,7 @@ def response_artifact_payload(response: Any) -> tuple[str, Any]:
 
 
 async def write_response_artifacts(
-    executor: Any,
+    executor: TurnExecutor,
     *,
     session_id: str,
     issue_id: str,
@@ -27,28 +30,28 @@ async def write_response_artifacts(
 ) -> None:
     response_content, response_raw = response_artifact_payload(response)
     await asyncio.to_thread(
-        executor._write_turn_artifact,
-        session_id,
-        issue_id,
-        role_name,
-        turn_index,
-        "model_response.txt",
-        response_content,
+        executor.artifact_writer.write_turn_artifact,
+        session_id=session_id,
+        issue_id=issue_id,
+        role_name=role_name,
+        turn_index=turn_index,
+        filename="model_response.txt",
+        content=response_content,
     )
     await asyncio.to_thread(
-        executor._write_turn_artifact,
-        session_id,
-        issue_id,
-        role_name,
-        turn_index,
-        "model_response_raw.json",
-        json.dumps(response_raw, indent=2, ensure_ascii=False, default=str),
+        executor.artifact_writer.write_turn_artifact,
+        session_id=session_id,
+        issue_id=issue_id,
+        role_name=role_name,
+        turn_index=turn_index,
+        filename="model_response_raw.json",
+        content=json.dumps(response_raw, indent=2, ensure_ascii=False, default=str),
     )
 
 
 def log_turn_start(
     *,
-    executor: Any,
+    executor: TurnExecutor,
     issue: IssueConfig,
     role: RoleConfig,
     context: dict[str, Any],

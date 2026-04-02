@@ -7,6 +7,7 @@ Source requirements: `docs/projects/archive/SupervisorRuntime/SRF03312026-LANE-C
 Implementation closeout authority:
 1. `docs/projects/archive/SupervisorRuntime/SRF03312026-LANE-CLOSEOUT/CLOSEOUT.md`
 2. `docs/projects/archive/RuntimeOS/RTOS04012026-SESSION-CONTINUITY-CLOSEOUT/CLOSEOUT.md`
+3. `docs/projects/archive/RuntimeOS/RTOS04012026-SESSIONS-CONTEXT-PROVIDER-PIPELINE-CLOSEOUT/CLOSEOUT.md`
 
 Related authority:
 1. `docs/API_FRONTEND_CONTRACT.md`
@@ -15,21 +16,21 @@ Related authority:
 
 ## Authority posture
 
-This document is the active durable contract authority for the completed Packet 1 and RuntimeOS session continuity boundary.
+This document is the active durable contract authority for the completed Packet 1, RuntimeOS session continuity boundary, and the completed RuntimeOS sessions context-provider pipeline lane.
 
-It extracts the selected host-owned `session_id` continuity model from the completed SupervisorRuntime Packet 1 lane and the completed RuntimeOS session continuity hardening lane.
+It extracts the selected host-owned `session_id` continuity model from the completed SupervisorRuntime Packet 1 lane, the completed RuntimeOS session continuity hardening lane, and the completed RuntimeOS sessions context-provider pipeline lane.
 It does not define broad retention, cleanup, replay, parity, or memory-product behavior beyond the selected bounded session-continuity slice.
 
 ## Purpose
 
-Define one host-owned session continuity boundary so turn continuity, bounded context-provider inputs, session inspection surfaces, and replay or reconstruction limits remain explicit without collapsing into a broad memory platform.
+Define one host-owned session continuity boundary so turn continuity, one canonical Packet 1 session-context envelope, explicit provider ordering, session inspection surfaces, and replay or reconstruction limits remain explicit without collapsing into a broad memory platform.
 
 ## Scope
 
 In scope:
 1. host-owned `session_id` creation on `POST /v1/interactions/sessions`
 2. subordinate turn attachment on `POST /v1/interactions/{session_id}/turns`
-3. one bounded context-provider input vocabulary for the selected Packet 1 slice
+3. one bounded context-provider input vocabulary, one canonical session-context envelope, and one explicit provider ordering for the selected Packet 1 slice
 4. host-owned session inspection on `GET /v1/sessions/{session_id}`, `GET /v1/sessions/{session_id}/status`, `GET /v1/sessions/{session_id}/replay`, and `GET /v1/sessions/{session_id}/snapshot`
 5. protocol replay and parity surfaces under `GET /v1/protocol/*` as inspection-only reconstruction and comparison views
 6. cleanup-adjacent operator commands limited to `POST /v1/sessions/{session_id}/halt` and `POST /v1/interactions/{session_id}/cancel`
@@ -58,9 +59,10 @@ The admitted host-owned continuity boundary is:
 1. `POST /v1/interactions/sessions` creates the host-owned `session_id`
 2. `POST /v1/interactions/{session_id}/turns` attaches subordinate turn execution to that session
 3. `GET /v1/sessions/{session_id}` and `GET /v1/sessions/{session_id}/status` are host-owned inspection views keyed by that canonical `session_id`
-4. `GET /v1/sessions/{session_id}/snapshot` and `GET /v1/sessions/{session_id}/replay` are inspection-only continuity views keyed by the same host-owned `session_id`
-5. when `GET /v1/sessions/{session_id}/replay` is called without both `issue_id` and `turn_index`, it returns a timeline view; when both are present, it returns targeted replay; neither mode grants execution or continuation authority
-6. `approval_id`, `turn_id`, `issue_id`, and seat or step identifiers remain subordinate targeting or execution identifiers and must not replace `session_id` as the continuity boundary
+4. `GET /v1/sessions/{session_id}/snapshot` returns an inspection-only continuity view keyed by the same host-owned `session_id`; on the admitted interaction-session path it exposes the latest session-context envelope plus ordered provider lineage for the bounded Packet 1 vocabulary
+5. when `GET /v1/sessions/{session_id}/replay` is called without both `issue_id` and `turn_index`, it returns a timeline view; on the admitted interaction-session path that timeline is the interaction-turn lineage view
+6. when `GET /v1/sessions/{session_id}/replay` is called with both `issue_id` and `turn_index`, it returns targeted replay for run-session surfaces only; interaction sessions fail closed on targeted replay requests
+7. `approval_id`, `turn_id`, `issue_id`, and step identifiers remain subordinate targeting or execution identifiers and must not replace `session_id` as the continuity boundary
 
 ## Context-provider input contract
 
@@ -77,6 +79,29 @@ For the selected session-continuity slice, context-provider inputs stay limited 
 `required_capabilities` is host-resolved manifest metadata, not a caller-owned freeform input.
 This contract does not authorize broader context-provider vocabularies without same-change spec updates.
 
+## Canonical session-context envelope and provider ordering
+
+For the admitted interaction-session path, the canonical Packet 1 session-context envelope is:
+1. `context_version`
+2. `continuity`:
+   1. `session_id`
+   2. `session_params`
+3. `turn_request`:
+   1. `input_config`
+   2. `turn_params`
+   3. `workload_id`
+   4. `department`
+   5. contained `workspace`
+4. `extension_manifest.required_capabilities` only when the extension path is used
+
+The admitted provider ordering is fixed to:
+1. host continuity
+2. host-validated turn request
+3. host-resolved extension-manifest `required_capabilities` metadata when present
+
+This ordering is inspection-only lineage.
+It does not create continuation authority, and it must not widen beyond the bounded Packet 1 vocabulary without same-change contract updates.
+
 ## Memory-scope separation rule
 
 This contract fixes the minimum non-collapse rule:
@@ -92,11 +117,13 @@ It only makes the boundary explicit enough for the selected Packet 1 slice to re
 
 The admitted operator-visible boundary is:
 1. `GET /v1/sessions/{session_id}`, `GET /v1/sessions/{session_id}/status`, `GET /v1/sessions/{session_id}/replay`, and `GET /v1/sessions/{session_id}/snapshot` are session inspection surfaces only
-2. `POST /v1/sessions/{session_id}/halt` is the admitted session-scoped cleanup-adjacent operator command on this contract
-3. `POST /v1/interactions/{session_id}/cancel` is the admitted interaction-scoped cleanup-adjacent operator command and may target the whole interaction session or one subordinate `turn_id`
-4. halt and cancel remain bounded operator commands; they do not define session deletion, retention expiry, workspace cleanup, or broader cleanup policy
-5. preserved session artifacts may describe prior continuity, but they do not invent new continuation authority
-6. a client-facing surface may present session state, but the host remains authoritative for continuity and lifecycle decisions
+2. on the admitted interaction-session path, `GET /v1/sessions/{session_id}/snapshot` exposes the latest session-context envelope and ordered provider lineage only as inspection truth
+3. on the admitted interaction-session path, `GET /v1/sessions/{session_id}/replay` without targeted replay selectors exposes an interaction-turn lineage timeline only as inspection truth
+4. `POST /v1/sessions/{session_id}/halt` is the admitted session-scoped cleanup-adjacent operator command on this contract
+5. `POST /v1/interactions/{session_id}/cancel` is the admitted interaction-scoped cleanup-adjacent operator command and may target the whole interaction session or one subordinate `turn_id`
+6. halt and cancel remain bounded operator commands; they do not define session deletion, retention expiry, workspace cleanup, or broader cleanup policy
+7. preserved session artifacts may describe prior continuity, but they do not invent new continuation authority
+8. a client-facing surface may present session state, but the host remains authoritative for continuity and lifecycle decisions
 
 ## Protocol replay and parity boundary
 
@@ -116,6 +143,7 @@ The selected session boundary must fail closed when:
 4. a client attempts to substitute subordinate identifiers for the host-owned `session_id`
 5. a later surface tries to treat replay, reconstruction, comparison, or parity artifacts as execution or continuation authority
 6. a halt request targets a missing `session_id` on the admitted session halt path
+7. targeted replay selectors are used against an admitted interaction session rather than a run-session replay surface
 
 ## Canonical seams and proof entrypoints
 
@@ -136,8 +164,9 @@ Current seams:
 
 Current proof entrypoints:
 1. `python -m pytest -q tests/interfaces/test_api_interactions.py`
-2. `python -m pytest -q tests/interfaces/test_sessions_router_protocol_replay.py`
-3. `python -m pytest -q tests/interfaces/test_api.py -k "run_detail_and_session_status or session_halt_endpoint or interaction_cancel_endpoint or session_replay_endpoint"`
+2. `python -m pytest -q tests/streaming/test_manager.py`
+3. `python -m pytest -q tests/interfaces/test_sessions_router_protocol_replay.py`
+4. `python -m pytest -q tests/interfaces/test_api.py -k "run_detail_and_session_status or session_halt_endpoint or interaction_cancel_endpoint or session_replay_endpoint or session_snapshot"`
 
 ## Contract maintenance rules
 
