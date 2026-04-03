@@ -47,7 +47,7 @@
             "top_p": 1.0,
             "top_k": 1,
             "repeat_penalty": 1.0,
-            "max_output_tokens": 512,
+            "max_output_tokens": 2048,
             "seed_policy": "fixed",
             "seed_value": 17
           },

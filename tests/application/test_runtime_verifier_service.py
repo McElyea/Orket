@@ -67,6 +67,100 @@ async def test_runtime_verifier_runs_policy_commands(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+async def test_runtime_verifier_runs_issue_scoped_behavioral_commands(tmp_path: Path):
+    agent_output = tmp_path / "agent_output"
+    runtime_root = agent_output / "challenge_runtime"
+    tests_root = agent_output / "tests"
+    runtime_root.mkdir(parents=True, exist_ok=True)
+    tests_root.mkdir(parents=True, exist_ok=True)
+    (agent_output / "main.py").write_text(
+        "import json\n"
+        "print(json.dumps({'validated_count': 2, 'layer_count': 3, 'checkpoint_written': True, 'resumed_terminal_state': 'completed'}))\n",
+        encoding="utf-8",
+    )
+    (runtime_root / "reporting.py").write_text(
+        "import json\n"
+        "def format_report(data):\n"
+        "    return json.dumps(data)\n",
+        encoding="utf-8",
+    )
+    (tests_root / "test_smoke.py").write_text("def test_smoke():\n    assert True\n", encoding="utf-8")
+
+    result = await RuntimeVerifier(
+        tmp_path,
+        artifact_contract={"kind": "artifact", "primary_output": "agent_output/README.md"},
+        issue_params={
+            "runtime_verifier": {
+                "commands": [
+                    {"argv": ["python", "-m", "pytest", "-q", "tests"], "cwd": "agent_output"},
+                    {
+                        "argv": [
+                            "python",
+                            "-c",
+                            "import json; from challenge_runtime.reporting import format_report; rendered = format_report({'ok': True}); payload = json.loads(rendered); print(json.dumps(payload))",
+                        ],
+                        "cwd": "agent_output",
+                    },
+                    {"argv": ["python", "agent_output/main.py"], "cwd": "."},
+                ],
+                "expect_json_stdout": True,
+                "json_assertions": [
+                    {"path": "validated_count", "op": "gte", "value": 2},
+                    {"path": "layer_count", "op": "gte", "value": 3},
+                    {"path": "checkpoint_written", "op": "eq", "value": True},
+                    {"path": "resumed_terminal_state", "op": "eq", "value": "completed"},
+                ],
+            }
+        },
+    ).verify()
+
+    assert result.ok is True
+    assert len(result.command_results) == 3
+    assert result.command_results[0]["policy_source"] == "issue_override"
+    assert result.command_results[0]["command_text"] == "python -m pytest -q tests"
+    assert result.command_results[0]["working_directory"] == "agent_output"
+    assert result.command_results[0]["exit_code"] == 0
+    assert result.command_results[0]["outcome"] == "pass"
+    assert result.command_results[1]["command_text"].startswith("python -c import json;")
+    assert result.command_results[1]["working_directory"] == "agent_output"
+    assert result.command_results[1]["exit_code"] == 0
+    assert result.command_results[2]["command_text"] == "python agent_output/main.py"
+    assert result.command_results[2]["working_directory"] == "."
+    assert result.command_results[2]["stdout_contract_ok"] is True
+    assert result.command_results[2]["stdout_json"]["validated_count"] == 2
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_supports_nested_list_json_assertions(tmp_path: Path):
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "main.py").write_text(
+        "import json\n"
+        "print(json.dumps({'layers': [['task1'], ['task2', 'task3'], ['task4']]}))\n",
+        encoding="utf-8",
+    )
+
+    result = await RuntimeVerifier(
+        tmp_path,
+        issue_params={
+            "runtime_verifier": {
+                "commands": [
+                    {"argv": ["python", "agent_output/main.py"], "cwd": "."},
+                ],
+                "expect_json_stdout": True,
+                "json_assertions": [
+                    {"path": "layers.1.1", "op": "eq", "value": "task3"},
+                ],
+            }
+        },
+    ).verify()
+
+    assert result.ok is True
+    assert result.command_results[0]["stdout_contract_ok"] is True
+    assert result.command_results[0]["stdout_json"]["layers"][1][1] == "task3"
+
+
+@pytest.mark.asyncio
 async def test_runtime_verifier_fails_on_runtime_command_error(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
@@ -80,6 +174,56 @@ async def test_runtime_verifier_fails_on_runtime_command_error(tmp_path: Path):
     assert result.command_results[0]["returncode"] == 3
     assert result.command_results[0]["failure_class"] == "command_failed"
     assert result.failure_breakdown.get("command_failed", 0) >= 1
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_preserves_traceback_tail_for_long_inline_commands(tmp_path: Path):
+    """Layer: contract. Verifies long inline verifier commands still surface the exception tail in stored stderr and summary errors."""
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
+    padding = "x=0;" * 700
+
+    result = await RuntimeVerifier(
+        tmp_path,
+        issue_params={
+            "runtime_verifier": {
+                "commands": [
+                    {"argv": ["python", "-c", padding + "raise RuntimeError('tail-visible')"], "cwd": "agent_output"},
+                ]
+            }
+        },
+    ).verify()
+
+    assert result.ok is False
+    assert result.command_results[0]["returncode"] == 1
+    assert "RuntimeError: tail-visible" in result.command_results[0]["stderr"]
+    assert result.errors
+    assert result.errors[0].startswith("runtime command failed [command_failed] cwd=agent_output:")
+    assert "RuntimeError: tail-visible" in result.errors[0]
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_rejects_issue_command_cwd_escape(tmp_path: Path):
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+
+    result = await RuntimeVerifier(
+        tmp_path,
+        issue_params={
+            "runtime_verifier": {
+                "commands": [
+                    {"argv": ["python", "-V"], "cwd": ".."},
+                ]
+            }
+        },
+    ).verify()
+
+    assert result.ok is False
+    assert result.command_results[0]["returncode"] == 126
+    assert result.command_results[0]["working_directory"] == ".."
+    assert result.command_results[0]["outcome"] == "fail"
+    assert "escapes workspace" in result.command_results[0]["stderr"]
 
 
 @pytest.mark.asyncio

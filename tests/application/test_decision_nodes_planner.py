@@ -794,10 +794,23 @@ def test_registry_resolves_default_orchestration_loop_policy():
     assert node.required_action_tools_for_seat("coder") == ["write_file", "update_issue_status"]
     assert node.required_action_tools_for_seat("evidence_reviewer") == ["write_file", "update_issue_status"]
     assert node.required_action_tools_for_seat("code_reviewer") == ["read_file", "update_issue_status"]
-    assert node.required_action_tools_for_seat("integrity_guard") == ["update_issue_status"]
+    assert node.required_action_tools_for_seat("integrity_guard") == ["read_file", "update_issue_status"]
     assert node.required_action_tools_for_seat(
         "integrity_guard",
         issue=SimpleNamespace(seat="code_reviewer"),
+    ) == ["read_file", "update_issue_status"]
+    assert node.required_action_tools_for_seat(
+        "integrity_guard",
+        issue=SimpleNamespace(
+            seat="coder",
+            params={
+                "artifact_contract": {
+                    "kind": "artifact",
+                    "required_write_paths": ["agent_output/out.txt"],
+                    "review_read_paths": ["agent_output/out.txt"],
+                }
+            },
+        ),
     ) == ["read_file", "update_issue_status"]
     assert node.required_action_tools_for_seat("lead_architect") == []
     assert node.required_statuses_for_seat("requirements_analyst") == ["code_review"]
@@ -894,6 +907,21 @@ def test_default_orchestration_loop_context_window_env_override(monkeypatch):
 
     monkeypatch.setenv("ORKET_CONTEXT_WINDOW", "bad")
     assert node.context_window(None) == 10
+
+
+def test_default_orchestration_loop_max_iterations_defaults_and_overrides(monkeypatch):
+    from orket.decision_nodes.builtins import DefaultOrchestrationLoopPolicyNode
+
+    monkeypatch.delenv("ORKET_ORCHESTRATOR_MAX_ITERATIONS", raising=False)
+    node = DefaultOrchestrationLoopPolicyNode()
+    assert node.max_iterations(SimpleNamespace(process_rules={})) == 40
+    assert node.max_iterations(SimpleNamespace(process_rules={"orchestrator_max_iterations": "28"})) == 28
+
+    monkeypatch.setenv("ORKET_ORCHESTRATOR_MAX_ITERATIONS", "33")
+    assert node.max_iterations(SimpleNamespace(process_rules={"orchestrator_max_iterations": "28"})) == 33
+
+    monkeypatch.setenv("ORKET_ORCHESTRATOR_MAX_ITERATIONS", "bad")
+    assert node.max_iterations(SimpleNamespace(process_rules={})) == 40
 
 
 def test_registry_resolves_default_model_client_policy():

@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.33] - 2026-04-03 - "The Challenge Workflow Runtime Truth Hardening Cut"
+
+### Added
+- **Challenge Workflow Runtime Closeout Archive**: Added the archived `TD04032026` techdebt closeout packet under `docs/projects/archive/techdebt/TD04032026/` so the accepted hardening scope, rerun evidence, and residual-risk framing are preserved as durable history instead of active lane drift.
+
+### Changed
+- **Challenge Epic Contract Hardening**: Hardened `challenge_workflow_runtime` issue notes, semantic checks, runtime-verifier commands, local prompt profile expectations, and the `qwen` dialect guidance so generated artifacts must match the admitted workflow vocabulary, planner/validator/simulator behavior, checkpoint/resume semantics, and reporting proof surface rather than passing on compile-only or semantically false-green output.
+- **Runtime Verifier And Turn Semantics**: Expanded runtime-verifier parsing, turn-contract validation, turn message/response handling, artifact semantic rules, orchestrator plumbing, and cards-runtime contracts so nested JSON assertions and issue-scoped behavioral proof commands are first-class runtime truth instead of ad hoc post-processing.
+- **Regression Proof Coverage**: Extended the repo-backed application/core/platform test matrix around the hardened challenge asset contracts, verifier behavior, planner/orchestrator flows, and local prompting policy so the accepted challenge-runtime proof path is mechanically defended.
+- **Roadmap Posture**: Updated `docs/ROADMAP.md` back to standing maintenance only after the finite `TD04032026` lane was archived.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Treat `runtime_verification.json` behavioral command execution as the canonical proof surface for `challenge_workflow_runtime`; compile-only verifier output is no longer sufficient evidence of success.
+
 ## [0.4.32] - 2026-04-02 - "The Runtime Challenge And Authority Rebase Cut"
 
 ### Added

@@ -101,6 +101,7 @@ async def test_resolve_local_prompting_policy_uses_tool_call_bundle_when_require
     assert result.sampling_bundle["temperature"] == 0.0
     assert result.sampling_bundle["seed_policy"] == "fixed"
     assert result.sampling_bundle["seed_value"] == 17
+    assert result.sampling_bundle["max_output_tokens"] == 2048
 
 
 @pytest.mark.asyncio

@@ -42,6 +42,36 @@ def test_response_parser_non_json_residue_and_guard_payload(tmp_path: Path) -> N
     assert payload.get("rationale") == "ok"
 
 
+def test_response_parser_non_json_residue_ignores_recovered_legacy_tool_only_payload(tmp_path: Path) -> None:
+    parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
+    content = (
+        '```json\n'
+        '{\n'
+        '  "tool": "write_file",\n'
+        '  "args": {\n'
+        '    "path": "agent_output/challenge_runtime/validator.py",\n'
+        '    "content": "if task[\'duration\'] < 0:\\n'
+        '    errors.append({\\n'
+        '        \'message\': f\'Negative duration: {task["duration"]}\'\\n'
+        '    })"\n'
+        '  }\n'
+        '}\n'
+        '```\n\n'
+        '```json\n'
+        '{\n'
+        '  "tool": "update_issue_status",\n'
+        '  "args": {\n'
+        '    "status": "code_review"\n'
+        '  }\n'
+        '}\n'
+        '```'
+    )
+
+    residue = parser.non_json_residue(content)
+
+    assert residue == ""
+
+
 def test_response_parser_strict_protocol_mode_accepts_canonical_envelope(tmp_path: Path) -> None:
     parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
     response = {

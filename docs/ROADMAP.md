@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-04-02
+Last updated: 2026-04-03
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. none.
+1. None. Active non-recurring lanes are closed; standing recurring maintenance continues below.
 
 ## Maintenance (Non-Priority)
 

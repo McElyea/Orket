@@ -52,6 +52,9 @@ class MessageBuilder:
             note = str(getattr(issue, "note", "") or "").strip()
             if note:
                 issue_brief_lines.append(f"Task Note: {note}")
+            retry_note = str(context.get("runtime_retry_note") or "").strip()
+            if retry_note:
+                issue_brief_lines.append(f"Retry Note: {retry_note}")
             references = [str(item).strip() for item in (getattr(issue, "references", []) or []) if str(item).strip()]
             if references:
                 issue_brief_lines.append("References:")
@@ -105,6 +108,7 @@ class MessageBuilder:
             profile_traits = {}
         artifact_contract_allowed = bool(profile_traits.get("artifact_contract_required", True))
         runtime_verifier_allowed = bool(profile_traits.get("runtime_verifier_allowed", True))
+        profile_intent = str(profile_traits.get("intent") or "").strip().lower()
 
         if (
             artifact_contract_allowed
@@ -118,6 +122,38 @@ class MessageBuilder:
                     "content": "Artifact Contract JSON:\n" + json.dumps(artifact_contract, sort_keys=True),
                 }
             )
+            semantic_checks = artifact_contract.get("semantic_checks")
+            if isinstance(semantic_checks, list) and semantic_checks:
+                semantic_lines = ["- Additional semantic checks apply to written artifact paths."]
+                for raw_check in semantic_checks:
+                    if not isinstance(raw_check, dict):
+                        continue
+                    path = str(raw_check.get("path") or "").strip()
+                    label = str(raw_check.get("label") or "").strip()
+                    if path:
+                        semantic_lines.append(f"- Path: {path}")
+                    if label:
+                        semantic_lines.append(f"  - Purpose: {label}")
+                    must_contain = [
+                        str(token).strip()
+                        for token in (raw_check.get("must_contain") or [])
+                        if str(token).strip()
+                    ]
+                    if must_contain:
+                        semantic_lines.append("  - Must contain: " + ", ".join(must_contain))
+                    must_not_contain = [
+                        str(token).strip()
+                        for token in (raw_check.get("must_not_contain") or [])
+                        if str(token).strip()
+                    ]
+                    if must_not_contain:
+                        semantic_lines.append("  - Must not contain: " + ", ".join(must_not_contain))
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": "Artifact Semantic Contract:\n" + "\n".join(semantic_lines),
+                    }
+                )
         scenario_truth = context.get("scenario_truth")
         if isinstance(scenario_truth, dict) and scenario_truth:
             blocked_issue_policy = (
@@ -151,8 +187,11 @@ class MessageBuilder:
             runtime_verifier_contract = dict(runtime_verifier_contract)
         else:
             runtime_verifier_contract = {}
+        runtime_verifier_prompt_enabled = runtime_verifier_allowed or (
+            bool(runtime_verifier_contract) and profile_intent in {"write_artifact", "build_app"}
+        )
         if (
-            runtime_verifier_allowed
+            runtime_verifier_prompt_enabled
             and isinstance(artifact_contract, dict)
             and artifact_contract
             and str(artifact_contract.get("kind") or "").strip().lower() != "none"
@@ -160,11 +199,27 @@ class MessageBuilder:
             entrypoint_path = str(artifact_contract.get("entrypoint_path") or "").strip()
             artifact_kind = str(artifact_contract.get("kind") or "").strip().lower()
             verifier_lines: list[str] = []
+            explicit_commands = runtime_verifier_contract.get("commands")
+            if isinstance(explicit_commands, list) and explicit_commands:
+                verifier_lines.append("- The runtime verifier will execute these commands exactly:")
+                for raw_command in explicit_commands:
+                    cwd = "."
+                    argv = raw_command
+                    if isinstance(raw_command, dict):
+                        cwd = str(raw_command.get("cwd") or ".").strip() or "."
+                        argv = raw_command.get("argv")
+                    if not isinstance(argv, list):
+                        continue
+                    rendered = " ".join(str(token).strip() for token in argv if str(token).strip())
+                    if not rendered:
+                        continue
+                    verifier_lines.append(f"  - cwd={cwd}: {rendered}")
             if artifact_kind == "app" and entrypoint_path:
                 verifier_lines.append(f"- The runtime verifier will execute exactly: python {entrypoint_path}")
                 verifier_lines.append("- The entrypoint must succeed with no positional arguments or interactive input.")
+                verifier_lines.append("- The entrypoint runs as a script, so do not use package-relative imports in that file.")
             if bool(runtime_verifier_contract.get("expect_json_stdout", False)):
-                verifier_lines.append("- The entrypoint must print valid JSON to stdout.")
+                verifier_lines.append("- The verifier command checked for stdout must print valid JSON.")
             json_assertions = runtime_verifier_contract.get("json_assertions")
             if isinstance(json_assertions, list) and json_assertions:
                 verifier_lines.append("- Required stdout assertions:")
@@ -222,6 +277,7 @@ class MessageBuilder:
             required_action_tools = [tool for tool in required_action_tools if tool != "read_file"]
         read_path_contract_required = "read_file" in required_action_tools
         write_path_contract_required = "write_file" in required_action_tools
+        profile_intent = str(((context.get("profile_traits") or {}) if isinstance(context.get("profile_traits"), dict) else {}).get("intent") or "").strip().lower()
         required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
         required_comment_min_length = context.get("required_comment_min_length")
         required_comment_contains = [str(token).strip() for token in (context.get("required_comment_contains") or []) if str(token).strip()]
@@ -229,6 +285,10 @@ class MessageBuilder:
             contract_lines = []
             if required_action_tools:
                 contract_lines.append(f"- Required tool calls this turn: {', '.join(required_action_tools)}")
+                if len(required_action_tools) > 1 and not bool(context.get("protocol_governed_enabled", False)):
+                    contract_lines.append(
+                        "- Emit multiple top-level JSON tool objects in sequence, one per required tool call."
+                    )
             if required_statuses:
                 contract_lines.append(f"- Required update_issue_status.status values: {', '.join(required_statuses)}")
                 contract_lines.append(
@@ -236,6 +296,11 @@ class MessageBuilder:
                 )
             contract_lines.append("- You must include all required tool calls in this same response.")
             contract_lines.append("- A response containing only get_issue_context/add_issue_comment is invalid.")
+            if write_path_contract_required:
+                contract_lines.append("- Empty or placeholder content for required write_file paths is invalid.")
+                contract_lines.append(
+                    "- When writing Python source through write_file, prefer single-quoted literals to keep the JSON payload valid."
+                )
             messages.append({"role": "user", "content": "Turn Success Contract:\n" + "\n".join(contract_lines)})
 
         if required_write_paths and write_path_contract_required:
@@ -251,6 +316,7 @@ class MessageBuilder:
             or "add_issue_comment" in required_action_tools
             or required_comment_min_length
             or required_comment_contains
+            or profile_intent in {"write_artifact", "build_app"}
         )
         if required_read_paths and read_path_contract_required:
             read_lines = [

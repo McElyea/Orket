@@ -609,7 +609,16 @@ class DefaultOrchestrationLoopPolicyNode:
         return 3
 
     def max_iterations(self, organization: Any) -> int:
-        return 20
+        process_rules = getattr(organization, "process_rules", None)
+        configured = process_rules.get("orchestrator_max_iterations") if isinstance(process_rules, dict) else None
+        raw = os.getenv("ORKET_ORCHESTRATOR_MAX_ITERATIONS") or configured
+        if raw is not None:
+            try:
+                return max(1, int(raw))
+            except (TypeError, ValueError):
+                pass
+        # Default above 20 so multi-issue builder+guard epics can complete without a custom loop policy.
+        return 40
 
     def context_window(self, organization: Any) -> int:
         raw = os.getenv("ORKET_CONTEXT_WINDOW", "10")
@@ -646,8 +655,10 @@ class DefaultOrchestrationLoopPolicyNode:
             "integrity_guard": ["update_issue_status"],
         }
         resolved = list(seat_requirements.get(seat, []))
-        if seat == "integrity_guard" and issue_seat in {"code_reviewer", "reviewer"}:
-            return ["read_file", "update_issue_status"]
+        if seat == "integrity_guard":
+            review_paths = resolve_cards_required_read_paths(seat_name=seat_name, issue=issue)
+            if review_paths or issue_seat in {"code_reviewer", "reviewer"}:
+                return ["read_file", "update_issue_status"]
         return resolved
 
     def required_statuses_for_seat(self, seat_name: str, **_kwargs) -> List[str]:

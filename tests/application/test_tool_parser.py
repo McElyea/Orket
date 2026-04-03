@@ -150,6 +150,27 @@ def test_parse_truncated_write_file_json_recovery():
     assert "print(\"ok\")" in results[0]["args"]["content"]
 
 
+def test_parse_write_file_recovery_with_unescaped_inner_quotes():
+    text = """```json
+{
+  "tool": "write_file",
+  "args": {
+    "path": "agent_output/challenge_runtime/validator.py",
+    "content": "def validate(task):\\n    return f'Duplicate task id: {task["id"]}'\\n"
+  }
+}
+```
+{"tool":"update_issue_status","args":{"status":"code_review"}}
+"""
+    results = ToolParser.parse(text)
+
+    assert len(results) == 2
+    assert results[0]["tool"] == "write_file"
+    assert results[0]["args"]["path"] == "agent_output/challenge_runtime/validator.py"
+    assert 'task["id"]' in results[0]["args"]["content"]
+    assert results[1]["tool"] == "update_issue_status"
+
+
 def test_parse_truncated_tool_batch_recovery():
     text = """
 ```json
@@ -162,6 +183,23 @@ def test_parse_truncated_tool_batch_recovery():
     assert results[0]["tool"] == "write_file"
     assert results[1]["tool"] == "update_issue_status"
     assert results[1]["args"]["status"] == "code_review"
+
+
+# Layer: unit
+def test_parse_truncated_tool_batch_recovery_preserves_read_file_calls():
+    text = """
+```json
+{"tool":"read_file","args":{"path":"agent_output/requirements.txt"}}
+{"tool":"write_file","args":{"path":"agent_output/design.txt","content":"{}"}}
+{"tool":"update_issue_status","args":{"status":"code_review"}
+```"""
+    results = ToolParser.parse(text)
+
+    assert len(results) == 3
+    assert results[0]["tool"] == "read_file"
+    assert results[0]["args"]["path"] == "agent_output/requirements.txt"
+    assert results[1]["tool"] == "write_file"
+    assert results[2]["tool"] == "update_issue_status"
 
 
 # Layer: unit
@@ -205,4 +243,3 @@ def test_parse_truncated_json_recovery_includes_skipped_tools_when_partial_recov
     assert recovery_events[0]["count"] == 1
     assert recovery_events[0]["tools"] == ["write_file"]
     assert recovery_events[0]["skipped_tools"] == [{"tool": "create_issue", "reason": "unsupported_tool"}]
-

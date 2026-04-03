@@ -3,7 +3,7 @@
   "dsl_format": "{\n  \"tool\": \"write_file\",\n  \"args\": {\n    \"path\": \"filename.ext\",\n    \"content\": \"your code here\"\n  }\n}",
   "constraints": [
     "NEVER include conversational filler.",
-    "Your output must be a SINGLE JSON object.",
+    "Each emitted tool call must be a valid JSON object.",
     "Do NOT use markdown code blocks (```json) unless the tool requires content containing them.",
     "You MUST use 'update_issue_status' when a task is completed, blocked, or requires handover."
   ],

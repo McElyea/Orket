@@ -22,6 +22,7 @@ from .turn_contract_rules import (
     required_write_paths,
     security_scope_diagnostics,
 )
+from .turn_artifact_semantic_rules import artifact_semantic_contract_diagnostics
 from .turn_response_parser import ResponseParser
 
 
@@ -77,6 +78,22 @@ class ContractValidator:
                     "reason": "write_path_contract_not_met",
                     "required_write_paths": self.required_write_paths(context),
                     "observed_write_paths": self.observed_write_paths(turn),
+                }
+            )
+        empty_write_paths = self.empty_required_write_paths(turn, context)
+        if empty_write_paths:
+            violations.append(
+                {
+                    "reason": "write_content_contract_not_met",
+                    "empty_required_write_paths": empty_write_paths,
+                }
+            )
+        semantic_diag = artifact_semantic_contract_diagnostics(turn, context)
+        if semantic_diag.get("violations"):
+            violations.append(
+                {
+                    "reason": "artifact_semantic_contract_not_met",
+                    "violations": semantic_diag.get("violations", []),
                 }
             )
         if not self.meets_read_path_contract(turn, context):
@@ -273,6 +290,25 @@ class ContractValidator:
 
     def meets_architecture_decision_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
         return meets_architecture_decision_contract(turn, context)
+
+    def empty_required_write_paths(self, turn: ExecutionTurn, context: dict[str, Any]) -> list[str]:
+        required_tools = {str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()}
+        if "write_file" not in required_tools:
+            return []
+        required_paths = set(self.required_write_paths(context))
+        if not required_paths:
+            return []
+        empty_paths: list[str] = []
+        for call in turn.tool_calls or []:
+            if call.tool != "write_file":
+                continue
+            path = str((call.args or {}).get("path") or "").strip()
+            if path not in required_paths:
+                continue
+            content = (call.args or {}).get("content")
+            if not isinstance(content, str) or not content.strip():
+                empty_paths.append(path)
+        return empty_paths
 
     def comment_contract_diagnostics(self, turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
         required_tools = {str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()}

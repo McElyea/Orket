@@ -60,6 +60,14 @@ class ToolParser:
                     skipped_tools.append({"tool": tool_name, "reason": "missing_status"})
                 continue
 
+            if tool_name == "read_file":
+                path_match = re.search(r'"path"\s*:\s*"([^"]+)"', segment, flags=re.DOTALL)
+                if path_match:
+                    recovered.append({"tool": tool_name, "args": {"path": path_match.group(1)}})
+                else:
+                    skipped_tools.append({"tool": tool_name, "reason": "missing_path"})
+                continue
+
             if tool_name != "write_file":
                 skipped_tools.append({"tool": tool_name, "reason": "unsupported_tool"})
                 continue
@@ -72,10 +80,7 @@ class ToolParser:
 
             content_start = content_match.end()
             trailing = segment[content_start:]
-            # Truncated generations often omit the final closing quote/braces. Recover by
-            # taking the remainder when no valid terminator is found.
-            terminator = re.search(r'(?<!\\)"\s*(?:[},]|$)', trailing, flags=re.DOTALL)
-            raw_content = trailing[: terminator.start()] if terminator else trailing
+            raw_content = ToolParser._recover_write_file_content(trailing)
             raw_content = raw_content.strip().replace("```", "").rstrip()
             if not raw_content:
                 skipped_tools.append({"tool": tool_name, "reason": "empty_content"})
@@ -103,12 +108,36 @@ class ToolParser:
         return recovered
 
     @staticmethod
+    def _recover_write_file_content(trailing: str) -> str:
+        """
+        Recover write_file content from malformed JSON tool payloads.
+
+        Local-model generations frequently embed quote-heavy source code into the
+        JSON string without escaping interior double quotes. Prefer the terminal
+        quote nearest the end of the tool object instead of the first quote-like
+        terminator so we salvage the intended file content.
+        """
+        closing_patterns = (
+            r'"\s*}\s*}\s*(?:```)?\s*(?:\{)?\s*$',
+            r'"\s*}\s*(?:```)?\s*(?:\{)?\s*$',
+        )
+        for pattern in closing_patterns:
+            closing = re.search(pattern, trailing, flags=re.DOTALL)
+            if closing:
+                return trailing[: closing.start()]
+        # Truncated generations often omit the final closing quote/braces. Recover by
+        # taking the remainder when no valid terminator is found.
+        terminator = re.search(r'(?<!\\)"\s*(?:[},]|$)', trailing, flags=re.DOTALL)
+        return trailing[: terminator.start()] if terminator else trailing
+
+    @staticmethod
     def parse(
         text: str,
         diagnostics: Optional[Callable[[str, Dict[str, Any]], None]] = None,
     ) -> List[Dict[str, Any]]:
         text = ToolParser.normalize_json_stringify(text or "").strip()
         results = []
+        tool_marker_count = len(re.findall(r'"tool"\s*:\s*"[a-zA-Z0-9_]+"', text))
 
         def _coerce_args(value: Any) -> Dict[str, Any]:
             if isinstance(value, dict):
@@ -206,9 +235,9 @@ class ToolParser:
 
         if results:
             recovered: List[Dict[str, Any]] = []
-            if ToolParser._likely_truncated_json(text):
+            if ToolParser._likely_truncated_json(text) or tool_marker_count > len(results):
                 recovered = ToolParser._recover_truncated_tool_calls(text, diagnostics=diagnostics)
-            merged = ToolParser._dedupe_tool_calls([*results, *recovered]) if recovered else results
+            merged = ToolParser._dedupe_tool_calls([*recovered, *results]) if recovered else results
             strategy = "stack_json+truncated_json_recovery" if len(merged) > len(results) else "stack_json"
             emit("parse_success", {"strategy": strategy, "count": len(merged)})
             return merged

@@ -126,6 +126,40 @@ def test_resolve_cards_runtime_block_profile_rejects_declared_artifact_outputs()
     assert runtime["invalid_profile_reason"] == "comment_or_block_profile_selected_for_artifact_contract"
 
 
+def test_resolve_cards_runtime_preserves_artifact_semantic_checks() -> None:
+    issue = SimpleNamespace(
+        seat="coder",
+        params={
+            "execution_profile": "build_app_v1",
+            "artifact_contract": {
+                "kind": "app",
+                "primary_output": "agent_output/main.py",
+                "entrypoint_path": "agent_output/main.py",
+                "required_write_paths": ["agent_output/main.py"],
+                "semantic_checks": [
+                    {
+                        "path": "agent_output/main.py",
+                        "label": "script-safe proof entrypoint",
+                        "must_contain": ["from challenge_runtime", "json.dumps"],
+                        "must_not_contain": ["from .challenge_runtime"],
+                    }
+                ],
+            },
+        },
+    )
+
+    runtime = resolve_cards_runtime(issue=issue)
+
+    assert runtime["artifact_contract"]["semantic_checks"] == [
+        {
+            "path": "agent_output/main.py",
+            "label": "script-safe proof entrypoint",
+            "must_contain": ["from challenge_runtime", "json.dumps"],
+            "must_not_contain": ["from .challenge_runtime"],
+        }
+    ]
+
+
 def test_summarize_cards_runtime_issues_carries_shared_scenario_truth() -> None:
     summary = summarize_cards_runtime_issues(
         [

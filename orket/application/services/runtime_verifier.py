@@ -11,6 +11,9 @@ import aiofiles
 
 from orket.core.domain.guard_contract import GuardContract, GuardViolation
 
+_COMMAND_OUTPUT_LIMIT = 2000
+_COMMAND_FAILURE_SUMMARY_LIMIT = 240
+
 
 @dataclass(frozen=True)
 class RuntimeVerificationResult:
@@ -26,8 +29,8 @@ class RuntimeVerifier:
     """
     Deterministic runtime verification stage.
 
-    Current baseline focuses on Python syntax/bytecode compilation checks
-    for generated files in agent_output/.
+    Baseline verification always checks Python syntax for generated files in
+    agent_output/ and may execute additional configured runtime commands.
     """
 
     def __init__(
@@ -71,8 +74,8 @@ class RuntimeVerifier:
                 failure_class = str(result.get("failure_class") or "command_failed")
                 failure_breakdown[failure_class] = failure_breakdown.get(failure_class, 0) + 1
                 errors.append(
-                    f"runtime command failed [{failure_class}] ({result.get('command_display')}): "
-                    f"{(result.get('stderr') or result.get('stdout') or '').strip()[:240]}"
+                    f"runtime command failed [{failure_class}] cwd={result.get('working_directory')}: "
+                    f"{self._summarize_command_failure(result)}"
                 )
 
         await self._validate_stdout_contract(
@@ -105,6 +108,10 @@ class RuntimeVerifier:
         return files
 
     async def _resolve_runtime_command_plan(self) -> Dict[str, Any]:
+        issue_commands = self._issue_runtime_verifier_commands()
+        if issue_commands:
+            return {"commands": issue_commands, "source": "issue_override"}
+
         process_rules = {}
         if self.organization and isinstance(getattr(self.organization, "process_rules", None), dict):
             process_rules = self.organization.process_rules
@@ -141,6 +148,15 @@ class RuntimeVerifier:
             "source": f"profile_default_none:{stack_profile}",
         }
 
+    def _issue_runtime_verifier_commands(self) -> List[Any]:
+        runtime_verifier = self.issue_params.get("runtime_verifier")
+        if not isinstance(runtime_verifier, dict):
+            return []
+        commands = runtime_verifier.get("commands")
+        if not isinstance(commands, list):
+            return []
+        return [item for item in commands if item]
+
     async def _infer_stack_profile(self) -> str:
         deps_root = self.workspace_root / "agent_output" / "dependencies"
         has_pyproject = await asyncio.to_thread((deps_root / "pyproject.toml").is_file)
@@ -157,7 +173,7 @@ class RuntimeVerifier:
         agent_output_exists = await asyncio.to_thread((self.workspace_root / "agent_output").exists)
         commands: List[Any] = []
         if agent_output_exists and stack_profile in {"python", "polyglot"}:
-            commands.append([sys.executable, "-m", "compileall", "-q", "agent_output"])
+            commands.append(["python", "-m", "compileall", "-q", "agent_output"])
         entrypoint_command = self._default_entrypoint_command()
         if entrypoint_command is not None:
             commands.append(entrypoint_command)
@@ -185,7 +201,7 @@ class RuntimeVerifier:
             return None
         if not entrypoint_path.lower().endswith(".py"):
             return None
-        return [sys.executable, entrypoint_path]
+        return ["python", entrypoint_path]
 
     async def _validate_deployment_artifacts_if_required(self) -> List[str]:
         process_rules = {}
@@ -272,24 +288,30 @@ class RuntimeVerifier:
         return ""
 
     async def _run_command(self, command: Any, timeout_sec: int, policy_source: str) -> Dict[str, Any]:
-        if isinstance(command, list):
-            cmd = [str(part) for part in command]
-            display = " ".join(cmd)
-        else:
-            display = str(command)
+        parsed = await self._parse_runtime_command(command)
+        if parsed.get("invalid"):
+            display = str(parsed.get("command_text") or parsed.get("command_display") or command)
             return {
+                "command_text": display,
                 "command_display": display,
+                "working_directory": str(parsed.get("working_directory") or "."),
                 "returncode": 126,
+                "exit_code": 126,
+                "outcome": "fail",
                 "stdout": "",
-                "stderr": "runtime verifier commands must be argv lists; shell strings are not allowed",
+                "stderr": str(parsed.get("error") or "runtime verifier commands must be argv lists; shell strings are not allowed"),
                 "failure_class": "command_failed",
                 "policy_source": policy_source,
             }
+        cmd = list(parsed["argv"])
+        display = str(parsed["command_text"])
+        working_directory = str(parsed["working_directory"])
+        resolved_cwd = parsed["resolved_cwd"]
 
         try:
             process = await asyncio.create_subprocess_exec(
                 *cmd,
-                cwd=str(self.workspace_root),
+                cwd=str(resolved_cwd),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -299,8 +321,12 @@ class RuntimeVerifier:
                 process.kill()
                 await process.communicate()
                 return {
+                    "command_text": display,
                     "command_display": display,
+                    "working_directory": working_directory,
                     "returncode": 124,
+                    "exit_code": 124,
+                    "outcome": "fail",
                     "stdout": "",
                     "stderr": f"timeout after {timeout_sec}s",
                     "failure_class": "timeout",
@@ -308,23 +334,132 @@ class RuntimeVerifier:
                 }
             stdout = stdout_bytes.decode("utf-8", errors="replace")
             stderr = stderr_bytes.decode("utf-8", errors="replace")
+            returncode = int(process.returncode or 0)
             return {
+                "command_text": display,
                 "command_display": display,
-                "returncode": int(process.returncode or 0),
-                "stdout": stdout[:2000],
-                "stderr": stderr[:2000],
-                "failure_class": self._failure_class_from_returncode(int(process.returncode or 0)),
+                "working_directory": working_directory,
+                "returncode": returncode,
+                "exit_code": returncode,
+                "outcome": "pass" if returncode == 0 else "fail",
+                "stdout": self._clip_runtime_stream(stdout),
+                "stderr": self._clip_runtime_stream(stderr, preserve_tail=True),
+                "failure_class": self._failure_class_from_returncode(returncode),
                 "policy_source": policy_source,
             }
         except OSError as exc:
             return {
+                "command_text": display,
                 "command_display": display,
+                "working_directory": working_directory,
                 "returncode": 127,
+                "exit_code": 127,
+                "outcome": "fail",
                 "stdout": "",
                 "stderr": str(exc),
                 "failure_class": "missing_runtime",
                 "policy_source": policy_source,
             }
+
+    async def _parse_runtime_command(self, command: Any) -> Dict[str, Any]:
+        declared_cwd = "."
+        raw_argv = command
+        if isinstance(command, dict):
+            raw_argv = command.get("argv")
+            declared_cwd = str(command.get("cwd") or ".").strip() or "."
+        if not isinstance(raw_argv, list):
+            return {
+                "invalid": True,
+                "command_text": str(command),
+                "working_directory": declared_cwd,
+                "error": "runtime verifier commands must be argv lists or {argv, cwd} objects; shell strings are not allowed",
+            }
+        argv = [str(part).strip() for part in raw_argv if str(part).strip()]
+        if not argv:
+            return {
+                "invalid": True,
+                "command_text": "",
+                "working_directory": declared_cwd,
+                "error": "runtime verifier command argv cannot be empty",
+            }
+
+        command_text = self._display_command(argv)
+        workspace_root = await asyncio.to_thread(self.workspace_root.resolve)
+        resolved_cwd = await asyncio.to_thread(self._resolve_command_cwd, declared_cwd, workspace_root)
+        if resolved_cwd is None:
+            return {
+                "invalid": True,
+                "command_text": command_text,
+                "working_directory": declared_cwd.replace("\\", "/"),
+                "error": f"runtime verifier cwd escapes workspace: {declared_cwd}",
+            }
+        cwd_exists = await asyncio.to_thread(resolved_cwd.is_dir)
+        working_directory = "." if resolved_cwd == workspace_root else str(resolved_cwd.relative_to(workspace_root)).replace("\\", "/")
+        if not cwd_exists:
+            return {
+                "invalid": True,
+                "command_text": command_text,
+                "working_directory": working_directory,
+                "error": f"runtime verifier cwd not found: {working_directory}",
+            }
+
+        executable_argv = list(argv)
+        if executable_argv[0].lower() == "python":
+            executable_argv[0] = sys.executable
+        return {
+            "invalid": False,
+            "argv": executable_argv,
+            "command_text": command_text,
+            "working_directory": working_directory,
+            "resolved_cwd": resolved_cwd,
+        }
+
+    @staticmethod
+    def _display_command(argv: List[str]) -> str:
+        display = list(argv)
+        if display and Path(display[0]).name.lower().startswith("python"):
+            display[0] = "python"
+        return " ".join(display)
+
+    @staticmethod
+    def _clip_runtime_stream(text: str, *, preserve_tail: bool = False) -> str:
+        normalized = str(text or "")
+        if len(normalized) <= _COMMAND_OUTPUT_LIMIT:
+            return normalized
+        if not preserve_tail:
+            return normalized[:_COMMAND_OUTPUT_LIMIT]
+
+        head_limit = 400
+        tail_limit = _COMMAND_OUTPUT_LIMIT - head_limit - 32
+        truncated = len(normalized) - head_limit - tail_limit
+        return (
+            normalized[:head_limit]
+            + f"\n...[truncated {truncated} chars]...\n"
+            + normalized[-tail_limit:]
+        )
+
+    @staticmethod
+    def _summarize_command_failure(result: Dict[str, Any]) -> str:
+        details = str(result.get("stderr") or result.get("stdout") or "").strip()
+        if not details:
+            return "command exited non-zero with no captured output"
+
+        lines = [line.strip() for line in details.splitlines() if line.strip()]
+        summary = " | ".join(lines[-3:]) if lines else details
+        if len(summary) <= _COMMAND_FAILURE_SUMMARY_LIMIT:
+            return summary
+        return "..." + summary[-(_COMMAND_FAILURE_SUMMARY_LIMIT - 3) :]
+
+    @staticmethod
+    def _resolve_command_cwd(raw_cwd: str, workspace_root: Path) -> Path | None:
+        token = str(raw_cwd or ".").strip() or "."
+        candidate = Path(token)
+        if not candidate.is_absolute():
+            candidate = workspace_root / candidate
+        resolved = candidate.resolve()
+        if not resolved.is_relative_to(workspace_root):
+            return None
+        return resolved
 
     @staticmethod
     def _failure_class_from_returncode(returncode: int) -> str:

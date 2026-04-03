@@ -261,7 +261,47 @@ class ResponseParser:
                     continue
             kept.append(ch)
             idx += 1
-        return "".join(kept).strip()
+        residue = "".join(kept).strip()
+        if residue and self._is_legacy_tool_only_residue(blob, residue):
+            return ""
+        return residue
+
+    def _is_legacy_tool_only_residue(self, blob: str, residue: str) -> bool:
+        stripped = str(blob or "").strip()
+        compare_residue = re.sub(r"[\s,\[\]]+", "", str(residue or ""))
+        if not stripped or not compare_residue.startswith('{"tool"'):
+            return False
+
+        parsed_calls = ToolParser.parse(stripped)
+        if not parsed_calls:
+            return False
+
+        marker_pattern = re.compile(r'"tool"\s*:\s*"[a-zA-Z0-9_]+"')
+        tool_markers = list(marker_pattern.finditer(stripped))
+        if len(tool_markers) != len(parsed_calls):
+            return False
+
+        object_starts: list[int] = []
+        for marker in tool_markers:
+            object_start = stripped.rfind("{", 0, marker.start())
+            if object_start == -1:
+                return False
+            object_starts.append(object_start)
+
+        prefix = stripped[: object_starts[0]]
+        if prefix.strip():
+            return False
+
+        for index, start in enumerate(object_starts):
+            next_start = object_starts[index + 1] if index + 1 < len(object_starts) else len(stripped)
+            compare_segment = re.sub(r"[\s,\[\]]+", "", stripped[start:next_start]).rstrip(",")
+            if not compare_segment.startswith('{"tool"'):
+                continue
+            if not compare_segment.endswith("}"):
+                continue
+            if compare_segment == compare_residue:
+                return True
+        return False
 
     def extract_guard_review_payload(self, content: str) -> dict[str, Any]:
         blob = content or ""

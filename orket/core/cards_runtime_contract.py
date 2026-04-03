@@ -279,12 +279,14 @@ def _normalize_artifact_contract(value: Any, *, requested_profile: str = "") -> 
 
     read_paths = _normalize_paths(payload.get("required_read_paths"), payload.get("read_paths"))
     review_read_paths = _normalize_paths(payload.get("review_read_paths"), write_paths)
+    semantic_checks = _normalize_semantic_checks(payload.get("semantic_checks"))
     return {
         "kind": kind,
         "primary_output": primary_output,
         "required_write_paths": write_paths,
         "required_read_paths": read_paths,
         "review_read_paths": review_read_paths,
+        "semantic_checks": semantic_checks,
         "entrypoint_path": entrypoint_path,
         "deployment_enabled": bool(kind == "app" and entrypoint_path == DEFAULT_APP_PRIMARY_OUTPUT),
     }
@@ -297,6 +299,7 @@ def _empty_artifact_contract() -> Dict[str, Any]:
         "required_write_paths": [],
         "required_read_paths": [],
         "review_read_paths": [],
+        "semantic_checks": [],
         "entrypoint_path": "",
         "deployment_enabled": False,
     }
@@ -397,6 +400,28 @@ def _normalize_paths(*values: Any) -> List[str]:
             seen.add(token)
             ordered.append(token)
     return ordered
+
+
+def _normalize_semantic_checks(value: Any) -> List[Dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    normalized: List[Dict[str, Any]] = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        path = _pick_first_token(item.get("path"))
+        if not path:
+            continue
+        check = {
+            "path": path.replace("\\", "/"),
+            "label": _pick_first_token(item.get("label")),
+            "must_contain": _normalize_paths(item.get("must_contain")),
+            "must_not_contain": _normalize_paths(item.get("must_not_contain")),
+        }
+        if not check["must_contain"] and not check["must_not_contain"]:
+            continue
+        normalized.append(check)
+    return normalized
 
 
 def _pick_first_token(*values: Any) -> str:

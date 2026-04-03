@@ -89,6 +89,21 @@ def _normalize_turn_contract_override_list(value: Any, *, lowercase: bool = Fals
     return normalized
 
 
+def _should_suppress_reference_context_for_cards_runtime(cards_runtime: Dict[str, Any] | None) -> bool:
+    runtime = dict(cards_runtime or {})
+    profile = str(runtime.get("execution_profile") or runtime.get("base_execution_profile") or "").strip().lower()
+    if not profile:
+        return False
+    artifact_contract = runtime.get("artifact_contract")
+    if not isinstance(artifact_contract, dict):
+        return False
+    has_explicit_paths = any(
+        bool(artifact_contract.get(key))
+        for key in ("required_read_paths", "required_write_paths", "review_read_paths")
+    )
+    return has_explicit_paths or bool(runtime.get("scenario_truth"))
+
+
 def _org_process_rules(org: Any) -> dict[str, Any]:
     process_rules = getattr(org, "process_rules", None) if org else None
     return process_rules if isinstance(process_rules, dict) else {}
@@ -105,6 +120,20 @@ def _normalize_wait_reason_token(value: Any) -> str | None:
     token = value.value if hasattr(value, "value") else value
     normalized = str(token).strip().lower()
     return normalized or None
+
+
+def _set_issue_runtime_retry_note(issue: IssueConfig, note: str | None) -> None:
+    params = dict(getattr(issue, "params", None) or {})
+    token = str(note or "").strip()
+    if token:
+        params["runtime_retry_note"] = token
+    else:
+        params.pop("runtime_retry_note", None)
+    issue.params = params
+
+
+def _clear_issue_runtime_retry_note(issue: IssueConfig) -> None:
+    _set_issue_runtime_retry_note(issue, None)
 
 
 def _resolve_transition_wait_reason(
@@ -1389,7 +1418,10 @@ async def _execute_issue_turn(
         if not runtime_result.ok:
             if guard_decision.action == "retry":
                 issue.retry_count = guard_decision.next_retry_count
-                issue.note = "runtime_guard_retry_scheduled: " + " | ".join(runtime_result.errors[:1])
+                _set_issue_runtime_retry_note(
+                    issue,
+                    "runtime_guard_retry_scheduled: " + " | ".join(runtime_result.errors[:3]),
+                )
                 await self._request_issue_transition(
                     issue=issue,
                     target_status=CardStatus.READY,
@@ -1418,6 +1450,7 @@ async def _execute_issue_turn(
                     )
                 )
             else:
+                _clear_issue_runtime_retry_note(issue)
                 issue.note = "runtime_guard_terminal_failure: " + (
                     guard_decision.terminal_reason.code if guard_decision.terminal_reason else "unknown"
                 )
@@ -1449,6 +1482,7 @@ async def _execute_issue_turn(
                     )
                 )
             return
+        _clear_issue_runtime_retry_note(issue)
 
     # RUN EMPIRICAL VERIFICATION (FIT) for review turns when a contract exists.
     if is_review_turn:
@@ -1720,7 +1754,8 @@ async def _execute_issue_turn(
             dialect,
             protocol_governed_enabled=bool(provisional_context.get("protocol_governed_enabled", False)),
         )
-    if memory_context:
+    suppress_reference_context = _should_suppress_reference_context_for_cards_runtime(cards_runtime)
+    if memory_context and not suppress_reference_context:
         system_desc += f"\n\nPROJECT CONTEXT (PAST DECISIONS):\n{memory_context}"
 
     import hashlib
@@ -2148,7 +2183,9 @@ def _build_turn_context(
         else {}
     )
     profile_traits = dict(cards_runtime.get("profile_traits") or {})
-    if not bool(profile_traits.get("runtime_verifier_allowed", True)):
+    profile_intent = str(profile_traits.get("intent") or "").strip().lower()
+    runtime_verifier_issue_override = bool(runtime_verifier_contract) and profile_intent in {"write_artifact", "build_app"}
+    if not bool(profile_traits.get("runtime_verifier_allowed", True)) and not runtime_verifier_issue_override:
         runtime_verifier_contract = {}
 
     gate_mode = "auto"
@@ -2462,6 +2499,7 @@ def _build_turn_context(
         "approval_required_tools": approval_required_tools,
         "runtime_verifier_ok": runtime_verifier_ok,
         "runtime_verifier_contract": runtime_verifier_contract,
+        "runtime_retry_note": str(params.get("runtime_retry_note") or "") if isinstance(params, dict) else "",
         "prompt_metadata": prompt_metadata or {},
         "prompt_layers": prompt_layers or {},
         "architecture_mode": architecture_mode,

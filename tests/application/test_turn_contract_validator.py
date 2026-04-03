@@ -52,6 +52,67 @@ def test_contract_validator_reports_consistency_scope_violation(tmp_path: Path) 
     assert diagnostics["violations"][0]["rule_id"] == "CONSISTENCY.OUTPUT_FORMAT"
 
 
+def test_contract_validator_rejects_blank_required_write_content(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        tool_calls=[
+            ToolCall(tool="write_file", args={"path": "agent_output/main.py", "content": ""}),
+            ToolCall(tool="update_issue_status", args={"status": "done"}),
+        ],
+    )
+    context = {
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["done"],
+        "required_write_paths": ["agent_output/main.py"],
+    }
+
+    violations = validator.collect_contract_violations(turn, _role(), context)
+
+    assert any(item["reason"] == "write_content_contract_not_met" for item in violations)
+
+
+def test_contract_validator_rejects_artifact_semantic_contract_violations(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        tool_calls=[
+            ToolCall(
+                tool="write_file",
+                args={
+                    "path": "agent_output/main.py",
+                    "content": "from .challenge_runtime.cli import main\n",
+                },
+            ),
+            ToolCall(tool="update_issue_status", args={"status": "done"}),
+        ],
+    )
+    context = {
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["done"],
+        "required_write_paths": ["agent_output/main.py"],
+        "artifact_contract": {
+            "semantic_checks": [
+                {
+                    "path": "agent_output/main.py",
+                    "label": "script entrypoint imports",
+                    "must_contain": ["from challenge_runtime"],
+                    "must_not_contain": ["from .challenge_runtime"],
+                }
+            ]
+        },
+    }
+
+    violations = validator.collect_contract_violations(turn, _role(), context)
+
+    semantic_violation = next(item for item in violations if item["reason"] == "artifact_semantic_contract_not_met")
+    assert semantic_violation["violations"][0]["path"] == "agent_output/main.py"
+    assert semantic_violation["violations"][0]["missing_tokens"] == ["from challenge_runtime"]
+    assert semantic_violation["violations"][0]["forbidden_tokens"] == ["from .challenge_runtime"]
+
+
 def test_contract_validator_allows_recovered_truncated_tool_only_payload(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
     turn = ExecutionTurn(
@@ -64,6 +125,49 @@ def test_contract_validator_allows_recovered_truncated_tool_only_payload(tmp_pat
         turn,
         context={"verification_scope": {"consistency_tool_calls_only": True}},
     )
+    assert diagnostics["violations"] == []
+
+
+def test_contract_validator_allows_recovered_quote_heavy_legacy_tool_only_payload(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content=(
+            '```json\n'
+            '{\n'
+            '  "tool": "write_file",\n'
+            '  "args": {\n'
+            '    "path": "agent_output/challenge_runtime/validator.py",\n'
+            '    "content": "if task[\'duration\'] < 0:\\n'
+            '    errors.append({\\n'
+            '        \'message\': f\'Negative duration: {task["duration"]}\'\\n'
+            '    })"\n'
+            '  }\n'
+            '}\n'
+            '```\n\n'
+            '```json\n'
+            '{\n'
+            '  "tool": "update_issue_status",\n'
+            '  "args": {\n'
+            '    "status": "code_review"\n'
+            '  }\n'
+            '}\n'
+            '```'
+        ),
+        tool_calls=[
+            ToolCall(
+                tool="write_file",
+                args={"path": "agent_output/challenge_runtime/validator.py", "content": "placeholder"},
+            ),
+            ToolCall(tool="update_issue_status", args={"status": "code_review"}),
+        ],
+    )
+    diagnostics = validator.consistency_scope_diagnostics(
+        turn,
+        context={"verification_scope": {"consistency_tool_calls_only": True}},
+    )
+
     assert diagnostics["violations"] == []
 
 

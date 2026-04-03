@@ -939,7 +939,13 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
 @pytest.mark.asyncio
 async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orchestrator, monkeypatch):
     orch, cards, _loader = orchestrator
-    issue = IssueConfig(id="REV-1", seat="code_reviewer", summary="Review", status=CardStatus.CODE_REVIEW)
+    issue = IssueConfig(
+        id="REV-1",
+        seat="code_reviewer",
+        summary="Review",
+        status=CardStatus.CODE_REVIEW,
+        note="Preserve the original review instructions.",
+    )
     issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
     epic = SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1")
     team = SimpleNamespace(seats={"code_reviewer": SimpleNamespace(roles=["code_reviewer"])})
@@ -971,7 +977,7 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
             return SimpleNamespace(
                 ok=False,
                 checked_files=["agent_output/main.py"],
-                errors=["SyntaxError: invalid syntax"],
+                errors=["SyntaxError: invalid syntax", "runtime stdout assertion failed: path=blocked_state"],
             )
 
     monkeypatch.setattr("orket.application.workflows.orchestrator.RuntimeVerifier", _RuntimeVerifier)
@@ -993,6 +999,11 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
     saved_issue = cards.save.calls[-1][0][0]
     assert saved_issue["status"] == CardStatus.READY
     assert saved_issue["retry_count"] == 1
+    assert saved_issue["note"] == "Preserve the original review instructions."
+    assert saved_issue["params"]["runtime_retry_note"] == (
+        "runtime_guard_retry_scheduled: "
+        "SyntaxError: invalid syntax | runtime stdout assertion failed: path=blocked_state"
+    )
     report_path = orch.workspace / "agent_output" / "verification" / "runtime_verification.json"
     assert report_path.exists()
     report = json.loads(report_path.read_text(encoding="utf-8"))
@@ -1358,6 +1369,107 @@ async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(or
 
 
 @pytest.mark.asyncio
+async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime_issue(orchestrator, monkeypatch):
+    orch, cards, loader = orchestrator
+    orch.org.process_rules["prompt_resolver_mode"] = "compiler"
+    issue = IssueConfig(
+        id="I1",
+        seat="coder",
+        summary="Implement contract-heavy artifact",
+        params={
+            "execution_profile": "write_artifact_v1",
+            "artifact_contract": {
+                "kind": "artifact",
+                "primary_output": "agent_output/out.txt",
+                "required_read_paths": ["agent_output/requirements.txt"],
+                "required_write_paths": ["agent_output/out.txt"],
+                "review_read_paths": ["agent_output/out.txt"],
+            },
+        },
+    )
+    issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
+    epic = SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1")
+    team = SimpleNamespace(seats={"coder": SimpleNamespace(roles=["coder"])})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    loader.queue_assets(
+        [
+            SimpleNamespace(name="coder", description="Role", tools=[], prompt_metadata={}),
+            SimpleNamespace(
+                model_family="generic",
+                dsl_format="json",
+                constraints=[],
+                hallucination_guard="none",
+                prompt_metadata={},
+            ),
+        ]
+    )
+
+    class _Memory:
+        async def search(self, _query):
+            return [{"content": "stale benchmark memory", "metadata": {}, "timestamp": "2026-04-03T00:00:00+00:00"}]
+
+        async def remember(self, content, metadata):
+            return None
+
+    class _Provider:
+        async def clear_context(self):
+            return None
+
+    class _ModelClientNode:
+        def create_provider(self, selected_model, env):
+            return _Provider()
+
+        def create_client(self, provider):
+            return SimpleNamespace()
+
+    class _PromptStrategy:
+        def select_model(self, role, asset_config):
+            return "dummy-model"
+
+        def select_dialect(self, model):
+            return "generic"
+
+    captured = {}
+
+    class _Executor:
+        async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
+            captured["system_prompt"] = system_prompt
+            return TurnResult(
+                success=True,
+                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+            )
+
+    async def _noop(*args, **kwargs):
+        return None
+
+    monkeypatch.setattr(
+        "orket.application.workflows.orchestrator.PromptCompiler.compile",
+        lambda skill, dialect, **kwargs: "COMPILER PROMPT",
+    )
+
+    orch.memory = _Memory()
+    orch.model_client_node = _ModelClientNode()
+    orch._save_checkpoint = _noop
+    orch._trigger_sandbox = _noop
+    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
+
+    await orch._execute_issue_turn(
+        issue_data=issue_data,
+        epic=epic,
+        team=team,
+        env=env,
+        run_id="run-1",
+        active_build="build-1",
+        prompt_strategy_node=_PromptStrategy(),
+        executor=_Executor(),
+        toolbox=SimpleNamespace(),
+    )
+
+    assert captured["system_prompt"] == "COMPILER PROMPT"
+
+
+@pytest.mark.asyncio
 async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     orch.org.process_rules["prompt_resolver_mode"] = "resolver"
@@ -1668,7 +1780,7 @@ def test_build_turn_context_non_final_guard_requires_done_status(orchestrator):
         resume_mode=False,
     )
     assert context["required_statuses"] == ["done"]
-    assert context["required_action_tools"] == ["update_issue_status"]
+    assert context["required_action_tools"] == ["read_file", "update_issue_status"]
     assert context["required_read_paths"] == ["agent_output/main.py"]
 
 
@@ -1833,7 +1945,7 @@ def test_build_turn_context_does_not_apply_issue_turn_contract_overrides_to_guar
         resume_mode=False,
     )
 
-    assert context["required_action_tools"] == ["update_issue_status"]
+    assert context["required_action_tools"] == ["read_file", "update_issue_status"]
     assert context["required_statuses"] == ["done"]
     assert context["required_read_paths"] == ["agent_output/soak_matrix/product/product_brief.md"]
     assert context["required_write_paths"] == []
@@ -1883,6 +1995,67 @@ def test_build_turn_context_includes_profile_traits_and_scenario_truth(orchestra
     assert context["profile_traits"]["intent"] == "truthful_block_only"
     assert context["scenario_truth"]["scenario_id"] == "role_matrix_soak_v1"
     assert context["runtime_verifier_contract"] == {}
+
+
+def test_build_turn_context_keeps_issue_runtime_verifier_contract_for_write_artifact_profile(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(
+        id="WR-ART-1",
+        seat="coder",
+        summary="Write simulator artifact",
+        params={
+            "execution_profile": "write_artifact_v1",
+            "artifact_contract": {
+                "kind": "artifact",
+                "primary_output": "agent_output/challenge_runtime/simulator.py",
+                "required_write_paths": ["agent_output/challenge_runtime/simulator.py"],
+            },
+            "runtime_verifier": {
+                "commands": [
+                    {"argv": ["python", "-c", "print('artifact-proof')"], "cwd": "agent_output"},
+                ]
+            },
+        },
+    )
+    context = orch._build_turn_context(
+        run_id="run-artifact-override",
+        issue=issue,
+        seat_name="coder",
+        roles_to_load=["coder"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+
+    assert context["execution_profile"] == "write_artifact_v1"
+    assert context["profile_traits"]["intent"] == "write_artifact"
+    assert context["runtime_verifier_contract"] == {
+        "commands": [
+            {"argv": ["python", "-c", "print('artifact-proof')"], "cwd": "agent_output"},
+        ]
+    }
+
+
+def test_build_turn_context_includes_runtime_retry_note(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(
+        id="WR-ART-2",
+        seat="coder",
+        summary="Retry simulator artifact",
+        note="Keep truthful simulator semantics.",
+        params={"runtime_retry_note": "runtime_guard_retry_scheduled: timeout after 60s"},
+    )
+    context = orch._build_turn_context(
+        run_id="run-artifact-retry-note",
+        issue=issue,
+        seat_name="coder",
+        roles_to_load=["coder"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+
+    assert context["runtime_retry_note"] == "runtime_guard_retry_scheduled: timeout after 60s"
 
 
 def test_build_turn_context_defaults_to_monolith_and_vue(orchestrator):
