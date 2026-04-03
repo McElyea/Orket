@@ -1,18 +1,18 @@
 # Control-Plane Convergence Hardening Requirements
-Last updated: 2026-03-26
-Status: Active requirements companion for open convergence lane
+Last updated: 2026-04-02
+Status: Paired requirements companion for paused checkpointed convergence lane
 Owner: Orket Core
 Lane type: Control-plane convergence / hardening
 
 ## Authority posture
 
-This document is the active scoped requirements companion for the open ControlPlane convergence lane.
-It is not the implementation authority.
+This document is the paired scoped requirements companion for the paused ControlPlane convergence lane recorded in `docs/ROADMAP.md`.
+It is not the implementation authority and does not reopen the lane by itself.
 
 The active ControlPlane requirements authority remains the accepted packet under `docs/projects/ControlPlane/orket_control_plane_packet/`.
 The last accepted ControlPlane implementation sequencing lane remains archived under `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/`.
 
-The active implementation authority for this open lane is `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`.
+The paused-checkpoint and explicit-reopen authority is `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`.
 The project index and packet README must continue to tell the same authority story as the roadmap and archive.
 
 ## Purpose

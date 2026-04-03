@@ -4,11 +4,15 @@ import json
 from pathlib import Path
 from typing import Any
 
+import aiofiles
+
 from orket.core.domain.verification_scope import parse_verification_scope
 from orket.logging import log_event
 from orket.schema import IssueConfig, RoleConfig
 
 from .turn_path_resolver import PathResolver
+
+_MAX_PRELOADED_READ_CONTEXT_CHARS = 4000
 
 
 class MessageBuilder:
@@ -34,6 +38,27 @@ class MessageBuilder:
             }
         )
 
+        role_name = str(context.get("role", role.name) or role.name).strip().lower()
+        current_status = str(context.get("current_status", "") or "").strip().lower()
+        is_guard_review_turn = role_name == "integrity_guard" or current_status == "awaiting_guard_review"
+        if not is_guard_review_turn:
+            issue_brief_lines: list[str] = []
+            description = str(getattr(issue, "description", "") or "").strip()
+            if description:
+                issue_brief_lines.append(f"Description: {description}")
+            requirements = str(getattr(issue, "requirements", "") or "").strip()
+            if requirements:
+                issue_brief_lines.append(f"Requirements: {requirements}")
+            note = str(getattr(issue, "note", "") or "").strip()
+            if note:
+                issue_brief_lines.append(f"Task Note: {note}")
+            references = [str(item).strip() for item in (getattr(issue, "references", []) or []) if str(item).strip()]
+            if references:
+                issue_brief_lines.append("References:")
+                issue_brief_lines.extend(f"- {reference}" for reference in references)
+            if issue_brief_lines:
+                messages.append({"role": "user", "content": "Issue Brief:\n" + "\n".join(issue_brief_lines)})
+
         required_read_paths = PathResolver.required_read_paths(context, self.workspace)
         missing_required_read_paths = PathResolver.missing_required_read_paths(context, self.workspace)
         required_write_paths = PathResolver.required_write_paths(context)
@@ -46,14 +71,18 @@ class MessageBuilder:
             "base_execution_profile": context.get("base_execution_profile"),
             "builder_seat_choice": context.get("builder_seat_choice"),
             "reviewer_seat_choice": context.get("reviewer_seat_choice"),
+            "profile_traits": context.get("profile_traits", {}),
             "seat_coercion": context.get("seat_coercion", {}),
             "artifact_contract": context.get("artifact_contract", {}),
+            "scenario_truth": context.get("scenario_truth", {}),
             "odr_active": bool(context.get("odr_active", False)),
             "required_action_tools": context.get("required_action_tools", []),
             "required_statuses": context.get("required_statuses", []),
             "required_read_paths": required_read_paths,
             "missing_required_read_paths": missing_required_read_paths,
             "required_write_paths": context.get("required_write_paths", []),
+            "required_comment_min_length": context.get("required_comment_min_length"),
+            "required_comment_contains": context.get("required_comment_contains", []),
             "stage_gate_mode": context.get("stage_gate_mode"),
             "runtime_verifier_ok": context.get("runtime_verifier_ok"),
             "architecture_mode": context.get("architecture_mode"),
@@ -69,13 +98,92 @@ class MessageBuilder:
         )
 
         artifact_contract = context.get("artifact_contract")
-        if isinstance(artifact_contract, dict) and artifact_contract:
+        profile_traits = context.get("profile_traits")
+        if isinstance(profile_traits, dict):
+            profile_traits = dict(profile_traits)
+        else:
+            profile_traits = {}
+        artifact_contract_allowed = bool(profile_traits.get("artifact_contract_required", True))
+        runtime_verifier_allowed = bool(profile_traits.get("runtime_verifier_allowed", True))
+
+        if (
+            artifact_contract_allowed
+            and isinstance(artifact_contract, dict)
+            and artifact_contract
+            and str(artifact_contract.get("kind") or "").strip().lower() != "none"
+        ):
             messages.append(
                 {
                     "role": "user",
                     "content": "Artifact Contract JSON:\n" + json.dumps(artifact_contract, sort_keys=True),
                 }
             )
+        scenario_truth = context.get("scenario_truth")
+        if isinstance(scenario_truth, dict) and scenario_truth:
+            blocked_issue_policy = (
+                scenario_truth.get("blocked_issue_policy")
+                if isinstance(scenario_truth.get("blocked_issue_policy"), dict)
+                else {}
+            )
+            allowed_issue_ids = [
+                str(token).strip()
+                for token in (blocked_issue_policy.get("allowed_issue_ids") or [])
+                if str(token).strip()
+            ]
+            scenario_lines = [
+                f"- scenario_id: {str(scenario_truth.get('scenario_id') or '').strip()}",
+                "- blocked_issue_policy.allowed_issue_ids: "
+                + (", ".join(allowed_issue_ids) if allowed_issue_ids else "none"),
+                "- blocked_issue_policy.blocked_implies_run_failure: "
+                + str(bool(blocked_issue_policy.get("blocked_implies_run_failure"))).lower(),
+            ]
+            expected_terminal_status = str(scenario_truth.get("expected_terminal_status") or "").strip()
+            if expected_terminal_status:
+                scenario_lines.append(f"- expected_terminal_status: {expected_terminal_status}")
+            expected_truth_classification = str(scenario_truth.get("expected_truth_classification") or "").strip()
+            if expected_truth_classification:
+                scenario_lines.append(f"- expected_truth_classification: {expected_truth_classification}")
+            if issue.id in allowed_issue_ids:
+                scenario_lines.append("- This issue is one of the admitted blocked_issue_policy.allowed_issue_ids.")
+            messages.append({"role": "user", "content": "Scenario Truth Contract:\n" + "\n".join(scenario_lines)})
+        runtime_verifier_contract = context.get("runtime_verifier_contract")
+        if isinstance(runtime_verifier_contract, dict):
+            runtime_verifier_contract = dict(runtime_verifier_contract)
+        else:
+            runtime_verifier_contract = {}
+        if (
+            runtime_verifier_allowed
+            and isinstance(artifact_contract, dict)
+            and artifact_contract
+            and str(artifact_contract.get("kind") or "").strip().lower() != "none"
+        ):
+            entrypoint_path = str(artifact_contract.get("entrypoint_path") or "").strip()
+            artifact_kind = str(artifact_contract.get("kind") or "").strip().lower()
+            verifier_lines: list[str] = []
+            if artifact_kind == "app" and entrypoint_path:
+                verifier_lines.append(f"- The runtime verifier will execute exactly: python {entrypoint_path}")
+                verifier_lines.append("- The entrypoint must succeed with no positional arguments or interactive input.")
+            if bool(runtime_verifier_contract.get("expect_json_stdout", False)):
+                verifier_lines.append("- The entrypoint must print valid JSON to stdout.")
+            json_assertions = runtime_verifier_contract.get("json_assertions")
+            if isinstance(json_assertions, list) and json_assertions:
+                verifier_lines.append("- Required stdout assertions:")
+                for assertion in json_assertions:
+                    if not isinstance(assertion, dict):
+                        continue
+                    path = str(assertion.get("path") or "").strip()
+                    op = str(assertion.get("op") or "").strip()
+                    value = assertion.get("value")
+                    if not path or not op:
+                        continue
+                    verifier_lines.append(f"  - {path} {op} {value!r}")
+            if verifier_lines:
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": "Runtime Verifier Contract:\n" + "\n".join(verifier_lines),
+                    }
+                )
 
         if bool(context.get("odr_active", False)):
             odr_context = {
@@ -115,6 +223,8 @@ class MessageBuilder:
         read_path_contract_required = "read_file" in required_action_tools
         write_path_contract_required = "write_file" in required_action_tools
         required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
+        required_comment_min_length = context.get("required_comment_min_length")
+        required_comment_contains = [str(token).strip() for token in (context.get("required_comment_contains") or []) if str(token).strip()]
         if required_action_tools or required_statuses:
             contract_lines = []
             if required_action_tools:
@@ -136,6 +246,12 @@ class MessageBuilder:
             ]
             messages.append({"role": "user", "content": "Write Path Contract:\n" + "\n".join(write_lines)})
 
+        should_preload_read_context = bool(required_read_paths) and (
+            read_path_contract_required
+            or "add_issue_comment" in required_action_tools
+            or required_comment_min_length
+            or required_comment_contains
+        )
         if required_read_paths and read_path_contract_required:
             read_lines = [
                 "- Required read_file paths this turn:",
@@ -143,6 +259,45 @@ class MessageBuilder:
                 "- Do not use placeholder or absolute paths outside the workspace.",
             ]
             messages.append({"role": "user", "content": "Read Path Contract:\n" + "\n".join(read_lines)})
+        if should_preload_read_context:
+            preloaded_read_context = await self._load_required_read_context(required_read_paths)
+            if preloaded_read_context:
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": "Preloaded Read Context:\n" + "\n\n".join(preloaded_read_context),
+                    }
+                )
+
+        prompt_required_comment_contains = list(required_comment_contains)
+        for path_token in required_read_paths:
+            if path_token and path_token not in prompt_required_comment_contains:
+                prompt_required_comment_contains.append(path_token)
+        if "add_issue_comment" in required_action_tools or required_comment_min_length or required_comment_contains:
+            comment_lines = [
+                "- Required add_issue_comment payloads must be concrete and evidence-linked.",
+                "- Ground comment claims in the preloaded read context or files explicitly listed in the Read Path Contract.",
+                "- Cite every required read path by exact path string when a Read Path Contract is present.",
+                '- Quote short inline snippets only, for example "Truthful failure detection".',
+                "- Do not use markdown fences or multi-line code blocks inside comment strings.",
+            ]
+            if required_read_paths:
+                comment_lines.append(
+                    "- Exact required path tokens to cite: " + ", ".join(required_read_paths)
+                )
+                comment_lines.append(
+                    "- A simple compliant citation pattern is: (" + ", ".join(required_read_paths) + ")."
+                )
+            if required_comment_min_length:
+                comment_lines.append(
+                    f"- At least one add_issue_comment.comment value must be at least {int(required_comment_min_length)} characters."
+                )
+            if prompt_required_comment_contains:
+                comment_lines.append(
+                    "- At least one add_issue_comment.comment value must contain: "
+                    + ", ".join(prompt_required_comment_contains)
+                )
+            messages.append({"role": "user", "content": "Comment Contract:\n" + "\n".join(comment_lines)})
 
         should_emit_missing_read_notice = bool(missing_required_read_paths) and read_path_contract_required
         if should_emit_missing_read_notice:
@@ -277,3 +432,22 @@ class MessageBuilder:
                 )
 
         return messages
+
+    async def _load_required_read_context(self, required_read_paths: list[str]) -> list[str]:
+        rendered: list[str] = []
+        for rel_path in required_read_paths:
+            candidate = (self.workspace / rel_path).resolve()
+            if not candidate.exists() or not candidate.is_file():
+                continue
+            async with aiofiles.open(candidate, mode="r", encoding="utf-8") as handle:
+                content = await handle.read()
+            normalized = content.replace("\r\n", "\n")
+            truncated = False
+            if len(normalized) > _MAX_PRELOADED_READ_CONTEXT_CHARS:
+                normalized = normalized[:_MAX_PRELOADED_READ_CONTEXT_CHARS]
+                truncated = True
+            block = f"Path: {rel_path}\nContent:\n{normalized}"
+            if truncated:
+                block += "\n[truncated]"
+            rendered.append(block)
+        return rendered

@@ -280,6 +280,43 @@ def test_run_summary_emits_odr_cards_runtime_fields() -> None:
 
 
 # Layer: contract
+def test_run_summary_emits_cards_runtime_scenario_truth_projection() -> None:
+    payload = build_run_summary_payload(
+        run_id="sess-summary-soak",
+        status="terminal_failure",
+        failure_reason="terminal_failure",
+        started_at=_STARTED_AT,
+        ended_at=_FINALIZED_AT,
+        tool_names=["workspace.read"],
+        artifacts={
+            "run_identity": _run_identity(run_id="sess-summary-soak", workload="cards-runtime"),
+            "cards_runtime_facts": {
+                "execution_profile": "mixed",
+                "stop_reason": "terminal_failure",
+                "scenario_truth": {
+                    "scenario_id": "role_matrix_soak_v1",
+                    "blocked_issue_policy": {
+                        "allowed_issue_ids": ["RMS-22"],
+                        "blocked_implies_run_failure": True,
+                    },
+                    "expected_terminal_status": "terminal_failure",
+                    "expected_truth_classification": "repaired_or_direct",
+                },
+                "scenario_truth_alignment": {
+                    "scenario_id": "role_matrix_soak_v1",
+                    "expected_terminal_status": "terminal_failure",
+                    "observed_terminal_status": "terminal_failure",
+                    "expected_terminal_status_match": True,
+                },
+            },
+        },
+    )
+
+    assert payload["cards_runtime"]["scenario_truth"]["scenario_id"] == "role_matrix_soak_v1"
+    assert payload["cards_runtime"]["scenario_truth_alignment"]["expected_terminal_status_match"] is True
+
+
+# Layer: contract
 @pytest.mark.asyncio
 async def test_generate_run_summary_for_finalize_uses_receipts_and_filtered_artifact_ids(tmp_path: Path) -> None:
     receipt_path = (

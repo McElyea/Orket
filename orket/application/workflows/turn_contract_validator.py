@@ -102,6 +102,18 @@ class ContractValidator:
                     "stage_gate_mode": context.get("stage_gate_mode"),
                 }
             )
+        comment_diag = self.comment_contract_diagnostics(turn, context)
+        if not comment_diag.get("ok", False):
+            violations.append(
+                {
+                    "reason": "comment_contract_not_met",
+                    "required_comment_min_length": comment_diag.get("required_comment_min_length"),
+                    "required_comment_contains": comment_diag.get("required_comment_contains", []),
+                    "observed_comment_lengths": comment_diag.get("observed_comment_lengths", []),
+                    "missing_comment_terms": comment_diag.get("missing_comment_terms", []),
+                    "missing_comment_paths": comment_diag.get("missing_comment_paths", []),
+                }
+            )
         anti_meta = self.local_prompt_anti_meta_diagnostics(turn, context)
         if anti_meta.get("violations"):
             violations.append(
@@ -261,6 +273,85 @@ class ContractValidator:
 
     def meets_architecture_decision_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
         return meets_architecture_decision_contract(turn, context)
+
+    def comment_contract_diagnostics(self, turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
+        required_tools = {str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()}
+        required_comment_contains = [
+            str(token).strip()
+            for token in (context.get("required_comment_contains") or [])
+            if str(token).strip()
+        ]
+        raw_min_length = context.get("required_comment_min_length")
+        required_comment_min_length = None
+        if raw_min_length is not None:
+            try:
+                required_comment_min_length = max(1, int(raw_min_length))
+            except (TypeError, ValueError):
+                required_comment_min_length = None
+
+        comment_payloads = [
+            str(call.args.get("comment", "") or "").strip()
+            for call in (turn.tool_calls or [])
+            if call.tool == "add_issue_comment"
+        ]
+        required_comment_paths = self.required_read_paths(context)
+        observed_comment_lengths = [len(comment) for comment in comment_payloads]
+        enforcement_required = (
+            "add_issue_comment" in required_tools
+            or required_comment_min_length is not None
+            or bool(required_comment_contains)
+        )
+        if not enforcement_required:
+            return {
+                "ok": True,
+                "required_comment_min_length": required_comment_min_length,
+                "required_comment_contains": required_comment_contains,
+                "observed_comment_lengths": observed_comment_lengths,
+                "missing_comment_terms": [],
+                "missing_comment_paths": [],
+            }
+        if not comment_payloads:
+            return {
+                "ok": False,
+                "required_comment_min_length": required_comment_min_length,
+                "required_comment_contains": required_comment_contains,
+                "observed_comment_lengths": [],
+                "missing_comment_terms": required_comment_contains,
+                "missing_comment_paths": required_comment_paths,
+            }
+
+        for comment in comment_payloads:
+            if required_comment_min_length is not None and len(comment) < required_comment_min_length:
+                continue
+            lower_comment = comment.lower()
+            missing_terms = [
+                token for token in required_comment_contains if token.lower() not in lower_comment
+            ]
+            missing_paths = [path for path in required_comment_paths if path.lower() not in lower_comment]
+            if not missing_terms and not missing_paths:
+                return {
+                    "ok": True,
+                    "required_comment_min_length": required_comment_min_length,
+                    "required_comment_contains": required_comment_contains,
+                    "observed_comment_lengths": observed_comment_lengths,
+                    "missing_comment_terms": [],
+                    "missing_comment_paths": [],
+                }
+
+        longest_comment = max(comment_payloads, key=len)
+        lower_longest = longest_comment.lower()
+        missing_terms = [
+            token for token in required_comment_contains if token.lower() not in lower_longest
+        ]
+        missing_paths = [path for path in required_comment_paths if path.lower() not in lower_longest]
+        return {
+            "ok": False,
+            "required_comment_min_length": required_comment_min_length,
+            "required_comment_contains": required_comment_contains,
+            "observed_comment_lengths": observed_comment_lengths,
+            "missing_comment_terms": missing_terms,
+            "missing_comment_paths": missing_paths,
+        }
 
     @staticmethod
     def parse_architecture_decision_payload(raw_content: str) -> dict[str, Any] | None:

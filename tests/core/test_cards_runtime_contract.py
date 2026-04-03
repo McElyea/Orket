@@ -5,7 +5,11 @@ from types import SimpleNamespace
 import pytest
 
 from orket.core.cards_runtime_contract import (
+    CRITIQUE_COMMENT_EXECUTION_PROFILE,
     ODR_EXECUTION_PROFILE,
+    REVIEW_COMMENT_EXECUTION_PROFILE,
+    TRUTHFUL_BLOCK_ONLY_EXECUTION_PROFILE,
+    normalize_scenario_truth_alignment,
     resolve_cards_runtime,
     summarize_cards_runtime_issues,
 )
@@ -86,3 +90,89 @@ def test_resolve_cards_runtime_preserves_configured_odr_auditor_model() -> None:
     runtime = resolve_cards_runtime(issue=issue)
 
     assert runtime["odr_auditor_model"] == "qwen2.5:7b"
+
+
+def test_resolve_cards_runtime_comment_profile_uses_empty_artifact_contract_by_default() -> None:
+    issue = SimpleNamespace(
+        seat="reviewer",
+        params={
+            "execution_profile": REVIEW_COMMENT_EXECUTION_PROFILE,
+        },
+    )
+
+    runtime = resolve_cards_runtime(issue=issue)
+
+    assert runtime["execution_profile"] == REVIEW_COMMENT_EXECUTION_PROFILE
+    assert runtime["profile_traits"]["intent"] == "review_comment"
+    assert runtime["artifact_contract"]["kind"] == "none"
+    assert runtime["artifact_contract"]["required_write_paths"] == []
+
+
+def test_resolve_cards_runtime_block_profile_rejects_declared_artifact_outputs() -> None:
+    issue = SimpleNamespace(
+        seat="market_researcher",
+        params={
+            "execution_profile": TRUTHFUL_BLOCK_ONLY_EXECUTION_PROFILE,
+            "artifact_contract": {
+                "kind": "artifact",
+                "primary_output": "agent_output/out.txt",
+                "required_write_paths": ["agent_output/out.txt"],
+            },
+        },
+    )
+
+    runtime = resolve_cards_runtime(issue=issue)
+
+    assert runtime["invalid_profile_reason"] == "comment_or_block_profile_selected_for_artifact_contract"
+
+
+def test_summarize_cards_runtime_issues_carries_shared_scenario_truth() -> None:
+    summary = summarize_cards_runtime_issues(
+        [
+            {
+                "issue_id": "RMS-20",
+                "execution_profile": CRITIQUE_COMMENT_EXECUTION_PROFILE,
+                "scenario_truth": {
+                    "scenario_id": "role_matrix_soak_v1",
+                    "blocked_issue_policy": {
+                        "allowed_issue_ids": ["RMS-22"],
+                        "blocked_implies_run_failure": True,
+                    },
+                    "expected_terminal_status": "terminal_failure",
+                },
+            },
+            {
+                "issue_id": "RMS-21",
+                "execution_profile": "write_artifact_v1",
+                "scenario_truth": {
+                    "scenario_id": "role_matrix_soak_v1",
+                    "blocked_issue_policy": {
+                        "allowed_issue_ids": ["RMS-22"],
+                        "blocked_implies_run_failure": True,
+                    },
+                    "expected_terminal_status": "terminal_failure",
+                },
+            },
+        ]
+    )
+
+    assert summary["execution_profile"] == "mixed"
+    assert summary["scenario_truth"]["scenario_id"] == "role_matrix_soak_v1"
+    assert summary["scenario_truth"]["blocked_issue_policy"]["allowed_issue_ids"] == ["RMS-22"]
+
+
+def test_normalize_scenario_truth_alignment_reports_expected_terminal_status_match() -> None:
+    alignment = normalize_scenario_truth_alignment(
+        scenario_truth={
+            "scenario_id": "role_matrix_soak_v1",
+            "blocked_issue_policy": {
+                "allowed_issue_ids": ["RMS-22"],
+                "blocked_implies_run_failure": True,
+            },
+            "expected_terminal_status": "terminal_failure",
+        },
+        observed_terminal_status="terminal_failure",
+    )
+
+    assert alignment["scenario_id"] == "role_matrix_soak_v1"
+    assert alignment["expected_terminal_status_match"] is True

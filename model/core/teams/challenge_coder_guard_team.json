@@ -1,0 +1,14 @@
+{
+  "name": "challenge_coder_guard_team",
+  "description": "Minimal coder plus guard team for long-form programming challenge epics.",
+  "seats": {
+    "coder": {
+      "name": "Coder",
+      "roles": ["coder"]
+    },
+    "integrity_guard": {
+      "name": "Integrity Guard",
+      "roles": ["integrity_guard"]
+    }
+  }
+}

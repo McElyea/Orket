@@ -111,3 +111,32 @@ def test_emit_run_evidence_graph_accepts_authority_and_decision_views(tmp_path: 
     html = html_path.read_text(encoding="utf-8")
     assert "Authority" in html
     assert "Decision" in html
+
+
+# Layer: integration
+def test_emit_run_evidence_graph_resolves_control_plane_run_id_from_session_summary(tmp_path: Path) -> None:
+    _, _, db_path, session_id, control_plane_run_id = asyncio.run(seed_complete_primary_lineage_sqlite(tmp_path=tmp_path))
+    run_summary_path = tmp_path / "runs" / session_id / "run_summary.json"
+    payload = json.loads(run_summary_path.read_text(encoding="utf-8"))
+    payload["run_id"] = session_id
+    payload["control_plane"] = {"run_id": control_plane_run_id}
+    run_summary_path.write_text(json.dumps(payload, ensure_ascii=True, indent=2), encoding="utf-8")
+
+    exit_code = main(
+        [
+            "--run-id",
+            session_id,
+            "--workspace-root",
+            str(tmp_path),
+            "--control-plane-db",
+            str(db_path),
+            "--generation-timestamp",
+            GENERATED_AT,
+        ]
+    )
+
+    assert exit_code == 0
+    json_path = tmp_path / "runs" / session_id / "run_evidence_graph.json"
+    graph_payload = json.loads(json_path.read_text(encoding="utf-8"))
+    assert graph_payload["run_id"] == control_plane_run_id
+    assert graph_payload["graph_result"] in {"complete", "degraded"}

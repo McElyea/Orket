@@ -1,0 +1,632 @@
+{
+  "name": "Orket Role Matrix Soak",
+  "description": "Long-run repo-local epic intended to exercise every built-in role at least once while preserving replay visibility for each turn.",
+  "status": "in_progress",
+  "type": "epic",
+  "team": "role_matrix_soak_team",
+  "environment": "standard",
+  "build_id": "build-role-matrix-soak",
+  "handshake_enabled": true,
+  "requirements": "Run a repo-local long-form Orket soak that uses every role at least once, keeps outputs truthful, preserves replay visibility for every turn, avoids unnecessary external dependencies, and writes all new artifacts under agent_output/soak_matrix unless a seat contract requires agent_output/requirements.txt, agent_output/design.txt, or agent_output/main.py.",
+  "params": {
+    "cards_runtime": {
+      "scenario_truth": {
+        "scenario_id": "role_matrix_soak_v1",
+        "blocked_issue_policy": {
+          "allowed_issue_ids": ["RMS-22"],
+          "blocked_implies_run_failure": true
+        },
+        "expected_terminal_status": "terminal_failure",
+        "expected_truth_classification": "repaired_or_direct"
+      }
+    }
+  },
+  "references": [
+    "docs/ROADMAP.md",
+    "CURRENT_AUTHORITY.md",
+    "benchmarks/results/probes/provider_codegen_matrix/primary/ollama.chain.json",
+    "benchmarks/results/probes/provider_codegen_matrix/primary/lmstudio.chain.json",
+    "benchmarks/results/probes/provider_codegen_matrix/primary/lmstudio.baseline.json",
+    "benchmarks/results/probes/provider_codegen_matrix/primary/ollama.preflight.json"
+  ],
+  "issues": [
+    {
+      "id": "RMS-01",
+      "summary": "Baseline Soak Requirements",
+      "seat": "requirements_analyst",
+      "priority": "High",
+      "status": "ready",
+      "note": "Write agent_output/requirements.txt with the repo-local soak goals: every role used at least once, per-turn replayability, truthful failure detection, and no invented external evidence. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/requirements.txt",
+          "required_write_paths": ["agent_output/requirements.txt"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/requirements.txt"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"],
+          "required_write_paths": ["agent_output/requirements.txt"]
+        }
+      }
+    },
+    {
+      "id": "RMS-02",
+      "summary": "Wave Architecture Plan",
+      "seat": "architect",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": ["RMS-01"],
+      "note": "Write agent_output/design.txt as JSON with recommendation \"monolith\", a confidence between 0 and 1, frontend_framework \"vue\", and an evidence object containing estimated_domains, external_integrations, independent_scaling_needs, deployment_complexity, team_parallelism, and operational_maturity. Ground the evidence in this repo-local soak plan, then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/design.txt",
+          "required_write_paths": ["agent_output/design.txt"],
+          "required_read_paths": ["agent_output/requirements.txt"],
+          "review_read_paths": ["agent_output/design.txt"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"],
+          "required_read_paths": ["agent_output/requirements.txt"],
+          "required_write_paths": ["agent_output/design.txt"]
+        }
+      }
+    },
+    {
+      "id": "RMS-03",
+      "summary": "Operator Success Criteria",
+      "seat": "product_owner",
+      "priority": "High",
+      "status": "ready",
+      "note": "Use write_file to create agent_output/soak_matrix/product/product_brief.md with success criteria, failure criteria, and operator acceptance checks for this soak. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/product/product_brief.md",
+          "required_write_paths": ["agent_output/soak_matrix/product/product_brief.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/product/product_brief.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-04",
+      "summary": "Runnable Reporter Scaffold",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": ["RMS-01", "RMS-02", "RMS-03"],
+      "note": "Read the grounding artifacts first, then implement agent_output/main.py as a valid Python reporter that runs from the workspace root with exactly python agent_output/main.py, takes no positional arguments, walks agent_output/soak_matrix recursively, and prints concise JSON with files_count and files_list using workspace-relative paths. Do not hardcode cwd-sensitive lookup assumptions or require argv input. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "build_app_v1",
+        "turn_contract": {
+          "required_action_tools": ["read_file", "write_file", "update_issue_status"],
+          "required_statuses": ["code_review"],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/soak_matrix/product/product_brief.md"
+          ],
+          "required_write_paths": ["agent_output/main.py"]
+        },
+        "runtime_verifier": {
+          "expect_json_stdout": true,
+          "json_assertions": [
+            {
+              "path": "files_count",
+              "op": "gte",
+              "value": 1
+            },
+            {
+              "path": "files_list",
+              "op": "len_gte",
+              "value": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "RMS-05",
+      "summary": "Lead Architecture Checkpoint",
+      "seat": "lead_architect",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": ["RMS-01", "RMS-02", "RMS-03"],
+      "note": "Use write_file to create agent_output/soak_matrix/architecture/lead_summary.md aligning the soak to current Orket orchestration, guard, and replay constraints. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/architecture/lead_summary.md",
+          "required_write_paths": ["agent_output/soak_matrix/architecture/lead_summary.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/architecture/lead_summary.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-06",
+      "summary": "Narrative Run Framing",
+      "seat": "writer",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-01", "RMS-02", "RMS-03"],
+      "note": "Use write_file to create agent_output/soak_matrix/narrative/runbook_story.md explaining what an operator should look for during the soak and what a truthful stop would mean. Include literal lines `Run Command: python main.py --epic role_matrix_soak` and `Replay Command: python main.py --replay-turn <session_id>:<issue_id>:<turn_index>[:role]`, and include a `Truthful Stop` section. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/narrative/runbook_story.md",
+          "required_write_paths": ["agent_output/soak_matrix/narrative/runbook_story.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/narrative/runbook_story.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-07",
+      "summary": "Backend Path Inventory",
+      "seat": "backend_specialist",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-04", "RMS-05", "RMS-06"],
+      "note": "Use write_file to create agent_output/soak_matrix/backend/runtime_paths.md enumerating safe runtime, artifact, and replay paths for this scenario. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/backend/runtime_paths.md",
+          "required_write_paths": ["agent_output/soak_matrix/backend/runtime_paths.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/backend/runtime_paths.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-08",
+      "summary": "Local Network Assumptions",
+      "seat": "network_engineer",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-04", "RMS-05", "RMS-06"],
+      "note": "Use write_file to create agent_output/soak_matrix/network/topology.md describing local-only network assumptions and why the soak should not depend on remote services for truth. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/network/topology.md",
+          "required_write_paths": ["agent_output/soak_matrix/network/topology.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/network/topology.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-09",
+      "summary": "Metrics Inspection Plan",
+      "seat": "data_scientist",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-04", "RMS-05", "RMS-06"],
+      "note": "Use write_file to create agent_output/soak_matrix/data/metrics_plan.json describing the operator metrics vocabulary for this soak without inventing observed results. Derive completion_outcome and blocked_issue_allowed from the scenario truth contract instead of inventing separate terminal semantics. Include keys for turn_visibility, completion_outcome, blocked_issue_allowed, runtime_verifier_ok, and canonical_graph_result. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/data/metrics_plan.json",
+          "required_write_paths": ["agent_output/soak_matrix/data/metrics_plan.json"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/data/metrics_plan.json"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-10",
+      "summary": "Wave Objective Trace",
+      "seat": "requirements_specialist",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-07", "RMS-08", "RMS-09"],
+      "note": "Use write_file to create agent_output/soak_matrix/requirements/delta_trace.md mapping each wave to a user-observable objective and expected evidence. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/requirements/delta_trace.md",
+          "required_write_paths": ["agent_output/soak_matrix/requirements/delta_trace.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/requirements/delta_trace.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-11",
+      "summary": "Truthfulness and Authority Risks",
+      "seat": "governance_ethics",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-07", "RMS-08", "RMS-09"],
+      "note": "Read the current soak artifacts you need, then add a structured issue comment with headings Findings, Evidence, and Actions that identifies concrete truthfulness, approval, and authority-drift risks in this soak, cites file paths directly, and quotes short inline literal snippets from the files you inspected. Include the exact parenthetical path list `(agent_output/requirements.txt, agent_output/soak_matrix/narrative/runbook_story.md, agent_output/soak_matrix/data/metrics_plan.json)` in the comment. Do not use fenced blocks inside the comment. Finish with update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "review_comment_v1",
+        "turn_contract": {
+          "required_action_tools": ["add_issue_comment", "update_issue_status"],
+          "required_statuses": ["code_review"],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/soak_matrix/narrative/runbook_story.md",
+            "agent_output/soak_matrix/data/metrics_plan.json"
+          ],
+          "required_comment_min_length": 240,
+          "required_comment_contains": [
+            "Findings",
+            "Evidence",
+            "Actions",
+            "agent_output/requirements.txt",
+            "agent_output/soak_matrix/narrative/runbook_story.md",
+            "agent_output/soak_matrix/data/metrics_plan.json"
+          ]
+        }
+      }
+    },
+    {
+      "id": "RMS-12",
+      "summary": "Protocol and Evidence Rules",
+      "seat": "protocol_enforcer",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-07", "RMS-08", "RMS-09"],
+      "note": "Read the current soak artifacts you need, then add a structured issue comment with headings Protocol, Artifacts, and Gaps naming the protocol and replay artifacts this soak must emit and any missing proof surface. Cite exact files and quote short inline literal snippets from what you inspected. Include the exact parenthetical path list `(agent_output/requirements.txt, agent_output/design.txt, agent_output/soak_matrix/data/metrics_plan.json)` in the comment. Do not use fenced blocks inside the comment. Finish with update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "review_comment_v1",
+        "turn_contract": {
+          "required_action_tools": ["add_issue_comment", "update_issue_status"],
+          "required_statuses": ["code_review"],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/soak_matrix/data/metrics_plan.json"
+          ],
+          "required_comment_min_length": 220,
+          "required_comment_contains": [
+            "Protocol",
+            "Artifacts",
+            "Gaps",
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/soak_matrix/data/metrics_plan.json"
+          ]
+        }
+      }
+    },
+    {
+      "id": "RMS-13",
+      "summary": "Operator Panel Concept",
+      "seat": "ux_artisan",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-10", "RMS-11", "RMS-12"],
+      "note": "Use write_file to create agent_output/soak_matrix/ui/operator_panel.md for a future operator panel that can browse session, issue, and turn inputs and outputs. Do not rely on image analysis. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/ui/operator_panel.md",
+          "required_write_paths": ["agent_output/soak_matrix/ui/operator_panel.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/ui/operator_panel.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-14",
+      "summary": "Style Notes Without Image Generation",
+      "seat": "stylist",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-10", "RMS-11", "RMS-12"],
+      "note": "Use write_file to create agent_output/soak_matrix/ui/style_notes.md with color, type, and layout guidance for the operator panel. Do not use image_generate. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/ui/style_notes.md",
+          "required_write_paths": ["agent_output/soak_matrix/ui/style_notes.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/ui/style_notes.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-15",
+      "summary": "Live Operator Procedure",
+      "seat": "operations_lead",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-10", "RMS-11", "RMS-12"],
+      "note": "Add a structured issue comment with headings Steps, Evidence, and Failure Mode that explains how an operator should use the workspace-local soak guidance honestly. Cite agent_output/requirements.txt and agent_output/soak_matrix/narrative/runbook_story.md exactly, summarize what those files say about running and inspecting the soak, and avoid fenced blocks or command-formatting markup in the comment. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "review_comment_v1",
+        "turn_contract": {
+          "required_action_tools": ["add_issue_comment", "update_issue_status"],
+          "required_statuses": ["code_review"],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/soak_matrix/narrative/runbook_story.md"
+          ],
+          "required_comment_min_length": 180,
+          "required_comment_contains": [
+            "Steps",
+            "Evidence",
+            "Failure Mode",
+            "agent_output/requirements.txt",
+            "agent_output/soak_matrix/narrative/runbook_story.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "RMS-16",
+      "summary": "Readable Reviewer Pass",
+      "seat": "reviewer",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": ["RMS-13", "RMS-14", "RMS-15"],
+      "note": "Read the required artifacts, then add a structured issue comment with headings Findings, Severity, and Path containing at least two concrete review findings tied to the exact files you inspected. Quote short inline literal snippets from those files, and include the exact parenthetical path list `(agent_output/requirements.txt, agent_output/soak_matrix/ui/operator_panel.md, agent_output/soak_matrix/ui/style_notes.md)` in the comment before calling update_issue_status(status='code_review') for integrity-guard handoff. Do not use fenced blocks inside the comment.",
+      "params": {
+        "execution_profile": "review_comment_v1",
+        "turn_contract": {
+          "required_action_tools": ["add_issue_comment", "update_issue_status"],
+          "required_statuses": ["code_review"],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/soak_matrix/ui/operator_panel.md",
+            "agent_output/soak_matrix/ui/style_notes.md"
+          ],
+          "required_comment_min_length": 240,
+          "required_comment_contains": [
+            "Findings",
+            "Severity",
+            "Path",
+            "agent_output/requirements.txt",
+            "agent_output/soak_matrix/ui/operator_panel.md",
+            "agent_output/soak_matrix/ui/style_notes.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "RMS-17",
+      "summary": "Code Reviewer Pass",
+      "seat": "code_reviewer",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": ["RMS-13", "RMS-14", "RMS-15"],
+      "note": "Read the required artifacts, then add a structured issue comment with headings Findings, Severity, and Path containing concrete code-review findings tied to the implementation and its stated requirements. Quote short inline literal snippets from those files, and include the exact parenthetical path list `(agent_output/requirements.txt, agent_output/main.py)` in the comment before calling update_issue_status(status='code_review') for integrity-guard handoff. Do not use fenced blocks inside the comment.",
+      "params": {
+        "execution_profile": "review_comment_v1",
+        "turn_contract": {
+          "required_action_tools": ["add_issue_comment", "update_issue_status"],
+          "required_statuses": ["code_review"],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/main.py"
+          ],
+          "required_comment_min_length": 240,
+          "required_comment_contains": [
+            "Findings",
+            "Severity",
+            "Path",
+            "agent_output/requirements.txt",
+            "agent_output/main.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "RMS-18",
+      "summary": "Refinement Specialist Proposal",
+      "seat": "reforge_specialist",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-13", "RMS-14", "RMS-15"],
+      "note": "Use write_file to create agent_output/soak_matrix/reforge/specialist_proposal.md with one bounded refinement proposal to make future soaks more resilient. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/reforge/specialist_proposal.md",
+          "required_write_paths": ["agent_output/soak_matrix/reforge/specialist_proposal.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/reforge/specialist_proposal.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-19",
+      "summary": "Reforger Plan",
+      "seat": "reforger",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-16", "RMS-17", "RMS-18"],
+      "note": "Use write_file to create agent_output/soak_matrix/reforge/reforger_plan.md with one concrete low-risk refactor candidate surfaced by this scenario. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/reforge/reforger_plan.md",
+          "required_write_paths": ["agent_output/soak_matrix/reforge/reforger_plan.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/reforge/reforger_plan.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-20",
+      "summary": "Coherence Critique",
+      "seat": "critic",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-16", "RMS-17", "RMS-18"],
+      "note": "Read the required artifacts, then add a structured issue comment with headings Tension, Evidence, and Recommendation describing concrete coherence gaps between the requirements, design, and refinement proposal. Quote short inline literal snippets from the inspected files, and include the exact parenthetical path list `(agent_output/requirements.txt, agent_output/design.txt, agent_output/soak_matrix/reforge/specialist_proposal.md)` in the comment before calling update_issue_status(status='code_review'). Do not use fenced blocks inside the comment.",
+      "params": {
+        "execution_profile": "critique_comment_v1",
+        "turn_contract": {
+          "required_action_tools": ["add_issue_comment", "update_issue_status"],
+          "required_statuses": ["code_review"],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/soak_matrix/reforge/specialist_proposal.md"
+          ],
+          "required_comment_min_length": 220,
+          "required_comment_contains": [
+            "Tension",
+            "Evidence",
+            "Recommendation",
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/soak_matrix/reforge/specialist_proposal.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "RMS-21",
+      "summary": "Failure Mode Narrative",
+      "seat": "writer",
+      "priority": "Medium",
+      "status": "ready",
+      "depends_on": ["RMS-16", "RMS-17", "RMS-18"],
+      "note": "Use write_file to create agent_output/soak_matrix/narrative/failure_modes.md describing what a truthful partial success or truthful stop would look like in this soak. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/narrative/failure_modes.md",
+          "required_write_paths": ["agent_output/soak_matrix/narrative/failure_modes.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/narrative/failure_modes.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-22",
+      "summary": "Repo-Local Provider Comparison",
+      "seat": "market_researcher",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": ["RMS-19", "RMS-20", "RMS-21"],
+      "note": "Read the repo-local provider probe artifacts, compare the Ollama and LM Studio evidence using only repo-local truth, then finish truthfully with update_issue_status(status='blocked', wait_reason='system') because this role still lacks admitted external search support in this soak.",
+      "params": {
+        "execution_profile": "truthful_block_only_v1",
+        "turn_contract": {
+          "required_action_tools": ["read_file", "update_issue_status"],
+          "required_statuses": ["blocked"],
+          "required_read_paths": [
+            "benchmarks/results/probes/provider_codegen_matrix/primary/ollama.chain.json",
+            "benchmarks/results/probes/provider_codegen_matrix/primary/lmstudio.chain.json",
+            "benchmarks/results/probes/provider_codegen_matrix/primary/lmstudio.baseline.json",
+            "benchmarks/results/probes/provider_codegen_matrix/primary/ollama.preflight.json"
+          ]
+        }
+      }
+    },
+    {
+      "id": "RMS-23",
+      "summary": "Text-Only Design Feedback",
+      "seat": "designer",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": ["RMS-19", "RMS-20", "RMS-21"],
+      "note": "Using only existing text context, add a structured issue comment describing visual hierarchy and naming improvements for an operator evidence dashboard. Do not use image_analyze or list_dir. Finish with update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "review_comment_v1",
+        "turn_contract": {
+          "required_action_tools": ["add_issue_comment", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    },
+    {
+      "id": "RMS-24",
+      "summary": "Exit Criteria Packet",
+      "seat": "product_owner",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": ["RMS-19", "RMS-20", "RMS-21"],
+      "note": "Use write_file to create agent_output/soak_matrix/product/exit_criteria.md defining complete, partial, and blocked outcomes for this soak and how an operator should report them. Derive blocked and terminal-failure semantics from the scenario truth contract rather than inventing a separate terminal story. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/soak_matrix/product/exit_criteria.md",
+          "required_write_paths": ["agent_output/soak_matrix/product/exit_criteria.md"],
+          "required_read_paths": [],
+          "review_read_paths": ["agent_output/soak_matrix/product/exit_criteria.md"]
+        },
+        "turn_contract": {
+          "required_action_tools": ["write_file", "update_issue_status"],
+          "required_statuses": ["code_review"]
+        }
+      }
+    }
+  ]
+}
+

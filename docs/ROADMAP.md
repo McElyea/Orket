@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-04-01
+Last updated: 2026-04-02
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. maintenance-only posture -- No active non-recurring lane is open.
+1. none.
 
 ## Maintenance (Non-Priority)
 
@@ -23,7 +23,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Future Lanes (Non-Priority Backlog)
 
-1. protocol-governed local provider compatibility expansion (`vLLM`, `llama.cpp`) -- Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Readiness: `benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json` (`ready=true` for current admitted profiles). Reopen only with an explicit scoped implementation request.
+1. protocol-governed local provider compatibility expansion (`vLLM`, `llama.cpp`) -- Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Readiness must be regenerated with `scripts/protocol/check_local_prompting_promotion_readiness.py` before reopen; do not treat local ignored `benchmarks/results/...` output as durable roadmap authority. Reopen only with an explicit scoped implementation request.
 2. marshaller requirements hardening -- Hold until requirements are mature and explicitly approved for execution.
 
 ## Project Index

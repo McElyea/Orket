@@ -204,3 +204,108 @@ def test_contract_validator_local_prompt_rejects_profile_intro_denylist_prefix(t
     )
     diagnostics = validator.local_prompt_anti_meta_diagnostics(turn, context={})
     assert any(item["rule_id"] == "LOCAL_PROMPT.INTRO_DENYLIST" for item in diagnostics["violations"])
+
+
+def test_contract_validator_accepts_comment_contract_when_comment_is_structured(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="reviewer",
+        issue_id="ISSUE-2",
+        tool_calls=[
+            ToolCall(
+                tool="add_issue_comment",
+                args={
+                    "comment": (
+                        "Findings: the scaffold is path-stable.\n"
+                        "Severity: low.\n"
+                        "Path: agent_output/main.py.\n"
+                        "Evidence: reviewed the entrypoint and output contract in detail."
+                    )
+                },
+            )
+        ],
+    )
+
+    diagnostics = validator.comment_contract_diagnostics(
+        turn,
+        context={
+            "required_action_tools": ["add_issue_comment"],
+            "required_comment_min_length": 80,
+            "required_comment_contains": ["Findings", "Severity", "Path"],
+            "required_read_paths": ["agent_output/main.py"],
+        },
+    )
+
+    assert diagnostics["ok"] is True
+    assert diagnostics["missing_comment_paths"] == []
+
+
+def test_contract_validator_rejects_comment_contract_when_terms_are_missing(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
+    turn = ExecutionTurn(
+        role="reviewer",
+        issue_id="ISSUE-3",
+        tool_calls=[ToolCall(tool="add_issue_comment", args={"comment": "Need more detail."})],
+    )
+
+    diagnostics = validator.comment_contract_diagnostics(
+        turn,
+        context={
+            "required_action_tools": ["add_issue_comment"],
+            "required_comment_min_length": 40,
+            "required_comment_contains": ["Findings", "Severity", "Path"],
+            "required_read_paths": ["agent_output/main.py"],
+        },
+    )
+
+    assert diagnostics["ok"] is False
+    assert diagnostics["missing_comment_terms"] == ["Findings", "Severity", "Path"]
+    assert diagnostics["missing_comment_paths"] == ["agent_output/main.py"]
+
+
+def test_contract_validator_rejects_comment_contract_when_required_paths_are_not_cited(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    ui_dir = tmp_path / "agent_output" / "soak_matrix" / "ui"
+    ui_dir.mkdir(parents=True, exist_ok=True)
+    (ui_dir / "operator_panel.md").write_text("# Operator Panel\n", encoding="utf-8")
+    (ui_dir / "style_notes.md").write_text("# Style Notes\n", encoding="utf-8")
+    turn = ExecutionTurn(
+        role="reviewer",
+        issue_id="ISSUE-4",
+        tool_calls=[
+            ToolCall(
+                tool="add_issue_comment",
+                args={
+                    "comment": (
+                        "Findings: review completed.\n"
+                        "Severity: medium.\n"
+                        "Path: cited one file only.\n"
+                        "Evidence: grounded on the operator panel and style notes."
+                    )
+                },
+            )
+        ],
+    )
+
+    diagnostics = validator.comment_contract_diagnostics(
+        turn,
+        context={
+            "required_action_tools": ["add_issue_comment"],
+            "required_comment_min_length": 80,
+            "required_comment_contains": ["Findings", "Severity", "Path"],
+            "required_read_paths": [
+                "agent_output/soak_matrix/ui/operator_panel.md",
+                "agent_output/soak_matrix/ui/style_notes.md",
+            ],
+        },
+    )
+
+    assert diagnostics["ok"] is False
+    assert diagnostics["missing_comment_terms"] == []
+    assert diagnostics["missing_comment_paths"] == [
+        "agent_output/soak_matrix/ui/operator_panel.md",
+        "agent_output/soak_matrix/ui/style_notes.md",
+    ]

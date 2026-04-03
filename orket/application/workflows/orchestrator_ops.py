@@ -77,6 +77,18 @@ async def _close_provider_transport(provider: Any) -> None:
         await maybe_awaitable
 
 
+def _normalize_turn_contract_override_list(value: Any, *, lowercase: bool = False) -> list[str] | None:
+    if not isinstance(value, list):
+        return None
+    normalized: list[str] = []
+    for item in value:
+        token = str(item).strip()
+        if not token:
+            continue
+        normalized.append(token.lower() if lowercase else token)
+    return normalized
+
+
 def _org_process_rules(org: Any) -> dict[str, Any]:
     process_rules = getattr(org, "process_rules", None) if org else None
     return process_rules if isinstance(process_rules, dict) else {}
@@ -1299,6 +1311,7 @@ async def _execute_issue_turn(
         issue_params=getattr(issue, "params", None),
         epic_params=getattr(epic, "params", None),
     )
+    cards_runtime = resolve_cards_runtime(issue=issue)
     is_review_turn = self.loop_policy_node.is_review_turn(issue.status)
     dependency_context = await self._build_dependency_context(issue)
     runtime_result = None
@@ -1315,6 +1328,8 @@ async def _execute_issue_turn(
                 organization=self.org,
                 project_surface_profile=self._resolve_project_surface_profile(),
                 architecture_pattern=self._resolve_architecture_pattern(),
+                artifact_contract=dict(cards_runtime.get("artifact_contract") or {}),
+                issue_params=dict(getattr(issue, "params", {}) or {}),
             )
         except TypeError:
             runtime_verifier = RuntimeVerifier(
@@ -1454,10 +1469,15 @@ async def _execute_issue_turn(
         normalized_seat = str(seat_name or "").strip().lower()
         if normalized_seat not in {"code_reviewer", "reviewer", "integrity_guard"}:
             seat_name = str(small_policy["builder_seat"])
+    runtime_builder_seat = str(issue.seat or "").strip() or "coder"
+    runtime_reviewer_seat = "integrity_guard"
+    if small_policy.get("active"):
+        runtime_builder_seat = str(small_policy.get("builder_seat") or runtime_builder_seat)
+        runtime_reviewer_seat = str(small_policy.get("reviewer_seat") or runtime_reviewer_seat)
     cards_runtime = resolve_cards_runtime(
         issue=issue,
-        builder_seat=str(small_policy.get("builder_seat") or issue.seat),
-        reviewer_seat=str(small_policy.get("reviewer_seat") or "integrity_guard"),
+        builder_seat=runtime_builder_seat,
+        reviewer_seat=runtime_reviewer_seat,
     )
     invalid_profile_reason = str(cards_runtime.get("invalid_profile_reason") or "").strip()
     if invalid_profile_reason:
@@ -1586,8 +1606,8 @@ async def _execute_issue_turn(
                 await _close_provider_transport(odr_auditor_provider)
         cards_runtime = resolve_cards_runtime(
             issue=issue,
-            builder_seat=str(small_policy.get("builder_seat") or issue.seat),
-            reviewer_seat=str(small_policy.get("reviewer_seat") or "integrity_guard"),
+            builder_seat=runtime_builder_seat,
+            reviewer_seat=runtime_reviewer_seat,
         )
         await provider.clear_context()
         if not bool(odr_result.get("odr_accepted")):
@@ -2082,6 +2102,55 @@ def _build_turn_context(
         except TypeError:
             required_write_paths = list(required_write_paths_fn(seat_name) or [])
 
+    params = getattr(issue, "params", None)
+    normalized_issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
+    normalized_seat_name = str(seat_name or "").strip().lower()
+    turn_contract = (
+        params.get("turn_contract")
+        if (
+            isinstance(params, dict)
+            and isinstance(params.get("turn_contract"), dict)
+            and normalized_issue_seat
+            and normalized_issue_seat == normalized_seat_name
+        )
+        else {}
+    )
+    override_action_tools = _normalize_turn_contract_override_list(turn_contract.get("required_action_tools"))
+    if override_action_tools is not None:
+        required_action_tools = override_action_tools
+    override_statuses = _normalize_turn_contract_override_list(turn_contract.get("required_statuses"), lowercase=True)
+    if override_statuses is not None:
+        required_statuses = override_statuses
+    override_read_paths = _normalize_turn_contract_override_list(turn_contract.get("required_read_paths"))
+    if override_read_paths is not None:
+        required_read_paths = override_read_paths
+    override_write_paths = _normalize_turn_contract_override_list(turn_contract.get("required_write_paths"))
+    if override_write_paths is not None:
+        required_write_paths = override_write_paths
+    raw_required_comment_min_length = turn_contract.get("required_comment_min_length")
+    required_comment_min_length = None
+    if raw_required_comment_min_length is not None:
+        try:
+            required_comment_min_length = max(1, int(raw_required_comment_min_length))
+        except (TypeError, ValueError):
+            required_comment_min_length = None
+    required_comment_contains = (
+        _normalize_turn_contract_override_list(turn_contract.get("required_comment_contains")) or []
+    )
+    runtime_verifier_contract = (
+        dict(params.get("runtime_verifier") or {})
+        if (
+            isinstance(params, dict)
+            and isinstance(params.get("runtime_verifier"), dict)
+            and normalized_issue_seat
+            and normalized_issue_seat == normalized_seat_name
+        )
+        else {}
+    )
+    profile_traits = dict(cards_runtime.get("profile_traits") or {})
+    if not bool(profile_traits.get("runtime_verifier_allowed", True)):
+        runtime_verifier_contract = {}
+
     gate_mode = "auto"
     gate_mode_fn = getattr(self.loop_policy_node, "gate_mode_for_seat", None)
     if callable(gate_mode_fn):
@@ -2322,7 +2391,12 @@ def _build_turn_context(
 
     declared_interfaces = list(required_action_tools) + list(approval_required_tools)
     if not required_action_tools:
-        for fallback_interface in ("read_file", "write_file", "update_issue_status"):
+        fallback_interfaces = list(resolved_skill_tool_bindings.keys()) or [
+            "read_file",
+            "write_file",
+            "update_issue_status",
+        ]
+        for fallback_interface in fallback_interfaces:
             if fallback_interface not in declared_interfaces:
                 declared_interfaces.append(fallback_interface)
     if available_required_read_paths and "read_file" not in declared_interfaces:
@@ -2352,12 +2426,16 @@ def _build_turn_context(
         "required_statuses": required_statuses,
         "required_read_paths": required_read_paths,
         "required_write_paths": required_write_paths,
+        "required_comment_min_length": required_comment_min_length,
+        "required_comment_contains": required_comment_contains,
         "execution_profile": str(cards_runtime.get("execution_profile") or ""),
         "base_execution_profile": str(cards_runtime.get("base_execution_profile") or ""),
         "builder_seat_choice": str(cards_runtime.get("builder_seat_choice") or ""),
         "reviewer_seat_choice": str(cards_runtime.get("reviewer_seat_choice") or ""),
+        "profile_traits": profile_traits,
         "seat_coercion": dict(cards_runtime.get("seat_coercion") or {}),
         "artifact_contract": dict(cards_runtime.get("artifact_contract") or {}),
+        "scenario_truth": dict(cards_runtime.get("scenario_truth") or {}),
         "odr_active": bool(cards_runtime.get("odr_active")),
         "odr_valid": cards_runtime.get("odr_valid"),
         "odr_pending_decisions": cards_runtime.get("odr_pending_decisions"),
@@ -2383,6 +2461,7 @@ def _build_turn_context(
         "stage_gate_mode": gate_mode,
         "approval_required_tools": approval_required_tools,
         "runtime_verifier_ok": runtime_verifier_ok,
+        "runtime_verifier_contract": runtime_verifier_contract,
         "prompt_metadata": prompt_metadata or {},
         "prompt_layers": prompt_layers or {},
         "architecture_mode": architecture_mode,

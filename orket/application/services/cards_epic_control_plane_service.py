@@ -8,7 +8,14 @@ from orket.core.contracts import AttemptRecord, RunRecord, StepRecord, WorkloadR
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AttemptState,
+    AuthoritySourceClass,
     CapabilityClass,
+    ClosureBasisClassification,
+    CompletionClassification,
+    DegradationClassification,
+    EvidenceSufficiencyClassification,
+    ResidualUncertaintyClassification,
+    ResultClass,
     RunState,
     validate_attempt_state_transition,
     validate_run_state_transition,
@@ -132,6 +139,7 @@ class CardsEpicControlPlaneService:
         attempt = await self._require_attempt(attempt_id=run.current_attempt_id)
         status = str(session_status or "").strip().lower()
         ended_at = self._utc_now()
+        closeout_ref = self.closeout_ref_for(run_id=run_id, session_status=status)
 
         if status == "done":
             next_run_state = RunState.COMPLETED
@@ -155,7 +163,40 @@ class CardsEpicControlPlaneService:
         validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=next_attempt_state)
         attempt = await self.execution_repository.save_attempt_record(record=attempt.model_copy(update=attempt_update))
         validate_run_state_transition(current_state=run.lifecycle_state, next_state=next_run_state)
-        run = await self.execution_repository.save_run_record(record=run.model_copy(update={"lifecycle_state": next_run_state}))
+        run_update = {"lifecycle_state": next_run_state}
+        if next_run_state in {RunState.COMPLETED, RunState.FAILED_TERMINAL}:
+            await self.execution_repository.save_step_record(
+                record=StepRecord(
+                    step_id=self.closeout_step_id_for(run_id=run_id),
+                    attempt_id=attempt.attempt_id,
+                    step_kind="cards_epic_session_closeout",
+                    input_ref=self.start_step_id_for(run_id=run_id),
+                    output_ref=closeout_ref,
+                    capability_used=CapabilityClass.DETERMINISTIC_COMPUTE,
+                    resources_touched=[],
+                    observed_result_classification=f"cards_epic_session_{status}",
+                    receipt_refs=[closeout_ref],
+                    closure_classification="step_completed",
+                )
+            )
+            truth = await self.publication.publish_final_truth(
+                final_truth_record_id=self.final_truth_id_for(run_id=run_id),
+                run_id=run_id,
+                result_class=(ResultClass.SUCCESS if status == "done" else ResultClass.FAILED),
+                completion_classification=(
+                    CompletionClassification.SATISFIED
+                    if status == "done"
+                    else CompletionClassification.UNSATISFIED
+                ),
+                evidence_sufficiency_classification=EvidenceSufficiencyClassification.SUFFICIENT,
+                residual_uncertainty_classification=ResidualUncertaintyClassification.NONE,
+                degradation_classification=DegradationClassification.NONE,
+                closure_basis=ClosureBasisClassification.NORMAL_EXECUTION,
+                authority_sources=[AuthoritySourceClass.RECEIPT_EVIDENCE],
+                authoritative_result_ref=closeout_ref,
+            )
+            run_update["final_truth_record_id"] = truth.final_truth_record_id
+        run = await self.execution_repository.save_run_record(record=run.model_copy(update=run_update))
         return run, attempt
 
     @staticmethod
@@ -179,6 +220,18 @@ class CardsEpicControlPlaneService:
     @staticmethod
     def start_step_id_for(*, run_id: str) -> str:
         return f"{run_id}:step:start"
+
+    @staticmethod
+    def closeout_step_id_for(*, run_id: str) -> str:
+        return f"{run_id}:step:closeout"
+
+    @staticmethod
+    def closeout_ref_for(*, run_id: str, session_status: str) -> str:
+        return f"{run_id}:closeout:{sanitize_name(str(session_status or 'unknown'))}"
+
+    @staticmethod
+    def final_truth_id_for(*, run_id: str) -> str:
+        return f"{run_id}:final_truth"
 
     async def _require_run(self, *, run_id: str) -> RunRecord:
         run = await self.execution_repository.get_run_record(run_id=run_id)

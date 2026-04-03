@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 from orket.exceptions import CatastrophicFailure, ExecutionFailed
 from orket.application.workflows.orchestrator import Orchestrator
+from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
 from orket.application.workflows.turn_executor import TurnResult
 from orket.application.services.guard_agent import GuardAgent
 from orket.application.services.runtime_verifier import build_runtime_guard_contract
@@ -1725,6 +1726,165 @@ def test_build_turn_context_includes_architecture_contract_for_architect(orchest
     assert "microservices" in context["architecture_allowed_patterns"]
 
 
+def test_build_turn_context_declares_role_tools_when_required_actions_are_empty(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(id="I1", seat="product_owner", summary="Define acceptance packet")
+    context = orch._build_turn_context(
+        run_id="run-1",
+        issue=issue,
+        seat_name="product_owner",
+        roles_to_load=["product_owner"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+        skill_tool_bindings=synthesize_role_tool_profile_bindings(
+            [
+                "read_file",
+                "write_file",
+                "add_issue_comment",
+                "get_issue_context",
+                "update_issue_status",
+            ]
+        ),
+    )
+
+    declared = context["verification_scope"]["declared_interfaces"]
+    assert "add_issue_comment" in declared
+    assert "get_issue_context" in declared
+    assert "update_issue_status" in declared
+
+
+def test_build_turn_context_applies_issue_turn_contract_overrides(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(
+        id="I2",
+        seat="product_owner",
+        summary="Define exit criteria",
+        params={
+            "turn_contract": {
+                "required_action_tools": ["add_issue_comment", "update_issue_status"],
+                "required_statuses": ["done"],
+                "required_read_paths": ["docs/ROADMAP.md"],
+                "required_write_paths": ["agent_output/soak_matrix/product/exit_criteria.md"],
+                "required_comment_min_length": 120,
+                "required_comment_contains": ["Findings", "Evidence"],
+            }
+        },
+    )
+    context = orch._build_turn_context(
+        run_id="run-2",
+        issue=issue,
+        seat_name="product_owner",
+        roles_to_load=["product_owner"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+        skill_tool_bindings=synthesize_role_tool_profile_bindings(
+            [
+                "read_file",
+                "write_file",
+                "add_issue_comment",
+                "get_issue_context",
+                "update_issue_status",
+            ]
+        ),
+    )
+
+    assert context["required_action_tools"] == ["add_issue_comment", "update_issue_status"]
+    assert context["required_statuses"] == ["done"]
+    assert context["required_read_paths"] == ["docs/ROADMAP.md"]
+    assert context["required_write_paths"] == ["agent_output/soak_matrix/product/exit_criteria.md"]
+    assert context["required_comment_min_length"] == 120
+    assert context["required_comment_contains"] == ["Findings", "Evidence"]
+    declared = context["verification_scope"]["declared_interfaces"]
+    assert "add_issue_comment" in declared
+    assert "update_issue_status" in declared
+
+
+def test_build_turn_context_does_not_apply_issue_turn_contract_overrides_to_guard(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(
+        id="I2",
+        seat="product_owner",
+        summary="Define exit criteria",
+        params={
+            "artifact_contract": {
+                "kind": "artifact",
+                "primary_output": "agent_output/soak_matrix/product/product_brief.md",
+                "required_write_paths": ["agent_output/soak_matrix/product/product_brief.md"],
+                "review_read_paths": ["agent_output/soak_matrix/product/product_brief.md"],
+            },
+            "turn_contract": {
+                "required_action_tools": ["write_file", "update_issue_status"],
+                "required_statuses": ["code_review"],
+                "required_read_paths": ["docs/ROADMAP.md"],
+                "required_write_paths": ["agent_output/soak_matrix/product/exit_criteria.md"],
+            }
+        },
+    )
+    context = orch._build_turn_context(
+        run_id="run-guard",
+        issue=issue,
+        seat_name="integrity_guard",
+        roles_to_load=["integrity_guard"],
+        turn_status=CardStatus.AWAITING_GUARD_REVIEW,
+        selected_model="dummy-model",
+        runtime_verifier_ok=True,
+        resume_mode=False,
+    )
+
+    assert context["required_action_tools"] == ["update_issue_status"]
+    assert context["required_statuses"] == ["done"]
+    assert context["required_read_paths"] == ["agent_output/soak_matrix/product/product_brief.md"]
+    assert context["required_write_paths"] == []
+
+
+def test_build_turn_context_includes_profile_traits_and_scenario_truth(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(
+        id="RMS-22",
+        seat="market_researcher",
+        summary="Repo-local provider comparison",
+        params={
+            "execution_profile": "truthful_block_only_v1",
+            "cards_runtime": {
+                "scenario_truth": {
+                    "scenario_id": "role_matrix_soak_v1",
+                    "blocked_issue_policy": {
+                        "allowed_issue_ids": ["RMS-22"],
+                        "blocked_implies_run_failure": True,
+                    },
+                    "expected_terminal_status": "terminal_failure",
+                }
+            },
+            "turn_contract": {
+                "required_action_tools": ["read_file", "update_issue_status"],
+                "required_statuses": ["blocked"],
+                "required_read_paths": [
+                    "benchmarks/results/probes/provider_codegen_matrix/primary/ollama.chain.json",
+                ],
+            },
+            "runtime_verifier": {
+                "expect_json_stdout": True,
+            },
+        },
+    )
+    context = orch._build_turn_context(
+        run_id="run-blocked",
+        issue=issue,
+        seat_name="market_researcher",
+        roles_to_load=["market_researcher"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+
+    assert context["execution_profile"] == "truthful_block_only_v1"
+    assert context["profile_traits"]["intent"] == "truthful_block_only"
+    assert context["scenario_truth"]["scenario_id"] == "role_matrix_soak_v1"
+    assert context["runtime_verifier_contract"] == {}
+
+
 def test_build_turn_context_defaults_to_monolith_and_vue(orchestrator):
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(process_rules={})
@@ -2075,6 +2235,102 @@ async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(o
     )
 
     assert captured["role"] == "architect"
+
+
+@pytest.mark.asyncio
+async def test_execute_issue_turn_does_not_coerce_builder_seat_when_small_project_policy_inactive(
+    orchestrator, monkeypatch
+):
+    orch, cards, loader = orchestrator
+    issue = IssueConfig(id="I1", seat="product_owner", summary="Define exit criteria", status=CardStatus.READY)
+    issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
+    epic = SimpleNamespace(
+        parent_id=None,
+        id="EPIC-1",
+        name="Epic 1",
+        issues=[issue, SimpleNamespace(id="I2"), SimpleNamespace(id="I3"), SimpleNamespace(id="I4")],
+    )
+    team = SimpleNamespace(
+        seats={
+            "product_owner": SimpleNamespace(roles=["product_owner"]),
+            "coder": SimpleNamespace(roles=["coder"]),
+            "code_reviewer": SimpleNamespace(roles=["code_reviewer"]),
+        }
+    )
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    loader.queue_assets(
+        [
+            SimpleNamespace(name="product_owner", description="Role", tools=[]),
+            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+        ]
+    )
+
+    class _PromptStrategy:
+        def select_model(self, role, asset_config):
+            assert role == "product_owner"
+            return "dummy-model"
+
+        def select_dialect(self, model):
+            return "generic"
+
+    class _Provider:
+        async def clear_context(self):
+            return None
+
+    class _ModelClient:
+        def create_provider(self, selected_model, env):
+            return _Provider()
+
+        def create_client(self, provider):
+            return SimpleNamespace()
+
+    class _Memory:
+        async def search(self, _query):
+            return []
+
+        async def remember(self, content, metadata):
+            return None
+
+    captured = {}
+
+    class _Executor:
+        async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
+            captured["builder_seat_choice"] = context["builder_seat_choice"]
+            captured["reviewer_seat_choice"] = context["reviewer_seat_choice"]
+            return TurnResult(
+                success=True,
+                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+            )
+
+    async def _noop(*args, **kwargs):
+        return None
+
+    monkeypatch.setattr(
+        "orket.application.workflows.orchestrator.PromptCompiler.compile",
+        lambda skill, dialect, **kwargs: "SYSTEM",
+    )
+
+    orch.memory = _Memory()
+    orch.model_client_node = _ModelClient()
+    orch._save_checkpoint = _noop
+    orch._trigger_sandbox = _noop
+    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
+
+    await orch._execute_issue_turn(
+        issue_data=issue_data,
+        epic=epic,
+        team=team,
+        env=env,
+        run_id="run-1",
+        active_build="build-1",
+        prompt_strategy_node=_PromptStrategy(),
+        executor=_Executor(),
+        toolbox=SimpleNamespace(),
+    )
+
+    assert captured["builder_seat_choice"] == "product_owner"
+    assert captured["reviewer_seat_choice"] == "integrity_guard"
 
 
 @pytest.mark.asyncio

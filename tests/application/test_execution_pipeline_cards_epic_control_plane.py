@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
+from orket.core.domain import ResultClass
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.schema import CardStatus
 
@@ -162,6 +163,7 @@ async def test_run_epic_publishes_completed_control_plane_run_for_success_path(
 
     assert run is not None
     assert run.lifecycle_state.value == "completed"
+    assert run.final_truth_record_id == CardsEpicControlPlaneService.final_truth_id_for(run_id=run_record["run_id"])
     assert attempt is not None
     assert attempt.attempt_state.value == "attempt_completed"
     assert attempt.end_timestamp is not None
@@ -169,6 +171,18 @@ async def test_run_epic_publishes_completed_control_plane_run_for_success_path(
     assert control_plane["run_state"] == "completed"
     assert control_plane["attempt_id"] == attempt_record["attempt_id"]
     assert control_plane["attempt_state"] == "attempt_completed"
+    final_truth = await pipeline.orchestrator.control_plane_repository.get_final_truth(run_id=run_record["run_id"])
+    closeout_step = await pipeline.orchestrator.control_plane_execution_repository.get_step_record(
+        step_id=CardsEpicControlPlaneService.closeout_step_id_for(run_id=run_record["run_id"])
+    )
+    assert final_truth is not None
+    assert final_truth.result_class is ResultClass.SUCCESS
+    assert final_truth.authoritative_result_ref == CardsEpicControlPlaneService.closeout_ref_for(
+        run_id=run_record["run_id"],
+        session_status="done",
+    )
+    assert closeout_step is not None
+    assert closeout_step.output_ref == final_truth.authoritative_result_ref
 
 
 # Layer: integration

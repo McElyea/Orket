@@ -54,23 +54,28 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 async def _run(args: argparse.Namespace) -> dict[str, Any]:
     workspace_root = Path(args.workspace_root).resolve()
-    run_id = str(args.run_id or "").strip()
+    requested_run_id = str(args.run_id or "").strip()
     selected_views = _selected_views(args.view)
     session_id = await _locate_session_id(
         workspace_root=workspace_root,
-        run_id=run_id,
+        run_id=requested_run_id,
         explicit_session_id=str(args.session_id or "").strip(),
     )
     if not session_id:
         return {
             "schema_version": "1.0",
             "ok": False,
-            "run_id": run_id,
+            "run_id": requested_run_id,
             "graph_result": "blocked",
             "error_code": "E_RUN_SESSION_NOT_LOCATED",
             "detail": "Unable to truthfully locate runs/<session_id>/ for the selected run id.",
             "selected_views": selected_views,
         }
+    run_id = _resolve_effective_run_id(
+        workspace_root=workspace_root,
+        session_id=session_id,
+        requested_run_id=requested_run_id,
+    )
 
     generation_timestamp = str(args.generation_timestamp or "").strip() or _now_utc_iso()
     control_plane_db_path = resolve_control_plane_db_path(str(args.control_plane_db or "").strip() or None)
@@ -99,6 +104,7 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
         "schema_version": "1.0",
         "ok": str(payload.get("graph_result") or "") != "blocked",
         "run_id": run_id,
+        "requested_run_id": requested_run_id,
         "session_id": session_id,
         "graph_result": payload["graph_result"],
         "selected_views": payload["selected_views"],
@@ -191,6 +197,26 @@ def _validated_summary_matches(*, payload: Any, run_id: str) -> bool:
         return True
     control_plane = payload.get("control_plane")
     return isinstance(control_plane, dict) and str(control_plane.get("run_id") or "").strip() == run_id
+
+
+def _resolve_effective_run_id(*, workspace_root: Path, session_id: str, requested_run_id: str) -> str:
+    run_summary_path = workspace_root / "runs" / session_id / "run_summary.json"
+    if not run_summary_path.exists():
+        return requested_run_id
+    try:
+        payload = json.loads(run_summary_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return requested_run_id
+    if not isinstance(payload, dict):
+        return requested_run_id
+    control_plane = payload.get("control_plane")
+    control_plane_run_id = str(control_plane.get("run_id") or "").strip() if isinstance(control_plane, dict) else ""
+    if not control_plane_run_id:
+        return requested_run_id
+    summary_run_id = str(payload.get("run_id") or "").strip()
+    if requested_run_id in {"", session_id, summary_run_id}:
+        return control_plane_run_id
+    return requested_run_id
 
 
 def _now_utc_iso() -> str:

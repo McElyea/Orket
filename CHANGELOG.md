@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.32] - 2026-04-02 - "The Runtime Challenge And Authority Rebase Cut"
+
+### Added
+- **Future Enhancement Packet Rebase**: Added the staged `docs/projects/future/EnhancementPackage/` packet as explicit future-delta material rather than live authority, keeping the packet under the future tree with baseline/delta/non-reopen framing.
+- **Long-Run Runtime Challenge Assets**: Added the `challenge_workflow_runtime` epic and `challenge_coder_guard_team` so Orket has a coder-plus-guard programming challenge that should drive at least 24 happy-path turns across a deterministic workflow-runtime implementation.
+- **Role Matrix Soak Asset Authority**: Added the repo-hosted role-matrix soak team/epic assets and the matching platform asset-load proof so long-run role-matrix scenarios are first-class repo config, not ad hoc workspace-only inputs.
+
+### Changed
+- **ControlPlane And Runbook Authority Cleanup**: Rebased the roadmap, runbook, ControlPlane hardening requirements, and the brainstorm authority wording so paused/staged posture and operator/runtime authority no longer imply an open active lane where one is not admitted.
+- **Runtime Verifier And Cards Runtime Contracts**: Hardened runtime verification and cards-runtime contract handling so real entrypoints run under verification, control-plane closeout truth is published, comment/blocker seats stop inheriting synthetic app contracts, and role-matrix scenarios can carry one canonical scenario-truth object into prompts and run summaries.
+- **Turn Contract And Graph Proof Surfaces**: Tightened turn prompt building, comment-contract enforcement, run-summary scenario projection, and evidence-graph emission coverage so the long-run soak surfaces fail closed more truthfully and expose clearer scenario-state drift.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use `python main.py --epic challenge_workflow_runtime` for the new hard coder challenge, and treat the future EnhancementPackage packet as staged planning input only rather than active roadmap authority.
+
 ## [0.4.31] - 2026-04-01 - "The Extension Publish Surface And Generic Runtime Cut"
 
 ### Added

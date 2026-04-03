@@ -1,0 +1,653 @@
+{
+  "name": "Challenge Workflow Runtime",
+  "description": "Hard deterministic programming challenge driven by a coder-only epic with 12 dependent issues and integrity-guard review after each builder turn.",
+  "status": "ready",
+  "type": "epic",
+  "team": "challenge_coder_guard_team",
+  "environment": "standard",
+  "build_id": "build-challenge-workflow-runtime",
+  "handshake_enabled": true,
+  "requirements": "Build a deterministic Python workflow runtime under agent_output/. The admitted workflow spec is a JSON object with workflow_id, max_concurrency, and tasks[]. Each task has id, deps, duration, retries, and outcomes[]. Required capabilities: load and normalize the spec, detect duplicate ids, unknown deps, and cycles, compute topological execution layers, simulate task attempts with retries, persist and reload checkpoints, expose CLI commands validate/plan/simulate/resume, and make python agent_output/main.py run a built-in proof suite over the challenge fixtures and print JSON. The happy path should require at least 24 turns because the epic contains 12 coder-owned issues and each one must pass integrity-guard review.",
+  "params": {
+    "cards_runtime": {
+      "scenario_truth": {
+        "scenario_id": "challenge_workflow_runtime_v1",
+        "blocked_issue_policy": {
+          "allowed_issue_ids": [],
+          "blocked_implies_run_failure": true
+        },
+        "expected_terminal_status": "done",
+        "expected_truth_classification": "direct_or_repaired"
+      }
+    }
+  },
+  "references": [
+    "docs/RUNBOOK.md",
+    "CURRENT_AUTHORITY.md"
+  ],
+  "issues": [
+    {
+      "id": "CWR-01",
+      "summary": "Challenge Requirements Packet",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "note": "Write agent_output/requirements.txt with the workflow-runtime challenge requirements, admitted workflow JSON schema, invariants, failure cases, CLI command expectations, and proof checklist. Include explicit sections for Invariants, Failure Cases, Commands, and Acceptance. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/requirements.txt",
+          "required_write_paths": [
+            "agent_output/requirements.txt"
+          ],
+          "required_read_paths": [],
+          "review_read_paths": [
+            "agent_output/requirements.txt"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_write_paths": [
+            "agent_output/requirements.txt"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CWR-02",
+      "summary": "Module Design JSON",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": [
+        "CWR-01"
+      ],
+      "note": "Read agent_output/requirements.txt first, then write agent_output/design.txt as JSON describing the package layout, key data structures, CLI command map, checkpoint model, and runtime proof flow. Include keys modules, commands, workflow_fields, checkpoint_fields, and proof_plan. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/design.txt",
+          "required_write_paths": [
+            "agent_output/design.txt"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt"
+          ],
+          "review_read_paths": [
+            "agent_output/design.txt"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "read_file",
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt"
+          ],
+          "required_write_paths": [
+            "agent_output/design.txt"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CWR-03",
+      "summary": "Challenge Fixture Pack",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": [
+        "CWR-02"
+      ],
+      "note": "Write three deterministic workflow fixtures: agent_output/challenge_inputs/workflow_valid.json, agent_output/challenge_inputs/workflow_cycle.json, and agent_output/challenge_inputs/workflow_retry.json. The valid workflow must require at least three layers. The cycle fixture must contain one explicit cycle. The retry fixture must contain at least one task that fails once then succeeds within retry budget. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/challenge_inputs/workflow_valid.json",
+          "required_write_paths": [
+            "agent_output/challenge_inputs/workflow_valid.json",
+            "agent_output/challenge_inputs/workflow_cycle.json",
+            "agent_output/challenge_inputs/workflow_retry.json"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt"
+          ],
+          "review_read_paths": [
+            "agent_output/challenge_inputs/workflow_valid.json",
+            "agent_output/challenge_inputs/workflow_cycle.json",
+            "agent_output/challenge_inputs/workflow_retry.json"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "read_file",
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt"
+          ],
+          "required_write_paths": [
+            "agent_output/challenge_inputs/workflow_valid.json",
+            "agent_output/challenge_inputs/workflow_cycle.json",
+            "agent_output/challenge_inputs/workflow_retry.json"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CWR-04",
+      "summary": "Core Models and Loader",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": [
+        "CWR-03"
+      ],
+      "note": "Create the package skeleton with agent_output/challenge_runtime/__init__.py, agent_output/challenge_runtime/models.py, and agent_output/challenge_runtime/loader.py. The loader must read a workflow JSON file and return normalized Python structures that preserve task order deterministically. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/challenge_runtime/loader.py",
+          "required_write_paths": [
+            "agent_output/challenge_runtime/__init__.py",
+            "agent_output/challenge_runtime/models.py",
+            "agent_output/challenge_runtime/loader.py"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_inputs/workflow_valid.json"
+          ],
+          "review_read_paths": [
+            "agent_output/challenge_runtime/__init__.py",
+            "agent_output/challenge_runtime/models.py",
+            "agent_output/challenge_runtime/loader.py"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "read_file",
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_inputs/workflow_valid.json"
+          ],
+          "required_write_paths": [
+            "agent_output/challenge_runtime/__init__.py",
+            "agent_output/challenge_runtime/models.py",
+            "agent_output/challenge_runtime/loader.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CWR-05",
+      "summary": "Workflow Validator",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": [
+        "CWR-04"
+      ],
+      "note": "Implement agent_output/challenge_runtime/validator.py with deterministic validation for duplicate task ids, unknown dependency references, negative durations, negative retries, empty outcomes, and dependency cycles. Return structured errors instead of raising bare exceptions for expected user-spec failures. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/challenge_runtime/validator.py",
+          "required_write_paths": [
+            "agent_output/challenge_runtime/validator.py"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_runtime/models.py",
+            "agent_output/challenge_runtime/loader.py",
+            "agent_output/challenge_inputs/workflow_cycle.json"
+          ],
+          "review_read_paths": [
+            "agent_output/challenge_runtime/validator.py"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "read_file",
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_runtime/models.py",
+            "agent_output/challenge_runtime/loader.py",
+            "agent_output/challenge_inputs/workflow_cycle.json"
+          ],
+          "required_write_paths": [
+            "agent_output/challenge_runtime/validator.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CWR-06",
+      "summary": "Topological Planner",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": [
+        "CWR-05"
+      ],
+      "note": "Implement agent_output/challenge_runtime/planner.py to compute deterministic topological layers and a stable execution order for valid workflows. Preserve input order as the tie-breaker within a layer. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/challenge_runtime/planner.py",
+          "required_write_paths": [
+            "agent_output/challenge_runtime/planner.py"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_runtime/models.py",
+            "agent_output/challenge_runtime/validator.py",
+            "agent_output/challenge_inputs/workflow_valid.json"
+          ],
+          "review_read_paths": [
+            "agent_output/challenge_runtime/planner.py"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "read_file",
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_runtime/models.py",
+            "agent_output/challenge_runtime/validator.py",
+            "agent_output/challenge_inputs/workflow_valid.json"
+          ],
+          "required_write_paths": [
+            "agent_output/challenge_runtime/planner.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CWR-07",
+      "summary": "Deterministic Simulator",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": [
+        "CWR-06"
+      ],
+      "note": "Implement agent_output/challenge_runtime/simulator.py to simulate task attempts over planner layers using each task's outcomes list and retry budget. Produce an event log, per-task attempt counts, and a terminal state. The retry fixture must complete after one controlled retry. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/challenge_runtime/simulator.py",
+          "required_write_paths": [
+            "agent_output/challenge_runtime/simulator.py"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_runtime/models.py",
+            "agent_output/challenge_runtime/planner.py",
+            "agent_output/challenge_inputs/workflow_retry.json"
+          ],
+          "review_read_paths": [
+            "agent_output/challenge_runtime/simulator.py"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "read_file",
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_runtime/models.py",
+            "agent_output/challenge_runtime/planner.py",
+            "agent_output/challenge_inputs/workflow_retry.json"
+          ],
+          "required_write_paths": [
+            "agent_output/challenge_runtime/simulator.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CWR-08",
+      "summary": "Checkpoint and Resume",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": [
+        "CWR-07"
+      ],
+      "note": "Implement agent_output/challenge_runtime/checkpoint.py so the simulator can save a partial run and resume it later without losing deterministic state. Use plain JSON checkpoints under agent_output/challenge_artifacts/. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/challenge_runtime/checkpoint.py",
+          "required_write_paths": [
+            "agent_output/challenge_runtime/checkpoint.py"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_runtime/models.py",
+            "agent_output/challenge_runtime/simulator.py"
+          ],
+          "review_read_paths": [
+            "agent_output/challenge_runtime/checkpoint.py"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "read_file",
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_runtime/models.py",
+            "agent_output/challenge_runtime/simulator.py"
+          ],
+          "required_write_paths": [
+            "agent_output/challenge_runtime/checkpoint.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CWR-09",
+      "summary": "CLI and Proof Entrypoint",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": [
+        "CWR-08"
+      ],
+      "note": "Implement agent_output/challenge_runtime/cli.py and agent_output/main.py. Required CLI commands: validate, plan, simulate, and resume. With no arguments, python agent_output/main.py must run a built-in proof suite over the challenge fixtures, write a checkpoint file, resume it, and print JSON with validated_count, layer_count, checkpoint_written, and resumed_terminal_state. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "build_app_v1",
+        "artifact_contract": {
+          "kind": "app",
+          "primary_output": "agent_output/main.py",
+          "entrypoint_path": "agent_output/main.py",
+          "required_write_paths": [
+            "agent_output/challenge_runtime/cli.py",
+            "agent_output/main.py"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_runtime/loader.py",
+            "agent_output/challenge_runtime/validator.py",
+            "agent_output/challenge_runtime/planner.py",
+            "agent_output/challenge_runtime/simulator.py",
+            "agent_output/challenge_runtime/checkpoint.py",
+            "agent_output/challenge_inputs/workflow_valid.json",
+            "agent_output/challenge_inputs/workflow_retry.json"
+          ],
+          "review_read_paths": [
+            "agent_output/challenge_runtime/cli.py",
+            "agent_output/main.py"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "read_file",
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/challenge_runtime/loader.py",
+            "agent_output/challenge_runtime/validator.py",
+            "agent_output/challenge_runtime/planner.py",
+            "agent_output/challenge_runtime/simulator.py",
+            "agent_output/challenge_runtime/checkpoint.py",
+            "agent_output/challenge_inputs/workflow_valid.json",
+            "agent_output/challenge_inputs/workflow_retry.json"
+          ],
+          "required_write_paths": [
+            "agent_output/challenge_runtime/cli.py",
+            "agent_output/main.py"
+          ]
+        },
+        "runtime_verifier": {
+          "expect_json_stdout": true,
+          "json_assertions": [
+            {
+              "path": "validated_count",
+              "op": "gte",
+              "value": 2
+            },
+            {
+              "path": "layer_count",
+              "op": "gte",
+              "value": 3
+            },
+            {
+              "path": "checkpoint_written",
+              "op": "eq",
+              "value": true
+            },
+            {
+              "path": "resumed_terminal_state",
+              "op": "eq",
+              "value": "completed"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CWR-10",
+      "summary": "Validator and Planner Tests",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": [
+        "CWR-09"
+      ],
+      "note": "Write agent_output/tests/test_validator_and_planner.py with deterministic tests for duplicate-id rejection, cycle detection, missing dependency detection, and stable topological layers for the valid fixture. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/tests/test_validator_and_planner.py",
+          "required_write_paths": [
+            "agent_output/tests/test_validator_and_planner.py"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/challenge_runtime/validator.py",
+            "agent_output/challenge_runtime/planner.py",
+            "agent_output/challenge_inputs/workflow_valid.json",
+            "agent_output/challenge_inputs/workflow_cycle.json"
+          ],
+          "review_read_paths": [
+            "agent_output/tests/test_validator_and_planner.py"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "read_file",
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/challenge_runtime/validator.py",
+            "agent_output/challenge_runtime/planner.py",
+            "agent_output/challenge_inputs/workflow_valid.json",
+            "agent_output/challenge_inputs/workflow_cycle.json"
+          ],
+          "required_write_paths": [
+            "agent_output/tests/test_validator_and_planner.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CWR-11",
+      "summary": "Simulator and Resume Tests",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": [
+        "CWR-10"
+      ],
+      "note": "Write agent_output/tests/test_simulator_and_resume.py with deterministic tests for retry behavior, checkpoint serialization, and resume-to-completion behavior on the retry fixture. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/tests/test_simulator_and_resume.py",
+          "required_write_paths": [
+            "agent_output/tests/test_simulator_and_resume.py"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/challenge_runtime/simulator.py",
+            "agent_output/challenge_runtime/checkpoint.py",
+            "agent_output/challenge_inputs/workflow_retry.json"
+          ],
+          "review_read_paths": [
+            "agent_output/tests/test_simulator_and_resume.py"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "read_file",
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/challenge_runtime/simulator.py",
+            "agent_output/challenge_runtime/checkpoint.py",
+            "agent_output/challenge_inputs/workflow_retry.json"
+          ],
+          "required_write_paths": [
+            "agent_output/tests/test_simulator_and_resume.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CWR-12",
+      "summary": "Operator Guide and Summary Contract",
+      "seat": "coder",
+      "priority": "High",
+      "status": "ready",
+      "depends_on": [
+        "CWR-11"
+      ],
+      "note": "Write agent_output/challenge_runtime/reporting.py and agent_output/README.md. The reporting module must centralize the JSON summary shape used by main.py. The README must explain the challenge, module layout, fixture meanings, and the expected no-argument proof run. Then call update_issue_status(status='code_review').",
+      "params": {
+        "execution_profile": "write_artifact_v1",
+        "artifact_contract": {
+          "kind": "artifact",
+          "primary_output": "agent_output/README.md",
+          "required_write_paths": [
+            "agent_output/challenge_runtime/reporting.py",
+            "agent_output/README.md"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/main.py",
+            "agent_output/challenge_runtime/cli.py"
+          ],
+          "review_read_paths": [
+            "agent_output/challenge_runtime/reporting.py",
+            "agent_output/README.md"
+          ]
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "read_file",
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_statuses": [
+            "code_review"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.txt",
+            "agent_output/main.py",
+            "agent_output/challenge_runtime/cli.py"
+          ],
+          "required_write_paths": [
+            "agent_output/challenge_runtime/reporting.py",
+            "agent_output/README.md"
+          ]
+        }
+      }
+    }
+  ]
+}

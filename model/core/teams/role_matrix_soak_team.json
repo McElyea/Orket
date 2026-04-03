@@ -1,0 +1,29 @@
+{
+  "name": "role_matrix_soak_team",
+  "description": "Full role-coverage team for a long-run repo-local Orket soak scenario.",
+  "seats": {
+    "architect": { "name": "Architect", "roles": ["architect"] },
+    "backend_specialist": { "name": "Backend Specialist", "roles": ["backend_specialist"] },
+    "code_reviewer": { "name": "Code Reviewer", "roles": ["code_reviewer"] },
+    "coder": { "name": "Coder", "roles": ["coder"] },
+    "critic": { "name": "Critic", "roles": ["critic"] },
+    "data_scientist": { "name": "Data Scientist", "roles": ["data_scientist"] },
+    "designer": { "name": "Designer", "roles": ["designer"] },
+    "governance_ethics": { "name": "Governance and Ethics", "roles": ["governance_ethics"] },
+    "integrity_guard": { "name": "Integrity Guard", "roles": ["integrity_guard"] },
+    "lead_architect": { "name": "Lead Architect", "roles": ["lead_architect"] },
+    "market_researcher": { "name": "Market Researcher", "roles": ["market_researcher"] },
+    "network_engineer": { "name": "Network Engineer", "roles": ["network_engineer"] },
+    "operations_lead": { "name": "Operations Lead", "roles": ["operations_lead"] },
+    "product_owner": { "name": "Product Owner", "roles": ["product_owner"] },
+    "protocol_enforcer": { "name": "Protocol Enforcer", "roles": ["protocol_enforcer"] },
+    "reforge_specialist": { "name": "Reforge Specialist", "roles": ["reforge_specialist"] },
+    "reforger": { "name": "Reforger", "roles": ["reforger"] },
+    "requirements_analyst": { "name": "Requirements Analyst", "roles": ["requirements_analyst"] },
+    "requirements_specialist": { "name": "Requirements Specialist", "roles": ["requirements_specialist"] },
+    "reviewer": { "name": "Reviewer", "roles": ["reviewer"] },
+    "stylist": { "name": "Stylist", "roles": ["stylist"] },
+    "ux_artisan": { "name": "UX Artisan", "roles": ["ux_artisan"] },
+    "writer": { "name": "Writer", "roles": ["writer"] }
+  }
+}

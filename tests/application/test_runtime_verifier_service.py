@@ -269,3 +269,80 @@ async def test_runtime_verifier_reports_when_no_builtin_defaults_exist_for_node_
 
     assert plan["commands"] == []
     assert plan["source"] == "profile_default_none:node"
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_runs_app_entrypoint_when_artifact_contract_is_app(tmp_path: Path):
+    agent_output = tmp_path / "agent_output"
+    soak_matrix = agent_output / "soak_matrix"
+    soak_matrix.mkdir(parents=True, exist_ok=True)
+    (soak_matrix / "a.txt").write_text("alpha\n", encoding="utf-8")
+    (agent_output / "main.py").write_text(
+        "import json\n"
+        "from pathlib import Path\n"
+        "root = Path(__file__).resolve().parent / 'soak_matrix'\n"
+        "files = sorted(str(path.relative_to(root)).replace('\\\\', '/') for path in root.rglob('*') if path.is_file())\n"
+        "print(json.dumps({'files_count': len(files), 'files_list': files}))\n",
+        encoding="utf-8",
+    )
+
+    result = await RuntimeVerifier(
+        tmp_path,
+        artifact_contract={"kind": "app", "entrypoint_path": "agent_output/main.py"},
+        issue_params={
+            "runtime_verifier": {
+                "expect_json_stdout": True,
+                "json_assertions": [
+                    {"path": "files_count", "op": "gte", "value": 1},
+                    {"path": "files_list", "op": "len_gte", "value": 1},
+                ],
+            }
+        },
+    ).verify()
+
+    assert result.ok is True
+    assert len(result.command_results) == 2
+    assert result.command_results[-1]["command_display"].endswith("agent_output/main.py")
+    assert result.command_results[-1]["stdout_contract_ok"] is True
+    assert result.command_results[-1]["stdout_json"]["files_count"] == 1
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_does_not_run_entrypoint_when_artifact_contract_is_artifact(tmp_path: Path):
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "requirements.txt").write_text("repo-local soak requirements\n", encoding="utf-8")
+    (agent_output / "main.py").write_text("raise SystemExit('should not run')\n", encoding="utf-8")
+
+    result = await RuntimeVerifier(
+        tmp_path,
+        artifact_contract={"kind": "artifact", "primary_output": "agent_output/requirements.txt"},
+    ).verify()
+
+    assert result.ok is True
+    assert len(result.command_results) == 1
+    assert result.command_results[0]["command_display"].endswith("-m compileall -q agent_output")
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_fails_when_stdout_json_assertions_fail(tmp_path: Path):
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "main.py").write_text("import json\nprint(json.dumps({'files_count': 0, 'files_list': []}))\n", encoding="utf-8")
+
+    result = await RuntimeVerifier(
+        tmp_path,
+        artifact_contract={"kind": "app", "entrypoint_path": "agent_output/main.py"},
+        issue_params={
+            "runtime_verifier": {
+                "expect_json_stdout": True,
+                "json_assertions": [
+                    {"path": "files_count", "op": "gte", "value": 1},
+                ],
+            }
+        },
+    ).verify()
+
+    assert result.ok is False
+    assert result.failure_breakdown.get("command_failed", 0) >= 1
+    assert "runtime stdout assertion failed" in "\n".join(result.errors)

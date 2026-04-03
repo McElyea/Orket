@@ -78,7 +78,11 @@ from orket.runtime.settings import resolve_str
 from orket.runtime.state_transition_registry import validate_state_token
 from orket.runtime.workload_shell import SharedWorkloadShell
 from orket.runtime_paths import resolve_control_plane_db_path, resolve_runtime_db_path
-from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, summarize_cards_runtime_issues
+from orket.core.cards_runtime_contract import (
+    apply_epic_cards_runtime_defaults,
+    normalize_scenario_truth_alignment,
+    summarize_cards_runtime_issues,
+)
 from orket.schema import (
     CardStatus,
     EnvironmentConfig,
@@ -1400,8 +1404,10 @@ class ExecutionPipeline:
                         "execution_profile",
                         "builder_seat_choice",
                         "reviewer_seat_choice",
+                        "profile_traits",
                         "seat_coercion",
                         "artifact_contract",
+                        "scenario_truth",
                         "odr_active",
                         "odr_stop_reason",
                         "odr_valid",
@@ -1427,6 +1433,12 @@ class ExecutionPipeline:
             session_status=session_status,
             failure_reason=failure_reason,
         )
+        scenario_truth_alignment = normalize_scenario_truth_alignment(
+            scenario_truth=summary.get("scenario_truth"),
+            observed_terminal_status=session_status,
+        )
+        if scenario_truth_alignment:
+            summary["scenario_truth_alignment"] = scenario_truth_alignment
         return {"cards_runtime_facts": summary}
 
     @staticmethod

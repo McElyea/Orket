@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import json
 from typing import Any, Dict, List
 
 APP_EXECUTION_PROFILE = "builder_guard_app_v1"
 ARTIFACT_EXECUTION_PROFILE = "builder_guard_artifact_v1"
 ODR_EXECUTION_PROFILE = "odr_prebuild_builder_guard_v1"
+BUILD_APP_EXECUTION_PROFILE = "build_app_v1"
+WRITE_ARTIFACT_EXECUTION_PROFILE = "write_artifact_v1"
+REVIEW_COMMENT_EXECUTION_PROFILE = "review_comment_v1"
+CRITIQUE_COMMENT_EXECUTION_PROFILE = "critique_comment_v1"
+TRUTHFUL_BLOCK_ONLY_EXECUTION_PROFILE = "truthful_block_only_v1"
 
 DEFAULT_APP_PRIMARY_OUTPUT = "agent_output/main.py"
 DEFAULT_REQUIREMENTS_PATH = "agent_output/requirements.txt"
@@ -18,6 +24,49 @@ _RUNTIME_PARAM_KEYS = (
     "artifact_contract",
     "odr_enabled",
 )
+
+_PROFILE_TRAITS_BY_PROFILE = {
+    APP_EXECUTION_PROFILE: {
+        "intent": "build_app",
+        "artifact_contract_required": True,
+        "runtime_verifier_allowed": True,
+    },
+    BUILD_APP_EXECUTION_PROFILE: {
+        "intent": "build_app",
+        "artifact_contract_required": True,
+        "runtime_verifier_allowed": True,
+    },
+    ARTIFACT_EXECUTION_PROFILE: {
+        "intent": "write_artifact",
+        "artifact_contract_required": True,
+        "runtime_verifier_allowed": False,
+    },
+    WRITE_ARTIFACT_EXECUTION_PROFILE: {
+        "intent": "write_artifact",
+        "artifact_contract_required": True,
+        "runtime_verifier_allowed": False,
+    },
+    REVIEW_COMMENT_EXECUTION_PROFILE: {
+        "intent": "review_comment",
+        "artifact_contract_required": False,
+        "runtime_verifier_allowed": False,
+    },
+    CRITIQUE_COMMENT_EXECUTION_PROFILE: {
+        "intent": "critique_comment",
+        "artifact_contract_required": False,
+        "runtime_verifier_allowed": False,
+    },
+    TRUTHFUL_BLOCK_ONLY_EXECUTION_PROFILE: {
+        "intent": "truthful_block_only",
+        "artifact_contract_required": False,
+        "runtime_verifier_allowed": False,
+    },
+    ODR_EXECUTION_PROFILE: {
+        "intent": "odr_prebuild_builder_guard",
+        "artifact_contract_required": True,
+        "runtime_verifier_allowed": False,
+    },
+}
 
 
 def apply_epic_cards_runtime_defaults(*, issue_params: Any, epic_params: Any) -> Dict[str, Any]:
@@ -64,8 +113,15 @@ def resolve_cards_runtime(
         nested.get("artifact_contract")
         if isinstance(nested.get("artifact_contract"), dict)
         else payload.get("artifact_contract"),
+        requested_profile=requested_profile,
     )
+    profile_traits = _profile_traits_for_profile(requested_profile)
     odr_result = payload.get("odr_result") if isinstance(payload.get("odr_result"), dict) else {}
+    scenario_truth = _normalize_scenario_truth(
+        nested.get("scenario_truth")
+        if isinstance(nested.get("scenario_truth"), dict)
+        else payload.get("scenario_truth"),
+    )
     base_profile = _resolve_base_profile(
         requested_profile=requested_profile,
         artifact_contract=artifact_contract,
@@ -75,8 +131,13 @@ def resolve_cards_runtime(
     execution_profile = ODR_EXECUTION_PROFILE if odr_enabled else base_profile
 
     invalid_reason = ""
-    if base_profile == APP_EXECUTION_PROFILE and artifact_contract["kind"] != "app":
+    if base_profile in {APP_EXECUTION_PROFILE, BUILD_APP_EXECUTION_PROFILE} and artifact_contract["kind"] != "app":
         invalid_reason = "app_profile_selected_for_non_app_artifact_contract"
+    if (
+        profile_traits.get("artifact_contract_required") is False
+        and _artifact_contract_declares_outputs(artifact_contract)
+    ):
+        invalid_reason = "comment_or_block_profile_selected_for_artifact_contract"
 
     resolved_builder_seat = str(builder_seat or issue_seat or "coder").strip() or "coder"
     resolved_reviewer_seat = str(reviewer_seat or "integrity_guard").strip() or "integrity_guard"
@@ -86,6 +147,7 @@ def resolve_cards_runtime(
         "base_execution_profile": base_profile,
         "builder_seat_choice": resolved_builder_seat,
         "reviewer_seat_choice": resolved_reviewer_seat,
+        "profile_traits": profile_traits,
         "odr_auditor_model": _pick_first_token(
             nested.get("odr_auditor_model"),
             payload.get("odr_auditor_model"),
@@ -97,6 +159,7 @@ def resolve_cards_runtime(
             "reviewer_runtime_seat": resolved_reviewer_seat,
         },
         "artifact_contract": artifact_contract,
+        "scenario_truth": scenario_truth,
         "odr_active": execution_profile == ODR_EXECUTION_PROFILE,
         "invalid_profile_reason": invalid_reason,
         **_normalize_odr_result(odr_result),
@@ -159,13 +222,18 @@ def summarize_cards_runtime_issues(issue_payloads: List[Dict[str, Any]]) -> Dict
         "execution_profile": shared_profile,
         "odr_active": odr_active,
     }
+    shared_scenario_truth = _shared_dict_value(rows=rows, key="scenario_truth")
+    if shared_scenario_truth:
+        summary["scenario_truth"] = shared_scenario_truth
     if len(rows) == 1:
         row = rows[0]
         for key in (
             "builder_seat_choice",
             "reviewer_seat_choice",
+            "profile_traits",
             "seat_coercion",
             "artifact_contract",
+            "scenario_truth",
             "odr_valid",
             "odr_pending_decisions",
             "odr_stop_reason",
@@ -177,15 +245,18 @@ def summarize_cards_runtime_issues(issue_payloads: List[Dict[str, Any]]) -> Dict
 
 
 def _resolve_base_profile(*, requested_profile: str, artifact_contract: Dict[str, Any]) -> str:
-    if requested_profile in {APP_EXECUTION_PROFILE, ARTIFACT_EXECUTION_PROFILE}:
+    if requested_profile in _PROFILE_TRAITS_BY_PROFILE:
         return requested_profile
     if artifact_contract.get("kind") == "artifact":
         return ARTIFACT_EXECUTION_PROFILE
     return APP_EXECUTION_PROFILE
 
 
-def _normalize_artifact_contract(value: Any) -> Dict[str, Any]:
+def _normalize_artifact_contract(value: Any, *, requested_profile: str = "") -> Dict[str, Any]:
     payload = dict(value or {}) if isinstance(value, dict) else {}
+    profile_traits = _profile_traits_for_profile(requested_profile)
+    if not payload and profile_traits.get("artifact_contract_required") is False:
+        return _empty_artifact_contract()
     requested_kind = _pick_first_token(payload.get("kind"), payload.get("intent"))
     primary_output = _pick_first_token(
         payload.get("primary_output"),
@@ -217,6 +288,95 @@ def _normalize_artifact_contract(value: Any) -> Dict[str, Any]:
         "entrypoint_path": entrypoint_path,
         "deployment_enabled": bool(kind == "app" and entrypoint_path == DEFAULT_APP_PRIMARY_OUTPUT),
     }
+
+
+def _empty_artifact_contract() -> Dict[str, Any]:
+    return {
+        "kind": "none",
+        "primary_output": "",
+        "required_write_paths": [],
+        "required_read_paths": [],
+        "review_read_paths": [],
+        "entrypoint_path": "",
+        "deployment_enabled": False,
+    }
+
+
+def _profile_traits_for_profile(profile: Any) -> Dict[str, Any]:
+    normalized = str(profile or "").strip()
+    traits = _PROFILE_TRAITS_BY_PROFILE.get(normalized)
+    if traits is None:
+        return {
+            "intent": "unspecified",
+            "artifact_contract_required": True,
+            "runtime_verifier_allowed": True,
+        }
+    return dict(traits)
+
+
+def _artifact_contract_declares_outputs(artifact_contract: Dict[str, Any]) -> bool:
+    kind = str(artifact_contract.get("kind") or "").strip().lower()
+    if kind in {"app", "artifact"}:
+        return True
+    for key in ("primary_output", "entrypoint_path"):
+        if str(artifact_contract.get(key) or "").strip():
+            return True
+    for key in ("required_write_paths", "review_read_paths"):
+        values = artifact_contract.get(key) or []
+        if isinstance(values, list) and any(str(item or "").strip() for item in values):
+            return True
+    return False
+
+
+def _normalize_scenario_truth(value: Any) -> Dict[str, Any]:
+    payload = dict(value or {}) if isinstance(value, dict) else {}
+    if not payload:
+        return {}
+    blocked_issue_policy = (
+        payload.get("blocked_issue_policy") if isinstance(payload.get("blocked_issue_policy"), dict) else {}
+    )
+    normalized = {
+        "scenario_id": _pick_first_token(payload.get("scenario_id"), payload.get("id")),
+        "blocked_issue_policy": {
+            "allowed_issue_ids": _normalize_paths(
+                blocked_issue_policy.get("allowed_issue_ids"),
+                payload.get("allowed_blocked_issue_ids"),
+            ),
+            "blocked_implies_run_failure": bool(
+                _coerce_bool(blocked_issue_policy.get("blocked_implies_run_failure"))
+                if blocked_issue_policy.get("blocked_implies_run_failure") is not None
+                else _coerce_bool(payload.get("blocked_implies_run_failure"))
+            ),
+        },
+        "expected_terminal_status": _pick_first_token(payload.get("expected_terminal_status")),
+        "expected_truth_classification": _pick_first_token(payload.get("expected_truth_classification")),
+    }
+    if not any(
+        (
+            normalized["scenario_id"],
+            normalized["blocked_issue_policy"]["allowed_issue_ids"],
+            normalized["expected_terminal_status"],
+            normalized["expected_truth_classification"],
+        )
+    ):
+        return {}
+    return normalized
+
+
+def normalize_scenario_truth_alignment(*, scenario_truth: Any, observed_terminal_status: str) -> Dict[str, Any]:
+    normalized = _normalize_scenario_truth(scenario_truth)
+    if not normalized:
+        return {}
+    expected_terminal_status = str(normalized.get("expected_terminal_status") or "").strip().lower()
+    observed = str(observed_terminal_status or "").strip().lower()
+    alignment: Dict[str, Any] = {
+        "scenario_id": str(normalized.get("scenario_id") or "").strip(),
+        "expected_terminal_status": expected_terminal_status,
+        "observed_terminal_status": observed,
+    }
+    if expected_terminal_status:
+        alignment["expected_terminal_status_match"] = expected_terminal_status == observed
+    return alignment
 
 
 def _infer_contract_kind(primary_output: str, write_paths: List[str]) -> str:
@@ -274,3 +434,17 @@ def _normalize_odr_result(value: Any) -> Dict[str, Any]:
             continue
         normalized[key] = payload[key]
     return normalized
+
+
+def _shared_dict_value(*, rows: List[Dict[str, Any]], key: str) -> Dict[str, Any]:
+    encoded: set[str] = set()
+    selected: Dict[str, Any] = {}
+    for row in rows:
+        value = row.get(key)
+        if not isinstance(value, dict) or not value:
+            continue
+        encoded.add(json.dumps(value, sort_keys=True))
+        selected = dict(value)
+    if len(encoded) == 1:
+        return selected
+    return {}
