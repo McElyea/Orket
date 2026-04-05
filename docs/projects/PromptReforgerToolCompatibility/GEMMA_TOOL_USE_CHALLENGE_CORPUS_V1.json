@@ -1,0 +1,155 @@
+{
+  "schema_version": "prompt_reforger_gemma_tool_use_corpus.v1",
+  "corpus_id": "challenge_workflow_runtime_bootstrap_v1",
+  "status": "active_bootstrap_freeze",
+  "implementation_plan_ref": "docs/projects/PromptReforgerToolCompatibility/PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md",
+  "epic_ref": "model/core/epics/challenge_workflow_runtime.json",
+  "judge_protocol_ref": "docs/projects/PromptReforgerToolCompatibility/FUNCTIONGEMMA_TOOL_CALL_JUDGE_PROTOCOL.md",
+  "tool_call_contract_family": "challenge_workflow_runtime.turn_contract.v1",
+  "measured_outputs": [
+    "accepted_tool_calls",
+    "rejected_tool_calls",
+    "argument_shape_defects",
+    "turns_to_first_valid_tool_call",
+    "turns_to_first_valid_completion",
+    "final_disposition"
+  ],
+  "slices": [
+    {
+      "slice_id": "PRGTU-CWR01-CODER-SINGLE-WRITE",
+      "issue_id": "CWR-01",
+      "role_name": "coder",
+      "description": "Single required artifact write plus status transition to code_review.",
+      "required_action_tools": [
+        "write_file",
+        "update_issue_status"
+      ],
+      "required_read_paths": [],
+      "required_write_paths": [
+        "agent_output/requirements.txt"
+      ],
+      "required_statuses": [
+        "code_review"
+      ],
+      "preconditions": [
+        "No required read paths."
+      ],
+      "postconditions": [
+        "agent_output/requirements.txt is written.",
+        "Issue status transitions to code_review."
+      ]
+    },
+    {
+      "slice_id": "PRGTU-CWR01-GUARD-READ-ACCEPT",
+      "issue_id": "CWR-01",
+      "role_name": "integrity_guard",
+      "description": "Single required read plus review acceptance to done.",
+      "required_action_tools": [
+        "read_file",
+        "update_issue_status"
+      ],
+      "required_read_paths": [
+        "agent_output/requirements.txt"
+      ],
+      "required_write_paths": [],
+      "required_statuses": [
+        "done"
+      ],
+      "preconditions": [
+        "agent_output/requirements.txt must already exist from the prior coder slice."
+      ],
+      "postconditions": [
+        "agent_output/requirements.txt is read.",
+        "Issue status transitions to done."
+      ]
+    },
+    {
+      "slice_id": "PRGTU-CWR03-CODER-MULTI-WRITE",
+      "issue_id": "CWR-03",
+      "role_name": "coder",
+      "description": "Three required fixture writes plus status transition to code_review.",
+      "required_action_tools": [
+        "write_file",
+        "update_issue_status"
+      ],
+      "required_read_paths": [
+        "agent_output/requirements.txt",
+        "agent_output/design.txt"
+      ],
+      "required_write_paths": [
+        "agent_output/challenge_inputs/workflow_valid.json",
+        "agent_output/challenge_inputs/workflow_cycle.json",
+        "agent_output/challenge_inputs/workflow_retry.json"
+      ],
+      "required_statuses": [
+        "code_review"
+      ],
+      "preconditions": [
+        "requirements.txt and design.txt must already exist.",
+        "All three fixture paths are admitted write targets."
+      ],
+      "postconditions": [
+        "All three challenge_input fixture files are written.",
+        "Issue status transitions to code_review."
+      ]
+    },
+    {
+      "slice_id": "PRGTU-CWR03-GUARD-MULTI-READ",
+      "issue_id": "CWR-03",
+      "role_name": "integrity_guard",
+      "description": "Three required reads of the newly written fixtures plus review acceptance to done.",
+      "required_action_tools": [
+        "read_file",
+        "update_issue_status"
+      ],
+      "required_read_paths": [
+        "agent_output/challenge_inputs/workflow_valid.json",
+        "agent_output/challenge_inputs/workflow_cycle.json",
+        "agent_output/challenge_inputs/workflow_retry.json"
+      ],
+      "required_write_paths": [],
+      "required_statuses": [
+        "done"
+      ],
+      "preconditions": [
+        "All three challenge_input fixture files must already exist from the prior coder slice."
+      ],
+      "postconditions": [
+        "All three challenge_input fixture files are read.",
+        "Issue status transitions to done."
+      ]
+    },
+    {
+      "slice_id": "PRGTU-CWR04-CODER-PACKAGE-REPAIR",
+      "issue_id": "CWR-04",
+      "role_name": "coder",
+      "description": "Three required package writes plus status transition to code_review, admitting corrective reprompt evidence.",
+      "required_action_tools": [
+        "write_file",
+        "update_issue_status"
+      ],
+      "required_read_paths": [
+        "agent_output/requirements.txt",
+        "agent_output/design.txt",
+        "agent_output/challenge_inputs/workflow_valid.json"
+      ],
+      "required_write_paths": [
+        "agent_output/challenge_runtime/__init__.py",
+        "agent_output/challenge_runtime/models.py",
+        "agent_output/challenge_runtime/loader.py"
+      ],
+      "required_statuses": [
+        "code_review"
+      ],
+      "preconditions": [
+        "requirements.txt, design.txt, and workflow_valid.json must already exist.",
+        "The admitted package scaffold paths are __init__.py, models.py, and loader.py."
+      ],
+      "postconditions": [
+        "All three challenge_runtime package files are written.",
+        "Issue status transitions to code_review.",
+        "Corrective reprompt evidence is allowed but does not replace validator authority."
+      ]
+    }
+  ]
+}

@@ -10,6 +10,7 @@ import pytest
 from orket.adapters.llm import local_model_provider as local_model_provider_module
 from orket.orchestration.engine import OrchestrationEngine
 from orket.schema import CardStatus
+from tests.turn_prompt_utils import extract_turn_prompt_context
 
 
 def _write_runtime_assets(root: Path) -> None:
@@ -117,21 +118,7 @@ def _write_runtime_assets(root: Path) -> None:
 
 
 def _seat_from_messages(messages: list[dict[str, Any]]) -> str:
-    marker = "Execution Context JSON:\n"
-    decoder = json.JSONDecoder()
-    for message in messages:
-        content = str((message or {}).get("content") or "")
-        if marker not in content:
-            continue
-        payload_text = content.split(marker, 1)[1]
-        try:
-            parsed, _ = decoder.raw_decode(payload_text.lstrip())
-        except (json.JSONDecodeError, TypeError, ValueError):
-            return ""
-        if isinstance(parsed, dict):
-            return str(parsed.get("seat") or "").strip().lower()
-        return ""
-    return ""
+    return str(extract_turn_prompt_context(messages).get("role") or "").strip().lower()
 
 
 class _FakeOpenAIClient:
@@ -194,6 +181,7 @@ async def test_model_invocation_uses_runtime_provider_and_executes_real_tools(
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
     monkeypatch.setenv("ORKET_PROTOCOL_GOVERNED_ENABLED", "true")
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_MODE", "enforce")
+    monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setattr(local_model_provider_module.httpx, "AsyncClient", lambda *args, **kwargs: fake_client)
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)

@@ -5,6 +5,7 @@ from pathlib import Path
 import uuid
 import re
 import os
+import inspect
 
 from orket.decision_nodes.api_runtime_strategy_node import (
     DefaultApiRuntimeStrategyNode as _DefaultApiRuntimeStrategyNode,
@@ -74,7 +75,20 @@ class DefaultPromptStrategyNode:
     def __init__(self, model_selector: Any):
         self.model_selector = model_selector
 
-    def select_model(self, role: str, asset_config: Any) -> str:
+    def select_model(self, role: str, asset_config: Any, override: str | None = None) -> str:
+        override_token = str(override or "").strip()
+        if not override_token:
+            return self.model_selector.select(role=role, asset_config=asset_config)
+        try:
+            signature = inspect.signature(self.model_selector.select)
+        except (TypeError, ValueError):
+            signature = None
+        if signature is not None:
+            parameters = signature.parameters
+            if "override" in parameters or any(
+                parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in parameters.values()
+            ):
+                return self.model_selector.select(role=role, asset_config=asset_config, override=override_token)
         return self.model_selector.select(role=role, asset_config=asset_config)
 
     def select_dialect(self, model: str) -> str:
@@ -606,6 +620,12 @@ class DefaultOrchestrationLoopPolicyNode:
     """
 
     def concurrency_limit(self, organization: Any) -> int:
+        raw = os.getenv("ORKET_ORCHESTRATOR_CONCURRENCY")
+        if raw is not None:
+            try:
+                return max(1, int(raw))
+            except (TypeError, ValueError):
+                pass
         return 3
 
     def max_iterations(self, organization: Any) -> int:

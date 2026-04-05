@@ -1,8 +1,8 @@
 {
   "catalog_v": "1.0.0",
-  "updated_on": "2026-03-19",
+  "updated_on": "2026-04-04",
   "root": "benchmarks/staging",
-  "highlight_id": "STAGE-GEN-007",
+  "highlight_id": "STAGE-GEN-017",
   "artifacts": [
     {
       "id": "STAGE-GEN-001",
@@ -139,6 +139,151 @@
       "artifact_manifest_ref": "General/dg03192026_extension_artifact_manifest_extract_2026-03-19.json",
       "provenance_ref": "General/dg03192026_extension_provenance_extract_2026-03-19.json",
       "determinism_class": "workspace"
+    },
+    {
+      "id": "STAGE-GEN-009",
+      "category": "General",
+      "path": "General/reforger_service_run_phase0-baseline-run-0001.json",
+      "title": "Prompt Reforger Phase 0 Baseline Generic Service Run",
+      "summary": "Candidate structural proof of the frozen Phase 0 baseline request envelope on the bounded LocalClaw-style textmystery slice, ending truthfully in an unsupported result with blocked live-runtime bookkeeping.",
+      "signals": [
+        "prompt_reforger",
+        "generic_service_surface",
+        "baseline_evaluate",
+        "unsupported",
+        "live_proof_blocked"
+      ],
+      "source_path": "benchmarks/staging/General/reforger_service_run_phase0-baseline-run-0001.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-010",
+      "category": "General",
+      "path": "General/reforger_service_run_phase0-adapt-run-0007.json",
+      "title": "Prompt Reforger Phase 0 Adapt Generic Service Run",
+      "summary": "Candidate structural proof of the bounded generic Prompt Reforger adapt path, including deterministic candidate scoring, a certified_with_limits bundle section, and an external-consumer verdict recorded as service_adopted.",
+      "signals": [
+        "prompt_reforger",
+        "generic_service_surface",
+        "bounded_adapt",
+        "certified_with_limits",
+        "external_consumer_verdict_source"
+      ],
+      "source_path": "benchmarks/staging/General/reforger_service_run_phase0-adapt-run-0007.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-011",
+      "category": "General",
+      "path": "General/local_model_coding_challenge_report.json",
+      "title": "Local Model Coding Challenge Repeatability Report",
+      "summary": "Candidate live benchmark report for repeating the challenge_workflow_runtime coding challenge against a local provider-model lane, including turns-to-first-write, turns-to-first-code, repair counts, deepest issue reached, deterministic program hashes, and final blocker families.",
+      "signals": [
+        "local_model_benchmark",
+        "coding_challenge",
+        "repeatability",
+        "turns_to_first_code",
+        "blocker_family"
+      ],
+      "source_path": "benchmarks/staging/General/local_model_coding_challenge_report.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-012",
+      "category": "General",
+      "path": "General/prompt_reforger_gemma_tool_use_inventory.json",
+      "title": "Prompt Reforger Gemma Tool-Use Inventory Checkpoint",
+      "summary": "Candidate live inventory checkpoint freezing the admitted Gemma proposer and FunctionGemma judge surfaces, explicit alias resolution, and the now-ready primary inventory state including the admitted Ollama alias candidate `functiongemma:latest`.",
+      "signals": [
+        "prompt_reforger",
+        "gemma_tool_use",
+        "runtime_inventory",
+        "alias_resolution",
+        "primary_judge_ready"
+      ],
+      "source_path": "benchmarks/staging/General/prompt_reforger_gemma_tool_use_inventory.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-013",
+      "category": "General",
+      "path": "General/prompt_reforger_gemma_tool_use_cycle.json",
+      "title": "Prompt Reforger Gemma Tool-Use Cycle Checkpoint",
+      "summary": "Candidate live bounded Gemma-only cycle comparing baseline and prompt-patch candidates across quality and portability targets after the judge blocker cleared, ending in a truthful pause because 12B clears the frozen corpus while 4B portability remains partial.",
+      "signals": [
+        "prompt_reforger",
+        "gemma_tool_use",
+        "cycle",
+        "judge_blocker_cleared",
+        "portability_blocker",
+        "promotion_pause"
+      ],
+      "source_path": "benchmarks/staging/General/prompt_reforger_gemma_tool_use_cycle.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-014",
+      "category": "General",
+      "path": "General/prompt_reforger_gemma_tool_use_judge.json",
+      "title": "Prompt Reforger FunctionGemma Judge Checkpoint",
+      "summary": "Candidate live advisory judge report showing that the admitted native-tool judge contract now yields usable LM Studio fallback verdicts while the Ollama `functiongemma:latest` path remains all-inconclusive on this machine.",
+      "signals": [
+        "prompt_reforger",
+        "functiongemma",
+        "tool_call_judge",
+        "fallback_path",
+        "native_tool_contract"
+      ],
+      "source_path": "benchmarks/staging/General/prompt_reforger_gemma_tool_use_judge.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-015",
+      "category": "General",
+      "path": "General/prompt_reforger_qwen25_coder_7b_probe.json",
+      "title": "Prompt Reforger Qwen2.5-Coder-7B Probe Run",
+      "summary": "Candidate live cross-family probe on Ollama `qwen2.5-coder:7b` against `challenge_workflow_runtime`, reaching CWR-04 with partial success before a runtime stdout assertion failure.",
+      "signals": [
+        "prompt_reforger",
+        "cross_family_probe",
+        "qwen25_coder_7b",
+        "live_run",
+        "partial_success"
+      ],
+      "source_path": "benchmarks/staging/General/prompt_reforger_qwen25_coder_7b_probe.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-016",
+      "category": "General",
+      "path": "General/prompt_reforger_qwen25_coder_7b_probe_score.json",
+      "title": "Prompt Reforger Qwen2.5-Coder-7B Probe Score",
+      "summary": "Candidate structural score for the exploratory Ollama `qwen2.5-coder:7b` probe, clearing all 5 frozen bootstrap slices and outperforming the current Gemma 4B portability baseline.",
+      "signals": [
+        "prompt_reforger",
+        "cross_family_probe",
+        "qwen25_coder_7b",
+        "frozen_corpus_clear",
+        "portability_comparison"
+      ],
+      "source_path": "benchmarks/staging/General/prompt_reforger_qwen25_coder_7b_probe_score.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-017",
+      "category": "General",
+      "path": "General/prompt_reforger_guide_model_comparison.json",
+      "title": "Prompt Reforger Guide-Model Comparison Checkpoint",
+      "summary": "Candidate live guide-model comparison checkpoint for the frozen Gemma tool-use corpus, showing degraded Qwen guide generation, blocked LM Studio Gemma guide warmup, and an environment blocker on target-side quality comparison because the portability baseline target did not produce a score report.",
+      "signals": [
+        "prompt_reforger",
+        "guide_model_comparison",
+        "candidate_generation_quality",
+        "environment_blocker",
+        "qwen_generation_partial"
+      ],
+      "source_path": "benchmarks/staging/General/prompt_reforger_guide_model_comparison.json",
+      "publish_reviewed": false
     }
   ]
 }

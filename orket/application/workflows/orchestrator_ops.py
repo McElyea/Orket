@@ -77,6 +77,30 @@ async def _close_provider_transport(provider: Any) -> None:
         await maybe_awaitable
 
 
+def _select_prompt_strategy_model(
+    *,
+    prompt_strategy_node: Any,
+    role: str,
+    asset_config: Any,
+    override: str | None,
+) -> str:
+    select_model = getattr(prompt_strategy_node, "select_model")
+    override_token = str(override or "").strip()
+    if not override_token:
+        return select_model(role=role, asset_config=asset_config)
+    try:
+        signature = inspect.signature(select_model)
+    except (TypeError, ValueError):
+        signature = None
+    if signature is not None:
+        parameters = signature.parameters
+        if "override" in parameters or any(
+            parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in parameters.values()
+        ):
+            return select_model(role=role, asset_config=asset_config, override=override_token)
+    return select_model(role=role, asset_config=asset_config)
+
+
 def _normalize_turn_contract_override_list(value: Any, *, lowercase: bool = False) -> list[str] | None:
     if not isinstance(value, list):
         return None
@@ -726,6 +750,22 @@ def _resolve_prompt_version_exact(self) -> str:
     )
 
 
+def _resolve_prompt_patch(self) -> str:
+    return resolve_str(
+        "ORKET_PROMPT_PATCH",
+        process_rules=_org_process_rules(self.org),
+        process_key="prompt_patch",
+    )
+
+
+def _resolve_prompt_patch_label(self) -> str:
+    return resolve_str(
+        "ORKET_PROMPT_PATCH_LABEL",
+        process_rules=_org_process_rules(self.org),
+        process_key="prompt_patch_label",
+    )
+
+
 def _resolve_verification_scope_limits(self) -> Dict[str, int | None]:
     defaults: Dict[str, int | None] = {
         "max_workspace_items": None,
@@ -862,6 +902,7 @@ async def execute_epic(
     env: EnvironmentConfig,
     target_issue_id: str = None,
     resume_mode: bool = False,
+    model_override: str | None = None,
 ):
     """
     Main execution loop for an Epic.
@@ -1166,6 +1207,7 @@ async def execute_epic(
                     executor,
                     toolbox,
                     resume_mode=resume_mode,
+                    model_override=model_override,
                 )
 
         await asyncio.gather(*(semaphore_wrapper(c) for c in candidates))
@@ -1333,6 +1375,7 @@ async def _execute_issue_turn(
     executor: TurnExecutor,
     toolbox: ToolBox,
     resume_mode: bool = False,
+    model_override: str | None = None,
 ):
     """Executes a single turn for one issue."""
     issue = IssueConfig.model_validate(issue_data.model_dump())
@@ -1591,7 +1634,12 @@ async def _execute_issue_turn(
             self.workspace,
         )
         return
-    selected_model = prompt_strategy_node.select_model(role=roles_to_load[0], asset_config=epic)
+    selected_model = _select_prompt_strategy_model(
+        prompt_strategy_node=prompt_strategy_node,
+        role=roles_to_load[0],
+        asset_config=epic,
+        override=model_override,
+    )
     model_selection_decision = {}
     if hasattr(prompt_strategy_node, "model_selector"):
         selector = getattr(prompt_strategy_node, "model_selector")
@@ -1676,6 +1724,8 @@ async def _execute_issue_turn(
     selection_policy = self._resolve_prompt_selection_policy()
     selection_strict = self._resolve_prompt_selection_strict()
     exact_version = self._resolve_prompt_version_exact()
+    prompt_patch = self._resolve_prompt_patch()
+    prompt_patch_label = self._resolve_prompt_patch_label()
     architecture_governance = getattr(epic, "architecture_governance", None)
     idesign_enabled = bool(getattr(architecture_governance, "idesign", False))
     if not isinstance(getattr(issue, "params", None), dict):
@@ -1744,6 +1794,7 @@ async def _execute_issue_turn(
             },
             guards=guard_layers,
             selection_policy=selection_policy,
+            patch=(prompt_patch or None),
         )
         system_desc = resolution.system_prompt
         prompt_metadata = dict(resolution.metadata)
@@ -1753,6 +1804,7 @@ async def _execute_issue_turn(
             skill,
             dialect,
             protocol_governed_enabled=bool(provisional_context.get("protocol_governed_enabled", False)),
+            patch=(prompt_patch or None),
         )
     suppress_reference_context = _should_suppress_reference_context_for_cards_runtime(cards_runtime)
     if memory_context and not suppress_reference_context:
@@ -1761,6 +1813,16 @@ async def _execute_issue_turn(
     import hashlib
 
     prompt_metadata["prompt_checksum"] = hashlib.sha256(system_desc.encode("utf-8")).hexdigest()[:16]
+    if prompt_patch:
+        prompt_patch_checksum = hashlib.sha256(prompt_patch.encode("utf-8")).hexdigest()[:16]
+        prompt_metadata["prompt_patch_applied"] = True
+        prompt_metadata["prompt_patch_label"] = prompt_patch_label or "runtime_patch"
+        prompt_metadata["prompt_patch_checksum"] = prompt_patch_checksum
+        prompt_layers["patch"] = {
+            "applied": True,
+            "label": prompt_patch_label or "runtime_patch",
+            "checksum": prompt_patch_checksum,
+        }
 
     context = self._build_turn_context(
         run_id=run_id,

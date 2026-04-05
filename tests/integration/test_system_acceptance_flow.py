@@ -8,6 +8,7 @@ from orket.exceptions import ExecutionFailed
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.orchestration.engine import OrchestrationEngine
 from orket.schema import CardStatus
+from tests.turn_prompt_utils import extract_turn_prompt_context
 
 # Fixture acceptance coverage is intentionally secondary to canonical-asset acceptance flow.
 FIXTURE_SECONDARY = True
@@ -18,11 +19,23 @@ class AcceptanceProvider:
         self.mode = mode
 
     async def complete(self, messages):
+        turn_context = extract_turn_prompt_context(messages)
+        active_role = str(turn_context.get("role") or "").strip().lower()
+        readable_paths = [
+            path
+            for path in turn_context.get("required_read_paths", [])
+            if path not in set(turn_context.get("missing_required_read_paths", []))
+        ]
         if self.mode == "approve":
-            system_prompt = messages[0]["content"]
-            if "CODE REVIEW" in system_prompt or "integrity_guard" in system_prompt.lower():
+            if active_role in {"integrity_guard", "verifier_seat"}:
+                read_calls = [
+                    f'```json\n{json.dumps({"tool": "read_file", "args": {"path": path}})}\n```'
+                    for path in readable_paths
+                ]
                 return ModelResponse(
-                    content='```json\n{"tool": "update_issue_status", "args": {"status": "done"}}\n```',
+                    content="\n".join(
+                        read_calls + ['```json\n{"tool": "update_issue_status", "args": {"status": "done"}}\n```']
+                    ),
                     raw={"model": "dummy", "total_tokens": 50},
                 )
             return ModelResponse(
@@ -31,10 +44,19 @@ class AcceptanceProvider:
             )
 
         if self.mode == "reject":
-            system_prompt = messages[0]["content"]
-            if "CODE REVIEW" in system_prompt or "integrity_guard" in system_prompt.lower():
+            if active_role in {"integrity_guard", "verifier_seat"}:
+                read_calls = [
+                    f'```json\n{json.dumps({"tool": "read_file", "args": {"path": path}})}\n```'
+                    for path in readable_paths
+                ]
                 return ModelResponse(
-                    content='{"rationale":"Insufficient acceptance criteria coverage.","violations":["missing acceptance criteria"],"remediation_actions":["Document explicit acceptance criteria before merge."]}\n```json\n{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "review"}}\n```',
+                    content="\n".join(
+                        read_calls
+                        + [
+                            '{"rationale":"Insufficient acceptance criteria coverage.","violations":["missing acceptance criteria"],"remediation_actions":["Document explicit acceptance criteria before merge."]}',
+                            '```json\n{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "review"}}\n```',
+                        ]
+                    ),
                     raw={"model": "dummy", "total_tokens": 50},
                 )
             return ModelResponse(
@@ -162,6 +184,7 @@ async def test_system_acceptance_guard_approves_actions(tmp_path, monkeypatch):
 
     _build_assets(root, with_guard=True, epic_id="acceptance_approve")
     _patch_provider(monkeypatch, AcceptanceProvider(mode="approve"))
+    monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
     await engine.run_card("acceptance_approve")
@@ -185,6 +208,7 @@ async def test_system_acceptance_guard_rejects_actions(tmp_path, monkeypatch):
 
     _build_assets(root, with_guard=True, epic_id="acceptance_reject")
     _patch_provider(monkeypatch, AcceptanceProvider(mode="reject"))
+    monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
     await engine.run_card("acceptance_reject")
@@ -207,6 +231,7 @@ async def test_system_acceptance_guard_blocks_illegal_transition(tmp_path, monke
 
     _build_assets(root, with_guard=False, epic_id="acceptance_block")
     _patch_provider(monkeypatch, AcceptanceProvider(mode="block"))
+    monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
     with pytest.raises(ExecutionFailed):

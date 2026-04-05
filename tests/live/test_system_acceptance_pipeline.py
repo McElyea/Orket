@@ -12,6 +12,7 @@ from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
 from orket.schema import CardStatus
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 from tests.live.run_summary_support import read_validated_run_summary
+from tests.turn_prompt_utils import extract_turn_prompt_context
 
 pytestmark = pytest.mark.end_to_end
 
@@ -37,48 +38,17 @@ def _run_roots(workspace):
 
 class MultiRoleAcceptanceProvider:
     async def complete(self, messages):
-        active_seat = None
-        active_issue_id = None
-        required_read_paths: list[str] = []
-        required_write_paths: list[str] = []
-        required_statuses: list[str] = []
-        missing_required_read_paths: set[str] = set()
-        for msg in messages:
-            content = msg.get("content") or ""
-            if "execution context json:" in content.lower():
-                try:
-                    payload = content.split("\n", 1)[1] if "\n" in content else ""
-                    parsed = json.loads(payload)
-                    active_seat = (parsed.get("seat") or "").lower()
-                    active_issue_id = (parsed.get("issue_id") or "").lower()
-                    required_read_paths = [
-                        str(path).strip()
-                        for path in (parsed.get("required_read_paths") or [])
-                        if str(path).strip()
-                    ]
-                    required_write_paths = [
-                        str(path).strip()
-                        for path in (parsed.get("required_write_paths") or [])
-                        if str(path).strip()
-                    ]
-                    required_statuses = [
-                        str(status).strip()
-                        for status in (parsed.get("required_statuses") or [])
-                        if str(status).strip()
-                    ]
-                    missing_required_read_paths = {
-                        str(path).strip()
-                        for path in (parsed.get("missing_required_read_paths") or [])
-                        if str(path).strip()
-                    }
-                except (json.JSONDecodeError, TypeError):
-                    active_seat = None
-                    active_issue_id = None
-                    required_read_paths = []
-                    required_write_paths = []
-                    required_statuses = []
-                    missing_required_read_paths = set()
-                break
+        turn_context = extract_turn_prompt_context(messages)
+        active_seat = str(turn_context.get("role") or "").strip().lower()
+        active_issue_id = str(turn_context.get("issue_id") or "").strip().lower()
+        required_read_paths = list(turn_context.get("required_read_paths", []))
+        required_write_paths = list(turn_context.get("required_write_paths", []))
+        required_statuses = list(turn_context.get("required_statuses", []))
+        missing_required_read_paths = {
+            str(path).strip()
+            for path in turn_context.get("missing_required_read_paths", [])
+            if str(path).strip()
+        }
 
         def _render_calls(calls: list[dict]) -> str:
             return "\n".join(f"```json\n{json.dumps(call)}\n```" for call in calls)
@@ -89,7 +59,7 @@ class MultiRoleAcceptanceProvider:
         readable_paths = [path for path in required_read_paths if path not in missing_required_read_paths]
 
         # Route by active seat/role first; issue-id fallback handles prompt format drift.
-        if active_seat == "requirements_analyst" or (not active_seat and active_issue_id == "req-1"):
+        if active_seat in {"requirements_analyst", "requirements_seat"} or (not active_seat and active_issue_id == "req-1"):
             target_path = required_write_paths[0] if required_write_paths else "agent_output/requirements.txt"
             calls = [
                 {
@@ -99,6 +69,16 @@ class MultiRoleAcceptanceProvider:
                         "content": "Program shall sum two integers from CLI args and print result.",
                     },
                 },
+                {
+                    "tool": "write_file",
+                    "args": {
+                        "path": "agent_output/main.py",
+                        "content": (
+                            "if __name__ == '__main__':\n"
+                            "    print(0)\n"
+                        ),
+                    },
+                },
                 {"tool": "update_issue_status", "args": {"status": _status_or("code_review")}},
             ]
             return ModelResponse(
@@ -106,7 +86,7 @@ class MultiRoleAcceptanceProvider:
                 raw={"model": "dummy", "total_tokens": 80},
             )
 
-        if active_seat == "coder" or (not active_seat and active_issue_id == "cod-1"):
+        if active_seat in {"coder", "builder_seat"} or (not active_seat and active_issue_id == "cod-1"):
             target_path = required_write_paths[0] if required_write_paths else "agent_output/main.py"
             calls = [
                 {
@@ -116,6 +96,9 @@ class MultiRoleAcceptanceProvider:
                         "content": (
                             "class SummationApp:\n"
                             "    def run(self, args):\n"
+                            "        if len(args) < 2:\n"
+                            "            print(0)\n"
+                            "            return\n"
                             "        a = int(args[0]); b = int(args[1])\n"
                             "        print(a + b)\n\n"
                             'if __name__ == "__main__":\n'
@@ -131,7 +114,7 @@ class MultiRoleAcceptanceProvider:
                 raw={"model": "dummy", "total_tokens": 140},
             )
 
-        if active_seat == "architect" or (not active_seat and active_issue_id == "arc-1"):
+        if active_seat in {"architect", "lead_architect"} or (not active_seat and active_issue_id == "arc-1"):
             target_path = required_write_paths[0] if required_write_paths else "agent_output/design.txt"
             calls = [{"tool": "read_file", "args": {"path": path}} for path in readable_paths]
             calls.append(
@@ -165,7 +148,7 @@ class MultiRoleAcceptanceProvider:
             )
 
         # code_reviewer seat: check outputs then send to guard for final approval.
-        if active_seat == "code_reviewer" or (not active_seat and active_issue_id == "rev-1"):
+        if active_seat in {"code_reviewer", "reviewer_seat"} or (not active_seat and active_issue_id == "rev-1"):
             review_paths = readable_paths or ["agent_output/requirements.txt", "agent_output/main.py"]
             calls = [{"tool": "read_file", "args": {"path": path}} for path in review_paths]
             calls.append({"tool": "update_issue_status", "args": {"status": _status_or("code_review")}})
@@ -174,7 +157,7 @@ class MultiRoleAcceptanceProvider:
                 raw={"model": "dummy", "total_tokens": 120},
             )
 
-        if active_seat == "integrity_guard" or active_issue_id in {"guard-1"}:
+        if active_seat in {"integrity_guard", "verifier_seat"} or active_issue_id in {"guard-1"}:
             calls = [{"tool": "read_file", "args": {"path": path}} for path in readable_paths]
             calls.append({"tool": "update_issue_status", "args": {"status": _status_or("done")}})
             return ModelResponse(

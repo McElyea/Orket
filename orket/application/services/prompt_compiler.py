@@ -25,11 +25,15 @@ class PromptCompiler:
                 "- Do not use markdown fences or multiple top-level JSON objects.",
             ]
         return [
-            "- DO NOT narrate your plan in prose. Emit executable tool-call JSON blocks only.",
-            "- Every action must be emitted as:",
-            "  ```json",
-            '  {"tool": "<tool_name>", "args": {"key": "value"}}',
-            "  ```",
+            "- DO NOT narrate your plan in prose. Emit executable JSON only.",
+            '- For a single tool call, emit one compact JSON object: {"tool":"<tool_name>","args":{"key":"value"}}',
+            (
+                '- When the turn requires multiple tool calls, return exactly one JSON object: '
+                '{"content":"","tool_calls":[{"tool":"<tool_name>","args":{"key":"value"}}]}'
+            ),
+            "- Do not use markdown fences, labels, or backticks around tool-call JSON.",
+            "- Escape newline characters inside string values; the JSON must parse without repair.",
+            "- Do not emit partial or truncated JSON objects.",
         ]
 
     @staticmethod
@@ -90,7 +94,10 @@ class PromptCompiler:
             prompt += '- Return ONLY one JSON object matching {"content":"","tool_calls":[...]}.\n'
             prompt += "- Do not wrap the JSON object in markdown fences.\n"
         else:
-            prompt += "- Return ONLY JSON tool blocks. No markdown explanations outside tool blocks.\n"
+            prompt += (
+                '- Return ONLY compact JSON with no markdown fences or prose. '
+                'If more than one tool call is needed, use {"content":"","tool_calls":[...]}.\n'
+            )
 
         role_name = (skill.name or "").strip().lower()
         if role_name in {"requirements_analyst", "architect", "coder", "developer", "code_reviewer", "integrity_guard"}:

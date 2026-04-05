@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
 from orket.application.workflows.turn_response_parser import ResponseParser
 
@@ -27,6 +28,173 @@ def test_response_parser_extracts_tool_calls(tmp_path: Path) -> None:
     assert len(turn.tool_calls) == 1
     assert turn.tool_calls[0].tool == "write_file"
     assert captured and captured[0]["filename"] == "tool_parser_diagnostics.json"
+    assert captured[1]["filename"] == "parsed_tool_calls.json"
+
+
+def test_response_parser_falls_back_to_native_tool_calls_when_content_is_empty(tmp_path: Path) -> None:
+    """Layer: contract. Verifies empty-content responses still parse provider-native tool calls."""
+    captured: list[dict] = []
+
+    def _write_turn_artifact(**kwargs):  # type: ignore[no-untyped-def]
+        captured.append(kwargs)
+
+    parser = ResponseParser(tmp_path, _write_turn_artifact)
+    response = SimpleNamespace(
+        content="",
+        raw={
+            "tool_calls": [
+                {
+                    "id": "call_1",
+                    "type": "function",
+                    "function": {"name": "write_file", "arguments": '{"path":"agent_output/main.py","content":"x"}'},
+                }
+            ]
+        },
+    )
+
+    turn = parser.parse_response(
+        response=response,
+        issue_id="ISSUE-1",
+        role_name="coder",
+        context={"session_id": "s1", "turn_index": 1},
+    )
+
+    assert len(turn.tool_calls) == 1
+    assert turn.tool_calls[0].tool == "write_file"
+    assert turn.tool_calls[0].args["path"] == "agent_output/main.py"
+    assert captured[1]["filename"] == "parsed_tool_calls.json"
+    assert "agent_output/main.py" in captured[1]["content"]
+
+
+def test_response_parser_unwraps_legacy_args_wrapper_inside_native_tool_calls(tmp_path: Path) -> None:
+    """Layer: contract. Verifies native tool calls still accept the legacy nested args wrapper."""
+    parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
+    response = SimpleNamespace(
+        content="",
+        raw={
+            "tool_calls": [
+                {
+                    "id": "call_1",
+                    "type": "function",
+                    "function": {
+                        "name": "write_file",
+                        "arguments": '{"args":{"path":"agent_output/main.py","content":"x"}}',
+                    },
+                }
+            ]
+        },
+    )
+
+    turn = parser.parse_response(
+        response=response,
+        issue_id="ISSUE-1",
+        role_name="coder",
+        context={"session_id": "s1", "turn_index": 1},
+    )
+
+    assert turn.tool_calls[0].args == {"path": "agent_output/main.py", "content": "x"}
+
+
+def test_response_parser_filters_undeclared_native_tool_calls_and_dedupes_duplicates(tmp_path: Path) -> None:
+    """Layer: contract. Verifies parser filtering drops undeclared native calls and exact duplicates."""
+    parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
+    response = SimpleNamespace(
+        content="",
+        raw={
+            "tool_calls": [
+                {
+                    "id": "call_1",
+                    "type": "function",
+                    "function": {
+                        "name": "read_file",
+                        "arguments": '{"args":{"path":"agent_output/requirements.txt"}}',
+                    },
+                },
+                {
+                    "id": "call_2",
+                    "type": "function",
+                    "function": {
+                        "name": "update_issue_status",
+                        "arguments": '{"args":{"status":"done"}}',
+                    },
+                },
+                {
+                    "id": "call_3",
+                    "type": "function",
+                    "function": {
+                        "name": "add_issue_comment",
+                        "arguments": '{"args":{"comment":"extra"}}',
+                    },
+                },
+                {
+                    "id": "call_4",
+                    "type": "function",
+                    "function": {
+                        "name": "update_issue_status",
+                        "arguments": '{"args":{"status":"done"}}',
+                    },
+                },
+            ]
+        },
+    )
+
+    turn = parser.parse_response(
+        response=response,
+        issue_id="ISSUE-1",
+        role_name="integrity_guard",
+        context={
+            "session_id": "s1",
+            "turn_index": 1,
+            "verification_scope": {"declared_interfaces": ["read_file", "update_issue_status"]},
+        },
+    )
+
+    assert [call.tool for call in turn.tool_calls] == ["read_file", "update_issue_status"]
+    assert turn.tool_calls[0].args == {"path": "agent_output/requirements.txt"}
+    assert turn.tool_calls[1].args == {"status": "done"}
+
+
+def test_response_parser_prefers_declared_native_tool_names_when_provider_telemetry_is_present(tmp_path: Path) -> None:
+    """Layer: contract. Verifies provider-recorded native tool telemetry overrides broader inferred interfaces."""
+    parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
+    response = SimpleNamespace(
+        content="",
+        raw={
+            "openai_native_tool_names": ["read_file"],
+            "tool_calls": [
+                {
+                    "id": "call_1",
+                    "type": "function",
+                    "function": {
+                        "name": "read_file",
+                        "arguments": '{"args":{"path":"agent_output/requirements.txt"}}',
+                    },
+                },
+                {
+                    "id": "call_2",
+                    "type": "function",
+                    "function": {
+                        "name": "update_issue_status",
+                        "arguments": '{"args":{"status":"done"}}',
+                    },
+                },
+            ],
+        },
+    )
+
+    turn = parser.parse_response(
+        response=response,
+        issue_id="ISSUE-1",
+        role_name="integrity_guard",
+        context={
+            "session_id": "s1",
+            "turn_index": 1,
+            "verification_scope": {"declared_interfaces": ["read_file", "update_issue_status"]},
+        },
+    )
+
+    assert [call.tool for call in turn.tool_calls] == ["read_file"]
+    assert turn.tool_calls[0].args == {"path": "agent_output/requirements.txt"}
 
 
 def test_response_parser_non_json_residue_and_guard_payload(tmp_path: Path) -> None:

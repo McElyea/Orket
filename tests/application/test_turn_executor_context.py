@@ -40,6 +40,7 @@ stages:
 
 @pytest.mark.asyncio
 async def test_prepare_messages_includes_dependency_context_block(tmp_path):
+    """Layer: contract. Verifies compact turn packets preserve dependency context instead of verbose JSON blocks."""
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -58,15 +59,12 @@ async def test_prepare_messages_includes_dependency_context_block(tmp_path):
     }
 
     messages = await executor._prepare_messages(issue, role, context)
-    payloads = [m["content"] for m in messages if m["role"] == "user"]
-    context_payload = next((p for p in payloads if p.startswith("Execution Context JSON:\n")), None)
-
-    assert context_payload is not None
-    parsed = json.loads(context_payload.split("\n", 1)[1])
-    assert parsed["issue_id"] == "ISSUE-1"
-    assert parsed["seat"] == "developer"
-    assert parsed["dependency_context"]["depends_on"] == ["REQ-1", "ARC-1"]
-    assert parsed["dependency_context"]["dependency_count"] == 2
+    assert [message["role"] for message in messages] == ["system", "user"]
+    rendered = messages[1]["content"]
+    assert "TURN PACKET:" in rendered
+    assert "Dependency Context:" in rendered
+    assert "- dependency_count: 2" in rendered
+    assert "- depends_on: REQ-1, ARC-1" in rendered
 
 
 @pytest.mark.asyncio

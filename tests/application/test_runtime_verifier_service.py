@@ -75,7 +75,7 @@ async def test_runtime_verifier_runs_issue_scoped_behavioral_commands(tmp_path: 
     tests_root.mkdir(parents=True, exist_ok=True)
     (agent_output / "main.py").write_text(
         "import json\n"
-        "print(json.dumps({'validated_count': 2, 'layer_count': 3, 'checkpoint_written': True, 'resumed_terminal_state': 'completed'}))\n",
+        "print(json.dumps({'validated_count': 2, 'layer_count': 3, 'dependency_cycle': True, 'cycle_policy': 'validation_rejects_cycle', 'cycle_fixture_result': 'expected_rejection', 'checkpoint_written': True, 'resumed_terminal_state': 'completed'}))\n",
         encoding="utf-8",
     )
     (runtime_root / "reporting.py").write_text(
@@ -107,6 +107,9 @@ async def test_runtime_verifier_runs_issue_scoped_behavioral_commands(tmp_path: 
                 "json_assertions": [
                     {"path": "validated_count", "op": "gte", "value": 2},
                     {"path": "layer_count", "op": "gte", "value": 3},
+                    {"path": "dependency_cycle", "op": "eq", "value": True},
+                    {"path": "cycle_policy", "op": "eq", "value": "validation_rejects_cycle"},
+                    {"path": "cycle_fixture_result", "op": "eq", "value": "expected_rejection"},
                     {"path": "checkpoint_written", "op": "eq", "value": True},
                     {"path": "resumed_terminal_state", "op": "eq", "value": "completed"},
                 ],
@@ -128,6 +131,7 @@ async def test_runtime_verifier_runs_issue_scoped_behavioral_commands(tmp_path: 
     assert result.command_results[2]["working_directory"] == "."
     assert result.command_results[2]["stdout_contract_ok"] is True
     assert result.command_results[2]["stdout_json"]["validated_count"] == 2
+    assert result.command_results[2]["stdout_json"]["cycle_policy"] == "validation_rejects_cycle"
 
 
 @pytest.mark.asyncio
@@ -488,5 +492,31 @@ async def test_runtime_verifier_fails_when_stdout_json_assertions_fail(tmp_path:
     ).verify()
 
     assert result.ok is False
-    assert result.failure_breakdown.get("command_failed", 0) >= 1
+    assert result.command_results[-1]["failure_class"] == "stdout_assertion_failed"
+    assert result.command_results[-1]["outcome"] == "fail"
+    assert result.failure_breakdown.get("stdout_assertion_failed", 0) >= 1
     assert "runtime stdout assertion failed" in "\n".join(result.errors)
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_classifies_stdout_json_parse_failures(tmp_path: Path):
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "main.py").write_text("print('not-json')\n", encoding="utf-8")
+
+    result = await RuntimeVerifier(
+        tmp_path,
+        artifact_contract={"kind": "app", "entrypoint_path": "agent_output/main.py"},
+        issue_params={
+            "runtime_verifier": {
+                "expect_json_stdout": True,
+            }
+        },
+    ).verify()
+
+    assert result.ok is False
+    assert result.command_results[-1]["failure_class"] == "stdout_json_parse_failed"
+    assert result.command_results[-1]["outcome"] == "fail"
+    assert result.command_results[-1]["stdout_contract_ok"] is False
+    assert result.command_results[-1]["stdout_contract_error"] == "json_parse_failed"
+    assert result.failure_breakdown.get("stdout_json_parse_failed", 0) >= 1

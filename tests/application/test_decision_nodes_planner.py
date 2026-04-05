@@ -924,6 +924,20 @@ def test_default_orchestration_loop_max_iterations_defaults_and_overrides(monkey
     assert node.max_iterations(SimpleNamespace(process_rules={})) == 40
 
 
+def test_default_orchestration_loop_concurrency_defaults_and_overrides(monkeypatch):
+    from orket.decision_nodes.builtins import DefaultOrchestrationLoopPolicyNode
+
+    monkeypatch.delenv("ORKET_ORCHESTRATOR_CONCURRENCY", raising=False)
+    node = DefaultOrchestrationLoopPolicyNode()
+    assert node.concurrency_limit(None) == 3
+
+    monkeypatch.setenv("ORKET_ORCHESTRATOR_CONCURRENCY", "1")
+    assert node.concurrency_limit(None) == 1
+
+    monkeypatch.setenv("ORKET_ORCHESTRATOR_CONCURRENCY", "bad")
+    assert node.concurrency_limit(None) == 3
+
+
 def test_registry_resolves_default_model_client_policy():
     registry = DecisionNodeRegistry()
     from orket.decision_nodes.builtins import DefaultModelClientPolicyNode

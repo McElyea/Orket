@@ -26,11 +26,17 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
     assert epic.issues[-1].id == "CWR-12"
 
     issues = {issue.id: issue for issue in epic.issues}
+    package_semantics = issues["CWR-04"].params["artifact_contract"]["semantic_checks"][0]
+    model_semantics = issues["CWR-04"].params["artifact_contract"]["semantic_checks"][1]
     validator_semantics = issues["CWR-05"].params["artifact_contract"]["semantic_checks"][0]
     assert "task_ids = {task['id'] for task in workflow['tasks']}" in issues["CWR-05"].note
     assert "recognized as dependency_cycle rather than as an unknown dependency caused by one-pass ordering" in issues["CWR-05"].note
     assert "Track duplicate ids with a dedicated seen_ids or equivalent collection" in issues["CWR-05"].note
+    assert "from .loader import load_workflow" in issues["CWR-05"].note
+    assert "from .models import WorkflowSpec, TaskSpec" in issues["CWR-05"].note
     assert "def validate_workflow(path: str)" in validator_semantics["must_contain"]
+    assert "from .loader import load_workflow" in validator_semantics["must_contain"]
+    assert "from .models import WorkflowSpec, TaskSpec" in validator_semantics["must_contain"]
     assert "load_workflow(path)" in validator_semantics["must_contain"]
     assert "task_ids = {task['id'] for task in workflow['tasks']}" in validator_semantics["must_contain"]
     assert "seen_ids = set()" in validator_semantics["must_contain"]
@@ -40,6 +46,7 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
     assert "if dep not in task_ids:" in validator_semantics["must_contain"]
     assert "task_graph[task['id']].append(dep)" in validator_semantics["must_contain"]
     assert "has_cycle" in validator_semantics["must_contain"]
+    assert "agent_output.challenge_runtime" in validator_semantics["must_not_contain"]
     assert "if task['id'] in visited:" in validator_semantics["must_not_contain"]
 
     validator_verifier = issues["CWR-05"].params["runtime_verifier"]
@@ -53,6 +60,8 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
     planner_semantics = issues["CWR-06"].params["artifact_contract"]["semantic_checks"][0]
     assert "task_ids = [task['id'] for task in workflow['tasks']]" in issues["CWR-06"].note
     assert "zero_in_degree = [task_id for task_id in task_ids if in_degree[task_id] == 0]" in issues["CWR-06"].note
+    assert "populate dependent adjacency and in-degree counts by scanning workflow['tasks'] before selecting any ready ids" in issues["CWR-06"].note
+    assert "Do not compute zero_in_degree before the dependency scan has filled in_degree" in issues["CWR-06"].note
     assert "for task_id in current_layer" in issues["CWR-06"].note
     assert "List[List[str]]" in planner_semantics["must_contain"]
     assert "def plan_workflow(path: str)" in planner_semantics["must_contain"]
@@ -88,6 +97,38 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
     assert "\"deps\": [\"task2\", \"task3\"]" in valid_fixture_semantics["must_contain"]
     cycle_fixture_semantics = issues["CWR-03"].params["artifact_contract"]["semantic_checks"][1]
     assert "\"deps\": [\"task2\"]" in cycle_fixture_semantics["must_contain"]
+
+    loader_semantics = issues["CWR-04"].params["artifact_contract"]["semantic_checks"][2]
+    assert "from .models import TaskSpec, WorkflowSpec and from .loader import load_workflow, normalize_task" in issues["CWR-04"].note
+    assert "do not leave __init__.py empty" in issues["CWR-04"].note
+    assert "TaskSpec only defines the task-level fields id, deps, duration, retries, and outcomes" in issues["CWR-04"].note
+    assert "WorkflowSpec only defines the root-level fields workflow_id, max_concurrency, and tasks" in issues["CWR-04"].note
+    assert "Do not call WorkflowSpec(**data) or TaskSpec(**raw_task)" in issues["CWR-04"].note
+    assert "from .models import TaskSpec, WorkflowSpec" in package_semantics["must_contain"]
+    assert "from .loader import load_workflow, normalize_task" in package_semantics["must_contain"]
+    assert "from typing import List, TypedDict" in model_semantics["must_contain"]
+    assert "class TaskSpec(TypedDict):" in model_semantics["must_contain"]
+    assert "class WorkflowSpec(TypedDict):" in model_semantics["must_contain"]
+    assert "tasks: List[TaskSpec]" in model_semantics["must_contain"]
+    assert "@dataclass" in model_semantics["must_not_contain"]
+    assert "import TaskSpec and WorkflowSpec from .models" in issues["CWR-04"].note
+    assert "agent_output.challenge_runtime" in issues["CWR-04"].note
+    assert "from .models import TaskSpec, WorkflowSpec" in loader_semantics["must_contain"]
+    assert "def load_workflow(path: str) -> WorkflowSpec:" in loader_semantics["must_contain"]
+    assert "def normalize_task(raw_task) -> TaskSpec:" in loader_semantics["must_contain"]
+    assert "'tasks': [normalize_task(task) for task in data['tasks']]" in loader_semantics["must_contain"]
+    assert "agent_output.challenge_runtime" in loader_semantics["must_not_contain"]
+    assert "WorkflowSpec(**data)" in loader_semantics["must_not_contain"]
+    assert "TaskSpec(**raw_task)" in loader_semantics["must_not_contain"]
+    cwr04_verifier = issues["CWR-04"].params["runtime_verifier"]
+    assert cwr04_verifier["commands"][0]["cwd"] == "agent_output"
+    assert cwr04_verifier["json_assertions"] == [
+        {"path": "workflow_id", "op": "eq", "value": "valid_workflow"},
+        {"path": "has_max_concurrency", "op": "eq", "value": True},
+        {"path": "task_count", "op": "eq", "value": 4},
+        {"path": "task0_id", "op": "eq", "value": "task1"},
+        {"path": "task3_deps", "op": "eq", "value": ["task2", "task3"]},
+    ]
     assert "\"deps\": [\"task1\"]" in cycle_fixture_semantics["must_contain"]
     assert "\"id\": \"task3\"" in cycle_fixture_semantics["must_not_contain"]
     retry_fixture_semantics = issues["CWR-03"].params["artifact_contract"]["semantic_checks"][2]
@@ -177,6 +218,8 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
     assert "cycle fixture must still contribute to validated_count" in issues["CWR-09"].note
     assert "validated_count = 2" in issues["CWR-09"].note
     assert "dependency_cycle = any(error['code'] == 'dependency_cycle' for error in cycle_errors)" in issues["CWR-09"].note
+    assert "cycle_policy = 'validation_rejects_cycle'" in issues["CWR-09"].note
+    assert "cycle_fixture_result = 'expected_rejection'" in issues["CWR-09"].note
     assert "do not derive it from len(valid_errors)" in issues["CWR-09"].note
     assert "from challenge_runtime" in main_semantics["must_contain"]
     assert "from challenge_runtime.validator import validate_workflow" in main_semantics["must_contain"]
@@ -189,6 +232,10 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
     assert "validated_count = 2" in main_semantics["must_contain"]
     assert "dependency_cycle" in main_semantics["must_contain"]
     assert "dependency_cycle = any(error['code'] == 'dependency_cycle' for error in cycle_errors)" in main_semantics["must_contain"]
+    assert "cycle_policy" in main_semantics["must_contain"]
+    assert "cycle_policy = 'validation_rejects_cycle'" in main_semantics["must_contain"]
+    assert "cycle_fixture_result" in main_semantics["must_contain"]
+    assert "cycle_fixture_result = 'expected_rejection'" in main_semantics["must_contain"]
     assert "plan_workflow(workflow_valid_path)" in main_semantics["must_contain"]
     assert "workflow_retry.json" in main_semantics["must_contain"]
     assert "plan_workflow(workflow_valid)" in main_semantics["must_not_contain"]
@@ -205,6 +252,16 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
     assert "workflow_valid.json" in cli_semantics["must_not_contain"]
     assert "workflow_cycle.json" in cli_semantics["must_not_contain"]
     assert "workflow_retry.json" in cli_semantics["must_not_contain"]
+    main_verifier = issues["CWR-09"].params["runtime_verifier"]
+    assert main_verifier["json_assertions"] == [
+        {"path": "validated_count", "op": "eq", "value": 2},
+        {"path": "layer_count", "op": "eq", "value": 3},
+        {"path": "dependency_cycle", "op": "eq", "value": True},
+        {"path": "cycle_policy", "op": "eq", "value": "validation_rejects_cycle"},
+        {"path": "cycle_fixture_result", "op": "eq", "value": "expected_rejection"},
+        {"path": "checkpoint_written", "op": "eq", "value": True},
+        {"path": "resumed_terminal_state", "op": "eq", "value": "completed"},
+    ]
 
     validator_test_semantics = issues["CWR-10"].params["artifact_contract"]["semantic_checks"][0]
     assert "Use tmp_path to create the duplicate-id and unknown-dependency workflow files" in issues["CWR-10"].note
@@ -242,16 +299,28 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
 
     simulator_test_semantics = issues["CWR-11"].params["artifact_contract"]["semantic_checks"][0]
     assert "The retry fixture succeeds with terminal state 'completed'" in issues["CWR-11"].note
+    assert "Import json plus Simulator explicitly from challenge_runtime.simulator" in issues["CWR-11"].note
+    assert "import save_checkpoint, load_checkpoint, and resume_simulation explicitly from challenge_runtime.checkpoint" in issues["CWR-11"].note
+    assert "use the shipped retry fixture path Path(__file__).resolve().parents[1] / 'challenge_inputs' / 'workflow_retry.json'" in issues["CWR-11"].note
     assert "artifact_root = Path(__file__).resolve().parents[1] / 'challenge_artifacts'" in issues["CWR-11"].note
     assert "checkpoint_path = artifact_root / 'retry_checkpoint.json'" in issues["CWR-11"].note
+    assert "corrupt_checkpoint_path = artifact_root / 'corrupt_retry_checkpoint.json'" in issues["CWR-11"].note
+    assert "json.JSONDecodeError" in issues["CWR-11"].note
+    assert "double-resume remains idempotent" in issues["CWR-11"].note
+    assert "tmp_path must be the real pytest tmp_path fixture" in issues["CWR-11"].note
     assert "tmp_path / 'workflow_dependency_gating.json'" in issues["CWR-11"].note
     assert "Use blocked fixture task ids named upstream and downstream" in issues["CWR-11"].note
+    assert "set upstream retries to 0 so it fails once and blocks downstream" in issues["CWR-11"].note
     assert "make upstream fail with outcomes ['failure']" in issues["CWR-11"].note
     assert "downstream never appears in the event_log" in issues["CWR-11"].note
     assert "import json" in simulator_test_semantics["must_contain"]
+    assert "def test_simulator_and_resume(tmp_path):" in simulator_test_semantics["must_contain"]
+    assert "from challenge_runtime.simulator import Simulator" in simulator_test_semantics["must_contain"]
+    assert "from challenge_runtime.checkpoint import save_checkpoint, load_checkpoint, resume_simulation" in simulator_test_semantics["must_contain"]
     assert "save_checkpoint" in simulator_test_semantics["must_contain"]
     assert "load_checkpoint" in simulator_test_semantics["must_contain"]
     assert "Path(__file__).resolve().parents[1] / 'challenge_inputs'" in simulator_test_semantics["must_contain"]
+    assert "Path(__file__).resolve().parents[1] / 'challenge_inputs' / 'workflow_retry.json'" in simulator_test_semantics["must_contain"]
     assert "Path(__file__).resolve().parents[1] / 'challenge_artifacts'" in simulator_test_semantics["must_contain"]
     assert "artifact_root = Path(__file__).resolve().parents[1] / 'challenge_artifacts'" in simulator_test_semantics["must_contain"]
     assert "artifact_root.mkdir(parents=True, exist_ok=True)" in simulator_test_semantics["must_contain"]
@@ -261,9 +330,16 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
     assert "resumed_terminal_state == 'completed'" in simulator_test_semantics["must_contain"]
     assert "loaded_checkpoint['terminal_state'] == 'completed'" in simulator_test_semantics["must_contain"]
     assert "loaded_checkpoint['event_log']" in simulator_test_semantics["must_contain"]
+    assert "corrupt_checkpoint_path = artifact_root / 'corrupt_retry_checkpoint.json'" in simulator_test_semantics["must_contain"]
+    assert "json.JSONDecodeError" in simulator_test_semantics["must_contain"]
+    assert "resume_simulation(str(corrupt_checkpoint_path))" in simulator_test_semantics["must_contain"]
+    assert "resumed_again = resume_simulation(str(checkpoint_path))" in simulator_test_semantics["must_contain"]
+    assert "resumed_again_terminal_state == 'completed'" in simulator_test_semantics["must_contain"]
+    assert "resumed_again.event_log == resumed.event_log" in simulator_test_semantics["must_contain"]
     assert "tmp_path / 'workflow_dependency_gating.json'" in simulator_test_semantics["must_contain"]
     assert "write_text(json.dumps(" in simulator_test_semantics["must_contain"]
     assert "'upstream'" in simulator_test_semantics["must_contain"]
+    assert "'retries': 0" in simulator_test_semantics["must_contain"]
     assert "'outcomes': ['failure']" in simulator_test_semantics["must_contain"]
     assert "not any(event['task_id'] == 'downstream'" in simulator_test_semantics["must_contain"]
     assert "'downstream'" in simulator_test_semantics["must_contain"]
@@ -272,6 +348,8 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
     assert "Path(__file__).parent / 'challenge_inputs'" in simulator_test_semantics["must_not_contain"]
     assert "agent_output/challenge_inputs/" in simulator_test_semantics["must_not_contain"]
     assert "checkpoint_path = tmp_path /" in simulator_test_semantics["must_not_contain"]
+    assert "tmp_path = Path(__file__).resolve().parents[1] / 'tmp'" in simulator_test_semantics["must_not_contain"]
+    assert "from challenge_runtime.simulator import Simulator, save_checkpoint, load_checkpoint, resume_simulation" in simulator_test_semantics["must_not_contain"]
     assert "== 'success'" in simulator_test_semantics["must_not_contain"]
 
     simulator_test_verifier = issues["CWR-11"].params["runtime_verifier"]
@@ -282,6 +360,13 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
     reporting_semantics = issues["CWR-12"].params["artifact_contract"]["semantic_checks"][0]
     assert "import json" in reporting_semantics["must_contain"]
     assert "def format_report" in reporting_semantics["must_contain"]
+    assert "python main.py from inside agent_output" in issues["CWR-12"].note
+    assert "python -m challenge_runtime.cli validate challenge_inputs/workflow_valid.json" in issues["CWR-12"].note
+    readme_semantics = issues["CWR-12"].params["artifact_contract"]["semantic_checks"][1]
+    assert "python agent_output/main.py" in readme_semantics["must_contain"]
+    assert "python main.py" in readme_semantics["must_contain"]
+    assert "python -m pytest -q tests" in readme_semantics["must_contain"]
+    assert "python -m challenge_runtime.cli validate challenge_inputs/workflow_valid.json" in readme_semantics["must_contain"]
 
     verifier_contract = issues["CWR-12"].params["runtime_verifier"]
     assert verifier_contract["commands"] == [
@@ -290,10 +375,29 @@ def test_challenge_workflow_runtime_assets_load_from_repo() -> None:
             "argv": [
                 "python",
                 "-c",
-                "import json; from challenge_runtime.reporting import format_report; rendered = format_report({'ok': True}); payload = json.loads(rendered); print(json.dumps(payload))",
+                "import json; from challenge_runtime.reporting import format_report; rendered = format_report({'ok': True, 'cycle_policy': 'validation_rejects_cycle'}); payload = json.loads(rendered); print(json.dumps(payload))",
             ],
             "cwd": "agent_output",
         },
+        {
+            "argv": [
+                "python",
+                "-m",
+                "challenge_runtime.cli",
+                "validate",
+                "challenge_inputs/workflow_valid.json",
+            ],
+            "cwd": "agent_output",
+        },
+        {"argv": ["python", "main.py"], "cwd": "agent_output"},
         {"argv": ["python", "agent_output/main.py"], "cwd": "."},
     ]
-    assert verifier_contract["json_assertions"][0]["path"] == "validated_count"
+    assert verifier_contract["json_assertions"] == [
+        {"path": "validated_count", "op": "eq", "value": 2},
+        {"path": "layer_count", "op": "eq", "value": 3},
+        {"path": "dependency_cycle", "op": "eq", "value": True},
+        {"path": "cycle_policy", "op": "eq", "value": "validation_rejects_cycle"},
+        {"path": "cycle_fixture_result", "op": "eq", "value": "expected_rejection"},
+        {"path": "checkpoint_written", "op": "eq", "value": True},
+        {"path": "resumed_terminal_state", "op": "eq", "value": "completed"},
+    ]

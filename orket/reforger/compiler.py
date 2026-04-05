@@ -130,8 +130,21 @@ def _eval_truth_only(blob: dict[str, Any], scenario_pack: dict[str, Any]) -> dic
                     ok = False
                     detail = f"{sid} has empty templates"
                     break
+        elif kind == "refusal_templates_use_reason_code":
+            for sid in sorted(refusal_styles):
+                templates = refusal_styles[sid].get("templates")
+                if not isinstance(templates, list) or not any("refusal_reason:" in str(t) for t in templates):
+                    ok = False
+                    detail = f"{sid} missing refusal_reason token"
+                    break
         elif kind == "no_exclamation_rules":
+            defaults = blob.get("rules", {}).get("defaults", {})
+            if isinstance(defaults, dict) and bool(defaults.get("allow_exclamation", False)):
+                ok = False
+                detail = "rules.defaults.allow_exclamation=true"
             for aid in sorted(archetypes):
+                if not ok:
+                    break
                 rules = archetypes[aid].get("rules")
                 if isinstance(rules, dict) and bool(rules.get("allow_exclamation", False)):
                     ok = False

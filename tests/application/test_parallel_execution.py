@@ -7,6 +7,7 @@ import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.orchestration.engine import OrchestrationEngine
+from tests.turn_prompt_utils import extract_turn_prompt_context
 
 
 class ParallelDummyProvider(LocalModelProvider):
@@ -25,9 +26,9 @@ class ParallelDummyProvider(LocalModelProvider):
         # Artificial delay to simulate LLM latency and allow parallelism to be visible.
         await asyncio.sleep(0.5)
 
-        system_prompt = messages[0]["content"]
-
-        if "integrity_guard" in system_prompt.lower():
+        turn_context = extract_turn_prompt_context(messages)
+        active_role = str(turn_context.get("role") or "").strip().lower()
+        if active_role in {"integrity_guard", "verifier_seat"}:
             self.active_calls -= 1
             return ModelResponse(
                 content='```json\n{"tool": "update_issue_status", "args": {"status": "done"}}\n```',

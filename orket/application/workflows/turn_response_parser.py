@@ -69,6 +69,12 @@ class ResponseParser:
             content = envelope["content"]
         else:
             parsed_calls = ToolParser.parse(content, diagnostics=capture)
+            if not parsed_calls:
+                parsed_calls = self._parse_native_tool_calls(
+                    raw_payload,
+                    diagnostics=capture,
+                    allowed_tool_names=self._allowed_native_tool_names(context, raw_payload),
+                )
         if protocol_metadata:
             raw_payload.update(protocol_metadata)
         session_id = context.get("session_id", "unknown-session")
@@ -94,6 +100,14 @@ class ResponseParser:
             filename="tool_parser_diagnostics.json",
             content=json.dumps(parser_diag, indent=2, ensure_ascii=False),
         )
+        self.write_turn_artifact(
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            filename="parsed_tool_calls.json",
+            content=json.dumps(parsed_calls, indent=2, ensure_ascii=False),
+        )
 
         tool_calls = [
             ToolCall(
@@ -114,6 +128,82 @@ class ResponseParser:
             timestamp=datetime.now(UTC),
             raw=raw_payload,
         )
+
+    def _allowed_native_tool_names(self, context: dict[str, Any], raw_payload: dict[str, Any]) -> set[str]:
+        declared_native_tool_names = raw_payload.get("openai_native_tool_names")
+        if isinstance(declared_native_tool_names, list):
+            return {
+                str(item).strip()
+                for item in declared_native_tool_names
+                if str(item).strip()
+            }
+        verification_scope = context.get("verification_scope")
+        declared_interfaces = (
+            verification_scope.get("declared_interfaces")
+            if isinstance(verification_scope, dict)
+            else None
+        )
+        allowed = {
+            str(item).strip()
+            for item in (declared_interfaces or context.get("required_action_tools") or [])
+            if str(item).strip()
+        }
+        return allowed
+
+    def _parse_native_tool_calls(
+        self,
+        raw_payload: dict[str, Any],
+        *,
+        diagnostics: Callable[[str, dict[str, Any]], None],
+        allowed_tool_names: set[str] | None = None,
+    ) -> list[dict[str, Any]]:
+        native_calls = raw_payload.get("tool_calls")
+        if not isinstance(native_calls, list) or not native_calls:
+            return []
+        normalized: list[dict[str, Any]] = []
+        seen_signatures: set[str] = set()
+        for index, item in enumerate(native_calls):
+            if not isinstance(item, dict):
+                diagnostics("native_tool_call_skipped", {"index": index, "reason": "non_object"})
+                continue
+            function_payload = item.get("function")
+            if not isinstance(function_payload, dict):
+                diagnostics("native_tool_call_skipped", {"index": index, "reason": "missing_function"})
+                continue
+            tool_name = str(function_payload.get("name") or "").strip()
+            if not tool_name:
+                diagnostics("native_tool_call_skipped", {"index": index, "reason": "missing_name"})
+                continue
+            if allowed_tool_names and tool_name not in allowed_tool_names:
+                diagnostics(
+                    "native_tool_call_skipped",
+                    {"index": index, "reason": "undeclared_tool", "tool": tool_name},
+                )
+                continue
+            arguments = function_payload.get("arguments")
+            if isinstance(arguments, str):
+                try:
+                    arguments = json.loads(arguments)
+                except json.JSONDecodeError:
+                    diagnostics("native_tool_call_skipped", {"index": index, "reason": "invalid_arguments_json"})
+                    continue
+            if not isinstance(arguments, dict):
+                diagnostics("native_tool_call_skipped", {"index": index, "reason": "arguments_not_object"})
+                continue
+            if set(arguments.keys()) == {"args"} and isinstance(arguments.get("args"), dict):
+                arguments = dict(arguments["args"])
+            signature = json.dumps({"tool": tool_name, "args": arguments}, ensure_ascii=False, sort_keys=True)
+            if signature in seen_signatures:
+                diagnostics(
+                    "native_tool_call_skipped",
+                    {"index": index, "reason": "duplicate_tool_call", "tool": tool_name},
+                )
+                continue
+            seen_signatures.add(signature)
+            normalized.append({"tool": tool_name, "args": arguments})
+        if normalized:
+            diagnostics("native_tool_calls_success", {"tool_call_count": len(normalized)})
+        return normalized
 
     def _parse_strict_envelope(
         self,

@@ -373,4 +373,6 @@ def _contract_reasons(contract_violations: list[dict[str, Any]]) -> list[str]:
         for item in contract_violations
         if str(item.get("reason", "")).strip()
     ]
+
+
 __all__ = ["prepare_turn_for_execution"]

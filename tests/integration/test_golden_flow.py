@@ -5,6 +5,7 @@ from pathlib import Path
 from orket.orchestration.engine import OrchestrationEngine
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.schema import CardStatus
+from tests.turn_prompt_utils import extract_turn_prompt_context
 
 class GoldenFlowDummyProvider(LocalModelProvider):
     def __init__(self):
@@ -14,10 +15,11 @@ class GoldenFlowDummyProvider(LocalModelProvider):
 
     async def complete(self, messages):
         self.turns += 1
-        # messages[0] is system prompt
-        system_prompt = messages[0]["content"]
-        
-        if "CODE REVIEW" in system_prompt or "integrity_guard" in system_prompt.lower():
+        turn_context = extract_turn_prompt_context(messages)
+        active_role = str(turn_context.get("role") or "").strip().lower()
+        current_status = str(turn_context.get("current_status") or "").strip().lower()
+
+        if active_role in {"integrity_guard", "verifier_seat"} or current_status == "code_review":
             # Verifier turn: finalize the card
             return ModelResponse(
                 content='```json\n{"tool": "update_issue_status", "args": {"status": "done"}}\n```',
@@ -132,6 +134,7 @@ async def test_golden_flow(tmp_path, monkeypatch):
     def mock_init(self, *args, **kwargs):
         self.model = "dummy"
         self.timeout = 300
+    monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", dummy_provider.complete)
 
@@ -212,6 +215,7 @@ async def test_session_resumption(tmp_path, monkeypatch):
     def mock_init(self, *a, **k):
         self.model = "dummy"
         self.timeout = 300
+    monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", dummy_provider.complete)
 

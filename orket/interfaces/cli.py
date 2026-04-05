@@ -487,13 +487,23 @@ async def run_cli():
 
         if args.rock:
             print(f"Running Orket Card via legacy compatibility alias --rock: {args.rock}")
-            await engine.run_card(args.rock, build_id=args.build_id, driver_steered=args.driver_steered)
+            await engine.run_card(
+                args.rock,
+                build_id=args.build_id,
+                driver_steered=args.driver_steered,
+                model_override=args.model,
+            )
             print(f"\n=== Card {args.rock} Complete (legacy compatibility alias --rock) ===")
             return
 
         if args.card:
             print(f"Running Orket Card: {args.card}")
-            await engine.run_card(args.card, build_id=args.build_id, driver_steered=args.driver_steered)
+            await engine.run_card(
+                args.card,
+                build_id=args.build_id,
+                driver_steered=args.driver_steered,
+                model_override=args.model,
+            )
             return
 
         if not args.epic:
@@ -518,7 +528,11 @@ async def run_cli():
 
         print(f"Running Orket Epic: {args.epic}")
         transcript = await engine.run_epic(
-            args.epic, build_id=args.build_id, driver_steered=args.driver_steered, target_issue_id=args.resume
+            args.epic,
+            build_id=args.build_id,
+            driver_steered=args.driver_steered,
+            target_issue_id=args.resume,
+            model_override=args.model,
         )
         print("\n=== Orket EOS Run Complete ===")
         for entry in transcript:

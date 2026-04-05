@@ -15,6 +15,7 @@ def _role() -> RoleConfig:
 
 
 async def test_message_builder_includes_execution_context(tmp_path: Path) -> None:
+    """Layer: contract. Verifies builder emits one compact turn packet instead of stacked user contract blocks."""
     builder = MessageBuilder(tmp_path)
     context = {
         "issue_id": "ISSUE-1",
@@ -26,12 +27,19 @@ async def test_message_builder_includes_execution_context(tmp_path: Path) -> Non
         "history": [{"role": "user", "content": "prior"}],
     }
     messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
-    rendered = "\n".join(m["content"] for m in messages)
-    assert "Execution Context JSON" in rendered
-    assert "Write Path Contract" in rendered
+    assert [message["role"] for message in messages] == ["system", "user"]
+    assert "MODE: compact governed tool turn" in messages[0]["content"]
+    rendered = messages[1]["content"]
+    assert "TURN PACKET:" in rendered
+    assert "- required tools: write_file" in rendered
+    assert "- allowed statuses: done" in rendered
+    assert "- required write paths: agent_output/main.py" in rendered
+    assert "Execution Context JSON" not in rendered
+    assert "Write Path Contract:" not in rendered
 
 
 async def test_message_builder_serializes_history_as_user_block(tmp_path: Path) -> None:
+    """Layer: contract. Verifies prior transcript history is folded into the compact turn packet."""
     builder = MessageBuilder(tmp_path)
     context = {
         "issue_id": "ISSUE-1",
@@ -46,14 +54,14 @@ async def test_message_builder_serializes_history_as_user_block(tmp_path: Path) 
         ],
     }
     messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
-    history_messages = [m for m in messages if m.get("content", "").startswith("Prior Transcript JSON:\n")]
-    assert len(history_messages) == 1
-    assert history_messages[0]["role"] == "user"
-    assert '"actor": "coder"' in history_messages[0]["content"]
-    assert '"actor": "integrity_guard"' in history_messages[0]["content"]
+    rendered = messages[1]["content"]
+    assert "Prior Transcript JSON:" in rendered
+    assert '"actor": "coder"' in rendered
+    assert '"actor": "integrity_guard"' in rendered
 
 
 async def test_message_builder_adds_protocol_response_contract_when_governed(tmp_path: Path) -> None:
+    """Layer: contract. Verifies governed turns keep the response envelope inside the compact packet."""
     builder = MessageBuilder(tmp_path)
     context = {
         "issue_id": "ISSUE-1",
@@ -67,11 +75,10 @@ async def test_message_builder_adds_protocol_response_contract_when_governed(tmp
     }
 
     messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
-    protocol_messages = [m for m in messages if m.get("content", "").startswith("Protocol Response Contract:\n")]
-
-    assert len(protocol_messages) == 1
-    assert '"content":"","tool_calls"' in protocol_messages[0]["content"]
-    assert "Do not use markdown fences" in protocol_messages[0]["content"]
+    assert [message["role"] for message in messages] == ["system", "user"]
+    assert 'Response envelope: {"content":"","tool_calls":[...]}' in messages[0]["content"]
+    assert '- response shape: {"content":"","tool_calls":[...]}' in messages[1]["content"]
+    assert "Protocol Response Contract:" not in messages[1]["content"]
 
 
 async def test_message_builder_includes_issue_brief_fields(tmp_path: Path) -> None:
@@ -188,7 +195,7 @@ async def test_message_builder_includes_comment_contract_when_required(tmp_path:
     messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
-    assert "Comment Contract:" in rendered
+    assert "Review Comment Rules:" in rendered
     assert "240 characters" in rendered
     assert "Findings, Severity, Path, agent_output/requirements.txt" in rendered
     assert "Cite every required read path by exact path string" in rendered
@@ -223,7 +230,7 @@ async def test_message_builder_includes_runtime_verifier_contract_for_app_entryp
     messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
-    assert "Runtime Verifier Contract:" in rendered
+    assert "Runtime Verification:" in rendered
     assert "python agent_output/main.py" in rendered
     assert "no positional arguments" in rendered
     assert "do not use package-relative imports" in rendered
@@ -259,7 +266,7 @@ async def test_message_builder_includes_explicit_runtime_verifier_commands(tmp_p
     messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
-    assert "Runtime Verifier Contract:" in rendered
+    assert "Runtime Verification:" in rendered
     assert "cwd=agent_output: python -m pytest -q tests" in rendered
     assert "cwd=.: python agent_output/main.py" in rendered
     assert "stdout must print valid JSON" in rendered
@@ -297,7 +304,7 @@ async def test_message_builder_includes_runtime_verifier_contract_for_write_arti
     messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
-    assert "Runtime Verifier Contract:" in rendered
+    assert "Runtime Verification:" in rendered
     assert "cwd=agent_output: python -c print('artifact-proof')" in rendered
 
 
@@ -329,14 +336,339 @@ async def test_message_builder_includes_artifact_semantic_contract(tmp_path: Pat
     messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
-    assert "Artifact Semantic Contract:" in rendered
+    assert "Artifact Checks:" in rendered
+    assert "checked as an exact substring" in rendered
     assert "Path: agent_output/main.py" in rendered
     assert "Purpose: script entrypoint imports" in rendered
     assert "Must contain: from challenge_runtime" in rendered
     assert "Must not contain: from .challenge_runtime" in rendered
 
 
-async def test_message_builder_includes_multi_tool_sequence_contract_for_legacy_prompts(tmp_path: Path) -> None:
+async def test_message_builder_includes_artifact_exact_shape_hints_for_simulator_contract(tmp_path: Path) -> None:
+    builder = MessageBuilder(tmp_path)
+    context = {
+        "issue_id": "ISSUE-5C",
+        "role": "coder",
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["code_review"],
+        "required_read_paths": [],
+        "required_write_paths": ["agent_output/challenge_runtime/simulator.py"],
+        "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/challenge_runtime/simulator.py",
+            "required_write_paths": ["agent_output/challenge_runtime/simulator.py"],
+            "semantic_checks": [
+                {
+                    "path": "agent_output/challenge_runtime/simulator.py",
+                    "label": "deterministic simulator",
+                    "must_contain": [
+                        "for layer in layers",
+                        "ready_tasks = self.get_ready_tasks(layer)",
+                        "batch = ready_tasks[:self.workflow['max_concurrency']]",
+                        "self.run_task(task)",
+                        "task['retries'] + 1",
+                    ],
+                    "must_not_contain": [],
+                }
+            ],
+        },
+        "history": [],
+    }
+
+    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    rendered = "\n".join(m["content"] for m in messages)
+
+    assert "Exact Shape Hints:" in rendered
+    assert "Keep the planner loop in this exact layer-driven form" in rendered
+    assert "Do not replace layers with self.layers" in rendered
+
+
+async def test_message_builder_includes_artifact_exact_shape_hints_for_validator_contract(tmp_path: Path) -> None:
+    builder = MessageBuilder(tmp_path)
+    context = {
+        "issue_id": "ISSUE-5D",
+        "role": "coder",
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["code_review"],
+        "required_read_paths": [],
+        "required_write_paths": ["agent_output/tests/test_validator_and_planner.py"],
+        "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/tests/test_validator_and_planner.py",
+            "required_write_paths": ["agent_output/tests/test_validator_and_planner.py"],
+            "semantic_checks": [
+                {
+                    "path": "agent_output/tests/test_validator_and_planner.py",
+                    "label": "validator and planner tests use real fixture paths",
+                    "must_contain": [
+                        "Path(__file__).resolve().parents[1] / 'challenge_inputs' / 'workflow_cycle.json'",
+                        "Path(__file__).resolve().parents[1] / 'challenge_inputs' / 'workflow_valid.json'",
+                        "write_text(json.dumps(",
+                    ],
+                    "must_not_contain": ["tmp_path / 'workflow_valid.json'"],
+                }
+            ],
+        },
+        "history": [],
+    }
+
+    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    rendered = "\n".join(m["content"] for m in messages)
+
+    assert "Exact Shape Hints:" in rendered
+    assert "workflow_cycle_path = Path(__file__).resolve().parents[1] / 'challenge_inputs' / 'workflow_cycle.json'" in rendered
+    assert "Never create or validate tmp_path / 'workflow_valid.json'." in rendered
+
+
+async def test_message_builder_includes_artifact_import_hints_for_loader_contract(tmp_path: Path) -> None:
+    builder = MessageBuilder(tmp_path)
+    context = {
+        "issue_id": "ISSUE-5E",
+        "role": "coder",
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["code_review"],
+        "required_read_paths": [],
+        "required_write_paths": ["agent_output/challenge_runtime/loader.py"],
+        "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/challenge_runtime/loader.py",
+            "required_write_paths": ["agent_output/challenge_runtime/loader.py"],
+            "semantic_checks": [
+                {
+                    "path": "agent_output/challenge_runtime/loader.py",
+                    "label": "loader normalizes workflow json into mappings",
+                    "must_contain": [
+                        "from .models import TaskSpec, WorkflowSpec",
+                        "json.load(",
+                        "def load_workflow(path: str) -> WorkflowSpec:",
+                        "def normalize_task(raw_task) -> TaskSpec:",
+                        "'tasks': [normalize_task(task) for task in data['tasks']]",
+                    ],
+                    "must_not_contain": [
+                        "agent_output.challenge_runtime",
+                        "WorkflowSpec(**data)",
+                        "TaskSpec(**raw_task)",
+                    ],
+                }
+            ],
+        },
+        "history": [],
+    }
+
+    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    rendered = "\n".join(m["content"] for m in messages)
+
+    assert "Exact Shape Hints:" in rendered
+    assert "return {'workflow_id': data['workflow_id'], 'max_concurrency': data['max_concurrency'], 'tasks': [normalize_task(task) for task in data['tasks']]}" in rendered
+    assert "Do not call WorkflowSpec(**data) or TaskSpec(**raw_task)" in rendered
+
+
+async def test_message_builder_includes_artifact_shape_hints_for_models_contract(tmp_path: Path) -> None:
+    builder = MessageBuilder(tmp_path)
+    context = {
+        "issue_id": "ISSUE-5E0",
+        "role": "coder",
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["code_review"],
+        "required_read_paths": [],
+        "required_write_paths": ["agent_output/challenge_runtime/models.py"],
+        "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/challenge_runtime/models.py",
+            "required_write_paths": ["agent_output/challenge_runtime/models.py"],
+            "semantic_checks": [
+                {
+                    "path": "agent_output/challenge_runtime/models.py",
+                    "label": "models define separated typed schema maps",
+                    "must_contain": [
+                        "from typing import List, TypedDict",
+                        "class TaskSpec(TypedDict):",
+                        "class WorkflowSpec(TypedDict):",
+                        "tasks: List[TaskSpec]",
+                    ],
+                    "must_not_contain": ["@dataclass"],
+                }
+            ],
+        },
+        "history": [],
+    }
+
+    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    rendered = "\n".join(m["content"] for m in messages)
+
+    assert "Exact Shape Hints:" in rendered
+    assert "TaskSpec limited to task-level fields only" in rendered
+    assert "WorkflowSpec limited to root-level fields only" in rendered
+
+
+async def test_message_builder_includes_artifact_export_hints_for_package_init_contract(tmp_path: Path) -> None:
+    builder = MessageBuilder(tmp_path)
+    context = {
+        "issue_id": "ISSUE-5E1",
+        "role": "coder",
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["code_review"],
+        "required_read_paths": [],
+        "required_write_paths": ["agent_output/challenge_runtime/__init__.py"],
+        "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/challenge_runtime/__init__.py",
+            "required_write_paths": ["agent_output/challenge_runtime/__init__.py"],
+            "semantic_checks": [
+                {
+                    "path": "agent_output/challenge_runtime/__init__.py",
+                    "label": "package exports",
+                    "must_contain": [
+                        "from .models import TaskSpec, WorkflowSpec",
+                        "from .loader import load_workflow, normalize_task",
+                    ],
+                    "must_not_contain": [],
+                }
+            ],
+        },
+        "history": [],
+    }
+
+    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    rendered = "\n".join(m["content"] for m in messages)
+
+    assert "Exact Shape Hints:" in rendered
+    assert "Do not leave challenge_runtime/__init__.py empty." in rendered
+    assert "from .loader import load_workflow, normalize_task" in rendered
+
+
+async def test_message_builder_includes_artifact_import_hints_for_validator_contract(tmp_path: Path) -> None:
+    builder = MessageBuilder(tmp_path)
+    context = {
+        "issue_id": "ISSUE-5F",
+        "role": "coder",
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["code_review"],
+        "required_read_paths": [],
+        "required_write_paths": ["agent_output/challenge_runtime/validator.py"],
+        "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/challenge_runtime/validator.py",
+            "required_write_paths": ["agent_output/challenge_runtime/validator.py"],
+            "semantic_checks": [
+                {
+                    "path": "agent_output/challenge_runtime/validator.py",
+                    "label": "validator schema and error codes",
+                    "must_contain": [
+                        "def validate_workflow(path: str)",
+                        "from .loader import load_workflow",
+                        "from .models import WorkflowSpec, TaskSpec",
+                        "load_workflow(path)",
+                    ],
+                    "must_not_contain": ["agent_output.challenge_runtime"],
+                }
+            ],
+        },
+        "history": [],
+    }
+
+    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    rendered = "\n".join(m["content"] for m in messages)
+
+    assert "Exact Shape Hints:" in rendered
+    assert "from .loader import load_workflow" in rendered
+    assert "Never import through agent_output.challenge_runtime" in rendered
+
+
+async def test_message_builder_includes_artifact_order_hints_for_planner_contract(tmp_path: Path) -> None:
+    builder = MessageBuilder(tmp_path)
+    context = {
+        "issue_id": "ISSUE-5G",
+        "role": "coder",
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["code_review"],
+        "required_read_paths": [],
+        "required_write_paths": ["agent_output/challenge_runtime/planner.py"],
+        "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/challenge_runtime/planner.py",
+            "required_write_paths": ["agent_output/challenge_runtime/planner.py"],
+            "semantic_checks": [
+                {
+                    "path": "agent_output/challenge_runtime/planner.py",
+                    "label": "planner imports and surface",
+                    "must_contain": [
+                        "task_ids = [task['id'] for task in workflow['tasks']]",
+                        "zero_in_degree = [task_id for task_id in task_ids if in_degree[task_id] == 0]",
+                        "for task_id in current_layer",
+                        "adjacency_list[dep].append(task['id'])",
+                        "in_degree[task['id']] += 1",
+                    ],
+                    "must_not_contain": ["for task_id in task_ids:"],
+                }
+            ],
+        },
+        "history": [],
+    }
+
+    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    rendered = "\n".join(m["content"] for m in messages)
+
+    assert "Exact Shape Hints:" in rendered
+    assert "Compute zero_in_degree only after that dependency scan" in rendered
+    assert "do not place every task in the first layer" in rendered
+
+
+async def test_message_builder_includes_artifact_shape_hints_for_simulator_resume_tests(tmp_path: Path) -> None:
+    builder = MessageBuilder(tmp_path)
+    context = {
+        "issue_id": "ISSUE-5H",
+        "role": "coder",
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["code_review"],
+        "required_read_paths": [],
+        "required_write_paths": ["agent_output/tests/test_simulator_and_resume.py"],
+        "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/tests/test_simulator_and_resume.py",
+            "required_write_paths": ["agent_output/tests/test_simulator_and_resume.py"],
+            "semantic_checks": [
+                {
+                    "path": "agent_output/tests/test_simulator_and_resume.py",
+                    "label": "simulator tests use admitted proof surface",
+                    "must_contain": [
+                        "def test_simulator_and_resume(tmp_path):",
+                        "from challenge_runtime.simulator import Simulator",
+                        "from challenge_runtime.checkpoint import save_checkpoint, load_checkpoint, resume_simulation",
+                        "Path(__file__).resolve().parents[1] / 'challenge_inputs' / 'workflow_retry.json'",
+                        "artifact_root = Path(__file__).resolve().parents[1] / 'challenge_artifacts'",
+                        "checkpoint_path = artifact_root / 'retry_checkpoint.json'",
+                        "resumed_terminal_state == 'completed'",
+                        "resumed_again_terminal_state == 'completed'",
+                        "tmp_path / 'workflow_dependency_gating.json'",
+                        "write_text(json.dumps(",
+                    ],
+                    "must_not_contain": [
+                        "checkpoint_path = tmp_path /",
+                        "tmp_path = Path(__file__).resolve().parents[1] / 'tmp'",
+                        "from challenge_runtime.simulator import Simulator, save_checkpoint, load_checkpoint, resume_simulation",
+                    ],
+                }
+            ],
+        },
+        "history": [],
+    }
+
+    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    rendered = "\n".join(m["content"] for m in messages)
+
+    assert "Exact Shape Hints:" in rendered
+    assert "def test_simulator_and_resume(tmp_path):" in rendered
+    assert "from challenge_runtime.checkpoint import save_checkpoint, load_checkpoint, resume_simulation" in rendered
+    assert "workflow_retry_path = Path(__file__).resolve().parents[1] / 'challenge_inputs' / 'workflow_retry.json'" in rendered
+    assert "resumed_terminal_state = resumed.terminal_state" in rendered
+    assert "'id': 'upstream'" in rendered
+    assert "'retries': 0" in rendered
+    assert "dependency_gating_path = tmp_path / 'workflow_dependency_gating.json'" in rendered
+    assert "Do not invent a repo-local tmp directory" in rendered
+
+
+async def test_message_builder_includes_single_envelope_contract_for_legacy_multi_tool_turns(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
         "issue_id": "ISSUE-5A",
@@ -351,7 +683,10 @@ async def test_message_builder_includes_multi_tool_sequence_contract_for_legacy_
     messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
-    assert "Emit multiple top-level JSON tool objects in sequence" in rendered
+    assert "Return exactly one JSON object." in rendered
+    assert 'Response envelope: {"content":"","tool_calls":[...]}' in rendered
+    assert '- response shape: {"content":"","tool_calls":[...]}' in rendered
+    assert "You must include all required tool calls in this same response." in rendered
 
 
 async def test_message_builder_suppresses_builder_contracts_for_review_comment_profile(tmp_path: Path) -> None:
@@ -392,8 +727,8 @@ async def test_message_builder_suppresses_builder_contracts_for_review_comment_p
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Artifact Contract JSON:" not in rendered
-    assert "Runtime Verifier Contract:" not in rendered
-    assert "Scenario Truth Contract:" in rendered
+    assert "Runtime Verification:" not in rendered
+    assert "Scenario Constraints:" in rendered
     assert "role_matrix_soak_v1" in rendered
     assert "RMS-22" in rendered
 

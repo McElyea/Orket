@@ -495,7 +495,7 @@ class RuntimeVerifier:
         if not expect_json_stdout and not json_assertions:
             return
         if not command_results:
-            failure_breakdown["command_failed"] = failure_breakdown.get("command_failed", 0) + 1
+            failure_breakdown["stdout_contract_missing"] = failure_breakdown.get("stdout_contract_missing", 0) + 1
             errors.append("runtime stdout contract requested but no runtime commands were executed")
             return
 
@@ -507,8 +507,10 @@ class RuntimeVerifier:
         try:
             parsed = json.loads(stdout)
         except json.JSONDecodeError as exc:
-            failure_breakdown["command_failed"] = failure_breakdown.get("command_failed", 0) + 1
+            failure_breakdown["stdout_json_parse_failed"] = failure_breakdown.get("stdout_json_parse_failed", 0) + 1
             errors.append(f"runtime stdout JSON parse failed: {exc.msg}")
+            last_result["outcome"] = "fail"
+            last_result["failure_class"] = "stdout_json_parse_failed"
             last_result["stdout_contract_ok"] = False
             last_result["stdout_contract_error"] = "json_parse_failed"
             return
@@ -516,8 +518,10 @@ class RuntimeVerifier:
         last_result["stdout_json"] = parsed
         assertion_failures = self._json_assertion_failures(parsed, json_assertions)
         if assertion_failures:
-            failure_breakdown["command_failed"] = failure_breakdown.get("command_failed", 0) + 1
+            failure_breakdown["stdout_assertion_failed"] = failure_breakdown.get("stdout_assertion_failed", 0) + 1
             errors.extend(assertion_failures)
+            last_result["outcome"] = "fail"
+            last_result["failure_class"] = "stdout_assertion_failed"
             last_result["stdout_contract_ok"] = False
             last_result["stdout_assertion_failures"] = assertion_failures
             return

@@ -32,6 +32,7 @@
         },
         "allows_thinking_blocks": false,
         "thinking_block_format": "none",
+        "intro_phrase_denylist": ["sure", "here is", "here's", "i will", "i'll", "thinking process:", "let me"],
         "sampling_bundles": {
           "strict_json": {
             "temperature": 0.0,
@@ -239,6 +240,7 @@
         },
         "allows_thinking_blocks": false,
         "thinking_block_format": "none",
+        "intro_phrase_denylist": ["sure", "here is", "here's", "i will", "i'll", "thinking process:", "let me"],
         "sampling_bundles": {
           "strict_json": {
             "temperature": 0.0,
@@ -326,6 +328,75 @@
             "max_output_tokens": 512,
             "seed_policy": "fixed",
             "seed_value": 53
+          },
+          "concise_text": {
+            "temperature": 0.2,
+            "top_p": 0.9,
+            "top_k": 40,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 768,
+            "seed_policy": "provider_default"
+          },
+          "reasoning": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 60,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 1024,
+            "seed_policy": "provider_default"
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai_compat",
+      "match": {
+        "model_contains": ["gemma"]
+      },
+      "profile": {
+        "profile_id": "openai_compat.gemma.openai_messages.v1",
+        "template_family": "openai_messages",
+        "template_variant": "openai_chat",
+        "template_source": "runtime_metadata",
+        "template_version": "openai_chat_2026_03",
+        "allowed_roles": ["system", "user", "assistant", "tool"],
+        "system_prompt_mode": "native",
+        "context_budget_tokens": 3600,
+        "history_policy": "bounded_head_tail_v1",
+        "stop_sequences_by_task_class": {
+          "strict_json": ["<|json_end|>"],
+          "tool_call": ["<|tool_end|>"],
+          "concise_text": ["</s>"],
+          "reasoning": ["</s>"]
+        },
+        "supports_assistant_prefill": false,
+        "prefill_strategy": "none",
+        "tool_call_mode": "native",
+        "tool_contract": {
+          "tool_manifest_injection": "system",
+          "tool_call_schema": "tool_call.v1",
+          "tool_result_role": "tool"
+        },
+        "allows_thinking_blocks": false,
+        "thinking_block_format": "none",
+        "sampling_bundles": {
+          "strict_json": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 67
+          },
+          "tool_call": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 71
           },
           "concise_text": {
             "temperature": 0.2,

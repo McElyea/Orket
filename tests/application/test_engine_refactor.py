@@ -17,8 +17,16 @@ class _FakePipeline:
         self.calls.append(("run_issue", issue_id, build_id, session_id, driver_steered))
         return {}
 
-    async def run_card(self, card_id, build_id=None, session_id=None, driver_steered=False, target_issue_id=None):
-        self.calls.append(("run_card", card_id, build_id, session_id, driver_steered, target_issue_id))
+    async def run_card(
+        self,
+        card_id,
+        build_id=None,
+        session_id=None,
+        driver_steered=False,
+        target_issue_id=None,
+        model_override=None,
+    ):
+        self.calls.append(("run_card", card_id, build_id, session_id, driver_steered, target_issue_id, model_override))
         return []
 
 
@@ -79,9 +87,9 @@ async def test_engine_explicit_calls(monkeypatch):
     await engine.run_issue("my-issue")
     await engine.run_rock("my-rock")
 
-    assert ("run_card", "my-epic", None, None, False, "ISSUE-1") in fake_pipeline.calls
-    assert ("run_card", "my-issue", None, None, False, None) in fake_pipeline.calls
-    assert ("run_card", "my-rock", None, None, False, None) in fake_pipeline.calls
+    assert ("run_card", "my-epic", None, None, False, "ISSUE-1", None) in fake_pipeline.calls
+    assert ("run_card", "my-issue", None, None, False, None, None) in fake_pipeline.calls
+    assert ("run_card", "my-rock", None, None, False, None, None) in fake_pipeline.calls
     assert not any(call[0] == "run_epic" for call in fake_pipeline.calls)
     assert not any(call[0] == "run_issue" for call in fake_pipeline.calls)
     assert not any(call[0] == "run_rock" for call in fake_pipeline.calls)
@@ -101,7 +109,24 @@ async def test_engine_run_card_is_canonical_public_surface(monkeypatch):
 
     await engine.run_card("some-card", target_issue_id="I1")
 
-    assert ("run_card", "some-card", None, None, False, "I1") in fake_pipeline.calls
+    assert ("run_card", "some-card", None, None, False, "I1", None) in fake_pipeline.calls
+
+
+@pytest.mark.asyncio
+async def test_engine_run_card_forwards_model_override(monkeypatch):
+    """Layer: unit. Verifies card execution preserves an explicit model override for downstream runtime selection."""
+    workspace = Path("./test_workspace")
+    fake_pipeline = _FakePipeline()
+
+    monkeypatch.setattr("orket.settings.load_env", lambda: None)
+    monkeypatch.setattr("orket.orket.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.orket.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
+
+    engine = OrchestrationEngine(workspace)
+
+    await engine.run_card("some-card", model_override="google/gemma-4-26b-a4b")
+
+    assert ("run_card", "some-card", None, None, False, None, "google/gemma-4-26b-a4b") in fake_pipeline.calls
 
 
 def test_engine_replay_turn_reads_artifacts(monkeypatch, tmp_path):

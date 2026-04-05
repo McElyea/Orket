@@ -172,6 +172,77 @@ async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: 
 
 
 @pytest.mark.asyncio
+async def test_local_model_provider_collapses_adjacent_user_blocks_for_gemma_requests(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies Gemma LM Studio requests compact verbose governed packets before submission."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="google/gemma-4-26b-a4b")
+
+    async def _fake_resolve(**kwargs: Any) -> ProviderRuntimeTarget:
+        _ = kwargs
+        return ProviderRuntimeTarget(
+            requested_provider="lmstudio",
+            canonical_provider="openai_compat",
+            requested_model="google/gemma-4-26b-a4b",
+            model_id="google/gemma-4-26b-a4b",
+            base_url="http://127.0.0.1:1234/v1",
+            resolution_mode="requested",
+            inventory_source="test",
+            available_models=("google/gemma-4-26b-a4b",),
+            loaded_models_before=("google/gemma-4-26b-a4b",),
+            loaded_models_after=("google/gemma-4-26b-a4b",),
+            auto_load_attempted=False,
+            auto_load_performed=False,
+            status="OK",
+        )
+
+    monkeypatch.setattr(
+        "orket.adapters.llm.local_model_provider_runtime_target.resolve_provider_runtime_target",
+        _fake_resolve,
+    )
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content.decode("utf-8"))
+        assert [message["role"] for message in payload["messages"]] == ["system", "user"]
+        assert "MODE: compact governed tool turn" in payload["messages"][0]["content"]
+        assert "ALLOWED TOOLS:" not in payload["messages"][0]["content"]
+        assert "TURN PACKET:" in payload["messages"][1]["content"]
+        assert "Issue CWR-01" in payload["messages"][1]["content"]
+        assert "Execution Context JSON:\n{}" not in payload["messages"][1]["content"]
+        assert "Guard Decision Contract:" not in payload["messages"][1]["content"]
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-gemma-shape",
+                "choices": [{"message": {"role": "assistant", "content": "ok"}}],
+                "usage": {"prompt_tokens": 9, "completion_tokens": 2, "total_tokens": 11},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    response = await provider.complete(
+        [
+            {"role": "system", "content": "IDENTITY: integrity_guard"},
+            {"role": "user", "content": "Issue CWR-01"},
+            {"role": "user", "content": "Execution Context JSON:\n{}"},
+            {"role": "user", "content": "Guard Decision Contract:\n- Do not emit blocked for this turn."},
+        ],
+        runtime_context={"local_prompt_task_class": "tool_call"},
+    )
+    await provider.close()
+
+    assert response.raw["openai_request_message_count"] == 2
+    assert response.raw["openai_request_role_sequence"] == ["system", "user"]
+    assert response.raw["openai_request_role_counts"] == {"system": 1, "user": 1}
+    assert "message_packet_compacted:gemma_tool_turn_v1:4->2" in response.raw["local_prompting_warnings"]
+
+
+@pytest.mark.asyncio
 async def test_local_model_provider_honors_bench_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
@@ -367,6 +438,365 @@ async def test_local_model_provider_applies_local_prompt_profile_overrides(monke
 
 
 @pytest.mark.asyncio
+async def test_local_model_provider_uses_native_write_tool_for_gemma_write_turns(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="google/gemma-4-26b-a4b")
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content.decode("utf-8"))
+        assert payload["tool_choice"] == "required"
+        assert payload["reasoning_effort"] == "none"
+        assert len(payload["tools"]) == 1
+        tool = payload["tools"][0]["function"]
+        assert tool["name"] == "write_file"
+        assert tool["parameters"]["properties"]["path"]["enum"] == ["agent_output/requirements.txt"]
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-native-tool",
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "",
+                            "tool_calls": [
+                                {
+                                    "id": "call_1",
+                                    "type": "function",
+                                    "function": {
+                                        "name": "write_file",
+                                        "arguments": (
+                                            '{"path":"agent_output/requirements.txt","content":"workflow_id"}'
+                                        ),
+                                    },
+                                }
+                            ],
+                        }
+                    }
+                ],
+                "usage": {"prompt_tokens": 7, "completion_tokens": 3, "total_tokens": 10},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    response = await provider.complete(
+        [{"role": "user", "content": "write the required file"}],
+        runtime_context={
+            "required_action_tools": ["write_file", "update_issue_status"],
+            "required_write_paths": ["agent_output/requirements.txt"],
+        },
+    )
+    await provider.close()
+
+    assert response.raw["openai_native_tool_names"] == ["write_file"]
+    assert response.raw["openai_tool_choice"] == "required"
+    assert response.raw["openai_native_payload_overrides"] == {"reasoning_effort": "none"}
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_uses_native_read_tool_for_gemma_guard_turns(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies Gemma guard turns expose only the bounded native read tool."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="google/gemma-4-26b-a4b")
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content.decode("utf-8"))
+        assert payload["tool_choice"] == "required"
+        assert payload["reasoning_effort"] == "none"
+        assert len(payload["tools"]) == 1
+        tool = payload["tools"][0]["function"]
+        assert tool["name"] == "read_file"
+        assert tool["parameters"]["properties"]["path"]["enum"] == ["agent_output/requirements.txt"]
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-native-read",
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "",
+                            "tool_calls": [
+                                {
+                                    "id": "call_1",
+                                    "type": "function",
+                                    "function": {
+                                        "name": "read_file",
+                                        "arguments": '{"path":"agent_output/requirements.txt"}',
+                                    },
+                                }
+                            ],
+                        }
+                    }
+                ],
+                "usage": {"prompt_tokens": 7, "completion_tokens": 3, "total_tokens": 10},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    response = await provider.complete(
+        [{"role": "user", "content": "read the required file"}],
+        runtime_context={
+            "required_action_tools": ["read_file", "update_issue_status"],
+            "required_read_paths": ["agent_output/requirements.txt"],
+            "required_statuses": ["done"],
+        },
+    )
+    await provider.close()
+
+    assert response.raw["openai_native_tool_names"] == ["read_file"]
+    assert response.raw["openai_tool_choice"] == "required"
+    assert response.raw["openai_native_payload_overrides"] == {"reasoning_effort": "none"}
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_uses_native_read_and_write_tools_for_gemma_mixed_turns(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies mixed Gemma turns expose only the admitted native read/write tools."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="google/gemma-4-26b-a4b")
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content.decode("utf-8"))
+        assert payload["tool_choice"] == "required"
+        assert payload["reasoning_effort"] == "none"
+        assert [tool["function"]["name"] for tool in payload["tools"]] == ["read_file", "write_file"]
+        assert payload["tools"][0]["function"]["parameters"]["properties"]["path"]["enum"] == [
+            "agent_output/requirements.txt"
+        ]
+        assert payload["tools"][1]["function"]["parameters"]["properties"]["path"]["enum"] == [
+            "agent_output/design.txt"
+        ]
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-native-mixed",
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "",
+                            "tool_calls": [
+                                {
+                                    "id": "call_1",
+                                    "type": "function",
+                                    "function": {
+                                        "name": "read_file",
+                                        "arguments": '{"path":"agent_output/requirements.txt"}',
+                                    },
+                                },
+                                {
+                                    "id": "call_2",
+                                    "type": "function",
+                                    "function": {
+                                        "name": "write_file",
+                                        "arguments": (
+                                            '{"path":"agent_output/design.txt","content":"{\\"modules\\": []}"}'
+                                        ),
+                                    },
+                                },
+                            ],
+                        }
+                    }
+                ],
+                "usage": {"prompt_tokens": 7, "completion_tokens": 3, "total_tokens": 10},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    response = await provider.complete(
+        [{"role": "user", "content": "read then write"}],
+        runtime_context={
+            "required_action_tools": ["read_file", "write_file", "update_issue_status"],
+            "required_read_paths": ["agent_output/requirements.txt"],
+            "required_write_paths": ["agent_output/design.txt"],
+            "required_statuses": ["code_review"],
+        },
+    )
+    await provider.close()
+
+    assert response.raw["openai_native_tool_names"] == ["read_file", "write_file"]
+    assert response.raw["openai_tool_choice"] == "required"
+    assert response.raw["openai_native_payload_overrides"] == {"reasoning_effort": "none"}
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_uses_native_read_tool_for_gemma_guard_turns_from_scope_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies Gemma guard turns recover bounded read paths from scope fallback surfaces."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="google/gemma-4-26b-a4b")
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content.decode("utf-8"))
+        assert payload["tool_choice"] == "required"
+        assert payload["reasoning_effort"] == "none"
+        assert [tool["function"]["name"] for tool in payload["tools"]] == ["read_file"]
+        assert payload["tools"][0]["function"]["parameters"]["properties"]["path"]["enum"] == [
+            "agent_output/requirements.txt"
+        ]
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-native-guard-fallback",
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "",
+                            "tool_calls": [
+                                {
+                                    "id": "call_1",
+                                    "type": "function",
+                                    "function": {
+                                        "name": "read_file",
+                                        "arguments": '{"path":"agent_output/requirements.txt"}',
+                                    },
+                                }
+                            ],
+                        }
+                    }
+                ],
+                "usage": {"prompt_tokens": 7, "completion_tokens": 3, "total_tokens": 10},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    response = await provider.complete(
+        [{"role": "user", "content": "verify the required file"}],
+        runtime_context={
+            "required_statuses": ["done"],
+            "artifact_contract": {
+                "review_read_paths": ["agent_output/requirements.txt"],
+            },
+            "verification_scope": {
+                "declared_interfaces": ["read_file", "update_issue_status"],
+                "active_context": ["agent_output/requirements.txt"],
+            },
+        },
+    )
+    await provider.close()
+
+    assert response.raw["openai_native_tool_names"] == ["read_file"]
+    assert response.raw["openai_tool_choice"] == "required"
+    assert response.raw["openai_native_payload_overrides"] == {"reasoning_effort": "none"}
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_uses_explicit_native_tool_contract_for_openai_compat(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies explicit native tool contracts can drive FunctionGemma-style OpenAI-compatible turns."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="functiongemma-270m-it")
+
+    async def _fake_resolve(**kwargs: Any) -> ProviderRuntimeTarget:
+        _ = kwargs
+        return ProviderRuntimeTarget(
+            requested_provider="lmstudio",
+            canonical_provider="openai_compat",
+            requested_model="functiongemma-270m-it",
+            model_id="functiongemma-270m-it",
+            base_url="http://127.0.0.1:1234/v1",
+            resolution_mode="requested_loaded",
+            inventory_source="test",
+            available_models=("functiongemma-270m-it",),
+            loaded_models_before=("functiongemma-270m-it",),
+            loaded_models_after=("functiongemma-270m-it",),
+            auto_load_attempted=False,
+            auto_load_performed=False,
+            status="OK",
+        )
+
+    monkeypatch.setattr(
+        "orket.adapters.llm.local_model_provider_runtime_target.resolve_provider_runtime_target",
+        _fake_resolve,
+    )
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content.decode("utf-8"))
+        assert payload["tool_choice"] == "required"
+        assert payload["reasoning_effort"] == "none"
+        assert [tool["function"]["name"] for tool in payload["tools"]] == ["emit_judgment"]
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-functiongemma-tool",
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "",
+                            "tool_calls": [
+                                {
+                                    "id": "call_1",
+                                    "type": "function",
+                                    "function": {
+                                        "name": "emit_judgment",
+                                        "arguments": '{"verdict":"pass","tool_selection":"pass","argument_presence":"pass","argument_shape":"pass","extra_undeclared_tool_calls":"pass","malformed_output_shape":"pass","rationale":"ok"}',
+                                    },
+                                }
+                            ],
+                        }
+                    }
+                ],
+                "usage": {"prompt_tokens": 7, "completion_tokens": 3, "total_tokens": 10},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    response = await provider.complete(
+        [{"role": "user", "content": "Judge this turn"}],
+        runtime_context={
+            "local_prompt_task_class": "strict_json",
+            "native_tools": [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "emit_judgment",
+                        "description": "Emit one advisory judgment.",
+                        "parameters": {"type": "object", "properties": {}, "required": []},
+                    },
+                }
+            ],
+            "native_tool_choice": "required",
+            "native_payload_overrides": {"reasoning_effort": "none"},
+        },
+    )
+    await provider.close()
+
+    assert response.raw["openai_native_tool_names"] == ["emit_judgment"]
+    assert response.raw["openai_tool_choice"] == "required"
+    assert response.raw["tool_calls"][0]["function"]["name"] == "emit_judgment"
+
+
+@pytest.mark.asyncio
 async def test_local_model_provider_ollama_strict_tasks_request_json_format(monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: contract. Verifies Ollama strict_json turns request provider JSON mode."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
@@ -397,10 +827,10 @@ async def test_local_model_provider_ollama_strict_tasks_request_json_format(monk
 
 
 @pytest.mark.asyncio
-async def test_local_model_provider_ollama_legacy_tool_call_turns_do_not_request_json_format(
+async def test_local_model_provider_ollama_tool_call_turns_request_json_format(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Layer: contract. Verifies legacy tool_call turns leave Ollama response format unconstrained for multi-call output."""
+    """Layer: contract. Verifies tool_call turns request provider JSON mode for the single-envelope contract."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
     monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
     provider = LocalModelProvider(model="qwen2.5-coder:7b")
@@ -412,8 +842,10 @@ async def test_local_model_provider_ollama_legacy_tool_call_turns_do_not_request
             return {
                 "message": {
                     "content": (
-                        '{"tool":"read_file","args":{"path":"agent_output/requirements.txt"}}\n'
-                        '{"tool":"read_file","args":{"path":"agent_output/main.py"}}'
+                        '{"content":"","tool_calls":['
+                        '{"tool":"read_file","args":{"path":"agent_output/requirements.txt"}},'
+                        '{"tool":"update_issue_status","args":{"status":"code_review"}}'
+                        ']}'
                     )
                 },
                 "prompt_eval_count": 4,
@@ -428,9 +860,77 @@ async def test_local_model_provider_ollama_legacy_tool_call_turns_do_not_request
         [{"role": "user", "content": "Return required tool calls"}],
         runtime_context={"required_action_tools": ["read_file", "update_issue_status"]},
     )
-    assert seen["format"] is None
-    assert response.raw["ollama_request_format"] is None
+    assert seen["format"] == "json"
+    assert response.raw["ollama_request_format"] == "json"
     assert response.raw["task_class"] == "tool_call"
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_ollama_uses_explicit_native_tools_without_forcing_json_format(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies explicit native tools bypass Ollama format=json and capture provider tool calls."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
+    monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
+    provider = LocalModelProvider(model="qwen2.5-coder:7b")
+    seen: dict[str, Any] = {}
+
+    class _CaptureClient:
+        async def chat(self, model, messages, options, format=None, tools=None):  # type: ignore[no-untyped-def]
+            seen["format"] = format
+            seen["tools"] = tools
+            return {
+                "message": {
+                    "content": "",
+                    "tool_calls": [
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "emit_judgment",
+                                "arguments": {
+                                    "verdict": "pass",
+                                    "tool_selection": "pass",
+                                    "argument_presence": "pass",
+                                    "argument_shape": "pass",
+                                    "extra_undeclared_tool_calls": "pass",
+                                    "malformed_output_shape": "pass",
+                                    "rationale": "ok",
+                                },
+                            },
+                        }
+                    ],
+                },
+                "prompt_eval_count": 4,
+                "eval_count": 2,
+                "prompt_eval_duration": 100_000_000,
+                "eval_duration": 90_000_000,
+                "total_duration": 210_000_000,
+            }
+
+    provider.client = _CaptureClient()
+    response = await provider.complete(
+        [{"role": "user", "content": "Judge this turn"}],
+        runtime_context={
+            "local_prompt_task_class": "strict_json",
+            "native_tools": [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "emit_judgment",
+                        "description": "Emit one advisory judgment.",
+                        "parameters": {"type": "object", "properties": {}, "required": []},
+                    },
+                }
+            ],
+            "native_tool_choice": "required",
+        },
+    )
+
+    assert seen["format"] is None
+    assert [tool["function"]["name"] for tool in seen["tools"]] == ["emit_judgment"]
+    assert response.raw["ollama_request_format"] is None
+    assert response.raw["ollama_native_tool_names"] == ["emit_judgment"]
+    assert response.raw["tool_calls"][0]["function"]["name"] == "emit_judgment"
 
 
 @pytest.mark.asyncio

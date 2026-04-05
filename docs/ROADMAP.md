@@ -1,12 +1,11 @@
 # Orket Roadmap
 
-Last updated: 2026-04-03
+Last updated: 2026-04-04
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
-
-1. None. Active non-recurring lanes are closed; standing recurring maintenance continues below.
+No active non-maintenance lane.
 
 ## Maintenance (Non-Priority)
 
@@ -15,6 +14,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 ## Paused / Checkpointed Lanes
 
 1. ControlPlane convergence -- Paused after a truthful partial-convergence checkpoint. Authority: `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`. Reopen only for authority drift bugs, proof failures, same-change doc sync required by touched runtime slices, or an explicitly reopened convergence packet or roadmap lane.
+2. Prompt Reforger Gemma tool-use lane -- Paused after the truthful 2026-04-04 portability checkpoint. Authority: `docs/projects/PromptReforgerToolCompatibility/PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md`. Reopen only for a bounded change set that clears the frozen portability corpus, with same-change rerun of the canonical inventory, cycle, and judge artifacts.
 
 ## Staged / Waiting (Externally Gated)
 
@@ -34,5 +34,6 @@ Every non-archive project under `docs/projects/` must appear here.
 |---|---|---|---|---|---|
 | ControlPlane | paused-checkpoint | paused | `docs/projects/ControlPlane/` | Orket Core | Control-plane packet requirements remain active scoped requirements authority; `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md` is the paused partial-convergence checkpoint and explicit-reopen authority; reopen only for authority drift bugs, proof failures, same-change doc sync required by touched runtime slices, or an explicitly reopened convergence packet or roadmap lane; prior packet-v2 implementation lane remains archived at `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md` with closeout in `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`. |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
-| techdebt | maintenance only | P2-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance continues through `Recurring-Maintenance-Checklist.md` and `README.md`. |
+| PromptReforgerToolCompatibility | paused-checkpoint | paused | `docs/projects/PromptReforgerToolCompatibility/` | Orket Core | Paused after the truthful 2026-04-04 portability checkpoint. `PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; the FunctionGemma judge blocker is now cleared through the admitted native-tool path, keep Prompt Reforger service truth in `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`, keep Gemma 4 deferred, and keep Qwen out of the core lane unless a later explicit cross-family baseline is requested. |
+| techdebt | standing maintenance | P2-recurring | `docs/projects/techdebt/` | Orket Core | Standing recurring maintenance only through `Recurring-Maintenance-Checklist.md` and `README.md`; no active non-recurring techdebt cycle is currently open. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane. |

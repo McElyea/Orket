@@ -342,13 +342,15 @@ class ExecutionPipeline:
             {"card_id": issue_id, "parent_epic": parent_ename},
             workspace=self.workspace,
         )
+        forwarded_kwargs = dict(kwargs)
+        forwarded_kwargs.pop("target_issue_id", None)
         return await self._run_epic_entry(
             parent_ename,
             build_id=build_id,
             session_id=session_id,
             driver_steered=driver_steered,
             target_issue_id=issue_id,
-            **kwargs,
+            **forwarded_kwargs,
         )
 
     async def run_gitea_state_loop(
@@ -505,6 +507,9 @@ class ExecutionPipeline:
         epic = await self.loader.load_asset_async("epics", epic_name, EpicConfig)
         team = await self.loader.load_asset_async("teams", epic.team, TeamConfig)
         env = await self.loader.load_asset_async("environments", epic.environment, EnvironmentConfig)
+        model_override = str(kwargs.get("model_override") or "").strip()
+        if model_override:
+            env = env.model_copy(update={"model": model_override})
 
         threshold = 7
         if self.org and self.org.architecture:
@@ -707,6 +712,7 @@ class ExecutionPipeline:
                     env=env,
                     target_issue_id=target_issue_id,
                     resume_mode=resume_mode,
+                    model_override=model_override or None,
                 )
                 return None
 

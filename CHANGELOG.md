@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.34] - 2026-04-05 - "The Prompt Reforger Tool-Use Truth Cut"
+
+### Added
+- **Prompt Reforger Generic Service Authority**: Added the Prompt Reforger generic service contract, service/result scaffolding, proof-slice support, and the bounded structural Phase 0 staging artifacts so the service now has one explicit authority surface instead of prompt-lab-only drift.
+- **Prompt Reforger Gemma Tool-Use Harness**: Added the Prompt Reforger Gemma tool-use implementation lane, frozen challenge corpus, FunctionGemma judge protocol, prompt-lab runners, score/judge/cycle test coverage, and the local-model coding challenge harness so the admitted portability evaluation path is repo-owned and rerunnable.
+
+### Changed
+- **Governed Local Prompting And Native Tool Turns**: Hardened local-model provider telemetry, prompt-compilation policy, compact turn-packet construction, response parsing, and orchestrator/runtime wiring so OpenAI-compatible Gemma tool turns use one compact model-facing packet, preserve truthful native-tool allowlists, and fail closed on undeclared or duplicate call shapes.
+- **Authority And Staging Surface Alignment**: Updated `CURRENT_AUTHORITY.md`, roadmap/docs indexes, Prompt Reforger contracts, local prompt profiles, challenge assets, and staging benchmark catalog metadata so the paused Gemma portability checkpoint, new guide-model comparison surface, and structural-versus-live proof status all match the shipped runtime truth.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use the Prompt Reforger staging runners and the compact Gemma/OpenAI-compatible tool-turn path as the canonical authority for this lane; the Prompt Reforger Gemma portability lane remains paused until the frozen corpus is cleared truthfully.
+
 ## [0.4.33] - 2026-04-03 - "The Challenge Workflow Runtime Truth Hardening Cut"
 
 ### Added

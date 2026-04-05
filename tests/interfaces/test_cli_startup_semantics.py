@@ -197,8 +197,8 @@ async def test_cli_rock_runtime_preserves_flag_but_routes_directly_to_run_card(m
         def __init__(self, *_args, **_kwargs) -> None:
             pass
 
-        async def run_card(self, card_id, build_id=None, driver_steered=False):
-            calls.append(("run_card", card_id, build_id, driver_steered))
+        async def run_card(self, card_id, build_id=None, driver_steered=False, model_override=None):
+            calls.append(("run_card", card_id, build_id, driver_steered, model_override))
             return {"card": card_id}
 
         async def run_rock(self, rock_name, build_id=None, driver_steered=False):
@@ -219,7 +219,7 @@ async def test_cli_rock_runtime_preserves_flag_but_routes_directly_to_run_card(m
     await cli_module.run_cli()
     out = capsys.readouterr().out
 
-    assert ("run_card", "demo-rock", "build-7", True) in calls
+    assert ("run_card", "demo-rock", "build-7", True, None) in calls
     assert ("run_rock", "demo-rock", "build-7", True) not in calls
     assert "Running Orket Card via legacy compatibility alias --rock: demo-rock" in out
     assert "=== Card demo-rock Complete (legacy compatibility alias --rock) ===" in out

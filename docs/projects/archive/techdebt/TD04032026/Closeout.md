@@ -6,7 +6,9 @@ Owner: Orket Core
 
 ## Scope
 
-This cycle closed the finite techdebt lane that hardened the `challenge_workflow_runtime` epic so generated artifacts and verifier output could be treated as behavioral proof instead of compile-only or semantically false green output.
+This cycle closed the finite techdebt lane that improved the `challenge_workflow_runtime` epic proof surface so generated artifacts and verifier output could be treated as behavioral proof over the admitted contract instead of compile-only or semantically false-green output.
+
+It did not, by itself, prove the slice was fully runtime hardened. That follow-up was reopened on 2026-04-03 under TD04032026B and later archived at [docs/projects/archive/techdebt/TD04032026B/Closeout.md](docs/projects/archive/techdebt/TD04032026B/Closeout.md).
 
 Primary closure areas:
 1. challenge epic contract hardening for fixtures, validator, planner, simulator, checkpoint, tests, and reporting
@@ -42,6 +44,7 @@ Governance proof:
 
 1. This closeout does not claim provider-generalization beyond the local rerun path used for the archived workspace.
 2. The generated challenge package remains intentionally bounded to the challenge contract; this cycle did not widen it into a production-grade reusable workflow engine.
+3. This archived closeout should be read as “implemented and minimally verified against the then-admitted proof surface,” not as a claim that all remaining semantic-truth gaps were closed.
 
 ## Archived Documents
 
@@ -49,4 +52,4 @@ Governance proof:
 
 ## Residual Risk
 
-1. `CWR-07` still required one corrective reprompt for tool-call formatting drift during the final successful rerun, but the guard/repair path contained it and the accepted artifact plus verifier proof remained green.
+1. `CWR-07` still required one corrective reprompt for tool-call formatting drift during the final successful rerun, which is why follow-up lane TD04032026B was reopened immediately after archive and later closed at [docs/projects/archive/techdebt/TD04032026B/Closeout.md](docs/projects/archive/techdebt/TD04032026B/Closeout.md).

@@ -488,7 +488,7 @@ class ContractValidator:
                     excerpt=content[:240],
                 )
             )
-        if protocol_governed_enabled and "```" in content:
+        if "```" in content and (protocol_governed_enabled or task_class == "tool_call"):
             violations.append(
                 self._local_prompt_violation(
                     rule_id="LOCAL_PROMPT.MARKDOWN_FENCE",

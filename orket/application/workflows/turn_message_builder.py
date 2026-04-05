@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -8,8 +9,10 @@ import aiofiles
 
 from orket.core.domain.verification_scope import parse_verification_scope
 from orket.logging import log_event
+from orket.runtime.compact_turn_packet import compact_turn_messages
 from orket.schema import IssueConfig, RoleConfig
 
+from .turn_artifact_semantic_prompt_hints import artifact_semantic_exact_shape_hints
 from .turn_path_resolver import PathResolver
 
 _MAX_PRELOADED_READ_CONTEXT_CHARS = 4000
@@ -41,6 +44,7 @@ class MessageBuilder:
         role_name = str(context.get("role", role.name) or role.name).strip().lower()
         current_status = str(context.get("current_status", "") or "").strip().lower()
         is_guard_review_turn = role_name == "integrity_guard" or current_status == "awaiting_guard_review"
+        issue_brief_message: dict[str, str] | None = None
         if not is_guard_review_turn:
             issue_brief_lines: list[str] = []
             description = str(getattr(issue, "description", "") or "").strip()
@@ -60,7 +64,7 @@ class MessageBuilder:
                 issue_brief_lines.append("References:")
                 issue_brief_lines.extend(f"- {reference}" for reference in references)
             if issue_brief_lines:
-                messages.append({"role": "user", "content": "Issue Brief:\n" + "\n".join(issue_brief_lines)})
+                issue_brief_message = {"role": "user", "content": "Issue Brief:\n" + "\n".join(issue_brief_lines)}
 
         required_read_paths = PathResolver.required_read_paths(context, self.workspace)
         missing_required_read_paths = PathResolver.missing_required_read_paths(context, self.workspace)
@@ -124,7 +128,13 @@ class MessageBuilder:
             )
             semantic_checks = artifact_contract.get("semantic_checks")
             if isinstance(semantic_checks, list) and semantic_checks:
-                semantic_lines = ["- Additional semantic checks apply to written artifact paths."]
+                semantic_lines = [
+                    "- Additional semantic checks apply to written artifact paths.",
+                    "- Every listed Must contain token is checked as an exact substring; include each one verbatim in the final file content.",
+                    "- Every listed Must not contain token is also checked as an exact substring; remove each one verbatim from the final file content.",
+                ]
+                exact_shape_hints: list[str] = []
+                seen_exact_shape_hints: set[str] = set()
                 for raw_check in semantic_checks:
                     if not isinstance(raw_check, dict):
                         continue
@@ -148,12 +158,28 @@ class MessageBuilder:
                     ]
                     if must_not_contain:
                         semantic_lines.append("  - Must not contain: " + ", ".join(must_not_contain))
+                    for hint in artifact_semantic_exact_shape_hints(
+                        path=path,
+                        must_contain=must_contain,
+                        must_not_contain=must_not_contain,
+                    ):
+                        if hint in seen_exact_shape_hints:
+                            continue
+                        seen_exact_shape_hints.add(hint)
+                        exact_shape_hints.append(hint)
                 messages.append(
                     {
                         "role": "user",
                         "content": "Artifact Semantic Contract:\n" + "\n".join(semantic_lines),
                     }
                 )
+                if exact_shape_hints:
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": "Artifact Exact-Shape Hints:\n" + "\n".join(exact_shape_hints),
+                        }
+                    )
         scenario_truth = context.get("scenario_truth")
         if isinstance(scenario_truth, dict) and scenario_truth:
             blocked_issue_policy = (
@@ -239,6 +265,8 @@ class MessageBuilder:
                         "content": "Runtime Verifier Contract:\n" + "\n".join(verifier_lines),
                     }
                 )
+        if issue_brief_message is not None:
+            messages.append(issue_brief_message)
 
         if bool(context.get("odr_active", False)):
             odr_context = {
@@ -285,15 +313,22 @@ class MessageBuilder:
             contract_lines = []
             if required_action_tools:
                 contract_lines.append(f"- Required tool calls this turn: {', '.join(required_action_tools)}")
-                if len(required_action_tools) > 1 and not bool(context.get("protocol_governed_enabled", False)):
+                if not bool(context.get("protocol_governed_enabled", False)):
                     contract_lines.append(
-                        "- Emit multiple top-level JSON tool objects in sequence, one per required tool call."
+                        '- Return exactly one JSON object: {"content":"","tool_calls":[...]}'
+                    )
+                    contract_lines.append(
+                        "- Put every required tool call into tool_calls within that single JSON object."
+                    )
+                    contract_lines.append(
+                        "- Do not use markdown fences, labels, or multiple top-level JSON objects."
                     )
             if required_statuses:
                 contract_lines.append(f"- Required update_issue_status.status values: {', '.join(required_statuses)}")
-                contract_lines.append(
-                    "- If you choose status=blocked, include wait_reason: resource|dependency|review|input|system."
-                )
+                if "blocked" in required_statuses:
+                    contract_lines.append(
+                        "- If you choose status=blocked, include wait_reason: resource|dependency|review|input|system."
+                    )
             contract_lines.append("- You must include all required tool calls in this same response.")
             contract_lines.append("- A response containing only get_issue_context/add_issue_comment is invalid.")
             if write_path_contract_required:
@@ -496,6 +531,26 @@ class MessageBuilder:
                         "content": "Prior Transcript JSON:\n" + json.dumps(history_payload, ensure_ascii=False),
                     }
                 )
+
+        if bool(context.get("compact_turn_packet_enabled", True)):
+            compaction = compact_turn_messages(messages, runtime_context=context)
+            messages = compaction.messages
+            if compaction.applied:
+                prompt_metadata = context.get("prompt_metadata")
+                if isinstance(prompt_metadata, dict):
+                    prompt_metadata["prompt_checksum"] = hashlib.sha256(
+                        str(messages[0].get("content") or "").encode("utf-8")
+                    ).hexdigest()[:16]
+                    prompt_metadata["prompt_packet_version"] = compaction.packet_version
+                    prompt_metadata["prompt_packet_compacted"] = True
+                prompt_layers = context.get("prompt_layers")
+                if isinstance(prompt_layers, dict):
+                    prompt_layers["packet_compaction"] = {
+                        "enabled": True,
+                        "version": compaction.packet_version,
+                        "source_message_count": compaction.source_message_count,
+                        "compacted_message_count": compaction.compacted_message_count,
+                    }
 
         return messages
 

@@ -70,3 +70,28 @@ def test_prompt_compiler_code_reviewer_requires_all_read_paths_in_same_response(
 
     assert "You MUST read every path listed in the Read Path Contract with read_file(...) in this same response." in prompt
     assert "Do not stop after reading only a subset of required artifacts." in prompt
+
+
+def test_prompt_compiler_legacy_tool_path_uses_compact_unfenced_json_contract() -> None:
+    skill = SkillConfig(
+        name="coder",
+        intent="Write implementation",
+        responsibilities=["Produce implementation"],
+        tools=["write_file", "update_issue_status"],
+    )
+    dialect = DialectConfig(
+        model_family="qwen",
+        dsl_format="JSON",
+        constraints=["Return JSON only"],
+        hallucination_guard="No extra prose",
+    )
+
+    prompt = PromptCompiler.compile(skill, dialect, protocol_governed_enabled=False)
+
+    assert "Emit executable JSON only." in prompt
+    assert 'For a single tool call, emit one compact JSON object: {"tool":"<tool_name>","args":{"key":"value"}}' in prompt
+    assert '{"content":"","tool_calls":[{"tool":"<tool_name>","args":{"key":"value"}}]}' in prompt
+    assert "Do not use markdown fences, labels, or backticks around tool-call JSON." in prompt
+    assert "Escape newline characters inside string values; the JSON must parse without repair." in prompt
+    assert 'If more than one tool call is needed, use {"content":"","tool_calls":[...]}' in prompt
+    assert "```json" not in prompt

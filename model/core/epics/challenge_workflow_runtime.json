@@ -343,7 +343,7 @@
       "depends_on": [
         "CWR-03"
       ],
-      "note": "Create the package skeleton with agent_output/challenge_runtime/__init__.py, agent_output/challenge_runtime/models.py, and agent_output/challenge_runtime/loader.py. models.py must define compact dataclasses or TypedDict-style structures for task specs and workflow specs using the admitted field names id, deps, duration, retries, outcomes and root fields workflow_id, max_concurrency, tasks. loader.py must implement one compact load_workflow(path) function and one compact normalize_task(raw_task) helper that return deterministic Python structures while preserving input task order. The fixture files are regular JSON objects, so load_workflow must parse them with json.load rather than line-by-line json.loads(line). __init__.py must export the admitted public names. Do not write empty files, do not leave TODO placeholders, and prefer single-quoted Python literals so the write_file JSON stays valid. Then call update_issue_status(status='code_review').",
+      "note": "Create the package skeleton with agent_output/challenge_runtime/__init__.py, agent_output/challenge_runtime/models.py, and agent_output/challenge_runtime/loader.py. models.py must define compact TypedDict-style schema mappings so downstream code can read workflow['tasks'] and task['id'] directly without dataclass attribute access. TaskSpec only defines the task-level fields id, deps, duration, retries, and outcomes. WorkflowSpec only defines the root-level fields workflow_id, max_concurrency, and tasks, where tasks is a list of normalized TaskSpec mappings. loader.py must implement one compact load_workflow(path) function and one compact normalize_task(raw_task) helper that return deterministic mapping-shaped Python structures while preserving input task order. The fixture files are regular JSON objects, so load_workflow must parse them with json.load rather than line-by-line json.loads(line). In challenge_runtime/loader.py, normalize_task(raw_task) should return a compact field-copy mapping with id, deps, duration, retries, and outcomes, and load_workflow(path) should return a compact mapping with workflow_id, max_concurrency, and tasks: [normalize_task(task) for task in data['tasks']]. Do not call WorkflowSpec(**data) or TaskSpec(**raw_task). In challenge_runtime/__init__.py, export the admitted public names with from .models import TaskSpec, WorkflowSpec and from .loader import load_workflow, normalize_task; do not leave __init__.py empty. In challenge_runtime/loader.py, import TaskSpec and WorkflowSpec from .models before using them in annotations or constructors, and keep package-local imports inside challenge_runtime modules rather than importing through agent_output.challenge_runtime. Do not write empty files, do not leave TODO placeholders, and prefer single-quoted Python literals so the write_file JSON stays valid. Then call update_issue_status(status='code_review').",
       "params": {
         "execution_profile": "write_artifact_v1",
         "artifact_contract": {
@@ -366,33 +366,101 @@
           ],
           "semantic_checks": [
             {
-              "path": "agent_output/challenge_runtime/models.py",
-              "label": "models schema fields",
+              "path": "agent_output/challenge_runtime/__init__.py",
+              "label": "package exports",
               "must_contain": [
-                "id:",
-                "deps:",
-                "duration:",
-                "retries:",
-                "outcomes:",
-                "workflow_id:",
-                "max_concurrency:",
-                "tasks:"
+                "from .models import TaskSpec, WorkflowSpec",
+                "from .loader import load_workflow, normalize_task"
+              ],
+              "must_not_contain": []
+            },
+            {
+              "path": "agent_output/challenge_runtime/models.py",
+              "label": "models define separated typed schema maps",
+              "must_contain": [
+                "from typing import List, TypedDict",
+                "class TaskSpec(TypedDict):",
+                "id: str",
+                "deps: List[str]",
+                "duration: int",
+                "retries: int",
+                "outcomes: List[str]",
+                "class WorkflowSpec(TypedDict):",
+                "workflow_id: str",
+                "max_concurrency: int",
+                "tasks: List[TaskSpec]"
               ],
               "must_not_contain": [
+                "@dataclass",
                 "task_id:",
                 "dependencies:"
               ]
             },
             {
               "path": "agent_output/challenge_runtime/loader.py",
-              "label": "loader parses standard workflow json",
+              "label": "loader normalizes workflow json into mappings",
               "must_contain": [
+                "from .models import TaskSpec, WorkflowSpec",
                 "json.load(",
-                "def load_workflow",
-                "def normalize_task"
+                "def load_workflow(path: str) -> WorkflowSpec:",
+                "def normalize_task(raw_task) -> TaskSpec:",
+                "'id': raw_task['id']",
+                "'deps': raw_task['deps']",
+                "'duration': raw_task['duration']",
+                "'retries': raw_task['retries']",
+                "'outcomes': raw_task['outcomes']",
+                "'workflow_id': data['workflow_id']",
+                "'max_concurrency': data['max_concurrency']",
+                "'tasks': [normalize_task(task) for task in data['tasks']]"
               ],
               "must_not_contain": [
-                "json.loads(line)"
+                "json.loads(line)",
+                "agent_output.challenge_runtime",
+                "WorkflowSpec(**data)",
+                "TaskSpec(**raw_task)"
+              ]
+            }
+          ]
+        },
+        "runtime_verifier": {
+          "commands": [
+            {
+              "argv": [
+                "python",
+                "-c",
+                "import json; from challenge_runtime.loader import load_workflow; workflow = load_workflow('challenge_inputs/workflow_valid.json'); print(json.dumps({'workflow_id': workflow['workflow_id'], 'has_max_concurrency': isinstance(workflow['max_concurrency'], int), 'task_count': len(workflow['tasks']), 'task0_id': workflow['tasks'][0]['id'], 'task3_deps': workflow['tasks'][3]['deps']}))"
+              ],
+              "cwd": "agent_output"
+            }
+          ],
+          "expect_json_stdout": true,
+          "json_assertions": [
+            {
+              "path": "workflow_id",
+              "op": "eq",
+              "value": "valid_workflow"
+            },
+            {
+              "path": "has_max_concurrency",
+              "op": "eq",
+              "value": true
+            },
+            {
+              "path": "task_count",
+              "op": "eq",
+              "value": 4
+            },
+            {
+              "path": "task0_id",
+              "op": "eq",
+              "value": "task1"
+            },
+            {
+              "path": "task3_deps",
+              "op": "eq",
+              "value": [
+                "task2",
+                "task3"
               ]
             }
           ]
@@ -427,7 +495,7 @@
       "depends_on": [
         "CWR-04"
       ],
-      "note": "Implement agent_output/challenge_runtime/validator.py with compact deterministic validation for duplicate task ids, unknown dependency references, negative durations, negative retries, empty outcomes, and dependency cycles. The public validator entrypoint must be validate_workflow(path: str) and it must load the workflow from disk with load_workflow(path) before validating, because later CLI and proof entrypoints call it with workflow file paths rather than in-memory workflow objects. Return structured error dictionaries with exactly code, task_id, and message keys instead of raising bare exceptions for expected user-spec failures. Build the complete known task-id set from workflow['tasks'] before validating deps, for example task_ids = {task['id'] for task in workflow['tasks']}, so the shipped two-node cycle fixture is recognized as dependency_cycle rather than as an unknown dependency caused by one-pass ordering. Track duplicate ids with a dedicated seen_ids or equivalent collection while scanning the task list; do not reuse the DFS visited set for duplicate detection, because both entries in the duplicate-id fixture must still yield duplicate_task_id even before cycle traversal runs. Initialize the cycle-detection graph from that complete id set, append known deps into the current task's adjacency list, and only skip recursion for truly missing deps. If a dependency is unknown, report unknown_dependency and do not recurse through the missing node during cycle detection. Read task fields as id and deps, not task_id and dependencies. Keep the module compact, avoid placeholder comments, and prefer single-quoted Python literals so the write_file JSON stays valid. Then call update_issue_status(status='code_review').",
+      "note": "Implement agent_output/challenge_runtime/validator.py with compact deterministic validation for duplicate task ids, unknown dependency references, negative durations, negative retries, empty outcomes, and dependency cycles. The public validator entrypoint must be validate_workflow(path: str) and it must load the workflow from disk with load_workflow(path) before validating, because later CLI and proof entrypoints call it with workflow file paths rather than in-memory workflow objects. Inside package modules under challenge_runtime, import sibling modules with package-local imports such as from .loader import load_workflow and from .models import WorkflowSpec, TaskSpec; do not import through agent_output.challenge_runtime. Return structured error dictionaries with exactly code, task_id, and message keys instead of raising bare exceptions for expected user-spec failures. Build the complete known task-id set from workflow['tasks'] before validating deps, for example task_ids = {task['id'] for task in workflow['tasks']}, so the shipped two-node cycle fixture is recognized as dependency_cycle rather than as an unknown dependency caused by one-pass ordering. Track duplicate ids with a dedicated seen_ids or equivalent collection while scanning the task list; do not reuse the DFS visited set for duplicate detection, because both entries in the duplicate-id fixture must still yield duplicate_task_id even before cycle traversal runs. Initialize the cycle-detection graph from that complete id set, append known deps into the current task's adjacency list, and only skip recursion for truly missing deps. If a dependency is unknown, report unknown_dependency and do not recurse through the missing node during cycle detection. Read task fields as id and deps, not task_id and dependencies. Keep the module compact, avoid placeholder comments, and prefer single-quoted Python literals so the write_file JSON stays valid. Then call update_issue_status(status='code_review').",
       "params": {
         "execution_profile": "write_artifact_v1",
         "artifact_contract": {
@@ -452,6 +520,8 @@
               "label": "validator schema and error codes",
               "must_contain": [
                 "def validate_workflow(path: str)",
+                "from .loader import load_workflow",
+                "from .models import WorkflowSpec, TaskSpec",
                 "load_workflow(path)",
                 "task_ids = {task['id'] for task in workflow['tasks']}",
                 "seen_ids = set()",
@@ -471,6 +541,7 @@
               ],
               "must_not_contain": [
                 "if task['id'] in visited:",
+                "agent_output.challenge_runtime",
                 "task['task_id']",
                 "task['dependencies']"
               ]
@@ -537,7 +608,7 @@
       "depends_on": [
         "CWR-05"
       ],
-      "note": "Implement agent_output/challenge_runtime/planner.py to compute deterministic topological layers and a stable execution order for valid workflows. The public planner entrypoint must be plan_workflow(path: str) and it must call load_workflow(path) before planning, because the simulator, CLI, and proof entrypoint call it with workflow file paths rather than in-memory workflow objects. compute_topological_layers should emit List[List[str]] task-id layers, not task dict objects, so downstream code can resolve ids back to task records deterministically. Keep queue and current_layer in task-id space rather than mixing ids and task dictionaries. Preserve input order as the tie-breaker within a layer; seed zero-in-degree work by scanning the original task list, not by iterating a set of ids. Build task_ids as an ordered list such as task_ids = [task['id'] for task in workflow['tasks']], derive the initial ready ids with a zero_in_degree list comprehension like zero_in_degree = [task_id for task_id in task_ids if in_degree[task_id] == 0], and iterate planned layers with for task_id in current_layer rather than rescanning task_ids each round. When task B depends on task A, A must appear in an earlier layer than B; build dependent adjacency and increase in-degree on the dependent task, not on the dependency. Keep using the admitted workflow field names id and deps. Import load_workflow explicitly from loader instead of relying on undeclared names. Then call update_issue_status(status='code_review').",
+      "note": "Implement agent_output/challenge_runtime/planner.py to compute deterministic topological layers and a stable execution order for valid workflows. The public planner entrypoint must be plan_workflow(path: str) and it must call load_workflow(path) before planning, because the simulator, CLI, and proof entrypoint call it with workflow file paths rather than in-memory workflow objects. compute_topological_layers should emit List[List[str]] task-id layers, not task dict objects, so downstream code can resolve ids back to task records deterministically. Keep queue and current_layer in task-id space rather than mixing ids and task dictionaries. Preserve input order as the tie-breaker within a layer; seed zero-in-degree work by scanning the original task list, not by iterating a set of ids. Build task_ids as an ordered list such as task_ids = [task['id'] for task in workflow['tasks']], populate dependent adjacency and in-degree counts by scanning workflow['tasks'] before selecting any ready ids, then derive the initial ready ids with a zero_in_degree list comprehension like zero_in_degree = [task_id for task_id in task_ids if in_degree[task_id] == 0]. Do not compute zero_in_degree before the dependency scan has filled in_degree, or every task will be placed into the first layer. Iterate planned layers with for task_id in current_layer rather than rescanning task_ids each round. When task B depends on task A, A must appear in an earlier layer than B; build dependent adjacency and increase in-degree on the dependent task, not on the dependency. Keep using the admitted workflow field names id and deps. Import load_workflow explicitly from loader instead of relying on undeclared names. Then call update_issue_status(status='code_review').",
       "params": {
         "execution_profile": "write_artifact_v1",
         "artifact_contract": {
@@ -885,7 +956,7 @@
       "depends_on": [
         "CWR-08"
       ],
-      "note": "Implement agent_output/challenge_runtime/cli.py and agent_output/main.py. Required CLI commands: validate, plan, simulate, and resume. Each CLI subcommand must honor its argparse path argument rather than hardcoding challenge fixture paths; declare a positional argument named 'path' and read it via args.path for validate, plan, simulate, and resume. With no arguments, python agent_output/main.py must run a built-in proof suite over the challenge fixtures, validate both workflow_valid.json and workflow_cycle.json, use workflow_retry.json for checkpoint/resume proof, and print one JSON object with validated_count, layer_count, checkpoint_written, and resumed_terminal_state. validated_count counts proof validations performed, not only validations that return an empty error list, so the cycle fixture must still contribute to validated_count while surfacing dependency_cycle truth. After calling valid_errors = validate_workflow(workflow_valid_path) and cycle_errors = validate_workflow(workflow_cycle_path), set validated_count from the two performed validations, for example validated_count = 2; do not derive it from len(valid_errors) or len(cycle_errors). Set dependency_cycle from the observed cycle validator errors, for example dependency_cycle = any(error['code'] == 'dependency_cycle' for error in cycle_errors), and include that exact field in the printed proof JSON. validate_workflow(path) returns an error list, so do not pass validator results into plan_workflow; call plan_workflow(workflow_valid_path) directly. Resolve fixture and checkpoint paths relative to main.py by deriving a base directory from __file__ or another explicit package-root rule, not by hardcoding agent_output/challenge_inputs/... strings, so the proof run does not depend on one fragile current working directory. Do not satisfy the proof suite by calling the argparse handlers with raw dict objects; either build argparse.Namespace instances or call dedicated helper functions that return plain Python data. main.py runs as a direct script via python agent_output/main.py, so do not use leading-dot relative imports in that file; use imports that work from the agent_output script directory, for example from challenge_runtime... instead of from .challenge_runtime.... If main.py directly calls validate_workflow, plan_workflow, Simulator, save_checkpoint, or resume_simulation during the no-argument proof run, import those exact helpers in main.py rather than importing only CLI wrappers and then calling undeclared lower-level names. Then call update_issue_status(status='code_review').",
+      "note": "Implement agent_output/challenge_runtime/cli.py and agent_output/main.py. Required CLI commands: validate, plan, simulate, and resume. Each CLI subcommand must honor its argparse path argument rather than hardcoding challenge fixture paths; declare a positional argument named 'path' and read it via args.path for validate, plan, simulate, and resume. With no arguments, python agent_output/main.py must run a built-in proof suite over the challenge fixtures, validate both workflow_valid.json and workflow_cycle.json, use workflow_retry.json for checkpoint/resume proof, and print one JSON object with validated_count, layer_count, dependency_cycle, cycle_policy, cycle_fixture_result, checkpoint_written, and resumed_terminal_state. validated_count counts proof validations performed, not only validations that return an empty error list, so the cycle fixture must still contribute to validated_count while surfacing dependency_cycle truth. After calling valid_errors = validate_workflow(workflow_valid_path) and cycle_errors = validate_workflow(workflow_cycle_path), set validated_count from the two performed validations, for example validated_count = 2; do not derive it from len(valid_errors) or len(cycle_errors). Set dependency_cycle from the observed cycle validator errors, for example dependency_cycle = any(error['code'] == 'dependency_cycle' for error in cycle_errors), and include that exact field in the printed proof JSON. That field reflects the intentionally invalid cycle fixture, not a successful runtime plan, so include exact policy fields cycle_policy = 'validation_rejects_cycle' and cycle_fixture_result = 'expected_rejection' to show the cycle was rejected during validation while the overall proof run completed. validate_workflow(path) returns an error list, so do not pass validator results into plan_workflow; call plan_workflow(workflow_valid_path) directly. Resolve fixture and checkpoint paths relative to main.py by deriving a base directory from __file__ or another explicit package-root rule, not by hardcoding agent_output/challenge_inputs/... strings, so the proof run does not depend on one fragile current working directory. Do not satisfy the proof suite by calling the argparse handlers with raw dict objects; either build argparse.Namespace instances or call dedicated helper functions that return plain Python data. main.py runs as a direct script via python agent_output/main.py, so do not use leading-dot relative imports in that file; use imports that work from the agent_output script directory, for example from challenge_runtime... instead of from .challenge_runtime.... If main.py directly calls validate_workflow, plan_workflow, Simulator, save_checkpoint, or resume_simulation during the no-argument proof run, import those exact helpers in main.py rather than importing only CLI wrappers and then calling undeclared lower-level names. Then call update_issue_status(status='code_review').",
       "params": {
         "execution_profile": "build_app_v1",
         "artifact_contract": {
@@ -955,6 +1026,10 @@
                 "validated_count = 2",
                 "dependency_cycle",
                 "dependency_cycle = any(error['code'] == 'dependency_cycle' for error in cycle_errors)",
+                "cycle_policy",
+                "cycle_policy = 'validation_rejects_cycle'",
+                "cycle_fixture_result",
+                "cycle_fixture_result = 'expected_rejection'",
                 "layer_count",
                 "checkpoint_written",
                 "resumed_terminal_state",
@@ -1003,13 +1078,28 @@
           "json_assertions": [
             {
               "path": "validated_count",
-              "op": "gte",
+              "op": "eq",
               "value": 2
             },
             {
               "path": "layer_count",
-              "op": "gte",
+              "op": "eq",
               "value": 3
+            },
+            {
+              "path": "dependency_cycle",
+              "op": "eq",
+              "value": true
+            },
+            {
+              "path": "cycle_policy",
+              "op": "eq",
+              "value": "validation_rejects_cycle"
+            },
+            {
+              "path": "cycle_fixture_result",
+              "op": "eq",
+              "value": "expected_rejection"
             },
             {
               "path": "checkpoint_written",
@@ -1132,7 +1222,7 @@
       "depends_on": [
         "CWR-10"
       ],
-      "note": "Write agent_output/tests/test_simulator_and_resume.py with deterministic tests for retry behavior, truthful terminal states, checkpoint serialization, and resume-to-completion behavior on the retry fixture. Import json plus save_checkpoint, load_checkpoint, and resume_simulation explicitly. Resolve package-root fixtures with Path(__file__).resolve().parents[1] / 'challenge_inputs' so python -m pytest -q tests works from inside agent_output. For the checkpoint test, create an explicit package-root artifact directory variable such as artifact_root = Path(__file__).resolve().parents[1] / 'challenge_artifacts', call artifact_root.mkdir(parents=True, exist_ok=True), and store the transient checkpoint under that directory with a concrete path such as checkpoint_path = artifact_root / 'retry_checkpoint.json'; do not save the retry checkpoint under tmp_path or under tests/. The retry fixture succeeds with terminal state 'completed', so do not assert 'success'. For checkpoint serialization, run simulator.simulate() before save_checkpoint(...), then assert the loaded checkpoint keeps workflow_path, a non-empty event_log, and terminal_state == 'completed'. For dependency gating, write a temporary blocked workflow JSON such as tmp_path / 'workflow_dependency_gating.json' before instantiating Simulator. Use blocked fixture task ids named upstream and downstream, make downstream depend on upstream, and make upstream fail with outcomes ['failure'] so terminal_state == 'blocked' is truthful and downstream never appears in the event_log, for example with not any(event['task_id'] == 'downstream' for event in simulator.event_log). Do not point fixtures at tests/challenge_inputs via Path(__file__).parent / 'challenge_inputs'. Then call update_issue_status(status='code_review').",
+      "note": "Write agent_output/tests/test_simulator_and_resume.py with deterministic tests for retry behavior, truthful terminal states, checkpoint serialization, and resume-to-completion behavior on the retry fixture. Import json plus Simulator explicitly from challenge_runtime.simulator, and import save_checkpoint, load_checkpoint, and resume_simulation explicitly from challenge_runtime.checkpoint rather than from simulator. Resolve package-root fixtures with Path(__file__).resolve().parents[1] / 'challenge_inputs' so python -m pytest -q tests works from inside agent_output, and use the shipped retry fixture path Path(__file__).resolve().parents[1] / 'challenge_inputs' / 'workflow_retry.json' rather than inventing a replacement retry workflow under tmp_path. For the checkpoint test, create an explicit package-root artifact directory variable such as artifact_root = Path(__file__).resolve().parents[1] / 'challenge_artifacts', call artifact_root.mkdir(parents=True, exist_ok=True), and store the transient checkpoint under that directory with a concrete path such as checkpoint_path = artifact_root / 'retry_checkpoint.json'; do not save the retry checkpoint under tmp_path or under tests/. The retry fixture succeeds with terminal state 'completed', so do not assert 'success'. For checkpoint serialization, run simulator.simulate() before save_checkpoint(...), then assert the loaded checkpoint keeps workflow_path, a non-empty event_log, and terminal_state == 'completed'. Also prove checkpoint corruption fails loudly by writing a truncated checkpoint such as corrupt_checkpoint_path = artifact_root / 'corrupt_retry_checkpoint.json' and asserting load_checkpoint(...) or resume_simulation(...) raises json.JSONDecodeError rather than fabricating recovered state. Resume the same saved retry checkpoint twice and assert both resumed runs complete with identical event logs so double-resume remains idempotent. For dependency gating, tmp_path must be the real pytest tmp_path fixture rather than a manually constructed repo-local Path; write a temporary blocked workflow JSON such as tmp_path / 'workflow_dependency_gating.json' before instantiating Simulator. Use blocked fixture task ids named upstream and downstream, set upstream retries to 0 so it fails once and blocks downstream, and make upstream fail with outcomes ['failure'] so terminal_state == 'blocked' is truthful and downstream never appears in the event_log, for example with not any(event['task_id'] == 'downstream' for event in simulator.event_log). Do not point fixtures at tests/challenge_inputs via Path(__file__).parent / 'challenge_inputs'. Then call update_issue_status(status='code_review').",
       "params": {
         "execution_profile": "write_artifact_v1",
         "artifact_contract": {
@@ -1157,10 +1247,14 @@
               "must_contain": [
                 "import json",
                 "from pathlib import Path",
+                "def test_simulator_and_resume(tmp_path):",
+                "from challenge_runtime.simulator import Simulator",
+                "from challenge_runtime.checkpoint import save_checkpoint, load_checkpoint, resume_simulation",
                 "save_checkpoint",
                 "load_checkpoint",
                 "resume_simulation",
                 "Path(__file__).resolve().parents[1] / 'challenge_inputs'",
+                "Path(__file__).resolve().parents[1] / 'challenge_inputs' / 'workflow_retry.json'",
                 "Path(__file__).resolve().parents[1] / 'challenge_artifacts'",
                 "artifact_root = Path(__file__).resolve().parents[1] / 'challenge_artifacts'",
                 "artifact_root.mkdir(parents=True, exist_ok=True)",
@@ -1170,9 +1264,16 @@
                 "resumed_terminal_state == 'completed'",
                 "loaded_checkpoint['terminal_state'] == 'completed'",
                 "loaded_checkpoint['event_log']",
+                "corrupt_checkpoint_path = artifact_root / 'corrupt_retry_checkpoint.json'",
+                "json.JSONDecodeError",
+                "resume_simulation(str(corrupt_checkpoint_path))",
+                "resumed_again = resume_simulation(str(checkpoint_path))",
+                "resumed_again_terminal_state == 'completed'",
+                "resumed_again.event_log == resumed.event_log",
                 "tmp_path / 'workflow_dependency_gating.json'",
                 "write_text(json.dumps(",
                 "'upstream'",
+                "'retries': 0",
                 "'outcomes': ['failure']",
                 "not any(event['task_id'] == 'downstream'",
                 "'downstream'",
@@ -1183,6 +1284,8 @@
                 "Path(__file__).parent / 'challenge_inputs'",
                 "agent_output/challenge_inputs/",
                 "checkpoint_path = tmp_path /",
+                "tmp_path = Path(__file__).resolve().parents[1] / 'tmp'",
+                "from challenge_runtime.simulator import Simulator, save_checkpoint, load_checkpoint, resume_simulation",
                 "Simulator('')",
                 "== 'success'"
               ]
@@ -1232,7 +1335,7 @@
       "depends_on": [
         "CWR-11"
       ],
-      "note": "Write agent_output/challenge_runtime/reporting.py and agent_output/README.md. reporting.py may offer import-safe formatting helpers, but it must not import main.py or claim to own the proof summary contract; main.py stdout remains the canonical proof summary surface. If reporting.py formats JSON, import json explicitly and keep the helper callable via from challenge_runtime.reporting import format_report. The README must explain the challenge, module layout, fixture meanings, and both admitted proof commands: python agent_output/main.py from the workspace root and python -m pytest -q tests from inside agent_output. Then call update_issue_status(status='code_review').",
+      "note": "Write agent_output/challenge_runtime/reporting.py and agent_output/README.md. reporting.py may offer import-safe formatting helpers, but it must not import main.py or claim to own the proof summary contract; main.py stdout remains the canonical proof summary surface. If reporting.py formats JSON, import json explicitly and keep the helper callable via from challenge_runtime.reporting import format_report. The README must explain the challenge, module layout, fixture meanings, and both admitted proof commands: python agent_output/main.py from the workspace root and python main.py from inside agent_output. Also document the supported module/CLI validation invocation python -m challenge_runtime.cli validate challenge_inputs/workflow_valid.json from inside agent_output. The final runtime verifier commands must exercise pytest, the import-safe reporting round-trip, that module/CLI validate path, the inside-agent_output main.py path, and the workspace-root agent_output/main.py path, with the last proof JSON still emitted by python agent_output/main.py. Then call update_issue_status(status='code_review').",
       "params": {
         "execution_profile": "write_artifact_v1",
         "artifact_contract": {
@@ -1272,7 +1375,9 @@
               "label": "operator guide names admitted proof commands",
               "must_contain": [
                 "python agent_output/main.py",
+                "python main.py",
                 "python -m pytest -q tests",
+                "python -m challenge_runtime.cli validate challenge_inputs/workflow_valid.json",
                 "agent_output",
                 "challenge_inputs"
               ],
@@ -1319,7 +1424,24 @@
               "argv": [
                 "python",
                 "-c",
-                "import json; from challenge_runtime.reporting import format_report; rendered = format_report({'ok': True}); payload = json.loads(rendered); print(json.dumps(payload))"
+                "import json; from challenge_runtime.reporting import format_report; rendered = format_report({'ok': True, 'cycle_policy': 'validation_rejects_cycle'}); payload = json.loads(rendered); print(json.dumps(payload))"
+              ],
+              "cwd": "agent_output"
+            },
+            {
+              "argv": [
+                "python",
+                "-m",
+                "challenge_runtime.cli",
+                "validate",
+                "challenge_inputs/workflow_valid.json"
+              ],
+              "cwd": "agent_output"
+            },
+            {
+              "argv": [
+                "python",
+                "main.py"
               ],
               "cwd": "agent_output"
             },
@@ -1335,13 +1457,28 @@
           "json_assertions": [
             {
               "path": "validated_count",
-              "op": "gte",
+              "op": "eq",
               "value": 2
             },
             {
               "path": "layer_count",
-              "op": "gte",
+              "op": "eq",
               "value": 3
+            },
+            {
+              "path": "dependency_cycle",
+              "op": "eq",
+              "value": true
+            },
+            {
+              "path": "cycle_policy",
+              "op": "eq",
+              "value": "validation_rejects_cycle"
+            },
+            {
+              "path": "cycle_fixture_result",
+              "op": "eq",
+              "value": "expected_rejection"
             },
             {
               "path": "checkpoint_written",

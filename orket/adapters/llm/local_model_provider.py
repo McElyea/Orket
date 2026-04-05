@@ -15,6 +15,7 @@ from orket.adapters.llm.local_model_provider_runtime_target import (
     ensure_provider_runtime_target,
     provider_runtime_target_payload,
 )
+from orket.adapters.llm.openai_native_tools import build_openai_native_tooling
 from orket.adapters.llm.openai_compat_runtime import (
     build_orket_session_id,
     build_prompt_fingerprint,
@@ -130,6 +131,61 @@ class LocalModelProvider:
             return None
         return float(value) / 1_000_000.0
 
+    @staticmethod
+    def _native_tool_names(native_tools: list[dict[str, Any]]) -> list[str]:
+        names: list[str] = []
+        for tool in native_tools:
+            if not isinstance(tool, dict):
+                continue
+            function_payload = tool.get("function")
+            if not isinstance(function_payload, dict):
+                continue
+            name = str(function_payload.get("name") or "").strip()
+            if name:
+                names.append(name)
+        return names
+
+    @staticmethod
+    def _normalize_ollama_tool_calls(tool_calls: Any) -> list[dict[str, Any]]:
+        if not isinstance(tool_calls, list):
+            return []
+        normalized: list[dict[str, Any]] = []
+        for item in tool_calls:
+            if isinstance(item, dict):
+                function_payload = item.get("function")
+                if not isinstance(function_payload, dict):
+                    continue
+                function_name = str(function_payload.get("name") or "").strip()
+                if not function_name:
+                    continue
+                payload: dict[str, Any] = {
+                    "type": str(item.get("type") or "function"),
+                    "function": {
+                        "name": function_name,
+                        "arguments": function_payload.get("arguments"),
+                    },
+                }
+                call_id = str(item.get("id") or "").strip()
+                if call_id:
+                    payload["id"] = call_id
+                normalized.append(payload)
+                continue
+
+            function_payload = getattr(item, "function", None)
+            function_name = str(getattr(function_payload, "name", "") or "").strip()
+            if not function_name:
+                continue
+            normalized.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": function_name,
+                        "arguments": getattr(function_payload, "arguments", None),
+                    },
+                }
+            )
+        return normalized
+
     def _resolve_request_session_id(self, base_session_id: str) -> str:
         if self.provider_backend != "openai_compat":
             return base_session_id
@@ -179,28 +235,46 @@ class LocalModelProvider:
             messages=list(messages),
             runtime_context=resolved_context,
         )
+        native_tools, native_tool_choice, native_payload_overrides = build_openai_native_tooling(
+            model=self.model,
+            runtime_context=resolved_context,
+        )
         if self.provider_backend == "openai_compat":
             return await self._complete_openai_compat(
                 policy.messages,
                 policy,
                 runtime_context=resolved_context,
+                native_tools=native_tools,
+                native_tool_choice=native_tool_choice,
+                native_payload_overrides=native_payload_overrides,
             )
-        return await self._complete_ollama(policy.messages, policy)
+        return await self._complete_ollama(
+            policy.messages,
+            policy,
+            native_tools=native_tools,
+            native_tool_choice=native_tool_choice,
+            native_payload_overrides=native_payload_overrides,
+        )
 
     async def _complete_ollama(
         self,
         messages: List[Dict[str, str]],
         local_prompting_policy: LocalPromptingPolicyResult,
+        *,
+        native_tools: list[dict[str, Any]],
+        native_tool_choice: str | None,
+        native_payload_overrides: Mapping[str, Any],
     ) -> ModelResponse:
         options = {"temperature": self.temperature}
         if self.seed is not None:
             options["seed"] = self.seed
         options.update(local_prompting_policy.ollama_options_overrides())
         request_format = ""
-        # Legacy tool_call turns may need multiple top-level JSON tool blocks in one
-        # response; Ollama format=json constrains generations to a single JSON object.
-        if local_prompting_policy.task_class == "strict_json":
+        # Strict payload paths now use one canonical JSON object, including legacy
+        # tool_call turns that carry multiple calls via {"content":"","tool_calls":[...]}.
+        if local_prompting_policy.task_class in {"strict_json", "tool_call"} and not native_tools:
             request_format = "json"
+        native_tool_names = self._native_tool_names(native_tools)
 
         max_retries = 3
         retry_delay = 1
@@ -213,6 +287,8 @@ class LocalModelProvider:
                     "messages": messages,
                     "options": options,
                 }
+                if native_tools:
+                    request_kwargs["tools"] = native_tools
                 if request_format:
                     request_kwargs["format"] = request_format
                 response = await asyncio.wait_for(
@@ -221,6 +297,7 @@ class LocalModelProvider:
                 )
 
                 content = response.get("message", {}).get("content", "")
+                tool_calls = self._normalize_ollama_tool_calls(response.get("message", {}).get("tool_calls"))
                 prompt_tokens = response.get("prompt_eval_count")
                 completion_tokens = response.get("eval_count")
                 total_tokens = None
@@ -233,6 +310,7 @@ class LocalModelProvider:
 
                 raw = {
                     "ollama": response,
+                    "tool_calls": tool_calls,
                     "input_tokens": prompt_tokens,
                     "output_tokens": completion_tokens,
                     "total_tokens": total_tokens,
@@ -255,12 +333,19 @@ class LocalModelProvider:
                     "response_chars": len(content),
                     "ollama_request_format": request_format or None,
                     "ollama_format_fallback_used": False,
+                    "ollama_native_tool_names": native_tool_names,
+                    "ollama_tool_choice_requested": native_tool_choice,
+                    "ollama_native_payload_overrides": dict(native_payload_overrides),
                     "runtime_target": provider_runtime_target_payload(self),
                 }
                 raw.update(local_prompting_policy.telemetry())
                 return ModelResponse(content=content, raw=raw)
 
             except TypeError as exc:
+                if native_tools and "tools" in str(exc):
+                    raise ModelProviderError(
+                        f"Ollama client does not support native tools for model {self.model}."
+                    ) from exc
                 if request_format and "format" in str(exc):
                     raise ModelProviderError(
                         "Ollama client does not support format='json' for strict task "
@@ -300,6 +385,9 @@ class LocalModelProvider:
         local_prompting_policy: LocalPromptingPolicyResult,
         *,
         runtime_context: Mapping[str, Any],
+        native_tools: list[dict[str, Any]],
+        native_tool_choice: str | None,
+        native_payload_overrides: Mapping[str, Any],
     ) -> ModelResponse:
         invalid_roles = validate_openai_messages(list(messages))
         if invalid_roles:
@@ -320,6 +408,11 @@ class LocalModelProvider:
         response_format = str(os.getenv("ORKET_LLM_OPENAI_RESPONSE_FORMAT", "")).strip().lower()
         if response_format in {"text", "json_schema"}:
             payload["response_format"] = {"type": response_format}
+        if native_tools:
+            payload["tools"] = native_tools
+        if native_tool_choice:
+            payload["tool_choice"] = native_tool_choice
+        payload.update(native_payload_overrides)
         base_session_id = build_orket_session_id(
             runtime_context=runtime_context,
             model=self.model,
@@ -358,6 +451,15 @@ class LocalModelProvider:
                 latency_ms = int((time.perf_counter() - started_at) * 1000)
                 prompt_tokens, completion_tokens, total_tokens = extract_openai_usage(parsed)
                 prompt_ms, predicted_ms, total_ms = extract_openai_timings(parsed, latency_ms)
+                outbound_role_sequence = [
+                    str((message.get("role") or "")).strip().lower()
+                    for message in messages
+                    if isinstance(message, dict)
+                ]
+                outbound_role_counts = {
+                    role: outbound_role_sequence.count(role)
+                    for role in sorted(set(outbound_role_sequence))
+                }
 
                 raw = {
                     "openai_compat": parsed,
@@ -397,6 +499,16 @@ class LocalModelProvider:
                         "response_headers": select_response_headers(response.headers),
                     },
                     "runtime_target": provider_runtime_target_payload(self),
+                    "openai_request_message_count": len(messages),
+                    "openai_request_role_sequence": outbound_role_sequence,
+                    "openai_request_role_counts": outbound_role_counts,
+                    "openai_native_tool_names": [
+                        str((tool.get("function") or {}).get("name") or "").strip()
+                        for tool in native_tools
+                        if isinstance(tool, dict)
+                    ],
+                    "openai_tool_choice": native_tool_choice,
+                    "openai_native_payload_overrides": dict(native_payload_overrides),
                 }
                 raw.update(local_prompting_policy.telemetry())
                 return ModelResponse(content=content, raw=raw)

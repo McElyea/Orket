@@ -111,6 +111,53 @@ def test_contract_validator_rejects_artifact_semantic_contract_violations(tmp_pa
     assert semantic_violation["violations"][0]["path"] == "agent_output/main.py"
     assert semantic_violation["violations"][0]["missing_tokens"] == ["from challenge_runtime"]
     assert semantic_violation["violations"][0]["forbidden_tokens"] == ["from .challenge_runtime"]
+    assert semantic_violation["violations"][0]["preserve_tokens"] == []
+
+
+def test_contract_validator_reports_high_specificity_preserve_tokens_for_semantic_retry(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        tool_calls=[
+            ToolCall(
+                tool="write_file",
+                args={
+                    "path": "agent_output/tests/test_validator_and_planner.py",
+                    "content": (
+                        "workflow_path.write_text(json.dumps(workflow), encoding='utf-8')\n"
+                        "errors = validate_workflow(str(workflow_path))\n"
+                    ),
+                },
+            ),
+            ToolCall(tool="update_issue_status", args={"status": "done"}),
+        ],
+    )
+    context = {
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["done"],
+        "required_write_paths": ["agent_output/tests/test_validator_and_planner.py"],
+        "artifact_contract": {
+            "semantic_checks": [
+                {
+                    "path": "agent_output/tests/test_validator_and_planner.py",
+                    "label": "validator and planner tests use real fixture paths",
+                    "must_contain": [
+                        "write_text(json.dumps(",
+                        "validate_workflow(str(",
+                        "plan_workflow(str(",
+                    ],
+                    "must_not_contain": [],
+                }
+            ]
+        },
+    }
+
+    violations = validator.collect_contract_violations(turn, _role(), context)
+
+    semantic_violation = next(item for item in violations if item["reason"] == "artifact_semantic_contract_not_met")
+    assert semantic_violation["violations"][0]["missing_tokens"] == ["plan_workflow(str("]
+    assert semantic_violation["violations"][0]["preserve_tokens"] == ["write_text(json.dumps("]
 
 
 def test_contract_validator_allows_recovered_truncated_tool_only_payload(tmp_path: Path) -> None:
@@ -242,8 +289,8 @@ def test_contract_validator_local_prompt_reports_markdown_fence_leaf_code(tmp_pa
     assert violation["error_family"] == EXTRANEOUS_TEXT
 
 
-def test_contract_validator_local_prompt_allows_markdown_fence_on_legacy_non_protocol_tool_path(tmp_path: Path) -> None:
-    """Layer: contract. Verifies legacy non-protocol tool-call turns allow fenced JSON blocks."""
+def test_contract_validator_local_prompt_rejects_markdown_fence_on_legacy_non_protocol_tool_path(tmp_path: Path) -> None:
+    """Layer: contract. Verifies legacy tool-call turns reject fenced JSON blocks instead of relying on repair."""
     validator = _validator(tmp_path)
     turn = ExecutionTurn(
         role="developer",
@@ -258,7 +305,8 @@ def test_contract_validator_local_prompt_allows_markdown_fence_on_legacy_non_pro
         context={"protocol_governed_enabled": False},
     )
 
-    assert diagnostics["violations"] == []
+    fence_violation = next(item for item in diagnostics["violations"] if item["rule_id"] == "LOCAL_PROMPT.MARKDOWN_FENCE")
+    assert fence_violation["error_code"] == ERR_JSON_MD_FENCE
 
 
 def test_contract_validator_local_prompt_allows_leading_think_block_when_profile_permits(tmp_path: Path) -> None:
@@ -308,6 +356,27 @@ def test_contract_validator_local_prompt_rejects_profile_intro_denylist_prefix(t
     )
     diagnostics = validator.local_prompt_anti_meta_diagnostics(turn, context={})
     assert any(item["rule_id"] == "LOCAL_PROMPT.INTRO_DENYLIST" for item in diagnostics["violations"])
+
+
+def test_contract_validator_local_prompt_rejects_tool_call_meta_prefix_from_profile_denylist(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content='Thinking Process:\n{"tool":"write_file","args":{"path":"a.txt","content":"ok"}}',
+        raw={
+            "task_class": "tool_call",
+            "local_prompt_intro_denylist": ["thinking process:"],
+        },
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "ok"})],
+    )
+    diagnostics = validator.local_prompt_anti_meta_diagnostics(
+        turn,
+        context={"protocol_governed_enabled": False},
+    )
+
+    violation = next(item for item in diagnostics["violations"] if item["rule_id"] == "LOCAL_PROMPT.INTRO_DENYLIST")
+    assert violation["detail"] == "thinking process:"
 
 
 def test_contract_validator_accepts_comment_contract_when_comment_is_structured(tmp_path: Path) -> None:

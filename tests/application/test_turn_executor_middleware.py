@@ -772,7 +772,7 @@ async def test_prepare_messages_includes_guard_rejection_contract(tmp_path):
         None,
     )
     joined = "\n".join(str(m.get("content", "")) for m in messages)
-    assert "Guard Rejection Contract" in joined
+    assert "Guard Review Rules" in joined
     assert "remediation_actions" in joined
 
 
@@ -845,7 +845,8 @@ async def test_prepare_messages_includes_read_path_contract(tmp_path):
         None,
     )
     joined = "\n".join(str(m.get("content", "")) for m in messages)
-    assert "Read Path Contract" in joined
+    assert "TURN PACKET:" in joined
+    assert "- required read paths: agent_output/main.py" in joined
     assert "agent_output/main.py" in joined
 
 
@@ -868,7 +869,8 @@ async def test_prepare_messages_includes_write_path_contract(tmp_path):
         None,
     )
     joined = "\n".join(str(m.get("content", "")) for m in messages)
-    assert "Write Path Contract" in joined
+    assert "TURN PACKET:" in joined
+    assert "- required write paths: agent_output/main.py" in joined
     assert "agent_output/main.py" in joined
 
 

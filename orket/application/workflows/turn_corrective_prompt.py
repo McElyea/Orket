@@ -24,7 +24,11 @@ class CorrectivePromptBuilder:
             )
             lines.append('Use {"content":"","tool_calls":[...]} and do not use markdown fences.')
         else:
-            lines.append("Return JSON tool-call blocks only and satisfy all required contracts in this same response.")
+            lines.append(
+                'Return exactly one JSON object with keys "content" and '
+                '"tool_calls", and satisfy all required contracts in this same response.'
+            )
+            lines.append('Use {"content":"","tool_calls":[...]} and do not use markdown fences.')
         reason_set = {str(item.get("reason", "")).strip() for item in violations if str(item.get("reason", "")).strip()}
         if "progress_contract_not_met" in reason_set:
             required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if str(t).strip()]
@@ -59,6 +63,57 @@ class CorrectivePromptBuilder:
                 "- Architecture decision JSON is required at the configured architecture_decision_path "
                 "with recommendation, confidence (0..1), and full evidence keys."
             )
+        if "artifact_semantic_contract_not_met" in reason_set:
+            lines.append("- Artifact semantic contract violations must be fixed in the rewritten write_file content.")
+            lines.append("- Each listed missing token must appear verbatim in the final file content; do not paraphrase, rename variables, or substitute an equivalent expression.")
+            lines.append("- Each listed forbidden token must be removed verbatim from the final file content.")
+            for item in violations:
+                if str(item.get("reason", "")).strip() != "artifact_semantic_contract_not_met":
+                    continue
+                nested = item.get("violations")
+                if not isinstance(nested, list):
+                    continue
+                for violation in nested:
+                    if not isinstance(violation, dict):
+                        continue
+                    path = str(violation.get("path") or "").strip()
+                    label = str(violation.get("label") or "").strip()
+                    prefix = f"- Artifact path {path or '<unknown>'}"
+                    if label:
+                        prefix += f" ({label})"
+                    lines.append(prefix + ":")
+                    missing_tokens = [
+                        str(token).strip()
+                        for token in (violation.get("missing_tokens") or [])
+                        if str(token).strip()
+                    ]
+                    forbidden_tokens = [
+                        str(token).strip()
+                        for token in (violation.get("forbidden_tokens") or [])
+                        if str(token).strip()
+                    ]
+                    preserve_tokens = [
+                        str(token).strip()
+                        for token in (violation.get("preserve_tokens") or [])
+                        if str(token).strip()
+                    ]
+                    if missing_tokens:
+                        lines.append("  - Add these exact required substrings: " + ", ".join(missing_tokens))
+                        if any("write_text(json.dumps(" in token for token in missing_tokens):
+                            lines.append(
+                                "  - If write_text(json.dumps( is required, use that exact substring verbatim; open(...)/json.dump(...) does not satisfy the contract."
+                            )
+                    if forbidden_tokens:
+                        lines.append("  - Remove these forbidden substrings: " + ", ".join(forbidden_tokens))
+                    if preserve_tokens:
+                        lines.append(
+                            "  - Keep these exact substrings that are already correct in the current file: "
+                            + ", ".join(preserve_tokens)
+                        )
+                    if missing_tokens or forbidden_tokens:
+                        lines.append(
+                            "  - Rewrite the required file so the final write_file content satisfies these exact checks."
+                        )
         if "guard_rejection_payload_contract_not_met" in reason_set:
             lines.append(
                 "- If update_issue_status.status=blocked, include JSON payload keys: "
@@ -113,26 +168,28 @@ class CorrectivePromptBuilder:
                 lines.append("- Required-call template (emit one JSON object like this in this same response):")
                 lines.append("  " + json.dumps({"content": "", "tool_calls": example_calls}, ensure_ascii=False))
             else:
-                lines.append("- Required-call template (emit blocks like these in this same response):")
+                example_calls: list[dict[str, object]] = []
                 for path in required_read_paths:
-                    lines.append(f'  {{"tool":"read_file","args":{{"path":"{path}"}}}}')
+                    example_calls.append({"tool": "read_file", "args": {"path": path}})
                 for path in required_write_paths:
-                    lines.append(f'  {{"tool":"write_file","args":{{"path":"{path}","content":"<actual content>"}}}}')
+                    example_calls.append({"tool": "write_file", "args": {"path": path, "content": "<actual content>"}})
                 if len(required_statuses) == 1:
                     status = required_statuses[0]
                     if status == "blocked":
-                        lines.append(
-                            '  {"tool":"update_issue_status","args":{"status":"blocked","wait_reason":"review"}}'
+                        example_calls.append(
+                            {"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "review"}}
                         )
                     else:
-                        lines.append(f'  {{"tool":"update_issue_status","args":{{"status":"{status}"}}}}')
+                        example_calls.append({"tool": "update_issue_status", "args": {"status": status}})
                 elif required_statuses:
-                    lines.append(
-                        "  "
-                        + '{"tool":"update_issue_status","args":{"status":"<one of '
-                        + "|".join(required_statuses)
-                        + '>"}}'
+                    example_calls.append(
+                        {
+                            "tool": "update_issue_status",
+                            "args": {"status": "<one of " + "|".join(required_statuses) + ">"},
+                        }
                     )
+                lines.append("- Required-call template (emit one JSON object like this in this same response):")
+                lines.append("  " + json.dumps({"content": "", "tool_calls": example_calls}, ensure_ascii=False))
 
         return "\n".join(lines)
 

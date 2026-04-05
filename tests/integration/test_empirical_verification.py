@@ -92,6 +92,7 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
     def mock_init(self, *a, **k):
         self.model = "dummy"
         self.timeout = 300
+    monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", p.complete)
 

@@ -730,6 +730,105 @@ async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mo
 
 
 @pytest.mark.asyncio
+async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_strategy(orchestrator, monkeypatch):
+    """Layer: integration. Verifies issue execution uses the explicit model override when selecting model and dialect."""
+    orch, cards, loader = orchestrator
+    issue = IssueConfig(id="I1", seat="dev", summary="Test")
+    issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
+    epic = SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1")
+    team = SimpleNamespace(seats={"dev": SimpleNamespace(roles=["lead_architect"])})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    loader.queue_assets(
+        [
+            SimpleNamespace(name="dev", description="role", tools=[]),
+            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+        ]
+    )
+
+    class _Memory:
+        async def search(self, _query):
+            return []
+
+        async def remember(self, content, metadata):
+            return None
+
+    class _Provider:
+        def __init__(self, owner):
+            self._owner = owner
+
+        async def complete(self, _messages):
+            return SimpleNamespace(content="ok", raw={})
+
+        async def clear_context(self):
+            return None
+
+        async def close(self):
+            self._owner.close_calls += 1
+
+    class _ModelClientNode:
+        def __init__(self):
+            self.provider_model = None
+            self.close_calls = 0
+
+        def create_provider(self, selected_model, env):
+            self.provider_model = selected_model
+            return _Provider(self)
+
+        def create_client(self, provider):
+            return SimpleNamespace()
+
+    captured = {"override": None, "dialect_model": None}
+
+    class _PromptStrategy:
+        def select_model(self, role, asset_config, override=None):
+            captured["override"] = override
+            return override or "dummy-model"
+
+        def select_dialect(self, model):
+            captured["dialect_model"] = model
+            return "generic"
+
+    class _Executor:
+        async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
+            return TurnResult(
+                success=True,
+                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+            )
+
+    async def _noop(*args, **kwargs):
+        return None
+
+    monkeypatch.setattr(
+        "orket.application.workflows.orchestrator.PromptCompiler.compile",
+        lambda skill, dialect, **kwargs: "SYSTEM",
+    )
+
+    orch.memory = _Memory()
+    orch._save_checkpoint = _noop
+    orch._trigger_sandbox = _noop
+    orch.model_client_node = _ModelClientNode()
+    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
+
+    await orch._execute_issue_turn(
+        issue_data=issue_data,
+        epic=epic,
+        team=team,
+        env=env,
+        run_id="run-1",
+        active_build="build-1",
+        prompt_strategy_node=_PromptStrategy(),
+        executor=_Executor(),
+        toolbox=SimpleNamespace(),
+        model_override="google/gemma-4-26b-a4b",
+    )
+
+    assert captured["override"] == "google/gemma-4-26b-a4b"
+    assert captured["dialect_model"] == "google/gemma-4-26b-a4b"
+    assert orch.model_client_node.provider_model == "google/gemma-4-26b-a4b"
+
+
+@pytest.mark.asyncio
 async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycles(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test")
@@ -1578,6 +1677,208 @@ async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchest
     assert "required_write_paths" in captured["kwargs"]["context"]
     assert captured["kwargs"]["guards"] == ["hallucination"]
     assert "HALLUCINATION.FILE_NOT_FOUND" in captured["kwargs"]["context"]["runtime_guard_rule_ids"]
+
+
+@pytest.mark.asyncio
+async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orchestrator, monkeypatch):
+    """Layer: contract. Verifies runtime prompt patches flow into resolver-mode execution without mutating assets."""
+    orch, cards, loader = orchestrator
+    orch.org.process_rules["prompt_resolver_mode"] = "resolver"
+    monkeypatch.setenv("ORKET_PROMPT_PATCH", "Patch line one.\nPatch line two.")
+    monkeypatch.setenv("ORKET_PROMPT_PATCH_LABEL", "gemma-tool-use-v1")
+    issue = IssueConfig(id="I1", seat="architect", summary="Design")
+    issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
+    epic = SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1")
+    team = SimpleNamespace(seats={"architect": SimpleNamespace(roles=["architect"])})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    loader.queue_assets(
+        [
+            SimpleNamespace(name="architect", description="Role", tools=[], prompt_metadata={}),
+            SimpleNamespace(
+                model_family="generic",
+                dsl_format="json",
+                constraints=[],
+                hallucination_guard="none",
+                prompt_metadata={},
+            ),
+        ]
+    )
+
+    class _Memory:
+        async def search(self, _query):
+            return []
+
+        async def remember(self, content, metadata):
+            return None
+
+    class _Provider:
+        async def clear_context(self):
+            return None
+
+    class _ModelClientNode:
+        def create_provider(self, selected_model, env):
+            return _Provider()
+
+        def create_client(self, provider):
+            return SimpleNamespace()
+
+    class _PromptStrategy:
+        def select_model(self, role, asset_config):
+            return "dummy-model"
+
+        def select_dialect(self, model):
+            return "generic"
+
+    captured = {}
+
+    class _Executor:
+        async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
+            captured["context"] = context
+            return TurnResult(
+                success=True,
+                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+            )
+
+    class _Resolution:
+        def __init__(self):
+            self.system_prompt = "RESOLVED PROMPT"
+            self.metadata = {
+                "prompt_id": "role.architect+dialect.generic",
+                "prompt_version": "1.0.0/1.0.0",
+                "prompt_checksum": "abc123",
+                "resolver_policy": "resolver_v1",
+            }
+            self.layers = {
+                "role_base": {"name": "architect", "version": "1.0.0"},
+                "dialect_adapter": {"name": "generic", "version": "1.0.0", "prefix_applied": False},
+                "guards": [],
+                "context_profile": "default",
+            }
+
+    async def _noop(*args, **kwargs):
+        return None
+
+    def _fake_resolve(**kwargs):
+        captured["kwargs"] = kwargs
+        return _Resolution()
+
+    monkeypatch.setattr("orket.application.workflows.orchestrator.PromptResolver.resolve", _fake_resolve)
+
+    orch.memory = _Memory()
+    orch.model_client_node = _ModelClientNode()
+    orch._save_checkpoint = _noop
+    orch._trigger_sandbox = _noop
+    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
+
+    await orch._execute_issue_turn(
+        issue_data=issue_data,
+        epic=epic,
+        team=team,
+        env=env,
+        run_id="run-1",
+        active_build="build-1",
+        prompt_strategy_node=_PromptStrategy(),
+        executor=_Executor(),
+        toolbox=SimpleNamespace(),
+    )
+
+    assert captured["kwargs"]["patch"] == "Patch line one.\nPatch line two."
+    assert captured["context"]["prompt_metadata"]["prompt_patch_applied"] is True
+    assert captured["context"]["prompt_metadata"]["prompt_patch_label"] == "gemma-tool-use-v1"
+    assert captured["context"]["prompt_layers"]["patch"]["applied"] is True
+
+
+@pytest.mark.asyncio
+async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orchestrator, monkeypatch):
+    """Layer: contract. Verifies compiler-mode execution also receives runtime prompt patches."""
+    orch, cards, loader = orchestrator
+    monkeypatch.setenv("ORKET_PROMPT_PATCH", "Compiler patch.")
+    issue = IssueConfig(id="I1", seat="architect", summary="Design")
+    issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
+    epic = SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1")
+    team = SimpleNamespace(seats={"architect": SimpleNamespace(roles=["architect"])})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    loader.queue_assets(
+        [
+            SimpleNamespace(name="architect", description="Role", tools=[], prompt_metadata={}),
+            SimpleNamespace(
+                model_family="generic",
+                dsl_format="json",
+                constraints=[],
+                hallucination_guard="none",
+                prompt_metadata={},
+            ),
+        ]
+    )
+
+    class _Memory:
+        async def search(self, _query):
+            return []
+
+        async def remember(self, content, metadata):
+            return None
+
+    class _Provider:
+        async def clear_context(self):
+            return None
+
+    class _ModelClientNode:
+        def create_provider(self, selected_model, env):
+            return _Provider()
+
+        def create_client(self, provider):
+            return SimpleNamespace()
+
+    class _PromptStrategy:
+        def select_model(self, role, asset_config):
+            return "dummy-model"
+
+        def select_dialect(self, model):
+            return "generic"
+
+    captured = {}
+
+    class _Executor:
+        async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
+            captured["context"] = context
+            captured["system_prompt"] = system_prompt
+            return TurnResult(
+                success=True,
+                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+            )
+
+    async def _noop(*args, **kwargs):
+        return None
+
+    def _fake_compile(skill, dialect, **kwargs):
+        captured["compile_kwargs"] = kwargs
+        return "COMPILER PROMPT"
+
+    monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", _fake_compile)
+
+    orch.memory = _Memory()
+    orch.model_client_node = _ModelClientNode()
+    orch._save_checkpoint = _noop
+    orch._trigger_sandbox = _noop
+    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
+
+    await orch._execute_issue_turn(
+        issue_data=issue_data,
+        epic=epic,
+        team=team,
+        env=env,
+        run_id="run-1",
+        active_build="build-1",
+        prompt_strategy_node=_PromptStrategy(),
+        executor=_Executor(),
+        toolbox=SimpleNamespace(),
+    )
+
+    assert captured["compile_kwargs"]["patch"] == "Compiler patch."
+    assert captured["context"]["prompt_metadata"]["prompt_patch_applied"] is True
+    assert captured["system_prompt"] == "COMPILER PROMPT"
 
 
 @pytest.mark.asyncio

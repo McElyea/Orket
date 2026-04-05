@@ -191,6 +191,46 @@ async def test_issue_dispatch_keeps_cards_epic_workload_path(monkeypatch: pytest
 
 
 @pytest.mark.asyncio
+async def test_issue_dispatch_ignores_forwarded_target_issue_id(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: unit. Verifies issue-card dispatch does not forward a duplicate target_issue_id into epic execution."""
+
+    pipeline = object.__new__(ExecutionPipeline)
+    pipeline.workspace = Path("workspace/default")
+    seen: dict[str, object] = {}
+
+    async def _run_epic_entry(epic_name: str, **kwargs):  # type: ignore[no-untyped-def]
+        seen["epic_name"] = epic_name
+        seen["kwargs"] = kwargs
+        return [{"epic": epic_name}]
+
+    pipeline._run_epic_entry = _run_epic_entry  # type: ignore[method-assign]
+    monkeypatch.setattr(execution_pipeline_module, "log_event", lambda *_args, **_kwargs: None)
+
+    result = await ExecutionPipeline._run_issue_entry(
+        pipeline,
+        "ISSUE-42",
+        build_id="build-42",
+        session_id="session-42",
+        driver_steered=True,
+        parent_epic_name="parent-epic",
+        target_issue_id="WRONG-ISSUE",
+        resume_token="resume-42",
+    )
+
+    assert seen == {
+        "epic_name": "parent-epic",
+        "kwargs": {
+            "build_id": "build-42",
+            "session_id": "session-42",
+            "driver_steered": True,
+            "target_issue_id": "ISSUE-42",
+            "resume_token": "resume-42",
+        },
+    }
+    assert result == [{"epic": "parent-epic"}]
+
+
+@pytest.mark.asyncio
 async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: unit. Verifies the internal collection path no longer returns a rock-shaped payload."""
     pipeline = object.__new__(ExecutionPipeline)

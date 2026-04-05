@@ -10,6 +10,10 @@ from typing import Any
 from orket.adapters.llm.local_prompting_lmstudio_session import (
     resolve_lmstudio_session_settings,
 )
+from orket.runtime.compact_turn_packet import (
+    compact_turn_messages,
+    is_compact_turn_packet,
+)
 from orket.runtime.local_prompt_profiles import (
     DEFAULT_LOCAL_PROMPT_PROFILE_REGISTRY_PATH,
     LocalPromptProfile,
@@ -145,6 +149,24 @@ def _apply_user_injection(messages: list[dict[str, str]]) -> list[dict[str, str]
     return [{"role": "user", "content": wrapper}, *non_system]
 
 
+def _collapse_adjacent_user_messages(messages: list[dict[str, str]]) -> tuple[list[dict[str, str]], int]:
+    collapsed: list[dict[str, str]] = []
+    merged_count = 0
+    for message in messages:
+        role = str((message or {}).get("role") or "").strip().lower()
+        content = str((message or {}).get("content") or "")
+        if role == "user" and collapsed and str(collapsed[-1].get("role") or "").strip().lower() == "user":
+            prior_content = str(collapsed[-1].get("content") or "")
+            if prior_content and content:
+                collapsed[-1]["content"] = f"{prior_content}\n\n{content}"
+            elif content:
+                collapsed[-1]["content"] = content
+            merged_count += 1
+            continue
+        collapsed.append({"role": role, "content": content})
+    return collapsed, merged_count
+
+
 def _apply_reasoning_suppression_hint(
     messages: list[dict[str, str]],
     *,
@@ -197,6 +219,28 @@ def _estimate_tokens(text: str) -> int:
     return max(1, len(text.encode("utf-8")) // 4)
 
 
+def _effective_context_budget_tokens(
+    *,
+    profile_id: str,
+    task_class: str,
+    runtime_context: dict[str, Any],
+    profile_budget_tokens: int,
+) -> tuple[int, str | None]:
+    effective_budget = int(profile_budget_tokens)
+    warning = None
+    if profile_id == "openai_compat.gemma.openai_messages.v1" and task_class == "tool_call":
+        required_write_paths = [
+            str(path).strip()
+            for path in (runtime_context.get("required_write_paths") or [])
+            if str(path).strip()
+        ]
+        if len(required_write_paths) > 1:
+            effective_budget = min(effective_budget, 2400)
+            if effective_budget != int(profile_budget_tokens):
+                warning = f"context_budget_cap:gemma_multi_write:{effective_budget}"
+    return effective_budget, warning
+
+
 def _trim_messages_by_budget(
     messages: list[dict[str, str]],
     *,
@@ -223,6 +267,18 @@ def _trim_messages_by_budget(
         keep.insert(1, row)
         keep_cost += cost
     return keep, trimmed
+
+
+def _strip_prior_transcript_messages(messages: list[dict[str, str]]) -> tuple[list[dict[str, str]], int]:
+    stripped: list[dict[str, str]] = []
+    removed = 0
+    for message in messages:
+        content = str((message or {}).get("content") or "")
+        if content.startswith("Prior Transcript JSON:\n"):
+            removed += 1
+            continue
+        stripped.append(message)
+    return stripped, removed
 
 
 def _provider_default_stops(provider_backend: str) -> list[str]:
@@ -341,6 +397,7 @@ async def resolve_local_prompting_policy(
     messages: list[dict[str, str]],
     runtime_context: dict[str, Any] | None = None,
 ) -> LocalPromptingPolicyResult:
+    warnings: list[str] = []
     context = dict(runtime_context or {})
     mode = _normalize_mode(context.get("local_prompting_mode") or os.getenv("ORKET_LOCAL_PROMPTING_MODE") or "shadow")
     task_class = _resolve_task_class(context)
@@ -413,22 +470,58 @@ async def resolve_local_prompting_policy(
         profile_id=resolved.profile.profile_id,
         allows_thinking_blocks=bool(resolved.profile.allows_thinking_blocks),
     )
-    resolved_messages, trimmed_count = _trim_messages_by_budget(
-        resolved_messages,
-        context_budget_tokens=int(resolved.profile.context_budget_tokens),
+    if resolved.profile.profile_id == "openai_compat.gemma.openai_messages.v1":
+        already_compacted = is_compact_turn_packet(resolved_messages)
+        if task_class == "tool_call" and not already_compacted:
+            gemma_compaction = compact_turn_messages(
+                resolved_messages,
+                runtime_context=context,
+            )
+            resolved_messages = gemma_compaction.messages
+            if gemma_compaction.applied:
+                warnings.append(
+                    "message_packet_compacted:gemma_tool_turn_v1:"
+                    f"{gemma_compaction.source_message_count}->{gemma_compaction.compacted_message_count}"
+                )
+    effective_context_budget_tokens, context_budget_warning = _effective_context_budget_tokens(
+        profile_id=resolved.profile.profile_id,
+        task_class=task_class,
+        runtime_context=context,
+        profile_budget_tokens=int(resolved.profile.context_budget_tokens),
     )
+    pretrim_messages = list(resolved_messages)
+    resolved_messages, trimmed_count = _trim_messages_by_budget(
+        pretrim_messages,
+        context_budget_tokens=effective_context_budget_tokens,
+    )
+    if trimmed_count > 0:
+        stripped_messages, stripped_history_count = _strip_prior_transcript_messages(pretrim_messages)
+        if stripped_history_count > 0:
+            stripped_messages, retrimmed_count = _trim_messages_by_budget(
+                stripped_messages,
+                context_budget_tokens=effective_context_budget_tokens,
+            )
+            if retrimmed_count <= trimmed_count:
+                resolved_messages = stripped_messages
+                trimmed_count = retrimmed_count
+                warnings.append(f"context_history_stripped:{stripped_history_count}")
     role_violation = _role_forbidden_error(resolved_messages, resolved.profile)
     if role_violation:
         tool_path = task_class == "tool_call"
         if mode == "enforce" or (mode == "compat" and tool_path):
             raise ValueError(f"{E_LOCAL_PROMPT_ROLE_FORBIDDEN}:{role_violation}")
-    warnings: list[str] = []
     if trimmed_count > 0:
         warnings.append(f"context_trimmed:{trimmed_count}")
     if reasoning_hint:
         warnings.append(f"reasoning_suppression:{reasoning_hint}")
+    if context_budget_warning:
+        warnings.append(context_budget_warning)
     if lmstudio_session_mode in {"context", "fixed"} and not lmstudio_session_id:
         warnings.append("lmstudio_session_id_missing")
+    if resolved.profile.profile_id == "openai_compat.gemma.openai_messages.v1":
+        resolved_messages, collapsed_user_messages = _collapse_adjacent_user_messages(resolved_messages)
+        if collapsed_user_messages > 0:
+            warnings.append(f"message_shape:user_blocks_collapsed:{collapsed_user_messages}")
     effective_stops = _effective_stops(provider_backend, resolved.profile, task_class)
     sampling_bundle = _sampling_bundle(resolved.profile, task_class)
     template_hash, byte_count = _render_hash(resolved_messages)

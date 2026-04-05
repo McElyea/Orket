@@ -242,6 +242,14 @@ class Orchestrator:
         _sync_patchable_symbols()
         return orchestrator_ops._resolve_prompt_version_exact(self, *args, **kwargs)
 
+    def _resolve_prompt_patch(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_prompt_patch(self, *args, **kwargs)
+
+    def _resolve_prompt_patch_label(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_prompt_patch_label(self, *args, **kwargs)
+
     def _resolve_verification_scope_limits(self, *args: Any, **kwargs: Any) -> Any:
         _sync_patchable_symbols()
         return orchestrator_ops._resolve_verification_scope_limits(self, *args, **kwargs)
@@ -324,6 +332,7 @@ class Orchestrator:
         env: EnvironmentConfig,
         target_issue_id: str | None = None,
         resume_mode: bool = False,
+        model_override: str | None = None,
     ) -> list[IssueConfig]:
         _sync_patchable_symbols()
         return await orchestrator_ops.execute_epic(
@@ -335,6 +344,7 @@ class Orchestrator:
             env=env,
             target_issue_id=target_issue_id,
             resume_mode=resume_mode,
+            model_override=model_override,
         )
 
     async def _save_checkpoint(

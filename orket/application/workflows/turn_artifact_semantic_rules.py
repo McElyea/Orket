@@ -5,6 +5,17 @@ from typing import Any
 from orket.domain.execution import ExecutionTurn
 
 
+def _preserve_tokens(*, must_contain: list[str], missing_tokens: list[str], content: str) -> list[str]:
+    missing = set(missing_tokens)
+    preserved: list[str] = []
+    for token in must_contain:
+        if token in missing or token not in content:
+            continue
+        if "write_text(" in token and "json.dumps(" in token:
+            preserved.append(token)
+    return preserved
+
+
 def artifact_semantic_contract_diagnostics(
     turn: ExecutionTurn,
     context: dict[str, Any],
@@ -59,6 +70,11 @@ def artifact_semantic_contract_diagnostics(
         forbidden_tokens = [token for token in must_not_contain if token in content]
         if not missing_tokens and not forbidden_tokens:
             continue
+        preserve_tokens = _preserve_tokens(
+            must_contain=must_contain,
+            missing_tokens=missing_tokens,
+            content=content,
+        )
 
         violations.append(
             {
@@ -66,6 +82,7 @@ def artifact_semantic_contract_diagnostics(
                 "label": label,
                 "missing_tokens": missing_tokens,
                 "forbidden_tokens": forbidden_tokens,
+                "preserve_tokens": preserve_tokens,
             }
         )
 

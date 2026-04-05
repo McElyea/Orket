@@ -1,6 +1,6 @@
 # Protocol-Governed Local Provider Compatibility Contract (v1.2)
 
-Last updated: 2026-03-06  
+Last updated: 2026-04-04
 Status: Active (contract baseline)  
 Owner: Orket Core
 
@@ -111,6 +111,11 @@ Requirements:
 2. If a runtime path requires a `tool` role, `tool` MUST be included in `allowed_roles`.
 3. Do not invent custom roles in outbound payloads.
 4. For profiles using `system_prompt_mode=user_injection`, system content MUST be injected into the first user turn using a deterministic wrapper, and outbound payload MUST omit the `system` role entirely.
+5. For `openai_messages` profiles, runtime SHOULD normalize internal prompt layering into canonical chat turns before provider submission when the provider-model lane has conformance evidence that adjacent duplicate-role blocks hurt tool behavior.
+6. Governed `tool_call` turns SHOULD compact at source into one minimal model-facing `system` prompt plus one bounded `TURN PACKET` `user` prompt before provider submission.
+7. The compact `TURN PACKET` MUST preserve the turn's required tools, admitted read or write paths, allowed statuses, artifact semantic checks, corrective instruction, and any preloaded read context or runtime-verifier result needed by that turn.
+8. The compact `TURN PACKET` MUST NOT preserve the old split-prompt block labels such as `Execution Context JSON`, `Artifact Contract JSON`, `Artifact Semantic Contract`, `Scenario Truth Contract`, `Turn Success Contract`, `Write Path Contract`, `Read Path Contract`, `Hallucination Verification Scope`, `Guard Decision Contract`, `Guard Rejection Contract`, or `Protocol Response Contract`.
+9. The admitted LM Studio Gemma 4 lane preserves the native `system` role and reuses the shared source compact packet; it MAY collapse any remaining adjacent `user` blocks into one merged `user` turn only as a compatibility safeguard when upstream legacy messages still arrive, unless alternating assistant/tool history requires distinct turns.
 
 ### LP-04: Stop Sequence Contract (MUST)
 
@@ -131,7 +136,9 @@ For `strict_json` and `tool_call` task classes, prompt assembly MUST include:
 2. explicit payload-only output constraint,
 3. no-markdown/no-prose constraint.
 4. for `tool_call`, serialization and role behavior MUST follow `tool_contract` in LP-01.
-5. provider-enforced single-object JSON response modes MUST NOT be required for legacy `tool_call` turns when the active runtime contract allows repeated tool-call objects in one response (for example multiple `read_file` calls to satisfy required read paths).
+5. provider-enforced single-object JSON response modes are allowed and preferred when the active runtime contract uses one canonical `{"content":"","tool_calls":[...]}` envelope for `tool_call` turns; they MUST NOT be required only for older compatibility paths that still admit repeated top-level tool-call objects in one response.
+6. For `tool_call_mode=native`, the adapter MUST declare only the native tool names and bounded path surfaces admitted for that turn.
+7. If explicit turn-level required read or write paths are absent, bounded native declared-path surfaces MAY fall back to the active artifact contract read or write paths and the verification-scope active or provided context, but MUST NOT widen beyond those sources.
 
 ### LP-06: Assistant Prefill Policy (SHOULD; MUST when configured)
 
@@ -156,11 +163,12 @@ Requirements:
 4. Active context trimming MUST honor `context_budget_tokens` before provider submission.
 5. `context_budget_tokens` MUST be computed with the tokenizer used by the resolved provider-model profile (or a declared equivalent), and token counter source MUST be recorded in conformance artifacts.
 6. Strict tool paths MUST exclude non-essential context/protocol chatter.
-7. `history_policy` MUST be selected from a versioned registry:
+7. Provider-model lanes with a measured local runtime ceiling below the nominal profile allowance MAY apply a stricter deterministic effective budget for specific task shapes, and the admitted LM Studio Gemma 4 lane applies that tighter cap on multi-write `tool_call` turns to preserve native tool-call headroom.
+8. `history_policy` MUST be selected from a versioned registry:
    - `bounded_head_tail_v1`
    - `seat_only_bounded_head_tail_v1`
    - `none_v1`
-8. `bounded_head_tail` is an alias for `bounded_head_tail_v1`.
+9. `bounded_head_tail` is an alias for `bounded_head_tail_v1`.
 
 LP-07 visualization (bounded head-tail):
 
@@ -271,9 +279,14 @@ Minimum telemetry fields:
 11. `stop_sequences_by_task_class`
 12. `effective_stop_sequences`
 13. `history_policy`
+14. declared native-tool telemetry when native tools are used (for example `openai_native_tool_names`)
+15. native tool-choice telemetry when native tools are used (for example `openai_tool_choice`)
+16. prompt-compaction telemetry when the provider-model lane compacts verbose governed prompt layers (for example `local_prompting_warnings`)
 
 Requirements:
 1. Validator inputs MUST include `(profile_id, task_class)`.
+2. When native-tool telemetry is present, parser and validator paths MUST treat the recorded declared native-tool surface as authoritative for filtering provider-emitted native calls.
+3. When prompt-packet compaction is applied, telemetry MUST record a stable provider-model warning token identifying the compaction contract version.
 
 ### LP-12: Runtime Compatibility Matrix Coverage (MUST)
 
