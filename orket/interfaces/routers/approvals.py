@@ -22,7 +22,7 @@ def build_approvals_router(engine_getter: Callable[[], Any]) -> APIRouter:
         session_id: str | None = Query(default=None),
         request_id: str | None = Query(default=None),
         limit: int = Query(default=100, ge=1, le=500),
-    ):
+    ) -> dict[str, Any]:
         engine = engine_getter()
         try:
             items = await engine.list_approvals(
@@ -46,7 +46,7 @@ def build_approvals_router(engine_getter: Callable[[], Any]) -> APIRouter:
         }
 
     @router.get("/approvals/{approval_id}")
-    async def get_approval(approval_id: str):
+    async def get_approval(approval_id: str) -> Any:
         engine = engine_getter()
         try:
             approval = await engine.get_approval(approval_id)
@@ -61,7 +61,7 @@ def build_approvals_router(engine_getter: Callable[[], Any]) -> APIRouter:
         return approval
 
     @router.post("/approvals/{approval_id}/decision")
-    async def decide_approval(approval_id: str, req: ApprovalDecisionRequest, request: Request):
+    async def decide_approval(approval_id: str, req: ApprovalDecisionRequest, request: Request) -> Any:
         engine = engine_getter()
         try:
             result = await engine.decide_approval(

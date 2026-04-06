@@ -37,7 +37,6 @@ _TRACE_IDS: dict[str, str] = {
     "feature_flag_expiration_policy": "TRUTH-W2E-FEATURE-FLAG-EXPIRATION-POLICY",
     "workspace_hygiene_rules": "TRUTH-W2E-WORKSPACE-HYGIENE-RULES",
     "canonical_examples_library": "TRUTH-W2E-CANONICAL-EXAMPLES-LIBRARY",
-    "spec_debt_queue": "TRUTH-W2E-SPEC-DEBT-QUEUE",
     "non_fatal_error_budget": "TRUTH-W2E-NON-FATAL-ERROR-BUDGET",
     "interface_freeze_windows": "TRUTH-W2E-INTERFACE-FREEZE-WINDOWS",
     "evidence_package_generator_contract": "TRUTH-W2E-EVIDENCE-PACKAGE-GENERATOR",

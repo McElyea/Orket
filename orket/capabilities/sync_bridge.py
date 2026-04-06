@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from typing import Any
+from collections.abc import Coroutine
+from typing import Any, TypeVar
 
 _bridge_lock = threading.Lock()
 _bridge_ready = threading.Event()
 _bridge_loop: asyncio.AbstractEventLoop | None = None
 _bridge_thread: threading.Thread | None = None
+ResultT = TypeVar("ResultT")
 
 
 def _bridge_loop_runner(loop: asyncio.AbstractEventLoop) -> None:
@@ -43,7 +45,7 @@ def _ensure_bridge_loop() -> asyncio.AbstractEventLoop:
         return loop
 
 
-def run_coro_sync(coro: Any) -> Any:
+def run_coro_sync(coro: Coroutine[Any, Any, ResultT]) -> ResultT:
     if not asyncio.iscoroutine(coro):
         raise TypeError("run_coro_sync expects a coroutine object.")
     loop = _ensure_bridge_loop()

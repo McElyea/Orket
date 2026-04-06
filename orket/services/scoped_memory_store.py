@@ -210,6 +210,7 @@ class ScopedMemoryStore:
         resolved_session = self.normalize_session_id("session_memory", session_id)
         bounded_limit = _bounded_limit(limit)
         normalized_query = str(query or "").strip()
+        args: tuple[Any, ...]
         if normalized_query:
             like_query = f"%{normalized_query}%"
             sql = """
@@ -236,6 +237,7 @@ class ScopedMemoryStore:
         resolved_session = self.normalize_session_id("episodic_memory", session_id)
         bounded_limit = _bounded_limit(limit)
         normalized_query = str(query or "").strip()
+        args: tuple[Any, ...]
         if normalized_query:
             like_query = f"%{normalized_query}%"
             sql = """
@@ -402,7 +404,7 @@ class ScopedMemoryStore:
         async with aiosqlite.connect(self._db_path) as conn:
             cursor = await conn.execute(sql, args)
             rows = await cursor.fetchall()
-        return [_row_to_record(row) for row in rows]
+        return [_row_to_record(tuple(row)) for row in rows]
 
 
 def _bounded_limit(limit: int) -> int:

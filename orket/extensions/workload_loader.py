@@ -7,7 +7,7 @@ import inspect
 import sys
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket_extension_sdk.result import WorkloadResult
 from orket_extension_sdk.workload import Workload as SDKWorkload
@@ -88,7 +88,7 @@ class WorkloadLoader:
             run_method = getattr(instance, "run", None)
             if run_method is None or not callable(run_method):
                 raise ValueError(f"E_SDK_ENTRYPOINT_INVALID: {workload.entrypoint}")
-            return instance
+            return cast(SDKWorkload, instance)
         finally:
             if added_path:
                 with contextlib.suppress(ValueError):

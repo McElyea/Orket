@@ -2,9 +2,55 @@ from __future__ import annotations
 
 import json
 import shlex
+from pathlib import Path
+from typing import Any, Protocol
+
+from orket.driver_support_conversation import _build_capabilities_summary
+
+class _ReforgerTools(Protocol):
+    def inspect(self, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def run(self, payload: dict[str, Any]) -> dict[str, Any]: ...
 
 
 class DriverCliMixin:
+    model_root: Path
+    fs: Any
+    reforger_tools: _ReforgerTools
+
+    def _capabilities_summary(self) -> str:
+        return _build_capabilities_summary(self)
+
+    def _slug_name(self, value: str) -> str:
+        raise NotImplementedError
+
+    def _resource_dir(self, resource: str, department: str) -> Path | None:
+        raise NotImplementedError
+
+    def _find_asset_path(self, resource: str, name: str, department: str | None = None) -> Path | None:
+        raise NotImplementedError
+
+    def _list_cards_for_epic(self, epic_name: str, department: str) -> str:
+        raise NotImplementedError
+
+    async def _list_cards_for_epic_async(self, epic_name: str, department: str) -> str:
+        raise NotImplementedError
+
+    def _team_template(self, name: str) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def _environment_template(self, name: str) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def _epic_template(self, name: str) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def _rock_template(self, name: str, department: str) -> dict[str, Any]:
+        raise NotImplementedError
+
+    async def _load_epic_payload_for_write_async(self, path: Path) -> tuple[dict[str, Any], bool]:
+        raise NotImplementedError
+
     async def _try_cli_command(self, message: str) -> str | None:
         text = str(message or "").strip()
         if not text:
@@ -70,7 +116,7 @@ class DriverCliMixin:
         sub = str(args[0]).strip().lower()
         flags = self._parse_reforge_flags(args[1:])
         if sub == "inspect":
-            input_dir = flags.get("in") or flags.get("input") or "."
+            input_dir = str(flags.get("in") or flags.get("input") or ".").strip() or "."
             payload = {
                 "route_id": flags.get("route"),
                 "input_dir": input_dir,
@@ -95,9 +141,9 @@ class DriverCliMixin:
                 + f"artifact_root={result.get('artifact_root')}"
             )
         if sub == "run":
-            route_id = flags.get("route")
-            input_dir = flags.get("in") or flags.get("input")
-            output_dir = flags.get("out") or flags.get("output")
+            route_id = str(flags.get("route") or "").strip()
+            input_dir = str(flags.get("in") or flags.get("input") or "").strip()
+            output_dir = str(flags.get("out") or flags.get("output") or "").strip()
             if not route_id or not input_dir or not output_dir:
                 return (
                     "Usage: /reforge run --route <id> --in <dir> --out <dir> "

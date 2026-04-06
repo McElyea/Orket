@@ -154,6 +154,8 @@ def _observed_result(non_odr: dict[str, Any], odr: dict[str, Any]) -> str:
     non_odr_summary = non_odr.get("run_summary") if isinstance(non_odr.get("run_summary"), dict) else {}
     odr_summary = odr.get("run_summary") if isinstance(odr.get("run_summary"), dict) else {}
     odr_artifact = odr.get("odr_artifact") if isinstance(odr.get("odr_artifact"), dict) else {}
+    if bool(non_odr_summary.get("is_degraded")) or bool(odr_summary.get("is_degraded")):
+        return "failure"
     if (
         non_odr_summary.get("odr_active") is False
         and str(non_odr_summary.get("status") or "").strip() == "done"

@@ -15,7 +15,7 @@ class EventStream:
     The UI will subscribe to this.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.events: list[Event] = []
 
     def push(self, event: Event) -> None:

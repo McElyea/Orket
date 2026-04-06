@@ -29,7 +29,7 @@ from .turn_executor_runtime import (
 from .turn_failure_traces import emit_turn_failure_traces
 
 if TYPE_CHECKING:
-    from .turn_executor import TurnExecutor
+    from .turn_executor import TurnExecutor, TurnResult
 
 runtime_tokens_payload = _runtime_tokens_payload
 state_delta_from_tool_calls = _state_delta_from_tool_calls
@@ -44,12 +44,12 @@ async def execute_turn(
     toolbox: Any,
     context: dict[str, Any],
     system_prompt: str | None = None,
-):
+) -> TurnResult:
     from .turn_executor import ModelTimeoutError, ToolApprovalPendingError, ToolValidationError, TurnResult
 
     issue_id = issue.id
-    role_name = role.name
-    session_id = context.get("session_id", "unknown-session")
+    role_name = str(role.name or "").strip()
+    session_id = str(context.get("session_id", "unknown-session"))
     turn_index = int(context.get("turn_index", 0))
     turn_trace_id = f"{session_id}:{issue_id}:{role_name}:{turn_index}"
     started_at = time.perf_counter()
@@ -197,6 +197,8 @@ async def execute_turn(
                 "odr_valid": context.get("odr_valid"),
                 "odr_pending_decisions": context.get("odr_pending_decisions"),
                 "odr_stop_reason": context.get("odr_stop_reason"),
+                "odr_termination_reason": context.get("odr_termination_reason"),
+                "odr_final_auditor_verdict": context.get("odr_final_auditor_verdict"),
                 "odr_artifact_path": context.get("odr_artifact_path"),
                 "replayed_from_control_plane": bool(
                     (turn.raw or {}).get("control_plane_resume", {}).get("artifact_reused")

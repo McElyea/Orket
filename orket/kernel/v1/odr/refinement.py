@@ -23,7 +23,8 @@ def extract_constraints_ledger(requirement_markdown: str) -> dict[str, Any]:
     if match is None:
         return {}
     payload = match.group(1)
-    return json.loads(payload)
+    parsed = json.loads(payload)
+    return dict(parsed) if isinstance(parsed, dict) else {}
 
 
 def missing_required_sections(requirement_markdown: str) -> list[str]:

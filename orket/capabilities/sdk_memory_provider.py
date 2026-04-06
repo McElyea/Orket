@@ -6,6 +6,7 @@ from orket.capabilities.sync_bridge import run_coro_sync
 from orket.services.profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
 from orket.services.scoped_memory_store import MemoryControls, ScopedMemoryRecord, ScopedMemoryStore
 from orket_extension_sdk.memory import (
+    MemoryScope as SDKMemoryScope,
     MemoryProvider,
     MemoryQueryRequest,
     MemoryQueryResponse,
@@ -102,11 +103,15 @@ class SQLiteMemoryCapabilityProvider(MemoryProvider):
 
     @staticmethod
     def _to_sdk_record(record: ScopedMemoryRecord) -> MemoryRecord:
+        scope = record.scope
+        if scope not in {"session_memory", "profile_memory"}:
+            raise ValueError(f"Unsupported SDK memory scope: {scope}")
+        sdk_scope: SDKMemoryScope = "session_memory" if scope == "session_memory" else "profile_memory"
         return MemoryRecord(
-            scope=record.scope,
+            scope=sdk_scope,
             key=record.key,
             value=record.value,
-            session_id=record.session_id if record.scope == "session_memory" else "",
+            session_id=record.session_id if sdk_scope == "session_memory" else "",
             metadata=dict(record.metadata),
         )
 

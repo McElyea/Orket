@@ -6,7 +6,7 @@ import json
 import os
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import aiofiles
 
@@ -19,10 +19,6 @@ from orket.adapters.storage.async_repositories import (
 from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
 from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
-from orket.application.services.control_plane_workload_catalog import (
-    build_cards_workload_contract,
-    resolve_cards_control_plane_workload_from_contract,
-)
 from orket.application.services.gitea_state_control_plane_checkpoint_service import (
     build_gitea_state_control_plane_checkpoint_service,
 )
@@ -47,30 +43,18 @@ from orket.application.services.runtime_policy import (
     resolve_gitea_worker_max_iterations,
 )
 from orket.application.workflows.protocol_hashing import hash_canonical_json
-from orket.core.cards_runtime_contract import (
-    apply_epic_cards_runtime_defaults,
-    normalize_scenario_truth_alignment,
-    summarize_cards_runtime_issues,
-)
+from orket.core.cards_runtime_contract import normalize_scenario_truth_alignment, summarize_cards_runtime_issues
 from orket.decision_nodes.registry import DecisionNodeRegistry
-from orket.exceptions import CardNotFound, ComplexityViolation, ExecutionFailed
+from orket.exceptions import CardNotFound
 from orket.logging import log_event
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.runtime.config_loader import ConfigLoader
-from orket.runtime.deterministic_mode_contract import deterministic_mode_contract_snapshot
-from orket.runtime.phase_c_runtime_truth import (
-    collect_phase_c_packet2_facts,
-    collect_source_attribution_facts,
-    normalize_truthful_runtime_policy,
-    resolve_source_attribution_gate_failure_reason,
-)
+from orket.runtime.epic_run_orchestrator import EpicRunOrchestrator
+from orket.runtime.epic_run_types import EpicRunCallbacks
+from orket.runtime.phase_c_runtime_truth import collect_phase_c_packet2_facts
 from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
-from orket.runtime.route_decision_artifact import build_route_decision_artifact
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
-from orket.runtime.run_start_artifacts import (
-    capture_run_start_artifacts,
-    validate_run_identity_projection,
-)
+from orket.runtime.run_start_artifacts import validate_run_identity_projection
 from orket.runtime.run_summary import (
     PACKET1_MISSING_TOKEN,
     build_degraded_run_summary_payload,
@@ -80,21 +64,20 @@ from orket.runtime.run_summary import (
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
 from orket.runtime.runtime_context import OrketRuntimeContext
 from orket.runtime.settings import resolve_str
-from orket.runtime.state_transition_registry import validate_state_token
 from orket.runtime.workload_shell import SharedWorkloadShell
 from orket.runtime_paths import resolve_control_plane_db_path
 from orket.schema import (
     CardStatus,
-    EnvironmentConfig,
     EpicConfig,
     IssueConfig,
     RockConfig,
-    TeamConfig,
 )
 from orket.settings import load_user_settings, load_user_settings_async
-from orket.utils import get_eos_sprint, sanitize_name
+from orket.utils import sanitize_name
 
 _RUN_SUMMARY_RUN_IDENTITY_ERROR_PREFIX = "run_summary_run_identity_"
+# EpicRunOrchestrator now owns cards workload authority resolution via
+# resolve_cards_control_plane_workload_from_contract.
 _TRANSIENT_RUN_IDENTITY_ARTIFACT_KEYS = ("run_identity", "run_identity_path")
 
 
@@ -169,7 +152,7 @@ class ExecutionPipeline:
         self.artifact_exporter = GiteaArtifactExporter(self.workspace)
 
         self.notes = NoteStore()
-        self.transcript = []
+        self.transcript: list[dict[str, Any]] = []
         self.sandbox_orchestrator = self.pipeline_wiring_node.create_sandbox_orchestrator(
             workspace=self.workspace,
             organization=self.org,
@@ -243,14 +226,44 @@ class ExecutionPipeline:
             user_settings = loaded if isinstance(loaded, dict) else {}
         return OrchestrationConfig(self.org).resolve_gitea_state_pilot_enabled(user_settings=user_settings)
 
-    async def run_card(self, card_id: str, **kwargs) -> Any:
+    async def run_card(
+        self,
+        card_id: str,
+        *,
+        build_id: str | None = None,
+        session_id: str | None = None,
+        driver_steered: bool = False,
+        target_issue_id: str | None = None,
+        model_override: str | None = None,
+    ) -> Any:
         """Canonical public runtime dispatcher over normalized card facts."""
         target_kind, parent_epic_name = await self._resolve_run_card_target(card_id)
         if target_kind == "epic":
-            return await self._run_epic_entry(card_id, **kwargs)
+            return await self._run_epic_entry(
+                card_id,
+                build_id=build_id,
+                session_id=session_id,
+                driver_steered=driver_steered,
+                target_issue_id=target_issue_id,
+                model_override=model_override,
+            )
         if target_kind == "epic_collection":
-            return await self._run_epic_collection_entry(card_id, **kwargs)
-        return await self._run_issue_entry(card_id, parent_epic_name=parent_epic_name, **kwargs)
+            return await self._run_epic_collection_entry(
+                card_id,
+                build_id=build_id,
+                session_id=session_id,
+                driver_steered=driver_steered,
+                model_override=model_override,
+            )
+        return await self._run_issue_entry(
+            card_id,
+            build_id=build_id,
+            session_id=session_id,
+            driver_steered=driver_steered,
+            parent_epic_name=parent_epic_name,
+            target_issue_id=target_issue_id,
+            model_override=model_override,
+        )
 
     async def _resolve_run_card_target(self, card_id: str) -> tuple[str, str | None]:
         """Resolve one normalized runtime target kind from explicit asset facts."""
@@ -271,10 +284,10 @@ class ExecutionPipeline:
     async def run_issue(
         self,
         issue_id: str,
-        build_id: str = None,
-        session_id: str = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
         driver_steered: bool = False,
-        **kwargs,
+        model_override: str | None = None,
     ) -> Any:
         """Compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
@@ -282,16 +295,16 @@ class ExecutionPipeline:
             build_id=build_id,
             session_id=session_id,
             driver_steered=driver_steered,
-            **kwargs,
+            model_override=model_override,
         )
 
     async def run_rock(
         self,
         rock_name: str,
-        build_id: str = None,
-        session_id: str = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
         driver_steered: bool = False,
-        **kwargs,
+        model_override: str | None = None,
     ) -> Any:
         """Legacy compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
@@ -299,37 +312,37 @@ class ExecutionPipeline:
             build_id=build_id,
             session_id=session_id,
             driver_steered=driver_steered,
-            **kwargs,
+            model_override=model_override,
         )
 
     async def _run_issue_entry(
         self,
         issue_id: str,
-        build_id: str = None,
-        session_id: str = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
         driver_steered: bool = False,
         parent_epic_name: str | None = None,
-        **kwargs,
+        target_issue_id: str | None = None,
+        model_override: str | None = None,
     ) -> Any:
         parent_ename = parent_epic_name
         if parent_ename is None:
             parent_epic, parent_ename, _ = await self._find_parent_epic(issue_id)
-            if not parent_epic:
+            if not parent_epic or parent_ename is None:
                 raise CardNotFound(f"Card {issue_id} not found.")
         log_event(
             "pipeline_atomic_issue",
             {"card_id": issue_id, "parent_epic": parent_ename},
             workspace=self.workspace,
         )
-        forwarded_kwargs = dict(kwargs)
-        forwarded_kwargs.pop("target_issue_id", None)
+        del target_issue_id
         return await self._run_epic_entry(
             parent_ename,
             build_id=build_id,
             session_id=session_id,
             driver_steered=driver_steered,
             target_issue_id=issue_id,
-            **forwarded_kwargs,
+            model_override=model_override,
         )
 
     async def run_gitea_state_loop(
@@ -353,8 +366,19 @@ class ExecutionPipeline:
             raise RuntimeError(f"State backend mode 'gitea' pilot readiness failed: {failures}")
 
         process_rules = getattr(self.org, "process_rules", None) if self.org else None
-        process_rules_get = process_rules.get if hasattr(process_rules, "get") else lambda key, default=None: getattr(process_rules, key, default) if process_rules is not None else default
-        user_settings = await load_user_settings_async()
+
+        def process_rules_get(key: str, default: Any = None) -> Any:
+            if process_rules is None:
+                return default
+            if isinstance(process_rules, dict):
+                return process_rules.get(key, default)
+            getter = getattr(process_rules, "get", None)
+            if callable(getter):
+                return getter(key, default)
+            return getattr(process_rules, key, default)
+
+        raw_user_settings = await load_user_settings_async()
+        user_settings = raw_user_settings if isinstance(raw_user_settings, dict) else {}
         effective_max_iterations = resolve_gitea_worker_max_iterations(
             max_iterations,
             resolve_str("ORKET_GITEA_WORKER_MAX_ITERATIONS"),
@@ -458,473 +482,69 @@ class ExecutionPipeline:
     async def run_epic(
         self,
         epic_name: str,
-        build_id: str = None,
-        session_id: str = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
         driver_steered: bool = False,
-        target_issue_id: str = None,
-        **kwargs,
-    ) -> list[dict]:
+        target_issue_id: str | None = None,
+        model_override: str | None = None,
+    ) -> list[dict[str, Any]]:
         """Compatibility wrapper over the canonical run_card surface."""
-        return await self.run_card(
+        result = await self.run_card(
             epic_name,
             build_id=build_id,
             session_id=session_id,
             driver_steered=driver_steered,
             target_issue_id=target_issue_id,
-            **kwargs,
+            model_override=model_override,
+        )
+        return cast(list[dict[str, Any]], result)
+
+    def _build_epic_run_orchestrator(self) -> EpicRunOrchestrator:
+        return EpicRunOrchestrator(
+            workspace=self.workspace,
+            department=self.department,
+            organization=self.org,
+            execution_runtime_node=self.execution_runtime_node,
+            pipeline_wiring_node=self.pipeline_wiring_node,
+            cards_repo=self.async_cards,
+            sessions_repo=self.sessions,
+            snapshots_repo=self.snapshots,
+            success_repo=self.success,
+            run_ledger=self.run_ledger,
+            cards_epic_control_plane=self.cards_epic_control_plane,
+            loader=self.loader,
+            orchestrator=self.orchestrator,
+            workload_shell=self.workload_shell,
+            callbacks=EpicRunCallbacks(
+                resolve_idesign_mode=self._resolve_idesign_mode,
+                resume_stalled_issues=self._resume_stalled_issues,
+                resume_target_issue_if_existing=self._resume_target_issue_if_existing,
+                run_artifact_refs=self._run_artifact_refs,
+                build_packet1_facts=self._build_packet1_facts,
+                materialize_protocol_receipts=self._materialize_protocol_receipts,
+                materialize_run_summary=self._materialize_run_summary,
+                export_run_artifacts=self._export_run_artifacts,
+                set_transcript=lambda transcript: setattr(self, "transcript", transcript),
+            ),
         )
 
     async def _run_epic_entry(
         self,
         epic_name: str,
-        build_id: str = None,
-        session_id: str = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
         driver_steered: bool = False,
-        target_issue_id: str = None,
-        **kwargs,
-    ) -> list[dict]:
-        epic = await self.loader.load_asset_async("epics", epic_name, EpicConfig)
-        team = await self.loader.load_asset_async("teams", epic.team, TeamConfig)
-        env = await self.loader.load_asset_async("environments", epic.environment, EnvironmentConfig)
-        model_override = str(kwargs.get("model_override") or "").strip()
-        if model_override:
-            env = env.model_copy(update={"model": model_override})
-
-        threshold = 7
-        if self.org and self.org.architecture:
-            threshold = self.org.architecture.idesign_threshold
-
-        idesign_mode = self._resolve_idesign_mode()
-        issue_count = len(epic.issues)
-        epic_params = epic.params if isinstance(epic.params, dict) else {}
-        phase_c_truth_policy = normalize_truthful_runtime_policy(epic_params.get("truthful_runtime"))
-
-        if idesign_mode == "force_idesign" and not epic.architecture_governance.idesign:
-            raise ComplexityViolation(
-                f"Complexity Gate Violation: iDesign policy is 'force_idesign' for epic '{epic.name}', "
-                "but epic architecture_governance.idesign is false."
-            )
-
-        if idesign_mode == "architect_decides" and issue_count > threshold and not epic.architecture_governance.idesign:
-            log_event(
-                "idesign_architect_decision_respected",
-                {
-                    "epic": epic.name,
-                    "issue_count": issue_count,
-                    "idesign_threshold": threshold,
-                    "idesign": False,
-                },
-                workspace=self.workspace,
-            )
-
-        run_id = self.execution_runtime_node.select_run_id(session_id)
-        active_build = self.execution_runtime_node.select_epic_build_id(build_id, epic_name, sanitize_name)
-        cards_workload_contract = build_cards_workload_contract(
-            epic=epic,
-            run_id=run_id,
-            build_id=active_build,
-            workspace=self.workspace,
-            department=self.department,
-        )
-        control_plane_workload_record = resolve_cards_control_plane_workload_from_contract(
-            contract_payload=cards_workload_contract,
-            department=self.department,
-        )
-
-        if not await self.sessions.get_session(run_id):
-            await self.sessions.start_session(
-                run_id,
-                {
-                    "type": "epic",
-                    "name": epic.name,
-                    "department": self.department,
-                    "task_input": epic.description,
-                },
-            )
-
-        existing = await self.async_cards.get_by_build(active_build)
-        resume_mode = bool(target_issue_id) or any(
-            issue.status in {CardStatus.IN_PROGRESS, CardStatus.CODE_REVIEW, CardStatus.AWAITING_GUARD_REVIEW}
-            for issue in existing
-        )
-        preserve_issue_ids = {str(target_issue_id).strip()} if target_issue_id else set()
-        if resume_mode:
-            await self._resume_stalled_issues(
-                existing,
-                run_id,
-                active_build,
-                preserve_issue_ids=preserve_issue_ids,
-            )
-
-        if existing:
-            if target_issue_id:
-                await self._resume_target_issue_if_existing(
-                    issues=existing,
-                    target_issue_id=target_issue_id,
-                    run_id=run_id,
-                    active_build=active_build,
-                )
-            else:
-                await self.async_cards.reset_build(active_build)
-
-        for issue in epic.issues:
-            issue.params = apply_epic_cards_runtime_defaults(
-                issue_params=getattr(issue, "params", None),
-                epic_params=epic_params,
-            )
-            if not any(ex.id == issue.id for ex in existing):
-                card_data = issue.model_dump(by_alias=True)
-                card_data.update(
-                    {
-                        "session_id": run_id,
-                        "build_id": active_build,
-                        "sprint": get_eos_sprint(),
-                        "status": CardStatus.READY,
-                    }
-                )
-                await self.async_cards.save(card_data)
-
-        deterministic_mode_contract = deterministic_mode_contract_snapshot()
-        route_decision_artifact = build_route_decision_artifact(
-            run_id=run_id,
-            workload_kind="epic",
-            execution_runtime_node=self.execution_runtime_node,
-            pipeline_wiring_node=self.pipeline_wiring_node,
+        target_issue_id: str | None = None,
+        model_override: str | None = None,
+    ) -> list[dict[str, Any]]:
+        return await self._build_epic_run_orchestrator().run(
+            epic_name,
+            build_id=build_id,
+            session_id=session_id,
+            driver_steered=driver_steered,
             target_issue_id=target_issue_id,
-            resume_mode=resume_mode,
-            deterministic_mode_enabled=bool(deterministic_mode_contract.get("deterministic_mode_enabled")),
+            model_override=str(model_override or "").strip(),
         )
-        control_plane_run, control_plane_attempt, control_plane_start_step = await self.cards_epic_control_plane.begin_execution(
-            session_id=run_id,
-            build_id=active_build,
-            epic_name=epic.name,
-            department=self.department,
-            workload=control_plane_workload_record,
-            resume_mode=resume_mode,
-            target_issue_id=target_issue_id,
-        )
-
-        log_event(
-            "session_start",
-            {"epic": epic.name, "run_id": run_id, "build_id": active_build},
-            workspace=self.workspace,
-        )
-        run_contract_artifacts = await asyncio.to_thread(
-            capture_run_start_artifacts,
-            workspace=self.workspace,
-            run_id=run_id,
-            workload=epic.name,
-        )
-        capability_manifest = run_contract_artifacts.get("capability_manifest")
-        if isinstance(capability_manifest, dict):
-            active_capabilities_allowed = [
-                str(token).strip().lower()
-                for token in (capability_manifest.get("capabilities_allowed") or [])
-                if str(token).strip()
-            ]
-            active_run_determinism_class = (
-                str(
-                    capability_manifest.get("run_determinism_class")
-                    or run_contract_artifacts.get("run_determinism_class")
-                    or "workspace"
-                )
-                .strip()
-                .lower()
-            )
-        else:
-            active_capabilities_allowed = ["workspace"]
-            active_run_determinism_class = (
-                str(run_contract_artifacts.get("run_determinism_class") or "workspace").strip().lower()
-            )
-        if active_run_determinism_class not in {"pure", "workspace", "external"}:
-            active_run_determinism_class = "workspace"
-        compatibility_map_snapshot = run_contract_artifacts.get("compatibility_map_snapshot")
-        if isinstance(compatibility_map_snapshot, dict):
-            raw_mappings = compatibility_map_snapshot.get("mappings")
-            raw_mappings = raw_mappings if isinstance(raw_mappings, dict) else {}
-            active_compatibility_mappings = {
-                str(tool_name).strip(): dict(mapping or {})
-                for tool_name, mapping in raw_mappings.items()
-                if str(tool_name).strip() and isinstance(mapping, dict)
-            }
-        else:
-            active_compatibility_mappings = {}
-        self.orchestrator.active_capabilities_allowed = active_capabilities_allowed or ["workspace"]
-        self.orchestrator.active_run_determinism_class = active_run_determinism_class
-        self.orchestrator.active_compatibility_mappings = active_compatibility_mappings
-
-        await self.run_ledger.start_run(
-            session_id=run_id,
-            run_type="epic",
-            run_name=epic.name,
-            department=self.department,
-            build_id=active_build,
-            artifacts={
-                **self._run_artifact_refs(run_id),
-                **dict(run_contract_artifacts),
-                "deterministic_mode_contract": dict(deterministic_mode_contract),
-                "route_decision_artifact": dict(route_decision_artifact),
-                "control_plane_workload_record": control_plane_workload_record.model_dump(mode="json"),
-                "control_plane_run_record": control_plane_run.model_dump(mode="json"),
-                "control_plane_attempt_record": control_plane_attempt.model_dump(mode="json"),
-                "control_plane_step_record": control_plane_start_step.model_dump(mode="json"),
-                "packet1_facts": self._build_packet1_facts(intended_model=env.model),
-            },
-        )
-
-        workflow_terminal_statuses = {
-            CardStatus.DONE,
-            CardStatus.CANCELED,
-            CardStatus.ARCHIVED,
-            CardStatus.BLOCKED,
-            CardStatus.GUARD_REJECTED,
-            CardStatus.GUARD_APPROVED,
-        }
-        success_statuses = {CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED}
-
-        legacy_transcript: list[dict[str, Any]] = []
-        backlog: list[Any] = []
-        session_status = "failed"
-
-        try:
-
-            async def _execute_cards_workload(_contract):
-                await self.orchestrator.execute_epic(
-                    active_build=active_build,
-                    run_id=run_id,
-                    epic=epic,
-                    team=team,
-                    env=env,
-                    target_issue_id=target_issue_id,
-                    resume_mode=resume_mode,
-                    model_override=model_override or None,
-                )
-                return None
-
-            await self.workload_shell.execute(
-                contract_payload=cards_workload_contract,
-                execute_fn=_execute_cards_workload,
-            )
-
-            self.transcript = self.orchestrator.transcript
-            legacy_transcript = [
-                {"step_index": i, "role": t.role, "issue": t.issue_id, "summary": t.content, "note": t.note}
-                for i, t in enumerate(self.transcript)
-            ]
-            backlog = await self.async_cards.get_by_build(active_build)
-
-            is_workflow_terminal = all(i.status in workflow_terminal_statuses for i in backlog)
-            is_success_terminal = all(i.status in success_statuses for i in backlog)
-            if is_success_terminal:
-                session_status = "done"
-            elif is_workflow_terminal:
-                session_status = "terminal_failure"
-            else:
-                session_status = "incomplete"
-            session_status = validate_state_token(domain="session", state=session_status)
-
-            failure_reason = None
-            artifacts = self._run_artifact_refs(run_id)
-            artifacts.update(dict(run_contract_artifacts))
-            artifacts["deterministic_mode_contract"] = dict(deterministic_mode_contract)
-            artifacts["route_decision_artifact"] = dict(route_decision_artifact)
-            artifacts["packet1_facts"] = self._build_packet1_facts(intended_model=env.model)
-            receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
-            if receipt_projection:
-                artifacts["protocol_receipts"] = receipt_projection
-            source_attribution_facts = await collect_source_attribution_facts(
-                workspace=self.workspace,
-                policy=phase_c_truth_policy,
-            )
-            gate_failure_reason = resolve_source_attribution_gate_failure_reason(source_attribution_facts)
-            if session_status == "done" and gate_failure_reason is not None:
-                session_status = validate_state_token(domain="session", state="terminal_failure")
-                failure_reason = gate_failure_reason
-                log_event(
-                    "source_attribution_gate_blocked",
-                    {
-                        "run_id": run_id,
-                        "failure_reason": failure_reason,
-                        "mode": source_attribution_facts.get("mode"),
-                        "missing_requirements": list(source_attribution_facts.get("missing_requirements") or []),
-                    },
-                    workspace=self.workspace,
-                )
-
-            await self.sessions.complete_session(run_id, session_status, legacy_transcript)
-            session_end_payload = {"run_id": run_id, "status": session_status}
-            if failure_reason is not None:
-                session_end_payload["failure_reason"] = failure_reason
-            log_event("session_end", session_end_payload, workspace=self.workspace)
-            if not is_workflow_terminal:
-                non_terminal = [
-                    {
-                        "id": issue.id,
-                        "status": issue.status.value if hasattr(issue.status, "value") else str(issue.status),
-                    }
-                    for issue in backlog
-                    if issue.status not in workflow_terminal_statuses
-                ]
-                log_event(
-                    "session_incomplete",
-                    {"run_id": run_id, "build_id": active_build, "open_issues": non_terminal},
-                    workspace=self.workspace,
-                )
-            elif session_status == "terminal_failure":
-                terminal_failure = [
-                    {
-                        "id": issue.id,
-                        "status": issue.status.value if hasattr(issue.status, "value") else str(issue.status),
-                    }
-                    for issue in backlog
-                    if issue.status not in success_statuses
-                ]
-                log_event(
-                    "session_terminal_failure",
-                    {
-                        "run_id": run_id,
-                        "build_id": active_build,
-                        "issues": terminal_failure,
-                        "failure_reason": failure_reason,
-                    },
-                    workspace=self.workspace,
-                )
-            await self.snapshots.record(
-                run_id,
-                {
-                    "epic": epic.model_dump(),
-                    "team": team.model_dump(),
-                    "env": env.model_dump(),
-                    "build_id": active_build,
-                },
-                legacy_transcript,
-            )
-
-            if session_status == "done":
-                await self.success.record_success(
-                    session_id=run_id,
-                    success_type="EPIC_COMPLETED",
-                    artifact_ref=f"build:{active_build}",
-                    human_ack=None,
-                )
-                log_event("success_recorded", {"run_id": run_id, "type": "EPIC_COMPLETED"}, workspace=self.workspace)
-
-            summary_finalized_at = datetime.now(UTC).isoformat()
-            control_plane_run, control_plane_attempt = await self.cards_epic_control_plane.finalize_execution(
-                run_id=control_plane_run.run_id,
-                session_status=session_status,
-                failure_reason=failure_reason,
-            )
-            artifacts["control_plane_run_record"] = control_plane_run.model_dump(mode="json")
-            artifacts["control_plane_attempt_record"] = control_plane_attempt.model_dump(mode="json")
-            artifacts["control_plane_step_record"] = control_plane_start_step.model_dump(mode="json")
-            run_summary, artifacts = await self._materialize_run_summary(
-                run_id=run_id,
-                session_status=session_status,
-                failure_reason=failure_reason,
-                artifacts=artifacts,
-                finalized_at=summary_finalized_at,
-                phase_c_truth_policy=phase_c_truth_policy,
-            )
-            gitea_export = await self._export_run_artifacts(
-                run_id=run_id,
-                run_type="epic",
-                run_name=epic.name,
-                build_id=active_build,
-                session_status=session_status,
-                summary=run_summary,
-                failure_reason=failure_reason,
-            )
-            if gitea_export:
-                artifacts["gitea_export"] = gitea_export
-
-            ledger_finalized_at = datetime.now(UTC).isoformat()
-            await self.run_ledger.finalize_run(
-                session_id=run_id,
-                status=session_status,
-                failure_reason=failure_reason,
-                summary=run_summary,
-                artifacts=artifacts,
-                finalized_at=ledger_finalized_at,
-            )
-
-        except (
-            CardNotFound,
-            ComplexityViolation,
-            ExecutionFailed,
-            RuntimeError,
-            ValueError,
-            TypeError,
-            OSError,
-            asyncio.TimeoutError,
-        ) as exc:
-            self.transcript = self.orchestrator.transcript
-            legacy_transcript = [
-                {"step_index": i, "role": t.role, "issue": t.issue_id, "summary": t.content, "note": t.note}
-                for i, t in enumerate(self.transcript)
-            ]
-            try:
-                backlog = await self.async_cards.get_by_build(active_build)
-            except (RuntimeError, ValueError, TypeError, OSError):
-                backlog = []
-
-            failed_status = validate_state_token(domain="session", state="failed")
-            await self.sessions.complete_session(run_id, failed_status, legacy_transcript)
-            log_event(
-                "session_end",
-                {"run_id": run_id, "status": failed_status, "failure_class": type(exc).__name__},
-                workspace=self.workspace,
-            )
-            artifacts = self._run_artifact_refs(run_id)
-            artifacts.update(dict(run_contract_artifacts))
-            artifacts["deterministic_mode_contract"] = dict(deterministic_mode_contract)
-            artifacts["route_decision_artifact"] = dict(route_decision_artifact)
-            artifacts["packet1_facts"] = self._build_packet1_facts(intended_model=env.model)
-            control_plane_run, control_plane_attempt = await self.cards_epic_control_plane.finalize_execution(
-                run_id=control_plane_run.run_id,
-                session_status=failed_status,
-                failure_reason=str(exc)[:2000],
-            )
-            artifacts["control_plane_run_record"] = control_plane_run.model_dump(mode="json")
-            artifacts["control_plane_attempt_record"] = control_plane_attempt.model_dump(mode="json")
-            artifacts["control_plane_step_record"] = control_plane_start_step.model_dump(mode="json")
-            receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
-            if receipt_projection:
-                artifacts["protocol_receipts"] = receipt_projection
-            summary_finalized_at = datetime.now(UTC).isoformat()
-            failure_summary, artifacts = await self._materialize_run_summary(
-                run_id=run_id,
-                session_status=failed_status,
-                failure_reason=str(exc)[:2000],
-                artifacts=artifacts,
-                finalized_at=summary_finalized_at,
-                phase_c_truth_policy=phase_c_truth_policy,
-            )
-            gitea_export = await self._export_run_artifacts(
-                run_id=run_id,
-                run_type="epic",
-                run_name=epic.name,
-                build_id=active_build,
-                session_status=failed_status,
-                summary=failure_summary,
-                failure_class=type(exc).__name__,
-                failure_reason=str(exc)[:2000],
-            )
-            if gitea_export:
-                artifacts["gitea_export"] = gitea_export
-            ledger_finalized_at = datetime.now(UTC).isoformat()
-            await self.run_ledger.finalize_run(
-                session_id=run_id,
-                status=failed_status,
-                failure_class=type(exc).__name__,
-                failure_reason=str(exc)[:2000],
-                summary=failure_summary,
-                artifacts=artifacts,
-                finalized_at=ledger_finalized_at,
-            )
-            raise
-
-        return legacy_transcript
 
     def _run_artifact_refs(self, run_id: str) -> dict[str, str]:
         return {
@@ -1318,7 +938,8 @@ class ExecutionPipeline:
                         continue
                     if str(payload.get("event") or "").strip() != "turn_corrective_reprompt":
                         continue
-                    data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+                    raw_data = payload.get("data")
+                    data: dict[str, Any] = dict(raw_data) if isinstance(raw_data, dict) else {}
                     if str(data.get("session_id") or "").strip() != str(run_id):
                         continue
                     reasons = sorted(
@@ -1383,7 +1004,8 @@ class ExecutionPipeline:
                         "odr_prebuild_failed",
                     }:
                         continue
-                    data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+                    raw_data = payload.get("data")
+                    data: dict[str, Any] = dict(raw_data) if isinstance(raw_data, dict) else {}
                     if str(data.get("session_id") or "").strip() != str(run_id):
                         continue
                     issue_id = str(data.get("issue_id") or "").strip()
@@ -1516,7 +1138,8 @@ class ExecutionPipeline:
                     event_name = str(payload.get("event") or "").strip()
                     if event_name not in {"tool_call_start", "tool_call_result"}:
                         continue
-                    data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+                    raw_data = payload.get("data")
+                    data: dict[str, Any] = dict(raw_data) if isinstance(raw_data, dict) else {}
                     if str(data.get("session_id") or "").strip() != str(run_id):
                         continue
                     operation_id = str(data.get("operation_id") or "").strip()
@@ -1735,7 +1358,8 @@ class ExecutionPipeline:
     ) -> tuple[str, Path] | None:
         raw_path = str(execution_result.get("path") or "").strip()
         if not raw_path:
-            tool_args = receipt.get("tool_args") if isinstance(receipt.get("tool_args"), dict) else {}
+            raw_tool_args = receipt.get("tool_args")
+            tool_args: dict[str, Any] = dict(raw_tool_args) if isinstance(raw_tool_args, dict) else {}
             raw_path = str(tool_args.get("path") or "").strip()
         if not raw_path:
             return None
@@ -1897,11 +1521,11 @@ class ExecutionPipeline:
     async def _run_epic_collection_entry(
         self,
         collection_name: str,
-        build_id: str = None,
-        session_id: str = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
         driver_steered: bool = False,
-        **kwargs,
-    ) -> dict:
+        model_override: str | None = None,
+    ) -> dict[str, Any]:
         collection = await self.loader.load_asset_async("rocks", collection_name, RockConfig)
         sid = self.execution_runtime_node.select_epic_collection_session_id(session_id)
         active_build = self.execution_runtime_node.select_epic_collection_build_id(
@@ -1920,6 +1544,7 @@ class ExecutionPipeline:
                 build_id=active_build,
                 session_id=sid,
                 driver_steered=driver_steered,
+                model_override=model_override,
             )
             results.append({"epic": entry["epic"], "transcript": res})
 
@@ -1958,9 +1583,8 @@ class ExecutionPipeline:
         if target_issue is None:
             return
         current_status = getattr(target_issue, "status", None)
-        current_status_token = str(
-            current_status.value if hasattr(current_status, "value") else current_status
-        ).strip() or "unknown"
+        current_status_value = getattr(current_status, "value", current_status)
+        current_status_token = str(current_status_value or "").strip() or "unknown"
         try:
             normalized_status = CardStatus(current_status_token.lower())
         except ValueError:
@@ -2111,9 +1735,9 @@ class ExecutionPipeline:
         return await self.orchestrator.verify_issue(issue_id)
 
 
-async def orchestrate_card(card_id: str, workspace: Path, **kwargs) -> Any:
+async def orchestrate_card(card_id: str, workspace: Path, **kwargs: Any) -> Any:
     return await ExecutionPipeline(workspace, kwargs.get("department", "core")).run_card(card_id, **kwargs)
 
 
-async def orchestrate(epic_name: str, workspace: Path, **kwargs) -> Any:
+async def orchestrate(epic_name: str, workspace: Path, **kwargs: Any) -> Any:
     return await ExecutionPipeline(workspace, kwargs.get("department", "core")).run_card(epic_name, **kwargs)

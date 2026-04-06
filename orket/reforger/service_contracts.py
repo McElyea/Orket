@@ -23,6 +23,34 @@ ALLOWED_OBSERVED_RESULTS = ("success", "failure", "partial success", "environmen
 ALLOWED_VERDICT_SOURCES = ("service_adopted", "harness_derived")
 
 
+def _coerce_float(value: Any, *, field_name: str) -> float:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        token = value.strip()
+        if token:
+            try:
+                return float(token)
+            except ValueError:
+                pass
+    raise ValueError(f"{field_name} must be numeric")
+
+
+def _coerce_int(value: Any, *, field_name: str) -> int:
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, str):
+        token = value.strip()
+        if token:
+            try:
+                return int(token)
+            except ValueError:
+                pass
+    raise ValueError(f"{field_name} must be an integer")
+
+
 def canonical_json(payload: dict[str, Any]) -> str:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
 
@@ -180,13 +208,19 @@ class PromptReforgerServiceRequest:
             baseline_bundle_ref=_optional_non_empty(payload.get("baseline_bundle_ref")),
             baseline_prompt_ref=_optional_non_empty(payload.get("baseline_prompt_ref")),
             acceptance_thresholds=AcceptanceThresholds(
-                certified_min_score=float(threshold_payload.get("certified_min_score")),
-                certified_with_limits_min_score=float(threshold_payload.get("certified_with_limits_min_score")),
+                certified_min_score=_coerce_float(
+                    threshold_payload.get("certified_min_score"),
+                    field_name="acceptance_thresholds.certified_min_score",
+                ),
+                certified_with_limits_min_score=_coerce_float(
+                    threshold_payload.get("certified_with_limits_min_score"),
+                    field_name="acceptance_thresholds.certified_with_limits_min_score",
+                ),
             ),
             candidate_budget=(
                 None
                 if payload.get("candidate_budget") is None
-                else int(payload.get("candidate_budget"))
+                else _coerce_int(payload.get("candidate_budget"), field_name="candidate_budget")
             ),
         )
 

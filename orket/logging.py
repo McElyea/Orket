@@ -8,7 +8,7 @@ import queue
 import threading
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 from orket.naming import sanitize_name
 from orket.time_utils import now_local
@@ -30,6 +30,13 @@ _prepared_log_dirs_lock = threading.Lock()
 _log_write_queue: queue.SimpleQueue[tuple[Path, str]] = queue.SimpleQueue()
 _log_writer_lock = threading.Lock()
 _log_writer_started = False
+
+
+class _MemberMetrics(TypedDict):
+    tokens: int
+    lines_written: int
+    last_action: str
+    detail: str
 
 
 def _start_log_writer() -> None:
@@ -304,7 +311,14 @@ def log_event(
             _append_json_record(log_file, failure_record)
 
 
-def log_model_selected(role: str, model: str, temperature: float, seed, epic: str, workspace: Path) -> None:
+def log_model_selected(
+    role: str,
+    model: str,
+    temperature: float,
+    seed: int | None,
+    epic: str,
+    workspace: Path,
+) -> None:
     log_event(
         "model_selected",
         {
@@ -334,7 +348,7 @@ def log_model_usage(role: str, model: str, tokens: dict[str, Any], step_index: i
     )
 
 
-def get_member_metrics(workspace: Path) -> dict[str, Any]:
+def get_member_metrics(workspace: Path) -> dict[str, _MemberMetrics]:
     """
     Aggregates stats per role from the workspace/orket.log.
     """
@@ -342,32 +356,41 @@ def get_member_metrics(workspace: Path) -> dict[str, Any]:
     if not log_path.exists():
         return {}
 
-    metrics = {}
+    metrics: dict[str, _MemberMetrics] = {}
     with log_path.open("r", encoding="utf-8") as f:
         for line in f:
             try:
                 record = json.loads(line)
-                role = record.get("role")
-                if not role:
+                if not isinstance(record, dict):
                     continue
+                role_value = record.get("role")
+                if not isinstance(role_value, str) or not role_value:
+                    continue
+                role = role_value
 
                 if role not in metrics:
                     metrics[role] = {"tokens": 0, "lines_written": 0, "last_action": "Idle", "detail": ""}
 
                 event = record.get("event")
-                data = record.get("data", {})
+                data = record.get("data")
+                data_dict = data if isinstance(data, dict) else {}
 
                 if event == "model_usage":
-                    metrics[role]["tokens"] += data.get("total_tokens") or 0
+                    total_tokens = data_dict.get("total_tokens")
+                    if isinstance(total_tokens, int):
+                        metrics[role]["tokens"] += total_tokens
                 elif event == "tool_call":
-                    tool = data.get("tool")
+                    tool = data_dict.get("tool")
                     metrics[role]["last_action"] = f"Executing {tool}"
                     if tool == "write_file":
-                        content = data.get("args", {}).get("content", "")
-                        metrics[role]["lines_written"] += len(content.splitlines())
-                        metrics[role]["detail"] = f"Wrote {data.get('args', {}).get('path')}"
+                        args_payload = data_dict.get("args")
+                        args_dict = args_payload if isinstance(args_payload, dict) else {}
+                        content = args_dict.get("content")
+                        content_text = content if isinstance(content, str) else ""
+                        metrics[role]["lines_written"] += len(content_text.splitlines())
+                        metrics[role]["detail"] = f"Wrote {args_dict.get('path')}"
                 elif event == "auto_persist":
-                    metrics[role]["detail"] = f"Persisted {data.get('path')}"
+                    metrics[role]["detail"] = f"Persisted {data_dict.get('path')}"
             except (json.JSONDecodeError, KeyError):
                 continue
     return metrics

@@ -578,12 +578,12 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
                 if not isinstance(links_digest, str) or not links_digest:
                     continue
 
-                for ref_type, ref_id, ptr, rel in _iter_refs_from_links(links):
+                for ref_type, ref_id, ptr, relationship in _iter_refs_from_links(links):
                     grouped.setdefault((ref_type, ref_id), []).append(
                         RefSource(
                             stem=stem,
                             location=ptr,
-                            relationship=rel,
+                            relationship=relationship,
                             artifact_digest=links_digest,
                         )
                     )

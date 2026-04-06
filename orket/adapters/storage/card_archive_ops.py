@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import aiosqlite
 
@@ -10,7 +10,7 @@ from orket.schema import CardStatus
 class CardArchiveOps:
     """Archive and related-card lookup operations for AsyncCardRepository."""
 
-    def __init__(self, execute) -> None:
+    def __init__(self, execute: Any) -> None:
         self._execute = execute
 
     async def archive_card(self, card_id: str, archived_by: str = "system", reason: str | None = None) -> bool:
@@ -32,7 +32,7 @@ class CardArchiveOps:
             )
             return True
 
-        return await self._execute(_op, commit=True)
+        return cast(bool, await self._execute(_op, commit=True))
 
     async def archive_cards(
         self,
@@ -76,7 +76,7 @@ class CardArchiveOps:
                 )
             return len(ids)
 
-        return await self._execute(_op, row_factory=True, commit=True)
+        return cast(int, await self._execute(_op, row_factory=True, commit=True))
 
     async def find_related_card_ids(self, tokens: list[str], limit: int = 500) -> list[str]:
         normalized = [token.strip().lower() for token in tokens if token and token.strip()]
@@ -107,4 +107,4 @@ class CardArchiveOps:
             rows = await cursor.fetchall()
             return [row["id"] for row in rows]
 
-        return await self._execute(_op, row_factory=True)
+        return cast(list[str], await self._execute(_op, row_factory=True))

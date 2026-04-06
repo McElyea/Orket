@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from typing import Any
 
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
@@ -90,8 +91,8 @@ async def publish_step_if_needed(
 
 async def persist_non_protocol_tool_result_if_needed(
     *,
-    persist_tool_result,
-    persist_operation_result,
+    persist_tool_result: Callable[..., None],
+    persist_operation_result: Callable[..., None],
     session_id: str,
     issue_id: str,
     role_name: str,

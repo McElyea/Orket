@@ -37,7 +37,7 @@ WEBHOOK_SECRET: bytes | None = None
 
 
 class _WebhookHandlerProxy:
-    def __init__(self):
+    def __init__(self) -> None:
         self._handler: GiteaWebhookHandler | None = None
 
     def _create_handler(self) -> GiteaWebhookHandler:
@@ -126,7 +126,7 @@ def _validate_test_webhook_auth(
 class SlidingWindowRateLimiter:
     """Simple per-process sliding-window limiter."""
 
-    def __init__(self, limit: int, window_seconds: int = 60):
+    def __init__(self, limit: int, window_seconds: int = 60) -> None:
         self.limit = max(1, int(limit))
         self.window_seconds = window_seconds
         self._events: deque[float] = deque()
@@ -178,13 +178,13 @@ def validate_signature(payload: bytes, signature: str) -> bool:
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, str]:
     """Health check endpoint."""
     return {"service": "Orket Webhook Server", "status": "running", "version": __version__}
 
 
 @app.get("/health")
-async def health():
+async def health() -> dict[str, str]:
     """Kubernetes-style health check."""
     return {"status": "healthy"}
 
@@ -205,7 +205,11 @@ class TestWebhookPayload(BaseModel):
 
 
 @app.post("/webhook/gitea")
-async def gitea_webhook(request: Request, x_gitea_event: str = Header(None), x_gitea_signature: str = Header(None)):
+async def gitea_webhook(
+    request: Request,
+    x_gitea_event: str | None = Header(None),
+    x_gitea_signature: str | None = Header(None),
+) -> JSONResponse:
     """
     Main Gitea webhook endpoint.
     """
@@ -258,7 +262,7 @@ async def gitea_webhook(request: Request, x_gitea_event: str = Header(None), x_g
 
     # Route to handler
     try:
-        result = await webhook_handler.handle_webhook(x_gitea_event, payload.model_dump())
+        result = await webhook_handler.handle_webhook(str(x_gitea_event or ""), payload.model_dump())
         return JSONResponse(content=result, status_code=200)
     except (RuntimeError, ValueError, TypeError, KeyError, OSError) as exc:
         log_event("webhook", {"message": f"Webhook handler error: {exc}", "level": "error"}, workspace=Path.cwd())
@@ -268,9 +272,9 @@ async def gitea_webhook(request: Request, x_gitea_event: str = Header(None), x_g
 @app.post("/webhook/test")
 async def test_webhook(
     req: TestWebhookPayload,
-    x_api_key: str = Header(None),
-    x_webhook_test_token: str = Header(None),
-):
+    x_api_key: str | None = Header(None),
+    x_webhook_test_token: str | None = Header(None),
+) -> JSONResponse:
     """
     Test endpoint for manual webhook testing (no signature validation).
 
@@ -297,7 +301,7 @@ async def test_webhook(
     return JSONResponse(content=result, status_code=200)
 
 
-def start_server(host: str = "127.0.0.1", port: int = 8080):
+def start_server(host: str = "127.0.0.1", port: int = 8080) -> None:
     """
     Start the webhook server.
 

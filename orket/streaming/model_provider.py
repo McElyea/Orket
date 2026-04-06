@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import json
 import os
 import time
@@ -38,7 +37,7 @@ class ProviderTurnRequest(BaseModel):
 
 class ModelStreamProvider(ABC):
     @abstractmethod
-    async def start_turn(self, req: ProviderTurnRequest) -> AsyncIterator[ProviderEvent]:
+    def start_turn(self, req: ProviderTurnRequest) -> AsyncIterator[ProviderEvent]:
         raise NotImplementedError
 
     @abstractmethod
@@ -58,6 +57,19 @@ def _int_value(value: Any, default: int, *, minimum: int = 0) -> int:
     except (TypeError, ValueError):
         return default
     return parsed if parsed >= minimum else minimum
+
+
+def _float_value(value: object) -> float | None:
+    if isinstance(value, bool):
+        return float(value)
+    if isinstance(value, int | float):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
 
 
 def _deterministic_chunk(seed: int, index: int, chunk_size: int) -> str:
@@ -163,7 +175,7 @@ class OllamaModelStreamProvider(ModelStreamProvider):
         stream_timeout_s: float | None = None,
     ) -> None:
         try:
-            import ollama  # type: ignore
+            import ollama
         except ModuleNotFoundError as exc:  # pragma: no cover - environment-dependent
             raise RuntimeError("Real model provider requires 'ollama' python package.") from exc
         self._ollama = ollama
@@ -191,8 +203,9 @@ class OllamaModelStreamProvider(ModelStreamProvider):
             if "seed" in req.input_config:
                 options["seed"] = _int_value(req.input_config.get("seed"), 0)
             if "temperature" in req.input_config:
-                with contextlib.suppress(TypeError, ValueError):
-                    options["temperature"] = float(req.input_config.get("temperature"))
+                temperature = _float_value(req.input_config.get("temperature"))
+                if temperature is not None:
+                    options["temperature"] = temperature
             # Bound generation by default to keep stream scenarios deterministic and fast.
             options["num_predict"] = _int_value(req.input_config.get("max_tokens"), 64, minimum=1)
             yield ProviderEvent(
@@ -333,8 +346,9 @@ class OpenAICompatModelStreamProvider(ModelStreamProvider):
             }
             payload["stream"] = use_stream
             if "temperature" in req.input_config:
-                with contextlib.suppress(TypeError, ValueError):
-                    payload["temperature"] = float(req.input_config.get("temperature"))
+                temperature = _float_value(req.input_config.get("temperature"))
+                if temperature is not None:
+                    payload["temperature"] = temperature
             headers = {"Content-Type": "application/json"}
             if self._api_key:
                 headers["Authorization"] = f"Bearer {self._api_key}"

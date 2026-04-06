@@ -30,17 +30,19 @@ def _append_compat_translation(
     operation_id: str,
     translation: dict[str, Any],
 ) -> None:
-    payload = {"schema_version": "1.0", "translations": []}
+    schema_version = "1.0"
+    translations: list[dict[str, Any]] = []
     if out_path.exists():
         existing = json.loads(out_path.read_text(encoding="utf-8"))
         if isinstance(existing, dict):
             rows = existing.get("translations")
-            rows = rows if isinstance(rows, list) else []
-            payload["schema_version"] = str(existing.get("schema_version") or "1.0")
-            payload["translations"] = [dict(row) for row in rows if isinstance(row, dict)]
+            schema_version = str(existing.get("schema_version") or "1.0")
+            if isinstance(rows, list):
+                translations = [dict(row) for row in rows if isinstance(row, dict)]
     row = dict(translation)
     row["operation_id"] = str(operation_id or "")
-    payload["translations"].append(row)
+    translations.append(row)
+    payload = {"schema_version": schema_version, "translations": translations}
     out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
@@ -58,20 +60,22 @@ def _append_compat_latency_profile(
         return
     mapped_core_tools = translation.get("mapped_core_tools")
     mapped_core_tools = mapped_core_tools if isinstance(mapped_core_tools, list) else []
-    profile = {
+    profile: dict[str, Any] = {
         "compat_tool": compat_tool_name,
         "core_tools_used": [str(token).strip() for token in mapped_core_tools if str(token).strip()],
         "latency_ms": int(latency_ms),
         "mapping_version": translation.get("mapping_version"),
         "operation_id": str(operation_id or ""),
     }
-    payload = {"schema_version": "1.0", "profiles": []}
+    schema_version = "1.0"
+    profiles: list[dict[str, Any]] = []
     if out_path.exists():
         existing = json.loads(out_path.read_text(encoding="utf-8"))
         if isinstance(existing, dict):
             rows = existing.get("profiles")
-            rows = rows if isinstance(rows, list) else []
-            payload["schema_version"] = str(existing.get("schema_version") or "1.0")
-            payload["profiles"] = [dict(row) for row in rows if isinstance(row, dict)]
-    payload["profiles"].append(profile)
+            schema_version = str(existing.get("schema_version") or "1.0")
+            if isinstance(rows, list):
+                profiles = [dict(row) for row in rows if isinstance(row, dict)]
+    profiles.append(profile)
+    payload = {"schema_version": schema_version, "profiles": profiles}
     out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")

@@ -40,6 +40,7 @@ from orket.core.domain import LeaseStatus, ReservationStatus
 from orket.core.domain.sandbox import PortAllocation, Sandbox, SandboxRegistry, SandboxStatus, TechStack
 from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError
 from orket.core.domain.sandbox_lifecycle import SandboxState as LifecycleState
+from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
 from orket.core.domain.verification import AGENT_OUTPUT_DIR
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
@@ -338,8 +339,14 @@ class SandboxOrchestrator:
         record = await self.lifecycle_service.repository.get_record(sandbox_id)
         if not sandbox and not record:
             return False
-        workspace_path = record.workspace_path if record else str(sandbox.workspace_path)
-        compose_project = record.compose_project if record else str(sandbox.compose_project)
+        if record is not None:
+            workspace_path = record.workspace_path
+            compose_project = record.compose_project
+        elif sandbox is not None:
+            workspace_path = str(sandbox.workspace_path)
+            compose_project = str(sandbox.compose_project)
+        else:
+            return False
 
         try:
             container_rows = await self.runtime_inspector.list_project_container_rows(
@@ -441,14 +448,22 @@ class SandboxOrchestrator:
             record = run_coroutine_blocking(self.lifecycle_repository.get_record(sandbox_id))
         if not sandbox and not record:
             raise ValueError(f"Sandbox {sandbox_id} not found")
-        compose_path = self._compose_path(record.workspace_path if record else sandbox.workspace_path)
+        if record is not None:
+            log_workspace_path = record.workspace_path
+            compose_project = record.compose_project
+        elif sandbox is not None:
+            log_workspace_path = sandbox.workspace_path
+            compose_project = sandbox.compose_project
+        else:
+            raise ValueError(f"Sandbox {sandbox_id} not found")
+        compose_path = self._compose_path(log_workspace_path)
 
         cmd = [
             "docker-compose",
             "-f",
             str(compose_path),
             "-p",
-            record.compose_project if record else sandbox.compose_project,
+            compose_project,
             "logs",
             "--tail=100",
         ]
@@ -550,7 +565,7 @@ class SandboxOrchestrator:
     def _now() -> str:
         return datetime.now(UTC).replace(microsecond=0).isoformat()
 
-    def _sync_registry_with_lifecycle(self, record) -> None:
+    def _sync_registry_with_lifecycle(self, record: SandboxLifecycleRecord) -> None:
         if record.state is not LifecycleState.CLEANED:
             return
         sandbox = self.registry.get(record.sandbox_id)

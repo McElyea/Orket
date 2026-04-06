@@ -15,7 +15,7 @@ from typing import Any
 import aiofiles
 
 from .bus import StreamBus
-from .contracts import CommitHandle, CommitIntent, StreamEventType, mono_ts_ms_now
+from .contracts import CommitHandle, CommitIntent, StreamEvent, StreamEventType, mono_ts_ms_now
 from .session_context import (
     SESSION_CONTEXT_VERSION,
     build_packet1_context_envelope,
@@ -279,7 +279,7 @@ class InteractionManager:
         )
         return turn_id
 
-    async def subscribe(self, session_id: str) -> asyncio.Queue:
+    async def subscribe(self, session_id: str) -> asyncio.Queue[StreamEvent]:
         return await self.bus.subscribe(session_id)
 
     async def cancel(self, target_id: str) -> None:
@@ -312,10 +312,10 @@ class InteractionManager:
             turn_state.canceled.set()
             turn_state.terminal_event = StreamEventType.TURN_INTERRUPTED.value
             turn_state.finalized_at = finalized_at
-            session = self._sessions.get(session_id)
-            if session is not None:
-                session.updated_at = finalized_at
-                turn_record = self._find_turn_record(session, turn_id)
+            session_state = self._sessions.get(session_id)
+            if session_state is not None:
+                session_state.updated_at = finalized_at
+                turn_record = self._find_turn_record(session_state, turn_id)
                 if turn_record is not None:
                     turn_record["terminal_event"] = StreamEventType.TURN_INTERRUPTED.value
                     turn_record["status"] = "interrupted"

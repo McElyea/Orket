@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from __future__ import annotations
 
 from scripts.companion.companion_matrix_scoring import (

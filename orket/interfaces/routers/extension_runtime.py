@@ -61,7 +61,7 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
     router = APIRouter()
 
     @router.get("/extensions/{extension_id}/runtime/status")
-    async def extension_runtime_status(extension_id: str):
+    async def extension_runtime_status(extension_id: str) -> Any:
         service = service_getter()
         try:
             return await service.status(extension_id=extension_id)
@@ -69,7 +69,7 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             _raise_extension_runtime_http_error(exc)
 
     @router.get("/extensions/{extension_id}/runtime/models")
-    async def extension_runtime_models(extension_id: str, provider: str = "ollama"):
+    async def extension_runtime_models(extension_id: str, provider: str = "ollama") -> Any:
         service = service_getter()
         try:
             return await service.list_models(extension_id=extension_id, provider=provider)
@@ -97,7 +97,7 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             ) from exc
 
     @router.post("/extensions/{extension_id}/runtime/llm/generate")
-    async def extension_runtime_generate(extension_id: str, req: ExtensionRuntimeGenerateRequest):
+    async def extension_runtime_generate(extension_id: str, req: ExtensionRuntimeGenerateRequest) -> Any:
         service = service_getter()
         try:
             return await service.llm_generate(
@@ -114,7 +114,7 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             _raise_extension_runtime_http_error(exc)
 
     @router.post("/extensions/{extension_id}/runtime/memory/query")
-    async def extension_runtime_memory_query(extension_id: str, req: ExtensionRuntimeMemoryQueryRequest):
+    async def extension_runtime_memory_query(extension_id: str, req: ExtensionRuntimeMemoryQueryRequest) -> Any:
         service = service_getter()
         try:
             return await service.memory_query(
@@ -128,7 +128,7 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             _raise_extension_runtime_http_error(exc)
 
     @router.post("/extensions/{extension_id}/runtime/memory/write")
-    async def extension_runtime_memory_write(extension_id: str, req: ExtensionRuntimeMemoryWriteRequest):
+    async def extension_runtime_memory_write(extension_id: str, req: ExtensionRuntimeMemoryWriteRequest) -> Any:
         service = service_getter()
         try:
             return await service.memory_write(
@@ -143,7 +143,7 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             _raise_extension_runtime_http_error(exc)
 
     @router.post("/extensions/{extension_id}/runtime/memory/clear")
-    async def extension_runtime_memory_clear(extension_id: str, req: ExtensionRuntimeMemoryClearRequest):
+    async def extension_runtime_memory_clear(extension_id: str, req: ExtensionRuntimeMemoryClearRequest) -> Any:
         service = service_getter()
         try:
             return await service.memory_clear(
@@ -155,7 +155,7 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             _raise_extension_runtime_http_error(exc)
 
     @router.get("/extensions/{extension_id}/runtime/voice/state")
-    async def extension_runtime_voice_state(extension_id: str):
+    async def extension_runtime_voice_state(extension_id: str) -> Any:
         service = service_getter()
         try:
             return await service.voice_state(extension_id=extension_id)
@@ -163,7 +163,7 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             _raise_extension_runtime_http_error(exc)
 
     @router.post("/extensions/{extension_id}/runtime/voice/control")
-    async def extension_runtime_voice_control(extension_id: str, req: ExtensionRuntimeVoiceControlRequest):
+    async def extension_runtime_voice_control(extension_id: str, req: ExtensionRuntimeVoiceControlRequest) -> Any:
         service = service_getter()
         try:
             return await service.voice_control(
@@ -175,7 +175,7 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             _raise_extension_runtime_http_error(exc)
 
     @router.post("/extensions/{extension_id}/runtime/voice/transcribe")
-    async def extension_runtime_voice_transcribe(extension_id: str, req: ExtensionRuntimeTranscribeRequest):
+    async def extension_runtime_voice_transcribe(extension_id: str, req: ExtensionRuntimeTranscribeRequest) -> Any:
         service = service_getter()
         try:
             return await service.transcribe(
@@ -188,7 +188,7 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             _raise_extension_runtime_http_error(exc)
 
     @router.get("/extensions/{extension_id}/runtime/tts/voices")
-    async def extension_runtime_tts_voices(extension_id: str):
+    async def extension_runtime_tts_voices(extension_id: str) -> Any:
         service = service_getter()
         try:
             return await service.tts_voices(extension_id=extension_id)
@@ -196,7 +196,7 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             _raise_extension_runtime_http_error(exc)
 
     @router.post("/extensions/{extension_id}/runtime/tts/synthesize")
-    async def extension_runtime_tts_synthesize(extension_id: str, req: ExtensionRuntimeSynthesizeRequest):
+    async def extension_runtime_tts_synthesize(extension_id: str, req: ExtensionRuntimeSynthesizeRequest) -> Any:
         service = service_getter()
         try:
             return await service.synthesize(

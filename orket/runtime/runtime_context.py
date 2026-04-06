@@ -69,7 +69,7 @@ class OrketRuntimeContext:
         telemetry_sink: TelemetrySink | None = None,
         primary_run_ledger_mode: str = "sqlite",
     ) -> OrketRuntimeContext:
-        runtime_nodes = decision_nodes or DecisionNodeRegistry()
+        runtime_nodes = decision_nodes if decision_nodes is not None else DecisionNodeRegistry()
         resolved_workspace = Path(workspace_root)
         resolved_db_path = resolve_runtime_db_path(db_path)
         resolved_config_root = (

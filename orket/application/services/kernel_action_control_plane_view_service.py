@@ -14,7 +14,7 @@ from orket.application.services.kernel_action_control_plane_service import Kerne
 class KernelActionControlPlaneViewService:
     """Builds read-model summaries for governed kernel-action control-plane state."""
 
-    def __init__(self, *, record_repository, execution_repository) -> None:
+    def __init__(self, *, record_repository: Any, execution_repository: Any) -> None:
         self.record_repository = record_repository
         self.execution_repository = execution_repository
 

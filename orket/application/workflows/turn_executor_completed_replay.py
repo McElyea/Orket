@@ -7,6 +7,13 @@ from orket.application.services.turn_tool_control_plane_service import (
     TurnToolControlPlaneService,
 )
 from orket.application.services.turn_tool_control_plane_support import attempt_id_for, run_id_for
+from orket.core.contracts import (
+    AttemptRecord,
+    CheckpointAcceptanceRecord,
+    CheckpointRecord,
+    FinalTruthRecord,
+    RunRecord,
+)
 from orket.core.domain import (
     AttemptState,
     CheckpointAcceptanceOutcome,
@@ -104,8 +111,8 @@ def control_plane_service_for_executor(executor: Any) -> TurnToolControlPlaneSer
 async def _load_successful_completed_truth(
     *,
     control_plane_service: TurnToolControlPlaneService,
-    run: Any,
-):
+    run: RunRecord,
+) -> FinalTruthRecord | None:
     if run.final_truth_record_id is None:
         if run.lifecycle_state is RunState.COMPLETED:
             raise TurnToolControlPlaneError(
@@ -129,8 +136,8 @@ async def _load_completed_attempt(
     *,
     control_plane_service: TurnToolControlPlaneService,
     run_id: str,
-    run: Any,
-):
+    run: RunRecord,
+) -> AttemptRecord:
     attempt = await control_plane_service.execution_repository.get_attempt_record(
         attempt_id=run.current_attempt_id or attempt_id_for(run_id=run_id)
     )
@@ -147,7 +154,7 @@ async def _load_completed_checkpoint_authority(
     *,
     control_plane_service: TurnToolControlPlaneService,
     attempt_id: str,
-):
+) -> tuple[CheckpointRecord, CheckpointAcceptanceRecord]:
     checkpoints = await control_plane_service.publication.repository.list_checkpoints(parent_ref=attempt_id)
     if not checkpoints:
         raise TurnToolControlPlaneError(

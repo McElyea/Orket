@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from orket.application.services.sandbox_cleanup_decision_service import SandboxCleanupDecisionService
-from orket.core.domain.sandbox_cleanup import DockerResourceType
+from orket.core.domain.sandbox_cleanup import DockerResourceType, ObservedDockerResource
 from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, SandboxLifecycleError, SandboxState
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
 
@@ -144,9 +144,10 @@ class SandboxRuntimeCleanupService:
                 error=error,
             )
             raise RuntimeError(f"Failed to verify sandbox cleanup: {error}")
-        current = await self.lifecycle_service.repository.get_record(current.sandbox_id)
-        if current is None:
+        latest = await self.lifecycle_service.repository.get_record(current.sandbox_id)
+        if latest is None:
             raise SandboxLifecycleError(f"Sandbox lifecycle record not found for {record.sandbox_id}")
+        current = latest
         cleaned = (
             await self.lifecycle_service.mutations.transition_state(
                 sandbox_id=current.sandbox_id,
@@ -196,7 +197,7 @@ class SandboxRuntimeCleanupService:
     async def _run_fallback_cleanup(
         self,
         *,
-        observed_resources,
+        observed_resources: list[ObservedDockerResource],
         allowed_names: set[str],
     ) -> list[str]:
         errors: list[str] = []

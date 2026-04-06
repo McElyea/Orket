@@ -9,7 +9,7 @@ from orket.schema import EpicConfig, OrganizationConfig
 
 
 class OrganizationLoop:
-    def __init__(self, organization_path: Path = Path("config/organization.json")):
+    def __init__(self, organization_path: Path = Path("config/organization.json")) -> None:
         self.org_path = organization_path
         self.fs = AsyncFileTools(Path())
         if not self.org_path.exists():
@@ -20,7 +20,7 @@ class OrganizationLoop:
     def _load_org(self) -> OrganizationConfig:
         return OrganizationConfig.model_validate_json(self.fs.read_file_sync(str(self.org_path)))
 
-    async def run_forever(self):
+    async def run_forever(self) -> None:
         self.running = True
         log_event("organization_loop_started", {"mode": "critical_path"}, workspace=Path("workspace/default"))
         while self.running:
@@ -33,16 +33,16 @@ class OrganizationLoop:
                     {"card_id": next_card["id"], "department": next_card["dept"]},
                     workspace=Path("workspace/default"),
                 )
-                pipeline = ExecutionPipeline(Path("workspace/default"), next_card["dept"])
-                await pipeline.run_card(next_card["id"])
+                pipeline = ExecutionPipeline(Path("workspace/default"), str(next_card["dept"]))
+                await pipeline.run_card(str(next_card["id"]))
             else:
                 # Idle jitter
                 await asyncio.sleep(10)
             await asyncio.sleep(0)
 
-    def _find_next_critical_card(self) -> dict | None:
+    def _find_next_critical_card(self) -> dict[str, str | int] | None:
         """Finds the most critical READY card across all departments."""
-        candidates = []
+        candidates: list[dict[str, str | int]] = []
 
         for dept in self.org.departments:
             loader = ConfigLoader(Path("model"), dept)
@@ -60,7 +60,7 @@ class OrganizationLoop:
                             {
                                 "id": top_id,
                                 "weight": len(priority_ids),  # Simplified global weight
-                                "priority": issue.priority,
+                                "priority": str(issue.priority),
                                 "dept": dept,
                             }
                         )
@@ -78,6 +78,6 @@ class OrganizationLoop:
 
         # Sort by Weight (Length of remaining critical path) then Priority
         p_map = {"High": 0, "Medium": 1, "Low": 2}
-        candidates.sort(key=lambda x: (-x["weight"], p_map.get(x["priority"], 3)))
+        candidates.sort(key=lambda x: (-int(x["weight"]), p_map.get(str(x["priority"]), 3)))
 
         return candidates[0]

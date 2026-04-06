@@ -69,17 +69,21 @@ _PROFILE_TRAITS_BY_PROFILE = {
 }
 
 
+def _dict_payload(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, dict) else {}
+
+
 def apply_epic_cards_runtime_defaults(*, issue_params: Any, epic_params: Any) -> dict[str, Any]:
-    issue_payload = dict(issue_params or {}) if isinstance(issue_params, dict) else {}
-    epic_payload = dict(epic_params or {}) if isinstance(epic_params, dict) else {}
+    issue_payload = _dict_payload(issue_params)
+    epic_payload = _dict_payload(epic_params)
     if not epic_payload:
         return issue_payload
 
     merged = dict(issue_payload)
-    epic_runtime = epic_payload.get("cards_runtime") if isinstance(epic_payload.get("cards_runtime"), dict) else {}
-    issue_runtime = merged.get("cards_runtime") if isinstance(merged.get("cards_runtime"), dict) else {}
+    epic_runtime = _dict_payload(epic_payload.get("cards_runtime"))
+    issue_runtime = _dict_payload(merged.get("cards_runtime"))
     if epic_runtime or issue_runtime:
-        merged["cards_runtime"] = {**dict(epic_runtime), **dict(issue_runtime)}
+        merged["cards_runtime"] = {**epic_runtime, **issue_runtime}
 
     for key in _RUNTIME_PARAM_KEYS[1:]:
         if key in merged:
@@ -97,8 +101,8 @@ def resolve_cards_runtime(
 ) -> dict[str, Any]:
     issue_seat = str(getattr(issue, "seat", "") or "").strip().lower() or "coder"
     params = getattr(issue, "params", None)
-    payload = dict(params or {}) if isinstance(params, dict) else {}
-    nested = payload.get("cards_runtime") if isinstance(payload.get("cards_runtime"), dict) else {}
+    payload = _dict_payload(params)
+    nested = _dict_payload(payload.get("cards_runtime"))
 
     requested_profile = _pick_first_token(
         nested.get("execution_profile"),
@@ -110,17 +114,13 @@ def resolve_cards_runtime(
     odr_enabled = bool(odr_enabled)
 
     artifact_contract = _normalize_artifact_contract(
-        nested.get("artifact_contract")
-        if isinstance(nested.get("artifact_contract"), dict)
-        else payload.get("artifact_contract"),
+        _dict_payload(nested.get("artifact_contract")) or payload.get("artifact_contract"),
         requested_profile=requested_profile,
     )
     profile_traits = _profile_traits_for_profile(requested_profile)
-    odr_result = payload.get("odr_result") if isinstance(payload.get("odr_result"), dict) else {}
+    odr_result = _dict_payload(payload.get("odr_result"))
     scenario_truth = _normalize_scenario_truth(
-        nested.get("scenario_truth")
-        if isinstance(nested.get("scenario_truth"), dict)
-        else payload.get("scenario_truth"),
+        _dict_payload(nested.get("scenario_truth")) or payload.get("scenario_truth"),
     )
     base_profile = _resolve_base_profile(
         requested_profile=requested_profile,
@@ -169,8 +169,8 @@ def resolve_cards_runtime(
 def required_read_paths_for_seat(*, seat_name: str, issue: Any) -> list[str]:
     seat = str(seat_name or "").strip().lower()
     runtime = resolve_cards_runtime(issue=issue)
-    artifact_contract = dict(runtime.get("artifact_contract") or {})
-    review_paths = list(artifact_contract.get("review_read_paths") or [])
+    artifact_contract = _dict_payload(runtime.get("artifact_contract"))
+    review_paths = _normalize_paths(artifact_contract.get("review_read_paths"))
     issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
     reviewer_seat = str(runtime.get("reviewer_seat_choice") or "").strip().lower()
 
@@ -195,7 +195,7 @@ def required_read_paths_for_seat(*, seat_name: str, issue: Any) -> list[str]:
 def required_write_paths_for_seat(*, seat_name: str, issue: Any) -> list[str]:
     seat = str(seat_name or "").strip().lower()
     runtime = resolve_cards_runtime(issue=issue)
-    artifact_contract = dict(runtime.get("artifact_contract") or {})
+    artifact_contract = _dict_payload(runtime.get("artifact_contract"))
     builder_seat = str(runtime.get("builder_seat_choice") or "").strip().lower()
     if seat == "requirements_analyst":
         return [DEFAULT_REQUIREMENTS_PATH]
@@ -217,7 +217,7 @@ def summarize_cards_runtime_issues(issue_payloads: list[dict[str, Any]]) -> dict
     profiles = sorted({str(row.get("execution_profile") or "").strip() for row in rows if str(row.get("execution_profile") or "").strip()})
     shared_profile = profiles[0] if len(profiles) == 1 else "mixed"
     odr_active = any(bool(row.get("odr_active")) for row in rows)
-    summary = {
+    summary: dict[str, Any] = {
         "issues": rows,
         "execution_profile": shared_profile,
         "odr_active": odr_active,
@@ -237,6 +237,8 @@ def summarize_cards_runtime_issues(issue_payloads: list[dict[str, Any]]) -> dict
             "odr_valid",
             "odr_pending_decisions",
             "odr_stop_reason",
+            "odr_termination_reason",
+            "odr_final_auditor_verdict",
             "odr_artifact_path",
         ):
             if key in row:
@@ -253,7 +255,7 @@ def _resolve_base_profile(*, requested_profile: str, artifact_contract: dict[str
 
 
 def _normalize_artifact_contract(value: Any, *, requested_profile: str = "") -> dict[str, Any]:
-    payload = dict(value or {}) if isinstance(value, dict) else {}
+    payload = _dict_payload(value)
     profile_traits = _profile_traits_for_profile(requested_profile)
     if not payload and profile_traits.get("artifact_contract_required") is False:
         return _empty_artifact_contract()
@@ -332,13 +334,11 @@ def _artifact_contract_declares_outputs(artifact_contract: dict[str, Any]) -> bo
 
 
 def _normalize_scenario_truth(value: Any) -> dict[str, Any]:
-    payload = dict(value or {}) if isinstance(value, dict) else {}
+    payload = _dict_payload(value)
     if not payload:
         return {}
-    blocked_issue_policy = (
-        payload.get("blocked_issue_policy") if isinstance(payload.get("blocked_issue_policy"), dict) else {}
-    )
-    normalized = {
+    blocked_issue_policy = _dict_payload(payload.get("blocked_issue_policy"))
+    normalized: dict[str, Any] = {
         "scenario_id": _pick_first_token(payload.get("scenario_id"), payload.get("id")),
         "blocked_issue_policy": {
             "allowed_issue_ids": _normalize_paths(
@@ -444,12 +444,14 @@ def _coerce_bool(value: Any) -> bool | None:
 
 
 def _normalize_odr_result(value: Any) -> dict[str, Any]:
-    payload = dict(value or {}) if isinstance(value, dict) else {}
+    payload = _dict_payload(value)
     normalized: dict[str, Any] = {}
     for key in (
         "odr_valid",
         "odr_pending_decisions",
         "odr_stop_reason",
+        "odr_termination_reason",
+        "odr_final_auditor_verdict",
         "odr_artifact_path",
         "odr_requirement",
         "odr_rounds_completed",
@@ -469,7 +471,7 @@ def _shared_dict_value(*, rows: list[dict[str, Any]], key: str) -> dict[str, Any
         if not isinstance(value, dict) or not value:
             continue
         encoded.add(json.dumps(value, sort_keys=True))
-        selected = dict(value)
+        selected = _dict_payload(value)
     if len(encoded) == 1:
         return selected
     return {}

@@ -233,7 +233,7 @@ def source_summary(
     detail: str | None = None,
     attributes: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    payload = {
+    payload: dict[str, Any] = {
         "source_id": source_id,
         "authority_level": authority_level,
         "source_kind": source_kind,

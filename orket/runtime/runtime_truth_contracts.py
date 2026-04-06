@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 RUNTIME_STATUS_VOCABULARY_SCHEMA_VERSION = "1.0"
 DEGRADATION_TAXONOMY_SCHEMA_VERSION = "1.0"
 FAIL_BEHAVIOR_REGISTRY_SCHEMA_VERSION = "1.0"
@@ -16,6 +18,27 @@ RUNTIME_STATUS_VOCABULARY: tuple[str, ...] = (
 
 _EXPECTED_DEGRADATION_LEVELS = {"none", "degraded", "blocked"}
 _ALLOWED_FAIL_BEHAVIOR_MODES = {"fail_open", "fail_closed"}
+
+
+def _normalized_strings(value: object, *, lowercase: bool = False) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    normalized: list[str] = []
+    for token in value:
+        item = str(token).strip()
+        if item:
+            normalized.append(item.lower() if lowercase else item)
+    return normalized
+
+
+def _normalized_dict_rows(value: object) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    rows: list[dict[str, Any]] = []
+    for row in value:
+        if isinstance(row, dict):
+            rows.append({str(key): item for key, item in row.items()})
+    return rows
 
 
 def runtime_status_vocabulary_snapshot() -> dict[str, object]:
@@ -36,7 +59,7 @@ def validate_runtime_status_vocabulary_contract(
     payload: dict[str, object] | None = None,
 ) -> tuple[str, ...]:
     contract = dict(payload or runtime_status_vocabulary_snapshot())
-    terms = [str(token).strip().lower() for token in contract.get("runtime_status_terms", []) if str(token).strip()]
+    terms = _normalized_strings(contract.get("runtime_status_terms"), lowercase=True)
     if not terms:
         raise ValueError("E_RUNTIME_STATUS_VOCABULARY_EMPTY")
     if len(set(terms)) != len(terms):
@@ -73,7 +96,7 @@ def validate_degradation_taxonomy_contract(
     payload: dict[str, object] | None = None,
 ) -> tuple[str, ...]:
     contract = dict(payload or degradation_taxonomy_snapshot())
-    rows = list(contract.get("levels") or [])
+    rows = _normalized_dict_rows(contract.get("levels"))
     if not rows:
         raise ValueError("E_DEGRADATION_TAXONOMY_EMPTY")
     levels: list[str] = []
@@ -125,7 +148,7 @@ def validate_fail_behavior_registry_contract(
     payload: dict[str, object] | None = None,
 ) -> tuple[str, ...]:
     contract = dict(payload or fail_behavior_registry_snapshot())
-    rows = list(contract.get("subsystems") or [])
+    rows = _normalized_dict_rows(contract.get("subsystems"))
     if not rows:
         raise ValueError("E_FAIL_BEHAVIOR_REGISTRY_EMPTY")
     subsystems: list[str] = []

@@ -2,8 +2,37 @@ from __future__ import annotations
 
 from collections import Counter
 from pathlib import Path
+from typing import Any
 
 from orket.reforger.eval.base import EvalResult
+
+
+def _scoreboard_text(row: dict[str, object], key: str) -> str:
+    return str(row.get(key) or "")
+
+
+def _scoreboard_float(row: dict[str, object], key: str) -> float:
+    value = row.get(key)
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        token = value.strip()
+        if token:
+            return float(token)
+    raise ValueError(f"scoreboard row field '{key}' must be numeric")
+
+
+def _scoreboard_int(row: dict[str, object], key: str) -> int:
+    value = row.get(key)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, str):
+        token = value.strip()
+        if token:
+            return int(token)
+    raise ValueError(f"scoreboard row field '{key}' must be an integer")
 
 
 def write_summary(
@@ -39,9 +68,9 @@ def write_summary(
             lines.append(
                 "- {candidate_id}: score={score:.6f}, hard={hard_fail_count}, soft={soft_fail_count}".format(
                     candidate_id=str(row["candidate_id"]),
-                    score=float(row["score"]),
-                    hard_fail_count=int(row["hard_fail_count"]),
-                    soft_fail_count=int(row["soft_fail_count"]),
+                    score=_scoreboard_float(row, "score"),
+                    hard_fail_count=_scoreboard_int(row, "hard_fail_count"),
+                    soft_fail_count=_scoreboard_int(row, "soft_fail_count"),
                 )
             )
     else:
@@ -67,8 +96,8 @@ def write_summary(
     lines.extend(["", "Top 5 Frequent Failures"])
     counter: Counter[str] = Counter()
     for result in all_results.values():
-        for row in result.failing_cases:
-            counter[row.case_id] += 1
+        for failing_case in result.failing_cases:
+            counter[failing_case.case_id] += 1
     frequent = sorted(counter.items(), key=lambda row: (-row[1], row[0]))[:5]
     lines.extend([f"- {case_id} ({count})" for case_id, count in frequent] or ["- <none>"])
 

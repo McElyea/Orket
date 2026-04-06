@@ -58,3 +58,23 @@ def test_read_validated_run_summary_rejects_drifted_projection_markers(tmp_path:
 
     with pytest.raises(ValueError, match="run_summary_truthful_runtime_packet1_projection_source_invalid"):
         read_validated_run_summary(path)
+
+
+def test_read_validated_run_summary_rejects_degraded_payload(tmp_path: Path) -> None:
+    """Layer: unit. Live-proof helpers should fail closed on degraded summaries."""
+    path = tmp_path / "run_summary.json"
+    _write_json(
+        path,
+        {
+            "run_id": "sess-live-degraded",
+            "status": "failed",
+            "duration_ms": 1,
+            "tools_used": [],
+            "artifact_ids": [],
+            "failure_reason": "summary_generation_failed",
+            "is_degraded": True,
+        },
+    )
+
+    with pytest.raises(ValueError, match="live_run_summary_degraded"):
+        read_validated_run_summary(path)

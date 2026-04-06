@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
@@ -79,7 +79,7 @@ class Orchestrator:
         db_path: str,
         loader: Any,
         sandbox_orchestrator: Any,
-    ):
+    ) -> None:
         self.workspace = workspace
         self.async_cards = async_cards
         self.snapshots = snapshots
@@ -95,10 +95,10 @@ class Orchestrator:
         self.memory = MemoryStore(memory_db)
 
         self.notes = NoteStore()
-        self.transcript = []
-        self._sandbox_locks = defaultdict(asyncio.Lock)
-        self._sandbox_failed_rocks = set()
-        self._team_replan_counts = defaultdict(int)
+        self.transcript: list[Any] = []
+        self._sandbox_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+        self._sandbox_failed_rocks: set[str] = set()
+        self._team_replan_counts: defaultdict[str, int] = defaultdict(int)
         self.pending_gates = AsyncPendingGateRepository(self.db_path)
         runtime_db_path = Path(self.db_path)
         if not runtime_db_path.is_absolute():
@@ -318,7 +318,7 @@ class Orchestrator:
         _sync_patchable_symbols()
         return await orchestrator_ops.verify_issue(self, issue_id, run_id)
 
-    async def _trigger_sandbox(self, epic: EpicConfig, run_id: str | None = None):
+    async def _trigger_sandbox(self, epic: EpicConfig, run_id: str | None = None) -> Any:
         _sync_patchable_symbols()
         return await orchestrator_ops._trigger_sandbox(self, epic, run_id)
 
@@ -335,17 +335,17 @@ class Orchestrator:
         model_override: str | None = None,
     ) -> list[IssueConfig]:
         _sync_patchable_symbols()
-        return await orchestrator_ops.execute_epic(
+        return cast(list[IssueConfig], await orchestrator_ops.execute_epic(
             self,
             active_build=active_build,
             run_id=run_id,
             epic=epic,
             team=team,
             env=env,
-            target_issue_id=target_issue_id,
+            target_issue_id=cast(Any, target_issue_id),
             resume_mode=resume_mode,
             model_override=model_override,
-        )
+        ))
 
     async def _save_checkpoint(
         self,
@@ -354,9 +354,23 @@ class Orchestrator:
         team: TeamConfig,
         env: EnvironmentConfig,
         active_build: str,
-    ):
+    ) -> Any:
         _sync_patchable_symbols()
         return await orchestrator_ops._save_checkpoint(self, run_id, epic, team, env, active_build)
 
 
-__all__ = ["Orchestrator", "CardStatus"]
+__all__ = [
+    "CardStatus",
+    "DependencyManager",
+    "DependencyValidationError",
+    "DeploymentPlanner",
+    "DeploymentValidationError",
+    "Orchestrator",
+    "PromptCompiler",
+    "PromptResolver",
+    "RuntimeVerifier",
+    "Scaffolder",
+    "ScaffoldValidationError",
+    "load_user_preferences",
+    "load_user_settings",
+]

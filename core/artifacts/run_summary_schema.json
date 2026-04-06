@@ -7,6 +7,7 @@
     "run_id",
     "status",
     "duration_ms",
+    "is_degraded",
     "tools_used",
     "artifact_ids",
     "failure_reason"
@@ -26,6 +27,9 @@
         "null"
       ],
       "minimum": 0
+    },
+    "is_degraded": {
+      "type": "boolean"
     },
     "tools_used": {
       "type": "array",

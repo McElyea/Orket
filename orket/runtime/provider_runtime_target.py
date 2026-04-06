@@ -4,7 +4,7 @@ import asyncio
 import os
 import re
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from orket.runtime.provider_quarantine_policy import (
@@ -203,6 +203,14 @@ def _supports_lmstudio_cli_warmup(*, provider: str, base_url: str) -> bool:
     return host in {"127.0.0.1", "localhost"} and port == 1234
 
 
+def _object_list(value: object) -> list[object]:
+    if isinstance(value, list):
+        return list(value)
+    if isinstance(value, tuple):
+        return list(value)
+    return []
+
+
 async def list_provider_models(
     *,
     provider: str,
@@ -302,10 +310,12 @@ async def resolve_provider_runtime_target(
     resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested_provider))
     requested_model_token = str(requested_model or "").strip()
     quarantine_policy = resolve_provider_quarantine_policy()
-    quarantined_providers = {str(token).strip().lower() for token in (quarantine_policy.get("providers") or [])}
+    quarantined_providers = {
+        str(token).strip().lower() for token in _object_list(quarantine_policy.get("providers"))
+    }
     quarantined_provider_models = {
         (str(row[0]).strip().lower(), str(row[1]).strip())
-        for row in (quarantine_policy.get("provider_models") or [])
+        for row in _object_list(quarantine_policy.get("provider_models"))
         if isinstance(row, (tuple, list)) and len(row) == 2
     }
     if is_provider_quarantined(
@@ -366,7 +376,7 @@ async def resolve_provider_runtime_target(
             timeout_s=timeout_s,
             api_key=api_key,
         )
-        available_models = [str(model) for model in (listing.get("models") or [])]
+        available_models = [str(model) for model in _object_list(listing.get("models"))]
         resolved_model = requested_model_token if requested_model_token in available_models else ""
         resolution_mode = "requested" if resolved_model else "unresolved"
         if not resolved_model and (auto_select_model or not requested_model_token):
@@ -529,7 +539,7 @@ def list_provider_models_sync(
     timeout_s: float,
     api_key: str | None = None,
 ) -> dict[str, object]:
-    return _run_coro_sync(
+    result = _run_coro_sync(
         list_provider_models(
             provider=provider,
             base_url=base_url,
@@ -537,8 +547,9 @@ def list_provider_models_sync(
             api_key=api_key,
         )
     )
+    return dict(cast(dict[str, object], result))
 
 
 def resolve_provider_runtime_target_sync(**kwargs: Any) -> dict[str, Any]:
-    result = _run_coro_sync(resolve_provider_runtime_target(**kwargs))
+    result = cast(ProviderRuntimeTarget, _run_coro_sync(resolve_provider_runtime_target(**kwargs)))
     return result.to_payload()

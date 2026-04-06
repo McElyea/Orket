@@ -41,7 +41,7 @@ class SandboxCleanupVerificationService:
                 observation_complete=False,
                 unverified_expected=expected_names,
             )
-        observed_by_type = {
+        observed_by_type: dict[DockerResourceType, set[str]] = {
             DockerResourceType.CONTAINER: set(),
             DockerResourceType.NETWORK: set(),
             DockerResourceType.MANAGED_VOLUME: set(),

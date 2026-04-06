@@ -7,17 +7,25 @@ from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 _FALLBACK_ELIGIBLE_STATES = {"supported", "conditional"}
 
 
+def _provider_rows(value: object) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    return [dict(row) for row in value if isinstance(row, dict)]
+
+
 def capability_fallback_hierarchy_snapshot() -> dict[str, Any]:
     truth_table = provider_truth_table_snapshot()
-    providers = [dict(row) for row in truth_table.get("providers", []) if isinstance(row, dict)]
-    capability_names = sorted(
-        {
-            str(name).strip()
-            for row in providers
-            for name in dict(row.get("capabilities") or {})
-            if str(name).strip()
-        }
-    )
+    providers = _provider_rows(truth_table.get("providers"))
+    capability_name_set: set[str] = set()
+    for row in providers:
+        capabilities_payload = row.get("capabilities")
+        if not isinstance(capabilities_payload, dict):
+            continue
+        for name in capabilities_payload.keys():
+            capability = str(name).strip()
+            if capability:
+                capability_name_set.add(capability)
+    capability_names = sorted(capability_name_set)
     hierarchy: dict[str, list[dict[str, str]]] = {}
     for capability in capability_names:
         rows: list[dict[str, str]] = []
@@ -38,17 +46,17 @@ def capability_fallback_hierarchy_snapshot() -> dict[str, Any]:
 
 def validate_capability_fallback_hierarchy(payload: dict[str, Any] | None = None) -> dict[str, Any]:
     hierarchy = dict(payload or capability_fallback_hierarchy_snapshot())
-    fallback_hierarchy = dict(hierarchy.get("fallback_hierarchy") or {})
+    fallback_hierarchy_payload = hierarchy.get("fallback_hierarchy")
+    fallback_hierarchy = fallback_hierarchy_payload if isinstance(fallback_hierarchy_payload, dict) else {}
     if not fallback_hierarchy:
         raise ValueError("E_CAPABILITY_FALLBACK_HIERARCHY_EMPTY")
 
     truth_table = provider_truth_table_snapshot()
     provider_capabilities: dict[tuple[str, str], str] = {}
-    for row in truth_table.get("providers", []):
-        if not isinstance(row, dict):
-            continue
+    for row in _provider_rows(truth_table.get("providers")):
         provider = str(row.get("provider") or "").strip()
-        capabilities = dict(row.get("capabilities") or {})
+        capabilities_payload = row.get("capabilities")
+        capabilities = capabilities_payload if isinstance(capabilities_payload, dict) else {}
         for capability_name, state in capabilities.items():
             capability = str(capability_name or "").strip()
             if provider and capability:
@@ -62,8 +70,10 @@ def validate_capability_fallback_hierarchy(payload: dict[str, Any] | None = None
             raise ValueError(f"E_CAPABILITY_FALLBACK_LIST_REQUIRED:{capability}")
         seen_providers: set[str] = set()
         for row in rows:
-            provider = str((row or {}).get("provider") or "").strip()
-            state = str((row or {}).get("state") or "").strip().lower()
+            if not isinstance(row, dict):
+                raise ValueError(f"E_CAPABILITY_FALLBACK_ROW_SCHEMA:{capability}")
+            provider = str(row.get("provider") or "").strip()
+            state = str(row.get("state") or "").strip().lower()
             if not provider:
                 raise ValueError(f"E_CAPABILITY_FALLBACK_PROVIDER_REQUIRED:{capability}")
             if provider in seen_providers:

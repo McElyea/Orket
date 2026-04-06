@@ -22,12 +22,12 @@ class AsyncSessionRepository(SessionRepository):
     Async implementation of SessionRepository using aiosqlite.
     """
 
-    def __init__(self, db_path: str | Path):
+    def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
         self._initialized = False
         self._lock = asyncio.Lock()
 
-    async def _ensure_initialized(self, conn: aiosqlite.Connection):
+    async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
         if self._initialized:
             return
         await conn.execute("""
@@ -54,7 +54,7 @@ class AsyncSessionRepository(SessionRepository):
             row = await cursor.fetchone()
             return dict(row) if row else None
 
-    async def start_session(self, session_id: str, data: dict[str, Any]):
+    async def start_session(self, session_id: str, data: dict[str, Any]) -> None:
         async with self._lock, aiosqlite.connect(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
@@ -124,7 +124,9 @@ class AsyncSessionRepository(SessionRepository):
                 issues.append(data)
             return issues
 
-    async def complete_session(self, session_id: str, status: str, transcript: list[dict]):
+    async def complete_session(
+        self, session_id: str, status: str, transcript: list[dict[str, Any]]
+    ) -> None:
         async with self._lock, aiosqlite.connect(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
@@ -139,12 +141,12 @@ class AsyncSnapshotRepository(SnapshotRepository):
     Async implementation of SnapshotRepository using aiosqlite.
     """
 
-    def __init__(self, db_path: str | Path):
+    def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
         self._initialized = False
         self._lock = asyncio.Lock()
 
-    async def _ensure_initialized(self, conn: aiosqlite.Connection):
+    async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
         if self._initialized:
             return
         await conn.execute("""
@@ -158,7 +160,9 @@ class AsyncSnapshotRepository(SnapshotRepository):
         await conn.commit()
         self._initialized = True
 
-    async def record(self, session_id: str, config: dict, logs: list[dict]):
+    async def record(
+        self, session_id: str, config: dict[str, Any], logs: list[dict[str, Any]]
+    ) -> None:
         async with self._lock, aiosqlite.connect(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
@@ -171,7 +175,7 @@ class AsyncSnapshotRepository(SnapshotRepository):
             )
             await conn.commit()
 
-    async def get(self, session_id: str) -> dict | None:
+    async def get(self, session_id: str) -> dict[str, Any] | None:
         async with aiosqlite.connect(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             await self._ensure_initialized(conn)
@@ -186,12 +190,12 @@ class AsyncSuccessRepository:
     One row per run. Incomplete until a success record is written.
     """
 
-    def __init__(self, db_path: str | Path):
+    def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
         self._initialized = False
         self._lock = asyncio.Lock()
 
-    async def _ensure_initialized(self, conn: aiosqlite.Connection):
+    async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
         if self._initialized:
             return
         await conn.execute("""
@@ -208,7 +212,7 @@ class AsyncSuccessRepository:
 
     async def record_success(
         self, session_id: str, success_type: str, artifact_ref: str, human_ack: str | None = None
-    ):
+    ) -> None:
         async with self._lock, aiosqlite.connect(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
@@ -227,12 +231,12 @@ class AsyncRunLedgerRepository:
     Unified run ledger for success, failure, and incomplete outcomes.
     """
 
-    def __init__(self, db_path: str | Path):
+    def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
         self._initialized = False
         self._lock = asyncio.Lock()
 
-    async def _ensure_initialized(self, conn: aiosqlite.Connection):
+    async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
         if self._initialized:
             return
         await conn.execute(
@@ -401,12 +405,12 @@ class AsyncPendingGateRepository:
     Persistent ledger for pending gate/approval/review requests.
     """
 
-    def __init__(self, db_path: str | Path):
+    def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
         self._initialized = False
         self._lock = asyncio.Lock()
 
-    async def _ensure_initialized(self, conn: aiosqlite.Connection):
+    async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
         if self._initialized:
             return
         await conn.execute(

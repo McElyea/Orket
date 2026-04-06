@@ -289,3 +289,108 @@ async def test_async_dual_write_run_ledger_distinguishes_parity_check_crash_from
     assert parity_event["parity_ok"] is False
     assert parity_event["parity_check_error"] is True
     assert "RuntimeError:forced parity crash" in str(parity_event["parity_error"])
+
+
+class _FinalizeFailingProtocolRepository:
+    def __init__(self, delegate: AsyncProtocolRunLedgerRepository) -> None:
+        self._delegate = delegate
+        self.root = delegate.root
+
+    async def start_run(self, **kwargs: Any) -> None:
+        await self._delegate.start_run(**kwargs)
+
+    async def finalize_run(self, **_: Any) -> None:
+        raise OSError("forced protocol finalize failure")
+
+    async def get_run(self, session_id: str) -> dict[str, Any] | None:
+        return await self._delegate.get_run(session_id)
+
+    async def append_event(self, **kwargs: Any) -> dict[str, Any]:
+        return await self._delegate.append_event(**kwargs)
+
+    async def append_receipt(self, **kwargs: Any) -> dict[str, Any]:
+        return await self._delegate.append_receipt(**kwargs)
+
+    async def list_events(self, session_id: str) -> list[dict[str, Any]]:
+        return await self._delegate.list_events(session_id)
+
+
+@pytest.mark.asyncio
+async def test_async_dual_write_run_ledger_recovers_pending_start_intent_before_next_operation(
+    tmp_path: Path,
+) -> None:
+    sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
+    broken_repo = AsyncDualModeLedgerRepository(
+        sqlite_repo=sqlite_repo,
+        protocol_repo=_FailingProtocolRepository(),
+    )
+
+    await broken_repo.start_run(
+        session_id="sess-recover-start",
+        run_type="epic",
+        run_name="Recover Start",
+        department="core",
+        build_id="build-1",
+    )
+
+    recovered_repo = AsyncDualModeLedgerRepository(
+        sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
+        protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace"),
+    )
+
+    await recovered_repo.start_run(
+        session_id="sess-after-recovery",
+        run_type="epic",
+        run_name="After Recovery",
+        department="core",
+        build_id="build-2",
+    )
+
+    recovered_events = await recovered_repo.list_events("sess-recover-start")
+    assert [event["kind"] for event in recovered_events] == ["run_started"]
+    assert await recovered_repo._load_intents() == []
+
+
+@pytest.mark.asyncio
+async def test_async_dual_write_run_ledger_recovers_pending_finalize_intent_before_next_operation(
+    tmp_path: Path,
+) -> None:
+    sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
+    working_protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace")
+    broken_repo = AsyncDualModeLedgerRepository(
+        sqlite_repo=sqlite_repo,
+        protocol_repo=_FinalizeFailingProtocolRepository(working_protocol_repo),
+    )
+
+    await broken_repo.start_run(
+        session_id="sess-recover-finalize",
+        run_type="epic",
+        run_name="Recover Finalize",
+        department="core",
+        build_id="build-1",
+    )
+    await broken_repo.finalize_run(
+        session_id="sess-recover-finalize",
+        status="failed",
+        failure_class="ExecutionFailed",
+        failure_reason="forced finalize recovery",
+    )
+
+    recovered_repo = AsyncDualModeLedgerRepository(
+        sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
+        protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace"),
+    )
+
+    await recovered_repo.start_run(
+        session_id="sess-recovery-trigger",
+        run_type="epic",
+        run_name="Recovery Trigger",
+        department="core",
+        build_id="build-2",
+    )
+
+    recovered_run = await recovered_repo.protocol_repo.get_run("sess-recover-finalize")
+    assert recovered_run is not None
+    assert recovered_run["status"] == "failed"
+    assert recovered_run["failure_class"] == "ExecutionFailed"
+    assert await recovered_repo._load_intents() == []

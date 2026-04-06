@@ -160,12 +160,13 @@ class PRReviewHandler:
 
         requirements_error = await self.handler.lifecycle.create_requirements_issue(repo, pr_number, repo_full_name)
         if requirements_error is not None:
+            normalized_requirements_error = str(requirements_error)
             log_event(
                 "pr_reject_failed",
-                {"pr": pr_number, "repo": repo_key, "step": "requirements_issue", "error": requirements_error},
+                {"pr": pr_number, "repo": repo_key, "step": "requirements_issue", "error": normalized_requirements_error},
                 self.handler.workspace,
             )
-            return requirements_error
+            return normalized_requirements_error
 
         log_event("pr_rejected", {"pr": pr_number, "repo": repo_key}, self.handler.workspace)
         await self.handler.db.close_pr_cycle(repo_full_name, pr_number, status="rejected")
@@ -199,16 +200,16 @@ class PRLifecycleHandler:
         engine = OrchestrationEngine(self.handler.workspace)
         await engine.cards.update_status(issue_id, CardStatus.CODE_REVIEW)
         task = asyncio.create_task(engine.run_card(issue_id))
-        task.add_done_callback(
-            lambda t: (
-                t.exception()
-                and log_event(
+        def _log_task_error(completed: asyncio.Task[Any]) -> None:
+            exc = completed.exception()
+            if exc is not None:
+                log_event(
                     "webhook_run_card_error",
-                    {"issue_id": issue_id, "error": str(t.exception())},
+                    {"issue_id": issue_id, "error": str(exc)},
                     self.handler.workspace,
                 )
-            )
-        )
+
+        task.add_done_callback(_log_task_error)
         return {"status": "success", "message": f"PR #{pr_number} review triggered for {issue_id}"}
 
     async def handle_pr_merged(self, payload: dict[str, Any]) -> dict[str, str]:

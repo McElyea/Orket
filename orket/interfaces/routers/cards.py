@@ -37,7 +37,7 @@ def _parse_guard_status_from_action(action: str) -> str | None:
     return None
 
 
-def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node: Any) -> APIRouter:
+def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node_getter: Callable[[], Any]) -> APIRouter:
     router = APIRouter()
 
     @router.get("/cards")
@@ -47,7 +47,7 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node: Any) 
         status: str | None = None,
         limit: int = Query(default=50, ge=1, le=500),
         offset: int = Query(default=0, ge=0),
-    ):
+    ) -> dict[str, Any]:
         engine = engine_getter()
         cards = await engine.cards.list_cards(
             build_id=build_id,
@@ -69,7 +69,7 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node: Any) 
         }
 
     @router.get("/cards/{card_id}")
-    async def get_card_detail(card_id: str):
+    async def get_card_detail(card_id: str) -> Any:
         engine = engine_getter()
         card = await engine.cards.get_by_id(card_id)
         if card is None:
@@ -79,7 +79,7 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node: Any) 
         return card
 
     @router.get("/cards/{card_id}/history")
-    async def get_card_history(card_id: str):
+    async def get_card_history(card_id: str) -> dict[str, Any]:
         engine = engine_getter()
         card = await engine.cards.get_by_id(card_id)
         if card is None:
@@ -88,7 +88,7 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node: Any) 
         return {"card_id": card_id, "history": history}
 
     @router.get("/cards/{card_id}/guard-history")
-    async def get_card_guard_history(card_id: str):
+    async def get_card_guard_history(card_id: str) -> dict[str, Any]:
         engine = engine_getter()
         card = await engine.cards.get_by_id(card_id)
         if card is None:
@@ -145,7 +145,7 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node: Any) 
         }
 
     @router.get("/cards/{card_id}/comments")
-    async def get_card_comments(card_id: str):
+    async def get_card_comments(card_id: str) -> dict[str, Any]:
         engine = engine_getter()
         card = await engine.cards.get_by_id(card_id)
         if card is None:
@@ -154,8 +154,9 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node: Any) 
         return {"card_id": card_id, "comments": comments}
 
     @router.post("/cards/archive")
-    async def archive_cards(req: ArchiveCardsRequest):
+    async def archive_cards(req: ArchiveCardsRequest) -> Any:
         engine = engine_getter()
+        api_runtime_node = api_runtime_node_getter()
         if not api_runtime_node.has_archive_selector(req.card_ids, req.build_id, req.related_tokens):
             raise HTTPException(status_code=400, detail=api_runtime_node.archive_selector_missing_detail())
 

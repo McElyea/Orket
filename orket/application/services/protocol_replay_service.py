@@ -59,9 +59,10 @@ class ProtocolReplayService:
         baseline_run: str | None,
         runs_root: str | None,
     ) -> dict[str, Any]:
+        runs_root_token = str(runs_root or "").strip()
         root = (
-            self._resolve_workspace_path(runs_root, field_name="runs_root")
-            if str(runs_root or "").strip()
+            self._resolve_workspace_path(runs_root_token, field_name="runs_root")
+            if runs_root_token
             else (self.workspace_root / "runs").resolve()
         )
         if not root.exists():
@@ -105,9 +106,10 @@ class ProtocolReplayService:
         )
 
     def _resolve_sqlite_path(self, raw_path: str | None) -> Path:
+        sqlite_path_token = str(raw_path or "").strip()
         sqlite_path = (
-            self._resolve_workspace_path(raw_path, field_name="sqlite_db_path")
-            if str(raw_path or "").strip()
+            self._resolve_workspace_path(sqlite_path_token, field_name="sqlite_db_path")
+            if sqlite_path_token
             else (self.workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
         )
         if not sqlite_path.exists():

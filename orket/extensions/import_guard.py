@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import importlib.abc
+from importlib.machinery import ModuleSpec
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from types import TracebackType
+from types import ModuleType, TracebackType
 
 DEFAULT_BLOCKED_PREFIXES: tuple[str, ...] = ("orket",)
 DEFAULT_ALLOWED_PREFIXES: tuple[str, ...] = (
@@ -41,7 +42,12 @@ class ExtensionImportGuard(importlib.abc.MetaPathFinder):
                 return False
         return any(_matches_module_prefix(fullname, prefix) for prefix in self._blocked_prefixes)
 
-    def find_spec(self, fullname: str, path: object = None, target: object = None) -> object | None:
+    def find_spec(
+        self,
+        fullname: str,
+        path: Sequence[str] | None,
+        target: ModuleType | None = None,
+    ) -> ModuleSpec | None:
         if self.is_blocked(fullname):
             raise ImportError(
                 "E_EXT_IMPORT_BLOCKED: "

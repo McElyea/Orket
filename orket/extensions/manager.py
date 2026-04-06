@@ -14,6 +14,7 @@ from orket.application.services.control_plane_workload_catalog import (
     _resolve_extension_control_plane_workload,
 )
 from orket.runtime_paths import durable_root
+from orket_extension_sdk.capabilities import CapabilityRegistry
 
 from .catalog import ExtensionCatalog
 from .contracts import ExtensionRegistry, Workload
@@ -123,16 +124,16 @@ class ExtensionManager:
     def _validate_extension_imports(self, *args: Any, **kwargs: Any) -> None:
         self.workload_executor.loader.validate_extension_imports(*args, **kwargs)
 
-    def _build_sdk_capability_registry(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    def _build_sdk_capability_registry(self, *args: Any, **kwargs: Any) -> CapabilityRegistry:
         return self.workload_executor.artifacts.build_sdk_capability_registry(*args, **kwargs)
 
-    def _validate_sdk_artifacts(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        return self.workload_executor.artifacts.validate_sdk_artifacts(*args, **kwargs)
+    def _validate_sdk_artifacts(self, *args: Any, **kwargs: Any) -> None:
+        self.workload_executor.artifacts.validate_sdk_artifacts(*args, **kwargs)
 
     def _artifact_root(self, *args: Any, **kwargs: Any) -> Path:
         return self.workload_executor.artifacts.artifact_root(*args, **kwargs)
 
-    def _run_validators(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    def _run_validators(self, *args: Any, **kwargs: Any) -> list[str]:
         return self.workload_executor.artifacts.run_validators(*args, **kwargs)
 
     def _build_provenance(self, *args: Any, **kwargs: Any) -> dict[str, Any]:

@@ -11,14 +11,27 @@ from orket.core.domain.verification_scope import parse_verification_scope
 from .turn_path_resolver import PathResolver
 
 
+def _coerce_float(value: Any) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        token = value.strip()
+        if token:
+            try:
+                return float(token)
+            except ValueError:
+                return None
+    return None
+
+
 def parse_architecture_decision_payload(raw_content: str) -> dict[str, Any] | None:
     from orket.application.services.tool_parser import ToolParser
 
     normalized = ToolParser.normalize_json_stringify(raw_content or "")
     try:
-        payload = json.loads(normalized)
-        if isinstance(payload, dict):
-            return payload
+        parsed = json.loads(normalized)
+        if isinstance(parsed, dict):
+            return dict(parsed)
     except json.JSONDecodeError:
         pass
 
@@ -48,14 +61,14 @@ def parse_architecture_decision_payload(raw_content: str) -> dict[str, Any] | No
         return None
 
     evidence = {key: True for key in evidence_keys}
-    payload: dict[str, Any] = {
+    decision_payload: dict[str, Any] = {
         "recommendation": recommendation,
         "confidence": confidence,
         "evidence": evidence,
     }
     if frontend_framework:
-        payload["frontend_framework"] = frontend_framework
-    return payload
+        decision_payload["frontend_framework"] = frontend_framework
+    return decision_payload
 
 
 def meets_architecture_decision_contract(turn: ExecutionTurn, context: dict[str, Any]) -> bool:
@@ -100,31 +113,29 @@ def meets_architecture_decision_contract(turn: ExecutionTurn, context: dict[str,
         raw_content = call.args.get("content", "")
         if not isinstance(raw_content, str):
             return False
-        payload = parse_architecture_decision_payload(raw_content)
-        if payload is None or not isinstance(payload, dict):
+        decision_payload = parse_architecture_decision_payload(raw_content)
+        if decision_payload is None or not isinstance(decision_payload, dict):
             return False
 
-        recommendation = str(payload.get("recommendation", "")).strip().lower()
+        recommendation = str(decision_payload.get("recommendation", "")).strip().lower()
         if recommendation not in allowed_patterns:
             return False
         if forced_pattern and recommendation != forced_pattern:
             return False
 
-        frontend_framework = str(payload.get("frontend_framework", "")).strip().lower()
+        frontend_framework = str(decision_payload.get("frontend_framework", "")).strip().lower()
         if frontend_framework and frontend_framework not in allowed_frontend_frameworks:
             return False
         if forced_frontend_framework and frontend_framework != forced_frontend_framework:
             return False
 
-        confidence = payload.get("confidence")
-        try:
-            confidence_value = float(confidence)
-        except (TypeError, ValueError):
+        confidence_value = _coerce_float(decision_payload.get("confidence"))
+        if confidence_value is None:
             return False
         if confidence_value < 0.0 or confidence_value > 1.0:
             return False
 
-        evidence = payload.get("evidence")
+        evidence = decision_payload.get("evidence")
         if not isinstance(evidence, dict):
             return False
         return required_evidence_keys.issubset(set(evidence.keys()))

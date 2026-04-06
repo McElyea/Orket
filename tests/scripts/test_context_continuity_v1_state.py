@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from pathlib import Path
 
 from scripts.odr.context_continuity_v1_state import (

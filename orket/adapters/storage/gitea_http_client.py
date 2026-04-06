@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
@@ -101,13 +101,14 @@ class GiteaHTTPClient:
         attempts = 0
         while True:
             try:
-                return await self.adapter._request_response(
+                response = await self.adapter._request_response(
                     method,
                     path,
                     params=params,
                     payload=payload,
                     extra_headers=extra_headers,
                 )
+                return cast(httpx.Response, response)
             except (GiteaAdapterTimeoutError, GiteaAdapterNetworkError, GiteaAdapterRateLimitError):
                 if attempts >= self.adapter.max_retries:
                     raise

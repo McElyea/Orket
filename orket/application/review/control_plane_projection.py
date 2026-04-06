@@ -140,7 +140,11 @@ def validate_review_control_plane_summary(
         raise ValueError("review_control_plane_attempt_state_required")
     if projected_attempt_id:
         try:
-            attempt_ordinal = int(projected_attempt_ordinal)
+            attempt_ordinal = (
+                projected_attempt_ordinal
+                if isinstance(projected_attempt_ordinal, int)
+                else int(str(projected_attempt_ordinal or "").strip())
+            )
         except (TypeError, ValueError):
             raise ValueError("review_control_plane_attempt_ordinal_required") from None
         if attempt_ordinal <= 0:

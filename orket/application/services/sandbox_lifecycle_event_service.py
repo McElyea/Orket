@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
+from typing import Any, Protocol
 
 import aiofiles
 
@@ -10,10 +11,14 @@ from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleEventRecord
 
 
+class _SandboxLifecycleEventRepository(Protocol):
+    async def append_event(self, record: SandboxLifecycleEventRecord) -> Any: ...
+
+
 class SandboxLifecycleEventService:
     """Primary event persistence with local spool fallback and replay."""
 
-    def __init__(self, *, repository, spool_path: str | Path):
+    def __init__(self, *, repository: _SandboxLifecycleEventRepository, spool_path: str | Path) -> None:
         self.repository = repository
         self.spool_path = Path(spool_path)
 

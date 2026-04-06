@@ -4,7 +4,7 @@ from collections.abc import Sequence
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.turn_tool_control_plane_support import utc_now
-from orket.core.contracts import CheckpointAcceptanceRecord, CheckpointRecord, RunRecord
+from orket.core.contracts import CheckpointAcceptanceRecord, CheckpointRecord, ReconciliationRecord, RunRecord
 from orket.core.domain import (
     DivergenceClass,
     ResidualUncertaintyClassification,
@@ -21,7 +21,7 @@ async def publish_resume_reconciliation(
     step_refs: Sequence[str],
     effect_refs: Sequence[str],
     operation_refs: Sequence[str] = (),
-) -> tuple[object, list[str]]:
+) -> tuple[ReconciliationRecord, list[str]]:
     observed_refs = list(effect_refs) if effect_refs else (list(step_refs) if step_refs else list(operation_refs))
     intended_refs = [
         checkpoint.checkpoint_id,

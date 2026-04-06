@@ -73,9 +73,6 @@ from scripts.governance.check_workspace_hygiene_rules import (
 from scripts.governance.check_canonical_examples_library import (
     evaluate_canonical_examples_library,
 )
-from scripts.governance.check_spec_debt_queue import (
-    evaluate_spec_debt_queue,
-)
 from scripts.governance.check_non_fatal_error_budget import (
     evaluate_non_fatal_error_budget,
 )
@@ -193,7 +190,6 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "feature_flag_expiration_policy.json",
     "workspace_hygiene_rules.json",
     "canonical_examples_library.json",
-    "spec_debt_queue.json",
     "non_fatal_error_budget.json",
     "interface_freeze_windows.json",
     "evidence_package_generator_contract.json",
@@ -374,11 +370,6 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip canonical examples library contract check.",
     )
     parser.add_argument(
-        "--skip-spec-debt-queue-check",
-        action="store_true",
-        help="Skip spec debt queue contract check.",
-    )
-    parser.add_argument(
         "--skip-non-fatal-error-budget-check",
         action="store_true",
         help="Skip non-fatal error budget contract check.",
@@ -510,7 +501,6 @@ def evaluate_runtime_truth_acceptance_gate(
     check_feature_flag_expiration: bool = True,
     check_workspace_hygiene: bool = True,
     check_canonical_examples: bool = True,
-    check_spec_debt_queue: bool = True,
     check_non_fatal_error_budget: bool = True,
     check_interface_freeze_windows: bool = True,
     check_evidence_package_generator: bool = True,
@@ -879,15 +869,6 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(examples_payload.get("ok")):
             failures.append("canonical_examples_library_check_failed")
 
-    if check_spec_debt_queue:
-        spec_debt_payload = evaluate_spec_debt_queue()
-        details["spec_debt_queue_check"] = {
-            "ok": bool(spec_debt_payload.get("ok")),
-            "debt_count": int(spec_debt_payload.get("debt_count") or 0),
-        }
-        if not bool(spec_debt_payload.get("ok")):
-            failures.append("spec_debt_queue_check_failed")
-
     if check_non_fatal_error_budget:
         budget_payload = evaluate_non_fatal_error_budget()
         details["non_fatal_error_budget_check"] = {
@@ -1095,7 +1076,6 @@ def main(argv: list[str] | None = None) -> int:
         check_feature_flag_expiration=not bool(args.skip_feature_flag_expiration_check),
         check_workspace_hygiene=not bool(args.skip_workspace_hygiene_check),
         check_canonical_examples=not bool(args.skip_canonical_examples_check),
-        check_spec_debt_queue=not bool(args.skip_spec_debt_queue_check),
         check_non_fatal_error_budget=not bool(args.skip_non_fatal_error_budget_check),
         check_interface_freeze_windows=not bool(args.skip_interface_freeze_windows_check),
         check_evidence_package_generator=not bool(args.skip_evidence_package_generator_check),

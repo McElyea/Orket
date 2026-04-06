@@ -43,6 +43,8 @@ async def test_run_card_routes_atomic_issue_via_normalized_dispatcher() -> None:
             "session_id": "session-42",
             "driver_steered": True,
             "parent_epic_name": "parent-epic",
+            "target_issue_id": None,
+            "model_override": None,
         },
     }
     assert result == {"issue_id": "ISSUE-42"}
@@ -67,7 +69,7 @@ async def test_run_issue_wrapper_routes_through_run_card() -> None:
         build_id="build-42",
         session_id="session-42",
         driver_steered=True,
-        resume_token="resume-42",
+        model_override="gemma-4",
     )
 
     assert seen == {
@@ -76,7 +78,7 @@ async def test_run_issue_wrapper_routes_through_run_card() -> None:
             "build_id": "build-42",
             "session_id": "session-42",
             "driver_steered": True,
-            "resume_token": "resume-42",
+            "model_override": "gemma-4",
         },
     }
     assert result == {"card_id": "ISSUE-42"}
@@ -102,7 +104,7 @@ async def test_run_epic_wrapper_routes_through_run_card() -> None:
         session_id="session-42",
         driver_steered=True,
         target_issue_id="ISSUE-42",
-        resume_token="resume-42",
+        model_override="gemma-4",
     )
 
     assert seen == {
@@ -112,7 +114,7 @@ async def test_run_epic_wrapper_routes_through_run_card() -> None:
             "session_id": "session-42",
             "driver_steered": True,
             "target_issue_id": "ISSUE-42",
-            "resume_token": "resume-42",
+            "model_override": "gemma-4",
         },
     }
     assert result == {"card_id": "EPIC-42"}
@@ -137,7 +139,7 @@ async def test_run_rock_wrapper_routes_through_run_card() -> None:
         build_id="build-42",
         session_id="session-42",
         driver_steered=True,
-        resume_token="resume-42",
+        model_override="gemma-4",
     )
 
     assert seen == {
@@ -146,7 +148,7 @@ async def test_run_rock_wrapper_routes_through_run_card() -> None:
             "build_id": "build-42",
             "session_id": "session-42",
             "driver_steered": True,
-            "resume_token": "resume-42",
+            "model_override": "gemma-4",
         },
     }
     assert result == {"card_id": "demo-rock"}
@@ -174,7 +176,7 @@ async def test_issue_dispatch_keeps_cards_epic_workload_path(monkeypatch: pytest
         session_id="session-42",
         driver_steered=True,
         parent_epic_name="parent-epic",
-        resume_token="resume-42",
+        model_override="gemma-4",
     )
 
     assert seen == {
@@ -184,7 +186,7 @@ async def test_issue_dispatch_keeps_cards_epic_workload_path(monkeypatch: pytest
             "session_id": "session-42",
             "driver_steered": True,
             "target_issue_id": "ISSUE-42",
-            "resume_token": "resume-42",
+            "model_override": "gemma-4",
         },
     }
     assert result == [{"epic": "parent-epic"}]
@@ -214,7 +216,7 @@ async def test_issue_dispatch_ignores_forwarded_target_issue_id(monkeypatch: pyt
         driver_steered=True,
         parent_epic_name="parent-epic",
         target_issue_id="WRONG-ISSUE",
-        resume_token="resume-42",
+        model_override="gemma-4",
     )
 
     assert seen == {
@@ -224,7 +226,7 @@ async def test_issue_dispatch_ignores_forwarded_target_issue_id(monkeypatch: pyt
             "session_id": "session-42",
             "driver_steered": True,
             "target_issue_id": "ISSUE-42",
-            "resume_token": "resume-42",
+            "model_override": "gemma-4",
         },
     }
     assert result == [{"epic": "parent-epic"}]
@@ -293,6 +295,7 @@ async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypat
         build_id="requested-build",
         session_id="requested-session",
         driver_steered=True,
+        model_override="gemma-4",
     )
 
     assert seen["load"] == ("rocks", "demo-collection")
@@ -308,6 +311,7 @@ async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypat
                 "build_id": "collection-build",
                 "session_id": "collection-session",
                 "driver_steered": True,
+                "model_override": "gemma-4",
             },
         ),
         (
@@ -318,6 +322,7 @@ async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypat
                 "build_id": "collection-build",
                 "session_id": "collection-session",
                 "driver_steered": True,
+                "model_override": "gemma-4",
             },
         ),
     ]

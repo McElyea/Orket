@@ -211,13 +211,8 @@ class SandboxControlPlaneExecutionService:
                 attempt_id=last_attempt.attempt_id
             )
             authorized_next_action = RecoveryActionClass.START_NEW_ATTEMPT
-            decision_kwargs: dict[str, object] = {}
             if target_checkpoint_id is not None and checkpoint_acceptance is not None:
                 authorized_next_action = RecoveryActionClass.RESUME_FROM_CHECKPOINT
-                decision_kwargs = {
-                    "target_checkpoint_id": target_checkpoint_id,
-                    "checkpoint_acceptance": checkpoint_acceptance,
-                }
             decision = await self.publication.publish_recovery_decision(
                 decision_id=f"sandbox-recovery:{run_id}:reacquire:{lease_epoch:08d}",
                 run_id=run_id,
@@ -229,7 +224,8 @@ class SandboxControlPlaneExecutionService:
                 rationale_ref=rationale_ref,
                 new_attempt_id=next_attempt_id,
                 required_precondition_refs=required_precondition_refs,
-                **decision_kwargs,
+                target_checkpoint_id=target_checkpoint_id if checkpoint_acceptance is not None else None,
+                checkpoint_acceptance=checkpoint_acceptance,
             )
             last_attempt = last_attempt.model_copy(update={"recovery_decision_id": decision.decision_id})
             await self.repository.save_attempt_record(record=last_attempt)

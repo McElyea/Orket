@@ -32,7 +32,8 @@ def _merge_values(base: Any, override: Any) -> Any:
 def _normalize_layer(payload: Mapping[str, Any] | None) -> dict[str, Any]:
     if payload is None:
         return {}
-    return _clone_value(payload)
+    normalized = _clone_value(payload)
+    return normalized if isinstance(normalized, dict) else {}
 
 
 class ConfigPrecedenceResolver:

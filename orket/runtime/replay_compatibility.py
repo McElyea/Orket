@@ -17,6 +17,21 @@ REPLAY_COMPATIBILITY_REQUIRED_FIELDS = (
 )
 
 
+def _coerce_int(value: Any) -> int | None:
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, str):
+        token = value.strip()
+        if token:
+            try:
+                return int(token)
+            except ValueError:
+                return None
+    return None
+
+
 def resolve_ledger_schema_version(events: list[dict[str, Any]]) -> str:
     observed = {
         str(event.get("ledger_schema_version") or "1.0").strip()
@@ -199,9 +214,7 @@ def _workspace_missing_fields(recorded: dict[str, Any]) -> list[str]:
         missing.append("workspace_state_snapshot.workspace_hash")
     if not str(snapshot.get("workspace_type") or "").strip():
         missing.append("workspace_state_snapshot.workspace_type")
-    try:
-        _ = int(snapshot.get("file_count"))
-    except (TypeError, ValueError):
+    if _coerce_int(snapshot.get("file_count")) is None:
         missing.append("workspace_state_snapshot.file_count")
     return missing
 
@@ -217,10 +230,7 @@ def _workspace_mismatch_fields(recorded: dict[str, Any]) -> list[str]:
     workspace_path = Path(workspace_path_value)
     expected_hash = str(snapshot.get("workspace_hash") or "").strip()
     expected_type = str(snapshot.get("workspace_type") or "").strip()
-    try:
-        expected_count = int(snapshot.get("file_count"))
-    except (TypeError, ValueError):
-        expected_count = -1
+    expected_count = _coerce_int(snapshot.get("file_count"))
 
     if not workspace_path.exists() or not workspace_path.is_dir():
         return ["workspace_state_snapshot.workspace_path"]
@@ -234,6 +244,6 @@ def _workspace_mismatch_fields(recorded: dict[str, Any]) -> list[str]:
         mismatch.append("workspace_state_snapshot.workspace_type")
     if expected_hash and str(observed.get("workspace_hash") or "") != expected_hash:
         mismatch.append("workspace_state_snapshot.workspace_hash")
-    if expected_count >= 0 and int(observed.get("file_count") or 0) != expected_count:
+    if expected_count is not None and int(observed.get("file_count") or 0) != expected_count:
         mismatch.append("workspace_state_snapshot.file_count")
     return mismatch

@@ -13,7 +13,7 @@ from orket.schema import ArchitecturePrescription, BrandingConfig, OrganizationC
 from orket.settings import load_user_settings, save_user_settings
 
 
-def run_wizard():
+def run_wizard() -> None:
     """Starts the interactive initialization process."""
     print("==========================================")
     print("   Orket EOS Initialization Wizard        ")

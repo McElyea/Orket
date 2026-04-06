@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
 from orket.core.domain.sandbox_lifecycle import SandboxState, TerminalReason
-from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleEventRecord
+from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleEventRecord, SandboxLifecycleRecord
 
 if TYPE_CHECKING:
     from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
@@ -47,7 +47,7 @@ class SandboxRestartPolicyService:
         sandbox_id: str,
         container_rows: list[dict[str, object]],
         observed_at: str,
-    ):
+    ) -> SandboxLifecycleRecord | None:
         record = await self.lifecycle_service.repository.get_record(sandbox_id)
         if record is None or record.state not in {SandboxState.ACTIVE, SandboxState.STARTING}:
             return record
@@ -147,7 +147,7 @@ class SandboxRestartPolicyService:
                 }
             )
 
-        payload = {
+        payload: dict[str, object] = {
             "restart_summary": {
                 "observed_at": observed_at,
                 "restart_threshold_count": policy.restart_threshold_count,

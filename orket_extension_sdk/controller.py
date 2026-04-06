@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -106,7 +106,7 @@ class ControllerRunEnvelope(BaseModel):
 
     def canonical_payload(self) -> dict[str, Any]:
         payload = self.model_dump(exclude_none=True)
-        return _normalize_for_canonical_json(payload)
+        return cast(dict[str, Any], _normalize_for_canonical_json(payload))
 
     def canonical_json(self) -> str:
         return canonical_json(self.canonical_payload())
@@ -139,7 +139,7 @@ class ControllerRunSummary(BaseModel):
 
     def canonical_payload(self) -> dict[str, Any]:
         payload = self.model_dump(exclude_none=True)
-        return _normalize_for_canonical_json(payload)
+        return cast(dict[str, Any], _normalize_for_canonical_json(payload))
 
     def canonical_json(self) -> str:
         return canonical_json(self.canonical_payload())

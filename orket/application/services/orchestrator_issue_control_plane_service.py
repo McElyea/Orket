@@ -27,7 +27,7 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
     transition_ref,
     utc_now,
 )
-from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
+from orket.core.contracts import AttemptRecord, LeaseRecord, RunRecord, StepRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AttemptState,
@@ -615,7 +615,7 @@ class OrchestratorIssueControlPlaneService:
                 invalidation_basis="issue_turn_dispatch_begin_failed",
             )
 
-    async def _publish_resource_snapshot(self, *, run: RunRecord, lease) -> None:
+    async def _publish_resource_snapshot(self, *, run: RunRecord, lease: LeaseRecord) -> None:
         namespace = str(run.namespace_scope or "").strip() or lease.resource_id
         await self.publication.publish_resource(
             resource_id=str(lease.resource_id),

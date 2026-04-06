@@ -28,6 +28,12 @@ class InfrastructureError(OrketError):
     pass
 
 
+class OrketInfrastructureError(RuntimeError):
+    """Infrastructure failure that should surface as a recorded run failure."""
+
+    pass
+
+
 class ModelProviderError(OrketError):
     """Base error for LLM provider failures."""
 

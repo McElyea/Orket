@@ -60,17 +60,17 @@ def build_settings_router(
     router = APIRouter()
 
     @router.get("/system/runtime-policy/options")
-    async def get_runtime_policy_options():
+    async def get_runtime_policy_options() -> dict[str, Any]:
         return runtime_policy_options()
 
     @router.get("/settings")
-    async def get_settings():
+    async def get_settings() -> dict[str, Any]:
         user_settings = await asyncio.to_thread(load_user_settings)
         process_rules = runtime_policy_process_rules()
         return {"settings": resolve_settings_snapshot(user_settings, process_rules)}
 
     @router.patch("/settings")
-    async def update_settings(payload: Annotated[dict[str, Any], Body(...)]):
+    async def update_settings(payload: Annotated[dict[str, Any], Body(...)]) -> dict[str, Any]:
         editable = {key: payload[key] for key in settings_order if key in payload}
         errors: list[dict[str, Any]] = []
         for key in payload:
@@ -138,7 +138,7 @@ def build_settings_router(
         }
 
     @router.get("/system/runtime-policy")
-    async def get_runtime_policy():
+    async def get_runtime_policy() -> dict[str, Any]:
         user_settings = await asyncio.to_thread(load_user_settings)
         process_rules = runtime_policy_process_rules()
 
@@ -240,7 +240,7 @@ def build_settings_router(
         }
 
     @router.post("/system/runtime-policy")
-    async def update_runtime_policy(req: RuntimePolicyUpdateRequest):
+    async def update_runtime_policy(req: RuntimePolicyUpdateRequest) -> dict[str, Any]:
         current = (await asyncio.to_thread(load_user_settings)).copy()
         if req.architecture_mode is not None:
             current["architecture_mode"] = resolve_architecture_mode(req.architecture_mode, None, None)

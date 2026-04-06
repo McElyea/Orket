@@ -71,7 +71,7 @@ def create_approval_request(
         if existing is not None:
             return dict(existing)
 
-        approval = {
+        approval: dict[str, Any] = {
             "approval_id": approval_id,
             "request_id": approval_id,
             "session_id": session_id,
@@ -119,7 +119,7 @@ def rebuild_pending_approvals(session_id: str) -> list[dict[str, Any]]:
                 if not approval_id:
                     continue
                 existing = _APPROVALS_BY_ID.get(approval_id)
-                base = {
+                base: dict[str, Any] = {
                     "approval_id": approval_id,
                     "request_id": approval_id,
                     "session_id": session_id,

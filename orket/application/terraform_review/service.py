@@ -8,11 +8,14 @@ from .deterministic import analyze_plan, digest_plan_bytes, parse_plan_json
 from .models import (
     AuditPublisher,
     DeterministicAnalysisArtifact,
+    ExecutionStatus,
     FinalReviewArtifact,
     FinalVerdictSource,
     GovernanceArtifact,
     InputArtifact,
     ModelSummarizer,
+    ObservedPathClassification,
+    ObservedResultClassification,
     ModelSummaryArtifact,
     PlanObjectReader,
     PolicyBlockedError,
@@ -254,7 +257,7 @@ class TerraformPlanReviewService:
         self,
         *,
         request: TerraformPlanReviewRequest,
-        execution_status: str,
+        execution_status: ExecutionStatus,
         publish_decision: PublishDecision,
         summary_status: SummaryStatus,
         final_verdict_source: FinalVerdictSource,
@@ -265,7 +268,7 @@ class TerraformPlanReviewService:
             execution_status=execution_status,
         )
         return GovernanceArtifact(
-            execution_status=execution_status,  # type: ignore[arg-type]
+            execution_status=execution_status,
             publish_decision=publish_decision,
             policy_violation_type="",
             blocked_capability="",
@@ -286,13 +289,13 @@ class TerraformPlanReviewService:
         self,
         *,
         governance: GovernanceArtifact,
-        execution_status: str,
+        execution_status: ExecutionStatus,
         publish_decision: PublishDecision,
         summary_status: SummaryStatus,
         final_verdict_source: FinalVerdictSource,
         deterministic_analysis_complete: bool,
     ) -> GovernanceArtifact:
-        governance.execution_status = execution_status  # type: ignore[assignment]
+        governance.execution_status = execution_status
         governance.publish_decision = publish_decision
         governance.summary_status = summary_status
         governance.final_verdict_source = final_verdict_source
@@ -309,8 +312,8 @@ class TerraformPlanReviewService:
         self,
         *,
         publish_decision: PublishDecision,
-        execution_status: str,
-    ) -> tuple[str, str]:
+        execution_status: ExecutionStatus,
+    ) -> tuple[ObservedPathClassification, ObservedResultClassification]:
         if publish_decision == "normal_publish":
             return "primary", "success"
         if publish_decision == "degraded_publish":

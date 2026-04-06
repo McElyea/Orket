@@ -180,9 +180,10 @@ def _admit_proposal_internal(
     if decision not in ADMISSION_DECISIONS_V1:
         raise ValueError("invalid admission decision")
 
+    admission_reason_codes = ordered_reason_codes_v1(reason_codes)
     admission = {
         "decision": decision,
-        "reason_codes": ordered_reason_codes_v1(reason_codes),
+        "reason_codes": admission_reason_codes,
     }
     decision_digest = digest_of(admission)
 
@@ -212,7 +213,7 @@ def _admit_proposal_internal(
             "proposal_digest": proposal_digest,
             "decision_digest": decision_digest,
             "decision": decision,
-            "reason_codes": admission["reason_codes"],
+            "reason_codes": admission_reason_codes,
         },
     )
 
@@ -245,7 +246,7 @@ def _admit_proposal_internal(
             request_id=request_id,
             proposal_digest=proposal_digest,
             decision_digest=decision_digest,
-            reason_codes=admission["reason_codes"],
+            reason_codes=admission_reason_codes,
         )
         response["approval_id"] = approval["approval_id"]
 

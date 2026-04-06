@@ -5,7 +5,7 @@ import logging
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 from pydantic import BaseModel, Field
@@ -67,7 +67,7 @@ def build_sessions_router(
         return ProtocolReplayService(workspace_root=_workspace_root())
 
     @router.post("/interactions/sessions")
-    async def start_interaction_session(req: InteractionSessionStartRequest):
+    async def start_interaction_session(req: InteractionSessionStartRequest) -> dict[str, Any]:
         interaction_manager = interaction_manager_getter()
         if not interaction_manager.stream_enabled():
             raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
@@ -79,7 +79,7 @@ def build_sessions_router(
         session_id: str,
         req: InteractionTurnRequest,
         background_tasks: BackgroundTasks,
-    ):
+    ) -> dict[str, Any]:
         interaction_manager = interaction_manager_getter()
         extension_manager = extension_manager_getter()
         if not interaction_manager.stream_enabled():
@@ -134,7 +134,7 @@ def build_sessions_router(
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         context = await interaction_manager.create_context(session_id, turn_id)
 
-        async def _run_turn():
+        async def _run_turn() -> None:
             try:
                 if is_builtin_workload(workload_id):
                     hints = await run_builtin_workload(
@@ -184,7 +184,7 @@ def build_sessions_router(
         return {"session_id": session_id, "turn_id": turn_id}
 
     @router.post("/interactions/{session_id}/finalize")
-    async def finalize_interaction_turn(session_id: str, req: InteractionFinalizeRequest):
+    async def finalize_interaction_turn(session_id: str, req: InteractionFinalizeRequest) -> dict[str, Any]:
         interaction_manager = interaction_manager_getter()
         if not interaction_manager.stream_enabled():
             raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
@@ -192,10 +192,14 @@ def build_sessions_router(
             handle = await interaction_manager.finalize(session_id, req.turn_id)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-        return handle.model_dump()
+        return cast(dict[str, Any], handle.model_dump())
 
     @router.post("/interactions/{session_id}/cancel")
-    async def cancel_interaction(session_id: str, req: InteractionCancelRequest, request: Request):
+    async def cancel_interaction(
+        session_id: str,
+        req: InteractionCancelRequest,
+        request: Request,
+    ) -> dict[str, Any]:
         interaction_manager = interaction_manager_getter()
         if not interaction_manager.stream_enabled():
             raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
@@ -228,7 +232,7 @@ def build_sessions_router(
         return {"ok": True, "target": target}
 
     @router.get("/marshaller/runs")
-    async def list_marshaller_run_rows(limit: int = 20):
+    async def list_marshaller_run_rows(limit: int = 20) -> dict[str, Any]:
         from orket.marshaller.cli import list_marshaller_runs
 
         workspace_root = _workspace_root()
@@ -236,7 +240,7 @@ def build_sessions_router(
         return {"runs": rows}
 
     @router.get("/marshaller/runs/{run_id}")
-    async def inspect_marshaller_run(run_id: str, attempt_index: int | None = None):
+    async def inspect_marshaller_run(run_id: str, attempt_index: int | None = None) -> Any:
         from orket.marshaller.cli import inspect_marshaller_attempt
 
         workspace_root = _workspace_root()
@@ -250,7 +254,7 @@ def build_sessions_router(
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     @router.get("/protocol/runs/{run_id}/replay")
-    async def replay_protocol_run(run_id: str):
+    async def replay_protocol_run(run_id: str) -> Any:
         try:
             replay = await _get_protocol_replay_service().replay_protocol_run(run_id=run_id)
         except FileNotFoundError as exc:
@@ -262,7 +266,7 @@ def build_sessions_router(
         return replay
 
     @router.get("/protocol/replay/compare")
-    async def compare_protocol_replays(run_a: str, run_b: str):
+    async def compare_protocol_replays(run_a: str, run_b: str) -> Any:
         try:
             comparison = await _get_protocol_replay_service().compare_protocol_replays(run_a=run_a, run_b=run_b)
         except FileNotFoundError as exc:
@@ -278,7 +282,7 @@ def build_sessions_router(
         run_id: Annotated[list[str] | None, Query()] = None,
         baseline_run: str | None = None,
         runs_root: str | None = None,
-    ):
+    ) -> Any:
         try:
             return await _get_protocol_replay_service().compare_protocol_determinism_campaign(
                 run_ids=list(run_id or []),
@@ -291,7 +295,7 @@ def build_sessions_router(
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.get("/protocol/runs/{run_id}/ledger-parity")
-    async def compare_protocol_and_sqlite_run_ledgers(run_id: str, sqlite_db_path: str | None = None):
+    async def compare_protocol_and_sqlite_run_ledgers(run_id: str, sqlite_db_path: str | None = None) -> Any:
         try:
             return await _get_protocol_replay_service().compare_protocol_and_sqlite_run_ledgers(
                 run_id=run_id,
@@ -309,7 +313,7 @@ def build_sessions_router(
         session_id: Annotated[list[str] | None, Query()] = None,
         sqlite_db_path: str | None = None,
         discover_limit: int = 200,
-    ):
+    ) -> Any:
         try:
             return await _get_protocol_replay_service().compare_protocol_ledger_parity_campaign(
                 session_ids=list(session_id or []),

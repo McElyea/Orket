@@ -59,9 +59,9 @@ def built_in_manifests() -> dict[str, ModuleManifest]:
 class ModuleResolutionError(Exception):
     code: str
     message: str
-    detail: dict
+    detail: dict[str, object]
 
-    def to_payload(self) -> dict:
+    def to_payload(self) -> dict[str, object]:
         return {
             "ok": False,
             "code": self.code,

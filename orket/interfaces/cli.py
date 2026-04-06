@@ -4,6 +4,7 @@ import io
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 from orket.discovery import perform_first_run_setup, print_orket_manifest
 from orket.extensions import ExtensionManager
@@ -18,7 +19,7 @@ async def _resolve_path(value: str | Path = ".") -> Path:
     return await asyncio.to_thread(_resolve_path_sync, value)
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run an Orket Card. Use --card for the canonical named runtime surface."
     )
@@ -169,7 +170,7 @@ def _print_extensions_list(manager: ExtensionManager) -> None:
             print("  workload: <none>")
 
 
-def _install_extension(args, manager: ExtensionManager) -> None:
+def _install_extension(args: argparse.Namespace, manager: ExtensionManager) -> None:
     repo = str(args.target or "").strip()
     if not repo:
         raise ValueError("extensions install requires a repo path/URL (e.g. 'orket extensions install <repo>').")
@@ -181,7 +182,7 @@ def _install_extension(args, manager: ExtensionManager) -> None:
             print(f"- {workload.workload_id} ({workload.workload_version})")
 
 
-async def _run_extension_workload(args, manager: ExtensionManager) -> None:
+async def _run_extension_workload(args: argparse.Namespace, manager: ExtensionManager) -> None:
     workload_id = (args.subcommand or "").strip()
     if not workload_id:
         raise ValueError("run command requires a workload id (e.g. 'orket run mystery_v1 --seed 123').")
@@ -199,7 +200,7 @@ async def _run_extension_workload(args, manager: ExtensionManager) -> None:
     print(f"Provenance: {result.provenance_path}")
 
 
-def print_board(hierarchy: dict):
+def print_board(hierarchy: dict[str, Any]) -> None:
     print(f"\n{'=' * 60}\n ORKET PROJECT BOARD (The Card Hierarchy)\n{'=' * 60}")
     for rock in hierarchy["rocks"]:
         print(f"\n[ROCK] {rock['name']} (Status: {rock.get('status', 'on_track')})")
@@ -223,7 +224,7 @@ def _emit_startup_status(startup_status: dict[str, str] | None) -> None:
         print("[STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.", file=sys.stderr)
 
 
-async def run_cli():
+async def run_cli() -> None:
     # Force UTF-8
     if sys.platform == "win32":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
@@ -270,12 +271,12 @@ async def run_cli():
                     raise ValueError(
                         "marshaller inspect requires target run_id (e.g. 'orket marshaller inspect <run_id>')."
                     )
-                result = await inspect_marshaller_attempt(
+                inspect_result = await inspect_marshaller_attempt(
                     workspace_root,
                     run_id=run_id,
                     attempt_index=args.marshaller_inspect_attempt,
                 )
-                print(json.dumps(result, indent=2, ensure_ascii=False))
+                print(json.dumps(inspect_result, indent=2, ensure_ascii=False))
                 return
 
             request_raw = str(args.marshaller_request or "").strip()
@@ -284,7 +285,7 @@ async def run_cli():
             if not args.marshaller_proposal:
                 raise ValueError("marshaller command requires at least one --marshaller-proposal <path>.")
             proposal_paths = [await _resolve_path(str(item)) for item in args.marshaller_proposal]
-            result = await execute_marshaller_from_files(
+            execution_result = await execute_marshaller_from_files(
                 workspace_root=workspace_root,
                 run_request_path=await _resolve_path(request_raw),
                 proposal_paths=proposal_paths,
@@ -295,7 +296,7 @@ async def run_cli():
                 actor_source=str(args.marshaller_actor_source or "cli"),
                 branch=str(args.marshaller_branch or "main"),
             )
-            print(json.dumps(result, indent=2, ensure_ascii=False))
+            print(json.dumps(execution_result, indent=2, ensure_ascii=False))
             return
 
         if args.command == "protocol":
@@ -326,7 +327,7 @@ async def run_cli():
                 candidate = _run_root(run_id) / "artifacts"
                 return candidate if candidate.exists() else None
 
-            engine = ProtocolReplayEngine()
+            protocol_engine = ProtocolReplayEngine()
             if args.subcommand == "replay":
                 run_id = str(args.target or "").strip()
                 if not run_id:
@@ -335,7 +336,7 @@ async def run_cli():
                 if not events_path.exists():
                     raise ValueError(f"events.log not found for run '{run_id}' at {events_path}")
                 replay = await asyncio.to_thread(
-                    engine.replay_from_ledger,
+                    protocol_engine.replay_from_ledger,
                     events_log_path=events_path,
                     artifact_root=_resolve_artifact_root(run_id=run_id, override=args.protocol_artifacts_a),
                 )
@@ -357,7 +358,7 @@ async def run_cli():
                 if not events_b.exists():
                     raise ValueError(f"events.log not found for run '{run_b}' at {events_b}")
                 comparison = await asyncio.to_thread(
-                    engine.compare_replays,
+                    protocol_engine.compare_replays,
                     run_a_events_path=events_a,
                     run_b_events_path=events_b,
                     run_a_artifact_root=_resolve_artifact_root(run_id=run_a, override=args.protocol_artifacts_a),
@@ -451,23 +452,23 @@ async def run_cli():
             return
 
         if args.archive_card or args.archive_build or args.archive_related:
-            archived_ids = []
-            missing_ids = []
+            archived_ids: list[str] = []
+            missing_ids: list[str] = []
             archived_count = 0
             if args.archive_card:
-                result = await engine.archive_cards(args.archive_card, archived_by="cli", reason=args.archive_reason)
-                archived_ids.extend(result.get("archived", []))
-                missing_ids.extend(result.get("missing", []))
+                archive_result = await engine.archive_cards(args.archive_card, archived_by="cli", reason=args.archive_reason)
+                archived_ids.extend(archive_result.get("archived", []))
+                missing_ids.extend(archive_result.get("missing", []))
             if args.archive_build:
                 archived_count += await engine.archive_build(
                     args.archive_build, archived_by="cli", reason=args.archive_reason
                 )
             if args.archive_related:
-                result = await engine.archive_related_cards(
+                related_archive_result = await engine.archive_related_cards(
                     args.archive_related, archived_by="cli", reason=args.archive_reason
                 )
-                archived_ids.extend(result.get("archived", []))
-                missing_ids.extend(result.get("missing", []))
+                archived_ids.extend(related_archive_result.get("archived", []))
+                missing_ids.extend(related_archive_result.get("missing", []))
 
             archived_ids = sorted(set(archived_ids))
             missing_ids = sorted(set(missing_ids))

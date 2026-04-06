@@ -7,6 +7,19 @@ from orket.schema import OrganizationConfig
 from orket.settings import load_user_preferences, load_user_settings
 
 
+def _float_value(value: object) -> float | None:
+    if isinstance(value, bool):
+        return float(value)
+    if isinstance(value, int | float):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
+
+
 class ModelSelector:
     """
     Centralized engine for selecting models based on organization standards,
@@ -148,10 +161,10 @@ class ModelSelector:
             if not isinstance(detail, dict):
                 continue
             value = detail.get("compliance_score")
-            try:
-                scores[str(model_name)] = float(value)
-            except (TypeError, ValueError):
+            parsed = _float_value(value)
+            if parsed is None:
                 continue
+            scores[str(model_name)] = parsed
         self._compliance_score_cache_path = path_key
         self._compliance_score_cache = dict(scores)
         return scores
@@ -190,10 +203,7 @@ class ModelSelector:
             return fallback_model
 
         min_score_raw = policy.get("min_score")
-        try:
-            min_score = float(min_score_raw)
-        except (TypeError, ValueError):
-            min_score = None
+        min_score = _float_value(min_score_raw)
         if min_score is None:
             self._last_selection_decision = {
                 "role": role,

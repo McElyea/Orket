@@ -91,6 +91,8 @@ def log_turn_start(
             "odr_valid": context.get("odr_valid"),
             "odr_pending_decisions": context.get("odr_pending_decisions"),
             "odr_stop_reason": context.get("odr_stop_reason"),
+            "odr_termination_reason": context.get("odr_termination_reason"),
+            "odr_final_auditor_verdict": context.get("odr_final_auditor_verdict"),
             "odr_artifact_path": context.get("odr_artifact_path"),
             "prompt_budget_stage": (prompt_budget_result or {}).get("stage"),
             "prompt_budget_tokenizer_id": (prompt_budget_result or {}).get("tokenizer_id"),

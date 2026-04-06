@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from pathlib import Path
 
 import pytest

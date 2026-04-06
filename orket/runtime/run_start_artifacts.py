@@ -38,15 +38,29 @@ def capture_run_start_artifacts(
         raise ValueError("workload is required for run-start artifacts")
 
     contract_snapshots = snapshots or load_runtime_contract_snapshots()
-    runtime_root = workspace / "observability" / sanitize_name(resolved_run_id) / "runtime_contracts"
-    runtime_root.mkdir(parents=True, exist_ok=True)
+    runtime_parent = workspace / "observability" / sanitize_name(resolved_run_id)
+    runtime_root = runtime_parent / "runtime_contracts"
+    staging_root = runtime_parent / "runtime_contracts_staging"
+    using_staging_root = False
+
+    if staging_root.exists():
+        if runtime_root.exists():
+            raise ValueError(f"E_RUN_START_ARTIFACTS_STAGING_CONFLICT:{staging_root}")
+        raise ValueError(f"E_RUN_START_ARTIFACTS_INCOMPLETE:{staging_root}")
+
+    if runtime_root.exists():
+        active_root = runtime_root
+    else:
+        staging_root.mkdir(parents=True, exist_ok=False)
+        active_root = staging_root
+        using_staging_root = True
 
     snapshot_paths = write_runtime_contract_snapshots(
         snapshots=contract_snapshots,
-        output_dir=runtime_root,
+        output_dir=active_root,
     )
 
-    run_identity_path = runtime_root / "run_identity.json"
+    run_identity_path = active_root / "run_identity.json"
     run_identity = _resolve_run_identity(
         path=run_identity_path,
         run_id=resolved_run_id,
@@ -54,25 +68,38 @@ def capture_run_start_artifacts(
         now=now,
     )
 
-    runtime_contract_artifacts = _write_runtime_contract_artifacts(runtime_root=runtime_root)
+    runtime_contract_artifacts = _write_runtime_contract_artifacts(runtime_root=active_root)
 
     capability_manifest = _capability_manifest_payload(
         run_id=resolved_run_id,
         snapshots=contract_snapshots,
     )
-    capability_manifest_path = runtime_root / "capability_manifest.json"
+    capability_manifest_path = active_root / "capability_manifest.json"
     _write_immutable_json(
         path=capability_manifest_path,
         payload=capability_manifest,
         error_code="E_RUN_CAPABILITY_MANIFEST_IMMUTABLE",
     )
 
-    workspace_state_snapshot_path = runtime_root / "workspace_state_snapshot.json"
+    workspace_state_snapshot_path = active_root / "workspace_state_snapshot.json"
     workspace_state_snapshot = _resolve_workspace_state_snapshot(
         path=workspace_state_snapshot_path,
         workspace=workspace,
         now=now,
     )
+
+    if using_staging_root:
+        active_root.replace(runtime_root)
+        active_root = runtime_root
+        snapshot_paths = _relocate_path_map(snapshot_paths, from_root=staging_root, to_root=runtime_root)
+        runtime_contract_artifacts = _relocate_path_payload(
+            runtime_contract_artifacts,
+            from_root=staging_root,
+            to_root=runtime_root,
+        )
+        run_identity_path = runtime_root / "run_identity.json"
+        capability_manifest_path = runtime_root / "capability_manifest.json"
+        workspace_state_snapshot_path = runtime_root / "workspace_state_snapshot.json"
 
     return {
         **contract_snapshots.as_ledger_artifacts(),
@@ -236,22 +263,51 @@ def _write_immutable_json(
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(
-        json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    path.write_bytes((json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n").encode("utf-8"))
 
 
 def _load_json_dict(path: Path) -> dict[str, Any] | None:
     if not path.exists():
         return None
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_bytes().decode("utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"E_RUN_ARTIFACT_PARSE:{path}:{exc}") from exc
     if not isinstance(payload, dict):
         raise ValueError(f"E_RUN_ARTIFACT_SCHEMA:{path}:root payload must be object")
     return dict(payload)
+
+
+def _relocate_path_map(
+    payload: dict[str, str],
+    *,
+    from_root: Path,
+    to_root: Path,
+) -> dict[str, str]:
+    relocated: dict[str, str] = {}
+    for key, value in payload.items():
+        candidate = Path(value)
+        if candidate.is_relative_to(from_root):
+            candidate = to_root / candidate.relative_to(from_root)
+        relocated[key] = str(candidate)
+    return relocated
+
+
+def _relocate_path_payload(
+    payload: dict[str, Any],
+    *,
+    from_root: Path,
+    to_root: Path,
+) -> dict[str, Any]:
+    relocated: dict[str, Any] = {}
+    for key, value in payload.items():
+        if key.endswith("_path") and isinstance(value, str):
+            candidate = Path(value)
+            if candidate.is_relative_to(from_root):
+                relocated[key] = str(to_root / candidate.relative_to(from_root))
+                continue
+        relocated[key] = value
+    return relocated
 
 
 def _run_identity_error(prefix: str, detail: str) -> str:

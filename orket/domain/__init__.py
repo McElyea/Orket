@@ -6,6 +6,7 @@ import sys
 import types
 import warnings
 from importlib import import_module
+from typing import Any
 
 from orket.core.domain.bug_fix_phase import (
     BugDiscoveryMetrics,
@@ -51,14 +52,14 @@ def _register_alias(module_name: str, target: str) -> None:
 for _legacy_name, _target in _MODULE_ALIASES.items():
     _register_alias(_legacy_name, _target)
 
-_records_module = types.ModuleType(f"{__name__}.records")
+_records_module: Any = types.ModuleType(f"{__name__}.records")
 _records_module.CardRecord = CardRecord
 _records_module.IssueRecord = IssueRecord
 _records_module.__all__ = ["IssueRecord", "CardRecord"]
 sys.modules.setdefault(f"{__name__}.records", _records_module)
 records = _records_module
 
-_state_machine_module = types.ModuleType(f"{__name__}.state_machine")
+_state_machine_module: Any = types.ModuleType(f"{__name__}.state_machine")
 _state_machine_module.StateMachine = StateMachine
 _state_machine_module.StateMachineError = StateMachineError
 _state_machine_module.WaitReason = WaitReason

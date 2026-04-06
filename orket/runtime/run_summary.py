@@ -55,6 +55,7 @@ def validate_run_summary_payload(payload: dict[str, Any]) -> None:
     run_id = str(payload.get("run_id") or "").strip()
     status = str(payload.get("status") or "").strip()
     duration_ms = payload.get("duration_ms")
+    is_degraded = payload.get("is_degraded")
     failure_reason = payload.get("failure_reason")
     tools_used = payload.get("tools_used")
     artifact_ids = payload.get("artifact_ids")
@@ -65,6 +66,8 @@ def validate_run_summary_payload(payload: dict[str, Any]) -> None:
         raise ValueError("run_summary_status_required")
     if duration_ms is not None and (not isinstance(duration_ms, int) or duration_ms < 0):
         raise ValueError("run_summary_duration_invalid")
+    if is_degraded is not None and not isinstance(is_degraded, bool):
+        raise ValueError("run_summary_is_degraded_invalid")
     if failure_reason is not None and not isinstance(failure_reason, str):
         raise ValueError("run_summary_failure_reason_invalid")
     _validate_token_list(tools_used, field_name="tools_used")
@@ -122,6 +125,7 @@ def build_run_summary_payload(
         "run_id": str(run_id).strip(),
         "status": str(status).strip(),
         "duration_ms": duration_ms,
+        "is_degraded": False,
         "tools_used": _normalize_token_list(tool_names),
         "artifact_ids": _artifact_ids(artifacts),
         "failure_reason": _normalize_failure_reason(failure_reason),
@@ -164,6 +168,8 @@ def build_run_summary_payload(
             "odr_valid",
             "odr_pending_decisions",
             "odr_stop_reason",
+            "odr_termination_reason",
+            "odr_final_auditor_verdict",
             "odr_artifact_path",
         ):
             if key in cards_runtime:
@@ -183,6 +189,7 @@ def build_degraded_run_summary_payload(
         "run_id": str(run_id).strip(),
         "status": str(status).strip(),
         "duration_ms": None,
+        "is_degraded": True,
         "tools_used": [],
         "artifact_ids": _artifact_ids(artifacts),
         "failure_reason": _normalize_failure_reason(failure_reason),
@@ -476,6 +483,8 @@ def _validate_control_plane_projection_for_run(
     if projected_attempt_id:
         if not projected_attempt_state:
             raise ValueError("run_summary_control_plane_attempt_state_required")
+        if projected_attempt_ordinal is None:
+            raise ValueError("run_summary_control_plane_attempt_ordinal_required")
         try:
             attempt_ordinal = int(projected_attempt_ordinal)
         except (TypeError, ValueError):
@@ -504,11 +513,23 @@ def _build_packet1_extension(
     primary_kind = str(selection.get("kind") or "none")
     primary_id = str(selection.get("id") or "").strip()
     classification_applicable = primary_kind != "none"
+    raw_primary_output_facts = facts.get("primary_output_facts")
+    primary_output_facts: dict[str, Any] = (
+        {str(key): value for key, value in raw_primary_output_facts.items()}
+        if isinstance(raw_primary_output_facts, dict)
+        else facts
+    )
+    raw_run_surface_facts = facts.get("run_surface_facts")
+    run_surface_facts: dict[str, Any] = (
+        {str(key): value for key, value in raw_run_surface_facts.items()}
+        if isinstance(raw_run_surface_facts, dict)
+        else facts
+    )
     primary_eval = _evaluate_classification(
-        facts.get("primary_output_facts") if isinstance(facts.get("primary_output_facts"), dict) else facts
+        primary_output_facts
     )
     run_eval = _evaluate_classification(
-        facts.get("run_surface_facts") if isinstance(facts.get("run_surface_facts"), dict) else facts
+        run_surface_facts
     )
     defects = _detect_packet1_defects(
         facts=facts,

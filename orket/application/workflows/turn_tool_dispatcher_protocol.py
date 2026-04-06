@@ -17,6 +17,7 @@ from orket.runtime.protocol_error_codes import (
 from ..services.governed_turn_tool_approval_continuation_service import (
     supports_governed_turn_tool_approval_continuation,
 )
+from ..services.turn_tool_control_plane_service import TurnToolControlPlaneService
 from ..services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run,
     namespace_resource_id_for_scope,
@@ -268,7 +269,7 @@ async def persist_protocol_operation(
     persist_operation_result: Callable[..., None],
     append_protocol_receipt: Callable[..., dict[str, Any]],
     control_plane_enabled: bool,
-    control_plane_service,
+    control_plane_service: TurnToolControlPlaneService | None,
     control_plane_run_id: str | None,
     control_plane_attempt_id: str | None,
     retry_count: int,

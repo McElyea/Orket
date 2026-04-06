@@ -11,8 +11,8 @@ class SounddevicePlayer:
 
     def __init__(self) -> None:
         try:
-            import numpy as np  # type: ignore
-            import sounddevice as sd  # type: ignore
+            import numpy as np
+            import sounddevice as sd  # type: ignore[import-not-found]
         except ModuleNotFoundError as exc:  # pragma: no cover
             raise RuntimeError("sounddevice backend requires sounddevice and numpy") from exc
         self._sd = sd

@@ -6,6 +6,7 @@ from typing import Any
 
 from orket.application.review.models import (
     DeterministicFinding,
+    DeterministicDecision,
     DeterministicReviewDecisionPayload,
     ReviewSnapshot,
 )
@@ -178,6 +179,7 @@ def run_deterministic_lane(
         )
 
     findings = _stable_sort_findings(findings)
+    decision: DeterministicDecision
     if any(item.severity == "critical" for item in findings):
         decision = "blocked"
     elif any(item.severity in {"high", "medium"} for item in findings):

@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 class ToolBox:
     def __init__(
         self,
-        policy,
+        policy: Any,
         workspace_root: str,
         references: list[str],
         db_path: str | None = None,
@@ -35,12 +35,12 @@ class ToolBox:
         organization: OrganizationConfig | None = None,
         decision_nodes: DecisionNodeRegistry | None = None,
         runtime_executor: ToolRuntimeExecutor | None = None,
-    ):
+    ) -> None:
         self.root = Path(workspace_root)
         self.refs = [Path(r) for r in references]
         self.db_path = resolve_runtime_db_path(db_path)
         self.organization = organization
-        self.decision_nodes = decision_nodes or DecisionNodeRegistry()
+        self.decision_nodes = decision_nodes if decision_nodes is not None else DecisionNodeRegistry()
         self.tool_strategy_node = self.decision_nodes.resolve_tool_strategy(self.organization)
         self.runtime_executor = runtime_executor or ToolRuntimeExecutor()
         self.fs = FileSystemTools(self.root, self.refs)
@@ -91,7 +91,7 @@ class ToolBox:
         return await self.governance.request_excuse(args, context=dict(context or {}))
 
 
-def get_tool_map(toolbox: ToolBox) -> dict[str, Callable]:
+def get_tool_map(toolbox: ToolBox) -> dict[str, Callable[..., Any]]:
     return toolbox.tool_strategy_node.compose(toolbox)
 
 

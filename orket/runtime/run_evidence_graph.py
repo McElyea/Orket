@@ -78,7 +78,7 @@ def build_run_evidence_graph_payload(
     nodes: list[dict[str, Any]] | None = None,
     edges: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    canonical_payload = {
+    canonical_payload: dict[str, Any] = {
         "run_evidence_graph_schema_version": RUN_EVIDENCE_GRAPH_SCHEMA_VERSION,
         "run_id": str(run_id).strip(),
         "projection_only": True,

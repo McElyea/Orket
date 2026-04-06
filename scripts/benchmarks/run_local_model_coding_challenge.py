@@ -19,11 +19,11 @@ if str(REPO_ROOT) not in sys.path:
 
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
-    from scripts.common.run_summary_support import load_validated_run_summary_or_empty
+    from scripts.common.run_summary_support import is_degraded_run_summary, load_validated_run_summary_or_empty
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
-    from common.run_summary_support import load_validated_run_summary_or_empty
+    from common.run_summary_support import is_degraded_run_summary, load_validated_run_summary_or_empty
 
 
 DEFAULT_OUTPUT = Path("benchmarks/staging/General/local_model_coding_challenge_report.json")
@@ -247,20 +247,28 @@ def _classify_blocker(*, note: str, repair_ledger: list[dict[str, Any]], status:
     return "unknown"
 
 
-def _find_run_summary(workspace: Path) -> tuple[Path | None, dict[str, Any]]:
+def _find_run_summary(workspace: Path) -> tuple[Path | None, dict[str, Any], str]:
     run_root = workspace / "runs"
     if not run_root.exists():
-        return None, {}
+        return None, {}, "blocked"
     candidates = sorted(
         [path for path in run_root.glob("*/run_summary.json") if path.is_file()],
         key=lambda candidate: candidate.stat().st_mtime,
         reverse=True,
     )
+    degraded_candidate: tuple[Path, dict[str, Any]] | None = None
     for path in candidates:
         payload = load_validated_run_summary_or_empty(path)
-        if payload:
-            return path, payload
-    return None, {}
+        if not payload:
+            continue
+        if is_degraded_run_summary(payload):
+            if degraded_candidate is None:
+                degraded_candidate = (path, payload)
+            continue
+        return path, payload, "primary"
+    if degraded_candidate is not None:
+        return degraded_candidate[0], degraded_candidate[1], "degraded"
+    return None, {}, "blocked"
 
 
 def _build_run_command(
@@ -344,7 +352,7 @@ def _summarize_run(
     run_ordinal: int,
     execution: dict[str, Any],
 ) -> dict[str, Any]:
-    summary_path, run_summary = _find_run_summary(workspace)
+    summary_path, run_summary, observed_path = _find_run_summary(workspace)
     run_id = str(run_summary.get("run_id") or "").strip()
     status = str(run_summary.get("status") or "").strip()
     stop_reason = str(run_summary.get("stop_reason") or "").strip()
@@ -376,7 +384,8 @@ def _summarize_run(
         challenge_result = "success"
     elif program_hashes or deepest_issue:
         challenge_result = "partial success"
-    observed_path = "primary" if run_summary else "blocked"
+    if observed_path == "degraded":
+        challenge_result = "failure"
     return {
         "run_ordinal": run_ordinal,
         "epic": epic,
@@ -391,6 +400,7 @@ def _summarize_run(
         "stop_reason": stop_reason,
         "observed_path": observed_path,
         "result": challenge_result,
+        "run_summary_warning": "run_summary_degraded" if observed_path == "degraded" else "",
         "deepest_issue": deepest_issue,
         "turn_count_observed": len(observed_turns),
         "first_artifact_write": first_artifact_write,

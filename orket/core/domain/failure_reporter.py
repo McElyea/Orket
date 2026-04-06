@@ -37,7 +37,12 @@ class FailureReporter:
 
     @staticmethod
     async def generate_report(
-        workspace: Path, session_id: str, card_id: str, violation: str, transcript: list[Any], roles: list[str] = None
+        workspace: Path,
+        session_id: str,
+        card_id: str,
+        violation: str,
+        transcript: list[Any],
+        roles: list[str] | None = None,
     ) -> Path:
         """
         Generates a JSON report for a failure.

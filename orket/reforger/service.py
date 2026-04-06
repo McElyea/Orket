@@ -253,17 +253,19 @@ class PromptReforgerService:
             winning_score = float(final_score["best_score"])
             for path in sorted((compile_root / "artifacts" / "candidates").glob("candidate_*.json")):
                 payload = _read_json(path)
-                candidate_id = str(payload.get("candidate_id") or "")
+                candidate_payload = payload if isinstance(payload, dict) else {}
+                candidate_id = str(candidate_payload.get("candidate_id") or "")
                 if candidate_id == "0000":
                     continue
-                eval_payload = payload.get("eval") if isinstance(payload.get("eval"), dict) else {"checks": []}
+                raw_eval = candidate_payload.get("eval")
+                eval_payload: dict[str, Any] = dict(raw_eval) if isinstance(raw_eval, dict) else {"checks": []}
                 candidate_records.append(
                     {
                         "candidate_id": candidate_id,
-                        "score": round(float(payload.get("score", 0.0)), 6),
-                        "hard_fail_count": int(payload.get("hard_fail_count", 0)),
-                        "validation_ok": bool(payload.get("validation_ok", False)),
-                        "patches": list(payload.get("patches", [])),
+                        "score": round(float(candidate_payload.get("score", 0.0)), 6),
+                        "hard_fail_count": int(candidate_payload.get("hard_fail_count", 0)),
+                        "validation_ok": bool(candidate_payload.get("validation_ok", False)),
+                        "patches": list(candidate_payload.get("patches", [])),
                         "failure_records": _failure_records(
                             checks=list(eval_payload.get("checks", [])),
                             eval_slice_ref=request.eval_slice_ref,

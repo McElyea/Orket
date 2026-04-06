@@ -179,9 +179,10 @@ class MessageBuilder:
                     )
         scenario_truth = context.get("scenario_truth")
         if isinstance(scenario_truth, dict) and scenario_truth:
-            blocked_issue_policy = (
-                scenario_truth.get("blocked_issue_policy")
-                if isinstance(scenario_truth.get("blocked_issue_policy"), dict)
+            raw_blocked_issue_policy = scenario_truth.get("blocked_issue_policy")
+            blocked_issue_policy: dict[str, Any] = (
+                {str(key): value for key, value in raw_blocked_issue_policy.items()}
+                if isinstance(raw_blocked_issue_policy, dict)
                 else {}
             )
             allowed_issue_ids = [
@@ -270,6 +271,8 @@ class MessageBuilder:
                 "odr_valid": context.get("odr_valid"),
                 "odr_pending_decisions": context.get("odr_pending_decisions"),
                 "odr_stop_reason": context.get("odr_stop_reason"),
+                "odr_termination_reason": context.get("odr_termination_reason"),
+                "odr_final_auditor_verdict": context.get("odr_final_auditor_verdict"),
                 "odr_artifact_path": context.get("odr_artifact_path"),
             }
             messages.append(

@@ -9,7 +9,7 @@ import shutil
 import subprocess
 from importlib import metadata
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from orket.reforger.compiler import run_compile_pipeline
 from orket.reforger.eval.base import EvalResult
@@ -29,6 +29,18 @@ from orket.reforger.runbundle import (
 )
 
 LOGGER = logging.getLogger("orket.reforger")
+
+
+class ReforgeOptimizer(Protocol):
+    def generate(
+        self,
+        *,
+        baseline_pack: Path,
+        mode: dict[str, object],
+        seed: int,
+        budget: int,
+        out_dir: Path,
+    ) -> list[Path]: ...
 
 
 def _tool_version() -> str:
@@ -74,7 +86,7 @@ def _write_scoreboard(path: Path, rows: list[dict[str, Any]]) -> None:
             writer.writerow({field: row[field] for field in fields})
 
 
-def _resolve_optimizer(name: str) -> object:
+def _resolve_optimizer(name: str) -> ReforgeOptimizer:
     normalized = name.strip().lower()
     if normalized == "noop":
         return NoopOptimizer()
@@ -274,7 +286,7 @@ def _open_last_reforge() -> int:
         return 0
     try:
         if os.name == "nt":
-            os.startfile(str(report))  # type: ignore[attr-defined]
+            os.startfile(str(report))
         elif os.name == "posix":
             subprocess.run(["xdg-open", str(report)], check=False)
         else:

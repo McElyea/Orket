@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+from typing import Awaitable, Callable, TypeVar
 
 import aiosqlite
 
 from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
+
+ResultT = TypeVar("ResultT")
 
 
 class ControlPlaneExecutionConflictError(ValueError):
@@ -62,7 +65,13 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
             """
         )
 
-    async def _execute(self, operation, *, row_factory: bool = False, commit: bool = False):
+    async def _execute(
+        self,
+        operation: Callable[[aiosqlite.Connection], Awaitable[ResultT]],
+        *,
+        row_factory: bool = False,
+        commit: bool = False,
+    ) -> ResultT:
         async with self._lock, aiosqlite.connect(self.db_path) as conn:
             if row_factory:
                 conn.row_factory = aiosqlite.Row

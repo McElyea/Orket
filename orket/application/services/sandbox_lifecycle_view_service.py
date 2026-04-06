@@ -2,12 +2,45 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any, Protocol, TypeAlias
 
 from orket.application.services.sandbox_control_plane_resource_service import (
     SandboxControlPlaneResourceService,
 )
+from orket.core.contracts import (
+    AttemptRecord,
+    CheckpointAcceptanceRecord,
+    CheckpointRecord,
+    EffectJournalEntryRecord,
+    FinalTruthRecord,
+    LeaseRecord,
+    OperatorActionRecord,
+    ReconciliationRecord,
+    RecoveryDecisionRecord,
+    ReservationRecord,
+    ResourceRecord,
+    RunRecord,
+)
+from orket.core.contracts.repositories import (
+    ControlPlaneExecutionRepository,
+    ControlPlaneRecordRepository,
+)
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState
-from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
+from orket.core.domain.sandbox_lifecycle_records import (
+    SandboxLifecycleEventRecord,
+    SandboxLifecycleRecord,
+)
+
+ControlPlaneSummaryValue: TypeAlias = str | int | list[str] | None
+ControlPlaneSummary: TypeAlias = dict[str, ControlPlaneSummaryValue]
+
+
+class SandboxLifecycleReadRepository(Protocol):
+    async def list_records(self) -> list[SandboxLifecycleRecord]: ...
+
+    async def list_events(
+        self, sandbox_id: str | None = None
+    ) -> list[SandboxLifecycleEventRecord]: ...
 
 
 @dataclass(frozen=True)
@@ -21,7 +54,7 @@ class SandboxLifecycleOperatorView:
     cleanup_owner_instance_id: str | None
     lease_expires_at: str | None
     heartbeat_age_seconds: int | None
-    restart_summary: dict[str, object] = field(default_factory=dict)
+    restart_summary: dict[str, Any] = field(default_factory=dict)
     cleanup_eligible: bool = False
     cleanup_due_at: str | None = None
     requires_reconciliation: bool = False
@@ -60,20 +93,26 @@ class SandboxLifecycleOperatorView:
     latest_effect_integrity_verification_ref: str | None = None
     latest_effect_uncertainty_classification: str | None = None
     operator_action_count: int = 0
-    latest_operator_action: dict[str, object] | None = None
+    latest_operator_action: dict[str, Any] | None = None
 
 
 class SandboxLifecycleViewService:
     """Projects durable lifecycle records into operator-facing read models."""
 
-    def __init__(self, repository, *, control_plane_repository=None, control_plane_execution_repository=None):
+    def __init__(
+        self,
+        repository: SandboxLifecycleReadRepository,
+        *,
+        control_plane_repository: ControlPlaneRecordRepository | None = None,
+        control_plane_execution_repository: ControlPlaneExecutionRepository | None = None,
+    ) -> None:
         self.repository = repository
         self.control_plane_repository = control_plane_repository
         self.control_plane_execution_repository = control_plane_execution_repository
 
     async def list_views(self, *, observed_at: str) -> list[SandboxLifecycleOperatorView]:
         records = await self.repository.list_records()
-        views = []
+        views: list[SandboxLifecycleOperatorView] = []
         for record in records:
             events = await self.repository.list_events(record.sandbox_id)
             operator_actions = await self._operator_actions_for_record(record)
@@ -97,19 +136,26 @@ class SandboxLifecycleViewService:
         *,
         record: SandboxLifecycleRecord,
         observed_at: str,
-        events: list | None = None,
-        operator_actions: list | None = None,
-        run_record=None,
-        attempt_record=None,
-        control_plane_summary: dict[str, object] | None = None,
+        events: list[SandboxLifecycleEventRecord] | None = None,
+        operator_actions: list[OperatorActionRecord] | None = None,
+        run_record: RunRecord | None = None,
+        attempt_record: AttemptRecord | None = None,
+        control_plane_summary: ControlPlaneSummary | None = None,
     ) -> SandboxLifecycleOperatorView:
+        events = events or []
+        operator_actions = operator_actions or []
+        summary = (
+            control_plane_summary
+            if control_plane_summary is not None
+            else self._empty_control_plane_summary()
+        )
         heartbeat_age = self._heartbeat_age_seconds(record.last_heartbeat_at, observed_at)
         cleanup_eligible = (
             record.state in {SandboxState.TERMINAL, SandboxState.RECLAIMABLE, SandboxState.ORPHANED}
             and record.cleanup_state in {CleanupState.NONE, CleanupState.SCHEDULED}
             and not record.requires_reconciliation
         )
-        latest_operator_action = self._latest_operator_action(operator_actions or [])
+        latest_operator_action = self._latest_operator_action(operator_actions)
         return SandboxLifecycleOperatorView(
             sandbox_id=record.sandbox_id,
             compose_project=record.compose_project,
@@ -120,97 +166,69 @@ class SandboxLifecycleViewService:
             cleanup_owner_instance_id=record.cleanup_owner_instance_id,
             lease_expires_at=record.lease_expires_at,
             heartbeat_age_seconds=heartbeat_age,
-            restart_summary=self._restart_summary(events or []),
+            restart_summary=self._restart_summary(events),
             cleanup_eligible=cleanup_eligible,
             cleanup_due_at=record.cleanup_due_at,
             requires_reconciliation=record.requires_reconciliation,
             control_plane_run_state=None if run_record is None else run_record.lifecycle_state.value,
             control_plane_current_attempt_id=None if run_record is None else run_record.current_attempt_id,
             control_plane_current_attempt_state=None if attempt_record is None else attempt_record.attempt_state.value,
-            control_plane_recovery_decision_id=None
-            if control_plane_summary is None
-            else control_plane_summary["recovery_decision_id"],
-            control_plane_recovery_action=None
-            if control_plane_summary is None
-            else control_plane_summary["recovery_action"],
-            control_plane_checkpoint_id=None
-            if control_plane_summary is None
-            else control_plane_summary["checkpoint_id"],
-            control_plane_checkpoint_resumability_class=None
-            if control_plane_summary is None
-            else control_plane_summary["checkpoint_resumability_class"],
-            control_plane_checkpoint_acceptance_outcome=None
-            if control_plane_summary is None
-            else control_plane_summary["checkpoint_acceptance_outcome"],
-            control_plane_reconciliation_id=None
-            if control_plane_summary is None
-            else control_plane_summary["reconciliation_id"],
-            control_plane_divergence_class=None
-            if control_plane_summary is None
-            else control_plane_summary["divergence_class"],
-            control_plane_safe_continuation_class=None
-            if control_plane_summary is None
-            else control_plane_summary["safe_continuation_class"],
-            control_plane_reservation_status=None
-            if control_plane_summary is None
-            else control_plane_summary["reservation_status"],
-            control_plane_lease_status=None if control_plane_summary is None else control_plane_summary["lease_status"],
-            control_plane_resource_id=None if control_plane_summary is None else control_plane_summary["resource_id"],
-            control_plane_resource_kind=None
-            if control_plane_summary is None
-            else control_plane_summary["resource_kind"],
-            control_plane_resource_state=None
-            if control_plane_summary is None
-            else control_plane_summary["resource_state"],
-            control_plane_resource_orphan_classification=None
-            if control_plane_summary is None
-            else control_plane_summary["resource_orphan_classification"],
+            control_plane_recovery_decision_id=self._summary_str(summary, "recovery_decision_id"),
+            control_plane_recovery_action=self._summary_str(summary, "recovery_action"),
+            control_plane_checkpoint_id=self._summary_str(summary, "checkpoint_id"),
+            control_plane_checkpoint_resumability_class=self._summary_str(
+                summary, "checkpoint_resumability_class"
+            ),
+            control_plane_checkpoint_acceptance_outcome=self._summary_str(
+                summary, "checkpoint_acceptance_outcome"
+            ),
+            control_plane_reconciliation_id=self._summary_str(summary, "reconciliation_id"),
+            control_plane_divergence_class=self._summary_str(summary, "divergence_class"),
+            control_plane_safe_continuation_class=self._summary_str(summary, "safe_continuation_class"),
+            control_plane_reservation_status=self._summary_str(summary, "reservation_status"),
+            control_plane_lease_status=self._summary_str(summary, "lease_status"),
+            control_plane_resource_id=self._summary_str(summary, "resource_id"),
+            control_plane_resource_kind=self._summary_str(summary, "resource_kind"),
+            control_plane_resource_state=self._summary_str(summary, "resource_state"),
+            control_plane_resource_orphan_classification=self._summary_str(
+                summary, "resource_orphan_classification"
+            ),
             final_truth_record_id=None if run_record is None else run_record.final_truth_record_id,
-            control_plane_final_result_class=None
-            if control_plane_summary is None
-            else control_plane_summary["final_result_class"],
-            control_plane_final_closure_basis=None
-            if control_plane_summary is None
-            else control_plane_summary["final_closure_basis"],
-            control_plane_final_terminality_basis=None
-            if control_plane_summary is None
-            else control_plane_summary["final_terminality_basis"],
-            control_plane_final_evidence_sufficiency_class=None
-            if control_plane_summary is None
-            else control_plane_summary["final_evidence_sufficiency_class"],
-            control_plane_final_residual_uncertainty_class=None
-            if control_plane_summary is None
-            else control_plane_summary["final_residual_uncertainty_class"],
-            control_plane_final_degradation_class=None
-            if control_plane_summary is None
-            else control_plane_summary["final_degradation_class"],
-            control_plane_final_authoritative_result_ref=None
-            if control_plane_summary is None
-            else control_plane_summary["final_authoritative_result_ref"],
-            control_plane_final_authority_sources=[]
-            if control_plane_summary is None
-            else control_plane_summary["final_authority_sources"],
-            effect_journal_entry_count=0 if control_plane_summary is None else control_plane_summary["effect_count"],
-            latest_effect_journal_entry_id=None
-            if control_plane_summary is None
-            else control_plane_summary["latest_effect_journal_entry_id"],
-            latest_effect_id=None if control_plane_summary is None else control_plane_summary["latest_effect_id"],
-            latest_effect_intended_target_ref=None
-            if control_plane_summary is None
-            else control_plane_summary["latest_effect_intended_target_ref"],
-            latest_effect_observed_result_ref=None
-            if control_plane_summary is None
-            else control_plane_summary["latest_effect_observed_result_ref"],
-            latest_effect_authorization_basis_ref=None
-            if control_plane_summary is None
-            else control_plane_summary["latest_effect_authorization_basis_ref"],
-            latest_effect_integrity_verification_ref=None
-            if control_plane_summary is None
-            else control_plane_summary["latest_effect_integrity_verification_ref"],
-            latest_effect_uncertainty_classification=None
-            if control_plane_summary is None
-            else control_plane_summary["latest_effect_uncertainty_classification"],
-            operator_action_count=len(operator_actions or []),
+            control_plane_final_result_class=self._summary_str(summary, "final_result_class"),
+            control_plane_final_closure_basis=self._summary_str(summary, "final_closure_basis"),
+            control_plane_final_terminality_basis=self._summary_str(summary, "final_terminality_basis"),
+            control_plane_final_evidence_sufficiency_class=self._summary_str(
+                summary, "final_evidence_sufficiency_class"
+            ),
+            control_plane_final_residual_uncertainty_class=self._summary_str(
+                summary, "final_residual_uncertainty_class"
+            ),
+            control_plane_final_degradation_class=self._summary_str(summary, "final_degradation_class"),
+            control_plane_final_authoritative_result_ref=self._summary_str(
+                summary, "final_authoritative_result_ref"
+            ),
+            control_plane_final_authority_sources=self._summary_str_list(
+                summary, "final_authority_sources"
+            ),
+            effect_journal_entry_count=self._summary_int(summary, "effect_count"),
+            latest_effect_journal_entry_id=self._summary_str(summary, "latest_effect_journal_entry_id"),
+            latest_effect_id=self._summary_str(summary, "latest_effect_id"),
+            latest_effect_intended_target_ref=self._summary_str(
+                summary, "latest_effect_intended_target_ref"
+            ),
+            latest_effect_observed_result_ref=self._summary_str(
+                summary, "latest_effect_observed_result_ref"
+            ),
+            latest_effect_authorization_basis_ref=self._summary_str(
+                summary, "latest_effect_authorization_basis_ref"
+            ),
+            latest_effect_integrity_verification_ref=self._summary_str(
+                summary, "latest_effect_integrity_verification_ref"
+            ),
+            latest_effect_uncertainty_classification=self._summary_str(
+                summary, "latest_effect_uncertainty_classification"
+            ),
+            operator_action_count=len(operator_actions),
             latest_operator_action=latest_operator_action,
         )
 
@@ -223,7 +241,7 @@ class SandboxLifecycleViewService:
         return max(0, int((end - start).total_seconds()))
 
     @staticmethod
-    def _restart_summary(events: list) -> dict[str, object]:
+    def _restart_summary(events: list[SandboxLifecycleEventRecord]) -> dict[str, Any]:
         for event in sorted(events, key=lambda item: (item.created_at, item.event_id), reverse=True):
             if (
                 str(event.event_type).startswith("sandbox.runtime_health")
@@ -232,12 +250,16 @@ class SandboxLifecycleViewService:
                 return dict(event.payload)
         return {}
 
-    async def _operator_actions_for_record(self, record: SandboxLifecycleRecord) -> list:
+    async def _operator_actions_for_record(
+        self, record: SandboxLifecycleRecord
+    ) -> list[OperatorActionRecord]:
         if self.control_plane_repository is None or record.run_id is None:
             return []
         return await self.control_plane_repository.list_operator_actions(target_ref=record.run_id)
 
-    async def _execution_authority_for_record(self, record: SandboxLifecycleRecord) -> tuple[object | None, object | None]:
+    async def _execution_authority_for_record(
+        self, record: SandboxLifecycleRecord
+    ) -> tuple[RunRecord | None, AttemptRecord | None]:
         if self.control_plane_execution_repository is None or record.run_id is None:
             return None, None
         run_record = await self.control_plane_execution_repository.get_run_record(run_id=record.run_id)
@@ -258,47 +280,16 @@ class SandboxLifecycleViewService:
         self,
         record: SandboxLifecycleRecord,
         *,
-        attempt_record,
-    ) -> dict[str, object]:
+        attempt_record: AttemptRecord | None,
+    ) -> ControlPlaneSummary:
         if self.control_plane_repository is None:
-            return {
-                "recovery_action": None,
-                "recovery_decision_id": None,
-                "checkpoint_id": None,
-                "checkpoint_resumability_class": None,
-                "checkpoint_acceptance_outcome": None,
-                "reconciliation_id": None,
-                "divergence_class": None,
-                "safe_continuation_class": None,
-                "reservation_status": None,
-                "lease_status": None,
-                "resource_id": None,
-                "resource_kind": None,
-                "resource_state": None,
-                "resource_orphan_classification": None,
-                "final_result_class": None,
-                "final_closure_basis": None,
-                "final_terminality_basis": None,
-                "final_evidence_sufficiency_class": None,
-                "final_residual_uncertainty_class": None,
-                "final_degradation_class": None,
-                "final_authoritative_result_ref": None,
-                "final_authority_sources": [],
-                "effect_count": 0,
-                "latest_effect_journal_entry_id": None,
-                "latest_effect_id": None,
-                "latest_effect_intended_target_ref": None,
-                "latest_effect_observed_result_ref": None,
-                "latest_effect_authorization_basis_ref": None,
-                "latest_effect_integrity_verification_ref": None,
-                "latest_effect_uncertainty_classification": None,
-            }
-        final_truth = None
+            return self._empty_control_plane_summary()
+        final_truth: FinalTruthRecord | None = None
         if record.run_id is not None:
             final_truth = await self.control_plane_repository.get_final_truth(run_id=record.run_id)
-        recovery_decision = None
+        recovery_decision: RecoveryDecisionRecord | None = None
         recovery_decision_id = None
-        attempts = []
+        attempts: list[AttemptRecord] = []
         if self.control_plane_execution_repository is not None and record.run_id is not None:
             attempts = await self.control_plane_execution_repository.list_attempt_records(run_id=record.run_id)
         if attempt_record is not None and attempt_record.recovery_decision_id is not None:
@@ -312,9 +303,9 @@ class SandboxLifecycleViewService:
             recovery_decision = await self.control_plane_repository.get_recovery_decision(
                 decision_id=recovery_decision_id
             )
-        checkpoint = None
-        checkpoint_acceptance = None
-        checkpoint_attempt_ids = []
+        checkpoint: CheckpointRecord | None = None
+        checkpoint_acceptance: CheckpointAcceptanceRecord | None = None
+        checkpoint_attempt_ids: list[str] = []
         if attempt_record is not None:
             checkpoint_attempt_ids.append(attempt_record.attempt_id)
         if attempts:
@@ -341,8 +332,10 @@ class SandboxLifecycleViewService:
         reconciliation = None if record.run_id is None else await self.control_plane_repository.get_latest_reconciliation_record(
             target_ref=record.run_id
         )
-        entries = [] if record.run_id is None else await self.control_plane_repository.list_effect_journal_entries(
-            run_id=record.run_id
+        entries: list[EffectJournalEntryRecord] = (
+            []
+            if record.run_id is None
+            else await self.control_plane_repository.list_effect_journal_entries(run_id=record.run_id)
         )
         latest_entry = entries[-1] if entries else None
         return {
@@ -399,7 +392,61 @@ class SandboxLifecycleViewService:
         }
 
     @staticmethod
-    def _latest_operator_action(operator_actions: list) -> dict[str, object] | None:
+    def _empty_control_plane_summary() -> ControlPlaneSummary:
+        return {
+            "recovery_action": None,
+            "recovery_decision_id": None,
+            "checkpoint_id": None,
+            "checkpoint_resumability_class": None,
+            "checkpoint_acceptance_outcome": None,
+            "reconciliation_id": None,
+            "divergence_class": None,
+            "safe_continuation_class": None,
+            "reservation_status": None,
+            "lease_status": None,
+            "resource_id": None,
+            "resource_kind": None,
+            "resource_state": None,
+            "resource_orphan_classification": None,
+            "final_result_class": None,
+            "final_closure_basis": None,
+            "final_terminality_basis": None,
+            "final_evidence_sufficiency_class": None,
+            "final_residual_uncertainty_class": None,
+            "final_degradation_class": None,
+            "final_authoritative_result_ref": None,
+            "final_authority_sources": [],
+            "effect_count": 0,
+            "latest_effect_journal_entry_id": None,
+            "latest_effect_id": None,
+            "latest_effect_intended_target_ref": None,
+            "latest_effect_observed_result_ref": None,
+            "latest_effect_authorization_basis_ref": None,
+            "latest_effect_integrity_verification_ref": None,
+            "latest_effect_uncertainty_classification": None,
+        }
+
+    @staticmethod
+    def _summary_str(summary: ControlPlaneSummary, key: str) -> str | None:
+        value = summary.get(key)
+        return value if isinstance(value, str) else None
+
+    @staticmethod
+    def _summary_int(summary: ControlPlaneSummary, key: str) -> int:
+        value = summary.get(key)
+        return value if isinstance(value, int) else 0
+
+    @staticmethod
+    def _summary_str_list(summary: ControlPlaneSummary, key: str) -> list[str]:
+        value = summary.get(key)
+        if isinstance(value, list) and all(isinstance(item, str) for item in value):
+            return list(value)
+        return []
+
+    @staticmethod
+    def _latest_operator_action(
+        operator_actions: list[OperatorActionRecord],
+    ) -> dict[str, Any] | None:
         if not operator_actions:
             return None
         latest = sorted(operator_actions, key=lambda item: (item.timestamp, item.action_id))[-1]

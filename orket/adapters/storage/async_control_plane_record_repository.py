@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+from typing import Awaitable, Callable, TypeVar
 
 import aiosqlite
 
@@ -22,6 +23,8 @@ from orket.core.contracts.control_plane_models import (
     ResourceRecord,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
+
+ResultT = TypeVar("ResultT")
 
 
 class ControlPlaneRecordConflictError(ValueError):
@@ -220,7 +223,13 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             """
         )
 
-    async def _execute(self, operation, *, row_factory: bool = False, commit: bool = False):
+    async def _execute(
+        self,
+        operation: Callable[[aiosqlite.Connection], Awaitable[ResultT]],
+        *,
+        row_factory: bool = False,
+        commit: bool = False,
+    ) -> ResultT:
         async with self._lock, aiosqlite.connect(self.db_path) as conn:
             if row_factory:
                 conn.row_factory = aiosqlite.Row
@@ -239,10 +248,10 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
         id_field: str,
         id_value: str,
         payload_json: str,
-        insert_op,
-        parse_existing,
-    ):
-        async def _op(conn: aiosqlite.Connection):
+        insert_op: Callable[[aiosqlite.Connection], Awaitable[ResultT]],
+        parse_existing: Callable[[str], ResultT],
+    ) -> ResultT:
+        async def _op(conn: aiosqlite.Connection) -> ResultT:
             cursor = await conn.execute(f"SELECT payload_json FROM {table} WHERE {id_field} = ?", (id_value,))
             existing = await cursor.fetchone()
             if existing is not None:

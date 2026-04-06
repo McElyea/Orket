@@ -50,7 +50,8 @@ def validate_unknown_input_policy(
     payload: dict[str, object] | None = None,
 ) -> tuple[str, ...]:
     policy = dict(payload or unknown_input_policy_snapshot())
-    rows = list(policy.get("surfaces") or [])
+    surfaces_payload = policy.get("surfaces")
+    rows = surfaces_payload if isinstance(surfaces_payload, list) else []
     if not rows:
         raise ValueError("E_UNKNOWN_INPUT_POLICY_EMPTY")
 

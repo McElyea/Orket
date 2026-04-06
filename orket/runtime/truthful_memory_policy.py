@@ -37,6 +37,19 @@ _REFERENCE_RATIONALES = {
 }
 
 
+def _coerce_float(value: Any) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        token = value.strip()
+        if token:
+            try:
+                return float(token)
+            except ValueError:
+                return None
+    return None
+
+
 @dataclass(frozen=True)
 class MemoryWritePolicyDecision:
     allow_write: bool
@@ -348,9 +361,8 @@ def _is_stale(metadata: Mapping[str, Any], *, fallback_timestamp: str) -> bool:
     max_age_minutes = metadata.get("max_age_minutes")
     if timestamp_value is None or max_age_minutes in {None, ""}:
         return False
-    try:
-        max_age = float(max_age_minutes)
-    except (TypeError, ValueError):
+    max_age = _coerce_float(max_age_minutes)
+    if max_age is None:
         return False
     age_seconds = (datetime.now(UTC) - timestamp_value).total_seconds()
     return age_seconds > (max_age * 60.0)

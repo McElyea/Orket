@@ -11,6 +11,17 @@ from orket.reforger.eval.base import EvalHarness, EvalResult, ModelAdapter
 from orket.reforger.eval.parsers import parse_normalized_report
 
 
+def _case_severity(row: dict[str, object]) -> float:
+    value = row.get("severity")
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        token = value.strip()
+        if token:
+            return float(token)
+    return 0.0
+
+
 def _read_cases(suite_path: Path) -> list[dict[str, Any]]:
     cases_file = suite_path / "cases.jsonl"
     if not cases_file.is_file():
@@ -245,7 +256,7 @@ class AdapterEvalHarness(EvalHarness):
                 }
             )
 
-        failing_cases.sort(key=lambda row: (str(row["case_id"]), -float(row["severity"]), bool(row["hard"])))
+        failing_cases.sort(key=lambda row: (str(row["case_id"]), -_case_severity(row), bool(row["hard"])))
         per_case.sort(key=lambda row: str(row["case_id"]))
         case_count = len(per_case)
         total_score = (score_sum / case_count) if case_count else 1.0

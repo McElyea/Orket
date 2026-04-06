@@ -185,7 +185,7 @@ class InMemoryCoordinatorStore:
             meta["lease_duration"] = lease_duration
             return card.model_copy(deep=True)
 
-    def complete(self, card_id: str, node_id: str, result: dict | None) -> Card:
+    def complete(self, card_id: str, node_id: str, result: dict[str, object] | None) -> Card:
         with self._lock:
             now = self._now()
             card = self._get_card(card_id)
@@ -215,7 +215,7 @@ class InMemoryCoordinatorStore:
             meta["claimants"] = set()
             return card.model_copy(deep=True)
 
-    def fail(self, card_id: str, node_id: str, result: dict | None) -> Card:
+    def fail(self, card_id: str, node_id: str, result: dict[str, object] | None) -> Card:
         with self._lock:
             now = self._now()
             card = self._get_card(card_id)

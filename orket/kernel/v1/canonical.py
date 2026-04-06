@@ -90,9 +90,9 @@ def _jcs_canonicalize_to_str(obj: Any) -> str:
     """
     # 1) Trail of Bits: rfc8785.py
     try:
-        import rfc8785  # type: ignore
+        import rfc8785
 
-        out = rfc8785.dumps(obj)  # type: ignore[attr-defined]
+        out = rfc8785.dumps(obj)
         if isinstance(out, (bytes, bytearray)):
             return bytes(out).decode("utf-8")
         if isinstance(out, str):
@@ -103,10 +103,10 @@ def _jcs_canonicalize_to_str(obj: Any) -> str:
 
     # 2) Anders Rundgren JCS package: jcs
     try:
-        import jcs  # type: ignore
+        import jcs  # type: ignore[import-untyped]
 
         # PyPI "jcs" exposes canonicalize() and returns bytes.
-        out = jcs.canonicalize(obj)  # type: ignore[attr-defined]
+        out = jcs.canonicalize(obj)
         if isinstance(out, (bytes, bytearray)):
             return bytes(out).decode("utf-8")
         if isinstance(out, str):
@@ -197,4 +197,4 @@ def sorted_deterministically(values: Iterable[T]) -> list[T]:
     """
     Minimal deterministic helper used by state modules.
     """
-    return sorted(values)  # type: ignore[arg-type]
+    return sorted(values, key=repr)

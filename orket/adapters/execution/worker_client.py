@@ -103,6 +103,7 @@ class Worker:
     def run_claimed_work(
         self, card_id: str, *, work_duration: float, completion_result: dict[str, Any]
     ) -> ResponseLike:
+        """Sync-only helper. It spawns a renewal thread and must stay off the server event loop."""
         stop_event = threading.Event()
         renew_thread = threading.Thread(target=self._renew_loop, args=(card_id, stop_event), daemon=True)
         renew_thread.start()
@@ -110,7 +111,7 @@ class Worker:
         while self.monotonic_fn() < deadline:
             self.sleep_fn(0.005)
         stop_event.set()
-        renew_thread.join(timeout=2.0)
+        renew_thread.join()
         return self.complete(card_id, completion_result)
 
     def run_once(self, *, work_duration: float = 0.1) -> bool:

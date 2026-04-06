@@ -102,7 +102,10 @@ def _nervous_system_enabled() -> bool:
 def _approval_reservation_publisher(engine: Any) -> ToolApprovalControlPlaneReservationService | None:
     publication = getattr(engine, "control_plane_publication", None)
     publisher = getattr(engine, "tool_approval_control_plane_reservation", None)
-    if publisher is not None and getattr(publisher, "publication", None) is publication:
+    if (
+        isinstance(publisher, ToolApprovalControlPlaneReservationService)
+        and getattr(publisher, "publication", None) is publication
+    ):
         return publisher
     if publication is None:
         return None
@@ -116,7 +119,7 @@ def _tool_approval_operator_publisher(engine: Any) -> ToolApprovalControlPlaneOp
     execution_repository = getattr(engine, "control_plane_execution_repository", None)
     publisher = getattr(engine, "tool_approval_control_plane_operator", None)
     if (
-        publisher is not None
+        isinstance(publisher, ToolApprovalControlPlaneOperatorService)
         and getattr(publisher, "publication", None) is publication
         and getattr(publisher, "execution_repository", None) is execution_repository
     ):
@@ -134,7 +137,10 @@ def _tool_approval_operator_publisher(engine: Any) -> ToolApprovalControlPlaneOp
 def _pending_gate_operator_publisher(engine: Any) -> PendingGateControlPlaneOperatorService | None:
     publication = getattr(engine, "control_plane_publication", None)
     publisher = getattr(engine, "pending_gate_control_plane_operator", None)
-    if publisher is not None and getattr(publisher, "publication", None) is publication:
+    if (
+        isinstance(publisher, PendingGateControlPlaneOperatorService)
+        and getattr(publisher, "publication", None) is publication
+    ):
         return publisher
     if publication is None:
         return None
@@ -150,7 +156,7 @@ def _governed_turn_tool_approval_continuation_service(
     execution_repository = getattr(engine, "control_plane_execution_repository", None)
     service = getattr(engine, "governed_turn_tool_approval_continuation", None)
     if (
-        service is not None
+        isinstance(service, GovernedTurnToolApprovalContinuationService)
         and getattr(service, "publication", None) is publication
         and getattr(service, "execution_repository", None) is execution_repository
     ):

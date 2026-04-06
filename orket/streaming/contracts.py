@@ -26,7 +26,7 @@ class DropRange(BaseModel):
     end_seq: int
 
     @model_validator(mode="after")
-    def validate_range(self):
+    def validate_range(self) -> DropRange:
         if self.start_seq > self.end_seq:
             raise ValueError("start_seq must be <= end_seq")
         return self
@@ -43,7 +43,7 @@ class StreamEvent(BaseModel):
     wall_ts: str | int | None = None
 
     @model_validator(mode="after")
-    def validate_payload(self):
+    def validate_payload(self) -> StreamEvent:
         ranges = self.payload.get("dropped_seq_ranges")
         if ranges is None:
             return self

@@ -40,7 +40,7 @@ class DecisionNodeRegistry:
     Minimal plugin registry for decision node implementations.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._planner_nodes: dict[str, PlannerNode] = {"default": DefaultPlannerNode()}
         self._router_nodes: dict[str, RouterNode] = {"default": DefaultRouterNode()}
         self._prompt_strategy_nodes: dict[str, PromptStrategyNode] = {}

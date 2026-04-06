@@ -209,7 +209,14 @@ def _normalize_stage_outcomes(run_payload: dict[str, Any]) -> list[dict[str, str
         turn_id = item.get("turn_id")
         stage = item.get("stage")
         outcome = item.get("outcome")
-        if all(isinstance(v, str) and v for v in (turn_id, stage, outcome)):
+        if (
+            isinstance(turn_id, str)
+            and turn_id
+            and isinstance(stage, str)
+            and stage
+            and isinstance(outcome, str)
+            and outcome
+        ):
             out.append({"turn_id": turn_id, "stage": stage, "outcome": outcome})
     return sorted(out, key=lambda item: item["turn_id"])
 
@@ -225,7 +232,14 @@ def _normalize_issue_codes(run_payload: dict[str, Any]) -> list[dict[str, str]]:
         code = item.get("code")
         stage = item.get("stage")
         location = item.get("location")
-        if all(isinstance(v, str) and v for v in (code, stage, location)):
+        if (
+            isinstance(code, str)
+            and code
+            and isinstance(stage, str)
+            and stage
+            and isinstance(location, str)
+            and location
+        ):
             out.append({"code": code, "stage": stage, "location": location})
     return sorted(out, key=lambda item: (item["stage"], item["location"], item["code"]))
 

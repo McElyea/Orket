@@ -38,6 +38,14 @@ class TurnArtifactWriter:
             fallback = {"non_canonical_repr": str(payload)}
             return hash_canonical_json(fallback)
 
+    @staticmethod
+    def _load_json_dict(path: Path) -> dict[str, Any] | None:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError, TypeError, ValueError):
+            return None
+        return payload if isinstance(payload, dict) else None
+
     def append_memory_event(
         self,
         context: dict[str, Any],
@@ -285,10 +293,7 @@ class TurnArtifactWriter:
         )
         if not path.exists():
             return None
-        try:
-            return json.loads(path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError, TypeError, ValueError):
-            return None
+        return self._load_json_dict(path)
 
     def persist_tool_result(
         self,
@@ -349,10 +354,7 @@ class TurnArtifactWriter:
         )
         if not path.exists():
             return None
-        try:
-            return json.loads(path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError, TypeError, ValueError):
-            return None
+        return self._load_json_dict(path)
 
     def persist_operation_result(
         self,

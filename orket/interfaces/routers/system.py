@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -39,14 +39,14 @@ def build_system_router(
     parse_roles_filter: Callable[[str | None], list[str]],
     discover_active_roles: Callable[[Path], list[str]],
     discover_team_topology: Callable[[Path], list[dict[str, Any]]],
-    invoke_async_method: Callable[[object, dict, str], Any],
-    schedule_async_invocation_task: Callable[[object, dict, str, str], Any],
+    invoke_async_method: Callable[[object, dict[str, Any], str], Any],
+    schedule_async_invocation_task: Callable[[object, dict[str, Any], str, str], Any],
     engine_getter: Callable[[], Any],
 ) -> APIRouter:
     router = APIRouter()
 
     @router.post("/system/clear-logs")
-    async def clear_logs():
+    async def clear_logs() -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
         project_root = project_root_getter()
         log_path = api_runtime_node.resolve_clear_logs_path()
@@ -63,7 +63,7 @@ def build_system_router(
         return {"ok": True}
 
     @router.get("/system/heartbeat")
-    async def heartbeat():
+    async def heartbeat() -> dict[str, Any]:
         return {
             "status": "online",
             "timestamp": now_local().isoformat(),
@@ -71,22 +71,22 @@ def build_system_router(
         }
 
     @router.get("/system/metrics")
-    async def get_metrics():
+    async def get_metrics() -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
         metrics = await asyncio.to_thread(get_metrics_snapshot)
-        return api_runtime_node.normalize_metrics(metrics)
+        return cast(dict[str, Any], api_runtime_node.normalize_metrics(metrics))
 
     @router.get("/system/explorer")
-    async def list_system_files(path: str = "."):
+    async def list_system_files(path: str = ".") -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
         project_root = project_root_getter()
         target = api_runtime_node.resolve_explorer_path(project_root, path)
         if target is None:
             raise HTTPException(**api_runtime_node.resolve_explorer_forbidden_error(path))
         if not target.exists():
-            return api_runtime_node.resolve_explorer_missing_response(path)
+            return cast(dict[str, Any], api_runtime_node.resolve_explorer_missing_response(path))
 
-        items = []
+        items: list[dict[str, Any]] = []
         for entry in target.iterdir():
             if not api_runtime_node.include_explorer_entry(entry.name):
                 continue
@@ -95,7 +95,7 @@ def build_system_router(
         return {"items": api_runtime_node.sort_explorer_items(items), "path": path}
 
     @router.get("/system/read")
-    async def read_system_file(path: str):
+    async def read_system_file(path: str) -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
         fs = api_runtime_node.create_file_tools(project_root_getter())
         try:
@@ -111,7 +111,7 @@ def build_system_router(
         return {"content": content}
 
     @router.post("/system/save")
-    async def save_system_file(req: SaveFileRequest):
+    async def save_system_file(req: SaveFileRequest) -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
         fs = api_runtime_node.create_file_tools(project_root_getter())
         try:
@@ -125,7 +125,7 @@ def build_system_router(
         return {"ok": True}
 
     @router.get("/system/calendar")
-    async def get_calendar():
+    async def get_calendar() -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
         now = now_local()
         calendar_window = api_runtime_node.calendar_window(now)
@@ -136,7 +136,7 @@ def build_system_router(
         }
 
     @router.get("/system/model-assignments")
-    async def get_model_assignments(roles: str | None = None):
+    async def get_model_assignments(roles: str | None = None) -> dict[str, Any]:
         project_root = project_root_getter()
         engine = engine_getter()
         role_filter = parse_roles_filter(roles)
@@ -168,7 +168,7 @@ def build_system_router(
         }
 
     @router.get("/system/teams")
-    async def get_system_teams(department: str | None = None):
+    async def get_system_teams(department: str | None = None) -> dict[str, Any]:
         project_root = project_root_getter()
         topology = await asyncio.to_thread(discover_team_topology, project_root / "model")
         if department:
@@ -181,7 +181,7 @@ def build_system_router(
         }
 
     @router.post("/system/run-active")
-    async def run_active_asset(req: RunAssetRequest):
+    async def run_active_asset(req: RunAssetRequest) -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
         engine = engine_getter()
         project_root = project_root_getter()
@@ -216,12 +216,12 @@ def build_system_router(
         return {"session_id": session_id}
 
     @router.get("/system/board")
-    async def get_system_board(dept: str = "core"):
+    async def get_system_board(dept: str = "core") -> Any:
         api_runtime_node = api_runtime_node_getter()
         return await api_runtime_node.resolve_system_board_async(dept)
 
     @router.get("/system/preview-asset")
-    async def preview_asset(path: str, issue_id: str | None = None):
+    async def preview_asset(path: str, issue_id: str | None = None) -> Any:
         api_runtime_node = api_runtime_node_getter()
         target = api_runtime_node.resolve_preview_target(path, issue_id)
         invocation = api_runtime_node.resolve_preview_invocation(target, issue_id)
@@ -229,7 +229,7 @@ def build_system_router(
         return await invoke_async_method(builder, invocation, "preview")
 
     @router.post("/system/chat-driver")
-    async def chat_driver(req: ChatDriverRequest):
+    async def chat_driver(req: ChatDriverRequest) -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
         driver = api_runtime_node.create_chat_driver()
         invocation = api_runtime_node.resolve_chat_driver_invocation(req.message)

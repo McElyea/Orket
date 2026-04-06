@@ -54,7 +54,7 @@ def _normalize_entries(value: Any) -> list[dict[str, Any]]:
             and truth_classification in _ALLOWED_TRUTH_CLASSIFICATIONS
         ):
             continue
-        entry = {
+        entry: dict[str, Any] = {
             "artifact_path": artifact_path,
             "artifact_type": artifact_type,
             "generator": generator,

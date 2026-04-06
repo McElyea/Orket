@@ -2,10 +2,11 @@ import asyncio
 import hashlib
 import json
 import os
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, Security, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -86,42 +87,42 @@ def _validate_session_path(session_id: str) -> Path:
     return candidate
 
 
-def _resolve_method(target: object, invocation: dict, error_prefix: str):
+def _resolve_method(target: object, invocation: dict[str, Any], error_prefix: str) -> Callable[..., Any]:
     method_name = invocation["method_name"]
     method = getattr(target, method_name, None)
-    if method is None:
+    if method is None or not callable(method):
         detail = invocation.get("unsupported_detail")
         if detail:
             raise HTTPException(status_code=400, detail=detail)
         raise HTTPException(status_code=400, detail=f"Unsupported {error_prefix} method '{method_name}'.")
-    return method
+    return cast(Callable[..., Any], method)
 
 
-async def _invoke_async_method(target: object, invocation: dict, error_prefix: str):
+async def _invoke_async_method(target: object, invocation: dict[str, Any], error_prefix: str) -> Any:
     method = _resolve_method(target, invocation, error_prefix)
     return await method(*invocation.get("args", []), **invocation.get("kwargs", {}))
 
 
 async def _schedule_async_invocation_task(
     target: object,
-    invocation: dict,
+    invocation: dict[str, Any],
     error_prefix: str,
     session_id: str,
-):
+) -> None:
     method = _resolve_method(target, invocation, error_prefix)
     task = asyncio.create_task(method(*invocation.get("args", []), **invocation.get("kwargs", {})))
     await runtime_state.add_task(session_id, task)
     loop = asyncio.get_running_loop()
 
     # Always remove completed/canceled tasks to keep active task tracking accurate.
-    def _cleanup(_done_task: asyncio.Task):
+    def _cleanup(_done_task: asyncio.Task[Any]) -> None:
         with suppress(RuntimeError):
             loop.call_soon_threadsafe(asyncio.create_task, runtime_state.remove_task(session_id, task))
 
     task.add_done_callback(_cleanup)
 
 
-def _runtime_task_summary(tasks: list[asyncio.Task]) -> tuple[bool, str]:
+def _runtime_task_summary(tasks: list[asyncio.Task[Any]]) -> tuple[bool, str]:
     active_tasks = [task for task in tasks if not task.done()]
     if active_tasks:
         return True, "running"
@@ -132,7 +133,7 @@ def _runtime_task_summary(tasks: list[asyncio.Task]) -> tuple[bool, str]:
     return False, "idle"
 
 
-def _invoke_sync_method(target: object, invocation: dict, error_prefix: str):
+def _invoke_sync_method(target: object, invocation: dict[str, Any], error_prefix: str) -> Any:
     method = _resolve_method(target, invocation, error_prefix)
     return method(*invocation.get("args", []), **invocation.get("kwargs", {}))
 
@@ -370,7 +371,8 @@ def _discover_team_topology(model_root: Path) -> list[dict[str, Any]]:
                     }
                 )
 
-        declared_roles: dict[str, Any] = payload.get("roles") if isinstance(payload.get("roles"), dict) else {}
+        raw_declared_roles = payload.get("roles")
+        declared_roles: dict[str, Any] = dict(raw_declared_roles) if isinstance(raw_declared_roles, dict) else {}
         role_items: list[dict[str, Any]] = []
         all_roles = sorted(
             set(referenced_roles)
@@ -442,7 +444,7 @@ def _api_key_actor_ref(api_key_value: str | None) -> str | None:
     return f"api_key_fingerprint:sha256:{digest}"
 
 
-async def get_api_key(request: Request, api_key_header: str | None = Security(api_key_header)):
+async def get_api_key(request: Request, api_key_header: str | None = Security(api_key_header)) -> str | None:
     default_key = _read_api_key_env("ORKET_API_KEY")
     request_path = str(request.url.path or "")
     provided_key_present = bool(str(api_key_header or "").strip())
@@ -466,15 +468,15 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
 # --- Lifespan ---
 
 
-def _on_log_record_factory(loop: asyncio.AbstractEventLoop):
-    def on_log_record(record):
+def _on_log_record_factory(loop: asyncio.AbstractEventLoop) -> Callable[[dict[str, Any]], None]:
+    def on_log_record(record: dict[str, Any]) -> None:
         loop.call_soon_threadsafe(runtime_state.event_queue.put_nowait, record)
 
     return on_log_record
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     from orket.utils import ensure_log_dir
 
     if engine is None:
@@ -593,7 +595,7 @@ engine = _get_engine()
 
 
 @app.get("/health")
-async def health():
+async def health() -> dict[str, str]:
     return {"status": "ok", "organization": "Orket"}
 
 
@@ -601,12 +603,12 @@ async def health():
 
 
 @v1_router.get("/version")
-async def get_version():
+async def get_version() -> dict[str, str]:
     return {"version": __version__, "api": "v1"}
 
 
 v1_router.include_router(build_kernel_router(lambda: _get_engine()))
-v1_router.include_router(build_cards_router(lambda: _get_engine(), api_runtime_node))
+v1_router.include_router(build_cards_router(lambda: _get_engine(), lambda: api_runtime_node))
 v1_router.include_router(
     build_settings_router(
         settings_order=SETTINGS_ORDER,
@@ -872,14 +874,14 @@ def _settings_validation_error(errors: list[dict[str, Any]]) -> HTTPException:
 
 
 @v1_router.get("/runs")
-async def list_runs():
+async def list_runs() -> Any:
     invocation = api_runtime_node.resolve_runs_invocation()
     runtime_engine = _get_engine()
     return await _invoke_async_method(runtime_engine.sessions, invocation, "runs")
 
 
 @v1_router.get("/runs/{session_id}")
-async def get_run_detail(session_id: str):
+async def get_run_detail(session_id: str) -> dict[str, Any]:
     runtime_engine = _get_engine()
     run_record = await runtime_engine.run_ledger.get_run(session_id)
     session = await runtime_engine.sessions.get_session(session_id)
@@ -911,7 +913,7 @@ async def get_run_detail(session_id: str):
 
 
 @v1_router.get("/runs/{session_id}/metrics")
-async def get_run_metrics(session_id: str):
+async def get_run_metrics(session_id: str) -> Any:
     log_event("api_run_metrics", {"session_id": session_id}, _project_root())
     _validate_session_path(session_id)
     workspace = api_runtime_node.resolve_member_metrics_workspace(_project_root(), session_id)
@@ -920,7 +922,7 @@ async def get_run_metrics(session_id: str):
 
 
 @v1_router.get("/runs/{session_id}/token-summary")
-async def get_run_token_summary(session_id: str):
+async def get_run_token_summary(session_id: str) -> dict[str, Any]:
     runtime_engine = _get_engine()
     run_record = await runtime_engine.run_ledger.get_run(session_id)
     session = await runtime_engine.sessions.get_session(session_id)
@@ -1120,7 +1122,7 @@ def _collect_replay_turns(session_id: str, role: str | None = None) -> list[dict
 
 
 @v1_router.get("/runs/{session_id}/replay")
-async def list_run_replay_turns(session_id: str, role: str | None = None):
+async def list_run_replay_turns(session_id: str, role: str | None = None) -> dict[str, Any]:
     runtime_engine = _get_engine()
     run_record = await runtime_engine.run_ledger.get_run(session_id)
     session = await runtime_engine.sessions.get_session(session_id)
@@ -1136,7 +1138,7 @@ async def list_run_replay_turns(session_id: str, role: str | None = None):
 
 
 @v1_router.get("/runs/{session_id}/backlog")
-async def get_backlog(session_id: str):
+async def get_backlog(session_id: str) -> Any:
     log_event("api_backlog", {"session_id": session_id}, _project_root())
     invocation = api_runtime_node.resolve_backlog_invocation(session_id)
     runtime_engine = _get_engine()
@@ -1144,7 +1146,7 @@ async def get_backlog(session_id: str):
 
 
 @v1_router.get("/runs/{session_id}/execution-graph")
-async def get_execution_graph(session_id: str):
+async def get_execution_graph(session_id: str) -> dict[str, Any]:
     runtime_engine = _get_engine()
     run_record = await runtime_engine.run_ledger.get_run(session_id)
     session = await runtime_engine.sessions.get_session(session_id)
@@ -1171,7 +1173,7 @@ async def get_execution_graph(session_id: str):
 
 
 @v1_router.get("/sessions/{session_id}")
-async def get_session_detail(session_id: str):
+async def get_session_detail(session_id: str) -> Any:
     log_event("api_session_detail", {"session_id": session_id}, _project_root())
     invocation = api_runtime_node.resolve_session_detail_invocation(session_id)
     runtime_engine = _get_engine()
@@ -1185,7 +1187,7 @@ async def get_session_detail(session_id: str):
 
 
 @v1_router.get("/sessions/{session_id}/status")
-async def get_session_status(session_id: str):
+async def get_session_status(session_id: str) -> dict[str, Any]:
     runtime_engine = _get_engine()
     session = await runtime_engine.sessions.get_session(session_id)
     if not session:
@@ -1220,7 +1222,7 @@ async def get_session_status(session_id: str):
 
 
 @v1_router.post("/sessions/{session_id}/halt")
-async def halt_session(session_id: str, request: Request):
+async def halt_session(session_id: str, request: Request) -> dict[str, Any]:
     runtime_engine = _get_engine()
     run_record = await runtime_engine.run_ledger.get_run(session_id)
     if run_record is None:
@@ -1244,7 +1246,7 @@ async def replay_session_turn(
     issue_id: str | None = None,
     turn_index: int | None = Query(default=None, ge=1),
     role: str | None = None,
-):
+) -> Any:
     runtime_engine = _get_engine()
     run_record = await runtime_engine.run_ledger.get_run(session_id)
     session = await runtime_engine.sessions.get_session(session_id)
@@ -1258,7 +1260,7 @@ async def replay_session_turn(
                 return interaction_timeline
             raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
         return await list_run_replay_turns(session_id=session_id, role=role)
-    if bool(issue_id) != bool(turn_index):
+    if not issue_id or turn_index is None:
         raise HTTPException(
             status_code=422,
             detail="Both 'issue_id' and 'turn_index' are required for targeted replay.",
@@ -1274,7 +1276,7 @@ async def replay_session_turn(
         replay = runtime_engine.replay_turn(
             session_id=session_id,
             issue_id=str(issue_id),
-            turn_index=int(turn_index),
+            turn_index=turn_index,
             role=role,
         )
     except FileNotFoundError as exc:
@@ -1283,7 +1285,7 @@ async def replay_session_turn(
 
 
 @v1_router.get("/sessions/{session_id}/snapshot")
-async def get_session_snapshot(session_id: str):
+async def get_session_snapshot(session_id: str) -> Any:
     log_event("api_session_snapshot", {"session_id": session_id}, _project_root())
     invocation = api_runtime_node.resolve_session_snapshot_invocation(session_id)
     runtime_engine = _get_engine()
@@ -1297,14 +1299,14 @@ async def get_session_snapshot(session_id: str):
 
 
 @v1_router.get("/sandboxes")
-async def list_sandboxes():
+async def list_sandboxes() -> Any:
     invocation = api_runtime_node.resolve_sandboxes_list_invocation()
     runtime_engine = _get_engine()
     return await _invoke_async_method(runtime_engine, invocation, "sandboxes")
 
 
 @v1_router.post("/sandboxes/{sandbox_id}/stop")
-async def stop_sandbox(sandbox_id: str, request: Request):
+async def stop_sandbox(sandbox_id: str, request: Request) -> dict[str, bool]:
     invocation = api_runtime_node.resolve_sandbox_stop_invocation(sandbox_id)
     operator_actor_ref = getattr(request.state, "authenticated_actor_ref", None)
     if operator_actor_ref is not None:
@@ -1324,7 +1326,7 @@ async def stop_sandbox(sandbox_id: str, request: Request):
 
 
 @v1_router.get("/sandboxes/{sandbox_id}/logs")
-async def get_sandbox_logs(sandbox_id: str, service: str | None = None):
+async def get_sandbox_logs(sandbox_id: str, service: str | None = None) -> dict[str, Any]:
     pipeline = api_runtime_node.create_execution_pipeline(api_runtime_node.resolve_sandbox_workspace(_project_root()))
     invocation = api_runtime_node.resolve_sandbox_logs_invocation(sandbox_id, service)
     logs = await asyncio.to_thread(
@@ -1546,10 +1548,10 @@ def _extract_total_tokens(value: Any) -> int:
     return parsed if parsed > 0 else 0
 
 
-def _read_log_records(path: Path) -> list[dict]:
+def _read_log_records(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
-    records: list[dict] = []
+    records: list[dict[str, Any]] = []
     for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
         line = line.strip()
         if not line:
@@ -1572,7 +1574,7 @@ async def list_logs(
     end_time: str | None = None,
     limit: int = Query(default=200, ge=1, le=2000),
     offset: int = Query(default=0, ge=0),
-):
+) -> dict[str, Any]:
     start_dt = _coerce_datetime(start_time)
     end_dt = _coerce_datetime(end_time)
 
@@ -1581,11 +1583,11 @@ async def list_logs(
         run_path = _validate_session_path(session_id)
         candidate_files.append(run_path / "orket.log")
 
-    records: list[dict] = []
+    records: list[dict[str, Any]] = []
     for path in candidate_files:
         records.extend(await asyncio.to_thread(_read_log_records, path))
 
-    filtered: list[dict] = []
+    filtered: list[dict[str, Any]] = []
     for record in records:
         rec_event = str(record.get("event") or "")
         rec_role = str(record.get("role") or "")
@@ -1650,7 +1652,7 @@ def create_api_app(project_root: Path | None = None) -> FastAPI:
 # --- WS ---
 
 
-async def event_broadcaster():
+async def event_broadcaster() -> None:
     while True:
         record = await runtime_state.event_queue.get()
         for ws in await runtime_state.get_websockets():

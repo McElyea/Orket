@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
+from typing import Awaitable, Callable, TypeVar
 
 import aiosqlite
 from pydantic import ValidationError
@@ -21,6 +22,8 @@ from orket.core.domain.sandbox_lifecycle_records import (
     SandboxOperationDedupeEntry,
 )
 
+ResultT = TypeVar("ResultT")
+
 
 class SandboxOperationIntegrityError(SandboxLifecycleError):
     """Raised when an operation id is reused with a different payload hash."""
@@ -33,7 +36,7 @@ class SandboxLifecycleConflictError(SandboxLifecycleError):
 class AsyncSandboxLifecycleRepository:
     """Durable SQLite repository for sandbox lifecycle authority."""
 
-    def __init__(self, db_path: str | Path):
+    def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
         self._lock = asyncio.Lock()
 
@@ -138,7 +141,13 @@ class AsyncSandboxLifecycleRepository:
             """
         )
 
-    async def _execute(self, operation, *, row_factory: bool = False, commit: bool = False):
+    async def _execute(
+        self,
+        operation: Callable[[aiosqlite.Connection], Awaitable[ResultT]],
+        *,
+        row_factory: bool = False,
+        commit: bool = False,
+    ) -> ResultT:
         async with self._lock, aiosqlite.connect(self.db_path) as conn:
             if row_factory:
                 conn.row_factory = aiosqlite.Row

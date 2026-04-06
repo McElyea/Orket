@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from pathlib import Path
 
 from scripts.odr.model_role_fit_lane import load_lane_config, load_matrix_registry

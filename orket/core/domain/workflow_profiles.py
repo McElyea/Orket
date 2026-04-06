@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import contextlib
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
 
 from orket.core.domain.state_machine import StateMachine, StateMachineError
-from orket.schema import CardStatus, CardType
+from orket.schema import CardStatus, CardType, WaitReason
 
 
 @dataclass(frozen=True)
@@ -66,13 +67,20 @@ class LegacyCardsV1Profile(WorkflowProfile):
         roles: Iterable[str],
         payload: dict[str, object],
     ) -> TransitionCheckResult:
+        raw_wait_reason = payload.get("wait_reason")
+        wait_reason: WaitReason | None = None
+        if isinstance(raw_wait_reason, WaitReason):
+            wait_reason = raw_wait_reason
+        elif isinstance(raw_wait_reason, str) and raw_wait_reason.strip():
+            with contextlib.suppress(ValueError):
+                wait_reason = WaitReason(raw_wait_reason.strip().lower())
         try:
             StateMachine.validate_transition(
                 card_type=card_type,
                 current=current,
                 requested=requested,
                 roles=[str(role).strip() for role in roles if str(role).strip()],
-                wait_reason=payload.get("wait_reason"),
+                wait_reason=wait_reason,
             )
             return TransitionCheckResult(ok=True)
         except StateMachineError as exc:

@@ -10,7 +10,36 @@ from orket.exceptions import ModelProviderError
 from orket.logging import log_event
 
 
+def _build_capabilities_summary(driver: Any) -> str:
+    model_root = getattr(driver, "model_root", Path())
+    departments = sorted([p.name for p in model_root.iterdir() if p.is_dir()]) if model_root.exists() else []
+    cli_help_text = getattr(driver, "_cli_help_text")
+    supported_action_summary_lines = getattr(driver, "_supported_action_summary_lines")
+    summary = [str(cli_help_text())]
+    summary.append("\n".join(supported_action_summary_lines()))
+    if departments:
+        summary.append(f"Detected departments: {', '.join(departments)}")
+    prompting_mode = str(getattr(driver, "prompting_mode", "unknown"))
+    json_parse_mode = str(getattr(driver, "json_parse_mode", "compatibility"))
+    summary.append(f"Active prompting mode: {prompting_mode}")
+    summary.append(f"Active JSON parse mode: {json_parse_mode}")
+    if bool(getattr(driver, "config_degraded", False)):
+        failures = getattr(driver, "config_load_failures", [])
+        summary.append(f"Config load status: degraded ({len(failures)} dependency load failure(s)).")
+    summary.append("Conversation mode is on by default. I only run structural actions when explicitly requested.")
+    return "\n".join(summary)
+
+
 class DriverConversationMixin:
+    model_root: Path
+    provider: Any
+
+    def _cli_help_text(self) -> str:
+        raise NotImplementedError
+
+    def _supported_action_summary_lines(self) -> list[str]:
+        raise NotImplementedError
+
     def _should_route_to_conversation(self, message: str) -> bool:
         text = str(message or "").strip().lower()
         if not text:
@@ -151,22 +180,7 @@ class DriverConversationMixin:
         return text
 
     def _capabilities_summary(self) -> str:
-        departments = (
-            sorted([p.name for p in self.model_root.iterdir() if p.is_dir()]) if self.model_root.exists() else []
-        )
-        summary = [self._cli_help_text()]
-        summary.append("\n".join(self._supported_action_summary_lines()))
-        if departments:
-            summary.append(f"Detected departments: {', '.join(departments)}")
-        prompting_mode = str(getattr(self, "prompting_mode", "unknown"))
-        json_parse_mode = str(getattr(self, "json_parse_mode", "compatibility"))
-        summary.append(f"Active prompting mode: {prompting_mode}")
-        summary.append(f"Active JSON parse mode: {json_parse_mode}")
-        if bool(getattr(self, "config_degraded", False)):
-            failures = getattr(self, "config_load_failures", [])
-            summary.append(f"Config load status: degraded ({len(failures)} dependency load failure(s)).")
-        summary.append("Conversation mode is on by default. I only run structural actions when explicitly requested.")
-        return "\n".join(summary)
+        return _build_capabilities_summary(self)
 
     def _log_operator_metric(self, metric_name: str, **tags: Any) -> None:
         try:

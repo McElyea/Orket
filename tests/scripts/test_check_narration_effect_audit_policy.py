@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from __future__ import annotations
 
 from scripts.governance.check_narration_effect_audit_policy import evaluate_narration_effect_audit_policy

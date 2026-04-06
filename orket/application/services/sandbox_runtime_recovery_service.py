@@ -9,6 +9,7 @@ from orket.application.services.sandbox_cleanup_scheduler_service import Sandbox
 from orket.application.services.sandbox_lifecycle_reconciliation_service import SandboxObservation
 from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
 from orket.application.services.sandbox_runtime_inspection_service import SandboxRuntimeInspectionService
+from orket.core.domain.sandbox_cleanup import ObservedDockerResource
 from orket.core.domain.sandbox_lifecycle import (
     CleanupState,
     LifecycleEvent,
@@ -50,12 +51,12 @@ class SandboxRuntimeRecoveryService:
         observed_resources = await self.lifecycle_service._observe_project_resources(record.compose_project)
         docker_present = bool(observed_resources)
         if record.state is SandboxState.ACTIVE and docker_present:
-            terminal = await self._terminalize_active_restart_loop_if_needed(
+            restart_terminal = await self._terminalize_active_restart_loop_if_needed(
                 record=record,
                 observed_at=observed_at,
             )
-            if terminal is not None:
-                return await self._schedule_cleanup_if_needed(record=terminal, observed_at=observed_at)
+            if restart_terminal is not None:
+                return await self._schedule_cleanup_if_needed(record=restart_terminal, observed_at=observed_at)
             latest = await self.lifecycle_service.repository.get_record(sandbox_id)
             if latest is not None:
                 record = latest
@@ -167,7 +168,7 @@ class SandboxRuntimeRecoveryService:
         *,
         record: SandboxLifecycleRecord,
         observed_at: str,
-        observed_resources,
+        observed_resources: list[ObservedDockerResource],
         docker_present: bool,
     ) -> SandboxLifecycleRecord:
         current = await self._clear_requires_reconciliation(record=record, reason="reconciliation completed")
@@ -195,7 +196,7 @@ class SandboxRuntimeRecoveryService:
         *,
         record: SandboxLifecycleRecord,
         observed_at: str,
-        observed_resources,
+        observed_resources: list[ObservedDockerResource],
         docker_present: bool,
     ) -> SandboxLifecycleRecord:
         current = record
@@ -301,7 +302,7 @@ class SandboxRuntimeRecoveryService:
         *,
         compose_project: str,
         observed_at: str,
-        observed_resources,
+        observed_resources: list[ObservedDockerResource],
     ) -> SandboxLifecycleRecord:
         confidence, sandbox_id, run_id = self._ownership_metadata(
             compose_project=compose_project, observed_resources=observed_resources
@@ -339,7 +340,11 @@ class SandboxRuntimeRecoveryService:
         )
 
     @staticmethod
-    def _ownership_metadata(*, compose_project: str, observed_resources) -> tuple[OwnershipConfidence, str, str | None]:
+    def _ownership_metadata(
+        *,
+        compose_project: str,
+        observed_resources: list[ObservedDockerResource],
+    ) -> tuple[OwnershipConfidence, str, str | None]:
         default_sandbox_id = compose_project.removeprefix("orket-sandbox-") or compose_project
         sandbox_ids = {
             str(resource.labels.get("orket.sandbox_id") or "").strip()

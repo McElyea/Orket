@@ -81,6 +81,8 @@ class BugFixPhase(BaseModel):
         self.status = BugFixPhaseStatus.EXTENDED
 
     def is_expired(self) -> bool:
+        if self.scheduled_end is None:
+            return False
         return datetime.now(UTC) >= datetime.fromisoformat(self.scheduled_end)
 
 
@@ -88,9 +90,12 @@ class BugFixPhaseManager:
     """Application Service: Manages bug fix phases."""
 
     def __init__(
-        self, organization_config: dict | None = None, db: Any | None = None, workspace: Path | None = None
-    ):
-        self.config = organization_config or {}
+        self,
+        organization_config: dict[str, Any] | None = None,
+        db: Any | None = None,
+        workspace: Path | None = None,
+    ) -> None:
+        self.config = dict(organization_config or {})
         self.db = db
         self.workspace = workspace or Path()
         self.active_phases: dict[str, BugFixPhase] = {}

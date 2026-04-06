@@ -152,7 +152,8 @@ class AttemptRuntime:
     async def _run_gates(self, *, clone_path: Path, attempt_index: int) -> tuple[GateResult, ...]:
         results: list[GateResult] = []
         task_spec = self.run_request.task_spec
-        flake_policy = task_spec.get("flake_policy") if isinstance(task_spec.get("flake_policy"), dict) else {}
+        raw_flake_policy = task_spec.get("flake_policy")
+        flake_policy: dict[str, Any] = dict(raw_flake_policy) if isinstance(raw_flake_policy, dict) else {}
         flake_mode = str(flake_policy.get("mode", "retry_then_deny")).strip() or "retry_then_deny"
         max_retries = int(flake_policy.get("max_retries", 2))
         timeout_seconds = optional_positive_float(task_spec.get("gate_timeout_seconds"))

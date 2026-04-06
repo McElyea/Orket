@@ -6,9 +6,9 @@ from typing import Any
 class GlobalState:
     """Global singleton for cross-module coordination."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.interventions: dict[str, dict[str, str]] = {}
-        self.event_queue = asyncio.Queue()
+        self.event_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
         self.active_websockets: list[Any] = []
         self.active_tasks: dict[str, list[asyncio.Task[Any]]] = {}
 
@@ -32,11 +32,11 @@ class GlobalState:
         async with self._ws_lock:
             return list(self.active_websockets)
 
-    async def add_task(self, session_id: str, task: asyncio.Task) -> None:
+    async def add_task(self, session_id: str, task: asyncio.Task[Any]) -> None:
         async with self._tasks_lock:
             self.active_tasks.setdefault(session_id, []).append(task)
 
-    async def remove_task(self, session_id: str, task: asyncio.Task | None = None) -> None:
+    async def remove_task(self, session_id: str, task: asyncio.Task[Any] | None = None) -> None:
         async with self._tasks_lock:
             tasks = self.active_tasks.get(session_id)
             if not tasks:
@@ -54,7 +54,7 @@ class GlobalState:
         async with self._tasks_lock:
             return list(self.active_tasks.get(session_id, []))
 
-    async def get_task(self, session_id: str) -> asyncio.Task | None:
+    async def get_task(self, session_id: str) -> asyncio.Task[Any] | None:
         async with self._tasks_lock:
             tasks = list(self.active_tasks.get(session_id, []))
             for task in reversed(tasks):

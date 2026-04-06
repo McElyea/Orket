@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.runtime.contract_schema import ContractRegistry
+
 SPEC_DEBT_QUEUE_SCHEMA_VERSION = "1.0"
 
 _ALLOWED_STATUS = {"open", "in_progress", "blocked"}
-_EXPECTED_DEBT_TYPES = {"doc_runtime_drift", "schema_gap", "test_taxonomy_gap"}
 
 
 def spec_debt_queue_snapshot() -> dict[str, Any]:
@@ -38,30 +39,28 @@ def validate_spec_debt_queue(payload: dict[str, Any] | None = None) -> tuple[str
     queue = dict(payload or spec_debt_queue_snapshot())
     rows = list(queue.get("entries") or [])
     if not rows:
-        raise ValueError("E_SPEC_DEBT_QUEUE_EMPTY")
+        return ()
 
-    debt_ids: list[str] = []
-    debt_types: set[str] = set()
+    registry = ContractRegistry(
+        schema_version=SPEC_DEBT_QUEUE_SCHEMA_VERSION,
+        rows=[dict(row) for row in rows if isinstance(row, dict)],
+        collection_key="entries",
+        row_id_field="debt_id",
+        empty_error="E_SPEC_DEBT_QUEUE_EMPTY",
+        row_schema_error="E_SPEC_DEBT_QUEUE_ROW_SCHEMA",
+        row_id_required_error="E_SPEC_DEBT_QUEUE_DEBT_ID_REQUIRED",
+        duplicate_error="E_SPEC_DEBT_QUEUE_DUPLICATE_DEBT_ID",
+        required_row_fields=("debt_type", "status", "owner"),
+        field_required_errors={
+            "debt_type": "E_SPEC_DEBT_QUEUE_DEBT_TYPE_REQUIRED",
+            "owner": "E_SPEC_DEBT_QUEUE_OWNER_REQUIRED",
+        },
+        allowed_row_values={"status": _ALLOWED_STATUS},
+        field_allowed_errors={"status": "E_SPEC_DEBT_QUEUE_STATUS_INVALID"},
+    )
+    debt_ids = list(registry.validate(queue))
+
     for row in rows:
         if not isinstance(row, dict):
             raise ValueError("E_SPEC_DEBT_QUEUE_ROW_SCHEMA")
-        debt_id = str(row.get("debt_id") or "").strip()
-        debt_type = str(row.get("debt_type") or "").strip()
-        status = str(row.get("status") or "").strip().lower()
-        owner = str(row.get("owner") or "").strip()
-        if not debt_id:
-            raise ValueError("E_SPEC_DEBT_QUEUE_DEBT_ID_REQUIRED")
-        if debt_type not in _EXPECTED_DEBT_TYPES:
-            raise ValueError(f"E_SPEC_DEBT_QUEUE_DEBT_TYPE_INVALID:{debt_id}")
-        if status not in _ALLOWED_STATUS:
-            raise ValueError(f"E_SPEC_DEBT_QUEUE_STATUS_INVALID:{debt_id}")
-        if not owner:
-            raise ValueError(f"E_SPEC_DEBT_QUEUE_OWNER_REQUIRED:{debt_id}")
-        debt_ids.append(debt_id)
-        debt_types.add(debt_type)
-
-    if len(set(debt_ids)) != len(debt_ids):
-        raise ValueError("E_SPEC_DEBT_QUEUE_DUPLICATE_DEBT_ID")
-    if debt_types != _EXPECTED_DEBT_TYPES:
-        raise ValueError("E_SPEC_DEBT_QUEUE_DEBT_TYPE_SET_MISMATCH")
     return tuple(sorted(debt_ids))

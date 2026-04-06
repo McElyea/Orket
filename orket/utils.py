@@ -63,5 +63,5 @@ def get_eos_sprint(date_obj: datetime | None = None) -> str:
     return f"Q{q} S{s}"
 
 
-def _ts():
+def _ts() -> str:
     return now_local().isoformat()

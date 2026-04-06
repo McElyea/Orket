@@ -19,19 +19,19 @@ class StructuralReconciler:
     Finds orphans and adopts them into 'Run the Business' or 'unplanned support'.
     """
 
-    def __init__(self, root_path: Path | None = None, workspace: Path | None = None):
+    def __init__(self, root_path: Path | None = None, workspace: Path | None = None) -> None:
         self.root_path = Path(root_path).resolve() if root_path is not None else _default_model_root()
         self.workspace = Path(workspace).resolve() if workspace is not None else _default_workspace_root()
         self.default_rock_id = "run_the_business"
         self.default_epic_id = "unplanned_support"
 
-    def reconcile_all(self):
+    def reconcile_all(self) -> None:
         """Runs the full reconciliation sweep across all departments."""
         log_event("reconciler_start", {"root_path": str(self.root_path)}, workspace=self.workspace)
 
         # 1. Gather all linked assets to identify orphans
-        linked_epics = set()
-        linked_issues = set()
+        linked_epics: set[str] = set()
+        linked_issues: set[str] = set()
 
         # Scan Rocks for linked Epics
         for dept_dir in self.root_path.iterdir():
@@ -77,7 +77,7 @@ class StructuralReconciler:
         # 3. Adopt orphaned Issues into 'unplanned support'
         self._adopt_issues(linked_issues)
 
-    def _adopt_epics(self, linked_epics: set):
+    def _adopt_epics(self, linked_epics: set[str]) -> None:
         rtb_path = self.root_path / "core" / "rocks" / f"{self.default_rock_id}.json"
         if not rtb_path.exists():
             return
@@ -115,7 +115,7 @@ class StructuralReconciler:
         if dirty:
             rtb_path.write_text(json.dumps(rtb_data, indent=2) + "\n", encoding="utf-8")
 
-    def _adopt_issues(self, linked_issues: set):
+    def _adopt_issues(self, linked_issues: set[str]) -> None:
         ups_path = self.root_path / "core" / "epics" / f"{self.default_epic_id}.json"
         if not ups_path.exists():
             return

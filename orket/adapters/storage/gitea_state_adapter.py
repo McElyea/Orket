@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+import httpx
 from pydantic import ValidationError
 
 from orket.adapters.storage.gitea_http_client import GiteaHTTPClient
@@ -80,7 +81,7 @@ class GiteaStateAdapter(StateBackendContract):
         params: dict[str, Any] | None = None,
         payload: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
-    ):
+    ) -> httpx.Response:
         return await self.http.request_response(
             method,
             path,
@@ -114,7 +115,7 @@ class GiteaStateAdapter(StateBackendContract):
         params: dict[str, Any] | None = None,
         payload: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
-    ):
+    ) -> httpx.Response:
         return await self.http.request_response_with_retry(
             method,
             path,
@@ -169,7 +170,7 @@ class GiteaStateAdapter(StateBackendContract):
         return GiteaStateTransitioner.parse_iso(raw)
 
     @staticmethod
-    def _now_utc():
+    def _now_utc() -> datetime:
         return GiteaStateTransitioner.now_utc()
 
     @staticmethod

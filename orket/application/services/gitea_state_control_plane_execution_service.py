@@ -335,7 +335,7 @@ class GiteaStateControlPlaneExecutionService:
     def lease_observation_ref(cls, *, card_id: str, lease_observation: Mapping[str, object]) -> str:
         version = lease_observation.get("version")
         if version is not None:
-            return f"gitea-card-snapshot:{str(card_id).strip()}:version:{int(version)}"
+            return f"gitea-card-snapshot:{str(card_id).strip()}:version:{cls._required_int(version)}"
         return f"gitea-card-lease-observation:{str(card_id).strip()}:epoch:{cls._lease_epoch(lease_observation):08d}"
 
     @classmethod
@@ -421,9 +421,15 @@ class GiteaStateControlPlaneExecutionService:
         if raw is None:
             raw = lease_observation.get("lease_epoch")
         try:
-            return int(raw)
+            return cls._required_int(raw)
         except (TypeError, ValueError) as exc:
             raise GiteaStateControlPlaneExecutionError("gitea worker execution publication requires lease epoch") from exc
+
+    @staticmethod
+    def _required_int(value: object) -> int:
+        if not isinstance(value, (str, bytes, bytearray, int, float)):
+            raise TypeError("expected integer-like value")
+        return int(value)
 
     @staticmethod
     def _utc_now() -> str:

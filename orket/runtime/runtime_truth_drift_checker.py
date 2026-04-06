@@ -53,7 +53,6 @@ from orket.runtime.runtime_truth_contracts import (
 from orket.runtime.safe_default_catalog import validate_safe_default_catalog
 from orket.runtime.sampling_discipline_guide import validate_sampling_discipline_guide
 from orket.runtime.source_attribution_policy import validate_source_attribution_policy
-from orket.runtime.spec_debt_queue import validate_spec_debt_queue
 from orket.runtime.state_transition_registry import state_transition_registry_snapshot
 from orket.runtime.structured_warning_policy import validate_structured_warning_policy
 from orket.runtime.timeout_streaming_contracts import (
@@ -66,13 +65,21 @@ from orket.runtime.unknown_input_policy import unknown_input_policy_snapshot, va
 from orket.runtime.workspace_hygiene_rules import validate_workspace_hygiene_rules
 
 
+def _list_value(value: object) -> list[object]:
+    return value if isinstance(value, list) else []
+
+
+def _dict_value(value: object) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
 def runtime_truth_contract_drift_report() -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
 
     provider_snapshot = provider_truth_table_snapshot()
     provider_names = {
         str(row.get("provider") or "").strip().lower()
-        for row in provider_snapshot.get("providers", [])
+        for row in _list_value(provider_snapshot.get("providers"))
         if isinstance(row, dict)
     }
     provider_choices = {str(token).strip().lower() for token in PROVIDER_CHOICES}
@@ -87,16 +94,16 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
 
     status_snapshot = runtime_status_vocabulary_snapshot()
     status_terms = {
-        str(token).strip().lower() for token in status_snapshot.get("runtime_status_terms", []) if str(token).strip()
+        str(token).strip().lower() for token in _list_value(status_snapshot.get("runtime_status_terms")) if str(token).strip()
     }
     transition_snapshot = state_transition_registry_snapshot()
     session_states: set[str] = set()
     run_states: set[str] = set()
-    for row in transition_snapshot.get("domains", []):
+    for row in _list_value(transition_snapshot.get("domains")):
         if not isinstance(row, dict):
             continue
         domain = str(row.get("domain") or "").strip().lower()
-        states = {str(token).strip().lower() for token in row.get("states", []) if str(token).strip()}
+        states = {str(token).strip().lower() for token in _list_value(row.get("states")) if str(token).strip()}
         if domain == "session":
             session_states = states
         if domain == "run":
@@ -178,7 +185,7 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
     )
 
     timeout_snapshot = timeout_semantics_snapshot()
-    timeout_surfaces = timeout_snapshot.get("timeout_surfaces", [])
+    timeout_surfaces = _list_value(timeout_snapshot.get("timeout_surfaces"))
     checks.append(
         {
             "check": "timeout_semantics_non_empty",
@@ -188,7 +195,7 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
     )
 
     streaming_snapshot = streaming_semantics_snapshot()
-    terminal_events = list(streaming_snapshot.get("terminal_events", []))
+    terminal_events = [str(token) for token in _list_value(streaming_snapshot.get("terminal_events"))]
     checks.append(
         {
             "check": "streaming_semantics_terminal_events",
@@ -198,11 +205,11 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
     )
 
     unknown_input_policy = unknown_input_policy_snapshot()
-    surfaces = list(unknown_input_policy.get("surfaces", []))
+    unknown_input_policy_surfaces = _list_value(unknown_input_policy.get("surfaces"))
     provider_surface = next(
         (
             row
-            for row in surfaces
+            for row in unknown_input_policy_surfaces
             if isinstance(row, dict)
             and str(row.get("surface") or "").strip() == "provider_runtime_target.requested_provider"
         ),
@@ -218,12 +225,12 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
     )
 
     try:
-        surfaces = validate_unknown_input_policy(unknown_input_policy)
+        validated_unknown_input_surfaces = validate_unknown_input_policy(unknown_input_policy)
         checks.append(
             {
                 "check": "unknown_input_policy_contract_valid",
                 "ok": True,
-                "count": len(surfaces),
+                "count": len(validated_unknown_input_surfaces),
             }
         )
     except ValueError as exc:
@@ -255,7 +262,7 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
 
     try:
         invariant_snapshot = runtime_invariant_registry_snapshot()
-        invariant_count = len(list(invariant_snapshot.get("invariants") or []))
+        invariant_count = len(_list_value(invariant_snapshot.get("invariants")))
         checks.append(
             {
                 "check": "runtime_invariant_registry_snapshot_valid",
@@ -278,7 +285,7 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
             {
                 "check": "clock_time_authority_policy_valid",
                 "ok": True,
-                "defaults": dict(clock_policy.get("defaults") or {}),
+                "defaults": _dict_value(clock_policy.get("defaults")),
             }
         )
     except ValueError as exc:
@@ -314,7 +321,7 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
             {
                 "check": "capability_fallback_hierarchy_valid",
                 "ok": True,
-                "capability_count": len(dict(fallback_hierarchy.get("fallback_hierarchy") or {})),
+                "capability_count": len(_dict_value(fallback_hierarchy.get("fallback_hierarchy"))),
             }
         )
     except ValueError as exc:
@@ -435,12 +442,12 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         )
 
     try:
-        surfaces = validate_interrupt_semantics_policy()
+        interrupt_surfaces = validate_interrupt_semantics_policy()
         checks.append(
             {
                 "check": "interrupt_semantics_policy_valid",
                 "ok": True,
-                "count": len(surfaces),
+                "count": len(interrupt_surfaces),
             }
         )
     except ValueError as exc:
@@ -453,12 +460,12 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         )
 
     try:
-        surfaces = validate_idempotency_discipline_policy()
+        idempotency_surfaces = validate_idempotency_discipline_policy()
         checks.append(
             {
                 "check": "idempotency_discipline_policy_valid",
                 "ok": True,
-                "count": len(surfaces),
+                "count": len(idempotency_surfaces),
             }
         )
     except ValueError as exc:
@@ -681,24 +688,6 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "canonical_examples_library_valid",
-                "ok": False,
-                "error": str(exc),
-            }
-        )
-
-    try:
-        debt_ids = validate_spec_debt_queue()
-        checks.append(
-            {
-                "check": "spec_debt_queue_valid",
-                "ok": True,
-                "count": len(debt_ids),
-            }
-        )
-    except ValueError as exc:
-        checks.append(
-            {
-                "check": "spec_debt_queue_valid",
                 "ok": False,
                 "error": str(exc),
             }
@@ -1021,5 +1010,9 @@ def assert_no_runtime_truth_contract_drift() -> dict[str, Any]:
     report = runtime_truth_contract_drift_report()
     if bool(report.get("ok")):
         return report
-    failing = [str(row.get("check") or "unknown") for row in report.get("checks", []) if not bool(row.get("ok"))]
+    failing = [
+        str(row.get("check") or "unknown")
+        for row in _list_value(report.get("checks"))
+        if isinstance(row, dict) and not bool(row.get("ok"))
+    ]
     raise ValueError(f"E_RUNTIME_TRUTH_CONTRACT_DRIFT:{','.join(failing)}")

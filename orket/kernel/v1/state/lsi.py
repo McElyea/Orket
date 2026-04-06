@@ -265,7 +265,8 @@ class LocalSovereignIndex:
         path = _triplets_path(scope_root, stem)
         if not path.exists():
             return None
-        return _read_json(path)
+        payload = _read_json(path)
+        return payload if isinstance(payload, dict) else None
 
     def read_refs_sources(
         self,
@@ -315,7 +316,7 @@ class LocalSovereignIndex:
         staged_root = _scope_root(self.root, DIR_STAGING, run_id, turn_id)
         triplet = self.read_triplet_record(scope=DIR_STAGING, stem=stem, run_id=run_id, turn_id=turn_id)
         if not triplet:
-            issues = [
+            missing_triplet_issues = [
                 KernelIssue(
                     level="FAIL",
                     stage="lsi",
@@ -328,11 +329,11 @@ class LocalSovereignIndex:
             events.append(
                 _event_line("FAIL", "lsi", E_LSI_ORPHAN_TARGET, "/ci/schema", "Triplet missing in staging.", stem=stem)
             )
-            return "FAIL", issues, events
+            return "FAIL", missing_triplet_issues, events
 
         links_digest = triplet.get("links_digest")
         if not isinstance(links_digest, str):
-            issues = [
+            missing_links_digest_issues = [
                 KernelIssue(
                     level="FAIL",
                     stage="base_shape",
@@ -352,11 +353,11 @@ class LocalSovereignIndex:
                     stem=stem,
                 )
             )
-            return "FAIL", issues, events
+            return "FAIL", missing_links_digest_issues, events
 
         links_obj = self._get_object_json(staged_root, links_digest)
         if not isinstance(links_obj, dict):
-            issues = [
+            invalid_links_object_issues = [
                 KernelIssue(
                     level="FAIL",
                     stage="base_shape",
@@ -376,7 +377,7 @@ class LocalSovereignIndex:
                     stem=stem,
                 )
             )
-            return "FAIL", issues, events
+            return "FAIL", invalid_links_object_issues, events
 
         # Evaluate refs deterministically in pointer order
         refs = sorted(_iter_refs_from_links(links_obj), key=lambda r: (r[2], r[0], r[1]))

@@ -13,12 +13,15 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiosqlite
 
 from orket.logging import log_event
 from orket.runtime_paths import resolve_webhook_db_path
+
+if TYPE_CHECKING:
+    from orket.core.domain.bug_fix_phase import BugFixPhase
 
 
 class WebhookDatabase:
@@ -27,7 +30,7 @@ class WebhookDatabase:
     Uses aiosqlite for non-blocking review cycle tracking.
     """
 
-    def __init__(self, db_path: Path | None = None):
+    def __init__(self, db_path: Path | None = None) -> None:
         """
         Initialize database connection.
         """
@@ -36,7 +39,7 @@ class WebhookDatabase:
         self._initialized = False
         self._lock = asyncio.Lock()
 
-    async def _ensure_initialized(self):
+    async def _ensure_initialized(self) -> None:
         """Ensure database schema exists."""
         if self._initialized:
             return
@@ -114,7 +117,7 @@ class WebhookDatabase:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute("SELECT cycle_count FROM pr_review_cycles WHERE pr_key = ?", (pr_key,))
             row = await cursor.fetchone()
-            return row["cycle_count"] if row else 0
+            return int(row["cycle_count"]) if row is not None else 0
 
     async def increment_pr_cycle(self, repo_full_name: str, pr_number: int) -> int:
         """
@@ -141,12 +144,20 @@ class WebhookDatabase:
             cursor = await conn.execute("SELECT cycle_count FROM pr_review_cycles WHERE pr_key = ?", (pr_key,))
             row = await cursor.fetchone()
             await conn.commit()
+            if row is None:
+                raise RuntimeError(f"failed to load cycle count for {pr_key}")
 
-            new_count = row["cycle_count"]
+            new_count = int(row["cycle_count"])
             log_event("webhook_db", {"message": f"Incremented PR cycle: {pr_key} -> {new_count}"}, level="info")
             return new_count
 
-    async def add_failure_reason(self, repo_full_name: str, pr_number: int, reviewer: str, reason: str):
+    async def add_failure_reason(
+        self,
+        repo_full_name: str,
+        pr_number: int,
+        reviewer: str,
+        reason: str,
+    ) -> None:
         """
         Record a review failure reason.
         """
@@ -185,9 +196,9 @@ class WebhookDatabase:
             )
 
             rows = await cursor.fetchall()
-            return [dict(row) for row in rows]
+            return [{key: row[key] for key in row.keys()} for row in rows]
 
-    async def save_bug_fix_phase(self, phase: Any):
+    async def save_bug_fix_phase(self, phase: Any) -> None:
         """Save a bug fix phase to the database."""
         await self._ensure_initialized()
         async with aiosqlite.connect(self.db_path) as conn:
@@ -200,7 +211,7 @@ class WebhookDatabase:
             )
             await conn.commit()
 
-    async def get_bug_fix_phase(self, rock_id: str) -> Any | None:
+    async def get_bug_fix_phase(self, rock_id: str) -> BugFixPhase | None:
         """Retrieve a bug fix phase from the database."""
         await self._ensure_initialized()
         from orket.core.domain.bug_fix_phase import BugFixPhase
@@ -209,11 +220,11 @@ class WebhookDatabase:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute("SELECT data_json FROM bug_fix_phases WHERE rock_id = ?", (rock_id,))
             row = await cursor.fetchone()
-            if row:
+            if row is not None:
                 return BugFixPhase.model_validate_json(row["data_json"])
             return None
 
-    async def close_pr_cycle(self, repo_full_name: str, pr_number: int, status: str = "closed"):
+    async def close_pr_cycle(self, repo_full_name: str, pr_number: int, status: str = "closed") -> None:
         """
         Mark a PR review cycle as closed.
         """
@@ -247,4 +258,4 @@ class WebhookDatabase:
             """)
 
             rows = await cursor.fetchall()
-            return [dict(row) for row in rows]
+            return [{key: row[key] for key in row.keys()} for row in rows]

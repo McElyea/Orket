@@ -87,6 +87,7 @@ class LocalModelProvider:
         self.openai_base_url = self._resolve_openai_base_url()
         self.openai_api_key = self._resolve_openai_api_key()
         self.ollama_host = self._resolve_ollama_host()
+        self.client: Any
 
         if self.provider_backend == "openai_compat":
             self.client = httpx.AsyncClient(
@@ -388,6 +389,7 @@ class LocalModelProvider:
 
             await asyncio.sleep(retry_delay)
             retry_delay *= 2
+        raise ModelProviderError(f"Unexpected error invoking model {self.model}: retry loop exited without response.")
 
     async def _complete_openai_compat(
         self,
@@ -557,8 +559,9 @@ class LocalModelProvider:
 
             await asyncio.sleep(retry_delay)
             retry_delay *= 2
+        raise ModelProviderError(f"Unexpected error invoking model {self.model}: retry loop exited without response.")
 
-    async def clear_context(self):
+    async def clear_context(self) -> None:
         """Rotate context for stateful OpenAI-compatible backends; stateless backends remain no-op."""
         if str(getattr(self, "provider_backend", "") or "") == "openai_compat":
             self._openai_session_epoch = max(0, int(getattr(self, "_openai_session_epoch", 0) or 0)) + 1

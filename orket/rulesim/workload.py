@@ -12,6 +12,7 @@ from .artifacts import write_artifact_bundle, write_checkpoint_episode
 from .canonical import canonical_json
 from .metrics import compute_run_hints
 from .runner import BatchResult, RuleSystemContractError, aggregate_summary, run_episode
+from .contracts import Strategy
 from .strategies import GreedyHeuristicStrategy, MixedStrategy, RandomUniformStrategy, ScriptedStrategy
 from .toys import build_toy_rulesystem
 from .types import AgentConfig, RunConfig, parse_run_config
@@ -27,7 +28,7 @@ def _merge_dict(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, An
     return out
 
 
-def _strategy_for_agent(agent: AgentConfig, run_config: RunConfig):
+def _strategy_for_agent(agent: AgentConfig, run_config: RunConfig) -> Strategy:
     normalized = str(agent.strategy).strip().lower()
     if normalized == "random_uniform":
         return RandomUniformStrategy()
@@ -87,9 +88,13 @@ def _run_batch(run_config: RunConfig) -> BatchResult:
         if run_config.episode_delay_ms > 0:
             time.sleep(run_config.episode_delay_ms / 1000.0)
     summary = aggregate_summary(run_config=run_config, episodes=episodes)
+    turn_order = run_config.scenario.get("turn_order")
+    first_agent_id = ""
+    if isinstance(turn_order, list) and turn_order:
+        first_agent_id = str(turn_order[0])
     run_hints = compute_run_hints(
         action_histogram=dict(summary.get("action_key_histogram") or {}),
-        first_agent_id=str(run_config.scenario.get("turn_order")[0]),
+        first_agent_id=first_agent_id,
         win_rates=dict(summary.get("win_rate") or {}),
         thresholds=run_config.detector_thresholds,
     )

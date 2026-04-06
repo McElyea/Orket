@@ -136,8 +136,18 @@ async def compare_protocol_ledger_parity_campaign(
         )
         differences = list(parity.get("differences") or [])
         difference_fields = [str(row.get("field") or "") for row in differences]
-        sqlite_row = parity.get("sqlite_row") if isinstance(parity.get("sqlite_row"), dict) else {}
-        protocol_row = parity.get("protocol_row") if isinstance(parity.get("protocol_row"), dict) else {}
+        raw_sqlite_row = parity.get("sqlite_row")
+        sqlite_row: dict[str, Any] = (
+            {str(key): value for key, value in raw_sqlite_row.items()}
+            if isinstance(raw_sqlite_row, dict)
+            else {}
+        )
+        raw_protocol_row = parity.get("protocol_row")
+        protocol_row: dict[str, Any] = (
+            {str(key): value for key, value in raw_protocol_row.items()}
+            if isinstance(raw_protocol_row, dict)
+            else {}
+        )
         parity_ok = bool(parity.get("parity_ok", False))
         sqlite_invalid_projection_fields = list(parity.get("sqlite_invalid_projection_fields") or [])
         protocol_invalid_projection_fields = list(parity.get("protocol_invalid_projection_fields") or [])

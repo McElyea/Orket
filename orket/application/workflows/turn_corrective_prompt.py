@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from .turn_path_resolver import PathResolver
 
@@ -12,7 +13,9 @@ class CorrectivePromptBuilder:
     def __init__(self, workspace: Path):
         self.workspace = workspace
 
-    def build_corrective_instruction(self, violations: list[dict], context: dict) -> str:
+    def build_corrective_instruction(
+        self, violations: list[dict[str, Any]], context: dict[str, Any]
+    ) -> str:
         protocol_governed_enabled = bool(context.get("protocol_governed_enabled", False))
         lines = [
             "Corrective instruction: previous response violated deterministic turn contracts.",
@@ -137,63 +140,45 @@ class CorrectivePromptBuilder:
             for hint in rule_hints:
                 lines.append(f"  - {hint}")
 
-        required_action_tools = {str(t).strip() for t in (context.get("required_action_tools") or []) if str(t).strip()}
+        required_action_tool_set = {
+            str(t).strip() for t in (context.get("required_action_tools") or []) if str(t).strip()
+        }
         required_read_paths = (
-            PathResolver.required_read_paths(context, self.workspace) if "read_file" in required_action_tools else []
+            PathResolver.required_read_paths(context, self.workspace)
+            if "read_file" in required_action_tool_set
+            else []
         )
-        required_write_paths = PathResolver.required_write_paths(context) if "write_file" in required_action_tools else []
+        required_write_paths = (
+            PathResolver.required_write_paths(context) if "write_file" in required_action_tool_set else []
+        )
         required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if str(s).strip()]
         if required_read_paths or required_write_paths or required_statuses:
-            if protocol_governed_enabled:
-                example_calls: list[dict[str, object]] = []
-                for path in required_read_paths:
-                    example_calls.append({"tool": "read_file", "args": {"path": path}})
-                for path in required_write_paths:
-                    example_calls.append({"tool": "write_file", "args": {"path": path, "content": "<actual content>"}})
-                if len(required_statuses) == 1:
-                    status = required_statuses[0]
-                    if status == "blocked":
-                        example_calls.append(
-                            {"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "review"}}
-                        )
-                    else:
-                        example_calls.append({"tool": "update_issue_status", "args": {"status": status}})
-                elif required_statuses:
+            example_calls: list[dict[str, object]] = []
+            for path in required_read_paths:
+                example_calls.append({"tool": "read_file", "args": {"path": path}})
+            for path in required_write_paths:
+                example_calls.append({"tool": "write_file", "args": {"path": path, "content": "<actual content>"}})
+            if len(required_statuses) == 1:
+                status = required_statuses[0]
+                if status == "blocked":
                     example_calls.append(
-                        {
-                            "tool": "update_issue_status",
-                            "args": {"status": "<one of " + "|".join(required_statuses) + ">"},
-                        }
+                        {"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "review"}}
                     )
-                lines.append("- Required-call template (emit one JSON object like this in this same response):")
-                lines.append("  " + json.dumps({"content": "", "tool_calls": example_calls}, ensure_ascii=False))
-            else:
-                example_calls: list[dict[str, object]] = []
-                for path in required_read_paths:
-                    example_calls.append({"tool": "read_file", "args": {"path": path}})
-                for path in required_write_paths:
-                    example_calls.append({"tool": "write_file", "args": {"path": path, "content": "<actual content>"}})
-                if len(required_statuses) == 1:
-                    status = required_statuses[0]
-                    if status == "blocked":
-                        example_calls.append(
-                            {"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "review"}}
-                        )
-                    else:
-                        example_calls.append({"tool": "update_issue_status", "args": {"status": status}})
-                elif required_statuses:
-                    example_calls.append(
-                        {
-                            "tool": "update_issue_status",
-                            "args": {"status": "<one of " + "|".join(required_statuses) + ">"},
-                        }
-                    )
-                lines.append("- Required-call template (emit one JSON object like this in this same response):")
-                lines.append("  " + json.dumps({"content": "", "tool_calls": example_calls}, ensure_ascii=False))
+                else:
+                    example_calls.append({"tool": "update_issue_status", "args": {"status": status}})
+            elif required_statuses:
+                example_calls.append(
+                    {
+                        "tool": "update_issue_status",
+                        "args": {"status": "<one of " + "|".join(required_statuses) + ">"},
+                    }
+                )
+            lines.append("- Required-call template (emit one JSON object like this in this same response):")
+            lines.append("  " + json.dumps({"content": "", "tool_calls": example_calls}, ensure_ascii=False))
 
         return "\n".join(lines)
 
-    def rule_specific_fix_hints(self, violations: list[dict]) -> list[str]:
+    def rule_specific_fix_hints(self, violations: list[dict[str, Any]]) -> list[str]:
         hints: list[str] = []
         for item in violations:
             nested = item.get("violations")

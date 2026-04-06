@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.36] - 2026-04-06 - "The Strict-Typing Techdebt Completion Cut"
+
+### Added
+- **Epic Run And Contract Typing Surfaces**: Added the extracted epic-run orchestration support, contract-schema scaffolding, local third-party stubs, and integration/policy coverage needed to make the strict type gate runnable as a repo-level authority check.
+- **Techdebt Closeout Archive**: Added the archived `TD04062026B` closeout packet so the completed Priority Now remediation lane has durable history while the active techdebt folder returns to standing maintenance only.
+
+### Changed
+- **Repo-Wide Strict Typing Completion**: Hardened runtime, API, orchestration, adapter, storage, kernel, CLI, extension, streaming, and script-test typing surfaces so `python -m mypy --strict orket` exits with zero issues.
+- **Runtime And API Regression Fixes**: Tightened execution-pipeline payload narrowing, orchestration helper signatures, turn-executor type aliases, and API cards-router runtime-node lookup so import/reload isolation and archive policy seams preserve truthful behavior.
+- **Roadmap And Script Lifecycle Hygiene**: Cleared the active Priority Now techdebt lane, archived completed remediation authority, and marked script-test lifecycle state so standing maintenance remains explicit without stale active lane drift.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use `python -m mypy --strict orket` as the canonical strict typing gate for the closed remediation lane; future techdebt work should enter through the standing maintenance authorities unless a new roadmap lane is explicitly opened.
+
 ## [0.4.35] - 2026-04-06 - "The Truth-Hardening Techdebt Closeout Cut"
 
 ### Added

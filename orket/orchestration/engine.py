@@ -1,7 +1,7 @@
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
@@ -54,7 +54,7 @@ class OrchestrationEngine:
         run_ledger_repo: Any | None = None,
         decision_nodes: DecisionNodeRegistry | None = None,
         kernel_gateway: KernelV1Gateway | None = None,
-    ):
+    ) -> None:
         self.decision_nodes = decision_nodes or DecisionNodeRegistry()
         self.engine_runtime_node = self.decision_nodes.resolve_engine_runtime()
         self.engine_runtime_node.bootstrap_environment()
@@ -133,12 +133,12 @@ class OrchestrationEngine:
     async def run_card(
         self,
         card_id: str,
-        build_id: str = None,
-        session_id: str = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
         driver_steered: bool = False,
-        target_issue_id: str = None,
+        target_issue_id: str | None = None,
         model_override: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> Any:
         """Canonical public runtime entrypoint for epic, rock, and issue execution."""
         return await self._pipeline.run_card(
             card_id,
@@ -152,12 +152,12 @@ class OrchestrationEngine:
     async def run_epic(
         self,
         epic_id: str,
-        build_id: str = None,
-        session_id: str = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
         driver_steered: bool = False,
-        target_issue_id: str = None,
+        target_issue_id: str | None = None,
         model_override: str | None = None,
-    ) -> list[dict]:
+    ) -> Any:
         """Compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
             epic_id,
@@ -171,11 +171,11 @@ class OrchestrationEngine:
     async def run_issue(
         self,
         issue_id: str,
-        build_id: str = None,
-        session_id: str = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
         driver_steered: bool = False,
         model_override: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> Any:
         """Compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
             issue_id,
@@ -188,11 +188,11 @@ class OrchestrationEngine:
     async def run_rock(
         self,
         rock_name: str,
-        build_id: str = None,
-        session_id: str = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
         driver_steered: bool = False,
         model_override: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> Any:
         """Legacy compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
             rock_name,
@@ -236,11 +236,11 @@ class OrchestrationEngine:
         """Returns list of active sandboxes."""
         return await self.sandbox_manager.list_active()
 
-    async def stop_sandbox(self, sandbox_id: str, *, operator_actor_ref: str | None = None):
+    async def stop_sandbox(self, sandbox_id: str, *, operator_actor_ref: str | None = None) -> None:
         """Stops and deletes a sandbox."""
         await self.sandbox_manager.stop(sandbox_id, operator_actor_ref=operator_actor_ref)
 
-    async def halt_session(self, session_id: str, *, operator_actor_ref: str | None = None):
+    async def halt_session(self, session_id: str, *, operator_actor_ref: str | None = None) -> None:
         """Halts an active session by signaling the runtime state."""
         cancelled_active_task = await self.session_controller.halt(session_id)
         if operator_actor_ref:
@@ -417,11 +417,11 @@ class OrchestrationEngine:
         )
         view_service = getattr(self, "kernel_action_control_plane_view", None)
         if view_service is not None:
-            return await view_service.augment_kernel_response(
+            return cast(dict[str, Any], await view_service.augment_kernel_response(
                 response=response,
                 session_id=str(request.get("session_id") or ""),
                 trace_id=str(request.get("trace_id") or ""),
-            )
+            ))
         reservation = await self.control_plane_repository.get_latest_reservation_record(
             reservation_id=reservation_id_for_run(run_id=run.run_id)
         )
@@ -454,11 +454,11 @@ class OrchestrationEngine:
         view_service = getattr(self, "kernel_action_control_plane_view", None)
         if view_service is None:
             return response
-        return await view_service.augment_kernel_response(
+        return cast(dict[str, Any], await view_service.augment_kernel_response(
             response=response,
             session_id=str(request.get("session_id") or ""),
             trace_id=str(request.get("trace_id") or ""),
-        )
+        ))
 
     def kernel_end_session(self, request: dict[str, Any]) -> dict[str, Any]:
         return self.kernel_gateway_facade.end_session(request)
@@ -523,11 +523,11 @@ class OrchestrationEngine:
         view_service = getattr(self, "kernel_action_control_plane_view", None)
         if view_service is None:
             return response
-        return await view_service.augment_kernel_response(
+        return cast(dict[str, Any], await view_service.augment_kernel_response(
             response=response,
             session_id=str(request.get("session_id") or ""),
             trace_id=str(request.get("trace_id") or ""),
-        )
+        ))
 
     def kernel_list_ledger_events(self, request: dict[str, Any]) -> dict[str, Any]:
         return self.kernel_gateway_facade.list_ledger_events(request)

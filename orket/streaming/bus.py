@@ -36,19 +36,19 @@ class StreamBusConfig:
 
 
 class StreamBus:
-    def __init__(self, config: StreamBusConfig | None = None):
+    def __init__(self, config: StreamBusConfig | None = None) -> None:
         self.config = config or StreamBusConfig()
-        self._subscribers: dict[str, set[asyncio.Queue]] = defaultdict(set)
+        self._subscribers: dict[str, set[asyncio.Queue[StreamEvent]]] = defaultdict(set)
         self._turn_states: dict[tuple[str, str], _TurnBusState] = {}
         self._lock = asyncio.Lock()
 
-    async def subscribe(self, session_id: str) -> asyncio.Queue:
-        queue: asyncio.Queue = asyncio.Queue()
+    async def subscribe(self, session_id: str) -> asyncio.Queue[StreamEvent]:
+        queue: asyncio.Queue[StreamEvent] = asyncio.Queue()
         async with self._lock:
             self._subscribers[session_id].add(queue)
         return queue
 
-    async def unsubscribe(self, session_id: str, queue: asyncio.Queue) -> None:
+    async def unsubscribe(self, session_id: str, queue: asyncio.Queue[StreamEvent]) -> None:
         async with self._lock:
             if session_id in self._subscribers:
                 self._subscribers[session_id].discard(queue)

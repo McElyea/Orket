@@ -14,11 +14,13 @@ import asyncio
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Coroutine, TypeVar
 
 import aiofiles
 
 from .async_executor_service import run_coroutine_blocking
+
+ResultT = TypeVar("ResultT")
 
 
 class AsyncFileTools:
@@ -30,7 +32,7 @@ class AsyncFileTools:
         self.workspace_root = workspace_root
         self.references = references or []
 
-    def _run_async(self, coro: Any) -> Any:
+    def _run_async(self, coro: Coroutine[Any, Any, ResultT]) -> ResultT:
         return run_coroutine_blocking(coro)
 
     def _resolve_safe_path(self, path_str: str, write: bool = False) -> Path:

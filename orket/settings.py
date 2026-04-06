@@ -4,7 +4,7 @@ import json
 import os
 import threading
 from pathlib import Path
-from typing import Any
+from typing import Any, Coroutine, TypeVar
 
 import aiofiles
 
@@ -20,6 +20,7 @@ _PREFERENCES_MIGRATION_MARKERS_KEY = "migration_markers"
 _LEGACY_MODEL_PREFERENCES_MIGRATION_KEY = "legacy_model_preferences_v1"
 _ENV_LOADED = False
 _ENV_LOADED_LOCK = threading.Lock()
+ResultT = TypeVar("ResultT")
 _RUNTIME_USER_SETTINGS: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
     "runtime_user_settings",
     default=None,
@@ -30,13 +31,13 @@ _RUNTIME_USER_PREFERENCES: contextvars.ContextVar[dict[str, Any] | None] = conte
 )
 
 
-def set_settings_file(path: Path):
+def set_settings_file(path: Path) -> None:
     global _SETTINGS_FILE, _SETTINGS_CACHE
     _SETTINGS_FILE = resolve_user_settings_path(path)
     _SETTINGS_CACHE = None
 
 
-def set_preferences_file(path: Path):
+def set_preferences_file(path: Path) -> None:
     global _PREFERENCES_FILE, _PREFERENCES_CACHE
     _PREFERENCES_FILE = resolve_user_preferences_path(path)
     _PREFERENCES_CACHE = None
@@ -50,7 +51,7 @@ def _is_running_in_event_loop() -> bool:
         return False
 
 
-def _run_settings_sync(awaitable: Any, *, operation: str) -> Any:
+def _run_settings_sync(awaitable: Coroutine[Any, Any, ResultT], *, operation: str) -> ResultT:
     if _is_running_in_event_loop():
         close = getattr(awaitable, "close", None)
         if callable(close):
@@ -368,7 +369,7 @@ def get_setting(key: str, default: Any = None) -> Any:
     return settings.get(key, default)
 
 
-def update_setting(key: str, value: Any):
+def update_setting(key: str, value: Any) -> None:
     settings = load_user_settings().copy()
     settings[key] = value
     save_user_settings(settings)

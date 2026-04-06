@@ -80,7 +80,7 @@ class PromptStrategyNode(Protocol):
 class ToolStrategyNode(Protocol):
     """Decision node: composes tool-name to callable mappings."""
 
-    def compose(self, toolbox: Any) -> dict[str, Callable]: ...
+    def compose(self, toolbox: Any) -> dict[str, Callable[..., Any]]: ...
 
 
 class ApiRuntimeStrategyNode(Protocol):

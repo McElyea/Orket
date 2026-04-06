@@ -12,6 +12,19 @@ _SUCCESS_STOP_REASONS = {"STABLE_DIFF_FLOOR", "LOOP_DETECTED"}
 _ACCEPTABLE_MAX_ROUNDS_STOP_REASON = "MAX_ROUNDS"
 
 
+def _coerce_int(value: object) -> int | None:
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            return None
+    return None
+
+
 def _build_odr_task(*, issue: Any, cards_runtime: dict[str, Any]) -> str:
     artifact_contract = dict(cards_runtime.get("artifact_contract") or {})
     required_write_paths = list(artifact_contract.get("required_write_paths") or [])
@@ -46,12 +59,13 @@ def _resolve_odr_max_rounds(issue: Any, *, default: int) -> int:
     params = getattr(issue, "params", None)
     if not isinstance(params, dict):
         return int(default)
-    nested = params.get("cards_runtime") if isinstance(params.get("cards_runtime"), dict) else {}
+    raw_nested = params.get("cards_runtime")
+    nested = raw_nested if isinstance(raw_nested, dict) else {}
     raw = nested.get("odr_max_rounds") if "odr_max_rounds" in nested else params.get("odr_max_rounds")
-    try:
-        return max(1, int(raw))
-    except (TypeError, ValueError):
+    parsed = _coerce_int(raw)
+    if parsed is None:
         return int(default)
+    return max(1, parsed)
 
 
 def _odr_prebuild_accepted(*, stop_reason: str, odr_valid: bool, pending_decisions: int) -> bool:
@@ -145,6 +159,8 @@ async def run_cards_odr_prebuild(
         "odr_valid": odr_valid,
         "odr_pending_decisions": pending_decisions,
         "odr_stop_reason": stop_reason or None,
+        "odr_termination_reason": str(result.get("termination_reason") or "").strip() or None,
+        "odr_final_auditor_verdict": str(result.get("final_auditor_verdict") or "").strip() or None,
         "odr_artifact_path": artifact_path,
         "odr_requirement": str(result.get("final_requirement") or "").strip(),
         "odr_rounds_completed": int(result.get("rounds_completed") or 0),

@@ -121,19 +121,19 @@ def reconstruct_run_graph(
                 "ok": bool(result_payload.get("ok", False)),
                 "artifact_digest": hash_canonical_json(result_payload),
             }
-            call_id = call_nodes.get(call_sequence_number)
-            if call_id is not None:
+            linked_call_id = call_nodes.get(call_sequence_number)
+            if linked_call_id is not None:
                 _add_edge(
                     edges=edges,
                     edge_type="call_result",
-                    source=call_id,
+                    source=linked_call_id,
                     target=result_id,
                     ordinal=event_seq,
                 )
                 _add_edge(
                     edges=edges,
                     edge_type="artifact_produced",
-                    source=call_id,
+                    source=linked_call_id,
                     target=result_id,
                     ordinal=event_seq,
                 )
@@ -155,11 +155,11 @@ def reconstruct_run_graph(
                 ],
                 "translation_hash": str(compat_translation.get("translation_hash") or "").strip(),
             }
-            if call_id is not None:
+            if linked_call_id is not None:
                 _add_edge(
                     edges=edges,
                     edge_type="compat_expansion",
-                    source=call_id,
+                    source=linked_call_id,
                     target=compat_node_id,
                     ordinal=event_seq,
                 )

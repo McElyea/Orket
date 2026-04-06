@@ -66,7 +66,12 @@ class WorkloadArtifacts:
                 ),
             )
         if not registry.has("memory.write") or not registry.has("memory.query"):
-            memory_settings = input_config.get("memory") if isinstance(input_config.get("memory"), dict) else {}
+            raw_memory_settings = input_config.get("memory")
+            memory_settings: dict[str, Any] = (
+                {str(key): value for key, value in raw_memory_settings.items()}
+                if isinstance(raw_memory_settings, dict)
+                else {}
+            )
             controls = MemoryControls(
                 session_memory_enabled=WorkloadArtifacts._resolve_bool_setting(
                     memory_settings.get("session_memory_enabled", input_config.get("session_memory_enabled", True))
@@ -86,7 +91,12 @@ class WorkloadArtifacts:
         if not registry.has("speech.transcribe"):
             registry.register("speech.transcribe", HostSTTCapabilityProvider())
         if not registry.has("voice.turn_control"):
-            voice_settings = input_config.get("voice") if isinstance(input_config.get("voice"), dict) else {}
+            raw_voice_settings = input_config.get("voice")
+            voice_settings: dict[str, Any] = (
+                {str(key): value for key, value in raw_voice_settings.items()}
+                if isinstance(raw_voice_settings, dict)
+                else {}
+            )
             registry.register(
                 "voice.turn_control",
                 HostVoiceTurnController(

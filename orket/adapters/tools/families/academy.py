@@ -16,9 +16,9 @@ class AcademyTools(BaseTools):
         self.project_root = self.workspace_root.parent.parent
         self.async_fs = AsyncFileTools(self.project_root)
 
-    def archive_eval(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
+    def archive_eval(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         session_id = args.get("session_id")
-        if not session_id:
+        if not isinstance(session_id, str) or not session_id.strip():
             return {"ok": False, "error": "session_id required"}
 
         src = self.workspace_root.parent / "runs" / session_id
@@ -35,9 +35,12 @@ class AcademyTools(BaseTools):
         except (OSError, shutil.Error, RuntimeError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
 
-    async def promote_prompt(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
-        seat, content = args.get("seat"), args.get("content")
-        if not seat or not content:
+    async def promote_prompt(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
+        seat = args.get("seat")
+        content = args.get("content")
+        if not isinstance(seat, str) or not seat.strip():
+            return {"ok": False, "error": "Missing params"}
+        if not content or not isinstance(content, (str, dict)):
             return {"ok": False, "error": "Missing params"}
         from orket.utils import sanitize_name
 

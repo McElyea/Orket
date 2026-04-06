@@ -25,8 +25,9 @@ class OrchestrationConfig:
         process_rules = getattr(self.org, "process_rules", None) if self.org else None
         if isinstance(process_rules, dict):
             return str(process_rules.get(key, "")).strip()
-        if hasattr(process_rules, "get"):
-            return str(process_rules.get(key, "")).strip()
+        getter = getattr(process_rules, "get", None)
+        if callable(getter):
+            return str(getter(key, "")).strip()
         if process_rules is not None:
             return str(getattr(process_rules, key, "")).strip()
         return ""

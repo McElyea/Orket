@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 import json
 from pathlib import Path
 

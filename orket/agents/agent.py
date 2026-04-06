@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import inspect
 import re
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.application.services.tool_parser import ToolParser
 from orket.core.domain.execution import ExecutionTurn, ToolCall
@@ -13,6 +13,17 @@ from orket.exceptions import CardNotFound
 from orket.logging import log_event
 from orket.schema import DialectConfig, SkillConfig
 from orket.utils import sanitize_name
+
+
+class ModelProvider(Protocol):
+    @property
+    def model(self) -> str: ...
+
+    async def complete(
+        self,
+        messages: list[dict[str, str]],
+        runtime_context: dict[str, Any] | None = None,
+    ) -> Any: ...
 
 
 class Agent:
@@ -25,13 +36,13 @@ class Agent:
         self,
         name: str,
         description: str,
-        tools: dict[str, callable],
-        provider: LocalModelProvider,
-        next_member: str = None,
-        prompt_patch: str = None,
+        tools: dict[str, Callable[..., Any]],
+        provider: ModelProvider,
+        next_member: str | None = None,
+        prompt_patch: str | None = None,
         config_root: Path | None = None,
-        tool_gate=None,
-    ):
+        tool_gate: Any | None = None,
+    ) -> None:
         self.name = name
         self.description = description
         self.tools = tools
@@ -45,7 +56,7 @@ class Agent:
         self.dialect: DialectConfig | None = None
         self._load_configs()
 
-    def _load_configs(self):
+    def _load_configs(self) -> None:
         from orket.orket import ConfigLoader
 
         loader = ConfigLoader(self.config_root, "core")
@@ -87,7 +98,11 @@ class Agent:
         return self.description
 
     async def run(
-        self, task: dict[str, Any], context: dict[str, Any], workspace: Path, transcript: list[dict] = None
+        self,
+        task: dict[str, Any],
+        context: dict[str, Any],
+        workspace: Path,
+        transcript: list[dict[str, Any]] | None = None,
     ) -> ExecutionTurn:
         """Executes the turn and returns a structured ExecutionTurn object."""
 
@@ -98,7 +113,7 @@ class Agent:
             else self.description
         )
 
-        messages = [
+        messages: list[dict[str, str]] = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Task: {task['description']}"},
         ]
@@ -114,7 +129,7 @@ class Agent:
         text = result.content if hasattr(result, "content") else str(result)
 
         # Extract Thought
-        thought = None
+        thought: str | None = None
         thought_match = re.search(r"<thought>(.*?)</thought>", text, re.DOTALL)
         if thought_match:
             thought = thought_match.group(1).strip()

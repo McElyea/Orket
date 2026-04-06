@@ -54,7 +54,7 @@ class LocalVendor(VendorInterface):
                         summary=c.summary,
                         description=c.note,
                         status=c.status,
-                        priority=c.priority,
+                        priority=str(c.priority or "Medium"),
                         assignee=c.assignee,
                     )
                 )
@@ -81,6 +81,6 @@ class LocalVendor(VendorInterface):
                 id=record.id,
                 summary=record.summary or "Local Card",
                 status=record.status.value,
-                priority=record.priority or "Medium",
+                priority=str(record.priority or "Medium"),
             )
         return VendorCard(id=card_id, summary="Local Card", status="ready", priority="Medium")

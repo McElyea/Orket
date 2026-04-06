@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from scripts.odr.context_continuity_live_metrics import (
     accepted_decision_summaries,
     build_replay_source_history,

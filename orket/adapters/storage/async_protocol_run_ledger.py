@@ -42,6 +42,13 @@ def _parse_event_timestamp(value: Any) -> datetime | None:
         return None
 
 
+def _coerce_int(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
 class AsyncProtocolRunLedgerRepository:
     """Async wrapper over append-only LPJ-C32 run ledger files."""
 
@@ -354,9 +361,8 @@ class AsyncProtocolRunLedgerRepository:
 
         if normalized_kind in _TOOL_RESULT_KINDS:
             raw_call_seq = payload.get("call_sequence_number")
-            try:
-                call_seq = int(raw_call_seq)
-            except (TypeError, ValueError):
+            call_seq = _coerce_int(raw_call_seq)
+            if call_seq is None:
                 return self._contract_rejection(
                     session_id=session_id,
                     error_code="E_CALL_SEQUENCE_REQUIRED",
@@ -400,9 +406,8 @@ class AsyncProtocolRunLedgerRepository:
         artifact_hash = str(event.get("artifact_hash") or payload.get("artifact_hash") or "").strip()
         if artifact_hash and normalized_kind not in _TOOL_RESULT_KINDS:
             raw_call_seq = payload.get("call_sequence_number")
-            try:
-                call_seq = int(raw_call_seq)
-            except (TypeError, ValueError):
+            call_seq = _coerce_int(raw_call_seq)
+            if call_seq is None:
                 return self._contract_rejection(
                     session_id=session_id,
                     error_code="E_ARTIFACT_CALL_SEQUENCE_REQUIRED",

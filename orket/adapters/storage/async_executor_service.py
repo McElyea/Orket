@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, Coroutine, TypeVar
+
+ResultT = TypeVar("ResultT")
 
 
 class AsyncExecutorService:
@@ -12,7 +14,7 @@ class AsyncExecutorService:
     behavior is explicit and reusable across adapters.
     """
 
-    def run_coroutine_blocking(self, coro: Any) -> Any:
+    def run_coroutine_blocking(self, coro: Coroutine[Any, Any, ResultT]) -> ResultT:
         try:
             asyncio.get_running_loop()
         except RuntimeError:
@@ -29,5 +31,5 @@ class AsyncExecutorService:
 _DEFAULT_EXECUTOR_SERVICE = AsyncExecutorService()
 
 
-def run_coroutine_blocking(coro: Any) -> Any:
+def run_coroutine_blocking(coro: Coroutine[Any, Any, ResultT]) -> ResultT:
     return _DEFAULT_EXECUTOR_SERVICE.run_coroutine_blocking(coro)

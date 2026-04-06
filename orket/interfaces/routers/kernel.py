@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -89,14 +89,17 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
         view_service = getattr(engine, "kernel_action_control_plane_view", None)
         if view_service is None:
             return response
-        return await view_service.augment_kernel_response(
-            response=response,
-            session_id=session_id,
-            trace_id=trace_id,
+        return cast(
+            dict[str, Any],
+            await view_service.augment_kernel_response(
+                response=response,
+                session_id=session_id,
+                trace_id=trace_id,
+            ),
         )
 
     @router.post("/kernel/lifecycle")
-    async def kernel_lifecycle(req: KernelLifecycleRequest):
+    async def kernel_lifecycle(req: KernelLifecycleRequest) -> Any:
         engine = engine_getter()
         return engine.kernel_run_lifecycle(
             workflow_id=req.workflow_id,
@@ -106,7 +109,7 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
         )
 
     @router.post("/kernel/compare")
-    async def kernel_compare(req: KernelCompareRequest):
+    async def kernel_compare(req: KernelCompareRequest) -> Any:
         engine = engine_getter()
         return engine.kernel_compare_runs(
             {
@@ -118,7 +121,7 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
         )
 
     @router.post("/kernel/replay")
-    async def kernel_replay(req: KernelReplayRequest):
+    async def kernel_replay(req: KernelReplayRequest) -> Any:
         engine = engine_getter()
         return engine.kernel_replay_run(
             {
@@ -128,7 +131,7 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
         )
 
     @router.post("/kernel/projection-pack")
-    async def kernel_projection_pack(req: KernelProjectionPackRequest):
+    async def kernel_projection_pack(req: KernelProjectionPackRequest) -> Any:
         engine = engine_getter()
         try:
             return engine.kernel_projection_pack(
@@ -147,7 +150,7 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.post("/kernel/admit-proposal")
-    async def kernel_admit_proposal(req: KernelAdmitProposalRequest):
+    async def kernel_admit_proposal(req: KernelAdmitProposalRequest) -> Any:
         engine = engine_getter()
         try:
             handler = getattr(engine, "kernel_admit_proposal_async", None)
@@ -182,7 +185,7 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.post("/kernel/commit-proposal")
-    async def kernel_commit_proposal(req: KernelCommitProposalRequest):
+    async def kernel_commit_proposal(req: KernelCommitProposalRequest) -> Any:
         engine = engine_getter()
         try:
             handler = getattr(engine, "kernel_commit_proposal_async", None)
@@ -220,7 +223,7 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.post("/kernel/end-session")
-    async def kernel_end_session(req: KernelEndSessionRequest, request: Request):
+    async def kernel_end_session(req: KernelEndSessionRequest, request: Request) -> Any:
         engine = engine_getter()
         try:
             handler = getattr(engine, "kernel_end_session_async", None)
@@ -256,7 +259,7 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
         trace_id: str | None = None,
         event_type: str | None = None,
         limit: int = 200,
-    ):
+    ) -> Any:
         engine = engine_getter()
         try:
             return engine.kernel_list_ledger_events(
@@ -272,7 +275,7 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.post("/kernel/approvals/rebuild")
-    async def kernel_rebuild_pending_approvals(req: KernelRebuildPendingApprovalsRequest):
+    async def kernel_rebuild_pending_approvals(req: KernelRebuildPendingApprovalsRequest) -> Any:
         engine = engine_getter()
         try:
             return engine.kernel_rebuild_pending_approvals(
@@ -285,7 +288,7 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.get("/kernel/action-lifecycle/replay")
-    async def kernel_replay_action_lifecycle(session_id: str, trace_id: str):
+    async def kernel_replay_action_lifecycle(session_id: str, trace_id: str) -> dict[str, Any]:
         engine = engine_getter()
         try:
             payload = {
@@ -293,10 +296,13 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
                 "session_id": session_id,
                 "trace_id": trace_id,
             }
-            response = engine.kernel_replay_action_lifecycle(
-                {
-                    **payload,
-                }
+            response = cast(
+                dict[str, Any],
+                engine.kernel_replay_action_lifecycle(
+                    {
+                        **payload,
+                    }
+                ),
             )
             view_service = getattr(engine, "kernel_action_control_plane_view", None)
             if view_service is not None:
@@ -309,15 +315,18 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.get("/kernel/action-lifecycle/audit")
-    async def kernel_audit_action_lifecycle(session_id: str, trace_id: str):
+    async def kernel_audit_action_lifecycle(session_id: str, trace_id: str) -> dict[str, Any]:
         engine = engine_getter()
         try:
-            response = engine.kernel_audit_action_lifecycle(
-                {
-                    "contract_version": "kernel_api/v1",
-                    "session_id": session_id,
-                    "trace_id": trace_id,
-                }
+            response = cast(
+                dict[str, Any],
+                engine.kernel_audit_action_lifecycle(
+                    {
+                        "contract_version": "kernel_api/v1",
+                        "session_id": session_id,
+                        "trace_id": trace_id,
+                    }
+                ),
             )
             view_service = getattr(engine, "kernel_action_control_plane_view", None)
             if view_service is not None:

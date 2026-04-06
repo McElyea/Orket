@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 # Layer: contract
 from __future__ import annotations
 
@@ -61,3 +62,22 @@ def test_extract_training_data_rejects_untrusted_run_summary_projection(tmp_path
     assert stats.runs_scanned == 1
     assert stats.runs_accepted == 0
     assert stats.runs_rejected_no_summary == 1
+
+
+@pytest.mark.contract
+def test_probe_support_run_summary_rejects_degraded_payload(tmp_path: Path) -> None:
+    session_id = "sess-probe-degraded"
+    _write_json(
+        tmp_path / "runs" / session_id / "run_summary.json",
+        {
+            "run_id": session_id,
+            "status": "failed",
+            "artifact_ids": [],
+            "failure_reason": "summary_generation_failed",
+            "is_degraded": True,
+        },
+    )
+
+    payload = run_summary(tmp_path, session_id)
+
+    assert payload == {}

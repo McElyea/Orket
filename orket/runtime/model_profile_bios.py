@@ -5,13 +5,19 @@ from typing import Any
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 
 
+def _provider_rows() -> list[dict[str, Any]]:
+    providers = provider_truth_table_snapshot().get("providers")
+    if not isinstance(providers, list):
+        return []
+    return [dict(row) for row in providers if isinstance(row, dict)]
+
+
 def _repair_tolerance_for_provider(provider: str) -> str:
-    snapshot = provider_truth_table_snapshot()
-    rows = [row for row in snapshot.get("providers", []) if isinstance(row, dict)]
-    for row in rows:
+    for row in _provider_rows():
         if str(row.get("provider") or "").strip().lower() != provider:
             continue
-        capabilities = dict(row.get("capabilities") or {})
+        capabilities_payload = row.get("capabilities")
+        capabilities = capabilities_payload if isinstance(capabilities_payload, dict) else {}
         return str(capabilities.get("repair_tolerance") or "unknown").strip().lower()
     return "unknown"
 
@@ -48,11 +54,12 @@ def model_profile_bios_snapshot() -> dict[str, Any]:
 
 def validate_model_profile_bios(payload: dict[str, Any] | None = None) -> tuple[str, ...]:
     bios = dict(payload or model_profile_bios_snapshot())
-    rows = list(bios.get("profiles") or [])
+    profiles_payload = bios.get("profiles")
+    rows = profiles_payload if isinstance(profiles_payload, list) else []
     if not rows:
         raise ValueError("E_MODEL_PROFILE_BIOS_EMPTY")
 
-    truth_rows = [row for row in provider_truth_table_snapshot().get("providers", []) if isinstance(row, dict)]
+    truth_rows = _provider_rows()
     truth_providers = {
         str(row.get("provider") or "").strip().lower() for row in truth_rows if str(row.get("provider") or "").strip()
     }

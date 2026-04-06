@@ -9,6 +9,9 @@ from orket.logging import log_event
 
 
 class DriverResourceMixin:
+    fs: Any
+    model_root: Path
+
     def _load_epic_payload_for_write(self, path: Path) -> tuple[dict[str, Any], bool]:
         epic_data = json.loads(self.fs.read_file_sync(str(path)))
         issues = epic_data.get("issues")

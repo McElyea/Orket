@@ -570,9 +570,9 @@ class RuntimeVerifier:
     @staticmethod
     def _json_assertion_matches(*, actual: Any, op: str, expected: Any) -> bool:
         if op == "eq":
-            return actual == expected
+            return bool(actual == expected)
         if op == "ne":
-            return actual != expected
+            return bool(actual != expected)
         if op == "contains":
             if isinstance(actual, str):
                 return str(expected) in actual

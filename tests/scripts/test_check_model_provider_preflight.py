@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from __future__ import annotations
 
 import scripts.providers.check_model_provider_preflight as preflight

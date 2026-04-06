@@ -317,7 +317,7 @@ class CoordinatorControlPlaneLeaseService:
             return "expire"
         if status is LeaseStatus.RELEASED:
             return "released"
-        return status.value
+        return str(status.value)
 
     @staticmethod
     def _utc_now() -> str:

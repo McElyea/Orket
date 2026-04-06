@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from __future__ import annotations
 
 from scripts.governance.check_source_attribution_policy import evaluate_source_attribution_policy

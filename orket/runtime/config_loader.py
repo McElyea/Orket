@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Coroutine
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
@@ -15,6 +16,8 @@ from orket.logging import log_event
 
 if TYPE_CHECKING:
     from orket.schema import DepartmentConfig, OrganizationConfig
+
+T = TypeVar("T")
 
 
 class ConfigLoader:
@@ -29,7 +32,7 @@ class ConfigLoader:
         department: str = "core",
         organization: Any | None = None,
         decision_nodes: DecisionNodeRegistry | None = None,
-    ):
+    ) -> None:
         self.root = root
         self.config_dir = root / "config"
         self.model_dir = root / "model"
@@ -39,7 +42,7 @@ class ConfigLoader:
         self.loader_strategy_node = self.decision_nodes.resolve_loader_strategy(self.organization)
         self.file_tools = AsyncFileTools(self.root)
 
-    def _run_async(self, coro):
+    def _run_async(self, coro: Coroutine[Any, Any, T]) -> T:
         """Run async file ops from sync callers without nested-loop failures."""
         try:
             asyncio.get_running_loop()
@@ -96,7 +99,8 @@ class ConfigLoader:
             return None
 
         set_runtime_settings_context(user_settings=await load_user_settings_async())
-        return self.loader_strategy_node.apply_organization_overrides(org, get_setting)
+        overridden = self.loader_strategy_node.apply_organization_overrides(org, get_setting)
+        return overridden if isinstance(overridden, OrganizationConfig) else org
 
     def load_department(self, name: str) -> DepartmentConfig | None:
         return self._run_async(self.load_department_async(name))

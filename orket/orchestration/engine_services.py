@@ -6,6 +6,37 @@ from typing import Any
 from orket.logging import log_event
 
 
+def _dict_result(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, dict) else {}
+
+
+def _dict_rows(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    rows: list[dict[str, Any]] = []
+    for item in value:
+        if isinstance(item, dict):
+            rows.append(dict(item))
+            continue
+        model_dump = getattr(item, "model_dump", None)
+        if callable(model_dump):
+            dumped = model_dump()
+            if isinstance(dumped, dict):
+                rows.append(dict(dumped))
+    return rows
+
+
+def _string_list_map(value: Any) -> dict[str, list[str]]:
+    if not isinstance(value, dict):
+        return {}
+    normalized: dict[str, list[str]] = {}
+    for key, row in value.items():
+        if not isinstance(row, list):
+            continue
+        normalized[str(key)] = [str(item) for item in row]
+    return normalized
+
+
 class SandboxManager:
     """Focused sandbox operations extracted from OrchestrationEngine."""
 
@@ -17,7 +48,7 @@ class SandboxManager:
             return []
         list_method = getattr(self._sandbox_orchestrator, "list_sandboxes", None)
         if callable(list_method):
-            return await list_method()
+            return _dict_rows(await list_method())
         registry = self._sandbox_orchestrator.registry
         return [item.model_dump() for item in registry.list_active()]
 
@@ -60,7 +91,7 @@ class CardArchiver:
         self._cards = cards_repo
 
     async def archive_card(self, card_id: str, *, archived_by: str = "system", reason: str | None = None) -> bool:
-        return await self._cards.archive_card(card_id, archived_by=archived_by, reason=reason)
+        return bool(await self._cards.archive_card(card_id, archived_by=archived_by, reason=reason))
 
     async def archive_cards(
         self,
@@ -69,10 +100,10 @@ class CardArchiver:
         archived_by: str = "system",
         reason: str | None = None,
     ) -> dict[str, list[str]]:
-        return await self._cards.archive_cards(card_ids, archived_by=archived_by, reason=reason)
+        return _string_list_map(await self._cards.archive_cards(card_ids, archived_by=archived_by, reason=reason))
 
     async def archive_build(self, build_id: str, *, archived_by: str = "system", reason: str | None = None) -> int:
-        return await self._cards.archive_build(build_id, archived_by=archived_by, reason=reason)
+        return int(await self._cards.archive_build(build_id, archived_by=archived_by, reason=reason))
 
     async def archive_related_cards(
         self,
@@ -83,7 +114,7 @@ class CardArchiver:
         limit: int = 500,
     ) -> dict[str, list[str]]:
         card_ids = await self._cards.find_related_card_ids(related_tokens, limit=limit)
-        return await self._cards.archive_cards(card_ids, archived_by=archived_by, reason=reason)
+        return _string_list_map(await self._cards.archive_cards(card_ids, archived_by=archived_by, reason=reason))
 
 
 class KernelGatewayFacade:
@@ -93,49 +124,49 @@ class KernelGatewayFacade:
         self._gw = kernel_gateway
 
     def start_run(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.start_run(request)
+        return _dict_result(self._gw.start_run(request))
 
     def execute_turn(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.execute_turn(request)
+        return _dict_result(self._gw.execute_turn(request))
 
     def finish_run(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.finish_run(request)
+        return _dict_result(self._gw.finish_run(request))
 
     def resolve_capability(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.resolve_capability(request)
+        return _dict_result(self._gw.resolve_capability(request))
 
     def authorize_tool_call(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.authorize_tool_call(request)
+        return _dict_result(self._gw.authorize_tool_call(request))
 
     def replay_run(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.replay_run(request)
+        return _dict_result(self._gw.replay_run(request))
 
     def compare_runs(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.compare_runs(request)
+        return _dict_result(self._gw.compare_runs(request))
 
     def projection_pack(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.projection_pack(request)
+        return _dict_result(self._gw.projection_pack(request))
 
     def admit_proposal(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.admit_proposal(request)
+        return _dict_result(self._gw.admit_proposal(request))
 
     def commit_proposal(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.commit_proposal(request)
+        return _dict_result(self._gw.commit_proposal(request))
 
     def end_session(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.end_session(request)
+        return _dict_result(self._gw.end_session(request))
 
     def list_ledger_events(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.list_ledger_events(request)
+        return _dict_result(self._gw.list_ledger_events(request))
 
     def rebuild_pending_approvals(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.rebuild_pending_approvals(request)
+        return _dict_result(self._gw.rebuild_pending_approvals(request))
 
     def replay_action_lifecycle(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.replay_action_lifecycle(request)
+        return _dict_result(self._gw.replay_action_lifecycle(request))
 
     def audit_action_lifecycle(self, request: dict[str, Any]) -> dict[str, Any]:
-        return self._gw.audit_action_lifecycle(request)
+        return _dict_result(self._gw.audit_action_lifecycle(request))
 
     def run_lifecycle(
         self,
@@ -145,9 +176,11 @@ class KernelGatewayFacade:
         finish_outcome: str = "PASS",
         start_request: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        return self._gw.run_lifecycle(
-            workflow_id=workflow_id,
-            execute_turn_requests=execute_turn_requests,
-            finish_outcome=finish_outcome,
-            start_request=start_request,
+        return _dict_result(
+            self._gw.run_lifecycle(
+                workflow_id=workflow_id,
+                execute_turn_requests=execute_turn_requests,
+                finish_outcome=finish_outcome,
+                start_request=start_request,
+            )
         )

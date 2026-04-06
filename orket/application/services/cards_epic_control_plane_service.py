@@ -163,7 +163,7 @@ class CardsEpicControlPlaneService:
         validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=next_attempt_state)
         attempt = await self.execution_repository.save_attempt_record(record=attempt.model_copy(update=attempt_update))
         validate_run_state_transition(current_state=run.lifecycle_state, next_state=next_run_state)
-        run_update = {"lifecycle_state": next_run_state}
+        run_update: dict[str, object] = {"lifecycle_state": next_run_state}
         if next_run_state in {RunState.COMPLETED, RunState.FAILED_TERMINAL}:
             await self.execution_repository.save_step_record(
                 record=StepRecord(

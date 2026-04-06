@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TypedDict
+
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_resource_authority_checks import (
     require_resource_snapshot_matches_lease,
@@ -42,6 +44,26 @@ from .orchestrator_scheduler_control_plane_mutation import (
     create_namespace_execution,
     publish_mutation_step_and_effect,
 )
+
+
+class SchedulerNamespaceMutation(TypedDict):
+    run_id: str
+    workload: WorkloadRecord
+    holder_ref: str
+    issue_id: str
+    admission_ref: str
+    policy_payload: dict[str, object]
+    config_payload: dict[str, object]
+    step_kind: str
+    input_ref: str
+    output_ref: str
+    capability_used: CapabilityClass
+    resources: list[str]
+    observed_result_classification: str
+    intended_target_ref: str
+    result_class: ResultClass
+    completion_classification: CompletionClassification
+    closure_basis: ClosureBasisClassification
 
 
 class OrchestratorSchedulerControlPlaneService:
@@ -125,7 +147,7 @@ class OrchestratorSchedulerControlPlaneService:
         reason: str,
         assignee: str | None,
         metadata: dict[str, object],
-    ) -> dict[str, object]:
+    ) -> SchedulerNamespaceMutation:
         holder_ref = scheduler_holder_ref_for_issue(session_id=session_id, issue_id=issue_id)
         admission_ref = transition_ref(
             session_id=session_id,
@@ -187,7 +209,7 @@ class OrchestratorSchedulerControlPlaneService:
         relationship_class: str,
         trigger_issue_ids: list[str],
         metadata: dict[str, object],
-    ) -> dict[str, object]:
+    ) -> SchedulerNamespaceMutation:
         holder_ref = child_workload_holder_ref_for_issue(session_id=session_id, issue_id=issue_id)
         creation_receipt_ref = issue_creation_ref(
             session_id=session_id,

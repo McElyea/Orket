@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from pathlib import Path
 
 from scripts.odr.model_role_fit_compare import build_pair_compare_payload, build_pair_verdict_payload

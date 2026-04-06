@@ -7,8 +7,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from orket.runtime.run_ledger_projection import coerce_run_ledger_json_object
 from orket.application.services.run_ledger_summary_projection import (
-    coerce_run_ledger_json_object,
     validated_run_ledger_record_projection,
 )
 

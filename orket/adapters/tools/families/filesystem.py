@@ -30,9 +30,23 @@ class FileSystemTools(BaseTools):
             self._path_locks.popitem(last=False)
         return lock
 
-    async def read_file(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
+    @staticmethod
+    def _require_path_arg(args: dict[str, Any]) -> str:
+        path_value = args.get("path")
+        if not isinstance(path_value, str) or not path_value.strip():
+            raise ValueError("path is required")
+        return path_value
+
+    @staticmethod
+    def _require_write_content(args: dict[str, Any]) -> str | dict[str, Any]:
+        content = args.get("content")
+        if isinstance(content, (str, dict)):
+            return content
+        raise TypeError("content must be a string or object")
+
+    async def read_file(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         try:
-            path_str = args.get("path")
+            path_str = self._require_path_arg(args)
             content = await self.async_fs.read_file(path_str)
             return {"ok": True, "content": content}
         except FileNotFoundError:
@@ -40,10 +54,10 @@ class FileSystemTools(BaseTools):
         except (PermissionError, OSError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
 
-    async def write_file(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
+    async def write_file(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         try:
-            path_str = args.get("path")
-            content = args.get("content")
+            path_str = self._require_path_arg(args)
+            content = self._require_write_content(args)
             resolved = self.async_fs._resolve_safe_path(path_str, write=True)
             lock = self._get_path_lock(resolved)
             async with lock:
@@ -52,9 +66,12 @@ class FileSystemTools(BaseTools):
         except (PermissionError, OSError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
 
-    async def list_directory(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
+    async def list_directory(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         try:
-            path_str = args.get("path", ".")
+            raw_path = args.get("path", ".")
+            if not isinstance(raw_path, str):
+                raise TypeError("path must be a string")
+            path_str = raw_path
             items = await self.async_fs.list_directory(path_str)
             return {"ok": True, "items": items}
         except FileNotFoundError:

@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from pathlib import Path
 
 from scripts.odr.round_cap_probe import _movement_analysis, load_probe_config, load_probe_registry

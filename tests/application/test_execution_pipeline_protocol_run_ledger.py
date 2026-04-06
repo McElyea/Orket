@@ -215,6 +215,43 @@ async def test_execution_pipeline_supports_protocol_run_ledger_failure_path(
 
 
 @pytest.mark.asyncio
+async def test_execution_pipeline_type_error_crashes_without_failed_run_record(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "protocol_ledger_epic_type_error")
+    protocol_repo = AsyncProtocolRunLedgerRepository(workspace)
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+        run_ledger_repo=protocol_repo,
+    )
+
+    async def _raise_type_error(**_kwargs):
+        raise TypeError("forced programming error")
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _raise_type_error)
+
+    with pytest.raises(TypeError, match="forced programming error"):
+        await pipeline.run_epic(
+            "protocol_ledger_epic_type_error",
+            build_id="build-protocol-ledger-epic-type-error",
+            session_id="sess-protocol-type-error",
+        )
+
+    run = await protocol_repo.get_run("sess-protocol-type-error")
+    assert run is not None
+    assert run["status"] == "running"
+    assert run["failure_class"] is None
+    events = await protocol_repo.list_events("sess-protocol-type-error")
+    assert [event["kind"] for event in events] == ["run_started"]
+
+
+@pytest.mark.asyncio
 async def test_execution_pipeline_protocol_run_ledger_terminal_failure_path(
     test_root,
     workspace,

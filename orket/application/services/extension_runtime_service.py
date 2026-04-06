@@ -91,7 +91,8 @@ class ExtensionRuntimeService:
             timeout_s=8.0,
             api_key=None,
         )
-        models = [str(model).strip() for model in list(payload.get("models", []) or []) if str(model).strip()]
+        raw_models = payload.get("models")
+        models = [str(model).strip() for model in raw_models if str(model).strip()] if isinstance(raw_models, list) else []
         default_model = "Command-R:35B" if requested_provider == "ollama" else ""
         if default_model not in models and models:
             default_model = models[0]

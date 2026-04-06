@@ -60,7 +60,7 @@ class WorkItemTransitionService:
         *,
         workflow_profile: str = "legacy_cards_v1",
         gate_boundary: TransitionGateBoundary | None = None,
-    ):
+    ) -> None:
         self.profile = resolve_workflow_profile(workflow_profile)
         self.workflow_profile = self.profile.name
         self.gate_boundary = gate_boundary
@@ -100,6 +100,7 @@ class WorkItemTransitionService:
             )
 
         metadata: dict[str, Any] = {"workflow_profile": self.workflow_profile}
+        requested: CardStatus | None
         if normalized_action == "system_set_status":
             target = str(payload.get("status", "")).strip().lower()
             reason = str(payload.get("reason", "")).strip()

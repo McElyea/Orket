@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 import aiosqlite
 
@@ -22,11 +23,13 @@ from .card_archive_ops import CardArchiveOps
 from .card_migrations import CardMigrations
 from .card_misc_ops import CardMiscOps
 
+ResultT = TypeVar("ResultT")
+
 
 class AsyncCardRepository(CardRepository):
     """Async implementation of CardRepository using aiosqlite."""
 
-    def __init__(self, db_path: str | Path):
+    def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
         self._lock = asyncio.Lock()
         self._migrations = CardMigrations()
@@ -57,11 +60,11 @@ class AsyncCardRepository(CardRepository):
 
     async def _execute(
         self,
-        operation,
+        operation: Callable[[aiosqlite.Connection], Awaitable[ResultT]],
         *,
         row_factory: bool = False,
         commit: bool = False,
-    ):
+    ) -> ResultT:
         async with self._lock, aiosqlite.connect(self.db_path) as conn:
             if row_factory:
                 conn.row_factory = aiosqlite.Row

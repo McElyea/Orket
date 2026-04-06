@@ -6,7 +6,15 @@ from .illegal_action import IllegalActionRuleSystem
 from .loop import LoopRuleSystem
 
 
-def build_toy_rulesystem(rulesystem_id: str):
+ToyRuleSystem = (
+    LoopRuleSystem
+    | DeadlockRuleSystem
+    | IllegalActionRuleSystem
+    | BiasedFirstPlayerRuleSystem
+)
+
+
+def build_toy_rulesystem(rulesystem_id: str) -> ToyRuleSystem:
     normalized = str(rulesystem_id or "").strip().lower()
     if normalized in {"toy_loop", "loop"}:
         return LoopRuleSystem()

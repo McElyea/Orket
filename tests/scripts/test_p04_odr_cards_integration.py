@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from __future__ import annotations
 
 from pathlib import Path
@@ -82,6 +83,30 @@ def test_observed_result_requires_successful_odr_continuation() -> None:
     )
 
     assert result == "success"
+
+
+def test_observed_result_rejects_degraded_run_summary() -> None:
+    result = p04._observed_result(
+        {
+            "run_summary": {
+                "status": "done",
+                "stop_reason": "completed",
+                "odr_active": False,
+                "is_degraded": True,
+            }
+        },
+        {
+            "run_summary": {
+                "status": "done",
+                "stop_reason": "completed",
+                "odr_active": True,
+                "odr_artifact_path": "observability/run/ISSUE/odr_refinement.json",
+            },
+            "odr_artifact": {"accepted": True},
+        },
+    )
+
+    assert result == "failure"
 
 
 def test_main_returns_failure_for_observed_probe_failure(

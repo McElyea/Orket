@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -8,6 +11,18 @@ from orket.logging import log_event
 from orket.orket import ConfigLoader
 from orket.schema import EpicConfig, RockConfig, TeamConfig
 from orket.utils import sanitize_name
+
+
+@dataclass(frozen=True)
+class PreviewModelProvider:
+    model: str
+
+    async def complete(
+        self,
+        messages: list[dict[str, str]],
+        runtime_context: dict[str, Any] | None = None,
+    ) -> Any:
+        raise NotImplementedError("PreviewModelProvider does not execute completions.")
 
 
 class PreviewBuilder:
@@ -77,8 +92,7 @@ class PreviewBuilder:
                 f"Branding Rules: {', '.join(self.org.branding.design_dos)}\n"
             )
 
-        mock_provider = type("MockProvider", (), {"model": selected_model})
-        agent = Agent(seat_name, desc, {}, mock_provider)
+        agent = Agent(seat_name, desc, {}, PreviewModelProvider(model=selected_model))
         return agent.get_compiled_prompt()
 
     async def build_issue_preview(self, issue_id: str, epic_name: str, department: str = "core") -> dict[str, Any]:

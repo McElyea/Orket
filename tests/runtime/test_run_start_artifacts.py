@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from orket.runtime import run_start_contract_artifacts
+import orket.runtime.run_start_artifacts as run_start_artifacts_module
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 
 
@@ -133,9 +134,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["canonical_examples_library"]["schema_version"] == "1.0"
     canonical_example_ids = [row["example_id"] for row in payload["canonical_examples_library"]["examples"]]
     assert "EX-ROUTE-DECISION-BASELINE" in canonical_example_ids
-    assert payload["spec_debt_queue"]["schema_version"] == "1.0"
-    debt_ids = [row["debt_id"] for row in payload["spec_debt_queue"]["entries"]]
-    assert "SDQ-001" in debt_ids
+    assert "spec_debt_queue" not in payload
     assert payload["non_fatal_error_budget"]["schema_version"] == "1.0"
     budget_ids = [row["budget_id"] for row in payload["non_fatal_error_budget"]["budgets"]]
     assert "degraded_completion_ratio" in budget_ids
@@ -225,7 +224,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["feature_flag_expiration_policy_path"]).exists()
     assert Path(payload["workspace_hygiene_rules_path"]).exists()
     assert Path(payload["canonical_examples_library_path"]).exists()
-    assert Path(payload["spec_debt_queue_path"]).exists()
+    assert "spec_debt_queue_path" not in payload
     assert Path(payload["non_fatal_error_budget_path"]).exists()
     assert Path(payload["interface_freeze_windows_path"]).exists()
     assert Path(payload["evidence_package_generator_contract_path"]).exists()
@@ -253,6 +252,52 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert workspace_snapshot["workspace_path"] == str(workspace.resolve())
     assert workspace_snapshot["file_count"] == 1
     assert len(str(workspace_snapshot["workspace_hash"])) == 64
+
+
+# Layer: integration
+def test_capture_run_start_artifacts_stages_initial_write_and_leaves_no_partial_final_directory_on_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    write_count = {"value": 0}
+    original_write_immutable_json = run_start_artifacts_module._write_immutable_json
+
+    def _fail_after_first_runtime_contract_write(*, path: Path, payload: dict[str, object], error_code: str) -> None:
+        write_count["value"] += 1
+        if write_count["value"] == 2:
+            raise RuntimeError("forced run-start interruption")
+        original_write_immutable_json(path=path, payload=payload, error_code=error_code)
+
+    monkeypatch.setattr(run_start_artifacts_module, "_write_immutable_json", _fail_after_first_runtime_contract_write)
+
+    with pytest.raises(RuntimeError, match="forced run-start interruption"):
+        _ = capture_run_start_artifacts(
+            workspace=tmp_path / "workspace",
+            run_id="run-stage-interruption",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+        )
+
+    runtime_root = tmp_path / "workspace" / "observability" / "run-stage-interruption" / "runtime_contracts"
+    staging_root = tmp_path / "workspace" / "observability" / "run-stage-interruption" / "runtime_contracts_staging"
+    assert runtime_root.exists() is False
+    assert staging_root.exists() is True
+
+
+# Layer: integration
+def test_capture_run_start_artifacts_fails_loudly_when_incomplete_staging_directory_exists(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    staging_root = workspace / "observability" / "run-stage-incomplete" / "runtime_contracts_staging"
+    staging_root.mkdir(parents=True)
+    (staging_root / "orphaned.json").write_text("{}", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="E_RUN_START_ARTIFACTS_INCOMPLETE"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-stage-incomplete",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
 
 
 # Layer: contract
@@ -937,38 +982,6 @@ def test_capture_run_start_artifacts_fails_closed_on_canonical_examples_library_
         _ = capture_run_start_artifacts(
             workspace=workspace,
             run_id="run-canonical-examples-library-immutable",
-            workload="core_epic",
-            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
-        )
-
-
-# Layer: contract
-def test_capture_run_start_artifacts_fails_closed_on_spec_debt_queue_mutation(
-    tmp_path: Path,
-) -> None:
-    workspace = tmp_path / "workspace"
-    _ = capture_run_start_artifacts(
-        workspace=workspace,
-        run_id="run-spec-debt-queue-immutable",
-        workload="core_epic",
-        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
-    )
-    spec_debt_queue_path = (
-        workspace
-        / "observability"
-        / "run-spec-debt-queue-immutable"
-        / "runtime_contracts"
-        / "spec_debt_queue.json"
-    )
-    spec_debt_queue_path.write_text(
-        '{"schema_version":"999.0","entries":[]}\n',
-        encoding="utf-8",
-    )
-
-    with pytest.raises(ValueError, match="E_RUN_SPEC_DEBT_QUEUE_IMMUTABLE"):
-        _ = capture_run_start_artifacts(
-            workspace=workspace,
-            run_id="run-spec-debt-queue-immutable",
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
         )

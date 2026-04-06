@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.runtime.contract_schema import ContractRegistry
+
 TRUST_LANGUAGE_REVIEW_POLICY_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_CLAIMS = {
@@ -72,10 +74,20 @@ def trust_language_review_policy_snapshot() -> dict[str, Any]:
 def validate_trust_language_review_policy(payload: dict[str, Any] | None = None) -> tuple[str, ...]:
     policy = dict(payload or trust_language_review_policy_snapshot())
     rows = list(policy.get("claims") or [])
-    if not rows:
-        raise ValueError("E_TRUST_LANGUAGE_REVIEW_POLICY_EMPTY")
+    registry = ContractRegistry(
+        schema_version=TRUST_LANGUAGE_REVIEW_POLICY_SCHEMA_VERSION,
+        rows=[dict(row) for row in rows if isinstance(row, dict)],
+        collection_key="claims",
+        row_id_field="claim",
+        empty_error="E_TRUST_LANGUAGE_REVIEW_POLICY_EMPTY",
+        row_schema_error="E_TRUST_LANGUAGE_REVIEW_POLICY_ROW_SCHEMA",
+        row_id_required_error="E_TRUST_LANGUAGE_REVIEW_POLICY_CLAIM_REQUIRED",
+        duplicate_error="E_TRUST_LANGUAGE_REVIEW_POLICY_DUPLICATE_CLAIM",
+        required_ids=_EXPECTED_CLAIMS,
+        required_set_error="E_TRUST_LANGUAGE_REVIEW_POLICY_CLAIM_SET_MISMATCH",
+    )
+    observed_claims = list(registry.validate(policy))
 
-    observed_claims: list[str] = []
     for row in rows:
         if not isinstance(row, dict):
             raise ValueError("E_TRUST_LANGUAGE_REVIEW_POLICY_ROW_SCHEMA")
@@ -95,12 +107,6 @@ def validate_trust_language_review_policy(payload: dict[str, Any] | None = None)
             raise ValueError(f"E_TRUST_LANGUAGE_REVIEW_POLICY_QUALIFIERS_REQUIRED:{claim}")
         if not approved_phrase_examples:
             raise ValueError(f"E_TRUST_LANGUAGE_REVIEW_POLICY_EXAMPLES_REQUIRED:{claim}")
-        observed_claims.append(claim)
-
-    if len(set(observed_claims)) != len(observed_claims):
-        raise ValueError("E_TRUST_LANGUAGE_REVIEW_POLICY_DUPLICATE_CLAIM")
-    if set(observed_claims) != _EXPECTED_CLAIMS:
-        raise ValueError("E_TRUST_LANGUAGE_REVIEW_POLICY_CLAIM_SET_MISMATCH")
 
     disallowed_phrases = {
         _normalize_phrase(token) for token in policy.get("disallowed_unqualified_phrases", []) if str(token).strip()

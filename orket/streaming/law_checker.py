@@ -25,8 +25,21 @@ class StreamLawChecker:
     Subscriber-side law checker for stream event invariants.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._turns: dict[tuple[str, str], TurnLawState] = {}
+
+    @staticmethod
+    def _require_int(value: object, *, field_name: str) -> int:
+        if isinstance(value, bool):
+            return int(value)
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str):
+            try:
+                return int(value)
+            except ValueError as exc:
+                raise StreamLawViolation(f"R0 dropped_seq_ranges {field_name} must be an integer") from exc
+        raise StreamLawViolation(f"R0 dropped_seq_ranges {field_name} must be an integer")
 
     def consume(self, raw_event: dict[str, Any]) -> None:
         event = StreamEvent.model_validate(raw_event)
@@ -81,8 +94,8 @@ class StreamLawChecker:
         for item in ranges:
             if not isinstance(item, dict):
                 raise StreamLawViolation("R0 dropped_seq_ranges entries must be objects")
-            start = int(item.get("start_seq"))
-            end = int(item.get("end_seq"))
+            start = self._require_int(item.get("start_seq"), field_name="start_seq")
+            end = self._require_int(item.get("end_seq"), field_name="end_seq")
             if start > end:
                 raise StreamLawViolation("R0 dropped_seq_ranges start_seq must be <= end_seq")
             normalized.append((start, end))

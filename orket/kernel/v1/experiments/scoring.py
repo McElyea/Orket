@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from statistics import mean, pvariance
 from typing import Any
 
-DEFAULT_WEIGHTS = {
+DEFAULT_WEIGHTS: dict[str, float] = {
     "forbidden_hit": 30,
     "anti_hallucination_hit": 30,
     "reopened_issue": 20,
@@ -16,7 +16,7 @@ DEFAULT_WEIGHTS = {
 
 
 def score_run(result: dict[str, Any], scoring: dict[str, Any]) -> dict[str, Any]:
-    weights = dict(DEFAULT_WEIGHTS)
+    weights: dict[str, float] = dict(DEFAULT_WEIGHTS)
     if isinstance(scoring.get("weights"), dict):
         for key, value in scoring["weights"].items():
             try:

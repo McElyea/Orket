@@ -14,7 +14,8 @@ class ToolParser:
     def _decode_relaxed_string(value: str) -> str:
         raw = value or ""
         try:
-            return json.loads(f'"{raw}"')
+            decoded = json.loads(f'"{raw}"')
+            return decoded if isinstance(decoded, str) else raw
         except json.JSONDecodeError:
             return raw.replace("\\\\", "\\").replace("\\n", "\n").replace("\\t", "\t").replace('\\"', '"')
 
@@ -198,7 +199,7 @@ class ToolParser:
         emit("parse_start", {"text_length": len(text)})
 
         # 1. Stack-based JSON extraction (Robust against nested blocks and conversational noise)
-        stack = []
+        stack: list[str] = []
         start_idx = -1
 
         for i, char in enumerate(text):

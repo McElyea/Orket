@@ -98,7 +98,7 @@ class StateMachine:
         requested: CardStatus,
         roles: str | list[str] = "system",
         wait_reason: WaitReason | None = None,
-    ):
+    ) -> bool:
         role_list = [roles] if isinstance(roles, str) else roles
         allowed_next = StateMachine._TRANSITIONS.get(card_type, {}).get(current, set())
 

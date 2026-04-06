@@ -12,7 +12,7 @@ from orket.runtime.truthful_memory_policy import (
 
 
 class MemoryEntry:
-    def __init__(self, content: str, metadata: dict[str, Any], timestamp: str):
+    def __init__(self, content: str, metadata: dict[str, Any], timestamp: str) -> None:
         self.content = content
         self.metadata = metadata
         self.timestamp = timestamp
@@ -24,11 +24,11 @@ class MemoryStore:
     Provides RAG capabilities using SQLite and keyword indexing.
     """
 
-    def __init__(self, db_path: str | Path):
+    def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
         self._initialized = False
 
-    async def _ensure_initialized(self):
+    async def _ensure_initialized(self) -> None:
         if self._initialized:
             return
         async with aiosqlite.connect(self.db_path) as conn:
@@ -44,7 +44,7 @@ class MemoryStore:
             await conn.commit()
         self._initialized = True
 
-    async def remember(self, content: str, metadata: dict[str, Any] = None):
+    async def remember(self, content: str, metadata: dict[str, Any] | None = None) -> None:
         """Stores a new memory."""
         await self._ensure_initialized()
         decision = evaluate_memory_write_policy(
@@ -69,7 +69,7 @@ class MemoryStore:
         await self._ensure_initialized()
         query_words = set(query.lower().split())
 
-        results = []
+        results: list[dict[str, Any]] = []
         async with aiosqlite.connect(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             # Use id for tie-breaking on same timestamp
@@ -83,7 +83,8 @@ class MemoryStore:
                 content_words = set(row["keywords"].split())
                 score = len(query_words.intersection(content_words))
                 if score > 0 or not query:  # Return recent if no query or matches
-                    metadata = json.loads(row["metadata_json"])
+                    metadata_payload = json.loads(row["metadata_json"])
+                    metadata = metadata_payload if isinstance(metadata_payload, dict) else {}
                     trust_level = classify_memory_trust_level(
                         scope="project_memory",
                         metadata=metadata,

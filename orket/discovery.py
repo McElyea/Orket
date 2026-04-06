@@ -1,5 +1,6 @@
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.logging import log_event
@@ -42,7 +43,7 @@ def get_installed_models() -> list[str]:
         return []
 
 
-def refresh_engine_mappings():
+def refresh_engine_mappings() -> dict[str, str]:
     """
     Scans installed models and hardware to find the best match for each category.
     Returns a dictionary of recommended overrides.
@@ -58,13 +59,13 @@ def refresh_engine_mappings():
 
     fs = AsyncFileTools(_default_project_root())
     registry = EngineRegistry.model_validate_json(fs.read_file_sync(str(registry_path)))
-    recommendations = {}
+    recommendations: dict[str, str] = {}
 
     for cat, mapping in registry.mappings.items():
         if not can_handle_model_tier(mapping.tier, hw):
             continue
 
-        best_match = None
+        best_match: str | None = None
         for m in models:
             if any(k in m.lower() for k in mapping.keywords) and (not best_match or "latest" in m):
                 # Simple heuristic: pick the one with 'latest' or the first one found
@@ -75,7 +76,7 @@ def refresh_engine_mappings():
     return recommendations
 
 
-def get_engine_recommendations():
+def get_engine_recommendations() -> list[dict[str, str]]:
     """
     Cross-references hardware profile + installed models against the Catalog
     to suggest what the user is missing for a 'Best-in-Class' setup.
@@ -91,7 +92,7 @@ def get_engine_recommendations():
 
     fs = AsyncFileTools(_default_project_root())
     registry = EngineRegistry.model_validate_json(fs.read_file_sync(str(registry_path)))
-    suggestions = []
+    suggestions: list[dict[str, str]] = []
     installed_lower = [str(item).strip().lower() for item in installed]
 
     for category, mapping in registry.mappings.items():
@@ -183,7 +184,7 @@ def perform_first_run_setup() -> dict[str, str]:
     return perform_startup_checks()
 
 
-def print_orket_manifest(department: str = "core"):
+def print_orket_manifest(department: str = "core") -> None:
     from orket.hardware import ModelTier, can_handle_model_tier, get_current_profile
 
     models, assets, hw = get_installed_models(), discover_project_assets(department), get_current_profile()
@@ -197,7 +198,7 @@ def print_orket_manifest(department: str = "core"):
     )
     print(manifest_header)
 
-    def find_best(keywords, tier):
+    def find_best(keywords: list[str], tier: Any) -> str:
         if not can_handle_model_tier(tier, hw):
             return f"Skipped ({tier})"
         for m in models:
@@ -247,8 +248,8 @@ def print_orket_manifest(department: str = "core"):
 
     else:
         print("\n[EPICS (Standalone)]")
-        for e in assets["epics"]:
-            print(f"  - {e}")
+        for epic_name in assets["epics"]:
+            print(f"  - {epic_name}")
 
     suggestion_rock = assets["rocks"][0] if assets["rocks"] else "..."
     print(f"\n[COMMAND SUGGESTION]\n  python main.py --card {suggestion_rock} --department {department}\n{'=' * 60}\n")

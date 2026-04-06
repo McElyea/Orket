@@ -34,7 +34,7 @@ class IssueRecord(BaseModel):
 
     @field_validator("priority", mode="before")
     @classmethod
-    def convert_priority(cls, v):
+    def convert_priority(cls, v: object) -> object:
         if isinstance(v, str):
             mapping = {"high": 3.0, "medium": 2.0, "low": 1.0}
             val = mapping.get(v.lower())

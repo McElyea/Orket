@@ -69,6 +69,8 @@ async def test_run_cards_odr_prebuild_uses_issue_odr_max_rounds_override(
             "odr_valid": True,
             "odr_pending_decisions": 0,
             "odr_stop_reason": "MAX_ROUNDS",
+            "termination_reason": "round_cap",
+            "final_auditor_verdict": "approved",
         }
 
     monkeypatch.setattr("orket.application.services.cards_odr_stage.run_live_refinement", _fake_live_refinement)
@@ -96,6 +98,8 @@ async def test_run_cards_odr_prebuild_uses_issue_odr_max_rounds_override(
     assert captured_kwargs["auditor_client"] is model_client
     assert summary["odr_max_rounds"] == 1
     assert summary["odr_accepted"] is True
+    assert summary["odr_termination_reason"] == "round_cap"
+    assert summary["odr_final_auditor_verdict"] == "approved"
 
 
 @pytest.mark.asyncio
@@ -121,6 +125,8 @@ async def test_run_cards_odr_prebuild_records_completed_event_for_valid_max_roun
             "odr_valid": True,
             "odr_pending_decisions": 0,
             "odr_stop_reason": "MAX_ROUNDS",
+            "termination_reason": "round_cap",
+            "final_auditor_verdict": "approved",
         }
 
     def _capture_event(name: str, payload: dict[str, object], _workspace: Path) -> None:
@@ -157,6 +163,8 @@ async def test_run_cards_odr_prebuild_records_completed_event_for_valid_max_roun
     assert artifact["accepted"] is True
     assert artifact["auditor_model"] == "qwen2.5:7b"
     assert artifact["odr_stop_reason"] == "MAX_ROUNDS"
+    assert artifact["termination_reason"] == "round_cap"
+    assert artifact["final_auditor_verdict"] == "approved"
 
 
 @pytest.mark.asyncio
@@ -185,6 +193,8 @@ async def test_run_cards_odr_prebuild_retries_format_violation_once(
                 "odr_pending_decisions": 0,
                 "odr_stop_reason": "FORMAT_VIOLATION",
                 "odr_failure_mode": "format_violation",
+                "termination_reason": "convergence",
+                "final_auditor_verdict": "rejected",
             }
         return {
             "task": str(kwargs["task"]),
@@ -198,6 +208,8 @@ async def test_run_cards_odr_prebuild_retries_format_violation_once(
             "odr_valid": True,
             "odr_pending_decisions": 0,
             "odr_stop_reason": "MAX_ROUNDS",
+            "termination_reason": "round_cap",
+            "final_auditor_verdict": "approved",
         }
 
     def _capture_event(name: str, payload: dict[str, object], _workspace: Path) -> None:

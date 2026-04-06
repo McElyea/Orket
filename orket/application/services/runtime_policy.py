@@ -212,7 +212,7 @@ def runtime_policy_options() -> dict[str, Any]:
             {"value": "architect_decides", "label": "Architect Decides (Monolith Only While Locked)"},
         ]
 
-    def text_option(default):
+    def text_option(default: Any) -> dict[str, Any]:
         return {"default": default, "options": [], "input_style": "text"}
 
     return {

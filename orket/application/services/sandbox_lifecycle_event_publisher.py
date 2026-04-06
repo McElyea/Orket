@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import Any
 
 from orket.application.services.sandbox_lifecycle_event_service import SandboxLifecycleEventService
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleEventRecord
@@ -11,7 +12,7 @@ from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleEventRec
 class SandboxLifecycleEventPublisher:
     """Publishes deterministic sandbox lifecycle events through the durable event service."""
 
-    def __init__(self, *, repository, spool_path: str | Path | None = None) -> None:
+    def __init__(self, *, repository: Any, spool_path: str | Path | None = None) -> None:
         resolved_spool = (
             Path(spool_path)
             if spool_path is not None

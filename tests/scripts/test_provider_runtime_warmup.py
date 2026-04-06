@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 from __future__ import annotations
 
 import scripts.providers.provider_runtime_warmup as warmup

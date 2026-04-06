@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from orket.application.services.sandbox_control_plane_closure_service import SandboxControlPlaneClosureService
 from orket.core.domain.sandbox_lifecycle import LifecycleEvent, SandboxState, TerminalReason
+from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
 
 if TYPE_CHECKING:
     from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
@@ -26,7 +27,7 @@ class SandboxTerminalOutcomeService:
         expected_lease_epoch: int | None = None,
         terminal_at: str | None = None,
         cleanup_due_at: str | None = None,
-    ):
+    ) -> SandboxLifecycleRecord:
         return await self._record_terminal_outcome(
             sandbox_id=sandbox_id,
             event=LifecycleEvent.WORKFLOW_TERMINAL_OUTCOME,
@@ -52,7 +53,7 @@ class SandboxTerminalOutcomeService:
         expected_lease_epoch: int | None = None,
         terminal_at: str | None = None,
         cleanup_due_at: str | None = None,
-    ):
+    ) -> SandboxLifecycleRecord:
         return await self._record_terminal_outcome(
             sandbox_id=sandbox_id,
             event=event,
@@ -78,7 +79,7 @@ class SandboxTerminalOutcomeService:
         expected_lease_epoch: int | None = None,
         terminal_at: str | None = None,
         cleanup_due_at: str | None = None,
-    ):
+    ) -> SandboxLifecycleRecord:
         return await self._record_terminal_outcome(
             sandbox_id=sandbox_id,
             event=event,
@@ -105,7 +106,7 @@ class SandboxTerminalOutcomeService:
         expected_lease_epoch: int | None,
         terminal_at: str | None,
         cleanup_due_at: str | None,
-    ):
+    ) -> SandboxLifecycleRecord:
         current = await self.lifecycle_service._require_record(sandbox_id)
         observed_at = terminal_at or self.lifecycle_service._now()
         due_at = cleanup_due_at or self.lifecycle_service.policy.cleanup_due_at_for(

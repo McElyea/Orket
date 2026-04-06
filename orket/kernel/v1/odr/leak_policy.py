@@ -182,15 +182,15 @@ def detect_code_leak(
     configured = list(DEFAULT_CODE_LEAK_PATTERNS) if patterns is None else list(patterns)
 
     if selected_mode == "strict":
-        hard = []
+        strict_hard: list[str] = []
         for index, pattern in enumerate(configured):
             if re.search(pattern, combined) is not None:
-                hard.append(f"strict_pattern_{index}")
+                strict_hard.append(f"strict_pattern_{index}")
         return LeakDetection(
-            hard_leak=bool(hard),
-            matches_hard=hard,
+            hard_leak=bool(strict_hard),
+            matches_hard=strict_hard,
             matches_weak=[],
-            classes=(["CODE"] if hard else []),
+            classes=(["CODE"] if strict_hard else []),
             warnings=[],
         )
 
@@ -203,12 +203,12 @@ def detect_code_leak(
         hard.append("fence_block")
         classes.append("FENCE")
 
-    for pattern in _PY_PATTERNS:
-        if pattern.search(combined) is not None:
-            hard.append(f"python_struct:{pattern.pattern}")
-    for pattern in _JS_TS_PATTERNS:
-        if pattern.search(combined) is not None:
-            hard.append(f"js_ts_struct:{pattern.pattern}")
+    for pattern_re in _PY_PATTERNS:
+        if pattern_re.search(combined) is not None:
+            hard.append(f"python_struct:{pattern_re.pattern}")
+    for pattern_re in _JS_TS_PATTERNS:
+        if pattern_re.search(combined) is not None:
+            hard.append(f"js_ts_struct:{pattern_re.pattern}")
     if any(item.startswith("python_struct:") or item.startswith("js_ts_struct:") for item in hard):
         classes.append("CODE")
 

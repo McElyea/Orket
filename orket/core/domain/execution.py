@@ -32,5 +32,5 @@ class ExecutionResult:
     turns: list[ExecutionTurn] = field(default_factory=list)
     status: str = "in_progress"
 
-    def add_turn(self, turn: ExecutionTurn):
+    def add_turn(self, turn: ExecutionTurn) -> None:
         self.turns.append(turn)

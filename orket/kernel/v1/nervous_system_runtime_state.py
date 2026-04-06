@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from threading import RLock
-from typing import Any
+from typing import Any, Literal, overload
 
 from .canonical import digest_of
 from .nervous_system_contract import GENESIS_STATE_DIGEST
@@ -18,7 +18,7 @@ _LEDGER_BY_SESSION: dict[str, list[dict[str, Any]]] = {}
 _EVENTS_BY_DIGEST: dict[str, dict[str, Any]] = {}
 
 _ADMISSIONS_BY_PROPOSAL: dict[tuple[str, str], dict[str, Any]] = {}
-_COMMIT_RESULTS_BY_KEY: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+_COMMIT_RESULTS_BY_KEY: dict[tuple[str, str, str, str, str | None, str | None], dict[str, Any]] = {}
 
 _APPROVALS_BY_ID: dict[str, dict[str, Any]] = {}
 _PENDING_APPROVALS_CACHE: dict[str, list[dict[str, Any]]] = {}
@@ -28,6 +28,14 @@ _TOKENS_BY_HASH: dict[str, dict[str, Any]] = {}
 
 def utc_iso_now() -> str:
     return datetime.now(UTC).isoformat()
+
+
+@overload
+def get_str(payload: dict[str, Any], key: str, *, required: Literal[True]) -> str: ...
+
+
+@overload
+def get_str(payload: dict[str, Any], key: str, *, required: Literal[False] = False) -> str | None: ...
 
 
 def get_str(payload: dict[str, Any], key: str, *, required: bool = False) -> str | None:

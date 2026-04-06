@@ -192,13 +192,15 @@ class Scaffolder:
             root = self.workspace_root / rel_root
             if not await asyncio.to_thread(root.exists):
                 continue
-            files = await asyncio.to_thread(
-                lambda root_path=root: [path for path in root_path.rglob("*") if path.is_file()]
-            )
+            files = await asyncio.to_thread(self._collect_files, root)
             for file_path in files:
                 if file_path.suffix.lower() in normalized_ext:
                     violations.append(str(file_path.relative_to(self.workspace_root)).replace("\\", "/"))
         return violations
+
+    @staticmethod
+    def _collect_files(root: Path) -> list[Path]:
+        return [path for path in root.rglob("*") if path.is_file()]
 
     @staticmethod
     def _normalize_str_list(raw: Any, default: Iterable[str]) -> list[str]:

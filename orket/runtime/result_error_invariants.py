@@ -6,6 +6,17 @@ _FAILURE_FORBIDDEN_STATUSES: tuple[str, ...] = ("done", "incomplete", "running")
 _FAILURE_FORBIDDEN_STATUS_SET = set(_FAILURE_FORBIDDEN_STATUSES)
 
 
+def _normalized_statuses(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    normalized: list[str] = []
+    for token in value:
+        item = str(token).strip().lower()
+        if item:
+            normalized.append(item)
+    return normalized
+
+
 def result_error_invariant_contract_snapshot() -> dict[str, object]:
     return {
         "schema_version": RESULT_ERROR_INVARIANT_CONTRACT_SCHEMA_VERSION,
@@ -17,9 +28,7 @@ def validate_result_error_invariant_contract(
     payload: dict[str, object] | None = None,
 ) -> tuple[str, ...]:
     contract = dict(payload or result_error_invariant_contract_snapshot())
-    statuses = [
-        str(token).strip().lower() for token in contract.get("failure_forbidden_statuses", []) if str(token).strip()
-    ]
+    statuses = _normalized_statuses(contract.get("failure_forbidden_statuses"))
     if not statuses:
         raise ValueError("E_RESULT_ERROR_INVARIANT_CONTRACT_EMPTY")
     if len(set(statuses)) != len(statuses):

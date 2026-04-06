@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.runtime.contract_schema import ContractRegistry
+
 WORKSPACE_HYGIENE_RULES_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_RULE_IDS = {
@@ -43,28 +45,20 @@ def workspace_hygiene_rules_snapshot() -> dict[str, Any]:
 
 def validate_workspace_hygiene_rules(payload: dict[str, Any] | None = None) -> tuple[str, ...]:
     ruleset = dict(payload or workspace_hygiene_rules_snapshot())
-    rows = list(ruleset.get("rules") or [])
-    if not rows:
-        raise ValueError("E_WORKSPACE_HYGIENE_RULES_EMPTY")
-
-    observed_ids: list[str] = []
-    for row in rows:
-        if not isinstance(row, dict):
-            raise ValueError("E_WORKSPACE_HYGIENE_RULES_ROW_SCHEMA")
-        rule_id = str(row.get("rule_id") or "").strip()
-        description = str(row.get("description") or "").strip()
-        severity = str(row.get("severity") or "").strip().lower()
-        if not rule_id:
-            raise ValueError("E_WORKSPACE_HYGIENE_RULES_RULE_ID_REQUIRED")
-        if not description:
-            raise ValueError(f"E_WORKSPACE_HYGIENE_RULES_DESCRIPTION_REQUIRED:{rule_id}")
-        if severity not in _ALLOWED_SEVERITY:
-            raise ValueError(f"E_WORKSPACE_HYGIENE_RULES_SEVERITY_INVALID:{rule_id}")
-        observed_ids.append(rule_id)
-
-    if len(set(observed_ids)) != len(observed_ids):
-        raise ValueError("E_WORKSPACE_HYGIENE_RULES_DUPLICATE_RULE_ID")
-    if {token for token in observed_ids} != _EXPECTED_RULE_IDS:
-        raise ValueError("E_WORKSPACE_HYGIENE_RULES_RULE_ID_SET_MISMATCH")
-
-    return tuple(sorted(observed_ids))
+    registry = ContractRegistry(
+        schema_version=WORKSPACE_HYGIENE_RULES_SCHEMA_VERSION,
+        rows=[dict(row) for row in list(ruleset.get("rules") or []) if isinstance(row, dict)],
+        collection_key="rules",
+        row_id_field="rule_id",
+        empty_error="E_WORKSPACE_HYGIENE_RULES_EMPTY",
+        row_schema_error="E_WORKSPACE_HYGIENE_RULES_ROW_SCHEMA",
+        row_id_required_error="E_WORKSPACE_HYGIENE_RULES_RULE_ID_REQUIRED",
+        duplicate_error="E_WORKSPACE_HYGIENE_RULES_DUPLICATE_RULE_ID",
+        required_ids=_EXPECTED_RULE_IDS,
+        required_set_error="E_WORKSPACE_HYGIENE_RULES_RULE_ID_SET_MISMATCH",
+        required_row_fields=("description", "severity"),
+        field_required_errors={"description": "E_WORKSPACE_HYGIENE_RULES_DESCRIPTION_REQUIRED"},
+        allowed_row_values={"severity": _ALLOWED_SEVERITY},
+        field_allowed_errors={"severity": "E_WORKSPACE_HYGIENE_RULES_SEVERITY_INVALID"},
+    )
+    return registry.validate(ruleset)

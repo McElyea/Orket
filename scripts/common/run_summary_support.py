@@ -15,6 +15,16 @@ def load_validated_run_summary(path: Path) -> dict[str, Any]:
     return payload
 
 
+def is_degraded_run_summary(payload: dict[str, Any]) -> bool:
+    return bool(payload.get("is_degraded") is True)
+
+
+def require_non_degraded_run_summary(payload: dict[str, Any], *, error_code: str = "run_summary_degraded") -> dict[str, Any]:
+    if is_degraded_run_summary(payload):
+        raise ValueError(error_code)
+    return payload
+
+
 def load_validated_run_summary_or_empty(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
@@ -33,7 +43,9 @@ def load_first_validated_run_summary(paths: Iterable[Path]) -> dict[str, Any] | 
 
 
 __all__ = [
+    "is_degraded_run_summary",
     "load_first_validated_run_summary",
     "load_validated_run_summary",
     "load_validated_run_summary_or_empty",
+    "require_non_degraded_run_summary",
 ]

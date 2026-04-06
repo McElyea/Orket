@@ -76,7 +76,7 @@ class BaseCardConfig(BaseModel):
 
     @field_validator("priority", mode="before")
     @classmethod
-    def convert_priority(cls, v):
+    def convert_priority(cls, v: object) -> object:
         """Migrate legacy string priorities to numeric values."""
         if isinstance(v, str):
             # 1. Handle actual level keywords
@@ -145,7 +145,7 @@ class IssueConfig(BaseCardConfig):
     max_retries: int = Field(default=3)
 
     # Separated Concerns
-    verification: IssueVerification = Field(default_factory=IssueVerification)
+    verification: IssueVerification = Field(default_factory=lambda: IssueVerification.model_construct())
     metrics: IssueMetrics = Field(default_factory=IssueMetrics)
 
 
@@ -292,4 +292,36 @@ class OrganizationConfig(BaseModel):
 
     process_rules: dict[str, Any] = Field(default_factory=dict)
 
-    bottleneck_thresholds: BottleneckThresholds = Field(default_factory=BottleneckThresholds)
+    bottleneck_thresholds: BottleneckThresholds = Field(default_factory=lambda: BottleneckThresholds.model_construct())
+
+
+__all__ = [
+    "ArchitectureGovernance",
+    "ArchitecturePrescription",
+    "BaseCardConfig",
+    "BrandingConfig",
+    "CardDetail",
+    "CardStatus",
+    "CardType",
+    "ContactInfo",
+    "DepartmentConfig",
+    "DialectConfig",
+    "EngineMapping",
+    "EngineRecommendation",
+    "EngineRegistry",
+    "EnvironmentConfig",
+    "EpicConfig",
+    "IssueConfig",
+    "IssueMetrics",
+    "IssueVerification",
+    "LessonsLearned",
+    "OrganizationConfig",
+    "RockConfig",
+    "RoleConfig",
+    "SeatConfig",
+    "SkillConfig",
+    "TeamConfig",
+    "VerificationResult",
+    "VerificationScenario",
+    "WaitReason",
+]

@@ -62,7 +62,7 @@ class TurnExecutor:
         workspace: Path,
         middleware: TurnLifecycleInterceptors | None = None,
         control_plane_service: TurnToolControlPlaneService | None = None,
-    ):
+    ) -> None:
         self.state = state_machine
         self.tool_gate = tool_gate
         self.workspace = workspace

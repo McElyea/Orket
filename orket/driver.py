@@ -171,7 +171,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             )
 
     async def _get_inventory(self) -> dict[str, Any]:
-        inventory = {"departments": {}}
+        inventory: dict[str, Any] = {"departments": {}}
         for dept_dir in self.model_root.iterdir():
             if dept_dir.is_dir():
                 dept_name = dept_dir.name
@@ -277,11 +277,14 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             )
             stripped = str(raw_text or "").strip()
             try:
-                return json.loads(stripped)
+                payload = json.loads(stripped)
             except json.JSONDecodeError as exc:
                 raise ValueError("Strict JSON mode requires pure JSON envelope output.") from exc
             except TypeError as exc:
                 raise ValueError("Strict JSON mode requires pure JSON envelope output.") from exc
+            if not isinstance(payload, dict):
+                raise ValueError("Strict JSON mode requires a JSON object envelope.")
+            return payload
 
         log_event(
             "driver_json_parse_mode_compatibility",
@@ -292,13 +295,19 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         text = str(raw_text or "")
         stripped = text.strip()
         if stripped.startswith("{") and stripped.endswith("}"):
-            return json.loads(stripped)
+            payload = json.loads(stripped)
+            if not isinstance(payload, dict):
+                raise ValueError("Compatibility mode requires a JSON object envelope.")
+            return payload
         start = text.find("{")
         end = text.rfind("}")
         if start == -1 or end == -1:
             raise ValueError("Compatibility mode could not find JSON envelope in model output.")
         self._compatibility_parse_fallback_used = True
-        return json.loads(text[start : end + 1])
+        payload = json.loads(text[start : end + 1])
+        if not isinstance(payload, dict):
+            raise ValueError("Compatibility mode requires a JSON object envelope.")
+        return payload
 
     async def process_request(self, message: str) -> str:
         request_text = str(message or "").strip()
@@ -389,7 +398,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
 
     async def execute_plan(self, plan: dict[str, Any]) -> str:
         action = plan.get("action")
-        reasoning = plan.get("reasoning", "No reasoning provided.")
+        reasoning = str(plan.get("reasoning", "No reasoning provided."))
         response_text = str(plan.get("response", "") or "").strip()
         normalized_action = str(action or "").strip().lower()
         workspace_root = self._operator_workspace_root()

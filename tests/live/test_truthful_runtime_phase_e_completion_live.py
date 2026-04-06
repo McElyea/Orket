@@ -79,7 +79,6 @@ async def test_phase_e_live_acceptance_gate_and_evidence_package_closeout(tmp_pa
     assert gate_payload["details"]["release_confidence_scorecard_check"]["ok"] is True
     assert gate_payload["details"]["trust_language_review_check"]["ok"] is True
     assert gate_payload["details"]["workspace_hygiene_rules_check"]["ok"] is True
-    assert gate_payload["details"]["spec_debt_queue_check"]["ok"] is True
 
     exit_code, evidence_payload, evidence_out_path = await asyncio.to_thread(
         generate_runtime_truth_evidence_package,

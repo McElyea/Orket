@@ -31,6 +31,10 @@ _COMMAND_CAPTURE = re.compile(
 _FILE_CAPTURE = re.compile(r"No such file or directory:\s*'([^']+)'")
 
 
+def _dict_payload(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, dict) else {}
+
+
 def failure_lessons_enabled() -> bool:
     raw = str(os.getenv("ORKET_FAILURE_LESSONS", "0")).strip().lower()
     return raw not in {"0", "false", "off", "no"}
@@ -172,13 +176,13 @@ def _score_lesson(
     score = 0
     if str(lesson.get("command", "")) == command_name:
         score += 10
-    lesson_request = lesson.get("request") if isinstance(lesson.get("request"), dict) else {}
+    lesson_request = _dict_payload(lesson.get("request"))
     if str(lesson_request.get("verify_profile", "")) == verify_profile:
         score += 5
     lesson_scope = [str(value) for value in (lesson_request.get("scope") or [])]
     scope_overlap = len(set(scope_inputs) & set(lesson_scope))
     score += scope_overlap * 3
-    lesson_plan = lesson.get("plan") if isinstance(lesson.get("plan"), dict) else {}
+    lesson_plan = _dict_payload(lesson.get("plan"))
     lesson_touch_set = [str(value) for value in (lesson_plan.get("touch_set") or [])]
     touch_overlap = len(set(touch_set) & set(lesson_touch_set))
     score += touch_overlap * 2
@@ -211,7 +215,7 @@ def lookup_relevant_lessons(
     ranked.sort(key=lambda item: (-item[0], item[1], str(item[2].get("id", ""))))
     results: list[dict[str, Any]] = []
     for score, _created_at, row in ranked[: max(1, int(top_k))]:
-        advice = row.get("advice") if isinstance(row.get("advice"), dict) else {}
+        advice = _dict_payload(row.get("advice"))
         results.append(
             {
                 "lesson_id": str(row.get("id", "")),

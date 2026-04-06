@@ -12,6 +12,7 @@ from orket.application.workflows.tool_invocation_contracts import (
     compute_tool_call_hash,
 )
 from orket.runtime.run_summary import (
+    build_degraded_run_summary_payload,
     build_run_summary_payload,
     generate_run_summary_for_finalize,
     reconstruct_run_summary,
@@ -142,6 +143,7 @@ def test_run_summary_schema_contract_is_canonical() -> None:
         "run_id",
         "status",
         "duration_ms",
+        "is_degraded",
         "tools_used",
         "artifact_ids",
         "failure_reason",
@@ -149,6 +151,7 @@ def test_run_summary_schema_contract_is_canonical() -> None:
     assert "truthful_runtime_artifact_provenance" in schema["properties"]
     assert "control_plane" in schema["properties"]
     assert payload["duration_ms"] == 5000
+    assert payload["is_degraded"] is False
 
 
 # Layer: contract
@@ -266,6 +269,8 @@ def test_run_summary_emits_odr_cards_runtime_fields() -> None:
                 "odr_valid": True,
                 "odr_pending_decisions": 0,
                 "odr_stop_reason": "STABLE_DIFF_FLOOR",
+                "odr_termination_reason": "convergence",
+                "odr_final_auditor_verdict": "approved",
                 "odr_artifact_path": "observability/sess-summary-odr/ISSUE-1/odr_refinement.json",
             },
         },
@@ -276,6 +281,8 @@ def test_run_summary_emits_odr_cards_runtime_fields() -> None:
     assert payload["odr_valid"] is True
     assert payload["odr_pending_decisions"] == 0
     assert payload["odr_stop_reason"] == "STABLE_DIFF_FLOOR"
+    assert payload["odr_termination_reason"] == "convergence"
+    assert payload["odr_final_auditor_verdict"] == "approved"
     assert payload["odr_artifact_path"] == "observability/sess-summary-odr/ISSUE-1/odr_refinement.json"
 
 
@@ -443,3 +450,15 @@ async def test_run_summary_emitted_and_reconstructed_live_replay_are_equal(tmp_p
     assert live_emitted == live_reconstructed
     assert replay_emitted == replay_reconstructed
     assert live_emitted == replay_emitted
+
+
+# Layer: contract
+def test_build_degraded_run_summary_marks_payload_as_degraded() -> None:
+    payload = build_degraded_run_summary_payload(
+        run_id="sess-summary-degraded",
+        status="failed",
+        failure_reason="missing-summary",
+        artifacts={},
+    )
+
+    assert payload["is_degraded"] is True

@@ -54,17 +54,25 @@ from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_dri
 from orket.runtime.runtime_truth_trace_ids import runtime_truth_trace_ids_snapshot
 from orket.runtime.safe_default_catalog import safe_default_catalog_snapshot
 from orket.runtime.sampling_discipline_guide import sampling_discipline_guide_snapshot
-from orket.runtime.source_attribution_policy import source_attribution_policy_snapshot
-from orket.runtime.spec_debt_queue import spec_debt_queue_snapshot
+from orket.runtime.source_attribution_policy import (
+    source_attribution_policy_snapshot,
+    validate_source_attribution_policy,
+)
 from orket.runtime.state_transition_registry import state_transition_registry_snapshot
 from orket.runtime.timeout_streaming_contracts import (
     streaming_semantics_snapshot,
     timeout_semantics_snapshot,
 )
-from orket.runtime.trust_language_review_policy import trust_language_review_policy_snapshot
+from orket.runtime.trust_language_review_policy import (
+    trust_language_review_policy_snapshot,
+    validate_trust_language_review_policy,
+)
 from orket.runtime.ui_lane_security_boundary_test_contract import ui_lane_security_boundary_test_contract_snapshot
 from orket.runtime.unknown_input_policy import unknown_input_policy_snapshot
-from orket.runtime.workspace_hygiene_rules import workspace_hygiene_rules_snapshot
+from orket.runtime.workspace_hygiene_rules import (
+    validate_workspace_hygiene_rules,
+    workspace_hygiene_rules_snapshot,
+)
 
 ContractSnapshotFactory = Callable[[], dict[str, Any]]
 ContractSnapshotDef = tuple[str, str, ContractSnapshotFactory, str]
@@ -121,6 +129,24 @@ def _checked_runtime_truth_contract_drift_report() -> dict[str, Any]:
 def _checked_retry_classification_policy_payload() -> dict[str, Any]:
     payload = retry_classification_policy_snapshot()
     _ = validate_retry_classification_policy(payload)
+    return payload
+
+
+def _checked_source_attribution_policy_payload() -> dict[str, Any]:
+    payload = source_attribution_policy_snapshot()
+    _ = validate_source_attribution_policy(payload)
+    return payload
+
+
+def _checked_workspace_hygiene_rules_payload() -> dict[str, Any]:
+    payload = workspace_hygiene_rules_snapshot()
+    _ = validate_workspace_hygiene_rules(payload)
+    return payload
+
+
+def _checked_trust_language_review_policy_payload() -> dict[str, Any]:
+    payload = trust_language_review_policy_snapshot()
+    _ = validate_trust_language_review_policy(payload)
     return payload
 
 
@@ -273,7 +299,7 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
     (
         "source_attribution_policy",
         "source_attribution_policy.json",
-        source_attribution_policy_snapshot,
+        _checked_source_attribution_policy_payload,
         "E_RUN_SOURCE_ATTRIBUTION_POLICY_IMMUTABLE",
     ),
     (
@@ -321,7 +347,7 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
     (
         "workspace_hygiene_rules",
         "workspace_hygiene_rules.json",
-        workspace_hygiene_rules_snapshot,
+        _checked_workspace_hygiene_rules_payload,
         "E_RUN_WORKSPACE_HYGIENE_RULES_IMMUTABLE",
     ),
     (
@@ -329,12 +355,6 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "canonical_examples_library.json",
         canonical_examples_library_snapshot,
         "E_RUN_CANONICAL_EXAMPLES_LIBRARY_IMMUTABLE",
-    ),
-    (
-        "spec_debt_queue",
-        "spec_debt_queue.json",
-        spec_debt_queue_snapshot,
-        "E_RUN_SPEC_DEBT_QUEUE_IMMUTABLE",
     ),
     (
         "non_fatal_error_budget",
@@ -369,7 +389,7 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
     (
         "trust_language_review_policy",
         "trust_language_review_policy.json",
-        trust_language_review_policy_snapshot,
+        _checked_trust_language_review_policy_payload,
         "E_RUN_TRUST_LANGUAGE_REVIEW_POLICY_IMMUTABLE",
     ),
     (

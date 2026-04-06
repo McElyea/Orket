@@ -13,10 +13,14 @@ KNOWN_TOOL_PROFILES = {
 }
 
 
+def _dict_payload(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, dict) else {}
+
+
 def resolve_tool_policy_flags(payload: dict[str, Any]) -> dict[str, Any]:
     tool_name = str(payload.get("tool_name") or "").strip()
-    args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
-    inline_profile = payload.get("tool_profile") if isinstance(payload.get("tool_profile"), dict) else {}
+    args = _dict_payload(payload.get("args"))
+    inline_profile = _dict_payload(payload.get("tool_profile"))
 
     resolved = {
         "policy_forbidden": False,

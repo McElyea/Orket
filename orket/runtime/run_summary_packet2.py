@@ -92,7 +92,7 @@ def _normalize_repair_entries(value: Any) -> list[dict[str, Any]]:
         if not repair_id:
             continue
         reasons = _normalize_reasons(item.get("reasons"))
-        entry = {
+        entry: dict[str, Any] = {
             "repair_id": repair_id,
             "turn_index": _normalize_turn_index(item.get("turn_index")),
             "source_event": str(item.get("source_event") or "turn_corrective_reprompt").strip()
@@ -142,7 +142,7 @@ def _normalize_narration_entries(value: Any) -> list[dict[str, Any]]:
         failure_reason = str(item.get("failure_reason") or "").strip().lower()
         if not operation_id or not tool or not effect_target or audit_status not in _AUDIT_STATUSES:
             continue
-        entry = {
+        entry: dict[str, Any] = {
             "operation_id": operation_id,
             "tool": tool,
             "effect_target": effect_target,
@@ -201,7 +201,7 @@ def _normalize_idempotency_surfaces(value: Any) -> list[dict[str, Any]]:
             or dedupe_status not in _IDEMPOTENCY_DEDUPE_STATUSES
         ):
             continue
-        entry = {
+        entry: dict[str, Any] = {
             "surface": surface,
             "operation_id": operation_id,
             "tool": tool,

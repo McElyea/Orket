@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.orchestration.engine import OrchestrationEngine
 
@@ -34,6 +34,6 @@ class ExtensionEngineAdapter:
             result = await self.engine.run_card(target, **params)
             if op in {"run_epic", "run_issue"}:
                 return {"transcript": result}
-            return result
+            return cast(dict[str, Any], result)
 
         raise ValueError(f"Unsupported run action op '{action.op}'")

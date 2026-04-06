@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Any
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_target_resource_refs import resource_id_for_supported_run
@@ -11,7 +12,12 @@ from orket.core.domain import OperatorCommandClass, OperatorInputClass
 class ToolApprovalControlPlaneOperatorService:
     """Publishes approval resolutions as control-plane risk acceptance or terminal commands."""
 
-    def __init__(self, *, publication: ControlPlanePublicationService, execution_repository=None) -> None:
+    def __init__(
+        self,
+        *,
+        publication: ControlPlanePublicationService,
+        execution_repository: Any | None = None,
+    ) -> None:
         self.publication = publication
         self.execution_repository = execution_repository
 

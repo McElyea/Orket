@@ -73,6 +73,14 @@ async def run_live_refinement(
     stop_reason = str(state.stop_reason or "")
     validity_verdict = str(final_trace.get("validity_verdict") or "invalid") if isinstance(final_trace, dict) else "invalid"
     odr_valid = validity_verdict == "valid"
+    pending_decisions = (
+        int(final_trace.get("pending_decision_count") or 0) if isinstance(final_trace, dict) else 0
+    )
+    termination_reason = "round_cap" if stop_reason == "MAX_ROUNDS" else "convergence"
+    if stop_reason == "MAX_ROUNDS":
+        final_auditor_verdict = "approved" if odr_valid and pending_decisions == 0 else "timeout"
+    else:
+        final_auditor_verdict = "approved" if odr_valid and pending_decisions == 0 else "rejected"
     if stop_reason in {"CODE_LEAK", "FORMAT_VIOLATION"}:
         odr_failure_mode: str | None = stop_reason.lower()
     elif not odr_valid:
@@ -91,8 +99,8 @@ async def run_live_refinement(
         "final_trace": final_trace,
         "odr_valid": odr_valid,
         "odr_failure_mode": odr_failure_mode,
-        "odr_pending_decisions": int(final_trace.get("pending_decision_count") or 0)
-        if isinstance(final_trace, dict)
-        else 0,
+        "odr_pending_decisions": pending_decisions,
         "odr_stop_reason": stop_reason or None,
+        "termination_reason": termination_reason,
+        "final_auditor_verdict": final_auditor_verdict,
     }

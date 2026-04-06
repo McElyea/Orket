@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
 import aiosqlite
 
@@ -12,7 +12,7 @@ from orket.schema import CardStatus
 class CardMiscOps:
     """Miscellaneous card operations delegated from AsyncCardRepository."""
 
-    def __init__(self, execute, get_by_build) -> None:
+    def __init__(self, execute: Any, get_by_build: Any) -> None:
         self._execute = execute
         self._get_by_build = get_by_build
 
@@ -37,7 +37,7 @@ class CardMiscOps:
                 history.append(f"{ts.strftime('%m/%d/%Y %I:%M%p')}: {row['role']} -> {row['action']}")
             return history
 
-        return await self._execute(_op, row_factory=True)
+        return cast(list[str], await self._execute(_op, row_factory=True))
 
     async def reset_build(self, build_id: str) -> None:
         async def _op(conn: aiosqlite.Connection) -> None:
@@ -62,7 +62,7 @@ class CardMiscOps:
             rows = await cursor.fetchall()
             return [dict(row) for row in rows]
 
-        return await self._execute(_op, row_factory=True)
+        return cast(list[dict[str, Any]], await self._execute(_op, row_factory=True))
 
     async def add_credits(self, issue_id: str, amount: float) -> None:
         async def _op(conn: aiosqlite.Connection) -> None:
@@ -75,7 +75,7 @@ class CardMiscOps:
         await self._execute(_op, commit=True)
 
     async def get_independent_ready_issues(self, build_id: str) -> list[IssueRecord]:
-        all_issues = await self._get_by_build(build_id)
+        all_issues = cast(list[IssueRecord], await self._get_by_build(build_id))
         done_ids = {issue.id for issue in all_issues if issue.status == CardStatus.DONE}
         ready_candidates: list[IssueRecord] = []
         for issue in all_issues:

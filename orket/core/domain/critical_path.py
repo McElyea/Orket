@@ -1,4 +1,6 @@
 
+from typing import Any
+
 from orket.core.critical_path import CriticalPathEngine as CoreCriticalPathEngine
 from orket.schema import EpicConfig
 
@@ -18,11 +20,11 @@ class CriticalPathEngine:
         return CoreCriticalPathEngine.get_priority_queue(epic.issues)
 
     @staticmethod
-    def calculate_weight(issue_id: str, adj_map: dict[str, set[str]], visited=None) -> int:
+    def calculate_weight(issue_id: str, adj_map: dict[str, set[str]], visited: set[str] | None = None) -> int:
         """Delegates to core logic."""
         return CoreCriticalPathEngine.calculate_weight(issue_id, adj_map, visited)
 
     @staticmethod
-    def build_dependency_graph(issues: list[dict]) -> dict[str, set[str]]:
+    def build_dependency_graph(issues: list[dict[str, Any]]) -> dict[str, set[str]]:
         """Delegates to core logic."""
         return CoreCriticalPathEngine.build_dependency_graph(issues)

@@ -24,15 +24,15 @@ class NoteStore:
     Only the orchestrator should mutate this store.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._notes: list[Note] = []
 
-    def add(self, note: Note):
+    def add(self, note: Note) -> None:
         self._notes.append(note)
 
     def get_for_role(self, role: str, up_to_step: int) -> list[Note]:
         """Returns all notes visible to a specific role at a specific turn."""
-        visible = []
+        visible: list[Note] = []
         for n in self._notes:
             if n.step_index >= up_to_step:
                 continue
@@ -43,5 +43,5 @@ class NoteStore:
     def all(self) -> list[Note]:
         return list(self._notes)
 
-    def clear(self):
+    def clear(self) -> None:
         self._notes = []

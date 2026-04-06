@@ -15,9 +15,11 @@ from orket.runtime.unknown_input_policy import unknown_input_policy_snapshot
 
 def safe_default_catalog_snapshot() -> dict[str, Any]:
     deterministic_mode_enabled, _ = resolve_deterministic_mode_flag(environment={})
+    surfaces_payload = unknown_input_policy_snapshot().get("surfaces")
+    surfaces = surfaces_payload if isinstance(surfaces_payload, list) else []
     unknown_input_surfaces = {
         str(row.get("surface") or "").strip(): str(row.get("on_unknown") or "").strip()
-        for row in unknown_input_policy_snapshot().get("surfaces", [])
+        for row in surfaces
         if isinstance(row, dict)
     }
     rows = [
@@ -65,7 +67,8 @@ def safe_default_catalog_snapshot() -> dict[str, Any]:
 
 def validate_safe_default_catalog(payload: dict[str, Any] | None = None) -> tuple[str, ...]:
     catalog = dict(payload or safe_default_catalog_snapshot())
-    rows = list(catalog.get("defaults") or [])
+    defaults_payload = catalog.get("defaults")
+    rows = defaults_payload if isinstance(defaults_payload, list) else []
     if not rows:
         raise ValueError("E_SAFE_DEFAULT_CATALOG_EMPTY")
     keys: list[str] = []
@@ -85,9 +88,13 @@ def validate_safe_default_catalog(payload: dict[str, Any] | None = None) -> tupl
     if len(set(keys)) != len(keys):
         raise ValueError("E_SAFE_DEFAULT_CATALOG_DUPLICATE_KEY")
     provider_unknown = next(
-        (row for row in rows if str(row.get("default_key") or "").strip() == "unknown_provider_input.on_unknown"),
+        (
+            row
+            for row in rows
+            if isinstance(row, dict) and str(row.get("default_key") or "").strip() == "unknown_provider_input.on_unknown"
+        ),
         None,
     )
-    if str((provider_unknown or {}).get("default_value") or "").strip() != "fail_closed":
+    if not isinstance(provider_unknown, dict) or str(provider_unknown.get("default_value") or "").strip() != "fail_closed":
         raise ValueError("E_SAFE_DEFAULT_CATALOG_PROVIDER_UNKNOWN_NOT_FAIL_CLOSED")
     return tuple(sorted(keys))

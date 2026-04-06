@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 # Layer: contract
 
 from __future__ import annotations
@@ -235,3 +236,34 @@ def test_run_local_model_coding_challenge_records_prompt_patch_metadata(monkeypa
     assert payload["prompt_patch"]["applied"] is True
     assert payload["prompt_patch"]["label"] == "candidate-1"
     assert payload["prompt_patch"]["source_ref"] == "prompt_patch.txt"
+
+
+def test_summarize_run_flags_degraded_summary_as_non_primary(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_json(
+        workspace / "runs" / "run-001" / "run_summary.json",
+        {
+            "run_id": "run-001",
+            "status": "failed",
+            "duration_ms": 1234,
+            "failure_reason": "summary_generation_failed",
+            "tools_used": [],
+            "artifact_ids": [],
+            "stop_reason": "summary_generation_failed",
+            "is_degraded": True,
+        },
+    )
+
+    run = script._summarize_run(
+        repo_root=tmp_path,
+        workspace=workspace,
+        epic="challenge_workflow_runtime",
+        provider="lmstudio",
+        model="google/gemma-4-26b-a4b",
+        run_ordinal=1,
+        execution={"command": ["python", "main.py"], "exit_code": 1, "stdout": "", "stderr": ""},
+    )
+
+    assert run["observed_path"] == "degraded"
+    assert run["result"] == "failure"
+    assert run["run_summary_warning"] == "run_summary_degraded"

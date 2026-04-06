@@ -5,10 +5,12 @@ import hmac
 import os
 import secrets
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Callable
 
 from .nervous_system_contract import canonical_scope_digest, tool_profile_digest
 from .nervous_system_runtime_state import _RUNTIME_LOCK, _TOKENS_BY_HASH, utc_iso_now
+
+AppendEventFn = Callable[..., dict[str, Any]]
 
 
 def _hmac_key() -> bytes:
@@ -51,7 +53,7 @@ def issue_credential_token(
     tool_name: str,
     scope_json: dict[str, Any],
     tool_profile_definition: dict[str, Any],
-    append_event,
+    append_event: AppendEventFn,
     executor_instance_id: str | None = None,
     expires_in_seconds: int = 900,
 ) -> dict[str, Any]:
@@ -123,7 +125,7 @@ def consume_credential_token(
     proposal_digest: str,
     tool_name: str,
     scope_json: dict[str, Any],
-    append_event,
+    append_event: AppendEventFn,
     executor_instance_id: str | None = None,
     expected_tool_profile_digest: str | None = None,
 ) -> dict[str, Any]:

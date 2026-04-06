@@ -41,7 +41,9 @@ class FixtureVerifier:
         return requested
 
     @staticmethod
-    def _run_subprocess(payload: dict, verification_root: Path, timeout_sec: int) -> subprocess.CompletedProcess[str]:
+    def _run_subprocess(
+        payload: dict[str, object], verification_root: Path, timeout_sec: int
+    ) -> subprocess.CompletedProcess[str]:
         env = os.environ.copy()
         env["PYTHONPATH"] = ""
         return subprocess.run(
@@ -56,7 +58,9 @@ class FixtureVerifier:
         )
 
     @staticmethod
-    def _run_container(payload: dict, verification_root: Path, timeout_sec: int) -> subprocess.CompletedProcess[str]:
+    def _run_container(
+        payload: dict[str, object], verification_root: Path, timeout_sec: int
+    ) -> subprocess.CompletedProcess[str]:
         fixture_path = Path(str(payload.get("fixture_path") or ""))
         try:
             relative_fixture = fixture_path.resolve().relative_to(verification_root.resolve()).as_posix()
@@ -152,7 +156,7 @@ class FixtureVerifier:
             )
 
         timeout_sec = int(os.getenv("ORKET_VERIFY_TIMEOUT_SEC", "5"))
-        payload = {
+        payload: dict[str, object] = {
             "fixture_path": str(fixture_path),
             "scenarios": [
                 {

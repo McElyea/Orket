@@ -249,7 +249,7 @@ async def close_namespace_mutation(
     publication: ControlPlanePublicationService,
     run: RunRecord,
     attempt: AttemptRecord,
-    lease,
+    lease: LeaseRecord,
     workload: WorkloadRecord,
     step_kind: str,
     output_ref: str,

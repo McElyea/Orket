@@ -64,13 +64,13 @@ class DefaultRouterNode:
 
     def route(self, issue: Any, team: Any, is_review_turn: bool) -> str:
         if not is_review_turn:
-            return issue.seat
+            return str(issue.seat)
 
         verifier_seat = next(
             (name for name, seat in team.seats.items() if "integrity_guard" in seat.roles),
             None,
         )
-        return verifier_seat or issue.seat
+        return str(verifier_seat or issue.seat)
 
 
 class DefaultPromptStrategyNode:
@@ -79,13 +79,13 @@ class DefaultPromptStrategyNode:
     Delegates to existing ModelSelector behavior to preserve runtime defaults.
     """
 
-    def __init__(self, model_selector: Any):
+    def __init__(self, model_selector: Any) -> None:
         self.model_selector = model_selector
 
     def select_model(self, role: str, asset_config: Any, override: str | None = None) -> str:
         override_token = str(override or "").strip()
         if not override_token:
-            return self.model_selector.select(role=role, asset_config=asset_config)
+            return str(self.model_selector.select(role=role, asset_config=asset_config))
         try:
             signature = inspect.signature(self.model_selector.select)
         except (TypeError, ValueError):
@@ -95,11 +95,11 @@ class DefaultPromptStrategyNode:
             if "override" in parameters or any(
                 parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in parameters.values()
             ):
-                return self.model_selector.select(role=role, asset_config=asset_config, override=override_token)
-        return self.model_selector.select(role=role, asset_config=asset_config)
+                return str(self.model_selector.select(role=role, asset_config=asset_config, override=override_token))
+        return str(self.model_selector.select(role=role, asset_config=asset_config))
 
     def select_dialect(self, model: str) -> str:
-        return self.model_selector.get_dialect_name(model)
+        return str(self.model_selector.get_dialect_name(model))
 
 
 class DefaultEvaluatorNode:
@@ -242,7 +242,7 @@ class DefaultToolStrategyNode:
     Preserves the legacy static tool mapping behavior.
     """
 
-    def compose(self, toolbox: Any) -> dict[str, Callable]:
+    def compose(self, toolbox: Any) -> dict[str, Callable[..., Any]]:
         return compose_default_tool_map(toolbox)
 
 
@@ -655,7 +655,7 @@ class DefaultOrchestrationLoopPolicyNode:
             return 10
 
     def is_review_turn(self, issue_status: Any) -> bool:
-        return issue_status == CardStatus.CODE_REVIEW
+        return bool(issue_status == CardStatus.CODE_REVIEW)
 
     def turn_status_for_issue(self, is_review_turn: bool) -> Any:
         return CardStatus.CODE_REVIEW if is_review_turn else CardStatus.IN_PROGRESS
@@ -666,7 +666,7 @@ class DefaultOrchestrationLoopPolicyNode:
             ordered_roles.insert(0, "integrity_guard")
         return ordered_roles
 
-    def required_action_tools_for_seat(self, seat_name: str, **_kwargs) -> list[str]:
+    def required_action_tools_for_seat(self, seat_name: str, **_kwargs: Any) -> list[str]:
         seat = (seat_name or "").strip().lower()
         issue = _kwargs.get("issue")
         issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
@@ -688,7 +688,7 @@ class DefaultOrchestrationLoopPolicyNode:
                 return ["read_file", "update_issue_status"]
         return resolved
 
-    def required_statuses_for_seat(self, seat_name: str, **_kwargs) -> list[str]:
+    def required_statuses_for_seat(self, seat_name: str, **_kwargs: Any) -> list[str]:
         seat = (seat_name or "").strip().lower()
         issue = _kwargs.get("issue")
         issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
@@ -707,21 +707,21 @@ class DefaultOrchestrationLoopPolicyNode:
             return ["done"]
         return status_requirements.get(seat, [])
 
-    def required_read_paths_for_seat(self, seat_name: str, **_kwargs) -> list[str]:
+    def required_read_paths_for_seat(self, seat_name: str, **_kwargs: Any) -> list[str]:
         issue = _kwargs.get("issue")
         return resolve_cards_required_read_paths(seat_name=seat_name, issue=issue)
 
-    def required_write_paths_for_seat(self, seat_name: str, **_kwargs) -> list[str]:
+    def required_write_paths_for_seat(self, seat_name: str, **_kwargs: Any) -> list[str]:
         issue = _kwargs.get("issue")
         return resolve_cards_required_write_paths(seat_name=seat_name, issue=issue)
 
-    def gate_mode_for_seat(self, seat_name: str, **_kwargs) -> str:
+    def gate_mode_for_seat(self, seat_name: str, **_kwargs: Any) -> str:
         seat = (seat_name or "").strip().lower()
         if seat == "integrity_guard":
             return "review_required"
         return "auto"
 
-    def approval_required_tools_for_seat(self, seat_name: str, **_kwargs) -> list[str]:
+    def approval_required_tools_for_seat(self, seat_name: str, **_kwargs: Any) -> list[str]:
         # Default OFF to preserve current behavior. Enable per seat via custom loop policy node.
         _ = (seat_name or "").strip().lower()
         return []
@@ -774,10 +774,10 @@ class DefaultOrchestrationLoopPolicyNode:
 
 
 class _DefaultAsyncModelClient:
-    def __init__(self, provider: Any):
+    def __init__(self, provider: Any) -> None:
         self.provider = provider
 
-    async def complete(self, messages):
+    async def complete(self, messages: Any) -> Any:
         return await self.provider.complete(messages)
 
     async def close(self) -> None:

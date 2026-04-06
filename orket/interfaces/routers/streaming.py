@@ -20,7 +20,7 @@ def register_streaming_routes(
     log_event: Callable[[str, dict[str, Any], Path], None],
 ) -> None:
     @app.websocket("/ws/events")
-    async def websocket_events(websocket: WebSocket):
+    async def websocket_events(websocket: WebSocket) -> None:
         api_runtime_node = api_runtime_node_getter()
         expected_key = os.getenv("ORKET_API_KEY")
         header_key = websocket.headers.get(api_key_name) or websocket.headers.get(api_key_name.lower())
@@ -44,7 +44,7 @@ def register_streaming_routes(
             await runtime_state.remove_websocket(websocket)
 
     @app.websocket("/ws/interactions/{session_id}")
-    async def websocket_interactions(session_id: str, websocket: WebSocket):
+    async def websocket_interactions(session_id: str, websocket: WebSocket) -> None:
         api_runtime_node = api_runtime_node_getter()
         interaction_manager = interaction_manager_getter()
         expected_key = os.getenv("ORKET_API_KEY")

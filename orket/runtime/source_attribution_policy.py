@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.runtime.contract_schema import ContractRegistry
+
 SOURCE_ATTRIBUTION_POLICY_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_MODES = {
@@ -54,10 +56,20 @@ def source_attribution_policy_snapshot() -> dict[str, Any]:
 def validate_source_attribution_policy(payload: dict[str, Any] | None = None) -> tuple[str, ...]:
     policy = dict(payload or source_attribution_policy_snapshot())
     rows = list(policy.get("modes") or [])
-    if not rows:
-        raise ValueError("E_SOURCE_ATTRIBUTION_POLICY_EMPTY")
+    registry = ContractRegistry(
+        schema_version=SOURCE_ATTRIBUTION_POLICY_SCHEMA_VERSION,
+        rows=[dict(row) for row in rows if isinstance(row, dict)],
+        collection_key="modes",
+        row_id_field="mode",
+        empty_error="E_SOURCE_ATTRIBUTION_POLICY_EMPTY",
+        row_schema_error="E_SOURCE_ATTRIBUTION_POLICY_ROW_SCHEMA",
+        row_id_required_error="E_SOURCE_ATTRIBUTION_POLICY_MODE_REQUIRED",
+        duplicate_error="E_SOURCE_ATTRIBUTION_POLICY_DUPLICATE_MODE",
+        required_ids=_EXPECTED_MODES,
+        required_set_error="E_SOURCE_ATTRIBUTION_POLICY_MODE_SET_MISMATCH",
+    )
+    observed_modes = list(registry.validate(policy))
 
-    observed_modes: list[str] = []
     for row in rows:
         if not isinstance(row, dict):
             raise ValueError("E_SOURCE_ATTRIBUTION_POLICY_ROW_SCHEMA")
@@ -70,12 +82,6 @@ def validate_source_attribution_policy(payload: dict[str, Any] | None = None) ->
             raise ValueError(f"E_SOURCE_ATTRIBUTION_POLICY_GATE_SCHEMA:{mode}")
         if not isinstance(high_stakes, bool):
             raise ValueError(f"E_SOURCE_ATTRIBUTION_POLICY_HIGH_STAKES_SCHEMA:{mode}")
-        observed_modes.append(mode)
-
-    if len(set(observed_modes)) != len(observed_modes):
-        raise ValueError("E_SOURCE_ATTRIBUTION_POLICY_DUPLICATE_MODE")
-    if set(observed_modes) != _EXPECTED_MODES:
-        raise ValueError("E_SOURCE_ATTRIBUTION_POLICY_MODE_SET_MISMATCH")
 
     required_claim_fields = tuple(
         str(token).strip() for token in policy.get("required_claim_fields", []) if str(token).strip()

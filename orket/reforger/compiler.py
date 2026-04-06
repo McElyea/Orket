@@ -17,6 +17,10 @@ from orket.reforger.routes import (
 ALLOWED_PATCH_SURFACE = ("/banks", "/entities", "/rules/defaults", "/archetypes", "/balance")
 
 
+def _dict_payload(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, dict) else {}
+
+
 @dataclass(frozen=True)
 class CompilerRunResult:
     ok: bool
@@ -185,15 +189,15 @@ def _eval_truth_only(blob: dict[str, Any], scenario_pack: dict[str, Any]) -> dic
 
 
 def _eval_meta_balance(blob: dict[str, Any], scenario_pack: dict[str, Any]) -> dict[str, Any]:
-    archetypes = blob.get("archetypes") if isinstance(blob.get("archetypes"), dict) else {}
-    balance = blob.get("balance") if isinstance(blob.get("balance"), dict) else {}
-    arche_ids = sorted(archetypes.keys())
+    archetypes = _dict_payload(blob.get("archetypes"))
+    balance = _dict_payload(blob.get("balance"))
+    arche_ids = sorted(str(key) for key in archetypes.keys())
     dominant_threshold = float(balance.get("dominant_threshold", 0.55))
     first_player_advantage = float(balance.get("first_player_advantage", 0.0))
     aggregate: dict[str, float] = {}
     for left in arche_ids:
-        row = archetypes[left].get("vs") if isinstance(archetypes[left], dict) else {}
-        if not isinstance(row, dict):
+        row = _dict_payload(_dict_payload(archetypes.get(left)).get("vs"))
+        if not row:
             aggregate[left] = 0.0
             continue
         values = [float(row.get(right, 0.0)) for right in arche_ids]
@@ -211,8 +215,8 @@ def _eval_meta_balance(blob: dict[str, Any], scenario_pack: dict[str, Any]) -> d
 
         if kind == "matrix_bounds":
             for left in arche_ids:
-                row = archetypes[left].get("vs") if isinstance(archetypes[left], dict) else {}
-                if not isinstance(row, dict):
+                row = _dict_payload(_dict_payload(archetypes.get(left)).get("vs"))
+                if not row:
                     ok = False
                     detail = f"{left}.vs missing"
                     break

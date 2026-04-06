@@ -80,7 +80,7 @@ def test_can_write_by_scope(policy_paths, path_key, expected):
     assert policy_paths["policy"].can_write(str(candidate)) is expected
 
 
-def test_launch_dir_is_readable():
+def test_launch_dir_readable_via_domain_scope():
     policy = create_session_policy(str(Path.cwd()))
     assert policy.can_read(str(Path.cwd())) is True
 
@@ -172,6 +172,25 @@ def test_policy_with_restricted_read_scope(tmp_path):
 
     assert policy.can_read(str(workspace / "ok.txt")) is True
     assert policy.can_read(str(reference / "nope.txt")) is False
+
+
+def test_launch_dir_not_readable_when_domain_scope_excluded(tmp_path):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    policy = FilesystemPolicy(
+        spaces={
+            "work_domain": str(tmp_path),
+            "workspaces": [str(workspace)],
+            "reference_spaces": [],
+        },
+        policy={
+            "read_scope": ["workspace"],
+            "write_scope": ["workspace"],
+        },
+    )
+
+    assert policy.can_read(str(Path.cwd())) is False
 
 
 def test_policy_with_domain_write_scope(tmp_path):

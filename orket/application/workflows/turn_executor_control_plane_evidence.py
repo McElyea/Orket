@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from orket.application.services.turn_tool_control_plane_service import (
     TurnToolControlPlaneError,
@@ -278,12 +278,13 @@ def turn_output_dir(
     resolver = getattr(executor.artifact_writer, "_turn_output_dir", None)
     if not callable(resolver):
         raise TurnToolControlPlaneError("turn artifact writer does not expose turn output resolution")
-    return resolver(
+    resolved = resolver(
         session_id=str(context.get("session_id", "unknown-session")),
         issue_id=issue_id,
         role_name=role_name,
         turn_index=int(context.get("turn_index", 0)),
     )
+    return cast(Path, resolved)
 
 
 def _validate_step_effect_alignment(
@@ -361,9 +362,10 @@ def _read_json_file(path: Path) -> dict[str, Any] | None:
     if not path.exists():
         return None
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError, TypeError, ValueError):
         return None
+    return payload if isinstance(payload, dict) else None
 
 
 __all__ = [

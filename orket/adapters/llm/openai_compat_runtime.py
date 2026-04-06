@@ -26,6 +26,10 @@ _AUDITOR_LABELS = [
 ]
 
 
+def _dict_payload(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, dict) else {}
+
+
 def _normalize_recovery_label(value: str) -> str:
     token = str(value or "").strip().lower().replace("_", " ")
     return " ".join(token.split())
@@ -215,7 +219,7 @@ def _ns_to_ms(value: Any) -> float | None:
 
 
 def extract_openai_usage(payload: dict[str, Any]) -> tuple[int | None, int | None, int | None]:
-    usage = payload.get("usage") if isinstance(payload.get("usage"), dict) else {}
+    usage = _dict_payload(payload.get("usage"))
     prompt_tokens = _to_int(usage.get("prompt_tokens"))
     completion_tokens = _to_int(usage.get("completion_tokens"))
     total_tokens = _to_int(usage.get("total_tokens"))
@@ -225,7 +229,7 @@ def extract_openai_usage(payload: dict[str, Any]) -> tuple[int | None, int | Non
 
 
 def extract_openai_timings(payload: dict[str, Any], latency_ms: int) -> tuple[float, float, float]:
-    timings = payload.get("timings") if isinstance(payload.get("timings"), dict) else {}
+    timings = _dict_payload(payload.get("timings"))
 
     prompt_ms = _to_float(timings.get("prompt_ms"))
     predicted_ms = _to_float(timings.get("predicted_ms"))
@@ -256,7 +260,10 @@ def extract_openai_timings(payload: dict[str, Any], latency_ms: int) -> tuple[fl
     elif predicted_ms is None:
         predicted_ms = max(0.0, float(total_ms) - float(prompt_ms or 0.0))
 
-    return float(prompt_ms), float(predicted_ms), float(total_ms)
+    resolved_prompt_ms = float(prompt_ms if prompt_ms is not None else 0.0)
+    resolved_predicted_ms = float(predicted_ms if predicted_ms is not None else 0.0)
+    resolved_total_ms = float(total_ms if total_ms is not None else latency_ms)
+    return resolved_prompt_ms, resolved_predicted_ms, resolved_total_ms
 
 
 def build_orket_session_id(

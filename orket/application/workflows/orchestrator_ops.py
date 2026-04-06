@@ -77,6 +77,20 @@ from orket.utils import sanitize_name
 
 load_user_preferences = _load_user_preferences
 
+__all__ = [
+    "DependencyManager",
+    "DependencyValidationError",
+    "DeploymentPlanner",
+    "DeploymentValidationError",
+    "PromptCompiler",
+    "PromptResolver",
+    "RuntimeVerifier",
+    "Scaffolder",
+    "ScaffoldValidationError",
+    "load_user_preferences",
+    "load_user_settings",
+]
+
 
 async def _close_provider_transport(provider: Any) -> None:
     close_method = getattr(provider, "close", None)
@@ -97,7 +111,7 @@ def _select_prompt_strategy_model(
     select_model = prompt_strategy_node.select_model
     override_token = str(override or "").strip()
     if not override_token:
-        return select_model(role=role, asset_config=asset_config)
+        return str(select_model(role=role, asset_config=asset_config))
     try:
         signature = inspect.signature(select_model)
     except (TypeError, ValueError):
@@ -107,8 +121,8 @@ def _select_prompt_strategy_model(
         if "override" in parameters or any(
             parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in parameters.values()
         ):
-            return select_model(role=role, asset_config=asset_config, override=override_token)
-    return select_model(role=role, asset_config=asset_config)
+            return str(select_model(role=role, asset_config=asset_config, override=override_token))
+    return str(select_model(role=role, asset_config=asset_config))
 
 
 def _normalize_turn_contract_override_list(value: Any, *, lowercase: bool = False) -> list[str] | None:
@@ -208,7 +222,7 @@ def _apply_issue_transition_locally(
         issue.wait_reason = WaitReason(wait_reason) if wait_reason else None
 
 
-def _resolve_architecture_mode(self) -> str:
+def _resolve_architecture_mode(self: Any) -> str:
     user_settings = _user_settings()
     raw = resolve_str(
         "ORKET_ARCHITECTURE_MODE",
@@ -217,10 +231,10 @@ def _resolve_architecture_mode(self) -> str:
         user_key="architecture_mode",
         user_settings=user_settings,
     )
-    return resolve_architecture_mode(raw, "", "")
+    return str(resolve_architecture_mode(raw, "", ""))
 
 
-def _resolve_frontend_framework_mode(self) -> str:
+def _resolve_frontend_framework_mode(self: Any) -> str:
     user_settings = _user_settings()
     raw = resolve_str(
         "ORKET_FRONTEND_FRAMEWORK_MODE",
@@ -229,10 +243,10 @@ def _resolve_frontend_framework_mode(self) -> str:
         user_key="frontend_framework_mode",
         user_settings=user_settings,
     )
-    return resolve_frontend_framework_mode(raw, "", "")
+    return str(resolve_frontend_framework_mode(raw, "", ""))
 
 
-def _resolve_architecture_pattern(self) -> str | None:
+def _resolve_architecture_pattern(self: Any) -> str | None:
     mode = self._resolve_architecture_mode()
     if mode == "force_microservices":
         return "microservices"
@@ -241,7 +255,7 @@ def _resolve_architecture_pattern(self) -> str | None:
     return None
 
 
-def _resolve_project_surface_profile(self) -> str:
+def _resolve_project_surface_profile(self: Any) -> str:
     user_settings = _user_settings()
     raw = resolve_str(
         "ORKET_PROJECT_SURFACE_PROFILE",
@@ -250,10 +264,10 @@ def _resolve_project_surface_profile(self) -> str:
         user_key="project_surface_profile",
         user_settings=user_settings,
     )
-    return resolve_project_surface_profile(raw, "", "")
+    return str(resolve_project_surface_profile(raw, "", ""))
 
 
-def _resolve_small_project_builder_variant(self) -> str:
+def _resolve_small_project_builder_variant(self: Any) -> str:
     user_settings = _user_settings()
     raw = resolve_str(
         "ORKET_SMALL_PROJECT_BUILDER_VARIANT",
@@ -262,12 +276,12 @@ def _resolve_small_project_builder_variant(self) -> str:
         user_key="small_project_builder_variant",
         user_settings=user_settings,
     )
-    return resolve_small_project_builder_variant(raw, "", "")
+    return str(resolve_small_project_builder_variant(raw, "", ""))
 
 
-def _resolve_protocol_governed_enabled(self) -> bool:
+def _resolve_protocol_governed_enabled(self: Any) -> bool:
     user_settings = _user_settings()
-    return resolve_bool(
+    return bool(resolve_bool(
         "ORKET_PROTOCOL_GOVERNED_ENABLED",
         "ORKET_PROTOCOL_GOVERNED",
         process_rules=_org_process_rules(self.org),
@@ -275,10 +289,10 @@ def _resolve_protocol_governed_enabled(self) -> bool:
         user_key="protocol_governed_enabled",
         user_settings=user_settings,
         default=False,
-    )
+    ))
 
 
-def _resolve_protocol_max_response_bytes(self) -> int:
+def _resolve_protocol_max_response_bytes(self: Any) -> int:
     user_settings = _user_settings()
     raw = resolve_str(
         "ORKET_PROTOCOL_MAX_RESPONSE_BYTES",
@@ -295,7 +309,7 @@ def _resolve_protocol_max_response_bytes(self) -> int:
     return 8192
 
 
-def _resolve_protocol_max_tool_calls(self) -> int:
+def _resolve_protocol_max_tool_calls(self: Any) -> int:
     user_settings = _user_settings()
     raw = resolve_str(
         "ORKET_PROTOCOL_MAX_TOOL_CALLS",
@@ -312,7 +326,7 @@ def _resolve_protocol_max_tool_calls(self) -> int:
     return 8
 
 
-def _resolve_protocol_determinism_context(self) -> dict[str, Any]:
+def _resolve_protocol_determinism_context(self: Any) -> dict[str, Any]:
     process_rules = _org_process_rules(self.org)
     user_settings = _user_settings()
     controls = resolve_protocol_determinism_controls(
@@ -395,10 +409,10 @@ def _resolve_protocol_determinism_context(self) -> dict[str, Any]:
     }
 
 
-def _resolve_local_prompting_mode(self) -> str:
+def _resolve_local_prompting_mode(self: Any) -> str:
     process_rules = _org_process_rules(self.org)
     user_settings = _user_settings()
-    return resolve_local_prompting_mode(
+    return str(resolve_local_prompting_mode(
         resolve_str(
             "ORKET_LOCAL_PROMPTING_MODE",
             process_rules=process_rules,
@@ -408,10 +422,10 @@ def _resolve_local_prompting_mode(self) -> str:
         ),
         "",
         "",
-    )
+    ))
 
 
-def _resolve_local_prompting_allow_fallback(self) -> bool:
+def _resolve_local_prompting_allow_fallback(self: Any) -> bool:
     process_rules = _org_process_rules(self.org)
     user_settings = _user_settings()
     return bool(
@@ -429,10 +443,10 @@ def _resolve_local_prompting_allow_fallback(self) -> bool:
     )
 
 
-def _resolve_local_prompting_fallback_profile_id(self) -> str:
+def _resolve_local_prompting_fallback_profile_id(self: Any) -> str:
     process_rules = _org_process_rules(self.org)
     user_settings = _user_settings()
-    return resolve_local_prompting_fallback_profile_id(
+    return str(resolve_local_prompting_fallback_profile_id(
         resolve_str(
             "ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID",
             process_rules=process_rules,
@@ -442,10 +456,10 @@ def _resolve_local_prompting_fallback_profile_id(self) -> str:
         ),
         "",
         "",
-    )
+    ))
 
 
-def _resolve_workflow_profile(self) -> str:
+def _resolve_workflow_profile(self: Any) -> str:
     process_rules = _org_process_rules(self.org)
     raw = resolve_str(
         "ORKET_WORKFLOW_PROFILE",
@@ -465,7 +479,7 @@ def _resolve_workflow_profile(self) -> str:
 
 
 async def _request_issue_transition(
-    self,
+    self: Any,
     *,
     issue: IssueConfig,
     target_status: CardStatus,
@@ -562,7 +576,7 @@ async def _request_issue_transition(
 
 
 async def _publish_issue_control_plane_transition(
-    self,
+    self: Any,
     *,
     issue: IssueConfig,
     current_status: CardStatus,
@@ -601,7 +615,7 @@ async def _publish_issue_control_plane_transition(
     )
 
 
-def _small_project_issue_threshold(self) -> int:
+def _small_project_issue_threshold(self: Any) -> int:
     raw = 3
     if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
         raw = self.org.process_rules.get("small_project_issue_threshold", 3)
@@ -611,16 +625,16 @@ def _small_project_issue_threshold(self) -> int:
         return 3
 
 
-def _should_auto_inject_small_project_reviewer(self) -> bool:
-    return resolve_bool(
+def _should_auto_inject_small_project_reviewer(self: Any) -> bool:
+    return bool(resolve_bool(
         "ORKET_SMALL_PROJECT_AUTO_INJECT_REVIEWER",
         process_rules=_org_process_rules(self.org),
         process_key="small_project_auto_inject_code_reviewer",
         default=False,
-    )
+    ))
 
 
-def _small_project_reviewer_seat_name(self) -> str:
+def _small_project_reviewer_seat_name(self: Any) -> str:
     if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
         configured = str(
             self.org.process_rules.get(
@@ -634,7 +648,7 @@ def _small_project_reviewer_seat_name(self) -> str:
     return "auto_code_reviewer"
 
 
-def _auto_inject_small_project_reviewer_seat(self, team: TeamConfig) -> str:
+def _auto_inject_small_project_reviewer_seat(self: Any, team: TeamConfig) -> str:
     seat_name = self._small_project_reviewer_seat_name()
     seats = getattr(team, "seats", {}) or {}
     existing = seats.get(seat_name)
@@ -643,16 +657,16 @@ def _auto_inject_small_project_reviewer_seat(self, team: TeamConfig) -> str:
             name="Auto Injected Code Reviewer",
             roles=["code_reviewer"],
         )
-        return seat_name
+        return str(seat_name)
 
     existing_roles = list(getattr(existing, "roles", []) or [])
     normalized_roles = {str(role).strip().lower() for role in existing_roles if str(role).strip()}
     if "code_reviewer" not in normalized_roles:
         existing.roles = existing_roles + ["code_reviewer"]
-    return seat_name
+    return str(seat_name)
 
 
-def _resolve_small_project_team_policy(self, epic: Any, team: Any) -> dict[str, Any]:
+def _resolve_small_project_team_policy(self: Any, epic: Any, team: Any) -> dict[str, Any]:
     issue_count = len(list(getattr(epic, "issues", []) or []))
     threshold = self._small_project_issue_threshold()
     active = 0 < issue_count <= threshold
@@ -692,36 +706,36 @@ def _resolve_small_project_team_policy(self, epic: Any, team: Any) -> dict[str, 
     }
 
 
-def _resolve_bool_flag(self, env_key: str, org_key: str, default: bool = False) -> bool:
-    return resolve_bool(
+def _resolve_bool_flag(self: Any, env_key: str, org_key: str, default: bool = False) -> bool:
+    return bool(resolve_bool(
         env_key,
         process_rules=_org_process_rules(self.org),
         process_key=org_key,
         default=default,
-    )
+    ))
 
 
-def _is_sandbox_disabled(self) -> bool:
-    return self._resolve_bool_flag("ORKET_DISABLE_SANDBOX", "disable_sandbox")
+def _is_sandbox_disabled(self: Any) -> bool:
+    return bool(self._resolve_bool_flag("ORKET_DISABLE_SANDBOX", "disable_sandbox"))
 
 
-def _is_scaffolder_disabled(self) -> bool:
-    return self._resolve_bool_flag("ORKET_DISABLE_SCAFFOLDER", "disable_scaffolder")
+def _is_scaffolder_disabled(self: Any) -> bool:
+    return bool(self._resolve_bool_flag("ORKET_DISABLE_SCAFFOLDER", "disable_scaffolder"))
 
 
-def _is_dependency_manager_disabled(self) -> bool:
-    return self._resolve_bool_flag("ORKET_DISABLE_DEPENDENCY_MANAGER", "disable_dependency_manager")
+def _is_dependency_manager_disabled(self: Any) -> bool:
+    return bool(self._resolve_bool_flag("ORKET_DISABLE_DEPENDENCY_MANAGER", "disable_dependency_manager"))
 
 
-def _is_runtime_verifier_disabled(self) -> bool:
-    return self._resolve_bool_flag("ORKET_DISABLE_RUNTIME_VERIFIER", "disable_runtime_verifier")
+def _is_runtime_verifier_disabled(self: Any) -> bool:
+    return bool(self._resolve_bool_flag("ORKET_DISABLE_RUNTIME_VERIFIER", "disable_runtime_verifier"))
 
 
-def _is_deployment_planner_disabled(self) -> bool:
-    return self._resolve_bool_flag("ORKET_DISABLE_DEPLOYMENT_PLANNER", "disable_deployment_planner")
+def _is_deployment_planner_disabled(self: Any) -> bool:
+    return bool(self._resolve_bool_flag("ORKET_DISABLE_DEPLOYMENT_PLANNER", "disable_deployment_planner"))
 
 
-def _resolve_prompt_resolver_mode(self) -> str:
+def _resolve_prompt_resolver_mode(self: Any) -> str:
     value = resolve_str(
         "ORKET_PROMPT_RESOLVER_MODE",
         process_rules=_org_process_rules(self.org),
@@ -732,7 +746,7 @@ def _resolve_prompt_resolver_mode(self) -> str:
     return "compiler"
 
 
-def _resolve_prompt_selection_policy(self) -> str:
+def _resolve_prompt_selection_policy(self: Any) -> str:
     value = resolve_str(
         "ORKET_PROMPT_SELECTION_POLICY",
         process_rules=_org_process_rules(self.org),
@@ -743,40 +757,40 @@ def _resolve_prompt_selection_policy(self) -> str:
     return "stable"
 
 
-def _resolve_prompt_selection_strict(self) -> bool:
-    return resolve_bool(
+def _resolve_prompt_selection_strict(self: Any) -> bool:
+    return bool(resolve_bool(
         "ORKET_PROMPT_SELECTION_STRICT",
         process_rules=_org_process_rules(self.org),
         process_key="prompt_selection_strict",
         default=True,
-    )
+    ))
 
 
-def _resolve_prompt_version_exact(self) -> str:
-    return resolve_str(
+def _resolve_prompt_version_exact(self: Any) -> str:
+    return str(resolve_str(
         "ORKET_PROMPT_VERSION_EXACT",
         process_rules=_org_process_rules(self.org),
         process_key="prompt_version_exact",
-    )
+    ))
 
 
-def _resolve_prompt_patch(self) -> str:
-    return resolve_str(
+def _resolve_prompt_patch(self: Any) -> str:
+    return str(resolve_str(
         "ORKET_PROMPT_PATCH",
         process_rules=_org_process_rules(self.org),
         process_key="prompt_patch",
-    )
+    ))
 
 
-def _resolve_prompt_patch_label(self) -> str:
-    return resolve_str(
+def _resolve_prompt_patch_label(self: Any) -> str:
+    return str(resolve_str(
         "ORKET_PROMPT_PATCH_LABEL",
         process_rules=_org_process_rules(self.org),
         process_key="prompt_patch_label",
-    )
+    ))
 
 
-def _resolve_verification_scope_limits(self) -> dict[str, int | None]:
+def _resolve_verification_scope_limits(self: Any) -> dict[str, int | None]:
     defaults: dict[str, int | None] = {
         "max_workspace_items": None,
         "max_active_context_items": None,
@@ -802,7 +816,7 @@ def _resolve_verification_scope_limits(self) -> dict[str, int | None]:
     return resolved
 
 
-def _history_context(self, seat_name: str | None = None) -> list[dict[str, str]]:
+def _history_context(self: Any, seat_name: str | None = None) -> list[dict[str, str]]:
     history_rows = self.transcript[-self.context_window :]
     normalized_seat = str(seat_name or "").strip().lower()
     if normalized_seat:
@@ -818,7 +832,7 @@ def _history_context(self, seat_name: str | None = None) -> list[dict[str, str]]
     ]
 
 
-async def verify_issue(self, issue_id: str, run_id: str | None = None) -> Any:
+async def verify_issue(self: Any, issue_id: str, run_id: str | None = None) -> Any:
     """
     Runs empirical verification for a specific issue.
     """
@@ -868,7 +882,7 @@ async def verify_issue(self, issue_id: str, run_id: str | None = None) -> Any:
     return result
 
 
-async def _trigger_sandbox(self, epic: EpicConfig, run_id: str | None = None):
+async def _trigger_sandbox(self: Any, epic: EpicConfig, run_id: str | None = None) -> None:
     """Helper to trigger sandbox deployment with per-epic locking."""
     from orket.core.domain.sandbox import SandboxStatus, TechStack
 
@@ -904,16 +918,16 @@ async def _trigger_sandbox(self, epic: EpicConfig, run_id: str | None = None):
 
 
 async def execute_epic(
-    self,
+    self: Any,
     active_build: str,
     run_id: str,
     epic: EpicConfig,
     team: TeamConfig,
     env: EnvironmentConfig,
-    target_issue_id: str = None,
+    target_issue_id: str | None = None,
     resume_mode: bool = False,
     model_override: str | None = None,
-):
+) -> None:
     """
     Main execution loop for an Epic.
     Executes independent issues in parallel using a TAG-based DAG.
@@ -1206,9 +1220,9 @@ async def execute_epic(
         )
 
         # 2. Parallel Dispatch with Semaphore
-        async def semaphore_wrapper(issue_data):
+        async def semaphore_wrapper(issue_data: Any) -> None:
             async with semaphore:
-                return await self._execute_issue_turn(
+                await self._execute_issue_turn(
                     issue_data,
                     epic,
                     team,
@@ -1235,7 +1249,7 @@ async def execute_epic(
             raise ExecutionFailed(f"Hyper-Loop exhausted iterations ({max_iterations})")
 
 
-async def _propagate_dependency_blocks(self, backlog: list[Any], run_id: str) -> int:
+async def _propagate_dependency_blocks(self: Any, backlog: list[Any], run_id: str) -> int:
     blocker_statuses = {CardStatus.BLOCKED, CardStatus.CANCELED, CardStatus.GUARD_REJECTED}
     status_by_id = {getattr(issue, "id", ""): getattr(issue, "status", None) for issue in backlog}
     propagated = []
@@ -1268,7 +1282,7 @@ async def _propagate_dependency_blocks(self, backlog: list[Any], run_id: str) ->
 
 
 async def _maybe_schedule_team_replan(
-    self,
+    self: Any,
     backlog: list[Any],
     run_id: str,
     active_build: str,
@@ -1376,7 +1390,7 @@ async def _maybe_schedule_team_replan(
 
 
 async def _execute_issue_turn(
-    self,
+    self: Any,
     issue_data: Any,
     epic: EpicConfig,
     team: TeamConfig,
@@ -1388,7 +1402,7 @@ async def _execute_issue_turn(
     toolbox: ToolBox,
     resume_mode: bool = False,
     model_override: str | None = None,
-):
+) -> None:
     """Executes a single turn for one issue."""
     issue = IssueConfig.model_validate(issue_data.model_dump())
     issue.params = apply_epic_cards_runtime_defaults(
@@ -1728,6 +1742,8 @@ async def _execute_issue_turn(
                 metadata={
                     "run_id": run_id,
                     "odr_stop_reason": odr_result.get("odr_stop_reason"),
+                    "odr_termination_reason": odr_result.get("odr_termination_reason"),
+                    "odr_final_auditor_verdict": odr_result.get("odr_final_auditor_verdict"),
                     "execution_profile": cards_runtime.get("execution_profile"),
                 },
             )
@@ -2029,7 +2045,7 @@ async def _execute_issue_turn(
         await _close_provider_transport(provider)
 
 
-def _validate_guard_rejection_payload(self, payload: GuardReviewPayload) -> dict[str, Any]:
+def _validate_guard_rejection_payload(self: Any, payload: GuardReviewPayload) -> dict[str, Any]:
     validate_fn = getattr(self.loop_policy_node, "validate_guard_rejection_payload", None)
     if callable(validate_fn):
         try:
@@ -2047,7 +2063,7 @@ def _validate_guard_rejection_payload(self, payload: GuardReviewPayload) -> dict
 
 
 async def _create_pending_gate_request(
-    self,
+    self: Any,
     *,
     run_id: str,
     issue_id: str,
@@ -2072,7 +2088,7 @@ async def _create_pending_gate_request(
             gate_mode = str(gate_mode_fn(seat_name))
 
     request_created_at = datetime.now(UTC).isoformat()
-    request_id = await self.pending_gates.create_request(
+    request_id = str(await self.pending_gates.create_request(
         session_id=run_id,
         issue_id=issue_id,
         seat_name=seat_name,
@@ -2081,7 +2097,7 @@ async def _create_pending_gate_request(
         reason=reason,
         created_at=request_created_at,
         payload=payload,
-    )
+    ))
     publisher = getattr(self, "tool_approval_control_plane_reservation", None)
     if publisher is not None:
         await publisher.publish_pending_guard_review_hold(
@@ -2097,7 +2113,7 @@ async def _create_pending_gate_request(
 
 
 async def _create_pending_tool_approval_request(
-    self,
+    self: Any,
     *,
     run_id: str,
     issue: IssueConfig,
@@ -2116,7 +2132,7 @@ async def _create_pending_tool_approval_request(
         role_name=seat_name,
         turn_index=int(turn_index),
     )
-    request_id = await self.pending_gates.create_request(
+    request_id = str(await self.pending_gates.create_request(
         session_id=run_id,
         issue_id=issue.id,
         seat_name=seat_name,
@@ -2132,7 +2148,7 @@ async def _create_pending_tool_approval_request(
             "control_plane_target_ref": control_plane_target_ref,
             "issue_status": str(issue.status.value if hasattr(issue.status, "value") else issue.status),
         },
-    )
+    ))
     publisher = getattr(self, "tool_approval_control_plane_reservation", None)
     if publisher is not None:
         await publisher.publish_pending_tool_approval_hold(
@@ -2149,7 +2165,7 @@ async def _create_pending_tool_approval_request(
 
 
 def _build_turn_context(
-    self,
+    self: Any,
     run_id: str,
     issue: IssueConfig,
     seat_name: str,
@@ -2230,11 +2246,11 @@ def _build_turn_context(
     params = getattr(issue, "params", None)
     normalized_issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
     normalized_seat_name = str(seat_name or "").strip().lower()
-    turn_contract = (
-        params.get("turn_contract")
+    raw_turn_contract = params.get("turn_contract") if isinstance(params, dict) else None
+    turn_contract: dict[str, Any] = (
+        dict(raw_turn_contract)
         if (
-            isinstance(params, dict)
-            and isinstance(params.get("turn_contract"), dict)
+            isinstance(raw_turn_contract, dict)
             and normalized_issue_seat
             and normalized_issue_seat == normalized_seat_name
         )
@@ -2365,7 +2381,7 @@ def _build_turn_context(
         )
         if existing is not None:
             return str(existing.get("request_id") or "")
-        return await self._create_pending_tool_approval_request(
+        return str(await self._create_pending_tool_approval_request(
             run_id=run_id,
             issue=issue,
             seat_name=seat_name,
@@ -2373,7 +2389,7 @@ def _build_turn_context(
             turn_index=turn_index,
             tool_name=tool_name,
             tool_args=tool_args,
-        )
+        ))
 
     async def _approved_tool_request_lookup(*, tool_name: str, tool_args: dict[str, Any]) -> str | None:
         existing = await _find_existing_tool_approval_request(
@@ -2567,6 +2583,8 @@ def _build_turn_context(
         "odr_valid": cards_runtime.get("odr_valid"),
         "odr_pending_decisions": cards_runtime.get("odr_pending_decisions"),
         "odr_stop_reason": cards_runtime.get("odr_stop_reason"),
+        "odr_termination_reason": cards_runtime.get("odr_termination_reason"),
+        "odr_final_auditor_verdict": cards_runtime.get("odr_final_auditor_verdict"),
         "odr_artifact_path": str(cards_runtime.get("odr_artifact_path") or ""),
         "odr_requirement": str(cards_runtime.get("odr_requirement") or ""),
         "verification_scope": build_verification_scope(
@@ -2644,7 +2662,7 @@ def _build_turn_context(
     }
 
 
-async def _build_dependency_context(self, issue: IssueConfig) -> dict[str, Any]:
+async def _build_dependency_context(self: Any, issue: IssueConfig) -> dict[str, Any]:
     depends_on = list(issue.depends_on or [])
     dependency_statuses: dict[str, str] = {}
     unresolved_dependencies: list[str] = []
@@ -2661,7 +2679,8 @@ async def _build_dependency_context(self, issue: IssueConfig) -> dict[str, Any]:
             unresolved_dependencies.append(dep_id)
             continue
         status_val = getattr(dep, "status", None)
-        status_text = status_val.value if hasattr(status_val, "value") else str(status_val)
+        status_text_value = getattr(status_val, "value", status_val)
+        status_text = str(status_text_value or "")
         dependency_statuses[dep_id] = status_text
         if status_val not in terminal_ok:
             unresolved_dependencies.append(dep_id)
@@ -2674,7 +2693,7 @@ async def _build_dependency_context(self, issue: IssueConfig) -> dict[str, Any]:
     }
 
 
-def _extract_guard_review_payload(self, content: str) -> GuardReviewPayload:
+def _extract_guard_review_payload(self: Any, content: str) -> GuardReviewPayload:
     blob = content or ""
     decoder = json.JSONDecoder()
     candidates: list[dict[str, Any]] = []
@@ -2714,7 +2733,7 @@ def _extract_guard_review_payload(self, content: str) -> GuardReviewPayload:
     )
 
 
-def _resolve_guard_event(self, status: Any) -> str | None:
+def _resolve_guard_event(self: Any, status: Any) -> str | None:
     if status == CardStatus.DONE:
         return "guard_approved"
     if status in {CardStatus.BLOCKED, CardStatus.GUARD_REJECTED}:
@@ -2725,7 +2744,7 @@ def _resolve_guard_event(self, status: Any) -> str | None:
 
 
 async def _dispatch_turn(
-    self,
+    self: Any,
     executor: TurnExecutor,
     issue: IssueConfig,
     role_config: RoleConfig,
@@ -2745,8 +2764,8 @@ async def _dispatch_turn(
 
 
 async def _save_checkpoint(
-    self, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, active_build: str
-):
+    self: Any, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, active_build: str
+) -> None:
     snapshot_data = {
         "epic": epic.model_dump(),
         "team": team.model_dump(),
@@ -2759,14 +2778,14 @@ async def _save_checkpoint(
 
 
 async def _handle_failure(
-    self,
+    self: Any,
     issue: IssueConfig,
     result: Any,
     run_id: str,
     roles: list[str],
     *,
     turn_index: int | None = None,
-):
+) -> None:
     from orket.core.domain.failure_reporter import FailureReporter
 
     await FailureReporter.generate_report(
@@ -2893,14 +2912,14 @@ async def _handle_failure(
     )
 
 
-def _is_issue_idesign_enabled(self, issue: IssueConfig) -> bool:
+def _is_issue_idesign_enabled(self: Any, issue: IssueConfig) -> bool:
     params = getattr(issue, "params", None)
     if not isinstance(params, dict):
         return False
     return bool(params.get("idesign_enabled", False))
 
 
-def _normalize_governance_violation_message(self, message: str | None) -> str:
+def _normalize_governance_violation_message(self: Any, message: str | None) -> str:
     normalized = str(message or "")
     normalized = normalized.replace("iDesign Violation:", "Governance Violation:")
     normalized = normalized.replace("iDesign AST Violation", "Governance AST Violation")

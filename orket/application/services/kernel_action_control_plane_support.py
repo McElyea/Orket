@@ -4,9 +4,10 @@ import hashlib
 import json
 from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from orket.core.contracts import EffectJournalEntryRecord, StepRecord
+from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AuthoritySourceClass,
     ClosureBasisClassification,
@@ -15,6 +16,9 @@ from orket.core.domain import (
     ResidualUncertaintyClassification,
     ResultClass,
 )
+
+if TYPE_CHECKING:
+    from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 
 
 class KernelActionControlPlaneSupportError(ValueError):
@@ -288,7 +292,7 @@ def build_step_record_for_commit(
 
 async def publish_step_from_commit_if_missing(
     *,
-    execution_repository,
+    execution_repository: ControlPlaneExecutionRepository,
     run_id: str,
     attempt_id: str,
     namespace_scope: str | None,
@@ -318,7 +322,7 @@ async def publish_step_from_commit_if_missing(
 
 async def publish_effect_from_commit_if_missing(
     *,
-    publication,
+    publication: ControlPlanePublicationService,
     run_id: str,
     attempt_id: str,
     request: dict[str, Any],

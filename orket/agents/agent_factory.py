@@ -1,11 +1,13 @@
 # orket/agents/agent_factory.py
 
+from typing import Any
+
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.agents.agent import Agent
 from orket.tools import ToolBox, get_tool_map
 
 
-def build_team_agents(team, provider: LocalModelProvider, toolbox: ToolBox) -> dict[str, Agent]:
+def build_team_agents(team: Any, provider: LocalModelProvider, toolbox: ToolBox) -> dict[str, Agent]:
     """
     Factory to instantiate agents for a specific Team.
     """

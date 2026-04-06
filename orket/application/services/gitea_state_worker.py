@@ -19,6 +19,7 @@ from orket.application.services.gitea_state_control_plane_lease_service import G
 from orket.application.services.gitea_state_control_plane_reservation_service import (
     GiteaStateControlPlaneReservationService,
 )
+from orket.core.contracts import AttemptRecord, RunRecord
 
 
 class LeaseExpiredError(RuntimeError):
@@ -43,7 +44,7 @@ class GiteaStateWorker:
         control_plane_execution_service: GiteaStateControlPlaneExecutionService | None = None,
         control_plane_lease_service: GiteaStateControlPlaneLeaseService | None = None,
         control_plane_reservation_service: GiteaStateControlPlaneReservationService | None = None,
-    ):
+    ) -> None:
         self.adapter = adapter
         self.worker_id = str(worker_id)
         self.lease_seconds = max(1, int(lease_seconds))
@@ -143,7 +144,7 @@ class GiteaStateWorker:
             reservation_id=control_plane_reservation_id,
         )
         stop_event = asyncio.Event()
-        lease_state = {
+        lease_state: dict[str, Any] = {
             "expired": False,
             "authority_drift": False,
             "reason": "",
@@ -471,7 +472,7 @@ class GiteaStateWorker:
         card_id: str,
         card: dict[str, Any],
         lease_observation: Any,
-    ):
+    ) -> tuple[RunRecord | None, AttemptRecord | None]:
         if self.control_plane_execution_service is None or not isinstance(lease_observation, dict):
             return None, None
         return await self.control_plane_execution_service.begin_claimed_execution(
@@ -535,8 +536,8 @@ class GiteaStateWorker:
         card_id: str,
         card: dict[str, Any],
         lease_observation: Any,
-        run,
-        attempt,
+        run: RunRecord | None,
+        attempt: AttemptRecord | None,
     ) -> None:
         if (
             self.control_plane_checkpoint_service is None

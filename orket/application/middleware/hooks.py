@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections.abc import Iterator
 from typing import Any, Protocol
 
 
@@ -69,12 +70,12 @@ class TurnLifecycleInterceptors:
         interceptors: list[TurnLifecycleInterceptor] | None = None,
         *,
         middlewares: list[TurnLifecycleInterceptor] | None = None,
-    ):
+    ) -> None:
         # Backward compatibility: `middlewares=` was the old constructor argument.
         source = interceptors if interceptors is not None else middlewares
-        self.interceptors = list(source or [])
+        self.interceptors: list[TurnLifecycleInterceptor] = list(source or [])
 
-    def _iter(self):
+    def _iter(self) -> Iterator[TurnLifecycleInterceptor]:
         yield from self.interceptors
 
     def apply_before_prompt(
@@ -87,10 +88,7 @@ class TurnLifecycleInterceptors:
     ) -> tuple[list[dict[str, str]], MiddlewareOutcome | None]:
         current = messages
         for interceptor in self._iter():
-            handler = getattr(interceptor, "before_prompt", None)
-            if not callable(handler):
-                continue
-            outcome = handler(current, issue=issue, role=role, context=context)
+            outcome = interceptor.before_prompt(current, issue=issue, role=role, context=context)
             if not outcome:
                 continue
             if outcome.short_circuit:
@@ -109,10 +107,7 @@ class TurnLifecycleInterceptors:
     ) -> tuple[Any, MiddlewareOutcome | None]:
         current = response
         for interceptor in self._iter():
-            handler = getattr(interceptor, "after_model", None)
-            if not callable(handler):
-                continue
-            outcome = handler(current, issue=issue, role=role, context=context)
+            outcome = interceptor.after_model(current, issue=issue, role=role, context=context)
             if not outcome:
                 continue
             if outcome.short_circuit:
@@ -131,10 +126,7 @@ class TurnLifecycleInterceptors:
         context: dict[str, Any],
     ) -> MiddlewareOutcome | None:
         for interceptor in self._iter():
-            handler = getattr(interceptor, "before_tool", None)
-            if not callable(handler):
-                continue
-            outcome = handler(tool_name, args, issue=issue, role_name=role_name, context=context)
+            outcome = interceptor.before_tool(tool_name, args, issue=issue, role_name=role_name, context=context)
             if outcome:
                 return outcome
         return None
@@ -151,10 +143,7 @@ class TurnLifecycleInterceptors:
     ) -> Any:
         current = result
         for interceptor in self._iter():
-            handler = getattr(interceptor, "after_tool", None)
-            if not callable(handler):
-                continue
-            outcome = handler(tool_name, args, current, issue=issue, role_name=role_name, context=context)
+            outcome = interceptor.after_tool(tool_name, args, current, issue=issue, role_name=role_name, context=context)
             if outcome and outcome.replacement is not None:
                 current = outcome.replacement
         return current
@@ -168,9 +157,7 @@ class TurnLifecycleInterceptors:
         context: dict[str, Any],
     ) -> None:
         for interceptor in self._iter():
-            handler = getattr(interceptor, "on_turn_failure", None)
-            if callable(handler):
-                handler(error, issue=issue, role=role, context=context)
+            interceptor.on_turn_failure(error, issue=issue, role=role, context=context)
 
 
 # Backward-compatible aliases.

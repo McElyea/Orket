@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, ConfigDict
@@ -42,14 +43,14 @@ class CompleteRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     node_id: str
-    result: dict | None = None
+    result: dict[str, Any] | None = None
 
 
 class FailRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     node_id: str
-    result: dict | None = None
+    result: dict[str, Any] | None = None
 
 
 class CoordinatorReservationSummary(BaseModel):
@@ -147,7 +148,7 @@ def _should_require_active_authority(*, card: Card | None, node_id: str) -> bool
     return str(card.claimed_by or "").strip() == str(node_id).strip()
 
 
-def _reservation_summary(record) -> CoordinatorReservationSummary | None:
+def _reservation_summary(record: Any) -> CoordinatorReservationSummary | None:
     if record is None:
         return None
     return CoordinatorReservationSummary(
@@ -163,7 +164,7 @@ def _reservation_summary(record) -> CoordinatorReservationSummary | None:
     )
 
 
-def _lease_summary(record) -> CoordinatorLeaseSummary | None:
+def _lease_summary(record: Any) -> CoordinatorLeaseSummary | None:
     if record is None:
         return None
     return CoordinatorLeaseSummary(
@@ -181,7 +182,7 @@ def _lease_summary(record) -> CoordinatorLeaseSummary | None:
     )
 
 
-def _resource_summary(record) -> CoordinatorResourceSummary | None:
+def _resource_summary(record: Any) -> CoordinatorResourceSummary | None:
     if record is None:
         return None
     return CoordinatorResourceSummary(

@@ -4,6 +4,10 @@ import inspect
 from typing import Any
 
 
+def _dict_payload(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, dict) else {}
+
+
 def _supports_runtime_context(callable_obj: Any) -> bool:
     try:
         parameters = inspect.signature(callable_obj).parameters
@@ -28,9 +32,9 @@ async def invoke_model_complete(model_client: Any, messages: list[dict[str, str]
 
 
 def runtime_tokens_payload(turn: Any) -> Any:
-    raw_data = turn.raw if isinstance(turn.raw, dict) else {}
-    usage = raw_data.get("usage") if isinstance(raw_data.get("usage"), dict) else {}
-    timings = raw_data.get("timings") if isinstance(raw_data.get("timings"), dict) else {}
+    raw_data = _dict_payload(turn.raw)
+    usage = _dict_payload(raw_data.get("usage"))
+    timings = _dict_payload(raw_data.get("timings"))
 
     prompt_tokens = usage.get("prompt_tokens", raw_data.get("input_tokens"))
     output_tokens = usage.get("completion_tokens", raw_data.get("output_tokens"))

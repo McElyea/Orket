@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
+yaml: Any | None
 try:
     import yaml
 except ModuleNotFoundError:  # pragma: no cover
@@ -241,9 +242,10 @@ class TextMysteryPersonaRouteV0:
             raise ValueError("PyYAML unavailable")
         if not path.is_file():
             raise ValueError(f"missing input file: {path}")
+        yaml_error_type = cast(type[Exception], getattr(yaml, "YAMLError", ValueError))
         try:
             payload = yaml.safe_load(path.read_text(encoding="utf-8"))
-        except (OSError, yaml.YAMLError) as exc:  # type: ignore[union-attr]
+        except (OSError, yaml_error_type) as exc:
             raise ValueError(f"invalid yaml: {path}") from exc
         return payload
 

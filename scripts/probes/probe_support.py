@@ -10,7 +10,7 @@ from typing import Any, Iterator, Sequence
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.core.critical_path import CriticalPathEngine
-from scripts.common.run_summary_support import load_validated_run_summary_or_empty
+from scripts.common.run_summary_support import is_degraded_run_summary, load_validated_run_summary_or_empty
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 DEFAULT_ROLE_NAME = "coder"
@@ -156,7 +156,10 @@ def run_root(workspace: Path, session_id: str) -> Path:
 
 def run_summary(workspace: Path, session_id: str) -> dict[str, Any]:
     path = run_root(workspace, session_id) / "run_summary.json"
-    return load_validated_run_summary_or_empty(path)
+    payload = load_validated_run_summary_or_empty(path)
+    if payload and is_degraded_run_summary(payload):
+        return {}
+    return payload
 
 
 def protocol_events(workspace: Path, session_id: str) -> list[dict[str, Any]]:

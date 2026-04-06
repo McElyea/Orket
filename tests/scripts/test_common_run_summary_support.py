@@ -1,3 +1,4 @@
+# LIFECYCLE: live
 # Layer: contract
 from __future__ import annotations
 
@@ -6,7 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from scripts.common.run_summary_support import load_first_validated_run_summary, load_validated_run_summary
+from scripts.common.run_summary_support import (
+    load_first_validated_run_summary,
+    load_validated_run_summary,
+    require_non_degraded_run_summary,
+)
 
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:
@@ -124,3 +129,22 @@ def test_load_first_validated_run_summary_skips_invalid_candidates(tmp_path: Pat
 
     assert payload is not None
     assert payload["run_id"] == "run-valid"
+
+
+@pytest.mark.contract
+def test_require_non_degraded_run_summary_rejects_degraded_payload(tmp_path: Path) -> None:
+    path = tmp_path / "run_summary.json"
+    _write_json(
+        path,
+        {
+            "run_id": "run-degraded",
+            "status": "failed",
+            "tools_used": [],
+            "artifact_ids": [],
+            "failure_reason": "summary_generation_failed",
+            "is_degraded": True,
+        },
+    )
+
+    with pytest.raises(ValueError, match="run_summary_degraded"):
+        require_non_degraded_run_summary(load_validated_run_summary(path))
