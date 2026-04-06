@@ -1,12 +1,13 @@
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
+
 from orket.adapters.storage.async_file_tools import AsyncFileTools
-from orket.orket import ConfigLoader
-from orket.schema import RockConfig, EpicConfig, TeamConfig
 from orket.agents.agent import Agent
-from orket.utils import sanitize_name
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
+from orket.orket import ConfigLoader
+from orket.schema import EpicConfig, RockConfig, TeamConfig
+from orket.utils import sanitize_name
 
 
 class PreviewBuilder:
@@ -17,7 +18,7 @@ class PreviewBuilder:
 
     def __init__(self, model_root: Path = Path("model")):
         self.model_root = model_root
-        self.fs = AsyncFileTools(Path("."))
+        self.fs = AsyncFileTools(Path())
 
         # Load Organization
         org_path = model_root / "organization.json"
@@ -80,7 +81,7 @@ class PreviewBuilder:
         agent = Agent(seat_name, desc, {}, mock_provider)
         return agent.get_compiled_prompt()
 
-    async def build_issue_preview(self, issue_id: str, epic_name: str, department: str = "core") -> Dict[str, Any]:
+    async def build_issue_preview(self, issue_id: str, epic_name: str, department: str = "core") -> dict[str, Any]:
         loader = ConfigLoader(self.model_root, department)
         epic = loader.load_asset("epics", epic_name, EpicConfig)
         team = loader.load_asset("teams", epic.team, TeamConfig)
@@ -105,7 +106,7 @@ class PreviewBuilder:
             "compiled_system_prompt": compiled_prompt,
         }
 
-    async def build_epic_preview(self, epic_name: str, department: str = "core") -> Dict[str, Any]:
+    async def build_epic_preview(self, epic_name: str, department: str = "core") -> dict[str, Any]:
         loader = ConfigLoader(self.model_root, department)
         epic = loader.load_asset("epics", epic_name, EpicConfig)
         team = loader.load_asset("teams", epic.team, TeamConfig)
@@ -126,7 +127,7 @@ class PreviewBuilder:
 
         return preview
 
-    async def build_rock_preview(self, rock_name: str, department: str = "core") -> Dict[str, Any]:
+    async def build_rock_preview(self, rock_name: str, department: str = "core") -> dict[str, Any]:
         loader = ConfigLoader(self.model_root, department)
         rock = loader.load_asset("rocks", rock_name, RockConfig)
 

@@ -22,8 +22,7 @@ from orket.core.contracts import (
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 from orket.core.domain import ReservationStatus
-from orket.domain.sandbox import PortAllocation
-
+from orket.core.domain.sandbox import PortAllocation
 
 pytestmark = pytest.mark.unit
 

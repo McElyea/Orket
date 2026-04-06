@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 PROVIDER_QUARANTINE_POLICY_CONTRACT_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_ENV_KEYS = (

@@ -3,27 +3,30 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
-from orket.logging import log_event
 from orket.application.services.turn_tool_control_plane_recovery import TurnToolCheckpointRecoveryError
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneError
 from orket.core.domain.state_machine import StateMachineError
+from orket.logging import log_event
 from orket.schema import IssueConfig, RoleConfig
-from .prompt_budget_guard import maybe_record_prompt_budget
+
 from .turn_executor_completed_replay import load_completed_turn_replay_if_needed
 from .turn_executor_control_plane import (
     ensure_turn_control_plane_reentry_allowed_if_needed,
     write_turn_checkpoint_and_publish_if_needed,
 )
 from .turn_executor_model_flow import prepare_turn_for_execution
-from .turn_failure_traces import emit_turn_failure_traces
 from .turn_executor_runtime import (
-    invoke_model_complete as _invoke_model_complete,
     runtime_tokens_payload as _runtime_tokens_payload,
+)
+from .turn_executor_runtime import (
     state_delta_from_tool_calls as _state_delta_from_tool_calls,
+)
+from .turn_executor_runtime import (
     synthesize_required_status_tool_call as _synthesize_required_status_tool_call,
 )
+from .turn_failure_traces import emit_turn_failure_traces
 
 if TYPE_CHECKING:
     from .turn_executor import TurnExecutor
@@ -39,8 +42,8 @@ async def execute_turn(
     role: RoleConfig,
     model_client: Any,
     toolbox: Any,
-    context: Dict[str, Any],
-    system_prompt: Optional[str] = None,
+    context: dict[str, Any],
+    system_prompt: str | None = None,
 ):
     from .turn_executor import ModelTimeoutError, ToolApprovalPendingError, ToolValidationError, TurnResult
 

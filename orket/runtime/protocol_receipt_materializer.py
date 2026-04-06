@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from typing import Any, Protocol
 
+import aiofiles
+
 from orket.application.services.turn_tool_control_plane_support import effect_id_for
 from orket.application.workflows.tool_invocation_contracts import (
     compute_tool_call_hash,
@@ -49,21 +51,23 @@ def _protocol_receipt_files(*, workspace: Path, session_id: str) -> list[Path]:
     return files
 
 
-def _load_turn_receipts(*, workspace: Path, session_id: str) -> list[dict[str, Any]]:
+async def _load_turn_receipts(*, workspace: Path, session_id: str) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for source_index, path in enumerate(_protocol_receipt_files(workspace=workspace, session_id=session_id), start=1):
-        with path.open("r", encoding="utf-8") as handle:
-            for line_index, line in enumerate(handle, start=1):
-                stripped = line.strip()
-                if not stripped:
-                    continue
-                payload = json.loads(stripped)
-                if not isinstance(payload, dict):
-                    continue
-                row = dict(payload)
-                row["_source_index"] = source_index
-                row["_line_index"] = line_index
-                rows.append(row)
+    receipt_files = await asyncio.to_thread(_protocol_receipt_files, workspace=workspace, session_id=session_id)
+    for source_index, path in enumerate(receipt_files, start=1):
+        async with aiofiles.open(path, encoding="utf-8") as handle:
+            content = await handle.read()
+        for line_index, line in enumerate(content.splitlines(), start=1):
+            stripped = line.strip()
+            if not stripped:
+                continue
+            payload = json.loads(stripped)
+            if not isinstance(payload, dict):
+                continue
+            row = dict(payload)
+            row["_source_index"] = source_index
+            row["_line_index"] = line_index
+            rows.append(row)
     rows.sort(
         key=lambda row: (
             int(row.get("_source_index") or 0),
@@ -215,11 +219,7 @@ async def materialize_protocol_receipts(
     session_id: str,
     run_ledger: _ProtocolLedgerWriter,
 ) -> dict[str, Any]:
-    rows = await asyncio.to_thread(
-        _load_turn_receipts,
-        workspace=workspace,
-        session_id=session_id,
-    )
+    rows = await _load_turn_receipts(workspace=workspace, session_id=session_id)
     if not rows:
         return {
             "session_id": str(session_id),

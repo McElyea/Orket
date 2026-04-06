@@ -123,6 +123,12 @@ def test_matches_authorized_removal_unrelated_removal_does_not_suppress() -> Non
     assert not _matches_authorized_removal(clause, [removal])
 
 
+def test_matches_authorized_removal_requires_exact_token_intersection() -> None:
+    clause = "must encrypt all data at rest"
+    removal = "[REMOVE] Drop the encryption default for sample fixtures."
+    assert not _matches_authorized_removal(clause, [removal])
+
+
 def test_matches_authorized_removal_empty_list_returns_false() -> None:
     assert not _matches_authorized_removal("must encrypt all backups at rest", [])
 

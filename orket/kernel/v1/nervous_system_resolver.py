@@ -4,7 +4,6 @@ from typing import Any
 
 from .nervous_system_policy import is_exfil_payload
 
-
 KNOWN_TOOL_PROFILES = {
     "fs.delete": {"risk": "critical", "destructive": True, "credentialed": False, "exfil": False},
     "fs.write_patch": {"risk": "high", "destructive": True, "credentialed": False, "exfil": False},

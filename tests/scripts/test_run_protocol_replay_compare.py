@@ -42,8 +42,7 @@ def _write_events(path: Path, *, status: str, ok: bool) -> None:
 
 def _write_receipts(path: Path, *, operation_id: str) -> None:
     path.write_text(
-        '{"receipt_seq":1,"receipt_digest":"%s","operation_id":"%s","event_seq_range":[2,2]}\n'
-        % ("a" * 64, operation_id),
+        '{{"receipt_seq":1,"receipt_digest":"{}","operation_id":"{}","event_seq_range":[2,2]}}\n'.format("a" * 64, operation_id),
         encoding="utf-8",
     )
 

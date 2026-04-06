@@ -8,11 +8,11 @@ from orket.core.domain.control_plane_enums import (
     AttemptState,
     AuthoritySourceClass,
     CapabilityClass,
-    ControlPlaneFailureClass,
     CheckpointResumabilityClass,
     CleanupAuthorityClass,
     ClosureBasisClassification,
     CompletionClassification,
+    ControlPlaneFailureClass,
     DegradationClassification,
     DivergenceClass,
     EffectClass,
@@ -26,11 +26,11 @@ from orket.core.domain.control_plane_enums import (
     OrphanClassification,
     OwnershipClass,
     ProtocolFailureClass,
+    RecoveryActionClass,
     ReservationKind,
     ReservationStatus,
-    RecoveryActionClass,
-    ResourceFailureClass,
     ResidualUncertaintyClassification,
+    ResourceFailureClass,
     ResultClass,
     RunState,
     SafeContinuationClass,
@@ -40,7 +40,6 @@ from orket.core.domain.control_plane_enums import (
 )
 from orket.core.domain.control_plane_final_truth import terminality_basis_for_closure
 from orket.core.domain.control_plane_lifecycle import is_terminal_attempt_state
-
 
 CONTROL_PLANE_CONTRACT_VERSION_V1 = "control_plane.contract.v1"
 CONTROL_PLANE_SNAPSHOT_VERSION_V1 = "control_plane.snapshot.v1"
@@ -58,9 +57,9 @@ class _ControlPlaneBaseModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     @model_validator(mode="after")
-    def _validate_contract_version(self) -> "_ControlPlaneBaseModel":
+    def _validate_contract_version(self) -> _ControlPlaneBaseModel:
         if hasattr(self, "contract_version"):
-            contract_version = str(getattr(self, "contract_version") or "").strip()
+            contract_version = str(self.contract_version or "").strip()
             if contract_version != CONTROL_PLANE_CONTRACT_VERSION_V1:
                 raise ValueError(
                     f"unsupported control-plane contract_version={contract_version!r}; "
@@ -78,7 +77,7 @@ class ResolvedPolicySnapshot(_ControlPlaneBaseModel):
     policy_payload: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
-    def _validate_schema_version(self) -> "ResolvedPolicySnapshot":
+    def _validate_schema_version(self) -> ResolvedPolicySnapshot:
         if self.schema_version != CONTROL_PLANE_SNAPSHOT_VERSION_V1:
             raise ValueError(
                 f"unsupported policy snapshot schema_version={self.schema_version!r}; "
@@ -96,7 +95,7 @@ class ResolvedConfigurationSnapshot(_ControlPlaneBaseModel):
     configuration_payload: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
-    def _validate_schema_version(self) -> "ResolvedConfigurationSnapshot":
+    def _validate_schema_version(self) -> ResolvedConfigurationSnapshot:
         if self.schema_version != CONTROL_PLANE_SNAPSHOT_VERSION_V1:
             raise ValueError(
                 f"unsupported configuration snapshot schema_version={self.schema_version!r}; "
@@ -153,7 +152,7 @@ class AttemptRecord(_ControlPlaneBaseModel):
     recovery_decision_id: NonEmptyStr | None = None
 
     @model_validator(mode="after")
-    def _validate_attempt_closure(self) -> "AttemptRecord":
+    def _validate_attempt_closure(self) -> AttemptRecord:
         terminal = is_terminal_attempt_state(self.attempt_state)
         if terminal and self.end_timestamp is None:
             raise ValueError("terminal attempt state requires end_timestamp")
@@ -237,7 +236,7 @@ class ReservationRecord(_ControlPlaneBaseModel):
     history_refs: list[NonEmptyStr] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _validate_promotion_fields(self) -> "ReservationRecord":
+    def _validate_promotion_fields(self) -> ReservationRecord:
         if self.status is ReservationStatus.PROMOTED_TO_LEASE and self.promoted_lease_id is None:
             raise ValueError("promoted reservation requires promoted_lease_id")
         if self.status is not ReservationStatus.PROMOTED_TO_LEASE and self.promoted_lease_id is not None:
@@ -295,7 +294,7 @@ class RecoveryDecisionRecord(_ControlPlaneBaseModel):
     rationale_ref: NonEmptyStr
 
     @model_validator(mode="after")
-    def _validate_execution_target(self) -> "RecoveryDecisionRecord":
+    def _validate_execution_target(self) -> RecoveryDecisionRecord:
         if self.resumed_attempt_id and self.new_attempt_id:
             raise ValueError("recovery decision cannot both resume an attempt and start a new attempt")
         if (self.failure_plane is None) != (self.failure_classification is None):
@@ -335,7 +334,7 @@ class OperatorActionRecord(_ControlPlaneBaseModel):
     receipt_refs: list[NonEmptyStr] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _validate_input_shape(self) -> "OperatorActionRecord":
+    def _validate_input_shape(self) -> OperatorActionRecord:
         if self.input_class is OperatorInputClass.COMMAND:
             if self.command_class is None:
                 raise ValueError("operator command input requires command_class")
@@ -369,7 +368,7 @@ class FinalTruthRecord(_ControlPlaneBaseModel):
     authoritative_result_ref: NonEmptyStr | None = None
 
     @model_validator(mode="after")
-    def _validate_truth_constraints(self) -> "FinalTruthRecord":
+    def _validate_truth_constraints(self) -> FinalTruthRecord:
         if self.result_class is ResultClass.SUCCESS and (
             self.evidence_sufficiency_classification is not EvidenceSufficiencyClassification.SUFFICIENT
         ):

@@ -10,7 +10,6 @@ from orket.application.workflows.protocol_hashing import (
 )
 from orket.runtime.protocol_error_codes import E_NETWORK_MODE_INVALID_PREFIX
 
-
 DEFAULT_TIMEZONE = "UTC"
 DEFAULT_LOCALE = "C.UTF-8"
 DEFAULT_NETWORK_MODE = "off"

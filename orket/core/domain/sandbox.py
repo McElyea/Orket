@@ -7,10 +7,11 @@ in Docker containers with allocated ports.
 """
 
 from __future__ import annotations
-from typing import Dict, Optional, List
-from pydantic import BaseModel, Field
-from datetime import datetime, UTC
+
 import enum
+from datetime import UTC, datetime
+
+from pydantic import BaseModel, Field
 
 
 class SandboxStatus(str, enum.Enum):
@@ -40,7 +41,7 @@ class PortAllocation(BaseModel):
     api: int  # Backend API port (8001+)
     frontend: int  # Frontend port (3001+)
     database: int  # Database port (5433+ or 27018+)
-    admin_tool: Optional[int] = None  # pgAdmin, Mongo Express, etc.
+    admin_tool: int | None = None  # pgAdmin, Mongo Express, etc.
 
 
 class Sandbox(BaseModel):
@@ -68,23 +69,23 @@ class Sandbox(BaseModel):
 
     # Lifecycle metadata
     created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
-    deployed_at: Optional[str] = None
-    deleted_at: Optional[str] = None
+    deployed_at: str | None = None
+    deleted_at: str | None = None
 
     # Health tracking
     health_checks_passed: int = 0
     health_checks_failed: int = 0
-    last_health_check: Optional[str] = None
+    last_health_check: str | None = None
 
     # Access URLs
     api_url: str  # http://localhost:8001
     frontend_url: str  # http://localhost:3001
     database_url: str  # postgresql://localhost:5433 or mongodb://localhost:27018
-    admin_url: Optional[str] = None  # http://localhost:8081 (pgAdmin)
+    admin_url: str | None = None  # http://localhost:8081 (pgAdmin)
 
     # Logs and errors
-    container_ids: Dict[str, str] = Field(default_factory=dict)  # service -> container_id
-    last_error: Optional[str] = None
+    container_ids: dict[str, str] = Field(default_factory=dict)  # service -> container_id
+    last_error: str | None = None
 
 
 class SandboxRegistry(BaseModel):
@@ -93,22 +94,22 @@ class SandboxRegistry(BaseModel):
     Persisted to SQLite for durability across Orket restarts.
     """
 
-    sandboxes: Dict[str, Sandbox] = Field(default_factory=dict)  # sandbox_id -> Sandbox
+    sandboxes: dict[str, Sandbox] = Field(default_factory=dict)  # sandbox_id -> Sandbox
     port_allocator: PortAllocator = Field(default_factory=lambda: PortAllocator())
 
     def register(self, sandbox: Sandbox) -> None:
         """Add sandbox to registry."""
         self.sandboxes[sandbox.id] = sandbox
 
-    def unregister(self, sandbox_id: str) -> Optional[Sandbox]:
+    def unregister(self, sandbox_id: str) -> Sandbox | None:
         """Remove sandbox from registry and return it."""
         return self.sandboxes.pop(sandbox_id, None)
 
-    def get(self, sandbox_id: str) -> Optional[Sandbox]:
+    def get(self, sandbox_id: str) -> Sandbox | None:
         """Retrieve sandbox by ID."""
         return self.sandboxes.get(sandbox_id)
 
-    def list_active(self) -> List[Sandbox]:
+    def list_active(self) -> list[Sandbox]:
         """List all non-deleted sandboxes."""
         return [s for s in self.sandboxes.values() if s.status != SandboxStatus.DELETED]
 
@@ -124,7 +125,7 @@ class PortAllocator(BaseModel):
     - Admin:    8081-8180
     """
 
-    allocated_ports: Dict[str, int] = Field(default_factory=dict)  # sandbox_id -> base_port
+    allocated_ports: dict[str, int] = Field(default_factory=dict)  # sandbox_id -> base_port
     next_available_base: int = 1  # Increments for each sandbox
 
     def allocate(self, sandbox_id: str, tech_stack: TechStack) -> PortAllocation:

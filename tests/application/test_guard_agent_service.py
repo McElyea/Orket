@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from orket.application.services.guard_agent import GuardAgent, GuardEvaluator, GuardController
+from orket.application.services.guard_agent import GuardAgent, GuardController, GuardEvaluator
 from orket.core.domain.guard_contract import GuardContract, GuardViolation, TerminalReason
 
 

@@ -5,7 +5,13 @@ from orket.application.services.turn_tool_control_plane_resource_lifecycle impor
     release_execution_authority_if_present,
 )
 from orket.application.services.turn_tool_control_plane_support import utc_now
-from orket.core.contracts import AttemptRecord, FinalTruthRecord, ReconciliationRecord, RecoveryDecisionRecord, RunRecord
+from orket.core.contracts import (
+    AttemptRecord,
+    FinalTruthRecord,
+    ReconciliationRecord,
+    RecoveryDecisionRecord,
+    RunRecord,
+)
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AttemptState,

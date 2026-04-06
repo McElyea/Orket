@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-
 _ALLOWED_EXCEPTION_POLICIES = {
     "log_and_raise",
     "log_and_return_error",

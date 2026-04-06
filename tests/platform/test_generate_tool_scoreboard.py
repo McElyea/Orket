@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import asyncio
 import json
-import subprocess
 
 import pytest
 
@@ -57,23 +57,22 @@ async def test_generate_tool_scoreboard_script_emits_scoreboard(tmp_path) -> Non
     )
 
     out_path = tmp_path / "tool_scoreboard.json"
-    result = subprocess.run(
-        [
-            "python",
-            "scripts/governance/generate_tool_scoreboard.py",
-            "--root",
-            str(tmp_path),
-            "--session-id",
-            run_id,
-            "--out",
-            str(out_path),
-            "--replay-pass-count",
-            "3",
-        ],
-        capture_output=True,
-        text=True,
+    result = await asyncio.create_subprocess_exec(
+        "python",
+        "scripts/governance/generate_tool_scoreboard.py",
+        "--root",
+        str(tmp_path),
+        "--session-id",
+        run_id,
+        "--out",
+        str(out_path),
+        "--replay-pass-count",
+        "3",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
     )
-    assert result.returncode == 0, result.stdout + "\n" + result.stderr
+    stdout, stderr = await result.communicate()
+    assert result.returncode == 0, stdout.decode("utf-8") + "\n" + stderr.decode("utf-8")
     payload = json.loads(out_path.read_text(encoding="utf-8"))
     assert payload["ok"] is True
     assert payload["scoreboard"]["tools"][0]["tool"] == "write_file"
@@ -104,20 +103,19 @@ async def test_generate_tool_scoreboard_script_fails_closed_on_incomplete_ledger
     )
 
     out_path = tmp_path / "tool_scoreboard.json"
-    result = subprocess.run(
-        [
-            "python",
-            "scripts/governance/generate_tool_scoreboard.py",
-            "--root",
-            str(tmp_path),
-            "--session-id",
-            run_id,
-            "--out",
-            str(out_path),
-        ],
-        capture_output=True,
-        text=True,
+    result = await asyncio.create_subprocess_exec(
+        "python",
+        "scripts/governance/generate_tool_scoreboard.py",
+        "--root",
+        str(tmp_path),
+        "--session-id",
+        run_id,
+        "--out",
+        str(out_path),
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
     )
+    await result.communicate()
     assert result.returncode != 0
     payload = json.loads(out_path.read_text(encoding="utf-8"))
     assert payload["ok"] is False

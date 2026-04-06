@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from pathlib import Path
 import struct
+from pathlib import Path
 
 import pytest
 
 from orket.adapters.storage.protocol_append_only_ledger import (
+    MAX_LEDGER_PAYLOAD_BYTES,
     AppendOnlyRunLedger,
     LedgerFramingError,
-    MAX_LEDGER_PAYLOAD_BYTES,
     decode_lpj_c32_stream,
     encode_lpj_c32_record,
 )
@@ -144,7 +144,7 @@ def test_lpj_c32_decode_rejects_checksum_corruption_on_first_middle_and_last_rec
         offsets.append((index, running))
         running += len(frame)
 
-    for index, stream_offset in offsets:
+    for _index, stream_offset in offsets:
         mutated = bytearray().join(frames)
         # Flip one payload byte from the selected frame.
         payload_start = stream_offset + 4

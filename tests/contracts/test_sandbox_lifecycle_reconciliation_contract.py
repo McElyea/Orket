@@ -9,7 +9,14 @@ from orket.application.services.sandbox_lifecycle_reconciliation_service import 
     SandboxLifecycleReconciliationService,
     SandboxObservation,
 )
-from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, OwnershipConfidence, SandboxState, TerminalReason, validate_lifecycle_transition
+from orket.core.domain.sandbox_lifecycle import (
+    CleanupState,
+    LifecycleEvent,
+    OwnershipConfidence,
+    SandboxState,
+    TerminalReason,
+    validate_lifecycle_transition,
+)
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
 

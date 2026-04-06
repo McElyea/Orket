@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 # Layer: contract
-
 import pytest
 
 from orket.runtime import provider_runtime_target as runtime_target

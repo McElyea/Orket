@@ -42,7 +42,7 @@ def test_score_report_emits_per_task_and_tier_aggregates() -> None:
     policy = json.loads(Path("model/core/contracts/benchmark_scoring_policy.json").read_text(encoding="utf-8"))
     report = _fake_report_for_tiers()
 
-    tasks_by_id = {task_id: {"id": task_id, "tier": int(task_id)} for task_id in report["details"].keys()}
+    tasks_by_id = {task_id: {"id": task_id, "tier": int(task_id)} for task_id in report["details"]}
     scored = score_module.score_report(report_payload=report, tasks_by_id=tasks_by_id, policy=policy)
 
     assert isinstance(scored["per_task_scores"], dict)
@@ -70,7 +70,7 @@ def test_scoring_gate_passes_for_good_report() -> None:
     gate_module = _load_script_module("check_benchmark_scoring_gate_b", "scripts/benchmarks/check_benchmark_scoring_gate.py")
     policy = json.loads(Path("model/core/contracts/benchmark_scoring_policy.json").read_text(encoding="utf-8"))
     report = _fake_report_for_tiers()
-    tasks_by_id = {task_id: {"id": task_id, "tier": int(task_id)} for task_id in report["details"].keys()}
+    tasks_by_id = {task_id: {"id": task_id, "tier": int(task_id)} for task_id in report["details"]}
     scored = score_module.score_report(report_payload=report, tasks_by_id=tasks_by_id, policy=policy)
 
     result = gate_module.evaluate_gate(scored=scored, policy=policy)

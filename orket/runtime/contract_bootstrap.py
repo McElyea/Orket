@@ -9,7 +9,6 @@ import yaml
 
 from orket.application.workflows.protocol_hashing import hash_canonical_json
 
-
 DEFAULT_ARTIFACT_SCHEMA_REGISTRY_PATH = Path("core/artifacts/schema_registry.yaml")
 DEFAULT_COMPATIBILITY_MAP_PATH = Path("core/tools/compatibility_map.yaml")
 DEFAULT_COMPATIBILITY_MAP_SCHEMA_PATH = Path("core/tools/compatibility_map_schema.yaml")

@@ -23,7 +23,6 @@ from orket.core.domain import LeaseStatus
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
-
 pytestmark = pytest.mark.unit
 
 

@@ -11,7 +11,6 @@ from orket.application.services.tool_approval_control_plane_reservation_service 
 from orket.core.domain import ReservationKind, ReservationStatus
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 
-
 pytestmark = pytest.mark.unit
 
 

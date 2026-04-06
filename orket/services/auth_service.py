@@ -5,18 +5,19 @@ Handles user authentication, password hashing, and JWT issuance.
 """
 
 from __future__ import annotations
+
 import os
-from datetime import datetime, timedelta, UTC
-from typing import Optional, Dict, Any
+import threading
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from jose import jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
 # Security configuration
-SECRET_KEY = os.getenv("ORKET_AUTH_SECRET")
-if not SECRET_KEY:
-    raise RuntimeError("ORKET_AUTH_SECRET environment variable is not set. Refusing to start in insecure mode.")
+SECRET_KEY: str | None = None
+_SECRET_KEY_LOCK = threading.Lock()
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day
@@ -30,7 +31,23 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: Optional[str] = None
+    username: str | None = None
+
+
+def get_secret_key() -> str:
+    global SECRET_KEY
+    if SECRET_KEY:
+        return SECRET_KEY
+    with _SECRET_KEY_LOCK:
+        if SECRET_KEY:
+            return SECRET_KEY
+        secret = str(os.getenv("ORKET_AUTH_SECRET") or "").strip()
+        if not secret:
+            raise RuntimeError(
+                "ORKET_AUTH_SECRET environment variable is not set. Refusing to start in insecure mode."
+            )
+        SECRET_KEY = secret
+        return SECRET_KEY
 
 
 def verify_password(plain_password, hashed_password):
@@ -41,12 +58,9 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None):
+def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None):
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(UTC) + expires_delta
-    else:
-        expire = datetime.now(UTC) + timedelta(minutes=15)
+    expire = datetime.now(UTC) + expires_delta if expires_delta else datetime.now(UTC) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, get_secret_key(), algorithm=ALGORITHM)
     return encoded_jwt

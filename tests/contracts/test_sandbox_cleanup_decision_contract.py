@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from orket.application.services.sandbox_cleanup_authority_service import CleanupAuthorityDecision
 from orket.application.services.sandbox_cleanup_decision_service import SandboxCleanupDecisionService
 from orket.core.domain.sandbox_cleanup import DockerResourceType, ObservedDockerResource

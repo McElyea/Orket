@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
-
+from typing import Any
 
 ARCHITECT_HEADERS = [
     "### REQUIREMENT",
@@ -22,21 +21,21 @@ def normalize_newlines(text: str) -> str:
     return str(text or "").replace("\r\n", "\n").replace("\r", "\n")
 
 
-def _ok(data: Dict[str, Any]) -> Dict[str, Any]:
+def _ok(data: dict[str, Any]) -> dict[str, Any]:
     return {"ok": True, "data": data, "error": None}
 
 
-def _err(code: str, message: str) -> Dict[str, Any]:
+def _err(code: str, message: str) -> dict[str, Any]:
     return {"ok": False, "data": None, "error": {"code": code, "message": message}}
 
 
-def _extract_sections(text: str, required_headers: List[str]) -> Tuple[Dict[str, str], Dict[str, Any] | None]:
+def _extract_sections(text: str, required_headers: list[str]) -> tuple[dict[str, str], dict[str, Any] | None]:
     normalized = normalize_newlines(text)
     if not normalized.strip():
         return {}, _err("EMPTY_INPUT", "Input text is empty.")
 
     lines = normalized.split("\n")
-    positions: Dict[str, List[int]] = {header: [] for header in required_headers}
+    positions: dict[str, list[int]] = {header: [] for header in required_headers}
     lower_lookup = {header.lower(): header for header in required_headers}
 
     for idx, line in enumerate(lines):
@@ -73,7 +72,7 @@ def _extract_sections(text: str, required_headers: List[str]) -> Tuple[Dict[str,
             "Required headers are out of order. out of order: non-header text appears before first required header.",
         )
 
-    sections: Dict[str, str] = {}
+    sections: dict[str, str] = {}
     for idx, header in enumerate(required_headers):
         start = positions[header][0] + 1
         end = len(lines) if idx == len(required_headers) - 1 else positions[required_headers[idx + 1]][0]
@@ -82,8 +81,8 @@ def _extract_sections(text: str, required_headers: List[str]) -> Tuple[Dict[str,
     return sections, None
 
 
-def _to_list(section_text: str) -> List[str]:
-    rows: List[str] = []
+def _to_list(section_text: str) -> list[str]:
+    rows: list[str] = []
     for line in normalize_newlines(section_text).split("\n"):
         trimmed = line.strip()
         if not trimmed:
@@ -97,7 +96,7 @@ def _to_list(section_text: str) -> List[str]:
     return rows
 
 
-def parse_architect(text: str) -> Dict[str, Any]:
+def parse_architect(text: str) -> dict[str, Any]:
     sections, error = _extract_sections(text, ARCHITECT_HEADERS)
     if error is not None:
         return error
@@ -116,7 +115,7 @@ def parse_architect(text: str) -> Dict[str, Any]:
     )
 
 
-def parse_auditor(text: str) -> Dict[str, Any]:
+def parse_auditor(text: str) -> dict[str, Any]:
     sections, error = _extract_sections(text, AUDITOR_HEADERS)
     if error is not None:
         return error

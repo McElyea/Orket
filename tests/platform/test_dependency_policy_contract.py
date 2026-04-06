@@ -27,7 +27,7 @@ def test_dependency_policy_rejects_unknown_namespace() -> None:
         policy.layer_for_module("orket.unknown_namespace.module")
     except ValueError:
         return
-    assert False, "expected ValueError for unknown namespace classification"
+    raise AssertionError("expected ValueError for unknown namespace classification")
 
 
 def test_dependency_direction_and_snapshot_use_canonical_policy(tmp_path: Path) -> None:

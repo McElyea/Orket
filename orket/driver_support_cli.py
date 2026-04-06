@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import shlex
-from typing import Dict, List
 
 
 class DriverCliMixin:
@@ -65,7 +64,7 @@ class DriverCliMixin:
 
         return None
 
-    async def _cli_handle_reforge(self, args: List[str]) -> str:
+    async def _cli_handle_reforge(self, args: list[str]) -> str:
         if not args:
             return "Usage: /reforge <inspect|run> [options]"
         sub = str(args[0]).strip().lower()
@@ -152,8 +151,8 @@ class DriverCliMixin:
             )
         return "Usage: /reforge <inspect|run> [options]"
 
-    def _parse_reforge_flags(self, tokens: List[str]) -> Dict[str, str]:
-        flags: Dict[str, str] = {}
+    def _parse_reforge_flags(self, tokens: list[str]) -> dict[str, str]:
+        flags: dict[str, str] = {}
         i = 0
         while i < len(tokens):
             token = str(tokens[i]).strip()
@@ -169,7 +168,7 @@ class DriverCliMixin:
             i += 1
         return flags
 
-    def _flag_enabled(self, flags: Dict[str, str], name: str) -> bool:
+    def _flag_enabled(self, flags: dict[str, str], name: str) -> bool:
         value = str(flags.get(name, "")).strip().lower()
         return value in {"1", "true", "yes", "on"}
 
@@ -194,7 +193,7 @@ class DriverCliMixin:
             ]
         )
 
-    def _cli_handle_list(self, args: List[str]) -> str:
+    def _cli_handle_list(self, args: list[str]) -> str:
         if not args:
             return "Usage: /list <resource> [department]"
         resource = args[0].strip().lower()
@@ -216,7 +215,7 @@ class DriverCliMixin:
         names = sorted([f.stem for f in resource_dir.glob("*.json")])
         return f"{resource.title()} in {department} ({len(names)}): " + ", ".join(names)
 
-    async def _cli_handle_show(self, args: List[str]) -> str:
+    async def _cli_handle_show(self, args: list[str]) -> str:
         if len(args) < 2:
             return "Usage: /show <team|environment|epic|rock> <name> [department]"
         resource = args[0].strip().lower()
@@ -228,7 +227,7 @@ class DriverCliMixin:
         data = json.loads(await self.fs.read_file(str(path)))
         return json.dumps(data, indent=2)
 
-    async def _cli_handle_create(self, args: List[str]) -> str:
+    async def _cli_handle_create(self, args: list[str]) -> str:
         if len(args) < 2:
             return "Usage: /create <team|environment|epic|rock> <name> [department]"
         resource = args[0].strip().lower()
@@ -258,14 +257,14 @@ class DriverCliMixin:
         await self.fs.write_file(str(target), payload)
         return f"Created {resource.rstrip('s')} '{name}' at {target.as_posix()}."
 
-    async def _cli_handle_list_cards(self, args: List[str]) -> str:
+    async def _cli_handle_list_cards(self, args: list[str]) -> str:
         if not args:
             return "Usage: /list-cards <epic> [department]"
         epic_name = self._slug_name(args[0])
         department = args[1] if len(args) > 1 else "core"
         return await self._list_cards_for_epic_async(epic_name, department)
 
-    async def _cli_handle_add_card(self, args: List[str]) -> str:
+    async def _cli_handle_add_card(self, args: list[str]) -> str:
         if len(args) < 4:
             return "Usage: /add-card <epic> <seat> <priority> <summary...> [--department <department>]"
         department = "core"

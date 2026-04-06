@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Optional
+from typing import Any
 
+from orket.application.services.governed_turn_tool_approval_continuation_service import (
+    GovernedTurnToolApprovalContinuationService,
+)
 from orket.application.services.pending_gate_control_plane_operator_service import (
     PendingGateControlPlaneOperatorService,
 )
@@ -11,9 +14,6 @@ from orket.application.services.tool_approval_control_plane_operator_service imp
 )
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
-)
-from orket.application.services.governed_turn_tool_approval_continuation_service import (
-    GovernedTurnToolApprovalContinuationService,
 )
 from orket.kernel.v1.nervous_system_runtime_extensions import (
     decide_approval_v1,
@@ -24,9 +24,9 @@ from orket.orchestration.approval_control_plane_read_model import (
     final_truth_summary,
     operator_action_summary,
     reservation_summary,
-    target_resource_summary,
     target_checkpoint_summary,
     target_effect_journal_summary,
+    target_resource_summary,
     target_run_summary,
     target_step_summary,
 )
@@ -107,7 +107,7 @@ def _approval_reservation_publisher(engine: Any) -> ToolApprovalControlPlaneRese
     if publication is None:
         return None
     publisher = ToolApprovalControlPlaneReservationService(publication=publication)
-    setattr(engine, "tool_approval_control_plane_reservation", publisher)
+    engine.tool_approval_control_plane_reservation = publisher
     return publisher
 
 
@@ -127,7 +127,7 @@ def _tool_approval_operator_publisher(engine: Any) -> ToolApprovalControlPlaneOp
         publication=publication,
         execution_repository=execution_repository,
     )
-    setattr(engine, "tool_approval_control_plane_operator", publisher)
+    engine.tool_approval_control_plane_operator = publisher
     return publisher
 
 
@@ -139,7 +139,7 @@ def _pending_gate_operator_publisher(engine: Any) -> PendingGateControlPlaneOper
     if publication is None:
         return None
     publisher = PendingGateControlPlaneOperatorService(publication=publication)
-    setattr(engine, "pending_gate_control_plane_operator", publisher)
+    engine.pending_gate_control_plane_operator = publisher
     return publisher
 
 
@@ -161,16 +161,16 @@ def _governed_turn_tool_approval_continuation_service(
         execution_repository=execution_repository,
         publication=publication,
     )
-    setattr(engine, "governed_turn_tool_approval_continuation", service)
+    engine.governed_turn_tool_approval_continuation = service
     return service
 
 
 async def list_approvals(
     engine: Any,
     *,
-    session_id: Optional[str] = None,
-    status: Optional[str] = None,
-    request_id: Optional[str] = None,
+    session_id: str | None = None,
+    status: str | None = None,
+    request_id: str | None = None,
     limit: int = 100,
 ) -> list[dict[str, Any]]:
     normalized_status = _normalize_packet1_status_filter(status)
@@ -198,7 +198,7 @@ async def list_approvals(
     return [await _enrich_approval_row(engine, item) for item in items]
 
 
-async def get_approval(engine: Any, approval_id: str) -> Optional[dict[str, Any]]:
+async def get_approval(engine: Any, approval_id: str) -> dict[str, Any] | None:
     if _nervous_system_enabled():
         approval = get_approval_v1(approval_id)
         if approval is None:
@@ -220,9 +220,9 @@ async def decide_approval(
     *,
     approval_id: str,
     decision: str,
-    edited_proposal: Optional[dict[str, Any]] = None,
-    notes: Optional[str] = None,
-    operator_actor_ref: Optional[str] = None,
+    edited_proposal: dict[str, Any] | None = None,
+    notes: str | None = None,
+    operator_actor_ref: str | None = None,
 ) -> dict[str, Any]:
     if _nervous_system_enabled():
         existing = await get_approval(engine, approval_id)

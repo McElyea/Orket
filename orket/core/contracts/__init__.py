@@ -1,5 +1,6 @@
 """Core contracts/ports."""
 
+from .control_plane_effect_journal_models import CheckpointAcceptanceRecord, EffectJournalEntryRecord
 from .control_plane_models import (
     CONTROL_PLANE_CONTRACT_VERSION_V1,
     CONTROL_PLANE_SNAPSHOT_VERSION_V1,
@@ -19,7 +20,6 @@ from .control_plane_models import (
     StepRecord,
     WorkloadRecord,
 )
-from .control_plane_effect_journal_models import CheckpointAcceptanceRecord, EffectJournalEntryRecord
 from .memory_models import DeterminismTraceContract, RetrievalTraceEventContract
 from .skills_models import SkillManifestContract
 from .state_backend import StateBackendContract

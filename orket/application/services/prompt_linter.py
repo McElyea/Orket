@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Literal
+from typing import Any, Literal
 
 from pydantic import ValidationError
 
@@ -28,7 +28,7 @@ def _violation(
     location: LintLocation = "system",
     severity: LintSeverity = "strict",
     evidence: str | None = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     return {
         "file": str(file),
         "rule_id": rule_id,
@@ -40,13 +40,13 @@ def _violation(
     }
 
 
-def _extract_placeholders(text: str) -> List[str]:
+def _extract_placeholders(text: str) -> list[str]:
     return sorted(
         {m.group(1).strip() for m in re.finditer(r"\{\{\s*([^{}]+?)\s*\}\}", text or "") if m.group(1).strip()}
     )
 
 
-def _collect_unbalanced_placeholder_violations(text: str, path: Path, field: str) -> List[Dict[str, Any]]:
+def _collect_unbalanced_placeholder_violations(text: str, path: Path, field: str) -> list[dict[str, Any]]:
     if "{{" not in text:
         return []
     if "}}" in text and text.count("{{") == text.count("}}"):
@@ -64,8 +64,8 @@ def _collect_unbalanced_placeholder_violations(text: str, path: Path, field: str
     ]
 
 
-def _prompt_text_fields(payload: Dict[str, Any]) -> List[tuple[str, str]]:
-    fields: List[tuple[str, str]] = []
+def _prompt_text_fields(payload: dict[str, Any]) -> list[tuple[str, str]]:
+    fields: list[tuple[str, str]] = []
     for key in ("prompt", "description", "dsl_format", "hallucination_guard", "system_prefix"):
         value = payload.get(key)
         if isinstance(value, str):
@@ -78,8 +78,8 @@ def _prompt_text_fields(payload: Dict[str, Any]) -> List[tuple[str, str]]:
     return fields
 
 
-def lint_prompt_asset(path: Path, payload: Dict[str, Any], kind: str) -> List[Dict[str, Any]]:
-    violations: List[Dict[str, Any]] = []
+def lint_prompt_asset(path: Path, payload: dict[str, Any], kind: str) -> list[dict[str, Any]]:
+    violations: list[dict[str, Any]] = []
 
     try:
         if kind == "role":
@@ -289,7 +289,7 @@ def lint_prompt_asset(path: Path, payload: Dict[str, Any], kind: str) -> List[Di
     return violations
 
 
-def lint_prompt_file(path: Path, kind: str) -> List[Dict[str, Any]]:
+def lint_prompt_file(path: Path, kind: str) -> list[dict[str, Any]]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:

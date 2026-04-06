@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-
 Outcome = Literal["PASS", "FAIL"]
 
 
@@ -25,9 +24,9 @@ class KernelResult:
     events: list[str] = field(default_factory=list)
 
     @staticmethod
-    def pass_(events: list[str] | None = None) -> "KernelResult":
+    def pass_(events: list[str] | None = None) -> KernelResult:
         return KernelResult(outcome="PASS", issues=[], events=events or [])
 
     @staticmethod
-    def fail(issues: list[KernelIssue], events: list[str] | None = None) -> "KernelResult":
+    def fail(issues: list[KernelIssue], events: list[str] | None = None) -> KernelResult:
         return KernelResult(outcome="FAIL", issues=issues, events=events or [])

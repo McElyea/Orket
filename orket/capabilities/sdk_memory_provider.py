@@ -3,16 +3,16 @@ from __future__ import annotations
 from pathlib import Path
 
 from orket.capabilities.sync_bridge import run_coro_sync
+from orket.services.profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
+from orket.services.scoped_memory_store import MemoryControls, ScopedMemoryRecord, ScopedMemoryStore
 from orket_extension_sdk.memory import (
     MemoryProvider,
-    MemoryRecord,
     MemoryQueryRequest,
     MemoryQueryResponse,
+    MemoryRecord,
     MemoryWriteRequest,
     MemoryWriteResponse,
 )
-from orket.services.profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
-from orket.services.scoped_memory_store import MemoryControls, ScopedMemoryRecord, ScopedMemoryStore
 
 
 class SQLiteMemoryCapabilityProvider(MemoryProvider):

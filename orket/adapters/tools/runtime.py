@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 
 class ToolRuntimeExecutor:
@@ -10,9 +11,9 @@ class ToolRuntimeExecutor:
     async def invoke(
         self,
         tool_fn: Callable,
-        args: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        args: dict[str, Any],
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         resolved_context = dict(context or {})
         try:
             if inspect.iscoroutinefunction(tool_fn):

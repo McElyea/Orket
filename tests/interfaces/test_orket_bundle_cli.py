@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import zipfile
 from pathlib import Path
 
 from orket.interfaces.orket_bundle_cli import (
@@ -15,8 +17,6 @@ from orket.interfaces.orket_bundle_cli import (
     main,
     validate_bundle,
 )
-import zipfile
-import hashlib
 
 
 def _fixture_payload(name: str) -> dict:

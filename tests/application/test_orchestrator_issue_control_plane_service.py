@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_workload_catalog import (
     ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD,
 )
-from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.orchestrator_issue_control_plane_service import (
     OrchestratorIssueControlPlaneError,
     OrchestratorIssueControlPlaneService,
@@ -35,7 +35,6 @@ from orket.core.domain import (
 from orket.schema import CardStatus
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
-
 
 pytestmark = pytest.mark.unit
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from typing import Any, Dict
+from typing import Any
 
 from orket.logging import log_event
 from orket.schema import CardStatus
@@ -25,7 +25,7 @@ class PRReviewHandler:
     def __init__(self, handler: Any) -> None:
         self.handler = handler
 
-    async def handle_pr_review(self, payload: Dict[str, Any]) -> Dict[str, str]:
+    async def handle_pr_review(self, payload: dict[str, Any]) -> dict[str, str]:
         pr = payload["pull_request"]
         review = payload["review"]
         repo = payload["repository"]
@@ -72,7 +72,7 @@ class PRReviewHandler:
 
         return {"status": "ignored", "message": "Review state not actionable"}
 
-    async def auto_merge(self, repo: Dict[str, Any], pr_number: int) -> str | None:
+    async def auto_merge(self, repo: dict[str, Any], pr_number: int) -> str | None:
         owner = repo["owner"]["login"]
         repo_name = repo["name"]
         url = f"{self.handler.gitea_url}/api/v1/repos/{owner}/{repo_name}/pulls/{pr_number}/merge"
@@ -98,7 +98,7 @@ class PRReviewHandler:
         log_event("pr_merged", {"pr": pr_number, "repo": f"{owner}/{repo_name}"}, self.handler.workspace)
         return None
 
-    async def escalate_to_architect(self, repo: Dict[str, Any], pr_number: int) -> str | None:
+    async def escalate_to_architect(self, repo: dict[str, Any], pr_number: int) -> str | None:
         owner = repo["owner"]["login"]
         repo_name = repo["name"]
         url = f"{self.handler.gitea_url}/api/v1/repos/{owner}/{repo_name}/issues/{pr_number}/comments"
@@ -123,7 +123,7 @@ class PRReviewHandler:
         log_event("pr_escalated", {"pr": pr_number, "repo": f"{owner}/{repo_name}"}, self.handler.workspace)
         return None
 
-    async def auto_reject(self, repo: Dict[str, Any], pr_number: int, repo_full_name: str) -> str | None:
+    async def auto_reject(self, repo: dict[str, Any], pr_number: int, repo_full_name: str) -> str | None:
         owner = repo["owner"]["login"]
         repo_name = repo["name"]
         repo_key = f"{owner}/{repo_name}"
@@ -178,7 +178,7 @@ class PRLifecycleHandler:
     def __init__(self, handler: Any) -> None:
         self.handler = handler
 
-    async def handle_pr_opened(self, payload: Dict[str, Any]) -> Dict[str, str]:
+    async def handle_pr_opened(self, payload: dict[str, Any]) -> dict[str, str]:
         pr = payload["pull_request"]
         repo = payload["repository"]
         pr_number = pr["number"]
@@ -211,7 +211,7 @@ class PRLifecycleHandler:
         )
         return {"status": "success", "message": f"PR #{pr_number} review triggered for {issue_id}"}
 
-    async def handle_pr_merged(self, payload: Dict[str, Any]) -> Dict[str, str]:
+    async def handle_pr_merged(self, payload: dict[str, Any]) -> dict[str, str]:
         pr = payload["pull_request"]
         repo = payload["repository"]
         pr_number = pr["number"]
@@ -244,7 +244,7 @@ class PRLifecycleHandler:
             }
         return {"status": "success", "message": f"PR #{pr_number} merged, sandbox deployment triggered"}
 
-    async def create_requirements_issue(self, repo: Dict[str, Any], pr_number: int, repo_full_name: str) -> str | None:
+    async def create_requirements_issue(self, repo: dict[str, Any], pr_number: int, repo_full_name: str) -> str | None:
         owner = repo["owner"]["login"]
         repo_name = repo["name"]
         url = f"{self.handler.gitea_url}/api/v1/repos/{owner}/{repo_name}/issues"
@@ -262,7 +262,7 @@ class PRLifecycleHandler:
             f"Rejection Reasons:\n{reasons_text}\n"
         )
         label_ids = await self._resolve_issue_label_ids(owner, repo_name, ["requirements-review", "auto-rejected"])
-        issue_payload: Dict[str, Any] = {
+        issue_payload: dict[str, Any] = {
             "title": f"Requirements Review: PR #{pr_number} failed after 4 cycles",
             "body": body,
         }
@@ -342,7 +342,7 @@ class SandboxDeploymentHandler:
     def __init__(self, handler: Any) -> None:
         self.handler = handler
 
-    async def trigger_sandbox_deployment(self, owner: str, repo_name: str, pr: Dict[str, Any]) -> Dict[str, Any]:
+    async def trigger_sandbox_deployment(self, owner: str, repo_name: str, pr: dict[str, Any]) -> dict[str, Any]:
         repo_full_name = f"{owner}/{repo_name}"
         pr_number = pr["number"]
         log_event(

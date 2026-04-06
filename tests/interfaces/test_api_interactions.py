@@ -2,11 +2,11 @@ import asyncio
 
 import pytest
 from fastapi.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
 
 import orket.interfaces.api as api_module
 import orket.marshaller.cli as marshaller_cli
 from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus
-
 
 client = TestClient(api_module.app)
 
@@ -14,9 +14,8 @@ client = TestClient(api_module.app)
 def test_interaction_websocket_requires_api_key(monkeypatch):
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    with pytest.raises(Exception):
-        with client.websocket_connect("/ws/interactions/no-session"):
-            pass
+    with pytest.raises(WebSocketDisconnect), client.websocket_connect("/ws/interactions/no-session"):
+        pass
 
 
 def test_interaction_stream_flow_emits_commit_final(monkeypatch):
@@ -239,7 +238,7 @@ def test_interaction_builtin_turn_exposes_bounded_packet1_context(monkeypatch, t
         "turn_params": {"persona": "guard"},
         "workload_id": "stream_test_v1",
         "department": "core",
-        "workspace": str((api_module.PROJECT_ROOT / "workspace" / "default").resolve()),
+        "workspace": str((api_module._project_root() / "workspace" / "default").resolve()),
     }
     assert captured_envelope["context_version"] == "packet1_session_context_v1"
     assert captured_envelope["continuity"] == {
@@ -251,7 +250,7 @@ def test_interaction_builtin_turn_exposes_bounded_packet1_context(monkeypatch, t
         "turn_params": {"persona": "guard"},
         "workload_id": "stream_test_v1",
         "department": "core",
-        "workspace": str((api_module.PROJECT_ROOT / "workspace" / "default").resolve()),
+        "workspace": str((api_module._project_root() / "workspace" / "default").resolve()),
     }
     assert [row["provider_id"] for row in captured_lineage] == [
         "host_continuity",
@@ -337,7 +336,7 @@ def test_interaction_extension_turn_includes_manifest_required_capabilities(monk
         "turn_params": {"mode": "extension"},
         "workload_id": "ext-workload",
         "department": "operations",
-        "workspace": str((api_module.PROJECT_ROOT / "workspace" / "default").resolve()),
+        "workspace": str((api_module._project_root() / "workspace" / "default").resolve()),
         "required_capabilities": ["workspace.root", "clock.now"],
     }
     assert captured_envelope["context_version"] == "packet1_session_context_v1"
@@ -429,7 +428,7 @@ def test_interaction_session_inspection_surfaces_expose_context_lineage(monkeypa
         "turn_params": {"persona": "guard"},
         "workload_id": "stream_test_v1",
         "department": "core",
-        "workspace": str((api_module.PROJECT_ROOT / "workspace" / "default").resolve()),
+        "workspace": str((api_module._project_root() / "workspace" / "default").resolve()),
     }
     assert snapshot_payload["replay_boundary"]["timeline_view"] == "inspection_only"
     assert snapshot_payload["replay_boundary"]["targeted_replay"] == "run_session_only"

@@ -1,9 +1,11 @@
-﻿import pytest
-import json
-from pathlib import Path
-from orket.orchestration.engine import OrchestrationEngine
+﻿import json
+
+import pytest
+
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.exceptions import ExecutionFailed
+from orket.orchestration.engine import OrchestrationEngine
+
 
 class MockiDesignProvider(LocalModelProvider):
     def __init__(self, bad_path=False):
@@ -28,7 +30,7 @@ async def test_force_idesign_policy_violation(tmp_path):
     (root / "model" / "core" / "epics").mkdir(parents=True)
     (root / "model" / "core" / "teams").mkdir(parents=True)
     (root / "model" / "core" / "environments").mkdir(parents=True)
-    
+
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Vibe Rail", "vision": "V", "ethos": "E",
         "architecture": {"idesign_threshold": 2},
@@ -39,21 +41,21 @@ async def test_force_idesign_policy_violation(tmp_path):
         },
         "departments": ["core"]
     }))
-    
+
     (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
         "name": "standard", "seats": {}
     }))
     (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({
         "name": "standard", "model": "dummy", "temperature": 0.1
     }))
-    
+
     # Epic with 3 issues but idesign: false
     (root / "model" / "core" / "epics" / "messy_epic.json").write_text(json.dumps({
         "id": "EPIC-M", "name": "Messy", "type": "epic", "team": "standard", "environment": "standard",
         "architecture_governance": {"idesign": False},
         "issues": [{"id": "1", "seat": "S", "summary": "S"}, {"id": "2", "seat": "S", "summary": "S"}, {"id": "3", "seat": "S", "summary": "S"}]
     }))
-    
+
     engine = OrchestrationEngine(root / "ws", config_root=root)
     with pytest.raises(ExecutionFailed) as exc:
         await engine.run_card("messy_epic")
@@ -140,7 +142,7 @@ async def test_idesign_structural_violation(tmp_path, monkeypatch):
     (root / "model" / "core" / "dialects").mkdir(parents=True)
     (root / "model" / "core" / "teams").mkdir(parents=True)
     (root / "model" / "core" / "environments").mkdir(parents=True)
-    
+
     db_path = str(root / "test.db")
 
     (root / "config" / "organization.json").write_text(json.dumps({
@@ -149,7 +151,7 @@ async def test_idesign_structural_violation(tmp_path, monkeypatch):
         "process_rules": {"small_project_builder_variant": "architect"},
         "departments": ["core"]
     }))
-    
+
     # Create required dialects
     for d_name in ["qwen", "llama3", "deepseek-r1", "phi", "generic"]:
         (root / "model" / "core" / "dialects" / f"{d_name}.json").write_text(json.dumps({
@@ -176,12 +178,12 @@ async def test_idesign_structural_violation(tmp_path, monkeypatch):
     def mock_init(self, *a, **k):
         self.model = "dummy"
         self.timeout = 300
-    
+
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", bad_provider.complete)
 
     engine = OrchestrationEngine(root / "ws", db_path=db_path, config_root=root)
-    
+
     with pytest.raises(ExecutionFailed) as exc:
         await engine.run_card("strict_epic")
     assert "iDesign Violation" in str(exc.value)

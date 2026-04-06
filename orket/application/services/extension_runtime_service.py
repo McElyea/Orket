@@ -20,6 +20,7 @@ from orket_extension_sdk.voice import (
     TranscribeRequest,
     VoiceTurnControlRequest,
 )
+
 from .extension_runtime_support import (
     default_memory_db_path,
     generate_response,

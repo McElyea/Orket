@@ -22,7 +22,6 @@ from orket.core.domain import (
     SideEffectBoundaryClass,
 )
 
-
 pytestmark = pytest.mark.unit
 
 

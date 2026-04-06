@@ -4,8 +4,8 @@ import pytest
 
 from orket.reforger.proof_slices import phase0_adapt_request, phase0_baseline_request
 from orket.reforger.service_contracts import (
-    PromptReforgerServiceRequest,
     SERVICE_MODE_ADAPT,
+    PromptReforgerServiceRequest,
 )
 
 

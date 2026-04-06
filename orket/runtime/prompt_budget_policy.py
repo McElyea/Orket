@@ -5,7 +5,6 @@ from typing import Any
 
 import yaml
 
-
 DEFAULT_PROMPT_BUDGET_PATH = Path("core/policies/prompt_budget.yaml")
 _VALID_STAGES = {"planner", "executor", "reviewer"}
 _STAGE_KEYS = {"max_tokens", "protocol_tokens", "tool_schema_tokens", "task_tokens"}

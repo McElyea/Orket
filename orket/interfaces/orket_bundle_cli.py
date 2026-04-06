@@ -4,17 +4,18 @@ import argparse
 import json
 import shutil
 import sys
+import zipfile
 from importlib import metadata
 from pathlib import Path, PurePosixPath
-from typing import Any, Dict, List, Tuple
-import zipfile
-import tomllib
+from typing import Any
 
 import httpx
+import tomllib
 from pydantic import ValidationError
-from orket_extension_sdk import __version__ as sdk_version
-from orket_extension_sdk.validate import validate_extension as validate_sdk_extension_tool
 
+from orket.application.review.bundle_validation import load_review_replay_artifacts
+from orket.application.review.models import ReviewSnapshot, SnapshotBounds
+from orket.application.review.run_service import ReviewRunService
 from orket.core.domain.orket_manifest import (
     OrketManifest,
     is_engine_compatible,
@@ -23,11 +24,9 @@ from orket.core.domain.orket_manifest import (
 from orket.interfaces.api_generation import run_api_add_transaction
 from orket.interfaces.refactor_transaction import run_refactor_transaction
 from orket.interfaces.scaffold_init import run_scaffold_init
-from orket.application.review.models import ReviewSnapshot, SnapshotBounds
-from orket.application.review.bundle_validation import load_review_replay_artifacts
-from orket.application.review.run_service import ReviewRunService
 from orket.reforger.cli import add_reforge_subparser, handle_reforge
-
+from orket_extension_sdk import __version__ as sdk_version
+from orket_extension_sdk.validate import validate_extension as validate_sdk_extension_tool
 
 ERROR_MANIFEST_NOT_FOUND = "E_MANIFEST_NOT_FOUND"
 ERROR_MANIFEST_PARSE = "E_MANIFEST_PARSE"
@@ -56,7 +55,7 @@ def _default_review_workspace() -> str:
     return str((Path(__file__).resolve().parents[2] / "workspace" / "default").resolve())
 
 
-def _resolve_manifest_path(target: Path) -> Tuple[Path | None, Path]:
+def _resolve_manifest_path(target: Path) -> tuple[Path | None, Path]:
     if target.is_file():
         return target, target.parent
 
@@ -83,7 +82,7 @@ def _current_engine_version() -> str:
             return "0.0.0"
 
 
-def _parse_manifest_content(*, suffix: str, text: str) -> Dict[str, Any]:
+def _parse_manifest_content(*, suffix: str, text: str) -> dict[str, Any]:
     if suffix == ".json":
         raw = json.loads(text)
     elif suffix in {".yaml", ".yml"}:
@@ -99,14 +98,14 @@ def _parse_manifest_content(*, suffix: str, text: str) -> Dict[str, Any]:
     return raw
 
 
-def _load_manifest_payload(path: Path) -> Dict[str, Any]:
+def _load_manifest_payload(path: Path) -> dict[str, Any]:
     suffix = path.suffix.lower()
     text = path.read_text(encoding="utf-8")
     return _parse_manifest_content(suffix=suffix, text=text)
 
 
-def _schema_validation_errors(exc: ValidationError) -> List[Dict[str, str]]:
-    rows: List[Dict[str, str]] = []
+def _schema_validation_errors(exc: ValidationError) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
     for item in exc.errors():
         loc = ".".join(str(part) for part in item.get("loc", ()))
         rows.append(
@@ -120,8 +119,8 @@ def _schema_validation_errors(exc: ValidationError) -> List[Dict[str, str]]:
     return rows
 
 
-def _bundle_reference_errors(bundle_root: Path, manifest: OrketManifest) -> List[Dict[str, str]]:
-    errors: List[Dict[str, str]] = []
+def _bundle_reference_errors(bundle_root: Path, manifest: OrketManifest) -> list[dict[str, str]]:
+    errors: list[dict[str, str]] = []
 
     state_machine_path = bundle_root / manifest.stateMachine.file
     if not state_machine_path.is_file():
@@ -167,8 +166,8 @@ def _bundle_reference_errors(bundle_root: Path, manifest: OrketManifest) -> List
     return errors
 
 
-def _bundle_archive_reference_errors(entry_names: set[str], manifest: OrketManifest) -> List[Dict[str, str]]:
-    errors: List[Dict[str, str]] = []
+def _bundle_archive_reference_errors(entry_names: set[str], manifest: OrketManifest) -> list[dict[str, str]]:
+    errors: list[dict[str, str]] = []
     state_machine_file = str(manifest.stateMachine.file).replace("\\", "/")
     if state_machine_file not in entry_names:
         errors.append(
@@ -218,9 +217,9 @@ def validate_bundle(
     target: Path,
     *,
     engine_version: str = "",
-    available_models: List[str] | None = None,
+    available_models: list[str] | None = None,
     model_override: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     manifest_path, bundle_root = _resolve_manifest_path(target)
     if manifest_path is None:
         return {
@@ -277,7 +276,7 @@ def validate_bundle(
             }
         )
 
-    model_selection: Dict[str, Any] | None = None
+    model_selection: dict[str, Any] | None = None
     if available_models is not None or str(model_override or "").strip():
         model_selection = resolve_model_selection(
             manifest,
@@ -324,7 +323,7 @@ def validate_bundle(
     return result
 
 
-def pack_bundle(source: Path, out_path: Path | None = None) -> Dict[str, Any]:
+def pack_bundle(source: Path, out_path: Path | None = None) -> dict[str, Any]:
     if not source.is_dir():
         return {
             "ok": False,
@@ -366,7 +365,7 @@ def pack_bundle(source: Path, out_path: Path | None = None) -> Dict[str, Any]:
     destination.parent.mkdir(parents=True, exist_ok=True)
 
     source_files = sorted(path.resolve() for path in source.rglob("*") if path.is_file())
-    entries: List[Tuple[Path, str]] = []
+    entries: list[tuple[Path, str]] = []
     for file_path in source_files:
         if file_path == destination:
             continue
@@ -405,7 +404,7 @@ def pack_bundle(source: Path, out_path: Path | None = None) -> Dict[str, Any]:
     }
 
 
-def inspect_target(target: Path) -> Dict[str, Any]:
+def inspect_target(target: Path) -> dict[str, Any]:
     if not target.exists():
         return {
             "ok": False,
@@ -494,7 +493,7 @@ def _inspect_summary(
     manifest: OrketManifest,
     manifest_path: str,
     entry_count: int | None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     summary = {
         "ok": True,
         "target": target,
@@ -536,11 +535,11 @@ def _is_safe_archive_name(name: str) -> bool:
     return normalized == str(pure)
 
 
-def validate_sdk_extension(target: Path, *, strict: bool = False) -> Dict[str, Any]:
+def validate_sdk_extension(target: Path, *, strict: bool = False) -> dict[str, Any]:
     return validate_sdk_extension_tool(target, strict=strict, include_import_scan=False)
 
 
-def validate_external_extension(target: Path, *, strict: bool = False) -> Dict[str, Any]:
+def validate_external_extension(target: Path, *, strict: bool = False) -> dict[str, Any]:
     return validate_sdk_extension_tool(target, strict=strict, include_import_scan=True)
 
 
@@ -551,7 +550,7 @@ def _is_transient_template_path(relative: Path) -> bool:
     return any(part in _TRANSIENT_TEMPLATE_PARTS for part in relative.parts)
 
 
-def init_external_extension(target: Path, *, force: bool = False) -> Dict[str, Any]:
+def init_external_extension(target: Path, *, force: bool = False) -> dict[str, Any]:
     template_root = (Path(__file__).resolve().parents[2] / "docs" / "templates" / "external_extension").resolve()
     destination = target.resolve()
     if not template_root.is_dir():
@@ -776,8 +775,8 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _parse_vars(raw: str) -> Dict[str, str]:
-    values: Dict[str, str] = {}
+def _parse_vars(raw: str) -> dict[str, str]:
+    values: dict[str, str] = {}
     for token in [part.strip() for part in str(raw or "").split(",") if part.strip()]:
         key, sep, value = token.partition("=")
         if sep and key.strip():
@@ -785,7 +784,7 @@ def _parse_vars(raw: str) -> Dict[str, str]:
     return values
 
 
-def _render_human(result: Dict[str, Any]) -> str:
+def _render_human(result: dict[str, Any]) -> str:
     if "deterministic_decision" in result and "artifact_dir" in result:
         lines = [
             f"run_id: {result.get('run_id', '')}",
@@ -841,7 +840,7 @@ def _render_human(result: Dict[str, Any]) -> str:
         return "\n".join(lines)
 
     if "code" in result and "message" in result:
-        lines: List[str] = []
+        lines: list[str] = []
         if result.get("plan"):
             lines.append(str(result["plan"]))
         advisories = result.get("advisories")
@@ -880,7 +879,7 @@ def _render_human(result: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def main(argv: List[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.command == "validate":
         available_models = list(args.available_model or [])

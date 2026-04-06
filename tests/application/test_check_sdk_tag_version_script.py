@@ -4,7 +4,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 SCRIPT = Path("scripts/sdk/check_sdk_tag_version.py").resolve()
 
 

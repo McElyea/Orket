@@ -3,7 +3,6 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-
 SESSION_CONTEXT_VERSION = "packet1_session_context_v1"
 
 

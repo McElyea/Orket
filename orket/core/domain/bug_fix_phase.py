@@ -6,11 +6,13 @@ Reconstructed for async persistence.
 """
 
 from __future__ import annotations
-from typing import List, Dict, Optional, Any
-from datetime import datetime, timedelta, UTC
-from pydantic import BaseModel, Field, model_validator
+
 import enum
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
+
+from pydantic import BaseModel, Field, model_validator
 
 from orket.logging import log_event
 
@@ -47,15 +49,15 @@ class BugFixPhase(BaseModel):
     max_duration_days: int = 28
     current_duration_days: int = 7
     started_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
-    scheduled_end: Optional[str] = None
-    actual_end: Optional[str] = None
+    scheduled_end: str | None = None
+    actual_end: str | None = None
     metrics: BugDiscoveryMetrics = Field(default_factory=BugDiscoveryMetrics)
-    bug_issue_ids: List[str] = Field(default_factory=list)
-    phase2_rock_id: Optional[str] = None
-    extensions: List[Dict[str, str]] = Field(default_factory=list)
+    bug_issue_ids: list[str] = Field(default_factory=list)
+    phase2_rock_id: str | None = None
+    extensions: list[dict[str, str]] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _set_scheduled_end(self) -> "BugFixPhase":
+    def _set_scheduled_end(self) -> BugFixPhase:
         if self.scheduled_end is None:
             start = datetime.fromisoformat(self.started_at)
             self.scheduled_end = (start + timedelta(days=self.initial_duration_days)).isoformat()
@@ -66,9 +68,7 @@ class BugFixPhase(BaseModel):
             return False
         if self.metrics.discovery_rate > self.metrics.high_rate_threshold:
             return True
-        if self.metrics.critical_bugs > self.metrics.critical_threshold:
-            return True
-        return False
+        return self.metrics.critical_bugs > self.metrics.critical_threshold
 
     def extend_phase(self, reason: str, added_days: int = 7) -> None:
         new_duration = min(self.current_duration_days + added_days, self.max_duration_days)
@@ -88,12 +88,12 @@ class BugFixPhaseManager:
     """Application Service: Manages bug fix phases."""
 
     def __init__(
-        self, organization_config: Optional[Dict] = None, db: Optional[Any] = None, workspace: Optional[Path] = None
+        self, organization_config: dict | None = None, db: Any | None = None, workspace: Path | None = None
     ):
         self.config = organization_config or {}
         self.db = db
-        self.workspace = workspace or Path(".")
-        self.active_phases: Dict[str, BugFixPhase] = {}
+        self.workspace = workspace or Path()
+        self.active_phases: dict[str, BugFixPhase] = {}
 
     async def start_phase(self, rock_id: str) -> BugFixPhase:
         """Begin bug fix phase for a Rock."""
@@ -122,7 +122,7 @@ class BugFixPhaseManager:
         log_event("bug_fix_phase_started", {"rock_id": rock_id, "ends_at": phase.scheduled_end}, self.workspace)
         return phase
 
-    async def update_metrics(self, rock_id: str, bug_issue_ids: List[str], critical_bug_ids: List[str]) -> None:
+    async def update_metrics(self, rock_id: str, bug_issue_ids: list[str], critical_bug_ids: list[str]) -> None:
         """Update bug discovery metrics."""
         phase = self.active_phases.get(rock_id)
         if not phase and self.db:
@@ -172,7 +172,7 @@ class BugFixPhaseManager:
 
         return False
 
-    async def end_phase(self, rock_id: str) -> Optional[str]:
+    async def end_phase(self, rock_id: str) -> str | None:
         """End the bug fix phase."""
         phase = self.active_phases.get(rock_id)
         if not phase:

@@ -7,6 +7,11 @@ from pathlib import Path
 import aiosqlite
 from pydantic import ValidationError
 
+from orket.adapters.storage.sandbox_lifecycle_row_serialization import (
+    deserialize_event_row,
+    deserialize_operation_row,
+    deserialize_record_row,
+)
 from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError
 from orket.core.domain.sandbox_lifecycle_records import (
     SandboxApprovalRecord,
@@ -14,11 +19,6 @@ from orket.core.domain.sandbox_lifecycle_records import (
     SandboxLifecycleRecord,
     SandboxLifecycleSnapshotRecord,
     SandboxOperationDedupeEntry,
-)
-from orket.adapters.storage.sandbox_lifecycle_row_serialization import (
-    deserialize_event_row,
-    deserialize_operation_row,
-    deserialize_record_row,
 )
 
 
@@ -139,15 +139,14 @@ class AsyncSandboxLifecycleRepository:
         )
 
     async def _execute(self, operation, *, row_factory: bool = False, commit: bool = False):
-        async with self._lock:
-            async with aiosqlite.connect(self.db_path) as conn:
-                if row_factory:
-                    conn.row_factory = aiosqlite.Row
-                await self._ensure_initialized(conn)
-                result = await operation(conn)
-                if commit:
-                    await conn.commit()
-                return result
+        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+            if row_factory:
+                conn.row_factory = aiosqlite.Row
+            await self._ensure_initialized(conn)
+            result = await operation(conn)
+            if commit:
+                await conn.commit()
+            return result
 
     async def save_record(self, record: SandboxLifecycleRecord) -> None:
         payload = record.model_dump(mode="json")

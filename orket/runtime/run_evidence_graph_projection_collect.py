@@ -4,8 +4,8 @@ from typing import Any
 
 from orket.core.domain import ClosureBasisClassification
 from orket.runtime.run_evidence_graph_projection_support import (
-    PrimaryLineageContext,
     TERMINAL_RUN_STATES,
+    PrimaryLineageContext,
     blocked_payload,
     load_latest_lease_record,
     load_latest_reservation_record,

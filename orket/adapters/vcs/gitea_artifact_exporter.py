@@ -14,6 +14,7 @@ from typing import Any
 from urllib import parse
 
 import httpx
+
 from orket.runtime_paths import resolve_gitea_artifact_cache_root
 
 
@@ -283,7 +284,7 @@ class GiteaArtifactExporter:
         return f"{scheme}://{host}{normalized_path}/{owner}/{repo}.git"
 
     def _git_auth_env(self, username: str, password: str) -> dict[str, str]:
-        auth_value = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+        auth_value = base64.b64encode(f"{username}:{password}".encode()).decode("ascii")
         env = dict(os.environ)
         try:
             config_count = max(0, int(str(env.get("GIT_CONFIG_COUNT", "0"))))

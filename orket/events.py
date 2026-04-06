@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
 class Event:
     timestamp: str
     event: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
 
 
 class EventStream:
@@ -16,13 +16,13 @@ class EventStream:
     """
 
     def __init__(self):
-        self.events: List[Event] = []
+        self.events: list[Event] = []
 
     def push(self, event: Event) -> None:
         self.events.append(event)
 
-    def all(self) -> List[Event]:
+    def all(self) -> list[Event]:
         return self.events
 
-    def last(self) -> Optional[Event]:
+    def last(self) -> Event | None:
         return self.events[-1] if self.events else None

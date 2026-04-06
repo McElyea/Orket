@@ -9,12 +9,14 @@ calls in the agent tools.
 """
 
 from __future__ import annotations
+
 import asyncio
-import aiofiles
-import os
 import json
+import os
 from pathlib import Path
 from typing import Any
+
+import aiofiles
 
 from .async_executor_service import run_coroutine_blocking
 
@@ -61,11 +63,10 @@ class AsyncFileTools:
         if not (is_in_workspace or is_in_references):
             raise PermissionError(f"Access denied: {path_str} is outside allowed boundaries.")
 
-        if write:
+        if write and not is_in_workspace:
             # We enforce workspace boundaries for writes.
             # Specialized governance (like AGENT_OUTPUT_DIR) is handled by ToolGate.
-            if not is_in_workspace:
-                raise PermissionError(f"Write access denied: {path_str} is outside the workspace.")
+            raise PermissionError(f"Write access denied: {path_str} is outside the workspace.")
 
         return resolved
 
@@ -77,7 +78,7 @@ class AsyncFileTools:
         if not path.exists():
             raise FileNotFoundError(f"File not found: {path_str}")
 
-        async with aiofiles.open(path, mode="r", encoding="utf-8") as f:
+        async with aiofiles.open(path, encoding="utf-8") as f:
             return await f.read()
 
     async def write_file(self, path_str: str, content: str | dict[str, Any]) -> str:

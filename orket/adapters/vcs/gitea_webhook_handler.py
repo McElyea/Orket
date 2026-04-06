@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import httpx
 
@@ -14,14 +14,14 @@ from orket.adapters.vcs.gitea_webhook_handlers import (
     SandboxDeploymentHandler,
 )
 from orket.adapters.vcs.webhook_db import WebhookDatabase
-from orket.domain.sandbox import SandboxRegistry
+from orket.core.domain.sandbox import SandboxRegistry
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
 
 class GiteaWebhookHandler:
     """Application service that routes incoming Gitea webhook events."""
 
-    def __init__(self, gitea_url: str = "http://localhost:3000", workspace: Optional[Path] = None):
+    def __init__(self, gitea_url: str = "http://localhost:3000", workspace: Path | None = None):
         self.gitea_url = gitea_url
         self.gitea_user = os.getenv("GITEA_ADMIN_USER", "Orket")
         self.gitea_password = os.getenv("GITEA_ADMIN_PASSWORD")
@@ -44,28 +44,28 @@ class GiteaWebhookHandler:
         self.lifecycle = PRLifecycleHandler(self)
         self.sandbox = SandboxDeploymentHandler(self)
 
-    async def _handle_pr_review(self, payload: Dict[str, Any]) -> Dict[str, str]:
+    async def _handle_pr_review(self, payload: dict[str, Any]) -> dict[str, str]:
         return await self.review.handle_pr_review(payload)
 
-    async def _auto_merge(self, repo: Dict[str, Any], pr_number: int) -> None:
+    async def _auto_merge(self, repo: dict[str, Any], pr_number: int) -> None:
         await self.review.auto_merge(repo, pr_number)
 
-    async def _escalate_to_architect(self, repo: Dict[str, Any], pr_number: int) -> None:
+    async def _escalate_to_architect(self, repo: dict[str, Any], pr_number: int) -> None:
         await self.review.escalate_to_architect(repo, pr_number)
 
-    async def _auto_reject(self, repo: Dict[str, Any], pr_number: int, repo_full_name: str) -> None:
+    async def _auto_reject(self, repo: dict[str, Any], pr_number: int, repo_full_name: str) -> None:
         await self.review.auto_reject(repo, pr_number, repo_full_name)
 
-    async def _handle_pr_opened(self, payload: Dict[str, Any]) -> Dict[str, str]:
+    async def _handle_pr_opened(self, payload: dict[str, Any]) -> dict[str, str]:
         return await self.lifecycle.handle_pr_opened(payload)
 
-    async def _handle_pr_merged(self, payload: Dict[str, Any]) -> Dict[str, str]:
+    async def _handle_pr_merged(self, payload: dict[str, Any]) -> dict[str, str]:
         return await self.lifecycle.handle_pr_merged(payload)
 
-    async def _create_requirements_issue(self, repo: Dict[str, Any], pr_number: int, repo_full_name: str) -> None:
+    async def _create_requirements_issue(self, repo: dict[str, Any], pr_number: int, repo_full_name: str) -> None:
         await self.lifecycle.create_requirements_issue(repo, pr_number, repo_full_name)
 
-    async def _trigger_sandbox_deployment(self, owner: str, repo_name: str, pr: Dict[str, Any]) -> None:
+    async def _trigger_sandbox_deployment(self, owner: str, repo_name: str, pr: dict[str, Any]) -> None:
         await self.sandbox.trigger_sandbox_deployment(owner, repo_name, pr)
 
     async def _add_sandbox_comment(self, owner: str, repo_name: str, pr_number: int, sandbox: Any) -> None:
@@ -74,7 +74,7 @@ class GiteaWebhookHandler:
     async def close(self) -> None:
         await self.client.aclose()
 
-    async def handle_webhook(self, event_type: str, payload: Dict[str, Any]) -> Dict[str, str]:
+    async def handle_webhook(self, event_type: str, payload: dict[str, Any]) -> dict[str, str]:
         if event_type == "pull_request_review":
             return await self._handle_pr_review(payload)
 

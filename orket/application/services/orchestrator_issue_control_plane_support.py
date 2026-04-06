@@ -4,7 +4,6 @@ import hashlib
 import json
 from datetime import UTC, datetime
 
-from orket.schema import CardStatus
 from orket.core.domain import (
     AttemptState,
     ClosureBasisClassification,
@@ -12,11 +11,11 @@ from orket.core.domain import (
     ExecutionFailureClass,
     FailurePlane,
     ResultClass,
+    RunState,
     SideEffectBoundaryClass,
     TruthFailureClass,
-    RunState,
 )
-
+from orket.schema import CardStatus
 
 BLOCKED_CLOSEOUT_REASONS = {
     "dependency_blocked",

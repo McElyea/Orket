@@ -1,6 +1,6 @@
-﻿from datetime import datetime, UTC
-from types import SimpleNamespace
+﻿from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 from orket.decision_nodes.builtins import (
     DefaultApiRuntimeStrategyNode,
@@ -47,6 +47,18 @@ def test_default_planner_target_missing_returns_empty():
 def test_default_planner_target_in_review_selected():
     planner = DefaultPlannerNode()
     backlog = [_issue("I1", CardStatus.CODE_REVIEW), _issue("I2", CardStatus.READY)]
+    independent_ready = [_issue("I2", CardStatus.READY)]
+
+    candidates = planner.plan(
+        PlanningInput(backlog=backlog, independent_ready=independent_ready, target_issue_id="I1")
+    )
+
+    assert [c.id for c in candidates] == ["I1"]
+
+
+def test_default_planner_target_in_progress_selected():
+    planner = DefaultPlannerNode()
+    backlog = [_issue("I1", CardStatus.IN_PROGRESS), _issue("I2", CardStatus.READY)]
     independent_ready = [_issue("I2", CardStatus.READY)]
 
     candidates = planner.plan(

@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 from functools import lru_cache
 from pathlib import Path
-from uuid import uuid4
 from typing import Any
+from uuid import uuid4
 
 from orket.kernel.v1.canonical import compute_turn_result_digest
 from orket.kernel.v1.state.lsi import LocalSovereignIndex
 from orket.kernel.v1.state.promotion import promote_turn
-
 
 CONTRACT_VERSION = "kernel_api/v1"
 DEFAULT_VISIBILITY_MODE = "local_only"

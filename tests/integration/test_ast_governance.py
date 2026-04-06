@@ -1,7 +1,10 @@
-﻿import pytest
-from pathlib import Path
-from orket.services.tool_gate import ToolGate
+﻿from pathlib import Path
+
+import pytest
+
 from orket.services.ast_validator import ASTValidator
+from orket.services.tool_gate import ToolGate
+
 
 def test_ast_validator_suffix_violation():
     code = "class WrongName:\n    pass"
@@ -29,7 +32,7 @@ def test_tool_gate_blocks_ast_violation(tmp_path):
         "content": "import orket.managers.my_manager\nclass DbAccessor: pass"
     }
     context = {"role": "coder", "idesign_enabled": True}
-    
+
     result = gate.validate("write_file", args, context, ["coder"])
     assert "iDesign AST Violation: Layer Violation" in result
 
@@ -40,7 +43,7 @@ def test_tool_gate_allows_valid_ast(tmp_path):
         "content": "class OrderManager:\n    def process(self): pass"
     }
     context = {"role": "coder", "idesign_enabled": True}
-    
+
     result = gate.validate("write_file", args, context, ["coder"])
     assert result is None
 
@@ -55,4 +58,27 @@ def test_tool_gate_skips_idesign_ast_when_disabled(tmp_path):
 
     result = gate.validate("write_file", args, context, ["coder"])
     assert result is None
+
+
+def test_tool_gate_passes_real_role_and_issue_id_to_idesign_validator(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+    """Layer: integration. Verifies file-write validation passes the actual execution identity to iDesign validation."""
+    gate = ToolGate(None, tmp_path)
+    captured = {}
+
+    def _spy_validate_turn(turn, workspace_root):  # type: ignore[no-untyped-def]
+        captured["role"] = turn.role
+        captured["issue_id"] = turn.issue_id
+        captured["workspace_root"] = workspace_root
+        return []
+
+    monkeypatch.setattr("orket.services.idesign_validator.iDesignValidator.validate_turn", _spy_validate_turn)
+    result = gate.validate(
+        "write_file",
+        {"path": "agent_output/test.py", "content": "print('ok')\n"},
+        {"role": "coder", "issue_id": "iss-001", "idesign_enabled": True},
+        ["coder"],
+    )
+
+    assert result is None
+    assert captured == {"role": "coder", "issue_id": "iss-001", "workspace_root": tmp_path}
 

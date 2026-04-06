@@ -9,9 +9,10 @@ from typing import Any
 
 import pytest
 
-from .adapter import LSIAdapter
-from orket.kernel.v1.canonical import canonical_json_bytes, structural_digest
+from orket.kernel.v1.canonical import canonical_json_bytes, fs_token, structural_digest
 from orket.kernel.v1.state.lsi import DIR_STAGING, LocalSovereignIndex
+
+from .adapter import LSIAdapter
 
 pytestmark = pytest.mark.contract
 
@@ -370,3 +371,36 @@ def test_link_integrity_orphan_fails_with_pointer(lsi_adapter: LSIAdapter):
     loc = orphan.get("location")
     assert isinstance(loc, str) and loc.startswith("/")
     assert "/links" in loc
+
+
+def test_link_integrity_treats_triplet_visibility_without_ref_index_as_lag_not_orphan(lsi_adapter: LSIAdapter):
+    run_id = "run-0009"
+    turn_id = "turn-0001"
+    target_stem = "data/dto/s/skill_one"
+    ref_type = "skill"
+    ref_id = "skill:one"
+
+    lsi_adapter.stage(
+        stem=target_stem,
+        body={"dto_type": ref_type, "id": ref_id},
+        links={},
+        run_id=run_id,
+        turn_id=turn_id,
+    )
+    lsi_adapter.stage(
+        stem="data/dto/o/consumer",
+        body={"dto_type": "invocation", "id": "inv:consumer"},
+        links={"declares": {"type": ref_type, "id": ref_id, "relationship": "declares"}},
+        run_id=run_id,
+        turn_id=turn_id,
+    )
+
+    staging_root = Path(lsi_adapter.root) / "index" / DIR_STAGING / fs_token(run_id) / fs_token(turn_id)
+    ref_path = staging_root / "refs" / "by_id" / ref_type / f"{fs_token(ref_id)}.json"
+    if ref_path.exists():
+        ref_path.unlink()
+
+    result = _must_pass(lsi_adapter.validate, stem="data/dto/o/consumer", run_id=run_id, turn_id=turn_id)
+    events = _result_events(result)
+
+    assert any("I_REF_INDEX_LAG" in event for event in events)

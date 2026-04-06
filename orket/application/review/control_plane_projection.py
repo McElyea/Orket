@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 REVIEW_EXECUTION_STATE_AUTHORITY = "control_plane_records"
 REVIEW_CONTROL_PLANE_PROJECTION_SOURCE = REVIEW_EXECUTION_STATE_AUTHORITY
 
@@ -149,15 +148,12 @@ def validate_review_control_plane_summary(
     if projected_step_id and not projected_step_kind:
         raise ValueError("review_control_plane_step_kind_required")
 
-    if str(expected_run_id or "").strip():
-        if projected_run_id != str(expected_run_id).strip():
-            raise ValueError("review_control_plane_run_id_mismatch")
-    if str(expected_attempt_id or "").strip():
-        if projected_attempt_id != str(expected_attempt_id).strip():
-            raise ValueError("review_control_plane_attempt_id_mismatch")
-    if str(expected_step_id or "").strip():
-        if projected_step_id != str(expected_step_id).strip():
-            raise ValueError("review_control_plane_step_id_mismatch")
+    if str(expected_run_id or "").strip() and projected_run_id != str(expected_run_id).strip():
+        raise ValueError("review_control_plane_run_id_mismatch")
+    if str(expected_attempt_id or "").strip() and projected_attempt_id != str(expected_attempt_id).strip():
+        raise ValueError("review_control_plane_attempt_id_mismatch")
+    if str(expected_step_id or "").strip() and projected_step_id != str(expected_step_id).strip():
+        raise ValueError("review_control_plane_step_id_mismatch")
     return normalized_summary
 
 

@@ -1,7 +1,7 @@
 from orket.settings import load_user_settings
 from orket.vendors.base import VendorInterface
-from orket.vendors.local import LocalVendor
 from orket.vendors.gitea import GiteaVendor
+from orket.vendors.local import LocalVendor
 
 
 def get_vendor() -> VendorInterface:

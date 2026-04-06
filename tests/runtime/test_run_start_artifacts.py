@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.runtime import run_start_artifacts, run_start_contract_artifacts
+from orket.runtime import run_start_contract_artifacts
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 
 

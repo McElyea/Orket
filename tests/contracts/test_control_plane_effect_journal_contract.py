@@ -20,7 +20,6 @@ from orket.core.domain import (
     validate_effect_journal_chain,
 )
 
-
 pytestmark = pytest.mark.contract
 
 

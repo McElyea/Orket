@@ -12,11 +12,10 @@ from orket.application.services.kernel_action_control_plane_resource_lifecycle i
 )
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 from orket.application.services.kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
-from orket.interfaces.api import app
 from orket.core.domain import LeaseStatus, ReservationStatus
+from orket.interfaces.api import app
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
-
 
 client = TestClient(app)
 

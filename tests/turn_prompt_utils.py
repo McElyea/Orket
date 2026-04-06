@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from typing import Any
 
-
 _EXECUTION_CONTEXT_MARKER = "Execution Context JSON:\n"
 _TURN_PACKET_PREFIX = "TURN PACKET:\n"
 _IDENTITY_PREFIX = "IDENTITY: "

@@ -1,17 +1,18 @@
 from __future__ import annotations
-from typing import Dict, Any, List, Optional
-from pathlib import Path
-import re
+
 import inspect
+import re
+from pathlib import Path
+from typing import Any
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
-from orket.logging import log_event
-from orket.utils import sanitize_name
-from orket.schema import SkillConfig, DialectConfig
-from orket.exceptions import CardNotFound
-from orket.domain.execution import ExecutionTurn, ToolCall
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.application.services.tool_parser import ToolParser
+from orket.core.domain.execution import ExecutionTurn, ToolCall
+from orket.exceptions import CardNotFound
+from orket.logging import log_event
+from orket.schema import DialectConfig, SkillConfig
+from orket.utils import sanitize_name
 
 
 class Agent:
@@ -24,11 +25,11 @@ class Agent:
         self,
         name: str,
         description: str,
-        tools: Dict[str, callable],
+        tools: dict[str, callable],
         provider: LocalModelProvider,
         next_member: str = None,
         prompt_patch: str = None,
-        config_root: Optional[Path] = None,
+        config_root: Path | None = None,
         tool_gate=None,
     ):
         self.name = name
@@ -37,7 +38,7 @@ class Agent:
         self.provider = provider
         self.next_member = next_member
         self._prompt_patch = prompt_patch
-        self.config_root = config_root or Path(".").resolve()
+        self.config_root = config_root or Path().resolve()
         self.tool_gate = tool_gate  # Optional ToolGate for mechanical enforcement
 
         self.skill: SkillConfig | None = None
@@ -86,7 +87,7 @@ class Agent:
         return self.description
 
     async def run(
-        self, task: Dict[str, Any], context: Dict[str, Any], workspace: Path, transcript: List[Dict] = None
+        self, task: dict[str, Any], context: dict[str, Any], workspace: Path, transcript: list[dict] = None
     ) -> ExecutionTurn:
         """Executes the turn and returns a structured ExecutionTurn object."""
 

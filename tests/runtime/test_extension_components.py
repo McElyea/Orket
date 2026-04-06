@@ -5,31 +5,30 @@ import json
 from pathlib import Path
 
 import pytest
+
 import orket.extensions as extensions_package
 import orket.extensions.manager as extension_manager_module
 import orket.extensions.models as extension_models
-from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
-from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
-from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
-from orket_extension_sdk.llm import LLMProvider
-from orket_extension_sdk.memory import MemoryWriteRequest
-from orket_extension_sdk.result import ArtifactRef, WorkloadResult
-
 from orket.application.services.control_plane_workload_catalog import (
     WorkloadAuthorityInput,
     resolve_control_plane_workload,
 )
+from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
+from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.extensions.catalog import ExtensionCatalog
+from orket.extensions.contracts import RunAction, RunPlan
+from orket.extensions.governed_identity import build_governed_identity
 from orket.extensions.manifest_parser import ManifestParser
 from orket.extensions.models import CONTRACT_STYLE_LEGACY
 from orket.extensions.reproducibility import ReproducibilityEnforcer
 from orket.extensions.runtime import ExtensionEngineAdapter, RunContext
-from orket.extensions.contracts import RunAction
 from orket.extensions.workload_artifacts import WorkloadArtifacts
 from orket.extensions.workload_executor import WorkloadExecutor
 from orket.extensions.workload_loader import WorkloadLoader
-from orket.extensions.contracts import RunPlan
-from orket.extensions.governed_identity import build_governed_identity
+from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
+from orket_extension_sdk.llm import LLMProvider
+from orket_extension_sdk.memory import MemoryWriteRequest
+from orket_extension_sdk.result import ArtifactRef, WorkloadResult
 
 
 def test_extension_catalog_load_and_list(tmp_path: Path) -> None:

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 ARCHITECTURE_PILOT_COMPARISON_MODES = ("force_monolith", "force_microservices")
 
 

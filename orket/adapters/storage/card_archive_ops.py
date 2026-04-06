@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiosqlite
 
@@ -13,7 +13,7 @@ class CardArchiveOps:
     def __init__(self, execute) -> None:
         self._execute = execute
 
-    async def archive_card(self, card_id: str, archived_by: str = "system", reason: Optional[str] = None) -> bool:
+    async def archive_card(self, card_id: str, archived_by: str = "system", reason: str | None = None) -> bool:
         async def _op(conn: aiosqlite.Connection) -> bool:
             cursor = await conn.execute("SELECT id FROM issues WHERE id = ?", (card_id,))
             row = await cursor.fetchone()
@@ -36,12 +36,12 @@ class CardArchiveOps:
 
     async def archive_cards(
         self,
-        card_ids: List[str],
+        card_ids: list[str],
         archived_by: str = "system",
-        reason: Optional[str] = None,
-    ) -> Dict[str, List[str]]:
-        archived: List[str] = []
-        missing: List[str] = []
+        reason: str | None = None,
+    ) -> dict[str, list[str]]:
+        archived: list[str] = []
+        missing: list[str] = []
         for card_id in card_ids:
             ok = await self.archive_card(card_id, archived_by=archived_by, reason=reason)
             if ok:
@@ -54,7 +54,7 @@ class CardArchiveOps:
         self,
         build_id: str,
         archived_by: str = "system",
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> int:
         async def _op(conn: aiosqlite.Connection) -> int:
             cursor = await conn.execute("SELECT id FROM issues WHERE build_id = ?", (build_id,))
@@ -78,13 +78,13 @@ class CardArchiveOps:
 
         return await self._execute(_op, row_factory=True, commit=True)
 
-    async def find_related_card_ids(self, tokens: List[str], limit: int = 500) -> List[str]:
+    async def find_related_card_ids(self, tokens: list[str], limit: int = 500) -> list[str]:
         normalized = [token.strip().lower() for token in tokens if token and token.strip()]
         if not normalized:
             return []
 
-        clauses: List[str] = []
-        params: List[Any] = []
+        clauses: list[str] = []
+        params: list[Any] = []
         for token in normalized:
             like = f"%{token}%"
             clauses.append(
@@ -102,7 +102,7 @@ class CardArchiveOps:
         """
         params.append(limit)
 
-        async def _op(conn: aiosqlite.Connection) -> List[str]:
+        async def _op(conn: aiosqlite.Connection) -> list[str]:
             cursor = await conn.execute(query, tuple(params))
             rows = await cursor.fetchall()
             return [row["id"] for row in rows]

@@ -15,7 +15,6 @@ from orket.core.domain import LeaseStatus, ReservationKind, ReservationStatus
 from orket.core.domain.coordinator_card import Card
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 
-
 pytestmark = pytest.mark.unit
 
 

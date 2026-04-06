@@ -10,7 +10,7 @@ from orket.application.services.turn_tool_control_plane_recovery import (
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneError
 from orket.application.services.turn_tool_control_plane_support import attempt_id_for, run_id_for
 from orket.core.domain import AttemptState, CheckpointResumabilityClass, RunState
-from orket.domain.execution import ExecutionTurn
+from orket.core.domain.execution import ExecutionTurn
 
 from .turn_executor_completed_replay import control_plane_service_for_executor
 from .turn_executor_control_plane_evidence import (

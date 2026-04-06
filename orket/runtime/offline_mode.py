@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List
-
+from typing import Any
 
 DEFAULT_NETWORK_MODE = "offline"
 KNOWN_NETWORK_MODES = {"offline", "online_opt_in"}
 
-OFFLINE_CAPABILITY_MATRIX: Dict[str, Dict[str, Any]] = {
+OFFLINE_CAPABILITY_MATRIX: dict[str, dict[str, Any]] = {
     "init": {
         "offline_supported": True,
         "requires_network": False,
@@ -33,9 +32,9 @@ OFFLINE_CAPABILITY_MATRIX: Dict[str, Dict[str, Any]] = {
 class OfflineModeError(Exception):
     code: str
     message: str
-    detail: Dict[str, Any]
+    detail: dict[str, Any]
 
-    def to_payload(self) -> Dict[str, Any]:
+    def to_payload(self) -> dict[str, Any]:
         return {
             "ok": False,
             "code": self.code,
@@ -59,7 +58,7 @@ def resolve_network_mode(*values: Any) -> str:
     return DEFAULT_NETWORK_MODE
 
 
-def command_offline_capability(command_name: str) -> Dict[str, Any]:
+def command_offline_capability(command_name: str) -> dict[str, Any]:
     key = str(command_name or "").strip().lower()
     row = OFFLINE_CAPABILITY_MATRIX.get(key)
     if not isinstance(row, dict):
@@ -71,7 +70,7 @@ def command_offline_capability(command_name: str) -> Dict[str, Any]:
     return dict(row)
 
 
-def assert_default_offline_surface(required_commands: List[str] | None = None) -> None:
+def assert_default_offline_surface(required_commands: list[str] | None = None) -> None:
     required = required_commands or ["init", "api_add", "refactor"]
     for command in required:
         row = command_offline_capability(command)

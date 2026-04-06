@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from typing import Dict, List
 
 import pytest
 
@@ -24,7 +23,7 @@ def _seed_value() -> int:
         return 7
 
 
-ROLE_ACCEPTANCE: Dict[str, Dict[str, List[str]]] = {
+ROLE_ACCEPTANCE: dict[str, dict[str, list[str]]] = {
     "requirements_analyst": {
         "required_tokens": ["REQUIREMENTS_ACCEPTED"],
         "required_all_substrings": ["hello world"],
@@ -48,7 +47,7 @@ ROLE_ACCEPTANCE: Dict[str, Dict[str, List[str]]] = {
 }
 
 
-def _contains_all(haystack: str, needles: List[str]) -> bool:
+def _contains_all(haystack: str, needles: list[str]) -> bool:
     return all(needle in haystack for needle in needles)
 
 

@@ -108,10 +108,10 @@ def infer_failure_taxonomy(
 
 
 def validate_recovery_decision_authority(
-    decision: "RecoveryDecisionRecord",
+    decision: RecoveryDecisionRecord,
     *,
-    checkpoint_acceptance: "CheckpointAcceptanceRecord | None" = None,
-    reconciliation_record: "ReconciliationRecord | None" = None,
+    checkpoint_acceptance: CheckpointAcceptanceRecord | None = None,
+    reconciliation_record: ReconciliationRecord | None = None,
     idempotent_retry_permitted: bool = False,
 ) -> bool:
     action = decision.authorized_next_action
@@ -149,12 +149,14 @@ def validate_recovery_decision_authority(
             raise ControlPlaneRecoveryError("resume_from_checkpoint requires accepted checkpoint")
         if checkpoint_acceptance.resumability_class is CheckpointResumabilityClass.RESUME_FORBIDDEN:
             raise ControlPlaneRecoveryError("resume_from_checkpoint cannot use resume_forbidden checkpoint")
-        if checkpoint_acceptance.resumability_class is CheckpointResumabilityClass.RESUME_SAME_ATTEMPT:
-            if not has_resumed_attempt or has_new_attempt:
-                raise ControlPlaneRecoveryError("resume_same_attempt checkpoint requires resumed_attempt_id only")
-        if checkpoint_acceptance.resumability_class is CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT:
-            if not has_new_attempt or has_resumed_attempt:
-                raise ControlPlaneRecoveryError("resume_new_attempt checkpoint requires new_attempt_id only")
+        if checkpoint_acceptance.resumability_class is CheckpointResumabilityClass.RESUME_SAME_ATTEMPT and (
+            not has_resumed_attempt or has_new_attempt
+        ):
+            raise ControlPlaneRecoveryError("resume_same_attempt checkpoint requires resumed_attempt_id only")
+        if checkpoint_acceptance.resumability_class is CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT and (
+            not has_new_attempt or has_resumed_attempt
+        ):
+            raise ControlPlaneRecoveryError("resume_new_attempt checkpoint requires new_attempt_id only")
 
     if (
         decision.side_effect_boundary_class is SideEffectBoundaryClass.EFFECT_BOUNDARY_UNCERTAIN
@@ -184,10 +186,10 @@ def build_recovery_decision(
     blocked_actions: list[str] | None = None,
     operator_requirement: object = None,
     rationale_ref: str,
-    checkpoint_acceptance: "CheckpointAcceptanceRecord | None" = None,
-    reconciliation_record: "ReconciliationRecord | None" = None,
+    checkpoint_acceptance: CheckpointAcceptanceRecord | None = None,
+    reconciliation_record: ReconciliationRecord | None = None,
     idempotent_retry_permitted: bool = False,
-) -> "RecoveryDecisionRecord":
+) -> RecoveryDecisionRecord:
     from orket.core.contracts.control_plane_models import RecoveryDecisionRecord
 
     resolved_failure_plane = failure_plane

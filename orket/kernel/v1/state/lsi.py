@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import json
-import os
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
+
 from orket.kernel.v1.canonical import canonical_json_bytes, fs_token, structural_digest
 from orket.kernel.v1.contracts import KernelIssue
 
@@ -28,6 +29,7 @@ DIR_BY_ID = "by_id"
 E_RELATIONSHIP_ORPHAN = "E_RELATIONSHIP_ORPHAN"
 E_LSI_ORPHAN_TARGET = "E_LSI_ORPHAN_TARGET"
 I_REF_MULTISOURCE = "I_REF_MULTISOURCE"
+I_REF_INDEX_LAG = "I_REF_INDEX_LAG"
 
 
 # ----------------------------
@@ -64,7 +66,7 @@ def _atomic_write_bytes(path: Path, payload: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_bytes(payload)
-    os.replace(tmp, path)
+    tmp.replace(path)
 
 
 def _atomic_write_json(path: Path, obj: Any) -> None:
@@ -387,12 +389,6 @@ class LocalSovereignIndex:
         for ref_type, ref_id, ptr, relationship in refs:
             id_ptr = f"{ptr}/id"
             ref_identity = f"{ref_type}:{ref_id}"
-            found_layer = None
-            if ref_identity in staged_visible:
-                found_layer = "StagedCreation"
-            elif ref_identity in committed_visible:
-                found_layer = "Committed"
-
             if ref_identity not in visible_identities:
                 issues.append(
                     KernelIssue(
@@ -405,18 +401,34 @@ class LocalSovereignIndex:
                     )
                 )
             else:
-                events.append(
-                    _event_line(
-                        "INFO",
-                        "lsi",
-                        "I_REF_VISIBLE",
-                        id_ptr,
-                        "Reference target resolved.",
-                        layer=found_layer,
-                        type=ref_type,
-                        id=ref_id,
+                indexed_layer = self._lookup_ref_visibility(run_id, turn_id, stem, ref_type, ref_id)
+                if indexed_layer is None:
+                    found_layer = "StagedCreation" if ref_identity in staged_visible else "Committed"
+                    events.append(
+                        _event_line(
+                            "INFO",
+                            "lsi",
+                            I_REF_INDEX_LAG,
+                            id_ptr,
+                            "Reference target exists in triplets but has not reached refs/by_id yet.",
+                            layer=found_layer,
+                            type=ref_type,
+                            id=ref_id,
+                        )
                     )
-                )
+                else:
+                    events.append(
+                        _event_line(
+                            "INFO",
+                            "lsi",
+                            "I_REF_VISIBLE",
+                            id_ptr,
+                            "Reference target resolved.",
+                            layer=indexed_layer,
+                            type=ref_type,
+                            id=ref_id,
+                        )
+                    )
 
         # Deterministic issue ordering (stage fixed, then pointer, then code, then details)
         issues.sort(key=lambda i: (i.location, i.code, json.dumps(i.details, sort_keys=True, separators=(",", ":"))))

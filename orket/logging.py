@@ -1,12 +1,14 @@
 import asyncio
+import contextlib
 import json
 import logging
 import logging.handlers
 import os
 import queue
 import threading
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from orket.naming import sanitize_name
 from orket.time_utils import now_local
@@ -283,10 +285,8 @@ def log_event(
 
     # 1. Emit JSON record to this workspace only.
     _append_json_record(log_file, record)
-    try:
+    with contextlib.suppress(RuntimeError, ValueError, TypeError, OSError):
         _append_runtime_event_artifact(workspace, runtime_event)
-    except (RuntimeError, ValueError, TypeError, OSError):
-        pass
 
     # 2. Notify subscribers (for WebSockets)
     for subscriber in _subscribers:

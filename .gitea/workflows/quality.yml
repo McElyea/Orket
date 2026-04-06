@@ -278,7 +278,7 @@ jobs:
         run: pytest tests/ --cov=orket --cov-fail-under=89
 
       - name: Ruff lint
-        run: ruff check orket/
+        run: ruff check orket tests
 
       - name: Mypy type check
         run: mypy orket/ --ignore-missing-imports

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
-from orket.domain.sandbox import PortAllocation
 from orket.core.contracts import ReservationRecord
 from orket.core.domain import ReservationKind, ReservationStatus
+from orket.core.domain.sandbox import PortAllocation
 
 
 class SandboxControlPlaneReservationError(ValueError):

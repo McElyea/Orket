@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from typing import Any
 
 
 @dataclass(frozen=True)
 class ScaffoldSpec:
     required_directories: tuple[str, ...]
-    required_files: Dict[str, str]
+    required_files: dict[str, str]
     forbidden_extensions: tuple[str, ...]
     scan_roots: tuple[str, ...]
 
@@ -32,7 +33,7 @@ class Scaffolder:
         "agent_output/scripts",
         "agent_output/docs",
     )
-    _DEFAULT_FILES: Dict[str, str] = {
+    _DEFAULT_FILES: dict[str, str] = {
         "agent_output/README.md": "# Orket Scaffold\n\nDeterministic project baseline.\n",
         "agent_output/.env.example": "# Add environment variables here\n",
         "agent_output/src/__init__.py": "",
@@ -41,7 +42,7 @@ class Scaffolder:
     _DEFAULT_FORBIDDEN_EXTENSIONS: tuple[str, ...] = (".exe", ".dll", ".so", ".dylib")
     _DEFAULT_SCAN_ROOTS: tuple[str, ...] = ("agent_output",)
     _API_VUE_DIRECTORIES: tuple[str, ...] = ("agent_output/frontend/src",)
-    _API_VUE_FILES: Dict[str, str] = {
+    _API_VUE_FILES: dict[str, str] = {
         "agent_output/frontend/index.html": (
             "<!doctype html>\n"
             '<html><head><meta charset="UTF-8"><title>Orket Frontend</title></head>'
@@ -54,7 +55,7 @@ class Scaffolder:
         "agent_output/services/worker/src",
         "agent_output/services/shared",
     )
-    _MICROSERVICES_FILES: Dict[str, str] = {
+    _MICROSERVICES_FILES: dict[str, str] = {
         "agent_output/services/api/src/__init__.py": "",
         "agent_output/services/worker/src/__init__.py": "",
         "agent_output/services/shared/README.md": "# Shared Contracts\n\nCross-service schemas and interfaces.\n",
@@ -74,7 +75,7 @@ class Scaffolder:
         self.project_surface_profile = str(project_surface_profile or "").strip().lower()
         self.architecture_pattern = str(architecture_pattern or "").strip().lower()
 
-    async def ensure(self) -> Dict[str, Any]:
+    async def ensure(self) -> dict[str, Any]:
         spec = self._resolve_spec()
 
         created_dirs = await self._ensure_directories(spec.required_directories)
@@ -136,8 +137,8 @@ class Scaffolder:
             scan_roots=tuple(scan_roots),
         )
 
-    async def _ensure_directories(self, directories: Sequence[str]) -> List[str]:
-        created: List[str] = []
+    async def _ensure_directories(self, directories: Sequence[str]) -> list[str]:
+        created: list[str] = []
         for rel_dir in directories:
             path = self.workspace_root / rel_dir
             existed = await asyncio.to_thread(path.exists)
@@ -146,8 +147,8 @@ class Scaffolder:
                 created.append(rel_dir)
         return created
 
-    async def _ensure_files(self, required_files: Mapping[str, str]) -> List[str]:
-        created: List[str] = []
+    async def _ensure_files(self, required_files: Mapping[str, str]) -> list[str]:
+        created: list[str] = []
         for rel_path, content in required_files.items():
             path = self.workspace_root / rel_path
             exists = await asyncio.to_thread(path.exists)
@@ -158,13 +159,13 @@ class Scaffolder:
         return created
 
     async def _validate_required_structure(self, spec: ScaffoldSpec) -> None:
-        missing_dirs: List[str] = []
-        missing_files: List[str] = []
+        missing_dirs: list[str] = []
+        missing_files: list[str] = []
 
         for rel_dir in spec.required_directories:
             if not await asyncio.to_thread((self.workspace_root / rel_dir).is_dir):
                 missing_dirs.append(rel_dir)
-        for rel_file in spec.required_files.keys():
+        for rel_file in spec.required_files:
             if not await asyncio.to_thread((self.workspace_root / rel_file).is_file):
                 missing_files.append(rel_file)
 
@@ -181,24 +182,26 @@ class Scaffolder:
         *,
         forbidden_extensions: Sequence[str],
         scan_roots: Sequence[str],
-    ) -> List[str]:
+    ) -> list[str]:
         normalized_ext = tuple(ext.lower() for ext in forbidden_extensions if ext)
         if not normalized_ext:
             return []
 
-        violations: List[str] = []
+        violations: list[str] = []
         for rel_root in scan_roots:
             root = self.workspace_root / rel_root
             if not await asyncio.to_thread(root.exists):
                 continue
-            files = await asyncio.to_thread(lambda: [p for p in root.rglob("*") if p.is_file()])
+            files = await asyncio.to_thread(
+                lambda root_path=root: [path for path in root_path.rglob("*") if path.is_file()]
+            )
             for file_path in files:
                 if file_path.suffix.lower() in normalized_ext:
                     violations.append(str(file_path.relative_to(self.workspace_root)).replace("\\", "/"))
         return violations
 
     @staticmethod
-    def _normalize_str_list(raw: Any, default: Iterable[str]) -> List[str]:
+    def _normalize_str_list(raw: Any, default: Iterable[str]) -> list[str]:
         if isinstance(raw, list):
             values = [str(item).strip() for item in raw if str(item).strip()]
             if values:
@@ -206,7 +209,7 @@ class Scaffolder:
         return [str(item).strip() for item in default if str(item).strip()]
 
     @staticmethod
-    def _normalize_file_map(raw: Any, default: Mapping[str, str]) -> Dict[str, str]:
+    def _normalize_file_map(raw: Any, default: Mapping[str, str]) -> dict[str, str]:
         if isinstance(raw, dict):
             normalized = {}
             for key, value in raw.items():

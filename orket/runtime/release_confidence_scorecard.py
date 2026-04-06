@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 RELEASE_CONFIDENCE_SCORECARD_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_DIMENSIONS = {

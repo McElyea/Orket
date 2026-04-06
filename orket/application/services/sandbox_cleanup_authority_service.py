@@ -83,9 +83,7 @@ class SandboxCleanupAuthorityService:
         if labels.get("orket.sandbox_id") != record.sandbox_id:
             return False
         run_id = str(record.run_id or "").strip()
-        if run_id and labels.get("orket.run_id") != run_id:
-            return False
-        return True
+        return not (run_id and labels.get("orket.run_id") != run_id)
 
     @classmethod
     def _host_context_matches(cls, *, record_host_id: str, observed_host_id: str) -> bool:

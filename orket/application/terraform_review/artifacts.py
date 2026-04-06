@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 
@@ -12,13 +12,13 @@ async def write_artifact_bundle(
     *,
     workspace: Path,
     execution_trace_ref: str,
-    payloads: Dict[str, Dict[str, Any]],
+    payloads: dict[str, dict[str, Any]],
 ) -> ArtifactBundle:
     fs = AsyncFileTools(workspace)
     safe_trace_ref = execution_trace_ref.replace("\\", "-").replace("/", "-").strip() or "terraform-plan-review"
     artifact_root = Path("terraform_plan_reviews") / safe_trace_ref
-    artifact_paths: Dict[str, str] = {}
-    artifact_hashes: Dict[str, str] = {}
+    artifact_paths: dict[str, str] = {}
+    artifact_hashes: dict[str, str] = {}
 
     for name, payload in payloads.items():
         rel_path = (artifact_root / f"{name}.json").as_posix()

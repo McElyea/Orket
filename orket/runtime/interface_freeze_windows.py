@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 INTERFACE_FREEZE_WINDOWS_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_WINDOW_IDS = {

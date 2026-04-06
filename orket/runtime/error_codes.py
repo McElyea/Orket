@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Final
 
-
 JSON_PARSE_ERROR: Final[str] = "JSON_PARSE_ERROR"
 SCHEMA_MISMATCH: Final[str] = "SCHEMA_MISMATCH"
 EXTRANEOUS_TEXT: Final[str] = "EXTRANEOUS_TEXT"

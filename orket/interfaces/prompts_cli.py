@@ -5,12 +5,11 @@ import difflib
 import json
 from datetime import date
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from orket.application.services.prompt_resolver import PromptResolver
 from orket.application.services.prompt_linter import lint_prompt_file
+from orket.application.services.prompt_resolver import PromptResolver
 from orket.schema import DialectConfig, RoleConfig, SkillConfig
-
 
 VALID_STATUSES = {"draft", "candidate", "canary", "stable", "deprecated"}
 ALLOWED_STATUS_TRANSITIONS = {
@@ -34,15 +33,15 @@ def _asset_dir(root: Path, kind: str) -> Path:
     raise ValueError(f"Unsupported asset kind: {kind}")
 
 
-def _iter_assets(root: Path, kind: str) -> List[Path]:
+def _iter_assets(root: Path, kind: str) -> list[Path]:
     return sorted(_asset_dir(root, kind).glob("*.json"))
 
 
-def _load_json(path: Path) -> Dict[str, Any]:
+def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _save_json(path: Path, payload: Dict[str, Any]) -> None:
+def _save_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
@@ -56,7 +55,7 @@ def _parse_iso_date(value: str) -> date | None:
         return None
 
 
-def _kind_and_name_from_id(prompt_id: str) -> Tuple[str, str]:
+def _kind_and_name_from_id(prompt_id: str) -> tuple[str, str]:
     raw = str(prompt_id or "").strip()
     if raw.startswith("role."):
         return "role", raw[len("role.") :]
@@ -73,8 +72,8 @@ def _asset_path_by_id(root: Path, prompt_id: str) -> Path:
     return path
 
 
-def _collect_placeholder_issues(text: str, path: Path, field: str) -> List[str]:
-    errors: List[str] = []
+def _collect_placeholder_issues(text: str, path: Path, field: str) -> list[str]:
+    errors: list[str] = []
     if "{{" not in text:
         return errors
     if "}}" not in text or text.count("{{") != text.count("}}"):
@@ -82,8 +81,8 @@ def _collect_placeholder_issues(text: str, path: Path, field: str) -> List[str]:
     return errors
 
 
-def _validate_prompt_metadata(path: Path, payload: Dict[str, Any], kind: str) -> List[str]:
-    errors: List[str] = []
+def _validate_prompt_metadata(path: Path, payload: dict[str, Any], kind: str) -> list[str]:
+    errors: list[str] = []
     metadata = payload.get("prompt_metadata")
     if not isinstance(metadata, dict):
         return [f"{path}: prompt_metadata must be an object."]
@@ -137,7 +136,7 @@ def _validate_prompt_metadata(path: Path, payload: Dict[str, Any], kind: str) ->
         if version and version not in versions:
             errors.append(f"{path}: prompt_metadata.version '{version}' missing from changelog entries.")
 
-    text_fields: List[Tuple[str, str]] = []
+    text_fields: list[tuple[str, str]] = []
     for key in ("prompt", "description", "dsl_format", "hallucination_guard"):
         if key in payload and isinstance(payload.get(key), str):
             text_fields.append((key, str(payload[key])))
@@ -152,13 +151,13 @@ def _validate_prompt_metadata(path: Path, payload: Dict[str, Any], kind: str) ->
     return errors
 
 
-def validate_prompt_assets(root: Path) -> List[str]:
+def validate_prompt_assets(root: Path) -> list[str]:
     lint = lint_prompt_assets(root)
     return [item["message"] for item in lint["errors"]]
 
 
-def lint_prompt_assets(root: Path) -> Dict[str, Any]:
-    violations: List[Dict[str, Any]] = []
+def lint_prompt_assets(root: Path) -> dict[str, Any]:
+    violations: list[dict[str, Any]] = []
     for kind in ("role", "dialect"):
         for path in _iter_assets(root, kind):
             violations.extend(lint_prompt_file(path, kind))
@@ -179,8 +178,8 @@ def lint_prompt_assets(root: Path) -> Dict[str, Any]:
     }
 
 
-def list_prompts(root: Path, kind: str = "all", status: str = "") -> List[Dict[str, Any]]:
-    rows: List[Dict[str, Any]] = []
+def list_prompts(root: Path, kind: str = "all", status: str = "") -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
     kinds = ("role", "dialect") if kind == "all" else (kind,)
     for item_kind in kinds:
         for path in _iter_assets(root, item_kind):
@@ -207,9 +206,9 @@ def find_stale_candidate_prompts(
     *,
     max_candidate_age_days: int = 14,
     as_of: date | None = None,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     anchor = as_of or date.today()
-    stale_rows: List[Dict[str, Any]] = []
+    stale_rows: list[dict[str, Any]] = []
     for row in list_prompts(root, kind="all", status="candidate"):
         updated_at = _parse_iso_date(str(row.get("updated_at") or ""))
         if updated_at is None:
@@ -239,10 +238,10 @@ def enforce_candidate_prompt_sla(
     root: Path,
     *,
     max_candidate_age_days: int = 14,
-    renew_ids: Optional[List[str]] = None,
+    renew_ids: list[str] | None = None,
     as_of: date | None = None,
     apply_changes: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     anchor = as_of or date.today()
     renew = {str(item).strip() for item in (renew_ids or []) if str(item).strip()}
     stale = find_stale_candidate_prompts(
@@ -250,7 +249,7 @@ def enforce_candidate_prompt_sla(
         max_candidate_age_days=max_candidate_age_days,
         as_of=anchor,
     )
-    actions: List[Dict[str, Any]] = []
+    actions: list[dict[str, Any]] = []
     for row in stale:
         prompt_id = str(row.get("id") or "").strip()
         if not prompt_id:
@@ -306,7 +305,7 @@ def enforce_candidate_prompt_sla(
     }
 
 
-def show_prompt(root: Path, prompt_id: str) -> Dict[str, Any]:
+def show_prompt(root: Path, prompt_id: str) -> dict[str, Any]:
     path = _asset_path_by_id(root, prompt_id)
     payload = _load_json(path)
     return {"path": str(path), "payload": payload}
@@ -329,7 +328,7 @@ def resolve_prompt(
     version_exact: str = "",
     strict: bool = True,
     profile: str = "default",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     role_cfg = _load_role(root, role)
     dialect_cfg = _load_dialect(root, dialect)
     skill = SkillConfig(
@@ -358,7 +357,7 @@ def resolve_prompt(
     }
 
 
-def _append_changelog(metadata: Dict[str, Any], *, version: str, notes: str) -> None:
+def _append_changelog(metadata: dict[str, Any], *, version: str, notes: str) -> None:
     changelog = metadata.setdefault("changelog", [])
     if not isinstance(changelog, list):
         changelog = []
@@ -392,9 +391,9 @@ def update_prompt_metadata(
     version: str = "",
     status: str = "",
     notes: str = "",
-    promotion_report: Optional[Dict[str, Any]] = None,
+    promotion_report: dict[str, Any] | None = None,
     apply_changes: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     path = _asset_path_by_id(root, prompt_id)
     payload = _load_json(path)
     metadata = dict(payload.get("prompt_metadata") or {})
@@ -421,18 +420,19 @@ def update_prompt_metadata(
         target_status = str(status or "stable").strip()
         if target_status not in VALID_STATUSES:
             raise ValueError(f"Invalid status: {target_status}")
-        if isinstance(promotion_report, dict) and target_status in {"canary", "stable"}:
-            if not bool(promotion_report.get("pass")):
-                blockers = promotion_report.get("blockers", [])
-                blocker_codes: List[str] = []
-                if isinstance(blockers, list):
-                    for item in blockers:
-                        if isinstance(item, dict):
-                            code = str(item.get("code") or "").strip()
-                            if code:
-                                blocker_codes.append(code)
-                suffix = f" blockers={','.join(blocker_codes)}" if blocker_codes else ""
-                raise ValueError(f"Promotion criteria not met for {target_status}.{suffix}")
+        if isinstance(promotion_report, dict) and target_status in {"canary", "stable"} and not bool(
+            promotion_report.get("pass")
+        ):
+            blockers = promotion_report.get("blockers", [])
+            blocker_codes: list[str] = []
+            if isinstance(blockers, list):
+                for item in blockers:
+                    if isinstance(item, dict):
+                        code = str(item.get("code") or "").strip()
+                        if code:
+                            blocker_codes.append(code)
+            suffix = f" blockers={','.join(blocker_codes)}" if blocker_codes else ""
+            raise ValueError(f"Promotion criteria not met for {target_status}.{suffix}")
         _assert_status_transition_allowed(
             current_status=old_status,
             target_status=target_status,
@@ -468,7 +468,7 @@ def update_prompt_metadata(
     }
 
 
-def _print_json(payload: Dict[str, Any]) -> None:
+def _print_json(payload: dict[str, Any]) -> None:
     print(json.dumps(payload, indent=2, ensure_ascii=False))
 
 
@@ -541,7 +541,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
     root = Path(args.root).resolve()
@@ -635,7 +635,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
 
     if args.cmd in {"new", "promote", "deprecate"}:
-        promotion_report: Optional[Dict[str, Any]] = None
+        promotion_report: dict[str, Any] | None = None
         report_path = str(getattr(args, "promotion_report", "") or "").strip()
         if report_path:
             promotion_report = _load_json(Path(report_path))

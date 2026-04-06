@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 RESULT_ERROR_INVARIANT_CONTRACT_SCHEMA_VERSION = "1.0"
 
 _FAILURE_FORBIDDEN_STATUSES: tuple[str, ...] = ("done", "incomplete", "running")

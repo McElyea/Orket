@@ -1,23 +1,26 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List
-from pathlib import Path
-import uuid
-import re
-import os
 import inspect
+import os
+import re
+import uuid
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
+from orket.adapters.tools.default_strategy import compose_default_tool_map
+from orket.core.cards_runtime_contract import (
+    required_read_paths_for_seat as resolve_cards_required_read_paths,
+)
+from orket.core.cards_runtime_contract import (
+    required_write_paths_for_seat as resolve_cards_required_write_paths,
+)
 from orket.decision_nodes.api_runtime_strategy_node import (
     DefaultApiRuntimeStrategyNode as _DefaultApiRuntimeStrategyNode,
 )
 from orket.decision_nodes.contracts import PlanningInput
-from orket.core.cards_runtime_contract import (
-    required_read_paths_for_seat as resolve_cards_required_read_paths,
-    required_write_paths_for_seat as resolve_cards_required_write_paths,
-)
-from orket.schema import CardStatus
-from orket.adapters.tools.default_strategy import compose_default_tool_map
 from orket.exceptions import CatastrophicFailure, ExecutionFailed, GovernanceViolation
+from orket.schema import CardStatus
 
 DefaultApiRuntimeStrategyNode = _DefaultApiRuntimeStrategyNode
 
@@ -28,7 +31,7 @@ class DefaultPlannerNode:
     Preserves existing orchestration candidate behavior.
     """
 
-    def plan(self, data: PlanningInput) -> List[Any]:
+    def plan(self, data: PlanningInput) -> list[Any]:
         backlog = data.backlog
         independent_ready = data.independent_ready
         target_issue_id = data.target_issue_id
@@ -39,7 +42,11 @@ class DefaultPlannerNode:
             target = next((i for i in backlog if i.id == target_issue_id), None)
             if not target:
                 return []
-            if target.status == CardStatus.CODE_REVIEW:
+            if target.status in {
+                CardStatus.IN_PROGRESS,
+                CardStatus.CODE_REVIEW,
+                CardStatus.AWAITING_GUARD_REVIEW,
+            }:
                 return [target]
             if target.status == CardStatus.READY and any(i.id == target_issue_id for i in independent_ready):
                 return [target]
@@ -108,7 +115,7 @@ class DefaultEvaluatorNode:
         turn: Any,
         seat_name: str,
         is_review_turn: bool,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return {
             "remember_decision": ("decision" in (turn.content or "").lower()) or ("architect" in seat_name),
             "trigger_sandbox": (
@@ -118,7 +125,7 @@ class DefaultEvaluatorNode:
             "promote_code_review": updated_issue.status == issue.status,
         }
 
-    def evaluate_failure(self, issue: Any, result: Any) -> Dict[str, Any]:
+    def evaluate_failure(self, issue: Any, result: Any) -> dict[str, Any]:
         if self._is_recoverable_missing_read_error(result):
             next_retry_count = issue.retry_count + 1
             if next_retry_count > issue.max_retries:
@@ -168,17 +175,17 @@ class DefaultEvaluatorNode:
         error_text = str(getattr(result, "error", "") or "").strip().lower()
         return "approval required for tool 'write_file' before execution." in error_text
 
-    def success_post_actions(self, success_eval: Dict[str, Any]) -> Dict[str, Any]:
+    def success_post_actions(self, success_eval: dict[str, Any]) -> dict[str, Any]:
         trigger_sandbox = bool(success_eval.get("trigger_sandbox"))
         next_status = None
         if trigger_sandbox and success_eval.get("promote_code_review"):
             next_status = CardStatus.CODE_REVIEW
         return {"trigger_sandbox": trigger_sandbox, "next_status": next_status}
 
-    def should_trigger_sandbox(self, success_actions: Dict[str, Any]) -> bool:
+    def should_trigger_sandbox(self, success_actions: dict[str, Any]) -> bool:
         return bool(success_actions.get("trigger_sandbox"))
 
-    def next_status_after_success(self, success_actions: Dict[str, Any]) -> Any:
+    def next_status_after_success(self, success_actions: dict[str, Any]) -> Any:
         return success_actions.get("next_status")
 
     def status_for_failure_action(self, action: str) -> Any:
@@ -235,7 +242,7 @@ class DefaultToolStrategyNode:
     Preserves the legacy static tool mapping behavior.
     """
 
-    def compose(self, toolbox: Any) -> Dict[str, Callable]:
+    def compose(self, toolbox: Any) -> dict[str, Callable]:
         return compose_default_tool_map(toolbox)
 
 
@@ -488,7 +495,7 @@ class DefaultEngineRuntimePolicyNode:
         load_env()
 
     def resolve_config_root(self, config_root: Any) -> Any:
-        return config_root or Path(".").resolve()
+        return config_root or Path().resolve()
 
 
 class DefaultLoaderStrategyNode:
@@ -500,23 +507,23 @@ class DefaultLoaderStrategyNode:
     def organization_modular_paths(self, config_dir: Any) -> tuple[Any, Any]:
         return (config_dir / "org_info.json", config_dir / "architecture.json")
 
-    def organization_fallback_paths(self, config_dir: Any, model_dir: Any) -> List[Any]:
+    def organization_fallback_paths(self, config_dir: Any, model_dir: Any) -> list[Any]:
         return [config_dir / "organization.json", model_dir / "organization.json"]
 
-    def department_paths(self, config_dir: Any, model_dir: Any, name: str) -> List[Any]:
+    def department_paths(self, config_dir: Any, model_dir: Any, name: str) -> list[Any]:
         return [
             config_dir / "departments" / f"{name}.json",
             model_dir / name / "department.json",
         ]
 
-    def asset_paths(self, config_dir: Any, model_dir: Any, dept: str, category: str, name: str) -> List[Any]:
+    def asset_paths(self, config_dir: Any, model_dir: Any, dept: str, category: str, name: str) -> list[Any]:
         return [
             config_dir / category / f"{name}.json",
             model_dir / dept / category / f"{name}.json",
             model_dir / "core" / category / f"{name}.json",
         ]
 
-    def list_asset_search_paths(self, config_dir: Any, model_dir: Any, dept: str, category: str) -> List[Any]:
+    def list_asset_search_paths(self, config_dir: Any, model_dir: Any, dept: str, category: str) -> list[Any]:
         return [
             config_dir / category,
             model_dir / dept / category,
@@ -572,7 +579,7 @@ class DefaultPipelineWiringStrategyNode:
         return WebhookDatabase()
 
     def create_bug_fix_manager(self, organization: Any, webhook_db: Any) -> Any:
-        from orket.domain.bug_fix_phase import BugFixPhaseManager
+        from orket.core.domain.bug_fix_phase import BugFixPhaseManager
 
         return BugFixPhaseManager(
             organization_config=organization.process_rules if organization else {},
@@ -653,13 +660,13 @@ class DefaultOrchestrationLoopPolicyNode:
     def turn_status_for_issue(self, is_review_turn: bool) -> Any:
         return CardStatus.CODE_REVIEW if is_review_turn else CardStatus.IN_PROGRESS
 
-    def role_order_for_turn(self, roles: List[str], is_review_turn: bool) -> List[str]:
+    def role_order_for_turn(self, roles: list[str], is_review_turn: bool) -> list[str]:
         ordered_roles = list(roles)
         if is_review_turn and "integrity_guard" not in ordered_roles:
             ordered_roles.insert(0, "integrity_guard")
         return ordered_roles
 
-    def required_action_tools_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
+    def required_action_tools_for_seat(self, seat_name: str, **_kwargs) -> list[str]:
         seat = (seat_name or "").strip().lower()
         issue = _kwargs.get("issue")
         issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
@@ -681,7 +688,7 @@ class DefaultOrchestrationLoopPolicyNode:
                 return ["read_file", "update_issue_status"]
         return resolved
 
-    def required_statuses_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
+    def required_statuses_for_seat(self, seat_name: str, **_kwargs) -> list[str]:
         seat = (seat_name or "").strip().lower()
         issue = _kwargs.get("issue")
         issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
@@ -695,17 +702,16 @@ class DefaultOrchestrationLoopPolicyNode:
             "reviewer": ["code_review"],
             "integrity_guard": ["done", "blocked"],
         }
-        if seat == "integrity_guard":
+        if seat == "integrity_guard" and issue_seat and issue_seat not in {"code_reviewer", "reviewer"}:
             # Guard can block only on final review issue; upstream handoff guards must resolve done.
-            if issue_seat and issue_seat not in {"code_reviewer", "reviewer"}:
-                return ["done"]
+            return ["done"]
         return status_requirements.get(seat, [])
 
-    def required_read_paths_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
+    def required_read_paths_for_seat(self, seat_name: str, **_kwargs) -> list[str]:
         issue = _kwargs.get("issue")
         return resolve_cards_required_read_paths(seat_name=seat_name, issue=issue)
 
-    def required_write_paths_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
+    def required_write_paths_for_seat(self, seat_name: str, **_kwargs) -> list[str]:
         issue = _kwargs.get("issue")
         return resolve_cards_required_write_paths(seat_name=seat_name, issue=issue)
 
@@ -715,12 +721,12 @@ class DefaultOrchestrationLoopPolicyNode:
             return "review_required"
         return "auto"
 
-    def approval_required_tools_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
+    def approval_required_tools_for_seat(self, seat_name: str, **_kwargs) -> list[str]:
         # Default OFF to preserve current behavior. Enable per seat via custom loop policy node.
         _ = (seat_name or "").strip().lower()
         return []
 
-    def validate_guard_rejection_payload(self, payload: Any) -> Dict[str, Any]:
+    def validate_guard_rejection_payload(self, payload: Any) -> dict[str, Any]:
         rationale = str(getattr(payload, "rationale", "") or "").strip()
         actions = getattr(payload, "remediation_actions", []) or []
         normalized_actions = [str(item).strip() for item in actions if str(item).strip()]
@@ -740,7 +746,7 @@ class DefaultOrchestrationLoopPolicyNode:
     def missing_seat_status(self) -> Any:
         return CardStatus.CANCELED
 
-    def is_backlog_done(self, backlog: List[Any]) -> bool:
+    def is_backlog_done(self, backlog: list[Any]) -> bool:
         terminal_statuses = {
             CardStatus.DONE,
             CardStatus.CANCELED,
@@ -751,7 +757,7 @@ class DefaultOrchestrationLoopPolicyNode:
         }
         return all(i.status in terminal_statuses for i in backlog)
 
-    def no_candidate_outcome(self, backlog: List[Any]) -> Dict[str, Any]:
+    def no_candidate_outcome(self, backlog: list[Any]) -> dict[str, Any]:
         is_done = self.is_backlog_done(backlog)
         return {
             "is_done": is_done,
@@ -762,7 +768,7 @@ class DefaultOrchestrationLoopPolicyNode:
         self,
         iteration_count: int,
         max_iterations: int,
-        backlog: List[Any],
+        backlog: list[Any],
     ) -> bool:
         return iteration_count >= max_iterations and not self.is_backlog_done(backlog)
 

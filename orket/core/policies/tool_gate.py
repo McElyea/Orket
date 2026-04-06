@@ -5,11 +5,11 @@ Intercepts tool calls before execution to enforce organizational invariants.
 """
 
 import logging
-from typing import Dict, Any, Optional, List
 from pathlib import Path
+from typing import Any
 
-from orket.schema import OrganizationConfig, CardStatus, CardType
 from orket.core.domain.state_machine import StateMachine, StateMachineError
+from orket.schema import CardStatus, CardType, OrganizationConfig
 
 
 class ToolGateViolation(Exception):
@@ -22,17 +22,17 @@ _LOGGER = logging.getLogger(__name__)
 class ToolGate:
     """Validates tool calls against organizational policy before execution."""
 
-    def __init__(self, organization: Optional[OrganizationConfig], workspace_root: Path):
+    def __init__(self, organization: OrganizationConfig | None, workspace_root: Path):
         self.org = organization
         self.workspace_root = workspace_root
 
     def validate(
         self,
         tool_name: str,
-        args: Dict[str, Any],
-        context: Dict[str, Any],
-        roles: List[str],
-    ) -> Optional[str]:
+        args: dict[str, Any],
+        context: dict[str, Any],
+        roles: list[str],
+    ) -> str | None:
         if tool_name == "write_file":
             violation = self._validate_file_write(args, context, roles)
             if violation:
@@ -57,10 +57,10 @@ class ToolGate:
 
     def _validate_file_write(
         self,
-        args: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
-        roles: Optional[List[str]] = None,
-    ) -> Optional[str]:
+        args: dict[str, Any],
+        context: dict[str, Any] | None = None,
+        roles: list[str] | None = None,
+    ) -> str | None:
         context = context or {}
         roles = roles or []
         file_path = args.get("path")
@@ -77,13 +77,15 @@ class ToolGate:
             except ValueError:
                 return f"Security violation: Cannot write outside workspace ({file_path})"
 
-            from orket.services.idesign_validator import iDesignValidator
+            from orket.core.domain.execution import ExecutionTurn, ToolCall
             from orket.services.ast_validator import ASTValidator
-            from orket.domain.execution import ExecutionTurn, ToolCall
+            from orket.services.idesign_validator import iDesignValidator
 
+            actual_role = str(context.get("role") or context.get("current_role") or "unknown")
+            actual_issue_id = str(context.get("issue_id") or context.get("card_id") or "unknown")
             temp_turn = ExecutionTurn(
-                role="unknown",
-                issue_id="unknown",
+                role=actual_role,
+                issue_id=actual_issue_id,
                 tool_calls=[ToolCall(tool="write_file", args=args)],
             )
 
@@ -125,7 +127,7 @@ class ToolGate:
 
         return None
 
-    def _idesign_enabled(self, context: Dict[str, Any]) -> bool:
+    def _idesign_enabled(self, context: dict[str, Any]) -> bool:
         if not isinstance(context, dict):
             return False
         return bool(context.get("idesign_enabled", False))
@@ -134,9 +136,9 @@ class ToolGate:
         self,
         *,
         full_path: Path,
-        context: Dict[str, Any],
-        roles: List[str],
-    ) -> Optional[str]:
+        context: dict[str, Any],
+        roles: list[str],
+    ) -> str | None:
         if not self.org or not isinstance(getattr(self.org, "process_rules", None), dict):
             return None
         process_rules = self.org.process_rules
@@ -180,9 +182,9 @@ class ToolGate:
         self,
         *,
         full_path: Path,
-        context: Dict[str, Any],
-        roles: List[str],
-    ) -> Optional[str]:
+        context: dict[str, Any],
+        roles: list[str],
+    ) -> str | None:
         if not self.org or not isinstance(getattr(self.org, "process_rules", None), dict):
             return None
         process_rules = self.org.process_rules
@@ -223,10 +225,10 @@ class ToolGate:
 
     def _validate_state_change(
         self,
-        args: Dict[str, Any],
-        context: Dict[str, Any],
-        roles: List[str],
-    ) -> Optional[str]:
+        args: dict[str, Any],
+        context: dict[str, Any],
+        roles: list[str],
+    ) -> str | None:
         new_status_str = args.get("status")
         if not new_status_str:
             return "update_issue_status requires 'status' argument"
@@ -258,7 +260,7 @@ class ToolGate:
 
         return None
 
-    def _resolve_card_type(self, context: Dict[str, Any]) -> CardType:
+    def _resolve_card_type(self, context: dict[str, Any]) -> CardType:
         raw_card_type = context.get("card_type", CardType.ISSUE.value)
         if isinstance(raw_card_type, CardType):
             return raw_card_type
@@ -267,18 +269,18 @@ class ToolGate:
     def _validate_destructive_operation(
         self,
         tool_name: str,
-        args: Dict[str, Any],
-        context: Dict[str, Any],
-    ) -> Optional[str]:
+        args: dict[str, Any],
+        context: dict[str, Any],
+    ) -> str | None:
         if not args.get("confirm", False):
             return f"Destructive operation '{tool_name}' requires explicit confirmation (confirm=true)"
         return None
 
     def _validate_issue_creation(
         self,
-        args: Dict[str, Any],
-        context: Dict[str, Any],
-    ) -> Optional[str]:
+        args: dict[str, Any],
+        context: dict[str, Any],
+    ) -> str | None:
         summary = args.get("summary", "")
         if len(summary) < 5:
             return "Issue summary must be at least 5 characters"

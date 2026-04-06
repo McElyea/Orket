@@ -1,16 +1,16 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from threading import RLock
-from typing import Callable
 
 from orket_extension_sdk.voice import (
     STTProvider,
     TranscribeRequest,
     TranscribeResponse,
     VoiceTurnCommand,
+    VoiceTurnController,
     VoiceTurnControlRequest,
     VoiceTurnControlResponse,
-    VoiceTurnController,
     VoiceTurnState,
 )
 

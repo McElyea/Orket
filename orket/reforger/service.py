@@ -17,15 +17,15 @@ from orket.reforger.compiler import (
 )
 from orket.reforger.proof_slices import phase0_service_run_id, resolve_phase0_proof_slice
 from orket.reforger.service_contracts import (
+    RESULT_CLASS_CERTIFIED,
+    RESULT_CLASS_CERTIFIED_WITH_LIMITS,
+    RESULT_CLASS_UNSUPPORTED,
+    SERVICE_MODE_ADAPT,
     BaselineMetrics,
     CandidateSummary,
     ExternalConsumerVerdict,
     PromptReforgerServiceRequest,
     PromptReforgerServiceResult,
-    RESULT_CLASS_CERTIFIED,
-    RESULT_CLASS_CERTIFIED_WITH_LIMITS,
-    RESULT_CLASS_UNSUPPORTED,
-    SERVICE_MODE_ADAPT,
 )
 
 _BRIDGE_ATTRIBUTION_KINDS = {"npc_archetype_exists", "npc_refusal_style_exists"}

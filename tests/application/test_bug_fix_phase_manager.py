@@ -1,6 +1,6 @@
 import pytest
 
-from orket.domain.bug_fix_phase import BugFixPhaseManager
+from orket.core.domain.bug_fix_phase import BugFixPhaseManager
 
 
 class _FakeDb:

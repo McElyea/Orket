@@ -1,41 +1,21 @@
 import asyncio
 import hashlib
 import json
+import os
+from contextlib import asynccontextmanager, suppress
+from datetime import UTC, datetime
 from pathlib import Path
-from contextlib import asynccontextmanager
-from datetime import datetime, UTC
-from typing import Any, Optional
+from typing import Any
 
-from fastapi import FastAPI, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, Security, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
-import os
+
 from orket import __version__
-from orket.logging import subscribe_to_events, unsubscribe_from_events, log_event
-from orket.state import runtime_state
-from orket.hardware import get_metrics_snapshot
-from orket.decision_nodes.registry import DecisionNodeRegistry
-from orket.time_utils import now_local
-from orket.settings import load_user_settings, save_user_settings, load_user_preferences
-from orket.extensions import ExtensionManager
-from orket.orchestration.models import ModelSelector
-from orket.streaming import (
-    CommitIntent,
-    CommitOrchestrator,
-    InteractionManager,
-    StreamBus,
-    StreamBusConfig,
-)
-from orket.workloads import is_builtin_workload, run_builtin_workload, validate_builtin_workload_start
-from orket.interfaces.routers.kernel import build_kernel_router
-from orket.interfaces.routers.cards import build_cards_router
-from orket.interfaces.routers.settings import build_settings_router
-from orket.interfaces.routers.system import build_system_router
-from orket.interfaces.routers.sessions import build_sessions_router
-from orket.interfaces.routers.extension_runtime import build_extension_runtime_router
-from orket.interfaces.routers.streaming import register_streaming_routes
 from orket.application.services.extension_runtime_service import ExtensionRuntimeService
-from orket.application.services.run_ledger_summary_projection import validated_run_ledger_record_projection, validated_run_ledger_summary
+from orket.application.services.run_ledger_summary_projection import (
+    validated_run_ledger_record_projection,
+)
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     is_microservices_pilot_stable,
@@ -57,14 +37,49 @@ from orket.application.services.runtime_policy import (
     resolve_state_backend_mode,
     runtime_policy_options,
 )
+from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.extensions import ExtensionManager
+from orket.hardware import get_metrics_snapshot
+from orket.interfaces.routers.cards import build_cards_router
+from orket.interfaces.routers.extension_runtime import build_extension_runtime_router
+from orket.interfaces.routers.kernel import build_kernel_router
+from orket.interfaces.routers.sessions import build_sessions_router
+from orket.interfaces.routers.settings import build_settings_router
+from orket.interfaces.routers.streaming import register_streaming_routes
+from orket.interfaces.routers.system import build_system_router
+from orket.logging import log_event, subscribe_to_events, unsubscribe_from_events
+from orket.orchestration.models import ModelSelector
+from orket.settings import load_user_preferences, load_user_settings, save_user_settings
+from orket.state import runtime_state
+from orket.streaming import (
+    CommitIntent,
+    CommitOrchestrator,
+    InteractionManager,
+    StreamBus,
+    StreamBusConfig,
+)
+from orket.time_utils import now_local
+from orket.workloads import is_builtin_workload, run_builtin_workload, validate_builtin_workload_start
+
 
 def _resolve_api_runtime_node() -> Any:
     return DecisionNodeRegistry().resolve_api_runtime()
 
 
+def _resolve_default_project_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _project_root() -> Path:
+    root = getattr(app.state, "project_root", None)
+    if root is None:
+        raise RuntimeError("API project root is not initialized. Call create_api_app() first.")
+    return Path(root).resolve()
+
+
 def _validate_session_path(session_id: str) -> Path:
     """Validate session_id does not traverse outside the runs directory."""
-    base = (PROJECT_ROOT / "workspace" / "runs").resolve()
+    base = (_project_root() / "workspace" / "runs").resolve()
     candidate = (base / session_id).resolve()
     if not candidate.is_relative_to(base):
         raise HTTPException(status_code=400, detail="Invalid session_id")
@@ -96,12 +111,25 @@ async def _schedule_async_invocation_task(
     method = _resolve_method(target, invocation, error_prefix)
     task = asyncio.create_task(method(*invocation.get("args", []), **invocation.get("kwargs", {})))
     await runtime_state.add_task(session_id, task)
+    loop = asyncio.get_running_loop()
 
     # Always remove completed/canceled tasks to keep active task tracking accurate.
     def _cleanup(_done_task: asyncio.Task):
-        asyncio.create_task(runtime_state.remove_task(session_id))
+        with suppress(RuntimeError):
+            loop.call_soon_threadsafe(asyncio.create_task, runtime_state.remove_task(session_id, task))
 
     task.add_done_callback(_cleanup)
+
+
+def _runtime_task_summary(tasks: list[asyncio.Task]) -> tuple[bool, str]:
+    active_tasks = [task for task in tasks if not task.done()]
+    if active_tasks:
+        return True, "running"
+    if any(task.done() and not task.cancelled() for task in tasks):
+        return False, "completed"
+    if any(task.cancelled() for task in tasks):
+        return False, "canceled"
+    return False, "idle"
 
 
 def _invoke_sync_method(target: object, invocation: dict, error_prefix: str):
@@ -241,7 +269,7 @@ def _normalize_role_name(value: Any) -> str:
     return str(value or "").strip().lower().replace(" ", "_")
 
 
-def _parse_roles_filter(roles: Optional[str]) -> list[str]:
+def _parse_roles_filter(roles: str | None) -> list[str]:
     if not roles:
         return []
     parsed: list[str] = []
@@ -264,7 +292,7 @@ def _discover_active_roles(model_root: Path) -> list[str]:
 
         declared_roles = payload.get("roles")
         if isinstance(declared_roles, dict):
-            for role_name in declared_roles.keys():
+            for role_name in declared_roles:
                 role = _normalize_role_name(role_name)
                 if role:
                     team_roles.add(role)
@@ -346,7 +374,7 @@ def _discover_team_topology(model_root: Path) -> list[dict[str, Any]]:
         role_items: list[dict[str, Any]] = []
         all_roles = sorted(
             set(referenced_roles)
-            | {_normalize_role_name(role) for role in declared_roles.keys() if _normalize_role_name(role)}
+            | {_normalize_role_name(role) for role in declared_roles if _normalize_role_name(role)}
         )
         for role_name in all_roles:
             declared = declared_roles.get(role_name)
@@ -402,7 +430,7 @@ def _log_api_auth_rejection(
             "request_path": request_path,
             "provided_key_present": provided_key_present,
         },
-        PROJECT_ROOT,
+        _project_root(),
     )
 
 
@@ -449,6 +477,9 @@ def _on_log_record_factory(loop: asyncio.AbstractEventLoop):
 async def lifespan(_app: FastAPI):
     from orket.utils import ensure_log_dir
 
+    if engine is None:
+        create_api_app(project_root=getattr(_app.state, "project_root", _resolve_default_project_root()))
+
     ensure_log_dir()
     broadcaster_task = asyncio.create_task(event_broadcaster())
     loop = asyncio.get_running_loop()
@@ -462,30 +493,28 @@ async def lifespan(_app: FastAPI):
             "api_key_configured": bool(expected_key),
             "insecure_no_api_key_bypass": insecure_bypass,
         },
-        PROJECT_ROOT,
+        _project_root(),
     )
     if insecure_bypass:
         log_event(
             "api_security_warning",
             {"message": "ORKET_ALLOW_INSECURE_NO_API_KEY is enabled; /v1 auth is bypassed without ORKET_API_KEY."},
-            PROJECT_ROOT,
+            _project_root(),
         )
     try:
         yield
     finally:
         unsubscribe_from_events(log_subscriber)
         broadcaster_task.cancel()
-        try:
+        with suppress(asyncio.CancelledError):
             await broadcaster_task
-        except asyncio.CancelledError:
-            pass
 
 
 app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
+app.state.project_root = _resolve_default_project_root()
 # Apply auth to all v1 endpoints if configured
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_api_key)])
 
-PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
 api_runtime_node = _resolve_api_runtime_node()
 origins_str = os.getenv("ORKET_ALLOWED_ORIGINS", api_runtime_node.default_allowed_origins_value())
 origins = api_runtime_node.parse_allowed_origins(origins_str)
@@ -497,7 +526,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
 
-engine = api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT))
+engine: Any | None = None
 stream_bus: StreamBus | None = None
 interaction_manager: InteractionManager | None = None
 extension_manager: ExtensionManager | None = None
@@ -521,13 +550,22 @@ def _get_stream_bus() -> StreamBus:
     return stream_bus
 
 
+def _get_engine() -> Any:
+    global engine
+    if engine is None:
+        root = _project_root()
+        engine = api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(root))
+    return engine
+
+
 def _get_interaction_manager() -> InteractionManager:
     global interaction_manager
     if interaction_manager is None:
+        root = _project_root()
         interaction_manager = InteractionManager(
             bus=_get_stream_bus(),
-            commit_orchestrator=CommitOrchestrator(project_root=PROJECT_ROOT),
-            project_root=PROJECT_ROOT,
+            commit_orchestrator=CommitOrchestrator(project_root=root),
+            project_root=root,
         )
     return interaction_manager
 
@@ -535,15 +573,20 @@ def _get_interaction_manager() -> InteractionManager:
 def _get_extension_manager() -> ExtensionManager:
     global extension_manager
     if extension_manager is None:
-        extension_manager = ExtensionManager(project_root=PROJECT_ROOT)
+        extension_manager = ExtensionManager(project_root=_project_root())
     return extension_manager
 
 
 def _get_extension_runtime_service() -> ExtensionRuntimeService:
     global extension_runtime_service
     if extension_runtime_service is None:
-        extension_runtime_service = ExtensionRuntimeService(project_root=PROJECT_ROOT)
+        extension_runtime_service = ExtensionRuntimeService(project_root=_project_root())
     return extension_runtime_service
+
+
+# Keep the engine import-available for legacy monkeypatch-driven API tests while
+# leaving other mutable runtime objects lazy until explicitly needed.
+engine = _get_engine()
 
 
 # --- System Endpoints ---
@@ -562,8 +605,8 @@ async def get_version():
     return {"version": __version__, "api": "v1"}
 
 
-v1_router.include_router(build_kernel_router(lambda: engine))
-v1_router.include_router(build_cards_router(lambda: engine, api_runtime_node))
+v1_router.include_router(build_kernel_router(lambda: _get_engine()))
+v1_router.include_router(build_cards_router(lambda: _get_engine(), api_runtime_node))
 v1_router.include_router(
     build_settings_router(
         settings_order=SETTINGS_ORDER,
@@ -673,7 +716,7 @@ v1_router.include_router(
 )
 v1_router.include_router(
     build_system_router(
-        project_root_getter=lambda: PROJECT_ROOT,
+        project_root_getter=lambda: _project_root(),
         runtime_state=runtime_state,
         api_runtime_node_getter=lambda: api_runtime_node,
         now_local=now_local,
@@ -691,7 +734,7 @@ v1_router.include_router(
         discover_team_topology=lambda root: _discover_team_topology(root),
         invoke_async_method=_invoke_async_method,
         schedule_async_invocation_task=_schedule_async_invocation_task,
-        engine_getter=lambda: engine,
+        engine_getter=lambda: _get_engine(),
     )
 )
 v1_router.include_router(
@@ -702,8 +745,8 @@ v1_router.include_router(
         validate_builtin_workload_start=lambda **kwargs: validate_builtin_workload_start(**kwargs),
         run_builtin_workload=lambda **kwargs: run_builtin_workload(**kwargs),
         commit_intent_factory=lambda reason: CommitIntent(type="decision", ref=f"fail_closed:{reason}"),
-        workspace_root_getter=lambda: PROJECT_ROOT,
-        control_plane_publication_getter=lambda: engine.control_plane_publication,
+        workspace_root_getter=lambda: _project_root(),
+        control_plane_publication_getter=lambda: _get_engine().control_plane_publication,
     )
 )
 v1_router.include_router(build_extension_runtime_router(service_getter=lambda: _get_extension_runtime_service()))
@@ -733,8 +776,9 @@ def _parse_setting_value(field: str, value: Any) -> Any | None:
 
 
 def _runtime_policy_process_rules() -> dict[str, Any]:
-    if engine.org and isinstance(getattr(engine.org, "process_rules", None), dict):
-        return dict(engine.org.process_rules)
+    runtime_engine = _get_engine()
+    if runtime_engine.org and isinstance(getattr(runtime_engine.org, "process_rules", None), dict):
+        return dict(runtime_engine.org.process_rules)
     return {}
 
 
@@ -830,18 +874,20 @@ def _settings_validation_error(errors: list[dict[str, Any]]) -> HTTPException:
 @v1_router.get("/runs")
 async def list_runs():
     invocation = api_runtime_node.resolve_runs_invocation()
-    return await _invoke_async_method(engine.sessions, invocation, "runs")
+    runtime_engine = _get_engine()
+    return await _invoke_async_method(runtime_engine.sessions, invocation, "runs")
 
 
 @v1_router.get("/runs/{session_id}")
 async def get_run_detail(session_id: str):
-    run_record = await engine.run_ledger.get_run(session_id)
-    session = await engine.sessions.get_session(session_id)
+    runtime_engine = _get_engine()
+    run_record = await runtime_engine.run_ledger.get_run(session_id)
+    session = await runtime_engine.sessions.get_session(session_id)
 
     if run_record is None and session is None:
         raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
 
-    backlog = await engine.sessions.get_session_issues(session_id)
+    backlog = await runtime_engine.sessions.get_session_issues(session_id)
     summary = {}
     artifacts = {}
     status = None
@@ -866,22 +912,23 @@ async def get_run_detail(session_id: str):
 
 @v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str):
-    log_event("api_run_metrics", {"session_id": session_id}, PROJECT_ROOT)
+    log_event("api_run_metrics", {"session_id": session_id}, _project_root())
     _validate_session_path(session_id)
-    workspace = api_runtime_node.resolve_member_metrics_workspace(PROJECT_ROOT, session_id)
+    workspace = api_runtime_node.resolve_member_metrics_workspace(_project_root(), session_id)
     metrics_reader = api_runtime_node.create_member_metrics_reader()
     return await asyncio.to_thread(metrics_reader, workspace)
 
 
 @v1_router.get("/runs/{session_id}/token-summary")
 async def get_run_token_summary(session_id: str):
-    run_record = await engine.run_ledger.get_run(session_id)
-    session = await engine.sessions.get_session(session_id)
+    runtime_engine = _get_engine()
+    run_record = await runtime_engine.run_ledger.get_run(session_id)
+    session = await runtime_engine.sessions.get_session(session_id)
     if run_record is None and session is None:
         raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
 
     run_path = _validate_session_path(session_id)
-    candidate_files = [PROJECT_ROOT / "workspace" / "default" / "orket.log"]
+    candidate_files = [_project_root() / "workspace" / "default" / "orket.log"]
     candidate_files.append(run_path / "orket.log")
 
     records: list[dict[str, Any]] = []
@@ -991,9 +1038,9 @@ async def get_run_token_summary(session_id: str):
     }
 
 
-def _collect_replay_turns(session_id: str, role: Optional[str] = None) -> list[dict[str, Any]]:
+def _collect_replay_turns(session_id: str, role: str | None = None) -> list[dict[str, Any]]:
     run_path = _validate_session_path(session_id)
-    candidate_files = [PROJECT_ROOT / "workspace" / "default" / "orket.log"]
+    candidate_files = [_project_root() / "workspace" / "default" / "orket.log"]
     candidate_files.append(run_path / "orket.log")
 
     records: list[dict[str, Any]] = []
@@ -1073,9 +1120,10 @@ def _collect_replay_turns(session_id: str, role: Optional[str] = None) -> list[d
 
 
 @v1_router.get("/runs/{session_id}/replay")
-async def list_run_replay_turns(session_id: str, role: Optional[str] = None):
-    run_record = await engine.run_ledger.get_run(session_id)
-    session = await engine.sessions.get_session(session_id)
+async def list_run_replay_turns(session_id: str, role: str | None = None):
+    runtime_engine = _get_engine()
+    run_record = await runtime_engine.run_ledger.get_run(session_id)
+    session = await runtime_engine.sessions.get_session(session_id)
     if run_record is None and session is None:
         raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
     turns = await asyncio.to_thread(_collect_replay_turns, session_id=session_id, role=role)
@@ -1089,19 +1137,21 @@ async def list_run_replay_turns(session_id: str, role: Optional[str] = None):
 
 @v1_router.get("/runs/{session_id}/backlog")
 async def get_backlog(session_id: str):
-    log_event("api_backlog", {"session_id": session_id}, PROJECT_ROOT)
+    log_event("api_backlog", {"session_id": session_id}, _project_root())
     invocation = api_runtime_node.resolve_backlog_invocation(session_id)
-    return await _invoke_async_method(engine.sessions, invocation, "backlog")
+    runtime_engine = _get_engine()
+    return await _invoke_async_method(runtime_engine.sessions, invocation, "backlog")
 
 
 @v1_router.get("/runs/{session_id}/execution-graph")
 async def get_execution_graph(session_id: str):
-    run_record = await engine.run_ledger.get_run(session_id)
-    session = await engine.sessions.get_session(session_id)
+    runtime_engine = _get_engine()
+    run_record = await runtime_engine.run_ledger.get_run(session_id)
+    session = await runtime_engine.sessions.get_session(session_id)
     if run_record is None and session is None:
         raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
 
-    backlog = await engine.sessions.get_session_issues(session_id)
+    backlog = await runtime_engine.sessions.get_session_issues(session_id)
     graph = await asyncio.to_thread(_build_execution_graph, backlog, session_id)
     compact_edges = [
         {"source": str(edge.get("source") or ""), "target": str(edge.get("target") or "")}
@@ -1122,9 +1172,10 @@ async def get_execution_graph(session_id: str):
 
 @v1_router.get("/sessions/{session_id}")
 async def get_session_detail(session_id: str):
-    log_event("api_session_detail", {"session_id": session_id}, PROJECT_ROOT)
+    log_event("api_session_detail", {"session_id": session_id}, _project_root())
     invocation = api_runtime_node.resolve_session_detail_invocation(session_id)
-    session = await _invoke_async_method(engine.sessions, invocation, "session")
+    runtime_engine = _get_engine()
+    session = await _invoke_async_method(runtime_engine.sessions, invocation, "session")
     if not session:
         interaction_session = await _get_interaction_manager().get_session_detail(session_id)
         if interaction_session is not None:
@@ -1135,18 +1186,19 @@ async def get_session_detail(session_id: str):
 
 @v1_router.get("/sessions/{session_id}/status")
 async def get_session_status(session_id: str):
-    session = await engine.sessions.get_session(session_id)
+    runtime_engine = _get_engine()
+    session = await runtime_engine.sessions.get_session(session_id)
     if not session:
         interaction_status = await _get_interaction_manager().get_session_status(session_id)
         if interaction_status is not None:
             return interaction_status
         raise HTTPException(**api_runtime_node.session_detail_not_found_error(session_id))
 
-    run_record = await engine.run_ledger.get_run(session_id)
+    run_record = await runtime_engine.run_ledger.get_run(session_id)
     projected_run_record = validated_run_ledger_record_projection(run_record)
-    backlog = await engine.sessions.get_session_issues(session_id)
-    task = await runtime_state.get_task(session_id)
-    is_active = bool(task and not task.done())
+    backlog = await runtime_engine.sessions.get_session_issues(session_id)
+    tasks = await runtime_state.get_tasks(session_id)
+    is_active, task_state = _runtime_task_summary(tasks)
 
     backlog_counts: dict[str, int] = {}
     for issue in backlog:
@@ -1157,15 +1209,7 @@ async def get_session_status(session_id: str):
         "session_id": session_id,
         "active": is_active,
         "status": (projected_run_record or {}).get("status", session.get("status")),
-        "task_state": (
-            "running"
-            if is_active
-            else (
-                "completed"
-                if task and task.done() and not task.cancelled()
-                else ("canceled" if task and task.cancelled() else "idle")
-            )
-        ),
+        "task_state": task_state,
         "backlog": {
             "count": len(backlog),
             "by_status": backlog_counts,
@@ -1177,30 +1221,33 @@ async def get_session_status(session_id: str):
 
 @v1_router.post("/sessions/{session_id}/halt")
 async def halt_session(session_id: str, request: Request):
-    run_record = await engine.run_ledger.get_run(session_id)
+    runtime_engine = _get_engine()
+    run_record = await runtime_engine.run_ledger.get_run(session_id)
     if run_record is None:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found.")
-    await engine.halt_session(
+    await runtime_engine.halt_session(
         session_id,
         operator_actor_ref=getattr(request.state, "authenticated_actor_ref", None),
     )
-    task = await runtime_state.get_task(session_id)
+    tasks = await runtime_state.get_tasks(session_id)
+    is_active, _task_state = _runtime_task_summary(tasks)
     return {
         "ok": True,
         "session_id": session_id,
-        "active": bool(task and not task.done()),
+        "active": is_active,
     }
 
 
 @v1_router.get("/sessions/{session_id}/replay")
 async def replay_session_turn(
     session_id: str,
-    issue_id: Optional[str] = None,
-    turn_index: Optional[int] = Query(default=None, ge=1),
-    role: Optional[str] = None,
+    issue_id: str | None = None,
+    turn_index: int | None = Query(default=None, ge=1),
+    role: str | None = None,
 ):
-    run_record = await engine.run_ledger.get_run(session_id)
-    session = await engine.sessions.get_session(session_id)
+    runtime_engine = _get_engine()
+    run_record = await runtime_engine.run_ledger.get_run(session_id)
+    session = await runtime_engine.sessions.get_session(session_id)
     if not issue_id and turn_index is None:
         if run_record is None and session is None:
             interaction_timeline = await _get_interaction_manager().get_session_replay_timeline(
@@ -1224,7 +1271,7 @@ async def replay_session_turn(
                 detail="Targeted replay is not supported for interaction sessions.",
             )
     try:
-        replay = engine.replay_turn(
+        replay = runtime_engine.replay_turn(
             session_id=session_id,
             issue_id=str(issue_id),
             turn_index=int(turn_index),
@@ -1237,9 +1284,10 @@ async def replay_session_turn(
 
 @v1_router.get("/sessions/{session_id}/snapshot")
 async def get_session_snapshot(session_id: str):
-    log_event("api_session_snapshot", {"session_id": session_id}, PROJECT_ROOT)
+    log_event("api_session_snapshot", {"session_id": session_id}, _project_root())
     invocation = api_runtime_node.resolve_session_snapshot_invocation(session_id)
-    snapshot = await _invoke_async_method(engine.snapshots, invocation, "snapshot")
+    runtime_engine = _get_engine()
+    snapshot = await _invoke_async_method(runtime_engine.snapshots, invocation, "snapshot")
     if not snapshot:
         interaction_snapshot = await _get_interaction_manager().get_session_snapshot(session_id)
         if interaction_snapshot is not None:
@@ -1251,7 +1299,8 @@ async def get_session_snapshot(session_id: str):
 @v1_router.get("/sandboxes")
 async def list_sandboxes():
     invocation = api_runtime_node.resolve_sandboxes_list_invocation()
-    return await _invoke_async_method(engine, invocation, "sandboxes")
+    runtime_engine = _get_engine()
+    return await _invoke_async_method(runtime_engine, invocation, "sandboxes")
 
 
 @v1_router.post("/sandboxes/{sandbox_id}/stop")
@@ -1267,15 +1316,16 @@ async def stop_sandbox(sandbox_id: str, request: Request):
             },
         }
     try:
-        await _invoke_async_method(engine, invocation, "sandbox stop")
+        runtime_engine = _get_engine()
+        await _invoke_async_method(runtime_engine, invocation, "sandbox stop")
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return {"ok": True}
 
 
 @v1_router.get("/sandboxes/{sandbox_id}/logs")
-async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
-    pipeline = api_runtime_node.create_execution_pipeline(api_runtime_node.resolve_sandbox_workspace(PROJECT_ROOT))
+async def get_sandbox_logs(sandbox_id: str, service: str | None = None):
+    pipeline = api_runtime_node.create_execution_pipeline(api_runtime_node.resolve_sandbox_workspace(_project_root()))
     invocation = api_runtime_node.resolve_sandbox_logs_invocation(sandbox_id, service)
     logs = await asyncio.to_thread(
         _invoke_sync_method,
@@ -1286,7 +1336,7 @@ async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
     return {"logs": logs}
 
 
-def _coerce_datetime(value: Optional[str]) -> Optional[datetime]:
+def _coerce_datetime(value: str | None) -> datetime | None:
     if not value:
         return None
     try:
@@ -1294,8 +1344,8 @@ def _coerce_datetime(value: Optional[str]) -> Optional[datetime]:
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=UTC)
         return dt
-    except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid datetime: '{value}'")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid datetime: '{value}'") from exc
 
 
 def _build_execution_graph(backlog: list[dict[str, Any]], session_id: str) -> dict[str, Any]:
@@ -1416,7 +1466,7 @@ def _derive_handoff_edges(session_id: str, index_by_id: dict[str, int]) -> list[
     records: list[dict[str, Any]] = []
     run_path = _validate_session_path(session_id)
     run_log = run_path / "orket.log"
-    default_log = PROJECT_ROOT / "workspace" / "default" / "orket.log"
+    default_log = _project_root() / "workspace" / "default" / "orket.log"
 
     for path in [run_log, default_log]:
         records.extend(_read_log_records(path))
@@ -1448,7 +1498,7 @@ def _derive_handoff_edges(session_id: str, index_by_id: dict[str, int]) -> list[
     turns.sort(key=lambda row: (row[0], row[1]))
 
     handoff_edges: list[dict[str, Any]] = []
-    previous_issue: Optional[str] = None
+    previous_issue: str | None = None
     for turn_index, timestamp, issue_id in turns:
         if previous_issue and previous_issue != issue_id:
             handoff_edges.append(
@@ -1488,10 +1538,7 @@ def _record_session_id(record: dict[str, Any]) -> str:
 
 
 def _extract_total_tokens(value: Any) -> int:
-    if isinstance(value, dict):
-        raw = value.get("total_tokens")
-    else:
-        raw = value
+    raw = value.get("total_tokens") if isinstance(value, dict) else value
     try:
         parsed = int(raw or 0)
     except (TypeError, ValueError):
@@ -1518,18 +1565,18 @@ def _read_log_records(path: Path) -> list[dict]:
 
 @v1_router.get("/logs")
 async def list_logs(
-    session_id: Optional[str] = None,
-    event: Optional[str] = None,
-    role: Optional[str] = None,
-    start_time: Optional[str] = None,
-    end_time: Optional[str] = None,
+    session_id: str | None = None,
+    event: str | None = None,
+    role: str | None = None,
+    start_time: str | None = None,
+    end_time: str | None = None,
     limit: int = Query(default=200, ge=1, le=2000),
     offset: int = Query(default=0, ge=0),
 ):
     start_dt = _coerce_datetime(start_time)
     end_dt = _coerce_datetime(end_time)
 
-    candidate_files = [PROJECT_ROOT / "workspace" / "default" / "orket.log"]
+    candidate_files = [_project_root() / "workspace" / "default" / "orket.log"]
     if session_id:
         run_path = _validate_session_path(session_id)
         candidate_files.append(run_path / "orket.log")
@@ -1584,19 +1631,19 @@ async def list_logs(
 app.include_router(v1_router)
 
 
-def create_api_app(project_root: Optional[Path] = None) -> FastAPI:
-    global PROJECT_ROOT, engine, interaction_manager, extension_manager, stream_bus, extension_runtime_service
-    if project_root is not None:
-        PROJECT_ROOT = Path(project_root).resolve()
-    engine = api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT))
+def create_api_app(project_root: Path | None = None) -> FastAPI:
+    global engine, interaction_manager, extension_manager, stream_bus, extension_runtime_service
+    root = Path(project_root).resolve() if project_root is not None else _resolve_default_project_root()
+    app.state.project_root = root
+    engine = api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(root))
     stream_bus = _build_stream_bus_from_env()
     interaction_manager = InteractionManager(
         bus=stream_bus,
-        commit_orchestrator=CommitOrchestrator(project_root=PROJECT_ROOT),
-        project_root=PROJECT_ROOT,
+        commit_orchestrator=CommitOrchestrator(project_root=root),
+        project_root=root,
     )
-    extension_manager = ExtensionManager(project_root=PROJECT_ROOT)
-    extension_runtime_service = ExtensionRuntimeService(project_root=PROJECT_ROOT)
+    extension_manager = ExtensionManager(project_root=root)
+    extension_runtime_service = ExtensionRuntimeService(project_root=root)
     return app
 
 
@@ -1622,6 +1669,6 @@ register_streaming_routes(
     interaction_manager_getter=lambda: _get_interaction_manager(),
     stream_bus_getter=lambda: _get_stream_bus(),
     runtime_state=runtime_state,
-    project_root_getter=lambda: PROJECT_ROOT,
+    project_root_getter=lambda: _project_root(),
     log_event=log_event,
 )

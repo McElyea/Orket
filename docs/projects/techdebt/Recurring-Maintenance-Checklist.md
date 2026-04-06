@@ -1,6 +1,6 @@
 # Tech Debt Recurring Maintenance Checklist
 
-Last updated: 2026-03-30  
+Last updated: 2026-04-05  
 Status: Active (living document)  
 Owner: Orket Core
 
@@ -136,6 +136,33 @@ Pass criteria:
 
 Retirement criterion:
 1. retire or replace this item only when another single canonical live maintenance baseline command supersedes this runner in the same checklist
+
+## Section F: Generic Truthful-Runtime Proof Recorder Drift (Conditional)
+
+Run when:
+1. a change touches generic truthful-runtime packet-1, packet-2 repair-ledger, or artifact-provenance recorder families or their source contracts
+2. a bounded lane diagnosis shows one of those recorder families asserting a broader fixture shape than the lane actually claims
+
+Objective:
+1. keep generic truthful-runtime live proof recorders truthful to their own declared fixture or contract
+2. prevent generic recorder families from becoming accidental closeout gates for narrower bounded lanes
+
+Commands:
+1. `python scripts/governance/record_truthful_runtime_packet1_live_proof.py`
+2. `python scripts/governance/record_truthful_runtime_packet2_repair_live_proof.py`
+3. `python scripts/governance/record_truthful_runtime_artifact_provenance_live_proof.py`
+
+Current tracked drift classes:
+1. packet-1 live proof currently hard-codes degraded fallback expectations around `agent_output/main.py` that do not apply to narrower bounded lanes such as ProductFlow
+2. packet-2 repair live proof currently hard-codes repaired `agent_output/main.py` acceptance-fixture expectations that do not apply to narrower bounded lanes such as ProductFlow
+3. artifact-provenance live proof currently requires `agent_output/requirements.txt`, `agent_output/design.txt`, and `agent_output/main.py` even though the artifact-provenance contract is path-agnostic and may emit one surviving qualifying artifact only
+
+Pass criteria:
+1. each recorder matches its own declared fixture or contract surface
+2. no recorder is used as a blocker for an unrelated bounded lane without same-change authority that explicitly binds it there
+
+Retirement criterion:
+1. retire or replace this item only when those recorder families are split or parameterized so each live proof enforces only its own declared fixture or contract surface
 
 ## Handoff Rules
 

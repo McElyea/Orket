@@ -1,9 +1,9 @@
-﻿import pytest
-import json
-from pathlib import Path
-from orket.orchestration.engine import OrchestrationEngine
+﻿import json
+
+import pytest
+
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
-from orket.schema import CardStatus
+from orket.orchestration.engine import OrchestrationEngine
 
 FIXTURE_CONTENT = """
 def verify(input_data):
@@ -21,11 +21,11 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
     (root / "model" / "core" / "dialects").mkdir(parents=True)
     (root / "model" / "core" / "teams").mkdir(parents=True)
     (root / "model" / "core" / "environments").mkdir(parents=True)
-    
+
     workspace = root / "workspace"
     workspace.mkdir()
     (workspace / "verification").mkdir()
-    
+
     # 1. Create Fixture File in verification/ directory
     fixture_file = workspace / "verification" / "test_fixture.py"
     fixture_file.write_text(FIXTURE_CONTENT)
@@ -43,7 +43,7 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
     (root / "model" / "core" / "roles" / "integrity_guard.json").write_text(json.dumps({"id": "V", "summary": "integrity_guard", "description": "V", "tools": ["update_issue_status"]}))
     (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(json.dumps({"id": "C", "summary": "code_reviewer", "description": "R", "tools": ["update_issue_status"]}))
     (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
-        "name": "standard", 
+        "name": "standard",
         "seats": {
             "lead_architect": {"name": "L", "roles": ["lead_architect"]},
             "reviewer_seat": {"name": "R", "roles": ["code_reviewer"]},
@@ -71,7 +71,7 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
 
     # 3. Mock Provider
     class MockProvider(LocalModelProvider):
-        def __init__(self): 
+        def __init__(self):
             self.model = "dummy"
             self.timeout = 300
             self.turns = 0
@@ -103,7 +103,7 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
     # 5. Assertions
     issue = await engine.cards.get_by_id("I1")
     assert issue.status == "done"
-    
+
     # Check that verification result was persisted
     # Note: SQLiteCardRepository returns a dict where complex types are in 'verification' key
     # after being loaded from 'verification_json'

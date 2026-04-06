@@ -3,8 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from typing import Any, Iterable
-
+from collections.abc import Iterable
+from typing import Any
 
 PROTOCOL_VERSION = "protocol-governed/v5.1"
 VALIDATOR_VERSION = "turn-validator/v1"

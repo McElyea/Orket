@@ -29,11 +29,10 @@ from orket.core.domain import (
     SafeContinuationClass,
     SideEffectBoundaryClass,
 )
+from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
 from orket.core.policies.tool_gate import ToolGate
-from orket.domain.execution import ExecutionTurn, ToolCall
 from orket.schema import CardStatus, IssueConfig, RoleConfig
-
 
 pytestmark = pytest.mark.integration
 

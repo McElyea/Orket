@@ -5,7 +5,6 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 
 from orket.application.services.gitea_state_control_plane_execution_service import (
-    GiteaStateControlPlaneExecutionError,
     GiteaStateControlPlaneExecutionService,
 )
 from orket.application.services.gitea_state_control_plane_lease_service import (
@@ -33,7 +32,6 @@ from orket.core.domain import (
     validate_attempt_state_transition,
     validate_run_state_transition,
 )
-
 
 CLAIM_FAILURE_CLASS = "gitea_state_claim_failure"
 
@@ -87,7 +85,7 @@ async def close_gitea_state_claim_failure(
             lease_observation=lease_observation,
             reason=error,
         )
-    reconciliation = await execution_service.publication.publish_reconciliation(
+    await execution_service.publication.publish_reconciliation(
         reconciliation_id=_reconciliation_id(run_id=run.run_id),
         target_ref=run.run_id,
         comparison_scope="claim_scope",

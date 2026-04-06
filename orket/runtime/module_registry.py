@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Set
 
 from orket.core.domain.module_manifest import ModuleManifest
 from orket.settings import load_user_settings
 
-
 DEFAULT_MODULE_PROFILE = "developer-local"
 RUNTIME_MODULE_CONTRACT_VERSION = "1.0.0"
 
-PROFILE_MODULES: Dict[str, List[str]] = {
+PROFILE_MODULES: dict[str, list[str]] = {
     "engine-only": ["engine"],
     "developer-local": ["engine", "cli", "api", "webhook"],
     "api-runtime": ["engine", "api"],
@@ -19,7 +18,7 @@ PROFILE_MODULES: Dict[str, List[str]] = {
 }
 
 
-def built_in_manifests() -> Dict[str, ModuleManifest]:
+def built_in_manifests() -> dict[str, ModuleManifest]:
     return {
         "engine": ModuleManifest(
             module_id="engine",
@@ -86,7 +85,7 @@ def resolve_module_profile(explicit_profile: str | None = None) -> str:
     return DEFAULT_MODULE_PROFILE
 
 
-def modules_for_profile(profile: str) -> List[str]:
+def modules_for_profile(profile: str) -> list[str]:
     normalized = (profile or "").strip().lower()
     if normalized not in PROFILE_MODULES:
         raise ModuleResolutionError(
@@ -97,11 +96,11 @@ def modules_for_profile(profile: str) -> List[str]:
     return list(PROFILE_MODULES[normalized])
 
 
-def _enabled_module_set(profile: str) -> Set[str]:
+def _enabled_module_set(profile: str) -> set[str]:
     return set(modules_for_profile(profile))
 
 
-def ensure_module_enabled(module_id: str, profile: str, manifests: Dict[str, ModuleManifest] | None = None) -> None:
+def ensure_module_enabled(module_id: str, profile: str, manifests: dict[str, ModuleManifest] | None = None) -> None:
     manifests = manifests or built_in_manifests()
     if module_id not in manifests:
         raise ModuleResolutionError(
@@ -139,7 +138,7 @@ def ensure_module_enabled(module_id: str, profile: str, manifests: Dict[str, Mod
         )
 
 
-def ensure_capability_enabled(capability: str, profile: str, manifests: Dict[str, ModuleManifest] | None = None) -> str:
+def ensure_capability_enabled(capability: str, profile: str, manifests: dict[str, ModuleManifest] | None = None) -> str:
     manifests = manifests or built_in_manifests()
     enabled = _enabled_module_set(profile)
 
@@ -202,7 +201,6 @@ def _is_contract_compatible(contract_range: str, runtime_version: str = RUNTIME_
         elif token.startswith("<"):
             if current >= _parse_version(token[1:]):
                 return False
-        elif token.startswith("=="):
-            if current != _parse_version(token[2:]):
-                return False
+        elif token.startswith("==") and current != _parse_version(token[2:]):
+            return False
     return True

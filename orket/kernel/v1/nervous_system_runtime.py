@@ -22,10 +22,10 @@ from .nervous_system_policy import (
 )
 from .nervous_system_resolver import resolve_tool_policy_flags
 from .nervous_system_runtime_state import (
-    CONTRACT_VERSION,
     _ADMISSIONS_BY_PROPOSAL,
     _COMMIT_RESULTS_BY_KEY,
     _RUNTIME_LOCK,
+    CONTRACT_VERSION,
     append_event,
     get_current_canonical_state_digest,
     get_str,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 from pathlib import Path
 
@@ -49,5 +50,5 @@ async def test_run_meta_breaker_workload_is_deterministic_for_same_seed(tmp_path
     output = result_a.summary["output"]
     assert output["card_pool_size"] == 30
     assert output["card_counts"] == {"aggro": 10, "combo": 10, "control": 10}
-    assert Path(result_a.provenance_path).exists()
-    assert Path(result_b.provenance_path).exists()
+    assert await asyncio.to_thread(Path(result_a.provenance_path).exists)
+    assert await asyncio.to_thread(Path(result_b.provenance_path).exists)

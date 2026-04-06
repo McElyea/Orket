@@ -9,6 +9,10 @@ from .ledger import LedgerWriter
 from .process import run_process
 
 
+def _resolve_repo_path(run_payload: dict[str, Any]) -> Path:
+    return Path(str(((run_payload.get("request") or {}).get("repo_path")) or "")).resolve()
+
+
 async def promote_run(
     run_path: Path,
     *,
@@ -31,7 +35,7 @@ async def promote_run(
         raise ValueError("Cannot promote a rejected attempt")
 
     patch_path = run_path / "attempts" / str(selected_attempt) / "patch.diff"
-    repo_path = Path(str(((run_payload.get("request") or {}).get("repo_path")) or "")).resolve()
+    repo_path = await asyncio.to_thread(_resolve_repo_path, run_payload)
     if not await asyncio.to_thread(repo_path.exists):
         raise ValueError(f"Repository path does not exist: {repo_path}")
 

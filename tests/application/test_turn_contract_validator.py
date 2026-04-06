@@ -4,7 +4,7 @@ from pathlib import Path
 
 from orket.application.workflows.turn_contract_validator import ContractValidator
 from orket.application.workflows.turn_response_parser import ResponseParser
-from orket.domain.execution import ExecutionTurn, ToolCall
+from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.runtime.error_codes import ERR_JSON_MD_FENCE, ERR_THINK_OVERFLOW, EXTRANEOUS_TEXT
 from orket.schema import RoleConfig
 

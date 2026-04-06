@@ -1,6 +1,7 @@
 import json
 import re
-from typing import List, Dict, Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 
 class ToolParser:
@@ -18,8 +19,8 @@ class ToolParser:
             return raw.replace("\\\\", "\\").replace("\\n", "\n").replace("\\t", "\t").replace('\\"', '"')
 
     @staticmethod
-    def _dedupe_tool_calls(tool_calls: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        deduped: List[Dict[str, Any]] = []
+    def _dedupe_tool_calls(tool_calls: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        deduped: list[dict[str, Any]] = []
         seen: set[str] = set()
         for call in tool_calls:
             key = json.dumps(call, sort_keys=True, ensure_ascii=False)
@@ -37,15 +38,15 @@ class ToolParser:
     @staticmethod
     def _recover_truncated_tool_calls(
         text: str,
-        diagnostics: Optional[Callable[[str, Dict[str, Any]], None]] = None,
-    ) -> List[Dict[str, Any]]:
+        diagnostics: Callable[[str, dict[str, Any]], None] | None = None,
+    ) -> list[dict[str, Any]]:
         cleaned = re.sub(r"```(?:json)?", " ", text or "", flags=re.IGNORECASE).replace("```", " ")
         tool_markers = list(re.finditer(r'"tool"\s*:\s*"(?P<tool>[a-zA-Z0-9_]+)"', cleaned))
         if not tool_markers:
             return []
 
-        recovered: List[Dict[str, Any]] = []
-        skipped_tools: List[Dict[str, str]] = []
+        recovered: list[dict[str, Any]] = []
+        skipped_tools: list[dict[str, str]] = []
         for idx, marker in enumerate(tool_markers):
             tool_name = marker.group("tool")
             segment_start = marker.start()
@@ -97,7 +98,7 @@ class ToolParser:
             )
 
         if diagnostics is not None and (recovered or skipped_tools):
-            payload: Dict[str, Any] = {
+            payload: dict[str, Any] = {
                 "strategy": "truncated_json_recovery",
                 "count": len(recovered),
                 "tools": [item.get("tool") for item in recovered],
@@ -133,13 +134,13 @@ class ToolParser:
     @staticmethod
     def parse(
         text: str,
-        diagnostics: Optional[Callable[[str, Dict[str, Any]], None]] = None,
-    ) -> List[Dict[str, Any]]:
+        diagnostics: Callable[[str, dict[str, Any]], None] | None = None,
+    ) -> list[dict[str, Any]]:
         text = ToolParser.normalize_json_stringify(text or "").strip()
         results = []
         tool_marker_count = len(re.findall(r'"tool"\s*:\s*"[a-zA-Z0-9_]+"', text))
 
-        def _coerce_args(value: Any) -> Dict[str, Any]:
+        def _coerce_args(value: Any) -> dict[str, Any]:
             if isinstance(value, dict):
                 return value
             if isinstance(value, str):
@@ -151,8 +152,8 @@ class ToolParser:
                     return {}
             return {}
 
-        def _extract_tool_calls(payload: Any) -> List[Dict[str, Any]]:
-            extracted: List[Dict[str, Any]] = []
+        def _extract_tool_calls(payload: Any) -> list[dict[str, Any]]:
+            extracted: list[dict[str, Any]] = []
 
             if isinstance(payload, list):
                 for item in payload:
@@ -190,7 +191,7 @@ class ToolParser:
 
             return extracted
 
-        def emit(stage: str, data: Dict[str, Any]) -> None:
+        def emit(stage: str, data: dict[str, Any]) -> None:
             if diagnostics:
                 diagnostics(stage, data)
 
@@ -234,7 +235,7 @@ class ToolParser:
                             )
 
         if results:
-            recovered: List[Dict[str, Any]] = []
+            recovered: list[dict[str, Any]] = []
             if ToolParser._likely_truncated_json(text) or tool_marker_count > len(results):
                 recovered = ToolParser._recover_truncated_tool_calls(text, diagnostics=diagnostics)
             merged = ToolParser._dedupe_tool_calls([*recovered, *results]) if recovered else results
@@ -293,7 +294,7 @@ class ToolParser:
         if marker not in blob:
             return blob
 
-        out: List[str] = []
+        out: list[str] = []
         idx = 0
         while idx < len(blob):
             marker_idx = blob.find(marker, idx)

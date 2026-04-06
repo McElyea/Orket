@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-import aiosqlite
+import asyncio
 from pathlib import Path
 from typing import Any
+
+import aiosqlite
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
@@ -36,7 +38,7 @@ def _discover_protocol_session_ids(protocol_root: Path) -> list[str]:
 
 
 async def _discover_sqlite_session_ids(*, sqlite_db: Path, limit: int) -> list[str]:
-    if not sqlite_db.exists():
+    if not await asyncio.to_thread(sqlite_db.exists):
         return []
     rows: list[str] = []
     async with aiosqlite.connect(str(sqlite_db)) as conn:
@@ -110,10 +112,7 @@ async def compare_protocol_ledger_parity_campaign(
     )
     discovered_protocol_ids = _discover_protocol_session_ids(protocol_root)
 
-    if requested_ids:
-        campaign_ids = requested_ids
-    else:
-        campaign_ids = _normalize_session_ids(discovered_sqlite_ids + discovered_protocol_ids)
+    campaign_ids = requested_ids or _normalize_session_ids(discovered_sqlite_ids + discovered_protocol_ids)
 
     if not campaign_ids:
         raise ValueError("No session ids available for parity campaign.")

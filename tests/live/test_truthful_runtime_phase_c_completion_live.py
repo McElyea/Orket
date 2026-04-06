@@ -131,7 +131,7 @@ async def test_phase_c_live_narration_effect_audit_detects_missing_source_receip
     async def _drop_source_receipt_write(self, args, context=None):
         path = str((args or {}).get("path") or "").replace("\\", "/").strip().lower()
         if path.endswith("agent_output/source_attribution_receipt.json"):
-            return {"ok": True, "path": str((self.workspace_root / "agent_output" / "source_attribution_receipt.json"))}
+            return {"ok": True, "path": str(self.workspace_root / "agent_output" / "source_attribution_receipt.json")}
         return await original_write_file(self, args, context=context)
 
     monkeypatch.setattr(FileSystemTools, "write_file", _drop_source_receipt_write)

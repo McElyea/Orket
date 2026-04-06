@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from orket.schema import DialectConfig, SkillConfig
 
 
@@ -40,8 +38,8 @@ class PromptCompiler:
     def compile(
         skill: SkillConfig,
         dialect: DialectConfig,
-        next_member: Optional[str] = None,
-        patch: Optional[str] = None,
+        next_member: str | None = None,
+        patch: str | None = None,
         protocol_governed_enabled: bool = False,
     ) -> str:
         prompt = f"IDENTITY: {skill.name}\n"

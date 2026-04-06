@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from .artifacts import write_artifact_bundle
 from .deterministic import analyze_plan, digest_plan_bytes, parse_plan_json
@@ -333,12 +333,12 @@ class TerraformPlanReviewService:
         self,
         *,
         request: TerraformPlanReviewRequest,
-        raw_payload: Dict[str, Any],
+        raw_payload: dict[str, Any],
         deterministic_verdict: str,
     ) -> ModelSummaryArtifact:
         summary = str(raw_payload.get("summary") or "").strip()
         focus = [str(item).strip() for item in list(raw_payload.get("review_focus_areas") or []) if str(item).strip()]
-        advisory_errors: List[str] = []
+        advisory_errors: list[str] = []
         suggested_verdict = str(raw_payload.get("suggested_verdict") or "").strip()
         if suggested_verdict and suggested_verdict != deterministic_verdict:
             advisory_errors.append("model_verdict_conflict")

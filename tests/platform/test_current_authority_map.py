@@ -6,7 +6,6 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-
 AUTHORITY_PATH = Path("CURRENT_AUTHORITY.md")
 AGENTS_PATH = Path("AGENTS.md")
 

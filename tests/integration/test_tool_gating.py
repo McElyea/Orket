@@ -4,10 +4,11 @@ Tests for Tool Gating (Phase 2: Mechanical Enforcement)
 Validates that tool calls are intercepted and validated BEFORE execution,
 enforcing organizational invariants at the tool level.
 """
+
 import pytest
-from pathlib import Path
-from orket.services.tool_gate import ToolGate, ToolGateViolation
-from orket.schema import OrganizationConfig, CardStatus, WaitReason
+
+from orket.schema import OrganizationConfig, WaitReason
+from orket.services.tool_gate import ToolGate
 
 
 @pytest.fixture

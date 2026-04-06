@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 import pytest
@@ -18,11 +19,14 @@ async def test_terraform_plan_review_fixtures_follow_locked_outcomes(tmp_path: P
     assert result.governance_artifact.deterministic_analysis_complete == case.expected_deterministic_analysis_complete
     assert result.deterministic_analysis.action_counts == case.expected_action_counts
     assert result.final_review.risk_verdict == case.expected_verdict
-    assert Path(result.artifact_bundle.artifact_paths["input_artifact"]).is_file()
-    assert Path(result.artifact_bundle.artifact_paths["deterministic_analysis"]).is_file()
-    assert Path(result.artifact_bundle.artifact_paths["model_summary"]).is_file()
-    assert Path(result.artifact_bundle.artifact_paths["final_review"]).is_file()
-    assert Path(result.artifact_bundle.artifact_paths["governance_artifact"]).is_file()
+    for key in (
+        "input_artifact",
+        "deterministic_analysis",
+        "model_summary",
+        "final_review",
+        "governance_artifact",
+    ):
+        assert await asyncio.to_thread(Path(result.artifact_bundle.artifact_paths[key]).is_file)
     if case.expected_publish_decision == "no_publish":
         assert publisher.calls == []
     else:

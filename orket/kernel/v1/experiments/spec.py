@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any
 
 from orket.kernel.v1.canonical import canonical_json_bytes
 
@@ -13,10 +13,10 @@ class ExperimentRunRef:
     scenario_id: str
     seed: int
     repeat_index: int
-    model_map: Dict[str, str]
+    model_map: dict[str, str]
 
 
-def normalize_spec(request: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_spec(request: dict[str, Any]) -> dict[str, Any]:
     experiment_id = str(request.get("experiment_id") or "").strip()
     if not experiment_id:
         raise ValueError("experiment_id is required")
@@ -26,8 +26,8 @@ def normalize_spec(request: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(matrix, dict) or not matrix:
         raise ValueError("matrix must be a non-empty mapping of role -> model list")
 
-    normalized_matrix: Dict[str, List[str]] = {}
-    for role in sorted(str(k).strip() for k in matrix.keys() if str(k).strip()):
+    normalized_matrix: dict[str, list[str]] = {}
+    for role in sorted(str(k).strip() for k in matrix if str(k).strip()):
         values = matrix.get(role)
         if not isinstance(values, list) or not values:
             raise ValueError(f"matrix role '{role}' must map to a non-empty model list")
@@ -39,7 +39,7 @@ def normalize_spec(request: Dict[str, Any]) -> Dict[str, Any]:
     scenarios_raw = request.get("scenarios")
     if not isinstance(scenarios_raw, list) or not scenarios_raw:
         raise ValueError("scenarios must be a non-empty list")
-    normalized_scenarios: List[Dict[str, Any]] = []
+    normalized_scenarios: list[dict[str, Any]] = []
     seen_scenarios = set()
     for row in scenarios_raw:
         if not isinstance(row, dict):
@@ -92,16 +92,16 @@ def normalize_spec(request: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def spec_hash(spec: Dict[str, Any]) -> str:
+def spec_hash(spec: dict[str, Any]) -> str:
     payload = canonical_json_bytes(spec)
     return hashlib.sha256(payload).hexdigest()
 
 
-def expand_model_maps(matrix: Dict[str, List[str]]) -> List[Dict[str, str]]:
+def expand_model_maps(matrix: dict[str, list[str]]) -> list[dict[str, str]]:
     role_names = sorted(matrix.keys())
-    maps: List[Dict[str, str]] = []
+    maps: list[dict[str, str]] = []
 
-    def _walk(index: int, current: Dict[str, str]) -> None:
+    def _walk(index: int, current: dict[str, str]) -> None:
         if index >= len(role_names):
             maps.append(dict(current))
             return
@@ -121,7 +121,7 @@ def run_identity(
     scenario_id: str,
     seed: int,
     repeat_index: int,
-    model_map: Dict[str, str],
+    model_map: dict[str, str],
 ) -> str:
     material = {
         "experiment_id": experiment_id,
@@ -134,8 +134,8 @@ def run_identity(
     return digest
 
 
-def expand_run_refs(spec: Dict[str, Any]) -> List[ExperimentRunRef]:
-    refs: List[ExperimentRunRef] = []
+def expand_run_refs(spec: dict[str, Any]) -> list[ExperimentRunRef]:
+    refs: list[ExperimentRunRef] = []
     model_maps = expand_model_maps(spec["matrix"])
     for scenario in spec["scenarios"]:
         scenario_id = scenario["scenario_id"]

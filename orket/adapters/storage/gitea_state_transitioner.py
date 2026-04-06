@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Dict, Optional
-
+from typing import Any
 
 from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.schema import CardStatus, CardType, WaitReason
@@ -23,7 +22,7 @@ class GiteaStateTransitioner:
         *,
         from_state: str,
         to_state: str,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> None:
         self.validate_transition(from_state=from_state, to_state=to_state)
         issue_number = int(card_id)
@@ -49,7 +48,7 @@ class GiteaStateTransitioner:
         )
         if reason:
             new_snapshot.metadata["transition_reason"] = reason
-        patch_headers: Dict[str, str] = {}
+        patch_headers: dict[str, str] = {}
         if etag:
             patch_headers["If-Match"] = etag
         try:
@@ -67,7 +66,7 @@ class GiteaStateTransitioner:
         card_id: str,
         *,
         final_state: str,
-        error: Optional[str] = None,
+        error: str | None = None,
     ) -> None:
         issue_number = int(card_id)
         issue_response = await self.adapter._request_response_with_retry("GET", f"/issues/{issue_number}")
@@ -100,7 +99,7 @@ class GiteaStateTransitioner:
         )
         if error:
             new_snapshot.metadata["terminal_error"] = error
-        patch_headers: Dict[str, str] = {}
+        patch_headers: dict[str, str] = {}
         if etag:
             patch_headers["If-Match"] = etag
         try:
@@ -143,7 +142,7 @@ class GiteaStateTransitioner:
             raise ValueError(f"Invalid state transition: {from_state} -> {to_state}") from exc
 
     @staticmethod
-    def parse_iso(raw: Optional[str]) -> Optional[datetime]:
+    def parse_iso(raw: str | None) -> datetime | None:
         if not raw:
             return None
         try:

@@ -9,12 +9,12 @@ import orket.runtime.run_summary as run_summary_module
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.services.turn_tool_control_plane_support import attempt_id_for, run_id_for
 from orket.application.workflows.protocol_hashing import hash_framed_fields
-from orket.exceptions import ExecutionFailed
-from orket.logging import log_event
 from orket.application.workflows.tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
+from orket.exceptions import ExecutionFailed
+from orket.logging import log_event
 from orket.naming import sanitize_name
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.runtime.run_summary import PACKET1_MISSING_TOKEN
@@ -29,6 +29,10 @@ def _write_json(path: Path, payload: dict) -> None:
 
 def _read_json(path: Path) -> dict:
     return json.loads(path.read_bytes().decode("utf-8"))
+
+
+async def _path_exists(path: Path) -> bool:
+    return await asyncio.to_thread(path.exists)
 
 
 def _write_epic_assets(root: Path, epic_id: str, *, truthful_runtime: dict | None = None) -> None:
@@ -326,7 +330,7 @@ async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, 
     assert ledger["artifact_json"]["workspace"] == str(workspace)
     assert ledger["artifact_json"]["run_summary"] == ledger["summary_json"]
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
-    assert summary_path.exists()
+    assert await _path_exists(summary_path)
     assert _read_json(summary_path) == ledger["summary_json"]
     assert ledger["artifact_json"]["gitea_export"]["provider"] == "gitea"
     assert ledger["artifact_json"]["gitea_export"]["commit"] == "abc123"
@@ -1251,7 +1255,7 @@ async def test_run_ledger_emits_degraded_run_summary_when_canonical_generation_f
     assert packet1_failure["packet1_conformance"]["status"] == "non_conformant"
     assert packet1_failure["packet1_conformance"]["reasons"] == ["packet1_emission_failure"]
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
-    assert summary_path.exists()
+    assert await _path_exists(summary_path)
     assert _read_json(summary_path) == ledger["summary_json"]
 
 
@@ -1311,7 +1315,7 @@ async def test_run_ledger_degrades_when_finalize_run_identity_validation_fails(
     )
     assert ledger["artifact_json"]["run_identity"]["projection_only"] is True
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
-    assert summary_path.exists()
+    assert await _path_exists(summary_path)
     assert _read_json(summary_path) == ledger["summary_json"]
 
 
@@ -1375,7 +1379,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_projection_attemp
         == ledger["artifact_json"]["control_plane_attempt_record"]["attempt_id"]
     )
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
-    assert summary_path.exists()
+    assert await _path_exists(summary_path)
     assert _read_json(summary_path) == ledger["summary_json"]
 
 
@@ -1443,7 +1447,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_attempt_lineage_d
         == ledger["artifact_json"]["control_plane_attempt_record"]["attempt_id"]
     )
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
-    assert summary_path.exists()
+    assert await _path_exists(summary_path)
     assert _read_json(summary_path) == ledger["summary_json"]
 
 
@@ -1511,7 +1515,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_step_lineage_drif
         == f"{ledger['artifact_json']['control_plane_run_record']['run_id']}:step:start"
     )
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
-    assert summary_path.exists()
+    assert await _path_exists(summary_path)
     assert _read_json(summary_path) == ledger["summary_json"]
 
 
@@ -1574,7 +1578,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_run_projection_dr
     assert str(ledger["artifact_json"]["control_plane_run_record"]["policy_snapshot_id"]).strip()
     assert str(ledger["artifact_json"]["control_plane_run_record"]["configuration_snapshot_id"]).strip()
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
-    assert summary_path.exists()
+    assert await _path_exists(summary_path)
     assert _read_json(summary_path) == ledger["summary_json"]
 
 
@@ -1643,7 +1647,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_attempt_or_step_p
     assert str(ledger["artifact_json"]["control_plane_attempt_record"]["attempt_state"]).strip()
     assert str(ledger["artifact_json"]["control_plane_step_record"]["step_kind"]).strip()
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
-    assert summary_path.exists()
+    assert await _path_exists(summary_path)
     assert _read_json(summary_path) == ledger["summary_json"]
 
 
@@ -1711,7 +1715,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_identity_hierarch
     assert int(ledger["artifact_json"]["control_plane_attempt_record"]["attempt_ordinal"]) > 0
     assert str(ledger["artifact_json"]["control_plane_step_record"]["step_kind"]).strip()
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
-    assert summary_path.exists()
+    assert await _path_exists(summary_path)
     assert _read_json(summary_path) == ledger["summary_json"]
 
 
@@ -1776,7 +1780,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_current_attempt_o
     assert str(ledger["artifact_json"]["control_plane_run_record"]["current_attempt_id"]).strip()
     assert str(ledger["artifact_json"]["control_plane_attempt_record"]["attempt_id"]).strip()
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
-    assert summary_path.exists()
+    assert await _path_exists(summary_path)
     assert _read_json(summary_path) == ledger["summary_json"]
 
 
@@ -1857,7 +1861,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_orphaned_projecti
     assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
     assert ledger["artifact_json"]["run_summary_generation_error"]["error"] == expected_error
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
-    assert summary_path.exists()
+    assert await _path_exists(summary_path)
     assert _read_json(summary_path) == ledger["summary_json"]
 
 
@@ -1956,26 +1960,29 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     assert artifact_json["capability_manifest"]["run_id"] == "sess-ledger-contract-bootstrap"
     assert artifact_json["workspace_state_snapshot"]["workspace_type"] == "filesystem"
     assert len(str(artifact_json["workspace_state_snapshot"]["workspace_hash"])) == 64
-    assert Path(artifact_json["tool_registry_snapshot_path"]).exists()
-    assert Path(artifact_json["artifact_schema_snapshot_path"]).exists()
-    assert Path(artifact_json["tool_contract_snapshot_path"]).exists()
-    assert Path(artifact_json["compatibility_map_snapshot_path"]).exists()
-    assert Path(artifact_json["run_identity_path"]).exists()
-    assert Path(artifact_json["run_phase_contract_path"]).exists()
-    assert Path(artifact_json["runtime_status_vocabulary_path"]).exists()
-    assert Path(artifact_json["degradation_taxonomy_path"]).exists()
-    assert Path(artifact_json["fail_behavior_registry_path"]).exists()
-    assert Path(artifact_json["provider_truth_table_path"]).exists()
-    assert Path(artifact_json["state_transition_registry_path"]).exists()
-    assert Path(artifact_json["timeout_semantics_contract_path"]).exists()
-    assert Path(artifact_json["streaming_semantics_contract_path"]).exists()
-    assert Path(artifact_json["runtime_truth_contract_drift_report_path"]).exists()
-    assert Path(artifact_json["runtime_truth_trace_ids_path"]).exists()
-    assert Path(artifact_json["runtime_invariant_registry_path"]).exists()
-    assert Path(artifact_json["runtime_config_ownership_map_path"]).exists()
-    assert Path(artifact_json["unknown_input_policy_path"]).exists()
-    assert Path(artifact_json["capability_manifest_path"]).exists()
-    assert Path(artifact_json["workspace_state_snapshot_path"]).exists()
+    for key in (
+        "tool_registry_snapshot_path",
+        "artifact_schema_snapshot_path",
+        "tool_contract_snapshot_path",
+        "compatibility_map_snapshot_path",
+        "run_identity_path",
+        "run_phase_contract_path",
+        "runtime_status_vocabulary_path",
+        "degradation_taxonomy_path",
+        "fail_behavior_registry_path",
+        "provider_truth_table_path",
+        "state_transition_registry_path",
+        "timeout_semantics_contract_path",
+        "streaming_semantics_contract_path",
+        "runtime_truth_contract_drift_report_path",
+        "runtime_truth_trace_ids_path",
+        "runtime_invariant_registry_path",
+        "runtime_config_ownership_map_path",
+        "unknown_input_policy_path",
+        "capability_manifest_path",
+        "workspace_state_snapshot_path",
+    ):
+        assert await _path_exists(Path(artifact_json[key]))
 
 
 # Layer: integration

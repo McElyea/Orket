@@ -10,7 +10,6 @@ from orket.application.services.kernel_action_control_plane_operator_service imp
 )
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 
-
 pytestmark = pytest.mark.unit
 
 

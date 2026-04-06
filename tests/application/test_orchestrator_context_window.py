@@ -1,5 +1,4 @@
 ﻿from types import SimpleNamespace
-from pathlib import Path
 
 from orket.application.workflows.orchestrator import Orchestrator
 

@@ -4,7 +4,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 DEFAULT_RUNTIME_INVARIANTS_DOC_PATH = Path("docs/specs/RUNTIME_INVARIANTS.md")
 
 _INVARIANT_PATTERN = re.compile(r"^\s*\d+\.\s+`(?P<id>INV-\d+)`:\s*(?P<statement>.+?)\s*$")

@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
 
 
 class BaseTools:
-    def __init__(self, workspace_root: Path, references: List[Path]):
+    def __init__(self, workspace_root: Path, references: list[Path]):
         self.workspace_root = workspace_root
         self.references = references
 

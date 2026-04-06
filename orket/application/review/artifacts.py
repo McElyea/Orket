@@ -2,18 +2,18 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from orket.application.review.models import (
     DeterministicReviewDecisionPayload,
     ModelAssistedCritiquePayload,
+    ResolvedPolicy,
     ReviewRunManifest,
     ReviewSnapshot,
-    ResolvedPolicy,
 )
 
 
-def _write_json(path: Path, payload: Dict[str, Any]) -> None:
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
@@ -25,8 +25,8 @@ def write_review_run_bundle(
     resolved_policy: ResolvedPolicy,
     deterministic: DeterministicReviewDecisionPayload,
     manifest: ReviewRunManifest,
-    model_assisted: Optional[ModelAssistedCritiquePayload] = None,
-) -> Dict[str, str]:
+    model_assisted: ModelAssistedCritiquePayload | None = None,
+) -> dict[str, str]:
     artifact_dir.mkdir(parents=True, exist_ok=True)
 
     snapshot_path = artifact_dir / "snapshot.json"

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from orket.adapters.tools.families.base import BaseTools
 from orket.runtime_paths import resolve_runtime_db_path
@@ -15,10 +15,10 @@ class CardManagementTools(BaseTools):
     def __init__(
         self,
         workspace_root: Path,
-        references: List[Path],
-        db_path: Optional[str] = None,
-        cards_repo: Optional["AsyncCardRepository"] = None,
-        tool_gate: Optional["ToolGate"] = None,
+        references: list[Path],
+        db_path: str | None = None,
+        cards_repo: AsyncCardRepository | None = None,
+        tool_gate: ToolGate | None = None,
     ):
         super().__init__(workspace_root, references)
         from orket.adapters.storage.async_card_repository import AsyncCardRepository
@@ -27,7 +27,7 @@ class CardManagementTools(BaseTools):
         self.cards = cards_repo or AsyncCardRepository(resolved_db_path)
         self.tool_gate = tool_gate
 
-    async def create_issue(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def create_issue(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
         context = context or {}
         session_id, seat, summary = context.get("session_id"), args.get("seat"), args.get("summary")
         if not all([session_id, seat, summary]):
@@ -47,7 +47,7 @@ class CardManagementTools(BaseTools):
         await self.cards.save(card_data)
         return {"ok": True, "issue_id": issue_id}
 
-    async def update_issue_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def update_issue_status(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
         from orket.core.domain.workitem_transition import WorkItemTransitionService
         from orket.schema import CardStatus, CardType
 
@@ -105,7 +105,7 @@ class CardManagementTools(BaseTools):
             card_type=card_type,
         )
         if not transition.ok:
-            response: Dict[str, Any] = {"ok": False, "error": transition.error or "Transition rejected."}
+            response: dict[str, Any] = {"ok": False, "error": transition.error or "Transition rejected."}
             if transition.error_code is not None:
                 response["error_code"] = transition.error_code.value
             if transition.metadata:
@@ -115,7 +115,7 @@ class CardManagementTools(BaseTools):
         await self.cards.update_status(issue_id, new_status)
         return {"ok": True, "issue_id": issue_id, "status": new_status.value}
 
-    async def add_issue_comment(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def add_issue_comment(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
         context = context or {}
         issue_id, content = context.get("issue_id"), args.get("comment")
         if not issue_id or not content:
@@ -123,7 +123,7 @@ class CardManagementTools(BaseTools):
         await self.cards.add_comment(issue_id, context.get("role", "Unknown"), content)
         return {"ok": True, "message": "Comment added."}
 
-    async def get_issue_context(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def get_issue_context(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
         context = context or {}
         issue_id = args.get("issue_id") or context.get("issue_id")
         if not issue_id:
@@ -131,7 +131,7 @@ class CardManagementTools(BaseTools):
         comments = await self.cards.get_comments(issue_id)
         issue_data = await self.cards.get_by_id(issue_id)
         if issue_data is None:
-            issue_payload: Dict[str, Any] = {}
+            issue_payload: dict[str, Any] = {}
         elif hasattr(issue_data, "model_dump"):
             issue_payload = issue_data.model_dump()
         elif isinstance(issue_data, dict):

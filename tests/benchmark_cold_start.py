@@ -1,14 +1,11 @@
 ﻿import asyncio
-import os
 import shutil
-import uuid
-import json
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, UTC
 
-from orket.orchestration.engine import OrchestrationEngine
-from orket.schema import CardStatus
 from orket.logging import subscribe_to_events
+from orket.orchestration.engine import OrchestrationEngine
+
 
 class ColdStartReferee:
     """
@@ -35,7 +32,7 @@ class ColdStartReferee:
         if self.workspace.exists():
             shutil.rmtree(self.workspace)
         self.workspace.mkdir(parents=True)
-        
+
         # Create minimal defaults (No 'known good' tweaks)
         (self.workspace / "orket.log").write_text("", encoding="utf-8")
         print(f"  [REFEREE] Clean room established: {self.workspace}")
@@ -55,30 +52,29 @@ class ColdStartReferee:
             db_path=str(self.workspace / "benchmark.db")
         )
 
-        print(f"  [REFEREE] Injecting Sacred Prompt...")
-        print(f"  [PROMPT] "{self.SACRED_PROMPT}"")
+        print("  [REFEREE] Injecting Sacred Prompt...")
+        print(f'  [PROMPT] "{self.SACRED_PROMPT}"')
 
         # We trigger the engine on the prompt
         # In a real cold start, we use the driver to turn prompt into an epic/issue
         from orket.driver import OrketDriver
         driver = OrketDriver()
-        
-        start_time = datetime.now(UTC)
+
         try:
             # We wrap the driver request to simulate a fresh start
             response = await driver.process_request(self.SACRED_PROMPT)
             print(f"  [SYSTEM] Initial response: {response}")
-            
+
             # Now we find the issue/epic it created and run it
             backlog = await engine.cards.get_by_build(f"build-{self.bench_id}")
             if not backlog:
                 # If driver didn't create a build, check for recent session
                 print("  [REFEREE] No build found. Checking sessions...")
-                
+
             # Simulate the 'Autonomous Execution' loop
             # Note: We expect the system to run until DONE or CatastrophicFailure
             # We don't call run_epic manually to avoid 'hints'.
-            
+
         except Exception as e:
             print(f"  [FAIL] System crashed during cold start: {e}")
 
@@ -86,53 +82,59 @@ class ColdStartReferee:
 
     def evaluate(self):
         """Binary Scoring: Non-negotiable Criteria."""
-        print("
-" + "="*60)
+        print("\n" + "=" * 60)
         print("  THE STOP REFACTORING BENCHMARK: SCORECARD")
-        print("="*60)
+        print("=" * 60)
 
         # 1. Multiple Artifacts
         files = list(self.workspace.rglob("*"))
         has_code = any(f.suffix == ".py" for f in files)
         has_tests = any("test" in f.name for f in files)
         has_docs = any(f.suffix in [".md", ".txt"] for f in files)
-        
+
         p1 = has_code and has_tests and has_docs
         print(f"  [1] Multiple Artifacts:      {'PASS' if p1 else 'FAIL'}")
         if not p1:
-            print(f"      Missing: {'code ' if not has_code else ''}{'tests ' if not has_tests else ''}{'docs' if not has_docs else ''}")
+            print(
+                f"      Missing: "
+                f"{'code ' if not has_code else ''}"
+                f"{'tests ' if not has_tests else ''}"
+                f"{'docs' if not has_docs else ''}"
+            )
 
         # 2. Separated Reasoning
         # Check if logs contain structured 'thought' or 'reasoning' fields
-        has_reasoning = any("reasoning" in str(l).lower() for l in self.logs)
+        has_reasoning = any("reasoning" in str(log_entry).lower() for log_entry in self.logs)
         print(f"  [2] Artifacts Separated:      {'PASS' if has_reasoning else 'FAIL'}")
 
         # 3. Survival of Partial Failure
         # Check if retry_count > 0 was ever hit
-        retries = [l for l in self.logs if l.get("type") == "retry_triggered"]
+        retries = [log_entry for log_entry in self.logs if log_entry.get("type") == "retry_triggered"]
         p3 = len(retries) > 0
         print(f"  [3] Survives Partial Failure: {'PASS' if p3 else 'FAIL'}")
 
         # 5. Zero Reread Summary
-        print("
-  [5] JUDGE CONDITION: Zero Reread Summary")
+        print("\n  [5] JUDGE CONDITION: Zero Reread Summary")
         print("-" * 40)
-        summary_events = [l for l in self.logs if l.get("type") in ["session_end", "catastrophic_failure", "governance_violation"]]
+        summary_events = [
+            log_entry
+            for log_entry in self.logs
+            if log_entry.get("type") in ["session_end", "catastrophic_failure", "governance_violation"]
+        ]
         if summary_events:
             for se in summary_events:
                 print(f"      EVENT: {se.get('type')} - {se.get('error', 'Success')}")
         else:
             print("      No terminal events found. System may still be running or hung.")
-        
-        print("
-  DECISION:")
+
+        print("\n  DECISION:")
         if p1 and has_reasoning and p3:
             print("  >> RESULT: PASS. Freeze architecture for 90 days.")
         else:
             print("  >> RESULT: FAIL. Fix only the first blocker and rerun.")
-        print("="*60)
+        print("=" * 60)
 
 if __name__ == "__main__":
-    ref = ColdStartReferee(Path("."))
+    ref = ColdStartReferee(Path())
     asyncio.run(ref.run())
 

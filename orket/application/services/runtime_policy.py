@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any
 
 from orket.application.services.microservices_acceptance_reports import (
     normalize_microservices_pilot_stability_report,
@@ -11,23 +12,36 @@ from orket.application.services.microservices_acceptance_reports import (
 )
 from orket.runtime.determinism_controls import (
     build_determinism_controls,
+)
+from orket.runtime.determinism_controls import (
     resolve_clock_artifact_ref as resolve_protocol_clock_artifact_ref,
+)
+from orket.runtime.determinism_controls import (
     resolve_clock_mode as resolve_protocol_clock_mode,
+)
+from orket.runtime.determinism_controls import (
     resolve_env_allowlist as resolve_protocol_env_allowlist,
+)
+from orket.runtime.determinism_controls import (
     resolve_locale as resolve_protocol_locale,
+)
+from orket.runtime.determinism_controls import (
     resolve_network_allowlist as resolve_protocol_network_allowlist,
+)
+from orket.runtime.determinism_controls import (
     resolve_network_mode as resolve_protocol_network_mode,
+)
+from orket.runtime.determinism_controls import (
     resolve_timezone as resolve_protocol_timezone,
 )
 
-
-ARCHITECTURE_MODE_OPTIONS: List[Dict[str, str]] = [
+ARCHITECTURE_MODE_OPTIONS: list[dict[str, str]] = [
     {"value": "force_monolith", "label": "Monolith (Forced)"},
     {"value": "force_microservices", "label": "Microservices (Forced)"},
     {"value": "architect_decides", "label": "Architect Decides"},
 ]
 
-FRONTEND_FRAMEWORK_MODE_OPTIONS: List[Dict[str, str]] = [
+FRONTEND_FRAMEWORK_MODE_OPTIONS: list[dict[str, str]] = [
     {"value": "force_vue", "label": "Vue (Forced)"},
     {"value": "force_react", "label": "React (Forced)"},
     {"value": "force_angular", "label": "Angular (Forced)"},
@@ -55,36 +69,36 @@ DEFAULT_LOCAL_PROMPTING_MODE = "shadow"
 DEFAULT_LOCAL_PROMPTING_ALLOW_FALLBACK = False
 DEFAULT_LOCAL_PROMPTING_FALLBACK_PROFILE_ID = ""
 
-PROJECT_SURFACE_PROFILE_OPTIONS: List[Dict[str, str]] = [
+PROJECT_SURFACE_PROFILE_OPTIONS: list[dict[str, str]] = [
     {"value": "unspecified", "label": "Unspecified (Legacy Defaults)"},
     {"value": "backend_only", "label": "Backend Only"},
     {"value": "cli", "label": "CLI App"},
     {"value": "api_vue", "label": "API + Vue Frontend"},
     {"value": "tui", "label": "TUI App"},
 ]
-SMALL_PROJECT_BUILDER_VARIANT_OPTIONS: List[Dict[str, str]] = [
+SMALL_PROJECT_BUILDER_VARIANT_OPTIONS: list[dict[str, str]] = [
     {"value": "auto", "label": "Auto"},
     {"value": "coder", "label": "Coder Builder"},
     {"value": "architect", "label": "Architect Builder"},
 ]
-STATE_BACKEND_MODE_OPTIONS: List[Dict[str, str]] = [
+STATE_BACKEND_MODE_OPTIONS: list[dict[str, str]] = [
     {"value": "local", "label": "Local DB (Default)"},
     {"value": "gitea", "label": "Gitea (Experimental)"},
 ]
-RUN_LEDGER_MODE_OPTIONS: List[Dict[str, str]] = [
+RUN_LEDGER_MODE_OPTIONS: list[dict[str, str]] = [
     {"value": "sqlite", "label": "SQLite (Compat Default)"},
     {"value": "protocol", "label": "Protocol Append-Only"},
     {"value": "dual_write", "label": "Protocol Primary + SQLite Lifecycle Mirror"},
 ]
-PROTOCOL_NETWORK_MODE_OPTIONS: List[Dict[str, str]] = [
+PROTOCOL_NETWORK_MODE_OPTIONS: list[dict[str, str]] = [
     {"value": "off", "label": "Off (Deterministic Default)"},
     {"value": "allowlist", "label": "Allowlist"},
 ]
-GITEA_STATE_PILOT_ENABLED_OPTIONS: List[Dict[str, str]] = [
+GITEA_STATE_PILOT_ENABLED_OPTIONS: list[dict[str, str]] = [
     {"value": "enabled", "label": "Enabled"},
     {"value": "disabled", "label": "Disabled"},
 ]
-LOCAL_PROMPTING_MODE_OPTIONS: List[Dict[str, str]] = [
+LOCAL_PROMPTING_MODE_OPTIONS: list[dict[str, str]] = [
     {"value": "shadow", "label": "Shadow"},
     {"value": "compat", "label": "Compat"},
     {"value": "enforce", "label": "Enforce"},
@@ -103,7 +117,7 @@ def _pick_first_non_empty(values: Iterable[Any]) -> str:
     return ""
 
 
-def _read_json_object(path: Path) -> Dict[str, Any]:
+def _read_json_object(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     try:
@@ -113,11 +127,11 @@ def _read_json_object(path: Path) -> Dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def _read_unlock_report(path: Path) -> Dict[str, Any]:
+def _read_unlock_report(path: Path) -> dict[str, Any]:
     return normalize_microservices_unlock_report(_read_json_object(path))
 
 
-def _read_pilot_stability_report(path: Path) -> Dict[str, Any]:
+def _read_pilot_stability_report(path: Path) -> dict[str, Any]:
     return normalize_microservices_pilot_stability_report(_read_json_object(path))
 
 
@@ -149,7 +163,7 @@ def is_microservices_pilot_stable() -> bool:
     return bool(report.get("stable"))
 
 
-def allowed_architecture_patterns() -> List[str]:
+def allowed_architecture_patterns() -> list[str]:
     if is_microservices_unlocked():
         return ["monolith", "microservices"]
     return ["monolith"]
@@ -187,7 +201,7 @@ def resolve_frontend_framework_mode(*values: Any) -> str:
     return aliases.get(raw, DEFAULT_FRONTEND_FRAMEWORK_MODE)
 
 
-def runtime_policy_options() -> Dict[str, Any]:
+def runtime_policy_options() -> dict[str, Any]:
     microservices_unlocked = is_microservices_unlocked()
     microservices_pilot_stable = is_microservices_pilot_stable()
     if microservices_unlocked:
@@ -443,7 +457,7 @@ def resolve_protocol_determinism_controls(
     clock_artifact_ref_values: Iterable[Any] = (),
     env_allowlist_values: Iterable[Any] = (),
     environment: dict[str, str] | None = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     timezone = resolve_protocol_timezone(*list(timezone_values))
     locale = resolve_protocol_locale(*list(locale_values))
     network_mode = resolve_protocol_network_mode(*list(network_mode_values))

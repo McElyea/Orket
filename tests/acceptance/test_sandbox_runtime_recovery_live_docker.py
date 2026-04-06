@@ -10,11 +10,10 @@ import shutil
 import pytest
 
 from orket.adapters.storage.command_runner import CommandRunner
+from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, SandboxState, TerminalReason
-from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
-
 
 pytestmark = pytest.mark.skipif(
     os.getenv("ORKET_RUN_SANDBOX_ACCEPTANCE") != "1",

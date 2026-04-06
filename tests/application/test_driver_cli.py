@@ -190,10 +190,10 @@ async def test_cli_reforge_inspect_and_run(tmp_path: Path):
 
     out_dir = tmp_path / "workspace" / "default" / "compiled_out"
     run = await driver.process_request(
-        (
+
             f"/reforge run --route textmystery_v1 --in {tmp_path.as_posix()} --out compiled_out "
             "--mode truth_only --scenario-pack truth_only_v0 --seed 1 --max-iters 2"
-        )
+
     )
     assert "Reforger run ok=True" in run
     assert "forced=False" in run
@@ -209,10 +209,10 @@ async def test_cli_reforge_run_block_lists_missing_details(tmp_path: Path):
     scenario.unlink()
     out_dir = tmp_path / "workspace" / "default" / "compiled_out"
     run = await driver.process_request(
-        (
+
             f"/reforge run --route textmystery_v1 --in {tmp_path.as_posix()} --out compiled_out "
             "--mode truth_only --scenario-pack truth_only_v0 --seed 1 --max-iters 2"
-        )
+
     )
     assert "suite_ready=false" in run
     assert "missing_inputs=" in run
@@ -228,10 +228,10 @@ async def test_cli_reforge_run_force_includes_force_fields(tmp_path: Path):
     scenario = tmp_path / "reforge" / "scenario_packs" / "truth_only_v0.json"
     scenario.unlink()
     run = await driver.process_request(
-        (
+
             f"/reforge run --route textmystery_v1 --in {tmp_path.as_posix()} --out compiled_out "
             "--mode truth_only --scenario-pack truth_only_v0 --seed 1 --max-iters 2 --force"
-        )
+
     )
     assert "Reforger run ok=True" in run
     assert "forced=True" in run

@@ -1,9 +1,9 @@
 from pathlib import Path
-from typing import List, Optional
-from orket.vendors.base import VendorInterface, VendorRock, VendorEpic, VendorCard
+
 from orket.orket import ConfigLoader
-from orket.schema import RockConfig, EpicConfig
 from orket.runtime_paths import resolve_runtime_db_path
+from orket.schema import EpicConfig, RockConfig
+from orket.vendors.base import VendorCard, VendorEpic, VendorInterface, VendorRock
 
 
 class LocalVendor(VendorInterface):
@@ -16,14 +16,14 @@ class LocalVendor(VendorInterface):
         self.loader = ConfigLoader(Path("model"), department)
         self.dept = department
 
-    async def get_rocks(self) -> List[VendorRock]:
+    async def get_rocks(self) -> list[VendorRock]:
         rocks = []
         for name in self.loader.list_assets("rocks"):
             r = self.loader.load_asset("rocks", name, RockConfig)
             rocks.append(VendorRock(id=name, name=r.name, description=r.description, status="active"))
         return rocks
 
-    async def get_epics(self, rock_id: Optional[str] = None) -> List[VendorEpic]:
+    async def get_epics(self, rock_id: str | None = None) -> list[VendorEpic]:
         epics = []
         # If rock_id is provided, only return epics linked to that rock
         if rock_id:
@@ -42,7 +42,7 @@ class LocalVendor(VendorInterface):
                 epics.append(VendorEpic(id=name, name=e.name, description=e.description))
         return epics
 
-    async def get_cards(self, epic_id: Optional[str] = None) -> List[VendorCard]:
+    async def get_cards(self, epic_id: str | None = None) -> list[VendorCard]:
         cards = []
         if epic_id:
             e = self.loader.load_asset("epics", epic_id, EpicConfig)

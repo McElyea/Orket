@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 # Layer: integration
-
 import asyncio
 
 import pytest
 
+from orket.runtime.provider_runtime_target import ProviderRuntimeTarget
 from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus, StreamBusConfig
 from orket.streaming.contracts import StreamEventType
 from orket.streaming.model_provider import ModelStreamProvider, ProviderEvent, ProviderEventType, ProviderTurnRequest
 from orket.workloads import run_builtin_workload
-from orket.runtime.provider_runtime_target import ProviderRuntimeTarget
 
 
 async def _drain_until_commit(queue: asyncio.Queue):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -24,16 +25,16 @@ class _ModelCritiqueContract(BaseModel):
     refs: list[str] = Field(default_factory=list)
 
 
-ModelProvider = Callable[[Dict[str, Any]], Dict[str, Any]]
+ModelProvider = Callable[[dict[str, Any]], dict[str, Any]]
 
 
 def run_model_assisted_lane(
     *,
     snapshot: ReviewSnapshot,
-    resolved_policy: Dict[str, Any],
+    resolved_policy: dict[str, Any],
     run_id: str,
     policy_digest: str,
-    provider: Optional[ModelProvider] = None,
+    provider: ModelProvider | None = None,
 ) -> ModelAssistedCritiquePayload:
     config = dict(resolved_policy.get("model_assisted") or {})
     model_id = str(config.get("model_id") or "")

@@ -221,17 +221,16 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
         )
 
     async def _execute(self, operation, *, row_factory: bool = False, commit: bool = False):
-        async with self._lock:
-            async with aiosqlite.connect(self.db_path) as conn:
-                if row_factory:
-                    conn.row_factory = aiosqlite.Row
-                if not self._initialized:
-                    await self._ensure_initialized(conn)
-                    self._initialized = True
-                result = await operation(conn)
-                if commit:
-                    await conn.commit()
-                return result
+        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+            if row_factory:
+                conn.row_factory = aiosqlite.Row
+            if not self._initialized:
+                await self._ensure_initialized(conn)
+                self._initialized = True
+            result = await operation(conn)
+            if commit:
+                await conn.commit()
+            return result
 
     async def _insert_or_return_existing(
         self,

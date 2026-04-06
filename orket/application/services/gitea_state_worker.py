@@ -1,18 +1,25 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Awaitable, Callable, Dict
+import contextlib
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from orket.application.services.control_plane_resource_authority_checks import (
     require_resource_snapshot_matches_lease,
 )
-from orket.application.services.gitea_state_control_plane_checkpoint_service import GiteaStateControlPlaneCheckpointService
+from orket.application.services.gitea_state_control_plane_checkpoint_service import (
+    GiteaStateControlPlaneCheckpointService,
+)
 from orket.application.services.gitea_state_control_plane_claim_failure_service import close_gitea_state_claim_failure
-from orket.application.services.gitea_state_control_plane_execution_service import GiteaStateControlPlaneExecutionService
+from orket.application.services.gitea_state_control_plane_execution_service import (
+    GiteaStateControlPlaneExecutionService,
+)
 from orket.application.services.gitea_state_control_plane_lease_service import GiteaStateControlPlaneLeaseService
 from orket.application.services.gitea_state_control_plane_reservation_service import (
     GiteaStateControlPlaneReservationService,
 )
+
 
 class LeaseExpiredError(RuntimeError):
     """Raised when lease renewal fails or lease epoch changes unexpectedly."""
@@ -51,7 +58,7 @@ class GiteaStateWorker:
     async def run_once(
         self,
         *,
-        work_fn: Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]],
+        work_fn: Callable[[dict[str, Any]], Awaitable[dict[str, Any]]],
         fetch_limit: int = 5,
     ) -> bool:
         candidates = await self.adapter.fetch_ready_cards(limit=max(1, int(fetch_limit)))
@@ -97,10 +104,10 @@ class GiteaStateWorker:
         self,
         *,
         card_id: str,
-        card: Dict[str, Any],
-        work_fn: Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]],
+        card: dict[str, Any],
+        work_fn: Callable[[dict[str, Any]], Awaitable[dict[str, Any]]],
         lease_epoch: int | None,
-        lease_observation: Dict[str, Any] | None,
+        lease_observation: dict[str, Any] | None,
         control_plane_run_id: str | None,
         control_plane_attempt_id: str | None,
         control_plane_reservation_id: str | None,
@@ -240,10 +247,8 @@ class GiteaStateWorker:
                 )
         finally:
             stop_event.set()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await renew_task
-            except asyncio.CancelledError:
-                pass
 
     async def _renew_loop(
         self,
@@ -251,7 +256,7 @@ class GiteaStateWorker:
         card_id: str,
         stop_event: asyncio.Event,
         lease_epoch: int | None,
-        lease_state: Dict[str, Any],
+        lease_state: dict[str, Any],
     ) -> None:
         while not stop_event.is_set():
             try:
@@ -315,10 +320,7 @@ class GiteaStateWorker:
         if not isinstance(lease, dict):
             return None
         nested = lease.get("lease")
-        if isinstance(nested, dict):
-            raw = nested.get("epoch")
-        else:
-            raw = lease.get("lease_epoch")
+        raw = nested.get("epoch") if isinstance(nested, dict) else lease.get("lease_epoch")
         if raw is None:
             return None
         try:
@@ -408,9 +410,11 @@ class GiteaStateWorker:
         latest = await self.control_plane_lease_service.publication.repository.get_latest_lease_record(
             lease_id=self.control_plane_lease_service.lease_id_for(card_id)
         )
-        if latest is not None and latest.status.value == "lease_expired":
-            if await self._latest_resource_matches_lease(card_id=card_id, lease=latest):
-                return
+        if latest is not None and latest.status.value == "lease_expired" and await self._latest_resource_matches_lease(
+            card_id=card_id,
+            lease=latest,
+        ):
+            return
         await self.control_plane_lease_service.publish_expired_lease(
             card_id=card_id,
             worker_id=self.worker_id,
@@ -430,9 +434,11 @@ class GiteaStateWorker:
         latest = await self.control_plane_lease_service.publication.repository.get_latest_lease_record(
             lease_id=self.control_plane_lease_service.lease_id_for(card_id)
         )
-        if latest is not None and latest.status.value == "lease_released":
-            if await self._latest_resource_matches_lease(card_id=card_id, lease=latest):
-                return
+        if latest is not None and latest.status.value == "lease_released" and await self._latest_resource_matches_lease(
+            card_id=card_id,
+            lease=latest,
+        ):
+            return
         await self.control_plane_lease_service.publish_released_lease(
             card_id=card_id,
             worker_id=self.worker_id,
@@ -463,7 +469,7 @@ class GiteaStateWorker:
         self,
         *,
         card_id: str,
-        card: Dict[str, Any],
+        card: dict[str, Any],
         lease_observation: Any,
     ):
         if self.control_plane_execution_service is None or not isinstance(lease_observation, dict):
@@ -527,7 +533,7 @@ class GiteaStateWorker:
         self,
         *,
         card_id: str,
-        card: Dict[str, Any],
+        card: dict[str, Any],
         lease_observation: Any,
         run,
         attempt,

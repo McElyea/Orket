@@ -9,14 +9,14 @@ import os
 import secrets
 import socket
 import subprocess
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from orket.adapters.storage.async_executor_service import run_coroutine_blocking
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
-from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.adapters.storage.async_executor_service import run_coroutine_blocking
+from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandRunner
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
@@ -25,10 +25,10 @@ from orket.application.services.control_plane_workload_catalog import (
 )
 from orket.application.services.sandbox_control_plane_effect_service import SandboxControlPlaneEffectService
 from orket.application.services.sandbox_control_plane_execution_service import SandboxControlPlaneExecutionService
+from orket.application.services.sandbox_control_plane_operator_service import SandboxControlPlaneOperatorService
 from orket.application.services.sandbox_control_plane_reservation_service import (
     SandboxControlPlaneReservationService,
 )
-from orket.application.services.sandbox_control_plane_operator_service import SandboxControlPlaneOperatorService
 from orket.application.services.sandbox_control_plane_resource_service import (
     SandboxControlPlaneResourceService,
 )
@@ -37,10 +37,11 @@ from orket.application.services.sandbox_runtime_inspection_service import Sandbo
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
 from orket.application.services.sandbox_runtime_recovery_service import SandboxRuntimeRecoveryService
 from orket.core.domain import LeaseStatus, ReservationStatus
-from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError, SandboxState as LifecycleState
+from orket.core.domain.sandbox import PortAllocation, Sandbox, SandboxRegistry, SandboxStatus, TechStack
+from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError
+from orket.core.domain.sandbox_lifecycle import SandboxState as LifecycleState
+from orket.core.domain.verification import AGENT_OUTPUT_DIR
 from orket.decision_nodes.registry import DecisionNodeRegistry
-from orket.domain.sandbox import PortAllocation, Sandbox, SandboxRegistry, SandboxStatus, TechStack
-from orket.domain.verification import AGENT_OUTPUT_DIR
 from orket.logging import log_event
 from orket.runtime_paths import resolve_control_plane_db_path, resolve_sandbox_lifecycle_db_path
 
@@ -51,13 +52,13 @@ class SandboxOrchestrator:
     def __init__(
         self,
         workspace_root: Path,
-        registry: Optional[SandboxRegistry] = None,
+        registry: SandboxRegistry | None = None,
         organization: Any = None,
-        decision_nodes: Optional[DecisionNodeRegistry] = None,
-        command_runner: Optional[CommandRunner] = None,
-        fs: Optional[AsyncFileTools] = None,
-        lifecycle_db_path: Optional[str] = None,
-        control_plane_db_path: Optional[str] = None,
+        decision_nodes: DecisionNodeRegistry | None = None,
+        command_runner: CommandRunner | None = None,
+        fs: AsyncFileTools | None = None,
+        lifecycle_db_path: str | None = None,
+        control_plane_db_path: str | None = None,
     ) -> None:
         self.workspace_root = workspace_root
         self.registry = registry or SandboxRegistry()
@@ -423,7 +424,7 @@ class SandboxOrchestrator:
         record = await self.lifecycle_service.reacquire_ownership(sandbox_id=sandbox_id)
         return record.model_dump(mode="json")
 
-    def get_logs(self, sandbox_id: str, service: Optional[str] = None) -> str:
+    def get_logs(self, sandbox_id: str, service: str | None = None) -> str:
         """
         Retrieve logs from sandbox containers.
 

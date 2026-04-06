@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from orket.kernel.v1.canonical import canonical_json_bytes
 
@@ -20,7 +20,7 @@ def _canonicalize_digest_value(value: Any) -> Any:
     return value
 
 
-def build_report(*, spec_hash: str, spec: Dict[str, Any], run_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+def build_report(*, spec_hash: str, spec: dict[str, Any], run_rows: list[dict[str, Any]]) -> dict[str, Any]:
     ranking = sorted(
         run_rows,
         key=lambda row: (
@@ -32,13 +32,13 @@ def build_report(*, spec_hash: str, spec: Dict[str, Any], run_rows: List[Dict[st
         ),
     )
 
-    pair_buckets: Dict[Tuple[Tuple[str, str], ...], List[Dict[str, Any]]] = defaultdict(list)
+    pair_buckets: dict[tuple[tuple[str, str], ...], list[dict[str, Any]]] = defaultdict(list)
     for row in run_rows:
         model_map = row.get("model_map", {})
         key = tuple((role, str(model_map.get(role))) for role in sorted(model_map.keys()))
         pair_buckets[key].append(row)
 
-    aggregates: List[Dict[str, Any]] = []
+    aggregates: list[dict[str, Any]] = []
     for key in sorted(pair_buckets.keys()):
         rows = pair_buckets[key]
         aggregate = aggregate_pairing(rows)
@@ -67,5 +67,5 @@ def build_report(*, spec_hash: str, spec: Dict[str, Any], run_rows: List[Dict[st
     }
 
 
-def report_canonical_bytes(report: Dict[str, Any]) -> bytes:
+def report_canonical_bytes(report: dict[str, Any]) -> bytes:
     return canonical_json_bytes(_canonicalize_digest_value(report))

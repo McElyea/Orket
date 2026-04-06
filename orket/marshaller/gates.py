@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 from .process import ProcessResult, run_process
 from .rejection_codes import BUILD_FAILED, FLAKE_DETECTED, LINT_FAILED, POLICY_DENY, TESTS_FAILED

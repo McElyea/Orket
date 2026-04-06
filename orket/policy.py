@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Literal, Optional
+from typing import Literal
 
 Scope = Literal["workspace", "reference", "domain"]
 
@@ -15,21 +15,21 @@ class FilesystemPolicy:
     """
 
     def __init__(self, spaces: dict, policy: dict):
-        self.work_domain: Optional[Path] = Path(spaces["work_domain"]).resolve() if spaces.get("work_domain") else None
-        self.workspaces: List[Path] = [Path(w).resolve() for w in spaces.get("workspaces", [])]
-        self.reference_spaces: List[Path] = [Path(r).resolve() for r in spaces.get("reference_spaces", [])]
+        self.work_domain: Path | None = Path(spaces["work_domain"]).resolve() if spaces.get("work_domain") else None
+        self.workspaces: list[Path] = [Path(w).resolve() for w in spaces.get("workspaces", [])]
+        self.reference_spaces: list[Path] = [Path(r).resolve() for r in spaces.get("reference_spaces", [])]
         self.launch_dir: Path = Path.cwd().resolve()
 
-        self.read_scope: List[Scope] = policy.get("read_scope", ["workspace", "reference", "domain"])
-        self.write_scope: List[Scope] = policy.get("write_scope", ["workspace"])
+        self.read_scope: list[Scope] = policy.get("read_scope", ["workspace", "reference", "domain"])
+        self.write_scope: list[Scope] = policy.get("write_scope", ["workspace"])
 
     def add_workspace(self, path: str):
         resolved = Path(path).resolve()
         if resolved not in self.workspaces:
             self.workspaces.append(resolved)
 
-    def _scopes_for_path(self, path: Path) -> List[Scope]:
-        scopes: List[Scope] = []
+    def _scopes_for_path(self, path: Path) -> list[Scope]:
+        scopes: list[Scope] = []
         if any(path.is_relative_to(w) for w in self.workspaces):
             scopes.append("workspace")
         if any(path.is_relative_to(r) for r in self.reference_spaces):

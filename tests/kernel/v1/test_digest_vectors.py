@@ -38,10 +38,7 @@ def test_digest_vectors_parity() -> None:
             assert digest_hex == vector["digest_hex"], f"digest mismatch for vector={vector['name']}"
             continue
 
-        if "raw_utf8" in vector:
-            raw = vector["raw_utf8"].encode("utf-8")
-        else:
-            raw = base64.b64decode(vector["raw_b64"])
+        raw = vector["raw_utf8"].encode("utf-8") if "raw_utf8" in vector else base64.b64decode(vector["raw_b64"])
         actual_error = _classify_raw_bytes(raw)
         assert actual_error == vector["expect_error"], f"error mismatch for vector={vector['name']}"
 

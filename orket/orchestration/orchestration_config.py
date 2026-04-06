@@ -21,28 +21,35 @@ class OrchestrationConfig:
     def __init__(self, org: Any) -> None:
         self.org = org
 
-    def resolve_state_backend_mode(self) -> str:
+    def _process_rule(self, key: str) -> str:
+        process_rules = getattr(self.org, "process_rules", None) if self.org else None
+        if isinstance(process_rules, dict):
+            return str(process_rules.get(key, "")).strip()
+        if hasattr(process_rules, "get"):
+            return str(process_rules.get(key, "")).strip()
+        if process_rules is not None:
+            return str(getattr(process_rules, key, "")).strip()
+        return ""
+
+    def resolve_state_backend_mode(self, *, user_settings: dict[str, Any] | None = None) -> str:
         env_raw = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip()
-        process_raw = ""
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            process_raw = str(self.org.process_rules.get("state_backend_mode", "")).strip()
-        user_raw = str(load_user_settings().get("state_backend_mode", "")).strip()
+        process_raw = self._process_rule("state_backend_mode")
+        settings = user_settings if isinstance(user_settings, dict) else load_user_settings()
+        user_raw = str(settings.get("state_backend_mode", "")).strip()
         return resolve_state_backend_mode(env_raw, process_raw, user_raw)
 
-    def resolve_run_ledger_mode(self) -> str:
+    def resolve_run_ledger_mode(self, *, user_settings: dict[str, Any] | None = None) -> str:
         env_raw = (os.environ.get("ORKET_RUN_LEDGER_MODE") or "").strip()
-        process_raw = ""
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            process_raw = str(self.org.process_rules.get("run_ledger_mode", "")).strip()
-        user_raw = str(load_user_settings().get("run_ledger_mode", "")).strip()
+        process_raw = self._process_rule("run_ledger_mode")
+        settings = user_settings if isinstance(user_settings, dict) else load_user_settings()
+        user_raw = str(settings.get("run_ledger_mode", "")).strip()
         return resolve_run_ledger_mode(env_raw, process_raw, user_raw)
 
-    def resolve_gitea_state_pilot_enabled(self) -> bool:
+    def resolve_gitea_state_pilot_enabled(self, *, user_settings: dict[str, Any] | None = None) -> bool:
         env_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()
-        process_raw = ""
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            process_raw = str(self.org.process_rules.get("gitea_state_pilot_enabled", "")).strip()
-        user_raw = str(load_user_settings().get("gitea_state_pilot_enabled", "")).strip()
+        process_raw = self._process_rule("gitea_state_pilot_enabled")
+        settings = user_settings if isinstance(user_settings, dict) else load_user_settings()
+        user_raw = str(settings.get("gitea_state_pilot_enabled", "")).strip()
         return bool(resolve_gitea_state_pilot_enabled(env_raw, process_raw, user_raw))
 
     def validate_state_backend_mode(self, state_backend_mode: str, gitea_state_pilot_enabled: bool) -> None:

@@ -3,14 +3,14 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
 class MemoryBuffer:
     run_id: str
     start_snapshot_id: int
-    writes: List[Dict[str, Any]] = field(default_factory=list)
+    writes: list[dict[str, Any]] = field(default_factory=list)
     state: str = "buffer_open"
     commit_id: str = ""
     commit_payload_fingerprint: str = ""
@@ -26,9 +26,9 @@ class InMemoryCommitStore:
 
     def __init__(self) -> None:
         self._current_snapshot_id = 0
-        self._snapshots: Dict[int, List[Dict[str, Any]]] = {0: []}
-        self._buffers: Dict[str, MemoryBuffer] = {}
-        self._commit_payload_by_id: Dict[str, str] = {}
+        self._snapshots: dict[int, list[dict[str, Any]]] = {0: []}
+        self._buffers: dict[str, MemoryBuffer] = {}
+        self._commit_payload_by_id: dict[str, str] = {}
 
     def current_snapshot_id(self) -> int:
         return self._current_snapshot_id
@@ -38,13 +38,13 @@ class InMemoryCommitStore:
         self._buffers[run_id] = MemoryBuffer(run_id=run_id, start_snapshot_id=snapshot_id)
         return snapshot_id
 
-    def append_write(self, run_id: str, record: Dict[str, Any]) -> None:
+    def append_write(self, run_id: str, record: dict[str, Any]) -> None:
         buffer = self._buffers[run_id]
         if buffer.state != "buffer_open":
             raise ValueError("buffer_not_open")
         buffer.writes.append(dict(record))
 
-    def read_snapshot(self, snapshot_id: int) -> List[Dict[str, Any]]:
+    def read_snapshot(self, snapshot_id: int) -> list[dict[str, Any]]:
         return [dict(row) for row in self._snapshots.get(snapshot_id, [])]
 
     def request_commit(self, run_id: str, commit_id: str, commit_payload_fingerprint: str) -> None:
@@ -55,7 +55,7 @@ class InMemoryCommitStore:
         buffer.commit_id = str(commit_id)
         buffer.commit_payload_fingerprint = str(commit_payload_fingerprint)
 
-    def _apply_commit(self, run_id: str) -> Optional[int]:
+    def _apply_commit(self, run_id: str) -> int | None:
         buffer = self._buffers[run_id]
         commit_id = buffer.commit_id
         payload = buffer.commit_payload_fingerprint
@@ -79,7 +79,7 @@ class InMemoryCommitStore:
         buffer.state = "commit_applied"
         return next_snapshot
 
-    def apply_commit(self, run_id: str) -> Optional[int]:
+    def apply_commit(self, run_id: str) -> int | None:
         buffer = self._buffers[run_id]
         if buffer.state != "commit_pending":
             raise ValueError("commit_not_pending")
@@ -115,7 +115,7 @@ class InMemoryCommitStore:
         now_ts: float,
         lease_seconds: float,
         fail_apply: bool = False,
-    ) -> Optional[int]:
+    ) -> int | None:
         buffer = self._buffers[run_id]
         if buffer.state != "commit_pending":
             raise ValueError("commit_not_pending")
@@ -144,7 +144,7 @@ class JsonFileCommitStore(InMemoryCommitStore):
         super().__init__()
         self._load()
 
-    def _serialize(self) -> Dict[str, Any]:
+    def _serialize(self) -> dict[str, Any]:
         return {
             "current_snapshot_id": self._current_snapshot_id,
             "snapshots": self._snapshots,
@@ -205,7 +205,7 @@ class JsonFileCommitStore(InMemoryCommitStore):
         self._persist()
         return snapshot_id
 
-    def append_write(self, run_id: str, record: Dict[str, Any]) -> None:
+    def append_write(self, run_id: str, record: dict[str, Any]) -> None:
         super().append_write(run_id, record)
         self._persist()
 
@@ -213,7 +213,7 @@ class JsonFileCommitStore(InMemoryCommitStore):
         super().request_commit(run_id, commit_id, commit_payload_fingerprint)
         self._persist()
 
-    def apply_commit(self, run_id: str) -> Optional[int]:
+    def apply_commit(self, run_id: str) -> int | None:
         result = super().apply_commit(run_id)
         self._persist()
         return result
@@ -236,7 +236,7 @@ class JsonFileCommitStore(InMemoryCommitStore):
         now_ts: float,
         lease_seconds: float,
         fail_apply: bool = False,
-    ) -> Optional[int]:
+    ) -> int | None:
         result = super().recover_pending_commit(
             run_id,
             worker_id=worker_id,

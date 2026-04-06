@@ -101,10 +101,7 @@ class TextMysteryPersonaRouteV0:
                 if not style_id:
                     continue
                 templates = item.get("templates")
-                if isinstance(templates, list):
-                    cleaned = [str(t).strip() for t in templates if str(t).strip()]
-                else:
-                    cleaned = []
+                cleaned = [str(t).strip() for t in templates if str(t).strip()] if isinstance(templates, list) else []
                 style_map[style_id] = {"templates": cleaned}
 
         voice_map: dict[str, dict[str, Any]] = {}

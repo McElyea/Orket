@@ -11,10 +11,17 @@ from orket.adapters.storage.command_runner import CommandResult
 from orket.application.services.control_plane_workload_catalog import (
     sandbox_runtime_workload_for_tech_stack,
 )
-from orket.core.domain import AttemptState, ClosureBasisClassification, LeaseStatus, ReservationStatus, ResultClass, RunState
-from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
-from orket.domain.sandbox import SandboxRegistry, TechStack
+from orket.core.domain import (
+    AttemptState,
+    ClosureBasisClassification,
+    LeaseStatus,
+    ReservationStatus,
+    ResultClass,
+    RunState,
+)
+from orket.core.domain.sandbox import SandboxRegistry, TechStack
+from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
 
@@ -50,7 +57,7 @@ class FakeLifecycleRunner:
         if cmd[:2] == ("docker-compose", "-f") and "ps" in cmd and "--format" in cmd:
             return CommandResult(
                 returncode=0,
-                stdout='{"Service":"api","State":"running","Name":"%s-api-1"}\n' % self.compose_project,
+                stdout=f'{{"Service":"api","State":"running","Name":"{self.compose_project}-api-1"}}\n',
                 stderr="",
             )
         if cmd[:2] == ("docker", "inspect"):
@@ -82,24 +89,21 @@ class FakeLifecycleRunner:
         if not self.resources_present:
             return ""
         return (
-            '{"Names":"%s-api-1","State":"%s","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s,com.docker.compose.service=api"}\n'
-            % (self.compose_project, self.container_state, self.sandbox_id, self.run_id)
+            f'{{"Names":"{self.compose_project}-api-1","State":"{self.container_state}","Labels":"orket.managed=true,orket.sandbox_id={self.sandbox_id},orket.run_id={self.run_id},com.docker.compose.service=api"}}\n'
         )
 
     def _network_rows(self) -> str:
         if not self.resources_present:
             return ""
         return (
-            '{"Name":"%s_default","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
-            % (self.compose_project, self.sandbox_id, self.run_id)
+            f'{{"Name":"{self.compose_project}_default","Labels":"orket.managed=true,orket.sandbox_id={self.sandbox_id},orket.run_id={self.run_id}"}}\n'
         )
 
     def _volume_rows(self) -> str:
         if not self.resources_present:
             return ""
         return (
-            '{"Name":"%s_db-data","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
-            % (self.compose_project, self.sandbox_id, self.run_id)
+            f'{{"Name":"{self.compose_project}_db-data","Labels":"orket.managed=true,orket.sandbox_id={self.sandbox_id},orket.run_id={self.run_id}"}}\n'
         )
 
     def _inspect_payload(self) -> str:
@@ -107,8 +111,7 @@ class FakeLifecycleRunner:
         if self.container_state == "running":
             health = ',"Health":{"Status":"healthy"}'
         return (
-            '[{"Name":"/%s-api-1","RestartCount":0,"Config":{"Labels":{"com.docker.compose.service":"api"}},"State":{"Status":"%s"%s}}]'
-            % (self.compose_project, self.container_state, health)
+            f'[{{"Name":"/{self.compose_project}-api-1","RestartCount":0,"Config":{{"Labels":{{"com.docker.compose.service":"api"}}}},"State":{{"Status":"{self.container_state}"{health}}}}}]'
         )
 
 
@@ -285,7 +288,7 @@ async def test_delete_sandbox_marks_cleaned_after_live_absence_even_if_down_warn
     assert lease.status is LeaseStatus.RELEASED
     assert resource is not None
     assert resource.current_observed_state.startswith("sandbox_state:cleaned")
-    async with aiofiles.open(record.required_evidence_ref, "r", encoding="utf-8") as handle:
+    async with aiofiles.open(record.required_evidence_ref, encoding="utf-8") as handle:
         evidence = await handle.read()
     assert "sandbox_cancellation_receipt" in evidence
     assert final_truth is not None

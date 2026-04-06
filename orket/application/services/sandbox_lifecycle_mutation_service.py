@@ -62,9 +62,10 @@ class SandboxLifecycleMutationService:
             terminal_reason=terminal_reason,
             cleanup_state=cleanup_state,
         )
-        if event is LifecycleEvent.OWNERSHIP_REACQUIRED:
-            if next_lease_epoch is None or next_lease_epoch <= current.lease_epoch:
-                raise SandboxLifecycleError("Ownership reacquisition requires a strictly newer lease epoch.")
+        if event is LifecycleEvent.OWNERSHIP_REACQUIRED and (
+            next_lease_epoch is None or next_lease_epoch <= current.lease_epoch
+        ):
+            raise SandboxLifecycleError("Ownership reacquisition requires a strictly newer lease epoch.")
         next_record = current.model_copy(
             update={
                 "state": next_state,

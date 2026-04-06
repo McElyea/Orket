@@ -78,7 +78,7 @@ def _force_prompt_updated_at(root: Path, prompt_id: str, updated_at: str) -> Non
 
 
 def test_validate_prompt_assets_core_passes() -> None:
-    errors = validate_prompt_assets(Path("."))
+    errors = validate_prompt_assets(Path())
     assert errors == []
 
 
@@ -166,7 +166,7 @@ def test_update_prompt_metadata_rejects_direct_draft_to_stable_promotion(tmp_pat
             notes="bad promote",
             apply_changes=True,
         )
-        assert False, "Expected ValueError for draft->stable transition"
+        raise AssertionError("Expected ValueError for draft->stable transition")
     except ValueError as exc:
         assert "Invalid status transition: draft -> stable" in str(exc)
 
@@ -196,7 +196,7 @@ def test_update_prompt_metadata_rejects_promotion_when_report_fails(tmp_path: Pa
             },
             apply_changes=True,
         )
-        assert False, "Expected ValueError when promotion report fails"
+        raise AssertionError("Expected ValueError when promotion report fails")
     except ValueError as exc:
         assert "Promotion criteria not met for stable." in str(exc)
         assert "CRITERIA_CANDIDATE_GUARD_PASS_RATE_MIN" in str(exc)

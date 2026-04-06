@@ -75,7 +75,7 @@ class FakeModelFixture:
     outputs: dict[str, str]
 
     @staticmethod
-    def from_path(path: Path) -> "FakeModelFixture":
+    def from_path(path: Path) -> FakeModelFixture:
         payload = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(payload, dict):
             raise ValueError(f"Fake model fixture must be an object: {path}")

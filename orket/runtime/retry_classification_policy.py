@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 _ALLOWED_CLASSES = {"safe_transient", "dangerous_non_retryable"}
 _ALLOWED_BACKOFF = {"none", "exponential"}
 _SCHEMA_VERSION = "1.0"

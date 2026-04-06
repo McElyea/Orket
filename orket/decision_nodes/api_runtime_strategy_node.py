@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from datetime import timedelta
-from datetime import UTC, datetime
-from pathlib import Path
-from typing import Any, Dict, List
 import os
 import uuid
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from typing import Any
 
 
 class DefaultApiRuntimeStrategyNode:
@@ -48,7 +47,7 @@ class DefaultApiRuntimeStrategyNode:
     def default_allowed_origins_value(self) -> str:
         return "http://localhost:5173,http://127.0.0.1:5173"
 
-    def parse_allowed_origins(self, origins_value: str) -> List[str]:
+    def parse_allowed_origins(self, origins_value: str) -> list[str]:
         return [origin.strip() for origin in origins_value.split(",") if origin.strip()]
 
     def is_api_key_valid(self, expected_key: str | None, provided_key: str | None) -> bool:
@@ -78,7 +77,7 @@ class DefaultApiRuntimeStrategyNode:
         build_id: str | None,
         session_id: str,
         request_type: str | None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return {
             "method_name": "run_card",
             "kwargs": {
@@ -91,37 +90,37 @@ class DefaultApiRuntimeStrategyNode:
     def run_active_missing_asset_detail(self) -> str:
         return "No asset ID provided."
 
-    def resolve_runs_invocation(self) -> Dict[str, Any]:
+    def resolve_runs_invocation(self) -> dict[str, Any]:
         return {"method_name": "get_recent_runs", "args": []}
 
-    def resolve_backlog_invocation(self, session_id: str) -> Dict[str, Any]:
+    def resolve_backlog_invocation(self, session_id: str) -> dict[str, Any]:
         return {"method_name": "get_session_issues", "args": [session_id]}
 
-    def resolve_session_detail_invocation(self, session_id: str) -> Dict[str, Any]:
+    def resolve_session_detail_invocation(self, session_id: str) -> dict[str, Any]:
         return {"method_name": "get_session", "args": [session_id]}
 
-    def session_detail_not_found_error(self, session_id: str) -> Dict[str, Any]:
+    def session_detail_not_found_error(self, session_id: str) -> dict[str, Any]:
         return {"status_code": 404}
 
-    def resolve_session_snapshot_invocation(self, session_id: str) -> Dict[str, Any]:
+    def resolve_session_snapshot_invocation(self, session_id: str) -> dict[str, Any]:
         return {"method_name": "get", "args": [session_id]}
 
-    def session_snapshot_not_found_error(self, session_id: str) -> Dict[str, Any]:
+    def session_snapshot_not_found_error(self, session_id: str) -> dict[str, Any]:
         return {"status_code": 404}
 
-    def resolve_sandboxes_list_invocation(self) -> Dict[str, Any]:
+    def resolve_sandboxes_list_invocation(self) -> dict[str, Any]:
         return {"method_name": "get_sandboxes", "args": []}
 
-    def resolve_sandbox_stop_invocation(self, sandbox_id: str) -> Dict[str, Any]:
+    def resolve_sandbox_stop_invocation(self, sandbox_id: str) -> dict[str, Any]:
         return {"method_name": "stop_sandbox", "args": [sandbox_id]}
 
     def resolve_clear_logs_path(self) -> str:
         return "workspace/default/orket.log"
 
-    def resolve_clear_logs_invocation(self, log_path: str) -> Dict[str, Any]:
+    def resolve_clear_logs_invocation(self, log_path: str) -> dict[str, Any]:
         return {"method_name": "write_file", "args": [log_path, ""]}
 
-    def resolve_read_invocation(self, path: str) -> Dict[str, Any]:
+    def resolve_read_invocation(self, path: str) -> dict[str, Any]:
         return {"method_name": "read_file", "args": [path]}
 
     def read_not_found_detail(self, path: str) -> str:
@@ -130,10 +129,10 @@ class DefaultApiRuntimeStrategyNode:
     def permission_denied_detail(self, operation: str, error: str) -> str:
         return error
 
-    def resolve_save_invocation(self, path: str, content: str) -> Dict[str, Any]:
+    def resolve_save_invocation(self, path: str, content: str) -> dict[str, Any]:
         return {"method_name": "write_file", "args": [path, content]}
 
-    def normalize_metrics(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
+    def normalize_metrics(self, snapshot: dict[str, Any]) -> dict[str, Any]:
         normalized = dict(snapshot)
         if "cpu" not in normalized and "cpu_percent" in normalized:
             normalized["cpu"] = normalized["cpu_percent"]
@@ -141,7 +140,7 @@ class DefaultApiRuntimeStrategyNode:
             normalized["memory"] = normalized["ram_percent"]
         return normalized
 
-    def calendar_window(self, now: Any) -> Dict[str, str]:
+    def calendar_window(self, now: Any) -> dict[str, str]:
         return {
             "sprint_start": (now - timedelta(days=now.weekday())).strftime("%Y-%m-%d"),
             "sprint_end": (now + timedelta(days=4 - now.weekday())).strftime("%Y-%m-%d"),
@@ -162,10 +161,10 @@ class DefaultApiRuntimeStrategyNode:
             return None
         return target
 
-    def resolve_explorer_forbidden_error(self, path: str) -> Dict[str, Any]:
+    def resolve_explorer_forbidden_error(self, path: str) -> dict[str, Any]:
         return {"status_code": 403}
 
-    def resolve_explorer_missing_response(self, path: str) -> Dict[str, Any]:
+    def resolve_explorer_missing_response(self, path: str) -> dict[str, Any]:
         return {"items": [], "path": path}
 
     def include_explorer_entry(self, entry_name: str) -> bool:
@@ -173,14 +172,12 @@ class DefaultApiRuntimeStrategyNode:
             return False
         if "__pycache__" in entry_name:
             return False
-        if entry_name == "node_modules":
-            return False
-        return True
+        return entry_name != "node_modules"
 
-    def sort_explorer_items(self, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def sort_explorer_items(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return sorted(items, key=lambda item: (not item["is_dir"], item["name"].lower()))
 
-    def resolve_preview_target(self, path: str, issue_id: str | None) -> Dict[str, str]:
+    def resolve_preview_target(self, path: str, issue_id: str | None) -> dict[str, str]:
         resolved_path = Path(path)
         asset_name = resolved_path.stem
         department = "core"
@@ -203,7 +200,7 @@ class DefaultApiRuntimeStrategyNode:
         }
         return method_map.get(mode, "build_epic_preview")
 
-    def resolve_preview_invocation(self, target: Dict[str, str], issue_id: str | None) -> Dict[str, Any]:
+    def resolve_preview_invocation(self, target: dict[str, str], issue_id: str | None) -> dict[str, Any]:
         method_name = self.select_preview_build_method(target["mode"])
         unsupported_detail = self.preview_unsupported_detail(
             target,
@@ -221,7 +218,7 @@ class DefaultApiRuntimeStrategyNode:
             "unsupported_detail": unsupported_detail,
         }
 
-    def preview_unsupported_detail(self, target: Dict[str, str], invocation: Dict[str, Any]) -> str:
+    def preview_unsupported_detail(self, target: dict[str, str], invocation: dict[str, Any]) -> str:
         return f"Unsupported preview mode '{target['mode']}'."
 
     def create_preview_builder(self, model_root: Any) -> Any:
@@ -234,7 +231,7 @@ class DefaultApiRuntimeStrategyNode:
 
         return OrketDriver()
 
-    def resolve_chat_driver_invocation(self, message: str) -> Dict[str, Any]:
+    def resolve_chat_driver_invocation(self, message: str) -> dict[str, Any]:
         return {"method_name": "process_request", "args": [message]}
 
     def resolve_member_metrics_workspace(self, project_root: Any, session_id: str) -> Any:
@@ -256,7 +253,7 @@ class DefaultApiRuntimeStrategyNode:
 
         return ExecutionPipeline(workspace_root)
 
-    def resolve_sandbox_logs_invocation(self, sandbox_id: str, service: str | None) -> Dict[str, Any]:
+    def resolve_sandbox_logs_invocation(self, sandbox_id: str, service: str | None) -> dict[str, Any]:
         return {"method_name": "get_logs", "args": [sandbox_id, service]}
 
     def resolve_api_workspace(self, project_root: Any) -> Any:
@@ -301,7 +298,7 @@ class DefaultApiRuntimeStrategyNode:
         archived_ids: list[str],
         missing_ids: list[str],
         archived_count: int,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         unique_archived_ids = sorted(set(archived_ids))
         unique_missing_ids = sorted(set(missing_ids))
         total_archived = archived_count + len(unique_archived_ids)

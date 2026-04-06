@@ -12,7 +12,6 @@ from orket.adapters.storage.async_control_plane_execution_repository import (
 from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
 from orket.core.domain import AttemptState, RunState, SideEffectBoundaryClass
 
-
 pytestmark = pytest.mark.integration
 
 

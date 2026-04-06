@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any
 
-
-DEFAULT_UTILITY_AGENT_PROFILES: Dict[str, Dict[str, Any]] = {
+DEFAULT_UTILITY_AGENT_PROFILES: dict[str, dict[str, Any]] = {
     "code_assistant": {
         "profile_id": "code_assistant",
         "allowed_roles": ["architect", "coder", "reviewer"],
@@ -24,9 +24,9 @@ DEFAULT_UTILITY_AGENT_PROFILES: Dict[str, Dict[str, Any]] = {
 class MemoryAccessPolicyError(Exception):
     code: str
     message: str
-    detail: Dict[str, Any]
+    detail: dict[str, Any]
 
-    def to_payload(self) -> Dict[str, Any]:
+    def to_payload(self) -> dict[str, Any]:
         return {
             "ok": False,
             "code": self.code,
@@ -35,7 +35,7 @@ class MemoryAccessPolicyError(Exception):
         }
 
 
-def load_utility_agent_profiles(path: Path | None = None) -> Dict[str, Dict[str, Any]]:
+def load_utility_agent_profiles(path: Path | None = None) -> dict[str, dict[str, Any]]:
     if path is None:
         return {key: dict(value) for key, value in DEFAULT_UTILITY_AGENT_PROFILES.items()}
     if not path.exists():
@@ -47,7 +47,7 @@ def load_utility_agent_profiles(path: Path | None = None) -> Dict[str, Dict[str,
             message="Profile payload must be a JSON object keyed by profile id.",
             detail={"path": str(path)},
         )
-    rows: Dict[str, Dict[str, Any]] = {}
+    rows: dict[str, dict[str, Any]] = {}
     for key in sorted(payload.keys()):
         row = payload[key]
         if not isinstance(row, dict):
@@ -63,7 +63,7 @@ def load_utility_agent_profiles(path: Path | None = None) -> Dict[str, Dict[str,
     return rows or {key: dict(value) for key, value in DEFAULT_UTILITY_AGENT_PROFILES.items()}
 
 
-def resolve_utility_agent_profile(profile_id: str, profiles: Dict[str, Dict[str, Any]] | None = None) -> Dict[str, Any]:
+def resolve_utility_agent_profile(profile_id: str, profiles: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
     profiles = profiles or load_utility_agent_profiles()
     key = str(profile_id or "").strip()
     if not key:
@@ -82,7 +82,7 @@ def resolve_utility_agent_profile(profile_id: str, profiles: Dict[str, Dict[str,
     return dict(profile)
 
 
-def enforce_role_access(*, role: str, profile: Dict[str, Any]) -> None:
+def enforce_role_access(*, role: str, profile: dict[str, Any]) -> None:
     allowed_roles = sorted({str(item).strip() for item in (profile.get("allowed_roles") or []) if str(item).strip()})
     normalized_role = str(role or "").strip()
     if normalized_role not in allowed_roles:
@@ -97,8 +97,8 @@ def enforce_role_access(*, role: str, profile: Dict[str, Any]) -> None:
         )
 
 
-def normalize_retrieval_rows(rows: Iterable[Dict[str, Any]], *, limit: int) -> List[Dict[str, Any]]:
-    normalized: List[Dict[str, Any]] = []
+def normalize_retrieval_rows(rows: Iterable[dict[str, Any]], *, limit: int) -> list[dict[str, Any]]:
+    normalized: list[dict[str, Any]] = []
     for row in rows:
         if not isinstance(row, dict):
             continue

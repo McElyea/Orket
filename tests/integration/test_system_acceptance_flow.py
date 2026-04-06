@@ -4,8 +4,9 @@ import json
 
 import pytest
 
-from orket.exceptions import ExecutionFailed
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
+from orket.core.domain import ReservationStatus
+from orket.exceptions import ExecutionFailed
 from orket.orchestration.engine import OrchestrationEngine
 from orket.schema import CardStatus
 from tests.turn_prompt_utils import extract_turn_prompt_context
@@ -68,6 +69,22 @@ class AcceptanceProvider:
         return ModelResponse(
             content='```json\n{"tool": "update_issue_status", "args": {"status": "done"}}\n```',
             raw={"model": "dummy", "total_tokens": 40},
+        )
+
+
+class ToolApprovalContinuationProvider:
+    async def complete(self, messages):
+        turn_context = extract_turn_prompt_context(messages)
+        active_role = str(turn_context.get("role") or "").strip().lower()
+        current_status = str(turn_context.get("current_status") or "").strip().lower()
+        if current_status == "code_review" or active_role in {"reviewer_seat", "code_reviewer"}:
+            return ModelResponse(
+                content='```json\n{"tool": "update_issue_status", "args": {"status": "done"}}\n```',
+                raw={"model": "dummy", "total_tokens": 40},
+            )
+        return ModelResponse(
+            content='```json\n{"tool": "write_file", "args": {"path": "agent_output/approved.txt", "content": "approved"}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
+            raw={"model": "dummy", "total_tokens": 80},
         )
 
 
@@ -240,4 +257,73 @@ async def test_system_acceptance_guard_blocks_illegal_transition(tmp_path, monke
     issue = await engine.cards.get_by_id("ISSUE-A")
     assert issue.status == CardStatus.BLOCKED
     assert (workspace / "agent_output" / "policy_violation_ISSUE-A.json").exists()
+
+
+@pytest.mark.asyncio
+async def test_system_acceptance_tool_approval_continues_same_governed_run(tmp_path, monkeypatch):
+    """Layer: integration."""
+    root = tmp_path
+    workspace = root / "workspace"
+    workspace.mkdir()
+    (workspace / "agent_output").mkdir()
+    (workspace / "verification").mkdir()
+    durable_root = root / ".orket" / "durable"
+    db_path = str(durable_root / "db" / "orket_persistence.db")
+
+    _build_assets(root, with_guard=False, epic_id="approval_required")
+    _patch_provider(monkeypatch, ToolApprovalContinuationProvider())
+    monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
+    monkeypatch.setenv("ORKET_DURABLE_ROOT", str(durable_root))
+
+    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
+    loop_policy = engine._pipeline.orchestrator.loop_policy_node
+
+    def _approval_required_tools_for_seat(seat_name, issue=None, turn_status=None):
+        if str(seat_name or "").strip().lower() == "lead_architect":
+            return ["write_file"]
+        return []
+
+    monkeypatch.setattr(loop_policy, "approval_required_tools_for_seat", _approval_required_tools_for_seat)
+
+    with pytest.raises(ExecutionFailed, match="Approval required for tool 'write_file'"):
+        await engine.run_card("approval_required")
+
+    issue = await engine.cards.get_by_id("ISSUE-A")
+    assert issue.status == CardStatus.IN_PROGRESS
+
+    approvals = await engine.list_approvals(status="PENDING", limit=10)
+    assert len(approvals) == 1
+    approval = approvals[0]
+    run_id = str(approval["control_plane_target_ref"])
+
+    pending_run = await engine.control_plane_execution_repository.get_run_record(run_id=run_id)
+    pending_truth = await engine.control_plane_repository.get_final_truth(run_id=run_id)
+    resource = await engine.control_plane_repository.get_latest_resource_record(resource_id="namespace:issue:ISSUE-A")
+
+    assert pending_run is not None
+    assert pending_run.lifecycle_state.value == "executing"
+    assert pending_truth is None
+    assert resource is not None
+    assert resource.resource_kind == "turn_tool_namespace"
+
+    resolved = await engine.decide_approval(approval_id=str(approval["approval_id"]), decision="approve")
+
+    completed_run = await engine.control_plane_execution_repository.get_run_record(run_id=run_id)
+    final_truth = await engine.control_plane_repository.get_final_truth(run_id=run_id)
+    reservation = await engine.control_plane_repository.get_latest_reservation_record(
+        reservation_id=f"approval-reservation:{approval['approval_id']}"
+    )
+    issue = await engine.cards.get_by_id("ISSUE-A")
+
+    assert resolved["status"] == "resolved"
+    assert resolved["approval"]["status"] == "APPROVED"
+    assert completed_run is not None
+    assert completed_run.lifecycle_state.value == "completed"
+    assert final_truth is not None
+    assert final_truth.result_class.value == "success"
+    assert reservation is not None
+    assert reservation.status is ReservationStatus.RELEASED
+    assert issue.status == CardStatus.DONE
+    assert (workspace / "agent_output" / "approved.txt").read_text(encoding="utf-8") == "approved"
 

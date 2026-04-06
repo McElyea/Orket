@@ -10,8 +10,8 @@ import time
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 import uvicorn
+from fastapi.testclient import TestClient
 
 from orket.interfaces.api import create_api_app
 from tests.live.test_runtime_stability_closeout_live import _live_enabled, _live_model
@@ -181,9 +181,9 @@ async def test_companion_voice_truth_live_gateway_playback_without_avatar(tmp_pa
     """Layer: end-to-end. Verifies gateway/UI playback truth works with avatar mode disabled and no lipsync dependency."""
     if not _live_enabled():
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live companion playback proof.")
-    if not _COMPANION_ROOT.exists():
+    if not await asyncio.to_thread(_COMPANION_ROOT.exists):
         pytest.skip("Companion extension checkout is required for gateway playback proof.")
-    if not (_COMPANION_UI_ROOT / "node_modules" / "playwright").exists():
+    if not await asyncio.to_thread((_COMPANION_UI_ROOT / "node_modules" / "playwright").exists):
         pytest.skip("Companion UI Playwright dependency is required for gateway playback proof.")
 
     host_port = _reserve_port()

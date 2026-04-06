@@ -4,7 +4,7 @@ import asyncio
 import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Optional, Type
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ValidationError
 
@@ -27,8 +27,8 @@ class ConfigLoader:
         self,
         root: Path,
         department: str = "core",
-        organization: Optional[Any] = None,
-        decision_nodes: Optional[DecisionNodeRegistry] = None,
+        organization: Any | None = None,
+        decision_nodes: DecisionNodeRegistry | None = None,
     ):
         self.root = root
         self.config_dir = root / "config"
@@ -48,11 +48,14 @@ class ConfigLoader:
         with ThreadPoolExecutor(max_workers=1) as pool:
             return pool.submit(lambda: asyncio.run(coro)).result()
 
-    async def _read_text(self, p: Path) -> str:
+    def _relative_path_for_read(self, path: Path) -> str:
         try:
-            relative_path = p.resolve().relative_to(self.root.resolve()).as_posix()
+            return path.resolve().relative_to(self.root.resolve()).as_posix()
         except ValueError:
-            relative_path = str(p)
+            return str(path)
+
+    async def _read_text(self, p: Path) -> str:
+        relative_path = await asyncio.to_thread(self._relative_path_for_read, p)
         return await self.file_tools.read_file(relative_path)
 
     def load_organization(self) -> OrganizationConfig | None:
@@ -60,7 +63,7 @@ class ConfigLoader:
 
     async def load_organization_async(self) -> OrganizationConfig | None:
         from orket.schema import OrganizationConfig
-        from orket.settings import get_setting
+        from orket.settings import get_setting, load_user_settings_async, set_runtime_settings_context
 
         org_data = {}
 
@@ -92,6 +95,7 @@ class ConfigLoader:
             log_event("config_validation_failed", {"error": str(exc)}, workspace=self.root)
             return None
 
+        set_runtime_settings_context(user_settings=await load_user_settings_async())
         return self.loader_strategy_node.apply_organization_overrides(org, get_setting)
 
     def load_department(self, name: str) -> DepartmentConfig | None:
@@ -107,10 +111,10 @@ class ConfigLoader:
                 return DepartmentConfig.model_validate_json(raw)
         return None
 
-    def load_asset(self, category: str, name: str, model_type: Type[BaseModel]) -> Any:
+    def load_asset(self, category: str, name: str, model_type: type[BaseModel]) -> Any:
         return self._run_async(self.load_asset_async(category, name, model_type))
 
-    async def load_asset_async(self, category: str, name: str, model_type: Type[BaseModel]) -> Any:
+    async def load_asset_async(self, category: str, name: str, model_type: type[BaseModel]) -> Any:
         raw = await self._load_asset_raw_async(category, name, self.department)
         return model_type.model_validate_json(raw)
 
@@ -132,11 +136,11 @@ class ConfigLoader:
 
         raise CardNotFound(f"Asset '{name}' not found in category '{category}' for department '{dept}'.")
 
-    def list_assets(self, category: str) -> List[str]:
+    def list_assets(self, category: str) -> list[str]:
         return self._run_async(self.list_assets_async(category))
 
-    async def list_assets_async(self, category: str) -> List[str]:
-        def _collect_assets() -> List[str]:
+    async def list_assets_async(self, category: str) -> list[str]:
+        def _collect_assets() -> list[str]:
             assets = set()
             search_paths = self.loader_strategy_node.list_asset_search_paths(
                 self.config_dir,

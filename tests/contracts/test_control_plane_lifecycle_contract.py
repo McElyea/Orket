@@ -5,11 +5,11 @@ from __future__ import annotations
 import pytest
 
 from orket.core.domain import (
+    TERMINAL_ATTEMPT_STATES,
+    TERMINAL_RUN_STATES,
     AttemptState,
     ControlPlaneLifecycleError,
     RunState,
-    TERMINAL_ATTEMPT_STATES,
-    TERMINAL_RUN_STATES,
     allowed_attempt_transitions,
     allowed_run_transitions,
     get_run_transition_requirement,
@@ -18,7 +18,6 @@ from orket.core.domain import (
     validate_attempt_state_transition,
     validate_run_state_transition,
 )
-
 
 pytestmark = pytest.mark.contract
 
@@ -78,13 +77,13 @@ def test_run_transition_matrix_rejects_forbidden_paths(current_state: RunState, 
 
 
 def test_terminal_run_states_match_contract() -> None:
-    assert TERMINAL_RUN_STATES == frozenset(
+    assert frozenset(
         {
             RunState.COMPLETED,
             RunState.FAILED_TERMINAL,
             RunState.CANCELLED,
         }
-    )
+    ) == TERMINAL_RUN_STATES
     assert is_terminal_run_state(RunState.COMPLETED) is True
     assert is_terminal_run_state(RunState.EXECUTING) is False
 
@@ -125,14 +124,14 @@ def test_attempt_transition_matrix_rejects_forbidden_paths(current_state: Attemp
 
 
 def test_terminal_attempt_states_match_contract() -> None:
-    assert TERMINAL_ATTEMPT_STATES == frozenset(
+    assert frozenset(
         {
             AttemptState.FAILED,
             AttemptState.INTERRUPTED,
             AttemptState.COMPLETED,
             AttemptState.ABANDONED,
         }
-    )
+    ) == TERMINAL_ATTEMPT_STATES
     assert is_terminal_attempt_state(AttemptState.COMPLETED) is True
     assert is_terminal_attempt_state(AttemptState.WAITING) is False
 

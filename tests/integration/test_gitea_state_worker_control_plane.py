@@ -9,10 +9,10 @@ import pytest
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_workload_catalog import (
     GITEA_STATE_WORKER_EXECUTION_WORKLOAD,
 )
-from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.gitea_state_control_plane_checkpoint_service import (
     GiteaStateControlPlaneCheckpointService,
 )
@@ -39,12 +39,11 @@ from orket.core.domain import (
     OrphanClassification,
     OwnershipClass,
     RecoveryActionClass,
-    ResourceFailureClass,
     ReservationStatus,
+    ResourceFailureClass,
     ResultClass,
     RunState,
 )
-
 
 pytestmark = pytest.mark.integration
 

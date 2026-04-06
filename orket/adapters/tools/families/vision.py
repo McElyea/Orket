@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
+from orket.adapters.tools.families.base import BaseTools
 from orket.logging import log_event
 from orket.settings import get_setting
-from orket.adapters.tools.families.base import BaseTools
 
 
 class VisionTools(BaseTools):
-    def __init__(self, workspace_root: Path, references: List[Path]):
+    def __init__(self, workspace_root: Path, references: list[Path]):
         super().__init__(workspace_root, references)
         self._image_pipeline = None
 
-    def image_analyze(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    def image_analyze(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
         return {
             "ok": False,
             "error": (
@@ -21,7 +21,7 @@ class VisionTools(BaseTools):
             ),
         }
 
-    def image_generate(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    def image_generate(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
         try:
             path = self._resolve_safe_path(args.get("path", "generated.png"), write=True)
             if self._image_pipeline is None:

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 DEGRADATION_FIRST_UI_STANDARD_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_CHECK_IDS = {

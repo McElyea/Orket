@@ -69,6 +69,24 @@ async def test_manager_commit_fail_closed_outcome(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_commit_orchestrator_persists_authority_artifact(tmp_path):
+    """Layer: integration. Verifies commit orchestration persists the authoritative artifact on disk."""
+    orchestrator = CommitOrchestrator(project_root=tmp_path)
+
+    outcome = await orchestrator.commit(
+        session_id="session-1",
+        turn_id="turn-1",
+        intents=[CommitIntent(type="turn_finalize", ref="turn-1")],
+    )
+
+    authority_path = (
+        tmp_path / "workspace" / "interactions" / "session-1" / "turn-1" / "authority_commit.json"
+    )
+    assert authority_path.exists()
+    assert outcome["authoritative"] is True
+
+
+@pytest.mark.asyncio
 async def test_manager_session_snapshot_and_replay_expose_context_lineage(tmp_path):
     """Layer: unit. Verifies interaction manager exposes explicit session-context envelope and provider lineage."""
     manager = InteractionManager(

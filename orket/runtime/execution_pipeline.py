@@ -1,35 +1,30 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+import contextlib
 import json
 import os
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiofiles
 
-from orket.decision_nodes.registry import DecisionNodeRegistry
-from orket.exceptions import CardNotFound, ComplexityViolation, ExecutionFailed
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository,
     AsyncSnapshotRepository,
     AsyncSuccessRepository,
 )
-from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
 from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
-from orket.application.services.gitea_state_pilot import (
-    collect_gitea_state_pilot_inputs,
-    evaluate_gitea_state_pilot_readiness,
+from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
+from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
+from orket.application.services.control_plane_workload_catalog import (
+    build_cards_workload_contract,
+    resolve_cards_control_plane_workload_from_contract,
 )
 from orket.application.services.gitea_state_control_plane_checkpoint_service import (
     build_gitea_state_control_plane_checkpoint_service,
-)
-from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
-from orket.application.services.control_plane_workload_catalog import (
-    _resolve_cards_control_plane_workload_from_contract,
-    build_cards_workload_contract,
 )
 from orket.application.services.gitea_state_control_plane_execution_service import (
     build_gitea_state_control_plane_execution_service,
@@ -40,19 +35,29 @@ from orket.application.services.gitea_state_control_plane_lease_service import (
 from orket.application.services.gitea_state_control_plane_reservation_service import (
     build_gitea_state_control_plane_reservation_service,
 )
+from orket.application.services.gitea_state_pilot import (
+    collect_gitea_state_pilot_inputs,
+    evaluate_gitea_state_pilot_readiness,
+)
 from orket.application.services.gitea_state_worker import GiteaStateWorker
 from orket.application.services.gitea_state_worker_coordinator import GiteaStateWorkerCoordinator
 from orket.application.services.runtime_policy import (
     resolve_gitea_worker_max_duration_seconds,
     resolve_gitea_worker_max_idle_streak,
     resolve_gitea_worker_max_iterations,
-    resolve_gitea_state_pilot_enabled,
-    resolve_run_ledger_mode,
-    resolve_state_backend_mode,
 )
 from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.core.cards_runtime_contract import (
+    apply_epic_cards_runtime_defaults,
+    normalize_scenario_truth_alignment,
+    summarize_cards_runtime_issues,
+)
+from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.exceptions import CardNotFound, ComplexityViolation, ExecutionFailed
 from orket.logging import log_event
+from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.runtime.config_loader import ConfigLoader
+from orket.runtime.deterministic_mode_contract import deterministic_mode_contract_snapshot
 from orket.runtime.phase_c_runtime_truth import (
     collect_phase_c_packet2_facts,
     collect_source_attribution_facts,
@@ -62,6 +67,10 @@ from orket.runtime.phase_c_runtime_truth import (
 from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
 from orket.runtime.route_decision_artifact import build_route_decision_artifact
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
+from orket.runtime.run_start_artifacts import (
+    capture_run_start_artifacts,
+    validate_run_identity_projection,
+)
 from orket.runtime.run_summary import (
     PACKET1_MISSING_TOKEN,
     build_degraded_run_summary_payload,
@@ -69,20 +78,11 @@ from orket.runtime.run_summary import (
     write_run_summary_artifact,
 )
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
-from orket.runtime.run_start_artifacts import (
-    capture_run_start_artifacts,
-    validate_run_identity_projection,
-)
-from orket.runtime.deterministic_mode_contract import deterministic_mode_contract_snapshot
+from orket.runtime.runtime_context import OrketRuntimeContext
 from orket.runtime.settings import resolve_str
 from orket.runtime.state_transition_registry import validate_state_token
 from orket.runtime.workload_shell import SharedWorkloadShell
-from orket.runtime_paths import resolve_control_plane_db_path, resolve_runtime_db_path
-from orket.core.cards_runtime_contract import (
-    apply_epic_cards_runtime_defaults,
-    normalize_scenario_truth_alignment,
-    summarize_cards_runtime_issues,
-)
+from orket.runtime_paths import resolve_control_plane_db_path
 from orket.schema import (
     CardStatus,
     EnvironmentConfig,
@@ -91,8 +91,8 @@ from orket.schema import (
     RockConfig,
     TeamConfig,
 )
+from orket.settings import load_user_settings, load_user_settings_async
 from orket.utils import get_eos_sprint, sanitize_name
-from orket.settings import load_user_settings
 
 _RUN_SUMMARY_RUN_IDENTITY_ERROR_PREFIX = "run_summary_run_identity_"
 _TRANSIENT_RUN_IDENTITY_ARTIFACT_KEYS = ("run_identity", "run_identity_path")
@@ -102,7 +102,7 @@ def _is_run_summary_run_identity_error(exc: Exception) -> bool:
     return str(exc).strip().startswith(_RUN_SUMMARY_RUN_IDENTITY_ERROR_PREFIX)
 
 
-def _strip_transient_run_identity_artifacts(artifacts: Dict[str, Any]) -> None:
+def _strip_transient_run_identity_artifacts(artifacts: dict[str, Any]) -> None:
     for key in _TRANSIENT_RUN_IDENTITY_ARTIFACT_KEYS:
         artifacts.pop(key, None)
 
@@ -117,46 +117,55 @@ class ExecutionPipeline:
         self,
         workspace: Path,
         department: str = "core",
-        db_path: Optional[str] = None,
-        config_root: Optional[Path] = None,
-        cards_repo: Optional[AsyncCardRepository] = None,
-        sessions_repo: Optional[AsyncSessionRepository] = None,
-        snapshots_repo: Optional[AsyncSnapshotRepository] = None,
-        success_repo: Optional[AsyncSuccessRepository] = None,
-        run_ledger_repo: Optional[Any] = None,
-        decision_nodes: Optional[DecisionNodeRegistry] = None,
+        db_path: str | None = None,
+        config_root: Path | None = None,
+        cards_repo: AsyncCardRepository | None = None,
+        sessions_repo: AsyncSessionRepository | None = None,
+        snapshots_repo: AsyncSnapshotRepository | None = None,
+        success_repo: AsyncSuccessRepository | None = None,
+        run_ledger_repo: Any | None = None,
+        decision_nodes: DecisionNodeRegistry | None = None,
+        runtime_context: OrketRuntimeContext | None = None,
     ):
         from orket.orchestration.notes import NoteStore
 
-        self.workspace = workspace
-        self.department = department
-        self.decision_nodes = decision_nodes or DecisionNodeRegistry()
-        self.config_root = config_root or Path(".").resolve()
-        self.loader = ConfigLoader(self.config_root, department, decision_nodes=self.decision_nodes)
-        self.db_path = resolve_runtime_db_path(db_path)
-
-        self.org = self.loader.load_organization()
-        self.state_backend_mode = self._resolve_state_backend_mode()
-        self.run_ledger_mode = self._resolve_run_ledger_mode()
-        self.gitea_state_pilot_enabled = self._resolve_gitea_state_pilot_enabled()
-        self._validate_state_backend_mode()
+        runtime_nodes = decision_nodes or DecisionNodeRegistry()
+        self.runtime_context = runtime_context or OrketRuntimeContext.from_env(
+            workspace_root=workspace,
+            department=department,
+            db_path=db_path,
+            config_root=config_root,
+            cards_repo=cards_repo,
+            sessions_repo=sessions_repo,
+            snapshots_repo=snapshots_repo,
+            success_repo=success_repo,
+            run_ledger_repo=run_ledger_repo,
+            decision_nodes=runtime_nodes,
+            config_loader_factory=ConfigLoader,
+            config_loader_kwargs={"decision_nodes": runtime_nodes},
+            run_ledger_factory=build_run_ledger_repository,
+            telemetry_sink=self._emit_run_ledger_telemetry,
+        )
+        self.workspace = self.runtime_context.workspace_root
+        self.department = self.runtime_context.department
+        self.decision_nodes = self.runtime_context.decision_nodes
+        self.config_root = self.runtime_context.config_root
+        self.loader = self.runtime_context.loader
+        self.db_path = self.runtime_context.db_path
+        self.org = self.runtime_context.org
+        self.orchestration_config = self.runtime_context.orchestration_config
+        self.user_settings = dict(self.runtime_context.user_settings)
+        self.state_backend_mode = self.runtime_context.state_backend_mode
+        self.run_ledger_mode = self.runtime_context.run_ledger_mode
+        self.gitea_state_pilot_enabled = self.runtime_context.gitea_state_pilot_enabled
         self.execution_runtime_node = self.decision_nodes.resolve_execution_runtime(self.org)
         self.pipeline_wiring_node = self.decision_nodes.resolve_pipeline_wiring(self.org)
 
-        self.async_cards = cards_repo or AsyncCardRepository(self.db_path)
-        self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
-        self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
-        self.success = success_repo or AsyncSuccessRepository(self.db_path)
-        if run_ledger_repo is not None:
-            self.run_ledger = run_ledger_repo
-        else:
-            self.run_ledger = build_run_ledger_repository(
-                mode=self.run_ledger_mode,
-                db_path=self.db_path,
-                workspace_root=self.workspace,
-                telemetry_sink=self._emit_run_ledger_telemetry,
-                primary_mode="sqlite",
-            )
+        self.async_cards = self.runtime_context.cards_repo
+        self.sessions = self.runtime_context.sessions_repo
+        self.snapshots = self.runtime_context.snapshots_repo
+        self.success = self.runtime_context.success_repo
+        self.run_ledger = self.runtime_context.run_ledger
         self.artifact_exporter = GiteaArtifactExporter(self.workspace)
 
         self.notes = NoteStore()
@@ -180,7 +189,7 @@ class ExecutionPipeline:
             loader=self.loader,
             sandbox_orchestrator=self.sandbox_orchestrator,
         )
-        setattr(self.orchestrator, "run_ledger", self.run_ledger)
+        self.orchestrator.run_ledger = self.run_ledger
         self.cards_epic_control_plane = CardsEpicControlPlaneService(
             execution_repository=self.orchestrator.control_plane_execution_repository,
             publication=self.orchestrator.control_plane_publication,
@@ -191,59 +200,33 @@ class ExecutionPipeline:
         process_rules = getattr(self.org, "process_rules", None) if self.org else None
         if process_rules is None:
             return ""
-        if isinstance(process_rules, dict):
-            value = process_rules.get(key, "")
-        elif hasattr(process_rules, "get"):
+        if isinstance(process_rules, dict) or hasattr(process_rules, "get"):
             value = process_rules.get(key, "")
         else:
             value = getattr(process_rules, key, "")
         return str(value or "").strip()
 
     def _resolve_state_backend_mode(self) -> str:
-        user_settings = load_user_settings()
-        raw = resolve_str(
-            "ORKET_STATE_BACKEND_MODE",
-            process_rules=getattr(self.org, "process_rules", None),
-            process_key="state_backend_mode",
-            user_key="state_backend_mode",
-            user_settings=user_settings if isinstance(user_settings, dict) else None,
-        )
-        return resolve_state_backend_mode(raw, "", "")
+        user_settings = getattr(self, "user_settings", None)
+        if not isinstance(user_settings, dict):
+            loaded = load_user_settings()
+            user_settings = loaded if isinstance(loaded, dict) else {}
+        return OrchestrationConfig(self.org).resolve_state_backend_mode(user_settings=user_settings)
 
     def _resolve_run_ledger_mode(self) -> str:
-        user_settings = load_user_settings()
-        raw = resolve_str(
-            "ORKET_RUN_LEDGER_MODE",
-            process_rules=getattr(self.org, "process_rules", None),
-            process_key="run_ledger_mode",
-            user_key="run_ledger_mode",
-            user_settings=user_settings if isinstance(user_settings, dict) else None,
-        )
-        return resolve_run_ledger_mode(raw, "", "")
+        user_settings = getattr(self, "user_settings", None)
+        if not isinstance(user_settings, dict):
+            loaded = load_user_settings()
+            user_settings = loaded if isinstance(loaded, dict) else {}
+        return OrchestrationConfig(self.org).resolve_run_ledger_mode(user_settings=user_settings)
 
     def _validate_state_backend_mode(self) -> None:
-        if self.state_backend_mode != "gitea":
-            return
-        # When backend mode is explicitly forced through env, require explicit env pilot
-        # enablement as well to avoid hidden host/user setting leakage.
-        env_mode = resolve_str("ORKET_STATE_BACKEND_MODE").lower()
-        env_pilot_raw = resolve_str("ORKET_ENABLE_GITEA_STATE_PILOT")
-        if env_mode == "gitea" and not env_pilot_raw:
-            raise ValueError(
-                "State backend mode 'gitea' requires pilot enablement "
-                "(set ORKET_ENABLE_GITEA_STATE_PILOT=true or runtime policy gitea_state_pilot_enabled=true)."
-            )
-        if not self.gitea_state_pilot_enabled:
-            raise ValueError(
-                "State backend mode 'gitea' requires pilot enablement "
-                "(set ORKET_ENABLE_GITEA_STATE_PILOT=true or runtime policy gitea_state_pilot_enabled=true)."
-            )
-        readiness = evaluate_gitea_state_pilot_readiness(collect_gitea_state_pilot_inputs())
-        if not bool(readiness.get("ready")):
-            failures = ", ".join(list(readiness.get("failures") or [])) or "unknown readiness failure"
-            raise ValueError(f"State backend mode 'gitea' pilot readiness failed: {failures}")
+        self.orchestration_config.validate_state_backend_mode(
+            self.state_backend_mode,
+            self.gitea_state_pilot_enabled,
+        )
 
-    async def _emit_run_ledger_telemetry(self, payload: Dict[str, Any]) -> None:
+    async def _emit_run_ledger_telemetry(self, payload: dict[str, Any]) -> None:
         log_event(
             "run_ledger_telemetry",
             {
@@ -254,15 +237,11 @@ class ExecutionPipeline:
         )
 
     def _resolve_gitea_state_pilot_enabled(self) -> bool:
-        user_settings = load_user_settings()
-        raw = resolve_str(
-            "ORKET_ENABLE_GITEA_STATE_PILOT",
-            process_rules=getattr(self.org, "process_rules", None),
-            process_key="gitea_state_pilot_enabled",
-            user_key="gitea_state_pilot_enabled",
-            user_settings=user_settings if isinstance(user_settings, dict) else None,
-        )
-        return bool(resolve_gitea_state_pilot_enabled(raw, "", ""))
+        user_settings = getattr(self, "user_settings", None)
+        if not isinstance(user_settings, dict):
+            loaded = load_user_settings()
+            user_settings = loaded if isinstance(loaded, dict) else {}
+        return OrchestrationConfig(self.org).resolve_gitea_state_pilot_enabled(user_settings=user_settings)
 
     async def run_card(self, card_id: str, **kwargs) -> Any:
         """Canonical public runtime dispatcher over normalized card facts."""
@@ -365,7 +344,7 @@ class ExecutionPipeline:
         max_duration_seconds: float | None = None,
         idle_sleep_seconds: float = 0.0,
         summary_out: str | Path | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         if self.state_backend_mode != "gitea":
             raise ValueError("run_gitea_state_loop requires state_backend_mode='gitea'")
         readiness = evaluate_gitea_state_pilot_readiness(collect_gitea_state_pilot_inputs())
@@ -375,7 +354,7 @@ class ExecutionPipeline:
 
         process_rules = getattr(self.org, "process_rules", None) if self.org else None
         process_rules_get = process_rules.get if hasattr(process_rules, "get") else lambda key, default=None: getattr(process_rules, key, default) if process_rules is not None else default
-        user_settings = load_user_settings()
+        user_settings = await load_user_settings_async()
         effective_max_iterations = resolve_gitea_worker_max_iterations(
             max_iterations,
             resolve_str("ORKET_GITEA_WORKER_MAX_ITERATIONS"),
@@ -429,7 +408,7 @@ class ExecutionPipeline:
             idle_sleep_seconds=idle_sleep_seconds,
         )
 
-        async def _work_fn(card: Dict[str, Any]) -> Dict[str, Any]:
+        async def _work_fn(card: dict[str, Any]) -> dict[str, Any]:
             target = str(card.get("card_id") or "").strip()
             if not target:
                 raise ValueError("missing card_id in gitea snapshot payload")
@@ -484,7 +463,7 @@ class ExecutionPipeline:
         driver_steered: bool = False,
         target_issue_id: str = None,
         **kwargs,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
             epic_name,
@@ -503,7 +482,7 @@ class ExecutionPipeline:
         driver_steered: bool = False,
         target_issue_id: str = None,
         **kwargs,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         epic = await self.loader.load_asset_async("epics", epic_name, EpicConfig)
         team = await self.loader.load_asset_async("teams", epic.team, TeamConfig)
         env = await self.loader.load_asset_async("environments", epic.environment, EnvironmentConfig)
@@ -547,7 +526,7 @@ class ExecutionPipeline:
             workspace=self.workspace,
             department=self.department,
         )
-        control_plane_workload_record = _resolve_cards_control_plane_workload_from_contract(
+        control_plane_workload_record = resolve_cards_control_plane_workload_from_contract(
             contract_payload=cards_workload_contract,
             department=self.department,
         )
@@ -568,8 +547,14 @@ class ExecutionPipeline:
             issue.status in {CardStatus.IN_PROGRESS, CardStatus.CODE_REVIEW, CardStatus.AWAITING_GUARD_REVIEW}
             for issue in existing
         )
+        preserve_issue_ids = {str(target_issue_id).strip()} if target_issue_id else set()
         if resume_mode:
-            await self._resume_stalled_issues(existing, run_id, active_build)
+            await self._resume_stalled_issues(
+                existing,
+                run_id,
+                active_build,
+                preserve_issue_ids=preserve_issue_ids,
+            )
 
         if existing:
             if target_issue_id:
@@ -697,8 +682,8 @@ class ExecutionPipeline:
         }
         success_statuses = {CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED}
 
-        legacy_transcript: List[Dict[str, Any]] = []
-        backlog: List[Any] = []
+        legacy_transcript: list[dict[str, Any]] = []
+        backlog: list[Any] = []
         session_status = "failed"
 
         try:
@@ -941,7 +926,7 @@ class ExecutionPipeline:
 
         return legacy_transcript
 
-    def _run_artifact_refs(self, run_id: str) -> Dict[str, str]:
+    def _run_artifact_refs(self, run_id: str) -> dict[str, str]:
         return {
             "workspace": str(self.workspace),
             "orket_log": str(self.workspace / "orket.log"),
@@ -953,8 +938,8 @@ class ExecutionPipeline:
         self,
         *,
         intended_model: str | None,
-        runtime_telemetry: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        runtime_telemetry: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         provider = (
             str(os.environ.get("ORKET_LLM_PROVIDER") or os.environ.get("ORKET_MODEL_PROVIDER") or "ollama")
             .strip()
@@ -1015,9 +1000,9 @@ class ExecutionPipeline:
 
     def _merge_packet1_facts(
         self,
-        existing_packet1_facts: Dict[str, Any],
-        updated_packet1_facts: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        existing_packet1_facts: dict[str, Any],
+        updated_packet1_facts: dict[str, Any],
+    ) -> dict[str, Any]:
         merged = dict(existing_packet1_facts)
         for key, value in updated_packet1_facts.items():
             if key in {
@@ -1027,19 +1012,18 @@ class ExecutionPipeline:
                 "actual_provider",
                 "actual_model",
                 "actual_profile",
-            }:
-                if str(value).strip() == PACKET1_MISSING_TOKEN and self._normalize_packet1_token(
-                    existing_packet1_facts.get(key)
-                ):
-                    continue
+            } and str(value).strip() == PACKET1_MISSING_TOKEN and self._normalize_packet1_token(
+                existing_packet1_facts.get(key)
+            ):
+                continue
             merged[key] = value
         return merged
 
     def _select_primary_work_artifact_output(
         self,
         *,
-        artifact_provenance_facts: Dict[str, Any] | None = None,
-    ) -> Dict[str, str]:
+        artifact_provenance_facts: dict[str, Any] | None = None,
+    ) -> dict[str, str]:
         facts = normalize_artifact_provenance_facts(artifact_provenance_facts)
         entries = list(facts.get("artifacts") or [])
         entries = [
@@ -1058,7 +1042,7 @@ class ExecutionPipeline:
         artifact_path = str(selected.get("artifact_path") or "").strip()
         if not artifact_path:
             return {}
-        output: Dict[str, str] = {"id": artifact_path, "kind": "artifact"}
+        output: dict[str, str] = {"id": artifact_path, "kind": "artifact"}
         for field in (
             "control_plane_run_id",
             "control_plane_attempt_id",
@@ -1077,10 +1061,10 @@ class ExecutionPipeline:
         run_name: str,
         build_id: str,
         session_status: str,
-        summary: Dict[str, Any],
-        failure_class: Optional[str] = None,
-        failure_reason: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        summary: dict[str, Any],
+        failure_class: str | None = None,
+        failure_reason: str | None = None,
+    ) -> dict[str, Any] | None:
         try:
             exported = await self.artifact_exporter.export_run(
                 run_id=run_id,
@@ -1124,10 +1108,10 @@ class ExecutionPipeline:
         run_id: str,
         session_status: str,
         failure_reason: str | None,
-        artifacts: Dict[str, Any],
+        artifacts: dict[str, Any],
         finalized_at: str,
-        phase_c_truth_policy: Dict[str, Any] | None = None,
-    ) -> tuple[Dict[str, Any], Dict[str, Any]]:
+        phase_c_truth_policy: dict[str, Any] | None = None,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
         resolved_artifacts = dict(artifacts)
         repair_entries = await self._resolve_packet2_repair_entries(run_id=run_id)
         artifact_provenance_artifacts = await self._resolve_artifact_provenance_artifacts(run_id=run_id)
@@ -1243,9 +1227,9 @@ class ExecutionPipeline:
         self,
         *,
         run_id: str,
-        repair_entries: List[Dict[str, Any]] | None = None,
-        artifact_provenance_facts: Dict[str, Any] | None = None,
-    ) -> Dict[str, Any]:
+        repair_entries: list[dict[str, Any]] | None = None,
+        artifact_provenance_facts: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         runtime_verification_path = self.workspace / "agent_output" / "verification" / "runtime_verification.json"
         runtime_telemetry = await self._resolve_packet1_runtime_telemetry(run_id=run_id)
         repair_facts = self._build_packet1_repair_facts(repair_entries or [])
@@ -1274,10 +1258,10 @@ class ExecutionPipeline:
         self,
         *,
         run_id: str,
-        repair_entries: List[Dict[str, Any]] | None = None,
-        artifact_provenance_facts: Dict[str, Any] | None = None,
-        phase_c_truth_policy: Dict[str, Any] | None = None,
-    ) -> Dict[str, Any]:
+        repair_entries: list[dict[str, Any]] | None = None,
+        artifact_provenance_facts: dict[str, Any] | None = None,
+        phase_c_truth_policy: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         packet2_facts = await collect_phase_c_packet2_facts(
             workspace=self.workspace,
             run_id=run_id,
@@ -1291,7 +1275,7 @@ class ExecutionPipeline:
         await self._record_packet2_facts(run_id=run_id, packet2_facts=packet2_facts)
         return {"packet2_facts": packet2_facts}
 
-    async def _resolve_artifact_provenance_artifacts(self, *, run_id: str) -> Dict[str, Any]:
+    async def _resolve_artifact_provenance_artifacts(self, *, run_id: str) -> dict[str, Any]:
         entries = await self._resolve_artifact_provenance_entries(run_id=run_id)
         artifact_provenance_facts = self._build_artifact_provenance_facts(entries=entries)
         if not artifact_provenance_facts:
@@ -1302,12 +1286,12 @@ class ExecutionPipeline:
         )
         return {"artifact_provenance_facts": artifact_provenance_facts}
 
-    async def _resolve_packet1_runtime_telemetry(self, *, run_id: str) -> Dict[str, Any]:
+    async def _resolve_packet1_runtime_telemetry(self, *, run_id: str) -> dict[str, Any]:
         candidate_paths = await asyncio.to_thread(self._packet1_model_response_paths, run_id)
-        selected: Dict[str, Any] = {}
+        selected: dict[str, Any] = {}
         for path in candidate_paths:
             try:
-                async with aiofiles.open(path, mode="r", encoding="utf-8") as handle:
+                async with aiofiles.open(path, encoding="utf-8") as handle:
                     payload = json.loads(await handle.read())
             except (OSError, ValueError, TypeError):
                 continue
@@ -1316,13 +1300,13 @@ class ExecutionPipeline:
             selected = payload
         return selected
 
-    async def _resolve_packet2_repair_entries(self, *, run_id: str) -> List[Dict[str, Any]]:
+    async def _resolve_packet2_repair_entries(self, *, run_id: str) -> list[dict[str, Any]]:
         log_path = self.workspace / "orket.log"
         if not log_path.exists():
             return []
-        repairs_by_id: Dict[str, Dict[str, Any]] = {}
+        repairs_by_id: dict[str, dict[str, Any]] = {}
         try:
-            async with aiofiles.open(log_path, mode="r", encoding="utf-8") as handle:
+            async with aiofiles.open(log_path, encoding="utf-8") as handle:
                 async for line in handle:
                     if not line.strip():
                         continue
@@ -1352,7 +1336,7 @@ class ExecutionPipeline:
                     )
                     existing = repairs_by_id.get(repair_id)
                     if existing is None:
-                        entry: Dict[str, Any] = {
+                        entry: dict[str, Any] = {
                             "repair_id": repair_id,
                             "turn_index": turn_index,
                             "source_event": "turn_corrective_reprompt",
@@ -1375,13 +1359,13 @@ class ExecutionPipeline:
         run_id: str,
         session_status: str,
         failure_reason: str | None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         log_path = self.workspace / "orket.log"
         if not log_path.exists():
             return {}
-        issues: Dict[str, Dict[str, Any]] = {}
+        issues: dict[str, dict[str, Any]] = {}
         try:
-            async with aiofiles.open(log_path, mode="r", encoding="utf-8") as handle:
+            async with aiofiles.open(log_path, encoding="utf-8") as handle:
                 async for line in handle:
                     if not line.strip():
                         continue
@@ -1463,9 +1447,9 @@ class ExecutionPipeline:
             return "failed"
         return token or "unknown"
 
-    async def _resolve_artifact_provenance_entries(self, *, run_id: str) -> List[Dict[str, Any]]:
+    async def _resolve_artifact_provenance_entries(self, *, run_id: str) -> list[dict[str, Any]]:
         receipt_entries = await self._resolve_artifact_provenance_entries_from_receipts(run_id=run_id)
-        artifacts_by_path: Dict[str, Dict[str, Any]] = {
+        artifacts_by_path: dict[str, dict[str, Any]] = {
             str(entry["artifact_path"]): dict(entry) for entry in receipt_entries
         }
         log_entries = await self._resolve_artifact_provenance_entries_from_logs(
@@ -1476,16 +1460,16 @@ class ExecutionPipeline:
             artifacts_by_path[str(entry["artifact_path"])] = dict(entry)
         return [artifacts_by_path[key] for key in sorted(artifacts_by_path)]
 
-    async def _resolve_artifact_provenance_entries_from_receipts(self, *, run_id: str) -> List[Dict[str, Any]]:
+    async def _resolve_artifact_provenance_entries_from_receipts(self, *, run_id: str) -> list[dict[str, Any]]:
         receipt_paths = await asyncio.to_thread(self._artifact_provenance_receipt_paths, run_id)
-        artifacts_by_path: Dict[str, Dict[str, Any]] = {}
+        artifacts_by_path: dict[str, dict[str, Any]] = {}
         for receipt_path in receipt_paths:
             issue_id, role_name, turn_index = self._artifact_provenance_receipt_context(
                 receipt_path=receipt_path,
                 run_id=run_id,
             )
             try:
-                async with aiofiles.open(receipt_path, mode="r", encoding="utf-8") as handle:
+                async with aiofiles.open(receipt_path, encoding="utf-8") as handle:
                     async for line in handle:
                         if not line.strip():
                             continue
@@ -1512,14 +1496,14 @@ class ExecutionPipeline:
         *,
         run_id: str,
         existing_paths: set[str],
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         log_path = self.workspace / "orket.log"
         if not log_path.exists():
             return []
-        starts_by_operation: Dict[str, Dict[str, Any]] = {}
-        artifacts_by_path: Dict[str, Dict[str, Any]] = {}
+        starts_by_operation: dict[str, dict[str, Any]] = {}
+        artifacts_by_path: dict[str, dict[str, Any]] = {}
         try:
-            async with aiofiles.open(log_path, mode="r", encoding="utf-8") as handle:
+            async with aiofiles.open(log_path, encoding="utf-8") as handle:
                 async for line in handle:
                     if not line.strip():
                         continue
@@ -1571,11 +1555,11 @@ class ExecutionPipeline:
     async def _artifact_provenance_entry_from_receipt(
         self,
         *,
-        receipt: Dict[str, Any],
+        receipt: dict[str, Any],
         issue_id: str,
         role_name: str,
         turn_index: int,
-    ) -> Dict[str, Any] | None:
+    ) -> dict[str, Any] | None:
         if str(receipt.get("tool") or "").strip() != "write_file":
             return None
         execution_result = receipt.get("execution_result")
@@ -1600,7 +1584,7 @@ class ExecutionPipeline:
             if isinstance(receipt.get("tool_invocation_manifest"), dict)
             else {}
         )
-        entry: Dict[str, Any] = {
+        entry: dict[str, Any] = {
             "artifact_path": artifact_path,
             "artifact_type": self._artifact_type_for_path(artifact_path),
             "generator": "tool.write_file",
@@ -1631,8 +1615,8 @@ class ExecutionPipeline:
         *,
         run_id: str,
         operation_id: str,
-        start: Dict[str, Any],
-    ) -> Dict[str, Any] | None:
+        start: dict[str, Any],
+    ) -> dict[str, Any] | None:
         artifact_location = await asyncio.to_thread(
             self._resolve_workspace_artifact_location,
             {},
@@ -1671,7 +1655,7 @@ class ExecutionPipeline:
             "turn_index": turn_index,
         }
 
-    def _build_packet1_repair_facts(self, repair_entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _build_packet1_repair_facts(self, repair_entries: list[dict[str, Any]]) -> dict[str, Any]:
         if not repair_entries:
             return {}
         repair_reasons = sorted(
@@ -1696,7 +1680,7 @@ class ExecutionPipeline:
             "repair_reasons": repair_reasons,
         }
 
-    def _build_packet2_facts(self, *, repair_entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _build_packet2_facts(self, *, repair_entries: list[dict[str, Any]]) -> dict[str, Any]:
         if not repair_entries:
             return {}
         return {
@@ -1704,20 +1688,20 @@ class ExecutionPipeline:
             "final_disposition": "accepted_with_repair",
         }
 
-    def _build_artifact_provenance_facts(self, *, entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _build_artifact_provenance_facts(self, *, entries: list[dict[str, Any]]) -> dict[str, Any]:
         if not entries:
             return {}
         return {
             "artifacts": [dict(entry) for entry in entries],
         }
 
-    def _packet1_model_response_paths(self, run_id: str) -> List[Path]:
+    def _packet1_model_response_paths(self, run_id: str) -> list[Path]:
         observability_root = self.workspace / "observability" / sanitize_name(run_id)
         if not observability_root.exists():
             return []
         return sorted(observability_root.rglob("model_response_raw.json"))
 
-    def _artifact_provenance_receipt_paths(self, run_id: str) -> List[Path]:
+    def _artifact_provenance_receipt_paths(self, run_id: str) -> list[Path]:
         observability_root = self.workspace / "observability" / sanitize_name(run_id)
         if not observability_root.exists():
             return []
@@ -1746,8 +1730,8 @@ class ExecutionPipeline:
 
     def _resolve_workspace_artifact_location(
         self,
-        execution_result: Dict[str, Any],
-        receipt: Dict[str, Any],
+        execution_result: dict[str, Any],
+        receipt: dict[str, Any],
     ) -> tuple[str, Path] | None:
         raw_path = str(execution_result.get("path") or "").strip()
         if not raw_path:
@@ -1799,7 +1783,7 @@ class ExecutionPipeline:
         issue_id: str,
         role_name: str,
         turn_index: int,
-        tool_args: Dict[str, Any],
+        tool_args: dict[str, Any],
     ) -> str:
         return hash_canonical_json(
             {
@@ -1833,21 +1817,19 @@ class ExecutionPipeline:
             },
         }
         if hasattr(self.run_ledger, "append_event"):
-            try:
+            with contextlib.suppress(RuntimeError, ValueError, TypeError, OSError, AttributeError):
                 await self.run_ledger.append_event(
                     session_id=str(run_id),
                     kind="packet1_emission_failure",
                     payload={"packet1_facts": payload["packet1_conformance"], **payload},
                 )
-            except (RuntimeError, ValueError, TypeError, OSError, AttributeError):
-                pass
         log_event("packet1_emission_failure", payload, workspace=self.workspace)
 
     async def _record_packet2_facts(
         self,
         *,
         run_id: str,
-        packet2_facts: Dict[str, Any],
+        packet2_facts: dict[str, Any],
     ) -> None:
         if not hasattr(self.run_ledger, "append_event"):
             return
@@ -1864,7 +1846,7 @@ class ExecutionPipeline:
         self,
         *,
         run_id: str,
-        artifact_provenance_facts: Dict[str, Any],
+        artifact_provenance_facts: dict[str, Any],
     ) -> None:
         if not hasattr(self.run_ledger, "append_event"):
             return
@@ -1877,7 +1859,7 @@ class ExecutionPipeline:
         except (RuntimeError, ValueError, TypeError, OSError, AttributeError):
             return
 
-    async def _materialize_protocol_receipts(self, *, run_id: str) -> Dict[str, Any] | None:
+    async def _materialize_protocol_receipts(self, *, run_id: str) -> dict[str, Any] | None:
         if not hasattr(self.run_ledger, "append_receipt"):
             return None
         if not hasattr(self.run_ledger, "append_event"):
@@ -1919,7 +1901,7 @@ class ExecutionPipeline:
         session_id: str = None,
         driver_steered: bool = False,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         collection = await self.loader.load_asset_async("rocks", collection_name, RockConfig)
         sid = self.execution_runtime_node.select_epic_collection_session_id(session_id)
         active_build = self.execution_runtime_node.select_epic_collection_build_id(
@@ -1964,7 +1946,7 @@ class ExecutionPipeline:
     async def _resume_target_issue_if_existing(
         self,
         *,
-        issues: List[Any],
+        issues: list[Any],
         target_issue_id: str,
         run_id: str,
         active_build: str,
@@ -1979,6 +1961,27 @@ class ExecutionPipeline:
         current_status_token = str(
             current_status.value if hasattr(current_status, "value") else current_status
         ).strip() or "unknown"
+        try:
+            normalized_status = CardStatus(current_status_token.lower())
+        except ValueError:
+            normalized_status = None
+        if normalized_status in {
+            CardStatus.READY,
+            CardStatus.IN_PROGRESS,
+            CardStatus.CODE_REVIEW,
+            CardStatus.AWAITING_GUARD_REVIEW,
+        }:
+            log_event(
+                "resume_target_issue_preserved",
+                {
+                    "run_id": run_id,
+                    "build_id": active_build,
+                    "issue_id": str(getattr(target_issue, "id", "")).strip(),
+                    "current_status": current_status_token,
+                },
+                workspace=self.workspace,
+            )
+            return
         metadata = {
             "run_id": run_id,
             "build_id": active_build,
@@ -1991,7 +1994,7 @@ class ExecutionPipeline:
             reason="resume_target_issue",
             metadata=metadata,
         )
-        setattr(target_issue, "status", CardStatus.READY)
+        target_issue.status = CardStatus.READY
         await self._publish_resume_transition_control_plane(
             issue=target_issue,
             current_status=current_status,
@@ -2012,9 +2015,20 @@ class ExecutionPipeline:
             workspace=self.workspace,
         )
 
-    async def _resume_stalled_issues(self, issues: List[Any], run_id: str, active_build: str) -> None:
+    async def _resume_stalled_issues(
+        self,
+        issues: list[Any],
+        run_id: str,
+        active_build: str,
+        *,
+        preserve_issue_ids: set[str] | None = None,
+    ) -> None:
         stalled_states = {CardStatus.IN_PROGRESS, CardStatus.CODE_REVIEW, CardStatus.AWAITING_GUARD_REVIEW}
+        preserved_ids = {str(issue_id).strip() for issue_id in (preserve_issue_ids or set()) if str(issue_id).strip()}
         for issue in issues:
+            issue_id = str(getattr(issue, "id", "")).strip()
+            if issue_id in preserved_ids:
+                continue
             if issue.status in stalled_states:
                 current_status = issue.status
                 current_status_token = str(
@@ -2026,7 +2040,7 @@ class ExecutionPipeline:
                     "previous_status": current_status_token,
                 }
                 await self.async_cards.update_status(
-                    issue.id,
+                    issue_id,
                     CardStatus.READY,
                     reason="resume_requeue",
                     metadata=metadata,
@@ -2045,7 +2059,7 @@ class ExecutionPipeline:
                     {
                         "run_id": run_id,
                         "build_id": active_build,
-                        "issue_id": issue.id,
+                        "issue_id": issue_id,
                         "previous_status": current_status_token,
                         "new_status": CardStatus.READY.value,
                     },
@@ -2060,7 +2074,7 @@ class ExecutionPipeline:
         target_status: CardStatus,
         run_id: str,
         reason: str,
-        metadata: Dict[str, Any],
+        metadata: dict[str, Any],
     ) -> None:
         issue_id = str(getattr(issue, "id", "")).strip()
         if not issue_id or not str(run_id or "").strip():

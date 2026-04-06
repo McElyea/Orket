@@ -1,13 +1,13 @@
 import pytest
 
-from orket.adapters.storage.async_dual_write_run_ledger import AsyncProtocolPrimaryRunLedgerRepository
+from orket.adapters.storage.async_dual_write_run_ledger import AsyncDualModeLedgerRepository
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.application.services.runtime_policy import (
+    resolve_gitea_state_pilot_enabled,
     resolve_gitea_worker_max_duration_seconds,
     resolve_gitea_worker_max_idle_streak,
     resolve_gitea_worker_max_iterations,
-    resolve_gitea_state_pilot_enabled,
     resolve_run_ledger_mode,
     resolve_state_backend_mode,
     runtime_policy_options,
@@ -114,4 +114,4 @@ def test_engine_uses_dual_write_run_ledger_mode(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "dual_write")
     engine = OrchestrationEngine(tmp_path, config_root=tmp_path)
     assert engine.run_ledger_mode == "dual_write"
-    assert isinstance(engine.run_ledger, AsyncProtocolPrimaryRunLedgerRepository)
+    assert isinstance(engine.run_ledger, AsyncDualModeLedgerRepository)

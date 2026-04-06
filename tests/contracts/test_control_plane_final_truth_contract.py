@@ -23,7 +23,6 @@ from orket.core.domain import (
     validate_final_truth_publication,
 )
 
-
 pytestmark = pytest.mark.contract
 
 

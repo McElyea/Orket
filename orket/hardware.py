@@ -1,13 +1,13 @@
 # orket/hardware.py
-import psutil
-import subprocess
-import time
 import os
+import subprocess
 import threading
+import time
 from dataclasses import dataclass
-from datetime import datetime, UTC
-from typing import Dict, Any
+from datetime import UTC, datetime
+from typing import Any
 
+import psutil
 
 _VRAM_CACHE = {
     "ts": 0.0,
@@ -51,7 +51,7 @@ def get_current_profile() -> HardwareProfile:
     return HardwareProfile(cpu_cores=cpu, ram_gb=ram, vram_gb=vram, has_nvidia=(vram > 0))
 
 
-def get_metrics_snapshot() -> Dict[str, Any]:
+def get_metrics_snapshot() -> dict[str, Any]:
     """Returns real-time usage stats for graphs."""
     vm = psutil.virtual_memory()
     cache_ttl_sec = 5.0
@@ -70,7 +70,7 @@ def get_metrics_snapshot() -> Dict[str, Any]:
     }
 
 
-def _cached_vram_metrics(cache_ttl_sec: float) -> Dict[str, float]:
+def _cached_vram_metrics(cache_ttl_sec: float) -> dict[str, float]:
     with _VRAM_CACHE_LOCK:
         now = time.monotonic()
         age = now - _VRAM_CACHE["ts"]

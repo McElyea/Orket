@@ -3,7 +3,7 @@ from __future__ import annotations
 import enum
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Literal
+from typing import Any, Literal
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion, Version
@@ -53,12 +53,12 @@ class ModelPolicy(BaseModel):
 
     preferred: str = Field(min_length=1)
     minimum: str = Field(min_length=1)
-    fallback: List[str] = Field(default_factory=list)
+    fallback: list[str] = Field(default_factory=list)
     allowOverride: bool = True
 
     @field_validator("fallback")
     @classmethod
-    def _validate_fallback_entries(cls, value: List[str]) -> List[str]:
+    def _validate_fallback_entries(cls, value: list[str]) -> list[str]:
         normalized = [str(item).strip() for item in value if str(item).strip()]
         if len(set(normalized)) != len(normalized):
             raise ValueError("model.fallback contains duplicates")
@@ -89,8 +89,8 @@ class PersistenceSettings(BaseModel):
 class FilesystemPermissions(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    read: List[str] = Field(default_factory=list)
-    write: List[str] = Field(default_factory=list)
+    read: list[str] = Field(default_factory=list)
+    write: list[str] = Field(default_factory=list)
 
 
 class NetworkPermissions(BaseModel):
@@ -102,7 +102,7 @@ class NetworkPermissions(BaseModel):
 class ToolPermissions(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    allowed: List[str] = Field(default_factory=list)
+    allowed: list[str] = Field(default_factory=list)
 
 
 class PermissionPolicy(BaseModel):
@@ -120,15 +120,15 @@ class OrketManifest(BaseModel):
     kind: Literal["Orket"]
     metadata: OrketMetadata
     model: ModelPolicy
-    agents: List[AgentSpec] = Field(min_length=1)
-    guards: List[GuardName] = Field(min_length=1)
+    agents: list[AgentSpec] = Field(min_length=1)
+    guards: list[GuardName] = Field(min_length=1)
     stateMachine: StateMachineRef
     persistence: PersistenceSettings
     permissions: PermissionPolicy
 
     @field_validator("guards")
     @classmethod
-    def _guards_must_be_unique(cls, value: List[GuardName]) -> List[GuardName]:
+    def _guards_must_be_unique(cls, value: list[GuardName]) -> list[GuardName]:
         raw = [item.value for item in value]
         if len(set(raw)) != len(raw):
             raise ValueError("guards contains duplicates")
@@ -142,7 +142,7 @@ def load_orket_manifest(path: str | Path) -> OrketManifest:
     return OrketManifest.model_validate(raw)
 
 
-def manifest_json_schema() -> Dict[str, Any]:
+def manifest_json_schema() -> dict[str, Any]:
     return OrketManifest.model_json_schema()
 
 
@@ -155,9 +155,9 @@ def is_engine_compatible(manifest: OrketManifest, engine_version: str) -> bool:
 def resolve_model_selection(
     manifest: OrketManifest,
     *,
-    available_models: List[str],
+    available_models: list[str],
     model_override: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     available = [str(item).strip() for item in available_models if str(item).strip()]
     available_set = set(available)
     override = str(model_override or "").strip()
@@ -185,7 +185,7 @@ def resolve_model_selection(
             "selection_source": "override",
         }
 
-    candidates: List[str] = []
+    candidates: list[str] = []
     for item in [manifest.model.preferred, manifest.model.minimum, *manifest.model.fallback]:
         normalized = str(item).strip()
         if not normalized or normalized in candidates:

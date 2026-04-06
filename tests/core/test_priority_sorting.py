@@ -1,6 +1,6 @@
-﻿import pytest
-from orket.schema import EpicConfig, IssueConfig, CardStatus
-from orket.domain.critical_path import CriticalPathEngine
+
+from orket.core.domain.critical_path import CriticalPathEngine
+from orket.schema import CardStatus, EpicConfig, IssueConfig
 
 
 def test_priority_field_migration_from_string():

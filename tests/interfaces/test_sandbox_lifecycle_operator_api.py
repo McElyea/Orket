@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
+
 from fastapi.testclient import TestClient
 
 import orket.interfaces.api as api_module
 from orket.interfaces.api import app
-
 
 client = TestClient(app)
 
@@ -139,4 +140,3 @@ def test_sandbox_operator_stop_returns_conflict_when_reconciliation_blocked(monk
 
     assert response.status_code == 409
     assert response.json()["detail"] == "Sandbox sb-2 is blocked by requires_reconciliation=true"
-import hashlib

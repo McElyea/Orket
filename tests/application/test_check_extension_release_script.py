@@ -6,7 +6,6 @@ import sys
 import tarfile
 from pathlib import Path
 
-
 SCRIPT = Path("docs/templates/external_extension/scripts/check_release.py").resolve()
 
 

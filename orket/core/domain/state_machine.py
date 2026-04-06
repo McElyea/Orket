@@ -1,4 +1,3 @@
-from typing import List, Dict, Set, Optional, Union
 
 from orket.schema import CardStatus, CardType, WaitReason
 
@@ -13,7 +12,7 @@ class StateMachine:
     Defines the allowed path for every work unit.
     """
 
-    _TRANSITIONS: Dict[CardType, Dict[CardStatus, Set[CardStatus]]] = {
+    _TRANSITIONS: dict[CardType, dict[CardStatus, set[CardStatus]]] = {
         CardType.ISSUE: {
             CardStatus.READY: {
                 CardStatus.IN_PROGRESS,
@@ -97,8 +96,8 @@ class StateMachine:
         card_type: CardType,
         current: CardStatus,
         requested: CardStatus,
-        roles: Union[str, List[str]] = "system",
-        wait_reason: Optional[WaitReason] = None,
+        roles: str | list[str] = "system",
+        wait_reason: WaitReason | None = None,
     ):
         role_list = [roles] if isinstance(roles, str) else roles
         allowed_next = StateMachine._TRANSITIONS.get(card_type, {}).get(current, set())

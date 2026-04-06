@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -30,7 +31,7 @@ class SandboxRuntimeCleanupService:
         authority = self.lifecycle_service.cleanup_authority.decide(
             record=record,
             observed_resources=observed_resources,
-            compose_path_available=compose_path.exists(),
+            compose_path_available=await asyncio.to_thread(compose_path.exists),
         )
         decision = self.decision_service.build_decision(
             record=record,
@@ -71,7 +72,7 @@ class SandboxRuntimeCleanupService:
         authority = self.lifecycle_service.cleanup_authority.decide(
             record=current,
             observed_resources=observed_before,
-            compose_path_available=compose_path.exists(),
+            compose_path_available=await asyncio.to_thread(compose_path.exists),
         )
         decision = self.decision_service.build_decision(
             record=current,

@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import subprocess
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -29,7 +28,7 @@ class CommandRunner:
             stderr=stderr.decode(),
         )
 
-    def run_sync(self, *cmd: str, timeout: Optional[int] = None) -> CommandResult:
+    def run_sync(self, *cmd: str, timeout: int | None = None) -> CommandResult:
         result = subprocess.run(list(cmd), capture_output=True, text=True, timeout=timeout)
         return CommandResult(
             returncode=result.returncode,

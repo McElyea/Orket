@@ -28,10 +28,7 @@ async def publish_resume_reconciliation(
         acceptance.acceptance_id,
         checkpoint.state_snapshot_ref,
     ]
-    if effect_refs:
-        divergence = DivergenceClass.UNEXPECTED_EFFECT_OBSERVED
-    else:
-        divergence = DivergenceClass.INSUFFICIENT_OBSERVATION
+    divergence = DivergenceClass.UNEXPECTED_EFFECT_OBSERVED if effect_refs else DivergenceClass.INSUFFICIENT_OBSERVATION
     record = await publication.publish_reconciliation(
         reconciliation_id=f"turn-tool-reconciliation:{run.run_id}:{run.current_attempt_id or 'no-attempt'}",
         target_ref=run.run_id,

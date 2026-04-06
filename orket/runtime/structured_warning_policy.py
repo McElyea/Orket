@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 _WARNING_ROWS: tuple[dict[str, Any], ...] = (
     {
         "warning_code": "W_RUNTIME_TRUTH_DRIFT_DETECTED",

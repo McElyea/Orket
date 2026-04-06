@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict
+from typing import Any
 
 from orket.application.terraform_review.models import TerraformPlanReviewRequest
 from orket.application.terraform_review.service import TerraformPlanReviewService
-
 
 FIXTURE_ROOT = Path(__file__).resolve().parents[1] / "fixtures" / "terraform_plan_reviewer_v1"
 

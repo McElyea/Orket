@@ -16,7 +16,6 @@ from orket.core.contracts.workload_identity import (
 from orket.core.domain import CapabilityClass
 from orket.schema import EpicConfig
 
-
 CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF = "control_plane.contract.v1:RunRecord"
 # Keep this local so application-service startup does not import the
 # extension package just to build control-plane workload projections.
@@ -199,11 +198,12 @@ def control_plane_workload_for_key(workload_key: str) -> WorkloadRecord:
     )
 
 
-def _resolve_cards_control_plane_workload_from_contract(
+def resolve_cards_control_plane_workload_from_contract(
     *,
     contract_payload: Mapping[str, Any],
     department: str,
 ) -> WorkloadRecord:
+    """Resolve the cards runtime workload record from a workload-contract payload and department scope."""
     return resolve_control_plane_workload(
         WorkloadAuthorityInput(
             kind="workload_contract_v1",
@@ -361,6 +361,7 @@ __all__ = [
     "build_cards_workload_contract",
     "control_plane_workload_for_key",
     "governed_control_plane_workloads",
+    "resolve_cards_control_plane_workload_from_contract",
     "resolve_control_plane_workload",
     "sandbox_runtime_workload_for_tech_stack",
 ]

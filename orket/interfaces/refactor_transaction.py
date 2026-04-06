@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import shlex
 import subprocess
-import hashlib
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from orket.interfaces.failure_lessons import (
     ERROR_PREFLIGHT_FAILED,
@@ -29,7 +29,7 @@ ERROR_INTERNAL = "E_INTERNAL"
 ERROR_WORKTREE_DIRTY = "E_WORKTREE_DIRTY"
 
 
-def _run(command: List[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
+def _run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)
 
 
@@ -72,7 +72,7 @@ def _is_clean_worktree(repo_root: Path) -> bool:
     return True
 
 
-def _load_verify_commands(repo_root: Path, profile_name: str) -> List[str]:
+def _load_verify_commands(repo_root: Path, profile_name: str) -> list[str]:
     config_path = repo_root / "orket.config.json"
     if not config_path.exists():
         return ["python -m pytest -q"]
@@ -95,9 +95,9 @@ def _load_verify_commands(repo_root: Path, profile_name: str) -> List[str]:
     return [item.strip() for item in commands]
 
 
-def _collect_files(scope_roots: List[Path]) -> List[Path]:
+def _collect_files(scope_roots: list[Path]) -> list[Path]:
     blocked_dir_names = {"node_modules", ".git", ".venv", "__pycache__"}
-    files: List[Path] = []
+    files: list[Path] = []
     for scope in scope_roots:
         if not scope.exists():
             continue
@@ -112,9 +112,9 @@ def _collect_files(scope_roots: List[Path]) -> List[Path]:
     return sorted(set(files))
 
 
-def _compute_touch_set(repo_root: Path, scope_roots: List[Path], rename_from: str) -> List[Path]:
+def _compute_touch_set(repo_root: Path, scope_roots: list[Path], rename_from: str) -> list[Path]:
     pattern = re.compile(rf"\b{re.escape(rename_from)}\b")
-    touches: List[Path] = []
+    touches: list[Path] = []
     for candidate in _collect_files(scope_roots):
         try:
             text = candidate.read_text(encoding="utf-8")
@@ -125,7 +125,7 @@ def _compute_touch_set(repo_root: Path, scope_roots: List[Path], rename_from: st
     return sorted(touches)
 
 
-def _in_scope(path: Path, scope_roots: List[Path]) -> bool:
+def _in_scope(path: Path, scope_roots: list[Path]) -> bool:
     for scope in scope_roots:
         try:
             path.resolve().relative_to(scope.resolve())
@@ -135,7 +135,7 @@ def _in_scope(path: Path, scope_roots: List[Path]) -> bool:
     return False
 
 
-def _validate_write(path: Path, scope_roots: List[Path]) -> str | None:
+def _validate_write(path: Path, scope_roots: list[Path]) -> str | None:
     resolved = path.resolve()
     if "node_modules" in resolved.parts:
         return ERROR_WRITE_OUT_OF_SCOPE
@@ -151,16 +151,16 @@ def _sha256_file(path: Path) -> str:
 def _build_refactor_parity_payload(
     *,
     instruction: str,
-    scope_inputs: List[str],
+    scope_inputs: list[str],
     verify_profile: str,
-    verify_commands: List[str],
+    verify_commands: list[str],
     head_sha: str,
-    touch_set: List[Path],
-    before_hashes: Dict[str, str],
-    after_hashes: Dict[str, str],
+    touch_set: list[Path],
+    before_hashes: dict[str, str],
+    after_hashes: dict[str, str],
     status: str,
-) -> Dict[str, Any]:
-    files: List[Dict[str, Any]] = []
+) -> dict[str, Any]:
+    files: list[dict[str, Any]] = []
     for path in sorted(touch_set):
         relative = path.as_posix()
         before_digest = str(before_hashes.get(relative, ""))
@@ -187,7 +187,7 @@ def _build_refactor_parity_payload(
     }
 
 
-def _render_plan(instruction: str, scope_inputs: List[str], touches: List[Path], verify_commands: List[str]) -> str:
+def _render_plan(instruction: str, scope_inputs: list[str], touches: list[Path], verify_commands: list[str]) -> str:
     lines = [f'ORCHESTRATING REFACTOR: "{instruction}"', "-----------------------------------------------", "SCOPE:"]
     lines.extend(f"  - {scope}" for scope in scope_inputs)
     lines.append("FILES TO BE MODIFIED:")
@@ -205,11 +205,11 @@ def _render_plan(instruction: str, scope_inputs: List[str], touches: List[Path],
 def run_refactor_transaction(
     *,
     instruction: str,
-    scope_inputs: List[str],
+    scope_inputs: list[str],
     dry_run: bool,
     auto_confirm: bool,
     verify_profile: str = "default",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     repo_root = Path.cwd().resolve()
     request_payload = {
         "instruction": instruction,

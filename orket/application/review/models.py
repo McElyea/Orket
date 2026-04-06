@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 from orket.application.review.control_plane_projection import (
     validate_review_control_plane_ref_hierarchy,
@@ -14,7 +14,6 @@ from orket.application.review.control_plane_projection import (
     validate_review_matching_identifier,
     validate_review_required_identifier,
 )
-
 
 DigestAlgorithm = Literal["sha256"]
 ReviewSource = Literal["pr", "diff", "files"]
@@ -61,7 +60,7 @@ class SnapshotBounds:
     max_blob_bytes: int = 200_000
     max_file_bytes: int = 100_000
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "max_files": int(self.max_files),
             "max_diff_bytes": int(self.max_diff_bytes),
@@ -77,7 +76,7 @@ class ChangedFile:
     additions: int
     deletions: int
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "path": str(self.path),
             "status": str(self.status),
@@ -93,7 +92,7 @@ class ContextBlob:
     truncated: bool = False
     omitted_bytes: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "path": str(self.path),
             "content": str(self.content),
@@ -111,9 +110,9 @@ class TruncationReport:
     blob_bytes_original: int = 0
     blob_bytes_kept: int = 0
     blob_truncated: bool = False
-    notes: List[str] | None = None
+    notes: list[str] | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "files_truncated": int(self.files_truncated),
             "diff_bytes_original": int(self.diff_bytes_original),
@@ -129,18 +128,18 @@ class TruncationReport:
 @dataclass(slots=True)
 class ReviewSnapshot:
     source: ReviewSource
-    repo: Dict[str, Any]
+    repo: dict[str, Any]
     base_ref: str
     head_ref: str
     bounds: SnapshotBounds
     truncation: TruncationReport
-    changed_files: List[ChangedFile]
+    changed_files: list[ChangedFile]
     diff_unified: str
-    context_blobs: List[ContextBlob]
-    metadata: Dict[str, Any]
+    context_blobs: list[ContextBlob]
+    metadata: dict[str, Any]
     snapshot_digest: str = ""
 
-    def _for_digest(self) -> Dict[str, Any]:
+    def _for_digest(self) -> dict[str, Any]:
         return {
             "source": self.source,
             "repo": dict(self.repo),
@@ -162,7 +161,7 @@ class ReviewSnapshot:
         self.snapshot_digest = digest
         return digest
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "source": self.source,
             "repo": dict(self.repo),
@@ -180,7 +179,7 @@ class ReviewSnapshot:
         }
 
     @classmethod
-    def from_dict(cls, payload: Dict[str, Any]) -> "ReviewSnapshot":
+    def from_dict(cls, payload: dict[str, Any]) -> ReviewSnapshot:
         bounds_payload = payload.get("bounds") or {}
         trunc_payload = payload.get("truncation") or {}
         changed_files = [
@@ -239,10 +238,10 @@ class DeterministicFinding:
     severity: Severity
     message: str
     path: str = ""
-    span: Optional[Dict[str, int]] = None
-    details: Dict[str, Any] | None = None
+    span: dict[str, int] | None = None
+    details: dict[str, Any] | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "code": self.code,
             "severity": self.severity,
@@ -256,8 +255,8 @@ class DeterministicFinding:
 @dataclass(slots=True)
 class DeterministicReviewDecisionPayload:
     decision: DeterministicDecision
-    findings: List[DeterministicFinding]
-    executed_checks: List[str]
+    findings: list[DeterministicFinding]
+    executed_checks: list[str]
     snapshot_digest: str
     policy_digest: str
     run_id: str
@@ -268,7 +267,7 @@ class DeterministicReviewDecisionPayload:
     control_plane_attempt_id: str = ""
     control_plane_step_id: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         run_id = validate_review_required_identifier(
             self.run_id,
             error="deterministic_review_decision_run_id_required",
@@ -294,7 +293,7 @@ class DeterministicReviewDecisionPayload:
                 attempt_id_error="deterministic_review_decision_control_plane_attempt_id_run_lineage_mismatch",
                 step_id_error="deterministic_review_decision_control_plane_step_id_run_lineage_mismatch",
             )
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "decision": self.decision,
             "findings": [finding.to_dict() for finding in self.findings],
             "executed_checks": list(self.executed_checks),
@@ -322,7 +321,7 @@ class ModelRiskIssue:
     confidence: float
     suggested_fix: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "why": self.why,
             "where": self.where,
@@ -334,26 +333,26 @@ class ModelRiskIssue:
 
 @dataclass(slots=True)
 class ModelAssistedCritiquePayload:
-    summary: List[str]
-    high_risk_issues: List[ModelRiskIssue]
-    missing_tests: List[str]
-    questions_for_author: List[str]
-    nits: List[str]
-    refs: List[str]
+    summary: list[str]
+    high_risk_issues: list[ModelRiskIssue]
+    missing_tests: list[str]
+    questions_for_author: list[str]
+    nits: list[str]
+    refs: list[str]
     model_id: str
     prompt_profile: str
     contract_version: str
     snapshot_digest: str
     policy_digest: str
     run_id: str
-    advisory_errors: List[str] | None = None
+    advisory_errors: list[str] | None = None
     execution_state_authority: str = "control_plane_records"
     lane_output_execution_state_authoritative: bool = False
     control_plane_run_id: str = ""
     control_plane_attempt_id: str = ""
     control_plane_step_id: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         run_id = validate_review_required_identifier(
             self.run_id,
             error="model_assisted_critique_run_id_required",
@@ -379,7 +378,7 @@ class ModelAssistedCritiquePayload:
                 attempt_id_error="model_assisted_critique_control_plane_attempt_id_run_lineage_mismatch",
                 step_id_error="model_assisted_critique_control_plane_step_id_run_lineage_mismatch",
             )
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "summary": list(self.summary),
             "high_risk_issues": [item.to_dict() for item in self.high_risk_issues],
             "missing_tests": list(self.missing_tests),
@@ -407,10 +406,10 @@ class ModelAssistedCritiquePayload:
 
 @dataclass(slots=True)
 class ResolvedPolicy:
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
     policy_digest: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {"policy_digest": self.policy_digest, **dict(self.payload)}
 
 
@@ -421,8 +420,8 @@ class ReviewRunManifest:
     policy_digest: str
     review_run_contract_version: str
     deterministic_lane_version: str
-    bounds: Dict[str, Any]
-    truncation: Dict[str, Any]
+    bounds: dict[str, Any]
+    truncation: dict[str, Any]
     auth_source: Literal["token_flag", "token_env", "none"]
     execution_state_authority: str = "control_plane_records"
     lane_outputs_execution_state_authoritative: bool = False
@@ -430,9 +429,9 @@ class ReviewRunManifest:
     control_plane_run_id: str = ""
     control_plane_attempt_id: str = ""
     control_plane_step_id: str = ""
-    timings_ms: Dict[str, int] | None = None
+    timings_ms: dict[str, int] | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         run_id = validate_review_required_identifier(
             self.run_id,
             error="review_run_manifest_run_id_required",
@@ -458,7 +457,7 @@ class ReviewRunManifest:
                 attempt_id_error="review_run_manifest_control_plane_attempt_id_run_lineage_mismatch",
                 step_id_error="review_run_manifest_control_plane_step_id_run_lineage_mismatch",
             )
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "run_id": run_id,
             "snapshot_digest": self.snapshot_digest,
             "policy_digest": self.policy_digest,
@@ -492,12 +491,12 @@ class ReviewRunResult:
     deterministic_decision: DeterministicDecision
     deterministic_findings: int
     model_assisted_enabled: bool
-    manifest: Dict[str, Any]
-    control_plane: Dict[str, Any] | None = None
+    manifest: dict[str, Any]
+    control_plane: dict[str, Any] | None = None
     exit_code: int = 0
     error: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         run_id = validate_review_required_identifier(
             self.run_id,
             error="review_run_result_run_id_required",

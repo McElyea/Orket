@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from orket.application.services.control_plane_workload_catalog import KERNEL_ACTION_WORKLOAD
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.control_plane_workload_catalog import KERNEL_ACTION_WORKLOAD
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 from orket.application.services.kernel_action_control_plane_support import KernelActionControlPlaneSupportError
 from orket.core.domain import (
@@ -27,7 +27,6 @@ from orket.core.domain import (
 )
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
-
 
 pytestmark = pytest.mark.unit
 

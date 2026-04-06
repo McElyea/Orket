@@ -9,18 +9,18 @@ from typing import Any
 import aiofiles
 
 from orket.naming import sanitize_name
+from orket.runtime.run_start_artifacts import validate_run_identity_projection
 from orket.runtime.run_summary_artifact_provenance import (
     ARTIFACT_PROVENANCE_KEY,
     build_artifact_provenance_extension,
     normalize_artifact_provenance_facts,
 )
+from orket.runtime.run_summary_control_plane import build_control_plane_summary_projection
 from orket.runtime.run_summary_packet2 import (
     PACKET2_KEY,
     build_packet2_extension,
     normalize_packet2_facts,
 )
-from orket.runtime.run_start_artifacts import validate_run_identity_projection
-from orket.runtime.run_summary_control_plane import build_control_plane_summary_projection
 
 _EXCLUDED_ARTIFACT_IDS = {"gitea_export", "run_summary", "run_summary_path"}
 _PACKET1_SCHEMA_VERSION = "1.0"
@@ -325,7 +325,7 @@ async def _tool_names_from_receipts(*, workspace: Path, run_id: str) -> list[str
     receipt_paths = await asyncio.to_thread(_receipt_paths, Path(workspace), str(run_id))
     tool_names: list[str] = []
     for path in receipt_paths:
-        async with aiofiles.open(path, mode="r", encoding="utf-8") as handle:
+        async with aiofiles.open(path, encoding="utf-8") as handle:
             async for line in handle:
                 stripped = line.strip()
                 if not stripped:

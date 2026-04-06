@@ -1,9 +1,11 @@
-﻿import pytest
-import json
-import shutil
+﻿import json
 from pathlib import Path
-from typing import List, Dict, Any, Optional
-from orket.schema import OrganizationConfig, EpicConfig, IssueConfig, TeamConfig, CardStatus, CardType
+from typing import Any
+
+import pytest
+
+import orket.settings as settings_module
+
 
 class OrgBuilder:
     def __init__(self, name: str = "Test Org"):
@@ -55,8 +57,8 @@ class IssueBuilder:
     def with_seat(self, seat: str):
         self.data["seat"] = seat
         return self
-    
-    def depends_on(self, issue_ids: List[str]):
+
+    def depends_on(self, issue_ids: list[str]):
         self.data["depends_on"] = issue_ids
         return self
 
@@ -76,7 +78,7 @@ class EpicBuilder:
             "issues": []
         }
 
-    def with_issues(self, issues: List[Dict[str, Any]]):
+    def with_issues(self, issues: list[dict[str, Any]]):
         self.data["issues"] = issues
         return self
 
@@ -113,7 +115,7 @@ def test_root(tmp_path):
     (root / "config").mkdir()
     for d in ["epics", "roles", "dialects", "teams", "environments"]:
         (root / "model" / "core" / d).mkdir(parents=True)
-    
+
     # Write default dialects
     for d_name in ["qwen", "llama3", "deepseek-r1", "phi", "generic"]:
         (root / "model" / "core" / "dialects" / f"{d_name}.json").write_text(json.dumps({
@@ -153,4 +155,11 @@ def fail_closed_sandbox_creation(monkeypatch):
     # The general pytest suite fails closed on Docker sandbox creation.
     # Tests that intentionally exercise live sandbox behavior must opt out.
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
+
+
+@pytest.fixture(autouse=True)
+def clear_settings_caches_between_tests():
+    settings_module.clear_settings_cache()
+    yield
+    settings_module.clear_settings_cache()
 

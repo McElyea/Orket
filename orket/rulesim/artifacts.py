@@ -25,7 +25,7 @@ def _write_atomic_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + f".tmp-{os.getpid()}-{uuid4().hex[:8]}")
     tmp.write_text(content, encoding="utf-8", newline="\n")
-    os.replace(tmp, path)
+    tmp.replace(path)
 
 
 def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:

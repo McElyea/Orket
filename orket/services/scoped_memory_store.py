@@ -7,8 +7,9 @@ from typing import Any, Literal
 
 import aiosqlite
 
-from .profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
 from orket.runtime.truthful_memory_policy import evaluate_memory_write_policy
+
+from .profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
 
 MemoryScope = Literal["session_memory", "profile_memory", "episodic_memory"]
 

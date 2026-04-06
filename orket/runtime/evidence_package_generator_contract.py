@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 EVIDENCE_PACKAGE_GENERATOR_CONTRACT_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_REQUIRED_SECTIONS = {

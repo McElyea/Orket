@@ -96,7 +96,7 @@ def test_artifact_files_conform_to_schema_and_references(tmp_path: Path) -> None
     jsonschema.validate(run_payload, RUN_SCHEMA)
     jsonschema.validate(summary_payload, SUMMARY_SCHEMA)
     jsonschema.validate(suspicious_payload, SUSPICIOUS_SCHEMA)
-    for reason in summary_payload["terminal_reason_distribution"].keys():
+    for reason in summary_payload["terminal_reason_distribution"]:
         assert reason in _TERMINAL_REASONS
     for episode_ref in suspicious_payload["episodes"]:
         episode_file = root / "episodes" / str(episode_ref["episode_id"]) / "episode.json"

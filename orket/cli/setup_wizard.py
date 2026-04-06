@@ -6,9 +6,10 @@ Created during the v1.0 maturation phase.
 """
 
 from __future__ import annotations
+
 from pathlib import Path
 
-from orket.schema import OrganizationConfig, BrandingConfig, ArchitecturePrescription
+from orket.schema import ArchitecturePrescription, BrandingConfig, OrganizationConfig
 from orket.settings import load_user_settings, save_user_settings
 
 

@@ -1,5 +1,6 @@
-﻿import pytest
-from pathlib import Path
+﻿from pathlib import Path
+
+import pytest
 
 from orket.policy import FilesystemPolicy, create_session_policy
 

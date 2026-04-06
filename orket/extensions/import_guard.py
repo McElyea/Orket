@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import importlib.abc
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from types import TracebackType
-from typing import Iterable
 
 DEFAULT_BLOCKED_PREFIXES: tuple[str, ...] = ("orket",)
 DEFAULT_ALLOWED_PREFIXES: tuple[str, ...] = (
@@ -39,10 +39,7 @@ class ExtensionImportGuard(importlib.abc.MetaPathFinder):
         for prefix in self._allowed_prefixes:
             if _matches_module_prefix(fullname, prefix):
                 return False
-        for prefix in self._blocked_prefixes:
-            if _matches_module_prefix(fullname, prefix):
-                return True
-        return False
+        return any(_matches_module_prefix(fullname, prefix) for prefix in self._blocked_prefixes)
 
     def find_spec(self, fullname: str, path: object = None, target: object = None) -> object | None:
         if self.is_blocked(fullname):

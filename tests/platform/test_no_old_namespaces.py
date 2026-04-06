@@ -1,5 +1,4 @@
-﻿import os
-import re
+﻿import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,14 +31,14 @@ def test_no_old_namespaces():
         # Skip ignored directories
         if any(ignored in path.parts for ignored in IGNORE_DIRS):
             continue
-            
+
         if not path.is_file():
             continue
-            
+
         # Skip this test file itself
         if path.name == "test_no_old_namespaces.py":
             continue
-            
+
         if path.suffix not in {".py", ".json", ".md"}:
             continue
 

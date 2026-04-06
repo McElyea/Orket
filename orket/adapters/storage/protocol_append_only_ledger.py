@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 import struct
+from pathlib import Path
 from typing import Any
 
 from orket.application.workflows.protocol_hashing import canonical_json
@@ -13,7 +13,6 @@ from orket.runtime.protocol_error_codes import (
     E_LEDGER_RECORD_TOO_LARGE,
     E_LEDGER_SEQ,
 )
-
 
 MAX_LEDGER_PAYLOAD_BYTES = 4 * 1024 * 1024
 

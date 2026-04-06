@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from typing import Any, Dict, List
+from typing import Any
 
 from orket.application.review.models import (
     DeterministicFinding,
@@ -10,13 +10,12 @@ from orket.application.review.models import (
     ReviewSnapshot,
 )
 
-
 SEVERITY_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 
 
-def _added_diff_lines(diff_unified: str) -> List[Dict[str, Any]]:
+def _added_diff_lines(diff_unified: str) -> list[dict[str, Any]]:
     lines = diff_unified.splitlines()
-    out: List[Dict[str, Any]] = []
+    out: list[dict[str, Any]] = []
     current_path = ""
     in_hunk = False
     new_line = 0
@@ -49,7 +48,7 @@ def _added_diff_lines(diff_unified: str) -> List[Dict[str, Any]]:
     return out
 
 
-def _stable_sort_findings(findings: List[DeterministicFinding]) -> List[DeterministicFinding]:
+def _stable_sort_findings(findings: list[DeterministicFinding]) -> list[DeterministicFinding]:
     def key(item: DeterministicFinding) -> tuple[Any, ...]:
         path_key = item.path if item.path else "\uffff"
         span_start = int((item.span or {}).get("start") or 0)
@@ -68,13 +67,13 @@ def _stable_sort_findings(findings: List[DeterministicFinding]) -> List[Determin
 def run_deterministic_lane(
     *,
     snapshot: ReviewSnapshot,
-    resolved_policy: Dict[str, Any],
+    resolved_policy: dict[str, Any],
     run_id: str,
     policy_digest: str,
 ) -> DeterministicReviewDecisionPayload:
     checks = (resolved_policy.get("deterministic") or {}).get("checks") or {}
-    findings: List[DeterministicFinding] = []
-    executed_checks: List[str] = []
+    findings: list[DeterministicFinding] = []
+    executed_checks: list[str] = []
 
     blocked_prefixes = [str(item) for item in list(checks.get("path_blocklist") or [])]
     if blocked_prefixes:

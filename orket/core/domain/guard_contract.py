@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Literal, List
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
-
 
 GuardResult = Literal["pass", "fail"]
 GuardSeverity = Literal["soft", "strict"]
@@ -39,7 +38,7 @@ class LoopControl(BaseModel):
 
 class GuardContract(BaseModel):
     result: GuardResult
-    violations: List[GuardViolation] = Field(default_factory=list)
+    violations: list[GuardViolation] = Field(default_factory=list)
     severity: GuardSeverity = "soft"
     fix_hint: str | None = None
     terminal_failure: bool = False
@@ -51,7 +50,7 @@ class GuardContract(BaseModel):
         return "strict" if any(v.severity == "strict" for v in self.violations) else "soft"
 
     @model_validator(mode="after")
-    def _validate_contract(self) -> "GuardContract":
+    def _validate_contract(self) -> GuardContract:
         self.severity = self._aggregated_severity()
         if self.result == "pass":
             if self.violations:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
@@ -22,6 +23,10 @@ def _write_json(path: Path, payload: dict) -> None:
 
 def _read_json(path: Path) -> dict:
     return json.loads(path.read_bytes().decode("utf-8"))
+
+
+async def _path_exists(path: Path) -> bool:
+    return await asyncio.to_thread(path.exists)
 
 
 def _write_epic_assets(root: Path, epic_id: str) -> None:
@@ -370,11 +375,14 @@ async def test_execution_pipeline_protocol_run_ledger_carries_runtime_contract_b
     assert artifact_json["capability_manifest"]["run_id"] == "sess-protocol-contract-bootstrap"
     assert artifact_json["workspace_state_snapshot"]["workspace_type"] == "filesystem"
     assert len(str(artifact_json["workspace_state_snapshot"]["workspace_hash"])) == 64
-    assert Path(artifact_json["tool_registry_snapshot_path"]).exists()
-    assert Path(artifact_json["run_identity_path"]).exists()
-    assert Path(artifact_json["runtime_truth_contract_drift_report_path"]).exists()
-    assert Path(artifact_json["runtime_truth_trace_ids_path"]).exists()
-    assert Path(artifact_json["runtime_invariant_registry_path"]).exists()
-    assert Path(artifact_json["runtime_config_ownership_map_path"]).exists()
-    assert Path(artifact_json["unknown_input_policy_path"]).exists()
-    assert Path(artifact_json["workspace_state_snapshot_path"]).exists()
+    for key in (
+        "tool_registry_snapshot_path",
+        "run_identity_path",
+        "runtime_truth_contract_drift_report_path",
+        "runtime_truth_trace_ids_path",
+        "runtime_invariant_registry_path",
+        "runtime_config_ownership_map_path",
+        "unknown_input_policy_path",
+        "workspace_state_snapshot_path",
+    ):
+        assert await _path_exists(Path(artifact_json[key]))

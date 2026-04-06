@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Literal, Tuple
-
+from typing import Literal
 
 GuardOwner = Literal["hallucination", "security", "consistency"]
 GuardSeverity = Literal["soft", "strict"]
@@ -15,10 +15,10 @@ class GuardRule:
     owner: GuardOwner
     description: str
     severity: GuardSeverity
-    scope: Tuple[GuardScope, ...]
+    scope: tuple[GuardScope, ...]
 
 
-DEFAULT_GUARD_RULES: List[GuardRule] = [
+DEFAULT_GUARD_RULES: list[GuardRule] = [
     GuardRule(
         rule_id="HALLUCINATION.FILE_NOT_FOUND",
         owner="hallucination",
@@ -71,13 +71,13 @@ DEFAULT_GUARD_RULES: List[GuardRule] = [
 ]
 
 
-DEFAULT_GUARD_RULE_IDS: List[str] = [rule.rule_id for rule in DEFAULT_GUARD_RULES]
+DEFAULT_GUARD_RULE_IDS: list[str] = [rule.rule_id for rule in DEFAULT_GUARD_RULES]
 
 
-def normalize_rule_ids(values: Iterable[object] | None) -> List[str]:
+def normalize_rule_ids(values: Iterable[object] | None) -> list[str]:
     if values is None:
         return []
-    normalized: List[str] = []
+    normalized: list[str] = []
     seen = set()
     for value in values:
         rule_id = str(value or "").strip()
@@ -92,15 +92,15 @@ def normalize_rule_ids(values: Iterable[object] | None) -> List[str]:
 
 def ownership_conflicts(
     prompt_rule_ids: Iterable[object] | None, runtime_guard_rule_ids: Iterable[object] | None
-) -> List[str]:
+) -> list[str]:
     prompt_ids = set(normalize_rule_ids(prompt_rule_ids))
     runtime_ids = set(normalize_rule_ids(runtime_guard_rule_ids))
     return sorted(prompt_ids.intersection(runtime_ids))
 
 
-def build_guard_rule_registry(rules: Iterable[GuardRule] | None = None) -> Dict[str, GuardRule]:
+def build_guard_rule_registry(rules: Iterable[GuardRule] | None = None) -> dict[str, GuardRule]:
     source = list(DEFAULT_GUARD_RULES if rules is None else rules)
-    registry: Dict[str, GuardRule] = {}
+    registry: dict[str, GuardRule] = {}
     for rule in source:
         rule_id = str(rule.rule_id or "").strip()
         if not rule_id:
@@ -116,21 +116,21 @@ def build_guard_rule_registry(rules: Iterable[GuardRule] | None = None) -> Dict[
     return registry
 
 
-DEFAULT_GUARD_RULE_REGISTRY: Dict[str, GuardRule] = build_guard_rule_registry()
-GUARD_OWNER_PREFIXES: Tuple[str, ...] = ("HALLUCINATION.", "SECURITY.", "CONSISTENCY.")
+DEFAULT_GUARD_RULE_REGISTRY: dict[str, GuardRule] = build_guard_rule_registry()
+GUARD_OWNER_PREFIXES: tuple[str, ...] = ("HALLUCINATION.", "SECURITY.", "CONSISTENCY.")
 
 
 def validate_runtime_guard_rule_ids(
     runtime_guard_rule_ids: Iterable[object] | None,
     *,
-    registry: Dict[str, GuardRule] | None = None,
-) -> List[str]:
+    registry: dict[str, GuardRule] | None = None,
+) -> list[str]:
     if runtime_guard_rule_ids is None:
         return []
     raw_values = [str(value or "").strip() for value in runtime_guard_rule_ids if str(value or "").strip()]
     if len(raw_values) != len(set(raw_values)):
         seen = set()
-        duplicates: List[str] = []
+        duplicates: list[str] = []
         for item in raw_values:
             if item in seen and item not in duplicates:
                 duplicates.append(item)
@@ -149,8 +149,8 @@ def validate_runtime_guard_rule_ids(
 def resolve_runtime_guard_rule_ids(
     configured_rule_ids: Iterable[object] | None,
     *,
-    registry: Dict[str, GuardRule] | None = None,
-) -> List[str]:
+    registry: dict[str, GuardRule] | None = None,
+) -> list[str]:
     if configured_rule_ids is None:
         return list(DEFAULT_GUARD_RULE_IDS)
     validated = validate_runtime_guard_rule_ids(
@@ -160,7 +160,7 @@ def resolve_runtime_guard_rule_ids(
     return validated if validated else list(DEFAULT_GUARD_RULE_IDS)
 
 
-def prompt_guard_namespace_conflicts(prompt_rule_ids: Iterable[object] | None) -> List[str]:
+def prompt_guard_namespace_conflicts(prompt_rule_ids: Iterable[object] | None) -> list[str]:
     prompt_ids = normalize_rule_ids(prompt_rule_ids)
     return sorted(
         rule_id for rule_id in prompt_ids if any(rule_id.startswith(prefix) for prefix in GUARD_OWNER_PREFIXES)

@@ -5,7 +5,7 @@ import secrets
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 from urllib import parse
 
 from orket.application.review.artifacts import write_review_run_bundle
@@ -19,18 +19,17 @@ from orket.application.review.models import (
     SnapshotBounds,
 )
 from orket.application.review.policy_resolver import resolve_review_policy
-from orket.application.services.review_run_control_plane_service import (
-    ReviewRunControlPlaneService,
-    build_review_run_control_plane_service,
-)
-from orket.capabilities.sync_bridge import run_coro_sync
 from orket.application.review.snapshot_loader import (
     filter_snapshot_paths,
     load_from_diff,
     load_from_files,
     load_from_pr,
 )
-
+from orket.application.services.review_run_control_plane_service import (
+    ReviewRunControlPlaneService,
+    build_review_run_control_plane_service,
+)
+from orket.capabilities.sync_bridge import run_coro_sync
 
 logger = logging.getLogger(__name__)
 
@@ -38,13 +37,13 @@ logger = logging.getLogger(__name__)
 def _ulid() -> str:
     alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
     timestamp_ms = int(time.time() * 1000)
-    time_chars: List[str] = []
+    time_chars: list[str] = []
     value = timestamp_ms
     for _ in range(10):
         time_chars.append(alphabet[value % 32])
         value //= 32
     random_value = int.from_bytes(secrets.token_bytes(10), byteorder="big", signed=False)
-    rand_chars: List[str] = []
+    rand_chars: list[str] = []
     for _ in range(16):
         rand_chars.append(alphabet[random_value % 32])
         random_value //= 32
@@ -57,7 +56,7 @@ def _decision_exit_code(decision: str, fail_on_blocked: bool) -> int:
     return 0
 
 
-def _git_paths(repo_root: Path, base_ref: str, head_ref: str) -> List[str]:
+def _git_paths(repo_root: Path, base_ref: str, head_ref: str) -> list[str]:
     proc = subprocess.run(
         ["git", "diff", "--name-only", base_ref, head_ref],
         cwd=str(repo_root),
@@ -68,7 +67,7 @@ def _git_paths(repo_root: Path, base_ref: str, head_ref: str) -> List[str]:
     return [line.strip().replace("\\", "/") for line in proc.stdout.splitlines() if line.strip()]
 
 
-def _normalize_extensions(values: List[str]) -> set[str]:
+def _normalize_extensions(values: list[str]) -> set[str]:
     out = set()
     for item in values:
         token = str(item or "").strip().lower()
@@ -78,10 +77,10 @@ def _normalize_extensions(values: List[str]) -> set[str]:
     return out
 
 
-def _filter_code_paths(paths: List[str], extensions: set[str]) -> List[str]:
+def _filter_code_paths(paths: list[str], extensions: set[str]) -> list[str]:
     if not extensions:
         return list(paths)
-    keep: List[str] = []
+    keep: list[str] = []
     for path in paths:
         suffix = Path(path).suffix.lower()
         if suffix in extensions:
@@ -195,7 +194,7 @@ class ReviewRunService:
         self,
         *,
         workspace: Path,
-        control_plane_db_path: Optional[Path] = None,
+        control_plane_db_path: Path | None = None,
         review_control_plane_service: ReviewRunControlPlaneService | None = None,
     ):
         self.workspace = workspace
@@ -211,11 +210,11 @@ class ReviewRunService:
         pr: int,
         repo_root: Path,
         bounds: SnapshotBounds,
-        cli_policy_overrides: Optional[Dict[str, Any]] = None,
-        policy_path: Optional[Path] = None,
+        cli_policy_overrides: dict[str, Any] | None = None,
+        policy_path: Path | None = None,
         fail_on_blocked: bool = False,
         token: str = "",
-        model_provider: Optional[ModelProvider] = None,
+        model_provider: ModelProvider | None = None,
     ) -> ReviewRunResult:
         resolved_policy = resolve_review_policy(
             cli_overrides=cli_policy_overrides,
@@ -253,10 +252,10 @@ class ReviewRunService:
         base_ref: str,
         head_ref: str,
         bounds: SnapshotBounds,
-        cli_policy_overrides: Optional[Dict[str, Any]] = None,
-        policy_path: Optional[Path] = None,
+        cli_policy_overrides: dict[str, Any] | None = None,
+        policy_path: Path | None = None,
         fail_on_blocked: bool = False,
-        model_provider: Optional[ModelProvider] = None,
+        model_provider: ModelProvider | None = None,
     ) -> ReviewRunResult:
         resolved_policy = resolve_review_policy(
             cli_overrides=cli_policy_overrides,
@@ -290,12 +289,12 @@ class ReviewRunService:
         *,
         repo_root: Path,
         ref: str,
-        paths: List[str],
+        paths: list[str],
         bounds: SnapshotBounds,
-        cli_policy_overrides: Optional[Dict[str, Any]] = None,
-        policy_path: Optional[Path] = None,
+        cli_policy_overrides: dict[str, Any] | None = None,
+        policy_path: Path | None = None,
         fail_on_blocked: bool = False,
-        model_provider: Optional[ModelProvider] = None,
+        model_provider: ModelProvider | None = None,
     ) -> ReviewRunResult:
         resolved_policy = resolve_review_policy(
             cli_overrides=cli_policy_overrides,
@@ -328,9 +327,9 @@ class ReviewRunService:
         *,
         repo_root: Path,
         snapshot: ReviewSnapshot,
-        resolved_policy_payload: Dict[str, Any],
+        resolved_policy_payload: dict[str, Any],
         fail_on_blocked: bool = False,
-        model_provider: Optional[ModelProvider] = None,
+        model_provider: ModelProvider | None = None,
     ) -> ReviewRunResult:
         from orket.application.review.models import ResolvedPolicy, digest_sha256_prefixed, to_canonical_json_bytes
 
@@ -353,7 +352,7 @@ class ReviewRunService:
         resolved_policy: Any,
         fail_on_blocked: bool,
         auth_source: Literal["token_flag", "token_env", "none"],
-        model_provider: Optional[ModelProvider],
+        model_provider: ModelProvider | None,
     ) -> ReviewRunResult:
         run_id = _ulid()
         artifact_dir = self.workspace / "review_runs" / run_id

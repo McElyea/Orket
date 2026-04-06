@@ -8,11 +8,11 @@ from typing import Any
 import yaml
 
 from orket.reforger.service_contracts import (
+    SERVICE_MODE_ADAPT,
+    SERVICE_MODE_BASELINE,
     AcceptanceThresholds,
     PromptReforgerServiceRequest,
     RuntimeContext,
-    SERVICE_MODE_ADAPT,
-    SERVICE_MODE_BASELINE,
 )
 
 PHASE0_BRIDGE_CONTRACT_REF = "localclaw://bridge/textmystery-v0"

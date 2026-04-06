@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from orket.logging import log_event
 
@@ -12,7 +12,7 @@ class SandboxManager:
     def __init__(self, sandbox_orchestrator: Any) -> None:
         self._sandbox_orchestrator = sandbox_orchestrator
 
-    async def list_active(self) -> List[Dict[str, Any]]:
+    async def list_active(self) -> list[dict[str, Any]]:
         if self._sandbox_orchestrator is None:
             return []
         list_method = getattr(self._sandbox_orchestrator, "list_sandboxes", None)
@@ -40,9 +40,14 @@ class SessionController:
     async def halt(self, session_id: str) -> bool:
         from orket.state import runtime_state
 
-        task = await runtime_state.get_task(session_id)
-        if task:
+        tasks = await runtime_state.get_tasks(session_id)
+        cancelled = False
+        for task in tasks:
+            if task.done():
+                continue
             task.cancel()
+            cancelled = True
+        if cancelled:
             log_event("session_halted", {"session_id": session_id}, self.workspace_root)
             return True
         return False
@@ -54,29 +59,29 @@ class CardArchiver:
     def __init__(self, cards_repo: Any) -> None:
         self._cards = cards_repo
 
-    async def archive_card(self, card_id: str, *, archived_by: str = "system", reason: Optional[str] = None) -> bool:
+    async def archive_card(self, card_id: str, *, archived_by: str = "system", reason: str | None = None) -> bool:
         return await self._cards.archive_card(card_id, archived_by=archived_by, reason=reason)
 
     async def archive_cards(
         self,
-        card_ids: List[str],
+        card_ids: list[str],
         *,
         archived_by: str = "system",
-        reason: Optional[str] = None,
-    ) -> Dict[str, List[str]]:
+        reason: str | None = None,
+    ) -> dict[str, list[str]]:
         return await self._cards.archive_cards(card_ids, archived_by=archived_by, reason=reason)
 
-    async def archive_build(self, build_id: str, *, archived_by: str = "system", reason: Optional[str] = None) -> int:
+    async def archive_build(self, build_id: str, *, archived_by: str = "system", reason: str | None = None) -> int:
         return await self._cards.archive_build(build_id, archived_by=archived_by, reason=reason)
 
     async def archive_related_cards(
         self,
-        related_tokens: List[str],
+        related_tokens: list[str],
         *,
         archived_by: str = "system",
-        reason: Optional[str] = None,
+        reason: str | None = None,
         limit: int = 500,
-    ) -> Dict[str, List[str]]:
+    ) -> dict[str, list[str]]:
         card_ids = await self._cards.find_related_card_ids(related_tokens, limit=limit)
         return await self._cards.archive_cards(card_ids, archived_by=archived_by, reason=reason)
 
@@ -87,59 +92,59 @@ class KernelGatewayFacade:
     def __init__(self, kernel_gateway: Any) -> None:
         self._gw = kernel_gateway
 
-    def start_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def start_run(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.start_run(request)
 
-    def execute_turn(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_turn(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.execute_turn(request)
 
-    def finish_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def finish_run(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.finish_run(request)
 
-    def resolve_capability(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def resolve_capability(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.resolve_capability(request)
 
-    def authorize_tool_call(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def authorize_tool_call(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.authorize_tool_call(request)
 
-    def replay_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def replay_run(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.replay_run(request)
 
-    def compare_runs(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def compare_runs(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.compare_runs(request)
 
-    def projection_pack(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def projection_pack(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.projection_pack(request)
 
-    def admit_proposal(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def admit_proposal(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.admit_proposal(request)
 
-    def commit_proposal(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def commit_proposal(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.commit_proposal(request)
 
-    def end_session(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def end_session(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.end_session(request)
 
-    def list_ledger_events(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def list_ledger_events(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.list_ledger_events(request)
 
-    def rebuild_pending_approvals(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def rebuild_pending_approvals(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.rebuild_pending_approvals(request)
 
-    def replay_action_lifecycle(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def replay_action_lifecycle(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.replay_action_lifecycle(request)
 
-    def audit_action_lifecycle(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def audit_action_lifecycle(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._gw.audit_action_lifecycle(request)
 
     def run_lifecycle(
         self,
         *,
         workflow_id: str,
-        execute_turn_requests: List[Dict[str, Any]],
+        execute_turn_requests: list[dict[str, Any]],
         finish_outcome: str = "PASS",
-        start_request: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        start_request: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         return self._gw.run_lifecycle(
             workflow_id=workflow_id,
             execute_turn_requests=execute_turn_requests,

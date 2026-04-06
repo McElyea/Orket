@@ -13,7 +13,6 @@ from orket.core.contracts.control_plane_models import (
     ResolvedPolicySnapshot,
 )
 
-
 pytestmark = pytest.mark.contract
 
 

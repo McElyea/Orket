@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 ARTIFACT_PROVENANCE_BLOCK_POLICY_SCHEMA_VERSION = "1.0"
 
 _REQUIRED_PROVENANCE_FIELDS = {

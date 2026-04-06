@@ -10,10 +10,12 @@ Reconstructed to use aiosqlite for true async I/O.
 """
 
 from __future__ import annotations
+
 import asyncio
-import aiosqlite
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any
+
+import aiosqlite
 
 from orket.logging import log_event
 from orket.runtime_paths import resolve_webhook_db_path
@@ -25,7 +27,7 @@ class WebhookDatabase:
     Uses aiosqlite for non-blocking review cycle tracking.
     """
 
-    def __init__(self, db_path: Optional[Path] = None):
+    def __init__(self, db_path: Path | None = None):
         """
         Initialize database connection.
         """
@@ -163,7 +165,7 @@ class WebhookDatabase:
             await conn.commit()
             log_event("webhook_db", {"message": f"Recorded failure reason for {pr_key}"}, level="info")
 
-    async def get_failure_reasons(self, repo_full_name: str, pr_number: int) -> List[Dict[str, Any]]:
+    async def get_failure_reasons(self, repo_full_name: str, pr_number: int) -> list[dict[str, Any]]:
         """
         Get all failure reasons for a PR.
         """
@@ -198,10 +200,10 @@ class WebhookDatabase:
             )
             await conn.commit()
 
-    async def get_bug_fix_phase(self, rock_id: str) -> Optional[Any]:
+    async def get_bug_fix_phase(self, rock_id: str) -> Any | None:
         """Retrieve a bug fix phase from the database."""
         await self._ensure_initialized()
-        from orket.domain.bug_fix_phase import BugFixPhase
+        from orket.core.domain.bug_fix_phase import BugFixPhase
 
         async with aiosqlite.connect(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
@@ -230,7 +232,7 @@ class WebhookDatabase:
             await conn.commit()
             log_event("webhook_db", {"message": f"Closed PR cycle: {pr_key} ({status})"}, level="info")
 
-    async def get_active_prs(self) -> List[Dict[str, Any]]:
+    async def get_active_prs(self) -> list[dict[str, Any]]:
         """
         Get all active PR review cycles.
         """

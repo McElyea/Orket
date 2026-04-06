@@ -1,10 +1,9 @@
-﻿import json
 
 import aiosqlite
 import pytest
 
-from orket.domain.bug_fix_phase import BugFixPhase, BugFixPhaseStatus
 from orket.adapters.vcs.webhook_db import WebhookDatabase
+from orket.core.domain.bug_fix_phase import BugFixPhase, BugFixPhaseStatus
 
 
 @pytest.fixture

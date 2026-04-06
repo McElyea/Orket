@@ -3,9 +3,9 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from typing import Any, Dict, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 from urllib.parse import urlparse
-
 
 _RECOVERY_STOP_MARKER = re.compile(
     r"(?im)^\s*(?:(?:[*-]|(?:\d+\.))\s+)?(?:\*+)?"
@@ -59,10 +59,7 @@ def _recover_labeled_sections(text: str, labels: list[tuple[str, str]]) -> str:
         rendered_sections: list[str] = []
         for section_index, (_source, target_header) in enumerate(labels):
             start = window[section_index].end()
-            if section_index + 1 < len(window):
-                end = window[section_index + 1].start()
-            else:
-                end = len(text)
+            end = window[section_index + 1].start() if section_index + 1 < len(window) else len(text)
             chunk = _clean_recovered_section_text(text[start:end])
             if not chunk:
                 rendered_sections = []
@@ -89,10 +86,7 @@ def _recover_header_sections(text: str, headers: list[str]) -> str:
         rendered_sections: list[str] = []
         for section_index, header in enumerate(headers):
             start = window[section_index].end()
-            if section_index + 1 < len(window):
-                end = window[section_index + 1].start()
-            else:
-                end = len(text)
+            end = window[section_index + 1].start() if section_index + 1 < len(window) else len(text)
             chunk = _clean_recovered_section_text(text[start:end])
             if not chunk:
                 rendered_sections = []
@@ -132,7 +126,7 @@ def normalize_openai_base_url(raw: str, *, default: str) -> str:
     return f"{base}/v1"
 
 
-def validate_openai_messages(messages: List[Dict[str, Any]]) -> list[str]:
+def validate_openai_messages(messages: list[dict[str, Any]]) -> list[str]:
     allowed_roles = {"system", "user", "assistant", "tool"}
     invalid: list[str] = []
     for index, message in enumerate(messages):
@@ -145,7 +139,7 @@ def validate_openai_messages(messages: List[Dict[str, Any]]) -> list[str]:
     return invalid
 
 
-def extract_openai_content(payload: Dict[str, Any]) -> str:
+def extract_openai_content(payload: dict[str, Any]) -> str:
     def _extract_text(value: Any) -> str:
         if isinstance(value, str):
             return value
@@ -176,7 +170,7 @@ def extract_openai_content(payload: Dict[str, Any]) -> str:
     return recover_structured_reasoning_answer(reasoning_content)
 
 
-def extract_openai_tool_calls(payload: Dict[str, Any]) -> list[dict[str, Any]]:
+def extract_openai_tool_calls(payload: dict[str, Any]) -> list[dict[str, Any]]:
     choices = payload.get("choices")
     if not isinstance(choices, list) or not choices:
         return []
@@ -220,7 +214,7 @@ def _ns_to_ms(value: Any) -> float | None:
     return float(value) / 1_000_000.0
 
 
-def extract_openai_usage(payload: Dict[str, Any]) -> tuple[int | None, int | None, int | None]:
+def extract_openai_usage(payload: dict[str, Any]) -> tuple[int | None, int | None, int | None]:
     usage = payload.get("usage") if isinstance(payload.get("usage"), dict) else {}
     prompt_tokens = _to_int(usage.get("prompt_tokens"))
     completion_tokens = _to_int(usage.get("completion_tokens"))
@@ -230,7 +224,7 @@ def extract_openai_usage(payload: Dict[str, Any]) -> tuple[int | None, int | Non
     return prompt_tokens, completion_tokens, total_tokens
 
 
-def extract_openai_timings(payload: Dict[str, Any], latency_ms: int) -> tuple[float, float, float]:
+def extract_openai_timings(payload: dict[str, Any], latency_ms: int) -> tuple[float, float, float]:
     timings = payload.get("timings") if isinstance(payload.get("timings"), dict) else {}
 
     prompt_ms = _to_float(timings.get("prompt_ms"))
@@ -270,7 +264,7 @@ def build_orket_session_id(
     runtime_context: Mapping[str, Any],
     model: str,
     provider_name: str,
-    fallback_messages: List[Dict[str, Any]],
+    fallback_messages: list[dict[str, Any]],
     preferred_session_id: str = "",
 ) -> str:
     preferred = str(preferred_session_id or "").strip()
@@ -291,12 +285,12 @@ def build_orket_session_id(
     return f"derived-{digest[:16]}"
 
 
-def build_prompt_fingerprint(payload: Dict[str, Any]) -> str:
+def build_prompt_fingerprint(payload: dict[str, Any]) -> str:
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
 
-def select_response_headers(headers: Mapping[str, str]) -> Dict[str, str]:
+def select_response_headers(headers: Mapping[str, str]) -> dict[str, str]:
     allowed_exact = {
         "content-type",
         "date",
@@ -306,7 +300,7 @@ def select_response_headers(headers: Mapping[str, str]) -> Dict[str, str]:
         "x-slot-id",
         "openai-processing-ms",
     }
-    selected: Dict[str, str] = {}
+    selected: dict[str, str] = {}
     for key, value in headers.items():
         lower = str(key).strip().lower()
         if lower in allowed_exact or lower.startswith("x-"):

@@ -3,7 +3,7 @@ from .contracts import ExecutionEnvelope, PatchProposal, RunRequest
 from .intake import IntakeValidationResult, evaluate_patch_proposal, validate_patch_proposal_payload
 from .promotion import promote_run
 from .replay import replay_run
-from .runner import MarshallerRunOutcome, MarshallerRunner
+from .runner import MarshallerRunner, MarshallerRunOutcome
 
 __all__ = [
     "ExecutionEnvelope",

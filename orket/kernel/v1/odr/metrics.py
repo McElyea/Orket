@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-from typing import List, Set
 
 from .parsers import normalize_newlines
 
@@ -13,14 +12,14 @@ def normalize_text(text: str) -> str:
     return normalized
 
 
-def tokenize(text: str) -> List[str]:
+def tokenize(text: str) -> list[str]:
     normalized = normalize_text(text)
     if not normalized:
         return []
     return normalized.split(" ")
 
 
-def shingles(tokens: List[str], k: int) -> Set[str]:
+def shingles(tokens: list[str], k: int) -> set[str]:
     if len(tokens) < int(k):
         return set()
     return {" ".join(tokens[i : i + k]) for i in range(0, len(tokens) - k + 1)}

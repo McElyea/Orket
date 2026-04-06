@@ -10,8 +10,8 @@ from orket.runtime.protocol_replay import (
     ProtocolReplayEngine,
     artifact_digest_inventory,
     receipt_digest_inventory,
-    runtime_contract_versions_snapshot,
     runtime_contract_hash,
+    runtime_contract_versions_snapshot,
 )
 from orket.runtime.runtime_policy_versions import runtime_policy_versions_snapshot
 from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot

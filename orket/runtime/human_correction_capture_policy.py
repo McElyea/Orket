@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 HUMAN_CORRECTION_CAPTURE_POLICY_SCHEMA_VERSION = "1.0"
 
 _REQUIRED_FIELDS = {

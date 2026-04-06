@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Final
 
-
 E_PARSE_JSON: Final[str] = "E_PARSE_JSON"
 E_RESPONSE_BYTES: Final[str] = "E_RESPONSE_BYTES"
 E_MARKDOWN_FENCE: Final[str] = "E_MARKDOWN_FENCE"

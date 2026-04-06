@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
@@ -130,3 +131,21 @@ async def test_materialize_protocol_receipts_is_idempotent_on_repeated_runs(tmp_
     assert events[1]["control_plane_effect_projection"]["effect_id"] == "turn-tool-effect:op-1"
     receipts = await repo.list_receipts("sess-2")
     assert len(receipts) == 1
+
+
+@pytest.mark.asyncio
+async def test_materialize_protocol_receipts_completes_under_asyncio_wait_for(tmp_path: Path) -> None:
+    """Layer: integration. Verifies receipt materialization remains awaitable under a bounded event-loop deadline."""
+    workspace = tmp_path / "workspace"
+    _write_turn_receipts(
+        workspace / "observability" / "sess-3" / "ISSUE-1" / "001_architect" / "protocol_receipts.log",
+        [_receipt_row(run_id="sess-3", step_id="ISSUE-1:1", operation_id="op-1")],
+    )
+    repo = AsyncProtocolRunLedgerRepository(workspace)
+
+    summary = await asyncio.wait_for(
+        materialize_protocol_receipts(workspace=workspace, session_id="sess-3", run_ledger=repo),
+        timeout=1.0,
+    )
+
+    assert summary["status"] == "ok"

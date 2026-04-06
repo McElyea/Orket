@@ -5,10 +5,10 @@ import json
 import os
 import re
 import shutil
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
-
+from typing import Any
 
 ERROR_PREFLIGHT_FAILED = "E_PREFLIGHT_FAILED"
 
@@ -45,11 +45,11 @@ def _lesson_path(repo_root: Path) -> Path:
     return repo_root / ".orket" / "memory" / "failure_lessons.jsonl"
 
 
-def _read_lessons(repo_root: Path) -> list[Dict[str, Any]]:
+def _read_lessons(repo_root: Path) -> list[dict[str, Any]]:
     path = _lesson_path(repo_root)
     if not path.exists():
         return []
-    rows: list[Dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     for line in path.read_text(encoding="utf-8").splitlines():
         text = line.strip()
         if not text:
@@ -63,8 +63,8 @@ def _read_lessons(repo_root: Path) -> list[Dict[str, Any]]:
     return rows
 
 
-def _extract_preflight_checks(output_text: str) -> list[Dict[str, str]]:
-    checks: list[Dict[str, str]] = []
+def _extract_preflight_checks(output_text: str) -> list[dict[str, str]]:
+    checks: list[dict[str, str]] = []
     env_vars = sorted(
         {token for token in _ENV_VAR_CAPTURE.findall(output_text) if token not in {"FAIL", "ERROR", "TEST"}}
     )
@@ -81,7 +81,7 @@ def _extract_preflight_checks(output_text: str) -> list[Dict[str, str]]:
     return checks
 
 
-def classify_failure(*, output_tail: str, message: str) -> Dict[str, Any]:
+def classify_failure(*, output_tail: str, message: str) -> dict[str, Any]:
     source = f"{message}\n{output_tail}"
     tags: list[str] = []
     signals: list[str] = []
@@ -105,8 +105,8 @@ def record_failure_lesson(
     *,
     repo_root: Path,
     command_name: str,
-    request: Dict[str, Any],
-    result: Dict[str, Any],
+    request: dict[str, Any],
+    result: dict[str, Any],
     touch_set: Iterable[str],
     head_pre: str,
     head_post: str,
@@ -119,7 +119,7 @@ def record_failure_lesson(
     output_tail = str(result.get("verify_output_tail", ""))
     touch_rows = sorted(str(path).replace("\\", "/") for path in touch_set)
     classification = classify_failure(output_tail=output_tail, message=str(result.get("message", "")))
-    lesson_payload: Dict[str, Any] = {
+    lesson_payload: dict[str, Any] = {
         "schema_version": "core_pillars/failure_lesson/v1",
         "created_at": datetime.now(UTC).isoformat(),
         "command": command_name,
@@ -163,10 +163,10 @@ def record_failure_lesson(
 
 def _score_lesson(
     *,
-    lesson: Dict[str, Any],
+    lesson: dict[str, Any],
     command_name: str,
-    scope_inputs: List[str],
-    touch_set: List[str],
+    scope_inputs: list[str],
+    touch_set: list[str],
     verify_profile: str,
 ) -> int:
     score = 0
@@ -189,14 +189,14 @@ def lookup_relevant_lessons(
     *,
     repo_root: Path,
     command_name: str,
-    scope_inputs: List[str],
-    touch_set: List[str],
+    scope_inputs: list[str],
+    touch_set: list[str],
     verify_profile: str,
     top_k: int = 3,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     if not failure_lessons_enabled():
         return []
-    ranked: list[tuple[int, str, Dict[str, Any]]] = []
+    ranked: list[tuple[int, str, dict[str, Any]]] = []
     for row in _read_lessons(repo_root):
         score = _score_lesson(
             lesson=row,
@@ -209,7 +209,7 @@ def lookup_relevant_lessons(
             continue
         ranked.append((score, str(row.get("created_at", "")), row))
     ranked.sort(key=lambda item: (-item[0], item[1], str(item[2].get("id", ""))))
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
     for score, _created_at, row in ranked[: max(1, int(top_k))]:
         advice = row.get("advice") if isinstance(row.get("advice"), dict) else {}
         results.append(
@@ -223,7 +223,7 @@ def lookup_relevant_lessons(
     return results
 
 
-def run_preflight_checks(*, repo_root: Path, advisories: List[Dict[str, Any]]) -> List[str]:
+def run_preflight_checks(*, repo_root: Path, advisories: list[dict[str, Any]]) -> list[str]:
     failures: list[str] = []
     for advisory in advisories:
         for check in list(advisory.get("preflight_checks") or []):

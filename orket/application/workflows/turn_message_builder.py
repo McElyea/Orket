@@ -106,10 +106,7 @@ class MessageBuilder:
 
         artifact_contract = context.get("artifact_contract")
         profile_traits = context.get("profile_traits")
-        if isinstance(profile_traits, dict):
-            profile_traits = dict(profile_traits)
-        else:
-            profile_traits = {}
+        profile_traits = dict(profile_traits) if isinstance(profile_traits, dict) else {}
         artifact_contract_allowed = bool(profile_traits.get("artifact_contract_required", True))
         runtime_verifier_allowed = bool(profile_traits.get("runtime_verifier_allowed", True))
         profile_intent = str(profile_traits.get("intent") or "").strip().lower()
@@ -560,7 +557,7 @@ class MessageBuilder:
             candidate = (self.workspace / rel_path).resolve()
             if not candidate.exists() or not candidate.is_file():
                 continue
-            async with aiofiles.open(candidate, mode="r", encoding="utf-8") as handle:
+            async with aiofiles.open(candidate, encoding="utf-8") as handle:
                 content = await handle.read()
             normalized = content.replace("\r\n", "\n")
             truncated = False

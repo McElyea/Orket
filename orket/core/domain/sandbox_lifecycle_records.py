@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field, model_validator
 
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxLifecycleError, SandboxState, TerminalReason
 
-
 SANDBOX_LIFECYCLE_SCHEMA_VERSION = "1.0"
 SANDBOX_LIFECYCLE_POLICY_VERSION = "docker_sandbox_lifecycle.v1"
 SUPPORTED_SANDBOX_LIFECYCLE_SCHEMA_VERSIONS = frozenset({SANDBOX_LIFECYCLE_SCHEMA_VERSION})

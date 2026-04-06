@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Protocol
+from typing import Any, Literal, Protocol
 
 from orket.application.review.models import digest_sha256_prefixed, to_canonical_json_bytes
-
 
 RiskVerdict = Literal["safe_for_v1_policy", "risky_for_v1_policy"]
 PublishDecision = Literal["normal_publish", "degraded_publish", "no_publish"]
@@ -15,7 +14,7 @@ ObservedPathClassification = Literal["primary", "fallback", "degraded", "blocked
 ObservedResultClassification = Literal["success", "failure", "partial success", "environment blocker"]
 
 
-def canonical_digest(payload: Dict[str, Any]) -> str:
+def canonical_digest(payload: dict[str, Any]) -> str:
     return digest_sha256_prefixed(to_canonical_json_bytes(payload))
 
 
@@ -24,11 +23,11 @@ class PlanObjectReader(Protocol):
 
 
 class ModelSummarizer(Protocol):
-    async def summarize(self, request: Dict[str, Any]) -> Dict[str, Any]: ...
+    async def summarize(self, request: dict[str, Any]) -> dict[str, Any]: ...
 
 
 class AuditPublisher(Protocol):
-    async def put_item(self, table_name: str, item: Dict[str, Any]) -> None: ...
+    async def put_item(self, table_name: str, item: dict[str, Any]) -> None: ...
 
 
 class PolicyBlockedError(RuntimeError):
@@ -41,8 +40,8 @@ class PolicyBlockedError(RuntimeError):
 @dataclass(slots=True)
 class TerraformPlanReviewRequest:
     plan_s3_uri: str
-    forbidden_operations: List[str]
-    request_metadata: Dict[str, Any] = field(default_factory=dict)
+    forbidden_operations: list[str]
+    request_metadata: dict[str, Any] = field(default_factory=dict)
     policy_bundle_id: str = "terraform_plan_reviewer_v1"
     execution_trace_ref: str = ""
     created_at: str = ""
@@ -57,7 +56,7 @@ class ResourceChangeRecord:
     resource_type: str
     action: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "address": self.address,
             "provider_name": self.provider_name,
@@ -73,7 +72,7 @@ class ForbiddenOperationHit:
     provider_name: str
     resource_type: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "operation": self.operation,
             "address": self.address,
@@ -91,7 +90,7 @@ class InputArtifact:
     parse_mode: str
     fetch_error: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "plan_s3_uri": self.plan_s3_uri,
             "plan_hash": self.plan_hash,
@@ -105,13 +104,13 @@ class InputArtifact:
 @dataclass(slots=True)
 class DeterministicAnalysisArtifact:
     analysis_complete: bool
-    resource_changes: List[ResourceChangeRecord]
-    action_counts: Dict[str, int]
-    forbidden_operation_hits: List[ForbiddenOperationHit]
-    warnings: List[str]
+    resource_changes: list[ResourceChangeRecord]
+    action_counts: dict[str, int]
+    forbidden_operation_hits: list[ForbiddenOperationHit]
+    warnings: list[str]
     analysis_confidence: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "analysis_complete": self.analysis_complete,
             "resource_changes": [item.to_dict() for item in self.resource_changes],
@@ -126,12 +125,12 @@ class DeterministicAnalysisArtifact:
 class ModelSummaryArtifact:
     model_id: str
     summary: str
-    review_focus_areas: List[str]
+    review_focus_areas: list[str]
     summary_status: SummaryStatus
-    advisory_errors: List[str] = field(default_factory=list)
+    advisory_errors: list[str] = field(default_factory=list)
     raw_completion_ref: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "model_id": self.model_id,
             "summary": self.summary,
@@ -147,8 +146,8 @@ class FinalReviewArtifact:
     plan_hash: str
     plan_s3_uri: str
     risk_verdict: str
-    forbidden_operation_hits: List[ForbiddenOperationHit]
-    resource_change_summary: Dict[str, Any]
+    forbidden_operation_hits: list[ForbiddenOperationHit]
+    resource_change_summary: dict[str, Any]
     model_id: str
     summary: str
     summary_status: SummaryStatus
@@ -157,7 +156,7 @@ class FinalReviewArtifact:
     created_at: str
     stored_in_dynamodb: bool
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "plan_hash": self.plan_hash,
             "plan_s3_uri": self.plan_s3_uri,
@@ -180,10 +179,10 @@ class GovernanceArtifact:
     publish_decision: PublishDecision
     policy_violation_type: str
     blocked_capability: str
-    durable_mutations_attempted: List[str]
-    durable_mutations_allowed: List[str]
-    adapter_calls_attempted: List[str]
-    adapter_calls_blocked: List[str]
+    durable_mutations_attempted: list[str]
+    durable_mutations_allowed: list[str]
+    adapter_calls_attempted: list[str]
+    adapter_calls_blocked: list[str]
     deterministic_analysis_complete: bool
     summary_status: SummaryStatus
     final_verdict_source: FinalVerdictSource
@@ -192,7 +191,7 @@ class GovernanceArtifact:
     observed_path_classification: ObservedPathClassification
     observed_result_classification: ObservedResultClassification
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "execution_status": self.execution_status,
             "publish_decision": self.publish_decision,
@@ -215,10 +214,10 @@ class GovernanceArtifact:
 @dataclass(slots=True)
 class ArtifactBundle:
     artifact_dir: str
-    artifact_paths: Dict[str, str]
-    artifact_hashes: Dict[str, str]
+    artifact_paths: dict[str, str]
+    artifact_hashes: dict[str, str]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "artifact_dir": self.artifact_dir,
             "artifact_paths": dict(self.artifact_paths),
@@ -236,7 +235,7 @@ class TerraformPlanReviewResult:
     final_review: FinalReviewArtifact
     governance_artifact: GovernanceArtifact
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "ok": self.ok,
             "artifact_bundle": self.artifact_bundle.to_dict(),

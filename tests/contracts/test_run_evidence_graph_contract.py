@@ -14,7 +14,6 @@ from orket.runtime.run_evidence_graph import (
     validate_run_evidence_graph_payload,
 )
 
-
 pytestmark = pytest.mark.contract
 
 _GENERATED_AT = "2036-03-05T12:00:05+00:00"

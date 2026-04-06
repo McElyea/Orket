@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+
 import aiosqlite
 
 
@@ -39,10 +41,8 @@ class CardMigrations:
             """
         )
 
-        try:
+        with contextlib.suppress(aiosqlite.OperationalError):
             await conn.execute("ALTER TABLE issues ADD COLUMN depends_on_json TEXT")
-        except aiosqlite.OperationalError:
-            pass
 
         try:
             await conn.execute("ALTER TABLE issues ADD COLUMN retry_count INTEGER DEFAULT 0")
@@ -50,10 +50,8 @@ class CardMigrations:
         except aiosqlite.OperationalError:
             pass
 
-        try:
+        with contextlib.suppress(aiosqlite.OperationalError):
             await conn.execute("ALTER TABLE issues ADD COLUMN params_json TEXT")
-        except aiosqlite.OperationalError:
-            pass
 
         await conn.execute(
             """

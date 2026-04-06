@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
+from orket.core.domain.execution import ExecutionTurn
 from orket.core.policies.tool_gate import ToolGate
-from orket.domain.execution import ExecutionTurn
 from orket.logging import log_event
 from orket.schema import IssueConfig
 
+from ..services.governed_turn_tool_approval_continuation_service import (
+    supports_governed_turn_tool_approval_continuation,
+)
 from .protocol_hashing import (
     VALIDATOR_VERSION,
     build_step_id,
@@ -42,17 +46,16 @@ from .turn_tool_dispatcher_support import (
     runtime_limit_violations,
     tool_policy_violation,
 )
-from ..services.governed_turn_tool_approval_continuation_service import (
-    supports_governed_turn_tool_approval_continuation,
-)
 
 
 class ToolDispatcher:
     """Execute tool calls with governance checks and replay/idempotency caching."""
 
     resolve_skill_tool_binding = staticmethod(resolve_skill_tool_binding)
-    missing_required_permissions = staticmethod(missing_required_permissions); permission_values = staticmethod(permission_values)
-    runtime_limit_violations = staticmethod(runtime_limit_violations); as_positive_float = staticmethod(as_positive_float)
+    missing_required_permissions = staticmethod(missing_required_permissions)
+    permission_values = staticmethod(permission_values)
+    runtime_limit_violations = staticmethod(runtime_limit_violations)
+    as_positive_float = staticmethod(as_positive_float)
 
     def __init__(
         self,

@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from orket.extensions.controller_dispatcher import (
-    ControllerDispatcher,
     ERROR_CHILD_EXECUTION_FAILED,
     ERROR_CHILD_SDK_REQUIRED,
     ERROR_CHILD_TIMEOUT_INVALID,
@@ -16,6 +15,7 @@ from orket.extensions.controller_dispatcher import (
     ERROR_MAX_DEPTH_EXCEEDED,
     ERROR_MAX_FANOUT_EXCEEDED,
     ERROR_RECURSION_DENIED,
+    ControllerDispatcher,
 )
 from orket.extensions.manager import ExtensionManager
 from orket.extensions.models import CONTRACT_STYLE_SDK_V0, ExtensionRunResult
@@ -198,7 +198,7 @@ async def test_controller_dispatcher_caps_and_stop_on_first_failure() -> None:
                 {"target_workload": "sdk_c", "contract_style": "sdk_v0"},
             ],
         },
-        workspace=Path("."),
+        workspace=Path(),
         department="core",
     )
     assert summary.status == "failed"
@@ -228,7 +228,7 @@ async def test_controller_dispatcher_depth_recursion_cycle_and_timeout_validatio
             "requested_caps": {"max_depth": 1},
             "children": [{"target_workload": "sdk_a", "contract_style": "sdk_v0"}],
         },
-        workspace=Path("."),
+        workspace=Path(),
         department="core",
     )
     assert depth.error_code == ERROR_MAX_DEPTH_EXCEEDED
@@ -241,7 +241,7 @@ async def test_controller_dispatcher_depth_recursion_cycle_and_timeout_validatio
             "ancestry": ["controller_workload_v1"],
             "children": [{"target_workload": "sdk_a", "contract_style": "sdk_v0"}],
         },
-        workspace=Path("."),
+        workspace=Path(),
         department="core",
     )
     assert recursion.error_code == ERROR_RECURSION_DENIED
@@ -257,7 +257,7 @@ async def test_controller_dispatcher_depth_recursion_cycle_and_timeout_validatio
                 {"target_workload": "sdk_a", "contract_style": "sdk_v0"},
             ],
         },
-        workspace=Path("."),
+        workspace=Path(),
         department="core",
     )
     assert cycle.error_code == ERROR_CYCLE_DENIED
@@ -271,7 +271,7 @@ async def test_controller_dispatcher_depth_recursion_cycle_and_timeout_validatio
             "ancestry": [],
             "children": [{"target_workload": "legacy_a", "contract_style": "sdk_v0"}],
         },
-        workspace=Path("."),
+        workspace=Path(),
         department="core",
     )
     assert legacy.error_code == ERROR_CHILD_SDK_REQUIRED
@@ -284,7 +284,7 @@ async def test_controller_dispatcher_depth_recursion_cycle_and_timeout_validatio
             "ancestry": [],
             "children": [{"target_workload": "sdk_a", "contract_style": "sdk_v0", "timeout_seconds": 0}],
         },
-        workspace=Path("."),
+        workspace=Path(),
         department="core",
     )
     assert timeout_invalid.error_code == ERROR_CHILD_TIMEOUT_INVALID

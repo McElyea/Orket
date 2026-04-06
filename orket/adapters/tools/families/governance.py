@@ -1,27 +1,27 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
-from orket.core.types import CardStatus
 from orket.adapters.tools.families.base import BaseTools
+from orket.core.types import CardStatus
 
 
 class GovernanceTools(BaseTools):
     """Process/governance-oriented tools separated from toolbox wiring mechanics."""
 
-    def __init__(self, workspace_root: Path, references: List[Path], cards: Any):
+    def __init__(self, workspace_root: Path, references: list[Path], cards: Any):
         super().__init__(workspace_root, references)
         self.cards = cards
 
-    def nominate_card(self, args: Dict[str, Any], context: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    def nominate_card(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         from orket.logging import log_event
 
         context = context or {}
         log_event("card_nomination", {**args, "nominated_by": context.get("role")}, self.workspace_root, role="SYS")
         return {"ok": True, "message": "Nomination recorded."}
 
-    async def report_credits(self, args: Dict[str, Any], context: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    async def report_credits(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         context = context or {}
         issue_id = context.get("issue_id") or args.get("issue_id")
         amount = args.get("amount", 0.0)
@@ -39,14 +39,14 @@ class GovernanceTools(BaseTools):
         await add_credits_fn(issue_id, amount)
         return {"ok": True, "message": f"Reported {amount} credits."}
 
-    def refinement_proposal(self, args: Dict[str, Any], context: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    def refinement_proposal(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         from orket.logging import log_event
 
         context = context or {}
         log_event("refinement_proposed", args, self.workspace_root, role="SYS")
         return {"ok": True, "message": "Proposal logged."}
 
-    async def request_excuse(self, args: Dict[str, Any], context: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    async def request_excuse(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         context = context or {}
         issue_id = context.get("issue_id") or args.get("issue_id")
         if not issue_id:

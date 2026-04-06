@@ -6,7 +6,6 @@ import pytest
 
 from orket.core.domain import LeaseStatus, build_lease_record
 
-
 pytestmark = pytest.mark.contract
 
 

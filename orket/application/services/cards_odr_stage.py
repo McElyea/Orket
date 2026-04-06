@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.kernel.v1.odr.live_runner import run_live_refinement
@@ -12,7 +12,7 @@ _SUCCESS_STOP_REASONS = {"STABLE_DIFF_FLOOR", "LOOP_DETECTED"}
 _ACCEPTABLE_MAX_ROUNDS_STOP_REASON = "MAX_ROUNDS"
 
 
-def _build_odr_task(*, issue: Any, cards_runtime: Dict[str, Any]) -> str:
+def _build_odr_task(*, issue: Any, cards_runtime: dict[str, Any]) -> str:
     artifact_contract = dict(cards_runtime.get("artifact_contract") or {})
     required_write_paths = list(artifact_contract.get("required_write_paths") or [])
     required_read_paths = list(artifact_contract.get("required_read_paths") or [])
@@ -32,7 +32,7 @@ def _build_odr_task(*, issue: Any, cards_runtime: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _cached_result(issue: Any, *, run_id: str) -> Dict[str, Any] | None:
+def _cached_result(issue: Any, *, run_id: str) -> dict[str, Any] | None:
     params = getattr(issue, "params", None)
     if not isinstance(params, dict):
         return None
@@ -73,12 +73,12 @@ async def run_cards_odr_prebuild(
     issue: Any,
     run_id: str,
     selected_model: str,
-    cards_runtime: Dict[str, Any],
+    cards_runtime: dict[str, Any],
     model_client: Any,
     auditor_client: Any | None = None,
     async_cards: Any,
     max_rounds: int = 8,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     cached = _cached_result(issue, run_id=run_id)
     if cached is not None:
         return cached

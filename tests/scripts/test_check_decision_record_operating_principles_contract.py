@@ -12,7 +12,7 @@ from scripts.governance.check_decision_record_operating_principles_contract impo
 
 # Layer: contract
 def test_evaluate_decision_record_operating_principles_contract_passes() -> None:
-    payload = evaluate_decision_record_operating_principles_contract(workspace=Path(".").resolve())
+    payload = evaluate_decision_record_operating_principles_contract(workspace=Path().resolve())
     assert payload["ok"] is True
     assert payload["check_count"] == 2
 
@@ -21,7 +21,7 @@ def test_evaluate_decision_record_operating_principles_contract_passes() -> None
 def test_check_decision_record_operating_principles_contract_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "decision_record_operating_principles_contract_check.json"
     exit_code, payload = check_decision_record_operating_principles_contract(
-        workspace=Path(".").resolve(),
+        workspace=Path().resolve(),
         out_path=out_path,
     )
     assert exit_code == 0

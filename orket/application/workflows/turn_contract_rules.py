@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
+from orket.core.domain.execution import ExecutionTurn
 from orket.core.domain.verification_scope import parse_verification_scope
-from orket.domain.execution import ExecutionTurn
 
 from .turn_path_resolver import PathResolver
 
@@ -110,9 +111,8 @@ def meets_architecture_decision_contract(turn: ExecutionTurn, context: dict[str,
             return False
 
         frontend_framework = str(payload.get("frontend_framework", "")).strip().lower()
-        if frontend_framework:
-            if frontend_framework not in allowed_frontend_frameworks:
-                return False
+        if frontend_framework and frontend_framework not in allowed_frontend_frameworks:
+            return False
         if forced_frontend_framework and frontend_framework != forced_frontend_framework:
             return False
 
@@ -127,9 +127,7 @@ def meets_architecture_decision_contract(turn: ExecutionTurn, context: dict[str,
         evidence = payload.get("evidence")
         if not isinstance(evidence, dict):
             return False
-        if not required_evidence_keys.issubset(set(evidence.keys())):
-            return False
-        return True
+        return required_evidence_keys.issubset(set(evidence.keys()))
 
     return False
 

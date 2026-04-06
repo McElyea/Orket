@@ -6,7 +6,7 @@ import shlex
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from orket.interfaces.failure_lessons import (
     ERROR_PREFLIGHT_FAILED,
@@ -34,7 +34,7 @@ class ParsedSchemaField:
     field_type: str
 
 
-def _run(command: List[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
+def _run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)
 
 
@@ -51,8 +51,8 @@ def _tail(text: str, *, max_lines: int = 200, max_bytes: int = 32768) -> str:
     return "\n".join(clipped.splitlines()[-max_lines:])
 
 
-def _parse_schema(schema_text: str) -> List[ParsedSchemaField]:
-    rows: List[ParsedSchemaField] = []
+def _parse_schema(schema_text: str) -> list[ParsedSchemaField]:
+    rows: list[ParsedSchemaField] = []
     for token in [part.strip() for part in schema_text.split(",") if part.strip()]:
         name, sep, field_type = token.partition(":")
         if not sep or not name.strip() or not field_type.strip():
@@ -84,7 +84,7 @@ def _is_clean_worktree(repo_root: Path) -> bool:
     return True
 
 
-def _load_verify_commands(repo_root: Path, profile_name: str) -> List[str]:
+def _load_verify_commands(repo_root: Path, profile_name: str) -> list[str]:
     config_path = repo_root / "orket.config.json"
     if not config_path.exists():
         return ["python -m pytest -q"]
@@ -107,7 +107,7 @@ def _load_verify_commands(repo_root: Path, profile_name: str) -> List[str]:
     return [item.strip() for item in commands]
 
 
-def _validate_scoped(path: Path, scope_roots: List[Path]) -> str | None:
+def _validate_scoped(path: Path, scope_roots: list[Path]) -> str | None:
     resolved = path.resolve()
     if "node_modules" in resolved.parts:
         return ERROR_WRITE_OUT_OF_SCOPE
@@ -143,7 +143,7 @@ def _route_template(route_name: str, method: str, controller_fn: str) -> str:
     )
 
 
-def _controller_template(route_name: str, method: str, fields: List[ParsedSchemaField]) -> str:
+def _controller_template(route_name: str, method: str, fields: list[ParsedSchemaField]) -> str:
     field_lines = "\n".join([f" * @property {{{field.field_type}}} {field.name}" for field in fields])
     return (
         "/**\n"
@@ -159,12 +159,12 @@ def _controller_template(route_name: str, method: str, fields: List[ParsedSchema
     )
 
 
-def _types_template(route_name: str, fields: List[ParsedSchemaField]) -> str:
+def _types_template(route_name: str, fields: list[ParsedSchemaField]) -> str:
     rows = ",\n".join([f'  "{field.name}": "{field.field_type}"' for field in fields])
     return f'{{\n  "route": "{route_name}",\n  "request_schema": {{\n{rows}\n  }}\n}}\n'
 
 
-def _render_plan(route_name: str, scope_inputs: List[str], touch_set: List[Path], verify_commands: List[str]) -> str:
+def _render_plan(route_name: str, scope_inputs: list[str], touch_set: list[Path], verify_commands: list[str]) -> str:
     lines = [f'ORCHESTRATING API ADD: "{route_name}"', "-----------------------------------------------", "SCOPE:"]
     lines.extend(f"  - {scope}" for scope in scope_inputs)
     lines.append("FILES TO BE MODIFIED:")
@@ -181,11 +181,11 @@ def run_api_add_transaction(
     route_name: str,
     schema_text: str,
     method: str,
-    scope_inputs: List[str],
+    scope_inputs: list[str],
     dry_run: bool,
     auto_confirm: bool,
     verify_profile: str = "default",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     repo_root = Path.cwd().resolve()
     request_payload = {
         "route_name": route_name,

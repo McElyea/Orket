@@ -5,7 +5,6 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCAN_ROOTS = (
     REPO_ROOT / "orket",
@@ -30,10 +29,10 @@ WORKLOAD_AUTHORITY_IMPORTS = {
     "ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD",
     "REVIEW_RUN_WORKLOAD",
     "TURN_TOOL_WORKLOAD",
-    "_resolve_cards_control_plane_workload_from_contract",
     "_resolve_extension_control_plane_workload",
     "_resolve_odr_arbiter_control_plane_workload_from_contract",
     "control_plane_workload_for_key",
+    "resolve_cards_control_plane_workload_from_contract",
     "resolve_control_plane_workload",
     "sandbox_runtime_workload_for_tech_stack",
 }
@@ -131,7 +130,6 @@ EXTENSION_MANIFEST_WORKLOAD_DESCRIPTOR = "ExtensionManifestWorkload"
 PRIVATE_EXTENSION_MANIFEST_WORKLOAD_DESCRIPTOR = "_ExtensionManifestEntry"
 RETIRED_EXTENSION_WORKLOAD_DESCRIPTOR = "ExtensionWorkloadDescriptor"
 PRIVATE_CATALOG_HELPER_IMPORT_OWNERS = {
-    "_resolve_cards_control_plane_workload_from_contract": {"orket/runtime/execution_pipeline.py"},
     "_resolve_extension_control_plane_workload": {"orket/extensions/manager.py"},
     "_resolve_odr_arbiter_control_plane_workload_from_contract": {"scripts/odr/run_arbiter.py"},
 }
@@ -466,7 +464,6 @@ def test_catalog_private_helpers_are_not_blessed_in_dunder_all() -> None:
     """Layer: unit. Verifies catalog-local helper seams stay internal-only and are not exported as public module surface."""
     exports = _module_all_exports(REPO_ROOT / "orket" / "application" / "services" / "control_plane_workload_catalog.py")
 
-    assert "_resolve_cards_control_plane_workload_from_contract" not in exports
     assert "_resolve_extension_control_plane_workload" not in exports
 
 
@@ -543,8 +540,8 @@ def test_controller_dispatcher_uses_manager_sdk_probe_instead_of_private_manifes
 
 
 def test_extension_models_do_not_define_manifest_workload_alias() -> None:
-    from dataclasses import fields
     import importlib
+    from dataclasses import fields
 
     extension_models = (REPO_ROOT / "orket" / "extensions" / "models.py").read_text(encoding="utf-8-sig")
     models_module = importlib.import_module("orket.extensions.models")
@@ -718,7 +715,7 @@ def test_execution_pipeline_no_longer_assembles_cards_workload_authority_input_d
         encoding="utf-8-sig"
     )
 
-    assert "_resolve_cards_control_plane_workload_from_contract" in execution_pipeline_text
+    assert "resolve_cards_control_plane_workload_from_contract" in execution_pipeline_text
     assert "WorkloadAuthorityInput" not in execution_pipeline_text
     assert "resolve_control_plane_workload(" not in execution_pipeline_text
 

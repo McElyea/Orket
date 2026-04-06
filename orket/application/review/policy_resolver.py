@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional
+from typing import Any
 
 from orket.application.review.models import ResolvedPolicy, digest_sha256_prefixed, to_canonical_json_bytes
 from orket.settings import load_user_settings
 
-
-DEFAULT_POLICY: Dict[str, Any] = {
+DEFAULT_POLICY: dict[str, Any] = {
     "policy_version": "review_policy_v0",
     "input_scope": {
         "mode": "code_only",
@@ -62,7 +62,7 @@ DEFAULT_POLICY: Dict[str, Any] = {
 }
 
 
-def _read_json_file(path: Path) -> Dict[str, Any]:
+def _read_json_file(path: Path) -> dict[str, Any]:
     if not path.is_file():
         return {}
     try:
@@ -72,7 +72,7 @@ def _read_json_file(path: Path) -> Dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def _deep_merge(base: Dict[str, Any], override: Mapping[str, Any]) -> Dict[str, Any]:
+def _deep_merge(base: dict[str, Any], override: Mapping[str, Any]) -> dict[str, Any]:
     result = dict(base)
     for key, value in override.items():
         if key in result and isinstance(result[key], dict) and isinstance(value, Mapping):
@@ -84,9 +84,9 @@ def _deep_merge(base: Dict[str, Any], override: Mapping[str, Any]) -> Dict[str, 
 
 def resolve_review_policy(
     *,
-    cli_overrides: Optional[Mapping[str, Any]] = None,
+    cli_overrides: Mapping[str, Any] | None = None,
     repo_root: Path,
-    policy_path: Optional[Path] = None,
+    policy_path: Path | None = None,
 ) -> ResolvedPolicy:
     repo_policy_path = policy_path or (repo_root / ".orket" / "review_policy.json")
     repo_policy = _read_json_file(repo_policy_path)

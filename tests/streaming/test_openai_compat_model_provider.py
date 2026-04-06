@@ -16,7 +16,7 @@ class _FakeStreamResponse:
     def __init__(self, lines: list[str]) -> None:
         self._lines = lines
 
-    async def __aenter__(self) -> "_FakeStreamResponse":
+    async def __aenter__(self) -> _FakeStreamResponse:
         return self
 
     async def __aexit__(self, exc_type, exc: BaseException | None, tb) -> None:
@@ -35,7 +35,7 @@ class _FakeAsyncClient:
         _ = args
         _ = kwargs
 
-    async def __aenter__(self) -> "_FakeAsyncClient":
+    async def __aenter__(self) -> _FakeAsyncClient:
         return self
 
     async def __aexit__(self, exc_type, exc: BaseException | None, tb) -> None:

@@ -8,15 +8,15 @@ from typing import Any
 
 import aiofiles
 
-from orket.application.services.run_ledger_summary_projection import validated_run_ledger_record_projection
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
-from orket.runtime.run_ledger_projection import project_run_ledger_record
+from orket.application.services.run_ledger_summary_projection import validated_run_ledger_record_projection
 from orket.runtime.run_evidence_graph_projection_support import (
     PrimaryLineageContext,
     issue,
     source_id,
     source_summary,
 )
+from orket.runtime.run_ledger_projection import project_run_ledger_record
 from orket.runtime.run_summary import validate_run_summary_payload
 
 
@@ -72,10 +72,10 @@ def _merge_projection(target: SupplementalProjection, incoming: SupplementalProj
     target.source_summaries.extend(incoming.source_summaries)
     target.issues.extend(incoming.issues)
     target.run_annotations.update(incoming.run_annotations)
-    for attempt_id, annotations in incoming.attempt_annotations_by_id.items():
-        target.attempt_annotations_by_id.setdefault(attempt_id, {}).update(annotations)
-    for step_id, annotations in incoming.step_annotations_by_id.items():
-        target.step_annotations_by_id.setdefault(step_id, {}).update(annotations)
+    for attempt_id, attempt_annotations in incoming.attempt_annotations_by_id.items():
+        target.attempt_annotations_by_id.setdefault(attempt_id, {}).update(attempt_annotations)
+    for step_id, step_annotations in incoming.step_annotations_by_id.items():
+        target.step_annotations_by_id.setdefault(step_id, {}).update(step_annotations)
 
 
 async def _load_run_summary_annotation(
@@ -93,7 +93,7 @@ async def _load_run_summary_annotation(
     path_ref = f"runs/{session_id}/run_summary.json"
     summary_source_id = source_id("run_summary.json", path_ref)
     try:
-        async with aiofiles.open(run_summary_path, mode="r", encoding="utf-8") as handle:
+        async with aiofiles.open(run_summary_path, encoding="utf-8") as handle:
             payload = json.loads(await handle.read())
         if not isinstance(payload, dict):
             raise ValueError("run_summary_payload_not_object")

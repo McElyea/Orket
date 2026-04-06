@@ -1,14 +1,13 @@
 import json
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
 from orket.marshaller.canonical import hash_canonical_json
 from orket.marshaller.promotion import promote_run
-from orket.marshaller.rejection_codes import FORBIDDEN_PATH
-from orket.marshaller.rejection_codes import FLAKE_DETECTED, LINT_FAILED, TESTS_FAILED
+from orket.marshaller.rejection_codes import FLAKE_DETECTED, FORBIDDEN_PATH, LINT_FAILED, TESTS_FAILED
 from orket.marshaller.replay import replay_run
 from orket.marshaller.runner import MarshallerRunner
 

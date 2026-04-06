@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
-from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.adapters.tools.families import (
     AcademyTools,
     BaseTools,
@@ -14,12 +14,13 @@ from orket.adapters.tools.families import (
     VisionTools,
 )
 from orket.adapters.tools.runtime import ToolRuntimeExecutor
+from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.runtime_paths import resolve_runtime_db_path
 
 if TYPE_CHECKING:
     from orket.adapters.storage.async_card_repository import AsyncCardRepository
-    from orket.schema import OrganizationConfig
     from orket.core.policies.tool_gate import ToolGate
+    from orket.schema import OrganizationConfig
 
 
 class ToolBox:
@@ -27,13 +28,13 @@ class ToolBox:
         self,
         policy,
         workspace_root: str,
-        references: List[str],
-        db_path: Optional[str] = None,
-        cards_repo: Optional["AsyncCardRepository"] = None,
-        tool_gate: Optional["ToolGate"] = None,
-        organization: Optional["OrganizationConfig"] = None,
-        decision_nodes: Optional[DecisionNodeRegistry] = None,
-        runtime_executor: Optional[ToolRuntimeExecutor] = None,
+        references: list[str],
+        db_path: str | None = None,
+        cards_repo: AsyncCardRepository | None = None,
+        tool_gate: ToolGate | None = None,
+        organization: OrganizationConfig | None = None,
+        decision_nodes: DecisionNodeRegistry | None = None,
+        runtime_executor: ToolRuntimeExecutor | None = None,
     ):
         self.root = Path(workspace_root)
         self.refs = [Path(r) for r in references]
@@ -58,9 +59,9 @@ class ToolBox:
     async def execute(
         self,
         tool_name: str,
-        args: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        args: dict[str, Any],
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         tool_map = get_tool_map(self)
         if tool_name not in tool_map:
             return {"ok": False, "error": f"Unknown tool '{tool_name}'"}
@@ -69,28 +70,28 @@ class ToolBox:
         resolved_context = dict(context or {})
         return await self.runtime_executor.invoke(tool_fn, args, context=resolved_context)
 
-    def nominate_card(self, args: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def nominate_card(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         return self.governance.nominate_card(args, context=dict(context or {}))
 
-    async def report_credits(self, args: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def report_credits(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         return await self.governance.report_credits(args, context=dict(context or {}))
 
     def refinement_proposal(
         self,
-        args: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        args: dict[str, Any],
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         return self.governance.refinement_proposal(args, context=dict(context or {}))
 
     async def request_excuse(
         self,
-        args: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        args: dict[str, Any],
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         return await self.governance.request_excuse(args, context=dict(context or {}))
 
 
-def get_tool_map(toolbox: ToolBox) -> Dict[str, Callable]:
+def get_tool_map(toolbox: ToolBox) -> dict[str, Callable]:
     return toolbox.tool_strategy_node.compose(toolbox)
 
 

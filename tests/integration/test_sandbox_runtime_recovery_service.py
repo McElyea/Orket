@@ -18,7 +18,7 @@ from orket.application.services.sandbox_runtime_recovery_service import SandboxR
 from orket.core.domain import ClosureBasisClassification, LeaseStatus, ResultClass
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
-from orket.domain.verification import AGENT_OUTPUT_DIR
+from orket.core.domain.verification import AGENT_OUTPUT_DIR
 
 
 class FakeRecoveryRunner:
@@ -63,24 +63,21 @@ class FakeRecoveryRunner:
         if not self.resources_present:
             return ""
         return (
-            '{"Names":"%s-api-1","State":"%s","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s,com.docker.compose.service=api"}\n'
-            % (self.compose_project, self.container_state, self.sandbox_id, self.run_id)
+            f'{{"Names":"{self.compose_project}-api-1","State":"{self.container_state}","Labels":"orket.managed=true,orket.sandbox_id={self.sandbox_id},orket.run_id={self.run_id},com.docker.compose.service=api"}}\n'
         )
 
     def _network_rows(self) -> str:
         if not self.resources_present:
             return ""
         return (
-            '{"Name":"%s_default","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
-            % (self.compose_project, self.sandbox_id, self.run_id)
+            f'{{"Name":"{self.compose_project}_default","Labels":"orket.managed=true,orket.sandbox_id={self.sandbox_id},orket.run_id={self.run_id}"}}\n'
         )
 
     def _volume_rows(self) -> str:
         if not self.resources_present:
             return ""
         return (
-            '{"Name":"%s_db-data","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
-            % (self.compose_project, self.sandbox_id, self.run_id)
+            f'{{"Name":"{self.compose_project}_db-data","Labels":"orket.managed=true,orket.sandbox_id={self.sandbox_id},orket.run_id={self.run_id}"}}\n'
         )
 
     def _inspect_payload(self) -> list[dict[str, object]]:

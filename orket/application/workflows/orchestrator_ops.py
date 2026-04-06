@@ -1,44 +1,26 @@
 import asyncio
 import inspect
 import json
-import re
 import os
+import re
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
-from typing import List, Dict, Any, Optional
-from datetime import datetime, UTC
+from typing import Any
 
-from orket.schema import (
-    EpicConfig,
-    TeamConfig,
-    EnvironmentConfig,
-    IssueConfig,
-    CardStatus,
-    RoleConfig,
-    DialectConfig,
-    SkillConfig,
-    SeatConfig,
-    WaitReason,
-)
-from orket.application.workflows.turn_executor import TurnExecutor
-from orket.orchestration.models import ModelSelector
-from orket.orchestration.notes import Note
-from orket.decision_nodes.contracts import PlanningInput
-from orket.application.services.prompt_compiler import PromptCompiler
-from orket.application.services.prompt_resolver import PromptResolver
-from orket.application.services.scaffolder import Scaffolder, ScaffoldValidationError
+from orket.adapters.storage.async_file_tools import AsyncFileTools
+from orket.application.services.cards_odr_stage import run_cards_odr_prebuild
 from orket.application.services.dependency_manager import (
     DependencyManager,
     DependencyValidationError,
 )
-from orket.application.services.runtime_verifier import RuntimeVerifier, build_runtime_guard_contract
-from orket.application.services.guard_agent import GuardAgent
-from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
-from orket.application.services.cards_odr_stage import run_cards_odr_prebuild
 from orket.application.services.deployment_planner import (
     DeploymentPlanner,
     DeploymentValidationError,
 )
+from orket.application.services.guard_agent import GuardAgent
+from orket.application.services.prompt_compiler import PromptCompiler
+from orket.application.services.prompt_resolver import PromptResolver
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     resolve_architecture_mode,
@@ -50,22 +32,50 @@ from orket.application.services.runtime_policy import (
     resolve_protocol_determinism_controls,
     resolve_small_project_builder_variant,
 )
-from orket.adapters.storage.async_file_tools import AsyncFileTools
-from orket.core.policies.tool_gate import ToolGate
-from orket.tools import ToolBox
-from orket.logging import log_event
-from orket.exceptions import CardNotFound, ExecutionFailed
-from orket.core.domain.state_machine import StateMachine
-from orket.core.domain.workitem_transition import WorkItemTransitionService
+from orket.application.services.runtime_verifier import RuntimeVerifier, build_runtime_guard_contract
+from orket.application.services.scaffolder import Scaffolder, ScaffoldValidationError
+from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
+from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, resolve_cards_runtime
 from orket.core.domain.guard_review import GuardReviewPayload
 from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
+from orket.core.domain.state_machine import StateMachine
 from orket.core.domain.verification_scope import build_verification_scope
-from orket.runtime.truthful_memory_policy import render_reference_context_rows
+from orket.core.domain.workitem_transition import WorkItemTransitionService
+from orket.core.policies.tool_gate import ToolGate
+from orket.decision_nodes.contracts import PlanningInput
+from orket.exceptions import CardNotFound, ExecutionFailed
+from orket.logging import log_event
+from orket.orchestration.models import ModelSelector
+from orket.orchestration.notes import Note
 from orket.runtime.settings import resolve_bool, resolve_str
+from orket.runtime.truthful_memory_policy import render_reference_context_rows
 from orket.runtime_paths import resolve_control_plane_db_path
+from orket.schema import (
+    CardStatus,
+    DialectConfig,
+    EnvironmentConfig,
+    EpicConfig,
+    IssueConfig,
+    RoleConfig,
+    SeatConfig,
+    SkillConfig,
+    TeamConfig,
+    WaitReason,
+)
+from orket.settings import (
+    load_user_preferences as _load_user_preferences,
+)
+from orket.settings import (
+    load_user_preferences_async,
+    load_user_settings,
+    load_user_settings_async,
+    set_runtime_settings_context,
+)
+from orket.tools import ToolBox
 from orket.utils import sanitize_name
-from orket.settings import load_user_settings, load_user_preferences
-from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, resolve_cards_runtime
+
+load_user_preferences = _load_user_preferences
 
 
 async def _close_provider_transport(provider: Any) -> None:
@@ -84,7 +94,7 @@ def _select_prompt_strategy_model(
     asset_config: Any,
     override: str | None,
 ) -> str:
-    select_model = getattr(prompt_strategy_node, "select_model")
+    select_model = prompt_strategy_node.select_model
     override_token = str(override or "").strip()
     if not override_token:
         return select_model(role=role, asset_config=asset_config)
@@ -113,7 +123,7 @@ def _normalize_turn_contract_override_list(value: Any, *, lowercase: bool = Fals
     return normalized
 
 
-def _should_suppress_reference_context_for_cards_runtime(cards_runtime: Dict[str, Any] | None) -> bool:
+def _should_suppress_reference_context_for_cards_runtime(cards_runtime: dict[str, Any] | None) -> bool:
     runtime = dict(cards_runtime or {})
     profile = str(runtime.get("execution_profile") or runtime.get("base_execution_profile") or "").strip().lower()
     if not profile:
@@ -164,7 +174,7 @@ def _resolve_transition_wait_reason(
     *,
     target_status: CardStatus,
     reason: str,
-    metadata: Optional[Dict[str, Any]],
+    metadata: dict[str, Any] | None,
 ) -> str | None:
     if isinstance(metadata, dict):
         explicit = _normalize_wait_reason_token(metadata.get("wait_reason"))
@@ -188,7 +198,7 @@ def _apply_issue_transition_locally(
     *,
     issue: IssueConfig,
     target_status: CardStatus,
-    assignee: Optional[str],
+    assignee: str | None,
     wait_reason: str | None,
 ) -> None:
     issue.status = target_status
@@ -302,7 +312,7 @@ def _resolve_protocol_max_tool_calls(self) -> int:
     return 8
 
 
-def _resolve_protocol_determinism_context(self) -> Dict[str, Any]:
+def _resolve_protocol_determinism_context(self) -> dict[str, Any]:
     process_rules = _org_process_rules(self.org)
     user_settings = _user_settings()
     controls = resolve_protocol_determinism_controls(
@@ -460,9 +470,9 @@ async def _request_issue_transition(
     issue: IssueConfig,
     target_status: CardStatus,
     reason: str,
-    assignee: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
-    roles: Optional[List[str]] = None,
+    assignee: str | None = None,
+    metadata: dict[str, Any] | None = None,
+    roles: list[str] | None = None,
     allow_policy_override: bool = True,
 ) -> None:
     current_status = (
@@ -558,8 +568,8 @@ async def _publish_issue_control_plane_transition(
     current_status: CardStatus,
     target_status: CardStatus,
     reason: str,
-    assignee: Optional[str],
-    metadata_payload: Dict[str, Any],
+    assignee: str | None,
+    metadata_payload: dict[str, Any],
 ) -> None:
     session_id = str(metadata_payload.get("run_id") or "").strip()
     if not session_id:
@@ -642,7 +652,7 @@ def _auto_inject_small_project_reviewer_seat(self, team: TeamConfig) -> str:
     return seat_name
 
 
-def _resolve_small_project_team_policy(self, epic: Any, team: Any) -> Dict[str, Any]:
+def _resolve_small_project_team_policy(self, epic: Any, team: Any) -> dict[str, Any]:
     issue_count = len(list(getattr(epic, "issues", []) or []))
     threshold = self._small_project_issue_threshold()
     active = 0 < issue_count <= threshold
@@ -766,8 +776,8 @@ def _resolve_prompt_patch_label(self) -> str:
     )
 
 
-def _resolve_verification_scope_limits(self) -> Dict[str, int | None]:
-    defaults: Dict[str, int | None] = {
+def _resolve_verification_scope_limits(self) -> dict[str, int | None]:
+    defaults: dict[str, int | None] = {
         "max_workspace_items": None,
         "max_active_context_items": None,
         "max_passive_context_items": None,
@@ -792,7 +802,7 @@ def _resolve_verification_scope_limits(self) -> Dict[str, int | None]:
     return resolved
 
 
-def _history_context(self, seat_name: str | None = None) -> List[Dict[str, str]]:
+def _history_context(self, seat_name: str | None = None) -> list[dict[str, str]]:
     history_rows = self.transcript[-self.context_window :]
     normalized_seat = str(seat_name or "").strip().lower()
     if normalized_seat:
@@ -812,8 +822,8 @@ async def verify_issue(self, issue_id: str, run_id: str | None = None) -> Any:
     """
     Runs empirical verification for a specific issue.
     """
-    from orket.domain.verification import VerificationEngine
-    from orket.domain.sandbox import SandboxStatus
+    from orket.core.domain.sandbox import SandboxStatus
+    from orket.core.domain.verification import VerificationEngine
 
     # 1. Load the latest IssueConfig from DB
     issue_data = await self.async_cards.get_by_id(issue_id)
@@ -860,7 +870,7 @@ async def verify_issue(self, issue_id: str, run_id: str | None = None) -> Any:
 
 async def _trigger_sandbox(self, epic: EpicConfig, run_id: str | None = None):
     """Helper to trigger sandbox deployment with per-epic locking."""
-    from orket.domain.sandbox import TechStack, SandboxStatus
+    from orket.core.domain.sandbox import SandboxStatus, TechStack
 
     rock_id = epic.parent_id or epic.id
     if rock_id in self._sandbox_failed_rocks:
@@ -908,6 +918,10 @@ async def execute_epic(
     Main execution loop for an Epic.
     Executes independent issues in parallel using a TAG-based DAG.
     """
+    user_settings = await load_user_settings_async()
+    preferences = await load_user_preferences_async()
+    set_runtime_settings_context(user_settings=user_settings, user_preferences=preferences)
+
     small_policy = self._resolve_small_project_team_policy(epic, team)
     if (
         small_policy["active"]
@@ -1078,8 +1092,6 @@ async def execute_epic(
         )
 
     # 1. Setup Execution Environment
-    user_settings = load_user_settings()
-    preferences = load_user_preferences()
     model_selector = ModelSelector(
         organization=self.org,
         preferences=preferences,
@@ -1223,7 +1235,7 @@ async def execute_epic(
             raise ExecutionFailed(f"Hyper-Loop exhausted iterations ({max_iterations})")
 
 
-async def _propagate_dependency_blocks(self, backlog: List[Any], run_id: str) -> int:
+async def _propagate_dependency_blocks(self, backlog: list[Any], run_id: str) -> int:
     blocker_statuses = {CardStatus.BLOCKED, CardStatus.CANCELED, CardStatus.GUARD_REJECTED}
     status_by_id = {getattr(issue, "id", ""): getattr(issue, "status", None) for issue in backlog}
     propagated = []
@@ -1257,12 +1269,12 @@ async def _propagate_dependency_blocks(self, backlog: List[Any], run_id: str) ->
 
 async def _maybe_schedule_team_replan(
     self,
-    backlog: List[Any],
+    backlog: list[Any],
     run_id: str,
     active_build: str,
     team: Any,
 ) -> bool:
-    triggering_issues: List[Any] = []
+    triggering_issues: list[Any] = []
     for issue in backlog:
         seat = str(getattr(issue, "seat", "") or "").strip().lower()
         if seat != "requirements_analyst":
@@ -1596,14 +1608,30 @@ async def _execute_issue_turn(
     turn_index = len(self.transcript) + 1
     if is_guard_turn:
         turn_status = CardStatus.AWAITING_GUARD_REVIEW
-    await self._request_issue_transition(
-        issue=issue,
-        target_status=turn_status,
-        assignee=seat_name,
-        reason="turn_dispatch",
-        metadata={"run_id": run_id, "review_turn": is_review_turn, "turn_index": turn_index},
-        roles=list(seat_obj.roles),
-    )
+    current_issue_status = getattr(issue, "status", None)
+    if not (resume_mode and current_issue_status == turn_status):
+        await self._request_issue_transition(
+            issue=issue,
+            target_status=turn_status,
+            assignee=seat_name,
+            reason="turn_dispatch",
+            metadata={"run_id": run_id, "review_turn": is_review_turn, "turn_index": turn_index},
+            roles=list(seat_obj.roles),
+        )
+    elif hasattr(issue, "assignee") and getattr(issue, "assignee", None) is None:
+        issue.assignee = seat_name
+        await self.async_cards.save(issue.model_dump())
+        log_event(
+            "resume_turn_dispatch_preserved",
+            {
+                "run_id": run_id,
+                "issue_id": issue.id,
+                "seat": seat_name,
+                "status": turn_status.value if hasattr(turn_status, "value") else str(turn_status),
+                "turn_index": turn_index,
+            },
+            self.workspace,
+        )
 
     # Prepare Role & Model
     roles_to_load = self.loop_policy_node.role_order_for_turn(list(seat_obj.roles), is_review_turn)
@@ -1642,7 +1670,7 @@ async def _execute_issue_turn(
     )
     model_selection_decision = {}
     if hasattr(prompt_strategy_node, "model_selector"):
-        selector = getattr(prompt_strategy_node, "model_selector")
+        selector = prompt_strategy_node.model_selector
         if hasattr(selector, "get_last_selection_decision"):
             model_selection_decision = dict(selector.get_last_selection_decision() or {})
     if model_selection_decision:
@@ -1747,7 +1775,7 @@ async def _execute_issue_turn(
         skill_tool_bindings=skill_tool_bindings,
         cards_runtime=cards_runtime,
     )
-    prompt_metadata: Dict[str, Any] = {
+    prompt_metadata: dict[str, Any] = {
         "prompt_id": "legacy.prompt_compiler",
         "prompt_version": "legacy",
         "prompt_checksum": "",
@@ -1756,7 +1784,7 @@ async def _execute_issue_turn(
         "role_status": "legacy",
         "dialect_status": "legacy",
     }
-    prompt_layers: Dict[str, Any] = {
+    prompt_layers: dict[str, Any] = {
         "role_base": {"name": str(skill.name or "").strip().lower(), "version": "legacy"},
         "dialect_adapter": {"name": str(dialect.model_family or "").strip().lower(), "version": "legacy"},
         "guards": [],
@@ -1765,8 +1793,8 @@ async def _execute_issue_turn(
     if prompt_mode == "resolver":
         role_rule_ids = list((getattr(role_config, "prompt_metadata", {}) or {}).get("owned_rule_ids", []) or [])
         dialect_rule_ids = list((getattr(dialect, "prompt_metadata", {}) or {}).get("owned_rule_ids", []) or [])
-        runtime_guard_rule_ids: List[str] = resolve_runtime_guard_rule_ids(None)
-        guard_layers: List[str] = ["hallucination"]
+        runtime_guard_rule_ids: list[str] = resolve_runtime_guard_rule_ids(None)
+        guard_layers: list[str] = ["hallucination"]
         if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
             configured_rule_ids = self.org.process_rules.get("runtime_guard_rule_ids")
             if isinstance(configured_rule_ids, list):
@@ -2001,7 +2029,7 @@ async def _execute_issue_turn(
         await _close_provider_transport(provider)
 
 
-def _validate_guard_rejection_payload(self, payload: GuardReviewPayload) -> Dict[str, Any]:
+def _validate_guard_rejection_payload(self, payload: GuardReviewPayload) -> dict[str, Any]:
     validate_fn = getattr(self.loop_policy_node, "validate_guard_rejection_payload", None)
     if callable(validate_fn):
         try:
@@ -2025,7 +2053,7 @@ async def _create_pending_gate_request(
     issue_id: str,
     seat_name: str,
     reason: str,
-    payload: Dict[str, Any],
+    payload: dict[str, Any],
     issue: IssueConfig,
     turn_status: CardStatus,
 ) -> str:
@@ -2077,7 +2105,7 @@ async def _create_pending_tool_approval_request(
     gate_mode: str,
     turn_index: int,
     tool_name: str,
-    tool_args: Dict[str, Any],
+    tool_args: dict[str, Any],
 ) -> str:
     from orket.application.services.turn_tool_control_plane_support import run_id_for as turn_tool_run_id_for
 
@@ -2125,18 +2153,18 @@ def _build_turn_context(
     run_id: str,
     issue: IssueConfig,
     seat_name: str,
-    roles_to_load: List[str],
+    roles_to_load: list[str],
     turn_status: CardStatus,
     selected_model: str,
-    dependency_context: Optional[Dict[str, Any]] = None,
-    runtime_verifier_ok: Optional[bool] = None,
-    prompt_metadata: Optional[Dict[str, Any]] = None,
-    prompt_layers: Optional[Dict[str, Any]] = None,
+    dependency_context: dict[str, Any] | None = None,
+    runtime_verifier_ok: bool | None = None,
+    prompt_metadata: dict[str, Any] | None = None,
+    prompt_layers: dict[str, Any] | None = None,
     idesign_enabled: bool = False,
     resume_mode: bool = False,
-    skill_tool_bindings: Optional[Dict[str, Dict[str, Any]]] = None,
-    cards_runtime: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    skill_tool_bindings: dict[str, dict[str, Any]] | None = None,
+    cards_runtime: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     turn_index = len(self.transcript) + 1
     cards_runtime = dict(cards_runtime or resolve_cards_runtime(issue=issue))
     required_action_tools = []
@@ -2285,9 +2313,9 @@ def _build_turn_context(
     async def _find_existing_tool_approval_request(
         *,
         tool_name: str,
-        tool_args: Dict[str, Any],
+        tool_args: dict[str, Any],
         allowed_statuses: set[str],
-    ) -> Dict[str, Any] | None:
+    ) -> dict[str, Any] | None:
         list_requests = getattr(self.pending_gates, "list_requests", None)
         if not callable(list_requests):
             return None
@@ -2329,7 +2357,7 @@ def _build_turn_context(
             return dict(row)
         return None
 
-    async def _pending_gate_request_writer(*, tool_name: str, tool_args: Dict[str, Any]) -> str:
+    async def _pending_gate_request_writer(*, tool_name: str, tool_args: dict[str, Any]) -> str:
         existing = await _find_existing_tool_approval_request(
             tool_name=tool_name,
             tool_args=tool_args,
@@ -2347,7 +2375,7 @@ def _build_turn_context(
             tool_args=tool_args,
         )
 
-    async def _approved_tool_request_lookup(*, tool_name: str, tool_args: Dict[str, Any]) -> str | None:
+    async def _approved_tool_request_lookup(*, tool_name: str, tool_args: dict[str, Any]) -> str | None:
         existing = await _find_existing_tool_approval_request(
             tool_name=tool_name,
             tool_args=tool_args,
@@ -2479,7 +2507,7 @@ def _build_turn_context(
         str(process_rules.get("prompt_budget_policy_path") or "core/policies/prompt_budget.yaml").strip()
         or "core/policies/prompt_budget.yaml"
     )
-    available_required_read_paths: List[str] = []
+    available_required_read_paths: list[str] = []
     for raw_path in required_read_paths:
         path_token = str(raw_path).strip()
         if not path_token:
@@ -2616,10 +2644,10 @@ def _build_turn_context(
     }
 
 
-async def _build_dependency_context(self, issue: IssueConfig) -> Dict[str, Any]:
+async def _build_dependency_context(self, issue: IssueConfig) -> dict[str, Any]:
     depends_on = list(issue.depends_on or [])
-    dependency_statuses: Dict[str, str] = {}
-    unresolved_dependencies: List[str] = []
+    dependency_statuses: dict[str, str] = {}
+    unresolved_dependencies: list[str] = []
     terminal_ok = {
         CardStatus.DONE,
         CardStatus.GUARD_APPROVED,
@@ -2649,7 +2677,7 @@ async def _build_dependency_context(self, issue: IssueConfig) -> Dict[str, Any]:
 def _extract_guard_review_payload(self, content: str) -> GuardReviewPayload:
     blob = content or ""
     decoder = json.JSONDecoder()
-    candidates: List[Dict[str, Any]] = []
+    candidates: list[dict[str, Any]] = []
 
     fenced_matches = re.findall(r"```json\s*([\s\S]*?)```", blob, flags=re.IGNORECASE)
     for chunk in fenced_matches:
@@ -2686,7 +2714,7 @@ def _extract_guard_review_payload(self, content: str) -> GuardReviewPayload:
     )
 
 
-def _resolve_guard_event(self, status: Any) -> Optional[str]:
+def _resolve_guard_event(self, status: Any) -> str | None:
     if status == CardStatus.DONE:
         return "guard_approved"
     if status in {CardStatus.BLOCKED, CardStatus.GUARD_REJECTED}:
@@ -2703,7 +2731,7 @@ async def _dispatch_turn(
     role_config: RoleConfig,
     client: Any,
     toolbox: ToolBox,
-    context: Dict[str, Any],
+    context: dict[str, Any],
     system_prompt: str,
 ) -> Any:
     return await executor.execute_turn(
@@ -2735,11 +2763,11 @@ async def _handle_failure(
     issue: IssueConfig,
     result: Any,
     run_id: str,
-    roles: List[str],
+    roles: list[str],
     *,
     turn_index: int | None = None,
 ):
-    from orket.domain.failure_reporter import FailureReporter
+    from orket.core.domain.failure_reporter import FailureReporter
 
     await FailureReporter.generate_report(
         workspace=self.workspace,
@@ -2782,16 +2810,6 @@ async def _handle_failure(
                 {"run_id": run_id, "issue_id": issue.id, "error": result.error},
                 self.workspace,
             )
-        metadata = {"run_id": run_id, "error": result.error}
-        if turn_index is not None:
-            metadata["turn_index"] = turn_index
-        await self._request_issue_transition(
-            issue=issue,
-            target_status=self.evaluator_node.status_for_failure_action(action),
-            reason="approval_pending",
-            metadata=metadata,
-            roles=roles,
-        )
         await self.async_cards.save(issue.model_dump())
         raise failure_exception_class(str(result.error or "Approval required before execution."))
 
@@ -2820,8 +2838,10 @@ async def _handle_failure(
         from orket.state import runtime_state
 
         if self.evaluator_node.should_cancel_session(action):
-            task = await runtime_state.get_task(run_id)
-            if task:
+            tasks = await runtime_state.get_tasks(run_id)
+            for task in tasks:
+                if task.done():
+                    continue
                 cancel_result = task.cancel()
                 if asyncio.iscoroutine(cancel_result):
                     await cancel_result

@@ -5,7 +5,7 @@ import json
 import os
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 
 def replay_recording_enabled() -> bool:
@@ -14,12 +14,12 @@ def replay_recording_enabled() -> bool:
 
 
 def write_replay_artifact(
-    *, command_name: str, request: Dict[str, Any], result: Dict[str, Any], repo_root: Path
+    *, command_name: str, request: dict[str, Any], result: dict[str, Any], repo_root: Path
 ) -> Path | None:
     if not replay_recording_enabled():
         return None
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "contract_version": "core_pillars/replay_artifact/v1",
         "recorded_at": datetime.now(UTC).isoformat(),
         "command": command_name,
@@ -40,7 +40,7 @@ def write_replay_artifact(
     return out_path
 
 
-def write_refactor_parity_artifact(*, payload: Dict[str, Any], repo_root: Path) -> Path | None:
+def write_refactor_parity_artifact(*, payload: dict[str, Any], repo_root: Path) -> Path | None:
     if not replay_recording_enabled():
         return None
 

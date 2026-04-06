@@ -1,6 +1,7 @@
+
 import httpx
-from typing import List, Optional
-from orket.vendors.base import VendorInterface, VendorRock, VendorEpic, VendorCard
+
+from orket.vendors.base import VendorCard, VendorEpic, VendorInterface, VendorRock
 
 
 class GiteaVendor(VendorInterface):
@@ -21,7 +22,7 @@ class GiteaVendor(VendorInterface):
         await self._client.aclose()
 
     @staticmethod
-    def _coerce_label_id(epic_id: Optional[str]) -> Optional[int]:
+    def _coerce_label_id(epic_id: str | None) -> int | None:
         token = str(epic_id or "").strip()
         if not token:
             return None
@@ -33,7 +34,7 @@ class GiteaVendor(VendorInterface):
             raise ValueError("epic_id must be a positive integer label id")
         return parsed
 
-    async def get_rocks(self) -> List[VendorRock]:
+    async def get_rocks(self) -> list[VendorRock]:
         resp = await self._client.get(f"{self.repo_api}/milestones")
         resp.raise_for_status()
         data = resp.json()
@@ -41,7 +42,7 @@ class GiteaVendor(VendorInterface):
             VendorRock(id=str(m["id"]), name=m["title"], description=m["description"], status=m["state"]) for m in data
         ]
 
-    async def get_epics(self, rock_id: Optional[str] = None) -> List[VendorEpic]:
+    async def get_epics(self, rock_id: str | None = None) -> list[VendorEpic]:
         resp = await self._client.get(f"{self.repo_api}/labels")
         resp.raise_for_status()
         return [
@@ -53,7 +54,7 @@ class GiteaVendor(VendorInterface):
             for label in resp.json()
         ]
 
-    async def get_cards(self, epic_id: Optional[str] = None) -> List[VendorCard]:
+    async def get_cards(self, epic_id: str | None = None) -> list[VendorCard]:
         params = {}
         label_id = self._coerce_label_id(epic_id)
         if label_id is not None:

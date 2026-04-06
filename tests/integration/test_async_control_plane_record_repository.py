@@ -14,9 +14,9 @@ from orket.application.services.control_plane_publication_service import Control
 from orket.core.contracts import CheckpointRecord, ResolvedConfigurationSnapshot, ResolvedPolicySnapshot
 from orket.core.domain import (
     AuthoritySourceClass,
-    CleanupAuthorityClass,
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
+    CleanupAuthorityClass,
     ClosureBasisClassification,
     CompletionClassification,
     DegradationClassification,
@@ -27,15 +27,14 @@ from orket.core.domain import (
     OperatorInputClass,
     OrphanClassification,
     OwnershipClass,
+    RecoveryActionClass,
     ReservationKind,
     ReservationStatus,
-    RecoveryActionClass,
     ResidualUncertaintyClassification,
     ResultClass,
     SafeContinuationClass,
     SideEffectBoundaryClass,
 )
-
 
 pytestmark = pytest.mark.integration
 

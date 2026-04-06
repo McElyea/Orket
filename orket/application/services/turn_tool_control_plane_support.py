@@ -71,6 +71,10 @@ def capability_for(*, tool_name: str, binding: dict[str, Any] | None) -> Capabil
     return CapabilityClass.BOUNDED_LOCAL_MUTATION
 
 
+def _workspace_ref(token: str) -> str:
+    return f"workspace:{token.replace(chr(92), '/')}"
+
+
 def resource_refs(
     *,
     tool_name: str,
@@ -82,19 +86,19 @@ def resource_refs(
     for key in ("path", "target_path", "workspace_path"):
         token = str(tool_args.get(key) or "").strip()
         if token:
-            refs.append(f"workspace:{token.replace('\\', '/')}")
+            refs.append(_workspace_ref(token))
     paths = tool_args.get("paths")
     if isinstance(paths, list):
         for raw in paths:
             token = str(raw or "").strip()
             if token:
-                refs.append(f"workspace:{token.replace('\\', '/')}")
+                refs.append(_workspace_ref(token))
     touched = result.get("touched_paths")
     if isinstance(touched, list):
         for raw in touched:
             token = str(raw or "").strip()
             if token:
-                refs.append(f"workspace:{token.replace('\\', '/')}")
+                refs.append(_workspace_ref(token))
     deduped: list[str] = []
     for ref in refs:
         if ref not in deduped:

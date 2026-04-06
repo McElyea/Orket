@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 E_LOCAL_PROMPT_PROFILE_SCHEMA = "E_LOCAL_PROMPT_PROFILE_SCHEMA"
@@ -116,7 +118,7 @@ class LocalPromptSamplingBundle(BaseModel):
         return resolved
 
     @model_validator(mode="after")
-    def _validate_seed_value(self) -> "LocalPromptSamplingBundle":
+    def _validate_seed_value(self) -> LocalPromptSamplingBundle:
         if self.seed_policy == "fixed" and self.seed_value is None:
             raise ValueError("seed_value is required when seed_policy=fixed")
         if self.seed_policy != "fixed" and self.seed_value is not None:
@@ -263,7 +265,7 @@ class LocalPromptProfile(BaseModel):
         return normalized
 
     @model_validator(mode="after")
-    def _validate_required_task_classes(self) -> "LocalPromptProfile":
+    def _validate_required_task_classes(self) -> LocalPromptProfile:
         missing_stop = [task for task in _TASK_CLASSES if task not in self.stop_sequences_by_task_class]
         if missing_stop:
             raise ValueError(f"stop_sequences_by_task_class missing required task classes: {','.join(missing_stop)}")
@@ -288,7 +290,7 @@ class LocalPromptProfileMatch(BaseModel):
         return _normalize_token_list(value, lowercase=True)
 
     @model_validator(mode="after")
-    def _validate_has_match_rules(self) -> "LocalPromptProfileMatch":
+    def _validate_has_match_rules(self) -> LocalPromptProfileMatch:
         if not self.model_equals and not self.model_prefixes and not self.model_contains:
             raise ValueError("at least one of model_equals/model_prefixes/model_contains is required")
         return self
@@ -301,9 +303,7 @@ class LocalPromptProfileMatch(BaseModel):
             return True
         if any(model_token.startswith(prefix) for prefix in self.model_prefixes):
             return True
-        if any(fragment in model_token for fragment in self.model_contains):
-            return True
-        return False
+        return bool(any(fragment in model_token for fragment in self.model_contains))
 
 
 class LocalPromptProfileEntry(BaseModel):
@@ -338,7 +338,7 @@ class LocalPromptProfileRegistry(BaseModel):
         return token
 
     @model_validator(mode="after")
-    def _validate_unique_profile_ids(self) -> "LocalPromptProfileRegistry":
+    def _validate_unique_profile_ids(self) -> LocalPromptProfileRegistry:
         seen: set[str] = set()
         duplicates: list[str] = []
         for entry in self.profiles:

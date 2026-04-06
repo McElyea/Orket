@@ -1,10 +1,10 @@
-﻿import pytest
-
-from orket.domain.verification import VerificationEngine, VerificationSecurityError
-from orket.schema import IssueVerification, VerificationScenario
-import subprocess
 import json
+import subprocess
 
+import pytest
+
+from orket.core.domain.verification import VerificationEngine, VerificationSecurityError
+from orket.schema import IssueVerification, VerificationScenario
 
 
 def test_verification_runs_in_subprocess_and_passes(tmp_path):

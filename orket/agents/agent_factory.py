@@ -1,15 +1,15 @@
 # orket/agents/agent_factory.py
-from typing import Dict
-from orket.agents.agent import Agent
+
 from orket.adapters.llm.local_model_provider import LocalModelProvider
-from orket.tools import get_tool_map, ToolBox
+from orket.agents.agent import Agent
+from orket.tools import ToolBox, get_tool_map
 
 
-def build_team_agents(team, provider: LocalModelProvider, toolbox: ToolBox) -> Dict[str, Agent]:
+def build_team_agents(team, provider: LocalModelProvider, toolbox: ToolBox) -> dict[str, Agent]:
     """
     Factory to instantiate agents for a specific Team.
     """
-    agents: Dict[str, Agent] = {}
+    agents: dict[str, Agent] = {}
     tool_map = get_tool_map(toolbox)
 
     for seat_name, seat in team.seats.items():
@@ -19,7 +19,7 @@ def build_team_agents(team, provider: LocalModelProvider, toolbox: ToolBox) -> D
         # This is a bit complex as we usually load role JSONs in the traction loop.
         # This factory is mostly used for high-level setup or specialized tests.
 
-        for role_name in seat.roles:
+        for _role_name in seat.roles:
             # Placeholder: In the real traction loop, we load RoleConfigs.
             # Here we just register what tools are in the tool_map.
             pass

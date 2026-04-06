@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Dict, Iterable, Optional, Set
 
 from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.schema import CardStatus, CardType
@@ -11,14 +11,14 @@ from orket.schema import CardStatus, CardType
 @dataclass(frozen=True)
 class TransitionCheckResult:
     ok: bool
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class WorkflowProfile(ABC):
     name: str
 
     @abstractmethod
-    def resolve_requested_status(self, action: str, payload: Dict[str, object]) -> Optional[CardStatus]:
+    def resolve_requested_status(self, action: str, payload: dict[str, object]) -> CardStatus | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -29,7 +29,7 @@ class WorkflowProfile(ABC):
         current: CardStatus,
         requested: CardStatus,
         roles: Iterable[str],
-        payload: Dict[str, object],
+        payload: dict[str, object],
     ) -> TransitionCheckResult:
         raise NotImplementedError
 
@@ -46,7 +46,7 @@ class LegacyCardsV1Profile(WorkflowProfile):
         "request_guard_review": CardStatus.AWAITING_GUARD_REVIEW,
     }
 
-    def resolve_requested_status(self, action: str, payload: Dict[str, object]) -> Optional[CardStatus]:
+    def resolve_requested_status(self, action: str, payload: dict[str, object]) -> CardStatus | None:
         if action == "set_status":
             target = str(payload.get("status", "")).strip().lower()
             if not target:
@@ -64,7 +64,7 @@ class LegacyCardsV1Profile(WorkflowProfile):
         current: CardStatus,
         requested: CardStatus,
         roles: Iterable[str],
-        payload: Dict[str, object],
+        payload: dict[str, object],
     ) -> TransitionCheckResult:
         try:
             StateMachine.validate_transition(
@@ -90,7 +90,7 @@ class ProjectTaskV1Profile(WorkflowProfile):
         CardStatus.CANCELED,
         CardStatus.ARCHIVED,
     }
-    _TRANSITIONS: Dict[CardStatus, Set[CardStatus]] = {
+    _TRANSITIONS: dict[CardStatus, set[CardStatus]] = {
         CardStatus.READY: {CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
         CardStatus.IN_PROGRESS: {CardStatus.BLOCKED, CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED},
         CardStatus.BLOCKED: {CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
@@ -107,7 +107,7 @@ class ProjectTaskV1Profile(WorkflowProfile):
         "cancel": CardStatus.CANCELED,
     }
 
-    def resolve_requested_status(self, action: str, payload: Dict[str, object]) -> Optional[CardStatus]:
+    def resolve_requested_status(self, action: str, payload: dict[str, object]) -> CardStatus | None:
         if action == "set_status":
             target = str(payload.get("status", "")).strip().lower()
             if not target:
@@ -128,7 +128,7 @@ class ProjectTaskV1Profile(WorkflowProfile):
         current: CardStatus,
         requested: CardStatus,
         roles: Iterable[str],
-        payload: Dict[str, object],
+        payload: dict[str, object],
     ) -> TransitionCheckResult:
         allowed = self._TRANSITIONS.get(current, set())
         if requested not in allowed:

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 from pathlib import Path
 
 import pytest
@@ -337,7 +336,7 @@ async def test_packet1_live_corrective_reprompt_marks_repaired_truth(tmp_path: P
     )
     assert any(
         str(row.get("event") or "") == "turn_corrective_reprompt"
-        and str(((row.get("data") or {}).get("session_id") or "")) == run_summary["run_id"]
+        and str((row.get("data") or {}).get("session_id") or "") == run_summary["run_id"]
         for row in event_rows
     )
     assert run_summary["status"] == "done"

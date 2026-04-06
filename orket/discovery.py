@@ -1,13 +1,12 @@
 import subprocess
 from pathlib import Path
-from typing import Dict, List
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.logging import log_event
 from orket.orket import ConfigLoader
 from orket.project_paths import default_model_root, default_project_root, default_workspace_root
+from orket.schema import EngineRegistry, EpicConfig, RockConfig, TeamConfig
 from orket.settings import load_user_settings, save_user_settings
-from orket.schema import RockConfig, EpicConfig, TeamConfig, EngineRegistry
 
 
 def _default_project_root() -> Path:
@@ -33,7 +32,7 @@ def _model_tier_rank(tier: str) -> int:
     }.get(normalized, 0)
 
 
-def get_installed_models() -> List[str]:
+def get_installed_models() -> list[str]:
     try:
         result = subprocess.run(["ollama", "list"], capture_output=True, text=True, check=True)
         lines = result.stdout.strip().splitlines()
@@ -48,7 +47,7 @@ def refresh_engine_mappings():
     Scans installed models and hardware to find the best match for each category.
     Returns a dictionary of recommended overrides.
     """
-    from orket.hardware import get_current_profile, can_handle_model_tier
+    from orket.hardware import can_handle_model_tier, get_current_profile
 
     hw = get_current_profile()
     models = get_installed_models()
@@ -67,10 +66,9 @@ def refresh_engine_mappings():
 
         best_match = None
         for m in models:
-            if any(k in m.lower() for k in mapping.keywords):
+            if any(k in m.lower() for k in mapping.keywords) and (not best_match or "latest" in m):
                 # Simple heuristic: pick the one with 'latest' or the first one found
-                if not best_match or "latest" in m:
-                    best_match = m
+                best_match = m
 
         recommendations[cat] = best_match or mapping.fallback
 
@@ -82,7 +80,7 @@ def get_engine_recommendations():
     Cross-references hardware profile + installed models against the Catalog
     to suggest what the user is missing for a 'Best-in-Class' setup.
     """
-    from orket.hardware import get_current_profile, can_handle_model_tier
+    from orket.hardware import can_handle_model_tier, get_current_profile
 
     hw = get_current_profile()
     installed = get_installed_models()
@@ -111,12 +109,13 @@ def get_engine_recommendations():
         # Find the best model in the catalog that the hardware CAN handle
         best_in_catalog = None
         for item in mapping.catalog:
-            if can_handle_model_tier(item.tier, hw):
-                # If it's not installed, it's a candidate
-                if str(item.model).strip().lower() not in installed_lower:
-                    # Prefer higher tiers
-                    if not best_in_catalog or _model_tier_rank(item.tier) > _model_tier_rank(best_in_catalog.tier):
-                        best_in_catalog = item
+            if (
+                can_handle_model_tier(item.tier, hw)
+                and str(item.model).strip().lower() not in installed_lower
+                and (not best_in_catalog or _model_tier_rank(item.tier) > _model_tier_rank(best_in_catalog.tier))
+            ):
+                # Prefer higher tiers among models the hardware can actually run.
+                best_in_catalog = item
 
         if best_in_catalog and _model_tier_rank(best_in_catalog.tier) > best_installed_rank:
             suggestions.append(
@@ -132,7 +131,7 @@ def get_engine_recommendations():
     return suggestions
 
 
-def discover_project_assets(department: str = "core") -> Dict[str, List[str]]:
+def discover_project_assets(department: str = "core") -> dict[str, list[str]]:
     loader = ConfigLoader(_default_model_root(), department)
     return {
         "rocks": loader.list_assets("rocks"),
@@ -144,7 +143,7 @@ def discover_project_assets(department: str = "core") -> Dict[str, List[str]]:
 def run_startup_reconciliation() -> str:
     """Run every-startup structural reconciliation and emit explicit path telemetry."""
     try:
-        from orket.domain.reconciler import StructuralReconciler
+        from orket.core.domain.reconciler import StructuralReconciler
 
         reconciler = StructuralReconciler(
             root_path=_default_model_root(),
@@ -172,20 +171,20 @@ def perform_first_run_onboarding() -> str:
     return "first_run_setup"
 
 
-def perform_startup_checks() -> Dict[str, str]:
+def perform_startup_checks() -> dict[str, str]:
     """Execute startup reconciliation plus first-run onboarding with explicit semantics."""
     reconciliation_result = run_startup_reconciliation()
     onboarding_result = perform_first_run_onboarding()
     return {"reconciliation": reconciliation_result, "onboarding": onboarding_result}
 
 
-def perform_first_run_setup() -> Dict[str, str]:
+def perform_first_run_setup() -> dict[str, str]:
     """Backward-compatible wrapper around explicit startup checks."""
     return perform_startup_checks()
 
 
 def print_orket_manifest(department: str = "core"):
-    from orket.hardware import get_current_profile, can_handle_model_tier, ModelTier
+    from orket.hardware import ModelTier, can_handle_model_tier, get_current_profile
 
     models, assets, hw = get_installed_models(), discover_project_assets(department), get_current_profile()
     loader = ConfigLoader(_default_model_root(), department)

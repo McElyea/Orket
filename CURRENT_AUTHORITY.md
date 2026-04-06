@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-04-04
+Last updated: 2026-04-05
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -95,13 +95,14 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
 67. Canonical Companion boundary is now BFF-owned: Companion product routes live only in the external Companion gateway under `/api/*`, Orket core no longer mounts Companion-named host routes, and the gateway reaches the host only through `/v1/extensions/{extension_id}/runtime/*` using the same `ORKET_API_KEY` posture as other core routes via `docs/specs/COMPANION_UI_MVP_CONTRACT.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/extension_runtime.py`, and `docs/templates/external_extension/src/companion_app/server.py`
 68. Canonical governed local-model tool-turn prompt shape now compacts at source in `orket/application/workflows/turn_message_builder.py` through shared `orket/runtime/compact_turn_packet.py`, producing one minimal model-facing `system` prompt plus one bounded `TURN PACKET` `user` prompt and eliminating the old stacked block labels such as `Execution Context JSON`, `Artifact Contract JSON`, `Artifact Semantic Contract`, `Scenario Truth Contract`, `Turn Success Contract`, `Write Path Contract`, `Read Path Contract`, `Hallucination Verification Scope`, `Guard Decision Contract`, `Guard Rejection Contract`, and `Protocol Response Contract`; the LM Studio Gemma 4 OpenAI-compatible lane preserves the native `system` role, reuses that shared compact packet, collapses any remaining adjacent governed `user` prompt blocks into one merged `user` turn only as a safety net if upstream legacy messages still arrive, records outbound request-shape telemetry as `openai_request_message_count`, `openai_request_role_sequence`, and `openai_request_role_counts` in model raw artifacts, records compacted-packet telemetry through `local_prompting_warnings`, keeps bounded native declared-path `read_file` and `write_file` schemas on admitted turns with `reasoning_effort=none`, falls back guard/native declared-path `read_file` exposure from explicit turn requirements to artifact-contract review or required read surfaces plus verification-scope active or provided context when those explicit lists are empty, applies a tighter deterministic effective context cap on Gemma multi-write tool turns, and treats recorded provider telemetry `openai_native_tool_names` as the authoritative native-tool allowlist for parser-side undeclared or exact-duplicate call filtering before execution via `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_MESSAGE_SHAPE_2026-04-03.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_TOOL_TURN_CONFORMANCE_2026-04-03.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_COMPACT_TURN_PACKET_2026-04-04.md`, `orket/application/workflows/turn_message_builder.py`, `orket/runtime/compact_turn_packet.py`, `orket/adapters/llm/local_prompting_policy.py`, `orket/adapters/llm/local_model_provider.py`, `orket/adapters/llm/openai_native_tools.py`, and `orket/application/workflows/turn_response_parser.py`
 69. Canonical local-model coding challenge benchmark harness path is `python scripts/benchmarks/run_local_model_coding_challenge.py --provider <provider> --model <model_id> --epic challenge_workflow_runtime`, and its stable staged report path is `benchmarks/staging/General/local_model_coding_challenge_report.json`; reruns append `diff_ledger` history instead of creating timestamp-only report files
+70. Canonical ProductFlow governed `write_file` proof authority now lives in `docs/specs/PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_V1.md` and `docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md`; the canonical commands are `ORKET_DISABLE_SANDBOX=1 python scripts/productflow/run_governed_write_file_flow.py`, `python scripts/productflow/build_operator_review_package.py --run-id <run_id>`, and `python scripts/productflow/run_replay_review.py --run-id <run_id>`, the stable proof artifact family lives at `benchmarks/results/productflow/governed_write_file_live_run.json`, `runs/<session_id>/productflow_review_index.json`, `benchmarks/results/productflow/operator_review_proof.json`, and `benchmarks/results/productflow/replay_review.json`, ProductFlow `run_id` resolution now fails closed unless exactly one approval row carries `control_plane_target_ref == <run_id>` for the bounded `approval_required_tool:write_file` seam and the matching `runs/<session_id>/run_summary.json` validates, operator review proof is expected to succeed on that same governed run, and replay review is expected to report a same-run truthful blocker with `replay_ready=false`, `stability_status=not_evaluable`, and explicit `missing_evidence` rather than a stable replay claim via `scripts/productflow/run_governed_write_file_flow.py`, `scripts/productflow/build_operator_review_package.py`, `scripts/productflow/run_replay_review.py`, `scripts/productflow/productflow_support.py`, `scripts/observability/emit_run_evidence_graph.py`, `docs/specs/PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_V1.md`, and `docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md`
 
 ## Machine-Readable Authority Map (v1)
 
 ```json
 {
   "version": 1,
-  "last_updated": "2026-04-04",
+  "last_updated": "2026-04-05",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -294,6 +295,13 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
       "run_evidence_graph_json_path": "runs/<session_id>/run_evidence_graph.json",
       "run_evidence_graph_mermaid_path": "runs/<session_id>/run_evidence_graph.mmd",
       "run_evidence_graph_rendered_path": "runs/<session_id>/run_evidence_graph.html",
+      "productflow_live_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/productflow/run_governed_write_file_flow.py",
+      "productflow_review_operator_path": "python scripts/productflow/build_operator_review_package.py --run-id <run_id>",
+      "productflow_replay_operator_path": "python scripts/productflow/run_replay_review.py --run-id <run_id>",
+      "productflow_live_proof_output_path": "benchmarks/results/productflow/governed_write_file_live_run.json",
+      "productflow_review_index_path": "runs/<session_id>/productflow_review_index.json",
+      "productflow_operator_review_proof_output_path": "benchmarks/results/productflow/operator_review_proof.json",
+      "productflow_replay_review_output_path": "benchmarks/results/productflow/replay_review.json",
       "run_evidence_graph_default_views": [
         "full_lineage",
         "failure_path",
@@ -333,6 +341,37 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "scripts/prompt_lab/run_prompt_reforger_gemma_tool_use_cycle.py",
         "scripts/prompt_lab/README.md",
         "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md"
+      ]
+    },
+    "productflow_governed_write_file_review_surface": {
+      "live_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/productflow/run_governed_write_file_flow.py",
+      "review_operator_path": "python scripts/productflow/build_operator_review_package.py --run-id <run_id>",
+      "replay_operator_path": "python scripts/productflow/run_replay_review.py --run-id <run_id>",
+      "stable_artifacts": [
+        "benchmarks/results/productflow/governed_write_file_live_run.json",
+        "runs/<session_id>/productflow_review_index.json",
+        "runs/<session_id>/run_evidence_graph.json",
+        "runs/<session_id>/run_evidence_graph.mmd",
+        "runs/<session_id>/run_evidence_graph.html",
+        "benchmarks/results/productflow/operator_review_proof.json",
+        "benchmarks/results/productflow/replay_review.json"
+      ],
+      "resolver_witness": "unique approval.control_plane_target_ref == run_id for approval_required_tool:write_file + validated runs/<session_id>/run_summary.json",
+      "run_summary_identity_note": "For the canonical ProductFlow fixture, run_summary.run_id is the session_id and run_summary.control_plane.run_id is the cards-epic run id; neither replaces the governed turn-tool run_id.",
+      "review_package_expected_result": "success",
+      "replay_surface_expected_result": "same-run truthful blocker",
+      "replay_ready": false,
+      "stability_status": "not_evaluable",
+      "claim_tier": "non_deterministic_lab_only",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/specs/PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_V1.md",
+        "docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md",
+        "scripts/productflow/productflow_support.py",
+        "scripts/productflow/run_governed_write_file_flow.py",
+        "scripts/productflow/build_operator_review_package.py",
+        "scripts/productflow/run_replay_review.py",
+        "scripts/observability/emit_run_evidence_graph.py"
       ]
     },
     "control_plane_storage": {

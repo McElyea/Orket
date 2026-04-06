@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import socket
 
-from orket.domain.sandbox import PortAllocation
+from orket.core.domain.sandbox import PortAllocation
 
 
 def patch_orchestrator_port_allocator(orchestrator, monkeypatch) -> None:

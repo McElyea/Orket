@@ -3,8 +3,8 @@ from __future__ import annotations
 from orket.kernel.v1 import (
     admit_proposal,
     authorize_tool_call,
-    compare_runs,
     commit_proposal,
+    compare_runs,
     end_session,
     execute_turn,
     finish_run,

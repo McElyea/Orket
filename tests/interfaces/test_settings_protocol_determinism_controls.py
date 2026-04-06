@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 import orket.interfaces.api as api_module
 from orket.interfaces.api import app
 
-
 client = TestClient(app)
 
 

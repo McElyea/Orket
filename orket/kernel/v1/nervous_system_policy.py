@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from urllib.parse import urlparse
 from typing import Any
+from urllib.parse import urlparse
 
 
 def require_nervous_system_enabled() -> None:
@@ -31,9 +31,7 @@ def is_exfil_payload(payload: dict[str, Any]) -> bool:
     if isinstance(tool_profile, dict) and bool(tool_profile.get("exfil")):
         return True
     target = payload.get("target")
-    if isinstance(target, str) and _is_non_local_target(target):
-        return True
-    return False
+    return bool(isinstance(target, str) and _is_non_local_target(target))
 
 
 def _is_non_local_target(target: str) -> bool:

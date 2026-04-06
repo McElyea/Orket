@@ -1,26 +1,27 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
 from typing import Any
 
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
-from orket.streaming.contracts import CommitIntent, StreamEventType
-from orket.streaming.manager import InteractionContext
-from orket.streaming.model_provider import (
-    ModelStreamProvider,
-    OpenAICompatModelStreamProvider,
-    OllamaModelStreamProvider,
-    ProviderEvent,
-    ProviderEventType,
-    ProviderTurnRequest,
-    StubModelStreamProvider,
-)
 from orket.runtime.provider_runtime_target import (
     resolve_bool_env,
     resolve_float_env,
     resolve_int_env,
     resolve_provider_runtime_target,
+)
+from orket.streaming.contracts import CommitIntent, StreamEventType
+from orket.streaming.manager import InteractionContext
+from orket.streaming.model_provider import (
+    ModelStreamProvider,
+    OllamaModelStreamProvider,
+    OpenAICompatModelStreamProvider,
+    ProviderEvent,
+    ProviderEventType,
+    ProviderTurnRequest,
+    StubModelStreamProvider,
 )
 
 
@@ -185,10 +186,8 @@ async def run_model_stream_v1(
             provider_error = f"provider_turn_timeout:{turn_timeout_s}s"
     finally:
         cancel_task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await cancel_task
-        except asyncio.CancelledError:
-            pass
 
     if provider_error:
         await interaction_context.request_commit(

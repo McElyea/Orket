@@ -1,14 +1,14 @@
 import asyncio
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
-from orket.orket import ConfigLoader
 from orket.exceptions import CardNotFound
+from orket.orket import ConfigLoader
 from orket.schema import EpicConfig, IssueConfig, RockConfig
 
 
 def _append_load_failure(
-    hierarchy: Dict[str, Any],
+    hierarchy: dict[str, Any],
     *,
     asset_type: str,
     asset_name: str,
@@ -27,7 +27,7 @@ def _append_load_failure(
     )
 
 
-def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dict[str, Any]:
+def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> dict[str, Any]:
     """
     CLI/test helper that builds a tree: Rock -> Epic -> Issue.
     Blocks the calling thread while loading config assets.
@@ -35,7 +35,7 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
     auto_fix_error: Exception | None = None
     if auto_fix:
         try:
-            from orket.domain.reconciler import StructuralReconciler
+            from orket.core.domain.reconciler import StructuralReconciler
 
             StructuralReconciler().reconcile_all()
         except (RuntimeError, ValueError, OSError, ImportError) as exc:
@@ -232,5 +232,5 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
 async def get_board_hierarchy_async(
     department: str = "core",
     auto_fix: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     return await asyncio.to_thread(get_board_hierarchy, department, auto_fix)

@@ -1,13 +1,14 @@
 # orket/kernel/v1/state/promotion.py
 from __future__ import annotations
 
+import contextlib
 import json
-import os
 import re
 import shutil
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from orket.kernel.v1.canonical import canonical_json_bytes, fs_token
 from orket.kernel.v1.contracts import KernelIssue
@@ -32,6 +33,7 @@ I_REF_MULTISOURCE = "I_REF_MULTISOURCE"
 I_NOOP_PROMOTION = "I_NOOP_PROMOTION"
 RUN_LEDGER_FILE = "run_ledger.json"
 TURN_ID_RE = re.compile(r"^turn-(\d{4})$")
+REPAIR_ACKNOWLEDGEMENT = "I_ACKNOWLEDGE_DATA_GAP"
 
 
 @dataclass(frozen=True)
@@ -103,8 +105,10 @@ def _load_last_promoted_turn_id(committed_root: Path) -> str:
         return "turn-0000"
     try:
         data = _read_json(path)
-    except (OSError, json.JSONDecodeError, TypeError):
-        return "turn-0000"
+    except OSError as exc:
+        raise ValueError(f"ledger I/O error: {exc}") from exc
+    except (json.JSONDecodeError, TypeError) as exc:
+        raise ValueError(f"ledger corrupt: {exc}") from exc
     if isinstance(data, dict):
         value = data.get("last_promoted_turn_id")
         if isinstance(value, str) and TURN_ID_RE.fullmatch(value):
@@ -120,6 +124,18 @@ def _save_last_promoted_turn_id(committed_root: Path, turn_id: str) -> None:
             "last_promoted_turn_id": turn_id,
         },
     )
+
+
+def repair_run_ledger(root: str, *, force_turn_id: str, acknowledge: str) -> None:
+    """
+    Force the promotion ledger past a missing or corrupted turn after an explicit
+    operator acknowledgment of the resulting continuity gap.
+    """
+    if acknowledge != REPAIR_ACKNOWLEDGEMENT:
+        raise ValueError("repair_run_ledger requires explicit data-gap acknowledgment")
+    _parse_turn_index(force_turn_id)
+    committed_root = _scope_root(root, DIR_COMMITTED)
+    _save_last_promoted_turn_id(committed_root, force_turn_id)
 
 
 def _triplets_dir(scope_root: Path) -> Path:
@@ -138,7 +154,7 @@ def _atomic_write_bytes(path: Path, payload: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_bytes(payload)
-    os.replace(tmp, path)
+    tmp.replace(path)
 
 
 def _atomic_write_json(path: Path, obj: Any) -> None:
@@ -612,8 +628,8 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
 
         # 5) Directory swap to make promotion atomic
         if committed_root.exists():
-            os.replace(committed_root, bak_root)
-        os.replace(new_root, committed_root)
+            committed_root.replace(bak_root)
+        new_root.replace(committed_root)
         _save_last_promoted_turn_id(committed_root, turn_id)
         if bak_root.exists():
             shutil.rmtree(bak_root)
@@ -677,9 +693,7 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
 
         # Cleanup new_root if it exists; do NOT delete bak_root automatically.
         if new_root.exists():
-            try:
+            with contextlib.suppress(OSError):
                 shutil.rmtree(new_root)
-            except OSError:
-                pass
 
         return PromotionResult(outcome="FAIL", promoted_stems=[], events=events, issues=issues)

@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import pytest
 
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_workload_catalog import (
     sandbox_runtime_workload_for_tech_stack,
 )
-from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.sandbox_control_plane_execution_service import (
     SandboxControlPlaneExecutionError,
     SandboxControlPlaneExecutionService,
 )
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
-from orket.core.contracts import AttemptRecord, CheckpointRecord, RecoveryDecisionRecord, RunRecord, StepRecord
+from orket.core.contracts import AttemptRecord, CheckpointRecord, RunRecord, StepRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository, ControlPlaneRecordRepository
 from orket.core.domain import (
     AttemptState,
@@ -26,7 +26,6 @@ from orket.core.domain import (
 )
 from orket.core.domain.sandbox_lifecycle import TerminalReason
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
-
 
 pytestmark = pytest.mark.unit
 

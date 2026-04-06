@@ -1,5 +1,5 @@
-from datetime import datetime, UTC
-from typing import List, Optional
+from datetime import UTC, datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -12,7 +12,7 @@ class Note(BaseModel):
 
     id: str = Field(default_factory=lambda: str(datetime.now(UTC).timestamp()))
     from_role: str
-    to_role: Optional[str] = None  # None = Broadcast to all
+    to_role: str | None = None  # None = Broadcast to all
     content: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     step_index: int
@@ -25,12 +25,12 @@ class NoteStore:
     """
 
     def __init__(self):
-        self._notes: List[Note] = []
+        self._notes: list[Note] = []
 
     def add(self, note: Note):
         self._notes.append(note)
 
-    def get_for_role(self, role: str, up_to_step: int) -> List[Note]:
+    def get_for_role(self, role: str, up_to_step: int) -> list[Note]:
         """Returns all notes visible to a specific role at a specific turn."""
         visible = []
         for n in self._notes:
@@ -40,7 +40,7 @@ class NoteStore:
                 visible.append(n)
         return visible
 
-    def all(self) -> List[Note]:
+    def all(self) -> list[Note]:
         return list(self._notes)
 
     def clear(self):

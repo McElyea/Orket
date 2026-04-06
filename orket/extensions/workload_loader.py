@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import ast
+import contextlib
 import importlib
 import inspect
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from orket_extension_sdk.result import WorkloadResult
 from orket_extension_sdk.workload import Workload as SDKWorkload
@@ -47,10 +49,8 @@ class WorkloadLoader:
             return workload
         finally:
             if added_path:
-                try:
+                with contextlib.suppress(ValueError):
                     sys.path.remove(str(extension_path))
-                except ValueError:
-                    pass
 
     def load_sdk_workload(self, extension: ExtensionRecord, workload: _ExtensionManifestEntry) -> SDKWorkload:
         extension_path = Path(extension.path).resolve()
@@ -91,10 +91,8 @@ class WorkloadLoader:
             return instance
         finally:
             if added_path:
-                try:
+                with contextlib.suppress(ValueError):
                     sys.path.remove(str(extension_path))
-                except ValueError:
-                    pass
 
     @staticmethod
     def parse_sdk_entrypoint(entrypoint: str) -> tuple[str, str]:
@@ -135,11 +133,17 @@ class WorkloadLoader:
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     name = str(alias.name or "")
-                    if name.startswith("orket.") and not name.startswith("orket.extensions"):
-                        if any(name.startswith(prefix) for prefix in blocked_prefixes):
-                            raise ValueError(f"Extension import blocked by isolation policy: {name}")
+                    if (
+                        name.startswith("orket.")
+                        and not name.startswith("orket.extensions")
+                        and any(name.startswith(prefix) for prefix in blocked_prefixes)
+                    ):
+                        raise ValueError(f"Extension import blocked by isolation policy: {name}")
             elif isinstance(node, ast.ImportFrom):
                 module = str(node.module or "")
-                if module.startswith("orket.") and not module.startswith("orket.extensions"):
-                    if any(module.startswith(prefix) for prefix in blocked_prefixes):
-                        raise ValueError(f"Extension import blocked by isolation policy: {module}")
+                if (
+                    module.startswith("orket.")
+                    and not module.startswith("orket.extensions")
+                    and any(module.startswith(prefix) for prefix in blocked_prefixes)
+                ):
+                    raise ValueError(f"Extension import blocked by isolation policy: {module}")

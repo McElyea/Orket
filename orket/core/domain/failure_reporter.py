@@ -6,11 +6,14 @@ Reconstructed for async native I/O and specific policy violation details.
 """
 
 from __future__ import annotations
-import aiofiles
+
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, UTC
-from typing import Dict, Any, List, Optional
+from typing import Any
+
+import aiofiles
 from pydantic import BaseModel, Field
+
 from orket.logging import log_event
 
 
@@ -22,9 +25,9 @@ class PolicyViolationReport(BaseModel):
     card_id: str
     violation_type: str  # "state_transition", "tool_gate", "structural", "timeout"
     detail: str
-    attempted_action: Optional[Dict[str, Any]] = None
+    attempted_action: dict[str, Any] | None = None
     remedy_suggestion: str
-    active_roles: List[str] = Field(default_factory=list)
+    active_roles: list[str] = Field(default_factory=list)
 
 
 class FailureReporter:
@@ -34,7 +37,7 @@ class FailureReporter:
 
     @staticmethod
     async def generate_report(
-        workspace: Path, session_id: str, card_id: str, violation: str, transcript: List[Any], roles: List[str] = None
+        workspace: Path, session_id: str, card_id: str, violation: str, transcript: list[Any], roles: list[str] = None
     ) -> Path:
         """
         Generates a JSON report for a failure.
@@ -62,7 +65,7 @@ class FailureReporter:
             active_roles=roles or [],
         )
 
-        from orket.domain.verification import AGENT_OUTPUT_DIR
+        from orket.core.domain.verification import AGENT_OUTPUT_DIR
 
         report_dir = workspace / AGENT_OUTPUT_DIR
         report_dir.mkdir(parents=True, exist_ok=True)

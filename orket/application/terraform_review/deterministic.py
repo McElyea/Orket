@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List
+from typing import Any
 
 from .models import (
     DeterministicAnalysisArtifact,
@@ -42,10 +42,10 @@ def _normalized_action(actions: Any) -> str:
     return ""
 
 
-def analyze_plan(*, plan_payload: Dict[str, Any], forbidden_operations: List[str]) -> DeterministicAnalysisArtifact:
-    warnings: List[str] = []
-    resource_changes: List[ResourceChangeRecord] = []
-    forbidden_hits: List[ForbiddenOperationHit] = []
+def analyze_plan(*, plan_payload: dict[str, Any], forbidden_operations: list[str]) -> DeterministicAnalysisArtifact:
+    warnings: list[str] = []
+    resource_changes: list[ResourceChangeRecord] = []
+    forbidden_hits: list[ForbiddenOperationHit] = []
     action_counts = {"create": 0, "update": 0, "destroy": 0, "replace": 0, "no-op": 0}
     analysis_complete = True
     forbidden = {str(item).strip().lower() for item in forbidden_operations if str(item).strip()}

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from orket.application.workflows.turn_executor import TurnExecutor
-from orket.domain.execution import ExecutionTurn
+from orket.application.workflows.turn_executor_ops import runtime_tokens_payload
+from orket.core.domain.execution import ExecutionTurn
 
 
 def _turn(raw: dict) -> ExecutionTurn:
@@ -17,7 +17,7 @@ def _turn(raw: dict) -> ExecutionTurn:
 
 
 def test_runtime_tokens_payload_state_ok() -> None:
-    payload = TurnExecutor._runtime_tokens_payload(
+    payload = runtime_tokens_payload(
         _turn(
             {
                 "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
@@ -34,7 +34,7 @@ def test_runtime_tokens_payload_state_ok() -> None:
 
 
 def test_runtime_tokens_payload_state_token_count_unavailable() -> None:
-    payload = TurnExecutor._runtime_tokens_payload(
+    payload = runtime_tokens_payload(
         _turn(
             {
                 "usage": {"prompt_tokens": None, "completion_tokens": None},
@@ -51,7 +51,7 @@ def test_runtime_tokens_payload_state_token_count_unavailable() -> None:
 
 
 def test_runtime_tokens_payload_state_timing_unavailable() -> None:
-    payload = TurnExecutor._runtime_tokens_payload(
+    payload = runtime_tokens_payload(
         _turn(
             {
                 "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
@@ -68,7 +68,7 @@ def test_runtime_tokens_payload_state_timing_unavailable() -> None:
 
 
 def test_runtime_tokens_payload_state_token_and_timing_unavailable() -> None:
-    payload = TurnExecutor._runtime_tokens_payload(_turn({}))
+    payload = runtime_tokens_payload(_turn({}))
     assert payload["status"] == "TOKEN_AND_TIMING_UNAVAILABLE"
     assert payload["prompt_tokens"] is None
     assert payload["output_tokens"] is None

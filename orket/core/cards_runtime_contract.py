@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List
+from typing import Any
 
 APP_EXECUTION_PROFILE = "builder_guard_app_v1"
 ARTIFACT_EXECUTION_PROFILE = "builder_guard_artifact_v1"
@@ -69,7 +69,7 @@ _PROFILE_TRAITS_BY_PROFILE = {
 }
 
 
-def apply_epic_cards_runtime_defaults(*, issue_params: Any, epic_params: Any) -> Dict[str, Any]:
+def apply_epic_cards_runtime_defaults(*, issue_params: Any, epic_params: Any) -> dict[str, Any]:
     issue_payload = dict(issue_params or {}) if isinstance(issue_params, dict) else {}
     epic_payload = dict(epic_params or {}) if isinstance(epic_params, dict) else {}
     if not epic_payload:
@@ -94,7 +94,7 @@ def resolve_cards_runtime(
     issue: Any,
     builder_seat: str = "",
     reviewer_seat: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     issue_seat = str(getattr(issue, "seat", "") or "").strip().lower() or "coder"
     params = getattr(issue, "params", None)
     payload = dict(params or {}) if isinstance(params, dict) else {}
@@ -166,7 +166,7 @@ def resolve_cards_runtime(
     }
 
 
-def required_read_paths_for_seat(*, seat_name: str, issue: Any) -> List[str]:
+def required_read_paths_for_seat(*, seat_name: str, issue: Any) -> list[str]:
     seat = str(seat_name or "").strip().lower()
     runtime = resolve_cards_runtime(issue=issue)
     artifact_contract = dict(runtime.get("artifact_contract") or {})
@@ -192,7 +192,7 @@ def required_read_paths_for_seat(*, seat_name: str, issue: Any) -> List[str]:
     return []
 
 
-def required_write_paths_for_seat(*, seat_name: str, issue: Any) -> List[str]:
+def required_write_paths_for_seat(*, seat_name: str, issue: Any) -> list[str]:
     seat = str(seat_name or "").strip().lower()
     runtime = resolve_cards_runtime(issue=issue)
     artifact_contract = dict(runtime.get("artifact_contract") or {})
@@ -210,7 +210,7 @@ def required_write_paths_for_seat(*, seat_name: str, issue: Any) -> List[str]:
     return []
 
 
-def summarize_cards_runtime_issues(issue_payloads: List[Dict[str, Any]]) -> Dict[str, Any]:
+def summarize_cards_runtime_issues(issue_payloads: list[dict[str, Any]]) -> dict[str, Any]:
     rows = [dict(row) for row in issue_payloads if isinstance(row, dict)]
     if not rows:
         return {}
@@ -244,7 +244,7 @@ def summarize_cards_runtime_issues(issue_payloads: List[Dict[str, Any]]) -> Dict
     return summary
 
 
-def _resolve_base_profile(*, requested_profile: str, artifact_contract: Dict[str, Any]) -> str:
+def _resolve_base_profile(*, requested_profile: str, artifact_contract: dict[str, Any]) -> str:
     if requested_profile in _PROFILE_TRAITS_BY_PROFILE:
         return requested_profile
     if artifact_contract.get("kind") == "artifact":
@@ -252,7 +252,7 @@ def _resolve_base_profile(*, requested_profile: str, artifact_contract: Dict[str
     return APP_EXECUTION_PROFILE
 
 
-def _normalize_artifact_contract(value: Any, *, requested_profile: str = "") -> Dict[str, Any]:
+def _normalize_artifact_contract(value: Any, *, requested_profile: str = "") -> dict[str, Any]:
     payload = dict(value or {}) if isinstance(value, dict) else {}
     profile_traits = _profile_traits_for_profile(requested_profile)
     if not payload and profile_traits.get("artifact_contract_required") is False:
@@ -292,7 +292,7 @@ def _normalize_artifact_contract(value: Any, *, requested_profile: str = "") -> 
     }
 
 
-def _empty_artifact_contract() -> Dict[str, Any]:
+def _empty_artifact_contract() -> dict[str, Any]:
     return {
         "kind": "none",
         "primary_output": "",
@@ -305,7 +305,7 @@ def _empty_artifact_contract() -> Dict[str, Any]:
     }
 
 
-def _profile_traits_for_profile(profile: Any) -> Dict[str, Any]:
+def _profile_traits_for_profile(profile: Any) -> dict[str, Any]:
     normalized = str(profile or "").strip()
     traits = _PROFILE_TRAITS_BY_PROFILE.get(normalized)
     if traits is None:
@@ -317,7 +317,7 @@ def _profile_traits_for_profile(profile: Any) -> Dict[str, Any]:
     return dict(traits)
 
 
-def _artifact_contract_declares_outputs(artifact_contract: Dict[str, Any]) -> bool:
+def _artifact_contract_declares_outputs(artifact_contract: dict[str, Any]) -> bool:
     kind = str(artifact_contract.get("kind") or "").strip().lower()
     if kind in {"app", "artifact"}:
         return True
@@ -331,7 +331,7 @@ def _artifact_contract_declares_outputs(artifact_contract: Dict[str, Any]) -> bo
     return False
 
 
-def _normalize_scenario_truth(value: Any) -> Dict[str, Any]:
+def _normalize_scenario_truth(value: Any) -> dict[str, Any]:
     payload = dict(value or {}) if isinstance(value, dict) else {}
     if not payload:
         return {}
@@ -366,13 +366,13 @@ def _normalize_scenario_truth(value: Any) -> Dict[str, Any]:
     return normalized
 
 
-def normalize_scenario_truth_alignment(*, scenario_truth: Any, observed_terminal_status: str) -> Dict[str, Any]:
+def normalize_scenario_truth_alignment(*, scenario_truth: Any, observed_terminal_status: str) -> dict[str, Any]:
     normalized = _normalize_scenario_truth(scenario_truth)
     if not normalized:
         return {}
     expected_terminal_status = str(normalized.get("expected_terminal_status") or "").strip().lower()
     observed = str(observed_terminal_status or "").strip().lower()
-    alignment: Dict[str, Any] = {
+    alignment: dict[str, Any] = {
         "scenario_id": str(normalized.get("scenario_id") or "").strip(),
         "expected_terminal_status": expected_terminal_status,
         "observed_terminal_status": observed,
@@ -382,14 +382,14 @@ def normalize_scenario_truth_alignment(*, scenario_truth: Any, observed_terminal
     return alignment
 
 
-def _infer_contract_kind(primary_output: str, write_paths: List[str]) -> str:
+def _infer_contract_kind(primary_output: str, write_paths: list[str]) -> str:
     if primary_output == DEFAULT_APP_PRIMARY_OUTPUT and write_paths == [DEFAULT_APP_PRIMARY_OUTPUT]:
         return "app"
     return "artifact"
 
 
-def _normalize_paths(*values: Any) -> List[str]:
-    ordered: List[str] = []
+def _normalize_paths(*values: Any) -> list[str]:
+    ordered: list[str] = []
     seen: set[str] = set()
     for value in values:
         items = value if isinstance(value, list) else [value]
@@ -402,10 +402,10 @@ def _normalize_paths(*values: Any) -> List[str]:
     return ordered
 
 
-def _normalize_semantic_checks(value: Any) -> List[Dict[str, Any]]:
+def _normalize_semantic_checks(value: Any) -> list[dict[str, Any]]:
     if not isinstance(value, list):
         return []
-    normalized: List[Dict[str, Any]] = []
+    normalized: list[dict[str, Any]] = []
     for item in value:
         if not isinstance(item, dict):
             continue
@@ -443,9 +443,9 @@ def _coerce_bool(value: Any) -> bool | None:
     return None
 
 
-def _normalize_odr_result(value: Any) -> Dict[str, Any]:
+def _normalize_odr_result(value: Any) -> dict[str, Any]:
     payload = dict(value or {}) if isinstance(value, dict) else {}
-    normalized: Dict[str, Any] = {}
+    normalized: dict[str, Any] = {}
     for key in (
         "odr_valid",
         "odr_pending_decisions",
@@ -461,9 +461,9 @@ def _normalize_odr_result(value: Any) -> Dict[str, Any]:
     return normalized
 
 
-def _shared_dict_value(*, rows: List[Dict[str, Any]], key: str) -> Dict[str, Any]:
+def _shared_dict_value(*, rows: list[dict[str, Any]], key: str) -> dict[str, Any]:
     encoded: set[str] = set()
-    selected: Dict[str, Any] = {}
+    selected: dict[str, Any] = {}
     for row in rows:
         value = row.get(key)
         if not isinstance(value, dict) or not value:

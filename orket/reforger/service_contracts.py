@@ -151,7 +151,7 @@ class PromptReforgerServiceRequest:
         return payload
 
     @classmethod
-    def from_payload(cls, payload: dict[str, Any]) -> "PromptReforgerServiceRequest":
+    def from_payload(cls, payload: dict[str, Any]) -> PromptReforgerServiceRequest:
         if not isinstance(payload, dict):
             raise ValueError("service request payload must be an object")
         runtime_payload = payload.get("runtime_context")

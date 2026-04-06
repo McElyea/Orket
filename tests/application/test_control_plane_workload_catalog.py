@@ -15,13 +15,13 @@ from orket.application.services.control_plane_workload_catalog import (
     REVIEW_RUN_WORKLOAD,
     SANDBOX_RUNTIME_WORKLOAD_VERSION,
     TURN_TOOL_WORKLOAD,
-    _resolve_cards_control_plane_workload_from_contract,
+    WorkloadAuthorityInput,
     _resolve_extension_control_plane_workload,
     _resolve_odr_arbiter_control_plane_workload_from_contract,
-    WorkloadAuthorityInput,
     build_cards_workload_contract,
     control_plane_workload_for_key,
     governed_control_plane_workloads,
+    resolve_cards_control_plane_workload_from_contract,
     resolve_control_plane_workload,
     sandbox_runtime_workload_for_tech_stack,
 )
@@ -44,7 +44,7 @@ from orket.application.services.turn_tool_control_plane_service import (
     TurnToolControlPlaneService,
 )
 from orket.core.contracts import WORKLOAD_CONTRACT_VERSION_V1, parse_workload_contract
-from orket.domain.sandbox import TechStack
+from orket.core.domain.sandbox import TechStack
 from orket.schema import ArchitectureGovernance, EpicConfig, IssueConfig
 
 
@@ -163,7 +163,7 @@ def test_cards_workload_record_helper_keeps_runtime_entrypoints_out_of_authority
         department="core",
     )
 
-    record = _resolve_cards_control_plane_workload_from_contract(
+    record = resolve_cards_control_plane_workload_from_contract(
         contract_payload=contract_payload,
         department="core",
     )

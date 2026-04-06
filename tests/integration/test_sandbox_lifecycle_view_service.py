@@ -7,7 +7,11 @@ import pytest
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.application.services.sandbox_lifecycle_view_service import SandboxLifecycleViewService
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
-from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleEventRecord, SandboxLifecycleRecord
+from orket.core.domain.sandbox_lifecycle_records import (
+    ManagedResourceInventory,
+    SandboxLifecycleEventRecord,
+    SandboxLifecycleRecord,
+)
 
 
 def _record(sandbox_id: str, *, cleanup_due_at: str | None, last_heartbeat_at: str | None, requires_reconciliation: bool = False) -> SandboxLifecycleRecord:

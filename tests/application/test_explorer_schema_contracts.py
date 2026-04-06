@@ -99,4 +99,4 @@ def test_explorer_schema_contracts_fail_on_missing_required(tmp_path: Path) -> N
     assert result.returncode == 2
     payload = json.loads(result.stdout)
     assert payload["status"] == "FAIL"
-    assert any("frontier:missing:execution_lane" == item for item in payload["failures"])
+    assert any(item == "frontier:missing:execution_lane" for item in payload["failures"])

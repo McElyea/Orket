@@ -23,7 +23,6 @@ from orket.orchestration.approval_control_plane_read_model import target_resourc
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
 
-
 pytestmark = pytest.mark.unit
 
 

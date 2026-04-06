@@ -1,5 +1,14 @@
 """Core domain models and invariants."""
 
+from .control_plane_effect_journal import (
+    ControlPlaneCheckpointError,
+    ControlPlaneEffectJournalError,
+    compute_effect_journal_entry_digest,
+    create_effect_journal_entry,
+    validate_checkpoint_acceptance,
+    validate_effect_journal_append,
+    validate_effect_journal_chain,
+)
 from .control_plane_enums import (
     AttemptState,
     AuthoritySourceClass,
@@ -26,9 +35,9 @@ from .control_plane_enums import (
     OrphanClassification,
     OwnershipClass,
     ProtocolFailureClass,
+    RecoveryActionClass,
     ReservationKind,
     ReservationStatus,
-    RecoveryActionClass,
     ResidualUncertaintyClassification,
     ResourceFailureClass,
     ResultClass,
@@ -37,15 +46,6 @@ from .control_plane_enums import (
     SideEffectBoundaryClass,
     TerminalityBasisClassification,
     TruthFailureClass,
-)
-from .control_plane_effect_journal import (
-    ControlPlaneCheckpointError,
-    ControlPlaneEffectJournalError,
-    compute_effect_journal_entry_digest,
-    create_effect_journal_entry,
-    validate_checkpoint_acceptance,
-    validate_effect_journal_append,
-    validate_effect_journal_chain,
 )
 from .control_plane_final_truth import (
     ControlPlaneFinalTruthError,
@@ -59,10 +59,10 @@ from .control_plane_leases import (
     lease_publication_ref,
 )
 from .control_plane_lifecycle import (
-    ControlPlaneLifecycleError,
-    RunTransitionRequirement,
     TERMINAL_ATTEMPT_STATES,
     TERMINAL_RUN_STATES,
+    ControlPlaneLifecycleError,
+    RunTransitionRequirement,
     allowed_attempt_transitions,
     allowed_run_transitions,
     get_run_transition_requirement,
@@ -71,10 +71,17 @@ from .control_plane_lifecycle import (
     validate_attempt_state_transition,
     validate_run_state_transition,
 )
+from .control_plane_recovery import (
+    CONTINUATION_ACTIONS,
+    ControlPlaneRecoveryError,
+    build_recovery_decision,
+    infer_failure_taxonomy,
+    validate_recovery_decision_authority,
+)
 from .control_plane_reservations import (
-    ControlPlaneReservationError,
     TERMINAL_LEASE_STATUSES,
     TERMINAL_RESERVATION_STATUSES,
+    ControlPlaneReservationError,
     allowed_lease_status_transitions,
     allowed_reservation_status_transitions,
     build_reservation_record,
@@ -82,13 +89,6 @@ from .control_plane_reservations import (
     reservation_publication_ref,
     validate_lease_status_transition,
     validate_reservation_status_transition,
-)
-from .control_plane_recovery import (
-    CONTINUATION_ACTIONS,
-    ControlPlaneRecoveryError,
-    build_recovery_decision,
-    infer_failure_taxonomy,
-    validate_recovery_decision_authority,
 )
 
 __all__ = [

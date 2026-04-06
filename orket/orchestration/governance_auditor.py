@@ -11,14 +11,14 @@ Checks:
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional
 from pathlib import Path
 
-from orket.domain.execution import ExecutionTurn, ToolCall
+from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine, StateMachineError
-from orket.schema import CardStatus, CardType
 from orket.logging import log_event
+from orket.schema import CardStatus, CardType
 
 
 @dataclass
@@ -26,15 +26,15 @@ class AuditResult:
     """Result of auditing an execution turn."""
 
     passed: bool
-    violations: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    violations: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
     @classmethod
     def clean(cls) -> AuditResult:
         return cls(passed=True)
 
     @classmethod
-    def failed(cls, violations: List[str]) -> AuditResult:
+    def failed(cls, violations: list[str]) -> AuditResult:
         return cls(passed=False, violations=violations)
 
 
@@ -52,7 +52,7 @@ class GovernanceAuditor:
     def __init__(
         self,
         workspace: Path,
-        role_tool_permissions: Optional[Dict[str, List[str]]] = None,
+        role_tool_permissions: dict[str, list[str]] | None = None,
         max_tool_calls_per_turn: int = 10,
         max_file_size_bytes: int = DEFAULT_MAX_FILE_SIZE,
     ):
@@ -111,7 +111,7 @@ class GovernanceAuditor:
 
         return result
 
-    def _audit_tool_call(self, tool_call: ToolCall, role_name: str) -> List[str]:
+    def _audit_tool_call(self, tool_call: ToolCall, role_name: str) -> list[str]:
         """Audit a single tool call against governance rules."""
         violations = []
 
@@ -139,7 +139,7 @@ class GovernanceAuditor:
 
         return violations
 
-    def _audit_write_file(self, tool_call: ToolCall, role_name: str) -> List[str]:
+    def _audit_write_file(self, tool_call: ToolCall, role_name: str) -> list[str]:
         """Audit write_file tool calls for security violations."""
         violations = []
         args = tool_call.args or {}
@@ -158,7 +158,7 @@ class GovernanceAuditor:
 
         return violations
 
-    def _audit_status_change(self, tool_call: ToolCall, role_name: str) -> List[str]:
+    def _audit_status_change(self, tool_call: ToolCall, role_name: str) -> list[str]:
         """Audit status change using StateMachine as the single authority."""
         violations = []
         args = tool_call.args or {}
@@ -185,14 +185,14 @@ class GovernanceAuditor:
 
         return violations
 
-    def _audit_destructive_operation(self, tool_call: ToolCall) -> List[str]:
+    def _audit_destructive_operation(self, tool_call: ToolCall) -> list[str]:
         """Ensure destructive operations have explicit confirmation."""
         args = tool_call.args or {}
         if not args.get("confirm", False):
             return [f"Destructive operation '{tool_call.tool}' missing confirm=true"]
         return []
 
-    def _audit_issue_creation(self, tool_call: ToolCall) -> List[str]:
+    def _audit_issue_creation(self, tool_call: ToolCall) -> list[str]:
         """Ensure newly created issues have minimally meaningful summaries."""
         args = tool_call.args or {}
         summary = str(args.get("summary", "")).strip()

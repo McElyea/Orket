@@ -9,13 +9,12 @@ from .nervous_system_approvals import (
     rebuild_pending_approvals,
 )
 from .nervous_system_policy import require_nervous_system_enabled
-from .nervous_system_runtime_state import _ADMISSIONS_BY_PROPOSAL, get_str, list_events_for_session
+from .nervous_system_runtime_state import _ADMISSIONS_BY_PROPOSAL, append_event, get_str, list_events_for_session
 from .nervous_system_tokens import (
     consume_credential_token,
     invalidate_tokens_for_proposal,
     issue_credential_token,
 )
-from .nervous_system_runtime_state import append_event
 
 
 def list_approvals_v1(
@@ -324,9 +323,7 @@ def _execution_path_consistent(*, commit_status: str, event_digests_by_type: dic
     validated = bool(event_digests_by_type.get("action.result_validated"))
     if commit_status != "COMMITTED" and (executed or validated):
         return False
-    if executed and not validated:
-        return False
-    return True
+    return not (executed and not validated)
 
 
 def _execution_evidence_status(*, execution_claimed: bool, executed: bool, validated: bool) -> str:

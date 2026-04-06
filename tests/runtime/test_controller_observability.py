@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 # Layer: contract/unit/integration
-
 from pathlib import Path
 from typing import Any
 
@@ -9,19 +8,18 @@ import pytest
 
 from orket.extensions import controller_observability
 from orket.extensions.controller_dispatcher import (
-    ControllerDispatcher,
     ERROR_CHILD_TIMEOUT_INVALID,
     ERROR_MAX_DEPTH_EXCEEDED,
+    ControllerDispatcher,
 )
 from orket.extensions.manager import ExtensionManager
 from orket.extensions.models import CONTRACT_STYLE_SDK_V0
 from orket_extension_sdk.controller import ControllerChildResult, ControllerPolicyCaps, ControllerRunSummary
-
 from tests.runtime.test_controller_dispatcher import (
-    _StubExtensionManager,
     _extension_result,
     _init_controller_bootstrap_repo,
     _init_sdk_child_repo,
+    _StubExtensionManager,
 )
 
 
@@ -112,7 +110,7 @@ async def test_dispatcher_blocked_mapping_and_not_attempted_timeout_shape() -> N
             "ancestry": [],
             "children": [{"target_workload": "sdk_a", "contract_style": "sdk_v0"}],
         },
-        workspace=Path("."),
+        workspace=Path(),
         department="core",
     )
     assert blocked.status == "blocked"
@@ -126,7 +124,7 @@ async def test_dispatcher_blocked_mapping_and_not_attempted_timeout_shape() -> N
             "ancestry": [],
             "children": [{"target_workload": "sdk_a", "contract_style": "sdk_v0", "timeout_seconds": 0}],
         },
-        workspace=Path("."),
+        workspace=Path(),
         department="core",
     )
     assert timeout_blocked.status == "blocked"
@@ -143,7 +141,7 @@ async def test_dispatcher_blocked_mapping_and_not_attempted_timeout_shape() -> N
                 {"target_workload": "sdk_b", "contract_style": "sdk_v0"},
             ],
         },
-        workspace=Path("."),
+        workspace=Path(),
         department="core",
     )
     assert failed.status == "failed"

@@ -7,8 +7,8 @@ import pytest
 
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
+from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.policies.tool_gate import ToolGate
-from orket.domain.execution import ExecutionTurn, ToolCall
 
 
 def _dispatcher(

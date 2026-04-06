@@ -1,5 +1,6 @@
 import os
 from datetime import UTC, datetime
+from pathlib import Path
 
 from orket.naming import sanitize_name
 from orket.time_utils import now_local
@@ -23,7 +24,7 @@ def _resolve_log_level() -> int:
 
 def ensure_log_dir() -> None:
     """Create the log directory if it does not exist. Call from application startup."""
-    os.makedirs(LOG_DIR, exist_ok=True)
+    Path(LOG_DIR).mkdir(exist_ok=True)
 
 
 CURRENT_LEVEL = _resolve_log_level()

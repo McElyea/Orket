@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.4.34"
+version = "0.4.35"
 description = "Local-first workflow runtime for card-based execution"
 authors = [
     { name = "Jonathan McElyea" }
@@ -38,8 +38,6 @@ dependencies = [
     # System monitoring
     "psutil>=5.9.0,<7.0.0",
 
-    # Image processing (optional heavy deps listed separately)
-    "Pillow>=10.0.0,<13.0.0",
 ]
 
 [project.scripts]
@@ -57,6 +55,7 @@ dev = [
 ]
 vision = [
     # Heavy ML dependencies - only install if needed
+    "Pillow>=10.0.0,<13.0.0",
     "diffusers>=0.25.0",
     "transformers>=4.37.0",
     "accelerate>=0.25.0",
@@ -109,10 +108,29 @@ select = [
     "E",      # pycodestyle errors
     "W",      # pycodestyle warnings
     "F",      # pyflakes
+    "B",      # bugbear bug patterns
+    "I",      # import sorting
+    "UP",     # pyupgrade
+    "SIM",    # simplify
+    "ASYNC",  # async anti-patterns
+    "PTH",    # pathlib preference
     "E722",   # bare except (CRITICAL - never allow)
+]
+ignore = [
+    "E501",   # pre-existing repo-wide line-length backlog remains out of scope for this fix cycle
 ]
 
 [tool.mypy]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
+exclude = "(^tests/|^scripts/|^benchmarks/)"
+
+[tool.coverage.run]
+source = ["orket"]
+branch = true
+omit = ["tests/*", "scripts/*", "benchmarks/*"]
+
+[tool.coverage.report]
+fail_under = 60
+show_missing = true

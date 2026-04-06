@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any
 
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.core.domain.guard_rule_catalog import (
@@ -18,8 +18,8 @@ from orket.schema import DialectConfig, SkillConfig
 @dataclass
 class PromptResolution:
     system_prompt: str
-    metadata: Dict[str, Any]
-    layers: Dict[str, Any]
+    metadata: dict[str, Any]
+    layers: dict[str, Any]
 
 
 class PromptResolver:
@@ -54,12 +54,12 @@ class PromptResolver:
         *,
         skill: SkillConfig,
         dialect: DialectConfig,
-        context: Optional[Dict[str, Any]] = None,
-        guards: Optional[List[str]] = None,
+        context: dict[str, Any] | None = None,
+        guards: list[str] | None = None,
         version_hint: str = "stable",
         selection_policy: str = "stable",
-        next_member: Optional[str] = None,
-        patch: Optional[str] = None,
+        next_member: str | None = None,
+        patch: str | None = None,
     ) -> PromptResolution:
         context = context or {}
         resolver_stages = ["resolve", "validate", "select", "render"]
@@ -82,7 +82,7 @@ class PromptResolver:
         guard_lines = PromptResolver._guard_lines(guards)
         context_lines = PromptResolver._context_overlay_lines(context)
 
-        prompt_parts: List[str] = []
+        prompt_parts: list[str] = []
         if dialect_prefix:
             prompt_parts.append(dialect_prefix)
         prompt_parts.append(base_prompt)
@@ -141,7 +141,7 @@ class PromptResolver:
         return PromptResolution(system_prompt=final_prompt, metadata=metadata, layers=layers)
 
     @staticmethod
-    def _guard_lines(guards: List[str]) -> List[str]:
+    def _guard_lines(guards: list[str]) -> list[str]:
         lines = []
         for guard in guards:
             normalized = str(guard).strip()
@@ -157,8 +157,8 @@ class PromptResolver:
         return lines
 
     @staticmethod
-    def _normalize_guard_layers(guards: List[str]) -> List[str]:
-        normalized_guards: List[str] = []
+    def _normalize_guard_layers(guards: list[str]) -> list[str]:
+        normalized_guards: list[str] = []
         seen = set()
         for guard in guards:
             normalized = str(guard).strip().lower()
@@ -176,7 +176,7 @@ class PromptResolver:
         return normalized_guards
 
     @staticmethod
-    def _context_overlay_lines(context: Dict[str, Any]) -> List[str]:
+    def _context_overlay_lines(context: dict[str, Any]) -> list[str]:
         keys = (
             "prompt_context_profile",
             "stage_gate_mode",
@@ -185,17 +185,14 @@ class PromptResolver:
             "required_read_paths",
             "required_write_paths",
         )
-        lines: List[str] = []
+        lines: list[str] = []
         for key in keys:
             if key not in context:
                 continue
             value = context.get(key)
             if value is None:
                 continue
-            if isinstance(value, (dict, list)):
-                rendered = json.dumps(value, sort_keys=True)
-            else:
-                rendered = str(value)
+            rendered = json.dumps(value, sort_keys=True) if isinstance(value, (dict, list)) else str(value)
             lines.append(f"- {key}: {rendered}")
         return lines
 
@@ -211,7 +208,7 @@ class PromptResolver:
         dialect_status: str,
         role_version: str,
         dialect_version: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> None:
         allowed = {"stable", "canary", "exact"}
         if policy not in allowed:
@@ -242,13 +239,13 @@ class PromptResolver:
             raise ValueError(f"Exact policy version mismatch: expected {exact}, resolved {resolved}")
 
     @staticmethod
-    def _normalize_rule_ids(value: Any) -> List[str]:
+    def _normalize_rule_ids(value: Any) -> list[str]:
         if value is None or not isinstance(value, list):
             return []
         return normalize_rule_ids(value)
 
     @staticmethod
-    def _validate_rule_ownership(*, context: Dict[str, Any]) -> None:
+    def _validate_rule_ownership(*, context: dict[str, Any]) -> None:
         prompt_rule_ids = PromptResolver._normalize_rule_ids(context.get("prompt_rule_ids"))
         raw_runtime_guard_rule_ids = context.get("runtime_guard_rule_ids")
         runtime_guard_rule_ids = validate_runtime_guard_rule_ids(raw_runtime_guard_rule_ids)

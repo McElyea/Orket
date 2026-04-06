@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import tempfile
-import hashlib
 from pathlib import Path
 
 from orket.kernel.v1.state.lsi import LocalSovereignIndex
@@ -22,7 +22,7 @@ def _registry_codes() -> list[str]:
     if isinstance(codes, list):
         return [code for code in codes if isinstance(code, str)]
     if isinstance(codes, dict):
-        return [code for code in codes.keys() if isinstance(code, str)]
+        return [code for code in codes if isinstance(code, str)]
     raise AssertionError("Violation: Registry must expose codes as list or object.")
 
 

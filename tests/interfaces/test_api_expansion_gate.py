@@ -8,7 +8,6 @@ import orket.interfaces.api as api_module
 from orket.interfaces.api import app
 from orket.schema import CardStatus
 
-
 client = TestClient(app)
 
 
@@ -89,7 +88,7 @@ async def test_api_expansion_gate_execution_graph_contract(monkeypatch, tmp_path
 
 def test_api_expansion_gate_token_summary_contract(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module, "PROJECT_ROOT", Path(tmp_path))
+    api_module.app.state.project_root = Path(tmp_path).resolve()
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}
@@ -198,4 +197,3 @@ async def test_api_expansion_gate_card_guard_history_contract(monkeypatch, tmp_p
     assert payload["summary"]["guard_requested_changes"] == 1
     assert payload["summary"]["guard_approved"] == 1
     assert payload["summary"]["retry_count"] == 1
-

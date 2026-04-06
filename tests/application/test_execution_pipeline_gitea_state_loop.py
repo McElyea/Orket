@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -75,7 +76,7 @@ async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeyp
             if summary_out is not None:
                 out = Path(summary_out)
                 out.parent.mkdir(parents=True, exist_ok=True)
-                out.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+                await asyncio.to_thread(out.write_text, json.dumps(summary, indent=2), encoding="utf-8")
             return summary
 
     monkeypatch.setattr(module, "GiteaStateAdapter", _FakeAdapter)

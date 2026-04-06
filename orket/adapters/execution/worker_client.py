@@ -3,7 +3,8 @@ from __future__ import annotations
 import random
 import threading
 import time
-from typing import Any, Callable, Protocol
+from collections.abc import Callable
+from typing import Any, Protocol
 
 
 class ResponseLike(Protocol):

@@ -121,15 +121,21 @@ def _validate_review_bundle_identity_alignment(
 
     if manifest_control_plane_attempt_id and not payload_control_plane_attempt_id:
         raise ValueError(f"{field_name}_control_plane_attempt_id_missing")
-    if manifest_control_plane_attempt_id and payload_control_plane_attempt_id:
-        if payload_control_plane_attempt_id != manifest_control_plane_attempt_id:
-            raise ValueError(f"{field_name}_control_plane_attempt_id_mismatch")
+    if (
+        manifest_control_plane_attempt_id
+        and payload_control_plane_attempt_id
+        and payload_control_plane_attempt_id != manifest_control_plane_attempt_id
+    ):
+        raise ValueError(f"{field_name}_control_plane_attempt_id_mismatch")
 
     if manifest_control_plane_step_id and not payload_control_plane_step_id:
         raise ValueError(f"{field_name}_control_plane_step_id_missing")
-    if manifest_control_plane_step_id and payload_control_plane_step_id:
-        if payload_control_plane_step_id != manifest_control_plane_step_id:
-            raise ValueError(f"{field_name}_control_plane_step_id_mismatch")
+    if (
+        manifest_control_plane_step_id
+        and payload_control_plane_step_id
+        and payload_control_plane_step_id != manifest_control_plane_step_id
+    ):
+        raise ValueError(f"{field_name}_control_plane_step_id_mismatch")
 
     return normalized_payload
 

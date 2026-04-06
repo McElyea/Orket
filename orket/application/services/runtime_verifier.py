@@ -5,7 +5,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import aiofiles
 
@@ -18,10 +18,10 @@ _COMMAND_FAILURE_SUMMARY_LIMIT = 240
 @dataclass(frozen=True)
 class RuntimeVerificationResult:
     ok: bool
-    checked_files: List[str]
-    errors: List[str]
-    command_results: List[Dict[str, Any]]
-    failure_breakdown: Dict[str, int]
+    checked_files: list[str]
+    errors: list[str]
+    command_results: list[dict[str, Any]]
+    failure_breakdown: dict[str, int]
     guard_contract: GuardContract
 
 
@@ -39,8 +39,8 @@ class RuntimeVerifier:
         organization: Any = None,
         project_surface_profile: str | None = None,
         architecture_pattern: str | None = None,
-        artifact_contract: Dict[str, Any] | None = None,
-        issue_params: Dict[str, Any] | None = None,
+        artifact_contract: dict[str, Any] | None = None,
+        issue_params: dict[str, Any] | None = None,
     ):
         self.workspace_root = workspace_root
         self.organization = organization
@@ -51,10 +51,10 @@ class RuntimeVerifier:
 
     async def verify(self) -> RuntimeVerificationResult:
         targets = await self._python_targets()
-        errors: List[str] = []
-        checked_files: List[str] = []
-        command_results: List[Dict[str, Any]] = []
-        failure_breakdown: Dict[str, int] = {}
+        errors: list[str] = []
+        checked_files: list[str] = []
+        command_results: list[dict[str, Any]] = []
+        failure_breakdown: dict[str, int] = {}
         for target in targets:
             checked_files.append(str(target.relative_to(self.workspace_root)).replace("\\", "/"))
             try:
@@ -99,7 +99,7 @@ class RuntimeVerifier:
             guard_contract=guard_contract,
         )
 
-    async def _python_targets(self) -> List[Path]:
+    async def _python_targets(self) -> list[Path]:
         root = self.workspace_root / "agent_output"
         exists = await asyncio.to_thread(root.exists)
         if not exists:
@@ -107,7 +107,7 @@ class RuntimeVerifier:
         files = await asyncio.to_thread(lambda: sorted([p for p in root.rglob("*.py") if p.is_file()]))
         return files
 
-    async def _resolve_runtime_command_plan(self) -> Dict[str, Any]:
+    async def _resolve_runtime_command_plan(self) -> dict[str, Any]:
         issue_commands = self._issue_runtime_verifier_commands()
         if issue_commands:
             return {"commands": issue_commands, "source": "issue_override"}
@@ -148,7 +148,7 @@ class RuntimeVerifier:
             "source": f"profile_default_none:{stack_profile}",
         }
 
-    def _issue_runtime_verifier_commands(self) -> List[Any]:
+    def _issue_runtime_verifier_commands(self) -> list[Any]:
         runtime_verifier = self.issue_params.get("runtime_verifier")
         if not isinstance(runtime_verifier, dict):
             return []
@@ -168,10 +168,10 @@ class RuntimeVerifier:
             return "node"
         return "python"
 
-    async def _default_commands_for_profile(self, stack_profile: str) -> List[Any]:
+    async def _default_commands_for_profile(self, stack_profile: str) -> list[Any]:
         # Only Python-backed surfaces have a safe cross-platform builtin verifier command.
         agent_output_exists = await asyncio.to_thread((self.workspace_root / "agent_output").exists)
-        commands: List[Any] = []
+        commands: list[Any] = []
         if agent_output_exists and stack_profile in {"python", "polyglot"}:
             commands.append(["python", "-m", "compileall", "-q", "agent_output"])
         entrypoint_command = self._default_entrypoint_command()
@@ -180,7 +180,7 @@ class RuntimeVerifier:
         return commands
 
     async def _check_python_syntax(self, path: Path) -> None:
-        async with aiofiles.open(path, mode="r", encoding="utf-8") as handle:
+        async with aiofiles.open(path, encoding="utf-8") as handle:
             source = await handle.read()
         await asyncio.to_thread(compile, source, str(path), "exec")
 
@@ -194,7 +194,7 @@ class RuntimeVerifier:
         except (TypeError, ValueError):
             return 60
 
-    def _default_entrypoint_command(self) -> List[str] | None:
+    def _default_entrypoint_command(self) -> list[str] | None:
         artifact_kind = str(self.artifact_contract.get("kind") or "").strip().lower()
         entrypoint_path = str(self.artifact_contract.get("entrypoint_path") or "").strip().replace("\\", "/")
         if artifact_kind != "app" or not entrypoint_path:
@@ -203,7 +203,7 @@ class RuntimeVerifier:
             return None
         return ["python", entrypoint_path]
 
-    async def _validate_deployment_artifacts_if_required(self) -> List[str]:
+    async def _validate_deployment_artifacts_if_required(self) -> list[str]:
         process_rules = {}
         if self.organization and isinstance(getattr(self.organization, "process_rules", None), dict):
             process_rules = self.organization.process_rules
@@ -214,7 +214,7 @@ class RuntimeVerifier:
         expected = self._resolve_expected_deployment_files(process_rules)
         if not isinstance(expected, list):
             return []
-        missing: List[str] = []
+        missing: list[str] = []
         for rel_path in expected:
             if not str(rel_path).strip():
                 continue
@@ -223,7 +223,7 @@ class RuntimeVerifier:
                 missing.append(str(rel_path))
         return missing
 
-    async def _resolve_stack_profile(self, process_rules: Dict[str, Any]) -> str:
+    async def _resolve_stack_profile(self, process_rules: dict[str, Any]) -> str:
         stack_profile = str(process_rules.get("runtime_verifier_stack_profile", "")).strip().lower()
         if stack_profile in {"python", "node", "polyglot"}:
             return stack_profile
@@ -234,14 +234,14 @@ class RuntimeVerifier:
             return profile_stack
         return await self._infer_stack_profile()
 
-    def _resolve_expected_deployment_files(self, process_rules: Dict[str, Any]) -> List[str]:
+    def _resolve_expected_deployment_files(self, process_rules: dict[str, Any]) -> list[str]:
         explicit = process_rules.get("runtime_verifier_required_deployment_files")
         if isinstance(explicit, list):
             return [str(item).strip() for item in explicit if str(item).strip()]
 
         planner_required = process_rules.get("deployment_planner_required_files")
         if isinstance(planner_required, dict):
-            inferred = [str(path).strip() for path in planner_required.keys() if str(path).strip()]
+            inferred = [str(path).strip() for path in planner_required if str(path).strip()]
             if inferred:
                 return inferred
 
@@ -287,7 +287,7 @@ class RuntimeVerifier:
             return "polyglot"
         return ""
 
-    async def _run_command(self, command: Any, timeout_sec: int, policy_source: str) -> Dict[str, Any]:
+    async def _run_command(self, command: Any, timeout_sec: int, policy_source: str) -> dict[str, Any]:
         parsed = await self._parse_runtime_command(command)
         if parsed.get("invalid"):
             display = str(parsed.get("command_text") or parsed.get("command_display") or command)
@@ -361,7 +361,7 @@ class RuntimeVerifier:
                 "policy_source": policy_source,
             }
 
-    async def _parse_runtime_command(self, command: Any) -> Dict[str, Any]:
+    async def _parse_runtime_command(self, command: Any) -> dict[str, Any]:
         declared_cwd = "."
         raw_argv = command
         if isinstance(command, dict):
@@ -415,7 +415,7 @@ class RuntimeVerifier:
         }
 
     @staticmethod
-    def _display_command(argv: List[str]) -> str:
+    def _display_command(argv: list[str]) -> str:
         display = list(argv)
         if display and Path(display[0]).name.lower().startswith("python"):
             display[0] = "python"
@@ -439,7 +439,7 @@ class RuntimeVerifier:
         )
 
     @staticmethod
-    def _summarize_command_failure(result: Dict[str, Any]) -> str:
+    def _summarize_command_failure(result: dict[str, Any]) -> str:
         details = str(result.get("stderr") or result.get("stdout") or "").strip()
         if not details:
             return "command exited non-zero with no captured output"
@@ -471,7 +471,7 @@ class RuntimeVerifier:
             return "missing_runtime"
         return "command_failed"
 
-    def _resolve_stdout_contract(self) -> Dict[str, Any]:
+    def _resolve_stdout_contract(self) -> dict[str, Any]:
         raw = self.issue_params.get("runtime_verifier")
         payload = dict(raw or {}) if isinstance(raw, dict) else {}
         expect_json_stdout = bool(payload.get("expect_json_stdout", False))
@@ -485,9 +485,9 @@ class RuntimeVerifier:
     async def _validate_stdout_contract(
         self,
         *,
-        command_results: List[Dict[str, Any]],
-        failure_breakdown: Dict[str, int],
-        errors: List[str],
+        command_results: list[dict[str, Any]],
+        failure_breakdown: dict[str, int],
+        errors: list[str],
     ) -> None:
         contract = self._resolve_stdout_contract()
         expect_json_stdout = bool(contract.get("expect_json_stdout"))
@@ -528,8 +528,8 @@ class RuntimeVerifier:
 
         last_result["stdout_contract_ok"] = True
 
-    def _json_assertion_failures(self, payload: Any, assertions: List[Dict[str, Any]]) -> List[str]:
-        failures: List[str] = []
+    def _json_assertion_failures(self, payload: Any, assertions: list[dict[str, Any]]) -> list[str]:
+        failures: list[str] = []
         for assertion in assertions:
             path = str(assertion.get("path") or "").strip()
             op = str(assertion.get("op") or "").strip().lower()
@@ -600,7 +600,7 @@ class RuntimeVerifier:
         return False
 
 
-def build_runtime_guard_contract(*, ok: bool, errors: List[str]) -> GuardContract:
+def build_runtime_guard_contract(*, ok: bool, errors: list[str]) -> GuardContract:
     if ok:
         return GuardContract(
             result="pass",

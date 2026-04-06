@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from .core import ReactorConfig, ReactorState, run_round
 from .prompt_contract import build_architect_messages, build_auditor_messages
@@ -18,14 +18,16 @@ async def run_live_refinement(
     architect_client: Any,
     auditor_client: Any,
     max_rounds: int = 8,
-) -> Dict[str, Any]:
+    max_attempts: int | None = None,
+) -> dict[str, Any]:
     state = ReactorState()
     current_requirement = str(task or "").strip()
     prior_auditor_output = ""
     rounds: list[dict[str, Any]] = []
-    cfg = ReactorConfig(max_rounds=int(max_rounds))
+    attempt_budget = int(max_attempts if max_attempts is not None else max_rounds)
+    cfg = ReactorConfig(max_attempts=attempt_budget)
 
-    for round_index in range(1, int(max_rounds) + 1):
+    for round_index in range(1, attempt_budget + 1):
         architect_messages = build_architect_messages(
             task=str(task),
             current_requirement=current_requirement,
@@ -39,13 +41,12 @@ async def run_live_refinement(
         prior_count = len(state.history_rounds)
         state = run_round(state, architect_raw, auditor_raw, cfg)
         trace = state.history_rounds[-1] if len(state.history_rounds) > prior_count else None
-        if isinstance(trace, dict):
-            if str(trace.get("validity_verdict") or "") == "valid":
-                architect_parsed = trace.get("architect_parsed")
-                if isinstance(architect_parsed, dict):
-                    next_requirement = str(architect_parsed.get("requirement") or "").strip()
-                    if next_requirement:
-                        current_requirement = next_requirement
+        if isinstance(trace, dict) and str(trace.get("validity_verdict") or "") == "valid":
+            architect_parsed = trace.get("architect_parsed")
+            if isinstance(architect_parsed, dict):
+                next_requirement = str(architect_parsed.get("requirement") or "").strip()
+                if next_requirement:
+                    current_requirement = next_requirement
 
         prior_auditor_output = auditor_raw
         rounds.append(

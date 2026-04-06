@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from pathlib import Path
+from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import Any, Callable, Optional
+from pathlib import Path
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from orket.application.services.protocol_replay_service import LedgerFramingError, ProtocolReplayService
@@ -30,7 +31,7 @@ class InteractionFinalizeRequest(BaseModel):
 
 
 class InteractionCancelRequest(BaseModel):
-    turn_id: Optional[str] = None
+    turn_id: str | None = None
 
 
 def build_sessions_router(
@@ -41,7 +42,7 @@ def build_sessions_router(
     validate_builtin_workload_start: Callable[..., None],
     run_builtin_workload: Callable[..., Any],
     commit_intent_factory: Callable[[str], Any],
-    workspace_root_getter: Callable[[], Path] = lambda: Path(".").resolve(),
+    workspace_root_getter: Callable[[], Path] = lambda: Path().resolve(),
     protocol_replay_service_getter: Callable[[], Any] | None = None,
     control_plane_publication_getter: Callable[[], Any] | None = None,
 ) -> APIRouter:
@@ -74,7 +75,11 @@ def build_sessions_router(
         return {"session_id": session_id}
 
     @router.post("/interactions/{session_id}/turns")
-    async def begin_interaction_turn(session_id: str, req: InteractionTurnRequest):
+    async def begin_interaction_turn(
+        session_id: str,
+        req: InteractionTurnRequest,
+        background_tasks: BackgroundTasks,
+    ):
         interaction_manager = interaction_manager_getter()
         extension_manager = extension_manager_getter()
         if not interaction_manager.stream_enabled():
@@ -160,21 +165,22 @@ def build_sessions_router(
 
         _logger = logging.getLogger(__name__)
 
-        def _log_turn_failure(done_task: asyncio.Task[Any]) -> None:
+        async def _run_turn_logged() -> None:
             try:
-                error = done_task.exception()
+                await _run_turn()
             except asyncio.CancelledError:
-                return
-            if error is not None:
+                _logger.warning("interaction turn canceled: session=%s turn=%s", session_id, turn_id)
+                raise
+            except (RuntimeError, ValueError, TypeError, OSError, asyncio.TimeoutError) as exc:
                 _logger.error(
                     "interaction turn failed: session=%s turn=%s error=%s",
                     session_id,
                     turn_id,
-                    error,
+                    exc,
                 )
+                raise
 
-        task = asyncio.create_task(_run_turn())
-        task.add_done_callback(_log_turn_failure)
+        background_tasks.add_task(_run_turn_logged)
         return {"session_id": session_id, "turn_id": turn_id}
 
     @router.post("/interactions/{session_id}/finalize")
@@ -230,7 +236,7 @@ def build_sessions_router(
         return {"runs": rows}
 
     @router.get("/marshaller/runs/{run_id}")
-    async def inspect_marshaller_run(run_id: str, attempt_index: Optional[int] = None):
+    async def inspect_marshaller_run(run_id: str, attempt_index: int | None = None):
         from orket.marshaller.cli import inspect_marshaller_attempt
 
         workspace_root = _workspace_root()
@@ -269,9 +275,9 @@ def build_sessions_router(
 
     @router.get("/protocol/replay/campaign")
     async def campaign_protocol_replays(
-        run_id: list[str] = Query(default_factory=list),
-        baseline_run: Optional[str] = None,
-        runs_root: Optional[str] = None,
+        run_id: Annotated[list[str] | None, Query()] = None,
+        baseline_run: str | None = None,
+        runs_root: str | None = None,
     ):
         try:
             return await _get_protocol_replay_service().compare_protocol_determinism_campaign(
@@ -285,7 +291,7 @@ def build_sessions_router(
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.get("/protocol/runs/{run_id}/ledger-parity")
-    async def compare_protocol_and_sqlite_run_ledgers(run_id: str, sqlite_db_path: Optional[str] = None):
+    async def compare_protocol_and_sqlite_run_ledgers(run_id: str, sqlite_db_path: str | None = None):
         try:
             return await _get_protocol_replay_service().compare_protocol_and_sqlite_run_ledgers(
                 run_id=run_id,
@@ -300,8 +306,8 @@ def build_sessions_router(
 
     @router.get("/protocol/ledger-parity/campaign")
     async def campaign_protocol_ledger_parity(
-        session_id: list[str] = Query(default_factory=list),
-        sqlite_db_path: Optional[str] = None,
+        session_id: Annotated[list[str] | None, Query()] = None,
+        sqlite_db_path: str | None = None,
         discover_limit: int = 200,
     ):
         try:

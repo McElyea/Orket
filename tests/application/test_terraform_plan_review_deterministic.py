@@ -5,7 +5,6 @@ import json
 import pytest
 
 from orket.application.terraform_review.deterministic import analyze_plan, parse_plan_json
-
 from tests.application.terraform_plan_review_support import load_fixture_case, load_fixture_manifest
 
 

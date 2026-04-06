@@ -2,28 +2,29 @@ from __future__ import annotations
 
 import asyncio
 import os
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel
 
 
 class RuntimePolicyUpdateRequest(BaseModel):
-    architecture_mode: Optional[str] = None
-    frontend_framework_mode: Optional[str] = None
-    project_surface_profile: Optional[str] = None
-    small_project_builder_variant: Optional[str] = None
-    state_backend_mode: Optional[str] = None
-    run_ledger_mode: Optional[str] = None
-    protocol_timezone: Optional[str] = None
-    protocol_locale: Optional[str] = None
-    protocol_network_mode: Optional[str] = None
-    protocol_network_allowlist: Optional[str] = None
-    protocol_env_allowlist: Optional[str] = None
-    local_prompting_mode: Optional[str] = None
-    local_prompting_allow_fallback: Optional[bool] = None
-    local_prompting_fallback_profile_id: Optional[str] = None
-    gitea_state_pilot_enabled: Optional[bool] = None
+    architecture_mode: str | None = None
+    frontend_framework_mode: str | None = None
+    project_surface_profile: str | None = None
+    small_project_builder_variant: str | None = None
+    state_backend_mode: str | None = None
+    run_ledger_mode: str | None = None
+    protocol_timezone: str | None = None
+    protocol_locale: str | None = None
+    protocol_network_mode: str | None = None
+    protocol_network_allowlist: str | None = None
+    protocol_env_allowlist: str | None = None
+    local_prompting_mode: str | None = None
+    local_prompting_allow_fallback: bool | None = None
+    local_prompting_fallback_profile_id: str | None = None
+    gitea_state_pilot_enabled: bool | None = None
 
 
 def build_settings_router(
@@ -69,10 +70,10 @@ def build_settings_router(
         return {"settings": resolve_settings_snapshot(user_settings, process_rules)}
 
     @router.patch("/settings")
-    async def update_settings(payload: dict[str, Any] = Body(...)):
+    async def update_settings(payload: Annotated[dict[str, Any], Body(...)]):
         editable = {key: payload[key] for key in settings_order if key in payload}
         errors: list[dict[str, Any]] = []
-        for key in payload.keys():
+        for key in payload:
             if key not in settings_schema:
                 errors.append(
                     {

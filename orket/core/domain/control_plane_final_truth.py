@@ -32,9 +32,9 @@ def terminality_basis_for_closure(
 
 
 def validate_final_truth_publication(
-    record: "FinalTruthRecord",
+    record: FinalTruthRecord,
     *,
-    operator_action: "OperatorActionRecord | None" = None,
+    operator_action: OperatorActionRecord | None = None,
 ) -> bool:
     expected_terminality = terminality_basis_for_closure(record.closure_basis)
     if record.terminality_basis is not expected_terminality:
@@ -66,8 +66,8 @@ def build_final_truth_record(
     closure_basis: ClosureBasisClassification,
     authority_sources: list[AuthoritySourceClass],
     authoritative_result_ref: str | None = None,
-    operator_action: "OperatorActionRecord | None" = None,
-) -> "FinalTruthRecord":
+    operator_action: OperatorActionRecord | None = None,
+) -> FinalTruthRecord:
     from orket.core.contracts.control_plane_models import FinalTruthRecord
 
     record = FinalTruthRecord(

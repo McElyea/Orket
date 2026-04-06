@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 # Layer: unit/integration
-
 from pathlib import Path
 
 import pytest
@@ -9,9 +8,8 @@ import pytest
 from orket.extensions.manager import ExtensionManager
 from orket.runtime.controller_replay_parity import compare_controller_replay_outputs
 from scripts.extensions.bootstrap_controller_external_repo import bootstrap_controller_external_repo
-
-from tests.runtime.test_controller_observability import _build_controller_manager
 from tests.runtime.test_controller_dispatcher import _init_git_repo, _init_sdk_child_repo
+from tests.runtime.test_controller_observability import _build_controller_manager
 
 
 def test_compare_controller_replay_outputs_detects_status_drift() -> None:

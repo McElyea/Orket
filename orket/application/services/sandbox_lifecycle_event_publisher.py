@@ -57,6 +57,6 @@ class SandboxLifecycleEventPublisher:
     ) -> str:
         blob = json.dumps(payload, sort_keys=True, separators=(",", ":"))
         digest = hashlib.sha256(
-            f"{sandbox_id or 'global'}:{event_type}:{created_at}:{blob}".encode("utf-8")
+            f"{sandbox_id or 'global'}:{event_type}:{created_at}:{blob}".encode()
         ).hexdigest()
         return f"{event_type}:{digest}"

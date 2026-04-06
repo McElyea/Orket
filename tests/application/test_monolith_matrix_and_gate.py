@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.acceptance.run_monolith_variant_matrix import build_combos, choose_default_variant, summarize_report
 from scripts.acceptance.check_monolith_readiness_gate import (
     _missing_required_combinations,
     _resolve_thresholds,
     aggregate_invalid_payload_signals,
     aggregate_metrics,
 )
+from scripts.acceptance.run_monolith_variant_matrix import build_combos, choose_default_variant, summarize_report
 
 
 def test_build_combos_cartesian_product():

@@ -82,9 +82,7 @@ class SandboxCleanupSchedulerService:
             return False
         if record.state not in {SandboxState.TERMINAL, SandboxState.ORPHANED}:
             return False
-        if record.cleanup_state is CleanupState.SCHEDULED:
-            pass
-        elif record.state is SandboxState.TERMINAL and record.cleanup_state in {
+        if record.cleanup_state is CleanupState.SCHEDULED or record.state is SandboxState.TERMINAL and record.cleanup_state in {
             CleanupState.NONE,
             CleanupState.FAILED,
         }:

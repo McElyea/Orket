@@ -235,10 +235,7 @@ def _eval_meta_balance(blob: dict[str, Any], scenario_pack: dict[str, Any]) -> d
                 detail = ",".join(dominant)
         elif kind == "winrate_variance_cap":
             max_spread = float(params.get("max_spread", 0.15))
-            if aggregate:
-                spread = max(aggregate.values()) - min(aggregate.values())
-            else:
-                spread = 0.0
+            spread = max(aggregate.values()) - min(aggregate.values()) if aggregate else 0.0
             ok = spread <= max_spread
             if not ok:
                 detail = f"spread={round(spread, 6)}"
@@ -358,10 +355,7 @@ def apply_patch_ops(blob: dict[str, Any], patch_ops: list[dict[str, Any]]) -> di
                 raise ValueError(f"patch move from outside surface: {from_path}")
             src_parts = _path_parts(from_path)
             src_parent, src_key = _resolve_parent(output, src_parts)
-            if isinstance(src_parent, list):
-                value = src_parent.pop(int(src_key))
-            else:
-                value = src_parent.pop(src_key)
+            value = src_parent.pop(int(src_key)) if isinstance(src_parent, list) else src_parent.pop(src_key)
             if isinstance(parent, list):
                 if key == "-":
                     parent.append(value)

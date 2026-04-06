@@ -16,12 +16,14 @@ def _executor(tmp_path: Path) -> TurnExecutor:
 
 
 def test_turn_executor_direct_helpers_are_not_redelegated(tmp_path):
-    """Layer: unit. Verifies the coordinator keeps real helper methods without a magic delegate surface."""
+    """Layer: unit. Verifies the coordinator exposes only the helper seams that still add observable value."""
     executor = _executor(tmp_path)
 
     assert callable(executor._prepare_messages)
-    assert callable(executor._parse_response)
-    assert callable(executor._execute_tools)
+    assert not hasattr(executor, "_parse_response")
+    assert not hasattr(executor, "_execute_tools")
+    assert not hasattr(executor, "_write_turn_artifact")
+    assert not hasattr(executor, "_write_turn_checkpoint")
 
 
 def test_turn_executor_legacy_delegate_names_are_not_attributes(tmp_path):
@@ -29,11 +31,11 @@ def test_turn_executor_legacy_delegate_names_are_not_attributes(tmp_path):
     executor = _executor(tmp_path)
 
     with pytest.raises(AttributeError):
-        getattr(executor, "_non_json_residue")
+        _ = executor._non_json_residue
     with pytest.raises(AttributeError):
-        getattr(executor, "_collect_contract_violations")
+        _ = executor._collect_contract_violations
     with pytest.raises(AttributeError):
-        getattr(executor, "_append_memory_event")
+        _ = executor._append_memory_event
 
 
 def test_turn_executor_exposes_collaborators_explicitly(tmp_path):

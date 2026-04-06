@@ -1,6 +1,7 @@
-﻿import pytest
-from orket.schema import IssueConfig, CardStatus, WaitReason, CardType
-from orket.domain.state_machine import StateMachine, StateMachineError
+import pytest
+
+from orket.core.domain.state_machine import StateMachine, StateMachineError
+from orket.schema import CardStatus, CardType, IssueConfig, WaitReason
 
 
 def test_wait_reason_enum_values():

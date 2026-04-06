@@ -1,6 +1,6 @@
 import ast
-from typing import List, Any
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -17,7 +17,7 @@ class ASTValidator:
     """
 
     @staticmethod
-    def validate_code(content: str, filename: str) -> List[ASTRuleViolation]:
+    def validate_code(content: str, filename: str) -> list[ASTRuleViolation]:
         violations = []
         try:
             tree = ast.parse(content)
@@ -54,7 +54,7 @@ class ASTValidator:
         return "other"
 
     @staticmethod
-    def _check_class_rules(node: ast.ClassDef, category: str) -> List[ASTRuleViolation]:
+    def _check_class_rules(node: ast.ClassDef, category: str) -> list[ASTRuleViolation]:
         violations = []
         name = node.name.lower()
 
@@ -98,7 +98,7 @@ class ASTValidator:
         return violations
 
     @staticmethod
-    def _check_import_rules(node: Any, category: str) -> List[ASTRuleViolation]:
+    def _check_import_rules(node: Any, category: str) -> list[ASTRuleViolation]:
         violations = []
 
         # Define forbidden patterns (Layer Violations)
@@ -116,26 +116,24 @@ class ASTValidator:
                 continue
             mod_lower = mod.lower()
 
-            if category == "accessor":
-                if "manager" in mod_lower or "engine" in mod_lower:
-                    violations.append(
-                        ASTRuleViolation(
-                            line=node.lineno,
-                            message=f"Layer Violation: Accessor cannot depend on {mod}. Accessors must be leaf nodes.",
-                        )
+            if category == "accessor" and ("manager" in mod_lower or "engine" in mod_lower):
+                violations.append(
+                    ASTRuleViolation(
+                        line=node.lineno,
+                        message=f"Layer Violation: Accessor cannot depend on {mod}. Accessors must be leaf nodes.",
                     )
+                )
 
-            if category == "engine":
-                if "manager" in mod_lower:
-                    violations.append(
-                        ASTRuleViolation(
-                            line=node.lineno,
-                            message=(
-                                "Layer Violation: Engine cannot depend on "
-                                f"Manager '{mod}'. Engines only depend on "
-                                "Accessors or other Engines."
-                            ),
-                        )
+            if category == "engine" and "manager" in mod_lower:
+                violations.append(
+                    ASTRuleViolation(
+                        line=node.lineno,
+                        message=(
+                            "Layer Violation: Engine cannot depend on "
+                            f"Manager '{mod}'. Engines only depend on "
+                            "Accessors or other Engines."
+                        ),
                     )
+                )
 
         return violations

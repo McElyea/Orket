@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 
 
 def test_turn_artifact_writer_replay_round_trip(tmp_path: Path) -> None:

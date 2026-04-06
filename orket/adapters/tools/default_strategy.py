@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 
-def compose_default_tool_map(toolbox: Any) -> Dict[str, Callable]:
+def compose_default_tool_map(toolbox: Any) -> dict[str, Callable]:
     return {
         "read_file": toolbox.fs.read_file,
         "write_file": toolbox.fs.write_file,

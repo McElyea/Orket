@@ -4,8 +4,14 @@ import orket.runtime.execution_pipeline as execution_pipeline_module
 from orket import orket as legacy
 from orket.runtime import (
     ConfigLoader as RuntimeConfigLoader,
+)
+from orket.runtime import (
     ExecutionPipeline as RuntimeExecutionPipeline,
+)
+from orket.runtime import (
     orchestrate as runtime_orchestrate,
+)
+from orket.runtime import (
     orchestrate_card as runtime_orchestrate_card,
 )
 

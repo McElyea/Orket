@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 FEATURE_FLAG_EXPIRATION_POLICY_SCHEMA_VERSION = "1.0"
 
 _ALLOWED_ENFORCEMENT = {"block_on_expired"}

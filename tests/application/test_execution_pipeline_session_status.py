@@ -5,6 +5,8 @@ import pytest
 
 from orket.application.services.orchestrator_issue_control_plane_support import (
     lease_id_for_run as orchestrator_lease_id_for_run,
+)
+from orket.application.services.orchestrator_issue_control_plane_support import (
     scheduler_holder_ref_for_issue,
 )
 from orket.core.domain import LeaseStatus, ReservationStatus

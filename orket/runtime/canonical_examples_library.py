@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 CANONICAL_EXAMPLES_LIBRARY_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_EXAMPLE_IDS = {

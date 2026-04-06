@@ -6,7 +6,7 @@ import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from orket.interfaces.replay_artifacts import write_replay_artifact
 
@@ -19,11 +19,11 @@ ERROR_INIT_CONFIG_INVALID = "E_INIT_CONFIG_INVALID"
 @dataclass(frozen=True)
 class Blueprint:
     name: str
-    verify_commands: List[str]
-    templates: Dict[str, str]
+    verify_commands: list[str]
+    templates: dict[str, str]
 
 
-def _builtin_blueprints() -> Dict[str, Blueprint]:
+def _builtin_blueprints() -> dict[str, Blueprint]:
     minimal_node = Blueprint(
         name="minimal-node",
         verify_commands=['python -c "pass"'],
@@ -45,7 +45,7 @@ def _builtin_blueprints() -> Dict[str, Blueprint]:
     return {minimal_node.name: minimal_node}
 
 
-def _render_template(raw: str, variables: Dict[str, str]) -> str:
+def _render_template(raw: str, variables: dict[str, str]) -> str:
     rendered = raw
     for key, value in sorted(variables.items()):
         rendered = rendered.replace(f"{{{{{key}}}}}", value)
@@ -70,9 +70,9 @@ def run_scaffold_init(
     template_name: str,
     project_name: str,
     output_dir: str | None = None,
-    variable_overrides: Dict[str, str] | None = None,
+    variable_overrides: dict[str, str] | None = None,
     verify_enabled: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     repo_root = Path.cwd().resolve()
     request_payload = {
         "template_name": template_name,

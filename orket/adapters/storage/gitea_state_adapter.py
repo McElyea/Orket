@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -22,6 +22,11 @@ from orket.adapters.storage.gitea_state_models import (
 )
 from orket.adapters.storage.gitea_state_transitioner import GiteaStateTransitioner
 from orket.core.contracts.state_backend import StateBackendContract
+
+
+class SecretToken(str):
+    def __repr__(self) -> str:
+        return "SecretToken(***)"
 
 
 class GiteaStateAdapter(StateBackendContract):
@@ -48,48 +53,33 @@ class GiteaStateAdapter(StateBackendContract):
         self.max_retries = max(0, int(max_retries))
         self.backoff_base_seconds = max(0.0, float(backoff_base_seconds))
         self.backoff_max_seconds = max(self.backoff_base_seconds, float(backoff_max_seconds))
-        self.headers = {
-            "Authorization": f"token {token}",
-            "Accept": "application/json",
-        }
+        self._token = SecretToken(token)
 
         self.http = GiteaHTTPClient(self)
         self.leases = GiteaLeaseManager(self)
         self.transitions = GiteaStateTransitioner(self)
 
-    def __getattr__(self, name: str) -> Any:
-        delegated = {
-            "_request_response": self.http.request_response,
-            "_request_json": self.http.request_json,
-            "_request_response_with_retry": self.http.request_response_with_retry,
-            "acquire_lease": self.leases.acquire_lease,
-            "renew_lease": self.leases.renew_lease,
-            "transition_state": self.transitions.transition_state,
-            "release_or_fail": self.transitions.release_or_fail,
-            "_validate_transition": self.transitions.validate_transition,
-            "_parse_iso": self.transitions.parse_iso,
-            "_now_utc": self.transitions.now_utc,
-            "_classify_http_error": self.http.classify_http_error,
-            "_log_failure": self.http.log_failure,
-            "_extract_card_id": self.http.extract_card_id,
-        }
-        target = delegated.get(name)
-        if target is not None:
-            return target
-        raise AttributeError(name)
-
     @property
     def _repo_api(self) -> str:
         return f"{self.base_url}/api/v1/repos/{self.owner}/{self.repo}"
+
+    def build_headers(self, extra_headers: dict[str, str] | None = None) -> dict[str, str]:
+        headers = {
+            "Authorization": f"token {self._token}",
+            "Accept": "application/json",
+        }
+        if extra_headers:
+            headers.update(extra_headers)
+        return headers
 
     async def _request_response(
         self,
         method: str,
         path: str,
         *,
-        params: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
-        extra_headers: Optional[Dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        payload: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
     ):
         return await self.http.request_response(
             method,
@@ -104,9 +94,9 @@ class GiteaStateAdapter(StateBackendContract):
         method: str,
         path: str,
         *,
-        params: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
-        extra_headers: Optional[Dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        payload: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
     ) -> Any:
         return await self.http.request_json(
             method,
@@ -121,9 +111,9 @@ class GiteaStateAdapter(StateBackendContract):
         method: str,
         path: str,
         *,
-        params: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
-        extra_headers: Optional[Dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        payload: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
     ):
         return await self.http.request_response_with_retry(
             method,
@@ -139,7 +129,7 @@ class GiteaStateAdapter(StateBackendContract):
         *,
         owner_id: str,
         lease_seconds: int,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         return await self.leases.acquire_lease(card_id, owner_id=owner_id, lease_seconds=lease_seconds)
 
     async def renew_lease(
@@ -148,7 +138,7 @@ class GiteaStateAdapter(StateBackendContract):
         *,
         owner_id: str,
         lease_seconds: int,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         return await self.leases.renew_lease(card_id, owner_id=owner_id, lease_seconds=lease_seconds)
 
     async def transition_state(
@@ -157,7 +147,7 @@ class GiteaStateAdapter(StateBackendContract):
         *,
         from_state: str,
         to_state: str,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> None:
         await self.transitions.transition_state(card_id, from_state=from_state, to_state=to_state, reason=reason)
 
@@ -166,7 +156,7 @@ class GiteaStateAdapter(StateBackendContract):
         card_id: str,
         *,
         final_state: str,
-        error: Optional[str] = None,
+        error: str | None = None,
     ) -> None:
         await self.transitions.release_or_fail(card_id, final_state=final_state, error=error)
 
@@ -175,7 +165,7 @@ class GiteaStateAdapter(StateBackendContract):
         GiteaStateTransitioner.validate_transition(from_state=from_state, to_state=to_state)
 
     @staticmethod
-    def _parse_iso(raw: Optional[str]) -> Optional[datetime]:
+    def _parse_iso(raw: str | None) -> datetime | None:
         return GiteaStateTransitioner.parse_iso(raw)
 
     @staticmethod
@@ -183,7 +173,7 @@ class GiteaStateAdapter(StateBackendContract):
         return GiteaStateTransitioner.now_utc()
 
     @staticmethod
-    def _classify_http_error(*, status_code: Optional[int], exc: Exception) -> GiteaAdapterError:
+    def _classify_http_error(*, status_code: int | None, exc: Exception) -> GiteaAdapterError:
         return GiteaHTTPClient.classify_http_error(status_code=status_code, exc=exc)
 
     @staticmethod
@@ -194,7 +184,7 @@ class GiteaStateAdapter(StateBackendContract):
     def _log_failure(failure_class: str, **fields: Any) -> None:
         GiteaHTTPClient.log_failure(failure_class, **fields)
 
-    async def fetch_ready_cards(self, *, limit: int = 1) -> List[Dict[str, Any]]:
+    async def fetch_ready_cards(self, *, limit: int = 1) -> list[dict[str, Any]]:
         payload = await self._request_json(
             "GET",
             "/issues",
@@ -202,7 +192,7 @@ class GiteaStateAdapter(StateBackendContract):
         )
         if not isinstance(payload, list):
             return []
-        cards: List[Dict[str, Any]] = []
+        cards: list[dict[str, Any]] = []
         for issue in payload:
             if not isinstance(issue, dict):
                 continue
@@ -227,7 +217,7 @@ class GiteaStateAdapter(StateBackendContract):
         card_id: str,
         *,
         event_type: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> None:
         issue_number = int(card_id)
         idempotency_key = str(payload.get("idempotency_key") or "").strip() or None

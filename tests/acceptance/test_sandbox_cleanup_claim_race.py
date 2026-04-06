@@ -7,8 +7,8 @@ import asyncio
 import pytest
 
 from orket.adapters.storage.command_runner import CommandResult
+from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
-from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
 
@@ -48,38 +48,34 @@ class RaceCommandRunner:
             return ""
         labels = (
             "orket.managed=true,"
-            "orket.sandbox_id=%s,"
-            "orket.run_id=%s,"
-            "com.docker.compose.project=%s,"
+            f"orket.sandbox_id={self.sandbox_id},"
+            f"orket.run_id={self.run_id},"
+            f"com.docker.compose.project={self.compose_project},"
             "com.docker.compose.service=api"
-        ) % (self.sandbox_id, self.run_id, self.compose_project)
+        )
         return (
-            '{"Names":"%s-api-1","Labels":"%s","State":"running","Status":"Up 10 seconds (healthy)"}\n'
-            % (self.compose_project, labels)
+            f'{{"Names":"{self.compose_project}-api-1","Labels":"{labels}","State":"running","Status":"Up 10 seconds (healthy)"}}\n'
         )
 
     def _container_inspect_rows(self) -> str:
         if not self.resources_present:
             return "[]"
         return (
-            '[{"Name":"/%s-api-1","Config":{"Labels":{"com.docker.compose.service":"api"}},"State":{"Status":"running","Health":{"Status":"healthy"}},"RestartCount":0}]'
-            % self.compose_project
+            f'[{{"Name":"/{self.compose_project}-api-1","Config":{{"Labels":{{"com.docker.compose.service":"api"}}}},"State":{{"Status":"running","Health":{{"Status":"healthy"}}}},"RestartCount":0}}]'
         )
 
     def _network_rows(self) -> str:
         if not self.resources_present:
             return ""
         return (
-            '{"Name":"%s_default","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
-            % (self.compose_project, self.sandbox_id, self.run_id)
+            f'{{"Name":"{self.compose_project}_default","Labels":"orket.managed=true,orket.sandbox_id={self.sandbox_id},orket.run_id={self.run_id}"}}\n'
         )
 
     def _volume_rows(self) -> str:
         if not self.resources_present:
             return ""
         return (
-            '{"Name":"%s_db-data","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
-            % (self.compose_project, self.sandbox_id, self.run_id)
+            f'{{"Name":"{self.compose_project}_db-data","Labels":"orket.managed=true,orket.sandbox_id={self.sandbox_id},orket.run_id={self.run_id}"}}\n'
         )
 
 

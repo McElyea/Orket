@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 PROVIDER_TRUTH_TABLE_SCHEMA_VERSION = "1.0"
 
 CAPABILITY_STATES = {"supported", "conditional", "unsupported", "unknown"}

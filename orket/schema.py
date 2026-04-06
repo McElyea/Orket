@@ -1,9 +1,12 @@
 from __future__ import annotations
-from typing import Dict, List, Optional, Any, Union
+
 import uuid
-from pydantic import BaseModel, Field, ConfigDict, AliasChoices, field_validator
-from orket.core.types import CardStatus, WaitReason, CardType
+from typing import Any
+
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
+
 from orket.core.bottlenecks import BottleneckThresholds
+from orket.core.types import CardStatus, CardType, WaitReason
 
 
 # ---------------------------------------------------------------------------
@@ -13,33 +16,33 @@ class EnvironmentConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
     schema_version: str = "1.0.0"
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     model: str
     temperature: float = 0.0
-    seed: Optional[int] = None
+    seed: int | None = None
     timeout: int = 300
-    params: Dict[str, Any] = Field(default_factory=dict)
+    params: dict[str, Any] = Field(default_factory=dict)
 
 
 class SkillConfig(BaseModel):
     name: str
     intent: str
-    responsibilities: List[str]
-    idesign_constraints: Optional[List[str]] = Field(default_factory=list)
-    tools: List[str] = Field(default_factory=list)
-    capabilities: Dict[str, Any] = Field(default_factory=dict)
-    prompt_metadata: Dict[str, Any] = Field(default_factory=dict)
+    responsibilities: list[str]
+    idesign_constraints: list[str] | None = Field(default_factory=list)
+    tools: list[str] = Field(default_factory=list)
+    capabilities: dict[str, Any] = Field(default_factory=dict)
+    prompt_metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class DialectConfig(BaseModel):
     model_family: str
     dsl_format: str
-    constraints: List[str]
+    constraints: list[str]
     hallucination_guard: str
     system_prefix: str = ""
-    tool_call_syntax: Optional[str] = None
-    style_guidelines: List[str] = Field(default_factory=list)
-    prompt_metadata: Dict[str, Any] = Field(default_factory=dict)
+    tool_call_syntax: str | None = None
+    style_guidelines: list[str] = Field(default_factory=list)
+    prompt_metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -53,23 +56,23 @@ class BaseCardConfig(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
     id: str = Field(default_factory=lambda: uuid.uuid4().hex)
-    name: Optional[str] = Field(None, alias="summary")
+    name: str | None = Field(None, alias="summary")
     type: CardType = Field(default=CardType.ISSUE)
     status: CardStatus = Field(default=CardStatus.READY)
-    description: Optional[str] = None
-    priority: Union[float, str] = Field(default=2.0)  # 3.0=High, 2.0=Medium, 1.0=Low
-    wait_reason: Optional[WaitReason] = None  # Why is this card blocked/waiting?
-    note: Optional[str] = None
+    description: str | None = None
+    priority: float | str = Field(default=2.0)  # 3.0=High, 2.0=Medium, 1.0=Low
+    wait_reason: WaitReason | None = None  # Why is this card blocked/waiting?
+    note: str | None = None
 
     # Hierarchy
-    parent_id: Optional[str] = None
-    build_id: Optional[str] = None
+    parent_id: str | None = None
+    build_id: str | None = None
 
     # Metadata
-    owner_department: Optional[str] = "core"
-    labels: List[str] = Field(default_factory=list)
-    params: Dict[str, Any] = Field(default_factory=dict)
-    references: List[str] = Field(default_factory=list)
+    owner_department: str | None = "core"
+    labels: list[str] = Field(default_factory=list)
+    params: dict[str, Any] = Field(default_factory=dict)
+    references: list[str] = Field(default_factory=list)
 
     @field_validator("priority", mode="before")
     @classmethod
@@ -85,10 +88,10 @@ class BaseCardConfig(BaseModel):
             # 2. Handle strings that are already numbers (e.g. '3.0')
             try:
                 return float(v)
-            except ValueError:
+            except ValueError as exc:
                 raise ValueError(
                     f"Unrecognized priority level: '{v}'. Expected 'High', 'Medium', 'Low', or a numeric value."
-                )
+                ) from exc
         return v
 
 
@@ -100,18 +103,18 @@ class BaseCardConfig(BaseModel):
 class IssueMetrics(BaseModel):
     score: float = 0.0
     grade: str = "Pending"  # e.g. "Shippable", "Non-Shippable"
-    audit_date: Optional[str] = None
-    criteria_scores: Dict[str, float] = Field(default_factory=dict)
+    audit_date: str | None = None
+    criteria_scores: dict[str, float] = Field(default_factory=dict)
     shippability_threshold: float = 7.0
-    path_delta: Optional[float] = 0.0  # Metric for Critical Path drift
+    path_delta: float | None = 0.0  # Metric for Critical Path drift
 
 
 class VerificationScenario(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4())[:4])
     description: str
-    input_data: Dict[str, Any]
+    input_data: dict[str, Any]
     expected_output: Any
-    actual_output: Optional[Any] = None
+    actual_output: Any | None = None
     status: str = Field(default="pending")  # "pass", "fail", "pending"
 
 
@@ -120,22 +123,22 @@ class VerificationResult(BaseModel):
     total_scenarios: int = 0
     passed: int = 0
     failed: int = 0
-    logs: List[str] = Field(default_factory=list)
+    logs: list[str] = Field(default_factory=list)
 
 
 class IssueVerification(BaseModel):
-    fixture_path: Optional[str] = Field(None, validation_alias=AliasChoices("fixture_path", "verification_fixture"))
-    scenarios: List[VerificationScenario] = Field(default_factory=list)
-    last_run: Optional[VerificationResult] = Field(None, validation_alias=AliasChoices("last_run", "last_verification"))
+    fixture_path: str | None = Field(None, validation_alias=AliasChoices("fixture_path", "verification_fixture"))
+    scenarios: list[VerificationScenario] = Field(default_factory=list)
+    last_run: VerificationResult | None = Field(None, validation_alias=AliasChoices("last_run", "last_verification"))
 
 
 class IssueConfig(BaseCardConfig):
     type: CardType = Field(default=CardType.ISSUE)
     seat: str = "standard"
-    assignee: Optional[str] = None
-    sprint: Optional[str] = None
-    requirements: Optional[str] = None  # Atomic requirement detail
-    depends_on: List[str] = Field(default_factory=list)
+    assignee: str | None = None
+    sprint: str | None = None
+    requirements: str | None = None  # Atomic requirement detail
+    depends_on: list[str] = Field(default_factory=list)
 
     # Governance & Retries
     retry_count: int = Field(default=0)
@@ -149,7 +152,7 @@ class IssueConfig(BaseCardConfig):
 class ArchitectureGovernance(BaseModel):
     idesign: bool = Field(default=False)
     pattern: str = Field(default="Standard")
-    reasoning: Optional[str] = None
+    reasoning: str | None = None
 
 
 class LessonsLearned(BaseModel):
@@ -157,7 +160,7 @@ class LessonsLearned(BaseModel):
     category: str
     observation: str
     sentiment: str = Field(default="negative")  # "positive" or "negative"
-    action_item: Optional[str] = None
+    action_item: str | None = None
 
 
 class EpicConfig(BaseCardConfig):
@@ -166,25 +169,25 @@ class EpicConfig(BaseCardConfig):
     environment: str
     iterations: int = Field(1)
     handshake_enabled: bool = Field(default=False)
-    issues: List[IssueConfig] = Field(default_factory=list, validation_alias=AliasChoices("issues", "stories", "cards"))
-    example_task: Optional[str] = None
-    requirements: Optional[str] = None  # High-level spec or link
+    issues: list[IssueConfig] = Field(default_factory=list, validation_alias=AliasChoices("issues", "stories", "cards"))
+    example_task: str | None = None
+    requirements: str | None = None  # High-level spec or link
     architecture_governance: ArchitectureGovernance = Field(default_factory=ArchitectureGovernance)
-    metrics: Optional[IssueMetrics] = None
-    lessons_learned: List[LessonsLearned] = Field(default_factory=list)
+    metrics: IssueMetrics | None = None
+    lessons_learned: list[LessonsLearned] = Field(default_factory=list)
 
 
 class RockConfig(BaseCardConfig):
     type: CardType = Field(default=CardType.ROCK)
-    task: Optional[str] = None
-    epics: List[Dict[str, str]]  # List of {epic: name, department: dept}
-    metrics: Optional[IssueMetrics] = None
-    lessons_learned: List[LessonsLearned] = Field(default_factory=list)
+    task: str | None = None
+    epics: list[dict[str, str]]  # List of {epic: name, department: dept}
+    metrics: IssueMetrics | None = None
+    lessons_learned: list[LessonsLearned] = Field(default_factory=list)
 
 
 # Recursive type for the Preview/Full Tree view
 class CardDetail(BaseCardConfig):
-    children: List[CardDetail] = []
+    children: list[CardDetail] = []
 
 
 # ---------------------------------------------------------------------------
@@ -193,23 +196,23 @@ class CardDetail(BaseCardConfig):
 class RoleConfig(BaseCardConfig):
     type: CardType = Field(default=CardType.UTILITY)
     description: str
-    prompt: Optional[str] = None
-    tools: List[str] = Field(default_factory=list)
-    policy: Dict[str, Any] = Field(default_factory=dict)
-    capabilities: Dict[str, Any] = Field(default_factory=dict)
-    prompt_metadata: Dict[str, Any] = Field(default_factory=dict)
+    prompt: str | None = None
+    tools: list[str] = Field(default_factory=list)
+    policy: dict[str, Any] = Field(default_factory=dict)
+    capabilities: dict[str, Any] = Field(default_factory=dict)
+    prompt_metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class SeatConfig(BaseModel):
     name: str
-    roles: List[str]
+    roles: list[str]
 
 
 class TeamConfig(BaseModel):
     name: str
-    description: Optional[str] = None
-    seats: Dict[str, SeatConfig]
-    roles: Optional[Dict[str, RoleConfig]] = Field(default_factory=dict)
+    description: str | None = None
+    seats: dict[str, SeatConfig]
+    roles: dict[str, RoleConfig] | None = Field(default_factory=dict)
 
 
 class EngineRecommendation(BaseModel):
@@ -220,36 +223,36 @@ class EngineRecommendation(BaseModel):
 
 class EngineMapping(BaseModel):
     tier: str
-    keywords: List[str]
+    keywords: list[str]
     fallback: str
-    catalog: List[EngineRecommendation] = Field(default_factory=list)
+    catalog: list[EngineRecommendation] = Field(default_factory=list)
 
 
 class EngineRegistry(BaseModel):
     name: str
     updated_at: str
-    mappings: Dict[str, EngineMapping]
+    mappings: dict[str, EngineMapping]
 
 
 class DepartmentConfig(BaseModel):
     name: str
-    description: Optional[str] = None
-    parent: Optional[str] = "core"
-    policy: Dict[str, Any] = Field(default_factory=dict)
-    preferred_stack: Dict[str, str] = Field(default_factory=dict)
-    default_llm: Optional[str] = None
+    description: str | None = None
+    parent: str | None = "core"
+    policy: dict[str, Any] = Field(default_factory=dict)
+    preferred_stack: dict[str, str] = Field(default_factory=dict)
+    default_llm: str | None = None
 
 
 class BrandingConfig(BaseModel):
-    colorscheme: Dict[str, str] = Field(default_factory=dict)
+    colorscheme: dict[str, str] = Field(default_factory=dict)
 
-    fonts: List[str] = Field(default_factory=list)
+    fonts: list[str] = Field(default_factory=list)
 
-    logo_path: Optional[str] = None
+    logo_path: str | None = None
 
-    design_dos: List[str] = Field(default_factory=list)
+    design_dos: list[str] = Field(default_factory=list)
 
-    design_donts: List[str] = Field(default_factory=list)
+    design_donts: list[str] = Field(default_factory=list)
 
 
 class ArchitecturePrescription(BaseModel):
@@ -257,17 +260,17 @@ class ArchitecturePrescription(BaseModel):
         default=10, description="Legacy iDesign threshold (inactive unless iDesign mode is explicitly enabled)."
     )
 
-    preferred_stack: Dict[str, str] = Field(default_factory=dict)
+    preferred_stack: dict[str, str] = Field(default_factory=dict)
 
-    cicd_rules: List[str] = Field(default_factory=list)
+    cicd_rules: list[str] = Field(default_factory=list)
 
 
 class ContactInfo(BaseModel):
-    email: Optional[str] = None
+    email: str | None = None
 
-    website: Optional[str] = None
+    website: str | None = None
 
-    socials: Dict[str, str] = Field(default_factory=dict)
+    socials: dict[str, str] = Field(default_factory=dict)
 
 
 class OrganizationConfig(BaseModel):
@@ -285,8 +288,8 @@ class OrganizationConfig(BaseModel):
 
     contact: ContactInfo = Field(default_factory=ContactInfo)
 
-    departments: List[str] = Field(default_factory=list)
+    departments: list[str] = Field(default_factory=list)
 
-    process_rules: Dict[str, Any] = Field(default_factory=dict)
+    process_rules: dict[str, Any] = Field(default_factory=dict)
 
     bottleneck_thresholds: BottleneckThresholds = Field(default_factory=BottleneckThresholds)

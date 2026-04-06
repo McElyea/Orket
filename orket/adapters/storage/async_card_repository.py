@@ -10,7 +10,7 @@ import asyncio
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiosqlite
 
@@ -62,18 +62,17 @@ class AsyncCardRepository(CardRepository):
         row_factory: bool = False,
         commit: bool = False,
     ):
-        async with self._lock:
-            async with aiosqlite.connect(self.db_path) as conn:
-                if row_factory:
-                    conn.row_factory = aiosqlite.Row
-                await self._ensure_initialized(conn)
-                result = await operation(conn)
-                if commit:
-                    await conn.commit()
-                return result
+        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+            if row_factory:
+                conn.row_factory = aiosqlite.Row
+            await self._ensure_initialized(conn)
+            result = await operation(conn)
+            if commit:
+                await conn.commit()
+            return result
 
-    async def get_by_id(self, card_id: str) -> Optional[IssueRecord]:
-        async def _op(conn: aiosqlite.Connection) -> Optional[IssueRecord]:
+    async def get_by_id(self, card_id: str) -> IssueRecord | None:
+        async def _op(conn: aiosqlite.Connection) -> IssueRecord | None:
             cursor = await conn.execute("SELECT * FROM issues WHERE id = ?", (card_id,))
             row = await cursor.fetchone()
             if not row:
@@ -82,8 +81,8 @@ class AsyncCardRepository(CardRepository):
 
         return await self._execute(_op, row_factory=True)
 
-    async def get_by_build(self, build_id: str) -> List[IssueRecord]:
-        async def _op(conn: aiosqlite.Connection) -> List[IssueRecord]:
+    async def get_by_build(self, build_id: str) -> list[IssueRecord]:
+        async def _op(conn: aiosqlite.Connection) -> list[IssueRecord]:
             cursor = await conn.execute("SELECT * FROM issues WHERE build_id = ? ORDER BY created_at ASC", (build_id,))
             rows = await cursor.fetchall()
             return [IssueRecord.model_validate(self._deserialize_row(dict(row))) for row in rows]
@@ -93,14 +92,14 @@ class AsyncCardRepository(CardRepository):
     async def list_cards(
         self,
         *,
-        build_id: Optional[str] = None,
-        session_id: Optional[str] = None,
-        status: Optional[str] = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
+        status: str | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> List[Dict[str, Any]]:
-        where_clauses: List[str] = []
-        params: List[Any] = []
+    ) -> list[dict[str, Any]]:
+        where_clauses: list[str] = []
+        params: list[Any] = []
 
         if build_id:
             where_clauses.append("build_id = ?")
@@ -116,14 +115,14 @@ class AsyncCardRepository(CardRepository):
         query = f"SELECT * FROM issues {where_sql} ORDER BY datetime(created_at) DESC, id DESC LIMIT ? OFFSET ?"
         params.extend([max(1, int(limit)), max(0, int(offset))])
 
-        async def _op(conn: aiosqlite.Connection) -> List[Dict[str, Any]]:
+        async def _op(conn: aiosqlite.Connection) -> list[dict[str, Any]]:
             cursor = await conn.execute(query, tuple(params))
             rows = await cursor.fetchall()
             return [self._deserialize_row(dict(row)) for row in rows]
 
         return await self._execute(_op, row_factory=True)
 
-    async def save(self, record: IssueRecord | Dict[str, Any]) -> None:
+    async def save(self, record: IssueRecord | dict[str, Any]) -> None:
         if isinstance(record, dict):
             record = IssueRecord.model_validate(record)
 
@@ -172,9 +171,9 @@ class AsyncCardRepository(CardRepository):
         self,
         card_id: str,
         status: CardStatus,
-        assignee: Optional[str] = None,
-        reason: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        assignee: str | None = None,
+        reason: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         async def _op(conn: aiosqlite.Connection) -> None:
             prev_cursor = await conn.execute("SELECT status FROM issues WHERE id = ?", (card_id,))
@@ -203,7 +202,7 @@ class AsyncCardRepository(CardRepository):
 
         await self._execute(_op, row_factory=True, commit=True)
 
-    def _deserialize_row(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def _deserialize_row(self, row: dict[str, Any]) -> dict[str, Any]:
         for field in ["verification_json", "metrics_json", "params_json", "depends_on_json"]:
             target = field.replace("_json", "")
             if row.get(field):

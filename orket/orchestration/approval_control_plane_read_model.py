@@ -75,9 +75,8 @@ async def target_run_summary(*, execution_repository: Any, run_id: str) -> dict[
     attempt = None
     if run.current_attempt_id is not None:
         attempt = await execution_repository.get_attempt_record(attempt_id=run.current_attempt_id)
-    if attempt is None:
-        if attempts:
-            attempt = attempts[-1]
+    if attempt is None and attempts:
+        attempt = attempts[-1]
     return {
         "run_id": run.run_id,
         "run_state": run.lifecycle_state.value,

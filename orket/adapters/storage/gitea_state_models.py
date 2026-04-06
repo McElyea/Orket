@@ -2,19 +2,18 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
-
 
 SNAPSHOT_MARKER = "<!-- ORKET_SNAPSHOT_V1 -->"
 EVENT_MARKER = "[ORKET_EVENT_V1]"
 
 
 class LeaseInfo(BaseModel):
-    owner_id: Optional[str] = None
-    acquired_at: Optional[str] = None
-    expires_at: Optional[str] = None
+    owner_id: str | None = None
+    acquired_at: str | None = None
+    expires_at: str | None = None
     epoch: int = 0
 
 
@@ -24,14 +23,14 @@ class CardSnapshot(BaseModel):
     backend: str = "gitea"
     version: int = 1
     lease: LeaseInfo = Field(default_factory=LeaseInfo)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class StateEvent(BaseModel):
     event_type: str
     created_at: str
-    payload: Dict[str, Any] = Field(default_factory=dict)
-    idempotency_key: Optional[str] = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+    idempotency_key: str | None = None
 
 
 def _utc_now_iso() -> str:
@@ -61,10 +60,10 @@ def decode_snapshot(body: str) -> CardSnapshot:
 
 def build_event_comment(
     event_type: str,
-    payload: Optional[Dict[str, Any]] = None,
+    payload: dict[str, Any] | None = None,
     *,
-    idempotency_key: Optional[str] = None,
-    created_at: Optional[str] = None,
+    idempotency_key: str | None = None,
+    created_at: str | None = None,
 ) -> str:
     event = StateEvent(
         event_type=event_type,

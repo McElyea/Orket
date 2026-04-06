@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import contextlib
 import inspect
-from typing import Any, Awaitable, Callable, Optional, Protocol
+from collections.abc import Awaitable, Callable
+from typing import Any, Protocol
 
 from orket.logging import log_event
 from orket.runtime.run_ledger_parity import compare_run_ledger_rows
@@ -16,8 +18,8 @@ class _RunLedgerRepository(Protocol):
         run_name: str,
         department: str,
         build_id: str,
-        summary: Optional[dict[str, Any]] = None,
-        artifacts: Optional[dict[str, Any]] = None,
+        summary: dict[str, Any] | None = None,
+        artifacts: dict[str, Any] | None = None,
     ) -> Any: ...
 
     async def finalize_run(
@@ -25,11 +27,11 @@ class _RunLedgerRepository(Protocol):
         *,
         session_id: str,
         status: str,
-        failure_class: Optional[str] = None,
-        failure_reason: Optional[str] = None,
-        summary: Optional[dict[str, Any]] = None,
-        artifacts: Optional[dict[str, Any]] = None,
-        finalized_at: Optional[str] = None,
+        failure_class: str | None = None,
+        failure_reason: str | None = None,
+        summary: dict[str, Any] | None = None,
+        artifacts: dict[str, Any] | None = None,
+        finalized_at: str | None = None,
     ) -> Any: ...
 
     async def get_run(self, session_id: str) -> dict[str, Any] | None: ...
@@ -41,7 +43,7 @@ class _ProtocolLedgerRepository(_RunLedgerRepository, Protocol):
         *,
         session_id: str,
         kind: str,
-        payload: Optional[dict[str, Any]] = None,
+        payload: dict[str, Any] | None = None,
     ) -> dict[str, Any]: ...
 
     async def append_receipt(
@@ -57,10 +59,12 @@ class _ProtocolLedgerRepository(_RunLedgerRepository, Protocol):
 TelemetrySink = Callable[[dict[str, Any]], Awaitable[None] | None]
 
 
-class AsyncProtocolPrimaryRunLedgerRepository:
+class AsyncDualModeLedgerRepository:
     """
-    Compatibility adapter that treats the protocol ledger as the primary event source
-    while mirroring run lifecycle state into SQLite and emitting parity telemetry.
+    Dual-mode run ledger adapter that mirrors lifecycle state into SQLite and the
+    protocol ledger while emitting parity telemetry. `primary_mode` defaults to
+    `"sqlite"` so SQLite remains the authoritative read surface unless explicitly
+    overridden.
     """
 
     def __init__(
@@ -86,8 +90,8 @@ class AsyncProtocolPrimaryRunLedgerRepository:
         run_name: str,
         department: str,
         build_id: str,
-        summary: Optional[dict[str, Any]] = None,
-        artifacts: Optional[dict[str, Any]] = None,
+        summary: dict[str, Any] | None = None,
+        artifacts: dict[str, Any] | None = None,
     ) -> None:
         await self.sqlite_repo.start_run(
             session_id=session_id,
@@ -123,11 +127,11 @@ class AsyncProtocolPrimaryRunLedgerRepository:
         *,
         session_id: str,
         status: str,
-        failure_class: Optional[str] = None,
-        failure_reason: Optional[str] = None,
-        summary: Optional[dict[str, Any]] = None,
-        artifacts: Optional[dict[str, Any]] = None,
-        finalized_at: Optional[str] = None,
+        failure_class: str | None = None,
+        failure_reason: str | None = None,
+        summary: dict[str, Any] | None = None,
+        artifacts: dict[str, Any] | None = None,
+        finalized_at: str | None = None,
     ) -> None:
         finalize_kwargs = {
             "session_id": session_id,
@@ -166,7 +170,7 @@ class AsyncProtocolPrimaryRunLedgerRepository:
         *,
         session_id: str,
         kind: str,
-        payload: Optional[dict[str, Any]] = None,
+        payload: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         return await self.protocol_repo.append_event(
             session_id=session_id,
@@ -199,7 +203,7 @@ class AsyncProtocolPrimaryRunLedgerRepository:
             if inspect.isawaitable(fn):
                 await fn
             return None
-        except (RuntimeError, ValueError, TypeError, OSError, AttributeError) as exc:
+        except (RuntimeError, ValueError, OSError) as exc:
             await self._emit(
                 {
                     "kind": "run_ledger_dual_write_error",
@@ -232,6 +236,7 @@ class AsyncProtocolPrimaryRunLedgerRepository:
                     "protocol_digest": None,
                     "protocol_error": protocol_error,
                     "parity_error": None,
+                    "parity_check_error": False,
                 }
             )
             return
@@ -240,6 +245,7 @@ class AsyncProtocolPrimaryRunLedgerRepository:
         differences: list[dict[str, Any]] = []
         sqlite_digest: str | None = None
         protocol_digest: str | None = None
+        parity_check_error = False
         try:
             parity = await compare_run_ledger_rows(
                 sqlite_repo=self.sqlite_repo,
@@ -252,6 +258,7 @@ class AsyncProtocolPrimaryRunLedgerRepository:
             protocol_digest = parity.get("protocol_digest")
         except (RuntimeError, ValueError, TypeError, OSError, AttributeError) as exc:
             parity_error = f"{type(exc).__name__}:{exc}"
+            parity_check_error = True
 
         await self._emit(
             {
@@ -265,6 +272,7 @@ class AsyncProtocolPrimaryRunLedgerRepository:
                 "protocol_digest": protocol_digest,
                 "protocol_error": protocol_error,
                 "parity_error": parity_error,
+                "parity_check_error": parity_check_error,
             }
         )
 
@@ -279,7 +287,7 @@ class AsyncProtocolPrimaryRunLedgerRepository:
         except (RuntimeError, ValueError, TypeError, OSError, AttributeError) as exc:
             self.sink_failure_count += 1
             # Telemetry sink failure must stay non-fatal but observable.
-            try:
+            with contextlib.suppress(RuntimeError, ValueError, TypeError, OSError, AttributeError):
                 log_event(
                     "telemetry_sink_error",
                     {
@@ -289,6 +297,4 @@ class AsyncProtocolPrimaryRunLedgerRepository:
                     },
                     role="system",
                 )
-            except (RuntimeError, ValueError, TypeError, OSError, AttributeError):
-                pass
             return

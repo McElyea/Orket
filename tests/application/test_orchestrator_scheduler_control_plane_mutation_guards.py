@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from orket.application.services.control_plane_workload_catalog import ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.control_plane_workload_catalog import ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD
 from orket.application.services.orchestrator_issue_control_plane_support import lease_id_for_run
 from orket.application.services.orchestrator_scheduler_control_plane_mutation import (
     activate_namespace_authority,
@@ -27,7 +27,6 @@ from orket.core.domain import (
 )
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
-
 
 pytestmark = pytest.mark.unit
 

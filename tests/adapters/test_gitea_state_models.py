@@ -3,9 +3,9 @@ import json
 import pytest
 
 from orket.adapters.storage.gitea_state_models import (
-    CardSnapshot,
     EVENT_MARKER,
     SNAPSHOT_MARKER,
+    CardSnapshot,
     build_event_comment,
     decode_snapshot,
     encode_snapshot,

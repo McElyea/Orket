@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
+import orket.interfaces.api as api_module
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 from orket.application.services.kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
@@ -12,7 +13,6 @@ from orket.application.services.tool_approval_control_plane_operator_service imp
     ToolApprovalControlPlaneOperatorService,
 )
 from orket.interfaces.api import app
-import orket.interfaces.api as api_module
 from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository

@@ -12,10 +12,10 @@ from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandb
 from orket.adapters.storage.command_runner import CommandResult
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
-from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
 from orket.application.services.sandbox_lifecycle_view_service import SandboxLifecycleViewService
 from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
+from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
 from orket.core.domain import (
     AuthoritySourceClass,
     ClosureBasisClassification,
@@ -116,7 +116,7 @@ async def test_restart_policy_terminalizes_active_record_and_projects_diagnostic
     assert stored.state is SandboxState.TERMINAL
     assert stored.terminal_reason is TerminalReason.RESTART_LOOP
     assert stored.required_evidence_ref is not None
-    async with aiofiles.open(stored.required_evidence_ref, "r", encoding="utf-8") as handle:
+    async with aiofiles.open(stored.required_evidence_ref, encoding="utf-8") as handle:
         evidence = json.loads(await handle.read())
     assert evidence["payload"]["terminal_reason"] == "restart_loop"
     assert final_truth is not None

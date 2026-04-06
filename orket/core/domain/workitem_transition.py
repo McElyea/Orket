@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from enum import Enum
-from typing import Any, Dict, Iterable, Optional, Protocol
+from typing import Any, Protocol
 
 from pydantic import BaseModel, Field
 
@@ -20,11 +21,11 @@ class TransitionErrorCode(str, Enum):
 class TransitionResult(BaseModel):
     ok: bool
     action: str
-    new_status: Optional[str] = None
-    error_code: Optional[TransitionErrorCode] = None
-    error: Optional[str] = None
-    gate_request_id: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    new_status: str | None = None
+    error_code: TransitionErrorCode | None = None
+    error: str | None = None
+    gate_request_id: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class TransitionGateBoundary(Protocol):
@@ -34,7 +35,7 @@ class TransitionGateBoundary(Protocol):
         action: str,
         current_status: CardStatus,
         requested_status: CardStatus,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> TransitionResult | None: ...
 
     def post_transition(
@@ -43,7 +44,7 @@ class TransitionGateBoundary(Protocol):
         action: str,
         current_status: CardStatus,
         requested_status: CardStatus,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> TransitionResult | None: ...
 
 
@@ -70,7 +71,7 @@ class WorkItemTransitionService:
         action: str,
         current_status: CardStatus,
         requested_status: CardStatus,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> bool:
         if action != "system_set_status":
             return False
@@ -84,8 +85,8 @@ class WorkItemTransitionService:
         *,
         action: str,
         current_status: CardStatus,
-        payload: Optional[Dict[str, Any]] = None,
-        roles: Optional[Iterable[str]] = None,
+        payload: dict[str, Any] | None = None,
+        roles: Iterable[str] | None = None,
         card_type: CardType = CardType.ISSUE,
     ) -> TransitionResult:
         payload = payload or {}
@@ -98,7 +99,7 @@ class WorkItemTransitionService:
                 error="Missing action.",
             )
 
-        metadata: Dict[str, Any] = {"workflow_profile": self.workflow_profile}
+        metadata: dict[str, Any] = {"workflow_profile": self.workflow_profile}
         if normalized_action == "system_set_status":
             target = str(payload.get("status", "")).strip().lower()
             reason = str(payload.get("reason", "")).strip()

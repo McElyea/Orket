@@ -1,7 +1,9 @@
-from .orket import orchestrate, ConfigLoader
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from importlib.metadata import version, PackageNotFoundError
+
 import tomllib
+
+from .orket import ConfigLoader, orchestrate
 
 
 def _read_pyproject_version() -> str | None:

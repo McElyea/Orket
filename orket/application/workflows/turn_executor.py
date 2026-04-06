@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
@@ -15,9 +15,9 @@ from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.application.workflows.turn_path_resolver import PathResolver
 from orket.application.workflows.turn_response_parser import ResponseParser
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
+from orket.core.domain.execution import ExecutionTurn
 from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.core.policies.tool_gate import ToolGate
-from orket.domain.execution import ExecutionTurn
 from orket.exceptions import ModelTimeoutError
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
@@ -29,10 +29,10 @@ class TurnResult:
     """Result of executing a single turn."""
 
     success: bool
-    turn: Optional[ExecutionTurn] = None
-    error: Optional[str] = None
+    turn: ExecutionTurn | None = None
+    error: str | None = None
     should_retry: bool = False
-    violations: List[str] = field(default_factory=list)
+    violations: list[str] = field(default_factory=list)
 
     @classmethod
     def succeeded(cls, turn: ExecutionTurn) -> TurnResult:
@@ -43,7 +43,7 @@ class TurnResult:
         return cls(success=False, error=error, should_retry=should_retry)
 
     @classmethod
-    def governance_violation(cls, violations: List[str]) -> TurnResult:
+    def governance_violation(cls, violations: list[str]) -> TurnResult:
         return cls(
             success=False,
             error=f"Governance violations: {violations}",
@@ -60,7 +60,7 @@ class TurnExecutor:
         state_machine: StateMachine,
         tool_gate: ToolGate,
         workspace: Path,
-        middleware: Optional[TurnLifecycleInterceptors] = None,
+        middleware: TurnLifecycleInterceptors | None = None,
         control_plane_service: TurnToolControlPlaneService | None = None,
     ):
         self.state = state_machine
@@ -95,22 +95,18 @@ class TurnExecutor:
         role: RoleConfig,
         model_client: Any,
         toolbox: Any,
-        context: Dict[str, Any],
-        system_prompt: Optional[str] = None,
+        context: dict[str, Any],
+        system_prompt: str | None = None,
     ) -> TurnResult:
         return await turn_executor_ops.execute_turn(self, issue, role, model_client, toolbox, context, system_prompt)
-
-    @staticmethod
-    def _runtime_tokens_payload(turn: ExecutionTurn) -> Any:
-        return turn_executor_ops.runtime_tokens_payload(turn)
 
     async def _prepare_messages(
         self,
         issue: IssueConfig,
         role: RoleConfig,
-        context: Dict[str, Any],
-        system_prompt: Optional[str] = None,
-    ) -> List[Dict[str, str]]:
+        context: dict[str, Any],
+        system_prompt: str | None = None,
+        ) -> list[dict[str, str]]:
         return await self.message_builder.prepare_messages(
             issue=issue,
             role=role,
@@ -118,78 +114,7 @@ class TurnExecutor:
             system_prompt=system_prompt,
         )
 
-    def _parse_response(
-        self,
-        response: Any,
-        issue_id: str,
-        role_name: str,
-        context: Dict[str, Any],
-    ) -> ExecutionTurn:
-        return self.response_parser.parse_response(
-            response=response,
-            issue_id=issue_id,
-            role_name=role_name,
-            context=context,
-        )
-
-    async def _execute_tools(
-        self,
-        turn: ExecutionTurn,
-        toolbox: Any,
-        context: Dict[str, Any],
-        issue: Optional[IssueConfig] = None,
-    ) -> None:
-        await self.tool_dispatcher.execute_tools(
-            turn=turn,
-            toolbox=toolbox,
-            context=context,
-            issue=issue,
-        )
-
-    def _write_turn_artifact(
-        self,
-        session_id: str,
-        issue_id: str,
-        role_name: str,
-        turn_index: int,
-        filename: str,
-        content: str,
-    ) -> None:
-        self.artifact_writer.write_turn_artifact(
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
-            filename=filename,
-            content=content,
-        )
-
-    def _write_turn_checkpoint(
-        self,
-        *,
-        session_id: str,
-        issue_id: str,
-        role_name: str,
-        turn_index: int,
-        prompt_hash: str,
-        selected_model: Any,
-        tool_calls: List[Dict[str, Any]],
-        state_delta: Dict[str, Any],
-        prompt_metadata: Optional[Dict[str, Any]] = None,
-    ) -> None:
-        self.artifact_writer.write_turn_checkpoint(
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
-            prompt_hash=prompt_hash,
-            selected_model=selected_model,
-            tool_calls=tool_calls,
-            state_delta=state_delta,
-            prompt_metadata=prompt_metadata,
-        )
-
-    def _validate_preconditions(self, issue: IssueConfig, role: RoleConfig, context: Dict[str, Any]) -> None:
+    def _validate_preconditions(self, issue: IssueConfig, role: RoleConfig, context: dict[str, Any]) -> None:
         if "session_id" not in context:
             raise ValueError("session_id required in context")
         if "current_status" not in context:
@@ -227,7 +152,7 @@ class TurnExecutor:
 class ToolValidationError(Exception):
     """Tool call validation failed."""
 
-    def __init__(self, violations: List[str]):
+    def __init__(self, violations: list[str]):
         self.violations = violations
         super().__init__(f"Tool validation failed: {violations}")
 

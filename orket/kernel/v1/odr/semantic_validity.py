@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, Iterable, List, Sequence
-
+from collections.abc import Iterable, Sequence
+from typing import Any
 
 _STOPWORDS = {
     "a",
@@ -44,8 +44,8 @@ _REQUIRED_TOKENS = {"must", "requir", "shall", "security", "encrypt", "retention
 _AUTHORIZATION_STOPWORDS = {"applicable", "clause", "clauses", "incorrect", "remove", "remov", "requirement"}
 
 
-def classify_patch_classes(patches: Sequence[str]) -> List[Dict[str, str]]:
-    rows: List[Dict[str, str]] = []
+def classify_patch_classes(patches: Sequence[str]) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
     for patch in patches:
         text = str(patch or "").strip()
         if not text:
@@ -69,10 +69,10 @@ def classify_patch_classes(patches: Sequence[str]) -> List[Dict[str, str]]:
 
 def evaluate_semantic_validity(
     *,
-    architect_data: Dict[str, Any],
-    auditor_data: Dict[str, Any],
-    previous_architect_data: Dict[str, Any] | None,
-) -> Dict[str, Any]:
+    architect_data: dict[str, Any],
+    auditor_data: dict[str, Any],
+    previous_architect_data: dict[str, Any] | None,
+) -> dict[str, Any]:
     requirement = str(architect_data.get("requirement") or "").strip()
     assumptions = _meaningful_list(architect_data.get("assumptions"))
     open_questions = _meaningful_list(architect_data.get("open_questions"))
@@ -97,7 +97,7 @@ def evaluate_semantic_validity(
         authorized_removals=remove_patch_texts,
     )
 
-    failures: List[str] = []
+    failures: list[str] = []
     if pending_decisions:
         failures.append("pending_decisions")
     if contradiction_hits:
@@ -123,8 +123,8 @@ def evaluate_semantic_validity(
     }
 
 
-def _meaningful_list(value: Any) -> List[str]:
-    rows: List[str] = []
+def _meaningful_list(value: Any) -> list[str]:
+    rows: list[str] = []
     if not isinstance(value, list):
         return rows
     for item in value:
@@ -137,13 +137,13 @@ def _meaningful_list(value: Any) -> List[str]:
     return rows
 
 
-def _explicit_decision_markers(text: str) -> List[str]:
+def _explicit_decision_markers(text: str) -> list[str]:
     return [match.group(0).strip() for match in _DECISION_REQUIRED_RE.finditer(str(text or ""))]
 
 
-def _unresolved_alternative_hits(text: str) -> List[str]:
+def _unresolved_alternative_hits(text: str) -> list[str]:
     cleaned = str(text or "")
-    hits: List[str] = []
+    hits: list[str] = []
     lowered = cleaned.lower()
     if "either" not in lowered and "depending on" not in lowered:
         return hits
@@ -160,7 +160,7 @@ def _unresolved_alternative_hits(text: str) -> List[str]:
     return hits
 
 
-def _contradiction_hits(text: str) -> List[str]:
+def _contradiction_hits(text: str) -> list[str]:
     """
     Detect requirement contradictions using semantic opposite pairs only.
 
@@ -169,7 +169,7 @@ def _contradiction_hits(text: str) -> List[str]:
     false positives in valid multi-constraint requirements.
     """
     lowered = str(text or "").lower()
-    hits: List[str] = []
+    hits: list[str] = []
     for positive, negative in _CONTRADICTION_PAIRS_SEMANTIC:
         positive_in_text = _contradiction_phrase_present(positive, lowered.replace(negative, ""))
         negative_in_text = _contradiction_phrase_present(negative, lowered)
@@ -197,11 +197,11 @@ def _constraint_demotion_violations(
     assumptions: Sequence[str],
     open_questions: Sequence[str],
     authorized_removals: Sequence[str] | None = None,
-) -> List[str]:
+) -> list[str]:
     previous = _required_clauses(previous_requirement)
     current = _required_clauses(current_requirement)
     sidecar = _required_clauses("\n".join([*assumptions, *open_questions]))
-    violations: List[str] = []
+    violations: list[str] = []
     for clause in previous:
         if _matches_any(clause, current):
             continue
@@ -217,10 +217,10 @@ def _required_constraint_regressions(
     previous_requirement: str,
     current_requirement: str,
     authorized_removals: Sequence[str] | None = None,
-) -> List[str]:
+) -> list[str]:
     previous = _required_clauses(previous_requirement)
     current = _required_clauses(current_requirement)
-    regressions: List[str] = []
+    regressions: list[str] = []
     for clause in previous:
         if _matches_any(clause, current):
             continue
@@ -232,7 +232,7 @@ def _required_constraint_regressions(
     return regressions
 
 
-def _required_clauses(text: str) -> List[str]:
+def _required_clauses(text: str) -> list[str]:
     return [clause for clause in _split_clauses(text) if _required_signal_relevant(clause)]
 
 
@@ -247,7 +247,7 @@ def _required_signal_relevant(text: str) -> bool:
     return any(ch.isdigit() for ch in cleaned)
 
 
-def _split_clauses(text: str) -> List[str]:
+def _split_clauses(text: str) -> list[str]:
     chunks = re.split(r"[\n.;:]+", str(text or ""))
     return [chunk.strip() for chunk in chunks if chunk.strip()]
 
@@ -283,19 +283,12 @@ def _matches_authorized_removal(clause: str, authorized_removals: Sequence[str] 
     if not authorized_removals:
         return False
     clause_tokens = _salient_tokens(clause)
-    if len(clause_tokens) < 2:
+    if not clause_tokens:
         return False
+    authorized_tokens: set[str] = set()
     for removal in authorized_removals:
-        removal_tokens = _salient_tokens(removal)
-        if len(removal_tokens) < 2:
-            continue
-        overlap = 0
-        for clause_token in clause_tokens:
-            if any(_loosely_matches_token(clause_token, removal_token) for removal_token in removal_tokens):
-                overlap += 1
-        if overlap >= max(2, min(len(clause_tokens), len(removal_tokens)) - 1):
-            return True
-    return False
+        authorized_tokens.update(_salient_tokens(removal))
+    return bool(clause_tokens & authorized_tokens)
 
 
 def _salient_tokens(text: str) -> set[str]:
@@ -304,14 +297,6 @@ def _salient_tokens(text: str) -> set[str]:
         for token in _tokens(text)
         if token not in _AUTHORIZATION_STOPWORDS and token not in {"all", "must", "system", "tool"}
     }
-
-
-def _loosely_matches_token(left: str, right: str) -> bool:
-    if left == right:
-        return True
-    if len(left) < 5 or len(right) < 5:
-        return False
-    return left.startswith(right) or right.startswith(left)
 
 
 def _normalize_token(token: str) -> str:

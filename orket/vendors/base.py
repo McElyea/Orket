@@ -1,29 +1,29 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+
 from pydantic import BaseModel
 
 
 class VendorRock(BaseModel):
     id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     status: str
 
 
 class VendorEpic(BaseModel):
     id: str
-    rock_id: Optional[str] = None
+    rock_id: str | None = None
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class VendorCard(BaseModel):
     id: str
-    epic_id: Optional[str] = None
+    epic_id: str | None = None
     summary: str
-    description: Optional[str] = None
+    description: str | None = None
     status: str
-    assignee: Optional[str] = None
+    assignee: str | None = None
     priority: str
 
 
@@ -33,15 +33,15 @@ class VendorInterface(ABC):
     """
 
     @abstractmethod
-    async def get_rocks(self) -> List[VendorRock]:
+    async def get_rocks(self) -> list[VendorRock]:
         pass
 
     @abstractmethod
-    async def get_epics(self, rock_id: Optional[str] = None) -> List[VendorEpic]:
+    async def get_epics(self, rock_id: str | None = None) -> list[VendorEpic]:
         pass
 
     @abstractmethod
-    async def get_cards(self, epic_id: Optional[str] = None) -> List[VendorCard]:
+    async def get_cards(self, epic_id: str | None = None) -> list[VendorCard]:
         pass
 
     @abstractmethod

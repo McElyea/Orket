@@ -193,6 +193,8 @@ async def _write_text_artifact(*, root: Path, session_id: str, filename: str, co
 
 
 def _build_html_view_section(view: dict[str, Any]) -> str:
+    empty_nodes_html = '<li class="empty">No semantic nodes selected for this view.</li>'
+    empty_edges_html = '<li class="empty">No semantic edges selected for this view.</li>'
     node_rows = "".join(
         f"<li><strong>{html.escape(str(node.get('family') or ''))}</strong>: "
         f"<code>{html.escape(str(node.get('label') or node.get('id') or ''))}</code></li>"
@@ -213,11 +215,11 @@ def _build_html_view_section(view: dict[str, Any]) -> str:
         "    <div class=\"columns\">\n"
         "      <div class=\"card\">\n"
         "        <h3>Nodes</h3>\n"
-        f"        <ul>{node_rows or '<li class=\"empty\">No semantic nodes selected for this view.</li>'}</ul>\n"
+        f"        <ul>{node_rows or empty_nodes_html}</ul>\n"
         "      </div>\n"
         "      <div class=\"card\">\n"
         "        <h3>Edges</h3>\n"
-        f"        <ul>{edge_rows or '<li class=\"empty\">No semantic edges selected for this view.</li>'}</ul>\n"
+        f"        <ul>{edge_rows or empty_edges_html}</ul>\n"
         "      </div>\n"
         "    </div>\n"
         "  </section>\n"

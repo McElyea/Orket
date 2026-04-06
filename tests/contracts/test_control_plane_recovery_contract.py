@@ -15,15 +15,14 @@ from orket.core.domain import (
     ExecutionFailureClass,
     FailurePlane,
     RecoveryActionClass,
-    ResourceFailureClass,
     ResidualUncertaintyClassification,
+    ResourceFailureClass,
     SafeContinuationClass,
     SideEffectBoundaryClass,
     TruthFailureClass,
     build_recovery_decision,
     validate_recovery_decision_authority,
 )
-
 
 pytestmark = pytest.mark.contract
 

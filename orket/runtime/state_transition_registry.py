@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 STATE_TRANSITION_REGISTRY_SCHEMA_VERSION = "1.0"
 
 

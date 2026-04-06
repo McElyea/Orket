@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 CONFORMANCE_GOVERNANCE_CONTRACT_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_SECTION_IDS = {

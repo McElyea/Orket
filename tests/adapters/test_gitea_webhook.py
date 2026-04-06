@@ -119,8 +119,8 @@ async def test_pr_opened_updates_status_with_cardstatus_enum(monkeypatch, tmp_pa
     """Layer: integration. Verifies PR-opened issue routing updates status and resumes through the canonical card surface."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
-    from orket.schema import CardStatus
     import orket.orchestration.engine as engine_module
+    from orket.schema import CardStatus
 
     captured = {"status": None, "issue_id": None}
     scheduled: list[asyncio.Task] = []

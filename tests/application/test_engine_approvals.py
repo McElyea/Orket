@@ -30,9 +30,9 @@ from orket.core.domain import (
     ResultClass,
     RunState,
 )
-from orket.orchestration.engine import OrchestrationEngine
 from orket.kernel.v1.nervous_system_runtime import admit_proposal_v1
 from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
+from orket.orchestration.engine import OrchestrationEngine
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
 

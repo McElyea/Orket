@@ -7,10 +7,10 @@ import os
 import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
+from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
 from orket.schema import CardStatus
-from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 from tests.live.run_summary_support import read_validated_run_summary
 from tests.turn_prompt_utils import extract_turn_prompt_context
 

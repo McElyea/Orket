@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from scripts.prompt_lab.compare_candidates import (
     DEFAULT_THRESHOLDS_PATH,
     compare_candidate_against_stable,
 )
-from pathlib import Path
 
 
 def test_compare_candidate_passes_without_regression() -> None:

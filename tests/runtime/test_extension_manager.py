@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import subprocess
 from pathlib import Path
@@ -7,6 +8,15 @@ from pathlib import Path
 import pytest
 
 from orket.extensions.manager import ExtensionManager
+
+
+async def _path_exists(path: Path) -> bool:
+    return await asyncio.to_thread(path.exists)
+
+
+async def _read_json_file(path: Path) -> dict:
+    content = await asyncio.to_thread(path.read_text, encoding="utf-8")
+    return json.loads(content)
 
 
 def _init_test_extension_repo(repo_root):
@@ -516,8 +526,8 @@ async def test_run_workload_emits_provenance(tmp_path):
 
     assert result.workload_id == "mystery_v1"
     assert "provenance.json" in result.provenance_path
-    assert Path(result.provenance_path).exists()
-    assert (Path(result.artifact_root) / "artifact_manifest.json").exists()
+    assert await _path_exists(Path(result.provenance_path))
+    assert await _path_exists(Path(result.artifact_root) / "artifact_manifest.json")
     _assert_governed_identity(result)
 
 
@@ -568,6 +578,9 @@ async def test_run_workload_with_interaction_context_emits_events_and_commit(tmp
     assert result.workload_id == "mystery_v1"
     assert any(name == "model_selected" for name, _ in ctx.events)
     assert any(name == "turn_final" for name, _ in ctx.events)
+    turn_final_payload = next(payload for name, payload in ctx.events if name == "turn_final")
+    assert turn_final_payload["authoritative"] is True
+    assert turn_final_payload["summary"]
     assert len(ctx.commits) == 1
 
 
@@ -589,10 +602,10 @@ async def test_run_sdk_workload_emits_provenance(tmp_path):
     )
 
     assert result.workload_id == "sdk_v1"
-    assert Path(result.provenance_path).exists()
-    assert (Path(result.artifact_root) / "result.txt").exists()
-    assert (Path(result.artifact_root) / "artifact_manifest.json").exists()
-    provenance = json.loads(Path(result.provenance_path).read_text(encoding="utf-8"))
+    assert await _path_exists(Path(result.provenance_path))
+    assert await _path_exists(Path(result.artifact_root) / "result.txt")
+    assert await _path_exists(Path(result.artifact_root) / "artifact_manifest.json")
+    provenance = await _read_json_file(Path(result.provenance_path))
     assert provenance["extension"]["resolved_commit_sha"] == manager._resolve_manifest_entry("sdk_v1")[0].resolved_commit_sha
     assert provenance["extension"]["manifest_digest_sha256"] == manager._resolve_manifest_entry("sdk_v1")[0].manifest_digest_sha256
     assert provenance["security"]["mode"] == "compat"
@@ -625,7 +638,7 @@ async def test_run_sdk_workload_provenance_verbose_mode_includes_raw_payloads(tm
         workspace=workspace,
         department="core",
     )
-    provenance = json.loads(Path(result.provenance_path).read_text(encoding="utf-8"))
+    provenance = await _read_json_file(Path(result.provenance_path))
     assert provenance["input_config"]["seed"] == 33
     assert provenance["run_result"]["status"] in {"ok", "error"}
     assert provenance["summary"]["artifact_count"] >= 1
@@ -682,8 +695,8 @@ async def test_mixed_catalog_runs_legacy_and_sdk_workloads(tmp_path):
 
     assert legacy_result.workload_id == "mystery_v1"
     assert sdk_result.workload_id == "sdk_json_v1"
-    assert Path(legacy_result.provenance_path).exists()
-    assert Path(sdk_result.provenance_path).exists()
+    assert await _path_exists(Path(legacy_result.provenance_path))
+    assert await _path_exists(Path(sdk_result.provenance_path))
 
 
 @pytest.mark.asyncio
@@ -733,7 +746,11 @@ async def test_run_workload_rejects_manifest_digest_tamper(tmp_path):
     record = manager.install_from_repo(str(repo))
 
     manifest_path = Path(record.manifest_path)
-    manifest_path.write_text("manifest_version: v0\nextension_id: sdk.extension\nextension_version: 9.9.9\n", encoding="utf-8")
+    await asyncio.to_thread(
+        manifest_path.write_text,
+        "manifest_version: v0\nextension_id: sdk.extension\nextension_version: 9.9.9\n",
+        encoding="utf-8",
+    )
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)

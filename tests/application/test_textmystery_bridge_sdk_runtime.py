@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 from pathlib import Path
 
@@ -78,9 +79,9 @@ async def test_textmystery_bridge_sdk_workload_deterministic_with_local_contract
 
     assert first.summary["output"] == second.summary["output"]
     assert first.plan_hash == second.plan_hash
-    assert Path(first.provenance_path).exists()
-    assert Path(second.provenance_path).exists()
-    assert (Path(first.artifact_root) / "bridge_response.json").exists()
-    assert (Path(first.artifact_root) / "turn_results.json").exists()
-    assert (Path(first.artifact_root) / "bridge_tts_clip.pcm").exists()
+    assert await asyncio.to_thread(Path(first.provenance_path).exists)
+    assert await asyncio.to_thread(Path(second.provenance_path).exists)
+    assert await asyncio.to_thread((Path(first.artifact_root) / "bridge_response.json").exists)
+    assert await asyncio.to_thread((Path(first.artifact_root) / "turn_results.json").exists)
+    assert await asyncio.to_thread((Path(first.artifact_root) / "bridge_tts_clip.pcm").exists)
     assert first.summary["output"]["audio"]["format"] == "pcm_s16le"

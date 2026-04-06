@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Dict, Iterable, List, Sequence
-
+from collections.abc import Iterable, Sequence
+from typing import Any
 
 REQUIRED_REQUIREMENT_SECTIONS: tuple[str, ...] = (
     "## Scope",
@@ -18,7 +18,7 @@ REQUIRED_REQUIREMENT_SECTIONS: tuple[str, ...] = (
 CONSTRAINTS_BLOCK_RE = re.compile(r"```orket-constraints\s*(\{.*?\})\s*```", re.DOTALL)
 
 
-def extract_constraints_ledger(requirement_markdown: str) -> Dict[str, Any]:
+def extract_constraints_ledger(requirement_markdown: str) -> dict[str, Any]:
     match = CONSTRAINTS_BLOCK_RE.search(str(requirement_markdown or ""))
     if match is None:
         return {}
@@ -26,12 +26,12 @@ def extract_constraints_ledger(requirement_markdown: str) -> Dict[str, Any]:
     return json.loads(payload)
 
 
-def missing_required_sections(requirement_markdown: str) -> List[str]:
+def missing_required_sections(requirement_markdown: str) -> list[str]:
     text = str(requirement_markdown or "")
     return [section for section in REQUIRED_REQUIREMENT_SECTIONS if section not in text]
 
 
-def carry_forward_gaps(previous_ledger: Dict[str, Any], next_ledger: Dict[str, Any]) -> List[str]:
+def carry_forward_gaps(previous_ledger: dict[str, Any], next_ledger: dict[str, Any]) -> list[str]:
     previous_ids = _must_have_ids(previous_ledger)
     next_ids = _must_have_ids(next_ledger)
     removed_ids = _removed_ids(next_ledger)
@@ -40,8 +40,8 @@ def carry_forward_gaps(previous_ledger: Dict[str, Any], next_ledger: Dict[str, A
     )
 
 
-def auditor_incorporation_gaps(auditor_issues: Sequence[Dict[str, Any]], next_ledger: Dict[str, Any]) -> List[str]:
-    resolution_by_issue: Dict[str, Dict[str, Any]] = {}
+def auditor_incorporation_gaps(auditor_issues: Sequence[dict[str, Any]], next_ledger: dict[str, Any]) -> list[str]:
+    resolution_by_issue: dict[str, dict[str, Any]] = {}
     for row in _as_list(next_ledger.get("auditor_resolution")):
         issue_id = str(row.get("issue_id") or "").strip()
         if issue_id:
@@ -49,7 +49,7 @@ def auditor_incorporation_gaps(auditor_issues: Sequence[Dict[str, Any]], next_le
 
     must_have = _must_have_ids(next_ledger)
     decision_required = _decision_required_ids(next_ledger)
-    missing: List[str] = []
+    missing: list[str] = []
     for issue in auditor_issues:
         issue_id = str(issue.get("id") or "").strip()
         if not issue_id:
@@ -77,16 +77,16 @@ def auditor_incorporation_gaps(auditor_issues: Sequence[Dict[str, Any]], next_le
     return sorted(set(missing))
 
 
-def forbidden_pattern_hits(requirement_markdown: str, forbidden_patterns: Iterable[str]) -> List[str]:
+def forbidden_pattern_hits(requirement_markdown: str, forbidden_patterns: Iterable[str]) -> list[str]:
     text = strip_constraints_block(requirement_markdown)
-    hits: List[str] = []
+    hits: list[str] = []
     for pattern in forbidden_patterns:
         if re.search(pattern, text, re.IGNORECASE) is not None:
             hits.append(pattern)
     return sorted(set(hits))
 
 
-def unresolved_issue_count(issues: Sequence[Dict[str, Any]]) -> int:
+def unresolved_issue_count(issues: Sequence[dict[str, Any]]) -> int:
     count = 0
     for issue in issues:
         status = str(issue.get("status") or "").strip().lower()
@@ -95,7 +95,7 @@ def unresolved_issue_count(issues: Sequence[Dict[str, Any]]) -> int:
     return count
 
 
-def reopened_issues(issue_series: Sequence[Sequence[Dict[str, Any]]]) -> List[str]:
+def reopened_issues(issue_series: Sequence[Sequence[dict[str, Any]]]) -> list[str]:
     resolved_once: set[str] = set()
     reopened: set[str] = set()
     for snapshot in issue_series:
@@ -115,25 +115,22 @@ def reopened_issues(issue_series: Sequence[Sequence[Dict[str, Any]]]) -> List[st
 def non_increasing(values: Sequence[int]) -> bool:
     if not values:
         return True
-    for idx in range(1, len(values)):
-        if values[idx] > values[idx - 1]:
-            return False
-    return True
+    return all(values[idx] <= values[idx - 1] for idx in range(1, len(values)))
 
 
 def strip_constraints_block(requirement_markdown: str) -> str:
     return CONSTRAINTS_BLOCK_RE.sub("", str(requirement_markdown or ""))
 
 
-def decision_required_ids(ledger: Dict[str, Any]) -> List[str]:
+def decision_required_ids(ledger: dict[str, Any]) -> list[str]:
     return sorted(_decision_required_ids(ledger))
 
 
-def numeric_day_values(text: str) -> List[str]:
+def numeric_day_values(text: str) -> list[str]:
     return sorted(set(re.findall(r"\b\d+\s*days?\b", str(text or ""), flags=re.IGNORECASE)))
 
 
-def _must_have_ids(ledger: Dict[str, Any]) -> set[str]:
+def _must_have_ids(ledger: dict[str, Any]) -> set[str]:
     identifiers: set[str] = set()
     for row in _as_list(ledger.get("must_have")):
         if isinstance(row, dict):
@@ -143,7 +140,7 @@ def _must_have_ids(ledger: Dict[str, Any]) -> set[str]:
     return identifiers
 
 
-def _removed_ids(ledger: Dict[str, Any]) -> set[str]:
+def _removed_ids(ledger: dict[str, Any]) -> set[str]:
     identifiers: set[str] = set()
     for row in _as_list(ledger.get("removed")):
         if isinstance(row, dict):
@@ -154,13 +151,13 @@ def _removed_ids(ledger: Dict[str, Any]) -> set[str]:
     return identifiers
 
 
-def _as_list(value: Any) -> List[Any]:
+def _as_list(value: Any) -> list[Any]:
     if isinstance(value, list):
         return value
     return []
 
 
-def _decision_required_ids(ledger: Dict[str, Any]) -> set[str]:
+def _decision_required_ids(ledger: dict[str, Any]) -> set[str]:
     identifiers: set[str] = set()
     for row in _as_list(ledger.get("decision_required")):
         if isinstance(row, dict):

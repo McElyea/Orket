@@ -7,7 +7,7 @@ from orket.interfaces.prompts_cli import resolve_prompt
 
 def test_canonical_prompt_resolution_from_repo_assets() -> None:
     resolved = resolve_prompt(
-        Path("."),
+        Path(),
         role="architect",
         dialect="generic",
         selection_policy="stable",

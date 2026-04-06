@@ -4,10 +4,7 @@ import asyncio
 import json
 from pathlib import Path
 
-from scripts.techdebt.run_live_maintenance_baseline import CommandOutcome
-from scripts.techdebt.run_live_maintenance_baseline import CommandSpec
-from scripts.techdebt.run_live_maintenance_baseline import main
-from scripts.techdebt.run_live_maintenance_baseline import run_baseline
+from scripts.techdebt.run_live_maintenance_baseline import CommandOutcome, CommandSpec, main, run_baseline
 
 
 def _load_json(path: Path) -> dict:

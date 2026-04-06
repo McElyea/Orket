@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 # Layer: unit
-
 import asyncio
 import contextlib
 import os
@@ -53,9 +52,8 @@ def test_load_env_rejects_running_event_loop(monkeypatch: pytest.MonkeyPatch, tm
     async def _invoke() -> None:
         settings_module.load_env()
 
-    with _unset_pytest_marker():
-        with pytest.raises(AssertionError, match="before the event loop starts"):
-            asyncio.run(_invoke())
+    with _unset_pytest_marker(), pytest.raises(AssertionError, match="before the event loop starts"):
+        asyncio.run(_invoke())
 
 
 def test_load_env_is_noop_after_preloop_load_even_if_called_in_event_loop(
@@ -78,3 +76,12 @@ def test_load_env_is_noop_after_preloop_load_even_if_called_in_event_loop(
         asyncio.run(_invoke())
 
     assert os.environ["FOO"] == "from-file"
+
+
+def test_clear_settings_cache_resets_env_loaded_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: unit. Verifies cache clearing resets the env bootstrap guard for later test cases."""
+    monkeypatch.setattr(settings_module, "_ENV_LOADED", True)
+
+    settings_module.clear_settings_cache()
+
+    assert settings_module._ENV_LOADED is False

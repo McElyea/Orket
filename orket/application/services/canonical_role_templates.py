@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
-
-CANONICAL_PIPELINE_ROLES: Tuple[str, ...] = (
+CANONICAL_PIPELINE_ROLES: tuple[str, ...] = (
     "requirements_analyst",
     "architect",
     "coder",
@@ -11,7 +10,7 @@ CANONICAL_PIPELINE_ROLES: Tuple[str, ...] = (
     "integrity_guard",
 )
 
-CANONICAL_ROLE_REQUIRED_TOOLS: Dict[str, Tuple[str, ...]] = {
+CANONICAL_ROLE_REQUIRED_TOOLS: dict[str, tuple[str, ...]] = {
     "requirements_analyst": ("write_file", "update_issue_status"),
     "architect": ("write_file", "update_issue_status"),
     "coder": ("write_file", "update_issue_status"),
@@ -19,7 +18,7 @@ CANONICAL_ROLE_REQUIRED_TOOLS: Dict[str, Tuple[str, ...]] = {
     "integrity_guard": ("update_issue_status",),
 }
 
-CANONICAL_ROLE_DEFAULTS: Dict[str, Dict[str, Any]] = {
+CANONICAL_ROLE_DEFAULTS: dict[str, dict[str, Any]] = {
     "requirements_analyst": {
         "intent": "Translate project asks into explicit, testable requirements for implementation handoff.",
         "responsibilities": [
@@ -84,10 +83,10 @@ CANONICAL_ROLE_DEFAULTS: Dict[str, Dict[str, Any]] = {
 }
 
 
-def _as_string_list(value: Any) -> List[str]:
+def _as_string_list(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
-    items: List[str] = []
+    items: list[str] = []
     for item in value:
         text = str(item).strip()
         if text:
@@ -95,7 +94,7 @@ def _as_string_list(value: Any) -> List[str]:
     return items
 
 
-def normalize_canonical_role_payload(role_name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_canonical_role_payload(role_name: str, payload: dict[str, Any]) -> dict[str, Any]:
     if role_name not in CANONICAL_ROLE_DEFAULTS:
         raise ValueError(f"Unsupported canonical role: {role_name}")
 
@@ -113,7 +112,7 @@ def normalize_canonical_role_payload(role_name: str, payload: Dict[str, Any]) ->
     if not tools:
         tools = list(CANONICAL_ROLE_REQUIRED_TOOLS[role_name])
 
-    normalized: Dict[str, Any] = {
+    normalized: dict[str, Any] = {
         "id": role_id,
         "name": role_name if name != role_name else name,
         "type": role_type,
@@ -145,11 +144,11 @@ def normalize_canonical_role_payload(role_name: str, payload: Dict[str, Any]) ->
     return normalized
 
 
-def canonical_role_conformance_violations(role_name: str, payload: Dict[str, Any]) -> List[Dict[str, str]]:
+def canonical_role_conformance_violations(role_name: str, payload: dict[str, Any]) -> list[dict[str, str]]:
     if role_name not in CANONICAL_ROLE_DEFAULTS:
         return []
 
-    violations: List[Dict[str, str]] = []
+    violations: list[dict[str, str]] = []
 
     role_type = str(payload.get("type") or "").strip().lower()
     if role_type != "utility":

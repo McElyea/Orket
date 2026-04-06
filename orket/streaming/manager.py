@@ -5,12 +5,14 @@ import hashlib
 import json
 import os
 import uuid
+from collections.abc import Awaitable, Callable
 from copy import deepcopy
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Awaitable, Callable
+from typing import Any
+
+import aiofiles
 
 from .bus import StreamBus
 from .contracts import CommitHandle, CommitIntent, StreamEventType, mono_ts_ms_now
@@ -20,7 +22,6 @@ from .session_context import (
     build_packet1_provider_lineage,
     flatten_packet1_context,
 )
-
 
 _INTERACTION_MEMORY_SCOPE_BOUNDARY = {
     "session_memory": "host_owned_session_continuity",
@@ -47,7 +48,7 @@ def _turn_status_from_terminal_event(terminal_event: str | None) -> str:
     return "accepted"
 
 
-def _session_status(session: "InteractionSessionState") -> str:
+def _session_status(session: InteractionSessionState) -> str:
     if session.closed:
         return "closed"
     if session.active_turn_id is not None:
@@ -139,12 +140,10 @@ class CommitOrchestrator:
         self.project_root = (project_root or Path.cwd()).resolve()
 
     @staticmethod
-    def _write_commit_artifact(path: Path, payload: dict[str, Any]) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            json.dumps(payload, indent=2, sort_keys=True),
-            encoding="utf-8",
-        )
+    async def _write_commit_artifact(path: Path, payload: dict[str, Any]) -> None:
+        await asyncio.to_thread(path.parent.mkdir, parents=True, exist_ok=True)
+        async with aiofiles.open(path, "w", encoding="utf-8") as handle:
+            await handle.write(json.dumps(payload, indent=2, sort_keys=True))
 
     async def commit(self, *, session_id: str, turn_id: str, intents: list[CommitIntent]) -> dict[str, Any]:
         # Deterministic digest over commit inputs.
@@ -158,7 +157,7 @@ class CommitOrchestrator:
         authority_path = (
             self.project_root / "workspace" / "interactions" / session_id / turn_id / "authority_commit.json"
         )
-        self._write_commit_artifact(
+        await self._write_commit_artifact(
             authority_path,
             {
                 "authoritative": True,
@@ -364,7 +363,7 @@ class InteractionManager:
             requested_at_mono_ts_ms=mono_ts_ms_now(),
         )
         if start_commit:
-            asyncio.create_task(self._run_commit(session_id=session_id, turn_id=turn_id))
+            await self._run_commit(session_id=session_id, turn_id=turn_id)
         return handle
 
     async def close(self, session_id: str) -> None:

@@ -92,7 +92,7 @@ async def collect_source_attribution_facts(
         missing_requirements.append("source_attribution_receipt_missing")
     else:
         try:
-            async with aiofiles.open(receipt_path, mode="r", encoding="utf-8") as handle:
+            async with aiofiles.open(receipt_path, encoding="utf-8") as handle:
                 payload = json.loads(await handle.read())
         except (OSError, ValueError, TypeError):
             payload = None
@@ -263,7 +263,7 @@ async def _load_protocol_receipts(*, workspace: Path, run_id: str) -> list[dict[
             receipt_path=receipt_path, run_id=run_id, workspace=workspace
         )
         try:
-            async with aiofiles.open(receipt_path, mode="r", encoding="utf-8") as handle:
+            async with aiofiles.open(receipt_path, encoding="utf-8") as handle:
                 async for line in handle:
                     if not line.strip():
                         continue
@@ -366,7 +366,7 @@ async def _load_legacy_turn_receipts(*, turn_dir: Path, run_id: str, workspace: 
 
 async def _load_json_payload(path: Path) -> Any:
     try:
-        async with aiofiles.open(path, mode="r", encoding="utf-8") as handle:
+        async with aiofiles.open(path, encoding="utf-8") as handle:
             return json.loads(await handle.read())
     except (OSError, TypeError, ValueError):
         return None

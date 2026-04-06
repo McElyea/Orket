@@ -2,8 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from orket.core.domain.sandbox import PortAllocation
 from orket.decision_nodes.builtins import DefaultSandboxPolicyNode
-from orket.domain.sandbox import PortAllocation
 
 
 def test_default_sandbox_policy_rejects_unknown_database_url_stack():

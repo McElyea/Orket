@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from orket.adapters.storage.command_runner import CommandResult
-from orket.domain.sandbox import SandboxRegistry, TechStack
+from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
 

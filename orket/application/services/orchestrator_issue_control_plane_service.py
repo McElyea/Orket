@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from orket.application.services.control_plane_workload_catalog import (
-    ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD,
-)
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_resource_authority_checks import (
     require_resource_snapshot_matches_lease,
 )
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots
+from orket.application.services.control_plane_workload_catalog import (
+    ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD,
+)
 from orket.application.services.orchestrator_issue_control_plane_support import (
     attempt_id_for_run,
-    classify_terminal_recovery_failure,
     classify_closeout,
+    classify_terminal_recovery_failure,
     digest,
     holder_ref_for_issue,
     lease_id_for_run,

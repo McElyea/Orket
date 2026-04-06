@@ -40,6 +40,14 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
+Optional extras:
+
+```bash
+python -m pip install -e ".[dev,vision]"
+```
+
+Use `vision` only for image-processing features; base runtime installs no longer pull Pillow.
+
 2. Optional local environment file:
 
 ```bash

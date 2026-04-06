@@ -1,11 +1,15 @@
 from __future__ import annotations
-from types import SimpleNamespace
+
 from pathlib import Path
+from types import SimpleNamespace
+
 import pytest
 
+import orket.interfaces.cli as cli_module
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
-import orket.interfaces.cli as cli_module
+
+
 def _write_run(workspace: Path, run_id: str, *, status: str, ok: bool) -> None:
     events = workspace / "runs" / run_id / "events.log"
     ledger = AppendOnlyRunLedger(events)

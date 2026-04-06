@@ -6,7 +6,7 @@ from orket.streaming.contracts import StreamEvent, StreamEventType
 
 
 def test_stream_event_requires_valid_type():
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         StreamEvent(
             session_id="s1",
             turn_id="t1",

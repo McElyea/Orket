@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -14,10 +15,10 @@ class SaveFileRequest(BaseModel):
 
 
 class RunAssetRequest(BaseModel):
-    path: Optional[str] = None
-    build_id: Optional[str] = None
-    type: Optional[str] = None
-    issue_id: Optional[str] = None
+    path: str | None = None
+    build_id: str | None = None
+    type: str | None = None
+    issue_id: str | None = None
 
 
 class ChatDriverRequest(BaseModel):
@@ -35,7 +36,7 @@ def build_system_router(
     model_selector_factory: Callable[[Any, dict[str, Any], dict[str, Any]], Any],
     load_user_preferences: Callable[[], dict[str, Any]],
     load_user_settings: Callable[[], dict[str, Any]],
-    parse_roles_filter: Callable[[Optional[str]], list[str]],
+    parse_roles_filter: Callable[[str | None], list[str]],
     discover_active_roles: Callable[[Path], list[str]],
     discover_team_topology: Callable[[Path], list[dict[str, Any]]],
     invoke_async_method: Callable[[object, dict, str], Any],
@@ -66,7 +67,7 @@ def build_system_router(
         return {
             "status": "online",
             "timestamp": now_local().isoformat(),
-            "active_tasks": len(runtime_state.active_tasks),
+            "active_tasks": await runtime_state.get_active_task_count(),
         }
 
     @router.get("/system/metrics")
@@ -135,7 +136,7 @@ def build_system_router(
         }
 
     @router.get("/system/model-assignments")
-    async def get_model_assignments(roles: Optional[str] = None):
+    async def get_model_assignments(roles: str | None = None):
         project_root = project_root_getter()
         engine = engine_getter()
         role_filter = parse_roles_filter(roles)
@@ -167,7 +168,7 @@ def build_system_router(
         }
 
     @router.get("/system/teams")
-    async def get_system_teams(department: Optional[str] = None):
+    async def get_system_teams(department: str | None = None):
         project_root = project_root_getter()
         topology = await asyncio.to_thread(discover_team_topology, project_root / "model")
         if department:
@@ -220,7 +221,7 @@ def build_system_router(
         return await api_runtime_node.resolve_system_board_async(dept)
 
     @router.get("/system/preview-asset")
-    async def preview_asset(path: str, issue_id: Optional[str] = None):
+    async def preview_asset(path: str, issue_id: str | None = None):
         api_runtime_node = api_runtime_node_getter()
         target = api_runtime_node.resolve_preview_target(path, issue_id)
         invocation = api_runtime_node.resolve_preview_invocation(target, issue_id)

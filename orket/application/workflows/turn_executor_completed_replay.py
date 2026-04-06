@@ -14,7 +14,7 @@ from orket.core.domain import (
     ResultClass,
     RunState,
 )
-from orket.domain.execution import ExecutionTurn
+from orket.core.domain.execution import ExecutionTurn
 
 from .turn_executor_control_plane_evidence import (
     load_checkpoint_snapshot_payload,

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from orket.domain.execution import ExecutionTurn
+from orket.core.domain.execution import ExecutionTurn
 
 
 class PathResolver:

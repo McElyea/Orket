@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-
 PACKET_VERSION = 'compact_turn_packet_v1'
 _ISSUE_PREFIX = 'Issue '
 _ISSUE_BRIEF_PREFIX = 'Issue Brief:\n'

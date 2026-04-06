@@ -199,7 +199,7 @@ class ExtensionManager:
         ref_value = str(ref or "").strip()
         policy = self._evaluate_source_policy(repo_value)
 
-        source_hash = hashlib.sha256(f"{repo_value}@{ref_value}".encode("utf-8")).hexdigest()[:12]
+        source_hash = hashlib.sha256(f"{repo_value}@{ref_value}".encode()).hexdigest()[:12]
         leaf = f"{Path(repo_value).stem or 'extension'}-{source_hash}"
         destination = self.install_root / leaf
         if destination.exists():

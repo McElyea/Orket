@@ -3,8 +3,9 @@ from __future__ import annotations
 import asyncio
 import json
 import time
+from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Dict
+from typing import Any
 
 
 class GiteaStateWorkerCoordinator:
@@ -32,9 +33,9 @@ class GiteaStateWorkerCoordinator:
     async def run(
         self,
         *,
-        work_fn: Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]],
+        work_fn: Callable[[dict[str, Any]], Awaitable[dict[str, Any]]],
         summary_out: str | Path | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         started = time.monotonic()
         iterations = 0
         consumed_count = 0
@@ -75,5 +76,5 @@ class GiteaStateWorkerCoordinator:
         if summary_out is not None:
             out_path = Path(summary_out)
             out_path.parent.mkdir(parents=True, exist_ok=True)
-            out_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+            await asyncio.to_thread(out_path.write_text, json.dumps(summary, indent=2), encoding="utf-8")
         return summary

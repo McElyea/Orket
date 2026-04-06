@@ -38,7 +38,7 @@ async def publish_pending_kernel_approval_hold_if_needed(
     publisher = getattr(engine, "tool_approval_control_plane_reservation", None)
     if publisher is None or getattr(publisher, "publication", None) is not publication:
         publisher = ToolApprovalControlPlaneReservationService(publication=publication)
-        setattr(engine, "tool_approval_control_plane_reservation", publisher)
+        engine.tool_approval_control_plane_reservation = publisher
     await publisher.publish_pending_tool_approval_hold(
         approval_id=approval_id,
         session_id=session_id,

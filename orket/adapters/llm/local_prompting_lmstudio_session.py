@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from typing import Any
 
-
 E_LOCAL_PROMPT_LMSTUDIO_SESSION_MODE_INVALID = "E_LOCAL_PROMPT_LMSTUDIO_SESSION_MODE_INVALID"
 _LMSTUDIO_SESSION_MODES = {"none", "context", "fixed"}
 

@@ -2,21 +2,21 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from orket.adapters.tools.families.base import BaseTools
 from orket.time_utils import now_local
 
 
 class AcademyTools(BaseTools):
-    def __init__(self, workspace_root: Path, references: List[Path]):
+    def __init__(self, workspace_root: Path, references: list[Path]):
         super().__init__(workspace_root, references)
         from orket.adapters.storage.async_file_tools import AsyncFileTools
 
         self.project_root = self.workspace_root.parent.parent
         self.async_fs = AsyncFileTools(self.project_root)
 
-    def archive_eval(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    def archive_eval(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
         session_id = args.get("session_id")
         if not session_id:
             return {"ok": False, "error": "session_id required"}
@@ -35,7 +35,7 @@ class AcademyTools(BaseTools):
         except (OSError, shutil.Error, RuntimeError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
 
-    async def promote_prompt(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def promote_prompt(self, args: dict[str, Any], context: dict[str, Any] = None) -> dict[str, Any]:
         seat, content = args.get("seat"), args.get("content")
         if not seat or not content:
             return {"ok": False, "error": "Missing params"}

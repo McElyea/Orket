@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
-from typing import Any, Dict, List, Optional
+import warnings
+from dataclasses import InitVar, dataclass, field, replace
+from typing import Any
 
 from .leak_policy import (
     DEFAULT_CODE_LEAK_PATTERNS,
@@ -16,18 +17,29 @@ from .semantic_validity import evaluate_semantic_validity
 
 @dataclass
 class ReactorConfig:
-    max_rounds: int = 8
+    max_attempts: int = 8
+    max_rounds: InitVar[int | None] = None
     diff_floor_pct: float = 0.05
     stable_rounds: int = 2
     shingle_k: int = 3
     margin: float = 0.02
     min_loop_sim: float = 0.65
-    code_leak_patterns: List[str] = field(default_factory=lambda: list(DEFAULT_CODE_LEAK_PATTERNS))
+    code_leak_patterns: list[str] = field(default_factory=lambda: list(DEFAULT_CODE_LEAK_PATTERNS))
     leak_gate_mode: str = DEFAULT_LEAK_GATE_MODE
 
-    def as_dict(self) -> Dict[str, Any]:
+    def __post_init__(self, max_rounds: int | None) -> None:
+        if max_rounds is not None:
+            self.max_attempts = int(max_rounds)
+
+    @property
+    def max_rounds_value(self) -> int:
+        warnings.warn("ReactorConfig.max_rounds is deprecated; use max_attempts.", DeprecationWarning, stacklevel=2)
+        return int(self.max_attempts)
+
+    def as_dict(self) -> dict[str, Any]:
         return {
-            "max_rounds": int(self.max_rounds),
+            "max_attempts": int(self.max_attempts),
+            "max_rounds": int(self.max_attempts),
             "diff_floor_pct": float(self.diff_floor_pct),
             "stable_rounds": int(self.stable_rounds),
             "shingle_k": int(self.shingle_k),
@@ -41,16 +53,16 @@ class ReactorConfig:
 @dataclass(frozen=True)
 class ReactorState:
     # `history_v` is the truthful attempt log. `valid_history_v` is the convergence trace.
-    history_v: List[str] = field(default_factory=list)
-    history_rounds: List[Dict[str, Any]] = field(default_factory=list)
+    history_v: list[str] = field(default_factory=list)
+    history_rounds: list[dict[str, Any]] = field(default_factory=list)
     stable_count: int = 0
-    stop_reason: Optional[str] = None
-    valid_history_v: List[str] = field(default_factory=list)
-    invalid_history_v: List[str] = field(default_factory=list)
+    stop_reason: str | None = None
+    valid_history_v: list[str] = field(default_factory=list)
+    invalid_history_v: list[str] = field(default_factory=list)
     invalid_stable_count: int = 0
 
 
-def check_code_leak(text: str, patterns: List[str]) -> bool:
+def check_code_leak(text: str, patterns: list[str]) -> bool:
     """Delegate to the authoritative leak detector used by `run_round`."""
     detection = detect_code_leak(
         architect_raw=text,
@@ -61,7 +73,7 @@ def check_code_leak(text: str, patterns: List[str]) -> bool:
     return detection.hard_leak
 
 
-def _base_metrics(*, n: int, code_leak_hit: bool, stable_count: int) -> Dict[str, Any]:
+def _base_metrics(*, n: int, code_leak_hit: bool, stable_count: int) -> dict[str, Any]:
     return {
         "code_leak_hit": bool(code_leak_hit),
         "n": int(n),
@@ -75,12 +87,12 @@ def _base_metrics(*, n: int, code_leak_hit: bool, stable_count: int) -> Dict[str
 def _state_with_record(
     state: ReactorState,
     *,
-    record: Dict[str, Any],
-    stop_reason: Optional[str],
-    history_v: List[str] | None = None,
+    record: dict[str, Any],
+    stop_reason: str | None,
+    history_v: list[str] | None = None,
     stable_count: int | None = None,
-    valid_history_v: List[str] | None = None,
-    invalid_history_v: List[str] | None = None,
+    valid_history_v: list[str] | None = None,
+    invalid_history_v: list[str] | None = None,
     invalid_stable_count: int | None = None,
 ) -> ReactorState:
     return replace(
@@ -97,7 +109,7 @@ def _state_with_record(
     )
 
 
-def _last_architect_data(state: ReactorState) -> Dict[str, Any] | None:
+def _last_architect_data(state: ReactorState) -> dict[str, Any] | None:
     for row in reversed(state.history_rounds):
         if str(row.get("validity_verdict") or "").strip().lower() != "valid":
             continue
@@ -109,10 +121,10 @@ def _last_architect_data(state: ReactorState) -> Dict[str, Any] | None:
 
 def _advance_history_metrics(
     *,
-    history: List[str],
+    history: list[str],
     prior_stable_count: int,
     cfg: ReactorConfig,
-    metrics: Dict[str, Any],
+    metrics: dict[str, Any],
     stable_count_key: str = "stable_count",
 ) -> tuple[int, bool, bool]:
     next_stable_count = int(prior_stable_count)
@@ -179,7 +191,7 @@ def run_round(
 
     architect_parse = parse_architect(normalized_architect_raw)
     auditor_parse = parse_auditor(normalized_auditor_raw)
-    parse_errors: List[Dict[str, str]] = []
+    parse_errors: list[dict[str, str]] = []
     if not architect_parse["ok"]:
         parse_errors.append(
             {
@@ -260,21 +272,21 @@ def run_round(
         )
         metrics["invalid_stable_count"] = int(next_invalid_stable_count)
 
-    # `max_rounds` is an attempt budget for the live loop, so invalid rounds count too.
-    max_hit = n == int(cfg.max_rounds)
-    stop_reason: Optional[str] = None
-    if semantic["validity_verdict"] == "valid":
+    # `max_attempts` is an attempt budget for the live loop, so invalid rounds count too.
+    max_hit = n == int(cfg.max_attempts)
+    stop_reason: str | None = None
+    if max_hit:
+        stop_reason = "MAX_ROUNDS"
+    elif semantic["validity_verdict"] == "valid":
         if circ_hit:
             stop_reason = "LOOP_DETECTED"
         elif diff_hit:
             stop_reason = "STABLE_DIFF_FLOOR"
-        elif max_hit:
-            stop_reason = "MAX_ROUNDS"
     else:
-        invalid_terminal = circ_hit or diff_hit or max_hit
-        if semantic["pending_decision_count"] > 0 and invalid_terminal:
+        invalid_convergence_hit = circ_hit or diff_hit
+        if semantic["pending_decision_count"] > 0 and invalid_convergence_hit:
             stop_reason = "UNRESOLVED_DECISIONS"
-        elif invalid_terminal:
+        elif invalid_convergence_hit:
             stop_reason = "INVALID_CONVERGENCE"
 
     record = {
@@ -297,6 +309,7 @@ def run_round(
         "required_constraint_regressions": semantic["required_constraint_regressions"],
         "repair_classes": semantic["repair_classes"],
         "patch_classes": semantic["patch_classes"],
+        "max_hit": max_hit,
         "stop_reason": stop_reason,
     }
     record.update(leak_detection.as_trace_fields())

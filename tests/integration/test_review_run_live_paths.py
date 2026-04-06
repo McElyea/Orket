@@ -113,7 +113,7 @@ class _StubGiteaServer:
 
         return _Handler
 
-    def __enter__(self) -> "_StubGiteaServer":
+    def __enter__(self) -> _StubGiteaServer:
         self._thread.start()
         return self
 

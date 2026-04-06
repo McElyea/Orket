@@ -8,19 +8,27 @@ from types import SimpleNamespace
 import pytest
 
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
-from orket.application.workflows.orchestrator import Orchestrator
-from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.services.orchestrator_issue_control_plane_support import (
     lease_id_for_run,
     reservation_id_for_run,
     run_id_for_dispatch,
 )
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
+from orket.application.workflows.orchestrator import Orchestrator
+from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain import AttemptState, CapabilityClass, LeaseStatus, ReservationKind, ReservationStatus, RunState
 from orket.core.domain.state_machine import StateMachine
 from orket.core.policies.tool_gate import ToolGate
-from orket.schema import CardStatus, DialectConfig, EnvironmentConfig, EpicConfig, IssueConfig, RoleConfig, SeatConfig, TeamConfig
-
+from orket.schema import (
+    CardStatus,
+    DialectConfig,
+    EnvironmentConfig,
+    EpicConfig,
+    IssueConfig,
+    RoleConfig,
+    SeatConfig,
+    TeamConfig,
+)
 
 pytestmark = pytest.mark.integration
 

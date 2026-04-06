@@ -6,20 +6,21 @@ Includes HMAC signature validation for security.
 """
 
 from __future__ import annotations
-import hmac
-import hashlib
-import os
-import json
+
 import asyncio
+import hashlib
+import hmac
+import json
+import os
 import time
 from collections import deque
-from typing import Dict, Any, Optional
 from pathlib import Path
+from typing import Any
 
-from fastapi import FastAPI, Request, HTTPException, Header
+import uvicorn
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, ValidationError
-import uvicorn
 
 from orket import __version__
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
@@ -53,7 +54,7 @@ class _WebhookHandlerProxy:
     def reset(self) -> None:
         self._handler = None
 
-    async def handle_webhook(self, event_type: str, payload: Dict[str, Any]) -> Dict[str, str]:
+    async def handle_webhook(self, event_type: str, payload: dict[str, Any]) -> dict[str, str]:
         return await self._get().handle_webhook(event_type, payload)
 
     async def close(self) -> None:
@@ -189,18 +190,18 @@ async def health():
 
 
 class GiteaWebhookPayload(BaseModel):
-    action: Optional[str] = None
-    number: Optional[int] = Field(None, gt=0)
-    pull_request: Optional[Dict[str, Any]] = None
-    repository: Optional[Dict[str, Any]] = None
-    review: Optional[Dict[str, Any]] = None
-    sender: Optional[Dict[str, Any]] = None
+    action: str | None = None
+    number: int | None = Field(None, gt=0)
+    pull_request: dict[str, Any] | None = None
+    repository: dict[str, Any] | None = None
+    review: dict[str, Any] | None = None
+    sender: dict[str, Any] | None = None
 
 
 class TestWebhookPayload(BaseModel):
     event: str = "test"
-    action: Optional[str] = None
-    payload: Dict[str, Any] = Field(default_factory=dict)
+    action: str | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
 
 
 @app.post("/webhook/gitea")
@@ -234,13 +235,13 @@ async def gitea_webhook(request: Request, x_gitea_event: str = Header(None), x_g
     try:
         payload_data = json.loads(body)
         payload = GiteaWebhookPayload.model_validate(payload_data)
-    except (json.JSONDecodeError, ValidationError, TypeError, ValueError) as e:
+    except (json.JSONDecodeError, ValidationError, TypeError, ValueError) as exc:
         log_event(
             "webhook",
-            {"message": f"Failed to parse or validate webhook payload: {e}", "level": "error"},
+            {"message": f"Failed to parse or validate webhook payload: {exc}", "level": "error"},
             workspace=Path.cwd(),
         )
-        raise HTTPException(status_code=400, detail=f"Invalid payload: {e}")
+        raise HTTPException(status_code=400, detail=f"Invalid payload: {exc}") from exc
 
     # Log webhook event
     log_event(
@@ -259,9 +260,9 @@ async def gitea_webhook(request: Request, x_gitea_event: str = Header(None), x_g
     try:
         result = await webhook_handler.handle_webhook(x_gitea_event, payload.model_dump())
         return JSONResponse(content=result, status_code=200)
-    except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:
-        log_event("webhook", {"message": f"Webhook handler error: {e}", "level": "error"}, workspace=Path.cwd())
-        raise HTTPException(status_code=500, detail=str(e))
+    except (RuntimeError, ValueError, TypeError, KeyError, OSError) as exc:
+        log_event("webhook", {"message": f"Webhook handler error: {exc}", "level": "error"}, workspace=Path.cwd())
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.post("/webhook/test")

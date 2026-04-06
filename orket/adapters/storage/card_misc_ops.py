@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Dict, List
+from typing import Any
 
 import aiosqlite
 
@@ -25,13 +25,13 @@ class CardMiscOps:
 
         await self._execute(_op, commit=True)
 
-    async def get_card_history(self, card_id: str) -> List[str]:
-        async def _op(conn: aiosqlite.Connection) -> List[str]:
+    async def get_card_history(self, card_id: str) -> list[str]:
+        async def _op(conn: aiosqlite.Connection) -> list[str]:
             cursor = await conn.execute(
                 "SELECT * FROM card_transactions WHERE card_id = ? ORDER BY timestamp ASC", (card_id,)
             )
             rows = await cursor.fetchall()
-            history: List[str] = []
+            history: list[str] = []
             for row in rows:
                 ts = datetime.fromisoformat(row["timestamp"].replace(" ", "T"))
                 history.append(f"{ts.strftime('%m/%d/%Y %I:%M%p')}: {row['role']} -> {row['action']}")
@@ -54,8 +54,8 @@ class CardMiscOps:
 
         await self._execute(_op, commit=True)
 
-    async def get_comments(self, issue_id: str) -> List[Dict[str, Any]]:
-        async def _op(conn: aiosqlite.Connection) -> List[Dict[str, Any]]:
+    async def get_comments(self, issue_id: str) -> list[dict[str, Any]]:
+        async def _op(conn: aiosqlite.Connection) -> list[dict[str, Any]]:
             cursor = await conn.execute(
                 "SELECT * FROM comments WHERE issue_id = ? ORDER BY created_at ASC", (issue_id,)
             )
@@ -74,10 +74,10 @@ class CardMiscOps:
 
         await self._execute(_op, commit=True)
 
-    async def get_independent_ready_issues(self, build_id: str) -> List[IssueRecord]:
+    async def get_independent_ready_issues(self, build_id: str) -> list[IssueRecord]:
         all_issues = await self._get_by_build(build_id)
         done_ids = {issue.id for issue in all_issues if issue.status == CardStatus.DONE}
-        ready_candidates: List[IssueRecord] = []
+        ready_candidates: list[IssueRecord] = []
         for issue in all_issues:
             if issue.status == CardStatus.READY and all(dep_id in done_ids for dep_id in issue.depends_on):
                 ready_candidates.append(issue)

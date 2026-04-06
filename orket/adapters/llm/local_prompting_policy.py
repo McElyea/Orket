@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import asyncio
 import hashlib
 import json
@@ -7,6 +8,7 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
 from orket.adapters.llm.local_prompting_lmstudio_session import (
     resolve_lmstudio_session_settings,
 )
@@ -260,7 +262,7 @@ def _trim_messages_by_budget(
     keep = [rows[0]]
     keep_cost = costs[0]
     trimmed = 0
-    for row, cost in zip(reversed(rows[1:]), reversed(costs[1:])):
+    for row, cost in zip(reversed(rows[1:]), reversed(costs[1:]), strict=False):
         if keep_cost + cost > context_budget_tokens:
             trimmed += 1
             continue

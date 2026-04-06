@@ -83,12 +83,11 @@ class StreamBus:
                     or (state.bytes_count + event_bytes) > self.config.max_bytes_per_turn_queue
                 ):
                     dropped = True
-            elif cls == EventClass.BOUNDED:
-                if (
-                    state.bounded_count >= self.config.bounded_max_events_per_turn
-                    or (state.bytes_count + event_bytes) > self.config.max_bytes_per_turn_queue
-                ):
-                    raise RuntimeError("bounded event queue capacity exceeded")
+            elif cls == EventClass.BOUNDED and (
+                state.bounded_count >= self.config.bounded_max_events_per_turn
+                or (state.bytes_count + event_bytes) > self.config.max_bytes_per_turn_queue
+            ):
+                raise RuntimeError("bounded event queue capacity exceeded")
 
             if dropped:
                 state.next_seq += 1

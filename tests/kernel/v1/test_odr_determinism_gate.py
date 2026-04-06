@@ -9,7 +9,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -28,11 +28,11 @@ def _fixture_path(name: str) -> Path:
     return Path(__file__).parent / "vectors" / "odr" / name
 
 
-def _load_fixture(name: str) -> Dict[str, Any]:
+def _load_fixture(name: str) -> dict[str, Any]:
     return json.loads(_fixture_path(name).read_text(encoding="utf-8"))
 
 
-def _permute_fixture(fixture: Dict[str, Any], seed: int, perm_index: int) -> Dict[str, Any]:
+def _permute_fixture(fixture: dict[str, Any], seed: int, perm_index: int) -> dict[str, Any]:
     payload = json.loads(json.dumps(fixture))
     rng = random.Random(seed + (perm_index * 7919))
     graph = payload.get("graph", {})
@@ -43,7 +43,7 @@ def _permute_fixture(fixture: Dict[str, Any], seed: int, perm_index: int) -> Dic
     return payload
 
 
-def _run_fixture_payload(payload: Dict[str, Any], *, rounds: int = 0) -> Dict[str, Any]:
+def _run_fixture_payload(payload: dict[str, Any], *, rounds: int = 0) -> dict[str, Any]:
     cfg = ReactorConfig()
     state = ReactorState()
 
@@ -69,7 +69,7 @@ def _run_fixture_payload(payload: Dict[str, Any], *, rounds: int = 0) -> Dict[st
     }
 
 
-def _run_fixture(name: str, *, seed: int, perm_index: int, rounds: int = 0) -> Dict[str, Any]:
+def _run_fixture(name: str, *, seed: int, perm_index: int, rounds: int = 0) -> dict[str, Any]:
     fixture = _permute_fixture(_load_fixture(name), seed, perm_index)
     return _run_fixture_payload(fixture, rounds=rounds)
 
@@ -110,7 +110,7 @@ def _assert_bytes_equal(
     )
 
 
-def _header_order_violation_output() -> Dict[str, Any]:
+def _header_order_violation_output() -> dict[str, Any]:
     cfg = ReactorConfig()
     state = ReactorState()
     architect = (
@@ -132,7 +132,7 @@ def _header_order_violation_output() -> Dict[str, Any]:
     }
 
 
-def _code_leak_output() -> Dict[str, Any]:
+def _code_leak_output() -> dict[str, Any]:
     cfg = ReactorConfig()
     state = ReactorState()
     architect = (
@@ -154,7 +154,7 @@ def _code_leak_output() -> Dict[str, Any]:
     }
 
 
-def _semantic_node_key(node: Dict[str, Any]) -> str:
+def _semantic_node_key(node: dict[str, Any]) -> str:
     if node.get("dto_type") is not None and node.get("id") is not None:
         return f"{node.get('dto_type')}::{node.get('id')}"
     if node.get("raw_id") is not None:
@@ -162,7 +162,7 @@ def _semantic_node_key(node: Dict[str, Any]) -> str:
     return json.dumps(node, sort_keys=True, separators=(",", ":"))
 
 
-def _dedupe_metrics(graph: Dict[str, Any]) -> Dict[str, Any]:
+def _dedupe_metrics(graph: dict[str, Any]) -> dict[str, Any]:
     nodes = graph.get("nodes", [])
     edges = graph.get("edges", [])
     pre = len(nodes)
@@ -176,15 +176,15 @@ def _dedupe_metrics(graph: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _print_metrics_line(fixture_id: str, metrics: Dict[str, Any]) -> None:
+def _print_metrics_line(fixture_id: str, metrics: dict[str, Any]) -> None:
     print(
         f"fixture={fixture_id} nodes_pre={metrics['nodes_pre']} nodes_post={metrics['nodes_post']} "
         f"edges_post={metrics['edges_post']} reduction_pct={metrics['reduction_pct']:.6f}"
     )
 
 
-def _parse_repro_output(text: str) -> Dict[str, str]:
-    parsed: Dict[str, str] = {}
+def _parse_repro_output(text: str) -> dict[str, str]:
+    parsed: dict[str, str] = {}
     for line in text.splitlines():
         if "=" not in line:
             continue
@@ -193,7 +193,7 @@ def _parse_repro_output(text: str) -> Dict[str, str]:
     return parsed
 
 
-def _generated_fixture_deep_chain(size: int) -> Dict[str, Any]:
+def _generated_fixture_deep_chain(size: int) -> dict[str, Any]:
     architect_raw = (
         "### REQUIREMENT\nscale deep fixture\n\n"
         "### CHANGELOG\n- baseline\n\n"
@@ -223,7 +223,7 @@ def _generated_fixture_deep_chain(size: int) -> Dict[str, Any]:
     }
 
 
-def _generated_fixture_wide_fan(size: int) -> Dict[str, Any]:
+def _generated_fixture_wide_fan(size: int) -> dict[str, Any]:
     architect_raw = (
         "### REQUIREMENT\nscale wide fixture\n\n"
         "### CHANGELOG\n- baseline\n\n"

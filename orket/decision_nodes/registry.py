@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from orket.decision_nodes.api_runtime_strategy_node import DefaultApiRuntimeStrategyNode
 from orket.decision_nodes.builtins import (
     DefaultEngineRuntimePolicyNode,
-    DefaultExecutionRuntimeStrategyNode,
     DefaultEvaluatorNode,
+    DefaultExecutionRuntimeStrategyNode,
     DefaultLoaderStrategyNode,
     DefaultModelClientPolicyNode,
     DefaultOrchestrationLoopPolicyNode,
@@ -18,8 +18,9 @@ from orket.decision_nodes.builtins import (
     DefaultToolStrategyNode,
 )
 from orket.decision_nodes.contracts import (
-    EvaluatorNode,
+    ApiRuntimeStrategyNode,
     EngineRuntimePolicyNode,
+    EvaluatorNode,
     ExecutionRuntimeStrategyNode,
     LoaderStrategyNode,
     ModelClientPolicyNode,
@@ -28,7 +29,6 @@ from orket.decision_nodes.contracts import (
     PlannerNode,
     PromptStrategyNode,
     RouterNode,
-    ApiRuntimeStrategyNode,
     SandboxPolicyNode,
     ToolStrategyNode,
 )
@@ -41,25 +41,25 @@ class DecisionNodeRegistry:
     """
 
     def __init__(self):
-        self._planner_nodes: Dict[str, PlannerNode] = {"default": DefaultPlannerNode()}
-        self._router_nodes: Dict[str, RouterNode] = {"default": DefaultRouterNode()}
-        self._prompt_strategy_nodes: Dict[str, PromptStrategyNode] = {}
-        self._evaluator_nodes: Dict[str, EvaluatorNode] = {"default": DefaultEvaluatorNode()}
-        self._tool_strategy_nodes: Dict[str, ToolStrategyNode] = {"default": DefaultToolStrategyNode()}
-        self._api_runtime_nodes: Dict[str, ApiRuntimeStrategyNode] = {"default": DefaultApiRuntimeStrategyNode()}
-        self._sandbox_policy_nodes: Dict[str, SandboxPolicyNode] = {"default": DefaultSandboxPolicyNode()}
-        self._engine_runtime_nodes: Dict[str, EngineRuntimePolicyNode] = {"default": DefaultEngineRuntimePolicyNode()}
-        self._loader_strategy_nodes: Dict[str, LoaderStrategyNode] = {"default": DefaultLoaderStrategyNode()}
-        self._execution_runtime_nodes: Dict[str, ExecutionRuntimeStrategyNode] = {
+        self._planner_nodes: dict[str, PlannerNode] = {"default": DefaultPlannerNode()}
+        self._router_nodes: dict[str, RouterNode] = {"default": DefaultRouterNode()}
+        self._prompt_strategy_nodes: dict[str, PromptStrategyNode] = {}
+        self._evaluator_nodes: dict[str, EvaluatorNode] = {"default": DefaultEvaluatorNode()}
+        self._tool_strategy_nodes: dict[str, ToolStrategyNode] = {"default": DefaultToolStrategyNode()}
+        self._api_runtime_nodes: dict[str, ApiRuntimeStrategyNode] = {"default": DefaultApiRuntimeStrategyNode()}
+        self._sandbox_policy_nodes: dict[str, SandboxPolicyNode] = {"default": DefaultSandboxPolicyNode()}
+        self._engine_runtime_nodes: dict[str, EngineRuntimePolicyNode] = {"default": DefaultEngineRuntimePolicyNode()}
+        self._loader_strategy_nodes: dict[str, LoaderStrategyNode] = {"default": DefaultLoaderStrategyNode()}
+        self._execution_runtime_nodes: dict[str, ExecutionRuntimeStrategyNode] = {
             "default": DefaultExecutionRuntimeStrategyNode()
         }
-        self._pipeline_wiring_nodes: Dict[str, PipelineWiringStrategyNode] = {
+        self._pipeline_wiring_nodes: dict[str, PipelineWiringStrategyNode] = {
             "default": DefaultPipelineWiringStrategyNode()
         }
-        self._orchestration_loop_nodes: Dict[str, OrchestrationLoopPolicyNode] = {
+        self._orchestration_loop_nodes: dict[str, OrchestrationLoopPolicyNode] = {
             "default": DefaultOrchestrationLoopPolicyNode()
         }
-        self._model_client_nodes: Dict[str, ModelClientPolicyNode] = {"default": DefaultModelClientPolicyNode()}
+        self._model_client_nodes: dict[str, ModelClientPolicyNode] = {"default": DefaultModelClientPolicyNode()}
 
     def register_planner(self, name: str, node: PlannerNode) -> None:
         self._planner_nodes[name] = node
@@ -100,7 +100,7 @@ class DecisionNodeRegistry:
     def register_model_client(self, name: str, node: ModelClientPolicyNode) -> None:
         self._model_client_nodes[name] = node
 
-    def register_module_nodes(self, module_id: str, registrations: Dict[str, Any]) -> None:
+    def register_module_nodes(self, module_id: str, registrations: dict[str, Any]) -> None:
         """
         Register a module-provided set of decision nodes using explicit keys.
         Supported keys:

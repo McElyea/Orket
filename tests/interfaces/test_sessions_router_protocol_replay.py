@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import sqlite3
 from pathlib import Path
 from typing import Any
-import asyncio
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

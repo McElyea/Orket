@@ -10,10 +10,9 @@ from pathlib import Path
 
 import pytest
 
+from orket.core.domain.sandbox import SandboxRegistry
 from orket.core.domain.sandbox_lifecycle import TerminalReason
-from orket.domain.sandbox import SandboxRegistry
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
-
 
 pytestmark = pytest.mark.skipif(
     os.getenv("ORKET_RUN_SANDBOX_ACCEPTANCE") != "1",

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-# Layer: unit
+from collections.abc import Mapping
 
+# Layer: unit
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import pytest
 

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pydantic import ValidationError
+
 from orket_extension_sdk.controller import (
     ControllerChildCall,
     ControllerChildResult,
@@ -10,7 +12,6 @@ from orket_extension_sdk.controller import (
     ControllerRunStatus,
     ControllerRunSummary,
 )
-from pydantic import ValidationError
 
 from .models import CONTRACT_STYLE_SDK_V0
 

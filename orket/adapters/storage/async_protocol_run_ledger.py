@@ -5,7 +5,7 @@ import json
 import os
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from orket.application.workflows.protocol_hashing import hash_canonical_json
 from orket.application.workflows.tool_invocation_contracts import (
@@ -70,8 +70,8 @@ class AsyncProtocolRunLedgerRepository:
         run_name: str,
         department: str,
         build_id: str,
-        summary: Optional[Dict[str, Any]] = None,
-        artifacts: Optional[Dict[str, Any]] = None,
+        summary: dict[str, Any] | None = None,
+        artifacts: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         event = self._build_event(
             session_id=session_id,
@@ -93,11 +93,11 @@ class AsyncProtocolRunLedgerRepository:
         *,
         session_id: str,
         status: str,
-        failure_class: Optional[str] = None,
-        failure_reason: Optional[str] = None,
-        summary: Optional[Dict[str, Any]] = None,
-        artifacts: Optional[Dict[str, Any]] = None,
-        finalized_at: Optional[str] = None,
+        failure_class: str | None = None,
+        failure_reason: str | None = None,
+        summary: dict[str, Any] | None = None,
+        artifacts: dict[str, Any] | None = None,
+        finalized_at: str | None = None,
     ) -> dict[str, Any]:
         resolved_status = validate_result_error_invariant(
             status=status,
@@ -156,7 +156,7 @@ class AsyncProtocolRunLedgerRepository:
         *,
         session_id: str,
         kind: str,
-        payload: Optional[Dict[str, Any]] = None,
+        payload: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         normalized_kind = str(kind)
         normalized_payload = dict(payload or {})
@@ -515,7 +515,7 @@ class AsyncProtocolRunLedgerRepository:
         self,
         *,
         session_id: str,
-        receipt: Dict[str, Any],
+        receipt: dict[str, Any],
     ) -> dict[str, Any]:
         normalized_session_id = str(session_id or "").strip()
         normalized_receipt = dict(receipt or {})
@@ -535,7 +535,7 @@ class AsyncProtocolRunLedgerRepository:
         async with self._lock:
             return await asyncio.to_thread(self._ledger(session_id).replay_events)
 
-    async def get_run(self, session_id: str) -> Optional[Dict[str, Any]]:
+    async def get_run(self, session_id: str) -> dict[str, Any] | None:
         events = await self.list_events(session_id)
         if not events:
             return None
@@ -545,10 +545,10 @@ class AsyncProtocolRunLedgerRepository:
         department = ""
         build_id = ""
         status = "running"
-        failure_class: Optional[str] = None
-        failure_reason: Optional[str] = None
-        summary: Dict[str, Any] = {}
-        artifacts: Dict[str, Any] = {}
+        failure_class: str | None = None
+        failure_reason: str | None = None
+        summary: dict[str, Any] = {}
+        artifacts: dict[str, Any] = {}
         started_event_seq = 0
         ended_event_seq = 0
         started_seen = False
@@ -600,7 +600,7 @@ class AsyncProtocolRunLedgerRepository:
         session_id: str,
         operation_id: str,
         kind: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> dict[str, Any]:
         event_seq = await asyncio.to_thread(self._ledger(session_id).next_event_seq)
         registry = self._operation_registry(session_id)
@@ -623,7 +623,7 @@ class AsyncProtocolRunLedgerRepository:
         session_id: str,
         operation_id: str,
         kind: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> dict[str, Any] | None:
         registry = self._operation_registry(session_id)
         winner = await asyncio.to_thread(registry.winner, operation_id)
@@ -649,7 +649,7 @@ class AsyncProtocolRunLedgerRepository:
     def _append_receipt_sync(
         self,
         session_id: str,
-        receipt: Dict[str, Any],
+        receipt: dict[str, Any],
     ) -> dict[str, Any]:
         receipts_path = self._receipts_path(session_id)
         existing_rows = self._load_receipts_sync(session_id)

@@ -2,15 +2,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.application.services.control_plane_workload_catalog import TURN_TOOL_WORKLOAD
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots
+from orket.application.services.control_plane_workload_catalog import TURN_TOOL_WORKLOAD
 from orket.application.services.turn_tool_control_plane_closeout import (
     ensure_begin_execution_allowed,
     ensure_current_execution_target,
     finalize_turn_execution,
     terminal_blocked_actions,
 )
+from orket.application.services.turn_tool_control_plane_recovery import recover_pre_effect_attempt_for_resume_mode
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     TurnToolControlPlaneResourceError,
     ensure_active_execution_lease,
@@ -18,7 +19,6 @@ from orket.application.services.turn_tool_control_plane_resource_lifecycle impor
     invalidate_admission_reservation_if_present,
     release_execution_authority_if_present,
 )
-from orket.application.services.turn_tool_control_plane_recovery import recover_pre_effect_attempt_for_resume_mode
 from orket.application.services.turn_tool_control_plane_state_gate import (
     ensure_existing_run_allows_execution,
     existing_effect_for_operation,
@@ -57,6 +57,7 @@ from orket.core.domain import (
     validate_attempt_state_transition,
     validate_run_state_transition,
 )
+
 
 class TurnToolControlPlaneError(ValueError):
     """Raised when governed turn-tool control-plane truth cannot be published honestly."""
@@ -433,6 +434,13 @@ class TurnToolControlPlaneService:
         if attempt is None:
             raise TurnToolControlPlaneError(f"governed turn-tool attempt not found: {attempt_id}")
         return attempt
-from .turn_tool_control_plane_factory import build_turn_tool_control_plane_service
+
+
+def build_turn_tool_control_plane_service(*args: Any, **kwargs: Any) -> TurnToolControlPlaneService:
+    from orket.application.services.turn_tool_control_plane_factory import (
+        build_turn_tool_control_plane_service as _build_turn_tool_control_plane_service,
+    )
+
+    return _build_turn_tool_control_plane_service(*args, **kwargs)
 
 __all__ = ["TurnToolControlPlaneError", "TurnToolControlPlaneService", "build_turn_tool_control_plane_service"]

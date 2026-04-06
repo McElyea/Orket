@@ -175,10 +175,7 @@ class InMemoryCoordinatorStore:
             if card.state != "CLAIMED":
                 raise CoordinatorConflictError("card is not claimed")
 
-            if card.hedged_execution:
-                allowed = node_id in meta["claimants"]
-            else:
-                allowed = card.claimed_by == node_id
+            allowed = node_id in meta["claimants"] if card.hedged_execution else card.claimed_by == node_id
 
             if not allowed:
                 raise CoordinatorPermissionError("only claimant may renew")
@@ -230,10 +227,7 @@ class InMemoryCoordinatorStore:
             if card.state != "CLAIMED":
                 raise CoordinatorConflictError("card is not claimed")
 
-            if card.hedged_execution:
-                allowed = node_id in meta["claimants"]
-            else:
-                allowed = card.claimed_by == node_id
+            allowed = node_id in meta["claimants"] if card.hedged_execution else card.claimed_by == node_id
             if not allowed:
                 raise CoordinatorPermissionError("only claimant may fail")
 

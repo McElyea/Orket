@@ -6,8 +6,8 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from orket.core.domain.coordinator_card import Card
 import orket.interfaces.coordinator_api as coordinator_api_module
+from orket.core.domain.coordinator_card import Card
 
 
 def _client() -> TestClient:

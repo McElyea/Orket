@@ -7,9 +7,9 @@ import pytest
 
 import orket.interfaces.cli as cli_module
 from tests.interfaces.test_cli_protocol_replay import (
-    _DummyExtensionManager,
     _args,
     _bypass_startup_for_protocol_path_test,
+    _DummyExtensionManager,
     _write_run,
     _write_sqlite_run,
 )

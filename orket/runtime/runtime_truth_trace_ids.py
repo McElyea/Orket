@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 RUNTIME_TRUTH_TRACE_IDS_SCHEMA_VERSION = "1.0"
 
 _TRACE_IDS: dict[str, str] = {

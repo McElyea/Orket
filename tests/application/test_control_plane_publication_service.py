@@ -22,9 +22,9 @@ from orket.core.contracts import (
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 from orket.core.domain import (
     AuthoritySourceClass,
-    CleanupAuthorityClass,
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
+    CleanupAuthorityClass,
     ClosureBasisClassification,
     CompletionClassification,
     DegradationClassification,
@@ -35,15 +35,14 @@ from orket.core.domain import (
     OperatorInputClass,
     OrphanClassification,
     OwnershipClass,
+    RecoveryActionClass,
     ReservationKind,
     ReservationStatus,
-    RecoveryActionClass,
     ResidualUncertaintyClassification,
     ResultClass,
     SafeContinuationClass,
     SideEffectBoundaryClass,
 )
-
 
 pytestmark = pytest.mark.unit
 

@@ -12,8 +12,8 @@ from orket.adapters.storage.async_control_plane_record_repository import AsyncCo
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandResult
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
-from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
+from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
 from orket.core.domain import ClosureBasisClassification, ResultClass
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
@@ -80,7 +80,7 @@ async def test_terminal_outcome_exports_required_evidence_and_records_event(tmp_
     assert record.state is SandboxState.TERMINAL
     assert record.terminal_reason is TerminalReason.SUCCESS
     assert record.required_evidence_ref is not None
-    async with aiofiles.open(Path(record.required_evidence_ref), "r", encoding="utf-8") as handle:
+    async with aiofiles.open(Path(record.required_evidence_ref), encoding="utf-8") as handle:
         evidence = json.loads(await handle.read())
     assert evidence["payload"]["kind"] == "integration_report"
     assert final_truth is not None

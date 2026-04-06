@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 # Layer: contract
-
 import json
 import subprocess
 from pathlib import Path

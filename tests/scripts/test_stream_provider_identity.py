@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 # Layer: contract
-
 import scripts.streaming.run_provider_scenario_direct as direct_script
 import scripts.streaming.run_stream_scenario as api_script
 

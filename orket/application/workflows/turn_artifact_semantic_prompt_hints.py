@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 
 def _normalized_tokens(values: Iterable[str]) -> set[str]:

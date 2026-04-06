@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 # Layer: contract
-
 import json
 from typing import Any
 
@@ -97,6 +96,24 @@ def test_local_model_provider_explicit_provider_override_beats_env(monkeypatch: 
     assert provider.provider_name == "lmstudio"
     assert provider.openai_base_url == "http://127.0.0.1:1234/v1"
     assert provider.openai_api_key == "test-key"
+
+
+def test_local_model_provider_separates_connect_and_read_timeouts(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: unit. Verifies openai-compatible clients fail fast on connect while preserving a longer stream read budget."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "openai_compat")
+
+    provider = LocalModelProvider(
+        model="dummy",
+        timeout=300,
+        connect_timeout_seconds=15.0,
+    )
+
+    assert isinstance(provider.client, httpx.AsyncClient)
+    timeout = provider.client.timeout
+    assert timeout.connect == 15.0
+    assert timeout.read == 300.0
+    assert timeout.write == 30.0
+    assert timeout.pool == 10.0
 
 
 @pytest.mark.asyncio

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from orket.domain.fixture_verifier import FixtureVerifier
-from orket.domain.sandbox_verifier import SandboxVerifier
+from orket.core.domain.fixture_verifier import FixtureVerifier
+from orket.core.domain.sandbox_verifier import SandboxVerifier
 from orket.orchestration.engine_services import KernelGatewayFacade
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.schema import IssueVerification, VerificationScenario

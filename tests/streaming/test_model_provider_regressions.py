@@ -13,7 +13,6 @@ from orket.streaming.model_provider import (
     StubModelStreamProvider,
 )
 
-
 pytestmark = pytest.mark.unit
 
 

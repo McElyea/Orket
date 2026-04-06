@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 from pathlib import Path
@@ -8,15 +9,14 @@ from typing import Any
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.adapters.tools.families.reforger_tools import ReforgerTools
+from orket.driver_support_cli import DriverCliMixin
+from orket.driver_support_conversation import DriverConversationMixin
+from orket.driver_support_resources import DriverResourceMixin
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
 from orket.orket import ConfigLoader
 from orket.project_paths import default_model_root, default_project_root, default_workspace_root
 from orket.schema import DialectConfig, SkillConfig
-
-from orket.driver_support_cli import DriverCliMixin
-from orket.driver_support_conversation import DriverConversationMixin
-from orket.driver_support_resources import DriverResourceMixin
 
 
 def _default_project_root() -> Path:
@@ -59,10 +59,8 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         org_path = self.model_root / "organization.json"
         self.org = None
         if org_path.exists():
-            try:
+            with contextlib.suppress(ValueError, FileNotFoundError):
                 self.org = OrganizationConfig.model_validate_json(self.fs.read_file_sync(str(org_path)))
-            except (ValueError, FileNotFoundError):
-                pass
 
         from orket.orchestration.models import ModelSelector
 
@@ -375,7 +373,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                 )
             self._log_operator_metric("operator_request_total", route="model")
             return compatibility_warning + await self.execute_plan(plan)
-        except (json.JSONDecodeError, ValueError) as e:
+        except json.JSONDecodeError as e:
             self._log_operator_metric("operator_request_total", route="model_json_error")
             return f"Driver failed to parse JSON: {str(e)}"
         except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:

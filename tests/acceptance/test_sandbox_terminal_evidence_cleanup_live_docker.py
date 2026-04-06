@@ -12,12 +12,11 @@ import pytest
 
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
 from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
+from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
-from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from tests.acceptance._sandbox_live_common import compose_cleanup, docker_rows, lightweight_compose
 from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
-
 
 pytestmark = pytest.mark.skipif(
     os.getenv("ORKET_RUN_SANDBOX_ACCEPTANCE") != "1",
@@ -78,7 +77,7 @@ async def test_live_terminal_evidence_export_and_sweeper_cleanup(tmp_path, monke
         assert cleaned.state is SandboxState.CLEANED
         assert cleaned.cleanup_state is CleanupState.COMPLETED
         assert cleaned.required_evidence_ref is not None
-        async with aiofiles.open(Path(cleaned.required_evidence_ref), "r", encoding="utf-8") as handle:
+        async with aiofiles.open(Path(cleaned.required_evidence_ref), encoding="utf-8") as handle:
             evidence = json.loads(await handle.read())
         assert evidence["payload"]["kind"] == "live_report"
         assert any(event.event_type == "sandbox.workflow_terminal_outcome" for event in events)

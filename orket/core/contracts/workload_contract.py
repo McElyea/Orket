@@ -4,7 +4,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-
 WORKLOAD_CONTRACT_VERSION_V1 = "workload.contract.v1"
 WorkloadType = Literal["odr", "cards"]
 REQUIRED_WORKLOAD_KEYS = (
@@ -36,7 +35,7 @@ class WorkloadContractV1(BaseModel):
     provenance_targets: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _validate_version_and_strings(self) -> "WorkloadContractV1":
+    def _validate_version_and_strings(self) -> WorkloadContractV1:
         if self.workload_contract_version != WORKLOAD_CONTRACT_VERSION_V1:
             raise ValueError(
                 f"unsupported workload_contract_version={self.workload_contract_version!r}; "

@@ -36,7 +36,7 @@ class EffectJournalEntryRecord(_ControlPlaneBaseModel):
     entry_digest: NonEmptyStr
 
     @model_validator(mode="after")
-    def _validate_journal_shape(self) -> "EffectJournalEntryRecord":
+    def _validate_journal_shape(self) -> EffectJournalEntryRecord:
         if self.publication_sequence == 1 and (
             self.prior_journal_entry_id is not None or self.prior_entry_digest is not None
         ):
@@ -74,7 +74,7 @@ class CheckpointAcceptanceRecord(_ControlPlaneBaseModel):
     rejection_reasons: list[NonEmptyStr] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _validate_acceptance_shape(self) -> "CheckpointAcceptanceRecord":
+    def _validate_acceptance_shape(self) -> CheckpointAcceptanceRecord:
         if self.outcome is CheckpointAcceptanceOutcome.ACCEPTED and self.rejection_reasons:
             raise ValueError("accepted checkpoint cannot carry rejection_reasons")
         if self.outcome is CheckpointAcceptanceOutcome.REJECTED:

@@ -14,8 +14,8 @@ from orket.exceptions import ExecutionFailed
 from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.protocol_replay import ProtocolReplayEngine
 from orket.schema import CardStatus
-from tests.live.test_system_acceptance_pipeline import _write_core_assets
 from tests.live.run_summary_support import read_validated_run_summary
+from tests.live.test_system_acceptance_pipeline import _write_core_assets
 
 pytestmark = pytest.mark.end_to_end
 
@@ -244,7 +244,7 @@ async def test_boundary_path_traversal_live(tmp_path: Path, monkeypatch) -> None
     sanitized_write_seen = any(
         str(row.get("event") or "") == "tool_call_start"
         and str((row.get("data") or {}).get("tool") or "") == "write_file"
-        and str((((row.get("data") or {}).get("args") or {}).get("path") or "")).endswith("secret.txt")
+        and str(((row.get("data") or {}).get("args") or {}).get("path") or "").endswith("secret.txt")
         for row in event_rows
     )
     sanitized_target_written = (workspace / "secret.txt").exists() or (workspace / "agent_output" / "secret.txt").exists()

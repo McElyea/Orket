@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from types import MethodType, SimpleNamespace
 from pathlib import Path
+from types import MethodType, SimpleNamespace
 
 import pytest
 

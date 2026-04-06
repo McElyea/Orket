@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 _CONFIG_OWNERSHIP_ROWS: tuple[dict[str, Any], ...] = (
     {
         "config_key": "ORKET_STATE_BACKEND_MODE",

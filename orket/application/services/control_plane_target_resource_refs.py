@@ -7,6 +7,8 @@ from orket.application.services.kernel_action_control_plane_resource_lifecycle i
 )
 from orket.application.services.orchestrator_issue_control_plane_support import (
     namespace_resource_id,
+)
+from orket.application.services.orchestrator_issue_control_plane_support import (
     resource_id as orchestrator_issue_dispatch_resource_id,
 )
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (

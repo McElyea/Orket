@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import subprocess
 import sys
-
+from pathlib import Path
 
 SCRIPT_PATH = Path("scripts/nervous_system/update_nervous_system_policy_digest_snapshot.py")
 

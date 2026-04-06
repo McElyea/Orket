@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import httpx
 
@@ -30,14 +30,12 @@ class GiteaHTTPClient:
         method: str,
         path: str,
         *,
-        params: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
-        extra_headers: Optional[Dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        payload: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
     ) -> httpx.Response:
         url = f"{self.adapter._repo_api}{path}"
-        headers = dict(self.adapter.headers)
-        if extra_headers:
-            headers.update(extra_headers)
+        headers = self.adapter.build_headers(extra_headers)
         try:
             async with httpx.AsyncClient(timeout=self.adapter.timeout_seconds) as client:
                 response = await client.request(method, url, headers=headers, params=params, json=payload)
@@ -76,9 +74,9 @@ class GiteaHTTPClient:
         method: str,
         path: str,
         *,
-        params: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
-        extra_headers: Optional[Dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        payload: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
     ) -> Any:
         response = await self.adapter._request_response_with_retry(
             method,
@@ -96,9 +94,9 @@ class GiteaHTTPClient:
         method: str,
         path: str,
         *,
-        params: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
-        extra_headers: Optional[Dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        payload: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
     ) -> httpx.Response:
         attempts = 0
         while True:
@@ -118,7 +116,7 @@ class GiteaHTTPClient:
                 attempts += 1
 
     @staticmethod
-    def classify_http_error(*, status_code: Optional[int], exc: Exception) -> GiteaAdapterError:
+    def classify_http_error(*, status_code: int | None, exc: Exception) -> GiteaAdapterError:
         if status_code == 429:
             return GiteaAdapterRateLimitError(str(exc))
         if status_code in {401, 403}:

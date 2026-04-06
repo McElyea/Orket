@@ -5,8 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.interfaces.server_launcher import LauncherConfigError
-from orket.interfaces.server_launcher import resolve_api_launch_settings
+from orket.interfaces.server_launcher import LauncherConfigError, resolve_api_launch_settings
 
 
 def _write_config(path: Path, payload: dict) -> None:

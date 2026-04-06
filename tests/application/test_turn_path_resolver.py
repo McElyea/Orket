@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from orket.application.workflows.turn_path_resolver import PathResolver
-from orket.domain.execution import ExecutionTurn, ToolCall
+from orket.core.domain.execution import ExecutionTurn, ToolCall
 
 
 def test_partition_required_read_paths_splits_existing_and_missing(tmp_path: Path) -> None:

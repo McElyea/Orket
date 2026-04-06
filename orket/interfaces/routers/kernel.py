@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Callable, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
+
 from orket.application.services.kernel_action_pending_approval_reservation import (
     publish_pending_kernel_approval_hold_if_needed,
 )
@@ -12,9 +14,9 @@ from orket.interfaces.routers.approvals import build_approvals_router
 
 class KernelLifecycleRequest(BaseModel):
     workflow_id: str
-    execute_turn_requests: List[dict[str, Any]]
+    execute_turn_requests: list[dict[str, Any]]
     finish_outcome: str = "PASS"
-    start_request: Optional[dict[str, Any]] = None
+    start_request: dict[str, Any] | None = None
 
 
 class KernelCompareRequest(BaseModel):
@@ -30,9 +32,9 @@ class KernelReplayRequest(BaseModel):
 class KernelProjectionPackRequest(BaseModel):
     session_id: str
     trace_id: str
-    request_id: Optional[str] = None
+    request_id: str | None = None
     purpose: str = "action_path"
-    canonical_state_digest: Optional[str] = None
+    canonical_state_digest: str | None = None
     tool_context_summary: dict[str, Any] = Field(default_factory=dict)
     policy_context: dict[str, Any] = Field(default_factory=dict)
 
@@ -40,33 +42,33 @@ class KernelProjectionPackRequest(BaseModel):
 class KernelAdmitProposalRequest(BaseModel):
     session_id: str
     trace_id: str
-    request_id: Optional[str] = None
+    request_id: str | None = None
     proposal: dict[str, Any]
 
 
 class KernelCommitProposalRequest(BaseModel):
     session_id: str
     trace_id: str
-    request_id: Optional[str] = None
+    request_id: str | None = None
     proposal_digest: str
     admission_decision_digest: str
-    approval_id: Optional[str] = None
-    execution_result_digest: Optional[str] = None
+    approval_id: str | None = None
+    execution_result_digest: str | None = None
     execution_result_payload: Any = None
-    execution_result_schema_valid: Optional[bool] = None
-    execution_error_reason_code: Optional[str] = None
-    sanitization_digest: Optional[str] = None
+    execution_result_schema_valid: bool | None = None
+    execution_error_reason_code: str | None = None
+    sanitization_digest: str | None = None
     revalidate_policy_forbidden: bool = False
-    canonical_state_digest_after: Optional[str] = None
+    canonical_state_digest_after: str | None = None
     block_result_leaks: bool = False
 
 
 class KernelEndSessionRequest(BaseModel):
     session_id: str
     trace_id: str
-    request_id: Optional[str] = None
-    reason: Optional[str] = None
-    attestation_scope: Optional[str] = None
+    request_id: str | None = None
+    reason: str | None = None
+    attestation_scope: str | None = None
     attestation_payload: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -251,8 +253,8 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
     @router.get("/kernel/ledger-events")
     async def kernel_list_ledger_events(
         session_id: str,
-        trace_id: Optional[str] = None,
-        event_type: Optional[str] = None,
+        trace_id: str | None = None,
+        event_type: str | None = None,
         limit: int = 200,
     ):
         engine = engine_getter()

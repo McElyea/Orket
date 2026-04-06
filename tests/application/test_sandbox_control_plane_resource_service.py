@@ -14,7 +14,6 @@ from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, Term
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 
-
 pytestmark = pytest.mark.unit
 
 

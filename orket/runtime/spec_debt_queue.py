@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 SPEC_DEBT_QUEUE_SCHEMA_VERSION = "1.0"
 
 _ALLOWED_STATUS = {"open", "in_progress", "blocked"}

@@ -14,7 +14,6 @@ from orket.application.services.gitea_state_control_plane_reservation_service im
 from orket.core.domain import LeaseStatus, ReservationKind, ReservationStatus
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 
-
 pytestmark = pytest.mark.unit
 
 

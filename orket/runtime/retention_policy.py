@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any
 
 
 def _parse_dt(value: str) -> datetime | None:
@@ -66,19 +67,19 @@ def check_id(path: str) -> str:
     return "_unknown"
 
 
-def check_status(entry: Dict[str, Any]) -> str:
+def check_status(entry: dict[str, Any]) -> str:
     raw = str(entry.get("status") or "").strip().lower()
     if raw in {"pass", "fail"}:
         return raw
     return "unknown"
 
 
-def _entry_dt(entry: Dict[str, Any]) -> datetime:
+def _entry_dt(entry: dict[str, Any]) -> datetime:
     dt = _parse_dt(str(entry.get("updated_at") or ""))
     return dt or datetime(1970, 1, 1, tzinfo=UTC)
 
 
-def _entry_size(entry: Dict[str, Any]) -> int:
+def _entry_size(entry: dict[str, Any]) -> int:
     try:
         return max(0, int(entry.get("size_bytes") or 0))
     except (TypeError, ValueError):
@@ -94,16 +95,16 @@ class RetentionPolicy:
     artifacts_size_cap_bytes: int = 200 * 1024 * 1024 * 1024
 
 
-def _rank_latest(entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _rank_latest(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(entries, key=lambda e: _entry_dt(e), reverse=True)
 
 
 def build_retention_plan(
-    entries: Iterable[Dict[str, Any]],
+    entries: Iterable[dict[str, Any]],
     *,
     as_of: datetime | None = None,
     policy: RetentionPolicy | None = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     policy = policy or RetentionPolicy()
     anchor = as_of or now_utc()
     rows = []
@@ -121,8 +122,8 @@ def build_retention_plan(
         }
         rows.append(row)
 
-    keep: Dict[str, Tuple[str, str]] = {}
-    delete: Dict[str, Tuple[str, str]] = {}
+    keep: dict[str, tuple[str, str]] = {}
+    delete: dict[str, tuple[str, str]] = {}
 
     # Hard-protect pinned and latest namespace.
     for row in rows:
@@ -133,7 +134,7 @@ def build_retention_plan(
             keep[row["path"]] = ("latest", "latest_pointer")
 
     # Smoke policy: keep newest N per profile, then age prune.
-    smoke_groups: Dict[str, List[Dict[str, Any]]] = {}
+    smoke_groups: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
         if row["namespace"] != "smoke":
             continue
@@ -152,14 +153,14 @@ def build_retention_plan(
                 keep[row["path"]] = ("smoke", f"within_ttl:{age_days}d")
 
     # Checks policy: keep newest pass/fail per check, then age prune.
-    check_groups: Dict[str, List[Dict[str, Any]]] = {}
+    check_groups: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
         if row["namespace"] != "checks":
             continue
         check_groups.setdefault(check_id(row["path"]), []).append(row)
     for cid, group in check_groups.items():
         ordered = _rank_latest(group)
-        newest_by_status: Dict[str, str] = {}
+        newest_by_status: dict[str, str] = {}
         for row in ordered:
             if row["status"] in {"pass", "fail"} and row["status"] not in newest_by_status:
                 newest_by_status[row["status"]] = row["path"]
@@ -205,7 +206,7 @@ def build_retention_plan(
             continue
         keep[row["path"]] = (row["namespace"], "default_keep")
 
-    actions: List[Dict[str, Any]] = []
+    actions: list[dict[str, Any]] = []
     for row in rows:
         action = "keep"
         reason = keep.get(row["path"], (row["namespace"], "default_keep"))[1]

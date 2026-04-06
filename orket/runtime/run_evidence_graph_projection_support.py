@@ -6,16 +6,26 @@ from typing import Any
 from orket.application.services.control_plane_target_resource_refs import resource_id_for_supported_run
 from orket.application.services.kernel_action_control_plane_resource_lifecycle import (
     holder_ref_for_run as kernel_action_holder_ref_for_run,
+)
+from orket.application.services.kernel_action_control_plane_resource_lifecycle import (
     lease_id_for_run as kernel_action_lease_id_for_run,
+)
+from orket.application.services.kernel_action_control_plane_resource_lifecycle import (
     reservation_id_for_run as kernel_action_reservation_id_for_run,
 )
 from orket.application.services.orchestrator_issue_control_plane_support import (
     lease_id_for_run as orchestrator_issue_lease_id_for_run,
+)
+from orket.application.services.orchestrator_issue_control_plane_support import (
     reservation_id_for_run as orchestrator_issue_reservation_id_for_run,
 )
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     holder_ref_for_run as turn_tool_holder_ref_for_run,
+)
+from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run as turn_tool_lease_id_for_run,
+)
+from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     reservation_id_for_run as turn_tool_reservation_id_for_run,
 )
 from orket.core.domain import RunState
@@ -54,7 +64,6 @@ class PrimaryLineageContext:
 
 
 async def load_latest_reservation_record(*, record_repository: Any, run: Any) -> Any | None:
-    candidates: list[Any] = []
     reservation_id = ""
     holder_refs: list[str] = []
     if str(run.run_id).startswith("turn-tool-run:"):
@@ -66,9 +75,10 @@ async def load_latest_reservation_record(*, record_repository: Any, run: Any) ->
     elif str(run.run_id).startswith(("orchestrator-issue-run:", "orchestrator-issue-scheduler-run:", "orchestrator-child-workload-run:")):
         reservation_id = orchestrator_issue_reservation_id_for_run(run_id=run.run_id)
     if reservation_id:
-        record = await record_repository.get_latest_reservation_record(reservation_id=reservation_id)
-        if record is not None:
-            candidates.append(record)
+        canonical = await record_repository.get_latest_reservation_record(reservation_id=reservation_id)
+        if canonical is not None:
+            return canonical
+    candidates: list[Any] = []
     for holder_ref in holder_refs:
         record = await record_repository.get_latest_reservation_record_for_holder_ref(holder_ref=holder_ref)
         if record is not None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
+import orket.interfaces.api as api_module
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.pending_gate_control_plane_operator_service import (
     PendingGateControlPlaneOperatorService,
@@ -29,8 +30,8 @@ from orket.core.domain import (
     ResultClass,
 )
 from orket.interfaces.api import app
-import orket.interfaces.api as api_module
 from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
+from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_engine_approvals import (
     _FakePendingGates,
     _guard_review_row,
@@ -38,7 +39,6 @@ from tests.application.test_engine_approvals import (
     _seed_target_step_and_effect_journal,
     _tool_approval_row,
 )
-from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
 
 pytestmark = pytest.mark.integration
@@ -284,6 +284,7 @@ def test_tool_approval_api_exposes_target_ref_and_target_operator_action(monkeyp
     )
 
     import asyncio
+
     from orket.core.contracts.control_plane_models import AttemptRecord, CheckpointRecord, RunRecord
     from orket.core.domain import AttemptState, RunState
 

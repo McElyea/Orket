@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List
-from orket.domain.execution import ExecutionTurn
+
+from orket.core.domain.execution import ExecutionTurn
 
 
 class ViolationCode(Enum):
@@ -46,7 +46,7 @@ class iDesignValidator:
     }
 
     @staticmethod
-    def validate_turn(turn: ExecutionTurn, workspace_root: Path) -> List[iDesignViolation]:
+    def validate_turn(turn: ExecutionTurn, workspace_root: Path) -> list[iDesignViolation]:
         """
         Scans tool calls in a turn for file creations and verifies their placement.
         Returns a list of structured violations.
@@ -65,19 +65,18 @@ class iDesignValidator:
                     continue
 
                 # Check for root files
-                if len(parts) == 1:
-                    if p.suffix in {".py", ".ts", ".js"}:
-                        violations.append(
-                            iDesignViolation(
-                                code=ViolationCode.ROOT_FILE_VIOLATION,
-                                severity="error",
-                                message=(
-                                    f"Source file '{path_str}' created in root. "
-                                    "Code must be encapsulated in a component directory."
-                                ),
-                                path=path_str,
-                            )
+                if len(parts) == 1 and p.suffix in {".py", ".ts", ".js"}:
+                    violations.append(
+                        iDesignViolation(
+                            code=ViolationCode.ROOT_FILE_VIOLATION,
+                            severity="error",
+                            message=(
+                                f"Source file '{path_str}' created in root. "
+                                "Code must be encapsulated in a component directory."
+                            ),
+                            path=path_str,
                         )
+                    )
 
                 # Determine category
                 category = parts[0].lower()

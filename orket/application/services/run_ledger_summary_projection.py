@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from orket.runtime.run_ledger_projection import (
-    coerce_run_ledger_json_object,
     project_run_ledger_artifacts,
     project_run_ledger_record,
     project_run_ledger_summary,

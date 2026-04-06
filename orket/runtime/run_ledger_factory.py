@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.storage.async_dual_write_run_ledger import (
-    AsyncProtocolPrimaryRunLedgerRepository,
+    AsyncDualModeLedgerRepository,
     TelemetrySink,
 )
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
@@ -29,7 +29,7 @@ def build_run_ledger_repository(
     if resolved_mode == "protocol":
         return protocol_repo
 
-    return AsyncProtocolPrimaryRunLedgerRepository(
+    return AsyncDualModeLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
         telemetry_sink=telemetry_sink,

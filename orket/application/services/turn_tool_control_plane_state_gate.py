@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_resource_authority_checks import (
     require_resource_snapshot_matches_lease,
 )
-from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run,
     namespace_resource_id_for_run,

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List
+from collections.abc import Iterable
+from typing import Any
 
 
-def normalize_scope_values(values: Iterable[object] | None) -> List[str]:
+def normalize_scope_values(values: Iterable[object] | None) -> list[str]:
     if values is None:
         return []
-    normalized: List[str] = []
+    normalized: list[str] = []
     seen = set()
     for value in values:
         item = str(value or "").strip()
@@ -36,7 +37,7 @@ def build_verification_scope(
     max_passive_context_items: int | None = None,
     max_archived_context_items: int | None = None,
     max_total_context_items: int | None = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     def _normalize_optional_limit(value: Any) -> int | None:
         if value is None:
             return None
@@ -66,7 +67,7 @@ def build_verification_scope(
     }
 
 
-def parse_verification_scope(raw: Any) -> Dict[str, Any] | None:
+def parse_verification_scope(raw: Any) -> dict[str, Any] | None:
     if not isinstance(raw, dict):
         return None
     return build_verification_scope(

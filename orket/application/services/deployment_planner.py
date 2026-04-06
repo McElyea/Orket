@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Mapping
+from typing import Any
 
 
 @dataclass(frozen=True)
 class DeploymentSpec:
-    required_files: Dict[str, str]
+    required_files: dict[str, str]
 
 
 class DeploymentValidationError(Exception):
@@ -22,7 +23,7 @@ class DeploymentPlanner:
     Emits baseline deployment assets for generated projects.
     """
 
-    _DEFAULT_FILES: Dict[str, str] = {
+    _DEFAULT_FILES: dict[str, str] = {
         "agent_output/deployment/Dockerfile": (
             'FROM python:3.11-slim\nWORKDIR /app\nCOPY . /app\nCMD ["python", "agent_output/main.py"]\n'
         ),
@@ -36,13 +37,13 @@ class DeploymentPlanner:
         ),
         "agent_output/deployment/run_local.sh": ("#!/usr/bin/env sh\nset -e\npython agent_output/main.py\n"),
     }
-    _BACKEND_ONLY_FILES: Dict[str, str] = {
+    _BACKEND_ONLY_FILES: dict[str, str] = {
         "agent_output/deployment/Dockerfile": (
             'FROM python:3.11-slim\nWORKDIR /app\nCOPY . /app\nCMD ["python", "agent_output/main.py"]\n'
         ),
         "agent_output/deployment/run_local.sh": ("#!/usr/bin/env sh\nset -e\npython agent_output/main.py\n"),
     }
-    _API_VUE_FILES: Dict[str, str] = {
+    _API_VUE_FILES: dict[str, str] = {
         "agent_output/deployment/Dockerfile": (
             'FROM python:3.11-slim\nWORKDIR /app\nCOPY . /app\nCMD ["python", "agent_output/main.py"]\n'
         ),
@@ -60,7 +61,7 @@ class DeploymentPlanner:
         ),
         "agent_output/deployment/run_local.sh": ("#!/usr/bin/env sh\nset -e\npython agent_output/main.py\n"),
     }
-    _MICROSERVICES_FILES: Dict[str, str] = {
+    _MICROSERVICES_FILES: dict[str, str] = {
         "agent_output/deployment/Dockerfile.api": (
             "FROM python:3.11-slim\n"
             "WORKDIR /app\n"
@@ -103,7 +104,7 @@ class DeploymentPlanner:
         self.project_surface_profile = str(project_surface_profile or "").strip().lower()
         self.architecture_pattern = str(architecture_pattern or "").strip().lower()
 
-    async def ensure(self) -> Dict[str, Any]:
+    async def ensure(self) -> dict[str, Any]:
         spec = self._resolve_spec()
         created_files = await self._ensure_files(spec.required_files)
         await self._validate_required_files(spec.required_files)
@@ -134,8 +135,8 @@ class DeploymentPlanner:
             required_files = dict(self._API_VUE_FILES)
         return DeploymentSpec(required_files=dict(required_files))
 
-    async def _ensure_files(self, required_files: Mapping[str, str]) -> List[str]:
-        created: List[str] = []
+    async def _ensure_files(self, required_files: Mapping[str, str]) -> list[str]:
+        created: list[str] = []
         for rel_path, content in required_files.items():
             target = self.workspace_root / rel_path
             exists = await asyncio.to_thread(target.exists)
@@ -147,7 +148,7 @@ class DeploymentPlanner:
 
     async def _validate_required_files(self, required_files: Mapping[str, str]) -> None:
         missing = []
-        for rel_path in required_files.keys():
+        for rel_path in required_files:
             exists = await asyncio.to_thread((self.workspace_root / rel_path).is_file)
             if not exists:
                 missing.append(rel_path)
@@ -155,7 +156,7 @@ class DeploymentPlanner:
             raise DeploymentValidationError("missing deployment files: " + ", ".join(sorted(missing)))
 
     @staticmethod
-    def _normalize_file_map(raw: Any, default: Mapping[str, str]) -> Dict[str, str]:
+    def _normalize_file_map(raw: Any, default: Mapping[str, str]) -> dict[str, str]:
         if isinstance(raw, dict):
             normalized = {}
             for key, value in raw.items():

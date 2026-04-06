@@ -10,10 +10,9 @@ import shutil
 import pytest
 
 from orket.core.domain import LeaseStatus, ReservationStatus
-from orket.domain.sandbox import SandboxRegistry, TechStack
+from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
-
 
 pytestmark = pytest.mark.skipif(
     os.getenv("ORKET_RUN_SANDBOX_ACCEPTANCE") != "1",

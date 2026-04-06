@@ -1,20 +1,21 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 
 class ArchiveCardsRequest(BaseModel):
-    card_ids: Optional[list[str]] = None
-    build_id: Optional[str] = None
-    related_tokens: Optional[list[str]] = None
-    reason: Optional[str] = None
-    archived_by: Optional[str] = "api"
+    card_ids: list[str] | None = None
+    build_id: str | None = None
+    related_tokens: list[str] | None = None
+    reason: str | None = None
+    archived_by: str | None = "api"
 
 
-def _parse_guard_status_from_action(action: str) -> Optional[str]:
+def _parse_guard_status_from_action(action: str) -> str | None:
     action_text = str(action or "")
     marker = "Set Status to '"
     start = action_text.find(marker)
@@ -41,9 +42,9 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node: Any) 
 
     @router.get("/cards")
     async def list_cards(
-        build_id: Optional[str] = None,
-        session_id: Optional[str] = None,
-        status: Optional[str] = None,
+        build_id: str | None = None,
+        session_id: str | None = None,
+        status: str | None = None,
         limit: int = Query(default=50, ge=1, le=500),
         offset: int = Query(default=0, ge=0),
     ):

@@ -4,8 +4,7 @@ import json
 import subprocess
 from pathlib import Path
 
-from scripts.techdebt.run_recurring_maintenance_cycle import main
-from scripts.techdebt.run_recurring_maintenance_cycle import run_cycle
+from scripts.techdebt.run_recurring_maintenance_cycle import main, run_cycle
 
 
 def _load_json(path: Path) -> dict:

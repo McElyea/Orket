@@ -1,7 +1,8 @@
 import json
-import aiosqlite
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
+
+import aiosqlite
 
 from orket.runtime.truthful_memory_policy import (
     classify_memory_trust_level,
@@ -11,7 +12,7 @@ from orket.runtime.truthful_memory_policy import (
 
 
 class MemoryEntry:
-    def __init__(self, content: str, metadata: Dict[str, Any], timestamp: str):
+    def __init__(self, content: str, metadata: dict[str, Any], timestamp: str):
         self.content = content
         self.metadata = metadata
         self.timestamp = timestamp
@@ -43,7 +44,7 @@ class MemoryStore:
             await conn.commit()
         self._initialized = True
 
-    async def remember(self, content: str, metadata: Dict[str, Any] = None):
+    async def remember(self, content: str, metadata: dict[str, Any] = None):
         """Stores a new memory."""
         await self._ensure_initialized()
         decision = evaluate_memory_write_policy(
@@ -63,7 +64,7 @@ class MemoryStore:
             )
             await conn.commit()
 
-    async def search(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+    async def search(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
         """Searches memories using simple keyword matching."""
         await self._ensure_initialized()
         query_words = set(query.lower().split())

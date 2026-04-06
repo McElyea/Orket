@@ -6,7 +6,6 @@ import pytest
 
 from orket.runtime.execution_pipeline import ExecutionPipeline
 
-
 pytestmark = pytest.mark.unit
 
 

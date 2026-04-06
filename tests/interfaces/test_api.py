@@ -1,13 +1,17 @@
 ﻿import asyncio
+import hashlib
 import json
-import pytest
+import os
 from datetime import datetime
 from pathlib import Path
+
+import pytest
 from fastapi.testclient import TestClient
-from orket.interfaces.api import app
+from starlette.websockets import WebSocketDisconnect
+
 import orket.interfaces.api as api_module
+from orket.interfaces.api import app
 from orket.schema import CardStatus
-import os
 
 client = TestClient(app)
 
@@ -55,7 +59,7 @@ def test_heartbeat():
     # Heartbeat might be under v1_router which requires auth if configured
     if response.status_code == 403:
         response = client.get("/v1/system/heartbeat", headers={"X-API-Key": os.getenv("ORKET_API_KEY", "")})
-    
+
     assert response.status_code in [200, 403]
     if response.status_code == 200:
         data = response.json()
@@ -2060,7 +2064,7 @@ def test_run_detail_and_replay_404_paths(monkeypatch):
 @pytest.mark.asyncio
 async def test_run_replay_list_endpoint_returns_turn_index_for_timeline(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module, "PROJECT_ROOT", Path(tmp_path))
+    api_module.app.state.project_root = tmp_path
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}
@@ -2133,7 +2137,7 @@ async def test_run_replay_list_endpoint_returns_turn_index_for_timeline(monkeypa
 @pytest.mark.asyncio
 async def test_session_replay_endpoint_without_target_returns_timeline(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module, "PROJECT_ROOT", Path(tmp_path))
+    api_module.app.state.project_root = tmp_path
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}
@@ -2271,7 +2275,7 @@ def test_execution_graph_endpoint_404_when_run_missing(monkeypatch):
 @pytest.mark.asyncio
 async def test_run_token_summary_aggregates_by_role_model_and_turn(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module, "PROJECT_ROOT", Path(tmp_path))
+    api_module.app.state.project_root = tmp_path
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}
@@ -2392,7 +2396,7 @@ def test_run_token_summary_404_when_run_missing(monkeypatch):
 
 def test_logs_endpoint_filters_and_paginates(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module, "PROJECT_ROOT", Path(tmp_path))
+    api_module.app.state.project_root = Path(tmp_path).resolve()
 
     default_workspace = Path(tmp_path) / "workspace" / "default"
     default_workspace.mkdir(parents=True, exist_ok=True)
@@ -2443,9 +2447,8 @@ def test_logs_endpoint_validates_datetime(monkeypatch):
 
 def test_websocket_events_requires_api_key(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    with pytest.raises(Exception):
-        with client.websocket_connect("/ws/events"):
-            pass
+    with pytest.raises(WebSocketDisconnect), client.websocket_connect("/ws/events"):
+        pass
 
 
 def test_websocket_events_accepts_valid_api_key(monkeypatch):
@@ -2457,9 +2460,8 @@ def test_websocket_events_accepts_valid_api_key(monkeypatch):
 def test_websocket_events_enforce_mode_rejects_query_api_key(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_API_SECURITY_MODE", "enforce")
-    with pytest.raises(Exception):
-        with client.websocket_connect("/ws/events?api_key=test-key"):
-            pass
+    with pytest.raises(WebSocketDisconnect), client.websocket_connect("/ws/events?api_key=test-key"):
+        pass
 
 
 def test_runs_sessions_use_runtime_invocation_policies(monkeypatch):
@@ -2673,4 +2675,3 @@ def test_cards_archive_uses_runtime_response_normalization(monkeypatch):
         "missing_ids": ["Z"],
         "policy": "custom",
     }
-import hashlib

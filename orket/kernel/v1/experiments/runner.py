@@ -1,19 +1,19 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from .report import build_report
 from .scoring import score_run
 from .spec import expand_run_refs, normalize_spec, spec_hash
 
 
-def run_experiment_v1(request: Dict[str, Any]) -> Dict[str, Any]:
+def run_experiment_v1(request: dict[str, Any]) -> dict[str, Any]:
     spec = normalize_spec(request)
     digest = spec_hash(spec)
     refs = expand_run_refs(spec)
     provided = _index_results(request.get("run_results"))
 
-    rows: List[Dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     for ref in refs:
         key = _result_key(
             scenario_id=ref.scenario_id,
@@ -40,7 +40,7 @@ def run_experiment_v1(request: Dict[str, Any]) -> Dict[str, Any]:
     return build_report(spec_hash=digest, spec=spec, run_rows=rows)
 
 
-def _result_key(*, scenario_id: str, seed: int, repeat_index: int, model_map: Dict[str, str]) -> Tuple[Any, ...]:
+def _result_key(*, scenario_id: str, seed: int, repeat_index: int, model_map: dict[str, str]) -> tuple[Any, ...]:
     return (
         str(scenario_id),
         int(seed),
@@ -49,8 +49,8 @@ def _result_key(*, scenario_id: str, seed: int, repeat_index: int, model_map: Di
     )
 
 
-def _index_results(raw: Any) -> Dict[Tuple[Any, ...], Dict[str, Any]]:
-    rows: Dict[Tuple[Any, ...], Dict[str, Any]] = {}
+def _index_results(raw: Any) -> dict[tuple[Any, ...], dict[str, Any]]:
+    rows: dict[tuple[Any, ...], dict[str, Any]] = {}
     if not isinstance(raw, list):
         return rows
     for item in raw:
@@ -77,7 +77,7 @@ def _index_results(raw: Any) -> Dict[Tuple[Any, ...], Dict[str, Any]]:
     return rows
 
 
-def _normalize_result(value: Any) -> Dict[str, Any]:
+def _normalize_result(value: Any) -> dict[str, Any]:
     data = dict(value) if isinstance(value, dict) else {}
     normalized = {
         "forbidden_hits": int(data.get("forbidden_hits", 0)),
@@ -91,7 +91,7 @@ def _normalize_result(value: Any) -> Dict[str, Any]:
     return normalized
 
 
-def _missing_result() -> Dict[str, Any]:
+def _missing_result() -> dict[str, Any]:
     return {
         "forbidden_hits": 0,
         "anti_hallucination_hits": 1,

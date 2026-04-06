@@ -3,9 +3,7 @@ from __future__ import annotations
 import pytest
 
 from orket.interfaces import api as api_module
-from orket.logging import event_subscriber_count
-from orket.logging import subscribe_to_events
-from orket.logging import unsubscribe_from_events
+from orket.logging import event_subscriber_count, subscribe_to_events, unsubscribe_from_events
 
 
 @pytest.mark.asyncio

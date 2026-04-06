@@ -8,10 +8,9 @@ instead.
 
 from __future__ import annotations
 
-import json
 import hashlib
-from typing import Any, Dict
-
+import json
+from typing import Any
 
 NON_SEMANTIC_KEYS = {
     "timestamp",
@@ -47,7 +46,7 @@ def _normalize_string(value: str) -> str:
 
 def canonicalize(obj: Any, *, _parent_key: str = "") -> Any:
     if isinstance(obj, dict):
-        cleaned: Dict[str, Any] = {}
+        cleaned: dict[str, Any] = {}
         for key in sorted(obj.keys()):
             if key in NON_SEMANTIC_KEYS:
                 continue
@@ -113,7 +112,7 @@ def _first_diff_path_obj(left: Any, right: Any, path: str) -> str:
     if isinstance(left, list):
         if len(left) != len(right):
             return path
-        for idx, (li, ri) in enumerate(zip(left, right)):
+        for idx, (li, ri) in enumerate(zip(left, right, strict=False)):
             if li != ri:
                 return _first_diff_path_obj(li, ri, f"{path}/{idx}")
         return path

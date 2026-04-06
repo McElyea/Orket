@@ -4,7 +4,7 @@ import ast
 import json
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from orket.exceptions import ModelProviderError
 from orket.logging import log_event
@@ -63,7 +63,7 @@ class DriverConversationMixin:
         )
         return any(re.search(pattern, text) for pattern in explicit_patterns)
 
-    def _conversation_reply(self, message: str) -> Optional[str]:
+    def _conversation_reply(self, message: str) -> str | None:
         text = str(message or "").strip()
         if not text:
             return "I am here. You can chat with me or ask me to make a specific board change."
@@ -102,7 +102,7 @@ class DriverConversationMixin:
             return math_answer
         return None
 
-    async def _conversation_model_reply(self, message: str) -> Optional[str]:
+    async def _conversation_model_reply(self, message: str) -> str | None:
         complete_fn = getattr(self.provider, "complete", None)
         if not callable(complete_fn):
             return None

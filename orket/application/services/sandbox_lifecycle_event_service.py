@@ -33,7 +33,7 @@ class SandboxLifecycleEventService:
     async def replay_spool(self) -> int:
         if not await asyncio.to_thread(self.spool_path.exists):
             return 0
-        async with aiofiles.open(self.spool_path, "r", encoding="utf-8") as handle:
+        async with aiofiles.open(self.spool_path, encoding="utf-8") as handle:
             lines = [line.strip() for line in await handle.readlines() if line.strip()]
         replayed = 0
         remaining: list[str] = []

@@ -11,7 +11,6 @@ from orket.runtime.protocol_error_codes import (
     is_registered_protocol_error_code,
 )
 
-
 TOOL_INVOCATION_POLICY_CONTRACT_SCHEMA_VERSION = "1.0"
 
 _ALLOWED_TOOL_RINGS = {

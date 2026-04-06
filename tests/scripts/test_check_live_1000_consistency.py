@@ -4,7 +4,6 @@ import json
 import subprocess
 from pathlib import Path
 
-
 SCRIPT_PATH = Path("scripts/streaming/check_live_1000_consistency.py")
 
 

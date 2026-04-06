@@ -342,7 +342,7 @@ class ArtifactProvenanceBuilder:
 
     @staticmethod
     def _redacted_snapshot(payload: dict[str, Any]) -> dict[str, Any]:
-        keys = sorted(str(key) for key in payload.keys())
+        keys = sorted(str(key) for key in payload)
         digest = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
         return {"keys": keys, "item_count": len(keys), "payload_digest_sha256": digest}
 

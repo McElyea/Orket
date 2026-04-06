@@ -1,18 +1,19 @@
 import json
-import pytest
 from types import SimpleNamespace
 
-from orket.exceptions import CatastrophicFailure, ExecutionFailed
-from orket.application.workflows.orchestrator import Orchestrator
-from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
-from orket.application.workflows.turn_executor import TurnResult
-from orket.application.services.guard_agent import GuardAgent
-from orket.application.services.runtime_verifier import build_runtime_guard_contract
-from orket.core.domain import ReservationStatus
-from orket.schema import CardStatus, IssueConfig, TeamConfig, SeatConfig
-from orket.application.services.scaffolder import ScaffoldValidationError
+import pytest
+
 from orket.application.services.dependency_manager import DependencyValidationError
 from orket.application.services.deployment_planner import DeploymentValidationError
+from orket.application.services.guard_agent import GuardAgent
+from orket.application.services.runtime_verifier import build_runtime_guard_contract
+from orket.application.services.scaffolder import ScaffoldValidationError
+from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
+from orket.application.workflows.orchestrator import Orchestrator
+from orket.application.workflows.turn_executor import TurnResult
+from orket.core.domain import ReservationStatus
+from orket.exceptions import CatastrophicFailure, ExecutionFailed
+from orket.schema import CardStatus, IssueConfig, SeatConfig, TeamConfig
 
 
 class AsyncSpy:
@@ -584,6 +585,39 @@ async def test_handle_failure_keeps_idesign_violation_message_when_enabled(orche
 
     message = str(exc.value)
     assert "iDesign Violation:" in message
+
+
+@pytest.mark.asyncio
+async def test_handle_failure_approval_pending_preserves_issue_state_without_scheduler_transition(orchestrator):
+    orch, cards, _loader = orchestrator
+    issue = IssueConfig(id="I1", seat="dev", summary="Test", status=CardStatus.IN_PROGRESS, retry_count=0, max_retries=3)
+    result = SimpleNamespace(error="Approval required for tool 'write_file'", violations=[])
+
+    class CustomEvaluator:
+        def evaluate_failure(self, issue, result):
+            return {"action": "approval_pending", "next_retry_count": issue.retry_count}
+
+        def failure_exception_class(self, action):
+            return ExecutionFailed
+
+        def status_for_failure_action(self, action):
+            return CardStatus.READY
+
+        def failure_event_name(self, action):
+            return "approval_pending"
+
+    transition_spy = AsyncSpy(return_value=None)
+    orch.evaluator_node = CustomEvaluator()
+    orch._request_issue_transition = transition_spy
+
+    with pytest.raises(ExecutionFailed, match="Approval required for tool 'write_file'"):
+        await orch._handle_failure(issue, result, "run-1", ["dev"])
+
+    assert transition_spy.calls == []
+    assert len(cards.save.calls) == 1
+    saved_issue = cards.save.calls[0][0][0]
+    assert saved_issue["id"] == "I1"
+    assert saved_issue["status"] == CardStatus.IN_PROGRESS.value
 
 
 @pytest.mark.asyncio

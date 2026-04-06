@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pydantic import ValidationError
 
-from .gitea_state_models import CardSnapshot, LeaseInfo, decode_snapshot, encode_snapshot
 from .gitea_state_errors import GiteaAdapterConflictError
+from .gitea_state_models import CardSnapshot, LeaseInfo, decode_snapshot, encode_snapshot
 
 
 class GiteaLeaseManager:
@@ -21,7 +21,7 @@ class GiteaLeaseManager:
         *,
         owner_id: str,
         lease_seconds: int,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         issue_number = int(card_id)
         issue_response = await self.adapter._request_response_with_retry("GET", f"/issues/{issue_number}")
         issue = issue_response.json()
@@ -63,7 +63,7 @@ class GiteaLeaseManager:
             lease=new_lease,
             metadata=dict(snapshot.metadata or {}),
         )
-        patch_headers: Dict[str, str] = {}
+        patch_headers: dict[str, str] = {}
         if etag:
             patch_headers["If-Match"] = etag
         try:
@@ -89,7 +89,7 @@ class GiteaLeaseManager:
         *,
         owner_id: str,
         lease_seconds: int,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         issue_number = int(card_id)
         issue_response = await self.adapter._request_response_with_retry("GET", f"/issues/{issue_number}")
         issue = issue_response.json()
@@ -118,7 +118,7 @@ class GiteaLeaseManager:
             lease=renewed_lease,
             metadata=dict(snapshot.metadata or {}),
         )
-        patch_headers: Dict[str, str] = {}
+        patch_headers: dict[str, str] = {}
         if etag:
             patch_headers["If-Match"] = etag
         try:

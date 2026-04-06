@@ -18,7 +18,7 @@ from orket.core.domain.sandbox_lifecycle import (
     TerminalReason,
 )
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
-from orket.domain.verification import AGENT_OUTPUT_DIR
+from orket.core.domain.verification import AGENT_OUTPUT_DIR
 
 if TYPE_CHECKING:
     from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService

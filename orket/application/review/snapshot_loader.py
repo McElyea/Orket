@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import httpx
 
@@ -15,7 +14,7 @@ from orket.application.review.models import (
 )
 
 
-def _run_git(repo_root: Path, args: List[str]) -> str:
+def _run_git(repo_root: Path, args: list[str]) -> str:
     proc = subprocess.run(
         ["git", *args],
         cwd=str(repo_root),
@@ -25,7 +24,7 @@ def _run_git(repo_root: Path, args: List[str]) -> str:
     return proc.stdout.decode("utf-8", errors="replace")
 
 
-def _truncate_bytes(text: str, max_bytes: int) -> Tuple[str, int, int, bool]:
+def _truncate_bytes(text: str, max_bytes: int) -> tuple[str, int, int, bool]:
     encoded = text.encode("utf-8")
     original = len(encoded)
     if original <= max_bytes:
@@ -35,10 +34,10 @@ def _truncate_bytes(text: str, max_bytes: int) -> Tuple[str, int, int, bool]:
     return truncated, original, len(kept), True
 
 
-def _split_unified_diff_sections(diff_unified: str) -> List[tuple[str, str]]:
+def _split_unified_diff_sections(diff_unified: str) -> list[tuple[str, str]]:
     lines = diff_unified.splitlines(keepends=True)
-    sections: List[tuple[str, str]] = []
-    current: List[str] = []
+    sections: list[tuple[str, str]] = []
+    current: list[str] = []
     current_path = ""
     for line in lines:
         if line.startswith("diff --git "):
@@ -67,12 +66,12 @@ def _filter_diff_to_paths(diff_unified: str, include_paths: set[str]) -> str:
 
 def _apply_bounds(
     *,
-    changed_files: List[ChangedFile],
+    changed_files: list[ChangedFile],
     diff_unified: str,
-    context_blobs: List[ContextBlob],
+    context_blobs: list[ContextBlob],
     bounds: SnapshotBounds,
-) -> tuple[List[ChangedFile], str, List[ContextBlob], TruncationReport]:
-    notes: List[str] = []
+) -> tuple[list[ChangedFile], str, list[ContextBlob], TruncationReport]:
+    notes: list[str] = []
 
     ordered_files = sorted(changed_files, key=lambda item: (item.path, item.status))
     files_truncated = 0
@@ -85,7 +84,7 @@ def _apply_bounds(
     if diff_truncated:
         notes.append("diff_unified truncated by max_diff_bytes")
 
-    bounded_blobs: List[ContextBlob] = []
+    bounded_blobs: list[ContextBlob] = []
     blob_original_bytes = 0
     blob_kept_bytes = 0
     blob_truncated = False
@@ -107,7 +106,7 @@ def _apply_bounds(
 
     if blob_kept_bytes > bounds.max_blob_bytes:
         running = 0
-        trimmed: List[ContextBlob] = []
+        trimmed: list[ContextBlob] = []
         for blob in bounded_blobs:
             blob_bytes = len(blob.content.encode("utf-8"))
             if running + blob_bytes <= bounds.max_blob_bytes:
@@ -144,8 +143,8 @@ def _apply_bounds(
     return ordered_files, bounded_diff, bounded_blobs, truncation
 
 
-def _parse_name_status(text: str) -> Dict[str, str]:
-    status_map: Dict[str, str] = {}
+def _parse_name_status(text: str) -> dict[str, str]:
+    status_map: dict[str, str] = {}
     for line in text.splitlines():
         if not line.strip():
             continue
@@ -153,16 +152,13 @@ def _parse_name_status(text: str) -> Dict[str, str]:
         if len(parts) < 2:
             continue
         raw_status = parts[0].strip()
-        if raw_status.startswith("R") and len(parts) >= 3:
-            path = parts[-1]
-        else:
-            path = parts[1]
+        path = parts[-1] if raw_status.startswith("R") and len(parts) >= 3 else parts[1]
         status_map[path] = raw_status
     return status_map
 
 
-def _parse_numstat(text: str) -> Dict[str, tuple[int, int]]:
-    out: Dict[str, tuple[int, int]] = {}
+def _parse_numstat(text: str) -> dict[str, tuple[int, int]]:
+    out: dict[str, tuple[int, int]] = {}
     for line in text.splitlines():
         parts = line.split("\t")
         if len(parts) != 3:
@@ -180,8 +176,8 @@ def load_from_diff(
     base_ref: str,
     head_ref: str,
     bounds: SnapshotBounds,
-    include_paths: Optional[set[str]] = None,
-    metadata: Optional[Dict[str, object]] = None,
+    include_paths: set[str] | None = None,
+    metadata: dict[str, object] | None = None,
 ) -> ReviewSnapshot:
     name_status = _run_git(repo_root, ["diff", "--name-status", base_ref, head_ref])
     numstat = _run_git(repo_root, ["diff", "--numstat", base_ref, head_ref])
@@ -230,14 +226,14 @@ def load_from_files(
     *,
     repo_root: Path,
     ref: str,
-    paths: List[str],
+    paths: list[str],
     bounds: SnapshotBounds,
-    include_paths: Optional[set[str]] = None,
-    metadata: Optional[Dict[str, object]] = None,
+    include_paths: set[str] | None = None,
+    metadata: dict[str, object] | None = None,
 ) -> ReviewSnapshot:
-    changed_files: List[ChangedFile] = []
-    context_blobs: List[ContextBlob] = []
-    diff_blocks: List[str] = []
+    changed_files: list[ChangedFile] = []
+    context_blobs: list[ContextBlob] = []
+    diff_blocks: list[str] = []
     selected_paths = sorted(set(paths))
     if include_paths is not None:
         selected_paths = [path for path in selected_paths if path in include_paths]
@@ -286,8 +282,8 @@ def load_from_pr(
     pr_number: int,
     bounds: SnapshotBounds,
     token: str = "",
-    include_paths: Optional[set[str]] = None,
-    metadata: Optional[Dict[str, object]] = None,
+    include_paths: set[str] | None = None,
+    metadata: dict[str, object] | None = None,
 ) -> ReviewSnapshot:
     base = remote.rstrip("/")
     headers = {"Accept": "application/json"}
@@ -309,7 +305,7 @@ def load_from_pr(
         diff_resp.raise_for_status()
         unified = str(diff_resp.text or "")
 
-    changed_files: List[ChangedFile] = []
+    changed_files: list[ChangedFile] = []
     for item in files_payload:
         path = str(item.get("filename") or item.get("new_filename") or item.get("previous_filename") or "").strip()
         if not path:

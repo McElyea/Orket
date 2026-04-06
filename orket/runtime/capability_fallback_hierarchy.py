@@ -4,7 +4,6 @@ from typing import Any
 
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 
-
 _FALLBACK_ELIGIBLE_STATES = {"supported", "conditional"}
 
 
@@ -15,7 +14,7 @@ def capability_fallback_hierarchy_snapshot() -> dict[str, Any]:
         {
             str(name).strip()
             for row in providers
-            for name in dict(row.get("capabilities") or {}).keys()
+            for name in dict(row.get("capabilities") or {})
             if str(name).strip()
         }
     )

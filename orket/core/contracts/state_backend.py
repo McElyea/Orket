@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class StateBackendContract(ABC):
@@ -12,7 +12,7 @@ class StateBackendContract(ABC):
     """
 
     @abstractmethod
-    async def fetch_ready_cards(self, *, limit: int = 1) -> List[Dict[str, Any]]:
+    async def fetch_ready_cards(self, *, limit: int = 1) -> list[dict[str, Any]]:
         """Fetch ready cards for execution."""
 
     @abstractmethod
@@ -22,7 +22,7 @@ class StateBackendContract(ABC):
         *,
         owner_id: str,
         lease_seconds: int,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Acquire a lease for a card (or return None if unavailable)."""
 
     @abstractmethod
@@ -31,7 +31,7 @@ class StateBackendContract(ABC):
         card_id: str,
         *,
         event_type: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> None:
         """Append an immutable state event for a card."""
 
@@ -42,7 +42,7 @@ class StateBackendContract(ABC):
         *,
         from_state: str,
         to_state: str,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> None:
         """Apply a guarded card-state transition."""
 
@@ -52,6 +52,6 @@ class StateBackendContract(ABC):
         card_id: str,
         *,
         final_state: str,
-        error: Optional[str] = None,
+        error: str | None = None,
     ) -> None:
         """Release lease and persist final state/error details."""

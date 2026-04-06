@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List
-
+from typing import Any
 
 REQUIRED_CONFIG_KEYS = [
     "gitea_url",
@@ -12,7 +11,7 @@ REQUIRED_CONFIG_KEYS = [
 ]
 
 
-def collect_gitea_state_pilot_inputs() -> Dict[str, Any]:
+def collect_gitea_state_pilot_inputs() -> dict[str, Any]:
     def _env(name: str) -> str:
         return str(os.environ.get(name) or "").strip()
 
@@ -26,8 +25,8 @@ def collect_gitea_state_pilot_inputs() -> Dict[str, Any]:
     }
 
 
-def evaluate_gitea_state_pilot_readiness(inputs: Dict[str, Any]) -> Dict[str, Any]:
-    failures: List[str] = []
+def evaluate_gitea_state_pilot_readiness(inputs: dict[str, Any]) -> dict[str, Any]:
+    failures: list[str] = []
     mode = str(inputs.get("state_backend_mode") or "").strip().lower()
     pilot_enabled = bool(inputs.get("pilot_enabled"))
     if mode != "gitea":

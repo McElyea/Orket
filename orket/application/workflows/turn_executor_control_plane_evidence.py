@@ -18,7 +18,7 @@ from orket.application.services.turn_tool_control_plane_support import (
 )
 from orket.application.workflows.protocol_hashing import build_step_id, derive_operation_id
 from orket.core.domain.control_plane_effect_journal import validate_effect_journal_chain
-from orket.domain.execution import ToolCall
+from orket.core.domain.execution import ToolCall
 
 if TYPE_CHECKING:
     from .turn_executor import TurnExecutor

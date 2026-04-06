@@ -1,3 +1,4 @@
+import asyncio
 import json
 from pathlib import Path
 
@@ -127,11 +128,17 @@ async def test_run_model_role_fit_live_proof_writes_artifacts_and_skips_triples_
         "triple_verdict_output",
         "closeout_output",
     ):
-        assert Path(result[key]).exists()
+        assert await asyncio.to_thread(Path(result[key]).exists)
 
-    closeout_payload = json.loads(Path(result["closeout_output"]).read_text(encoding="utf-8"))
-    pair_verdict_payload = json.loads(Path(result["pair_verdict_output"]).read_text(encoding="utf-8"))
-    triple_verdict_payload = json.loads(Path(result["triple_verdict_output"]).read_text(encoding="utf-8"))
+    closeout_payload = json.loads(
+        await asyncio.to_thread(Path(result["closeout_output"]).read_text, encoding="utf-8")
+    )
+    pair_verdict_payload = json.loads(
+        await asyncio.to_thread(Path(result["pair_verdict_output"]).read_text, encoding="utf-8")
+    )
+    triple_verdict_payload = json.loads(
+        await asyncio.to_thread(Path(result["triple_verdict_output"]).read_text, encoding="utf-8")
+    )
 
     assert pair_verdict_payload["best_observed_pair"] == "magistral_small_2509__gemma3_27b"
     assert pair_verdict_payload["triple_phase_status"] == "skipped_insufficient_survivors"

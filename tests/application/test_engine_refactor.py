@@ -1,8 +1,11 @@
-﻿import pytest
-from pathlib import Path
+import importlib
 import json
+from pathlib import Path
+
+import pytest
 
 from orket.orchestration.engine import OrchestrationEngine
+from orket.runtime.runtime_context import OrketRuntimeContext
 
 
 class _FakePipeline:
@@ -78,8 +81,8 @@ async def test_engine_explicit_calls(monkeypatch):
     fake_pipeline = _FakePipeline()
 
     monkeypatch.setattr("orket.settings.load_env", lambda: None)
-    monkeypatch.setattr("orket.orket.ConfigLoader", _FakeLoader)
-    monkeypatch.setattr("orket.orket.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
+    monkeypatch.setattr("orket.orchestration.engine.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.orchestration.engine.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
 
     engine = OrchestrationEngine(workspace)
 
@@ -102,8 +105,8 @@ async def test_engine_run_card_is_canonical_public_surface(monkeypatch):
     fake_pipeline = _FakePipeline()
 
     monkeypatch.setattr("orket.settings.load_env", lambda: None)
-    monkeypatch.setattr("orket.orket.ConfigLoader", _FakeLoader)
-    monkeypatch.setattr("orket.orket.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
+    monkeypatch.setattr("orket.orchestration.engine.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.orchestration.engine.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
 
     engine = OrchestrationEngine(workspace)
 
@@ -119,8 +122,8 @@ async def test_engine_run_card_forwards_model_override(monkeypatch):
     fake_pipeline = _FakePipeline()
 
     monkeypatch.setattr("orket.settings.load_env", lambda: None)
-    monkeypatch.setattr("orket.orket.ConfigLoader", _FakeLoader)
-    monkeypatch.setattr("orket.orket.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
+    monkeypatch.setattr("orket.orchestration.engine.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.orchestration.engine.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
 
     engine = OrchestrationEngine(workspace)
 
@@ -133,8 +136,8 @@ def test_engine_replay_turn_reads_artifacts(monkeypatch, tmp_path):
     fake_pipeline = _FakePipeline()
 
     monkeypatch.setattr("orket.settings.load_env", lambda: None)
-    monkeypatch.setattr("orket.orket.ConfigLoader", _FakeLoader)
-    monkeypatch.setattr("orket.orket.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
+    monkeypatch.setattr("orket.orchestration.engine.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.orchestration.engine.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
 
     turn_dir = tmp_path / "observability" / "run-1" / "ISSUE-1" / "001_developer"
     turn_dir.mkdir(parents=True)
@@ -157,8 +160,8 @@ def test_engine_kernel_gateway_path(monkeypatch, tmp_path):
     fake_gateway = _FakeKernelGateway()
 
     monkeypatch.setattr("orket.settings.load_env", lambda: None)
-    monkeypatch.setattr("orket.orket.ConfigLoader", _FakeLoader)
-    monkeypatch.setattr("orket.orket.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
+    monkeypatch.setattr("orket.orchestration.engine.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.orchestration.engine.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
 
     engine = OrchestrationEngine(tmp_path, kernel_gateway=fake_gateway)
     request = {"contract_version": "kernel_api/v1", "workflow_id": "wf-engine"}
@@ -192,8 +195,8 @@ def test_engine_kernel_gateway_path(monkeypatch, tmp_path):
 def test_engine_kernel_lifecycle_and_compare_boundary_with_real_gateway(monkeypatch, tmp_path):
     fake_pipeline = _FakePipeline()
     monkeypatch.setattr("orket.settings.load_env", lambda: None)
-    monkeypatch.setattr("orket.orket.ConfigLoader", _FakeLoader)
-    monkeypatch.setattr("orket.orket.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
+    monkeypatch.setattr("orket.orchestration.engine.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.orchestration.engine.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
 
     engine = OrchestrationEngine(tmp_path)
     lifecycle = engine.kernel_run_lifecycle(
@@ -237,3 +240,25 @@ def test_engine_kernel_lifecycle_and_compare_boundary_with_real_gateway(monkeypa
     assert compare["outcome"] == "FAIL"
     assert compare["issues"][0]["code"] == "E_REPLAY_EQUIVALENCE_FAILED"
 
+
+def test_engine_module_reload_import_smoke():
+    """Layer: unit. Verifies the engine module imports directly without routing through the legacy runtime shim."""
+    import orket.orchestration.engine as engine_module
+
+    reloaded = importlib.reload(engine_module)
+
+    assert hasattr(reloaded, "OrchestrationEngine")
+
+
+def test_engine_reuses_shared_runtime_context(monkeypatch, tmp_path):
+    fake_pipeline = _FakePipeline()
+
+    monkeypatch.setattr("orket.settings.load_env", lambda: None)
+    monkeypatch.setattr("orket.orchestration.engine.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.orchestration.engine.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
+
+    engine = OrchestrationEngine(tmp_path)
+
+    assert isinstance(engine.runtime_context, OrketRuntimeContext)
+    assert engine.runtime_context.run_ledger is engine.run_ledger
+    assert engine.runtime_context.cards_repo is engine.cards

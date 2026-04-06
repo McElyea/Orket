@@ -7,10 +7,11 @@ ODR-specific non-semantic keys or reorder domain-specific list fields; use
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
-import copy
-from typing import Any, Iterable, TypeVar
+from collections.abc import Iterable
+from typing import Any, TypeVar
 
 LSI_VERSION_V1 = "lsi/v1"
 

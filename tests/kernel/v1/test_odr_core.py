@@ -151,6 +151,7 @@ def test_max_rounds_triggers_when_n_equals_max_rounds() -> None:
     assert state.stop_reason is None
     state = run_round(state, _architect("r2"), _auditor(), cfg)
     assert state.stop_reason == "MAX_ROUNDS"
+    assert state.history_rounds[-1]["max_hit"] is True
 
 
 def test_trace_completeness_and_noop_after_stop() -> None:
@@ -192,7 +193,7 @@ def test_pending_decisions_stop_as_unresolved_decisions() -> None:
         "- none\n"
     )
     state = run_round(state, architect, _auditor(), cfg)
-    assert state.stop_reason == "UNRESOLVED_DECISIONS"
+    assert state.stop_reason == "MAX_ROUNDS"
     record = state.history_rounds[-1]
     assert record["validity_verdict"] == "invalid"
     assert record["pending_decision_count"] >= 1
@@ -357,7 +358,7 @@ async def test_run_live_refinement_exposes_valid_history_trace() -> None:
         max_rounds=3,
     )
 
-    assert result["stop_reason"] == "UNRESOLVED_DECISIONS"
+    assert result["stop_reason"] == "MAX_ROUNDS"
     assert result["history_v"] == [
         "The system must encrypt all backups at rest.",
         "DECISION_REQUIRED(retention_days): retention period not yet specified.",
@@ -506,3 +507,31 @@ def test_check_code_leak_matches_authoritative_detector() -> None:
     ).hard_leak
 
     assert delegated is authoritative
+
+
+def test_invalid_terminal_round_uses_max_rounds_not_invalid_convergence() -> None:
+    cfg = ReactorConfig(max_rounds=2)
+    state = ReactorState()
+    invalid_architect = (
+        "### REQUIREMENT\n"
+        "DECISION_REQUIRED(retention_days): retention period not yet specified.\n\n"
+        "### CHANGELOG\n"
+        "- changed\n\n"
+        "### ASSUMPTIONS\n"
+        "- a1\n\n"
+        "### OPEN_QUESTIONS\n"
+        "- none\n"
+    )
+
+    state = run_round(state, invalid_architect, _auditor(), cfg)
+    assert state.stop_reason is None
+    state = run_round(state, invalid_architect, _auditor(), cfg)
+
+    assert state.stop_reason == "MAX_ROUNDS"
+
+
+def test_reactor_config_accepts_deprecated_max_rounds_alias() -> None:
+    cfg = ReactorConfig(max_rounds=3)
+
+    assert cfg.max_attempts == 3
+    assert cfg.as_dict()["max_rounds"] == 3

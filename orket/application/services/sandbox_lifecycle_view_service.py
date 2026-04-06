@@ -225,11 +225,11 @@ class SandboxLifecycleViewService:
     @staticmethod
     def _restart_summary(events: list) -> dict[str, object]:
         for event in sorted(events, key=lambda item: (item.created_at, item.event_id), reverse=True):
-            if str(event.event_type).startswith("sandbox.runtime_health") or str(event.event_type).startswith(
-                "sandbox.restart_loop"
-            ):
-                if isinstance(event.payload, dict):
-                    return dict(event.payload)
+            if (
+                str(event.event_type).startswith("sandbox.runtime_health")
+                or str(event.event_type).startswith("sandbox.restart_loop")
+            ) and isinstance(event.payload, dict):
+                return dict(event.payload)
         return {}
 
     async def _operator_actions_for_record(self, record: SandboxLifecycleRecord) -> list:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 
@@ -14,8 +14,8 @@ from orket.kernel.v1.odr.refinement import (
     extract_constraints_ledger,
     forbidden_pattern_hits,
     missing_required_sections,
-    numeric_day_values,
     non_increasing,
+    numeric_day_values,
     reopened_issues,
     strip_constraints_block,
     unresolved_issue_count,
@@ -24,11 +24,11 @@ from orket.kernel.v1.odr.refinement import (
 FIXTURE_ROOT = Path(__file__).parent / "vectors" / "odr" / "refinement"
 
 
-def _load_scenarios() -> List[Dict[str, Any]]:
+def _load_scenarios() -> list[dict[str, Any]]:
     return json.loads((FIXTURE_ROOT / "scenarios.json").read_text(encoding="utf-8"))
 
 
-def _decision_requirement_scenarios() -> List[Dict[str, Any]]:
+def _decision_requirement_scenarios() -> list[dict[str, Any]]:
     return [
         scenario
         for scenario in _load_scenarios()
@@ -40,11 +40,11 @@ def _read_markdown(scenario_path: str, name: str) -> str:
     return (FIXTURE_ROOT / scenario_path / name).read_text(encoding="utf-8")
 
 
-def _read_issues(scenario_path: str, name: str) -> List[Dict[str, Any]]:
+def _read_issues(scenario_path: str, name: str) -> list[dict[str, Any]]:
     return json.loads((FIXTURE_ROOT / scenario_path / name).read_text(encoding="utf-8"))
 
 
-def _read_seed(scenario: Dict[str, Any]) -> Dict[str, Any]:
+def _read_seed(scenario: dict[str, Any]) -> dict[str, Any]:
     seed_file = str(scenario.get("seed_file") or "").strip()
     if not seed_file:
         return {}
@@ -55,8 +55,8 @@ def _decision_id_for_key(key: str) -> str:
     return f"DEC-{str(key).strip().replace('_', '-').upper()}"
 
 
-def _ledger_text_blob(ledger: Dict[str, Any]) -> str:
-    chunks: List[str] = []
+def _ledger_text_blob(ledger: dict[str, Any]) -> str:
+    chunks: list[str] = []
     for row in ledger.get("must_have", []):
         if isinstance(row, dict):
             chunks.append(str(row.get("text") or ""))
@@ -98,7 +98,7 @@ def _auditor_payload(round_index: int) -> str:
     )
 
 
-def _run_requirement_rounds(requirements: List[str]) -> ReactorState:
+def _run_requirement_rounds(requirements: list[str]) -> ReactorState:
     state = ReactorState()
     cfg = ReactorConfig(max_rounds=8, diff_floor_pct=0.0, stable_rounds=99, code_leak_patterns=[], leak_gate_mode="strict")
     for idx, requirement in enumerate(requirements):
@@ -109,7 +109,7 @@ def _run_requirement_rounds(requirements: List[str]) -> ReactorState:
 
 
 @pytest.mark.parametrize("scenario", _load_scenarios(), ids=lambda row: row["id"])
-def test_refinement_constraint_carry_forward(scenario: Dict[str, Any]) -> None:
+def test_refinement_constraint_carry_forward(scenario: dict[str, Any]) -> None:
     r0 = _read_markdown(scenario["path"], "R0.md")
     r1 = _read_markdown(scenario["path"], "R1.md")
 
@@ -118,7 +118,7 @@ def test_refinement_constraint_carry_forward(scenario: Dict[str, Any]) -> None:
 
 
 @pytest.mark.parametrize("scenario", _load_scenarios(), ids=lambda row: row["id"])
-def test_refinement_auditor_incorporation(scenario: Dict[str, Any]) -> None:
+def test_refinement_auditor_incorporation(scenario: dict[str, Any]) -> None:
     a0 = _read_issues(scenario["path"], "A0.json")
     r1 = _read_markdown(scenario["path"], "R1.md")
 
@@ -127,21 +127,21 @@ def test_refinement_auditor_incorporation(scenario: Dict[str, Any]) -> None:
 
 
 @pytest.mark.parametrize("scenario", _load_scenarios(), ids=lambda row: row["id"])
-def test_refinement_forbidden_regressions(scenario: Dict[str, Any]) -> None:
+def test_refinement_forbidden_regressions(scenario: dict[str, Any]) -> None:
     r1 = _read_markdown(scenario["path"], "R1.md")
     hits = forbidden_pattern_hits(r1, scenario.get("forbidden_patterns", []))
     assert hits == [], f"forbidden patterns found in requirement text: {hits}"
 
 
 @pytest.mark.parametrize("scenario", _load_scenarios(), ids=lambda row: row["id"])
-def test_refinement_structural_checklist(scenario: Dict[str, Any]) -> None:
+def test_refinement_structural_checklist(scenario: dict[str, Any]) -> None:
     r1 = _read_markdown(scenario["path"], "R1.md")
     missing = missing_required_sections(r1)
     assert missing == [], f"missing required sections: {missing}"
 
 
 @pytest.mark.parametrize("scenario", _decision_requirement_scenarios(), ids=lambda row: row["id"])
-def test_refinement_missing_seed_values_require_decisions(scenario: Dict[str, Any]) -> None:
+def test_refinement_missing_seed_values_require_decisions(scenario: dict[str, Any]) -> None:
     required = scenario.get("require_decision_required_for_missing_values", [])
     seed = _read_seed(scenario)
     decisions = seed.get("decisions", {}) if isinstance(seed, dict) else {}
@@ -166,7 +166,7 @@ def test_refinement_missing_seed_values_require_decisions(scenario: Dict[str, An
 
 
 @pytest.mark.parametrize("scenario", _load_scenarios(), ids=lambda row: row["id"])
-def test_refinement_convergence_monotonic(scenario: Dict[str, Any]) -> None:
+def test_refinement_convergence_monotonic(scenario: dict[str, Any]) -> None:
     requirements = [
         _read_markdown(scenario["path"], "R0.md"),
         _read_markdown(scenario["path"], "R1.md"),

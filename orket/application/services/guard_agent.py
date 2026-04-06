@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import re
-from typing import Any, Dict, Literal
+from dataclasses import dataclass
+from typing import Any, Literal
+
 from pydantic import ValidationError
 
 from orket.core.domain.guard_contract import (
@@ -12,7 +13,6 @@ from orket.core.domain.guard_contract import (
     LoopEscalation,
     TerminalReason,
 )
-
 
 GuardAction = Literal["pass", "retry", "terminal_failure"]
 
@@ -26,7 +26,7 @@ class GuardDecision:
     retry_fingerprint: str | None = None
     repeated_fingerprint: bool = False
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return {
             "action": self.action,
             "next_retry_count": self.next_retry_count,
@@ -132,7 +132,7 @@ class GuardController:
         )
 
     def _resolve_loop_control(self, *, max_retries: int) -> LoopControl:
-        process_rules: Dict[str, Any] = {}
+        process_rules: dict[str, Any] = {}
         if self.organization and isinstance(getattr(self.organization, "process_rules", None), dict):
             process_rules = self.organization.process_rules
 

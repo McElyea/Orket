@@ -7,19 +7,18 @@ from pydantic import ValidationError
 
 from orket.core.contracts import LeaseRecord, ReservationRecord
 from orket.core.domain import (
+    TERMINAL_LEASE_STATUSES,
+    TERMINAL_RESERVATION_STATUSES,
     ControlPlaneReservationError,
     LeaseStatus,
     ReservationKind,
     ReservationStatus,
-    TERMINAL_LEASE_STATUSES,
-    TERMINAL_RESERVATION_STATUSES,
     allowed_lease_status_transitions,
     allowed_reservation_status_transitions,
     promote_reservation_to_lease,
     validate_lease_status_transition,
     validate_reservation_status_transition,
 )
-
 
 pytestmark = pytest.mark.contract
 
@@ -142,7 +141,7 @@ def test_promote_non_resource_reservation_to_lease_rejected() -> None:
 
 
 def test_terminal_status_sets_match_contract() -> None:
-    assert TERMINAL_RESERVATION_STATUSES == frozenset(
+    assert frozenset(
         {
             ReservationStatus.PROMOTED_TO_LEASE,
             ReservationStatus.RELEASED,
@@ -150,14 +149,14 @@ def test_terminal_status_sets_match_contract() -> None:
             ReservationStatus.CANCELLED,
             ReservationStatus.INVALIDATED,
         }
-    )
-    assert TERMINAL_LEASE_STATUSES == frozenset(
+    ) == TERMINAL_RESERVATION_STATUSES
+    assert frozenset(
         {
             LeaseStatus.EXPIRED,
             LeaseStatus.RELEASED,
             LeaseStatus.REVOKED,
         }
-    )
+    ) == TERMINAL_LEASE_STATUSES
 
 
 def test_allowed_status_transition_helpers_expose_closed_terminal_states() -> None:

@@ -1,16 +1,17 @@
-import pytest
 import json
 import logging
 
 import httpx
+import pytest
 
 from orket.adapters.storage.gitea_state_adapter import (
     GiteaAdapterAuthError,
     GiteaAdapterConflictError,
-    GiteaAdapterTimeoutError,
     GiteaAdapterNetworkError,
     GiteaAdapterRateLimitError,
+    GiteaAdapterTimeoutError,
     GiteaStateAdapter,
+    SecretToken,
 )
 from orket.adapters.storage.gitea_state_models import CardSnapshot, encode_snapshot
 
@@ -66,6 +67,21 @@ async def test_append_event_posts_orket_comment(monkeypatch):
     assert captured["method"] == "POST"
     assert captured["path"] == "/issues/7/comments"
     assert captured["payload"]["body"].startswith("[ORKET_EVENT_V1]")
+
+
+def test_gitea_state_adapter_redacts_token_repr_and_builds_headers_lazily() -> None:
+    """Layer: unit. Verifies the adapter does not keep a long-lived plaintext headers dict with the token."""
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret-token",
+    )
+
+    assert isinstance(adapter._token, SecretToken)
+    assert repr(adapter._token) == "SecretToken(***)"
+    headers = adapter.build_headers()
+    assert headers["Authorization"] == "token secret-token"
 
 
 @pytest.mark.asyncio

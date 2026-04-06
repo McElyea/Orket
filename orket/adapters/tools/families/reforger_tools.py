@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from orket.adapters.tools.families.base import BaseTools
 from orket.reforger.compiler import run_compile_pipeline
@@ -16,7 +16,7 @@ class ReforgerTools(BaseTools):
         ROUTE_ID_TEXTMYSTERY_PERSONA_V0: ROUTE_ID_TEXTMYSTERY_PERSONA_V0,
     }
 
-    def inspect(self, args: Dict[str, Any], context: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    def inspect(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         del context
         route_id_raw = str(args.get("route_id") or "").strip()
         mode_raw = str(args.get("mode") or "").strip()
@@ -36,7 +36,7 @@ class ReforgerTools(BaseTools):
         route = TextMysteryPersonaRouteV0()
         plan = route.inspect(input_dir)
         suite_ready: bool | None = None
-        suite_requirements: List[str] = []
+        suite_requirements: list[str] = []
         if mode_raw:
             if mode_raw != "truth_only":
                 return {
@@ -91,7 +91,7 @@ class ReforgerTools(BaseTools):
             "artifact_root": str(artifact_root),
         }
 
-    def run(self, args: Dict[str, Any], context: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    def run(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         del context
         route_id_raw = str(args.get("route_id") or "").strip()
         mode_raw = str(args.get("mode") or "").strip()
@@ -133,7 +133,7 @@ class ReforgerTools(BaseTools):
             }
         artifact_root = self._artifact_root("run", route_id, input_dir, mode_raw, seed, max_iters)
         scenario_pack_path = self._resolve_scenario_pack_path(scenario_pack_raw or None, input_dir)
-        warnings: List[str] = []
+        warnings: list[str] = []
         if scenario_pack_path is None or not scenario_pack_path.is_file():
             if not forced:
                 return {
@@ -231,8 +231,8 @@ class ReforgerTools(BaseTools):
         run_id = hashlib.sha256(key).hexdigest()[:16]
         return self.workspace_root / "reforger" / kind / run_id
 
-    def _issues_from_plan(self, plan: Any) -> List[Dict[str, Any]]:
-        issues: List[Dict[str, Any]] = []
+    def _issues_from_plan(self, plan: Any) -> list[dict[str, Any]]:
+        issues: list[dict[str, Any]] = []
         for rel in sorted(plan.missing_inputs):
             issues.append(
                 {

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 LONG_SESSION_SOAK_TEST_CONTRACT_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_CHECK_IDS = {

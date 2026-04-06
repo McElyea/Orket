@@ -30,6 +30,33 @@ async def test_scheduled_task_is_removed_after_completion():
 
 
 @pytest.mark.asyncio
+async def test_runtime_state_tracks_multiple_tasks_per_session():
+    """Layer: integration. Verifies one session can track and clean up multiple concurrent tasks independently."""
+    session_id = "task-multi-test"
+    await runtime_state.remove_task(session_id)
+
+    task_a = asyncio.create_task(asyncio.sleep(0.05))
+    task_b = asyncio.create_task(asyncio.sleep(0.05))
+
+    await runtime_state.add_task(session_id, task_a)
+    await runtime_state.add_task(session_id, task_b)
+
+    tasks = await runtime_state.get_tasks(session_id)
+    assert tasks == [task_a, task_b]
+
+    task_a.cancel()
+    task_b.cancel()
+    await asyncio.gather(task_a, task_b, return_exceptions=True)
+
+    await runtime_state.remove_task(session_id, task_a)
+    remaining = await runtime_state.get_tasks(session_id)
+    assert remaining == [task_b]
+
+    await runtime_state.remove_task(session_id, task_b)
+    assert await runtime_state.get_tasks(session_id) == []
+
+
+@pytest.mark.asyncio
 async def test_heartbeat_active_tasks_converges_after_run_active_completion(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     session_id = "hbtask01"

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
-
 
 VisibilityMode = Literal["off", "read_only", "buffered_write", "live_read_write"]
 
@@ -11,7 +10,7 @@ VisibilityMode = Literal["off", "read_only", "buffered_write", "live_read_write"
 class TraceToolCall(BaseModel):
     tool_name: str = Field(min_length=1)
     tool_profile_version: str = Field(min_length=1)
-    normalized_args: Dict[str, Any] = Field(default_factory=dict)
+    normalized_args: dict[str, Any] = Field(default_factory=dict)
     normalization_version: str = Field(min_length=1)
     tool_result_fingerprint: str = Field(min_length=1)
     side_effect_fingerprint: str | None = None
@@ -23,9 +22,9 @@ class TraceEvent(BaseModel):
     role: str = Field(min_length=1)
     interceptor: str = Field(min_length=1)
     decision_type: str = Field(min_length=1)
-    tool_calls: List[TraceToolCall] = Field(default_factory=list)
-    guardrails_triggered: List[str] = Field(default_factory=list)
-    retrieval_event_ids: List[str] = Field(default_factory=list)
+    tool_calls: list[TraceToolCall] = Field(default_factory=list)
+    guardrails_triggered: list[str] = Field(default_factory=list)
+    retrieval_event_ids: list[str] = Field(default_factory=list)
 
 
 class OutputDescriptor(BaseModel):
@@ -42,11 +41,11 @@ class DeterminismTraceContract(BaseModel):
     model_config_id: str = Field(min_length=1)
     policy_set_id: str = Field(min_length=1)
     determinism_trace_schema_version: str = Field(min_length=1)
-    events: List[TraceEvent] = Field(default_factory=list)
+    events: list[TraceEvent] = Field(default_factory=list)
     output: OutputDescriptor
 
     @model_validator(mode="after")
-    def _validate_event_indexes(self) -> "DeterminismTraceContract":
+    def _validate_event_indexes(self) -> DeterminismTraceContract:
         indexes = [event.index for event in self.events]
         if indexes != list(range(len(self.events))):
             raise ValueError("events must be contiguous and ordered by index starting at 0")
@@ -74,12 +73,12 @@ class RetrievalTraceEventContract(BaseModel):
     query_fingerprint: str = Field(min_length=1)
     retrieval_mode: str = Field(min_length=1)
     candidate_count: int = Field(ge=0)
-    selected_records: List[RetrievalSelectedRecord] = Field(default_factory=list)
-    applied_filters: Dict[str, Any] = Field(default_factory=dict)
+    selected_records: list[RetrievalSelectedRecord] = Field(default_factory=list)
+    applied_filters: dict[str, Any] = Field(default_factory=dict)
     retrieval_trace_schema_version: str = Field(min_length=1)
 
     @model_validator(mode="after")
-    def _validate_rank_order(self) -> "RetrievalTraceEventContract":
+    def _validate_rank_order(self) -> RetrievalTraceEventContract:
         ranks = [row.rank for row in self.selected_records]
         if ranks and ranks != list(range(1, len(self.selected_records) + 1)):
             raise ValueError("selected_records ranks must be contiguous and ordered starting at 1")

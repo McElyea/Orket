@@ -23,6 +23,7 @@ _CONTROLLER_RUN_FIELDS = (
     "result",
     "error_code",
 )
+_DEFAULT_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "controller_observability_v1.json"
 _CONTROLLER_CHILD_FIELDS = (
     "event",
     "run_id",
@@ -188,7 +189,7 @@ def _caps_payload(caps: Any) -> dict[str, Any]:
 
 
 def _canonicalize_caps(caps: Mapping[str, Any]) -> dict[str, Any]:
-    unknown = [key for key in caps.keys() if key not in _CAPS_FIELDS]
+    unknown = [key for key in caps if key not in _CAPS_FIELDS]
     if unknown:
         raise ValueError("controller.observability_event_invalid")
     return {key: caps[key] for key in _CAPS_FIELDS if key in caps}
@@ -221,10 +222,8 @@ def _child_observability_status(child_status: str) -> str:
 async def _load_schema(*, schema_path: Path | None = None) -> dict[str, Any]:
     global _SCHEMA_CACHE
     if _SCHEMA_CACHE is None:
-        target_path = (
-            schema_path or Path(__file__).resolve().parents[2] / "schemas" / "controller_observability_v1.json"
-        )
-        async with aiofiles.open(target_path, "r", encoding="utf-8") as handle:
+        target_path = schema_path or _DEFAULT_SCHEMA_PATH
+        async with aiofiles.open(target_path, encoding="utf-8") as handle:
             _SCHEMA_CACHE = json.loads(await handle.read())
     return _SCHEMA_CACHE
 

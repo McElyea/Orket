@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.35] - 2026-04-06 - "The Truth-Hardening Techdebt Closeout Cut"
+
+### Added
+- **Runtime Context And Archive Closeouts**: Added the extracted runtime-context support, the archived `TD04062026` techdebt closeout packet, and the archived ProductFlow closeout materials so the completed remediation cycle and roadmap closeouts have one durable authority surface.
+
+### Changed
+- **Runtime And Domain Truth Hardening**: Consolidated legacy domain imports onto `orket.core.domain`, finished the active fix-plan and behavioral-remediation code path, expanded lint and coverage policy surfaces, and hardened runtime, orchestration, kernel, storage, and review flows so the repo closes the current truth-hardening cycle with tighter single-source authority and fewer async or delegation traps.
+- **API Composition And Interaction Streaming**: Hardened API composition isolation, lazy engine access, task tracking, approvals surfaces, and interaction-session commit delivery so websocket and `TestClient` flows now preserve truthful `commit_final` behavior without import-time mutable-runtime drift.
+- **Roadmap And Maintenance Posture**: Updated roadmap and project docs back to maintenance-only posture after completing the active non-recurring techdebt lanes, while preserving the standing live-maintenance runbook and recurring checklist as the remaining active `techdebt` authority.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use the standing maintenance authorities in `docs/projects/techdebt/` for future recurring work; the completed fix-plan and behavioral-remediation cycle now lives under `docs/projects/archive/techdebt/TD04062026/`.
+
 ## [0.4.34] - 2026-04-05 - "The Prompt Reforger Tool-Use Truth Cut"
 
 ### Added

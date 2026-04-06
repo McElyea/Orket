@@ -14,7 +14,6 @@ from orket_extension_sdk.controller import (
     ControllerRunSummary,
 )
 
-from .manager import ExtensionManager
 from .controller_dispatcher_contract import (
     DEFAULT_CHILD_TIMEOUT_SECONDS,
     DEFAULT_MAX_DEPTH,
@@ -38,6 +37,7 @@ from .controller_dispatcher_contract import (
     read_env_int,
     requested_timeout,
 )
+from .manager import ExtensionManager
 
 
 @dataclass(frozen=True)

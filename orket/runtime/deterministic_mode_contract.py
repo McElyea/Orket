@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from typing import Any
 
-
 DETERMINISTIC_MODE_CONTRACT_SCHEMA_VERSION = "1.0"
 
 _DETERMINISTIC_ENV_KEYS = (

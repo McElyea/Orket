@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-04-03
+Last reviewed: 2026-04-05
 
 This index is the canonical map for markdown docs under `docs/`, excluding `docs/projects/**` and excluding non-markdown artifacts such as schemas, JSON snapshots, and YAML scenarios.
 
@@ -70,7 +70,9 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 43. `docs/specs/CONTROLLER_WORKLOAD_V1.md`
 44. `docs/specs/CONTROLLER_OBSERVABILITY_V1.md`
 45. `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`
-46. `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`
+46. `docs/specs/PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_V1.md`
+47. `docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md`
+48. `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -141,8 +143,9 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 31. `docs/architecture/CONTRACT_DELTA_SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_HARDENING_2026-04-01.md`
 32. `docs/architecture/CONTRACT_DELTA_COMPANION_BFF_BOUNDARY_REALIGNMENT_2026-04-01.md`
 33. `docs/architecture/CONTRACT_DELTA_CHALLENGE_RUNTIME_TRUTH_SURFACE_2026-04-03.md`
-34. `docs/architecture/VOLATILITY_BASELINE.md`
-35. `docs/architecture/dependency_graph_snapshot.md`
+34. `docs/architecture/CONTRACT_DELTA_PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_2026-04-05.md`
+35. `docs/architecture/VOLATILITY_BASELINE.md`
+36. `docs/architecture/dependency_graph_snapshot.md`
 
 ## Releases
 1. `docs/releases/0.4.0/PROOF_REPORT.md`

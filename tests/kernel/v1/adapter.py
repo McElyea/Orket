@@ -1,9 +1,10 @@
 # tests/lsi/adapter.py
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 # Expect these modules to exist based on what you generated:
 from orket.kernel.v1.contracts import KernelResult

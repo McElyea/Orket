@@ -1,10 +1,10 @@
-from pathlib import Path
-from typing import Dict, Any, Optional, List
 import json
 import os
+from pathlib import Path
+from typing import Any
 
 from orket.schema import OrganizationConfig
-from orket.settings import load_user_settings, load_user_preferences
+from orket.settings import load_user_preferences, load_user_settings
 
 
 class ModelSelector:
@@ -15,19 +15,19 @@ class ModelSelector:
 
     def __init__(
         self,
-        organization: Optional[OrganizationConfig] = None,
-        preferences: Optional[Dict[str, Any]] = None,
-        user_settings: Optional[Dict[str, Any]] = None,
+        organization: OrganizationConfig | None = None,
+        preferences: dict[str, Any] | None = None,
+        user_settings: dict[str, Any] | None = None,
     ):
         self.org = organization
         self.preferences = preferences if preferences is not None else load_user_preferences()
         self.user_settings = user_settings if user_settings is not None else load_user_settings()
-        self._compliance_score_cache: Dict[str, float] = {}
-        self._compliance_score_cache_path: Optional[str] = None
-        self._last_selection_decision: Dict[str, Any] = {}
+        self._compliance_score_cache: dict[str, float] = {}
+        self._compliance_score_cache_path: str | None = None
+        self._last_selection_decision: dict[str, Any] = {}
 
     def select(
-        self, role: str, department: str = "core", override: Optional[str] = None, asset_config: Optional[Any] = None
+        self, role: str, department: str = "core", override: str | None = None, asset_config: Any | None = None
     ) -> str:
         """
         Determines the best model for a specific role using a strict precedence chain:
@@ -85,7 +85,7 @@ class ModelSelector:
         selected = self._fallback_model_for_role(role)
         return self._apply_compliance_policy(role=role, selected_model=selected)
 
-    def get_last_selection_decision(self) -> Dict[str, Any]:
+    def get_last_selection_decision(self) -> dict[str, Any]:
         return dict(self._last_selection_decision)
 
     def _fallback_model_for_role(self, role: str) -> str:
@@ -97,7 +97,7 @@ class ModelSelector:
         }
         return fallbacks.get(role, "qwen2.5-coder:14b")
 
-    def _resolve_env_override(self, role: str) -> Optional[str]:
+    def _resolve_env_override(self, role: str) -> str | None:
         normalized_role = str(role or "").strip().upper().replace("-", "_")
         candidates = [f"ORKET_MODEL_{normalized_role}"]
         if role == "operations_lead":
@@ -118,8 +118,8 @@ class ModelSelector:
         }
         return alias_map.get(normalized, normalized)
 
-    def _resolve_model_compliance_policy(self) -> Dict[str, Any]:
-        policy: Dict[str, Any] = {}
+    def _resolve_model_compliance_policy(self) -> dict[str, Any]:
+        policy: dict[str, Any] = {}
         if isinstance(self.user_settings.get("model_compliance_policy"), dict):
             policy.update(dict(self.user_settings.get("model_compliance_policy") or {}))
         if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
@@ -128,7 +128,7 @@ class ModelSelector:
                 policy.update(dict(org_policy))
         return policy
 
-    def _load_scores_from_report(self, report_path: str) -> Dict[str, float]:
+    def _load_scores_from_report(self, report_path: str) -> dict[str, float]:
         path = Path(report_path).resolve()
         if not path.exists():
             return {}
@@ -143,7 +143,7 @@ class ModelSelector:
         model_compliance = payload.get("model_compliance")
         if not isinstance(model_compliance, dict):
             return {}
-        scores: Dict[str, float] = {}
+        scores: dict[str, float] = {}
         for model_name, detail in model_compliance.items():
             if not isinstance(detail, dict):
                 continue
@@ -204,7 +204,7 @@ class ModelSelector:
             }
             return selected_model
 
-        scores: Dict[str, float] = {}
+        scores: dict[str, float] = {}
         configured_scores = policy.get("model_scores")
         if isinstance(configured_scores, dict):
             for model_name, score in configured_scores.items():
@@ -268,7 +268,7 @@ class ModelRegistry:
     """
 
     @staticmethod
-    def get_installed_models() -> List[str]:
+    def get_installed_models() -> list[str]:
         import subprocess
 
         try:

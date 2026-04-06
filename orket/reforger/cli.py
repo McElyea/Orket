@@ -244,10 +244,7 @@ def _init_reforge(args: argparse.Namespace) -> int:
     mode_path = workspace_root / "modes" / f"{args.mode}.yaml"
     mode_text = mode_path.read_text(encoding="utf-8")
     source = Path(args.from_pack)
-    if source.exists():
-        parent_ref = str(source.resolve())
-    else:
-        parent_ref = str(args.from_pack)
+    parent_ref = str(source.resolve()) if source.exists() else str(args.from_pack)
 
     target = workspace_root / "packs" / "model" / args.model / args.mode
     target.mkdir(parents=True, exist_ok=True)

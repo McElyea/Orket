@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_workload_catalog import (
     sandbox_runtime_workload_for_tech_stack,
 )
-from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.sandbox_control_plane_effect_service import SandboxControlPlaneEffectService
 from orket.application.services.sandbox_control_plane_execution_service import SandboxControlPlaneExecutionService
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
@@ -16,7 +16,6 @@ from orket.core.contracts.repositories import ControlPlaneExecutionRepository, C
 from orket.core.domain import ResidualUncertaintyClassification
 from orket.core.domain.sandbox_lifecycle import TerminalReason
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
-
 
 pytestmark = pytest.mark.unit
 

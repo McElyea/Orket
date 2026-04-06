@@ -17,7 +17,6 @@ from orket.application.workflows.orchestrator import Orchestrator
 from orket.core.domain import AttemptState, LeaseStatus, ReservationKind, ReservationStatus, RunState
 from orket.schema import CardStatus, EnvironmentConfig, IssueConfig, SeatConfig, TeamConfig
 
-
 pytestmark = pytest.mark.integration
 
 

@@ -3,8 +3,8 @@ from __future__ import annotations
 import pytest
 
 from orket.core.domain.guard_rule_catalog import (
-    DEFAULT_GUARD_RULE_REGISTRY,
     DEFAULT_GUARD_RULE_IDS,
+    DEFAULT_GUARD_RULE_REGISTRY,
     GuardRule,
     build_guard_rule_registry,
     normalize_rule_ids,

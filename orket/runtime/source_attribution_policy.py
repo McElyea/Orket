@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 SOURCE_ATTRIBUTION_POLICY_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_MODES = {

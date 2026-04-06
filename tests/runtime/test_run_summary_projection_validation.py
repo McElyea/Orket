@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 import orket.runtime.run_summary as run_summary_module
-
 from orket.runtime.run_summary import build_run_summary_payload, validate_run_summary_payload
 
 _STARTED_AT = "2036-03-05T12:00:00+00:00"

@@ -32,6 +32,6 @@ def test_create_api_app_rebuilds_runtime_objects_for_distinct_project_roots(tmp_
     assert id(interaction_a) != id(interaction_b)
     assert id(stream_a) != id(stream_b)
     assert id(extension_a) != id(extension_b)
-    assert module.PROJECT_ROOT == root_b
-    assert getattr(interaction_b, "project_root") == root_b
-    assert getattr(extension_b, "project_root") == root_b
+    assert root_b == module._project_root()
+    assert interaction_b.project_root == root_b
+    assert extension_b.project_root == root_b

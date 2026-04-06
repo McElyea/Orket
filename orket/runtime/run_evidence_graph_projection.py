@@ -304,7 +304,15 @@ def _build_primary_lineage_payload(
         for transition_ref in sorted({ref for ref in transition_refs if ref in ref_to_node_id}):
             add_edge(edges, "operator_action_to_affected_transition", node_key("operator_action", action.action_id), ref_to_node_id[transition_ref], [action.action_id, transition_ref], "OperatorActionRecord", record_kind_for_ref(transition_ref, nodes, ref_to_node_id))
         for resource_ref in sorted({ref for ref in resource_action_refs if ref in ref_to_node_id}):
-            add_edge(edges, "operator_action_to_affected_resource", node_key("operator_action", action.action_id), ref_to_node_id[resource_ref], [action.action_id, resource_ref], "OperatorActionRecord", "ResourceRecord")
+            add_edge(
+                edges,
+                "operator_action_to_affected_resource",
+                node_key("operator_action", action.action_id),
+                ref_to_node_id[resource_ref],
+                [action.action_id, resource_ref],
+                "OperatorActionRecord",
+                record_kind_for_ref(resource_ref, nodes, ref_to_node_id),
+            )
 
     source_summaries = list(context.sources.values()) + list(supplemental_source_summaries)
     issues = list(supplemental_issues)

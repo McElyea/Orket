@@ -4,8 +4,8 @@ import importlib
 import json
 from pathlib import Path
 
-import orket.settings as settings_module
 import orket.runtime_paths as runtime_paths_module
+import orket.settings as settings_module
 
 
 def _write_json(path: Path, payload: dict):

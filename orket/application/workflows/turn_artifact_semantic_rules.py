@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.domain.execution import ExecutionTurn
+from orket.core.domain.execution import ExecutionTurn
 
 
 def _preserve_tokens(*, must_contain: list[str], missing_tokens: list[str], content: str) -> list[str]:

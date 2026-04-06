@@ -1,5 +1,5 @@
-﻿from pathlib import Path
-import re
+﻿import re
+from pathlib import Path
 
 
 def test_runtime_print_usage_is_whitelisted():

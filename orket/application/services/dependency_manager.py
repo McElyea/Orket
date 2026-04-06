@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping
+from typing import Any
 
 
 @dataclass(frozen=True)
 class DependencySpec:
-    required_files: Dict[str, str]
+    required_files: dict[str, str]
 
 
 class DependencyValidationError(Exception):
@@ -23,7 +24,7 @@ class DependencyManager:
     Owns dependency-manifest baseline files for generated projects.
     """
 
-    _DEFAULT_FILES: Dict[str, str] = {
+    _DEFAULT_FILES: dict[str, str] = {
         "agent_output/dependencies/pyproject.toml": (
             "[project]\n"
             'name = "orket-generated-project"\n'
@@ -44,7 +45,7 @@ class DependencyManager:
             "}\n"
         ),
     }
-    _MICROSERVICES_FILES: Dict[str, str] = {
+    _MICROSERVICES_FILES: dict[str, str] = {
         "agent_output/dependencies/microservices.json": (
             "{\n"
             '  "services": [\n'
@@ -69,7 +70,7 @@ class DependencyManager:
         self.project_surface_profile = str(project_surface_profile or "").strip().lower()
         self.architecture_pattern = str(architecture_pattern or "").strip().lower()
 
-    async def ensure(self) -> Dict[str, Any]:
+    async def ensure(self) -> dict[str, Any]:
         spec = self._resolve_spec()
         created_files = await self._ensure_files(spec.required_files)
         await self._validate_required_files(spec.required_files)
@@ -109,11 +110,11 @@ class DependencyManager:
         rules: Mapping[str, Any],
         stack_profile: str,
         pinned_required: bool,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         if stack_profile not in {"python", "node", "polyglot"}:
             stack_profile = "polyglot"
 
-        files: Dict[str, str] = {}
+        files: dict[str, str] = {}
         if stack_profile in {"python", "polyglot"}:
             py_deps = self._string_list(rules.get("dependency_manager_python_dependencies"))
             py_dev_deps = self._string_list(rules.get("dependency_manager_python_dev_dependencies"))
@@ -181,8 +182,8 @@ class DependencyManager:
             return "polyglot"
         return ""
 
-    async def _ensure_files(self, required_files: Mapping[str, str]) -> List[str]:
-        created: List[str] = []
+    async def _ensure_files(self, required_files: Mapping[str, str]) -> list[str]:
+        created: list[str] = []
         for rel_path, content in required_files.items():
             target = self.workspace_root / rel_path
             exists = await asyncio.to_thread(target.exists)
@@ -194,7 +195,7 @@ class DependencyManager:
 
     async def _validate_required_files(self, required_files: Mapping[str, str]) -> None:
         missing = []
-        for rel_path in required_files.keys():
+        for rel_path in required_files:
             exists = await asyncio.to_thread((self.workspace_root / rel_path).is_file)
             if not exists:
                 missing.append(rel_path)
@@ -202,7 +203,7 @@ class DependencyManager:
             raise DependencyValidationError("missing dependency files: " + ", ".join(sorted(missing)))
 
     @staticmethod
-    def _normalize_file_map(raw: Any, default: Mapping[str, str]) -> Dict[str, str]:
+    def _normalize_file_map(raw: Any, default: Mapping[str, str]) -> dict[str, str]:
         if isinstance(raw, dict):
             normalized = {}
             for key, value in raw.items():
@@ -215,10 +216,10 @@ class DependencyManager:
         return dict(default)
 
     @staticmethod
-    def _string_list(raw: Any) -> List[str]:
+    def _string_list(raw: Any) -> list[str]:
         if not isinstance(raw, Iterable) or isinstance(raw, (str, bytes, dict)):
             return []
-        values: List[str] = []
+        values: list[str] = []
         for item in raw:
             text = str(item).strip()
             if text:
@@ -226,10 +227,10 @@ class DependencyManager:
         return values
 
     @staticmethod
-    def _string_map(raw: Any) -> Dict[str, str]:
+    def _string_map(raw: Any) -> dict[str, str]:
         if not isinstance(raw, Mapping):
             return {}
-        out: Dict[str, str] = {}
+        out: dict[str, str] = {}
         for key, value in raw.items():
             k = str(key).strip()
             v = str(value).strip()
@@ -239,7 +240,7 @@ class DependencyManager:
         return out
 
     @staticmethod
-    def _validate_pinned_python(dependencies: List[str]) -> None:
+    def _validate_pinned_python(dependencies: list[str]) -> None:
         for dep in dependencies:
             if "==" in dep:
                 continue
@@ -248,7 +249,7 @@ class DependencyManager:
             raise DependencyValidationError(f"python dependency '{dep}' is not pinned. Expected exact version (==).")
 
     @staticmethod
-    def _validate_pinned_node(dependencies: Dict[str, str]) -> None:
+    def _validate_pinned_node(dependencies: dict[str, str]) -> None:
         for name, version in dependencies.items():
             # allow exact semver only by default
             if version and version[0].isdigit():
@@ -262,8 +263,8 @@ class DependencyManager:
         version: str,
         description: str,
         requires_python: str,
-        dependencies: List[str],
-        dev_dependencies: List[str],
+        dependencies: list[str],
+        dev_dependencies: list[str],
     ) -> str:
         deps_json = json.dumps(dependencies, ensure_ascii=False)
         lines = [
@@ -287,7 +288,7 @@ class DependencyManager:
         return "\n".join(lines)
 
     @staticmethod
-    def _render_requirements(dependencies: List[str]) -> str:
+    def _render_requirements(dependencies: list[str]) -> str:
         if not dependencies:
             return ""
         return "\n".join(dependencies) + "\n"
@@ -297,8 +298,8 @@ class DependencyManager:
         *,
         name: str,
         version: str,
-        dependencies: Dict[str, str],
-        dev_dependencies: Dict[str, str],
+        dependencies: dict[str, str],
+        dev_dependencies: dict[str, str],
     ) -> str:
         payload = {
             "name": name,

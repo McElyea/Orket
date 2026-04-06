@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 def _supports_runtime_context(callable_obj: Any) -> bool:
@@ -12,8 +12,8 @@ def _supports_runtime_context(callable_obj: Any) -> bool:
     return "runtime_context" in parameters
 
 
-async def invoke_model_complete(model_client: Any, messages: list[dict[str, str]], context: Dict[str, Any]) -> Any:
-    complete = getattr(model_client, "complete")
+async def invoke_model_complete(model_client: Any, messages: list[dict[str, str]], context: dict[str, Any]) -> Any:
+    complete = model_client.complete
     if _supports_runtime_context(complete):
         return await complete(messages, runtime_context=context)
 
@@ -63,7 +63,7 @@ def runtime_tokens_payload(turn: Any) -> Any:
     }
 
 
-def state_delta_from_tool_calls(context: Dict[str, Any], turn: Any) -> Dict[str, Any]:
+def state_delta_from_tool_calls(context: dict[str, Any], turn: Any) -> dict[str, Any]:
     current = context.get("current_status")
     requested = None
     for call in turn.tool_calls:
@@ -73,8 +73,8 @@ def state_delta_from_tool_calls(context: Dict[str, Any], turn: Any) -> Dict[str,
     return {"from": current, "to": requested}
 
 
-def synthesize_required_status_tool_call(turn: Any, context: Dict[str, Any]) -> None:
-    from orket.domain.execution import ToolCall
+def synthesize_required_status_tool_call(turn: Any, context: dict[str, Any]) -> None:
+    from orket.core.domain.execution import ToolCall
 
     role_names = {
         str(value).strip().lower() for value in (context.get("roles") or [context.get("role")]) if str(value).strip()
@@ -88,7 +88,7 @@ def synthesize_required_status_tool_call(turn: Any, context: Dict[str, Any]) -> 
     required_statuses = [
         str(status).strip().lower() for status in (context.get("required_statuses") or []) if str(status).strip()
     ]
-    required_status: Optional[str] = None
+    required_status: str | None = None
     if len(required_statuses) == 1:
         required_status = required_statuses[0]
     elif (

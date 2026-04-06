@@ -4,18 +4,18 @@ import asyncio
 import inspect
 import os
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any
 
 import httpx
 import ollama
 
-from orket.adapters.llm.local_prompting_policy import LocalPromptingPolicyResult, resolve_local_prompting_policy
 from orket.adapters.llm.local_model_provider_runtime_target import (
     ensure_provider_runtime_target,
     provider_runtime_target_payload,
 )
-from orket.adapters.llm.openai_native_tools import build_openai_native_tooling
+from orket.adapters.llm.local_prompting_policy import LocalPromptingPolicyResult, resolve_local_prompting_policy
 from orket.adapters.llm.openai_compat_runtime import (
     build_orket_session_id,
     build_prompt_fingerprint,
@@ -27,6 +27,7 @@ from orket.adapters.llm.openai_compat_runtime import (
     select_response_headers,
     validate_openai_messages,
 )
+from orket.adapters.llm.openai_native_tools import build_openai_native_tooling
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.logging import log_event
 from orket.runtime.provider_runtime_target import ProviderRuntimeTarget
@@ -35,7 +36,7 @@ from orket.runtime.provider_runtime_target import ProviderRuntimeTarget
 @dataclass
 class ModelResponse:
     content: str
-    raw: Dict[str, Any]
+    raw: dict[str, Any]
 
 
 def _read_provider_env() -> str:
@@ -63,18 +64,20 @@ class LocalModelProvider:
         self,
         model: str,
         temperature: float = 0.2,
-        seed: Optional[int] = None,
+        seed: int | None = None,
         timeout: int = 300,
         *,
         provider: str = "",
         base_url: str = "",
         api_key: str = "",
+        connect_timeout_seconds: float = 30.0,
     ):
         self.requested_model = str(model or "").strip()
         self.model = self.requested_model
         self.temperature = self._resolve_temperature_override(temperature)
         self.seed = self._resolve_seed_override(seed)
         self.timeout = timeout
+        self.connect_timeout_seconds = max(1.0, float(connect_timeout_seconds))
         self._provider_override = str(provider or "").strip().lower()
         self._base_url_override = str(base_url or "").strip()
         self._api_key_override = str(api_key or "").strip()
@@ -88,7 +91,12 @@ class LocalModelProvider:
         if self.provider_backend == "openai_compat":
             self.client = httpx.AsyncClient(
                 base_url=self.openai_base_url,
-                timeout=httpx.Timeout(timeout=max(1.0, float(self.timeout))),
+                timeout=httpx.Timeout(
+                    connect=self.connect_timeout_seconds,
+                    read=max(1.0, float(self.timeout)),
+                    write=30.0,
+                    pool=10.0,
+                ),
             )
         else:
             self.client = ollama.AsyncClient(host=self.ollama_host) if self.ollama_host else ollama.AsyncClient()
@@ -110,7 +118,7 @@ class LocalModelProvider:
         return float(default_temperature)
 
     @staticmethod
-    def _resolve_seed_override(default_seed: Optional[int]) -> Optional[int]:
+    def _resolve_seed_override(default_seed: int | None) -> int | None:
         if isinstance(default_seed, int):
             return default_seed
         for key in ("ORKET_BENCH_SEED", "ORKET_LLM_SEED", "ORKET_MODEL_SEED"):
@@ -224,8 +232,8 @@ class LocalModelProvider:
 
     async def complete(
         self,
-        messages: List[Dict[str, str]],
-        runtime_context: Optional[Dict[str, Any]] = None,
+        messages: list[dict[str, str]],
+        runtime_context: dict[str, Any] | None = None,
     ) -> ModelResponse:
         resolved_context = dict(runtime_context or {})
         effective_model = await ensure_provider_runtime_target(self)
@@ -258,7 +266,7 @@ class LocalModelProvider:
 
     async def _complete_ollama(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         local_prompting_policy: LocalPromptingPolicyResult,
         *,
         native_tools: list[dict[str, Any]],
@@ -282,7 +290,7 @@ class LocalModelProvider:
         for attempt in range(max_retries):
             try:
                 started_at = time.perf_counter()
-                request_kwargs: Dict[str, Any] = {
+                request_kwargs: dict[str, Any] = {
                     "model": self.model,
                     "messages": messages,
                     "options": options,
@@ -352,36 +360,38 @@ class LocalModelProvider:
                         f"class '{local_prompting_policy.task_class}'."
                     ) from exc
                 raise ModelProviderError(f"Unexpected error invoking model {self.model}: {str(exc)}") from exc
-            except (asyncio.TimeoutError, ModelTimeoutError):
+            except (asyncio.TimeoutError, ModelTimeoutError) as exc:
                 if attempt == max_retries - 1:
-                    raise ModelTimeoutError(f"Model {self.model} timed out after {max_retries} attempts.")
+                    raise ModelTimeoutError(f"Model {self.model} timed out after {max_retries} attempts.") from exc
                 log_event(
                     "model_timeout_retry",
                     {"model": self.model, "attempt": attempt + 1, "retry_delay_sec": retry_delay},
                 )
-            except (ConnectionError, ollama.ResponseError, ModelConnectionError) as e:
+            except (ConnectionError, ollama.ResponseError, ModelConnectionError) as exc:
                 if attempt == max_retries - 1:
-                    raise ModelConnectionError(f"Ollama connection failed after {max_retries} attempts: {str(e)}")
+                    raise ModelConnectionError(
+                        f"Ollama connection failed after {max_retries} attempts: {str(exc)}"
+                    ) from exc
                 log_event(
                     "model_connection_retry",
                     {
                         "model": self.model,
                         "attempt": attempt + 1,
                         "retry_delay_sec": retry_delay,
-                        "error": str(e),
+                        "error": str(exc),
                     },
                 )
             except asyncio.CancelledError:
                 raise
-            except (RuntimeError, ValueError, TypeError, KeyError, AttributeError, OSError) as e:
-                raise ModelProviderError(f"Unexpected error invoking model {self.model}: {str(e)}")
+            except (RuntimeError, ValueError, KeyError, AttributeError, OSError) as exc:
+                raise ModelProviderError(f"Unexpected error invoking model {self.model}: {str(exc)}") from exc
 
             await asyncio.sleep(retry_delay)
             retry_delay *= 2
 
     async def _complete_openai_compat(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         local_prompting_policy: LocalPromptingPolicyResult,
         *,
         runtime_context: Mapping[str, Any],
@@ -396,7 +406,7 @@ class LocalModelProvider:
                 "[assistant, system, tool, user]. "
                 f"Invalid message roles: {', '.join(invalid_roles[:8])}. Normalize upstream."
             )
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "model": self.model,
             "messages": list(messages),
             "temperature": self.temperature,
@@ -452,7 +462,7 @@ class LocalModelProvider:
                 prompt_tokens, completion_tokens, total_tokens = extract_openai_usage(parsed)
                 prompt_ms, predicted_ms, total_ms = extract_openai_timings(parsed, latency_ms)
                 outbound_role_sequence = [
-                    str((message.get("role") or "")).strip().lower()
+                    str(message.get("role") or "").strip().lower()
                     for message in messages
                     if isinstance(message, dict)
                 ]
@@ -513,25 +523,25 @@ class LocalModelProvider:
                 raw.update(local_prompting_policy.telemetry())
                 return ModelResponse(content=content, raw=raw)
 
-            except (asyncio.TimeoutError, httpx.TimeoutException, ModelTimeoutError):
+            except (asyncio.TimeoutError, httpx.TimeoutException, ModelTimeoutError) as exc:
                 if attempt == max_retries - 1:
-                    raise ModelTimeoutError(f"Model {self.model} timed out after {max_retries} attempts.")
+                    raise ModelTimeoutError(f"Model {self.model} timed out after {max_retries} attempts.") from exc
                 log_event(
                     "model_timeout_retry",
                     {"model": self.model, "attempt": attempt + 1, "retry_delay_sec": retry_delay},
                 )
-            except (httpx.ConnectError, httpx.NetworkError, httpx.RemoteProtocolError, ModelConnectionError) as e:
+            except (httpx.ConnectError, httpx.NetworkError, httpx.RemoteProtocolError, ModelConnectionError) as exc:
                 if attempt == max_retries - 1:
                     raise ModelConnectionError(
-                        f"OpenAI-compatible connection failed after {max_retries} attempts: {str(e)}"
-                    )
+                        f"OpenAI-compatible connection failed after {max_retries} attempts: {str(exc)}"
+                    ) from exc
                 log_event(
                     "model_connection_retry",
                     {
                         "model": self.model,
                         "attempt": attempt + 1,
                         "retry_delay_sec": retry_delay,
-                        "error": str(e),
+                        "error": str(exc),
                     },
                 )
             except httpx.HTTPStatusError as e:
@@ -542,8 +552,8 @@ class LocalModelProvider:
                 ) from e
             except asyncio.CancelledError:
                 raise
-            except (RuntimeError, ValueError, TypeError, KeyError, AttributeError, OSError, httpx.HTTPError) as e:
-                raise ModelProviderError(f"Unexpected error invoking model {self.model}: {str(e)}")
+            except (RuntimeError, ValueError, TypeError, KeyError, AttributeError, OSError, httpx.HTTPError) as exc:
+                raise ModelProviderError(f"Unexpected error invoking model {self.model}: {str(exc)}") from exc
 
             await asyncio.sleep(retry_delay)
             retry_delay *= 2

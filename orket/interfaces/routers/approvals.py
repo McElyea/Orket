@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
@@ -8,8 +9,8 @@ from pydantic import BaseModel
 
 class ApprovalDecisionRequest(BaseModel):
     decision: str
-    edited_proposal: Optional[dict[str, Any]] = None
-    notes: Optional[str] = None
+    edited_proposal: dict[str, Any] | None = None
+    notes: str | None = None
 
 
 def build_approvals_router(engine_getter: Callable[[], Any]) -> APIRouter:
@@ -17,9 +18,9 @@ def build_approvals_router(engine_getter: Callable[[], Any]) -> APIRouter:
 
     @router.get("/approvals")
     async def list_approvals(
-        status: Optional[str] = Query(default=None),
-        session_id: Optional[str] = Query(default=None),
-        request_id: Optional[str] = Query(default=None),
+        status: str | None = Query(default=None),
+        session_id: str | None = Query(default=None),
+        request_id: str | None = Query(default=None),
         limit: int = Query(default=100, ge=1, le=500),
     ):
         engine = engine_getter()

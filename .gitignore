@@ -86,6 +86,7 @@ sandbox_pytest/
 benchmarks/results/**
 benchmarks/staging/**
 docs/internal/
+coverage.json
 
 # SDK runtime data (user-local; not versioned)
 data/voices/

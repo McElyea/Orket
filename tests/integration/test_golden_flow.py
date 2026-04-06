@@ -1,11 +1,11 @@
-﻿import pytest
-import json
-import asyncio
-from pathlib import Path
-from orket.orchestration.engine import OrchestrationEngine
+﻿import json
+
+import pytest
+
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
-from orket.schema import CardStatus
+from orket.orchestration.engine import OrchestrationEngine
 from tests.turn_prompt_utils import extract_turn_prompt_context
+
 
 class GoldenFlowDummyProvider(LocalModelProvider):
     def __init__(self):
@@ -42,12 +42,12 @@ async def test_golden_flow(tmp_path, monkeypatch):
     (root / "model" / "core" / "dialects").mkdir(parents=True)
     (root / "model" / "core" / "teams").mkdir(parents=True)
     (root / "model" / "core" / "environments").mkdir(parents=True)
-    
+
     workspace = root / "workspace"
     workspace.mkdir()
     (workspace / "agent_output").mkdir() # Required for secure write
     (workspace / "verification").mkdir() # Required for RCE fix
-    
+
     db_path = str(root / "test_orket.db")
 
     # 2. Create mock assets
@@ -77,7 +77,7 @@ async def test_golden_flow(tmp_path, monkeypatch):
         "prompt": "Test Prompt",
         "tools": ["write_file", "update_issue_status"]
     }))
-    
+
     (root / "model" / "core" / "roles" / "integrity_guard.json").write_text(json.dumps({
         "id": "VERI",
         "summary": "integrity_guard",
@@ -158,12 +158,12 @@ async def test_session_resumption(tmp_path, monkeypatch):
     (root / "model" / "core").mkdir(parents=True)
     for d in ["epics", "roles", "dialects", "teams", "environments"]:
         (root / "model" / "core" / d).mkdir()
-    
+
     workspace = root / "workspace"
     workspace.mkdir()
     (workspace / "agent_output").mkdir()
     (workspace / "verification").mkdir()
-    
+
     db_path = str(root / "test_resume.db")
 
     (root / "config" / "organization.json").write_text(json.dumps({
@@ -172,7 +172,7 @@ async def test_session_resumption(tmp_path, monkeypatch):
         "process_rules": {"small_project_builder_variant": "architect"},
         "departments": ["core"]
     }))
-    
+
     # Create required dialects
     for d_name in ["qwen", "llama3", "deepseek-r1", "phi", "generic"]:
         (root / "model" / "core" / "dialects" / f"{d_name}.json").write_text(json.dumps({
@@ -195,7 +195,7 @@ async def test_session_resumption(tmp_path, monkeypatch):
             "reviewer_seat": {"name": "R", "roles": ["code_reviewer"]},
         },
     }))
-        
+
     (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({"name": "standard", "model": "dummy", "temperature": 0.1}))
 
     (root / "model" / "core" / "epics" / "resume_epic.json").write_text(json.dumps({
@@ -210,7 +210,7 @@ async def test_session_resumption(tmp_path, monkeypatch):
     from orket.adapters.storage.async_card_repository import AsyncCardRepository
     cards = AsyncCardRepository(db_path)
     await cards.save({"id": "I1", "summary": "Done already", "seat": "lead_architect", "type": "issue", "priority": "Low", "status": "done", "build_id": "build-resume_epic"})
-    
+
     dummy_provider = GoldenFlowDummyProvider()
     def mock_init(self, *a, **k):
         self.model = "dummy"
@@ -224,7 +224,7 @@ async def test_session_resumption(tmp_path, monkeypatch):
 
     issue2 = await engine.cards.get_by_id("I2")
     assert issue2.status == "done"
-    
+
     issue1 = await engine.cards.get_by_id("I1")
     assert issue1.status == "done"
 

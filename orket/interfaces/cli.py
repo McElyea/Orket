@@ -1,12 +1,21 @@
 import argparse
-import sys
-import io
 import asyncio
+import io
 import json
+import sys
 from pathlib import Path
-from orket.orchestration.engine import OrchestrationEngine
-from orket.discovery import print_orket_manifest, perform_first_run_setup
+
+from orket.discovery import perform_first_run_setup, print_orket_manifest
 from orket.extensions import ExtensionManager
+from orket.orchestration.engine import OrchestrationEngine
+
+
+def _resolve_path_sync(value: str | Path = ".") -> Path:
+    return Path(value).resolve()
+
+
+async def _resolve_path(value: str | Path = ".") -> Path:
+    return await asyncio.to_thread(_resolve_path_sync, value)
 
 
 def parse_args():
@@ -176,7 +185,7 @@ async def _run_extension_workload(args, manager: ExtensionManager) -> None:
     workload_id = (args.subcommand or "").strip()
     if not workload_id:
         raise ValueError("run command requires a workload id (e.g. 'orket run mystery_v1 --seed 123').")
-    workspace = Path(args.workspace).resolve()
+    workspace = await _resolve_path(args.workspace)
     result = await manager.run_workload(
         workload_id=workload_id,
         input_config={"seed": args.seed},
@@ -250,7 +259,7 @@ async def run_cli():
                 list_marshaller_runs,
             )
 
-            workspace_root = Path(".").resolve()
+            workspace_root = await _resolve_path()
             if args.subcommand == "list":
                 result = await list_marshaller_runs(workspace_root, limit=max(1, int(args.marshaller_list_limit)))
                 print(json.dumps(result, indent=2, ensure_ascii=False))
@@ -274,10 +283,11 @@ async def run_cli():
                 raise ValueError("marshaller command requires --marshaller-request <path>.")
             if not args.marshaller_proposal:
                 raise ValueError("marshaller command requires at least one --marshaller-proposal <path>.")
+            proposal_paths = [await _resolve_path(str(item)) for item in args.marshaller_proposal]
             result = await execute_marshaller_from_files(
                 workspace_root=workspace_root,
-                run_request_path=Path(request_raw).resolve(),
-                proposal_paths=[Path(str(item)).resolve() for item in args.marshaller_proposal],
+                run_request_path=await _resolve_path(request_raw),
+                proposal_paths=proposal_paths,
                 run_id=str(args.marshaller_run_id or default_run_id()).strip(),
                 allowed_paths=list(args.marshaller_allow_path or []),
                 promote=bool(args.marshaller_promote),
@@ -363,17 +373,15 @@ async def run_cli():
                 if not run_id:
                     raise ValueError("protocol parity requires target run_id (e.g. 'orket protocol parity <run_id>').")
                 sqlite_db = (
-                    Path(str(args.protocol_sqlite_db)).resolve()
+                    await _resolve_path(str(args.protocol_sqlite_db))
                     if str(args.protocol_sqlite_db or "").strip()
-                    else (
-                        Path(args.workspace).resolve() / ".orket" / "durable" / "db" / "orket_persistence.db"
-                    ).resolve()
+                    else await _resolve_path(Path(args.workspace) / ".orket" / "durable" / "db" / "orket_persistence.db")
                 )
                 if not sqlite_db.exists():
                     raise ValueError(f"SQLite run ledger database not found: {sqlite_db}")
                 parity = await compare_run_ledger_rows(
                     sqlite_repo=AsyncRunLedgerRepository(sqlite_db),
-                    protocol_repo=AsyncProtocolRunLedgerRepository(Path(args.workspace).resolve()),
+                    protocol_repo=AsyncProtocolRunLedgerRepository(await _resolve_path(args.workspace)),
                     session_id=run_id,
                 )
                 print(json.dumps(parity, indent=2, ensure_ascii=False))
@@ -383,9 +391,9 @@ async def run_cli():
 
             if args.subcommand == "campaign":
                 runs_root = (
-                    Path(str(args.protocol_runs_root)).resolve()
+                    await _resolve_path(str(args.protocol_runs_root))
                     if str(args.protocol_runs_root or "").strip()
-                    else (Path(args.workspace).resolve() / "runs").resolve()
+                    else await _resolve_path(Path(args.workspace) / "runs")
                 )
                 campaign = await asyncio.to_thread(
                     compare_protocol_determinism_campaign,
@@ -400,17 +408,15 @@ async def run_cli():
 
             if args.subcommand == "parity-campaign":
                 sqlite_db = (
-                    Path(str(args.protocol_sqlite_db)).resolve()
+                    await _resolve_path(str(args.protocol_sqlite_db))
                     if str(args.protocol_sqlite_db or "").strip()
-                    else (
-                        Path(args.workspace).resolve() / ".orket" / "durable" / "db" / "orket_persistence.db"
-                    ).resolve()
+                    else await _resolve_path(Path(args.workspace) / ".orket" / "durable" / "db" / "orket_persistence.db")
                 )
                 if not sqlite_db.exists():
                     raise ValueError(f"SQLite run ledger database not found: {sqlite_db}")
                 campaign = await compare_protocol_ledger_parity_campaign(
                     sqlite_db=sqlite_db,
-                    protocol_root=Path(args.workspace).resolve(),
+                    protocol_root=await _resolve_path(args.workspace),
                     session_ids=list(args.protocol_parity_session_id or []),
                     discover_limit=max(0, int(args.protocol_parity_discover_limit)),
                 )
@@ -431,7 +437,7 @@ async def run_cli():
                 "'orket protocol parity-campaign [--protocol-sqlite-db <path>] [--protocol-parity-session-id <id>]'."
             )
 
-        workspace = Path(args.workspace).resolve()
+        workspace = await _resolve_path(args.workspace)
         engine = OrchestrationEngine(workspace, args.department)
 
         if args.board:

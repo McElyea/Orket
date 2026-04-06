@@ -54,7 +54,7 @@ async def test_emit_falls_back_to_local_spool_when_primary_store_fails(tmp_path)
 
     assert path == "fallback"
     assert spool_path.exists()
-    async with aiofiles.open(spool_path, "r", encoding="utf-8") as handle:
+    async with aiofiles.open(spool_path, encoding="utf-8") as handle:
         content = await handle.read()
     assert "evt-1" in content
 

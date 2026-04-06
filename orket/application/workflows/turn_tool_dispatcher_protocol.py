@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
+from orket.core.domain.execution import ExecutionTurn
 from orket.core.policies.tool_gate import ToolGate
-from orket.domain.execution import ExecutionTurn
 from orket.runtime.protocol_error_codes import (
     E_COMPAT_PARITY_VIOLATION_PREFIX,
     E_MAX_TOOL_CALLS_PREFIX,
@@ -13,25 +14,25 @@ from orket.runtime.protocol_error_codes import (
     format_protocol_error,
 )
 
-from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
-from .turn_tool_dispatcher_control_plane import publish_step_if_needed
-from .turn_path_resolver import PathResolver
+from ..services.governed_turn_tool_approval_continuation_service import (
+    supports_governed_turn_tool_approval_continuation,
+)
 from ..services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run,
     namespace_resource_id_for_scope,
     reservation_id_for_run,
 )
-from ..services.governed_turn_tool_approval_continuation_service import (
-    supports_governed_turn_tool_approval_continuation,
-)
+from .tool_invocation_contracts import build_tool_invocation_manifest, compute_tool_call_hash
+from .turn_path_resolver import PathResolver
+from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
+from .turn_tool_dispatcher_control_plane import publish_step_if_needed
 from .turn_tool_dispatcher_support import (
     required_sequence_violation,
+    required_tools_violation,
     resolved_declared_namespace_scopes,
     resolved_tool_namespace_scope,
-    required_tools_violation,
     tool_policy_violation,
 )
-from .tool_invocation_contracts import build_tool_invocation_manifest, compute_tool_call_hash
 
 
 def collect_protocol_preflight_violations(

@@ -3,8 +3,9 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 from .promotion import promote_run
 from .replay import replay_run

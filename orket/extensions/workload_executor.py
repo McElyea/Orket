@@ -4,12 +4,13 @@ import asyncio
 import hashlib
 import inspect
 import json
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
+from orket.streaming.contracts import CommitIntent, StreamEventType
 from orket_extension_sdk.result import WorkloadResult
 from orket_extension_sdk.workload import run_workload as sdk_run_workload
-from orket.streaming.contracts import CommitIntent, StreamEventType
 
 from .contracts import ExtensionRegistry, RunPlan
 from .governed_identity import (
@@ -81,7 +82,7 @@ class WorkloadExecutor:
             raise TypeError("summarize(run_artifacts) must return a dict")
         if interaction_context is not None:
             await interaction_context.emit_event(
-                StreamEventType.TURN_FINAL, {"authoritative": False, "summary": summary}
+                StreamEventType.TURN_FINAL, {"authoritative": True, "summary": summary}
             )
             await interaction_context.request_commit(
                 CommitIntent(type="turn_finalize", ref=workload.workload_id)
@@ -202,7 +203,7 @@ class WorkloadExecutor:
 
         if interaction_context is not None:
             await interaction_context.emit_event(
-                StreamEventType.TURN_FINAL, {"authoritative": False, "summary": summary}
+                StreamEventType.TURN_FINAL, {"authoritative": True, "summary": summary}
             )
             await interaction_context.request_commit(CommitIntent(type="turn_finalize", ref=workload.workload_id))
 

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Set
+from typing import Any
 
 
 class ImpactWeightCalculator:
@@ -8,7 +8,7 @@ class ImpactWeightCalculator:
     """
 
     @staticmethod
-    def get_priority_queue(issues: List[Any]) -> List[str]:
+    def get_priority_queue(issues: list[Any]) -> list[str]:
         """
         Returns a list of Issue IDs sorted by combined priority score.
         Score = base_priority + impact_weight
@@ -43,7 +43,7 @@ class ImpactWeightCalculator:
         return [issue.get("id") if isinstance(issue, dict) else issue.id for issue in ready_issues]
 
     @staticmethod
-    def calculate_weight(issue_id: str, adj_map: Dict[str, Set[str]], visited: Set[str] | None = None) -> int:
+    def calculate_weight(issue_id: str, adj_map: dict[str, set[str]], visited: set[str] | None = None) -> int:
         """
         Recursively calculates the impact weight of an issue based on blocked descendants.
         Weight = sum(1 + weight(blocked_child)) for each blocked child.
@@ -63,12 +63,12 @@ class ImpactWeightCalculator:
         return weight
 
     @staticmethod
-    def build_dependency_graph(issues: List[Dict[str, Any]]) -> Dict[str, Set[str]]:
+    def build_dependency_graph(issues: list[dict[str, Any]]) -> dict[str, set[str]]:
         """
         Builds an adjacency map where Key = Issue ID, Value = Set of Issue IDs that depend on Key.
         Input issues should be dicts or objects with 'id' and 'depends_on' (list of IDs).
         """
-        adj_map: Dict[str, Set[str]] = {}
+        adj_map: dict[str, set[str]] = {}
 
         for issue in issues:
             # Handle both dictionary and object access

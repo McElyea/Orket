@@ -1,15 +1,16 @@
-﻿"""
+"""
 Test Docker Compose generation for sandboxes.
 
 Verifies that SandboxOrchestrator generates valid docker-compose.yml files
 for all supported tech stacks.
 """
-import pytest
-
 # Layer: unit
 from pathlib import Path
+
+import pytest
+
+from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
-from orket.domain.sandbox import TechStack, SandboxRegistry
 
 
 def test_fastapi_react_postgres_compose():
@@ -20,7 +21,7 @@ def test_fastapi_react_postgres_compose():
     )
 
     # Create a test sandbox (without deploying)
-    from orket.domain.sandbox import Sandbox, PortAllocation, SandboxStatus
+    from orket.core.domain.sandbox import PortAllocation, Sandbox
 
     ports = PortAllocation(
         api=8001,
@@ -74,7 +75,7 @@ def test_fastapi_vue_mongo_compose():
         registry=SandboxRegistry()
     )
 
-    from orket.domain.sandbox import Sandbox, PortAllocation
+    from orket.core.domain.sandbox import PortAllocation, Sandbox
 
     ports = PortAllocation(
         api=8002,
@@ -143,7 +144,7 @@ def test_csharp_razor_ef_compose():
         registry=SandboxRegistry()
     )
 
-    from orket.domain.sandbox import Sandbox, PortAllocation
+    from orket.core.domain.sandbox import PortAllocation, Sandbox
 
     ports = PortAllocation(
         api=8010,

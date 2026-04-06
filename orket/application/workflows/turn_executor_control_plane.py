@@ -5,13 +5,12 @@ import hashlib
 import json
 from typing import TYPE_CHECKING, Any
 
-from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run,
     reservation_id_for_run,
 )
+from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
 from orket.application.services.turn_tool_control_plane_support import (
-    digest,
     resource_refs,
     run_namespace_scope,
     utc_now,
@@ -22,7 +21,8 @@ from orket.core.domain import (
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
 )
-from orket.domain.execution import ExecutionTurn
+from orket.core.domain.execution import ExecutionTurn
+
 from .turn_executor_runtime import state_delta_from_tool_calls
 
 if TYPE_CHECKING:

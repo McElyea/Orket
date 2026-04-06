@@ -1,18 +1,17 @@
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
+from orket.core.domain.critical_path import CriticalPathEngine
+from orket.logging import log_event
 from orket.orket import ConfigLoader, ExecutionPipeline
 from orket.schema import EpicConfig, OrganizationConfig
-from orket.domain.critical_path import CriticalPathEngine
-from orket.logging import log_event
 
 
 class OrganizationLoop:
     def __init__(self, organization_path: Path = Path("config/organization.json")):
         self.org_path = organization_path
-        self.fs = AsyncFileTools(Path("."))
+        self.fs = AsyncFileTools(Path())
         if not self.org_path.exists():
             self.org_path = Path("model/organization.json")
         self.org = self._load_org()
@@ -41,7 +40,7 @@ class OrganizationLoop:
                 await asyncio.sleep(10)
             await asyncio.sleep(0)
 
-    def _find_next_critical_card(self) -> Optional[dict]:
+    def _find_next_critical_card(self) -> dict | None:
         """Finds the most critical READY card across all departments."""
         candidates = []
 

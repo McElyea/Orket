@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from orket.application.services.control_plane_target_resource_refs import resource_id_for_supported_run
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.control_plane_target_resource_refs import resource_id_for_supported_run
 from orket.core.contracts import OperatorActionRecord
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
 

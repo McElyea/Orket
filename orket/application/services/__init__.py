@@ -23,8 +23,8 @@ from .gitea_state_control_plane_reservation_service import (
     GiteaStateControlPlaneReservationService,
     build_gitea_state_control_plane_reservation_service,
 )
-from .kernel_action_control_plane_service import KernelActionControlPlaneService
 from .kernel_action_control_plane_operator_service import KernelActionControlPlaneOperatorService
+from .kernel_action_control_plane_service import KernelActionControlPlaneService
 from .kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
 from .orchestrator_issue_control_plane_service import OrchestratorIssueControlPlaneService
 from .orchestrator_scheduler_control_plane_service import OrchestratorSchedulerControlPlaneService
@@ -37,12 +37,12 @@ from .sandbox_control_plane_lease_service import SandboxControlPlaneLeaseService
 from .sandbox_control_plane_operator_service import SandboxControlPlaneOperatorService
 from .sandbox_control_plane_reconciliation_service import SandboxControlPlaneReconciliationService
 from .sandbox_control_plane_reservation_service import SandboxControlPlaneReservationService
+from .tool_approval_control_plane_operator_service import ToolApprovalControlPlaneOperatorService
+from .tool_approval_control_plane_reservation_service import ToolApprovalControlPlaneReservationService
 from .turn_tool_control_plane_service import (
     TurnToolControlPlaneService,
     build_turn_tool_control_plane_service,
 )
-from .tool_approval_control_plane_operator_service import ToolApprovalControlPlaneOperatorService
-from .tool_approval_control_plane_reservation_service import ToolApprovalControlPlaneReservationService
 
 __all__ = [
     "ControlPlaneAuthorityService",

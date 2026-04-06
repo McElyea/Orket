@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import PurePosixPath
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -156,7 +157,4 @@ def _contains_traversal(path: str) -> bool:
 
 
 def _is_under_allowlist(path: str, allowed: Sequence[str]) -> bool:
-    for root in allowed:
-        if path == root or path.startswith(f"{root}/"):
-            return True
-    return False
+    return any(path == root or path.startswith(f"{root}/") for root in allowed)

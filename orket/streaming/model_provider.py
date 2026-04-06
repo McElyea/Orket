@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import os
 import time
@@ -190,10 +191,8 @@ class OllamaModelStreamProvider(ModelStreamProvider):
             if "seed" in req.input_config:
                 options["seed"] = _int_value(req.input_config.get("seed"), 0)
             if "temperature" in req.input_config:
-                try:
+                with contextlib.suppress(TypeError, ValueError):
                     options["temperature"] = float(req.input_config.get("temperature"))
-                except (TypeError, ValueError):
-                    pass
             # Bound generation by default to keep stream scenarios deterministic and fast.
             options["num_predict"] = _int_value(req.input_config.get("max_tokens"), 64, minimum=1)
             yield ProviderEvent(
@@ -334,10 +333,8 @@ class OpenAICompatModelStreamProvider(ModelStreamProvider):
             }
             payload["stream"] = use_stream
             if "temperature" in req.input_config:
-                try:
+                with contextlib.suppress(TypeError, ValueError):
                     payload["temperature"] = float(req.input_config.get("temperature"))
-                except (TypeError, ValueError):
-                    pass
             headers = {"Content-Type": "application/json"}
             if self._api_key:
                 headers["Authorization"] = f"Bearer {self._api_key}"

@@ -54,7 +54,7 @@ def test_error_description_returns_specific_messages() -> None:
     assert "duplicate object keys" in codes.error_description("E_DUPLICATE_KEY:content")
     assert "cardinality" in codes.error_description("E_TOOL_CARDINALITY:write_file:2")
     assert "Workspace path safety" in codes.error_description("E_WORKSPACE_CONSTRAINT:path")
-    assert "Unsupported protocol network mode." == codes.error_description("E_NETWORK_MODE_INVALID:internet")
+    assert codes.error_description("E_NETWORK_MODE_INVALID:internet") == "Unsupported protocol network mode."
     assert "ring policy" in codes.error_description("E_RING_POLICY_VIOLATION:tool")
     assert "capability profile" in codes.error_description("E_CAPABILITY_VIOLATION:tool")
     assert "determinism class" in codes.error_description("E_DETERMINISM_POLICY_VIOLATION:tool")

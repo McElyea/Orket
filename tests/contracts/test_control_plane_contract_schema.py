@@ -11,8 +11,8 @@ from orket.core.contracts import (
     FinalTruthRecord,
     LeaseRecord,
     OperatorActionRecord,
-    ReservationRecord,
     RecoveryDecisionRecord,
+    ReservationRecord,
     ResolvedConfigurationSnapshot,
     ResolvedPolicySnapshot,
     RunRecord,
@@ -34,7 +34,6 @@ from orket.core.domain import (
     RunState,
     TerminalityBasisClassification,
 )
-
 
 pytestmark = pytest.mark.contract
 

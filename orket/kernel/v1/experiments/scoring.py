@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from statistics import mean, pvariance
-from typing import Any, Dict, Iterable
-
+from typing import Any
 
 DEFAULT_WEIGHTS = {
     "forbidden_hit": 30,
@@ -15,7 +15,7 @@ DEFAULT_WEIGHTS = {
 }
 
 
-def score_run(result: Dict[str, Any], scoring: Dict[str, Any]) -> Dict[str, Any]:
+def score_run(result: dict[str, Any], scoring: dict[str, Any]) -> dict[str, Any]:
     weights = dict(DEFAULT_WEIGHTS)
     if isinstance(scoring.get("weights"), dict):
         for key, value in scoring["weights"].items():
@@ -57,7 +57,7 @@ def score_run(result: Dict[str, Any], scoring: Dict[str, Any]) -> Dict[str, Any]
     }
 
 
-def aggregate_pairing(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
+def aggregate_pairing(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
     seq = list(rows)
     if not seq:
         return {"run_count": 0, "mean_score": None, "variance_score": None, "hard_fail_rate": None}

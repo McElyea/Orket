@@ -31,7 +31,7 @@ def _hash_canonical_payload(payload: object) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def compute_effect_journal_entry_digest(entry: "EffectJournalEntryRecord") -> str:
+def compute_effect_journal_entry_digest(entry: EffectJournalEntryRecord) -> str:
     payload = entry.model_dump(mode="json", exclude={"entry_digest"})
     return _hash_canonical_payload(payload)
 
@@ -49,10 +49,10 @@ def create_effect_journal_entry(
     observed_result_ref: str | None,
     uncertainty_classification: ResidualUncertaintyClassification,
     integrity_verification_ref: str,
-    previous_entry: "EffectJournalEntryRecord | None" = None,
+    previous_entry: EffectJournalEntryRecord | None = None,
     contradictory_entry_refs: Sequence[str] = (),
     superseding_entry_refs: Sequence[str] = (),
-) -> "EffectJournalEntryRecord":
+) -> EffectJournalEntryRecord:
     from orket.core.contracts.control_plane_effect_journal_models import EffectJournalEntryRecord
 
     base_entry = EffectJournalEntryRecord(
@@ -81,8 +81,8 @@ def create_effect_journal_entry(
 
 
 def validate_effect_journal_append(
-    previous_entry: "EffectJournalEntryRecord | None",
-    entry: "EffectJournalEntryRecord",
+    previous_entry: EffectJournalEntryRecord | None,
+    entry: EffectJournalEntryRecord,
 ) -> bool:
     expected_sequence = 1 if previous_entry is None else previous_entry.publication_sequence + 1
     if entry.publication_sequence != expected_sequence:
@@ -106,8 +106,8 @@ def validate_effect_journal_append(
 
 
 def validate_effect_journal_chain(
-    entries: Iterable["EffectJournalEntryRecord"],
-) -> tuple["EffectJournalEntryRecord", ...]:
+    entries: Iterable[EffectJournalEntryRecord],
+) -> tuple[EffectJournalEntryRecord, ...]:
     ordered_entries = tuple(sorted(entries, key=lambda entry: entry.publication_sequence))
     previous_entry: EffectJournalEntryRecord | None = None
     for expected_sequence, entry in enumerate(ordered_entries, start=1):
@@ -121,10 +121,10 @@ def validate_effect_journal_chain(
 
 
 def validate_checkpoint_acceptance(
-    checkpoint: "CheckpointRecord",
-    acceptance: "CheckpointAcceptanceRecord",
+    checkpoint: CheckpointRecord,
+    acceptance: CheckpointAcceptanceRecord,
     *,
-    journal_entries: Iterable["EffectJournalEntryRecord"] = (),
+    journal_entries: Iterable[EffectJournalEntryRecord] = (),
     reservation_ids: Iterable[str] | None = None,
     lease_ids: Iterable[str] | None = None,
 ) -> bool:
