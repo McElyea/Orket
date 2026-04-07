@@ -68,7 +68,14 @@ class ToolBox:
 
         tool_fn = tool_map[tool_name]
         resolved_context = dict(context or {})
-        return await self.runtime_executor.invoke(tool_fn, args, context=resolved_context)
+        resolved_context["tool_name"] = tool_name
+        return await self.runtime_executor.invoke(
+            tool_fn,
+            args,
+            context=resolved_context,
+            tool_timeout_seconds=_resolve_tool_timeout_seconds(resolved_context),
+            workspace=self.root,
+        )
 
     def nominate_card(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         return self.governance.nominate_card(args, context=dict(context or {}))
@@ -93,6 +100,25 @@ class ToolBox:
 
 def get_tool_map(toolbox: ToolBox) -> dict[str, Callable[..., Any]]:
     return toolbox.tool_strategy_node.compose(toolbox)
+
+
+def _resolve_tool_timeout_seconds(context: dict[str, Any]) -> float:
+    runtime_limits = context.get("tool_runtime_limits")
+    candidates = [
+        context.get("tool_timeout_seconds"),
+        runtime_limits.get("max_execution_time") if isinstance(runtime_limits, dict) else None,
+        context.get("max_tool_execution_time"),
+    ]
+    for candidate in candidates:
+        if candidate is None:
+            continue
+        try:
+            value = float(candidate)
+        except (TypeError, ValueError):
+            continue
+        if value > 0:
+            return value
+    return 60.0
 
 
 __all__ = [

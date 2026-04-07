@@ -27,9 +27,23 @@ _LOG_LEVELS = {
 }
 _prepared_log_dirs: set[Path] = set()
 _prepared_log_dirs_lock = threading.Lock()
-_log_write_queue: queue.SimpleQueue[tuple[Path, str]] = queue.SimpleQueue()
+LOG_QUEUE_MAX_ENV = "ORKET_LOG_QUEUE_MAX"
+DEFAULT_LOG_QUEUE_MAX = 10_000
+
+
+def _resolve_log_queue_max() -> int:
+    try:
+        configured = int(str(os.getenv(LOG_QUEUE_MAX_ENV, "")).strip())
+    except ValueError:
+        return DEFAULT_LOG_QUEUE_MAX
+    return configured if configured > 0 else DEFAULT_LOG_QUEUE_MAX
+
+
+_log_write_queue: queue.Queue[tuple[Path, str]] = queue.Queue(maxsize=_resolve_log_queue_max())
 _log_writer_lock = threading.Lock()
 _log_writer_started = False
+_dropped_log_entries = 0
+_dropped_log_entries_lock = threading.Lock()
 
 
 class _MemberMetrics(TypedDict):
@@ -58,6 +72,34 @@ def _log_writer_loop() -> None:
             _append_line_sync(path, line)
         except OSError:
             continue
+        finally:
+            _log_write_queue.task_done()
+
+
+def dropped_log_entry_count() -> int:
+    with _dropped_log_entries_lock:
+        return _dropped_log_entries
+
+
+def _record_dropped_log_entry(path: Path) -> None:
+    global _dropped_log_entries
+    with _dropped_log_entries_lock:
+        _dropped_log_entries += 1
+        dropped = _dropped_log_entries
+    if dropped == 1 or dropped % 1000 == 0:
+        _logger.warning(
+            "log_write_queue_full",
+            extra={
+                "orket_record": {
+                    "event": "log_write_queue_full",
+                    "data": {
+                        "dropped_log_entries": dropped,
+                        "queue_max": _log_write_queue.maxsize,
+                        "path": str(path),
+                    },
+                }
+            },
+        )
 
 
 def _append_line_sync(path: Path, line: str) -> None:
@@ -87,7 +129,10 @@ def _append_json_record(path: Path, payload: dict[str, Any]) -> None:
     line = json.dumps(payload, ensure_ascii=False, default=str) + "\n"
     if _running_on_event_loop():
         _start_log_writer()
-        _log_write_queue.put((path, line))
+        try:
+            _log_write_queue.put_nowait((path, line))
+        except queue.Full:
+            _record_dropped_log_entry(path)
         return
     _append_line_sync(path, line)
 

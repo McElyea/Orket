@@ -1,7 +1,17 @@
 import json
 import re
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
+
+from orket.adapters.tools.registry import DEFAULT_TOOL_REGISTRY, ToolRegistry
+
+
+@dataclass(frozen=True)
+class ToolRecoveryResult:
+    calls: list[dict[str, Any]]
+    recovery_complete: bool
+    skipped_tools: list[dict[str, str]]
 
 
 class ToolParser:
@@ -40,12 +50,14 @@ class ToolParser:
     def _recover_truncated_tool_calls(
         text: str,
         diagnostics: Callable[[str, dict[str, Any]], None] | None = None,
-    ) -> list[dict[str, Any]]:
+        tool_registry: ToolRegistry | None = None,
+    ) -> ToolRecoveryResult:
         cleaned = re.sub(r"```(?:json)?", " ", text or "", flags=re.IGNORECASE).replace("```", " ")
         tool_markers = list(re.finditer(r'"tool"\s*:\s*"(?P<tool>[a-zA-Z0-9_]+)"', cleaned))
         if not tool_markers:
-            return []
+            return ToolRecoveryResult(calls=[], recovery_complete=True, skipped_tools=[])
 
+        registry = tool_registry or DEFAULT_TOOL_REGISTRY
         recovered: list[dict[str, Any]] = []
         skipped_tools: list[dict[str, str]] = []
         for idx, marker in enumerate(tool_markers):
@@ -53,61 +65,65 @@ class ToolParser:
             segment_start = marker.start()
             segment_end = tool_markers[idx + 1].start() if idx + 1 < len(tool_markers) else len(cleaned)
             segment = cleaned[segment_start:segment_end]
+            schema = registry.recoverable_schema(tool_name)
 
-            if tool_name == "update_issue_status":
-                status_match = re.search(r'"status"\s*:\s*"([^"]+)"', segment, flags=re.DOTALL)
-                if status_match:
-                    recovered.append({"tool": tool_name, "args": {"status": status_match.group(1)}})
-                else:
-                    skipped_tools.append({"tool": tool_name, "reason": "missing_status"})
-                continue
-
-            if tool_name == "read_file":
-                path_match = re.search(r'"path"\s*:\s*"([^"]+)"', segment, flags=re.DOTALL)
-                if path_match:
-                    recovered.append({"tool": tool_name, "args": {"path": path_match.group(1)}})
-                else:
-                    skipped_tools.append({"tool": tool_name, "reason": "missing_path"})
-                continue
-
-            if tool_name != "write_file":
+            if schema is None:
                 skipped_tools.append({"tool": tool_name, "reason": "unsupported_tool"})
                 continue
 
-            path_match = re.search(r'"path"\s*:\s*"([^"]+)"', segment, flags=re.DOTALL)
-            content_match = re.search(r'"content"\s*:\s*"', segment, flags=re.DOTALL)
-            if not path_match or not content_match:
-                skipped_tools.append({"tool": tool_name, "reason": "missing_path_or_content"})
+            args: dict[str, Any] = {}
+            missing_args: list[str] = []
+            empty_arg = ""
+            for arg_name in schema.required_args:
+                if arg_name == schema.greedy_string_arg:
+                    arg_match = re.search(fr'"{re.escape(arg_name)}"\s*:\s*"', segment, flags=re.DOTALL)
+                    if not arg_match:
+                        missing_args.append(arg_name)
+                        continue
+                    raw_content = ToolParser._recover_write_file_content(segment[arg_match.end() :])
+                    raw_content = raw_content.strip().replace("```", "").rstrip()
+                    if not raw_content:
+                        empty_arg = arg_name
+                        break
+                    args[arg_name] = ToolParser._decode_relaxed_string(raw_content)
+                    continue
+
+                arg_match = re.search(fr'"{re.escape(arg_name)}"\s*:\s*"([^"]+)"', segment, flags=re.DOTALL)
+                if not arg_match:
+                    missing_args.append(arg_name)
+                    continue
+                args[arg_name] = arg_match.group(1)
+
+            if missing_args:
+                skipped_tools.append(
+                    {
+                        "tool": tool_name,
+                        "reason": schema.missing_reason or f"missing_{'_or_'.join(missing_args)}",
+                    }
+                )
+                continue
+            if empty_arg:
+                skipped_tools.append({"tool": tool_name, "reason": f"empty_{empty_arg}"})
                 continue
 
-            content_start = content_match.end()
-            trailing = segment[content_start:]
-            raw_content = ToolParser._recover_write_file_content(trailing)
-            raw_content = raw_content.strip().replace("```", "").rstrip()
-            if not raw_content:
-                skipped_tools.append({"tool": tool_name, "reason": "empty_content"})
-                continue
-
-            recovered.append(
-                {
-                    "tool": tool_name,
-                    "args": {
-                        "path": path_match.group(1),
-                        "content": ToolParser._decode_relaxed_string(raw_content),
-                    },
-                }
-            )
+            recovered.append({"tool": tool_name, "args": args})
 
         if diagnostics is not None and (recovered or skipped_tools):
+            recovery_complete = not skipped_tools
             payload: dict[str, Any] = {
                 "strategy": "truncated_json_recovery",
                 "count": len(recovered),
                 "tools": [item.get("tool") for item in recovered],
+                "recovery_complete": recovery_complete,
             }
             if skipped_tools:
                 payload["skipped_tools"] = skipped_tools
             diagnostics("parse_partial_recovery", payload)
-        return recovered
+        return ToolRecoveryResult(
+            calls=recovered,
+            recovery_complete=not skipped_tools,
+            skipped_tools=skipped_tools,
+        )
 
     @staticmethod
     def _recover_write_file_content(trailing: str) -> str:
@@ -136,6 +152,7 @@ class ToolParser:
     def parse(
         text: str,
         diagnostics: Callable[[str, dict[str, Any]], None] | None = None,
+        tool_registry: ToolRegistry | None = None,
     ) -> list[dict[str, Any]]:
         text = ToolParser.normalize_json_stringify(text or "").strip()
         results = []
@@ -238,7 +255,11 @@ class ToolParser:
         if results:
             recovered: list[dict[str, Any]] = []
             if ToolParser._likely_truncated_json(text) or tool_marker_count > len(results):
-                recovered = ToolParser._recover_truncated_tool_calls(text, diagnostics=diagnostics)
+                recovered = ToolParser._recover_truncated_tool_calls(
+                    text,
+                    diagnostics=diagnostics,
+                    tool_registry=tool_registry,
+                ).calls
             merged = ToolParser._dedupe_tool_calls([*recovered, *results]) if recovered else results
             strategy = "stack_json+truncated_json_recovery" if len(merged) > len(results) else "stack_json"
             emit("parse_success", {"strategy": strategy, "count": len(merged)})
@@ -276,7 +297,11 @@ class ToolParser:
             emit("parse_success", {"strategy": "legacy_dsl", "count": len(results)})
             return results
 
-        recovered = ToolParser._recover_truncated_tool_calls(text, diagnostics=diagnostics)
+        recovered = ToolParser._recover_truncated_tool_calls(
+            text,
+            diagnostics=diagnostics,
+            tool_registry=tool_registry,
+        ).calls
         if recovered:
             emit("parse_success", {"strategy": "truncated_json_recovery", "count": len(recovered)})
             return recovered

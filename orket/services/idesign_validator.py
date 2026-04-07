@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from orket.core.domain.execution import ExecutionTurn
 
@@ -45,14 +46,33 @@ class iDesignValidator:
         "verification",  # Standard Orket verification directory
     }
 
-    @staticmethod
-    def validate_turn(turn: ExecutionTurn, workspace_root: Path) -> list[iDesignViolation]:
+    def __init__(self, organization: Any | None = None) -> None:
+        self.allowed_categories = _resolve_allowed_categories(organization)
+
+    def validate_turn(
+        self,
+        turn: ExecutionTurn | Path,
+        workspace_root: Path | None = None,
+    ) -> list[iDesignViolation]:
         """
         Scans tool calls in a turn for file creations and verifies their placement.
         Returns a list of structured violations.
         """
+        if isinstance(self, iDesignValidator):
+            validator = self
+            actual_turn = turn
+            actual_workspace_root = workspace_root
+        else:
+            validator = iDesignValidator()
+            actual_turn = self
+            actual_workspace_root = turn
+        if not isinstance(actual_turn, ExecutionTurn):
+            raise TypeError("validate_turn requires an ExecutionTurn")
+        if actual_workspace_root is None:
+            raise TypeError("validate_turn requires a workspace root")
+        del actual_workspace_root
         violations = []
-        for call in turn.tool_calls:
+        for call in actual_turn.tool_calls:
             if call.tool == "write_file":
                 path_str = call.args.get("path")
                 if not path_str:
@@ -85,7 +105,7 @@ class iDesignValidator:
                     if category == "product" and len(parts) > 2:
                         category = parts[2].lower()
 
-                if category not in iDesignValidator.ALLOWED_CATEGORIES:
+                if category not in validator.allowed_categories:
                     # Only enforce categorization for source code
                     if p.suffix in {".py", ".ts", ".js"}:
                         violations.append(
@@ -134,3 +154,11 @@ class iDesignValidator:
                     )
 
         return violations
+
+
+def _resolve_allowed_categories(organization: Any | None) -> set[str]:
+    configured = getattr(organization, "allowed_idesign_categories", None) if organization is not None else None
+    if configured is None:
+        return set(iDesignValidator.ALLOWED_CATEGORIES)
+    allowed = {str(category).strip().lower() for category in list(configured or []) if str(category).strip()}
+    return allowed or set(iDesignValidator.ALLOWED_CATEGORIES)

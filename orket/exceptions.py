@@ -34,6 +34,18 @@ class OrketInfrastructureError(RuntimeError):
     pass
 
 
+class LeaseNotAvailableError(OrketInfrastructureError):
+    """Raised when a runtime card lease cannot be acquired."""
+
+    pass
+
+
+class SettingsBridgeError(RuntimeError):
+    """Raised when sync settings access would cross an active event loop."""
+
+    pass
+
+
 class ModelProviderError(OrketError):
     """Base error for LLM provider failures."""
 

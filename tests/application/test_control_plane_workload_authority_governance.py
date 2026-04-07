@@ -39,11 +39,11 @@ WORKLOAD_AUTHORITY_IMPORTS = {
 EXPECTED_GOVERNED_START_PATH_MATRIX = {
     "cards epic execution": {
         "status": "projection-resolved",
-        "paths": {"orket/runtime/execution_pipeline.py"},
+        "paths": {"orket/runtime/epic_run_orchestrator.py"},
     },
     "atomic issue execution": {
         "status": "projection-resolved",
-        "paths": {"orket/runtime/execution_pipeline.py"},
+        "paths": {"orket/runtime/epic_run_orchestrator.py"},
     },
     "ODR / run arbiter": {
         "status": "projection-resolved",
@@ -90,7 +90,7 @@ EXPECTED_GOVERNED_START_PATH_MATRIX = {
     },
     "rock entrypoints that initiate governed execution": {
         "status": "routing-only",
-        "paths": {"orket/runtime/execution_pipeline.py"},
+        "paths": set(),
     },
 }
 CATALOG_RESOLVED_IDENTITY_ALIAS_BANS = {
@@ -141,6 +141,30 @@ PRIVATE_EXTENSION_MANIFEST_IMPORT_OWNERS = {
     "orket/extensions/workload_executor.py",
     "orket/extensions/workload_loader.py",
 }
+RUNTIME_PIPELINE_METHOD_OWNERS = (
+    (REPO_ROOT / "orket" / "runtime" / "execution_pipeline.py", "ExecutionPipeline"),
+    (
+        REPO_ROOT / "orket" / "runtime" / "execution_pipeline_artifact_provenance.py",
+        "ExecutionPipelineArtifactProvenanceMixin",
+    ),
+    (
+        REPO_ROOT / "orket" / "runtime" / "execution_pipeline_card_dispatch.py",
+        "ExecutionPipelineCardDispatchMixin",
+    ),
+    (
+        REPO_ROOT / "orket" / "runtime" / "execution_pipeline_ledger_events.py",
+        "ExecutionPipelineLedgerEventsMixin",
+    ),
+    (REPO_ROOT / "orket" / "runtime" / "execution_pipeline_resume.py", "ExecutionPipelineResumeMixin"),
+    (
+        REPO_ROOT / "orket" / "runtime" / "execution_pipeline_run_summary.py",
+        "ExecutionPipelineRunSummaryMixin",
+    ),
+    (
+        REPO_ROOT / "orket" / "runtime" / "execution_pipeline_runtime_artifacts.py",
+        "ExecutionPipelineRuntimeArtifactsMixin",
+    ),
+)
 
 
 def _iter_python_files() -> list[Path]:
@@ -272,11 +296,12 @@ def _named_importers(
 
 
 def _load_execution_pipeline_method(method_name: str) -> ast.AsyncFunctionDef | ast.FunctionDef:
-    return _load_class_method(
-        REPO_ROOT / "orket" / "runtime" / "execution_pipeline.py",
-        class_name="ExecutionPipeline",
-        method_name=method_name,
-    )
+    for path, class_name in RUNTIME_PIPELINE_METHOD_OWNERS:
+        try:
+            return _load_class_method(path, class_name=class_name, method_name=method_name)
+        except AssertionError:
+            continue
+    raise AssertionError(f"Runtime pipeline method {method_name} not found")
 
 
 def _load_class_method(path: Path, *, class_name: str, method_name: str) -> ast.AsyncFunctionDef | ast.FunctionDef:
@@ -299,6 +324,13 @@ def _class_has_method(path: Path, *, class_name: str, method_name: str) -> bool:
             if isinstance(child, (ast.AsyncFunctionDef, ast.FunctionDef)) and child.name == method_name:
                 return True
     return False
+
+
+def _runtime_pipeline_has_method(method_name: str) -> bool:
+    return any(
+        _class_has_method(path, class_name=class_name, method_name=method_name)
+        for path, class_name in RUNTIME_PIPELINE_METHOD_OWNERS
+    )
 
 
 def _load_module_function(path: Path, *, function_name: str) -> ast.AsyncFunctionDef | ast.FunctionDef:
@@ -637,6 +669,13 @@ def test_public_runtime_wrappers_collapse_to_run_card() -> None:
     pipeline_rock_targets = _call_targets(_load_execution_pipeline_method("run_rock"))
     pipeline_card_targets = _call_targets(_load_execution_pipeline_method("run_card"))
     gitea_loop_targets = _call_targets(_load_execution_pipeline_method("run_gitea_state_loop"))
+    gitea_loop_worker_targets = _call_targets(
+        _load_class_method(
+            REPO_ROOT / "orket" / "runtime" / "gitea_state_loop.py",
+            class_name="GiteaStateLoopRunner",
+            method_name="_work_claimed_card",
+        )
+    )
     organization_loop_targets = _call_targets(
         _load_class_method(
             REPO_ROOT / "orket" / "organization_loop.py",
@@ -693,8 +732,10 @@ def test_public_runtime_wrappers_collapse_to_run_card() -> None:
     assert "run_epic" in cli_targets
     assert "run_rock" not in cli_targets
     assert "run_issue" not in cli_targets
-    assert "run_card" in gitea_loop_targets
+    assert "run_gitea_state_loop" in gitea_loop_targets
+    assert "run_card" in gitea_loop_worker_targets
     assert "run_issue" not in gitea_loop_targets
+    assert "run_issue" not in gitea_loop_worker_targets
     assert "run_card" in organization_loop_targets
     assert "run_issue" not in organization_loop_targets
     assert "run_card" in webhook_targets
@@ -714,10 +755,20 @@ def test_execution_pipeline_no_longer_assembles_cards_workload_authority_input_d
     execution_pipeline_text = (REPO_ROOT / "orket" / "runtime" / "execution_pipeline.py").read_text(
         encoding="utf-8-sig"
     )
+    card_dispatch_text = (REPO_ROOT / "orket" / "runtime" / "execution_pipeline_card_dispatch.py").read_text(
+        encoding="utf-8-sig"
+    )
+    epic_orchestrator_text = (REPO_ROOT / "orket" / "runtime" / "epic_run_orchestrator.py").read_text(
+        encoding="utf-8-sig"
+    )
 
-    assert "resolve_cards_control_plane_workload_from_contract" in execution_pipeline_text
+    assert "resolve_cards_control_plane_workload_from_contract" in epic_orchestrator_text
     assert "WorkloadAuthorityInput" not in execution_pipeline_text
+    assert "WorkloadAuthorityInput" not in card_dispatch_text
+    assert "WorkloadAuthorityInput" not in epic_orchestrator_text
     assert "resolve_control_plane_workload(" not in execution_pipeline_text
+    assert "resolve_control_plane_workload(" not in card_dispatch_text
+    assert "resolve_control_plane_workload(" not in epic_orchestrator_text
 
 
 def test_extension_manager_no_longer_assembles_extension_workload_authority_input_directly() -> None:
@@ -744,10 +795,9 @@ def test_run_arbiter_no_longer_assembles_odr_workload_authority_input_directly()
 
 def test_runtime_and_engine_expose_only_thin_run_rock_wrappers() -> None:
     """Layer: unit. Verifies run_rock survives only as a thin legacy public wrapper over run_card."""
-    pipeline_path = REPO_ROOT / "orket" / "runtime" / "execution_pipeline.py"
     engine_path = REPO_ROOT / "orket" / "orchestration" / "engine.py"
 
-    assert _class_has_method(pipeline_path, class_name="ExecutionPipeline", method_name="run_rock") is True
+    assert _runtime_pipeline_has_method("run_rock") is True
     assert _class_has_method(engine_path, class_name="OrchestrationEngine", method_name="run_rock") is True
     assert _call_targets(_load_execution_pipeline_method("run_rock")) == {"run_card"}
     assert _call_targets(
@@ -761,9 +811,7 @@ def test_runtime_and_engine_expose_only_thin_run_rock_wrappers() -> None:
 
 def test_runtime_execution_pipeline_no_longer_exposes_rock_named_internal_entry() -> None:
     """Layer: unit. Verifies internal rock routing no longer survives as a rock-named helper."""
-    pipeline_path = REPO_ROOT / "orket" / "runtime" / "execution_pipeline.py"
-
-    assert _class_has_method(pipeline_path, class_name="ExecutionPipeline", method_name="_run_rock_entry") is False
+    assert _runtime_pipeline_has_method("_run_rock_entry") is False
 
 
 def test_runtime_execution_pipeline_no_longer_exposes_orchestrate_rock_helper() -> None:

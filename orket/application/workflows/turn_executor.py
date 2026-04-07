@@ -18,7 +18,7 @@ from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn
 from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.core.policies.tool_gate import ToolGate
-from orket.exceptions import ModelTimeoutError
+from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
 from . import turn_executor_ops
@@ -67,6 +67,7 @@ class TurnExecutor:
         self.tool_gate = tool_gate
         self.workspace = workspace
         self.middleware = middleware or TurnLifecycleInterceptors([])
+        self.middleware.bind_workspace(self.workspace)
 
         self.artifact_writer = TurnArtifactWriter(workspace)
         self.response_parser = ResponseParser(workspace, self.artifact_writer.write_turn_artifact)
@@ -169,6 +170,8 @@ __all__ = [
     "ContractValidator",
     "CorrectivePromptBuilder",
     "MessageBuilder",
+    "ModelConnectionError",
+    "ModelProviderError",
     "ModelTimeoutError",
     "PathResolver",
     "ResponseParser",

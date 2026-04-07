@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-import orket.runtime.execution_pipeline as execution_pipeline_module
+import orket.runtime.execution_pipeline_run_summary as execution_pipeline_run_summary_module
 import orket.runtime.run_summary as run_summary_module
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.services.turn_tool_control_plane_support import attempt_id_for, run_id_for
@@ -1228,7 +1228,7 @@ async def test_run_ledger_emits_degraded_run_summary_when_canonical_generation_f
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
     monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
     monkeypatch.setattr(
-        execution_pipeline_module,
+        execution_pipeline_run_summary_module,
         "generate_run_summary_for_finalize",
         _raise_summary_generation,
     )
@@ -1282,7 +1282,7 @@ async def test_run_ledger_degrades_when_finalize_run_identity_validation_fails(
     async def _no_export_run(**_kwargs):
         return None
 
-    original_validate = execution_pipeline_module.validate_run_identity_projection
+    original_validate = execution_pipeline_run_summary_module.validate_run_identity_projection
 
     def _raise_finalize_run_identity_error(value, *, error_prefix: str = "run_identity"):
         if error_prefix == "run_summary_run_identity":
@@ -1292,7 +1292,7 @@ async def test_run_ledger_degrades_when_finalize_run_identity_validation_fails(
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
     monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
     monkeypatch.setattr(
-        execution_pipeline_module,
+        execution_pipeline_run_summary_module,
         "validate_run_identity_projection",
         _raise_finalize_run_identity_error,
     )

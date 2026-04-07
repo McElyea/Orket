@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 import orket.settings as settings_module
+from orket.exceptions import SettingsBridgeError
 
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:
@@ -38,7 +39,7 @@ async def test_load_user_settings_sync_fails_closed_inside_event_loop_without_ru
     monkeypatch.setattr(settings_module, "_SETTINGS_FILE", settings_path)
     monkeypatch.setattr(settings_module, "_SETTINGS_CACHE", None)
 
-    with pytest.raises(AssertionError, match="set_runtime_settings_context"):
+    with pytest.raises(SettingsBridgeError, match="set_runtime_settings_context"):
         settings_module.load_user_settings()
 
 

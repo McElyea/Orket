@@ -20,6 +20,7 @@ from orket.application.workflows.turn_executor_runtime import (
     synthesize_required_status_tool_call,
 )
 from orket.core.domain.execution import ExecutionTurn
+from orket.exceptions import ModelProviderError
 from orket.logging import log_event
 from orket.schema import IssueConfig, RoleConfig
 
@@ -257,7 +258,16 @@ async def _invoke_and_parse_turn(
     turn_result_failed: FailedResultFactory,
 ) -> tuple[ExecutionTurn | None, TurnResult | None]:
     role_name = str(role.name or "").strip()
-    response = await _invoke_model_complete(model_client, messages, context)
+    response = await _invoke_model_complete_with_retries(
+        executor=executor,
+        issue=issue,
+        role=role,
+        model_client=model_client,
+        messages=messages,
+        context=context,
+        session_id=session_id,
+        turn_index=turn_index,
+    )
     response, middleware_outcome = executor.middleware.apply_after_model(
         response,
         issue=issue,
@@ -380,6 +390,69 @@ def _contract_reasons(contract_violations: list[dict[str, Any]]) -> list[str]:
         for item in contract_violations
         if str(item.get("reason", "")).strip()
     ]
+
+
+async def _invoke_model_complete_with_retries(
+    *,
+    executor: TurnExecutor,
+    issue: IssueConfig,
+    role: RoleConfig,
+    model_client: Any,
+    messages: list[dict[str, str]],
+    context: dict[str, Any],
+    session_id: str,
+    turn_index: int,
+) -> Any:
+    try:
+        max_retries = max(0, int(context.get("max_turn_retries", context.get("max_retries", 2))))
+    except (TypeError, ValueError):
+        max_retries = 2
+    try:
+        base_backoff = max(0.0, float(context.get("turn_retry_backoff_seconds", 1.0)))
+    except (TypeError, ValueError):
+        base_backoff = 1.0
+
+    for attempt in range(max_retries + 1):
+        try:
+            return await _invoke_model_complete(model_client, messages, context)
+        except ModelProviderError as exc:
+            if attempt >= max_retries:
+                context["turn_retry_exhausted"] = True
+                log_event(
+                    "turn_retry_exhausted",
+                    {
+                        "issue_id": issue.id,
+                        "role": role.name,
+                        "session_id": session_id,
+                        "turn_index": turn_index,
+                        "retry_count": attempt,
+                        "max_retries": max_retries,
+                        "error_type": type(exc).__name__,
+                        "error": str(exc),
+                        "result": "blocked",
+                    },
+                    executor.workspace,
+                )
+                raise
+            delay = base_backoff * (2 ** attempt)
+            log_event(
+                "turn_retry_scheduled",
+                {
+                    "issue_id": issue.id,
+                    "role": role.name,
+                    "session_id": session_id,
+                    "turn_index": turn_index,
+                    "retry_count": attempt + 1,
+                    "max_retries": max_retries,
+                    "backoff_seconds": delay,
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                },
+                executor.workspace,
+            )
+            if delay > 0:
+                await asyncio.sleep(delay)
+    raise RuntimeError("unreachable model retry state")
 
 
 __all__ = ["prepare_turn_for_execution"]

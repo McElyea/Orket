@@ -20,6 +20,8 @@ from orket.application.services.gitea_state_control_plane_reservation_service im
     GiteaStateControlPlaneReservationService,
 )
 from orket.core.contracts import AttemptRecord, RunRecord
+from orket.exceptions import LeaseNotAvailableError
+from orket.logging import log_event
 
 
 class LeaseExpiredError(RuntimeError):
@@ -67,8 +69,9 @@ class GiteaStateWorker:
             card_id = str(candidate.get("issue_number") or candidate.get("card_id") or "").strip()
             if not card_id:
                 continue
-            lease = await self.adapter.acquire_lease(card_id, owner_id=self.worker_id, lease_seconds=self.lease_seconds)
-            if not lease:
+            try:
+                lease = await self._acquire_required_lease(card_id)
+            except LeaseNotAvailableError:
                 continue
             reservation_id = await self._publish_claim_reservation_if_enabled(card_id=card_id, lease_observation=lease)
             await self._publish_claimed_lease_if_enabled(
@@ -101,6 +104,25 @@ class GiteaStateWorker:
             return True
         return False
 
+    async def _acquire_required_lease(self, card_id: str) -> dict[str, Any]:
+        lease = await self.adapter.acquire_lease(
+            card_id,
+            owner_id=self.worker_id,
+            lease_seconds=self.lease_seconds,
+        )
+        if isinstance(lease, dict):
+            return dict(lease)
+        log_event(
+            "lease_acquisition_failed",
+            {
+                "card_id": card_id,
+                "worker_id": self.worker_id,
+                "wait_reason": "system",
+                "result": "skipped",
+            },
+        )
+        raise LeaseNotAvailableError(f"lease unavailable for card {card_id}")
+
     async def _run_claimed(
         self,
         *,
@@ -121,7 +143,7 @@ class GiteaStateWorker:
                 to_state="in_progress",
                 reason=f"worker_claimed:{self.worker_id}",
             )
-        except (RuntimeError, ValueError, TypeError, OSError, TimeoutError, asyncio.TimeoutError) as exc:
+        except (RuntimeError, ValueError, TypeError, OSError, TimeoutError) as exc:
             handled = await close_gitea_state_claim_failure(
                 execution_service=self.control_plane_execution_service,
                 lease_service=self.control_plane_lease_service,
@@ -216,7 +238,7 @@ class GiteaStateWorker:
                 control_plane_run_id=control_plane_run_id,
                 control_plane_attempt_id=control_plane_attempt_id,
             )
-        except (RuntimeError, ValueError, TypeError, OSError, TimeoutError, asyncio.TimeoutError) as exc:
+        except (RuntimeError, ValueError, TypeError, OSError, TimeoutError) as exc:
             effective_error = (
                 lease_state["reason"]
                 if lease_state.get("authority_drift")
@@ -263,7 +285,7 @@ class GiteaStateWorker:
             try:
                 await asyncio.wait_for(stop_event.wait(), timeout=self.renew_interval_seconds)
                 break
-            except (TimeoutError, asyncio.TimeoutError):
+            except TimeoutError:
                 if await self._control_plane_renewal_authority_drifted(card_id=card_id):
                     lease_state["authority_drift"] = True
                     lease_state["reason"] = self.CONTROL_PLANE_RESOURCE_DRIFT_REASON

@@ -45,7 +45,14 @@ async def execute_turn(
     context: dict[str, Any],
     system_prompt: str | None = None,
 ) -> TurnResult:
-    from .turn_executor import ModelTimeoutError, ToolApprovalPendingError, ToolValidationError, TurnResult
+    from .turn_executor import (
+        ModelConnectionError,
+        ModelProviderError,
+        ModelTimeoutError,
+        ToolApprovalPendingError,
+        ToolValidationError,
+        TurnResult,
+    )
 
     issue_id = issue.id
     role_name = str(role.name or "").strip()
@@ -290,20 +297,38 @@ async def execute_turn(
 
     except ModelTimeoutError as exc:
         executor.middleware.apply_on_turn_failure(exc, issue=issue, role=role, context=context)
+        retry_exhausted = bool(context.get("turn_retry_exhausted"))
         log_event(
             "turn_failed",
             {
                 "issue_id": issue_id,
                 "error": str(exc),
-                "type": "timeout",
+                "type": "turn_retry_exhausted" if retry_exhausted else "timeout",
                 "session_id": session_id,
                 "turn_index": turn_index,
                 "turn_trace_id": turn_trace_id,
             },
             executor.workspace,
         )
-        await emit_failure(str(exc), "timeout")
-        return TurnResult.failed(str(exc), should_retry=True)
+        await emit_failure(str(exc), "turn_retry_exhausted" if retry_exhausted else "timeout")
+        return TurnResult.failed(str(exc), should_retry=not retry_exhausted)
+
+    except (ModelConnectionError, ModelProviderError) as exc:
+        executor.middleware.apply_on_turn_failure(exc, issue=issue, role=role, context=context)
+        log_event(
+            "turn_failed",
+            {
+                "issue_id": issue_id,
+                "error": str(exc),
+                "type": "turn_retry_exhausted",
+                "session_id": session_id,
+                "turn_index": turn_index,
+                "turn_trace_id": turn_trace_id,
+            },
+            executor.workspace,
+        )
+        await emit_failure(str(exc), "turn_retry_exhausted")
+        return TurnResult.failed(str(exc), should_retry=False)
 
     except (ValueError, TypeError, KeyError, RuntimeError, OSError, AttributeError) as exc:
         import traceback

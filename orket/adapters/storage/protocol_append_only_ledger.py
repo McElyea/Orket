@@ -6,6 +6,8 @@ import struct
 from pathlib import Path
 from typing import Any
 
+import google_crc32c
+
 from orket.application.workflows.protocol_hashing import canonical_json
 from orket.runtime.protocol_error_codes import (
     E_LEDGER_CORRUPT,
@@ -26,28 +28,9 @@ class LedgerFramingError(ValueError):
         super().__init__(f"{self.code}:{self.detail}" if self.detail else self.code)
 
 
-def _build_crc32c_table() -> list[int]:
-    polynomial = 0x82F63B78  # Castagnoli, reversed form for byte-wise update.
-    table: list[int] = []
-    for value in range(256):
-        crc = value
-        for _ in range(8):
-            if crc & 1:
-                crc = (crc >> 1) ^ polynomial
-            else:
-                crc >>= 1
-        table.append(crc & 0xFFFFFFFF)
-    return table
-
-
-_CRC32C_TABLE = _build_crc32c_table()
-
-
 def crc32c(payload: bytes) -> int:
-    crc = 0xFFFFFFFF
-    for byte in payload:
-        crc = _CRC32C_TABLE[(crc ^ byte) & 0xFF] ^ (crc >> 8)
-    return crc ^ 0xFFFFFFFF
+    # LPJ-C32 v1 requires Castagnoli CRC-32C per RFC 4960 Appendix B; IEEE crc32 is not wire-compatible.
+    return int(google_crc32c.value(payload))
 
 
 def encode_lpj_c32_record(

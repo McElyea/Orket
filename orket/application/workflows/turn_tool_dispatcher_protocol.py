@@ -17,12 +17,12 @@ from orket.runtime.protocol_error_codes import (
 from ..services.governed_turn_tool_approval_continuation_service import (
     supports_governed_turn_tool_approval_continuation,
 )
-from ..services.turn_tool_control_plane_service import TurnToolControlPlaneService
 from ..services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run,
     namespace_resource_id_for_scope,
     reservation_id_for_run,
 )
+from ..services.turn_tool_control_plane_service import TurnToolControlPlaneService
 from .tool_invocation_contracts import build_tool_invocation_manifest, compute_tool_call_hash
 from .turn_path_resolver import PathResolver
 from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
@@ -36,7 +36,7 @@ from .turn_tool_dispatcher_support import (
 )
 
 
-def collect_protocol_preflight_violations(
+async def collect_protocol_preflight_violations(
     *,
     turn: ExecutionTurn,
     context: dict[str, Any],
@@ -105,7 +105,7 @@ def collect_protocol_preflight_violations(
         if workspace_violation:
             return [format_protocol_error(E_WORKSPACE_CONSTRAINT_PREFIX, workspace_violation)]
 
-        gate_violation = tool_gate.validate(
+        gate_violation = await tool_gate.validate(
             tool_name=tool_name,
             args=tool_call.args,
             context=context,

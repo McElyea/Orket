@@ -6,11 +6,13 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Protocol
 
+from orket.agents.model_family_registry import ModelFamilyRegistry
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.application.services.tool_parser import ToolParser
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
+from orket.runtime import ConfigLoader
 from orket.schema import DialectConfig, SkillConfig
 from orket.utils import sanitize_name
 
@@ -57,8 +59,6 @@ class Agent:
         self._load_configs()
 
     def _load_configs(self) -> None:
-        from orket.orket import ConfigLoader
-
         loader = ConfigLoader(self.config_root, "core")
         try:
             self.skill = loader.load_asset("roles", sanitize_name(self.name), SkillConfig)
@@ -71,15 +71,16 @@ class Agent:
             )
 
         model_name = self.provider.model.lower()
-        family = "generic"
-        if "deepseek" in model_name:
-            family = "deepseek-r1"
-        elif "llama" in model_name:
-            family = "llama3"
-        elif "phi" in model_name:
-            family = "phi"
-        elif "qwen" in model_name:
-            family = "qwen"
+        model_family_match = ModelFamilyRegistry.from_config().resolve(model_name)
+        family = model_family_match.family
+        if not model_family_match.recognized:
+            log_event(
+                "model_family_unrecognized",
+                {"agent": self.name, "model": self.provider.model, "family": family},
+                workspace=Path("workspace/default"),
+                role=self.name,
+                level="warn",
+            )
 
         try:
             self.dialect = loader.load_asset("dialects", family, DialectConfig)
@@ -136,7 +137,48 @@ class Agent:
             text = re.sub(r"<thought>.*?</thought>", "", text, flags=re.DOTALL).strip()
 
         # 3. PARSE & EXECUTE TOOLS
-        parsed_calls = ToolParser.parse(text)
+        parser_diag: list[dict[str, Any]] = []
+
+        def capture(stage: str, data: dict[str, Any]) -> None:
+            parser_diag.append({"stage": stage, "data": data})
+
+        parsed_calls = ToolParser.parse(text, diagnostics=capture)
+        partial_recovery_events = [
+            dict(item.get("data") or {})
+            for item in parser_diag
+            if item.get("stage") == "parse_partial_recovery"
+            and dict(item.get("data") or {}).get("recovery_complete") is False
+        ]
+        if partial_recovery_events:
+            skipped_tools = [
+                dict(skipped)
+                for event in partial_recovery_events
+                for skipped in (event.get("skipped_tools") or [])
+                if isinstance(skipped, dict)
+            ]
+            log_event(
+                "tool_recovery_partial",
+                {
+                    "issue_id": context.get("issue_id", "unknown"),
+                    "role": self.name,
+                    "skipped_tools": skipped_tools,
+                    "recovered_count": len(parsed_calls),
+                    "result": "blocked",
+                },
+                workspace,
+                role=self.name,
+            )
+            parsed_calls = [
+                {
+                    "tool": "add_issue_comment",
+                    "args": {
+                        "comment": (
+                            "Blocked: tool-call recovery was partial, so Orket did not execute the recovered "
+                            f"tool calls. Skipped tools: {skipped_tools}"
+                        )
+                    },
+                }
+            ]
         turn = ExecutionTurn(
             role=self.name,
             issue_id=context.get("issue_id", "unknown"),
@@ -157,7 +199,7 @@ class Agent:
             # --- TOOL GATE: Pre-execution validation ---
             if self.tool_gate:
                 roles = context.get("roles", [self.name])
-                gate_error = self.tool_gate.validate(tool_name, args, context, roles)
+                gate_error = await self.tool_gate.validate(tool_name, args, context, roles)
                 if gate_error:
                     turn.tool_calls.append(ToolCall(tool=tool_name, args=args, error=f"[GATE] {gate_error}"))
                     log_event(

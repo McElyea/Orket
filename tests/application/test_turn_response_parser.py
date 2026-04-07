@@ -66,6 +66,40 @@ def test_response_parser_falls_back_to_native_tool_calls_when_content_is_empty(t
     assert "agent_output/main.py" in captured[1]["content"]
 
 
+def test_response_parser_replaces_partial_recovery_with_blocked_comment(tmp_path: Path) -> None:
+    """Layer: contract. Verifies partial tool recovery does not execute recovered calls silently."""
+    captured: list[dict] = []
+
+    def _write_turn_artifact(**kwargs):  # type: ignore[no-untyped-def]
+        captured.append(kwargs)
+
+    parser = ResponseParser(tmp_path, _write_turn_artifact)
+    response = {
+        "content": (
+            '```json\n'
+            '{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)\\n"}}\n'
+            '{"tool":"create_issue","args":{"title":"Ship it"}\n'
+            '```'
+        ),
+        "raw": {"total_tokens": 11},
+    }
+
+    turn = parser.parse_response(
+        response=response,
+        issue_id="ISSUE-1",
+        role_name="coder",
+        context={"session_id": "s1", "turn_index": 1},
+    )
+
+    assert [call.tool for call in turn.tool_calls] == ["add_issue_comment"]
+    assert "tool-call recovery was partial" in turn.tool_calls[0].args["comment"]
+    diagnostics = captured[0]["content"]
+    assert '"recovery_complete": false' in diagnostics
+    parsed = captured[1]["content"]
+    assert "add_issue_comment" in parsed
+    assert "write_file" not in parsed
+
+
 def test_response_parser_unwraps_legacy_args_wrapper_inside_native_tool_calls(tmp_path: Path) -> None:
     """Layer: contract. Verifies native tool calls still accept the legacy nested args wrapper."""
     parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]

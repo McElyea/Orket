@@ -1,4 +1,5 @@
 ﻿
+from orket.adapters.tools.registry import ToolArgumentSchema, ToolRegistry
 from orket.application.services.tool_parser import ToolParser
 
 
@@ -220,6 +221,7 @@ def test_parse_truncated_json_recovery_reports_unsupported_tools():
     recovery_events = [data for stage, data in diagnostics if stage == "parse_partial_recovery"]
     assert len(recovery_events) == 1
     assert recovery_events[0]["count"] == 0
+    assert recovery_events[0]["recovery_complete"] is False
     assert recovery_events[0]["skipped_tools"] == [{"tool": "create_issue", "reason": "unsupported_tool"}]
 
 
@@ -243,4 +245,32 @@ def test_parse_truncated_json_recovery_includes_skipped_tools_when_partial_recov
     assert len(recovery_events) == 1
     assert recovery_events[0]["count"] == 1
     assert recovery_events[0]["tools"] == ["write_file"]
+    assert recovery_events[0]["recovery_complete"] is False
     assert recovery_events[0]["skipped_tools"] == [{"tool": "create_issue", "reason": "unsupported_tool"}]
+
+
+# Layer: unit
+def test_parse_truncated_json_recovery_uses_injected_tool_registry():
+    registry = ToolRegistry(
+        [
+            ToolArgumentSchema(
+                tool_name="add_issue_comment",
+                required_args=("comment",),
+                recoverable=True,
+                missing_reason="missing_comment",
+            )
+        ]
+    )
+    text = """
+```json
+{"tool":"add_issue_comment","args":{"comment":"Blocked until operator review"}
+```"""
+
+    results = ToolParser.parse(text, tool_registry=registry)
+
+    assert results == [
+        {
+            "tool": "add_issue_comment",
+            "args": {"comment": "Blocked until operator review"},
+        }
+    ]

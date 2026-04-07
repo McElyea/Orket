@@ -4,6 +4,14 @@ import asyncio
 import re
 from typing import Any
 
+from pydantic import ValidationError
+
+from orket.adapters.vcs.gitea_webhook_payloads import (
+    PullRequestMergedWebhookPayload,
+    PullRequestOpenedWebhookPayload,
+    PullRequestReviewWebhookPayload,
+    webhook_payload_validation_error,
+)
 from orket.logging import log_event
 from orket.schema import CardStatus
 
@@ -25,10 +33,15 @@ class PRReviewHandler:
     def __init__(self, handler: Any) -> None:
         self.handler = handler
 
-    async def handle_pr_review(self, payload: dict[str, Any]) -> dict[str, str]:
-        pr = payload["pull_request"]
-        review = payload["review"]
-        repo = payload["repository"]
+    async def handle_pr_review(self, payload: dict[str, Any]) -> dict[str, Any]:
+        try:
+            validated_payload = PullRequestReviewWebhookPayload.model_validate(payload)
+        except ValidationError as exc:
+            return webhook_payload_validation_error(event_type="pull_request_review", exc=exc)
+
+        pr = validated_payload.pull_request.model_dump()
+        review = validated_payload.review.model_dump(exclude_none=True)
+        repo = validated_payload.repository.model_dump()
 
         pr_number = pr["number"]
         pr_key = f"{repo['owner']['login']}/{repo['name']}/#{pr_number}"
@@ -46,7 +59,7 @@ class PRReviewHandler:
         if review_state == "changes_requested":
             repo_full_name = f"{repo['owner']['login']}/{repo['name']}"
             cycles = await self.handler.db.increment_pr_cycle(repo_full_name, pr_number)
-            reason = review.get("body", "No reason provided")
+            reason = review.get("body") or "No reason provided"
             await self.handler.db.add_failure_reason(repo_full_name, pr_number, reviewer, reason)
 
             if cycles == 3:
@@ -179,15 +192,20 @@ class PRLifecycleHandler:
     def __init__(self, handler: Any) -> None:
         self.handler = handler
 
-    async def handle_pr_opened(self, payload: dict[str, Any]) -> dict[str, str]:
-        pr = payload["pull_request"]
-        repo = payload["repository"]
+    async def handle_pr_opened(self, payload: dict[str, Any]) -> dict[str, Any]:
+        try:
+            validated_payload = PullRequestOpenedWebhookPayload.model_validate(payload)
+        except ValidationError as exc:
+            return webhook_payload_validation_error(event_type="pull_request", exc=exc)
+
+        pr = validated_payload.pull_request.model_dump()
+        repo = validated_payload.repository.model_dump()
         pr_number = pr["number"]
         repo_full_name = f"{repo['owner']['login']}/{repo['name']}"
 
         log_event(
             "pr_opened",
-            {"pr": pr_number, "repo": repo_full_name, "action": payload.get("action")},
+            {"pr": pr_number, "repo": repo_full_name, "action": validated_payload.action},
             self.handler.workspace,
         )
         issue_match = re.search(r"ISSUE-[A-Z0-9]+", pr["title"])
@@ -212,9 +230,14 @@ class PRLifecycleHandler:
         task.add_done_callback(_log_task_error)
         return {"status": "success", "message": f"PR #{pr_number} review triggered for {issue_id}"}
 
-    async def handle_pr_merged(self, payload: dict[str, Any]) -> dict[str, str]:
-        pr = payload["pull_request"]
-        repo = payload["repository"]
+    async def handle_pr_merged(self, payload: dict[str, Any]) -> dict[str, Any]:
+        try:
+            validated_payload = PullRequestMergedWebhookPayload.model_validate(payload)
+        except ValidationError as exc:
+            return webhook_payload_validation_error(event_type="pull_request", exc=exc)
+
+        pr = validated_payload.pull_request.model_dump(exclude_none=True)
+        repo = validated_payload.repository.model_dump()
         pr_number = pr["number"]
         owner = repo["owner"]["login"]
         repo_name = repo["name"]

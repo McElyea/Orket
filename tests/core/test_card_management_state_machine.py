@@ -9,7 +9,7 @@ class SpyToolGate:
         self.violation = violation
         self.calls = []
 
-    def validate(self, tool_name, args, context, roles):
+    async def validate(self, tool_name, args, context, roles):
         self.calls.append(
             {
                 "tool_name": tool_name,

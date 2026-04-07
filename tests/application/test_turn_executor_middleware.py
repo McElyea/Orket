@@ -10,6 +10,7 @@ from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain import AttemptState, RunState
 from orket.core.domain.state_machine import StateMachine
 from orket.core.policies.tool_gate import ToolGate
+from orket.exceptions import ModelConnectionError
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
 
@@ -113,6 +114,40 @@ async def test_turn_executor_middleware_hook_order(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_turn_executor_isolates_broken_before_prompt_interceptor(tmp_path):
+    """Layer: integration. Verifies a broken interceptor does not abort the turn."""
+    hook_order = []
+
+    class _BrokenHooks:
+        def before_prompt(self, messages, **_kwargs):
+            raise RuntimeError("broken interceptor")
+
+    class _HealthyHooks:
+        def before_prompt(self, messages, **_kwargs):
+            hook_order.append("healthy_before_prompt")
+            return MiddlewareOutcome(replacement=messages)
+
+        def after_model(self, response, **_kwargs):
+            hook_order.append("healthy_after_model")
+            return MiddlewareOutcome(replacement=response)
+
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+        middleware=TurnLifecycleInterceptors([_BrokenHooks(), _HealthyHooks()]),
+    )
+    model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
+    toolbox = _ToolBox()
+
+    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+
+    assert result.success is True
+    assert hook_order == ["healthy_before_prompt", "healthy_after_model"]
+    assert toolbox.calls == [("write_file", {"path": "out.txt", "content": "ok"})]
+
+
+@pytest.mark.asyncio
 async def test_turn_executor_middleware_short_circuit_before_tool(tmp_path):
     class _Hooks:
         def before_tool(self, tool_name, args, **_kwargs):
@@ -158,6 +193,36 @@ async def test_turn_executor_calls_on_turn_failure_hook(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_turn_executor_on_turn_failure_continues_after_broken_hook(tmp_path):
+    """Layer: integration. Verifies failure hooks remain isolated from one another."""
+    hit = {"called": False}
+
+    class _BrokenHooks:
+        def on_turn_failure(self, error, **_kwargs):
+            raise RuntimeError("broken failure hook")
+
+    class _HealthyHooks:
+        def on_turn_failure(self, error, **_kwargs):
+            hit["called"] = True
+
+    class _FailingModel:
+        async def complete(self, _messages):
+            raise RuntimeError("boom")
+
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+        middleware=TurnLifecycleInterceptors([_BrokenHooks(), _HealthyHooks()]),
+    )
+
+    result = await executor.execute_turn(_issue(), _role(), _FailingModel(), _ToolBox(), _context())
+
+    assert result.success is False
+    assert hit["called"] is True
+
+
+@pytest.mark.asyncio
 async def test_turn_executor_non_progress_fails_after_one_reprompt(tmp_path):
     executor = TurnExecutor(
         StateMachine(),
@@ -192,6 +257,71 @@ async def test_turn_executor_non_progress_recovery_after_reprompt(tmp_path):
     assert result.success is True
     assert model.calls == 2
     assert len(toolbox.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_retries_transient_model_failure(tmp_path):
+    """Layer: integration. Verifies transient model provider errors are retried before parsing."""
+
+    class _FlakyModel:
+        def __init__(self):
+            self.calls = 0
+
+        async def complete(self, _messages):
+            self.calls += 1
+            if self.calls == 1:
+                raise ModelConnectionError("temporary outage")
+            return {
+                "content": '{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}',
+                "raw": {"total_tokens": 1},
+            }
+
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _FlakyModel()
+    toolbox = _ToolBox()
+    context = _context()
+    context["max_turn_retries"] = 1
+    context["turn_retry_backoff_seconds"] = 0
+
+    result = await executor.execute_turn(_issue(), _role(), model, toolbox, context)
+
+    assert result.success is True
+    assert model.calls == 2
+    assert toolbox.calls == [("write_file", {"path": "out.txt", "content": "ok"})]
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_blocks_after_model_retry_exhaustion(tmp_path):
+    """Layer: integration. Verifies exhausted transient model errors return a blocked turn result."""
+
+    class _FailingModel:
+        def __init__(self):
+            self.calls = 0
+
+        async def complete(self, _messages):
+            self.calls += 1
+            raise ModelConnectionError("provider unavailable")
+
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _FailingModel()
+    context = _context()
+    context["max_turn_retries"] = 1
+    context["turn_retry_backoff_seconds"] = 0
+
+    result = await executor.execute_turn(_issue(), _role(), model, _ToolBox(), context)
+
+    assert result.success is False
+    assert result.should_retry is False
+    assert model.calls == 2
+    assert context["turn_retry_exhausted"] is True
 
 
 @pytest.mark.asyncio

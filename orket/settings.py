@@ -3,11 +3,13 @@ import contextvars
 import json
 import os
 import threading
+from collections.abc import Coroutine
 from pathlib import Path
-from typing import Any, Coroutine, TypeVar
+from typing import Any, TypeVar
 
 import aiofiles
 
+from orket.exceptions import SettingsBridgeError
 from orket.runtime_paths import resolve_user_preferences_path, resolve_user_settings_path
 
 ENV_FILE = Path(".env")
@@ -56,7 +58,7 @@ def _run_settings_sync(awaitable: Coroutine[Any, Any, ResultT], *, operation: st
         close = getattr(awaitable, "close", None)
         if callable(close):
             close()
-        raise AssertionError(
+        raise SettingsBridgeError(
             f"{operation} must run before the event loop starts or after set_runtime_settings_context()."
         )
     return asyncio.run(awaitable)
@@ -133,7 +135,7 @@ def load_env() -> None:
         if _ENV_LOADED:
             return
         if _is_running_in_event_loop():
-            raise AssertionError("load_env must run before the event loop starts.")
+            raise SettingsBridgeError("load_env must run before the event loop starts.")
         content = _run_settings_sync(_read_text_async(ENV_FILE), operation="load_env")
         if content is not None:
             for line in content.splitlines():

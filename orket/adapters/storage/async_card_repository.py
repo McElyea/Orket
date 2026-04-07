@@ -31,32 +31,56 @@ class AsyncCardRepository(CardRepository):
 
     def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
-        self._lock = asyncio.Lock()
+        self._write_lock = asyncio.Lock()
         self._migrations = CardMigrations()
         self._archive_ops = CardArchiveOps(self._execute)
         self._misc_ops = CardMiscOps(self._execute, self.get_by_build)
 
-    def __getattr__(self, name: str) -> Any:
-        delegated = {
-            "archive_card": self._archive_ops.archive_card,
-            "archive_cards": self._archive_ops.archive_cards,
-            "archive_build": self._archive_ops.archive_build,
-            "find_related_card_ids": self._archive_ops.find_related_card_ids,
-            "add_transaction": self._misc_ops.add_transaction,
-            "get_card_history": self._misc_ops.get_card_history,
-            "reset_build": self._misc_ops.reset_build,
-            "add_comment": self._misc_ops.add_comment,
-            "get_comments": self._misc_ops.get_comments,
-            "add_credits": self._misc_ops.add_credits,
-            "get_independent_ready_issues": self._misc_ops.get_independent_ready_issues,
-        }
-        target = delegated.get(name)
-        if target is not None:
-            return target
-        raise AttributeError(name)
-
     async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
         await self._migrations.ensure_initialized(conn)
+
+    async def archive_card(self, card_id: str, archived_by: str = "system", reason: str | None = None) -> bool:
+        return await self._archive_ops.archive_card(card_id, archived_by=archived_by, reason=reason)
+
+    async def archive_cards(
+        self,
+        card_ids: list[str],
+        archived_by: str = "system",
+        reason: str | None = None,
+    ) -> dict[str, list[str]]:
+        return await self._archive_ops.archive_cards(card_ids, archived_by=archived_by, reason=reason)
+
+    async def archive_build(
+        self,
+        build_id: str,
+        archived_by: str = "system",
+        reason: str | None = None,
+    ) -> int:
+        return await self._archive_ops.archive_build(build_id, archived_by=archived_by, reason=reason)
+
+    async def find_related_card_ids(self, tokens: list[str], limit: int = 500) -> list[str]:
+        return await self._archive_ops.find_related_card_ids(tokens, limit=limit)
+
+    async def add_transaction(self, card_id: str, role: str, action: str) -> None:
+        await self._misc_ops.add_transaction(card_id, role, action)
+
+    async def get_card_history(self, card_id: str) -> list[str]:
+        return await self._misc_ops.get_card_history(card_id)
+
+    async def reset_build(self, build_id: str) -> None:
+        await self._misc_ops.reset_build(build_id)
+
+    async def add_comment(self, issue_id: str, author: str, content: str) -> None:
+        await self._misc_ops.add_comment(issue_id, author, content)
+
+    async def get_comments(self, issue_id: str) -> list[dict[str, Any]]:
+        return await self._misc_ops.get_comments(issue_id)
+
+    async def add_credits(self, issue_id: str, amount: float) -> None:
+        await self._misc_ops.add_credits(issue_id, amount)
+
+    async def get_independent_ready_issues(self, build_id: str) -> list[IssueRecord]:
+        return await self._misc_ops.get_independent_ready_issues(build_id)
 
     async def _execute(
         self,
@@ -64,15 +88,22 @@ class AsyncCardRepository(CardRepository):
         *,
         row_factory: bool = False,
         commit: bool = False,
+        write: bool = False,
     ) -> ResultT:
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
-            if row_factory:
-                conn.row_factory = aiosqlite.Row
-            await self._ensure_initialized(conn)
-            result = await operation(conn)
-            if commit:
-                await conn.commit()
-            return result
+        async def _run_operation() -> ResultT:
+            async with aiosqlite.connect(self.db_path) as conn:
+                if row_factory:
+                    conn.row_factory = aiosqlite.Row
+                await self._ensure_initialized(conn)
+                result = await operation(conn)
+                if commit:
+                    await conn.commit()
+                return result
+
+        if commit or write:
+            async with self._write_lock:
+                return await _run_operation()
+        return await _run_operation()
 
     async def get_by_id(self, card_id: str) -> IssueRecord | None:
         async def _op(conn: aiosqlite.Connection) -> IssueRecord | None:

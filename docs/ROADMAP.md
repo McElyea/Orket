@@ -26,6 +26,7 @@ _No active non-recurring Priority Now items._
 
 1. protocol-governed local provider compatibility expansion (`vLLM`, `llama.cpp`) -- Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Readiness must be regenerated with `scripts/protocol/check_local_prompting_promotion_readiness.py` before reopen; do not treat local ignored `benchmarks/results/...` output as durable roadmap authority. Reopen only with an explicit scoped implementation request.
 2. marshaller requirements hardening -- Hold until requirements are mature and explicitly approved for execution.
+3. `orket.orket` compatibility shim removal -- Remove the deprecated shim after one techdebt cycle once production imports use `orket.runtime` directly.
 
 ## Project Index
 

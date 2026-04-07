@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import json
 import logging
+import queue
 from pathlib import Path
 
+import orket.logging as logging_module
 from orket.logging import get_member_metrics, log_event
 
 
@@ -129,6 +131,22 @@ def test_log_event_routes_legacy_level_through_stdlib_logger(tmp_path: Path, mon
     assert record["level"] == "error"
     assert record["role"] == "webhook_db"
     assert record["event"] == "legacy_event"
+
+
+def test_log_write_queue_drops_when_full_without_blocking_event_loop(tmp_path: Path, monkeypatch) -> None:
+    """Layer: unit. Verifies async-reachable log writes use bounded lossy backpressure."""
+    monkeypatch.setattr(logging_module, "_log_write_queue", queue.Queue(maxsize=1))
+    monkeypatch.setattr(logging_module, "_dropped_log_entries", 0)
+    monkeypatch.setattr(logging_module, "_start_log_writer", lambda: None)
+    monkeypatch.setattr(logging_module, "_running_on_event_loop", lambda: True)
+
+    log_path = tmp_path / "orket.log"
+    logging_module._append_json_record(log_path, {"event": "queued"})
+    logging_module._append_json_record(log_path, {"event": "dropped"})
+
+    assert logging_module._log_write_queue.qsize() == 1
+    assert logging_module.dropped_log_entry_count() == 1
+    assert not log_path.exists()
 
 
 def test_get_member_metrics_returns_aggregated_roles(tmp_path: Path) -> None:

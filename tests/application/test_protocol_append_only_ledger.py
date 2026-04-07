@@ -9,9 +9,14 @@ from orket.adapters.storage.protocol_append_only_ledger import (
     MAX_LEDGER_PAYLOAD_BYTES,
     AppendOnlyRunLedger,
     LedgerFramingError,
+    crc32c,
     decode_lpj_c32_stream,
     encode_lpj_c32_record,
 )
+
+
+def test_lpj_c32_uses_castagnoli_crc32c_vector() -> None:
+    assert crc32c(b"123456789") == 0xE3069283
 
 
 def test_lpj_c32_encode_decode_round_trip() -> None:

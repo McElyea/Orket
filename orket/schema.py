@@ -60,7 +60,7 @@ class BaseCardConfig(BaseModel):
     type: CardType = Field(default=CardType.ISSUE)
     status: CardStatus = Field(default=CardStatus.READY)
     description: str | None = None
-    priority: float | str = Field(default=2.0)  # 3.0=High, 2.0=Medium, 1.0=Low
+    priority: float = Field(default=2.0)  # 3.0=High, 2.0=Medium, 1.0=Low
     wait_reason: WaitReason | None = None  # Why is this card blocked/waiting?
     note: str | None = None
 
@@ -291,6 +291,8 @@ class OrganizationConfig(BaseModel):
     departments: list[str] = Field(default_factory=list)
 
     process_rules: dict[str, Any] = Field(default_factory=dict)
+
+    allowed_idesign_categories: list[str] | None = None
 
     bottleneck_thresholds: BottleneckThresholds = Field(default_factory=lambda: BottleneckThresholds.model_construct())
 

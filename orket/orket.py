@@ -3,6 +3,8 @@
 Primary runtime modules now live under `orket.runtime`.
 """
 
+import warnings
+
 from orket.runtime import (
     ConfigLoader,
     ExecutionPipeline,
@@ -16,3 +18,10 @@ __all__ = [
     "orchestrate",
     "orchestrate_card",
 ]
+
+for _exported_name in __all__:
+    warnings.warn(
+        f"orket.orket.{_exported_name} is deprecated; import from orket.runtime directly.",
+        DeprecationWarning,
+        stacklevel=2,
+    )

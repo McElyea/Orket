@@ -77,6 +77,7 @@ class ToolDispatcher:
         self.tool_gate = tool_gate
         self.middleware = middleware
         self.workspace = workspace
+        self.middleware.bind_workspace(self.workspace)
         self.append_memory_event = append_memory_event
         self.hash_payload = hash_payload
         self.load_replay_tool_result = load_replay_tool_result
@@ -150,7 +151,7 @@ class ToolDispatcher:
         last_result_ref: str | None = None
 
         if protocol_enabled:
-            preflight_violations = collect_protocol_preflight_violations(
+            preflight_violations = await collect_protocol_preflight_violations(
                 turn=turn,
                 context=context,
                 roles=roles,
@@ -247,7 +248,7 @@ class ToolDispatcher:
                         ],
                     )
 
-                gate_violation = self.tool_gate.validate(
+                gate_violation = await self.tool_gate.validate(
                     tool_name=tool_name,
                     args=tool_call.args,
                     context=context,

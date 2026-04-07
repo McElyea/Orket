@@ -4,12 +4,16 @@ Tool Gate Service - Mechanical Enforcement.
 Intercepts tool calls before execution to enforce organizational invariants.
 """
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import Any
 
+from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.schema import CardStatus, CardType, OrganizationConfig
+from orket.services.ast_validator import ASTValidator
+from orket.services.idesign_validator import iDesignValidator
 
 
 class ToolGateViolation(Exception):
@@ -25,8 +29,9 @@ class ToolGate:
     def __init__(self, organization: OrganizationConfig | None, workspace_root: Path):
         self.org = organization
         self.workspace_root = workspace_root
+        self.idesign_validator = iDesignValidator(organization)
 
-    def validate(
+    async def validate(
         self,
         tool_name: str,
         args: dict[str, Any],
@@ -34,7 +39,7 @@ class ToolGate:
         roles: list[str],
     ) -> str | None:
         if tool_name == "write_file":
-            violation = self._validate_file_write(args, context, roles)
+            violation = await self._validate_file_write(args, context, roles)
             if violation:
                 return violation
 
@@ -55,7 +60,7 @@ class ToolGate:
 
         return None
 
-    def _validate_file_write(
+    async def _validate_file_write(
         self,
         args: dict[str, Any],
         context: dict[str, Any] | None = None,
@@ -77,10 +82,6 @@ class ToolGate:
             except ValueError:
                 return f"Security violation: Cannot write outside workspace ({file_path})"
 
-            from orket.core.domain.execution import ExecutionTurn, ToolCall
-            from orket.services.ast_validator import ASTValidator
-            from orket.services.idesign_validator import iDesignValidator
-
             actual_role = str(context.get("role") or context.get("current_role") or "unknown")
             actual_issue_id = str(context.get("issue_id") or context.get("card_id") or "unknown")
             temp_turn = ExecutionTurn(
@@ -90,13 +91,13 @@ class ToolGate:
             )
 
             if self._idesign_enabled(context):
-                violations = iDesignValidator.validate_turn(temp_turn, self.workspace_root)
+                violations = self.idesign_validator.validate_turn(temp_turn, self.workspace_root)
                 if violations:
                     return f"iDesign Violation: {violations[0].message} (Code: {violations[0].code.value})"
 
                 if full_path.suffix == ".py":
                     content = args.get("content", "")
-                    ast_violations = ASTValidator.validate_code(content, full_path.name)
+                    ast_violations = await asyncio.to_thread(ASTValidator.validate_code, content, full_path.name)
                     errors = [v for v in ast_violations if v.severity == "error"]
                     if errors:
                         return f"iDesign AST Violation: {errors[0].message} (Line: {errors[0].line})"

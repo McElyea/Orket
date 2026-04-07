@@ -128,6 +128,18 @@ async def test_concurrency_stress(repo):
         assert retrieved is not None
         assert retrieved.id == f"CONC-{i}"
 
+
+@pytest.mark.asyncio
+async def test_read_operations_do_not_wait_on_write_lock(repo):
+    """Layer: unit. Verifies reads are not serialized behind the repository write lock."""
+    await repo.save(IssueRecord(id="READ-LOCK", summary="Readable while write lock held", seat="standard"))
+
+    async with repo._write_lock:
+        retrieved = await asyncio.wait_for(repo.get_by_id("READ-LOCK"), timeout=1)
+
+    assert retrieved is not None
+    assert retrieved.id == "READ-LOCK"
+
 @pytest.mark.asyncio
 async def test_serialization_edge_cases(repo):
     """Test handling of empty or malformed JSON in extended fields."""
@@ -178,7 +190,7 @@ async def test_update_status_transaction_logging(repo):
 @pytest.mark.asyncio
 async def test_deserialize_corrupted_json(repo):
     """Test _deserialize_row with actual corrupted JSON string in DB."""
-    async with repo._lock, aiosqlite.connect(repo.db_path) as conn:
+    async with repo._write_lock, aiosqlite.connect(repo.db_path) as conn:
         await repo._ensure_initialized(conn)
         await conn.execute(
             "INSERT INTO issues (id, seat, summary, type, priority, status, depends_on_json) VALUES (?, ?, ?, ?, ?, ?, ?)",

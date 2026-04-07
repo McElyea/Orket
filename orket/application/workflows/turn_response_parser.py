@@ -70,6 +70,13 @@ class ResponseParser:
             content = envelope["content"]
         else:
             parsed_calls = ToolParser.parse(content, diagnostics=capture)
+            parsed_calls = self._fail_closed_on_partial_recovery(
+                parsed_calls=parsed_calls,
+                parser_diag=parser_diag,
+                issue_id=issue_id,
+                role_name=role_name,
+                context=context,
+            )
             if not parsed_calls:
                 parsed_calls = self._parse_native_tool_calls(
                     raw_payload,
@@ -150,6 +157,52 @@ class ResponseParser:
             if str(item).strip()
         }
         return allowed
+
+    def _fail_closed_on_partial_recovery(
+        self,
+        *,
+        parsed_calls: list[dict[str, Any]],
+        parser_diag: list[dict[str, Any]],
+        issue_id: str,
+        role_name: str,
+        context: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        partial_events = [
+            dict(item.get("data") or {})
+            for item in parser_diag
+            if item.get("stage") == "parse_partial_recovery"
+            and dict(item.get("data") or {}).get("recovery_complete") is False
+        ]
+        if not partial_events:
+            return parsed_calls
+
+        skipped_tools: list[dict[str, str]] = []
+        for event in partial_events:
+            skipped_tools.extend(
+                dict(item)
+                for item in (event.get("skipped_tools") or [])
+                if isinstance(item, dict)
+            )
+        session_id = str(context.get("session_id", "unknown-session"))
+        turn_index = int(context.get("turn_index", 0))
+        log_event(
+            "tool_recovery_partial",
+            {
+                "issue_id": issue_id,
+                "role": role_name,
+                "session_id": session_id,
+                "turn_index": turn_index,
+                "recovered_count": len(parsed_calls),
+                "skipped_tools": skipped_tools,
+                "result": "blocked",
+            },
+            self.workspace,
+        )
+        comment = (
+            "Blocked: tool-call recovery was partial, so Orket did not execute the recovered tool calls. "
+            f"Skipped tools: {json.dumps(skipped_tools, ensure_ascii=False)}"
+        )
+        return [{"tool": "add_issue_comment", "args": {"comment": comment}}]
 
     def _parse_native_tool_calls(
         self,

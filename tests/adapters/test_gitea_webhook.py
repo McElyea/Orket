@@ -5,6 +5,7 @@ import pytest
 
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 from orket.adapters.vcs.webhook_db import WebhookDatabase
+from orket.core.domain.sandbox import SandboxRegistry
 
 
 class _FakeResponse:
@@ -51,6 +52,37 @@ class _FakeClient:
 
     async def aclose(self):
         return None
+
+
+@pytest.mark.asyncio
+async def test_webhook_handler_accepts_injected_sandbox_orchestrator(monkeypatch, tmp_path):
+    """Layer: unit. Verifies webhook startup can share a repository-backed sandbox orchestrator."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+    registry = SandboxRegistry()
+
+    class _FakeSandboxOrchestrator:
+        def __init__(self):
+            self.registry = registry
+
+    orchestrator = _FakeSandboxOrchestrator()
+
+    handler = GiteaWebhookHandler(workspace=tmp_path, sandbox_orchestrator=orchestrator)
+
+    assert handler.sandbox_orchestrator is orchestrator
+    assert handler.sandbox_registry is registry
+    await handler.close()
+
+
+@pytest.mark.asyncio
+async def test_webhook_handler_passes_lifecycle_db_path_to_sandbox_orchestrator(monkeypatch, tmp_path):
+    """Layer: unit. Verifies default webhook sandbox orchestration is lifecycle-repository backed."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+    lifecycle_db_path = tmp_path / "sandbox_lifecycle.db"
+
+    handler = GiteaWebhookHandler(workspace=tmp_path, lifecycle_db_path=str(lifecycle_db_path))
+
+    assert handler.sandbox_orchestrator.lifecycle_repository.db_path == str(lifecycle_db_path)
+    await handler.close()
 
 
 @pytest.mark.asyncio
@@ -453,3 +485,66 @@ async def test_auto_reject_reports_close_failure_without_marking_rejected(monkey
     assert "rejection failed" in result["message"].lower()
     assert "503" in result["message"]
     assert row["status"] == "active"
+
+
+@pytest.mark.asyncio
+async def test_pr_review_payload_validation_returns_structured_error(monkeypatch, tmp_path):
+    """Layer: unit. Verifies malformed PR review payloads fail before nested key access."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+
+    handler = GiteaWebhookHandler(workspace=tmp_path)
+    result = await handler.handle_webhook(
+        "pull_request_review",
+        {
+            "pull_request": {"number": 61},
+            "repository": {"name": "repo", "owner": {"login": "org"}},
+        },
+    )
+    await handler.close()
+
+    assert result["status"] == "error"
+    assert result["error"] == "webhook_payload_validation_failed"
+    assert result["message"] == "Invalid pull_request_review webhook payload"
+    assert any(detail["loc"] == "review" for detail in result["details"])
+
+
+@pytest.mark.asyncio
+async def test_pr_opened_payload_validation_returns_structured_error(monkeypatch, tmp_path):
+    """Layer: unit. Verifies malformed PR-opened payloads fail before title access."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+
+    handler = GiteaWebhookHandler(workspace=tmp_path)
+    result = await handler.handle_webhook(
+        "pull_request",
+        {
+            "action": "opened",
+            "pull_request": {"number": 62},
+            "repository": {"name": "repo", "owner": {"login": "org"}},
+        },
+    )
+    await handler.close()
+
+    assert result["status"] == "error"
+    assert result["error"] == "webhook_payload_validation_failed"
+    assert any(detail["loc"] == "pull_request.title" for detail in result["details"])
+
+
+@pytest.mark.asyncio
+async def test_pr_merged_payload_validation_returns_structured_error(monkeypatch, tmp_path):
+    """Layer: unit. Verifies malformed merged PR payloads fail before repository owner access."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+
+    handler = GiteaWebhookHandler(workspace=tmp_path)
+    result = await handler.handle_webhook(
+        "pull_request",
+        {
+            "action": "closed",
+            "pull_request": {"number": 63, "merged": True},
+            "repository": {"name": "repo"},
+        },
+    )
+    await handler.close()
+
+    assert result["status"] == "error"
+    assert result["error"] == "webhook_payload_validation_failed"
+    assert any(detail["loc"] == "repository.owner" for detail in result["details"])

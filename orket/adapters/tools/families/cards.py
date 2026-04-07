@@ -90,7 +90,7 @@ class CardManagementTools(BaseTools):
 
         gate_context = {**context, "current_status": current_status.value, "card_type": card_type.value}
         if self.tool_gate:
-            gate_violation = self.tool_gate.validate(
+            gate_violation = await self.tool_gate.validate(
                 tool_name="update_issue_status",
                 args=args,
                 context=gate_context,

@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import orket.settings as settings_module
+from orket.exceptions import SettingsBridgeError
 
 
 @contextlib.contextmanager
@@ -52,7 +53,7 @@ def test_load_env_rejects_running_event_loop(monkeypatch: pytest.MonkeyPatch, tm
     async def _invoke() -> None:
         settings_module.load_env()
 
-    with _unset_pytest_marker(), pytest.raises(AssertionError, match="before the event loop starts"):
+    with _unset_pytest_marker(), pytest.raises(SettingsBridgeError, match="before the event loop starts"):
         asyncio.run(_invoke())
 
 

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from collections.abc import Iterator
-from typing import Any, Protocol
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Protocol, cast
+
+from orket.logging import log_event
 
 
 @dataclass
@@ -70,13 +73,32 @@ class TurnLifecycleInterceptors:
         interceptors: list[TurnLifecycleInterceptor] | None = None,
         *,
         middlewares: list[TurnLifecycleInterceptor] | None = None,
+        workspace: Path | None = None,
     ) -> None:
         # Backward compatibility: `middlewares=` was the old constructor argument.
         source = interceptors if interceptors is not None else middlewares
         self.interceptors: list[TurnLifecycleInterceptor] = list(source or [])
+        self.workspace = workspace
 
     def _iter(self) -> Iterator[TurnLifecycleInterceptor]:
         yield from self.interceptors
+
+    def bind_workspace(self, workspace: Path) -> None:
+        if self.workspace is None:
+            self.workspace = workspace
+
+    def _record_interceptor_error(
+        self,
+        *,
+        hook: str,
+        interceptor: TurnLifecycleInterceptor,
+        exc: Exception,
+    ) -> None:
+        log_event(
+            "interceptor_error",
+            {"hook": hook, "interceptor": type(interceptor).__name__, "error": str(exc)},
+            self.workspace,
+        )
 
     def apply_before_prompt(
         self,
@@ -88,7 +110,14 @@ class TurnLifecycleInterceptors:
     ) -> tuple[list[dict[str, str]], MiddlewareOutcome | None]:
         current = messages
         for interceptor in self._iter():
-            outcome = interceptor.before_prompt(current, issue=issue, role=role, context=context)
+            handler = getattr(interceptor, "before_prompt", None)
+            if not callable(handler):
+                continue
+            try:
+                outcome = handler(current, issue=issue, role=role, context=context)
+            except Exception as exc:
+                self._record_interceptor_error(hook="before_prompt", interceptor=interceptor, exc=exc)
+                continue
             if not outcome:
                 continue
             if outcome.short_circuit:
@@ -107,7 +136,14 @@ class TurnLifecycleInterceptors:
     ) -> tuple[Any, MiddlewareOutcome | None]:
         current = response
         for interceptor in self._iter():
-            outcome = interceptor.after_model(current, issue=issue, role=role, context=context)
+            handler = getattr(interceptor, "after_model", None)
+            if not callable(handler):
+                continue
+            try:
+                outcome = handler(current, issue=issue, role=role, context=context)
+            except Exception as exc:
+                self._record_interceptor_error(hook="after_model", interceptor=interceptor, exc=exc)
+                continue
             if not outcome:
                 continue
             if outcome.short_circuit:
@@ -126,9 +162,16 @@ class TurnLifecycleInterceptors:
         context: dict[str, Any],
     ) -> MiddlewareOutcome | None:
         for interceptor in self._iter():
-            outcome = interceptor.before_tool(tool_name, args, issue=issue, role_name=role_name, context=context)
+            handler = getattr(interceptor, "before_tool", None)
+            if not callable(handler):
+                continue
+            try:
+                outcome = handler(tool_name, args, issue=issue, role_name=role_name, context=context)
+            except Exception as exc:
+                self._record_interceptor_error(hook="before_tool", interceptor=interceptor, exc=exc)
+                continue
             if outcome:
-                return outcome
+                return cast(MiddlewareOutcome, outcome)
         return None
 
     def apply_after_tool(
@@ -143,7 +186,21 @@ class TurnLifecycleInterceptors:
     ) -> Any:
         current = result
         for interceptor in self._iter():
-            outcome = interceptor.after_tool(tool_name, args, current, issue=issue, role_name=role_name, context=context)
+            handler = getattr(interceptor, "after_tool", None)
+            if not callable(handler):
+                continue
+            try:
+                outcome = handler(
+                    tool_name,
+                    args,
+                    current,
+                    issue=issue,
+                    role_name=role_name,
+                    context=context,
+                )
+            except Exception as exc:
+                self._record_interceptor_error(hook="after_tool", interceptor=interceptor, exc=exc)
+                continue
             if outcome and outcome.replacement is not None:
                 current = outcome.replacement
         return current
@@ -157,7 +214,13 @@ class TurnLifecycleInterceptors:
         context: dict[str, Any],
     ) -> None:
         for interceptor in self._iter():
-            interceptor.on_turn_failure(error, issue=issue, role=role, context=context)
+            handler = getattr(interceptor, "on_turn_failure", None)
+            if not callable(handler):
+                continue
+            try:
+                handler(error, issue=issue, role=role, context=context)
+            except Exception as exc:
+                self._record_interceptor_error(hook="on_turn_failure", interceptor=interceptor, exc=exc)
 
 
 # Backward-compatible aliases.

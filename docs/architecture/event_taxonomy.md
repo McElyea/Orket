@@ -21,6 +21,8 @@ This document defines canonical runtime events and minimum fields.
 ## Parser Lifecycle
 1. `tool_parser_diagnostic`
    - `issue_id`, `session_id`, `turn_index`, `stage`, `details`
+2. `tool_recovery_partial`
+   - `issue_id`, `role`, `session_id`, `turn_index`, `recovered_count`, `skipped_tools`, `result`
 
 ## Tool Lifecycle
 1. `tool_call_start`
@@ -33,8 +35,24 @@ This document defines canonical runtime events and minimum fields.
    - `issue_id`, `session_id`, `turn_index`, `tool`
 5. `determinism_violation`
    - `issue_id`, `session_id`, `turn_index`, `tool`, `error`, `error_code`, `determinism_class`, `capability_profile`, `tool_contract_version`, `side_effect_signal_keys`
+6. `tool_timeout`
+   - `tool`, `timeout_seconds`, `ok`, `error`
+7. `interceptor_error`
+   - `hook`, `interceptor`, `error`
 
 `determinism_violation` is emitted to the runtime event artifact stream at `agent_output/observability/runtime_events.jsonl` when a tool's observed side effects contradict its declared determinism class.
+
+## Agent Factory Lifecycle
+1. `seat_no_roles_configured`
+   - `team`, `seat`
+2. `seat_role_config_missing`
+   - `team`, `seat`, `role`
+3. `model_family_unrecognized`
+   - `agent`, `model`, `family`
+
+## Logging Lifecycle
+1. `log_write_queue_full`
+   - `dropped_log_entries`, `queue_max`, `path`
 
 ## Transition/Failure Lifecycle
 1. `retry_triggered`
@@ -57,6 +75,14 @@ This document defines canonical runtime events and minimum fields.
    - `session_id`, `issue_id`, `execution_profile`, `odr_active`, `selected_model`, `odr_run_id`, `odr_valid`, `odr_pending_decisions`, `odr_stop_reason`, `odr_artifact_path`, `odr_requirement`, `odr_rounds_completed`, `odr_accepted`
 10. `odr_prebuild_failed`
    - `session_id`, `issue_id`, `execution_profile`, `odr_active`, `selected_model`, `odr_run_id`, `odr_valid`, `odr_pending_decisions`, `odr_stop_reason`, `odr_artifact_path`, `odr_requirement`, `odr_rounds_completed`, `odr_accepted`
+11. `turn_retry_scheduled`
+   - `issue_id`, `role`, `session_id`, `turn_index`, `retry_count`, `max_retries`, `backoff_seconds`, `error_type`, `error`
+12. `turn_retry_exhausted`
+   - `issue_id`, `role`, `session_id`, `turn_index`, `retry_count`, `max_retries`, `error_type`, `error`, `result`
+13. `lease_acquisition_failed`
+   - `card_id`, `worker_id`, `wait_reason`, `result` (`skipped` when no lease was acquired and no state transition occurred)
+14. `state_reconciliation_conflict`
+   - `card_id`, `sqlite_state`, `gitea_state`, `gitea_version`, `authority_policy`, `result`, `conflict_type`
 
 ## Guard Lifecycle
 1. `guard_approved`

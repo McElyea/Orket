@@ -108,14 +108,15 @@ def test_response_parser_protocol_errors_emit_registered_codes(tmp_path: Path) -
     assert codes.is_registered_protocol_error_code(emitted) is True
 
 
-def test_protocol_preflight_validator_errors_emit_registered_codes(tmp_path: Path) -> None:
+@pytest.mark.asyncio
+async def test_protocol_preflight_validator_errors_emit_registered_codes(tmp_path: Path) -> None:
     turn = ExecutionTurn(
         role="coder",
         issue_id="ISSUE-1",
         content="",
         tool_calls=[ToolCall(tool="read_file", args={"path": "a.txt"})],
     )
-    violations = collect_protocol_preflight_violations(
+    violations = await collect_protocol_preflight_violations(
         turn=turn,
         context={
             "session_id": "s1",

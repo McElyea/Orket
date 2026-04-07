@@ -1,6 +1,14 @@
 
 from orket.schema import CardStatus, CardType, WaitReason
 
+_SIMPLE_EXECUTION_TRANSITIONS: dict[CardStatus, set[CardStatus]] = {
+    CardStatus.READY: {CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
+    CardStatus.IN_PROGRESS: {CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED},
+    CardStatus.DONE: {CardStatus.ARCHIVED},
+    CardStatus.CANCELED: {CardStatus.ARCHIVED},
+    CardStatus.ARCHIVED: set(),
+}
+
 
 class StateMachineError(Exception):
     """Raised when an invalid state transition is attempted."""
@@ -89,6 +97,10 @@ class StateMachine:
             CardStatus.CANCELED: {CardStatus.ARCHIVED},
             CardStatus.ARCHIVED: set(),
         },
+        # Utility and app cards use the simple lifecycle profile until a richer
+        # domain-specific workflow is defined.
+        CardType.UTILITY: _SIMPLE_EXECUTION_TRANSITIONS,
+        CardType.APP: _SIMPLE_EXECUTION_TRANSITIONS,
     }
 
     @staticmethod

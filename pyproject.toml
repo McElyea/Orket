@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.4.36"
+version = "0.4.37"
 description = "Local-first workflow runtime for card-based execution"
 authors = [
     { name = "Jonathan McElyea" }
@@ -20,6 +20,7 @@ dependencies = [
     "python-dotenv>=1.0.0,<2.0.0",
     "PyYAML>=6.0.0,<7.0.0",
     "rfc8785>=0.1.4,<1.0.0",
+    "google-crc32c>=1.5.0,<2.0.0",
 
     # Web framework
     "fastapi>=0.109.0,<1.0.0",

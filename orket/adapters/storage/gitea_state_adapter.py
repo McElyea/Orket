@@ -213,6 +213,27 @@ class GiteaStateAdapter(StateBackendContract):
             )
         return cards
 
+    async def fetch_card_snapshot(self, card_id: str) -> dict[str, Any] | None:
+        try:
+            issue_number = int(str(card_id).strip())
+        except ValueError:
+            return None
+        payload = await self._request_json("GET", f"/issues/{issue_number}")
+        if not isinstance(payload, dict):
+            return None
+        try:
+            snapshot = decode_snapshot(str(payload.get("body") or ""))
+        except (ValueError, ValidationError):
+            return None
+        return {
+            "card_id": snapshot.card_id,
+            "issue_number": payload.get("number"),
+            "state": snapshot.state,
+            "version": snapshot.version,
+            "lease": snapshot.lease.model_dump(),
+            "metadata": snapshot.metadata,
+        }
+
     async def append_event(
         self,
         card_id: str,

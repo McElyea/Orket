@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.37] - 2026-04-06 - "The Priority Techdebt Remediation Cut"
+
+### Added
+- **Remediation Closeout Archive**: Added the archived `TD04062026C` techdebt closeout packet and preserved the completed review/remediation source docs as durable history outside active techdebt scope.
+- **Tool, Webhook, Model, And Reconciliation Registries**: Added the tool recovery registry, Gitea webhook payload boundary models, model-family registry, and SQLite/Gitea state reconciliation service plus on-demand script coverage.
+
+### Changed
+- **Priority Now Techdebt Completion**: Completed the active remediation plan through W1-W3, including fail-closed partial tool recovery, per-tool timeouts, typed lease and settings failures, turn retry backoff, middleware isolation, async AST validation, role-scoped tool gating, utility/app transitions, async repository locking cleanup, configurable iDesign categories, and deprecated `orket.orket` roadmap tracking.
+- **Execution Pipeline And Runtime Hardening**: Split `ExecutionPipeline` into bounded coordinator/mixin files, kept public compatibility wrappers routed through `run_card`, added repository-backed Gitea state loop authority, and tightened type-only split contracts to avoid new static-analysis drift.
+- **Observability And Protocol Maintenance**: Added bounded log-queue backpressure, call-time log-level resolution, payload schema failure events, float-only card priority authority with legacy migration, and maintained LPJ-C32 Castagnoli CRC-32C via the declared `google-crc32c` dependency instead of a hand-rolled table.
+- **Roadmap And Authority Alignment**: Cleared the active `Priority Now` lane, updated authority/event taxonomy notes, and kept the active techdebt folder limited to standing maintenance authority plus the live-runtime recovery plan.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No action required. The closeout proof is structural/contract/integration; live Gitea, live model-provider retry, and live sandbox paths were not rerun in this release.
+
 ## [0.4.36] - 2026-04-06 - "The Strict-Typing Techdebt Completion Cut"
 
 ### Added

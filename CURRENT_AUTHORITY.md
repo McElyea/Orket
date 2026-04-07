@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-04-05
+Last updated: 2026-04-06
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -512,6 +512,7 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "orket/extensions/manager.py",
         "orket/extensions/artifact_provenance.py",
         "orket/runtime/execution_pipeline.py",
+        "orket/runtime/epic_run_orchestrator.py",
         "scripts/odr/run_arbiter.py",
         "tests/application/test_control_plane_workload_authority_governance.py",
         "docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md",
@@ -546,6 +547,7 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
       "claim_failure_service": "orket/application/services/gitea_state_control_plane_claim_failure_service.py",
       "worker_runtime": "orket/application/services/gitea_state_worker.py",
       "pipeline_entrypoint": "orket/runtime/execution_pipeline.py::run_gitea_state_loop",
+      "loop_runner": "orket/runtime/gitea_state_loop.py::run_gitea_state_loop",
       "published_record_families": [
         "run_record",
         "attempt_record",
@@ -567,7 +569,8 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "orket/application/services/gitea_state_control_plane_lease_service.py",
         "orket/application/services/gitea_state_control_plane_reservation_service.py",
         "orket/application/services/gitea_state_worker.py",
-        "orket/runtime/execution_pipeline.py"
+        "orket/runtime/execution_pipeline.py",
+        "orket/runtime/gitea_state_loop.py"
       ]
     },
     "core_release_versioning": {
@@ -617,6 +620,40 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
   }
 }
 ```
+
+## Runtime Behavior Notes
+
+Turn tool-call recovery is fail-closed when truncated recovery is partial: `ToolParser` records `recovery_complete=false`, `ResponseParser` and the legacy `Agent` path emit `tool_recovery_partial`, and recovered side-effect calls are replaced by a blocked-state `add_issue_comment` rather than executed silently.
+
+Truncated tool-call recovery consults `orket/adapters/tools/registry.py::DEFAULT_TOOL_REGISTRY` for recoverable tool argument schemas. The default registry only enables recovery for `read_file`, `write_file`, and `update_issue_status`; additional tools require explicit recoverable registration instead of parser code changes.
+
+Tool execution through `ToolRuntimeExecutor` has a default per-tool timeout of 60 seconds, with runtime context overrides flowing through `tool_timeout_seconds`, skill `tool_runtime_limits.max_execution_time`, or organization-derived `max_tool_execution_time`.
+
+Async-reachable structured log writes use a bounded queue sized by `ORKET_LOG_QUEUE_MAX` with default `10000`; when the queue is full, Orket drops the log record, increments `dropped_log_entry_count()`, and emits sparse stdlib-only `log_write_queue_full` warnings instead of blocking the event loop or recursing through `log_event`.
+
+Runtime log-level resolution in `orket/utils.py` is call-time via `get_current_level()` with `reset_current_level_cache()` for test isolation; there is no import-time `CURRENT_LEVEL` authority.
+
+Agent model-family resolution uses `orket/agents/model_family_registry.py`, defaulting to DeepSeek/Llama/Phi/Qwen pattern mappings and accepting operator extension through `ORKET_MODEL_FAMILY_PATTERNS`; unrecognized models fall back to `generic` and emit `model_family_unrecognized`.
+
+Factory-built agents from `orket/agents/agent_factory.py` fail closed to the union of tools declared by the seat's configured roles. Seats without roles or with missing role configs receive no tools and emit warning events instead of inheriting the full toolbox.
+
+SQLite/Gitea card-state reconciliation is inspection-only and halt-and-alert by default: `StateReconciliationService` compares requested card ids across `AsyncCardRepository` and `GiteaStateAdapter.fetch_card_snapshot`, emits `state_reconciliation_conflict` on divergence, and the on-demand `scripts/gitea/reconcile_state_backends.py` command writes stable diff-ledger JSON at `benchmarks/results/gitea/state_reconciliation.json`.
+
+iDesign source-category enforcement defaults to `iDesignValidator.ALLOWED_CATEGORIES`, but `OrganizationConfig.allowed_idesign_categories` can replace that category set for organization-scoped `ToolGate` validation.
+
+`BaseCardConfig.priority` is now authoritative as a `float`; legacy persisted string priorities are accepted only through the Pydantic construction boundary where `convert_priority` migrates `High`/`Medium`/`Low` and numeric strings, while unknown strings fail validation and must be cleaned before persistence.
+
+Synchronous settings bridge calls that would cross an active event loop fail with `SettingsBridgeError`, not `AssertionError`.
+
+`orket.orket` is a deprecated compatibility shim over `orket.runtime`; new imports must use `orket.runtime` directly, and shim removal is tracked on the roadmap.
+
+Gitea webhook PR review/opened/merged handling validates consumed payload fields through Pydantic boundary models and returns `status=error`, `error=webhook_payload_validation_failed` on invalid payloads instead of propagating nested-key access errors.
+
+Gitea webhook sandbox handling accepts an injected `SandboxOrchestrator` and explicit `lifecycle_db_path`; default construction routes sandbox state through the repository-backed `SandboxOrchestrator.lifecycle_repository` rather than treating the handler-local `SandboxRegistry` as durable authority.
+
+LPJ-C32 append-only run-ledger framing remains `uint32_be payload_len | payload_bytes | uint32_be crc32c(payload_bytes)` with Castagnoli CRC-32C as specified in `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`; runtime checksum calculation uses the declared `google-crc32c` dependency instead of a local hand-rolled table, and IEEE `binascii.crc32` is intentionally not compatible with existing ledger frames.
+
+`ExecutionPipeline` now keeps construction, state-mode helpers, the epic-orchestrator builder, and module entrypoints in `orket/runtime/execution_pipeline.py`; public card dispatch, compatibility wrappers, Gitea loop entry wrapping, resume/collection helpers, run-summary materialization, runtime artifact collection, artifact provenance, and ledger/protocol event helpers live in `orket/runtime/execution_pipeline_card_dispatch.py`, `orket/runtime/execution_pipeline_resume.py`, `orket/runtime/execution_pipeline_run_summary.py`, `orket/runtime/execution_pipeline_runtime_artifacts.py`, `orket/runtime/execution_pipeline_artifact_provenance.py`, and `orket/runtime/execution_pipeline_ledger_events.py`.
 
 ## Drift Rule
 

@@ -1,4 +1,7 @@
 
+import pytest
+from pydantic import ValidationError
+
 from orket.core.domain.critical_path import CriticalPathEngine
 from orket.schema import CardStatus, EpicConfig, IssueConfig
 
@@ -18,6 +21,12 @@ def test_priority_field_accepts_floats():
     """Test that numeric priorities are accepted directly."""
     issue = IssueConfig(summary="Custom priority", priority=2.5)
     assert issue.priority == 2.5
+
+
+def test_priority_field_rejects_unknown_strings():
+    """Test that unknown persisted string priorities fail at the schema boundary."""
+    with pytest.raises(ValidationError, match="Unrecognized priority level"):
+        IssueConfig(summary="Invalid priority", priority="urgent")
 
 
 def test_priority_default_value():

@@ -33,7 +33,7 @@ async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeyp
 
     pipeline.run_card = _run_card
 
-    import orket.runtime.execution_pipeline as module
+    import orket.runtime.gitea_state_loop as module
 
     monkeypatch.setattr(
         module,
@@ -48,7 +48,10 @@ async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeyp
         },
     )
     monkeypatch.setattr(module, "evaluate_gitea_state_pilot_readiness", lambda _inputs: {"ready": True})
-    monkeypatch.setattr(module, "load_user_settings", lambda: {})
+    async def _load_user_settings():
+        return {}
+
+    monkeypatch.setattr(module, "load_user_settings_async", _load_user_settings)
 
     seen = {}
 
