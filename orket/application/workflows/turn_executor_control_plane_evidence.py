@@ -18,7 +18,7 @@ from orket.application.services.turn_tool_control_plane_support import (
 )
 from orket.application.workflows.protocol_hashing import build_step_id, derive_operation_id
 from orket.core.domain.control_plane_effect_journal import validate_effect_journal_chain
-from orket.core.domain.execution import ToolCall
+from orket.core.domain.execution import ToolCall, ToolCallErrorClass
 
 if TYPE_CHECKING:
     from .turn_executor import TurnExecutor
@@ -263,6 +263,7 @@ async def load_completed_replay_tool_calls(
                 args=planned_tool_call["args"],
                 result=result,
                 error=str(result.get("error") or "").strip() or None,
+                error_class=ToolCallErrorClass.EXECUTION_FAILED if result.get("error") else None,
             )
         )
     return tool_calls

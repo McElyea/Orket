@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.39] - 2026-04-07 - "The Runtime Subpackage Techdebt Closeout Cut"
+
+### Added
+- **Runtime Subpackage Authority**: Added bounded `orket.runtime` implementation subpackages for config, evidence, execution, policy, registry, and summary behavior while keeping flat runtime modules as one-release compatibility aliases.
+- **Extension Sandbox Enforcement**: Added subprocess SDK workload execution with declared-stdlib static checks, runtime import guards, manifest/template updates, and regression coverage for blocked undeclared imports.
+- **Techdebt Closeout Archive**: Added the archived `TD04072026` techdebt closeout packet and preserved future adapter target notes as non-active backlog context.
+
+### Changed
+- **Priority Now Techdebt Completion**: Completed the active remediation plan through the remaining P0, P1, and P2 items, including fail-hard middleware behavior, typed tool-call failures, fail-closed partial parsing, effect journaling, strict agent configuration, settings locking, typed transcripts, OpenClaw partial results, SDK defaults, and controller invariant checks.
+- **Roadmap And Authority Alignment**: Cleared `Priority Now`, archived completed techdebt authority, updated contributor/current-authority references for runtime subpackages and SDK sandbox behavior, and kept active techdebt scope limited to standing maintenance docs.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Extension authors should declare required stdlib imports through the manifest allowlist when opting into strict SDK workload sandboxing. Flat `orket.runtime.<module>` imports remain temporarily available through one-release compatibility aliases.
+
 ## [0.4.38] - 2026-04-07 - "The Governed Execution Maintenance Cut"
 
 ### Added

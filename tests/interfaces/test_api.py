@@ -1067,7 +1067,7 @@ def test_chat_driver_rejects_unsupported_runtime_method(monkeypatch):
     assert "Unsupported chat driver method" in response.json()["detail"]
 
 
-def test_run_active_uses_runtime_invocation(monkeypatch):
+def test_run_active_uses_runtime_invocation(monkeypatch, fresh_runtime_state):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     captured = {}
@@ -1816,12 +1816,10 @@ def test_run_detail_and_session_status_drop_invalid_run_artifact_projection(monk
 
 
 @pytest.mark.asyncio
-async def test_session_halt_endpoint_cancels_runtime_task(monkeypatch, tmp_path):
+async def test_session_halt_endpoint_cancels_runtime_task(monkeypatch, tmp_path, fresh_runtime_state):
     """Layer: integration. Verifies session halt cancels the runtime task and publishes durable operator command truth."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     from orket.orchestration.engine import OrchestrationEngine
-    from orket.state import runtime_state
-
     workspace_root = Path(tmp_path) / "workspace"
     workspace_root.mkdir(parents=True, exist_ok=True)
     real_engine = OrchestrationEngine(
@@ -1844,7 +1842,7 @@ async def test_session_halt_endpoint_cancels_runtime_task(monkeypatch, tmp_path)
         summary={"phase": "execute"},
         artifacts={},
     )
-    await runtime_state.add_task(session_id, task)
+    await fresh_runtime_state.add_task(session_id, task)
 
     response = client.post(f"/v1/sessions/{session_id}/halt", headers={"X-API-Key": "test-key"})
     await asyncio.sleep(0)
@@ -1861,7 +1859,7 @@ async def test_session_halt_endpoint_cancels_runtime_task(monkeypatch, tmp_path)
     assert latest.command_class.value == "cancel_run"
     assert latest.result == "accepted_cancel"
 
-    await runtime_state.remove_task(session_id)
+    await fresh_runtime_state.remove_task(session_id)
 
 
 @pytest.mark.asyncio

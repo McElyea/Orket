@@ -101,6 +101,14 @@ def test_registry_typed_accessors() -> None:
     assert voice_result.ok is False
 
 
+def test_generate_request_default_and_low_token_warning() -> None:
+    """Layer: unit. Verifies SDK LLM requests default to non-truncating output budgets."""
+    assert GenerateRequest(system_prompt="system", user_message="hello").max_tokens == 2048
+
+    with pytest.warns(RuntimeWarning, match="below 256"):
+        GenerateRequest(system_prompt="system", user_message="hello", max_tokens=128)
+
+
 def test_preflight_rejects_invalid_typed_provider() -> None:
     registry = CapabilityRegistry()
     registry.register("tts.speak", object())

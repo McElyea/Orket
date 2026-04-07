@@ -27,7 +27,7 @@ def test_load_env_parses_values_before_event_loop(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(settings_module, "_ENV_LOADED", False)
     env_file = tmp_path / ".env"
     env_file.write_text(
-        "# comment\nFOO=from-file\n\nBAR=from-bar\nEXISTING=from-file\n",
+        "# comment\nFOO=from-file\n\nBAR=\"from bar\"\nexport BAZ=from-baz\nEXISTING=from-file\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(settings_module, "ENV_FILE", env_file)
@@ -39,7 +39,8 @@ def test_load_env_parses_values_before_event_loop(monkeypatch: pytest.MonkeyPatc
         settings_module.load_env()
 
     assert os.environ["FOO"] == "from-file"
-    assert os.environ["BAR"] == "from-bar"
+    assert os.environ["BAR"] == "from bar"
+    assert os.environ["BAZ"] == "from-baz"
     assert os.environ["EXISTING"] == "already-set"
 
 

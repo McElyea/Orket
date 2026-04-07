@@ -16,6 +16,8 @@ from orket_extension_sdk.workload import WorkloadContext as SDKWorkloadContext
 from .contracts import ExtensionRegistry, Workload
 from .models import ExtensionRecord, _ExtensionManifestEntry
 
+_BASE_ALLOWED_STDLIB_MODULES = {"__future__"}
+
 
 class WorkloadLoader:
     """Loads legacy and SDK workloads from extension sources."""
@@ -27,7 +29,11 @@ class WorkloadLoader:
         extension_path = Path(extension.path).resolve()
         if not extension_path.exists():
             raise FileNotFoundError(f"Extension path missing: {extension.path}")
-        self.validate_extension_imports(extension_path, extension.module)
+        self.validate_extension_imports(
+            extension_path,
+            extension.module,
+            allowed_stdlib_modules=extension.allowed_stdlib_modules,
+        )
 
         added_path = False
         if str(extension_path) not in sys.path:
@@ -57,7 +63,12 @@ class WorkloadLoader:
         if not extension_path.exists():
             raise FileNotFoundError(f"Extension path missing: {extension.path}")
         module_name, attr_name = self.parse_sdk_entrypoint(workload.entrypoint)
-        self.validate_extension_imports(extension_path, module_name)
+        self.validate_extension_imports(
+            extension_path,
+            module_name,
+            allowed_stdlib_modules=extension.allowed_stdlib_modules,
+            enforce_declared_stdlib=True,
+        )
 
         added_path = False
         if str(extension_path) not in sys.path:
@@ -103,7 +114,13 @@ class WorkloadLoader:
         return module_name.strip(), attr_name.strip()
 
     @staticmethod
-    def validate_extension_imports(extension_path: Path, module_name: str) -> None:
+    def validate_extension_imports(
+        extension_path: Path,
+        module_name: str,
+        *,
+        allowed_stdlib_modules: tuple[str, ...] = (),
+        enforce_declared_stdlib: bool | None = None,
+    ) -> None:
         module_path = extension_path / Path(*module_name.split("."))
         file_path = module_path.with_suffix(".py")
         package_init_path = module_path / "__init__.py"
@@ -129,10 +146,18 @@ class WorkloadLoader:
             "orket.webhook_server",
             "orket.orket",
         )
+        declared_stdlib = {item.split(".", 1)[0] for item in allowed_stdlib_modules if item.strip()}
+        allowed_stdlib = _BASE_ALLOWED_STDLIB_MODULES | declared_stdlib
+        should_enforce_declared_stdlib = bool(declared_stdlib) if enforce_declared_stdlib is None else enforce_declared_stdlib
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     name = str(alias.name or "")
+                    WorkloadLoader._validate_declared_stdlib_import(
+                        name,
+                        allowed_stdlib,
+                        enforce_declared_stdlib=should_enforce_declared_stdlib,
+                    )
                     if (
                         name.startswith("orket.")
                         and not name.startswith("orket.extensions")
@@ -141,9 +166,27 @@ class WorkloadLoader:
                         raise ValueError(f"Extension import blocked by isolation policy: {name}")
             elif isinstance(node, ast.ImportFrom):
                 module = str(node.module or "")
+                WorkloadLoader._validate_declared_stdlib_import(
+                    module,
+                    allowed_stdlib,
+                    enforce_declared_stdlib=should_enforce_declared_stdlib,
+                )
                 if (
                     module.startswith("orket.")
                     and not module.startswith("orket.extensions")
                     and any(module.startswith(prefix) for prefix in blocked_prefixes)
                 ):
                     raise ValueError(f"Extension import blocked by isolation policy: {module}")
+
+    @staticmethod
+    def _validate_declared_stdlib_import(
+        module_name: str,
+        allowed_stdlib: set[str],
+        *,
+        enforce_declared_stdlib: bool,
+    ) -> None:
+        if not enforce_declared_stdlib:
+            return
+        top_level = str(module_name or "").split(".", 1)[0]
+        if top_level in sys.stdlib_module_names and top_level not in allowed_stdlib:
+            raise ValueError(f"E_EXT_STDLIB_IMPORT_UNDECLARED: {top_level}")

@@ -89,6 +89,7 @@ def _init_sdk_child_repo(repo_root: Path, *, extension_id: str, workload_id: str
         "manifest_version": "v0",
         "extension_id": extension_id,
         "extension_version": "0.1.0",
+        "allowed_stdlib_modules": ["hashlib", "pathlib"],
         "workloads": [
             {
                 "workload_id": workload_id,

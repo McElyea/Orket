@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.services.config_precedence_resolver import ConfigPrecedenceResolver
 from orket.extensions.manager import ExtensionManager
 
 
@@ -121,14 +122,21 @@ def _init_blocked_import_extension_repo(repo_root):
     )
 
 
-def _init_sdk_extension_repo(repo_root, *, required_capabilities=None):
+def _init_sdk_extension_repo(repo_root, *, required_capabilities=None, config_sections=None, allowed_stdlib_modules=None):
     required_capabilities = list(required_capabilities or [])
+    allowed_stdlib_modules = ["hashlib", "pathlib"] if allowed_stdlib_modules is None else allowed_stdlib_modules
+    config_lines = [f"  - {section}" for section in list(config_sections or [])]
+    config_section_lines = ["config_sections:", *config_lines] if config_lines else ["config_sections: []"]
+    stdlib_lines = [f"  - {module}" for module in list(allowed_stdlib_modules or [])]
+    stdlib_section_lines = ["allowed_stdlib_modules:", *stdlib_lines] if stdlib_lines else ["allowed_stdlib_modules: []"]
     (repo_root / "extension.yaml").write_text(
         "\n".join(
             [
                 "manifest_version: v0",
                 "extension_id: sdk.extension",
                 "extension_version: 0.1.0",
+                *config_section_lines,
+                *stdlib_section_lines,
                 "workloads:",
                 "  - workload_id: sdk_v1",
                 "    entrypoint: sdk_extension:run_workload",
@@ -170,11 +178,55 @@ def _init_sdk_extension_repo(repo_root, *, required_capabilities=None):
     )
 
 
+def _init_sdk_dynamic_import_repo(repo_root):
+    (repo_root / "extension.yaml").write_text(
+        "\n".join(
+            [
+                "manifest_version: v0",
+                "extension_id: sdk.dynamic.import",
+                "extension_version: 0.1.0",
+                "allowed_stdlib_modules:",
+                "  - pathlib",
+                "workloads:",
+                "  - workload_id: sdk_dynamic_import_v1",
+                "    entrypoint: sdk_dynamic_extension:run_workload",
+                "    required_capabilities: []",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo_root / "sdk_dynamic_extension.py").write_text(
+        "\n".join(
+            [
+                "from __future__ import annotations",
+                "from pathlib import Path",
+                "from orket_extension_sdk import WorkloadResult",
+                "",
+                "def run_workload(ctx, payload):",
+                "    _ = Path(ctx.output_dir)",
+                "    __import__('subprocess')",
+                "    return WorkloadResult(ok=True, output={'unexpected': 'ran'})",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "init"], cwd=repo_root, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "add", "."], cwd=repo_root, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-m", "init"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
 def _init_sdk_extension_repo_json_manifest(repo_root):
     manifest = {
         "manifest_version": "v0",
         "extension_id": "sdk.json.extension",
         "extension_version": "0.2.0",
+        "allowed_stdlib_modules": ["hashlib", "pathlib"],
         "workloads": [
             {
                 "workload_id": "sdk_json_v1",
@@ -224,6 +276,7 @@ def _init_sdk_bad_artifact_repo(repo_root, *, mode):
         "manifest_version": "v0",
         "extension_id": f"sdk.bad.{mode}",
         "extension_version": "0.3.0",
+        "allowed_stdlib_modules": ["hashlib", "pathlib"],
         "workloads": [
             {
                 "workload_id": f"sdk_bad_{mode}_v1",
@@ -440,18 +493,61 @@ def test_install_from_repo_registers_extension(tmp_path):
 def test_install_from_repo_registers_sdk_extension(tmp_path):
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
-    _init_sdk_extension_repo(repo)
+    original_sections = set(ConfigPrecedenceResolver.SECTION_KEYS)
+    _init_sdk_extension_repo(repo, config_sections=["appearance"], allowed_stdlib_modules=["hashlib", "pathlib"])
 
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    record = manager.install_from_repo(str(repo))
+    try:
+        manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+        record = manager.install_from_repo(str(repo))
+        assert "appearance" in ConfigPrecedenceResolver.SECTION_KEYS
+    finally:
+        ConfigPrecedenceResolver.SECTION_KEYS = original_sections
 
     assert record.extension_id == "sdk.extension"
     assert record.contract_style == "sdk_v0"
+    assert record.config_sections == ("appearance",)
+    assert record.allowed_stdlib_modules == ("hashlib", "pathlib")
     assert record.manifest_entries[0].workload_id == "sdk_v1"
     assert record.manifest_entries[0].entrypoint == "sdk_extension:run_workload"
     assert len(record.resolved_commit_sha) == 40
     assert len(record.manifest_digest_sha256) == 64
     assert len(record.security_policy_version) == 64
+
+
+@pytest.mark.asyncio
+async def test_run_sdk_workload_blocks_undeclared_stdlib_import_when_declared_allowlist_exists(tmp_path):
+    """Layer: integration. Verifies declared stdlib import sandboxing blocks undeclared runtime imports."""
+    repo = tmp_path / "sdk_repo_stdlib"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_sdk_extension_repo(repo, allowed_stdlib_modules=["pathlib"])
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager.install_from_repo(str(repo))
+
+    with pytest.raises(ValueError, match="E_EXT_STDLIB_IMPORT_UNDECLARED: hashlib"):
+        await manager.run_workload(
+            workload_id="sdk_v1",
+            input_config={"seed": 321, "mode": "basic"},
+            workspace=tmp_path / "workspace" / "default",
+            department="core",
+        )
+
+
+@pytest.mark.asyncio
+async def test_run_sdk_workload_subprocess_blocks_dynamic_undeclared_stdlib_import(tmp_path):
+    """Layer: integration. Verifies subprocess import-hook sandboxing catches dynamic stdlib imports."""
+    repo = tmp_path / "sdk_repo_dynamic"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_sdk_dynamic_import_repo(repo)
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager.install_from_repo(str(repo))
+
+    with pytest.raises(RuntimeError, match="E_EXT_STDLIB_IMPORT_UNDECLARED: subprocess"):
+        await manager.run_workload(
+            workload_id="sdk_dynamic_import_v1",
+            input_config={"seed": 321, "mode": "basic"},
+            workspace=tmp_path / "workspace" / "default",
+            department="core",
+        )
 
 
 def test_install_from_repo_registers_sdk_json_manifest_extension(tmp_path):

@@ -1,18 +1,31 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
 
 @dataclass(frozen=True)
 class GenerateRequest:
-    """Input to LLM generation."""
+    """Input to LLM generation.
+
+    Set max_tokens to the maximum safe output length for your model. 128
+    causes truncation for most tasks.
+    """
 
     system_prompt: str
     user_message: str
-    max_tokens: int = 128
+    max_tokens: int = 2048
     temperature: float = 0.7
     stop_sequences: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if self.max_tokens < 256:
+            warnings.warn(
+                "GenerateRequest.max_tokens below 256 can truncate governed outputs.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
 
 @dataclass(frozen=True)

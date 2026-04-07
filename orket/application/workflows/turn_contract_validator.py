@@ -43,6 +43,12 @@ class ContractValidator:
         context: dict[str, Any],
     ) -> list[dict[str, Any]]:
         violations: list[dict[str, Any]] = []
+        if turn.partial_parse_failure:
+            return [{
+                "reason": "partial_parse_failure",
+                "error": turn.error,
+                "error_class": None if turn.error_class is None else turn.error_class.value,
+            }]
         self._append_progress_violations(violations, turn, role, context)
         self._append_contract_violations(violations, turn, context)
         self._append_scope_violations(violations, turn, context)

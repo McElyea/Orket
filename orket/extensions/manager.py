@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
+from orket.application.services.config_precedence_resolver import ConfigPrecedenceResolver
 from orket.application.services.control_plane_workload_catalog import (
     _resolve_extension_control_plane_workload,
 )
@@ -155,7 +156,10 @@ class ExtensionManager:
         self.reproducibility.validate_clean_git_if_required(*args, **kwargs)
 
     def list_extensions(self) -> list[ExtensionRecord]:
-        return self.catalog.list_extensions(entry_point_rows=self._discover_entry_point_rows())
+        records = self.catalog.list_extensions(entry_point_rows=self._discover_entry_point_rows())
+        for record in records:
+            self._register_config_sections(record)
+        return records
 
     def has_manifest_entry(self, workload_id: str) -> bool:
         return self._resolve_manifest_entry(workload_id) is not None
@@ -236,7 +240,13 @@ class ExtensionManager:
         ]
         rows.append(self._row_from_record(record))
         self._save_catalog_payload({"extensions": rows})
+        self._register_config_sections(record)
         return record
+
+    @staticmethod
+    def _register_config_sections(record: ExtensionRecord) -> None:
+        for section in record.config_sections:
+            ConfigPrecedenceResolver.register_section(section)
 
     async def run_workload(
         self,

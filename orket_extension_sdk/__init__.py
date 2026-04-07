@@ -1,26 +1,5 @@
 from .__version__ import __version__
 from .audio import AudioClip, AudioPlayer, NullAudioPlayer, NullTTSProvider, TTSProvider, VoiceInfo
-from .llm import GenerateRequest, GenerateResponse, LLMProvider, NullLLMProvider
-from .memory import (
-    MemoryProvider,
-    MemoryQueryRequest,
-    MemoryQueryResponse,
-    MemoryRecord,
-    MemoryWriteRequest,
-    MemoryWriteResponse,
-    NullMemoryProvider,
-)
-from .tui import NullScreenRenderer, Panel, ScreenRenderer, TerminalSize
-from .voice import (
-    NullSTTProvider,
-    NullVoiceTurnController,
-    STTProvider,
-    TranscribeRequest,
-    TranscribeResponse,
-    VoiceTurnControlRequest,
-    VoiceTurnControlResponse,
-    VoiceTurnController,
-)
 from .capabilities import (
     CapabilityId,
     CapabilityProvider,
@@ -39,6 +18,32 @@ from .controller import (
     canonical_digest_sha256,
     canonical_json,
 )
+from .errors import AgentConfigurationError, OrketSDKError
+from .llm import GenerateRequest, GenerateResponse, LLMProvider, NullLLMProvider
+from .manifest import ExtensionManifest, WorkloadManifest, load_manifest
+from .memory import (
+    MemoryProvider,
+    MemoryQueryRequest,
+    MemoryQueryResponse,
+    MemoryRecord,
+    MemoryWriteRequest,
+    MemoryWriteResponse,
+    NullMemoryProvider,
+)
+from .result import ArtifactRef, Issue, WorkloadResult
+from .testing import DeterminismHarness, FakeCapabilities, GoldenArtifact
+from .tui import NullScreenRenderer, Panel, ScreenRenderer, TerminalSize
+from .voice import (
+    NullSTTProvider,
+    NullVoiceTurnController,
+    STTProvider,
+    TranscribeRequest,
+    TranscribeResponse,
+    VoiceTurnController,
+    VoiceTurnControlRequest,
+    VoiceTurnControlResponse,
+)
+from .workload import Workload, WorkloadContext
 from .workloads import (
     ControllerWorkloadRunner,
     ControllerWorkloadRuntime,
@@ -46,10 +51,6 @@ from .workloads import (
     canonical_observability_projection,
     resolve_controller_department,
 )
-from .manifest import ExtensionManifest, WorkloadManifest, load_manifest
-from .result import ArtifactRef, Issue, WorkloadResult
-from .testing import DeterminismHarness, FakeCapabilities, GoldenArtifact
-from .workload import Workload, WorkloadContext
 
 __all__ = [
     "__version__",
@@ -96,6 +97,8 @@ __all__ = [
     "ControllerRunSummary",
     "canonical_digest_sha256",
     "canonical_json",
+    "AgentConfigurationError",
+    "OrketSDKError",
     "ControllerWorkloadRunner",
     "ControllerWorkloadRuntime",
     "build_controller_envelope_payload",

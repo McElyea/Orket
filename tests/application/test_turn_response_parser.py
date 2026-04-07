@@ -66,8 +66,8 @@ def test_response_parser_falls_back_to_native_tool_calls_when_content_is_empty(t
     assert "agent_output/main.py" in captured[1]["content"]
 
 
-def test_response_parser_replaces_partial_recovery_with_blocked_comment(tmp_path: Path) -> None:
-    """Layer: contract. Verifies partial tool recovery does not execute recovered calls silently."""
+def test_response_parser_marks_partial_recovery_failure_without_recovery_tool(tmp_path: Path) -> None:
+    """Layer: contract. Verifies partial tool recovery carries structured failure state."""
     captured: list[dict] = []
 
     def _write_turn_artifact(**kwargs):  # type: ignore[no-untyped-def]
@@ -91,12 +91,15 @@ def test_response_parser_replaces_partial_recovery_with_blocked_comment(tmp_path
         context={"session_id": "s1", "turn_index": 1},
     )
 
-    assert [call.tool for call in turn.tool_calls] == ["add_issue_comment"]
-    assert "tool-call recovery was partial" in turn.tool_calls[0].args["comment"]
+    assert turn.tool_calls == []
+    assert turn.partial_parse_failure is True
+    assert turn.error_class is not None
+    assert turn.error_class.value == "parse_partial"
+    assert "tool-call recovery was partial" in (turn.error or "")
     diagnostics = captured[0]["content"]
     assert '"recovery_complete": false' in diagnostics
     parsed = captured[1]["content"]
-    assert "add_issue_comment" in parsed
+    assert parsed.strip() == "[]"
     assert "write_file" not in parsed
 
 

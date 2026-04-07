@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import uuid
+import warnings
 from typing import Any
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from orket.core.bottlenecks import BottleneckThresholds
 from orket.core.types import CardStatus, CardType, WaitReason
@@ -13,7 +14,7 @@ from orket.core.types import CardStatus, CardType, WaitReason
 # 1. Environment & Dialect
 # ---------------------------------------------------------------------------
 class EnvironmentConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="ignore")
     schema_version: str = "1.0.0"
     name: str
     description: str | None = None
@@ -22,6 +23,20 @@ class EnvironmentConfig(BaseModel):
     seed: int | None = None
     timeout: int = 300
     params: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def warn_on_unknown_keys(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        unknown = sorted(set(data) - set(cls.model_fields))
+        if unknown:
+            warnings.warn(
+                "EnvironmentConfig ignored unknown key(s): " + ", ".join(unknown),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        return data
 
 
 class SkillConfig(BaseModel):

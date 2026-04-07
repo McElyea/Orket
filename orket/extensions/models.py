@@ -53,6 +53,8 @@ class ExtensionRecord:
     security_profile: str = "production"
     security_policy_version: str = ""
     compat_fallbacks: tuple[str, ...] = ()
+    config_sections: tuple[str, ...] = ()
+    allowed_stdlib_modules: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

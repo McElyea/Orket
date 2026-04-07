@@ -2,22 +2,33 @@ from __future__ import annotations
 
 import asyncio
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from orket.adapters.execution import OpenClawJsonlSubprocessAdapter
-from orket.kernel.v1 import api as kernel_api
-from orket.kernel.v1.nervous_system_contract import tool_profile_digest
-from orket.kernel.v1.nervous_system_resolver import KNOWN_TOOL_PROFILES
-from orket.kernel.v1.nervous_system_runtime import admit_proposal_v1, commit_proposal_v1, end_session_v1, projection_pack_v1
-from orket.kernel.v1.nervous_system_runtime_extensions import consume_credential_token_v1, decide_approval_v1, get_session_ledger_events_v1, issue_credential_token_v1, list_approvals_v1
-from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests, utc_iso_now
-from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+from orket.adapters.execution import OpenClawJsonlSubprocessAdapter  # noqa: E402
+from orket.kernel.v1 import api as kernel_api  # noqa: E402
+from orket.kernel.v1.nervous_system_contract import tool_profile_digest  # noqa: E402
+from orket.kernel.v1.nervous_system_resolver import KNOWN_TOOL_PROFILES  # noqa: E402
+from orket.kernel.v1.nervous_system_runtime import (  # noqa: E402
+    admit_proposal_v1,
+    commit_proposal_v1,
+    end_session_v1,
+    projection_pack_v1,
+)
+from orket.kernel.v1.nervous_system_runtime_extensions import (  # noqa: E402
+    consume_credential_token_v1,
+    decide_approval_v1,
+    get_session_ledger_events_v1,
+    issue_credential_token_v1,
+    list_approvals_v1,
+)
+from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests, utc_iso_now  # noqa: E402
+from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger  # noqa: E402
 
 REQUIRED_EVENT_TYPES = [
     "projection.issued",
@@ -339,7 +350,12 @@ async def _run_live() -> dict[str, Any]:
         {"type": "next_action", "scenario_kind": "credentialed_token"},
         {"type": "next_action", "scenario_kind": "credentialed_token_replay"},
     ]
-    responses = await adapter.run_requests(requests)
+    adapter_result = await adapter.run_requests(requests)
+    if not adapter_result.ok:
+        raise RuntimeError(
+            f"fake OpenClaw adapter failed after {adapter_result.completed_count} responses: {adapter_result.error}"
+        )
+    responses = adapter_result.responses
     if any(str(item.get("type") or "") != "action_proposal" for item in responses):
         raise RuntimeError("fake OpenClaw adapter returned unexpected message type")
     scenarios = [
@@ -357,6 +373,8 @@ async def _run_live() -> dict[str, Any]:
             "command": [sys.executable, "tools/fake_openclaw_adapter_strict.py"],
             "request_count": len(requests),
             "response_count": len(responses),
+            "completed_count": adapter_result.completed_count,
+            "failed_at": adapter_result.failed_at,
             "status": "ok",
         },
         "required_event_types": REQUIRED_EVENT_TYPES,

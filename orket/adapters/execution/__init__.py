@@ -1,5 +1,5 @@
 """Execution-related adapters."""
 
-from .openclaw_jsonl_adapter import OpenClawJsonlSubprocessAdapter
+from .openclaw_jsonl_adapter import OpenClawJsonlSubprocessAdapter, OpenClawSubprocessError, PartialAdapterResult
 
-__all__ = ["OpenClawJsonlSubprocessAdapter"]
+__all__ = ["OpenClawJsonlSubprocessAdapter", "OpenClawSubprocessError", "PartialAdapterResult"]

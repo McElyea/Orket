@@ -9,9 +9,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from orket.extensions.catalog import ExtensionCatalog
-from orket.extensions.manifest_parser import ManifestParser
-from orket.runtime_paths import durable_root
+from orket.extensions.catalog import ExtensionCatalog  # noqa: E402
+from orket.extensions.manifest_parser import ManifestParser  # noqa: E402
+from orket.runtime_paths import durable_root  # noqa: E402
 
 EXTENSION_ID = "meta.breaker.extension"
 WORKLOAD_ID = "meta_breaker_v1"
@@ -26,6 +26,7 @@ def _manifest_payload() -> dict[str, Any]:
         "manifest_version": "v0",
         "extension_id": EXTENSION_ID,
         "extension_version": "0.1.0",
+        "allowed_stdlib_modules": ["hashlib", "json", "pathlib", "typing"],
         "workloads": [
             {
                 "workload_id": WORKLOAD_ID,
@@ -198,6 +199,11 @@ def main() -> int:
                 f"manifest_version: {manifest['manifest_version']}",
                 f"extension_id: {manifest['extension_id']}",
                 f"extension_version: {manifest['extension_version']}",
+                "allowed_stdlib_modules:",
+                "  - hashlib",
+                "  - json",
+                "  - pathlib",
+                "  - typing",
                 "workloads:",
                 f"  - workload_id: {manifest['workloads'][0]['workload_id']}",
                 f"    entrypoint: {manifest['workloads'][0]['entrypoint']}",

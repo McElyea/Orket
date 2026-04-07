@@ -30,6 +30,7 @@ def build_team_agents(team: Any, provider: LocalModelProvider, toolbox: ToolBox)
             description=f"Member of team {team.name} in seat {seat_name}",
             tools=scoped_tool_map,
             provider=provider,
+            strict_config=bool(scoped_tool_map),
         )
 
     return agents

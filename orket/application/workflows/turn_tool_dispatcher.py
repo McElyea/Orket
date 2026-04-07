@@ -7,7 +7,7 @@ from typing import Any
 
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
-from orket.core.domain.execution import ExecutionTurn
+from orket.core.domain.execution import ExecutionTurn, ToolCallErrorClass
 from orket.core.policies.tool_gate import ToolGate
 from orket.logging import log_event
 from orket.schema import IssueConfig
@@ -220,11 +220,18 @@ class ToolDispatcher:
                     context=context,
                 )
                 if middleware_outcome and middleware_outcome.short_circuit:
+                    reason = middleware_outcome.reason or "tool short-circuited by middleware"
                     tool_call.result = {
                         "ok": False,
-                        "error": middleware_outcome.reason or "tool short-circuited by middleware",
+                        "error": reason,
                     }
-                    violations.append(tool_call.result["error"])
+                    tool_call.error = reason
+                    tool_call.error_class = (
+                        ToolCallErrorClass.INTERCEPTOR_CRASH
+                        if reason == "interceptor_crash"
+                        else ToolCallErrorClass.GATE_BLOCKED
+                    )
+                    violations.append(reason)
                     continue
 
                 if not protocol_replay_mode:
@@ -261,6 +268,8 @@ class ToolDispatcher:
                     issue_id=turn.issue_id,
                 )
                 if policy_violation:
+                    tool_call.error = policy_violation
+                    tool_call.error_class = ToolCallErrorClass.GATE_BLOCKED
                     if not protocol_replay_mode:
                         log_event(
                             "tool_call_blocked",
@@ -278,6 +287,8 @@ class ToolDispatcher:
                     violations.append(policy_violation)
                     continue
                 if gate_violation:
+                    tool_call.error = str(gate_violation)
+                    tool_call.error_class = ToolCallErrorClass.GATE_BLOCKED
                     if not protocol_replay_mode:
                         log_event(
                             "tool_call_blocked",
@@ -297,21 +308,27 @@ class ToolDispatcher:
 
                 if bool(context.get("skill_contract_enforced")):
                     if binding is None:
+                        tool_call.error = f"Skill contract violation: undeclared entrypoint/tool '{tool_name}'."
+                        tool_call.error_class = ToolCallErrorClass.GATE_BLOCKED
                         violations.append(f"Skill contract violation: undeclared entrypoint/tool '{tool_name}'.")
                         continue
                     missing_permissions = missing_required_permissions(binding, context)
                     if missing_permissions:
-                        violations.append(
+                        tool_call.error = (
                             "Skill contract violation: missing required permissions for "
                             f"'{tool_name}' ({', '.join(missing_permissions)})."
                         )
+                        tool_call.error_class = ToolCallErrorClass.GATE_BLOCKED
+                        violations.append(tool_call.error)
                         continue
                     limit_violations = runtime_limit_violations(binding, context)
                     if limit_violations:
-                        violations.append(
+                        tool_call.error = (
                             "Skill contract violation: runtime limits exceeded for "
                             f"'{tool_name}' ({', '.join(limit_violations)})."
                         )
+                        tool_call.error_class = ToolCallErrorClass.GATE_BLOCKED
+                        violations.append(tool_call.error)
                         continue
 
                 if tool_name in approval_required_tools:
@@ -367,6 +384,8 @@ class ToolDispatcher:
                             )
                         if admitted_continuation_slice:
                             raise self.tool_approval_pending_error_factory(message)
+                        tool_call.error = message
+                        tool_call.error_class = ToolCallErrorClass.GATE_BLOCKED
                         violations.append(message)
                         continue
 
@@ -377,6 +396,8 @@ class ToolDispatcher:
                     context=context,
                 )
                 if compatibility_violation:
+                    tool_call.error = compatibility_violation
+                    tool_call.error_class = ToolCallErrorClass.GATE_BLOCKED
                     violations.append(compatibility_violation)
                     continue
 
@@ -573,9 +594,12 @@ class ToolDispatcher:
                         self.workspace,
                     )
                 if not result.get("ok", False):
+                    tool_call.error = str(result.get("error") or "tool execution failed")
+                    tool_call.error_class = ToolCallErrorClass.EXECUTION_FAILED
                     violations.append(f"Tool {tool_name} failed: {result.get('error')}")
             except (ValueError, TypeError, KeyError, RuntimeError, OSError, AttributeError) as exc:
                 tool_call.error = str(exc)
+                tool_call.error_class = ToolCallErrorClass.EXECUTION_FAILED
                 if not protocol_replay_mode:
                     log_event(
                         "tool_call_exception",

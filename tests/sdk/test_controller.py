@@ -139,3 +139,10 @@ def test_summary_enforces_result_error_and_blocked_invariants() -> None:
             error_code="controller.max_depth_exceeded",
             child_results=[ControllerChildResult(target_workload="child.alpha", status="success")],
         )
+
+    with pytest.raises(ValidationError, match="controller.run_result_invariant_invalid"):
+        ControllerRunSummary(
+            controller_workload_id="controller_workload",
+            status="success",
+            child_results=[ControllerChildResult(target_workload="child.alpha", status="failed")],
+        )

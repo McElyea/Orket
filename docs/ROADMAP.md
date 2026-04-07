@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-04-06
+Last updated: 2026-04-07
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-_No active non-recurring Priority Now items._
+_No active Priority Now items._
 
 ## Maintenance (Non-Priority)
 

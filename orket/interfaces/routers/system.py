@@ -45,6 +45,9 @@ def build_system_router(
 ) -> APIRouter:
     router = APIRouter()
 
+    def _runtime_state() -> Any:
+        return runtime_state() if callable(runtime_state) else runtime_state
+
     @router.post("/system/clear-logs")
     async def clear_logs() -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
@@ -67,7 +70,7 @@ def build_system_router(
         return {
             "status": "online",
             "timestamp": now_local().isoformat(),
-            "active_tasks": await runtime_state.get_active_task_count(),
+            "active_tasks": await _runtime_state().get_active_task_count(),
         }
 
     @router.get("/system/metrics")

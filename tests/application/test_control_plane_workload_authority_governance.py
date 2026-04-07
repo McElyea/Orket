@@ -39,11 +39,11 @@ WORKLOAD_AUTHORITY_IMPORTS = {
 EXPECTED_GOVERNED_START_PATH_MATRIX = {
     "cards epic execution": {
         "status": "projection-resolved",
-        "paths": {"orket/runtime/epic_run_orchestrator.py"},
+        "paths": {"orket/runtime/execution/epic_run_orchestrator.py"},
     },
     "atomic issue execution": {
         "status": "projection-resolved",
-        "paths": {"orket/runtime/epic_run_orchestrator.py"},
+        "paths": {"orket/runtime/execution/epic_run_orchestrator.py"},
     },
     "ODR / run arbiter": {
         "status": "projection-resolved",
@@ -138,30 +138,31 @@ PRIVATE_EXTENSION_MANIFEST_IMPORT_OWNERS = {
     "orket/extensions/catalog.py",
     "orket/extensions/manager.py",
     "orket/extensions/manifest_parser.py",
+    "orket/extensions/sdk_workload_runner.py",
     "orket/extensions/workload_executor.py",
     "orket/extensions/workload_loader.py",
 }
 RUNTIME_PIPELINE_METHOD_OWNERS = (
-    (REPO_ROOT / "orket" / "runtime" / "execution_pipeline.py", "ExecutionPipeline"),
+    (REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline.py", "ExecutionPipeline"),
     (
-        REPO_ROOT / "orket" / "runtime" / "execution_pipeline_artifact_provenance.py",
+        REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_artifact_provenance.py",
         "ExecutionPipelineArtifactProvenanceMixin",
     ),
     (
-        REPO_ROOT / "orket" / "runtime" / "execution_pipeline_card_dispatch.py",
+        REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_card_dispatch.py",
         "ExecutionPipelineCardDispatchMixin",
     ),
     (
-        REPO_ROOT / "orket" / "runtime" / "execution_pipeline_ledger_events.py",
+        REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_ledger_events.py",
         "ExecutionPipelineLedgerEventsMixin",
     ),
-    (REPO_ROOT / "orket" / "runtime" / "execution_pipeline_resume.py", "ExecutionPipelineResumeMixin"),
+    (REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_resume.py", "ExecutionPipelineResumeMixin"),
     (
-        REPO_ROOT / "orket" / "runtime" / "execution_pipeline_run_summary.py",
+        REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_run_summary.py",
         "ExecutionPipelineRunSummaryMixin",
     ),
     (
-        REPO_ROOT / "orket" / "runtime" / "execution_pipeline_runtime_artifacts.py",
+        REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_runtime_artifacts.py",
         "ExecutionPipelineRuntimeArtifactsMixin",
     ),
 )
@@ -671,7 +672,7 @@ def test_public_runtime_wrappers_collapse_to_run_card() -> None:
     gitea_loop_targets = _call_targets(_load_execution_pipeline_method("run_gitea_state_loop"))
     gitea_loop_worker_targets = _call_targets(
         _load_class_method(
-            REPO_ROOT / "orket" / "runtime" / "gitea_state_loop.py",
+            REPO_ROOT / "orket" / "runtime" / "execution" / "gitea_state_loop.py",
             class_name="GiteaStateLoopRunner",
             method_name="_work_claimed_card",
         )
@@ -699,7 +700,7 @@ def test_public_runtime_wrappers_collapse_to_run_card() -> None:
     )
     runtime_orchestrate_targets = _call_targets(
         _load_module_function(
-            REPO_ROOT / "orket" / "runtime" / "execution_pipeline.py",
+            REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline.py",
             function_name="orchestrate",
         )
     )
@@ -752,13 +753,13 @@ def test_extension_runtime_treats_run_rock_as_legacy_alias_not_primary_run_surfa
 
 def test_execution_pipeline_no_longer_assembles_cards_workload_authority_input_directly() -> None:
     """Layer: unit. Verifies the cards runtime path uses a catalog-local helper instead of assembling workload authority input locally."""
-    execution_pipeline_text = (REPO_ROOT / "orket" / "runtime" / "execution_pipeline.py").read_text(
+    execution_pipeline_text = (REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline.py").read_text(
         encoding="utf-8-sig"
     )
-    card_dispatch_text = (REPO_ROOT / "orket" / "runtime" / "execution_pipeline_card_dispatch.py").read_text(
+    card_dispatch_text = (REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_card_dispatch.py").read_text(
         encoding="utf-8-sig"
     )
-    epic_orchestrator_text = (REPO_ROOT / "orket" / "runtime" / "epic_run_orchestrator.py").read_text(
+    epic_orchestrator_text = (REPO_ROOT / "orket" / "runtime" / "execution" / "epic_run_orchestrator.py").read_text(
         encoding="utf-8-sig"
     )
 

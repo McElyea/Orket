@@ -126,6 +126,10 @@ class ManifestParser:
             raise ValueError("module is required in manifest")
 
         manifest_entries: list[_ExtensionManifestEntry] = []
+        config_sections = tuple(str(item).strip() for item in manifest.get("config_sections", []) if str(item).strip())
+        allowed_stdlib_modules = tuple(
+            str(item).strip() for item in manifest.get("allowed_stdlib_modules", []) if str(item).strip()
+        )
         for item in manifest.get("workloads", []):
             workload_id = str(item.get("workload_id", "")).strip()
             workload_version = str(item.get("workload_version", "")).strip() or "0.0.0"
@@ -158,6 +162,8 @@ class ManifestParser:
             security_profile=security_profile,
             security_policy_version=security_policy_version,
             compat_fallbacks=compat_fallbacks,
+            config_sections=config_sections,
+            allowed_stdlib_modules=allowed_stdlib_modules,
         )
 
     def sdk_record_from_manifest(
@@ -186,6 +192,10 @@ class ManifestParser:
             raise ValueError("extension_version is required in manifest")
 
         manifest_entries: list[_ExtensionManifestEntry] = []
+        config_sections = tuple(str(item).strip() for item in manifest.get("config_sections", []) if str(item).strip())
+        allowed_stdlib_modules = tuple(
+            str(item).strip() for item in manifest.get("allowed_stdlib_modules", []) if str(item).strip()
+        )
         for item in manifest.get("workloads", []):
             workload_id = str(item.get("workload_id", "")).strip()
             if not workload_id:
@@ -223,4 +233,6 @@ class ManifestParser:
             security_profile=security_profile,
             security_policy_version=security_policy_version,
             compat_fallbacks=compat_fallbacks,
+            config_sections=config_sections,
+            allowed_stdlib_modules=allowed_stdlib_modules,
         )

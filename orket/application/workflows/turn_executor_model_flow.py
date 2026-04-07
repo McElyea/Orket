@@ -12,6 +12,10 @@ from orket.application.workflows.turn_executor_model_artifacts import (
     log_turn_start,
     write_response_artifacts,
 )
+from orket.application.workflows.turn_executor_partial_parse import (
+    blocked_partial_parse_failure,
+    partial_parse_recovery_policy,
+)
 from orket.application.workflows.turn_executor_resume_replay import load_pre_effect_resume_turn_if_needed
 from orket.application.workflows.turn_executor_runtime import (
     invoke_model_complete as _invoke_model_complete,
@@ -143,6 +147,20 @@ async def _generate_turn_via_model(
     )
     if early_result is not None or turn is None:
         return None, "", early_result
+
+    if turn.partial_parse_failure and partial_parse_recovery_policy(context) != "retry":
+        return await blocked_partial_parse_failure(
+            executor=executor,
+            issue=issue,
+            role=role,
+            context=context,
+            session_id=session_id,
+            turn_index=turn_index,
+            turn_trace_id=turn_trace_id,
+            turn=turn,
+            emit_failure=emit_failure,
+            turn_result_failed=turn_result_failed,
+        )
 
     contract_violations = executor.contract_validator.collect_contract_violations(turn, role, context)
     if not contract_violations:

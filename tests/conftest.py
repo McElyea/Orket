@@ -1,4 +1,5 @@
 ﻿import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -162,4 +163,17 @@ def clear_settings_caches_between_tests():
     settings_module.clear_settings_cache()
     yield
     settings_module.clear_settings_cache()
+
+
+@pytest.fixture
+def fresh_runtime_state(monkeypatch):
+    """Layer: unit. Provides isolated GlobalState for tests that touch runtime_state."""
+    import orket.state as state_module
+
+    fresh = state_module.GlobalState()
+    monkeypatch.setattr(state_module, "runtime_state", fresh)
+    api_module = sys.modules.get("orket.interfaces.api")
+    if api_module is not None:
+        monkeypatch.setattr(api_module, "runtime_state", fresh)
+    return fresh
 

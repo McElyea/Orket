@@ -2,6 +2,7 @@
   "manifest_version": "v0",
   "extension_id": "controller.workload.bootstrap",
   "extension_version": "0.1.0",
+  "allowed_stdlib_modules": ["typing"],
   "workloads": [
     {
       "workload_id": "controller_workload_v1",

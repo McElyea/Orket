@@ -14,7 +14,10 @@ from orket.extensions.controller_dispatcher import (
 )
 from orket.extensions.manager import ExtensionManager
 from orket.extensions.models import CONTRACT_STYLE_SDK_V0
+from orket_extension_sdk.capabilities import CapabilityRegistry
 from orket_extension_sdk.controller import ControllerChildResult, ControllerPolicyCaps, ControllerRunSummary
+from orket_extension_sdk.workload import WorkloadContext
+from orket_extension_sdk.workloads.controller import ControllerWorkloadRunner, ControllerWorkloadRuntime
 from tests.runtime.test_controller_dispatcher import (
     _extension_result,
     _init_controller_bootstrap_repo,
@@ -206,20 +209,30 @@ async def test_controller_workload_observability_emission_and_fail_closed(
     async def _raise_emit_error(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
         raise ValueError("forced observability failure")
 
-    monkeypatch.setattr(controller_observability, "emit_observability_batch", _raise_emit_error)
-    fail_closed_run = await manager.run_workload(
-        workload_id="controller_workload_v1",
-        input_config={
-            "controller_workload_id": "controller_workload_v1",
-            "requested_caps": {"max_depth": 2, "max_fanout": 5, "child_timeout_seconds": 30},
-            "children": [
-                {"target_workload": "sdk_child_a_v1", "contract_style": "sdk_v0", "payload": {"token": "a"}},
-            ],
-        },
-        workspace=workspace,
-        department="core",
+    async def _success_dispatch(*args: Any, **kwargs: Any) -> ControllerRunSummary:
+        return ControllerRunSummary(controller_workload_id="controller_workload_v1", status="success")
+
+    direct_runner = ControllerWorkloadRunner(
+        runtime=ControllerWorkloadRuntime(
+            dispatch=_success_dispatch,
+            emit_observability=_raise_emit_error,
+            observability_emit_failed_error_code="controller.observability_emit_failed",
+        )
     )
-    fail_output = fail_closed_run.summary["output"]
+    direct_ctx = WorkloadContext(
+        extension_id="controller.test",
+        workload_id="controller_workload_v1",
+        run_id="controller-test-run",
+        workspace_root=workspace,
+        input_dir=workspace,
+        output_dir=tmp_path / "artifacts",
+        capabilities=CapabilityRegistry(),
+    )
+    fail_closed_result = await direct_runner.run(
+        ctx=direct_ctx,
+        payload={"controller_workload_id": "controller_workload_v1", "department": "core"},
+    )
+    fail_output = fail_closed_result.output
 
     assert fail_output["controller_summary"]["status"] == "failed"
     assert fail_output["controller_summary"]["error_code"] == "controller.observability_emit_failed"

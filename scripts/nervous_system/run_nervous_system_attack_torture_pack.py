@@ -5,8 +5,8 @@ import asyncio
 import hashlib
 import json
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -14,7 +14,11 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from orket.adapters.execution import OpenClawJsonlSubprocessAdapter  # noqa: E402
-from orket.kernel.v1.nervous_system_runtime import admit_proposal_v1, commit_proposal_v1, projection_pack_v1  # noqa: E402
+from orket.kernel.v1.nervous_system_runtime import (  # noqa: E402
+    admit_proposal_v1,
+    commit_proposal_v1,
+    projection_pack_v1,
+)
 from orket.kernel.v1.nervous_system_runtime_extensions import (  # noqa: E402
     consume_credential_token_v1,
     decide_approval_v1,
@@ -274,7 +278,12 @@ async def _run_torture(corpus_path: Path) -> dict[str, Any]:
         command=[sys.executable, "tools/fake_openclaw_adapter_torture.py"],
         io_timeout_seconds=15.0,
     )
-    responses = await adapter.run_requests(requests)
+    adapter_result = await adapter.run_requests(requests)
+    if not adapter_result.ok:
+        raise RuntimeError(
+            f"fake OpenClaw torture adapter failed after {adapter_result.completed_count} responses: {adapter_result.error}"
+        )
+    responses = adapter_result.responses
     if len(responses) != len(cases):
         raise RuntimeError("adapter response count mismatch")
 
@@ -299,6 +308,8 @@ async def _run_torture(corpus_path: Path) -> dict[str, Any]:
             "command": [sys.executable, "tools/fake_openclaw_adapter_torture.py"],
             "request_count": len(requests),
             "response_count": len(responses),
+            "completed_count": adapter_result.completed_count,
+            "failed_at": adapter_result.failed_at,
             "status": "ok",
         },
         "summary": {

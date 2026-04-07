@@ -1,3 +1,6 @@
+from orket_extension_sdk.errors import AgentConfigurationError as SDKAgentConfigurationError
+
+
 class OrketError(Exception):
     """Base error for the Orket Domain."""
 
@@ -42,6 +45,12 @@ class LeaseNotAvailableError(OrketInfrastructureError):
 
 class SettingsBridgeError(RuntimeError):
     """Raised when sync settings access would cross an active event loop."""
+
+    pass
+
+
+class AgentConfigurationError(SDKAgentConfigurationError, OrketError):
+    """Raised when an agent cannot load required governance configuration."""
 
     pass
 

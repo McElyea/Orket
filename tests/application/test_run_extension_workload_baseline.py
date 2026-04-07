@@ -10,6 +10,7 @@ def _init_sdk_benchmark_extension_repo(repo_root: Path) -> None:
         "manifest_version": "v0",
         "extension_id": "sdk.benchmark.extension",
         "extension_version": "0.1.0",
+        "allowed_stdlib_modules": ["hashlib", "pathlib"],
         "workloads": [
             {
                 "workload_id": "sdk_benchmark_v1",

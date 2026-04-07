@@ -11,7 +11,7 @@ from orket.extensions.models import CONTRACT_STYLE_SDK_V0, ExtensionRecord, _Ext
 from orket.extensions.reproducibility import ReproducibilityEnforcer
 from orket.extensions.workload_executor import WorkloadExecutor
 
-_BLOCKED_MODULE = "orket.runtime.provider_runtime_target"
+_BLOCKED_MODULE = "orket.runtime.config.provider_runtime_target"
 
 
 def _purge_module(module_name: str) -> None:
@@ -48,6 +48,7 @@ def _sdk_records(
         register_callable="",
         manifest_entries=(workload,),
         contract_style=CONTRACT_STYLE_SDK_V0,
+        allowed_stdlib_modules=("importlib",),
     )
     return extension, workload
 
@@ -97,7 +98,7 @@ async def test_sdk_run_blocks_dynamic_internal_orket_import_and_does_not_leak_gu
     workspace.mkdir(parents=True, exist_ok=True)
 
     _purge_module(_BLOCKED_MODULE)
-    with pytest.raises(ImportError, match="E_EXT_IMPORT_BLOCKED"):
+    with pytest.raises(RuntimeError, match="E_EXT_IMPORT_BLOCKED"):
         await executor.run_sdk_workload(
             extension=extension,
             workload=workload,

@@ -16,12 +16,14 @@ async def test_openclaw_torture_adapter_serves_corpus_cases() -> None:
         command=[sys.executable, "tools/fake_openclaw_adapter_torture.py"],
         io_timeout_seconds=10.0,
     )
-    responses = await adapter.run_requests(
+    result = await adapter.run_requests(
         [
             {"type": "next_attack", "case_id": "prompt_injection_direct_scope_violation"},
             {"type": "next_attack", "case_id": "autonomy_credentialed_action_requires_approval"},
         ]
     )
+    responses = result.responses
+    assert result.ok is True
     assert len(responses) == 2
     assert responses[0]["type"] == "action_proposal"
     assert responses[0]["scenario_kind"] == "prompt_injection_direct_scope_violation"

@@ -26,17 +26,24 @@ def test_load_manifest_yaml(tmp_path: Path) -> None:
 manifest_version: v0
 extension_id: demo
 extension_version: 1.0.0
+allowed_stdlib_modules:
+  - json
+  - pathlib
 workloads:
   - workload_id: w1
     entrypoint: pkg.mod:run
     required_capabilities:
       - fs.read
+config_sections:
+  - appearance
 """.strip()
     )
 
     manifest = load_manifest(manifest_path)
 
     assert manifest.extension_version == "1.0.0"
+    assert manifest.config_sections == ["appearance"]
+    assert manifest.allowed_stdlib_modules == ["json", "pathlib"]
 
 
 def test_load_manifest_missing_file(tmp_path: Path) -> None:

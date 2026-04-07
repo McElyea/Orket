@@ -15,7 +15,7 @@ from orket.core.domain.bug_fix_phase import (
     BugFixPhaseStatus,
 )
 from orket.core.domain.critical_path import CriticalPathEngine
-from orket.core.domain.execution import ExecutionResult, ExecutionTurn, ToolCall
+from orket.core.domain.execution import ExecutionResult, ExecutionTurn, ToolCall, ToolCallErrorClass
 from orket.core.domain.failure_reporter import FailureReporter, PolicyViolationReport
 from orket.core.domain.fixture_verifier import FixtureVerifier, VerificationSecurityError
 from orket.core.domain.reconciler import StructuralReconciler
@@ -91,6 +91,7 @@ __all__ = [
     "StructuralReconciler",
     "TechStack",
     "ToolCall",
+    "ToolCallErrorClass",
     "VERIFICATION_DIR",
     "VerificationEngine",
     "VerificationSecurityError",

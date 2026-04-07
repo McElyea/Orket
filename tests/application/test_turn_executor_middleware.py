@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.application.middleware import MiddlewareOutcome, TurnLifecycleInterceptors
+from orket.application.middleware import InterceptorKind, MiddlewareOutcome, TurnLifecycleInterceptors
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain import AttemptState, RunState
@@ -165,6 +165,61 @@ async def test_turn_executor_middleware_short_circuit_before_tool(tmp_path):
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is False
     assert "blocked by middleware" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_mandatory_before_tool_crash_blocks_execution(tmp_path):
+    """Layer: integration. Verifies mandatory interceptor crashes fail closed before tool execution."""
+
+    class _Hooks:
+        def before_tool(self, tool_name, args, **_kwargs):
+            raise RuntimeError("broken mandatory interceptor")
+
+    middleware = TurnLifecycleInterceptors([])
+    middleware.register(_Hooks(), kind=InterceptorKind.MANDATORY)
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+        middleware=middleware,
+    )
+    model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
+    toolbox = _ToolBox()
+
+    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+
+    assert result.success is False
+    assert "interceptor_crash" in (result.error or "")
+    assert toolbox.calls == []
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_partial_parse_failure_blocks_without_recovery_tool(tmp_path):
+    """Layer: integration. Verifies partial recovery does not execute a hardcoded recovery tool."""
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '```json\n'
+            '{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)\\n"}}\n'
+            '{"tool":"create_issue","args":{"title":"Ship it"}\n'
+            '```'
+        ]
+    )
+    toolbox = _ToolBox()
+
+    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+
+    assert result.success is False
+    assert result.turn is not None
+    assert result.turn.partial_parse_failure is True
+    assert result.turn.tool_calls == []
+    assert "tool-call recovery was partial" in (result.error or "")
+    assert toolbox.calls == []
+    assert model.calls == 1
 
 
 @pytest.mark.asyncio

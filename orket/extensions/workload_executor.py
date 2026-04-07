@@ -9,8 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from orket.streaming.contracts import CommitIntent, StreamEventType
-from orket_extension_sdk.result import WorkloadResult
-from orket_extension_sdk.workload import run_workload as sdk_run_workload
 
 from .contracts import ExtensionRegistry, RunPlan
 from .governed_identity import (
@@ -20,10 +18,10 @@ from .governed_identity import (
     build_governed_identity,
     digest_prefixed,
 )
-from .import_guard import ImportGuardContext
 from .models import ExtensionRecord, ExtensionRunResult, _ExtensionManifestEntry
 from .reproducibility import ReproducibilityEnforcer
 from .runtime import ExtensionEngineAdapter, RunContext
+from .sdk_workload_runner import run_sdk_workload_in_subprocess
 from .workload_artifacts import WorkloadArtifacts
 from .workload_loader import WorkloadLoader
 
@@ -52,7 +50,7 @@ class WorkloadExecutor:
         department: str,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
-        loaded_workload = self.loader.load_legacy_workload(extension, workload.workload_id)
+        loaded_workload = await asyncio.to_thread(self.loader.load_legacy_workload, extension, workload.workload_id)
         run_plan = self._compile_workload(loaded_workload, input_config, interaction_context)
         if run_plan.workload_id != workload.workload_id:
             raise ValueError("RunPlan workload_id mismatch")
@@ -181,9 +179,20 @@ class WorkloadExecutor:
         sdk_ctx = self._build_sdk_context(
             extension, workload, input_config, workspace, artifact_root, capability_registry, input_digest
         )
-        with ImportGuardContext():
-            sdk_workload = self.loader.load_sdk_workload(extension, workload)
-            result = await self._invoke_sdk_workload(sdk_workload, sdk_ctx, dict(input_config))
+        module_name, _attr_name = WorkloadLoader.parse_sdk_entrypoint(workload.entrypoint)
+        await asyncio.to_thread(
+            self.loader.validate_extension_imports,
+            Path(extension.path),
+            module_name,
+            allowed_stdlib_modules=extension.allowed_stdlib_modules,
+            enforce_declared_stdlib=True,
+        )
+        result = await run_sdk_workload_in_subprocess(
+            extension=extension,
+            workload=workload,
+            sdk_ctx=sdk_ctx,
+            input_payload=dict(input_config),
+        )
         await asyncio.to_thread(self.artifacts.validate_sdk_artifacts, result, artifact_root)
 
         run_result: dict[str, Any] = {
@@ -342,16 +351,6 @@ class WorkloadExecutor:
             seed=int(input_config.get("seed", 0) or 0),
             config=dict(input_config),
         )
-
-    @staticmethod
-    async def _invoke_sdk_workload(sdk_workload: Any, sdk_ctx: Any, input_payload: dict[str, Any]) -> WorkloadResult:
-        run_method = getattr(sdk_workload, "run", None)
-        if run_method is not None and inspect.iscoroutinefunction(run_method):
-            result = await run_method(sdk_ctx, input_payload)
-            if not isinstance(result, WorkloadResult):
-                raise ValueError("E_SDK_WORKLOAD_RESULT_INVALID")
-            return result
-        return await asyncio.to_thread(sdk_run_workload, sdk_workload, sdk_ctx, input_payload)
 
     def _build_governed_identity(
         self,

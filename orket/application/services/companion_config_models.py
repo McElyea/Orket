@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
-class CompanionRoleId(str, Enum):
+class CompanionRoleId(StrEnum):
     NONE = "none"
     WAIFU = "waifu"
     BOYFRIEND = "boyfriend"
@@ -21,7 +21,7 @@ class CompanionRoleId(str, Enum):
     GENERAL_ASSISTANT = "general_assistant"
 
 
-class RelationshipStyleId(str, Enum):
+class RelationshipStyleId(StrEnum):
     PLATONIC = "platonic"
     ROMANTIC = "romantic"
     INTERMEDIATE = "intermediate"
@@ -98,7 +98,7 @@ class CompanionVoiceConfig(BaseModel):
 
 
 class CompanionConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="allow")
 
     mode: CompanionModeConfig = Field(default_factory=CompanionModeConfig)
     memory: CompanionMemoryConfig = Field(default_factory=CompanionMemoryConfig)

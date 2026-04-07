@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import warnings
 
-from orket.core.domain.execution import ExecutionResult, ExecutionTurn, ToolCall
+from orket.core.domain.execution import ExecutionResult, ExecutionTurn, ToolCall, ToolCallErrorClass
 
 warnings.warn(
     "`orket.domain.execution` is deprecated; import from `orket.core.domain.execution` instead.",
@@ -12,4 +12,4 @@ warnings.warn(
     stacklevel=2,
 )
 
-__all__ = ["ExecutionResult", "ExecutionTurn", "ToolCall"]
+__all__ = ["ExecutionResult", "ExecutionTurn", "ToolCall", "ToolCallErrorClass"]

@@ -128,8 +128,10 @@ class ControllerRunSummary(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
-    def _validate_result_error_invariants(self) -> "ControllerRunSummary":
+    def _validate_result_error_invariants(self) -> ControllerRunSummary:
         if self.status == "success" and self.error_code is not None:
+            raise ValueError("controller.run_result_invariant_invalid")
+        if self.status == "success" and any(item.status == "failed" for item in self.child_results):
             raise ValueError("controller.run_result_invariant_invalid")
         if self.status in {"failed", "blocked"} and not self.error_code:
             raise ValueError("controller.run_result_invariant_invalid")

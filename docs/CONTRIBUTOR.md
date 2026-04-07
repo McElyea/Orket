@@ -95,8 +95,9 @@ Compatibility-only CLI alias:
 1. Prefer real filesystems, databases, and integration paths over mocks when practical.
 2. Keep tests deterministic and isolated.
 3. For refactors, prove parity with regression tests.
-4. Provider-backed runtime selection and local warmup authority live in `orket/runtime/provider_runtime_target.py`. Runtime paths and provider verification scripts must reuse it.
+4. Provider-backed runtime selection and local warmup authority live in `orket/runtime/config/provider_runtime_target.py`; `orket/runtime/provider_runtime_target.py` is a one-release compatibility alias. Runtime paths and provider verification scripts must reuse the canonical implementation.
 5. The general pytest suite fails closed on Docker sandbox creation through `tests/conftest.py`. Only explicit live sandbox acceptance work may create real `orket-sandbox-*` resources.
 6. When maintenance work needs live sandbox baseline proof, run `python scripts/techdebt/run_live_maintenance_baseline.py --baseline-id <baseline_id> --strict`.
 7. Provider-backed live proof scripts/tests that are not explicit sandbox acceptance work must set `ORKET_DISABLE_SANDBOX=1`.
 8. Any flow that intentionally creates real `orket-sandbox-*` resources must prove teardown in the same execution path before temp-workspace cleanup or handoff. Do not rely on delayed TTL cleanup for routine proof runs.
+9. Tests that touch the module-level `orket.state.runtime_state` singleton must use the `fresh_runtime_state` pytest fixture from `tests/conftest.py`.

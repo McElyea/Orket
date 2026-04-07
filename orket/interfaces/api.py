@@ -719,7 +719,7 @@ v1_router.include_router(
 v1_router.include_router(
     build_system_router(
         project_root_getter=lambda: _project_root(),
-        runtime_state=runtime_state,
+        runtime_state=lambda: runtime_state,
         api_runtime_node_getter=lambda: api_runtime_node,
         now_local=now_local,
         get_metrics_snapshot=get_metrics_snapshot,

@@ -1,6 +1,7 @@
 import asyncio
 import contextvars
 import json
+import logging
 import os
 import threading
 from collections.abc import Coroutine
@@ -8,6 +9,7 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 import aiofiles
+from dotenv import dotenv_values
 
 from orket.exceptions import SettingsBridgeError
 from orket.runtime_paths import resolve_user_preferences_path, resolve_user_settings_path
@@ -22,6 +24,7 @@ _PREFERENCES_MIGRATION_MARKERS_KEY = "migration_markers"
 _LEGACY_MODEL_PREFERENCES_MIGRATION_KEY = "legacy_model_preferences_v1"
 _ENV_LOADED = False
 _ENV_LOADED_LOCK = threading.Lock()
+_SETTINGS_CACHE_LOCK = threading.RLock()
 ResultT = TypeVar("ResultT")
 _RUNTIME_USER_SETTINGS: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
     "runtime_user_settings",
@@ -34,15 +37,15 @@ _RUNTIME_USER_PREFERENCES: contextvars.ContextVar[dict[str, Any] | None] = conte
 
 
 def set_settings_file(path: Path) -> None:
-    global _SETTINGS_FILE, _SETTINGS_CACHE
+    global _SETTINGS_FILE
     _SETTINGS_FILE = resolve_user_settings_path(path)
-    _SETTINGS_CACHE = None
+    _set_cache("_SETTINGS_CACHE", None)
 
 
 def set_preferences_file(path: Path) -> None:
-    global _PREFERENCES_FILE, _PREFERENCES_CACHE
+    global _PREFERENCES_FILE
     _PREFERENCES_FILE = resolve_user_preferences_path(path)
-    _PREFERENCES_CACHE = None
+    _set_cache("_PREFERENCES_CACHE", None)
 
 
 def _is_running_in_event_loop() -> bool:
@@ -54,6 +57,15 @@ def _is_running_in_event_loop() -> bool:
 
 
 def _run_settings_sync(awaitable: Coroutine[Any, Any, ResultT], *, operation: str) -> ResultT:
+    """Run settings async helpers for sync callers.
+
+    Settings injected via set_runtime_settings_context() are not visible to sync callers using this bridge.
+    """
+    if _RUNTIME_USER_SETTINGS.get() is not None or _RUNTIME_USER_PREFERENCES.get() is not None:
+        logging.getLogger("orket.settings").warning(
+            "runtime settings context is not visible to _run_settings_sync callers",
+            extra={"operation": operation},
+        )
     if _is_running_in_event_loop():
         close = getattr(awaitable, "close", None)
         if callable(close):
@@ -66,6 +78,17 @@ def _run_settings_sync(awaitable: Coroutine[Any, Any, ResultT], *, operation: st
 
 def _settings_cache_enabled() -> bool:
     return not bool(os.environ.get("PYTEST_CURRENT_TEST"))
+
+
+def _read_cache(name: str) -> dict[str, Any] | None:
+    with _SETTINGS_CACHE_LOCK:
+        cached = globals()[name]
+        return dict(cached) if isinstance(cached, dict) else None
+
+
+def _set_cache(name: str, payload: dict[str, Any] | None) -> None:
+    with _SETTINGS_CACHE_LOCK:
+        globals()[name] = dict(payload) if isinstance(payload, dict) else None
 
 
 def set_runtime_settings_context(
@@ -85,11 +108,11 @@ def clear_runtime_settings_context() -> None:
 
 
 def clear_settings_cache() -> None:
-    global _SETTINGS_FILE, _PREFERENCES_FILE, _SETTINGS_CACHE, _PREFERENCES_CACHE, _ENV_LOADED
+    global _SETTINGS_FILE, _PREFERENCES_FILE, _ENV_LOADED
     _SETTINGS_FILE = None
     _PREFERENCES_FILE = None
-    _SETTINGS_CACHE = None
-    _PREFERENCES_CACHE = None
+    _set_cache("_SETTINGS_CACHE", None)
+    _set_cache("_PREFERENCES_CACHE", None)
     clear_runtime_settings_context()
     with _ENV_LOADED_LOCK:
         _ENV_LOADED = False
@@ -126,7 +149,7 @@ async def _write_json_async(path: Path, payload: dict[str, Any]) -> None:
 
 
 def load_env() -> None:
-    """Simple .env loader to avoid extra dependencies."""
+    """Load .env values before event loop startup."""
     global _ENV_LOADED
     # Keep tests hermetic: avoid re-injecting host .env values after monkeypatch.delenv.
     if os.environ.get("PYTEST_CURRENT_TEST"):
@@ -136,13 +159,9 @@ def load_env() -> None:
             return
         if _is_running_in_event_loop():
             raise SettingsBridgeError("load_env must run before the event loop starts.")
-        content = _run_settings_sync(_read_text_async(ENV_FILE), operation="load_env")
-        if content is not None:
-            for line in content.splitlines():
-                line = line.strip()
-                if line and not line.startswith("#"):
-                    key, _, value = line.partition("=")
-                    os.environ.setdefault(key.strip(), value.strip())
+        for key, value in dotenv_values(ENV_FILE).items():
+            if key and value is not None:
+                os.environ.setdefault(str(key).strip(), str(value))
         _ENV_LOADED = True
 
 
@@ -228,10 +247,10 @@ def _mark_legacy_model_preferences_migrated(preferences: dict[str, Any]) -> dict
 
 
 async def load_user_settings_async() -> dict[str, Any]:
-    global _SETTINGS_CACHE
     cache_enabled = _settings_cache_enabled()
-    if cache_enabled and _SETTINGS_CACHE is not None:
-        return _SETTINGS_CACHE
+    cached = _read_cache("_SETTINGS_CACHE")
+    if cache_enabled and cached is not None:
+        return cached
     if os.environ.get("PYTEST_CURRENT_TEST") and _SETTINGS_FILE is None:
         return {}
 
@@ -239,7 +258,7 @@ async def load_user_settings_async() -> dict[str, Any]:
         if await asyncio.to_thread(settings_path.exists):
             settings = await _read_json_async(settings_path)
             if cache_enabled:
-                _SETTINGS_CACHE = settings
+                _set_cache("_SETTINGS_CACHE", settings)
             return settings
     return {}
 
@@ -251,8 +270,9 @@ def load_user_settings() -> dict[str, Any]:
         return dict(runtime_settings)
     if os.environ.get("PYTEST_CURRENT_TEST") and _SETTINGS_FILE is None:
         return {}
-    if _SETTINGS_CACHE is not None:
-        return _SETTINGS_CACHE
+    cached = _read_cache("_SETTINGS_CACHE")
+    if cached is not None:
+        return cached
     if _is_running_in_event_loop() and not any(path.exists() for path in _settings_search_paths()):
         return {}
     return _run_settings_sync(load_user_settings_async(), operation="load_user_settings")
@@ -272,10 +292,9 @@ def _extract_legacy_model_preferences(settings: dict[str, Any]) -> dict[str, str
 
 
 async def save_user_settings_async(settings: dict[str, Any]) -> None:
-    global _SETTINGS_CACHE
     settings_path = _settings_file_for_write()
     await _write_json_async(settings_path, settings)
-    _SETTINGS_CACHE = dict(settings) if _settings_cache_enabled() else None
+    _set_cache("_SETTINGS_CACHE", dict(settings) if _settings_cache_enabled() else None)
 
 
 def save_user_settings(settings: dict[str, Any]) -> None:
@@ -284,10 +303,9 @@ def save_user_settings(settings: dict[str, Any]) -> None:
 
 
 async def save_user_preferences_async(preferences: dict[str, Any]) -> None:
-    global _PREFERENCES_CACHE
     preferences_path = _preferences_file_for_write()
     await _write_json_async(preferences_path, preferences)
-    _PREFERENCES_CACHE = dict(preferences) if _settings_cache_enabled() else None
+    _set_cache("_PREFERENCES_CACHE", dict(preferences) if _settings_cache_enabled() else None)
 
 
 def save_user_preferences(preferences: dict[str, Any]) -> None:
@@ -338,8 +356,9 @@ def load_user_preferences() -> dict[str, Any]:
         return dict(runtime_preferences)
     if os.environ.get("PYTEST_CURRENT_TEST") and _SETTINGS_FILE is None and _PREFERENCES_FILE is None:
         return {}
-    if _PREFERENCES_CACHE is not None:
-        return _PREFERENCES_CACHE
+    cached = _read_cache("_PREFERENCES_CACHE")
+    if cached is not None:
+        return cached
     if _is_running_in_event_loop():
         preferences_path = _preferences_file_for_read()
         if not preferences_path.exists() and not any(path.exists() for path in _settings_search_paths()):
@@ -348,16 +367,16 @@ def load_user_preferences() -> dict[str, Any]:
 
 
 async def load_user_preferences_async() -> dict[str, Any]:
-    global _PREFERENCES_CACHE
     cache_enabled = _settings_cache_enabled()
-    if cache_enabled and _PREFERENCES_CACHE is not None:
-        return _PREFERENCES_CACHE
+    cached = _read_cache("_PREFERENCES_CACHE")
+    if cache_enabled and cached is not None:
+        return cached
     if os.environ.get("PYTEST_CURRENT_TEST") and _SETTINGS_FILE is None and _PREFERENCES_FILE is None:
         return {}
 
     preferences = await migrate_legacy_model_preferences_async()
     if cache_enabled:
-        _PREFERENCES_CACHE = preferences
+        _set_cache("_PREFERENCES_CACHE", preferences)
     return preferences
 
 

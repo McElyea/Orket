@@ -19,6 +19,8 @@ class ExtensionManifest(BaseModel):
     manifest_version: str = Field(min_length=1)
     extension_id: str = Field(min_length=1)
     extension_version: str = Field(min_length=1)
+    config_sections: list[str] = Field(default_factory=list)
+    allowed_stdlib_modules: list[str] = Field(default_factory=list)
     workloads: list[WorkloadManifest] = Field(default_factory=list)
 
 

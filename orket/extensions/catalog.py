@@ -41,6 +41,10 @@ class ExtensionCatalog:
             security_profile = str(row.get("security_profile", "")).strip() or "production"
             security_policy_version = str(row.get("security_policy_version", "")).strip()
             compat_fallbacks = tuple(str(item).strip() for item in row.get("compat_fallbacks", []) if str(item).strip())
+            config_sections = tuple(str(item).strip() for item in row.get("config_sections", []) if str(item).strip())
+            allowed_stdlib_modules = tuple(
+                str(item).strip() for item in row.get("allowed_stdlib_modules", []) if str(item).strip()
+            )
             if not extension_id or extension_id in seen_ids:
                 continue
             seen_ids.add(extension_id)
@@ -89,6 +93,8 @@ class ExtensionCatalog:
                     security_profile=security_profile,
                     security_policy_version=security_policy_version,
                     compat_fallbacks=compat_fallbacks,
+                    config_sections=config_sections,
+                    allowed_stdlib_modules=allowed_stdlib_modules,
                 )
             )
         return records
@@ -141,6 +147,8 @@ class ExtensionCatalog:
             "security_profile": record.security_profile,
             "security_policy_version": record.security_policy_version,
             "compat_fallbacks": list(record.compat_fallbacks),
+            "config_sections": list(record.config_sections),
+            "allowed_stdlib_modules": list(record.allowed_stdlib_modules),
             "manifest_entries": [
                 {
                     "workload_id": workload.workload_id,

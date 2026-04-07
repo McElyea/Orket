@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-from typing import Any
+import sys as _sys
+from importlib import import_module as _import_module
 
-_RUNTIME_POLICY_VERSIONS = {
-    "prompt_budget_policy": "1.0",
-    "retry_policy": "1.1",
-    "promotion_gate_policy": "1.0",
-}
-
-
-def runtime_policy_versions_snapshot() -> dict[str, Any]:
-    return dict(_RUNTIME_POLICY_VERSIONS)
+_module = _import_module("orket.runtime.registry.runtime_policy_versions")
+_sys.modules[__name__] = _module
+_parent = _sys.modules[__name__.rsplit(".", 1)[0]]
+setattr(_parent, __name__.rsplit(".", 1)[1], _module)

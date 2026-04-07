@@ -1,6 +1,9 @@
 manifest_version: v0
 extension_id: your.extension.id
 extension_version: 0.1.0
+allowed_stdlib_modules:
+  - json
+  - typing
 workloads:
   - workload_id: sample_workload
     entrypoint: companion_extension.workload:run

@@ -5,8 +5,6 @@ from typing import Any
 
 from .companion_config_models import CompanionConfig
 
-_SECTION_KEYS = frozenset({"mode", "memory", "voice"})
-
 
 def _clone_value(value: Any) -> Any:
     if isinstance(value, Mapping):
@@ -41,6 +39,14 @@ class ConfigPrecedenceResolver:
     Deterministic Companion config layering:
     extension_defaults < profile_defaults < session_overrides < pending_next_turn.
     """
+    SECTION_KEYS: set[str] = {"mode", "memory", "voice"}
+
+    @classmethod
+    def register_section(cls, name: str) -> None:
+        section_name = str(name or "").strip()
+        if not section_name:
+            raise ValueError("E_COMPANION_CONFIG_SECTION_INVALID: section=''")
+        cls.SECTION_KEYS.add(section_name)
 
     def __init__(
         self,
@@ -81,8 +87,8 @@ class ConfigPrecedenceResolver:
     @staticmethod
     def _set_layer_value(layer: dict[str, Any], *, section: str, value: Any) -> None:
         section_name = str(section or "").strip()
-        if section_name not in _SECTION_KEYS:
-            allowed = ", ".join(sorted(_SECTION_KEYS))
+        if section_name not in ConfigPrecedenceResolver.SECTION_KEYS:
+            allowed = ", ".join(sorted(ConfigPrecedenceResolver.SECTION_KEYS))
             raise ValueError(f"E_COMPANION_CONFIG_SECTION_INVALID: section='{section_name}' allowed='{allowed}'")
         existing = layer.get(section_name)
         if existing is None:

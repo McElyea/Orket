@@ -1,17 +1,17 @@
-from orket.runtime.composition import (
+from orket.runtime.config.config_loader import ConfigLoader
+from orket.runtime.config.runtime_context import OrketRuntimeContext
+from orket.runtime.execution.execution_pipeline import (
+    ExecutionPipeline,
+    orchestrate,
+    orchestrate_card,
+)
+from orket.runtime.policy.composition import (
     CompositionConfig,
     create_api_app,
     create_cli_runtime,
     create_engine,
     create_webhook_app,
 )
-from orket.runtime.config_loader import ConfigLoader
-from orket.runtime.execution_pipeline import (
-    ExecutionPipeline,
-    orchestrate,
-    orchestrate_card,
-)
-from orket.runtime.runtime_context import OrketRuntimeContext
 
 __all__ = [
     "ConfigLoader",

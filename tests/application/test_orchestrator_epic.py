@@ -460,7 +460,7 @@ async def test_execute_epic_fails_on_deployment_planner_validation_error(orchest
 
 
 @pytest.mark.asyncio
-async def test_handle_failure_retry_limit(orchestrator, monkeypatch):
+async def test_handle_failure_retry_limit(orchestrator, monkeypatch, fresh_runtime_state):
     orch, cards, _loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test", retry_count=3, max_retries=3)
     result = SimpleNamespace(error="Total failure", violations=[])

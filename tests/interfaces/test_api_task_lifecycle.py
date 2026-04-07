@@ -3,8 +3,8 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+import orket.state as state_module
 from orket.interfaces import api as api_module
-from orket.state import runtime_state
 
 
 class _FakeTarget:
@@ -14,50 +14,50 @@ class _FakeTarget:
 
 
 @pytest.mark.asyncio
-async def test_scheduled_task_is_removed_after_completion():
+async def test_scheduled_task_is_removed_after_completion(fresh_runtime_state):
     session_id = "task-cleanup-test"
-    await runtime_state.remove_task(session_id)
+    await state_module.runtime_state.remove_task(session_id)
 
     target = _FakeTarget()
     invocation = {"method_name": "run", "args": []}
     await api_module._schedule_async_invocation_task(target, invocation, "run", session_id)
 
-    task = await runtime_state.get_task(session_id)
+    task = await state_module.runtime_state.get_task(session_id)
     assert task is not None
 
     await asyncio.sleep(0.05)
-    assert await runtime_state.get_task(session_id) is None
+    assert await state_module.runtime_state.get_task(session_id) is None
 
 
 @pytest.mark.asyncio
-async def test_runtime_state_tracks_multiple_tasks_per_session():
+async def test_runtime_state_tracks_multiple_tasks_per_session(fresh_runtime_state):
     """Layer: integration. Verifies one session can track and clean up multiple concurrent tasks independently."""
     session_id = "task-multi-test"
-    await runtime_state.remove_task(session_id)
+    await state_module.runtime_state.remove_task(session_id)
 
     task_a = asyncio.create_task(asyncio.sleep(0.05))
     task_b = asyncio.create_task(asyncio.sleep(0.05))
 
-    await runtime_state.add_task(session_id, task_a)
-    await runtime_state.add_task(session_id, task_b)
+    await state_module.runtime_state.add_task(session_id, task_a)
+    await state_module.runtime_state.add_task(session_id, task_b)
 
-    tasks = await runtime_state.get_tasks(session_id)
+    tasks = await state_module.runtime_state.get_tasks(session_id)
     assert tasks == [task_a, task_b]
 
     task_a.cancel()
     task_b.cancel()
     await asyncio.gather(task_a, task_b, return_exceptions=True)
 
-    await runtime_state.remove_task(session_id, task_a)
-    remaining = await runtime_state.get_tasks(session_id)
+    await state_module.runtime_state.remove_task(session_id, task_a)
+    remaining = await state_module.runtime_state.get_tasks(session_id)
     assert remaining == [task_b]
 
-    await runtime_state.remove_task(session_id, task_b)
-    assert await runtime_state.get_tasks(session_id) == []
+    await state_module.runtime_state.remove_task(session_id, task_b)
+    assert await state_module.runtime_state.get_tasks(session_id) == []
 
 
 @pytest.mark.asyncio
-async def test_heartbeat_active_tasks_converges_after_run_active_completion(monkeypatch):
+async def test_heartbeat_active_tasks_converges_after_run_active_completion(monkeypatch, fresh_runtime_state):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     session_id = "hbtask01"
 
@@ -107,7 +107,7 @@ async def test_heartbeat_active_tasks_converges_after_run_active_completion(monk
 
 
 @pytest.mark.asyncio
-async def test_concurrent_run_active_task_cleanup_stress(monkeypatch):
+async def test_concurrent_run_active_task_cleanup_stress(monkeypatch, fresh_runtime_state):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     base = "hbconcur"
     counter = {"n": 0}

@@ -75,6 +75,22 @@ def test_config_precedence_rejects_unknown_section() -> None:
         resolver.set_session_override("invalid_section", {"value": 1})
 
 
+def test_config_precedence_accepts_registered_extension_section() -> None:
+    """Layer: unit. Verifies extension-declared config sections can be layered."""
+    original_sections = set(ConfigPrecedenceResolver.SECTION_KEYS)
+    try:
+        ConfigPrecedenceResolver.register_section("appearance")
+        resolver = ConfigPrecedenceResolver(extension_defaults={"appearance": {"theme": "dark"}})
+        resolver.set_session_override("appearance", {"accent": "blue"})
+
+        resolved = resolver.resolve()
+
+        assert resolved.model_extra is not None
+        assert resolved.model_extra["appearance"] == {"theme": "dark", "accent": "blue"}
+    finally:
+        ConfigPrecedenceResolver.SECTION_KEYS = original_sections
+
+
 def test_config_precedence_preview_does_not_consume_pending_layer() -> None:
     """Layer: unit. Verifies preview reads pending-next-turn config without consuming it."""
     resolver = ConfigPrecedenceResolver(extension_defaults={"mode": {"role_id": "researcher"}})

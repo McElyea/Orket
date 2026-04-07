@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.application.services.tool_parser import ToolParser
-from orket.core.domain.execution import ExecutionTurn, ToolCall
+from orket.core.domain.execution import ExecutionTurn, ToolCall, ToolCallErrorClass
 from orket.logging import log_event
 from orket.runtime.protocol_error_codes import (
     E_DUPLICATE_KEY_PREFIX,
@@ -48,6 +48,7 @@ class ResponseParser:
         protocol_metadata: dict[str, Any] = {}
 
         parser_diag: list[dict[str, Any]] = []
+        partial_parse_error: dict[str, Any] | None = None
 
         def capture(stage: str, data: dict[str, Any]) -> None:
             parser_diag.append({"stage": stage, "data": data})
@@ -70,14 +71,16 @@ class ResponseParser:
             content = envelope["content"]
         else:
             parsed_calls = ToolParser.parse(content, diagnostics=capture)
-            parsed_calls = self._fail_closed_on_partial_recovery(
+            partial_parse_error = self._partial_recovery_error(
                 parsed_calls=parsed_calls,
                 parser_diag=parser_diag,
                 issue_id=issue_id,
                 role_name=role_name,
                 context=context,
             )
-            if not parsed_calls:
+            if partial_parse_error is not None:
+                parsed_calls = []
+            if not parsed_calls and partial_parse_error is None:
                 parsed_calls = self._parse_native_tool_calls(
                     raw_payload,
                     diagnostics=capture,
@@ -85,6 +88,8 @@ class ResponseParser:
                 )
         if protocol_metadata:
             raw_payload.update(protocol_metadata)
+        if partial_parse_error is not None:
+            raw_payload["partial_parse_failure"] = partial_parse_error
         session_id = context.get("session_id", "unknown-session")
         turn_index = int(context.get("turn_index", 0))
         for diag in parser_diag:
@@ -135,6 +140,9 @@ class ResponseParser:
             tokens_used=raw_payload.get("total_tokens", 0),
             timestamp=datetime.now(UTC),
             raw=raw_payload,
+            partial_parse_failure=partial_parse_error is not None,
+            error=None if partial_parse_error is None else str(partial_parse_error["error"]),
+            error_class=ToolCallErrorClass.PARSE_PARTIAL if partial_parse_error else None,
         )
 
     def _allowed_native_tool_names(self, context: dict[str, Any], raw_payload: dict[str, Any]) -> set[str]:
@@ -158,7 +166,7 @@ class ResponseParser:
         }
         return allowed
 
-    def _fail_closed_on_partial_recovery(
+    def _partial_recovery_error(
         self,
         *,
         parsed_calls: list[dict[str, Any]],
@@ -166,7 +174,7 @@ class ResponseParser:
         issue_id: str,
         role_name: str,
         context: dict[str, Any],
-    ) -> list[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         partial_events = [
             dict(item.get("data") or {})
             for item in parser_diag
@@ -174,7 +182,7 @@ class ResponseParser:
             and dict(item.get("data") or {}).get("recovery_complete") is False
         ]
         if not partial_events:
-            return parsed_calls
+            return None
 
         skipped_tools: list[dict[str, str]] = []
         for event in partial_events:
@@ -198,11 +206,12 @@ class ResponseParser:
             },
             self.workspace,
         )
-        comment = (
-            "Blocked: tool-call recovery was partial, so Orket did not execute the recovered tool calls. "
-            f"Skipped tools: {json.dumps(skipped_tools, ensure_ascii=False)}"
-        )
-        return [{"tool": "add_issue_comment", "args": {"comment": comment}}]
+        return {
+            "error": "tool-call recovery was partial; Orket did not execute recovered or skipped tool calls",
+            "error_class": ToolCallErrorClass.PARSE_PARTIAL.value,
+            "recovered_count": len(parsed_calls),
+            "skipped_tools": skipped_tools,
+        }
 
     def _parse_native_tool_calls(
         self,
