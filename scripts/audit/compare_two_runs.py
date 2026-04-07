@@ -11,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.kernel.v1.canon import first_diff_path
+from orket.kernel.v1.canonical import first_diff_path
 from scripts.audit.audit_support import (
     authored_output_paths,
     build_identity_replacements,

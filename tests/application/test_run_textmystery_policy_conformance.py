@@ -61,3 +61,33 @@ def test_run_textmystery_policy_conformance_fail(tmp_path: Path) -> None:
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert payload["status"] == "fail"
     assert payload["run"]["returncode"] != 0
+
+
+def test_run_textmystery_policy_conformance_requires_root_argument_or_env(monkeypatch) -> None:
+    monkeypatch.delenv("TEXTMYSTERY_ROOT", raising=False)
+
+    result = subprocess.run(
+        [
+            "python",
+            "scripts/extensions/run_textmystery_policy_conformance.py",
+            "--test",
+            "tests/test_policy_gate.py",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "Set --textmystery-root or TEXTMYSTERY_ROOT." in (result.stdout + result.stderr)
+
+
+def test_scripts_do_not_hardcode_local_source_paths() -> None:
+    offenders = []
+    for path in Path("scripts").rglob("*"):
+        if "__pycache__" in path.parts or path.suffix not in {".py", ".sh", ".ps1", ".yml", ".yaml"}:
+            continue
+        if path.is_file() and "C:/Source" in path.read_text(encoding="utf-8", errors="ignore"):
+            offenders.append(path.as_posix())
+
+    assert offenders == []

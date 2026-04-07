@@ -15,3 +15,12 @@ def test_quant_sweep_full_workflow_enforces_policy_gates() -> None:
     ]
     missing = [cmd for cmd in required_commands if cmd not in workflow]
     assert not missing, "quant-sweep full workflow missing required policy gates: " + ", ".join(missing)
+
+
+def test_quant_sweep_smoke_workflow_runs_real_execution_smoke() -> None:
+    workflow = Path(".gitea/workflows/quant-sweep-smoke.yml").read_text(encoding="utf-8")
+    assert "Matrix Execution Smoke" in workflow
+    execution_step = workflow.split("Matrix Execution Smoke", 1)[1]
+    assert "stub_quant_runner.py" in execution_step
+    assert "--summary-out benchmarks/results/quant/quant_sweep/smoke/sweep_summary.json" in execution_step
+    assert "--dry-run" not in execution_step

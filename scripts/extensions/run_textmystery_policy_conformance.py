@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -19,10 +20,17 @@ DEFAULT_TESTS = [
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run TextMystery policy conformance tests (hint/disambiguation gates).")
-    parser.add_argument("--textmystery-root", default="C:/Source/Orket-Extensions/TextMystery")
+    parser.add_argument("--textmystery-root", default=None)
     parser.add_argument("--output", default="")
     parser.add_argument("--test", action="append", default=[], help="Optional explicit test path(s), repeatable.")
     return parser.parse_args()
+
+
+def _resolve_textmystery_root(raw_value: str | None) -> Path:
+    token = str(raw_value or os.getenv("TEXTMYSTERY_ROOT", "")).strip()
+    if not token:
+        raise SystemExit("Set --textmystery-root or TEXTMYSTERY_ROOT.")
+    return Path(token).resolve()
 
 
 def _run_pytest(textmystery_root: Path, tests: list[str]) -> dict[str, Any]:
@@ -47,7 +55,7 @@ def _run_pytest(textmystery_root: Path, tests: list[str]) -> dict[str, Any]:
 
 def main() -> int:
     args = _parse_args()
-    textmystery_root = Path(args.textmystery_root).resolve()
+    textmystery_root = _resolve_textmystery_root(args.textmystery_root)
     tests = list(args.test) if args.test else list(DEFAULT_TESTS)
     if not textmystery_root.exists():
         raise FileNotFoundError(f"textmystery root not found: {textmystery_root}")

@@ -12,7 +12,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
-from orket.kernel.v1.canon import raw_signature
+from orket.kernel.v1.canonical import odr_raw_signature
 from orket.kernel.v1.odr.live_runner import run_live_refinement
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from scripts.probes.probe_support import applied_probe_env, is_environment_blocker, now_utc_iso, write_report
@@ -65,7 +65,7 @@ async def _run_once(args: argparse.Namespace, run_index: int) -> dict[str, Any]:
         "model": str(args.model),
         **result,
         "history_v_count": len(result.get("history_v") or []),
-        "raw_signature": raw_signature(
+        "raw_signature": odr_raw_signature(
             {
                 "history_v": list(result.get("history_v") or []),
                 "stop_reason": result.get("stop_reason"),

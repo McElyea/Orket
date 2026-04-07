@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from orket.kernel.v1.canon import canonicalize
+from orket.kernel.v1.canonical import odr_canonicalize
 from scripts.common.run_summary_support import load_validated_run_summary_or_empty
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
@@ -386,7 +386,7 @@ def normalize_json_surface(value: Any, *, surface_kind: str, replacements: list[
     replaced = replace_identity_tokens(value, replacements)
     keys = set(COMMON_VOLATILE_KEYS) | set(SURFACE_VOLATILE_KEYS.get(surface_kind, set()))
     pruned = drop_volatile_keys(replaced, keys)
-    return canonicalize(pruned)
+    return odr_canonicalize(pruned)
 
 
 def surface_digest(value: Any) -> str:

@@ -102,7 +102,7 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
 ```json
 {
   "version": 1,
-  "last_updated": "2026-04-05",
+  "last_updated": "2026-04-06",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",

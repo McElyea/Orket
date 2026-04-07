@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import ast
 import json
 import sys
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-from orket.kernel.v1.canon import canonical_bytes as odr_canonical_bytes
-from orket.kernel.v1.canonical import canonical_json_bytes
+from orket.kernel.v1.canonical import canonical_json_bytes, odr_canonical_json_bytes
 
 pytestmark = pytest.mark.unit
 
@@ -32,4 +33,22 @@ def test_odr_and_rfc8785_canonicalizers_remain_distinct(monkeypatch: pytest.Monk
         "nodes": [{"id": "b"}, {"id": "a"}],
     }
 
-    assert odr_canonical_bytes(payload) != canonical_json_bytes(payload)
+    assert odr_canonical_json_bytes(payload) != canonical_json_bytes(payload)
+
+
+def test_no_source_imports_removed_odr_canon_module() -> None:
+    roots = [Path("orket"), Path("scripts"), Path("tests"), Path("tools")]
+    offenders: list[str] = []
+    for root in roots:
+        for path in root.rglob("*.py"):
+            text = path.read_text(encoding="utf-8-sig")
+            module = ast.parse(text)
+            for node in ast.walk(module):
+                if isinstance(node, ast.ImportFrom) and node.module == "orket.kernel.v1.canon":
+                    offenders.append(path.as_posix())
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        if alias.name == "orket.kernel.v1.canon":
+                            offenders.append(path.as_posix())
+
+    assert offenders == []

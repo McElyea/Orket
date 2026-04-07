@@ -13,15 +13,15 @@ from typing import Any
 
 import pytest
 
-from orket.kernel.v1.canon import canonical_bytes, first_diff_path, raw_signature
+from orket.kernel.v1.canonical import first_diff_path, odr_canonical_json_bytes, odr_raw_signature
 from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, run_round
 
 pytestmark = pytest.mark.contract
 
 SEED = 1729
-EXPECTED_TORTURE_SHA256 = "d4d8e1d66653270c84d84f373dbba011574f9d1b7757f12434255df2243f57f5"
-EXPECTED_NEAR_MISS_SHA256 = "8de74d32d5f9598b8e945eb1a012252106bc7fe4c02739ba0c400e30901b9a45"
-EXPECTED_HEADER_ORDER_SHA256 = "bffedc3c51768a2a63715c5ab6642bd2d7eddd695d65939d354cd9d802e271c7"
+EXPECTED_TORTURE_SHA256 = "f9e7532a418b78dd71365731fdb0375cd93871c7716d85efb51f7d22fe97ea36"
+EXPECTED_NEAR_MISS_SHA256 = "10913f9ce3bcdb66d57259ef520dab6873b33edd2dd03ea1a1739e5bb85752fd"
+EXPECTED_HEADER_ORDER_SHA256 = "bda65e1c777deba0d6aa5efbe02eb107c3d6a1d88f84960fe8ee58108a7af72f"
 
 
 def _fixture_path(name: str) -> Path:
@@ -264,13 +264,13 @@ def _run_scale_checks() -> None:
         start = time.monotonic()
         base_payload = _permute_fixture(fixture, SEED, 0)
         base_output = _run_fixture_payload(base_payload)
-        base_bytes = canonical_bytes(base_output)
+        base_bytes = odr_canonical_json_bytes(base_output)
 
         for perm_index in range(scale_permutations):
             output = _run_fixture_payload(_permute_fixture(fixture, SEED, perm_index))
             _assert_bytes_equal(
                 expected=base_bytes,
-                actual=canonical_bytes(output),
+                actual=odr_canonical_json_bytes(output),
                 seed=SEED,
                 perm_index=perm_index,
                 round_index=1,
@@ -281,7 +281,7 @@ def _run_scale_checks() -> None:
         reparsed = json.loads(base_bytes.decode("utf-8"))
         _assert_bytes_equal(
             expected=base_bytes,
-            actual=canonical_bytes(reparsed),
+            actual=odr_canonical_json_bytes(reparsed),
             seed=SEED,
             perm_index=0,
             round_index=1,
@@ -305,8 +305,8 @@ def _run_scale_checks() -> None:
 
 def _run_gate(permutations: int, repeats: int, *, include_scale: bool = False) -> None:
     base_output = _run_fixture("odr_torture_pack.json", seed=SEED, perm_index=0)
-    base_raw_signature = raw_signature(base_output)
-    base_bytes = canonical_bytes(base_output)
+    base_raw_signature = odr_raw_signature(base_output)
+    base_bytes = odr_canonical_json_bytes(base_output)
     base_hash = _sha256(base_bytes)
     if base_hash != EXPECTED_TORTURE_SHA256:
         pytest.fail(
@@ -324,7 +324,7 @@ def _run_gate(permutations: int, repeats: int, *, include_scale: bool = False) -
         output = _run_fixture("odr_torture_pack.json", seed=SEED, perm_index=perm_index)
         _assert_bytes_equal(
             expected=base_bytes,
-            actual=canonical_bytes(output),
+            actual=odr_canonical_json_bytes(output),
             seed=SEED,
             perm_index=perm_index,
             round_index=max(1, len(output.get("history_rounds", []))),
@@ -333,7 +333,7 @@ def _run_gate(permutations: int, repeats: int, *, include_scale: bool = False) -
         )
 
     reparsed = json.loads(base_bytes.decode("utf-8"))
-    fixed_point = canonical_bytes(reparsed)
+    fixed_point = odr_canonical_json_bytes(reparsed)
     _assert_bytes_equal(
         expected=base_bytes,
         actual=fixed_point,
@@ -359,7 +359,7 @@ def _run_gate(permutations: int, repeats: int, *, include_scale: bool = False) -
         )
 
     near_output = _run_fixture("odr_near_miss.json", seed=SEED, perm_index=0)
-    near_bytes = canonical_bytes(near_output)
+    near_bytes = odr_canonical_json_bytes(near_output)
     near_hash = _sha256(near_bytes)
     if near_hash != EXPECTED_NEAR_MISS_SHA256:
         pytest.fail(
@@ -389,8 +389,8 @@ def _run_gate(permutations: int, repeats: int, *, include_scale: bool = False) -
 
     header_order_one = _header_order_violation_output()
     header_order_two = _header_order_violation_output()
-    header_order_one_bytes = canonical_bytes(header_order_one)
-    header_order_two_bytes = canonical_bytes(header_order_two)
+    header_order_one_bytes = odr_canonical_json_bytes(header_order_one)
+    header_order_two_bytes = odr_canonical_json_bytes(header_order_two)
     _assert_bytes_equal(
         expected=header_order_one_bytes,
         actual=header_order_two_bytes,
@@ -519,8 +519,8 @@ def test_odr_determinism_gate_imports_odr_canonicalizer_only() -> None:
         if isinstance(node, ast.ImportFrom) and node.module is not None
     }
 
-    assert "orket.kernel.v1.canon" in imported_modules
-    assert "orket.kernel.v1.canonical" not in imported_modules
+    assert "orket.kernel.v1.canonical" in imported_modules
+    assert "orket.kernel.v1.canon" not in imported_modules
 
 
 def test_code_leak_shape_detection_fires() -> None:

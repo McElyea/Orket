@@ -10,7 +10,7 @@ _No active non-recurring Priority Now items._
 
 ## Maintenance (Non-Priority)
 
-1. techdebt -- Standing recurring maintenance. Checklist: `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`. Governance: `docs/projects/techdebt/README.md`.
+_No active non-recurring Maintenance items._
 
 ## Paused / Checkpointed Lanes
 

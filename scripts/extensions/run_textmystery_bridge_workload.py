@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -23,13 +24,20 @@ def _load_payload(path: Path | None) -> dict[str, Any]:
     return data
 
 
+def _resolve_textmystery_root(raw_value: str | None) -> str:
+    token = str(raw_value or os.getenv("TEXTMYSTERY_ROOT", "")).strip()
+    if not token:
+        raise SystemExit("Set --textmystery-root or TEXTMYSTERY_ROOT.")
+    return str(Path(token).resolve())
+
+
 async def _run(args: argparse.Namespace) -> int:
     manager = ExtensionManager(project_root=Path.cwd())
     result = await manager.run_workload(
         workload_id="textmystery_bridge_v1",
         input_config={
             "operation": args.operation,
-            "textmystery_root": args.textmystery_root,
+            "textmystery_root": _resolve_textmystery_root(args.textmystery_root),
             "payload": _load_payload(Path(args.payload_file) if args.payload_file else None),
         },
         workspace=Path(args.workspace).resolve(),
@@ -42,7 +50,7 @@ async def _run(args: argparse.Namespace) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run TextMystery bridge extension workload.")
     parser.add_argument("--operation", choices=["parity-check", "leak-check"], default="parity-check")
-    parser.add_argument("--textmystery-root", default="C:/Source/Orket-Extensions/TextMystery")
+    parser.add_argument("--textmystery-root", default=None)
     parser.add_argument("--payload-file", default=None, help="Path to JSON object payload passed to bridge endpoint.")
     parser.add_argument("--workspace", default="workspace/default")
     parser.add_argument("--department", default="core")

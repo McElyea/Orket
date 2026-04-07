@@ -82,7 +82,7 @@ async def recover_pre_effect_attempt_for_resume_mode(
             run=run,
             current_attempt=current_attempt,
             checkpoint=checkpoint,
-            acceptance=acceptance,
+            acceptance=accepted_checkpoint,
             step_records=step_records,
             effect_entries=attempt_effect_entries,
             operation_refs=[],

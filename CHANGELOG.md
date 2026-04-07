@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.38] - 2026-04-07 - "The Governed Execution Maintenance Cut"
+
+### Added
+- **Techdebt Closeout Archive**: Added the archived `TD04062026D` remediation closeout packet and preserved the current code and behavioral review inputs as durable history outside the active maintenance lane.
+- **Lifecycle And CI Regression Coverage**: Added sandbox lifecycle spool replay/dead-letter coverage, governed approval resource-reference coverage, OpenClaw torture approval coverage, quant sweep workflow smoke coverage, and changed-package detector regression coverage.
+
+### Changed
+- **Sandbox Lifecycle Truth Hardening**: Hardened event spool replay with structured replay results, retry accounting, dead-letter output, atomic spool rewrite, replay locking, and single-read mutation-result handling for lifecycle transitions.
+- **Kernel Canonicalization Consolidation**: Retired the legacy ODR `canon.py` module, moved domain-specific ODR canonicalization behind the RFC 8785 canonical backend with explicit policy preprocessing, admitted finite floats only for that domain surface, and re-pinned determinism gate hashes.
+- **Workflow And Script Reliability**: Added quant sweep matrix execution smoke coverage, made changed-package detection fail open to the package matrix when the configured base ref is unavailable, tightened TextMystery bridge execution path handling, and removed local path drift from Gitea backup/probe script paths.
+- **Roadmap And Authority Alignment**: Cleared active non-recurring maintenance posture, advanced the authority snapshot date, and preserved future-lane idea review notes without reopening a roadmap lane.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No action required. The closeout proof is structural/contract/integration plus local workflow smoke; ShellCheck was not available and no live sandbox resource path was intentionally executed.
+
 ## [0.4.37] - 2026-04-06 - "The Priority Techdebt Remediation Cut"
 
 ### Added

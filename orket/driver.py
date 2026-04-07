@@ -31,7 +31,7 @@ def _default_workspace_root() -> Path:
     return default_workspace_root()
 
 
-class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
+class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
     """
     The Driver is the high-level intent parser and resource manager.
     It manages Rocks, Epics, Issues, and Team Selection.
@@ -279,11 +279,11 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             try:
                 payload = json.loads(stripped)
             except json.JSONDecodeError as exc:
-                raise ValueError("Strict JSON mode requires pure JSON envelope output.") from exc
+                raise json.JSONDecodeError("Strict JSON mode requires pure JSON envelope output.", stripped, 0) from exc
             except TypeError as exc:
-                raise ValueError("Strict JSON mode requires pure JSON envelope output.") from exc
+                raise json.JSONDecodeError("Strict JSON mode requires pure JSON envelope output.", stripped, 0) from exc
             if not isinstance(payload, dict):
-                raise ValueError("Strict JSON mode requires a JSON object envelope.")
+                raise json.JSONDecodeError("Strict JSON mode requires a JSON object envelope.", stripped, 0)
             return payload
 
         log_event(
@@ -297,16 +297,16 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         if stripped.startswith("{") and stripped.endswith("}"):
             payload = json.loads(stripped)
             if not isinstance(payload, dict):
-                raise ValueError("Compatibility mode requires a JSON object envelope.")
+                raise json.JSONDecodeError("Compatibility mode requires a JSON object envelope.", stripped, 0)
             return payload
         start = text.find("{")
         end = text.rfind("}")
         if start == -1 or end == -1:
-            raise ValueError("Compatibility mode could not find JSON envelope in model output.")
+            raise json.JSONDecodeError("Compatibility mode could not find JSON envelope in model output.", text, 0)
         self._compatibility_parse_fallback_used = True
         payload = json.loads(text[start : end + 1])
         if not isinstance(payload, dict):
-            raise ValueError("Compatibility mode requires a JSON object envelope.")
+            raise json.JSONDecodeError("Compatibility mode requires a JSON object envelope.", text[start : end + 1], 0)
         return payload
 
     async def process_request(self, message: str) -> str:

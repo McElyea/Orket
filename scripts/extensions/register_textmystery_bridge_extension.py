@@ -41,6 +41,7 @@ def _module_source() -> str:
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import sys
 from typing import Any
@@ -55,8 +56,10 @@ def run_workload(ctx, input_payload: dict[str, Any]) -> WorkloadResult:
 
     textmystery_root = str(
         input_payload.get("textmystery_root")
-        or "C:/Source/Orket-Extensions/TextMystery"
+        or os.getenv("TEXTMYSTERY_ROOT", "")
     ).strip()
+    if not textmystery_root:
+        raise ValueError("Set textmystery_root input or TEXTMYSTERY_ROOT.")
     request_payload = input_payload.get("payload") if isinstance(input_payload.get("payload"), dict) else {}
     response_payload = _run_contract_operation(
         operation=operation,

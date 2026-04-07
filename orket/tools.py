@@ -68,11 +68,11 @@ class ToolBox:
 
         tool_fn = tool_map[tool_name]
         resolved_context = dict(context or {})
-        resolved_context["tool_name"] = tool_name
         return await self.runtime_executor.invoke(
             tool_fn,
             args,
             context=resolved_context,
+            tool_name=tool_name,
             tool_timeout_seconds=_resolve_tool_timeout_seconds(resolved_context),
             workspace=self.root,
         )

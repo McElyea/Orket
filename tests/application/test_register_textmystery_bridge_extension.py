@@ -30,6 +30,7 @@ def test_register_textmystery_bridge_extension_writes_sdk_manifest_and_catalog(t
     module_path = extension_dir / "textmystery_bridge_extension.py"
     assert manifest_path.exists()
     assert module_path.exists()
+    assert "C:/Source" not in module_path.read_text(encoding="utf-8")
     manifest_text = manifest_path.read_text(encoding="utf-8")
     assert "manifest_version: v0" in manifest_text
     assert "entrypoint: textmystery_bridge_extension:run_workload" in manifest_text

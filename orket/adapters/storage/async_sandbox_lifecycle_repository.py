@@ -237,7 +237,18 @@ class AsyncSandboxLifecycleRepository:
                     raise SandboxOperationIntegrityError(
                         f"operation_id {operation_id} reused with different payload hash."
                     )
-                return {"reused": True, "result": stored.result_payload}
+                record_cursor = await conn.execute(
+                    "SELECT * FROM sandbox_lifecycle_records WHERE sandbox_id = ?",
+                    (str(stored.result_payload.get("sandbox_id") or record.sandbox_id),),
+                )
+                record_row = await record_cursor.fetchone()
+                if record_row is None:
+                    raise SandboxLifecycleError(f"Sandbox lifecycle record not found: {record.sandbox_id}.")
+                return {
+                    "reused": True,
+                    "result": stored.result_payload,
+                    "record": SandboxLifecycleRecord.model_validate(deserialize_record_row(dict(record_row))),
+                }
             where = ["sandbox_id = ?", "record_version = ?"]
             params: list[object] = [record.sandbox_id, expected_record_version]
             if expected_lease_epoch is not None:
@@ -308,7 +319,7 @@ class AsyncSandboxLifecycleRepository:
                     record.created_at,
                 ),
             )
-            return {"reused": False, "result": result_payload}
+            return {"reused": False, "result": result_payload, "record": record}
 
         return await self._execute(_op, row_factory=True, commit=True)
 

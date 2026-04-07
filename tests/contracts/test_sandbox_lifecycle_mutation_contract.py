@@ -6,7 +6,13 @@ import pytest
 
 from orket.adapters.storage.async_sandbox_lifecycle_repository import SandboxLifecycleConflictError
 from orket.application.services.sandbox_lifecycle_mutation_service import SandboxLifecycleMutationService
-from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, SandboxLifecycleError, SandboxState
+from orket.core.domain.sandbox_lifecycle import (
+    CleanupState,
+    LifecycleEvent,
+    SandboxLifecycleError,
+    SandboxState,
+    TerminalReason,
+)
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
 
@@ -14,8 +20,10 @@ class _FakeRepo:
     def __init__(self, record: SandboxLifecycleRecord):
         self.record = record
         self.operations: dict[str, tuple[str, dict[str, object]]] = {}
+        self.get_record_calls = 0
 
     async def get_record(self, sandbox_id: str) -> SandboxLifecycleRecord | None:
+        self.get_record_calls += 1
         return self.record if self.record.sandbox_id == sandbox_id else None
 
     async def apply_record_mutation(
@@ -33,7 +41,7 @@ class _FakeRepo:
         if existing is not None:
             if existing[0] != payload_hash:
                 raise SandboxLifecycleError("operation_id reused with different payload hash.")
-            return {"reused": True, "result": existing[1]}
+            return {"reused": True, "result": existing[1], "record": self.record}
         if self.record.record_version != expected_record_version:
             raise SandboxLifecycleConflictError("stale version")
         if expected_cleanup_state is not None and self.record.cleanup_state.value != expected_cleanup_state:
@@ -47,7 +55,7 @@ class _FakeRepo:
             "requires_reconciliation": record.requires_reconciliation,
         }
         self.operations[operation_id] = (payload_hash, result)
-        return {"reused": False, "result": result}
+        return {"reused": False, "result": result, "record": record}
 
 
 def _record(**overrides) -> SandboxLifecycleRecord:
@@ -119,3 +127,21 @@ async def test_requires_reconciliation_blocks_cleanup_and_state_mutation() -> No
             next_state=SandboxState.CLEANED,
             cleanup_state=CleanupState.COMPLETED,
         )
+
+
+@pytest.mark.asyncio
+async def test_transition_state_uses_single_initial_record_read() -> None:
+    repo = _FakeRepo(_record(state=SandboxState.ACTIVE, cleanup_state=CleanupState.NONE))
+    service = SandboxLifecycleMutationService(repo)
+
+    result = await service.transition_state(
+        sandbox_id="sb-1",
+        operation_id="op-transition",
+        expected_record_version=3,
+        event=LifecycleEvent.WORKFLOW_TERMINAL_OUTCOME,
+        next_state=SandboxState.TERMINAL,
+        terminal_reason=TerminalReason.SUCCESS,
+    )
+
+    assert repo.get_record_calls == 1
+    assert result.record.state is SandboxState.TERMINAL

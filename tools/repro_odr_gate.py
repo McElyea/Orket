@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.kernel.v1.canon import canonical_bytes, raw_signature  # noqa: E402
+from orket.kernel.v1.canonical import odr_canonical_json_bytes, odr_raw_signature  # noqa: E402
 from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, run_round  # noqa: E402
 
 
@@ -94,9 +94,9 @@ def main() -> int:
     fixture = _load_fixture(args.fixture)
     permuted = _permute_fixture(fixture, args.seed, args.perm_index)
     output = _run_fixture_rounds(permuted, args.rounds)
-    canon = canonical_bytes(output)
+    canon = odr_canonical_json_bytes(output)
     canon_hash = _hash_bytes(canon)
-    raw_sig = raw_signature(output)
+    raw_sig = odr_raw_signature(output)
 
     stop_reason = str(output.get("stop_reason") or "NONE")
     if args.expected_stop_reason and stop_reason != args.expected_stop_reason:

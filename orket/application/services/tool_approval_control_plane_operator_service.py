@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Protocol
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_target_resource_refs import resource_id_for_supported_run
 from orket.core.contracts import OperatorActionRecord
+from orket.core.contracts.control_plane_models import RunRecord
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
+
+
+class ExecutionRepository(Protocol):
+    async def get_run_record(self, *, run_id: str) -> RunRecord | None: ...
 
 
 class ToolApprovalControlPlaneOperatorService:
@@ -16,7 +21,7 @@ class ToolApprovalControlPlaneOperatorService:
         self,
         *,
         publication: ControlPlanePublicationService,
-        execution_repository: Any | None = None,
+        execution_repository: ExecutionRepository | None = None,
     ) -> None:
         self.publication = publication
         self.execution_repository = execution_repository
@@ -60,7 +65,9 @@ class ToolApprovalControlPlaneOperatorService:
 
         resolution = self._mapping_or_empty(resolved_approval.get("resolution"))
         payload = self._mapping_or_empty(resolved_approval.get("payload"))
-        decision_token = str(resolution.get("decision") or "").strip().lower() or "approve"
+        raw_decision_token = str(resolution.get("decision") or "").strip().lower()
+        decision_token = "deny" if status_token == "denied" else raw_decision_token or "approve"
+        action_namespace = "deny" if status_token == "denied" else "approve"
         before_status = self._status_token(previous_approval)
         timestamp = self._timestamp(resolved_approval)
         session_id = str(resolved_approval.get("session_id") or "").strip()
@@ -83,7 +90,7 @@ class ToolApprovalControlPlaneOperatorService:
 
         if status_token == "denied":
             action = await self.publication.publish_operator_action(
-                action_id=f"approval-operator-action:{approval_id}:{decision_token}:{timestamp}",
+                action_id=f"approval-operator-action:{approval_id}:{action_namespace}:{decision_token}:{timestamp}",
                 actor_ref=actor_ref,
                 input_class=OperatorInputClass.COMMAND,
                 target_ref=self.target_ref(approval_id),
@@ -125,7 +132,7 @@ class ToolApprovalControlPlaneOperatorService:
             scope_tokens.append(f"issue_id={issue_id}")
 
         action = await self.publication.publish_operator_action(
-            action_id=f"approval-operator-action:{approval_id}:{decision_token}:{timestamp}",
+            action_id=f"approval-operator-action:{approval_id}:{action_namespace}:{decision_token}:{timestamp}",
             actor_ref=actor_ref,
             input_class=OperatorInputClass.RISK_ACCEPTANCE,
             target_ref=self.target_ref(approval_id),
@@ -166,7 +173,8 @@ class ToolApprovalControlPlaneOperatorService:
     ) -> OperatorActionRecord | None:
         if not control_plane_target_ref:
             return None
-        action_id = f"approval-run-operator-action:{approval_id}:{decision_token}:{timestamp}"
+        action_namespace = "deny" if status_token == "denied" else "approve"
+        action_id = f"approval-run-operator-action:{approval_id}:{action_namespace}:{decision_token}:{timestamp}"
         precondition_basis_ref = f"{self.target_ref(approval_id)}:status:{before_status}"
         if status_token == "denied":
             return await self.publication.publish_operator_action(
@@ -213,11 +221,11 @@ class ToolApprovalControlPlaneOperatorService:
 
     async def _target_resource_refs(self, *, control_plane_target_ref: str) -> list[str]:
         execution_repository = self.execution_repository
-        if execution_repository is None:
-            return []
         target_ref = str(control_plane_target_ref or "").strip()
         if not target_ref:
             return []
+        if execution_repository is None:
+            raise ValueError("execution_repository is required when control_plane_target_ref is present")
         run = await execution_repository.get_run_record(run_id=target_ref)
         if run is None:
             return []

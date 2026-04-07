@@ -45,9 +45,13 @@ def _path_in_prefixes(path: str, prefixes: list[str]) -> bool:
     return False
 
 
-def _detect_changed_files(base_ref: str) -> list[str]:
+def _detect_changed_files(base_ref: str) -> list[str] | None:
     try:
         _run_git(["rev-parse", "--verify", base_ref])
+    except RuntimeError:
+        return None
+
+    try:
         diff_text = _run_git(["diff", "--name-only", "--diff-filter=ACMR", f"{base_ref}...HEAD"])
         if diff_text:
             return [line.strip() for line in diff_text.splitlines() if line.strip()]
@@ -92,7 +96,8 @@ def main() -> None:
     if not isinstance(global_paths, list):
         raise SystemExit("Config key 'global_trigger_paths' must be a list.")
 
-    changed_files = [_safe_rel_posix(p) for p in _detect_changed_files(args.base_ref)]
+    detected_changed_files = _detect_changed_files(args.base_ref)
+    changed_files = [] if detected_changed_files is None else [_safe_rel_posix(p) for p in detected_changed_files]
     changed_set = set(changed_files)
 
     package_matrix: list[dict[str, Any]] = []
@@ -106,7 +111,9 @@ def main() -> None:
         package_matrix.append(item)
 
     run_all = _path_in_prefixes_any(changed_set, [_safe_rel_posix(p) for p in global_paths]) if changed_set else False
-    if run_all:
+    if detected_changed_files is None:
+        selected = package_matrix
+    elif run_all:
         selected = package_matrix
     else:
         selected = []

@@ -105,7 +105,7 @@ class SandboxLifecycleMutationService:
             expected_owner_instance_id=expected_owner_instance_id,
             expected_cleanup_state=current.cleanup_state.value if cleanup_state is not None else None,
         )
-        record = await self._require_record(sandbox_id)
+        record = self._mutation_record(result)
         return SandboxLifecycleMutationResult(record=record, reused=bool(result["reused"]))
 
     async def renew_lease(
@@ -150,7 +150,7 @@ class SandboxLifecycleMutationService:
             expected_lease_epoch=expected_lease_epoch,
             expected_owner_instance_id=expected_owner_instance_id,
         )
-        record = await self._require_record(sandbox_id)
+        record = self._mutation_record(result)
         return SandboxLifecycleMutationResult(record=record, reused=bool(result["reused"]))
 
     async def claim_cleanup(
@@ -186,7 +186,7 @@ class SandboxLifecycleMutationService:
             expected_record_version=expected_record_version,
             expected_cleanup_state=current.cleanup_state.value,
         )
-        record = await self._require_record(sandbox_id)
+        record = self._mutation_record(result)
         return SandboxLifecycleMutationResult(record=record, reused=bool(result["reused"]))
 
     async def set_requires_reconciliation(
@@ -219,7 +219,7 @@ class SandboxLifecycleMutationService:
             record=next_record,
             expected_record_version=expected_record_version,
         )
-        record = await self._require_record(sandbox_id)
+        record = self._mutation_record(result)
         return SandboxLifecycleMutationResult(record=record, reused=bool(result["reused"]))
 
     async def reacquire_ownership(
@@ -282,13 +282,20 @@ class SandboxLifecycleMutationService:
             record=next_record,
             expected_record_version=expected_record_version,
         )
-        record = await self._require_record(sandbox_id)
+        record = self._mutation_record(result)
         return SandboxLifecycleMutationResult(record=record, reused=bool(result["reused"]))
 
     async def _require_record(self, sandbox_id: str) -> SandboxLifecycleRecord:
         record = await self.repository.get_record(sandbox_id)
         if record is None:
             raise SandboxLifecycleError(f"Sandbox lifecycle record not found: {sandbox_id}.")
+        return record
+
+    @staticmethod
+    def _mutation_record(result: dict[str, object]) -> SandboxLifecycleRecord:
+        record = result.get("record")
+        if not isinstance(record, SandboxLifecycleRecord):
+            raise SandboxLifecycleError("Lifecycle mutation repository did not return a written record.")
         return record
 
     @staticmethod

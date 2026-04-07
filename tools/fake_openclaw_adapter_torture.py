@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 import sys
 import time
 import uuid
 from typing import Any
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _project_root() -> Path:
@@ -134,9 +137,10 @@ def _select_case_id(request: dict[str, Any], known_case_ids: list[str]) -> str:
     requested = str(request.get("case_id") or request.get("scenario_kind") or "").strip()
     if requested:
         return requested
-    if not known_case_ids:
-        return ""
-    return known_case_ids[0]
+    if len(known_case_ids) == 1:
+        LOGGER.warning("openclaw_torture_adapter_auto_selected_single_case", extra={"case_id": known_case_ids[0]})
+        return known_case_ids[0]
+    return ""
 
 
 def main() -> int:
@@ -169,6 +173,16 @@ def main() -> int:
 
         case_id = _select_case_id(request, known_case_ids)
         if not case_id:
+            if known_case_ids:
+                _write_line(
+                    {
+                        "type": "error",
+                        "code": "CASE_ID_REQUIRED",
+                        "message": "case_id is required when multiple cases are loaded.",
+                        "known_case_ids": known_case_ids,
+                    }
+                )
+                continue
             _write_line({"type": "error", "code": "NO_CASES_LOADED", "message": "Corpus is empty."})
             continue
         case = cases_by_id.get(case_id)

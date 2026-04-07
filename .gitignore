@@ -83,7 +83,7 @@ orket_storage/
 pytest_tmp/
 sandbox_pytest/
 .ruff_cache/
-benchmarks/results/**
+benchmarks/results/
 benchmarks/staging/**
 docs/internal/
 coverage.json

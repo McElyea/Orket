@@ -34,11 +34,37 @@ async def test_openclaw_torture_adapter_serves_corpus_cases() -> None:
 
 # Layer: unit
 def test_openclaw_torture_adapter_select_case_id_returns_empty_on_empty_corpus() -> None:
+    module = _load_torture_adapter_module()
+
+    assert module._select_case_id({}, []) == ""
+
+
+# Layer: unit
+def test_openclaw_torture_adapter_select_case_id_errors_when_multiple_cases_need_explicit_id() -> None:
+    module = _load_torture_adapter_module()
+
+    assert module._select_case_id({}, ["case-a", "case-b"]) == ""
+
+
+# Layer: unit
+def test_openclaw_torture_adapter_select_case_id_auto_selects_single_case_with_warning(caplog) -> None:
+    module = _load_torture_adapter_module()
+
+    selected = module._select_case_id({}, ["case-a"])
+
+    assert selected == "case-a"
+    assert any(
+        record.message == "openclaw_torture_adapter_auto_selected_single_case"
+        and getattr(record, "case_id", "") == "case-a"
+        for record in caplog.records
+    )
+
+
+def _load_torture_adapter_module():
     module_path = Path("tools/fake_openclaw_adapter_torture.py").resolve()
     spec = importlib.util.spec_from_file_location("fake_openclaw_adapter_torture", module_path)
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-
-    assert module._select_case_id({}, []) == ""
+    return module

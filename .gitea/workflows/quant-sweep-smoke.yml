@@ -106,3 +106,57 @@ jobs:
             --quant-tags Q8_0 \
             --matrix-config benchmarks/configs/quant_sweep_common_sessions.json \
             --dry-run
+
+      - name: Matrix Execution Smoke
+        run: |
+          mkdir -p benchmarks/results/quant/quant_sweep/smoke
+          cat > benchmarks/results/quant/quant_sweep/smoke/stub_quant_runner.py <<'PY'
+          import json
+          import os
+
+          quant = os.environ.get("ORKET_QUANT_TAG", "Q8_0")
+          print(json.dumps({
+              "telemetry": {
+                  "init_latency": None,
+                  "total_latency": 1.0,
+                  "peak_memory_rss": 100.0,
+                  "adherence_score": 1.0,
+                  "token_metrics_status": "OK",
+                  "run_quality_status": "CLEAN",
+                  "run_quality_reasons": [],
+                  "vibe_metrics": {
+                      "latency_variance": None,
+                      "code_density": 0.9,
+                      "gen_retries": 0,
+                      "vibe_delta": None,
+                      "vibe_delta_status": "NO_BASELINE",
+                  },
+                  "quant_tag": quant,
+              }
+          }))
+          PY
+          cat > benchmarks/results/quant/quant_sweep/smoke/task_bank.json <<'JSON'
+          [
+            {
+              "id": "001",
+              "tier": 1,
+              "description": "CI quant sweep execution smoke",
+              "acceptance_contract": {
+                "mode": "function",
+                "required_artifacts": [],
+                "pass_conditions": ["ok"],
+                "determinism_profile": "strict"
+              }
+            }
+          ]
+          JSON
+          python scripts/quant/run_quant_sweep.py \
+            --model-id placeholder-model \
+            --quant-tags Q8_0 \
+            --task-bank benchmarks/results/quant/quant_sweep/smoke/task_bank.json \
+            --runs 1 \
+            --runner-template "python benchmarks/results/quant/quant_sweep/smoke/stub_quant_runner.py --task {task_file} --venue {venue} --flow {flow}" \
+            --out-dir benchmarks/results/quant/quant_sweep/smoke/reports \
+            --summary-out benchmarks/results/quant/quant_sweep/smoke/sweep_summary.json \
+            --task-limit 1 \
+            --no-sanitize-model-cache

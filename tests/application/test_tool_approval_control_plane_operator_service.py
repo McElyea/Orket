@@ -121,6 +121,85 @@ async def test_tool_approval_operator_service_publishes_terminal_command_for_den
 
 
 @pytest.mark.asyncio
+async def test_tool_approval_operator_service_namespaces_denial_and_approval_action_ids() -> None:
+    repository = InMemoryControlPlaneRecordRepository()
+    service = ToolApprovalControlPlaneOperatorService(
+        publication=ControlPlanePublicationService(repository=repository)
+    )
+    common = {
+        "approval_id": "apr-collision",
+        "session_id": "sess-collision",
+        "issue_id": "ISS-collision",
+        "request_type": "tool_approval",
+        "reason": "approval_required_tool:write_file",
+        "updated_at": "2026-03-24T02:11:15+00:00",
+    }
+
+    denied = await service.publish_resolution_operator_action(
+        actor_ref="api_key_fingerprint:sha256:test",
+        previous_approval={
+            "approval_id": "apr-collision",
+            "status": "PENDING",
+        },
+        resolved_approval={
+            **common,
+            "status": "DENIED",
+            "resolution": {},
+        },
+    )
+    approved = await service.publish_resolution_operator_action(
+        actor_ref="api_key_fingerprint:sha256:test",
+        previous_approval={
+            "approval_id": "apr-collision",
+            "status": "PENDING",
+        },
+        resolved_approval={
+            **common,
+            "status": "APPROVED",
+            "resolution": {
+                "decision": "approve",
+            },
+        },
+    )
+
+    assert denied.action_id != approved.action_id
+    assert ":deny:deny:" in denied.action_id
+    assert ":approve:approve:" in approved.action_id
+
+
+@pytest.mark.asyncio
+async def test_tool_approval_operator_service_requires_execution_repository_for_target_ref() -> None:
+    repository = InMemoryControlPlaneRecordRepository()
+    service = ToolApprovalControlPlaneOperatorService(
+        publication=ControlPlanePublicationService(repository=repository)
+    )
+
+    with pytest.raises(ValueError, match="execution_repository is required"):
+        await service.publish_resolution_operator_action(
+            actor_ref="api_key_fingerprint:sha256:test",
+            previous_approval={
+                "approval_id": "apr-target-no-repo",
+                "status": "PENDING",
+            },
+            resolved_approval={
+                "approval_id": "apr-target-no-repo",
+                "session_id": "sess-target",
+                "issue_id": "ISS-target",
+                "request_type": "tool_approval",
+                "reason": "approval_required_tool:write_file",
+                "payload": {
+                    "control_plane_target_ref": "turn-tool-run:sess-target:ISS-target:coder:0001",
+                },
+                "status": "APPROVED",
+                "resolution": {
+                    "decision": "approve",
+                },
+                "updated_at": "2026-03-24T02:11:30+00:00",
+            },
+        )
+
+
+@pytest.mark.asyncio
 async def test_tool_approval_operator_service_publishes_secondary_action_for_control_plane_run_target() -> None:
     repository = InMemoryControlPlaneRecordRepository()
     execution_repository = InMemoryControlPlaneExecutionRepository()

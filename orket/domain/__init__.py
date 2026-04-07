@@ -32,7 +32,6 @@ warnings.warn("`orket.domain` is deprecated; import from `orket.core.domain` ins
 _MODULE_ALIASES = {
     "bug_fix_phase": "orket.core.domain.bug_fix_phase",
     "critical_path": "orket.core.domain.critical_path",
-    "execution": "orket.core.domain.execution",
     "failure_reporter": "orket.core.domain.failure_reporter",
     "fixture_verifier": "orket.core.domain.fixture_verifier",
     "reconciler": "orket.core.domain.reconciler",
