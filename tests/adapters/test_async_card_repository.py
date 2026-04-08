@@ -140,6 +140,68 @@ async def test_read_operations_do_not_wait_on_write_lock(repo):
     assert retrieved is not None
     assert retrieved.id == "READ-LOCK"
 
+
+async def _issue_columns(db_path: str) -> set[str]:
+    async with aiosqlite.connect(db_path) as conn:
+        cursor = await conn.execute("PRAGMA table_info(issues)")
+        rows = await cursor.fetchall()
+    return {str(row[1]) for row in rows}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("column_name", ["retry_count", "max_retries"])
+async def test_card_repository_reapplies_missing_retry_migration_columns(tmp_path, column_name):
+    """Layer: integration. Verifies additive retry migrations rerun when a legacy DB is missing one column."""
+    db_path = str(tmp_path / "cards.db")
+    repo = AsyncCardRepository(db_path)
+    await repo.get_by_id("missing")
+
+    async with aiosqlite.connect(db_path) as conn:
+        try:
+            await conn.execute(f"ALTER TABLE issues DROP COLUMN {column_name}")
+        except aiosqlite.OperationalError as exc:
+            pytest.skip(f"SQLite build does not support DROP COLUMN for this regression: {exc}")
+        await conn.commit()
+
+    repo_after_column_drift = AsyncCardRepository(db_path)
+    await repo_after_column_drift.get_by_id("missing")
+
+    assert column_name in await _issue_columns(db_path)
+
+
+@pytest.mark.asyncio
+async def test_card_repository_initialization_enables_wal_mode(tmp_path):
+    """Layer: integration. Verifies card storage initialization selects WAL mode on the real SQLite file."""
+    db_path = str(tmp_path / "cards.db")
+    repo = AsyncCardRepository(db_path)
+    await repo.get_by_id("missing")
+
+    async with aiosqlite.connect(db_path) as conn:
+        cursor = await conn.execute("PRAGMA journal_mode")
+        row = await cursor.fetchone()
+
+    assert str(row[0]).lower() == "wal"
+
+
+@pytest.mark.asyncio
+async def test_card_repository_wal_allows_concurrent_readers_and_writer(tmp_path):
+    """Layer: integration. Verifies concurrent readers and a writer complete on the real SQLite WAL path."""
+    db_path = str(tmp_path / "cards.db")
+    repo = AsyncCardRepository(db_path)
+    await repo.save(IssueRecord(id="WAL-BASE", summary="base", seat="standard"))
+
+    async def reader() -> None:
+        for _ in range(10):
+            retrieved = await repo.get_by_id("WAL-BASE")
+            assert retrieved is not None
+
+    async def writer() -> None:
+        for index in range(10):
+            await repo.save(IssueRecord(id=f"WAL-WRITE-{index}", summary=f"write {index}", seat="standard"))
+
+    await asyncio.wait_for(asyncio.gather(*(reader() for _ in range(10)), writer()), timeout=5)
+
+
 @pytest.mark.asyncio
 async def test_serialization_edge_cases(repo):
     """Test handling of empty or malformed JSON in extended fields."""

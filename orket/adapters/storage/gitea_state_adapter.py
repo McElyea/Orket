@@ -26,8 +26,17 @@ from orket.core.contracts.state_backend import StateBackendContract
 
 
 class SecretToken(str):
+    def reveal(self) -> str:
+        return super().__str__()
+
+    def __str__(self) -> str:
+        return "***"
+
     def __repr__(self) -> str:
         return "SecretToken(***)"
+
+    def __format__(self, format_spec: str) -> str:
+        return format("***", format_spec)
 
 
 class GiteaStateAdapter(StateBackendContract):
@@ -66,7 +75,7 @@ class GiteaStateAdapter(StateBackendContract):
 
     def build_headers(self, extra_headers: dict[str, str] | None = None) -> dict[str, str]:
         headers = {
-            "Authorization": f"token {self._token}",
+            "Authorization": f"token {self._token.reveal()}",
             "Accept": "application/json",
         }
         if extra_headers:

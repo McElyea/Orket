@@ -9,8 +9,10 @@ from urllib.parse import urlparse
 
 _RECOVERY_STOP_MARKER = re.compile(
     r"(?im)^\s*(?:(?:[*-]|(?:\d+\.))\s+)?(?:\*+)?"
-    r"(?:wait\b|let's\b|self-correction\b|final check\b|review against constraints\b|"
-    r"refining the output\b|final polish\b|final output generation\b|formatting\b)"
+    r"(?:wait(?:[,.:]|\s+i\b)|let's\s+finalize\b|self-correction\b(?:[^:\n]*)?:|"
+    r"final check\b(?:[^:\n]*)?:|review against constraints\b(?:[^:\n]*)?:|"
+    r"refining the output\b(?:[^:\n]*)?:|final polish\b(?:[^:\n]*)?:|"
+    r"final output generation\b(?:[^:\n]*)?:|formatting\s*:)"
 )
 _ARCHITECT_LABELS = [
     ("requirement", "### REQUIREMENT"),

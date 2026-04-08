@@ -24,6 +24,24 @@ async def test_increment_pr_cycle_starts_at_one(webhook_db):
 
 
 @pytest.mark.asyncio
+async def test_try_record_webhook_event_returns_false_for_duplicate_delivery(webhook_db):
+    """Layer: integration. Verifies webhook delivery ids are persisted as idempotency keys."""
+    first = await webhook_db.try_record_webhook_event(
+        event_id="evt-1",
+        event_type="pull_request_review",
+        pr_key="org/repo#1",
+    )
+    second = await webhook_db.try_record_webhook_event(
+        event_id="evt-1",
+        event_type="pull_request_review",
+        pr_key="org/repo#1",
+    )
+
+    assert first is True
+    assert second is False
+
+
+@pytest.mark.asyncio
 async def test_increment_pr_cycle_accumulates(webhook_db):
     await webhook_db.increment_pr_cycle("org/repo", 1)
     count = await webhook_db.increment_pr_cycle("org/repo", 1)

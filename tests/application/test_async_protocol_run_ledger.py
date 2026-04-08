@@ -95,6 +95,31 @@ async def test_async_protocol_run_ledger_start_and_finalize(tmp_path: Path) -> N
     assert events[1]["sequence_number"] == events[1]["event_seq"]
 
 
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_start_and_finalize_are_idempotent(tmp_path: Path) -> None:
+    """Layer: integration. Verifies crash recovery replays do not duplicate lifecycle records."""
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    await repo.start_run(
+        session_id="sess-idempotent",
+        run_type="epic",
+        run_name="Idempotent",
+        department="core",
+        build_id="build-1",
+    )
+    await repo.start_run(
+        session_id="sess-idempotent",
+        run_type="epic",
+        run_name="Idempotent",
+        department="core",
+        build_id="build-1",
+    )
+    await repo.finalize_run(session_id="sess-idempotent", status="incomplete")
+    await repo.finalize_run(session_id="sess-idempotent", status="incomplete")
+
+    events = await repo.list_events("sess-idempotent")
+    assert [event["kind"] for event in events] == ["run_started", "run_finalized"]
+
+
 # Layer: contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_finalize_rejects_done_with_failure(tmp_path: Path) -> None:

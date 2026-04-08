@@ -139,6 +139,40 @@ def test_extract_openai_content_recovers_direct_header_block_and_trims_numbered_
     )
 
 
+def test_extract_openai_content_does_not_trim_adversarial_stop_marker_phrases() -> None:
+    """Layer: unit. Verifies ordinary content does not match reasoning-tail stop markers."""
+    payload = {
+        "choices": [
+            {
+                "message": {
+                    "content": "",
+                    "reasoning_content": (
+                        "### REQUIREMENT\n"
+                        "Document formatting rules for operators.\n\n"
+                        "### CHANGELOG\n"
+                        "Added wait for lock guidance.\n\n"
+                        "### ASSUMPTIONS\n"
+                        "The team can wait for lock release.\n\n"
+                        "### OPEN_QUESTIONS\n"
+                        "Should we let's refactor this later?"
+                    ),
+                }
+            }
+        ]
+    }
+
+    assert extract_openai_content(payload) == (
+        "### REQUIREMENT\n"
+        "Document formatting rules for operators.\n\n"
+        "### CHANGELOG\n"
+        "Added wait for lock guidance.\n\n"
+        "### ASSUMPTIONS\n"
+        "The team can wait for lock release.\n\n"
+        "### OPEN_QUESTIONS\n"
+        "Should we let's refactor this later?"
+    )
+
+
 def test_extract_openai_content_returns_raw_reasoning_when_no_recoverable_sections_exist() -> None:
     payload = {
         "choices": [

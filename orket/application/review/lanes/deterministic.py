@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import hashlib
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from orket.application.review.models import (
-    DeterministicFinding,
     DeterministicDecision,
+    DeterministicFinding,
     DeterministicReviewDecisionPayload,
     ReviewSnapshot,
 )
 
 SEVERITY_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
+DEFAULT_FORBIDDEN_PATTERN_SEVERITY = "high"
 
 
 def _added_diff_lines(diff_unified: str) -> list[dict[str, Any]]:
@@ -65,6 +67,23 @@ def _stable_sort_findings(findings: list[DeterministicFinding]) -> list[Determin
     return sorted(findings, key=key)
 
 
+def _forbidden_pattern_rows(raw_patterns: Any) -> list[tuple[str, str]]:
+    rows: list[tuple[str, str]] = []
+    for item in list(raw_patterns or []):
+        if isinstance(item, Mapping):
+            pattern = str(item.get("pattern") or "").strip()
+            severity = str(item.get("severity") or DEFAULT_FORBIDDEN_PATTERN_SEVERITY).strip().lower()
+        else:
+            pattern = str(item).strip()
+            severity = DEFAULT_FORBIDDEN_PATTERN_SEVERITY
+        if not pattern:
+            continue
+        if severity not in SEVERITY_RANK:
+            severity = DEFAULT_FORBIDDEN_PATTERN_SEVERITY
+        rows.append((pattern, severity))
+    return rows
+
+
 def run_deterministic_lane(
     *,
     snapshot: ReviewSnapshot,
@@ -94,11 +113,11 @@ def run_deterministic_lane(
                         )
                     )
 
-    patterns = [str(item) for item in list(checks.get("forbidden_patterns") or [])]
+    patterns = _forbidden_pattern_rows(checks.get("forbidden_patterns"))
     if patterns:
         executed_checks.append("forbidden_patterns")
         added_lines = _added_diff_lines(snapshot.diff_unified)
-        for pattern in patterns:
+        for pattern, severity in patterns:
             try:
                 regex = re.compile(pattern, re.MULTILINE)
             except re.error:
@@ -120,7 +139,7 @@ def run_deterministic_lane(
                 findings.append(
                     DeterministicFinding(
                         code="PATTERN_MATCHED",
-                        severity="high",
+                        severity=severity,
                         message=f"Forbidden pattern matched: {pattern}",
                         path=str(location.get("path") or ""),
                         span={"start": int(location.get("line") or 0), "end": int(location.get("line") or 0)},
@@ -133,7 +152,7 @@ def run_deterministic_lane(
                 findings.append(
                     DeterministicFinding(
                         code="PATTERN_MATCHED",
-                        severity="high",
+                        severity=severity,
                         message=f"Forbidden pattern matched: {pattern}",
                         details={"pattern": pattern},
                     )

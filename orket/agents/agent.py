@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
+import logging
 import re
 from collections.abc import Callable
 from datetime import UTC, datetime
@@ -13,6 +14,7 @@ from orket.agents.model_family_registry import ModelFamilyRegistry
 from orket.application.services.control_plane_authority_service import ControlPlaneAuthorityService
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.application.services.tool_parser import ToolParser
+from orket.core.contracts import EffectJournalEntryRecord
 from orket.core.domain import ResidualUncertaintyClassification
 from orket.core.domain.execution import ExecutionTurn, ToolCall, ToolCallErrorClass
 from orket.exceptions import AgentConfigurationError, CardNotFound
@@ -20,6 +22,8 @@ from orket.logging import log_event
 from orket.runtime import ConfigLoader
 from orket.schema import DialectConfig, SkillConfig
 from orket.utils import sanitize_name
+
+logger = logging.getLogger(__name__)
 
 
 class ModelProvider(Protocol):
@@ -36,8 +40,8 @@ class ModelProvider(Protocol):
 class NullControlPlaneAuthorityService:
     """No-op journal seam for callers that intentionally run without durable control-plane authority."""
 
-    def append_effect_journal_entry(self, **_kwargs: Any) -> None:
-        return None
+    def append_effect_journal_entry(self, **_kwargs: Any) -> EffectJournalEntryRecord:
+        return _null_effect_journal_entry()
 
 
 class Agent:
@@ -65,10 +69,16 @@ class Agent:
         self.provider = provider
         self.next_member = next_member
         self._prompt_patch = prompt_patch
-        self.config_root = config_root or Path().resolve()
+        if config_root is None:
+            raise TypeError("Agent config_root is required; runtime composition must inject the project root explicitly")
+        self.config_root = Path(config_root).resolve()
         self.tool_gate = tool_gate  # Optional ToolGate for mechanical enforcement
         self.strict_config = bool(strict_config)
-        self.journal = journal
+        if journal is None or isinstance(journal, NullControlPlaneAuthorityService):
+            logger.warning("agent_effect_journaling_disabled", extra={"agent": self.name})
+            self.journal = journal or NullControlPlaneAuthorityService()
+        else:
+            self.journal = journal
 
         self.skill: SkillConfig | None = None
         self.dialect: DialectConfig | None = None
@@ -369,3 +379,21 @@ def _canonical_digest(payload: Any) -> str:
 
 def _canonical_ref(payload: Any) -> str:
     return f"sha256:{_canonical_digest(payload)}"
+
+
+def _null_effect_journal_entry() -> EffectJournalEntryRecord:
+    return EffectJournalEntryRecord(
+        journal_entry_id="0",
+        effect_id="0",
+        run_id="0",
+        attempt_id="0",
+        step_id="0",
+        authorization_basis_ref="0",
+        publication_sequence=1,
+        publication_timestamp="0",
+        intended_target_ref="0",
+        observed_result_ref=None,
+        uncertainty_classification=ResidualUncertaintyClassification.UNRESOLVED,
+        integrity_verification_ref="0",
+        entry_digest="0",
+    )

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import time
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
 
-class StreamEventType(str, Enum):
+class StreamEventType(StrEnum):
     TURN_ACCEPTED = "turn_accepted"
     MODEL_SELECTED = "model_selected"
     MODEL_LOADING = "model_loading"
@@ -19,6 +19,7 @@ class StreamEventType(str, Enum):
     TURN_INTERRUPTED = "turn_interrupted"
     TURN_FINAL = "turn_final"
     COMMIT_FINAL = "commit_final"
+    STREAM_TRUNCATED = "stream_truncated"
 
 
 class DropRange(BaseModel):
@@ -69,7 +70,7 @@ class CommitHandle(BaseModel):
     requested_at_mono_ts_ms: int
 
 
-class EventClass(str, Enum):
+class EventClass(StrEnum):
     MUST_DELIVER = "must_deliver"
     BEST_EFFORT = "best_effort"
     BOUNDED = "bounded"
@@ -92,6 +93,7 @@ BEST_EFFORT_EVENTS: set[StreamEventType] = {
 BOUNDED_EVENTS: set[StreamEventType] = {
     StreamEventType.TOOL_CALL_STARTED,
     StreamEventType.TOOL_CALL_RESULT,
+    StreamEventType.STREAM_TRUNCATED,
 }
 
 

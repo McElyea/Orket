@@ -92,7 +92,15 @@ class PreviewBuilder:
                 f"Branding Rules: {', '.join(self.org.branding.design_dos)}\n"
             )
 
-        agent = Agent(seat_name, desc, {}, PreviewModelProvider(model=selected_model), strict_config=False)
+        config_root = self.model_root.parent if self.model_root.name == "model" else self.model_root
+        agent = Agent(
+            seat_name,
+            desc,
+            {},
+            PreviewModelProvider(model=selected_model),
+            strict_config=False,
+            config_root=config_root,
+        )
         return agent.get_compiled_prompt()
 
     async def build_issue_preview(self, issue_id: str, epic_name: str, department: str = "core") -> dict[str, Any]:

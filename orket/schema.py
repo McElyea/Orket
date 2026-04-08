@@ -33,7 +33,7 @@ class EnvironmentConfig(BaseModel):
         if unknown:
             warnings.warn(
                 "EnvironmentConfig ignored unknown key(s): " + ", ".join(unknown),
-                DeprecationWarning,
+                UserWarning,
                 stacklevel=2,
             )
         return data

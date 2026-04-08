@@ -5,7 +5,7 @@ import hashlib
 import json
 import os
 import uuid
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -35,6 +35,9 @@ _INTERACTION_REPLAY_BOUNDARY = {
     "execution_authority": "none",
 }
 
+_INTERACTION_MEMORY_SCOPE_BOUNDARY_KEYS = frozenset(_INTERACTION_MEMORY_SCOPE_BOUNDARY)
+_INTERACTION_REPLAY_BOUNDARY_KEYS = frozenset(_INTERACTION_REPLAY_BOUNDARY)
+
 
 def _utc_now_iso() -> str:
     return datetime.now(UTC).isoformat()
@@ -54,6 +57,18 @@ def _session_status(session: InteractionSessionState) -> str:
     if session.active_turn_id is not None:
         return "active"
     return "idle"
+
+
+def _validated_interaction_boundary(
+    boundary: Mapping[str, str],
+    *,
+    required_keys: frozenset[str],
+    name: str,
+) -> dict[str, str]:
+    actual_keys = frozenset(str(key) for key in boundary)
+    if actual_keys != required_keys:
+        raise RuntimeError(f"{name} keys drifted: expected={sorted(required_keys)} actual={sorted(actual_keys)}")
+    return dict(boundary)
 
 
 @dataclass
@@ -438,8 +453,16 @@ class InteractionManager:
                 **self._session_detail_payload(session),
                 "snapshot_kind": "interaction_session_context",
                 "captured_at": session.updated_at,
-                "memory_scope_boundary": deepcopy(_INTERACTION_MEMORY_SCOPE_BOUNDARY),
-                "replay_boundary": deepcopy(_INTERACTION_REPLAY_BOUNDARY),
+                "memory_scope_boundary": _validated_interaction_boundary(
+                    _INTERACTION_MEMORY_SCOPE_BOUNDARY,
+                    required_keys=_INTERACTION_MEMORY_SCOPE_BOUNDARY_KEYS,
+                    name="interaction_memory_scope_boundary",
+                ),
+                "replay_boundary": _validated_interaction_boundary(
+                    _INTERACTION_REPLAY_BOUNDARY,
+                    required_keys=_INTERACTION_REPLAY_BOUNDARY_KEYS,
+                    name="interaction_replay_boundary",
+                ),
                 "session_context_pipeline": {
                     "context_version": SESSION_CONTEXT_VERSION,
                     "provider_lineage": deepcopy(session.latest_provider_lineage),
@@ -466,7 +489,11 @@ class InteractionManager:
                 "inspection_only": True,
                 "turn_count": len(turns),
                 "filters": {"role": role_filter},
-                "replay_boundary": deepcopy(_INTERACTION_REPLAY_BOUNDARY),
+                "replay_boundary": _validated_interaction_boundary(
+                    _INTERACTION_REPLAY_BOUNDARY,
+                    required_keys=_INTERACTION_REPLAY_BOUNDARY_KEYS,
+                    name="interaction_replay_boundary",
+                ),
                 "turns": turns,
             }
 
@@ -527,6 +554,7 @@ class InteractionManager:
                     turn_record["commit_outcome"] = str(payload.get("commit_outcome") or "")
                     turn_record["commit_id"] = str(payload.get("commit_id") or "")
                     turn_record["authoritative_commit"] = bool(payload.get("authoritative", False))
+        await self.bus.purge_turn(session_id, turn_id, drain_subscriber_queues=False)
 
     def _find_turn_record(self, session: InteractionSessionState, turn_id: str) -> dict[str, Any] | None:
         for turn in reversed(session.turn_history):

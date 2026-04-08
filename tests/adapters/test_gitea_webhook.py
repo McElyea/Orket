@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import aiosqlite
 import pytest
@@ -54,6 +55,42 @@ class _FakeClient:
         return None
 
 
+def test_webhook_handler_rejects_plaintext_gitea_url_without_override(monkeypatch, tmp_path):
+    """Layer: unit. Verifies Gitea admin credentials are not sent over plaintext by default."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+
+    with pytest.raises(ValueError, match="https:// gitea_url"):
+        GiteaWebhookHandler(gitea_url="http://example.com", workspace=tmp_path)
+
+
+@pytest.mark.asyncio
+async def test_webhook_handler_allows_plaintext_only_with_explicit_local_override(
+    monkeypatch,
+    tmp_path,
+    caplog,
+):
+    """Layer: unit. Verifies local plaintext Gitea requires an explicit degraded-mode override."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+    caplog.set_level(logging.WARNING, logger="orket.adapters.vcs.gitea_webhook_handler")
+
+    handler = GiteaWebhookHandler(gitea_url="http://localhost:3000", workspace=tmp_path, allow_insecure=True)
+    await handler.close()
+
+    assert handler.gitea_url == "http://localhost:3000"
+    assert any(record.message == "gitea_webhook_insecure_url_allowed" for record in caplog.records)
+
+
+@pytest.mark.asyncio
+async def test_webhook_handler_context_manager_closes_http_client(monkeypatch, tmp_path):
+    """Layer: integration. Verifies async context-manager exit closes the shared HTTP client."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+
+    async with GiteaWebhookHandler(workspace=tmp_path) as handler:
+        assert handler.client.is_closed is False
+
+    assert handler.client.is_closed is True
+
+
 @pytest.mark.asyncio
 async def test_webhook_handler_accepts_injected_sandbox_orchestrator(monkeypatch, tmp_path):
     """Layer: unit. Verifies webhook startup can share a repository-backed sandbox orchestrator."""
@@ -82,6 +119,17 @@ async def test_webhook_handler_passes_lifecycle_db_path_to_sandbox_orchestrator(
     handler = GiteaWebhookHandler(workspace=tmp_path, lifecycle_db_path=str(lifecycle_db_path))
 
     assert handler.sandbox_orchestrator.lifecycle_repository.db_path == str(lifecycle_db_path)
+    await handler.close()
+
+
+@pytest.mark.asyncio
+async def test_webhook_handler_uses_workspace_durable_db_path(monkeypatch, tmp_path):
+    """Layer: unit. Verifies webhook event state is rooted in the injected workspace."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+
+    handler = GiteaWebhookHandler(workspace=tmp_path)
+
+    assert handler.db.db_path == tmp_path / ".orket" / "durable" / "db" / "webhook.db"
     await handler.close()
 
 
@@ -115,6 +163,33 @@ async def test_pr_cycle_tracking_real_db(monkeypatch, tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_pr_review_duplicate_event_id_is_skipped_before_side_effects(monkeypatch, tmp_path):
+    """Layer: integration. Verifies repeated Gitea delivery ids do not advance review cycles twice."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+    db_path = tmp_path / "dedupe_test.db"
+
+    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler.db = WebhookDatabase(db_path=db_path)
+    handler.client = _FakeClient()
+
+    payload = {
+        "event_id": "evt-dup-1",
+        "pull_request": {"number": 42},
+        "review": {"user": {"login": "bot"}, "state": "changes_requested"},
+        "repository": {"name": "repo", "owner": {"login": "org"}},
+    }
+
+    first = await handler.handle_webhook("pull_request_review", payload)
+    second = await handler.handle_webhook("pull_request_review", payload)
+
+    assert first["status"] == "changes_requested"
+    assert second["status"] == "duplicate"
+    assert await handler.db.get_pr_cycle_count("org/repo", 42) == 1
+    assert handler.client.post_calls == []
+    await handler.close()
+
+
+@pytest.mark.asyncio
 async def test_auto_reject_after_4_cycles(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "reject_test.db"
@@ -144,6 +219,34 @@ async def test_auto_reject_after_4_cycles(monkeypatch, tmp_path):
     assert len(handler.client.patch_calls) >= 1
 
     await handler.close()
+
+
+@pytest.mark.asyncio
+async def test_pr_review_cycles_survive_handler_restart_to_escalate(monkeypatch, tmp_path):
+    """Layer: integration. Verifies the workspace-root webhook DB persists review cycles across handler instances."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+
+    payload = {
+        "pull_request": {"number": 77},
+        "review": {"user": {"login": "bot"}, "state": "changes_requested", "body": "still failing"},
+        "repository": {"name": "repo", "owner": {"login": "org"}},
+    }
+
+    first_handler = GiteaWebhookHandler(workspace=tmp_path)
+    first_handler.client = _FakeClient()
+    await first_handler.handle_webhook("pull_request_review", payload)
+    await first_handler.handle_webhook("pull_request_review", payload)
+    db_path = first_handler.db.db_path
+    await first_handler.close()
+
+    second_handler = GiteaWebhookHandler(workspace=tmp_path)
+    second_handler.client = _FakeClient()
+    result = await second_handler.handle_webhook("pull_request_review", payload)
+    await second_handler.close()
+
+    assert second_handler.db.db_path == db_path
+    assert result["status"] == "escalated"
+    assert any("/issues/77/comments" in call[0] for call in second_handler.client.post_calls)
 
 
 @pytest.mark.asyncio

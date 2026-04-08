@@ -5,6 +5,7 @@ from pathlib import Path
 
 import httpx
 
+from orket.application.review.errors import ReviewError
 from orket.application.review.models import (
     ChangedFile,
     ContextBlob,
@@ -13,14 +14,36 @@ from orket.application.review.models import (
     TruncationReport,
 )
 
+GIT_COMMAND_TIMEOUT_SECONDS = 30
+
 
 def _run_git(repo_root: Path, args: list[str]) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=str(repo_root),
-        check=True,
-        capture_output=True,
-    )
+    command = ["git", *args]
+    try:
+        proc = subprocess.run(
+            command,
+            cwd=str(repo_root),
+            check=True,
+            capture_output=True,
+            timeout=GIT_COMMAND_TIMEOUT_SECONDS,
+        )
+    except subprocess.CalledProcessError as exc:
+        stderr = exc.stderr.decode("utf-8", errors="replace").strip() if exc.stderr else ""
+        raise ReviewError(
+            f"Review git command failed: {' '.join(command)}",
+            command=command,
+            returncode=exc.returncode,
+            stderr=stderr,
+        ) from exc
+    except subprocess.TimeoutExpired as exc:
+        stderr = exc.stderr.decode("utf-8", errors="replace").strip() if isinstance(exc.stderr, bytes) else str(exc.stderr or "")
+        raise ReviewError(
+            f"Review git command timed out after {GIT_COMMAND_TIMEOUT_SECONDS}s: {' '.join(command)}",
+            command=command,
+            stderr=stderr,
+        ) from exc
+    except FileNotFoundError as exc:
+        raise ReviewError("Review git command failed: git executable was not found", command=command) from exc
     return proc.stdout.decode("utf-8", errors="replace")
 
 
@@ -243,11 +266,8 @@ def load_from_files(
             continue
         try:
             content = _run_git(repo_root, ["show", f"{ref}:{path}"])
-        except subprocess.CalledProcessError as exc:
-            detail = exc.stderr.decode("utf-8", errors="replace").strip() if exc.stderr else ""
-            raise FileNotFoundError(
-                f"Requested review file '{path}' could not be loaded from ref '{ref}': {detail or 'git show failed'}"
-            ) from exc
+        except ReviewError:
+            raise
         changed_files.append(ChangedFile(path=path, status="selected", additions=0, deletions=0))
         context_blobs.append(ContextBlob(path=path, content=content))
         diff_blocks.append(f"*** FILE {path} @ {ref}\n{content}")

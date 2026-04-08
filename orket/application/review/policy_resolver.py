@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.application.review.models import ResolvedPolicy, digest_sha256_prefixed, to_canonical_json_bytes
+from orket.logging import log_event
 from orket.settings import load_user_settings
 
 DEFAULT_POLICY: dict[str, Any] = {
@@ -47,7 +48,10 @@ DEFAULT_POLICY: dict[str, Any] = {
     "deterministic": {
         "checks": {
             "path_blocklist": [],
-            "forbidden_patterns": [r"(?i)\b(todo|fixme)\b", r"(?i)password\s*="],
+            "forbidden_patterns": [
+                {"pattern": r"(?i)\b(todo|fixme)\b", "severity": "info"},
+                {"pattern": r"(?i)password\s*=", "severity": "high"},
+            ],
             "test_hint_required_roots": ["src/", "orket/"],
             "test_hint_test_roots": ["tests/"],
         }
@@ -61,15 +65,34 @@ DEFAULT_POLICY: dict[str, Any] = {
     },
 }
 
+_KNOWN_POLICY_KEYS = set(DEFAULT_POLICY)
+
 
 def _read_json_file(path: Path) -> dict[str, Any]:
     if not path.is_file():
         return {}
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        payload = json.loads(path.read_bytes().decode("utf-8"))
+    except json.JSONDecodeError as exc:
+        log_event(
+            "review_policy_file_malformed",
+            {"path": str(path), "error": str(exc)},
+            level="warn",
+        )
+        return {}
+    except OSError:
         return {}
     return payload if isinstance(payload, dict) else {}
+
+
+def _warn_unknown_policy_keys(payload: Mapping[str, Any], *, source: str) -> None:
+    unknown = sorted(str(key) for key in payload if str(key) not in _KNOWN_POLICY_KEYS)
+    if unknown:
+        log_event(
+            "review_policy_unknown_keys",
+            {"source": source, "keys": unknown},
+            level="warn",
+        )
 
 
 def _deep_merge(base: dict[str, Any], override: Mapping[str, Any]) -> dict[str, Any]:
@@ -92,6 +115,9 @@ def resolve_review_policy(
     repo_policy = _read_json_file(repo_policy_path)
     user_settings = load_user_settings()
     user_policy = user_settings.get("review_policy") if isinstance(user_settings.get("review_policy"), dict) else {}
+    _warn_unknown_policy_keys(repo_policy, source=str(repo_policy_path))
+    _warn_unknown_policy_keys(user_policy or {}, source="user_settings.review_policy")
+    _warn_unknown_policy_keys(dict(cli_overrides or {}), source="cli_overrides")
 
     merged = _deep_merge(dict(DEFAULT_POLICY), user_policy or {})
     merged = _deep_merge(merged, repo_policy)

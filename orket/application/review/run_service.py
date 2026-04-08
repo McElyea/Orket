@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import secrets
 import subprocess
+import threading
 import time
 from pathlib import Path
 from typing import Any, Literal
@@ -10,6 +11,7 @@ from urllib import parse
 
 from orket.application.review.artifacts import write_review_run_bundle
 from orket.application.review.control_plane_projection import validate_review_control_plane_summary
+from orket.application.review.errors import ReviewError
 from orket.application.review.lanes.deterministic import run_deterministic_lane
 from orket.application.review.lanes.model_assisted import ModelProvider, run_model_assisted_lane
 from orket.application.review.models import (
@@ -33,21 +35,55 @@ from orket.capabilities.sync_bridge import run_coro_sync
 
 logger = logging.getLogger(__name__)
 
+GIT_COMMAND_TIMEOUT_SECONDS = 30
+_ULID_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+_ULID_RANDOMNESS_BYTES = 10
+_ULID_RANDOMNESS_LIMIT = 1 << 80
+_ULID_TIMESTAMP_LIMIT = 1 << 48
+_ulid_lock = threading.Lock()
+_last_ulid_timestamp_ms = -1
+_last_ulid_randomness = -1
 
-def _ulid() -> str:
-    alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
-    timestamp_ms = int(time.time() * 1000)
-    time_chars: list[str] = []
-    value = timestamp_ms
-    for _ in range(10):
-        time_chars.append(alphabet[value % 32])
-        value //= 32
-    random_value = int.from_bytes(secrets.token_bytes(10), byteorder="big", signed=False)
-    rand_chars: list[str] = []
-    for _ in range(16):
-        rand_chars.append(alphabet[random_value % 32])
-        random_value //= 32
-    return "".join(reversed(time_chars)) + "".join(reversed(rand_chars))
+
+def _encode_crockford_base32(value: int, *, length: int) -> str:
+    if value < 0:
+        raise ValueError("ULID component cannot be negative")
+    chars: list[str] = []
+    remaining = value
+    for _ in range(length):
+        chars.append(_ULID_ALPHABET[remaining & 0x1F])
+        remaining >>= 5
+    if remaining:
+        raise ValueError("ULID component exceeds encoded length")
+    return "".join(reversed(chars))
+
+
+def _generate_ulid() -> str:
+    global _last_ulid_randomness, _last_ulid_timestamp_ms
+
+    timestamp_ms = time.time_ns() // 1_000_000
+    if timestamp_ms >= _ULID_TIMESTAMP_LIMIT:
+        raise OverflowError("ULID timestamp exceeds 48-bit range")
+
+    with _ulid_lock:
+        if timestamp_ms > _last_ulid_timestamp_ms:
+            resolved_timestamp_ms = timestamp_ms
+            randomness = int.from_bytes(secrets.token_bytes(_ULID_RANDOMNESS_BYTES), byteorder="big", signed=False)
+        else:
+            resolved_timestamp_ms = _last_ulid_timestamp_ms
+            randomness = (_last_ulid_randomness + 1) % _ULID_RANDOMNESS_LIMIT
+            if randomness == 0:
+                resolved_timestamp_ms += 1
+                if resolved_timestamp_ms >= _ULID_TIMESTAMP_LIMIT:
+                    raise OverflowError("ULID timestamp exceeds 48-bit range")
+
+        _last_ulid_timestamp_ms = resolved_timestamp_ms
+        _last_ulid_randomness = randomness
+
+    return _encode_crockford_base32(resolved_timestamp_ms, length=10) + _encode_crockford_base32(
+        randomness,
+        length=16,
+    )
 
 
 def _decision_exit_code(decision: str, fail_on_blocked: bool) -> int:
@@ -56,14 +92,36 @@ def _decision_exit_code(decision: str, fail_on_blocked: bool) -> int:
     return 0
 
 
+def _run_git_command(repo_root: Path, args: list[str], *, check: bool) -> subprocess.CompletedProcess[str]:
+    command = ["git", *args]
+    try:
+        return subprocess.run(
+            command,
+            cwd=str(repo_root),
+            check=check,
+            capture_output=True,
+            text=True,
+            timeout=GIT_COMMAND_TIMEOUT_SECONDS,
+        )
+    except subprocess.CalledProcessError as exc:
+        raise ReviewError(
+            f"Review git command failed: {' '.join(command)}",
+            command=command,
+            returncode=exc.returncode,
+            stderr=str(exc.stderr or "").strip(),
+        ) from exc
+    except subprocess.TimeoutExpired as exc:
+        raise ReviewError(
+            f"Review git command timed out after {GIT_COMMAND_TIMEOUT_SECONDS}s: {' '.join(command)}",
+            command=command,
+            stderr=str(exc.stderr or "").strip(),
+        ) from exc
+    except FileNotFoundError as exc:
+        raise ReviewError("Review git command failed: git executable was not found", command=command) from exc
+
+
 def _git_paths(repo_root: Path, base_ref: str, head_ref: str) -> list[str]:
-    proc = subprocess.run(
-        ["git", "diff", "--name-only", base_ref, head_ref],
-        cwd=str(repo_root),
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    proc = _run_git_command(repo_root, ["diff", "--name-only", base_ref, head_ref], check=True)
     return [line.strip().replace("\\", "/") for line in proc.stdout.splitlines() if line.strip()]
 
 
@@ -146,13 +204,7 @@ def _parse_repo_remote_binding(raw_url: str, *, repo: str) -> tuple[str, str] | 
 
 
 def _configured_review_remote_bindings(repo_root: Path, *, repo: str) -> set[tuple[str, str]]:
-    proc = subprocess.run(
-        ["git", "config", "--get-regexp", r"^remote\..*\.url$"],
-        cwd=str(repo_root),
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    proc = _run_git_command(repo_root, ["config", "--get-regexp", r"^remote\..*\.url$"], check=False)
     if proc.returncode not in {0, 1}:
         detail = str(proc.stderr or "").strip() or "git remote lookup failed"
         raise ValueError(f"Review PR mode requires a git repo with configured remotes: {detail}")
@@ -354,7 +406,7 @@ class ReviewRunService:
         auth_source: Literal["token_flag", "token_env", "none"],
         model_provider: ModelProvider | None,
     ) -> ReviewRunResult:
-        run_id = _ulid()
+        run_id = _generate_ulid()
         artifact_dir = self.workspace / "review_runs" / run_id
         control_plane_attempt_id = ""
         control_plane_step_id = ""

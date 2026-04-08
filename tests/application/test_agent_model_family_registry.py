@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from orket.agents import agent as agent_module
-from orket.agents.agent import Agent
+from orket.agents.agent import Agent, NullControlPlaneAuthorityService
 from orket.agents.model_family_registry import ModelFamilyRegistry
 from orket.application.services.control_plane_authority_service import ControlPlaneAuthorityService
+from orket.core.contracts import EffectJournalEntryRecord
 from orket.core.domain import ResidualUncertaintyClassification
 from orket.core.domain.execution import ToolCallErrorClass
 from orket.exceptions import AgentConfigurationError
@@ -83,6 +85,88 @@ def test_agent_logs_unrecognized_model_family(monkeypatch, tmp_path: Path) -> No
         and kwargs.get("level") == "warn"
         for event, data, kwargs in events
     )
+
+
+def test_null_control_plane_authority_service_returns_chainable_sentinel() -> None:
+    """Layer: unit. Verifies null journaling returns a typed sentinel instead of None."""
+    journal = NullControlPlaneAuthorityService()
+
+    first = journal.append_effect_journal_entry()
+    second = journal.append_effect_journal_entry(previous_entry=first)
+
+    assert isinstance(first, EffectJournalEntryRecord)
+    assert isinstance(second, EffectJournalEntryRecord)
+    assert first.journal_entry_id == "0"
+    assert second.journal_entry_id == "0"
+
+
+def test_agent_warns_once_when_journal_is_not_configured(monkeypatch, tmp_path: Path, caplog) -> None:
+    """Layer: unit. Verifies null journal degradation is observable on agent construction."""
+    monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
+    caplog.set_level(logging.WARNING, logger=agent_module.__name__)
+
+    agent = Agent(
+        "coder",
+        "description",
+        {},
+        _Provider("unknown-7b"),
+        config_root=tmp_path,
+        strict_config=False,
+        journal=None,
+    )
+
+    matching_records = [
+        record for record in caplog.records if record.message == "agent_effect_journaling_disabled"
+    ]
+    assert len(matching_records) == 1
+    assert isinstance(agent.journal, NullControlPlaneAuthorityService)
+
+
+def test_agent_requires_explicit_config_root() -> None:
+    """Layer: unit. Verifies Agent construction no longer falls back to the process working directory."""
+    with pytest.raises(TypeError, match="config_root is required"):
+        Agent("coder", "description", {}, _Provider("unknown-7b"), strict_config=False)
+
+
+@pytest.mark.asyncio
+async def test_agent_tool_gate_blocks_before_direct_tool_execution(monkeypatch, tmp_path: Path) -> None:
+    """Layer: unit. Verifies legacy Agent.run applies the tool gate before executing direct tool maps."""
+    monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
+    calls: list[dict[str, Any]] = []
+
+    class _ToolProvider:
+        model = "unknown-7b"
+
+        async def complete(
+            self,
+            messages: list[dict[str, str]],
+            runtime_context: dict[str, Any] | None = None,
+        ) -> str:
+            return '{"tool":"write_file","args":{"path":"agent_output/a.txt","content":"blocked"}}'
+
+    class _DenyAllGate:
+        async def validate(self, tool_name: str, args: dict[str, Any], context: dict[str, Any], roles: list[str]) -> str:
+            return f"denied:{tool_name}:{roles[0]}"
+
+    async def _tool(args: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+        calls.append(dict(args))
+        return {"ok": True}
+
+    agent = Agent(
+        "coder",
+        "description",
+        {"write_file": _tool},
+        _ToolProvider(),
+        config_root=tmp_path,
+        strict_config=False,
+        tool_gate=_DenyAllGate(),
+    )
+
+    turn = await agent.run({"description": "do work"}, {"issue_id": "ISSUE-1", "roles": ["coder"]}, tmp_path)
+
+    assert calls == []
+    assert turn.tool_calls[0].error_class is ToolCallErrorClass.GATE_BLOCKED
+    assert "denied:write_file:coder" in str(turn.tool_calls[0].error)
 
 
 @pytest.mark.asyncio

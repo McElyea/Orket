@@ -22,7 +22,16 @@ class GiteaLeaseManager:
         owner_id: str,
         lease_seconds: int,
     ) -> dict[str, Any] | None:
-        issue_number = int(card_id)
+        try:
+            issue_number = int(card_id)
+        except ValueError:
+            self.adapter._log_failure(
+                "invalid_card_id",
+                operation="acquire_lease",
+                card_id=str(card_id),
+                error="non-numeric card id",
+            )
+            return None
         issue_response = await self.adapter._request_response_with_retry("GET", f"/issues/{issue_number}")
         issue = issue_response.json()
         if not isinstance(issue, dict):

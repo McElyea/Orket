@@ -4,16 +4,17 @@ import contextlib
 
 import aiosqlite
 
+CARD_SCHEMA_USER_VERSION = 1
+
 
 class CardMigrations:
     """Database schema bootstrap and additive migrations for issue storage."""
 
-    def __init__(self) -> None:
-        self.initialized = False
-
     async def ensure_initialized(self, conn: aiosqlite.Connection) -> None:
-        if self.initialized:
-            return
+        await conn.execute("PRAGMA journal_mode=WAL")
+        version_cursor = await conn.execute("PRAGMA user_version")
+        version_row = await version_cursor.fetchone()
+        user_version = int(version_row[0] or 0) if version_row else 0
 
         await conn.execute(
             """
@@ -44,11 +45,11 @@ class CardMigrations:
         with contextlib.suppress(aiosqlite.OperationalError):
             await conn.execute("ALTER TABLE issues ADD COLUMN depends_on_json TEXT")
 
-        try:
+        with contextlib.suppress(aiosqlite.OperationalError):
             await conn.execute("ALTER TABLE issues ADD COLUMN retry_count INTEGER DEFAULT 0")
+
+        with contextlib.suppress(aiosqlite.OperationalError):
             await conn.execute("ALTER TABLE issues ADD COLUMN max_retries INTEGER DEFAULT 3")
-        except aiosqlite.OperationalError:
-            pass
 
         with contextlib.suppress(aiosqlite.OperationalError):
             await conn.execute("ALTER TABLE issues ADD COLUMN params_json TEXT")
@@ -77,4 +78,7 @@ class CardMigrations:
             )
             """
         )
-        self.initialized = True
+
+        if user_version < CARD_SCHEMA_USER_VERSION:
+            await conn.execute(f"PRAGMA user_version = {CARD_SCHEMA_USER_VERSION}")
+        await conn.commit()

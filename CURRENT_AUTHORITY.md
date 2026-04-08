@@ -638,7 +638,7 @@ Agent model-family resolution uses `orket/agents/model_family_registry.py`, defa
 
 Legacy `Agent.run()` has an opt-in `ControlPlaneAuthorityService` journal seam. Without `journal`, tool effects are log-only; with `journal`, successful and failed tool executions publish `EffectJournalEntryRecord` payloads using `ToolCallErrorClass` and context-provided run authority, and journal publication failures are not silently swallowed.
 
-`EnvironmentConfig` drops unknown keys with a `DeprecationWarning` at the Pydantic boundary as the intermediate step toward future `extra="forbid"` validation; unknown environment keys are no longer retained as runtime configuration authority.
+`EnvironmentConfig` drops unknown keys with a `UserWarning` at the Pydantic boundary as the intermediate step toward future `extra="forbid"` validation; unknown environment keys are no longer retained as runtime configuration authority.
 
 Session transcripts are schema-bound through `TranscriptTurn` / `ToolCallRecord` at `orket/session.py`; legacy dict rows are defensively migrated on `Session` construction and serialized back as versioned transcript turns.
 
@@ -648,7 +648,7 @@ Runtime implementation modules are physically grouped under bounded `orket/runti
 
 SDK extension workloads run in a child interpreter through `orket/extensions/sdk_workload_runner.py` and `orket/extensions/sdk_workload_subprocess.py`. SDK workload loading statically rejects undeclared standard-library imports, and subprocess execution installs both a manifest-declared stdlib `sys.meta_path` finder and scoped `__import__` guard so dynamic undeclared imports fail before extension code can reuse already-loaded host modules. Legacy workloads retain compatibility behavior: internal Orket imports remain blocked, and stdlib allowlist enforcement applies only when the legacy manifest declares allowed modules.
 
-Factory-built agents from `orket/agents/agent_factory.py` fail closed to the union of tools declared by the seat's configured roles. Seats without roles or with missing role configs receive no tools and emit warning events instead of inheriting the full toolbox.
+Factory-built agents from `orket/agents/agent_factory.py` fail closed to the union of tools declared by the seat's configured roles. Seats without roles or with missing role configs raise `AgentConfigurationError` and emit error events instead of inheriting the full toolbox.
 
 SQLite/Gitea card-state reconciliation is inspection-only and halt-and-alert by default: `StateReconciliationService` compares requested card ids across `AsyncCardRepository` and `GiteaStateAdapter.fetch_card_snapshot`, emits `state_reconciliation_conflict` on divergence, and the on-demand `scripts/gitea/reconcile_state_backends.py` command writes stable diff-ledger JSON at `benchmarks/results/gitea/state_reconciliation.json`.
 
@@ -662,7 +662,15 @@ Synchronous settings bridge calls that would cross an active event loop fail wit
 
 Gitea webhook PR review/opened/merged handling validates consumed payload fields through Pydantic boundary models and returns `status=error`, `error=webhook_payload_validation_failed` on invalid payloads instead of propagating nested-key access errors.
 
+Gitea webhook authenticated API calls require `https://` `GITEA_URL` by default. Plaintext `http://` is admitted only when `ORKET_GITEA_ALLOW_INSECURE=true` or `allow_insecure=True` is explicitly set for local development, and that degraded transport posture emits `gitea_webhook_insecure_url_allowed`.
+
 Gitea webhook sandbox handling accepts an injected `SandboxOrchestrator` and explicit `lifecycle_db_path`; default construction routes sandbox state through the repository-backed `SandboxOrchestrator.lifecycle_repository` rather than treating the handler-local `SandboxRegistry` as durable authority.
+
+Gitea webhook review-cycle state now uses a workspace-derived durable DB path at `.orket/durable/db/webhook.db`, records webhook delivery ids as idempotency keys when present, skips duplicate PR review deliveries before side effects, escalates at `MAX_PR_REVIEW_CYCLES=3`, and auto-rejects at the following cycle.
+
+Manual review deterministic defaults treat broad `TODO|FIXME` forbidden-pattern matches as `info` severity and keep `password\s*=` at `high`; operators can override the resolved policy if they want TODO/FIXME matches to block PRs.
+
+Streaming turn state is purged after authoritative commit publication while preserving already-queued terminal subscriber events; subscriber queues are bounded by the configured best-effort plus bounded producer budgets, duplicate `COMMIT_FINAL` publication fails closed, and best-effort producer budget exhaustion emits one `STREAM_TRUNCATED` advisory event carrying dropped sequence ranges.
 
 LPJ-C32 append-only run-ledger framing remains `uint32_be payload_len | payload_bytes | uint32_be crc32c(payload_bytes)` with Castagnoli CRC-32C as specified in `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`; runtime checksum calculation uses the declared `google-crc32c` dependency instead of a local hand-rolled table, and IEEE `binascii.crc32` is intentionally not compatible with existing ledger frames.
 

@@ -31,7 +31,7 @@ class InfrastructureError(OrketError):
     pass
 
 
-class OrketInfrastructureError(RuntimeError):
+class OrketInfrastructureError(RuntimeError, OrketError):
     """Infrastructure failure that should surface as a recorded run failure."""
 
     pass
@@ -43,7 +43,7 @@ class LeaseNotAvailableError(OrketInfrastructureError):
     pass
 
 
-class SettingsBridgeError(RuntimeError):
+class SettingsBridgeError(RuntimeError, OrketError):
     """Raised when sync settings access would cross an active event loop."""
 
     pass

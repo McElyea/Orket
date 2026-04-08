@@ -222,8 +222,7 @@ class ControlPlanePublicationService:
         *,
         checkpoint: CheckpointRecord,
     ) -> CheckpointRecord:
-        record = self.authority.publish_checkpoint(checkpoint=checkpoint)
-        return await self.repository.save_checkpoint(record=record)
+        return await self.repository.save_checkpoint(record=checkpoint)
 
     async def accept_checkpoint(
         self,

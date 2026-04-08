@@ -94,7 +94,11 @@ class AsyncProtocolRunLedgerRepository:
             artifacts=dict(artifacts or {}),
         )
         async with self._lock:
-            return await self._append_event_locked(session_id=session_id, event=event)
+            existing_events = await asyncio.to_thread(self._ledger(session_id).replay_events)
+            existing_started = self._first_event_by_kind(existing_events, "run_started")
+            if existing_started is not None:
+                return existing_started
+            return await self._append_event_locked(session_id=session_id, event=event, existing_events=existing_events)
 
     async def finalize_run(
         self,
@@ -125,6 +129,14 @@ class AsyncProtocolRunLedgerRepository:
         )
         async with self._lock:
             existing_events = await asyncio.to_thread(self._ledger(session_id).replay_events)
+            existing_finalized = self._matching_run_finalized_event(
+                existing_events,
+                status=str(resolved_status),
+                failure_class=failure_class,
+                failure_reason=failure_reason,
+            )
+            if existing_finalized is not None:
+                return existing_finalized
             rejection = self._validate_ordering_contract(
                 session_id=session_id,
                 kind="run_finalized",
@@ -474,6 +486,32 @@ class AsyncProtocolRunLedgerRepository:
         target = int(sequence_number)
         for row in events:
             if self._event_sequence(row) == target:
+                return dict(row)
+        return None
+
+    @staticmethod
+    def _first_event_by_kind(events: list[dict[str, Any]], kind: str) -> dict[str, Any] | None:
+        for row in events:
+            if str(row.get("kind") or "") == kind:
+                return dict(row)
+        return None
+
+    @staticmethod
+    def _matching_run_finalized_event(
+        events: list[dict[str, Any]],
+        *,
+        status: str,
+        failure_class: str | None,
+        failure_reason: str | None,
+    ) -> dict[str, Any] | None:
+        for row in events:
+            if str(row.get("kind") or "") != "run_finalized":
+                continue
+            if (
+                str(row.get("status") or "") == str(status)
+                and str(row.get("failure_class") or "") == str(failure_class or "")
+                and str(row.get("failure_reason") or "") == str(failure_reason or "")
+            ):
                 return dict(row)
         return None
 

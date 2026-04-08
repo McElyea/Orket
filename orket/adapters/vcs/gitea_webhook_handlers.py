@@ -15,6 +15,8 @@ from orket.adapters.vcs.gitea_webhook_payloads import (
 from orket.logging import log_event
 from orket.schema import CardStatus
 
+MAX_PR_REVIEW_CYCLES = 3
+
 
 def _response_error(*, action: str, response: Any) -> str | None:
     status_code = int(getattr(response, "status_code", 0) or 0)
@@ -25,6 +27,14 @@ def _response_error(*, action: str, response: Any) -> str | None:
     if response_text:
         detail = f"{detail}: {response_text}"
     return detail
+
+
+def _webhook_event_id(payload: dict[str, Any]) -> str:
+    for key in ("event_id", "delivery_id", "x_gitea_delivery", "X-Gitea-Delivery"):
+        value = str(payload.get(key) or "").strip()
+        if value:
+            return value
+    return ""
 
 
 class PRReviewHandler:
@@ -45,6 +55,21 @@ class PRReviewHandler:
 
         pr_number = pr["number"]
         pr_key = f"{repo['owner']['login']}/{repo['name']}/#{pr_number}"
+        repo_full_name = f"{repo['owner']['login']}/{repo['name']}"
+        event_id = _webhook_event_id(payload)
+        if event_id:
+            recorded = await self.handler.db.try_record_webhook_event(
+                event_id=event_id,
+                event_type="pull_request_review",
+                pr_key=f"{repo_full_name}#{pr_number}",
+            )
+            if not recorded:
+                log_event(
+                    "webhook_event_duplicate_skipped",
+                    {"event_type": "pull_request_review", "event_id": event_id, "pr": pr_key},
+                    self.handler.workspace,
+                )
+                return {"status": "duplicate", "message": f"Duplicate webhook event skipped: {event_id}"}
         reviewer = review["user"]["login"]
         review_state = review["state"]
 
@@ -57,12 +82,22 @@ class PRReviewHandler:
             return {"status": "success", "message": f"PR #{pr_number} approved and merged"}
 
         if review_state == "changes_requested":
-            repo_full_name = f"{repo['owner']['login']}/{repo['name']}"
             cycles = await self.handler.db.increment_pr_cycle(repo_full_name, pr_number)
             reason = review.get("body") or "No reason provided"
             await self.handler.db.add_failure_reason(repo_full_name, pr_number, reviewer, reason)
 
-            if cycles == 3:
+            if cycles >= MAX_PR_REVIEW_CYCLES + 1:
+                rejection_error = await self.auto_reject(repo, pr_number, repo_full_name)
+                if rejection_error is not None:
+                    return {
+                        "status": "error",
+                        "message": f"PR #{pr_number} hit auto-reject threshold but rejection failed: {rejection_error}",
+                    }
+                return {
+                    "status": "rejected",
+                    "message": f"PR #{pr_number} auto-rejected after {MAX_PR_REVIEW_CYCLES + 1} cycles",
+                }
+            if cycles >= MAX_PR_REVIEW_CYCLES:
                 escalation_error = await self.escalate_to_architect(repo, pr_number)
                 if escalation_error is not None:
                     return {
@@ -73,15 +108,10 @@ class PRReviewHandler:
                         ),
                     }
                 return {"status": "escalated", "message": f"PR #{pr_number} escalated to architect"}
-            if cycles >= 4:
-                rejection_error = await self.auto_reject(repo, pr_number, repo_full_name)
-                if rejection_error is not None:
-                    return {
-                        "status": "error",
-                        "message": f"PR #{pr_number} hit auto-reject threshold but rejection failed: {rejection_error}",
-                    }
-                return {"status": "rejected", "message": f"PR #{pr_number} auto-rejected after 4 cycles"}
-            return {"status": "changes_requested", "message": f"PR #{pr_number} rejected (cycle {cycles}/4)"}
+            return {
+                "status": "changes_requested",
+                "message": f"PR #{pr_number} rejected (cycle {cycles}/{MAX_PR_REVIEW_CYCLES + 1})",
+            }
 
         return {"status": "ignored", "message": "Review state not actionable"}
 

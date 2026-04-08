@@ -35,11 +35,11 @@ from orket.core.domain import (
     OwnershipClass,
     ProtocolFailureClass,
     RecoveryActionClass,
+    ReservationKind,
+    ReservationStatus,
     ResidualUncertaintyClassification,
     ResourceFailureClass,
     ResultClass,
-    ReservationKind,
-    ReservationStatus,
     SafeContinuationClass,
     SideEffectBoundaryClass,
     TruthFailureClass,
@@ -96,13 +96,6 @@ class ControlPlaneAuthorityService:
         entries: Iterable[EffectJournalEntryRecord],
     ) -> tuple[EffectJournalEntryRecord, ...]:
         return validate_effect_journal_chain(entries)
-
-    def publish_checkpoint(
-        self,
-        *,
-        checkpoint: CheckpointRecord,
-    ) -> CheckpointRecord:
-        return checkpoint
 
     def accept_checkpoint(
         self,

@@ -80,8 +80,30 @@ def test_gitea_state_adapter_redacts_token_repr_and_builds_headers_lazily() -> N
 
     assert isinstance(adapter._token, SecretToken)
     assert repr(adapter._token) == "SecretToken(***)"
+    assert str(adapter._token) == "***"
+    assert f"{adapter._token}" == "***"
     headers = adapter.build_headers()
     assert headers["Authorization"] == "token secret-token"
+
+
+@pytest.mark.asyncio
+async def test_acquire_lease_returns_none_for_nonnumeric_card_id(monkeypatch, caplog) -> None:
+    """Layer: unit. Verifies invalid Gitea card IDs fail closed before any HTTP request."""
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    caplog.set_level(logging.WARNING, logger="orket.gitea_state_adapter")
+
+    async def fail_request(*_args, **_kwargs):
+        raise AssertionError("invalid card ID should not reach Gitea")
+
+    monkeypatch.setattr(adapter, "_request_response_with_retry", fail_request)
+
+    assert await adapter.acquire_lease("ISSUE-abc", owner_id="worker-1", lease_seconds=30) is None
+    assert any("invalid_card_id" in record.message and "ISSUE-abc" in record.message for record in caplog.records)
 
 
 @pytest.mark.asyncio

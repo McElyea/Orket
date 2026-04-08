@@ -9,7 +9,7 @@ from orket.kernel.v1.odr.live_runner import run_live_refinement
 from orket.logging import log_event
 
 _SUCCESS_STOP_REASONS = {"STABLE_DIFF_FLOOR", "LOOP_DETECTED"}
-_ACCEPTABLE_MAX_ROUNDS_STOP_REASON = "MAX_ROUNDS"
+_MAX_ROUNDS_STOP_REASON = "MAX_ROUNDS"
 
 
 def _coerce_int(value: object) -> int | None:
@@ -65,10 +65,30 @@ def _resolve_odr_max_rounds(issue: Any, *, default: int) -> int:
     parsed = _coerce_int(raw)
     if parsed is None:
         return int(default)
-    return max(1, parsed)
+    return max(0, parsed)
 
 
-def _odr_prebuild_accepted(*, stop_reason: str, odr_valid: bool, pending_decisions: int) -> bool:
+def _odr_max_rounds_accepted(issue: Any) -> bool:
+    params = getattr(issue, "params", None)
+    if not isinstance(params, dict):
+        return False
+    raw_nested = params.get("cards_runtime")
+    nested = raw_nested if isinstance(raw_nested, dict) else {}
+    raw = (
+        nested.get("odr_max_rounds_accepted")
+        if "odr_max_rounds_accepted" in nested
+        else params.get("odr_max_rounds_accepted")
+    )
+    return bool(raw)
+
+
+def _odr_prebuild_accepted(
+    *,
+    stop_reason: str,
+    odr_valid: bool,
+    pending_decisions: int,
+    max_rounds_accepted: bool = False,
+) -> bool:
     if not bool(odr_valid):
         return False
     if int(pending_decisions) > 0:
@@ -76,9 +96,49 @@ def _odr_prebuild_accepted(*, stop_reason: str, odr_valid: bool, pending_decisio
     normalized_stop_reason = str(stop_reason or "").strip()
     if normalized_stop_reason in _SUCCESS_STOP_REASONS:
         return True
-    # Keep the ODR core stop reason truthful while allowing the non-default prebuild
-    # path to continue when refinement ends valid and decision-complete at max rounds.
-    return normalized_stop_reason == _ACCEPTABLE_MAX_ROUNDS_STOP_REASON
+    return normalized_stop_reason == _MAX_ROUNDS_STOP_REASON and bool(max_rounds_accepted)
+
+
+async def _skip_odr_prebuild(
+    *,
+    workspace: Path,
+    issue: Any,
+    run_id: str,
+    selected_model: str,
+    cards_runtime: dict[str, Any],
+    async_cards: Any,
+) -> dict[str, Any]:
+    summary = {
+        "odr_run_id": str(run_id),
+        "odr_valid": True,
+        "odr_pending_decisions": 0,
+        "odr_stop_reason": "SKIPPED",
+        "odr_termination_reason": "operator_disabled",
+        "odr_final_auditor_verdict": None,
+        "odr_artifact_path": None,
+        "odr_requirement": "",
+        "odr_rounds_completed": 0,
+        "odr_max_rounds": 0,
+        "odr_accepted": True,
+        "odr_active": False,
+    }
+    params = getattr(issue, "params", None)
+    issue.params = dict(params or {}) if isinstance(params, dict) else {}
+    issue.params["odr_result"] = dict(summary)
+    await async_cards.save(issue.model_dump(by_alias=True))
+    log_event(
+        "odr_prebuild_skipped",
+        {
+            "session_id": str(run_id),
+            "issue_id": str(getattr(issue, "id", "")),
+            "execution_profile": str(cards_runtime.get("execution_profile") or ""),
+            "selected_model": str(selected_model),
+            **dict(summary),
+        },
+        workspace,
+        level="info",
+    )
+    return summary
 
 
 async def run_cards_odr_prebuild(
@@ -99,6 +159,15 @@ async def run_cards_odr_prebuild(
 
     task = _build_odr_task(issue=issue, cards_runtime=cards_runtime)
     effective_max_rounds = _resolve_odr_max_rounds(issue, default=max_rounds)
+    if effective_max_rounds == 0:
+        return await _skip_odr_prebuild(
+            workspace=workspace,
+            issue=issue,
+            run_id=run_id,
+            selected_model=selected_model,
+            cards_runtime=cards_runtime,
+            async_cards=async_cards,
+        )
     result = await run_live_refinement(
         task=task,
         architect_client=model_client,
@@ -131,6 +200,7 @@ async def run_cards_odr_prebuild(
         stop_reason=stop_reason,
         odr_valid=odr_valid,
         pending_decisions=pending_decisions,
+        max_rounds_accepted=_odr_max_rounds_accepted(issue),
     )
     artifact_path = f"observability/{str(run_id).strip()}/{str(getattr(issue, 'id', '')).strip()}/odr_refinement.json"
     artifact_payload = {
@@ -165,6 +235,7 @@ async def run_cards_odr_prebuild(
         "odr_requirement": str(result.get("final_requirement") or "").strip(),
         "odr_rounds_completed": int(result.get("rounds_completed") or 0),
         "odr_max_rounds": effective_max_rounds,
+        "odr_max_rounds_accepted": _odr_max_rounds_accepted(issue),
         "odr_accepted": accepted,
     }
     params = getattr(issue, "params", None)

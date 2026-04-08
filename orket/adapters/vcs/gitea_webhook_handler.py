@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
+from types import TracebackType
 from typing import Any
+from urllib import parse
 
 import httpx
 from pydantic import ValidationError
@@ -22,19 +25,25 @@ from orket.adapters.vcs.webhook_db import WebhookDatabase
 from orket.core.domain.sandbox import SandboxRegistry
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
+logger = logging.getLogger(__name__)
+
 
 class GiteaWebhookHandler:
-    """Application service that routes incoming Gitea webhook events."""
+    """Application service that routes incoming Gitea webhook events.
+
+    `allow_insecure` is only for local development against plaintext Gitea.
+    """
 
     def __init__(
         self,
-        gitea_url: str = "http://localhost:3000",
+        gitea_url: str = "https://localhost:3000",
         workspace: Path | None = None,
         *,
         sandbox_orchestrator: SandboxOrchestrator | None = None,
         lifecycle_db_path: str | None = None,
+        allow_insecure: bool = False,
     ):
-        self.gitea_url = gitea_url
+        self.gitea_url = _validate_gitea_url(gitea_url, allow_insecure=allow_insecure)
         self.gitea_user = os.getenv("GITEA_ADMIN_USER", "Orket")
         self.gitea_password = os.getenv("GITEA_ADMIN_PASSWORD")
         if not self.gitea_password:
@@ -44,7 +53,7 @@ class GiteaWebhookHandler:
         self.workspace = workspace or Path.cwd()
         self.auth = (self.gitea_user, self.gitea_password)
 
-        self.db = WebhookDatabase()
+        self.db = WebhookDatabase(db_path=self.workspace / ".orket" / "durable" / "db" / "webhook.db")
         if sandbox_orchestrator is not None:
             self.sandbox_orchestrator = sandbox_orchestrator
             self.sandbox_registry = sandbox_orchestrator.registry
@@ -88,6 +97,17 @@ class GiteaWebhookHandler:
     async def _add_sandbox_comment(self, owner: str, repo_name: str, pr_number: int, sandbox: Any) -> None:
         await self.sandbox.add_sandbox_comment(owner, repo_name, pr_number, sandbox)
 
+    async def __aenter__(self) -> GiteaWebhookHandler:
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        await self.close()
+
     async def close(self) -> None:
         await self.client.aclose()
 
@@ -108,3 +128,15 @@ class GiteaWebhookHandler:
                 return await self._handle_pr_merged(payload)
 
         return {"status": "ignored", "message": f"Event type {event_type} not handled"}
+
+
+def _validate_gitea_url(gitea_url: str, *, allow_insecure: bool) -> str:
+    resolved_url = str(gitea_url or "").strip().rstrip("/")
+    parsed = parse.urlparse(resolved_url)
+    scheme = str(parsed.scheme or "").lower()
+    if scheme == "https":
+        return resolved_url
+    if scheme == "http" and allow_insecure:
+        logger.warning("gitea_webhook_insecure_url_allowed")
+        return resolved_url
+    raise ValueError("Gitea webhook handler requires an https:// gitea_url unless allow_insecure=True.")

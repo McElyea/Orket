@@ -72,12 +72,21 @@ class LocalModelProvider:
         api_key: str = "",
         connect_timeout_seconds: float = 30.0,
     ):
+        """Initialize provider.
+
+        `timeout` is the total response generation timeout in seconds.
+        `connect_timeout_seconds` is the TCP connection establishment timeout in seconds.
+        """
         self.requested_model = str(model or "").strip()
         self.model = self.requested_model
         self.temperature = self._resolve_temperature_override(temperature)
         self.seed = self._resolve_seed_override(seed)
+        resolved_timeout = float(timeout)
+        resolved_connect_timeout = max(1.0, float(connect_timeout_seconds))
+        if resolved_timeout < resolved_connect_timeout:
+            raise ValueError("timeout must be greater than or equal to connect_timeout_seconds")
         self.timeout = timeout
-        self.connect_timeout_seconds = max(1.0, float(connect_timeout_seconds))
+        self.connect_timeout_seconds = resolved_connect_timeout
         self._provider_override = str(provider or "").strip().lower()
         self._base_url_override = str(base_url or "").strip()
         self._api_key_override = str(api_key or "").strip()
@@ -361,7 +370,7 @@ class LocalModelProvider:
                         f"class '{local_prompting_policy.task_class}'."
                     ) from exc
                 raise ModelProviderError(f"Unexpected error invoking model {self.model}: {str(exc)}") from exc
-            except (asyncio.TimeoutError, ModelTimeoutError) as exc:
+            except (TimeoutError, ModelTimeoutError) as exc:
                 if attempt == max_retries - 1:
                     raise ModelTimeoutError(f"Model {self.model} timed out after {max_retries} attempts.") from exc
                 log_event(
@@ -525,7 +534,7 @@ class LocalModelProvider:
                 raw.update(local_prompting_policy.telemetry())
                 return ModelResponse(content=content, raw=raw)
 
-            except (asyncio.TimeoutError, httpx.TimeoutException, ModelTimeoutError) as exc:
+            except (TimeoutError, httpx.TimeoutException, ModelTimeoutError) as exc:
                 if attempt == max_retries - 1:
                     raise ModelTimeoutError(f"Model {self.model} timed out after {max_retries} attempts.") from exc
                 log_event(

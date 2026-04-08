@@ -65,6 +65,11 @@ Deterministic lane:
 4. Deterministic test/lane hints
 5. Stable finding ordering
 
+Default forbidden-pattern severities:
+1. `TODO|FIXME` defaults to `info` because the regex is intentionally broad and may match comments, docs, or strings.
+2. `password\s*=` defaults to `high`.
+3. Operators may override the resolved `forbidden_patterns` entries and raise `TODO|FIXME` severity if they want it to block PRs.
+
 Model-assisted lane:
 1. Disabled by default
 2. Bounded snapshot input only

@@ -301,7 +301,7 @@ def test_review_run_failure_closes_control_plane_run_failed(tmp_path: Path, monk
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
 
     run_id = "01TESTREVIEWRUNFAIL0000000000"
-    monkeypatch.setattr(run_service_module, "_ulid", lambda: run_id)
+    monkeypatch.setattr(run_service_module, "_generate_ulid", lambda: run_id)
 
     def _boom(**_kwargs):  # type: ignore[no-untyped-def]
         raise RuntimeError("lane failed")
@@ -340,7 +340,7 @@ def test_review_run_service_rejects_control_plane_summary_identifier_drift(tmp_p
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
 
     run_id = "01TESTREVIEWRUNDRIFT0000000000"
-    monkeypatch.setattr(run_service_module, "_ulid", lambda: run_id)
+    monkeypatch.setattr(run_service_module, "_generate_ulid", lambda: run_id)
 
     control_plane_db = tmp_path / "control_plane.sqlite3"
     service = ReviewRunService(workspace=tmp_path / "workspace" / "default", control_plane_db_path=control_plane_db)
@@ -399,7 +399,7 @@ def test_review_run_service_rejects_incomplete_control_plane_lifecycle_projectio
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
 
     run_id = "01TESTREVIEWRUNSTATE0000000000"
-    monkeypatch.setattr(run_service_module, "_ulid", lambda: run_id)
+    monkeypatch.setattr(run_service_module, "_generate_ulid", lambda: run_id)
 
     control_plane_db = tmp_path / "control_plane.sqlite3"
     service = ReviewRunService(workspace=tmp_path / "workspace" / "default", control_plane_db_path=control_plane_db)
@@ -473,7 +473,7 @@ def test_review_run_service_rejects_orphaned_control_plane_identifier_hierarchy(
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
 
     run_id = "01TESTREVIEWRUNHIER0000000000"
-    monkeypatch.setattr(run_service_module, "_ulid", lambda: run_id)
+    monkeypatch.setattr(run_service_module, "_generate_ulid", lambda: run_id)
 
     control_plane_db = tmp_path / "control_plane.sqlite3"
     service = ReviewRunService(workspace=tmp_path / "workspace" / "default", control_plane_db_path=control_plane_db)
@@ -559,7 +559,7 @@ def test_review_run_service_rejects_orphaned_control_plane_projection_metadata(
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
 
     run_id = "01TESTREVIEWRUNMETA0000000000"
-    monkeypatch.setattr(run_service_module, "_ulid", lambda: run_id)
+    monkeypatch.setattr(run_service_module, "_generate_ulid", lambda: run_id)
 
     control_plane_db = tmp_path / "control_plane.sqlite3"
     service = ReviewRunService(workspace=tmp_path / "workspace" / "default", control_plane_db_path=control_plane_db)

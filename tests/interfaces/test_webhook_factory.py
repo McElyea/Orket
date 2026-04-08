@@ -3,6 +3,8 @@ import importlib
 import os
 from pathlib import Path
 
+from fastapi.testclient import TestClient
+
 
 def test_webhook_server_import_does_not_require_secrets(monkeypatch):
     monkeypatch.delenv("GITEA_ADMIN_PASSWORD", raising=False)
@@ -85,3 +87,22 @@ def test_create_webhook_app_loads_required_env_from_dotenv(monkeypatch, tmp_path
         app = module.create_webhook_app(require_config=True)
 
     assert app is module.app
+
+
+def test_webhook_app_shutdown_closes_constructed_handler(monkeypatch):
+    """Layer: integration. Verifies FastAPI shutdown closes the lazy webhook handler if it was constructed."""
+    module = importlib.import_module("orket.webhook_server")
+    module = importlib.reload(module)
+    closed = {"called": False}
+
+    class _Handler:
+        async def close(self) -> None:
+            closed["called"] = True
+
+    module.webhook_handler._handler = _Handler()
+
+    with TestClient(module.app):
+        pass
+
+    assert closed["called"] is True
+    assert module.webhook_handler._handler is None

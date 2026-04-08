@@ -348,6 +348,11 @@ async def test_async_dual_write_run_ledger_recovers_pending_start_intent_before_
 
     recovered_events = await recovered_repo.list_events("sess-recover-start")
     assert [event["kind"] for event in recovered_events] == ["run_started"]
+    recovered_sqlite_run = await recovered_repo.sqlite_repo.get_run("sess-recover-start")
+    assert recovered_sqlite_run is not None
+    assert recovered_sqlite_run["session_id"] == "sess-recover-start"
+    recovered_protocol_run = await recovered_repo.protocol_repo.get_run("sess-recover-start")
+    assert recovered_protocol_run is not None
     assert await recovered_repo._load_intents() == []
 
 
@@ -393,4 +398,9 @@ async def test_async_dual_write_run_ledger_recovers_pending_finalize_intent_befo
     assert recovered_run is not None
     assert recovered_run["status"] == "failed"
     assert recovered_run["failure_class"] == "ExecutionFailed"
+    recovered_sqlite_run = await recovered_repo.sqlite_repo.get_run("sess-recover-finalize")
+    assert recovered_sqlite_run is not None
+    assert recovered_sqlite_run["status"] == "failed"
+    recovered_events = await recovered_repo.list_events("sess-recover-finalize")
+    assert [event["kind"] for event in recovered_events] == ["run_started", "run_finalized"]
     assert await recovered_repo._load_intents() == []

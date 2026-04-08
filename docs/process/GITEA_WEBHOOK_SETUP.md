@@ -1,6 +1,6 @@
 ﻿# Gitea Webhook Setup
 
-Last reviewed: 2026-02-27
+Last reviewed: 2026-04-07
 
 ## Purpose
 Configure Gitea to send PR-related events into Orket's webhook service.
@@ -18,7 +18,7 @@ Set in `.env`:
 GITEA_WEBHOOK_SECRET=<random hex secret>
 GITEA_ADMIN_USER=admin
 GITEA_ADMIN_PASSWORD=<gitea-admin-password>
-GITEA_URL=http://localhost:3000
+GITEA_URL=https://localhost:3000
 ```
 
 Optional for test endpoint auth:
@@ -27,6 +27,14 @@ Optional for test endpoint auth:
 ORKET_ENABLE_WEBHOOK_TEST_ENDPOINT=true
 ORKET_WEBHOOK_TEST_TOKEN=<token>
 ```
+
+Optional for local plaintext Gitea only:
+
+```bash
+ORKET_GITEA_ALLOW_INSECURE=true
+```
+
+Do not set `ORKET_GITEA_ALLOW_INSECURE=true` outside local development. Without that explicit override, the webhook handler rejects `http://` Gitea API URLs so admin credentials are not sent over plaintext.
 
 ## Start Webhook Server
 ```bash

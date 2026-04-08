@@ -42,8 +42,9 @@ class _WebhookHandlerProxy:
 
     def _create_handler(self) -> GiteaWebhookHandler:
         return GiteaWebhookHandler(
-            gitea_url=os.getenv("GITEA_URL", "http://localhost:3000"),
+            gitea_url=os.getenv("GITEA_URL", "https://localhost:3000"),
             workspace=Path.cwd(),
+            allow_insecure=_is_truthy(os.getenv("ORKET_GITEA_ALLOW_INSECURE")),
         )
 
     def _get(self) -> GiteaWebhookHandler:
@@ -64,6 +65,7 @@ class _WebhookHandlerProxy:
 
 
 webhook_handler = _WebhookHandlerProxy()
+app.add_event_handler("shutdown", webhook_handler.close)
 
 
 def _resolve_webhook_secret(required: bool = False) -> bytes | None:

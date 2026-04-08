@@ -36,8 +36,20 @@ def _load_json(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_odr_prebuild_accepts_valid_decision_complete_max_rounds() -> None:
-    assert _odr_prebuild_accepted(stop_reason="MAX_ROUNDS", odr_valid=True, pending_decisions=0) is True
+def test_odr_prebuild_rejects_valid_decision_complete_max_rounds_without_override() -> None:
+    assert _odr_prebuild_accepted(stop_reason="MAX_ROUNDS", odr_valid=True, pending_decisions=0) is False
+
+
+def test_odr_prebuild_accepts_valid_decision_complete_max_rounds_with_override() -> None:
+    assert (
+        _odr_prebuild_accepted(
+            stop_reason="MAX_ROUNDS",
+            odr_valid=True,
+            pending_decisions=0,
+            max_rounds_accepted=True,
+        )
+        is True
+    )
 
 
 def test_odr_prebuild_rejects_max_rounds_when_pending_decisions_remain() -> None:
@@ -51,6 +63,7 @@ async def test_run_cards_odr_prebuild_uses_issue_odr_max_rounds_override(
 ) -> None:
     issue = _issue()
     issue.params["odr_max_rounds"] = 1
+    issue.params["odr_max_rounds_accepted"] = True
     save_spy = AsyncSpy(return_value=None)
     captured_kwargs: dict[str, object] = {}
     model_client = SimpleNamespace()
@@ -108,6 +121,7 @@ async def test_run_cards_odr_prebuild_records_completed_event_for_valid_max_roun
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     issue = _issue()
+    issue.params["odr_max_rounds_accepted"] = True
     save_spy = AsyncSpy(return_value=None)
     captured_events: list[tuple[str, dict[str, object]]] = []
     auditor_client = SimpleNamespace(provider=SimpleNamespace(model="qwen2.5:7b"))
@@ -173,6 +187,7 @@ async def test_run_cards_odr_prebuild_retries_format_violation_once(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     issue = _issue()
+    issue.params["odr_max_rounds_accepted"] = True
     save_spy = AsyncSpy(return_value=None)
     captured_events: list[tuple[str, dict[str, object]]] = []
     calls: list[dict[str, object]] = []
@@ -242,3 +257,45 @@ async def test_run_cards_odr_prebuild_retries_format_violation_once(
     assert summary["odr_accepted"] is True
     assert captured_events[0][0] == "odr_prebuild_format_violation_retry"
     assert captured_events[1][0] == "odr_prebuild_completed"
+
+
+@pytest.mark.asyncio
+async def test_run_cards_odr_prebuild_skips_live_refinement_when_max_rounds_zero(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: unit. Verifies operator-configured ODR round cap 0 disables the prebuild refinement."""
+    issue = _issue()
+    issue.params["odr_max_rounds"] = 0
+    save_spy = AsyncSpy(return_value=None)
+    captured_events: list[tuple[str, dict[str, object], dict[str, object]]] = []
+
+    async def _unexpected_live_refinement(**_kwargs):
+        raise AssertionError("ODR refinement should be skipped when odr_max_rounds is 0")
+
+    def _capture_event(name: str, payload: dict[str, object], _workspace: Path, **kwargs: object) -> None:
+        captured_events.append((name, payload, dict(kwargs)))
+
+    monkeypatch.setattr("orket.application.services.cards_odr_stage.run_live_refinement", _unexpected_live_refinement)
+    monkeypatch.setattr("orket.application.services.cards_odr_stage.log_event", _capture_event)
+
+    summary = await run_cards_odr_prebuild(
+        workspace=tmp_path,
+        issue=issue,
+        run_id="run-skip",
+        selected_model="qwen2.5-coder:7b",
+        cards_runtime={
+            "execution_profile": "odr_prebuild_builder_guard_v1",
+            "artifact_contract": {"kind": "artifact", "primary_output": "agent_output/out.py"},
+        },
+        model_client=SimpleNamespace(),
+        async_cards=SimpleNamespace(save=save_spy),
+        max_rounds=4,
+    )
+
+    assert summary["odr_max_rounds"] == 0
+    assert summary["odr_accepted"] is True
+    assert summary["odr_stop_reason"] == "SKIPPED"
+    assert captured_events[0][0] == "odr_prebuild_skipped"
+    assert captured_events[0][2]["level"] == "info"
+    assert save_spy.calls

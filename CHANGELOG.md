@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.41] - 2026-04-07 - "The Remediation Completion Closeout Cut"
+
+### Added
+- **Techdebt Closeout Archive**: Added the archived `TD04072026C` closeout packet and preserved the completed remediation plan plus review inputs outside the active maintenance lane.
+- **Remediation Regression Coverage**: Added coverage for session repository initialization, review-run IDs, exception hierarchy, model-assisted provider errors, review git failures, local provider timeout validation, control-plane checkpoint persistence, and dual-write/protocol ledger idempotency.
+
+### Changed
+- **Runtime And Storage Hardening**: Completed the active remediation plan across SQLite WAL initialization, migration idempotency, structured review git failures, monotonic review run IDs, checkpoint persistence, Gitea webhook security/dedupe/persistent state, lease input validation, and secret-token masking.
+- **Agent, Review, ODR, And Streaming Safety**: Tightened explicit agent config roots, fail-closed empty tool scopes, direct and dispatcher tool-gate proof, deterministic review severity defaults, malformed/unknown review policy warnings, ODR max-round acceptance/skip semantics, streaming truncation advisory events, and bounded/purged stream state.
+- **Roadmap And Authority Alignment**: Cleared `Priority Now`, archived the completed finite techdebt lane, updated related authority/spec docs, and kept active techdebt scope limited to standing maintenance docs.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No action required. No live external provider, intentional sandbox acceptance flow, or live Gitea webhook delivery was exercised.
+
 ## [0.4.40] - 2026-04-07 - "The Priority Now Techdebt Completion Cut"
 
 ### Added

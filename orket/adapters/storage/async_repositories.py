@@ -24,12 +24,10 @@ class AsyncSessionRepository(SessionRepository):
 
     def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
-        self._initialized = False
         self._lock = asyncio.Lock()
 
     async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
-        if self._initialized:
-            return
+        await conn.execute("PRAGMA journal_mode=WAL")
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS sessions (
                 id TEXT PRIMARY KEY,
@@ -44,7 +42,6 @@ class AsyncSessionRepository(SessionRepository):
             )
         """)
         await conn.commit()
-        self._initialized = True
 
     async def get_session(self, session_id: str) -> dict[str, Any] | None:
         async with aiosqlite.connect(self.db_path) as conn:

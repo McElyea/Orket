@@ -24,6 +24,10 @@ if TYPE_CHECKING:
     from orket.core.domain.bug_fix_phase import BugFixPhase
 
 
+def _row_to_dict(row: aiosqlite.Row) -> dict[str, Any]:
+    return dict(zip(row.keys(), row, strict=True))
+
+
 class WebhookDatabase:
     """
     Data Access Layer for webhook event persistence.
@@ -82,6 +86,15 @@ class WebhookDatabase:
                         pr_key TEXT,
                         payload TEXT,
                         result TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+
+                await conn.execute("""
+                    CREATE TABLE IF NOT EXISTS webhook_event_dedupe (
+                        event_id TEXT PRIMARY KEY,
+                        event_type TEXT NOT NULL,
+                        pr_key TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
@@ -151,6 +164,23 @@ class WebhookDatabase:
             log_event("webhook_db", {"message": f"Incremented PR cycle: {pr_key} -> {new_count}"}, level="info")
             return new_count
 
+    async def try_record_webhook_event(self, *, event_id: str, event_type: str, pr_key: str | None = None) -> bool:
+        """Record a webhook delivery id once. Returns False for duplicate deliveries."""
+        normalized_event_id = str(event_id or "").strip()
+        if not normalized_event_id:
+            return True
+        await self._ensure_initialized()
+        async with aiosqlite.connect(self.db_path) as conn:
+            cursor = await conn.execute(
+                """
+                INSERT OR IGNORE INTO webhook_event_dedupe (event_id, event_type, pr_key)
+                VALUES (?, ?, ?)
+                """,
+                (normalized_event_id, str(event_type), pr_key),
+            )
+            await conn.commit()
+            return int(cursor.rowcount or 0) > 0
+
     async def add_failure_reason(
         self,
         repo_full_name: str,
@@ -196,7 +226,7 @@ class WebhookDatabase:
             )
 
             rows = await cursor.fetchall()
-            return [{key: row[key] for key in row.keys()} for row in rows]
+            return [_row_to_dict(row) for row in rows]
 
     async def save_bug_fix_phase(self, phase: Any) -> None:
         """Save a bug fix phase to the database."""
@@ -258,4 +288,4 @@ class WebhookDatabase:
             """)
 
             rows = await cursor.fetchall()
-            return [{key: row[key] for key in row.keys()} for row in rows]
+            return [_row_to_dict(row) for row in rows]

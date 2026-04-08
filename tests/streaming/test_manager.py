@@ -49,8 +49,9 @@ async def test_manager_cancel_then_finalize_emits_single_terminal_plus_commit(tm
 @pytest.mark.asyncio
 async def test_manager_commit_fail_closed_outcome(tmp_path):
     """Layer: unit. Verifies interaction manager preserves fail-closed commit outcomes."""
+    bus = StreamBus()
     manager = InteractionManager(
-        bus=StreamBus(),
+        bus=bus,
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
     )
@@ -66,6 +67,7 @@ async def test_manager_commit_fail_closed_outcome(tmp_path):
     assert commit.event_type == StreamEventType.COMMIT_FINAL
     assert commit.payload["commit_outcome"] == "fail_closed"
     assert commit.payload["issues"] == ["tool-side-effect"]
+    assert (session_id, turn_id) not in bus._turn_states
 
 
 @pytest.mark.asyncio

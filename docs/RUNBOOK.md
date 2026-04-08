@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-04-02
+Last reviewed: 2026-04-07
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -39,6 +39,9 @@ python -m orket.webhook_server
 Requires webhook credentials in environment or `.env`:
 1. `GITEA_WEBHOOK_SECRET`
 2. `GITEA_ADMIN_PASSWORD`
+3. `GITEA_URL=https://...`
+
+`ORKET_GITEA_ALLOW_INSECURE=true` is only for local plaintext Gitea. Without that explicit override, the webhook handler rejects `http://` Gitea API URLs before constructing the authenticated client.
 
 ## Engine Launch Examples
 1. Default CLI runtime:

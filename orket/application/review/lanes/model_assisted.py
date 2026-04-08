@@ -73,7 +73,7 @@ def run_model_assisted_lane(
     }
     try:
         raw_payload = provider(request)
-    except (RuntimeError, ValueError, TypeError, OSError) as exc:
+    except (RuntimeError, ValueError, OSError) as exc:
         advisory_errors.append(f"model_provider_error:{exc}")
         return ModelAssistedCritiquePayload(
             summary=[],
