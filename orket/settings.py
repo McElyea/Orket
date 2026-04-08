@@ -24,7 +24,8 @@ _PREFERENCES_MIGRATION_MARKERS_KEY = "migration_markers"
 _LEGACY_MODEL_PREFERENCES_MIGRATION_KEY = "legacy_model_preferences_v1"
 _ENV_LOADED = False
 _ENV_LOADED_LOCK = threading.Lock()
-_SETTINGS_CACHE_LOCK = threading.RLock()
+_SETTINGS_CACHE_THREAD_LOCK = threading.Lock()
+_SETTINGS_CACHE_ASYNC_LOCK = asyncio.Lock()
 ResultT = TypeVar("ResultT")
 _RUNTIME_USER_SETTINGS: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
     "runtime_user_settings",
@@ -81,14 +82,24 @@ def _settings_cache_enabled() -> bool:
 
 
 def _read_cache(name: str) -> dict[str, Any] | None:
-    with _SETTINGS_CACHE_LOCK:
+    with _SETTINGS_CACHE_THREAD_LOCK:
         cached = globals()[name]
         return dict(cached) if isinstance(cached, dict) else None
 
 
 def _set_cache(name: str, payload: dict[str, Any] | None) -> None:
-    with _SETTINGS_CACHE_LOCK:
+    with _SETTINGS_CACHE_THREAD_LOCK:
         globals()[name] = dict(payload) if isinstance(payload, dict) else None
+
+
+async def _read_cache_async(name: str) -> dict[str, Any] | None:
+    async with _SETTINGS_CACHE_ASYNC_LOCK:
+        return _read_cache(name)
+
+
+async def _set_cache_async(name: str, payload: dict[str, Any] | None) -> None:
+    async with _SETTINGS_CACHE_ASYNC_LOCK:
+        _set_cache(name, payload)
 
 
 def set_runtime_settings_context(
@@ -248,7 +259,7 @@ def _mark_legacy_model_preferences_migrated(preferences: dict[str, Any]) -> dict
 
 async def load_user_settings_async() -> dict[str, Any]:
     cache_enabled = _settings_cache_enabled()
-    cached = _read_cache("_SETTINGS_CACHE")
+    cached = await _read_cache_async("_SETTINGS_CACHE")
     if cache_enabled and cached is not None:
         return cached
     if os.environ.get("PYTEST_CURRENT_TEST") and _SETTINGS_FILE is None:
@@ -258,7 +269,7 @@ async def load_user_settings_async() -> dict[str, Any]:
         if await asyncio.to_thread(settings_path.exists):
             settings = await _read_json_async(settings_path)
             if cache_enabled:
-                _set_cache("_SETTINGS_CACHE", settings)
+                await _set_cache_async("_SETTINGS_CACHE", settings)
             return settings
     return {}
 
@@ -294,7 +305,7 @@ def _extract_legacy_model_preferences(settings: dict[str, Any]) -> dict[str, str
 async def save_user_settings_async(settings: dict[str, Any]) -> None:
     settings_path = _settings_file_for_write()
     await _write_json_async(settings_path, settings)
-    _set_cache("_SETTINGS_CACHE", dict(settings) if _settings_cache_enabled() else None)
+    await _set_cache_async("_SETTINGS_CACHE", dict(settings) if _settings_cache_enabled() else None)
 
 
 def save_user_settings(settings: dict[str, Any]) -> None:
@@ -305,7 +316,7 @@ def save_user_settings(settings: dict[str, Any]) -> None:
 async def save_user_preferences_async(preferences: dict[str, Any]) -> None:
     preferences_path = _preferences_file_for_write()
     await _write_json_async(preferences_path, preferences)
-    _set_cache("_PREFERENCES_CACHE", dict(preferences) if _settings_cache_enabled() else None)
+    await _set_cache_async("_PREFERENCES_CACHE", dict(preferences) if _settings_cache_enabled() else None)
 
 
 def save_user_preferences(preferences: dict[str, Any]) -> None:
@@ -368,7 +379,7 @@ def load_user_preferences() -> dict[str, Any]:
 
 async def load_user_preferences_async() -> dict[str, Any]:
     cache_enabled = _settings_cache_enabled()
-    cached = _read_cache("_PREFERENCES_CACHE")
+    cached = await _read_cache_async("_PREFERENCES_CACHE")
     if cache_enabled and cached is not None:
         return cached
     if os.environ.get("PYTEST_CURRENT_TEST") and _SETTINGS_FILE is None and _PREFERENCES_FILE is None:
@@ -376,7 +387,7 @@ async def load_user_preferences_async() -> dict[str, Any]:
 
     preferences = await migrate_legacy_model_preferences_async()
     if cache_enabled:
-        _set_cache("_PREFERENCES_CACHE", preferences)
+        await _set_cache_async("_PREFERENCES_CACHE", preferences)
     return preferences
 
 

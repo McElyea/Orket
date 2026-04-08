@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -119,6 +120,18 @@ class OrchestrationEngine:
         self.session_controller = SessionController(self.workspace_root)
         self.card_archiver = CardArchiver(self.cards)
         self.kernel_gateway_facade = KernelGatewayFacade(self.kernel_gateway)
+        self._initialize_lock = asyncio.Lock()
+        self._initialized = False
+
+    async def initialize(self) -> None:
+        if self._initialized:
+            return
+        async with self._initialize_lock:
+            if self._initialized:
+                return
+            await self.runtime_context.initialize()
+            await self._pipeline.initialize()
+            self._initialized = True
 
     async def _emit_run_ledger_telemetry(self, payload: dict[str, Any]) -> None:
         log_event(

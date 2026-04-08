@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 import warnings
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -29,7 +29,7 @@ class EnvironmentConfig(BaseModel):
     def warn_on_unknown_keys(cls, data: Any) -> Any:
         if not isinstance(data, dict):
             return data
-        unknown = sorted(set(data) - set(cls.model_fields))
+        unknown = sorted(frozenset(data) - frozenset(cls.model_fields))
         if unknown:
             warnings.warn(
                 "EnvironmentConfig ignored unknown key(s): " + ", ".join(unknown),
@@ -117,7 +117,7 @@ class BaseCardConfig(BaseModel):
 
 class IssueMetrics(BaseModel):
     score: float = 0.0
-    grade: str = "Pending"  # e.g. "Shippable", "Non-Shippable"
+    grade: Literal["Shippable", "Non-Shippable", "Pending"] = "Pending"
     audit_date: str | None = None
     criteria_scores: dict[str, float] = Field(default_factory=dict)
     shippability_threshold: float = 7.0

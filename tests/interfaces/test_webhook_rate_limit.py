@@ -108,6 +108,27 @@ def test_webhook_test_endpoint_enabled_with_flag(monkeypatch):
     assert response.json()["status"] == "ok"
 
 
+def test_webhook_health_reports_per_process_rate_limit_scope(monkeypatch):
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+    monkeypatch.setenv("GITEA_WEBHOOK_SECRET", "test-secret")
+    monkeypatch.setenv("ORKET_RATE_LIMIT", "17")
+    monkeypatch.setenv("ORKET_WEBHOOK_WORKERS", "3")
+
+    module = importlib.import_module("orket.webhook_server")
+    module = importlib.reload(module)
+    client = TestClient(module.app)
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "healthy",
+        "rate_limit_scope": "per_process",
+        "webhook_rate_limit_per_minute": 17,
+        "worker_count_hint": 3,
+    }
+
+
 def test_webhook_test_endpoint_enabled_rejects_missing_auth(monkeypatch):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     monkeypatch.setenv("GITEA_WEBHOOK_SECRET", "test-secret")

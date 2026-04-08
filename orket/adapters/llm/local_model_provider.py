@@ -575,6 +575,9 @@ class LocalModelProvider:
         if str(getattr(self, "provider_backend", "") or "") == "openai_compat":
             self._openai_session_epoch = max(0, int(getattr(self, "_openai_session_epoch", 0) or 0)) + 1
 
+    async def __aenter__(self) -> LocalModelProvider:
+        return self
+
     async def close(self) -> None:
         if bool(getattr(self, "_closed", False)):
             return
@@ -587,3 +590,10 @@ class LocalModelProvider:
             if inspect.isawaitable(maybe_awaitable):
                 await maybe_awaitable
         self._closed = True
+
+    async def aclose(self) -> None:
+        await self.close()
+
+    async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
+        _ = (exc_type, exc, traceback)
+        await self.close()

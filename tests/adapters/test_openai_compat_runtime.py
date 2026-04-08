@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from orket.adapters.llm.openai_compat_runtime import extract_openai_content
+from orket.adapters.llm.openai_compat_runtime import extract_openai_content, validate_openai_messages
 
 pytestmark = pytest.mark.unit
 
@@ -186,3 +186,10 @@ def test_extract_openai_content_returns_raw_reasoning_when_no_recoverable_sectio
     }
 
     assert extract_openai_content(payload) == "Thinking Process:\n1. Analyze the request.\n2. Draft a response."
+
+
+def test_validate_openai_messages_reports_original_role_value() -> None:
+    """Layer: unit. Verifies invalid-role diagnostics preserve the caller's original role token."""
+    invalid = validate_openai_messages([{"role": "  Developer  "}, {"content": "missing"}])
+
+    assert invalid == ["0:  Developer  ", "1:<missing>"]

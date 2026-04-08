@@ -90,6 +90,27 @@ class AsyncDualModeLedgerRepository:
         self._intent_lock = asyncio.Lock()
         self._recovery_lock = asyncio.Lock()
         self._recovery_complete = False
+        self._recovery_run_once = False
+
+    async def initialize(self) -> None:
+        if self._recovery_run_once:
+            return
+        async with self._recovery_lock:
+            if self._recovery_run_once:
+                return
+            intents = await self._load_intents()
+            if not intents:
+                self._recovery_complete = True
+                self._recovery_run_once = True
+                return
+            unresolved: list[dict[str, Any]] = []
+            for intent in intents:
+                recovered = await self._recover_intent(dict(intent))
+                if recovered is not None:
+                    unresolved.append(recovered)
+            await self._write_intents(unresolved)
+            self._recovery_complete = not unresolved
+            self._recovery_run_once = True
 
     async def start_run(
         self,
@@ -102,7 +123,7 @@ class AsyncDualModeLedgerRepository:
         summary: dict[str, Any] | None = None,
         artifacts: dict[str, Any] | None = None,
     ) -> None:
-        await self._recover_pending_intents()
+        await self.initialize()
         intent_id = await self._record_intent(
             operation="start_run",
             session_id=session_id,
@@ -162,7 +183,7 @@ class AsyncDualModeLedgerRepository:
         artifacts: dict[str, Any] | None = None,
         finalized_at: str | None = None,
     ) -> None:
-        await self._recover_pending_intents()
+        await self.initialize()
         finalize_intent_kwargs: dict[str, Any] = {
             "session_id": session_id,
             "status": status,
@@ -235,7 +256,7 @@ class AsyncDualModeLedgerRepository:
         )
 
     async def get_run(self, session_id: str) -> dict[str, Any] | None:
-        await self._recover_pending_intents()
+        await self.initialize()
         if self.primary_mode == "protocol":
             return await self.protocol_repo.get_run(session_id)
         return await self.sqlite_repo.get_run(session_id)
@@ -247,7 +268,7 @@ class AsyncDualModeLedgerRepository:
         kind: str,
         payload: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        await self._recover_pending_intents()
+        await self.initialize()
         return await self.protocol_repo.append_event(
             session_id=session_id,
             kind=kind,
@@ -260,14 +281,14 @@ class AsyncDualModeLedgerRepository:
         session_id: str,
         receipt: dict[str, Any],
     ) -> dict[str, Any]:
-        await self._recover_pending_intents()
+        await self.initialize()
         return await self.protocol_repo.append_receipt(
             session_id=session_id,
             receipt=receipt,
         )
 
     async def list_events(self, session_id: str) -> list[dict[str, Any]]:
-        await self._recover_pending_intents()
+        await self.initialize()
         return await self.protocol_repo.list_events(session_id)
 
     def _resolve_intent_path(self) -> Path:
@@ -280,22 +301,7 @@ class AsyncDualModeLedgerRepository:
         return Path.cwd() / ".orket" / "dual_write_intents.json"
 
     async def _recover_pending_intents(self) -> None:
-        if self._recovery_complete:
-            return
-        async with self._recovery_lock:
-            if self._recovery_complete:
-                return
-            intents = await self._load_intents()
-            if not intents:
-                self._recovery_complete = True
-                return
-            unresolved: list[dict[str, Any]] = []
-            for intent in intents:
-                recovered = await self._recover_intent(dict(intent))
-                if recovered is not None:
-                    unresolved.append(recovered)
-            await self._write_intents(unresolved)
-            self._recovery_complete = not unresolved
+        await self.initialize()
 
     async def _recover_intent(self, intent: dict[str, Any]) -> dict[str, Any] | None:
         operation = str(intent.get("operation") or "").strip()

@@ -664,15 +664,31 @@ Gitea webhook PR review/opened/merged handling validates consumed payload fields
 
 Gitea webhook authenticated API calls require `https://` `GITEA_URL` by default. Plaintext `http://` is admitted only when `ORKET_GITEA_ALLOW_INSECURE=true` or `allow_insecure=True` is explicitly set for local development, and that degraded transport posture emits `gitea_webhook_insecure_url_allowed`.
 
+Gitea webhook ingress validates `X-Gitea-Signature` against the canonical `sha256=<hex>` HMAC form, and the lazy webhook handler proxy now uses async-lock-guarded initialization so concurrent deliveries do not construct duplicate handler instances.
+
+JWT access tokens issued through `orket/services/auth_service.py` now default to a 60-minute lifetime unless `ORKET_AUTH_TOKEN_EXPIRE_MINUTES` overrides it, include a `jti` claim on every token, and verify revocation against the SQLite token blocklist at `.orket/durable/db/auth_token_blocklist.sqlite3` resolved through `orket/runtime_paths.py`.
+
 Gitea webhook sandbox handling accepts an injected `SandboxOrchestrator` and explicit `lifecycle_db_path`; default construction routes sandbox state through the repository-backed `SandboxOrchestrator.lifecycle_repository` rather than treating the handler-local `SandboxRegistry` as durable authority.
 
 Gitea webhook review-cycle state now uses a workspace-derived durable DB path at `.orket/durable/db/webhook.db`, records webhook delivery ids as idempotency keys when present, skips duplicate PR review deliveries before side effects, escalates at `MAX_PR_REVIEW_CYCLES=3`, and auto-rejects at the following cycle.
 
 Manual review deterministic defaults treat broad `TODO|FIXME` forbidden-pattern matches as `info` severity and keep `password\s*=` at `high`; operators can override the resolved policy if they want TODO/FIXME matches to block PRs.
 
+Project memory retrieval now uses SQLite FTS5-backed search with SQL-level filtering and BM25 ordering, while `MemoryStore.remember()` deduplicates exact repeated content by SHA-256 content hash before insert so the project-memory surface no longer over-fetches recent rows or accumulate duplicate entries for the same content.
+
+Interaction streaming now admits per-turn `stream_budget` overrides on the shared `StreamBus`, gives `model_stream_v1` a default best-effort budget of 2048 token deltas when no explicit override is supplied, and bounds retained `_turn_states` bookkeeping through TTL/LRU eviction instead of leaving per-turn stream state unbounded.
+
+Interaction session ownership is now explicitly split: `orket/state.py` keeps transport/runtime coordination only (event broadcast queue, websocket fanout, classic runtime task tracking, and interaction-session surface presence), while `orket/streaming/manager.py` remains the sole authority for interaction session and turn state; the API wires those surfaces together through explicit interaction-session start/close registration hooks.
+
+Webhook operator posture now exposes ingress rate limiting as a per-process surface, with `/health` returning `rate_limit_scope=per_process`, `webhook_rate_limit_per_minute`, and `worker_count_hint`, while `.env.example` documents sizing `ORKET_RATE_LIMIT` against the configured worker count when no shared limiter backend is present.
+
+Review-bundle replay validation now raises `ReviewBundleError` carrying explicit `error_code` and `field` metadata instead of untyped string-only `ValueError` failures, and the CLI replay surface preserves those structured bundle error codes in replay failure output.
+
 Streaming turn state is purged after authoritative commit publication while preserving already-queued terminal subscriber events; subscriber queues are bounded by the configured best-effort plus bounded producer budgets, duplicate `COMMIT_FINAL` publication fails closed, and best-effort producer budget exhaustion emits one `STREAM_TRUNCATED` advisory event carrying dropped sequence ranges.
 
 LPJ-C32 append-only run-ledger framing remains `uint32_be payload_len | payload_bytes | uint32_be crc32c(payload_bytes)` with Castagnoli CRC-32C as specified in `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`; runtime checksum calculation uses the declared `google-crc32c` dependency instead of a local hand-rolled table, and IEEE `binascii.crc32` is intentionally not compatible with existing ledger frames.
+
+Dual-write run-ledger recovery now exposes a one-time `AsyncDualModeLedgerRepository.initialize()` seam guarded by `_recovery_run_once`; primary runtime startup/entry surfaces call that initializer before using the repository, and recovery no longer reruns its pending-intent replay loop on every repository operation.
 
 `ExecutionPipeline` now keeps construction, state-mode helpers, the epic-orchestrator builder, and module entrypoints in `orket/runtime/execution/execution_pipeline.py`; public card dispatch, compatibility wrappers, Gitea loop entry wrapping, resume/collection helpers, run-summary materialization, runtime artifact collection, artifact provenance, and ledger/protocol event helpers live in `orket/runtime/execution/execution_pipeline_card_dispatch.py`, `orket/runtime/execution/execution_pipeline_resume.py`, `orket/runtime/execution/execution_pipeline_run_summary.py`, `orket/runtime/execution/execution_pipeline_runtime_artifacts.py`, `orket/runtime/execution/execution_pipeline_artifact_provenance.py`, and `orket/runtime/execution/execution_pipeline_ledger_events.py`, with flat `orket/runtime/*.py` paths preserved only as compatibility aliases.
 

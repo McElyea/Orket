@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -124,6 +125,17 @@ class ExecutionPipeline(
             publication=self.orchestrator.control_plane_publication,
         )
         self.workload_shell = SharedWorkloadShell()
+        self._initialize_lock = asyncio.Lock()
+        self._initialized = False
+
+    async def initialize(self) -> None:
+        if self._initialized:
+            return
+        async with self._initialize_lock:
+            if self._initialized:
+                return
+            await self.runtime_context.initialize()
+            self._initialized = True
 
     def _process_rules_value(self, key: str) -> str:
         process_rules = getattr(self.org, "process_rules", None) if self.org else None

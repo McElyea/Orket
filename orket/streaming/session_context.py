@@ -46,8 +46,22 @@ def build_packet1_context_envelope(
 
 
 def build_packet1_provider_lineage(envelope: dict[str, Any]) -> list[dict[str, Any]]:
+    continuity = dict(envelope.get("continuity") or {})
+    turn_request = dict(envelope.get("turn_request") or {})
     extension_manifest = dict(envelope.get("extension_manifest") or {})
     required_capabilities = _normalized_required_capabilities(extension_manifest.get("required_capabilities"))
+    continuity_present = bool(str(continuity.get("session_id") or "").strip()) or bool(
+        dict(continuity.get("session_params") or {})
+    )
+    turn_request_present = any(
+        (
+            dict(turn_request.get("input_config") or {}),
+            dict(turn_request.get("turn_params") or {}),
+            str(turn_request.get("workload_id") or "").strip(),
+            str(turn_request.get("department") or "").strip(),
+            str(turn_request.get("workspace") or "").strip(),
+        )
+    )
     return [
         {
             "order": 1,
@@ -55,7 +69,7 @@ def build_packet1_provider_lineage(envelope: dict[str, Any]) -> list[dict[str, A
             "authority": "host_owned",
             "source_surface": "POST /v1/interactions/sessions",
             "fields": ["session_id", "session_params"],
-            "present": True,
+            "present": continuity_present,
         },
         {
             "order": 2,
@@ -63,7 +77,7 @@ def build_packet1_provider_lineage(envelope: dict[str, Any]) -> list[dict[str, A
             "authority": "host_validated_request",
             "source_surface": "POST /v1/interactions/{session_id}/turns",
             "fields": ["input_config", "turn_params", "workload_id", "department", "workspace"],
-            "present": True,
+            "present": turn_request_present,
         },
         {
             "order": 3,

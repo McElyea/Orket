@@ -66,6 +66,14 @@ def resolve_webhook_db_path(db_path: str | Path | None = None) -> Path:
     return target
 
 
+def resolve_auth_token_blocklist_db_path(db_path: str | Path | None = None) -> Path:
+    if db_path is not None:
+        return Path(db_path)
+    target = durable_root() / "db" / "auth_token_blocklist.sqlite3"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    return target
+
+
 def resolve_live_acceptance_db_path(db_path: str | None = None) -> str:
     if db_path:
         return db_path

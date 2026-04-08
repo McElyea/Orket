@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import threading
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -56,7 +57,14 @@ def _normalize_task_class(value: Any) -> str:
 
 def _parse_bool(value: Any) -> bool:
     token = str(value or "").strip().lower()
-    return token in {"1", "true", "yes", "on", "enabled"}
+    if not token:
+        return False
+    if token in {"1", "true", "yes", "on", "enabled"}:
+        return True
+    if token in {"0", "false", "no", "off", "disabled"}:
+        return False
+    warnings.warn(f"Unrecognized boolean token in local prompting policy: {token}", UserWarning, stacklevel=2)
+    return False
 
 
 def _canonicalize_text(value: str) -> str:

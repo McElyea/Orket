@@ -69,6 +69,9 @@ class GiteaStateAdapter(StateBackendContract):
         self.leases = GiteaLeaseManager(self)
         self.transitions = GiteaStateTransitioner(self)
 
+    async def close(self) -> None:
+        await self.http.close()
+
     @property
     def _repo_api(self) -> str:
         return f"{self.base_url}/api/v1/repos/{self.owner}/{self.repo}"

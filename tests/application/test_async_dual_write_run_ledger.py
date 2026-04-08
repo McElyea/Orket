@@ -404,3 +404,43 @@ async def test_async_dual_write_run_ledger_recovers_pending_finalize_intent_befo
     recovered_events = await recovered_repo.list_events("sess-recover-finalize")
     assert [event["kind"] for event in recovered_events] == ["run_started", "run_finalized"]
     assert await recovered_repo._load_intents() == []
+
+
+@pytest.mark.asyncio
+async def test_async_dual_write_run_ledger_initialize_recovers_once_per_repository_instance(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Layer: integration. Verifies startup recovery is exposed as a one-time initialize step instead of rerunning on every operation."""
+    broken_repo = AsyncDualModeLedgerRepository(
+        sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
+        protocol_repo=_FailingProtocolRepository(),
+    )
+    await broken_repo.start_run(
+        session_id="sess-init-once",
+        run_type="epic",
+        run_name="Init Once",
+        department="core",
+        build_id="build-1",
+    )
+
+    recovered_repo = AsyncDualModeLedgerRepository(
+        sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
+        protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace"),
+    )
+    load_count = {"calls": 0}
+    original_load = recovered_repo._load_intents
+
+    async def _counted_load() -> list[dict[str, Any]]:
+        load_count["calls"] += 1
+        return await original_load()
+
+    monkeypatch.setattr(recovered_repo, "_load_intents", _counted_load)
+
+    await recovered_repo.initialize()
+    await recovered_repo.get_run("sess-init-once")
+
+    assert load_count["calls"] == 1
+    recovered_protocol_run = await recovered_repo.protocol_repo.get_run("sess-init-once")
+    assert recovered_protocol_run is not None
+    assert recovered_protocol_run["session_id"] == "sess-init-once"

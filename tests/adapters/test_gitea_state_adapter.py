@@ -514,6 +514,26 @@ async def test_renew_lease_returns_none_for_non_owner(monkeypatch):
     assert renewed is None
 
 
+@pytest.mark.asyncio
+async def test_renew_lease_returns_none_for_nonnumeric_card_id(monkeypatch, caplog) -> None:
+    """Layer: unit. Verifies invalid renew lease card IDs fail closed before any HTTP request."""
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    caplog.set_level(logging.WARNING, logger="orket.gitea_state_adapter")
+
+    async def fail_request(*_args, **_kwargs):
+        raise AssertionError("invalid card ID should not reach Gitea")
+
+    monkeypatch.setattr(adapter, "_request_response_with_retry", fail_request)
+
+    assert await adapter.renew_lease("ISSUE-abc", owner_id="worker-1", lease_seconds=30) is None
+    assert any("invalid_card_id" in record.message and "ISSUE-abc" in record.message for record in caplog.records)
+
+
 def test_classify_http_error_maps_status_codes():
     err = GiteaStateAdapter._classify_http_error(status_code=429, exc=RuntimeError("x"))
     assert isinstance(err, GiteaAdapterRateLimitError)
@@ -601,6 +621,79 @@ async def test_request_response_with_retry_exhausts_and_raises(monkeypatch):
     with pytest.raises(GiteaAdapterRateLimitError):
         await adapter._request_response_with_retry("GET", "/issues/2")
     assert attempts["count"] == 2
+
+
+@pytest.mark.asyncio
+async def test_gitea_http_client_reuses_pooled_async_client_and_closes_once(monkeypatch):
+    """Layer: unit. Verifies the Gitea adapter reuses one pooled AsyncClient instead of constructing one per request."""
+
+    class _FakeHttpClient:
+        def __init__(self):
+            self.request_calls = 0
+            self.close_calls = 0
+
+        async def request(self, method, url, headers=None, params=None, json=None):
+            _ = (method, url, headers, params, json)
+            self.request_calls += 1
+            return _OkResponse()
+
+        async def aclose(self):
+            self.close_calls += 1
+
+    class _OkResponse:
+        text = "{}"
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self):
+            return {"ok": True}
+
+    fake_client = _FakeHttpClient()
+    async_client_ctor_calls = {"count": 0}
+
+    def _fake_async_client(*args, **kwargs):
+        _ = (args, kwargs)
+        async_client_ctor_calls["count"] += 1
+        return fake_client
+
+    monkeypatch.setattr("orket.adapters.storage.gitea_http_client.httpx.AsyncClient", _fake_async_client)
+    adapter = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="secret")
+
+    await adapter._request_response("GET", "/issues/1")
+    await adapter._request_response("GET", "/issues/2")
+    await adapter.close()
+
+    assert async_client_ctor_calls["count"] == 1
+    assert fake_client.request_calls == 2
+    assert fake_client.close_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_acquire_lease_rejects_snapshot_body_that_exceeds_limit(monkeypatch):
+    """Layer: unit. Verifies snapshot writes fail closed before PATCH when the encoded issue body exceeds the configured cap."""
+    monkeypatch.setenv("ORKET_GITEA_ISSUE_BODY_MAX_BYTES", "8")
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(CardSnapshot(card_id="ISSUE-5", state="ready", version=3))
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        assert method == "GET"
+        assert path == "/issues/5"
+        return _FakeResponse({"number": 5, "body": body}, headers={"ETag": '"v3"'})
+
+    async def fail_patch(*args, **kwargs):
+        raise AssertionError("PATCH should not be attempted when the snapshot body exceeds the configured cap.")
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fail_patch)
+
+    with pytest.raises(ValueError, match="E_GITEA_SNAPSHOT_BODY_TOO_LARGE"):
+        await adapter.acquire_lease("5", owner_id="runner-a", lease_seconds=30)
 
 
 @pytest.mark.asyncio

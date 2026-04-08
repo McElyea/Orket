@@ -35,7 +35,13 @@ def test_deterministic_lane_reproducible_and_sorted() -> None:
             }
         }
     }
-    snap = _snapshot("password = 1\n")
+    snap = _snapshot(
+        "diff --git a/src/app.py b/src/app.py\n"
+        "--- a/src/app.py\n"
+        "+++ b/src/app.py\n"
+        "@@ -0,0 +1 @@\n"
+        "+password = 1\n"
+    )
     first = run_deterministic_lane(snapshot=snap, resolved_policy=policy, run_id="R1", policy_digest="sha256:abc")
     second = run_deterministic_lane(snapshot=snap, resolved_policy=policy, run_id="R1", policy_digest="sha256:abc")
     assert first.decision == second.decision
@@ -75,3 +81,77 @@ def test_default_todo_forbidden_pattern_is_info_severity() -> None:
     )
     assert todo_finding.severity == "info"
     assert result.decision == "pass"
+
+
+def test_deterministic_lane_ignores_removed_forbidden_patterns() -> None:
+    """Layer: unit. Verifies removed forbidden text does not trigger an introduced-pattern finding."""
+    policy = {
+        "deterministic": {
+            "checks": {
+                "forbidden_patterns": ["password\\s*="],
+            }
+        }
+    }
+    snap = _snapshot(
+        "diff --git a/src/app.py b/src/app.py\n"
+        "--- a/src/app.py\n"
+        "+++ b/src/app.py\n"
+        "@@ -1,2 +1,2 @@\n"
+        '-password = "secret"\n'
+        '+token = get_from_vault()\n'
+    )
+
+    result = run_deterministic_lane(snapshot=snap, resolved_policy=policy, run_id="R1", policy_digest="sha256:abc")
+
+    assert not any(item.code == "PATTERN_MATCHED" for item in result.findings)
+
+
+def test_default_password_policy_requires_string_literal_assignment() -> None:
+    """Layer: unit. Verifies the default password policy does not flag dynamic secret retrieval."""
+    snap = _snapshot(
+        "diff --git a/src/app.py b/src/app.py\n"
+        "--- a/src/app.py\n"
+        "+++ b/src/app.py\n"
+        "@@ -0,0 +1 @@\n"
+        "+password = get_from_vault()\n"
+    )
+
+    result = run_deterministic_lane(
+        snapshot=snap,
+        resolved_policy=DEFAULT_POLICY,
+        run_id="R1",
+        policy_digest="sha256:abc",
+    )
+
+    assert not any(
+        (item.details or {}).get("pattern") == r"(?i)password\s*=\s*['\"](?!\s*['\"])"
+        for item in result.findings
+    )
+
+
+def test_deterministic_lane_caps_forbidden_pattern_occurrences() -> None:
+    """Layer: unit. Verifies forbidden-pattern reporting stays bounded when a pattern matches many added lines."""
+    policy = {
+        "deterministic": {
+            "checks": {
+                "forbidden_patterns": [
+                    {"pattern": "secret", "severity": "high", "max_occurrences": 2},
+                ],
+            }
+        }
+    }
+    snap = _snapshot(
+        "diff --git a/src/app.py b/src/app.py\n"
+        "--- a/src/app.py\n"
+        "+++ b/src/app.py\n"
+        "@@ -0,0 +1,3 @@\n"
+        '+token = "secret-1"\n'
+        '+token = "secret-2"\n'
+        '+token = "secret-3"\n'
+    )
+
+    result = run_deterministic_lane(snapshot=snap, resolved_policy=policy, run_id="R1", policy_digest="sha256:abc")
+
+    matched = [item for item in result.findings if item.code == "PATTERN_MATCHED"]
+    assert len(matched) == 2
+    assert [item.span["start"] for item in matched] == [1, 2]

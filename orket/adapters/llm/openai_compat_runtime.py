@@ -139,9 +139,10 @@ def validate_openai_messages(messages: list[dict[str, Any]]) -> list[str]:
         if not isinstance(message, dict):
             invalid.append(f"{index}:<non-object>")
             continue
-        role = str(message.get("role") or "").strip().lower()
+        original_role = str(message.get("role") or "")
+        role = original_role.strip().lower()
         if role not in allowed_roles:
-            invalid.append(f"{index}:{role or '<missing>'}")
+            invalid.append(f"{index}:{original_role or '<missing>'}")
     return invalid
 
 

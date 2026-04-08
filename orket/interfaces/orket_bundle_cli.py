@@ -13,7 +13,7 @@ import httpx
 import tomllib
 from pydantic import ValidationError
 
-from orket.application.review.bundle_validation import load_review_replay_artifacts
+from orket.application.review.bundle_validation import ReviewBundleError, load_review_replay_artifacts
 from orket.application.review.models import ReviewSnapshot, SnapshotBounds
 from orket.application.review.run_service import ReviewRunService
 from orket.core.domain.orket_manifest import (
@@ -1103,6 +1103,24 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             result = run_result.to_dict()
             result["verbose"] = bool(getattr(args, "verbose", False))
+        except ReviewBundleError as exc:
+            result = {
+                "ok": False,
+                "error_count": 1,
+                "errors": [
+                    {
+                        "code": str(exc.error_code or ERROR_REVIEW_RUN_FAILED),
+                        "location": str(exc.field or f"review.{review_command or 'unknown'}"),
+                        "message": str(exc),
+                    }
+                ],
+                "exit_code": 1,
+            }
+            if bool(getattr(args, "json", False)):
+                print(json.dumps(result, indent=2, ensure_ascii=False))
+            else:
+                print(_render_human(result))
+            return 1
         except (RuntimeError, ValueError, TypeError, OSError, json.JSONDecodeError, httpx.HTTPError) as exc:
             result = {
                 "ok": False,

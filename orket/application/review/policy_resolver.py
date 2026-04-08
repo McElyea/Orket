@@ -50,7 +50,7 @@ DEFAULT_POLICY: dict[str, Any] = {
             "path_blocklist": [],
             "forbidden_patterns": [
                 {"pattern": r"(?i)\b(todo|fixme)\b", "severity": "info"},
-                {"pattern": r"(?i)password\s*=", "severity": "high"},
+                {"pattern": r"(?i)password\s*=\s*['\"](?!\s*['\"])", "severity": "high"},
             ],
             "test_hint_required_roots": ["src/", "orket/"],
             "test_hint_test_roots": ["tests/"],

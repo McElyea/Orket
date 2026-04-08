@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from orket.application.review.bundle_validation import (
+    ReviewBundleError,
     load_validated_review_run_bundle_artifacts,
     load_validated_review_run_bundle_payloads,
 )
@@ -429,3 +430,16 @@ def test_load_validated_review_run_bundle_artifacts_requires_policy_when_request
 
     with pytest.raises(ValueError, match="review_run_resolved_policy_missing"):
         load_validated_review_run_bundle_artifacts(run_dir, require_policy_resolved=True)
+
+
+def test_review_bundle_error_exposes_error_code_and_field(tmp_path: Path) -> None:
+    """Layer: unit. Verifies review bundle validation failures use the typed error surface."""
+    run_dir = tmp_path / "run"
+    _write_valid_bundle(run_dir)
+    (run_dir / "policy_resolved.json").unlink()
+
+    with pytest.raises(ReviewBundleError) as exc_info:
+        load_validated_review_run_bundle_artifacts(run_dir, require_policy_resolved=True)
+
+    assert exc_info.value.error_code == "review_run_resolved_policy_missing"
+    assert exc_info.value.field == "review_run_resolved_policy"

@@ -24,6 +24,10 @@ class GiteaHTTPClient:
 
     def __init__(self, adapter: Any) -> None:
         self.adapter = adapter
+        self._client = httpx.AsyncClient(timeout=self.adapter.timeout_seconds)
+
+    async def close(self) -> None:
+        await self._client.aclose()
 
     async def request_response(
         self,
@@ -37,10 +41,9 @@ class GiteaHTTPClient:
         url = f"{self.adapter._repo_api}{path}"
         headers = self.adapter.build_headers(extra_headers)
         try:
-            async with httpx.AsyncClient(timeout=self.adapter.timeout_seconds) as client:
-                response = await client.request(method, url, headers=headers, params=params, json=payload)
-                response.raise_for_status()
-                return response
+            response = await self._client.request(method, url, headers=headers, params=params, json=payload)
+            response.raise_for_status()
+            return response
         except httpx.TimeoutException as exc:
             self.log_failure(
                 "timeout",

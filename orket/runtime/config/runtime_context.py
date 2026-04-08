@@ -48,6 +48,11 @@ class OrketRuntimeContext:
     success_repo: AsyncSuccessRepository
     run_ledger: Any
 
+    async def initialize(self) -> None:
+        initialize = getattr(self.run_ledger, "initialize", None)
+        if callable(initialize):
+            await initialize()
+
     @classmethod
     def from_env(
         cls,

@@ -57,6 +57,19 @@ async def test_runtime_state_tracks_multiple_tasks_per_session(fresh_runtime_sta
 
 
 @pytest.mark.asyncio
+async def test_runtime_state_get_task_returns_none_when_only_completed_tasks_remain(fresh_runtime_state):
+    """Layer: unit. Verifies session task lookup does not surface completed tasks as if they were active."""
+    session_id = "task-finished-test"
+    await state_module.runtime_state.remove_task(session_id)
+
+    task = asyncio.create_task(asyncio.sleep(0))
+    await state_module.runtime_state.add_task(session_id, task)
+    await task
+
+    assert await state_module.runtime_state.get_task(session_id) is None
+
+
+@pytest.mark.asyncio
 async def test_heartbeat_active_tasks_converges_after_run_active_completion(monkeypatch, fresh_runtime_state):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     session_id = "hbtask01"

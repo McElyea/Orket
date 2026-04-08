@@ -77,18 +77,17 @@ def test_config_precedence_rejects_unknown_section() -> None:
 
 def test_config_precedence_accepts_registered_extension_section() -> None:
     """Layer: unit. Verifies extension-declared config sections can be layered."""
-    original_sections = set(ConfigPrecedenceResolver.SECTION_KEYS)
-    try:
-        ConfigPrecedenceResolver.register_section("appearance")
-        resolver = ConfigPrecedenceResolver(extension_defaults={"appearance": {"theme": "dark"}})
-        resolver.set_session_override("appearance", {"accent": "blue"})
+    resolver = ConfigPrecedenceResolver(
+        extension_defaults={"appearance": {"theme": "dark"}},
+        extra_sections={"appearance"},
+    )
+    resolver.set_session_override("appearance", {"accent": "blue"})
 
-        resolved = resolver.resolve()
+    resolved = resolver.resolve()
 
-        assert resolved.model_extra is not None
-        assert resolved.model_extra["appearance"] == {"theme": "dark", "accent": "blue"}
-    finally:
-        ConfigPrecedenceResolver.SECTION_KEYS = original_sections
+    assert resolved.model_extra is not None
+    assert resolved.model_extra["appearance"] == {"theme": "dark", "accent": "blue"}
+    assert "appearance" in resolver.section_keys
 
 
 def test_config_precedence_preview_does_not_consume_pending_layer() -> None:

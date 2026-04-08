@@ -127,5 +127,6 @@ async def test_run_builtin_marshaller_workload(tmp_path: Path) -> None:
     assert run_dir.exists()
     assert (run_dir / "summary.json").exists()
     assert len(ctx.events) >= 2
+    token_delta_payload = next(payload for _event_name, payload in ctx.events if "delta" in payload)
+    assert token_delta_payload["delta"] == "marshaller result: accept=True attempts=1"
     assert len(ctx.commits) == 1
-

@@ -77,6 +77,25 @@ def test_sandbox_orchestrator_get_logs_rejects_unknown_service(tmp_path):
     assert runner.sync_calls == []
 
 
+def test_sandbox_orchestrator_get_logs_uses_env_allowed_service_list(monkeypatch, tmp_path):
+    """Layer: unit. Verifies log-service allowlists can be narrowed or extended through env configuration."""
+    monkeypatch.setenv("ORKET_SANDBOX_ALLOWED_LOG_SERVICES", "api,frontend,custom")
+    registry = SandboxRegistry()
+    runner = FakeRunner()
+    orchestrator = SandboxOrchestrator(
+        workspace_root=tmp_path,
+        registry=registry,
+        command_runner=runner,
+    )
+
+    registry.register(_sandbox(tmp_path))
+
+    logs = orchestrator.get_logs("sandbox-test", service="custom")
+
+    assert logs == "logs-from-fake-runner"
+    assert runner.sync_calls[0][0][-1] == "custom"
+
+
 @pytest.mark.asyncio
 async def test_sandbox_orchestrator_health_check_parses_compose_ndjson(tmp_path):
     registry = SandboxRegistry()

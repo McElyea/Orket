@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import secrets
 import subprocess
@@ -120,8 +121,17 @@ def _run_git_command(repo_root: Path, args: list[str], *, check: bool) -> subpro
         raise ReviewError("Review git command failed: git executable was not found", command=command) from exc
 
 
+async def _run_git_command_async(
+    repo_root: Path,
+    args: list[str],
+    *,
+    check: bool,
+) -> subprocess.CompletedProcess[str]:
+    return await asyncio.to_thread(_run_git_command, repo_root, args, check=check)
+
+
 def _git_paths(repo_root: Path, base_ref: str, head_ref: str) -> list[str]:
-    proc = _run_git_command(repo_root, ["diff", "--name-only", base_ref, head_ref], check=True)
+    proc = run_coro_sync(_run_git_command_async(repo_root, ["diff", "--name-only", base_ref, head_ref], check=True))
     return [line.strip().replace("\\", "/") for line in proc.stdout.splitlines() if line.strip()]
 
 
@@ -204,7 +214,9 @@ def _parse_repo_remote_binding(raw_url: str, *, repo: str) -> tuple[str, str] | 
 
 
 def _configured_review_remote_bindings(repo_root: Path, *, repo: str) -> set[tuple[str, str]]:
-    proc = _run_git_command(repo_root, ["config", "--get-regexp", r"^remote\..*\.url$"], check=False)
+    proc = run_coro_sync(
+        _run_git_command_async(repo_root, ["config", "--get-regexp", r"^remote\..*\.url$"], check=False)
+    )
     if proc.returncode not in {0, 1}:
         detail = str(proc.stderr or "").strip() or "git remote lookup failed"
         raise ValueError(f"Review PR mode requires a git repo with configured remotes: {detail}")

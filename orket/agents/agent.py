@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import inspect
 import json
 import logging
 import re
+import threading
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -42,6 +44,37 @@ class NullControlPlaneAuthorityService:
 
     def append_effect_journal_entry(self, **_kwargs: Any) -> EffectJournalEntryRecord:
         return _null_effect_journal_entry()
+
+
+_SYSTEM_CONTEXT_KEYS = frozenset(
+    {
+        "attempt_id",
+        "authorization_basis_ref",
+        "integrity_verification_ref",
+        "intended_target_ref",
+        "issue_id",
+        "journal_publication_timestamp",
+        "role",
+        "roles",
+        "run_id",
+        "session_id",
+        "step_id",
+        "workflow_profile",
+    }
+)
+_USER_CONTEXT_KEYS = frozenset(
+    {
+        "comment",
+        "description",
+        "instructions",
+        "notes",
+        "prompt",
+        "request",
+        "summary",
+        "title",
+        "user_message",
+    }
+)
 
 
 class Agent:
@@ -82,7 +115,8 @@ class Agent:
 
         self.skill: SkillConfig | None = None
         self.dialect: DialectConfig | None = None
-        self._load_configs()
+        self._configs_loaded = False
+        self._config_load_lock = threading.Lock()
 
     def _load_configs(self) -> None:
         loader = ConfigLoader(self.config_root, "core")
@@ -127,8 +161,21 @@ class Agent:
                 role=self.name,
             )
 
+    def _ensure_configs_loaded(self) -> None:
+        if self._configs_loaded:
+            return
+        with self._config_load_lock:
+            if self._configs_loaded:
+                return
+            self._load_configs()
+            self._configs_loaded = True
+
+    async def _ensure_configs_loaded_async(self) -> None:
+        await asyncio.to_thread(self._ensure_configs_loaded)
+
     def get_compiled_prompt(self) -> str:
         """Returns the fully compiled system instructions for this agent."""
+        self._ensure_configs_loaded()
         if self.skill and self.dialect:
             return PromptCompiler.compile(self.skill, self.dialect, self.next_member, self._prompt_patch)
         return self.description
@@ -141,6 +188,7 @@ class Agent:
         transcript: list[dict[str, Any]] | None = None,
     ) -> ExecutionTurn:
         """Executes the turn and returns a structured ExecutionTurn object."""
+        await self._ensure_configs_loaded_async()
 
         # 1. COMPILE INSTRUCTIONS
         system_prompt = (
@@ -158,7 +206,7 @@ class Agent:
             history = "Previous steps:\n" + "\n".join([f"[{t['role']}] {t['summary']}" for t in transcript])
             messages.append({"role": "user", "content": history})
 
-        messages.append({"role": "user", "content": f"Context: {context}"})
+        messages.append({"role": "user", "content": _render_context(context)})
 
         # 2. GENERATE RESPONSE
         result = await self.provider.complete(messages)
@@ -370,6 +418,30 @@ def _required_journal_context(context: dict[str, Any], key: str) -> str:
     if not value:
         raise ValueError(f"agent effect journal requires context['{key}']")
     return value
+
+
+def _render_context(context: dict[str, Any]) -> str:
+    # Context can carry both user-controlled values and runtime-owned values. Keep both as
+    # labeled data inside a delimited block so they are not injected as free-form instructions.
+    lines = ["<context>"]
+    for key in sorted(context):
+        boundary = _context_boundary_label(key)
+        try:
+            rendered_value = json.dumps(context[key], ensure_ascii=True, sort_keys=True, default=str)
+        except TypeError:
+            rendered_value = repr(context[key])
+        lines.append(f"{key} [{boundary}]: {rendered_value}")
+    lines.append("</context>")
+    return "\n".join(lines)
+
+
+def _context_boundary_label(key: str) -> str:
+    token = str(key or "").strip()
+    if token in _SYSTEM_CONTEXT_KEYS:
+        return "system"
+    if token in _USER_CONTEXT_KEYS:
+        return "user"
+    return "mixed"
 
 
 def _canonical_digest(payload: Any) -> str:

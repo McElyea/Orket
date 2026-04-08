@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import timedelta
 from typing import Any
 
@@ -14,6 +15,21 @@ class GiteaLeaseManager:
 
     def __init__(self, adapter: Any) -> None:
         self.adapter = adapter
+
+    @staticmethod
+    def _max_issue_body_bytes() -> int:
+        raw = str(os.getenv("ORKET_GITEA_ISSUE_BODY_MAX_BYTES", "65000")).strip()
+        try:
+            return max(1, int(raw))
+        except ValueError:
+            return 65000
+
+    @classmethod
+    def _encode_snapshot_body(cls, snapshot: CardSnapshot) -> str:
+        body = encode_snapshot(snapshot)
+        if len(body.encode("utf-8")) > cls._max_issue_body_bytes():
+            raise ValueError("E_GITEA_SNAPSHOT_BODY_TOO_LARGE")
+        return body
 
     async def acquire_lease(
         self,
@@ -76,10 +92,20 @@ class GiteaLeaseManager:
         if etag:
             patch_headers["If-Match"] = etag
         try:
+            body = self._encode_snapshot_body(new_snapshot)
+        except ValueError:
+            self.adapter._log_failure(
+                "snapshot_body_too_large",
+                operation="acquire_lease",
+                card_id=str(card_id),
+                error="E_GITEA_SNAPSHOT_BODY_TOO_LARGE",
+            )
+            raise
+        try:
             await self.adapter._request_json(
                 "PATCH",
                 f"/issues/{issue_number}",
-                payload={"body": encode_snapshot(new_snapshot)},
+                payload={"body": body},
                 extra_headers=patch_headers or None,
             )
         except GiteaAdapterConflictError:
@@ -99,7 +125,18 @@ class GiteaLeaseManager:
         owner_id: str,
         lease_seconds: int,
     ) -> dict[str, Any] | None:
-        issue_number = int(card_id)
+        try:
+            issue_number = int(card_id)
+        except ValueError:
+            log_failure = getattr(self.adapter, "_log_failure", None)
+            if callable(log_failure):
+                log_failure(
+                    "invalid_card_id",
+                    operation="renew_lease",
+                    card_id=str(card_id),
+                    error="non-numeric card id",
+                )
+            return None
         issue_response = await self.adapter._request_response_with_retry("GET", f"/issues/{issue_number}")
         issue = issue_response.json()
         if not isinstance(issue, dict):
@@ -131,10 +168,22 @@ class GiteaLeaseManager:
         if etag:
             patch_headers["If-Match"] = etag
         try:
+            body = self._encode_snapshot_body(new_snapshot)
+        except ValueError:
+            log_failure = getattr(self.adapter, "_log_failure", None)
+            if callable(log_failure):
+                log_failure(
+                    "snapshot_body_too_large",
+                    operation="renew_lease",
+                    card_id=str(card_id),
+                    error="E_GITEA_SNAPSHOT_BODY_TOO_LARGE",
+                )
+            raise
+        try:
             await self.adapter._request_json(
                 "PATCH",
                 f"/issues/{issue_number}",
-                payload={"body": encode_snapshot(new_snapshot)},
+                payload={"body": body},
                 extra_headers=patch_headers or None,
             )
         except GiteaAdapterConflictError:

@@ -151,6 +151,8 @@ async def test_card_management_create_issue(tmp_path):
 
     assert res["ok"] is True
     assert "issue_id" in res
+    assert res["issue_id"].startswith("ISSUE-")
+    assert len(res["issue_id"]) == 18
 
     issue = await cards.cards.get_by_id(res["issue_id"])
     assert issue.summary == "Fix bug"

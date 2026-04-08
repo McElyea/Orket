@@ -1,8 +1,12 @@
+import asyncio
 import contextlib
+import hashlib
+import hmac
 import importlib
 import os
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -33,6 +37,19 @@ def test_validate_signature_logs_reject_by_default_when_secret_missing(monkeypat
     assert module.validate_signature(b"{}", "sig") is False
     assert events[0][0] == "webhook"
     assert events[0][1]["message"] == "GITEA_WEBHOOK_SECRET not set. All webhooks will be rejected."
+
+
+def test_validate_signature_requires_sha256_prefixed_hmac(monkeypatch):
+    """Layer: contract. Verifies webhook signatures match Gitea's `sha256=<hex>` header format."""
+    monkeypatch.setenv("GITEA_WEBHOOK_SECRET", "test-secret")
+
+    module = importlib.import_module("orket.webhook_server")
+    module = importlib.reload(module)
+    payload = b'{"ok":true}'
+    expected_hex = hmac.new(b"test-secret", payload, hashlib.sha256).hexdigest()
+
+    assert module.validate_signature(payload, f"sha256={expected_hex}") is True
+    assert module.validate_signature(payload, expected_hex) is False
 
 
 @contextlib.contextmanager
@@ -106,3 +123,35 @@ def test_webhook_app_shutdown_closes_constructed_handler(monkeypatch):
 
     assert closed["called"] is True
     assert module.webhook_handler._handler is None
+
+
+@pytest.mark.asyncio
+async def test_webhook_handler_proxy_initializes_handler_once_under_concurrency(monkeypatch):
+    """Layer: integration. Verifies concurrent webhook ingress shares one lazy handler instance."""
+    module = importlib.import_module("orket.webhook_server")
+    module = importlib.reload(module)
+    module.webhook_handler.reset()
+    created = {"count": 0}
+
+    class _Handler:
+        async def handle_webhook(self, event_type: str, payload: dict[str, object]) -> dict[str, str]:
+            await asyncio.sleep(0)
+            return {"status": "ok", "event": event_type, "keys": str(sorted(payload))}
+
+        async def close(self) -> None:
+            return None
+
+    def _create_handler() -> _Handler:
+        created["count"] += 1
+        return _Handler()
+
+    monkeypatch.setattr(module.webhook_handler, "_create_handler", _create_handler)
+
+    results = await asyncio.gather(
+        module.webhook_handler.handle_webhook("pull_request", {"number": 1}),
+        module.webhook_handler.handle_webhook("pull_request", {"number": 2}),
+        module.webhook_handler.handle_webhook("pull_request", {"number": 3}),
+    )
+
+    assert created["count"] == 1
+    assert [row["status"] for row in results] == ["ok", "ok", "ok"]

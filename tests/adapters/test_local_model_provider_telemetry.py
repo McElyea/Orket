@@ -1083,3 +1083,27 @@ async def test_local_model_provider_close_is_idempotent_for_openai_client(monkey
     await provider.close()
     await provider.close()
     assert fake_client.close_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_supports_aclose_and_async_context_manager(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: unit. Verifies provider shutdown also supports the standard async-close/context-manager surface."""
+
+    class _FakeClient:
+        def __init__(self):
+            self.close_calls = 0
+
+        async def aclose(self) -> None:
+            self.close_calls += 1
+
+    fake_client = _FakeClient()
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "openai_compat")
+    monkeypatch.setattr(
+        "orket.adapters.llm.local_model_provider.httpx.AsyncClient",
+        lambda *args, **kwargs: fake_client,
+    )
+
+    async with LocalModelProvider(model="qwen3.5-4b") as provider:
+        assert provider is not None
+
+    assert fake_client.close_calls == 1

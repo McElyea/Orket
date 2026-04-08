@@ -88,3 +88,14 @@ def test_review_policy_warns_on_unknown_top_level_key(tmp_path: Path, caplog) ->
         and "lane" in getattr(record, "orket_record", {}).get("data", {}).get("keys", [])
         for record in caplog.records
     )
+
+
+def test_review_policy_default_password_rule_requires_literal_assignment(tmp_path: Path) -> None:
+    """Layer: unit. Verifies the default password pattern narrows to literal credential assignment."""
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir(parents=True)
+
+    resolved = resolve_review_policy(repo_root=repo_root)
+    pattern_rows = resolved.payload["deterministic"]["checks"]["forbidden_patterns"]
+
+    assert pattern_rows[1]["pattern"] == r"(?i)password\s*=\s*['\"](?!\s*['\"])"

@@ -34,7 +34,7 @@ class CardManagementTools(BaseTools):
             return {"ok": False, "error": "Missing params"}
         import uuid
 
-        issue_id = f"ISSUE-{str(uuid.uuid4())[:4].upper()}"
+        issue_id = f"ISSUE-{uuid.uuid4().hex[:12].upper()}"
         card_data = {
             "id": issue_id,
             "session_id": session_id,

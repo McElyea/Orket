@@ -505,6 +505,10 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
     if engine is None:
         create_api_app(project_root=getattr(_app.state, "project_root", _resolve_default_project_root()))
+    runtime_engine = _get_engine()
+    initialize = getattr(runtime_engine, "initialize", None)
+    if callable(initialize):
+        await initialize()
 
     ensure_log_dir()
     broadcaster_task = asyncio.create_task(event_broadcaster())
@@ -563,6 +567,9 @@ def _build_stream_bus_from_env() -> StreamBus:
     return StreamBus(
         StreamBusConfig(
             best_effort_max_events_per_turn=int(os.getenv("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN", "256")),
+            best_effort_max_events_per_turn_override=int(
+                os.getenv("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN_OVERRIDE", "2048")
+            ),
             bounded_max_events_per_turn=int(os.getenv("ORKET_STREAM_BOUNDED_MAX_EVENTS_PER_TURN", "128")),
             max_bytes_per_turn_queue=int(os.getenv("ORKET_STREAM_MAX_BYTES_PER_TURN_QUEUE", "1000000")),
         )
@@ -584,15 +591,27 @@ def _get_engine() -> Any:
     return engine
 
 
+def _build_interaction_manager(root: Path) -> InteractionManager:
+    async def _register_interaction_session(session_id: str) -> None:
+        await runtime_state.register_interaction_session(session_id)
+
+    async def _unregister_interaction_session(session_id: str) -> None:
+        await runtime_state.unregister_interaction_session(session_id)
+
+    return InteractionManager(
+        bus=_get_stream_bus(),
+        commit_orchestrator=CommitOrchestrator(project_root=root),
+        project_root=root,
+        on_session_started=_register_interaction_session,
+        on_session_closed=_unregister_interaction_session,
+    )
+
+
 def _get_interaction_manager() -> InteractionManager:
     global interaction_manager
     if interaction_manager is None:
         root = _project_root()
-        interaction_manager = InteractionManager(
-            bus=_get_stream_bus(),
-            commit_orchestrator=CommitOrchestrator(project_root=root),
-            project_root=root,
-        )
+        interaction_manager = _build_interaction_manager(root)
     return interaction_manager
 
 
@@ -1663,11 +1682,7 @@ def create_api_app(project_root: Path | None = None) -> FastAPI:
     app.state.project_root = root
     engine = api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(root))
     stream_bus = _build_stream_bus_from_env()
-    interaction_manager = InteractionManager(
-        bus=stream_bus,
-        commit_orchestrator=CommitOrchestrator(project_root=root),
-        project_root=root,
-    )
+    interaction_manager = _build_interaction_manager(root)
     extension_manager = ExtensionManager(project_root=root)
     extension_runtime_service = ExtensionRuntimeService(project_root=root)
     return app

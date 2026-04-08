@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import warnings
+
 import pytest
 
 from orket.adapters.llm.local_prompting_policy import (
@@ -304,3 +306,12 @@ async def test_resolve_local_prompting_policy_drops_prior_transcript_before_othe
     assert "context_history_stripped:1" in result.warnings
     assert all(not message["content"].startswith("Prior Transcript JSON:\n") for message in result.messages)
     assert any(message["content"].startswith("Execution Context JSON:\n") for message in result.messages)
+
+
+def test_local_prompting_bool_parse_warns_on_unrecognized_token() -> None:
+    """Layer: unit. Verifies local prompting boolean parsing fails closed and emits an explicit warning on invalid tokens."""
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        assert resolve_local_prompting_policy.__globals__["_parse_bool"]("maybe") is False
+
+    assert any("Unrecognized boolean token" in str(item.message) for item in caught)

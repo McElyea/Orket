@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
-from orket.application.services.config_precedence_resolver import ConfigPrecedenceResolver
 from orket.application.services.control_plane_workload_catalog import (
     _resolve_extension_control_plane_workload,
 )
@@ -73,6 +72,7 @@ class ExtensionManager:
         self.project_root = (project_root or Path.cwd()).resolve()
         self.install_root = durable_root() / "extensions"
         self.install_root.mkdir(parents=True, exist_ok=True)
+        self._config_sections: set[str] = set()
 
         self.catalog = ExtensionCatalog(self.catalog_path)
         self.manifest_parser = ManifestParser()
@@ -158,8 +158,11 @@ class ExtensionManager:
     def list_extensions(self) -> list[ExtensionRecord]:
         records = self.catalog.list_extensions(entry_point_rows=self._discover_entry_point_rows())
         for record in records:
-            self._register_config_sections(record)
+            self._remember_config_sections(record)
         return records
+
+    def config_sections(self) -> tuple[str, ...]:
+        return tuple(sorted(self._config_sections))
 
     def has_manifest_entry(self, workload_id: str) -> bool:
         return self._resolve_manifest_entry(workload_id) is not None
@@ -240,13 +243,14 @@ class ExtensionManager:
         ]
         rows.append(self._row_from_record(record))
         self._save_catalog_payload({"extensions": rows})
-        self._register_config_sections(record)
+        self._remember_config_sections(record)
         return record
 
-    @staticmethod
-    def _register_config_sections(record: ExtensionRecord) -> None:
+    def _remember_config_sections(self, record: ExtensionRecord) -> None:
         for section in record.config_sections:
-            ConfigPrecedenceResolver.register_section(section)
+            token = str(section or "").strip()
+            if token:
+                self._config_sections.add(token)
 
     async def run_workload(
         self,

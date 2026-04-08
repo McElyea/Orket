@@ -39,25 +39,29 @@ class ConfigPrecedenceResolver:
     Deterministic Companion config layering:
     extension_defaults < profile_defaults < session_overrides < pending_next_turn.
     """
-    SECTION_KEYS: set[str] = {"mode", "memory", "voice"}
-
-    @classmethod
-    def register_section(cls, name: str) -> None:
-        section_name = str(name or "").strip()
-        if not section_name:
-            raise ValueError("E_COMPANION_CONFIG_SECTION_INVALID: section=''")
-        cls.SECTION_KEYS.add(section_name)
+    _DEFAULT_SECTION_KEYS: frozenset[str] = frozenset({"mode", "memory", "voice"})
 
     def __init__(
         self,
         *,
         extension_defaults: Mapping[str, Any] | None = None,
         profile_defaults: Mapping[str, Any] | None = None,
+        extra_sections: set[str] | None = None,
     ) -> None:
         self._extension_defaults = _normalize_layer(extension_defaults)
         self._profile_defaults = _normalize_layer(profile_defaults)
         self._session_overrides: dict[str, Any] = {}
         self._pending_next_turn: dict[str, Any] = {}
+        self._section_keys = set(self._DEFAULT_SECTION_KEYS)
+        for section in set(extra_sections or set()):
+            section_name = str(section or "").strip()
+            if not section_name:
+                raise ValueError("E_COMPANION_CONFIG_SECTION_INVALID: section=''")
+            self._section_keys.add(section_name)
+
+    @property
+    def section_keys(self) -> frozenset[str]:
+        return frozenset(self._section_keys)
 
     def set_extension_defaults(self, payload: Mapping[str, Any] | None) -> None:
         self._extension_defaults = _normalize_layer(payload)
@@ -84,11 +88,10 @@ class ConfigPrecedenceResolver:
         self._pending_next_turn = {}
         return resolved
 
-    @staticmethod
-    def _set_layer_value(layer: dict[str, Any], *, section: str, value: Any) -> None:
+    def _set_layer_value(self, layer: dict[str, Any], *, section: str, value: Any) -> None:
         section_name = str(section or "").strip()
-        if section_name not in ConfigPrecedenceResolver.SECTION_KEYS:
-            allowed = ", ".join(sorted(ConfigPrecedenceResolver.SECTION_KEYS))
+        if section_name not in self._section_keys:
+            allowed = ", ".join(sorted(self._section_keys))
             raise ValueError(f"E_COMPANION_CONFIG_SECTION_INVALID: section='{section_name}' allowed='{allowed}'")
         existing = layer.get(section_name)
         if existing is None:

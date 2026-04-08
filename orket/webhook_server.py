@@ -39,6 +39,7 @@ WEBHOOK_SECRET: bytes | None = None
 class _WebhookHandlerProxy:
     def __init__(self) -> None:
         self._handler: GiteaWebhookHandler | None = None
+        self._lock = asyncio.Lock()
 
     def _create_handler(self) -> GiteaWebhookHandler:
         return GiteaWebhookHandler(
@@ -52,16 +53,26 @@ class _WebhookHandlerProxy:
             self._handler = self._create_handler()
         return self._handler
 
+    async def _get_async(self) -> GiteaWebhookHandler:
+        if self._handler is not None:
+            return self._handler
+        async with self._lock:
+            if self._handler is None:
+                self._handler = self._create_handler()
+            return self._handler
+
     def reset(self) -> None:
         self._handler = None
 
     async def handle_webhook(self, event_type: str, payload: dict[str, Any]) -> dict[str, str]:
-        return await self._get().handle_webhook(event_type, payload)
+        return await (await self._get_async()).handle_webhook(event_type, payload)
 
     async def close(self) -> None:
-        if self._handler is not None:
-            await self._handler.close()
+        async with self._lock:
+            handler = self._handler
             self._handler = None
+        if handler is not None:
+            await handler.close()
 
 
 webhook_handler = _WebhookHandlerProxy()
@@ -98,6 +109,14 @@ def _validate_required_webhook_environment() -> None:
 
 def _is_truthy(value: str | None) -> bool:
     return (value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _configured_webhook_worker_count() -> int:
+    raw = str(os.getenv("ORKET_WEBHOOK_WORKERS") or os.getenv("WEB_CONCURRENCY") or "1").strip()
+    try:
+        return max(1, int(raw))
+    except ValueError:
+        return 1
 
 
 def _validate_test_webhook_auth(
@@ -174,8 +193,8 @@ def validate_signature(payload: bytes, signature: str) -> bool:
         )
         return False  # Reject if not configured
 
-    expected_signature = hmac.new(secret, payload, hashlib.sha256).hexdigest()
-
+    expected_hex = hmac.new(secret, payload, hashlib.sha256).hexdigest()
+    expected_signature = f"sha256={expected_hex}"
     return hmac.compare_digest(signature, expected_signature)
 
 
@@ -186,9 +205,14 @@ async def root() -> dict[str, str]:
 
 
 @app.get("/health")
-async def health() -> dict[str, str]:
+async def health() -> dict[str, Any]:
     """Kubernetes-style health check."""
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "rate_limit_scope": "per_process",
+        "webhook_rate_limit_per_minute": _rate_limit,
+        "worker_count_hint": _configured_webhook_worker_count(),
+    }
 
 
 class GiteaWebhookPayload(BaseModel):

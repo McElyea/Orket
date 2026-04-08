@@ -16,6 +16,8 @@ class ExecutionPipelineCardDispatchMixin:
         state_backend_mode: str
         org: Any
 
+        async def initialize(self) -> None: ...
+
         async def _find_parent_epic(self, issue_id: str) -> tuple[Any, str | None, Any]: ...
 
         async def _run_epic_collection_entry(
@@ -40,6 +42,7 @@ class ExecutionPipelineCardDispatchMixin:
         model_override: str | None = None,
     ) -> Any:
         """Canonical public runtime dispatcher over normalized card facts."""
+        await self.initialize()
         target_kind, parent_epic_name = await self._resolve_run_card_target(card_id)
         if target_kind == "epic":
             return await self._run_epic_entry(
@@ -161,6 +164,7 @@ class ExecutionPipelineCardDispatchMixin:
         idle_sleep_seconds: float = 0.0,
         summary_out: str | Path | None = None,
     ) -> dict[str, Any]:
+        await self.initialize()
         return await run_gitea_state_loop(
             state_backend_mode=self.state_backend_mode,
             organization=getattr(self, "org", None),

@@ -4,13 +4,14 @@ from typing import Any
 
 
 class GlobalState:
-    """Global singleton for cross-module coordination."""
+    """Global singleton for transport/runtime coordination."""
 
     def __init__(self) -> None:
         self.interventions: dict[str, dict[str, str]] = {}
         self.event_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
         self.active_websockets: list[Any] = []
         self.active_tasks: dict[str, list[asyncio.Task[Any]]] = {}
+        self.interaction_sessions: set[str] = set()
 
         # Locks are created at import time. This is safe on Python 3.11 because
         # asyncio locks no longer bind to a running loop at construction time.
@@ -18,6 +19,7 @@ class GlobalState:
         self._ws_lock = asyncio.Lock()
         self._tasks_lock = asyncio.Lock()
         self._interventions_lock = asyncio.Lock()
+        self._interaction_sessions_lock = asyncio.Lock()
 
     async def add_websocket(self, ws: Any) -> None:
         async with self._ws_lock:
@@ -60,11 +62,23 @@ class GlobalState:
             for task in reversed(tasks):
                 if not task.done():
                     return task
-            return tasks[-1] if tasks else None
+            return None
 
     async def get_active_task_count(self) -> int:
         async with self._tasks_lock:
             return sum(1 for tasks in self.active_tasks.values() for task in tasks if not task.done())
+
+    async def register_interaction_session(self, session_id: str) -> None:
+        async with self._interaction_sessions_lock:
+            self.interaction_sessions.add(str(session_id))
+
+    async def unregister_interaction_session(self, session_id: str) -> None:
+        async with self._interaction_sessions_lock:
+            self.interaction_sessions.discard(str(session_id))
+
+    async def is_interaction_session(self, session_id: str) -> bool:
+        async with self._interaction_sessions_lock:
+            return str(session_id) in self.interaction_sessions
 
     async def set_intervention(self, session_id: str, intervention: dict[str, str]) -> None:
         async with self._interventions_lock:
@@ -83,5 +97,22 @@ class GlobalState:
         async with self._interventions_lock:
             return {key: dict(value) for key, value in self.interventions.items()}
 
+    def reset(self) -> None:
+        self.interventions = {}
+        self.event_queue = asyncio.Queue()
+        self.active_websockets = []
+        self.active_tasks = {}
+        self.interaction_sessions = set()
 
-runtime_state = GlobalState()
+
+def create_runtime_state() -> GlobalState:
+    return GlobalState()
+
+
+def reset_runtime_state() -> GlobalState:
+    global runtime_state
+    runtime_state = create_runtime_state()
+    return runtime_state
+
+
+runtime_state = create_runtime_state()

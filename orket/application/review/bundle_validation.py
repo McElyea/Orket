@@ -13,6 +13,17 @@ from orket.application.review.control_plane_projection import (
 )
 
 
+class ReviewBundleError(ValueError):
+    def __init__(self, *, error_code: str, field: str) -> None:
+        self.error_code = str(error_code or "").strip()
+        self.field = str(field or "").strip()
+        super().__init__(self.error_code)
+
+
+def _raise_review_bundle_error(*, error_code: str, field: str) -> None:
+    raise ReviewBundleError(error_code=error_code, field=field)
+
+
 def _load_review_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -36,9 +47,9 @@ def _load_required_review_json_object(path: Path, *, field_name: str) -> dict[st
     try:
         payload = _load_review_json(path)
     except FileNotFoundError as exc:
-        raise ValueError(f"{field_name}_missing") from exc
+        raise ReviewBundleError(error_code=f"{field_name}_missing", field=field_name) from exc
     if not isinstance(payload, dict):
-        raise ValueError(f"{field_name}_json_object_required")
+        _raise_review_bundle_error(error_code=f"{field_name}_json_object_required", field=field_name)
     return dict(payload)
 
 def _validate_review_bundle_identity_alignment(
@@ -85,12 +96,12 @@ def _validate_review_bundle_identity_alignment(
         error=f"{field_name}_run_id_missing",
     )
     if payload_run_id != manifest_run_id:
-        raise ValueError(f"{field_name}_run_id_mismatch")
+        _raise_review_bundle_error(error_code=f"{field_name}_run_id_mismatch", field=field_name)
 
     expected_control_plane_run_id = manifest_control_plane_run_id or manifest_run_id
     payload_control_plane_run_id = str(normalized_payload.get("control_plane_run_id") or "").strip()
     if manifest_control_plane_run_id and not payload_control_plane_run_id:
-        raise ValueError(f"{field_name}_control_plane_run_id_missing")
+        _raise_review_bundle_error(error_code=f"{field_name}_control_plane_run_id_missing", field=field_name)
     if expected_control_plane_run_id and payload_control_plane_run_id:
         validate_review_matching_identifier(
             payload_control_plane_run_id,
@@ -98,7 +109,7 @@ def _validate_review_bundle_identity_alignment(
             error=f"{field_name}_control_plane_run_id_mismatch",
         )
     elif payload_run_id and payload_control_plane_run_id and payload_control_plane_run_id != payload_run_id:
-        raise ValueError(f"{field_name}_control_plane_run_id_mismatch")
+        _raise_review_bundle_error(error_code=f"{field_name}_control_plane_run_id_mismatch", field=field_name)
 
     payload_control_plane_attempt_id = str(normalized_payload.get("control_plane_attempt_id") or "").strip()
     payload_control_plane_step_id = str(normalized_payload.get("control_plane_step_id") or "").strip()
@@ -120,22 +131,22 @@ def _validate_review_bundle_identity_alignment(
         )
 
     if manifest_control_plane_attempt_id and not payload_control_plane_attempt_id:
-        raise ValueError(f"{field_name}_control_plane_attempt_id_missing")
+        _raise_review_bundle_error(error_code=f"{field_name}_control_plane_attempt_id_missing", field=field_name)
     if (
         manifest_control_plane_attempt_id
         and payload_control_plane_attempt_id
         and payload_control_plane_attempt_id != manifest_control_plane_attempt_id
     ):
-        raise ValueError(f"{field_name}_control_plane_attempt_id_mismatch")
+        _raise_review_bundle_error(error_code=f"{field_name}_control_plane_attempt_id_mismatch", field=field_name)
 
     if manifest_control_plane_step_id and not payload_control_plane_step_id:
-        raise ValueError(f"{field_name}_control_plane_step_id_missing")
+        _raise_review_bundle_error(error_code=f"{field_name}_control_plane_step_id_missing", field=field_name)
     if (
         manifest_control_plane_step_id
         and payload_control_plane_step_id
         and payload_control_plane_step_id != manifest_control_plane_step_id
     ):
-        raise ValueError(f"{field_name}_control_plane_step_id_mismatch")
+        _raise_review_bundle_error(error_code=f"{field_name}_control_plane_step_id_mismatch", field=field_name)
 
     return normalized_payload
 
@@ -228,7 +239,10 @@ def load_review_replay_artifacts(
             require_policy_resolved=True,
         )
     if snapshot_path is None or policy_path is None:
-        raise ValueError("review_replay_artifacts_require_run_dir_or_snapshot_and_policy")
+        _raise_review_bundle_error(
+            error_code="review_replay_artifacts_require_run_dir_or_snapshot_and_policy",
+            field="review_replay_artifacts",
+        )
     canonical_run_dir = _resolve_review_replay_bundle_dir(snapshot_path, policy_path)
     if canonical_run_dir is not None:
         return load_validated_review_run_bundle_artifacts(

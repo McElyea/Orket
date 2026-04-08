@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -66,7 +65,10 @@ async def run_marshaller_v0(
     await interaction_context.emit_event(
         StreamEventType.TOKEN_DELTA,
         {
-            "delta": hashlib.sha256(str(result).encode("utf-8")).hexdigest()[:16],
+            "delta": (
+                f"marshaller result: accept={bool(result['accept'])} "
+                f"attempts={int(result['attempt_count'])}"
+            ),
             "index": 0,
             "authoritative": False,
         },

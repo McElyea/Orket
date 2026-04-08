@@ -43,6 +43,22 @@ def test_interaction_stream_flow_emits_commit_final(monkeypatch):
         assert "commit_final" in event_types
 
 
+def test_interaction_session_start_registers_runtime_surface(monkeypatch):
+    """Layer: integration. Verifies the API start path records interaction-session ownership in GlobalState's transport registry."""
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    start = client.post(
+        "/v1/interactions/sessions",
+        headers={"X-API-Key": "test-key"},
+        json={"session_params": {"npc": "innkeeper"}},
+    )
+
+    assert start.status_code == 200
+    session_id = start.json()["session_id"]
+    assert asyncio.run(api_module.runtime_state.is_interaction_session(session_id)) is True
+
+
 def test_interaction_model_stream_flow_emits_commit_final(monkeypatch):
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")

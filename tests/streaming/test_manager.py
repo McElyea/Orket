@@ -85,6 +85,7 @@ async def test_commit_orchestrator_persists_authority_artifact(tmp_path):
         tmp_path / "workspace" / "interactions" / "session-1" / "turn-1" / "authority_commit.json"
     )
     assert authority_path.exists()
+    assert not authority_path.with_suffix(".json.tmp").exists()
     assert outcome["authoritative"] is True
 
 
@@ -156,3 +157,78 @@ async def test_manager_session_snapshot_and_replay_expose_context_lineage(tmp_pa
     assert replay["turn_count"] == 1
     assert replay["turns"][0]["turn_index"] == 1
     assert replay["turns"][0]["context_envelope"]["continuity"]["session_id"] == session_id
+
+
+@pytest.mark.asyncio
+async def test_manager_model_stream_turns_get_high_default_stream_budget(tmp_path):
+    """Layer: unit. Verifies model_stream_v1 turns receive the raised default token budget without caller-supplied overrides."""
+    bus = StreamBus()
+    manager = InteractionManager(
+        bus=bus,
+        commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
+        project_root=tmp_path,
+    )
+    session_id = await manager.start({})
+    queue = await manager.subscribe(session_id)
+    turn_id = await manager.begin_turn(
+        session_id,
+        {"seed": 5},
+        {},
+        context_inputs={
+            "workload_id": "model_stream_v1",
+            "input_config": {"seed": 5},
+            "turn_params": {},
+            "department": "core",
+            "workspace": str(tmp_path),
+        },
+    )
+    context = await manager.create_context(session_id, turn_id)
+    await queue.get()  # turn_accepted
+
+    for index in range(300):
+        await context.emit_event(StreamEventType.TOKEN_DELTA, {"delta": str(index)})
+
+    events = [queue.get_nowait() for _ in range(queue.qsize())]
+    assert len(events) == 300
+    assert all(event.event_type != StreamEventType.STREAM_TRUNCATED for event in events)
+
+
+def test_manager_stream_enabled_is_cached_at_construction(monkeypatch, tmp_path):
+    """Layer: unit. Verifies stream toggle resolution is fixed when the manager is constructed."""
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
+    manager = InteractionManager(
+        bus=StreamBus(),
+        commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
+        project_root=tmp_path,
+    )
+
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "false")
+
+    assert manager.stream_enabled() is True
+
+
+@pytest.mark.asyncio
+async def test_manager_session_lifecycle_hooks_track_surface_presence(tmp_path):
+    """Layer: integration. Verifies interaction session start/close emits the explicit handoff hooks used by API state tracking."""
+    started: list[str] = []
+    closed: list[str] = []
+
+    async def _started(session_id: str) -> None:
+        started.append(session_id)
+
+    async def _closed(session_id: str) -> None:
+        closed.append(session_id)
+
+    manager = InteractionManager(
+        bus=StreamBus(),
+        commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
+        project_root=tmp_path,
+        on_session_started=_started,
+        on_session_closed=_closed,
+    )
+
+    session_id = await manager.start({})
+    assert started == [session_id]
+
+    await manager.close(session_id)
+    assert closed == [session_id]

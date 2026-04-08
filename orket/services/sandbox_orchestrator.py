@@ -114,13 +114,12 @@ class SandboxOrchestrator:
         self.restart_policy = SandboxRestartPolicyService(lifecycle_service=self.lifecycle_service)
         self.runtime_inspector = SandboxRuntimeInspectionService(command_runner=self.command_runner)
         self._allowed_log_services = {
-            "api",
-            "frontend",
-            "db",
-            "database",
-            "pgadmin",
-            "mongo",
-            "mongo-express",
+            item.strip()
+            for item in os.getenv(
+                "ORKET_SANDBOX_ALLOWED_LOG_SERVICES",
+                "api,frontend,db,database,pgadmin,mongo,mongo-express",
+            ).split(",")
+            if item.strip()
         }
         self._initial_health_attempts = int(os.getenv("ORKET_SANDBOX_INITIAL_HEALTH_ATTEMPTS", "20"))
         self._initial_health_delay_seconds = float(os.getenv("ORKET_SANDBOX_INITIAL_HEALTH_DELAY_SECONDS", "0.5"))

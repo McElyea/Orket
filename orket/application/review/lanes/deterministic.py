@@ -67,20 +67,25 @@ def _stable_sort_findings(findings: list[DeterministicFinding]) -> list[Determin
     return sorted(findings, key=key)
 
 
-def _forbidden_pattern_rows(raw_patterns: Any) -> list[tuple[str, str]]:
-    rows: list[tuple[str, str]] = []
+def _forbidden_pattern_rows(raw_patterns: Any) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
     for item in list(raw_patterns or []):
         if isinstance(item, Mapping):
             pattern = str(item.get("pattern") or "").strip()
             severity = str(item.get("severity") or DEFAULT_FORBIDDEN_PATTERN_SEVERITY).strip().lower()
+            try:
+                max_occurrences = max(1, int(item.get("max_occurrences", 1)))
+            except (TypeError, ValueError):
+                max_occurrences = 1
         else:
             pattern = str(item).strip()
             severity = DEFAULT_FORBIDDEN_PATTERN_SEVERITY
+            max_occurrences = 1
         if not pattern:
             continue
         if severity not in SEVERITY_RANK:
             severity = DEFAULT_FORBIDDEN_PATTERN_SEVERITY
-        rows.append((pattern, severity))
+        rows.append({"pattern": pattern, "severity": severity, "max_occurrences": max_occurrences})
     return rows
 
 
@@ -117,7 +122,9 @@ def run_deterministic_lane(
     if patterns:
         executed_checks.append("forbidden_patterns")
         added_lines = _added_diff_lines(snapshot.diff_unified)
-        for pattern, severity in patterns:
+        for row in patterns:
+            pattern = str(row["pattern"])
+            severity = str(row["severity"])
             try:
                 regex = re.compile(pattern, re.MULTILINE)
             except re.error:
@@ -130,33 +137,23 @@ def run_deterministic_lane(
                     )
                 )
                 continue
-            location = None
+            max_occurrences = max(1, int(row.get("max_occurrences", 1)))
+            matches = 0
             for entry in added_lines:
                 if regex.search(str(entry.get("text") or "")):
-                    location = entry
-                    break
-            if location is not None:
-                findings.append(
-                    DeterministicFinding(
-                        code="PATTERN_MATCHED",
-                        severity=severity,
-                        message=f"Forbidden pattern matched: {pattern}",
-                        path=str(location.get("path") or ""),
-                        span={"start": int(location.get("line") or 0), "end": int(location.get("line") or 0)},
-                        details={"pattern": pattern},
+                    findings.append(
+                        DeterministicFinding(
+                            code="PATTERN_MATCHED",
+                            severity=severity,
+                            message=f"Forbidden pattern matched: {pattern}",
+                            path=str(entry.get("path") or ""),
+                            span={"start": int(entry.get("line") or 0), "end": int(entry.get("line") or 0)},
+                            details={"pattern": pattern},
+                        )
                     )
-                )
-                continue
-
-            if regex.search(snapshot.diff_unified):
-                findings.append(
-                    DeterministicFinding(
-                        code="PATTERN_MATCHED",
-                        severity=severity,
-                        message=f"Forbidden pattern matched: {pattern}",
-                        details={"pattern": pattern},
-                    )
-                )
+                    matches += 1
+                    if matches >= max_occurrences:
+                        break
 
     executed_checks.append("thresholds")
     if snapshot.truncation.files_truncated > 0:

@@ -493,15 +493,12 @@ def test_install_from_repo_registers_extension(tmp_path):
 def test_install_from_repo_registers_sdk_extension(tmp_path):
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
-    original_sections = set(ConfigPrecedenceResolver.SECTION_KEYS)
     _init_sdk_extension_repo(repo, config_sections=["appearance"], allowed_stdlib_modules=["hashlib", "pathlib"])
 
-    try:
-        manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-        record = manager.install_from_repo(str(repo))
-        assert "appearance" in ConfigPrecedenceResolver.SECTION_KEYS
-    finally:
-        ConfigPrecedenceResolver.SECTION_KEYS = original_sections
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    record = manager.install_from_repo(str(repo))
+
+    assert "appearance" in manager.config_sections()
 
     assert record.extension_id == "sdk.extension"
     assert record.contract_style == "sdk_v0"

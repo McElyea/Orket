@@ -37,6 +37,7 @@ _INTERACTION_REPLAY_BOUNDARY = {
 
 _INTERACTION_MEMORY_SCOPE_BOUNDARY_KEYS = frozenset(_INTERACTION_MEMORY_SCOPE_BOUNDARY)
 _INTERACTION_REPLAY_BOUNDARY_KEYS = frozenset(_INTERACTION_REPLAY_BOUNDARY)
+SessionLifecycleHook = Callable[[str], Awaitable[None]]
 
 
 def _utc_now_iso() -> str:
@@ -69,6 +70,18 @@ def _validated_interaction_boundary(
     if actual_keys != required_keys:
         raise RuntimeError(f"{name} keys drifted: expected={sorted(required_keys)} actual={sorted(actual_keys)}")
     return dict(boundary)
+
+
+def _resolve_turn_stream_budget(*, workload_id: str, turn_params: Mapping[str, Any] | None) -> int | None:
+    raw_budget = None if turn_params is None else turn_params.get("stream_budget")
+    if raw_budget is not None:
+        try:
+            return max(1, int(raw_budget))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Invalid stream_budget; expected a positive integer.") from exc
+    if str(workload_id or "").strip() == "model_stream_v1":
+        return 2048
+    return None
 
 
 @dataclass
@@ -157,8 +170,11 @@ class CommitOrchestrator:
     @staticmethod
     async def _write_commit_artifact(path: Path, payload: dict[str, Any]) -> None:
         await asyncio.to_thread(path.parent.mkdir, parents=True, exist_ok=True)
-        async with aiofiles.open(path, "w", encoding="utf-8") as handle:
+        tmp_path = path.with_suffix(f"{path.suffix}.tmp")
+        # Same-directory replace prevents partially written commit artifacts from surfacing.
+        async with aiofiles.open(tmp_path, "w", encoding="utf-8") as handle:
             await handle.write(json.dumps(payload, indent=2, sort_keys=True))
+        await asyncio.to_thread(os.replace, str(tmp_path), str(path))
 
     async def commit(self, *, session_id: str, turn_id: str, intents: list[CommitIntent]) -> dict[str, Any]:
         # Deterministic digest over commit inputs.
@@ -200,14 +216,23 @@ class CommitOrchestrator:
 
 class InteractionManager:
     def __init__(
-        self, *, bus: StreamBus, commit_orchestrator: CommitOrchestrator, project_root: Path | None = None
+        self,
+        *,
+        bus: StreamBus,
+        commit_orchestrator: CommitOrchestrator,
+        project_root: Path | None = None,
+        on_session_started: SessionLifecycleHook | None = None,
+        on_session_closed: SessionLifecycleHook | None = None,
     ) -> None:
         self.bus = bus
         self.commit_orchestrator = commit_orchestrator
         self.project_root = (project_root or Path.cwd()).resolve()
+        self._stream_enabled = self._resolve_stream_enabled()
         self._sessions: dict[str, InteractionSessionState] = {}
         self._turns: dict[tuple[str, str], TurnState] = {}
         self._pending_commit_intents: dict[tuple[str, str], list[CommitIntent]] = {}
+        self._on_session_started = on_session_started
+        self._on_session_closed = on_session_closed
         self._lock = asyncio.Lock()
 
     @staticmethod
@@ -216,6 +241,10 @@ class InteractionManager:
         path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
 
     def stream_enabled(self) -> bool:
+        return self._stream_enabled
+
+    @staticmethod
+    def _resolve_stream_enabled() -> bool:
         raw = (os.getenv("ORKET_STREAM_EVENTS_V1", "false") or "").strip().lower()
         return raw in {"1", "true", "yes", "on"}
 
@@ -229,6 +258,8 @@ class InteractionManager:
                 created_at=now,
                 updated_at=now,
             )
+        if self._on_session_started is not None:
+            await self._on_session_started(session_id)
         return session_id
 
     async def begin_turn(
@@ -240,6 +271,9 @@ class InteractionManager:
         context_inputs: dict[str, Any] | None = None,
     ) -> str:
         accepted_at = _utc_now_iso()
+        context_payload = dict(context_inputs or {})
+        workload_id = str(context_payload.get("workload_id") or "").strip()
+        stream_budget = _resolve_turn_stream_budget(workload_id=workload_id, turn_params=turn_params)
         async with self._lock:
             session = self._require_session(session_id)
             if session.active_turn_id is not None:
@@ -249,7 +283,7 @@ class InteractionManager:
             context_envelope = build_packet1_context_envelope(
                 session_id=session_id,
                 session_params=session.params,
-                context_inputs=dict(context_inputs or {}),
+                context_inputs=context_payload,
             )
             provider_lineage = build_packet1_provider_lineage(context_envelope)
             session.active_turn_id = turn_id
@@ -281,6 +315,12 @@ class InteractionManager:
                 provider_lineage=deepcopy(provider_lineage),
             )
             self._pending_commit_intents[(session_id, turn_id)] = []
+        if stream_budget is not None:
+            await self.bus.configure_turn_budget(
+                session_id=session_id,
+                turn_id=turn_id,
+                best_effort_max_events_per_turn=stream_budget,
+            )
 
         await self.bus.publish(
             session_id=session_id,
@@ -390,6 +430,8 @@ class InteractionManager:
                 self._pending_commit_intents.pop((session_id, session.active_turn_id), None)
                 await self.bus.clear_turn(session_id, session.active_turn_id)
             self._sessions.pop(session_id, None)
+        if self._on_session_closed is not None:
+            await self._on_session_closed(session_id)
 
     async def create_context(self, session_id: str, turn_id: str) -> InteractionContext:
         async with self._lock:

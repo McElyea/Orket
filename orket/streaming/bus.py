@@ -28,13 +28,18 @@ class _TurnBusState:
     best_effort_count: int = 0
     bounded_count: int = 0
     bytes_count: int = 0
+    best_effort_max_events_per_turn: int | None = None
+    last_access_mono_ts_ms: int = 0
 
 
 @dataclass
 class StreamBusConfig:
     best_effort_max_events_per_turn: int = 256
+    best_effort_max_events_per_turn_override: int | None = None
     bounded_max_events_per_turn: int = 128
     max_bytes_per_turn_queue: int = 1_000_000
+    turn_state_ttl_ms: int = 3_600_000
+    turn_state_max_entries: int = 1024
 
 
 class StreamBus:
@@ -49,6 +54,23 @@ class StreamBus:
         async with self._lock:
             self._subscribers[session_id].add(queue)
         return queue
+
+    async def configure_turn_budget(
+        self,
+        *,
+        session_id: str,
+        turn_id: str,
+        best_effort_max_events_per_turn: int | None = None,
+    ) -> None:
+        async with self._lock:
+            self._evict_turn_states_locked()
+            state = self._turn_states.setdefault((session_id, turn_id), _TurnBusState())
+            state.last_access_mono_ts_ms = mono_ts_ms_now()
+            self._evict_turn_states_locked()
+            if best_effort_max_events_per_turn is None:
+                state.best_effort_max_events_per_turn = None
+                return
+            state.best_effort_max_events_per_turn = max(1, int(best_effort_max_events_per_turn))
 
     async def unsubscribe(self, session_id: str, queue: asyncio.Queue[StreamEvent]) -> None:
         async with self._lock:
@@ -72,7 +94,10 @@ class StreamBus:
         subscribers: list[asyncio.Queue[StreamEvent]] = []
 
         async with self._lock:
+            self._evict_turn_states_locked()
             state = self._turn_states.setdefault(state_key, _TurnBusState())
+            state.last_access_mono_ts_ms = mono_ts_ms_now()
+            self._evict_turn_states_locked()
 
             if state.terminal_emitted and event_type != StreamEventType.COMMIT_FINAL:
                 raise ValueError("Post-terminal events are forbidden except commit_final")
@@ -84,10 +109,11 @@ class StreamBus:
             dropped = False
             dropped_seq = state.next_seq
             budget_exempt = event_type == StreamEventType.STREAM_TRUNCATED
+            best_effort_limit = int(state.best_effort_max_events_per_turn or self.config.best_effort_max_events_per_turn)
 
             if cls == EventClass.BEST_EFFORT:
                 if (
-                    state.best_effort_count >= self.config.best_effort_max_events_per_turn
+                    state.best_effort_count >= best_effort_limit
                     or (state.bytes_count + event_bytes) > self.config.max_bytes_per_turn_queue
                 ):
                     dropped = True
@@ -159,10 +185,34 @@ class StreamBus:
         await self.purge_turn(session_id, turn_id)
 
     def _subscriber_queue_maxsize(self) -> int:
+        best_effort_max = max(
+            self.config.best_effort_max_events_per_turn,
+            int(self.config.best_effort_max_events_per_turn_override or 0),
+        )
         return max(
             1,
-            self.config.best_effort_max_events_per_turn + self.config.bounded_max_events_per_turn,
+            best_effort_max + self.config.bounded_max_events_per_turn,
         )
+
+    def _evict_turn_states_locked(self) -> None:
+        ttl_ms = max(1, int(self.config.turn_state_ttl_ms))
+        max_entries = max(1, int(self.config.turn_state_max_entries))
+        now = mono_ts_ms_now()
+        expired_keys = [
+            key
+            for key, state in self._turn_states.items()
+            if (state.last_access_mono_ts_ms or now) <= (now - ttl_ms)
+        ]
+        for key in expired_keys:
+            self._turn_states.pop(key, None)
+        if len(self._turn_states) <= max_entries:
+            return
+        ordered_keys = sorted(
+            self._turn_states,
+            key=lambda key: int(self._turn_states[key].last_access_mono_ts_ms or 0),
+        )
+        while len(self._turn_states) > max_entries and ordered_keys:
+            self._turn_states.pop(ordered_keys.pop(0), None)
 
     @staticmethod
     def _drain_queue_for_turn(
@@ -181,7 +231,10 @@ class StreamBus:
             if event.session_id != session_id or event.turn_id != turn_id:
                 retained.append(event)
         for event in retained:
-            queue.put_nowait(event)
+            try:
+                queue.put_nowait(event)
+            except asyncio.QueueFull:
+                pass
 
     @staticmethod
     def _build_event_locked(
