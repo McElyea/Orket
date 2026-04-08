@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiofiles
 
-from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.runtime.registry import protocol_hashing
 from orket.utils import sanitize_name
 
 
@@ -310,7 +310,7 @@ class ExecutionPipelineArtifactProvenanceMixin:
         turn_index: int,
         tool_args: dict[str, Any],
     ) -> str:
-        return hash_canonical_json(
+        return protocol_hashing.hash_canonical_json(
             {
                 "run_id": str(run_id),
                 "operation_id": str(operation_id),

@@ -15,7 +15,7 @@ from orket.application.services.turn_tool_control_plane_support import (
     run_namespace_scope,
     utc_now,
 )
-from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.runtime.registry.protocol_hashing import hash_canonical_json
 from orket.core.contracts import CheckpointRecord
 from orket.core.domain import (
     CheckpointReobservationClass,

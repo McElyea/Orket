@@ -1,9 +1,23 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
+from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.kernel_action_control_plane_operator_service import (
+    KernelActionControlPlaneOperatorService,
+)
+from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
+from orket.application.services.kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
+from orket.application.services.tool_approval_control_plane_operator_service import (
+    ToolApprovalControlPlaneOperatorService,
+)
 from orket.logging import log_event
+from orket.runtime_paths import resolve_control_plane_db_path
 
 
 def _dict_result(value: Any) -> dict[str, Any]:
@@ -35,6 +49,59 @@ def _string_list_map(value: Any) -> dict[str, list[str]]:
             continue
         normalized[str(key)] = [str(item) for item in row]
     return normalized
+
+
+class EngineControlPlaneServices:
+    """Explicit owner for engine-scoped control-plane composition."""
+
+    def __init__(
+        self,
+        *,
+        pending_gates: Any,
+        control_plane_repository: Any,
+        control_plane_execution_repository: Any,
+        control_plane_publication: Any,
+        tool_approval_control_plane_operator: Any,
+        kernel_action_control_plane: Any,
+        kernel_action_control_plane_operator: Any,
+        kernel_action_control_plane_view: Any,
+    ) -> None:
+        self.pending_gates = pending_gates
+        self.control_plane_repository = control_plane_repository
+        self.control_plane_execution_repository = control_plane_execution_repository
+        self.control_plane_publication = control_plane_publication
+        self.tool_approval_control_plane_operator = tool_approval_control_plane_operator
+        self.kernel_action_control_plane = kernel_action_control_plane
+        self.kernel_action_control_plane_operator = kernel_action_control_plane_operator
+        self.kernel_action_control_plane_view = kernel_action_control_plane_view
+
+
+def build_engine_control_plane_services(*, db_path: str | Path) -> EngineControlPlaneServices:
+    """Build the engine's control-plane dependencies in one explicit composition step."""
+    control_plane_db_path = resolve_control_plane_db_path()
+    control_plane_repository = AsyncControlPlaneRecordRepository(control_plane_db_path)
+    control_plane_execution_repository = AsyncControlPlaneExecutionRepository(control_plane_db_path)
+    control_plane_publication = ControlPlanePublicationService(repository=control_plane_repository)
+    return EngineControlPlaneServices(
+        pending_gates=AsyncPendingGateRepository(str(db_path)),
+        control_plane_repository=control_plane_repository,
+        control_plane_execution_repository=control_plane_execution_repository,
+        control_plane_publication=control_plane_publication,
+        tool_approval_control_plane_operator=ToolApprovalControlPlaneOperatorService(
+            publication=control_plane_publication
+        ),
+        kernel_action_control_plane=KernelActionControlPlaneService(
+            execution_repository=control_plane_execution_repository,
+            publication=control_plane_publication,
+        ),
+        kernel_action_control_plane_operator=KernelActionControlPlaneOperatorService(
+            publication=control_plane_publication
+        ),
+        kernel_action_control_plane_view=KernelActionControlPlaneViewService(
+            record_repository=control_plane_repository,
+            execution_repository=control_plane_execution_repository,
+        ),
+    )
 
 
 class SandboxManager:
@@ -184,3 +251,50 @@ class KernelGatewayFacade:
                 start_request=start_request,
             )
         )
+
+
+class ReplayDiagnosticsService:
+    """Artifact-backed replay diagnostics. This is not a canonical replay-verdict authority path."""
+
+    def __init__(self, workspace_root: Path) -> None:
+        self.workspace_root = workspace_root
+
+    def replay_turn_diagnostics(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        turn_index: int,
+        role: str | None = None,
+    ) -> dict[str, Any]:
+        run_root = self.workspace_root / "observability" / session_id / issue_id
+        if not run_root.exists():
+            raise FileNotFoundError(f"No observability artifacts found for run={session_id} issue={issue_id}")
+
+        prefix = f"{turn_index:03d}_"
+        candidates = [path for path in run_root.iterdir() if path.is_dir() and path.name.startswith(prefix)]
+        if role:
+            role_suffix = role.lower().replace(" ", "_")
+            candidates = [path for path in candidates if path.name.endswith(role_suffix)]
+        if not candidates:
+            raise FileNotFoundError(f"No turn artifacts found for turn_index={turn_index}")
+
+        target = sorted(candidates)[0]
+        checkpoint_path = target / "checkpoint.json"
+        messages_path = target / "messages.json"
+        model_path = target / "model_response.txt"
+        parsed_tools_path = target / "parsed_tool_calls.json"
+
+        def _read_json(path: Path) -> Any:
+            if not path.exists():
+                return None
+            return json.loads(path.read_text(encoding="utf-8"))
+
+        return {
+            "diagnostics_class": "artifact_observability_only",
+            "turn_dir": str(target),
+            "checkpoint": _read_json(checkpoint_path),
+            "messages": _read_json(messages_path),
+            "model_response": model_path.read_text(encoding="utf-8") if model_path.exists() else None,
+            "parsed_tool_calls": _read_json(parsed_tools_path),
+        }

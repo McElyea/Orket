@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 import warnings
 from typing import Any, Literal
@@ -37,6 +38,20 @@ class EnvironmentConfig(BaseModel):
                 stacklevel=2,
             )
         return data
+
+
+def validate_authoritative_environment_config_payload(data: Any) -> dict[str, Any]:
+    if not isinstance(data, dict):
+        raise ValueError("E_ENVIRONMENT_CONFIG_PAYLOAD_INVALID")
+    unknown = sorted(frozenset(data) - frozenset(EnvironmentConfig.model_fields))
+    if unknown:
+        raise ValueError("E_ENVIRONMENT_CONFIG_UNKNOWN_KEYS:" + ",".join(unknown))
+    return dict(data)
+
+
+def validate_authoritative_environment_config_json(raw: str) -> EnvironmentConfig:
+    payload = json.loads(raw)
+    return EnvironmentConfig.model_validate(validate_authoritative_environment_config_payload(payload))
 
 
 class SkillConfig(BaseModel):
@@ -338,6 +353,8 @@ __all__ = [
     "SeatConfig",
     "SkillConfig",
     "TeamConfig",
+    "validate_authoritative_environment_config_json",
+    "validate_authoritative_environment_config_payload",
     "VerificationResult",
     "VerificationScenario",
     "WaitReason",

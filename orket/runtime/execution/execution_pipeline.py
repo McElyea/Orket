@@ -11,6 +11,7 @@ from orket.adapters.storage.async_repositories import (
     AsyncSuccessRepository,
 )
 from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
@@ -24,6 +25,7 @@ from orket.runtime.execution_pipeline_ledger_events import ExecutionPipelineLedg
 from orket.runtime.execution_pipeline_resume import ExecutionPipelineResumeMixin
 from orket.runtime.execution_pipeline_run_summary import ExecutionPipelineRunSummaryMixin
 from orket.runtime.execution_pipeline_runtime_artifacts import ExecutionPipelineRuntimeArtifactsMixin
+from orket.runtime.execution.pipeline_wiring_service import PipelineWiringService
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
 from orket.runtime.runtime_context import OrketRuntimeContext
 from orket.runtime.workload_shell import SharedWorkloadShell
@@ -56,6 +58,8 @@ class ExecutionPipeline(
         run_ledger_repo: Any | None = None,
         decision_nodes: DecisionNodeRegistry | None = None,
         runtime_context: OrketRuntimeContext | None = None,
+        runtime_inputs: RuntimeInputService | None = None,
+        pipeline_wiring_service: PipelineWiringService | None = None,
     ):
         from orket.orchestration.notes import NoteStore
 
@@ -88,8 +92,9 @@ class ExecutionPipeline(
         self.state_backend_mode = self.runtime_context.state_backend_mode
         self.run_ledger_mode = self.runtime_context.run_ledger_mode
         self.gitea_state_pilot_enabled = self.runtime_context.gitea_state_pilot_enabled
+        self.runtime_inputs = runtime_inputs or RuntimeInputService()
         self.execution_runtime_node = self.decision_nodes.resolve_execution_runtime(self.org)
-        self.pipeline_wiring_node = self.decision_nodes.resolve_pipeline_wiring(self.org)
+        self.pipeline_wiring_service = pipeline_wiring_service or PipelineWiringService()
 
         self.async_cards = self.runtime_context.cards_repo
         self.sessions = self.runtime_context.sessions_repo
@@ -100,16 +105,16 @@ class ExecutionPipeline(
 
         self.notes = NoteStore()
         self.transcript: list[dict[str, Any]] = []
-        self.sandbox_orchestrator = self.pipeline_wiring_node.create_sandbox_orchestrator(
+        self.sandbox_orchestrator = self.pipeline_wiring_service.create_sandbox_orchestrator(
             workspace=self.workspace,
             organization=self.org,
         )
-        self.webhook_db = self.pipeline_wiring_node.create_webhook_database()
-        self.bug_fix_manager = self.pipeline_wiring_node.create_bug_fix_manager(
+        self.webhook_db = self.pipeline_wiring_service.create_webhook_database()
+        self.bug_fix_manager = self.pipeline_wiring_service.create_bug_fix_manager(
             organization=self.org,
             webhook_db=self.webhook_db,
         )
-        self.orchestrator = self.pipeline_wiring_node.create_orchestrator(
+        self.orchestrator = self.pipeline_wiring_service.create_orchestrator(
             workspace=self.workspace,
             async_cards=self.async_cards,
             snapshots=self.snapshots,
@@ -189,8 +194,9 @@ class ExecutionPipeline(
             workspace=self.workspace,
             department=self.department,
             organization=self.org,
+            runtime_input_service=self.runtime_inputs,
             execution_runtime_node=self.execution_runtime_node,
-            pipeline_wiring_node=self.pipeline_wiring_node,
+            pipeline_wiring_service=self.pipeline_wiring_service,
             cards_repo=self.async_cards,
             sessions_repo=self.sessions,
             snapshots_repo=self.snapshots,

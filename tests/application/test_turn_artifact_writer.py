@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.application.workflows.tool_invocation_contracts import (
+from orket.runtime.registry.tool_invocation_contracts import (
     PROTOCOL_RECEIPT_SCHEMA_VERSION,
     build_tool_invocation_manifest,
     compute_tool_call_hash,

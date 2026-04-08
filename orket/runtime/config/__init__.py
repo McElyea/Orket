@@ -10,6 +10,7 @@ __all__ = [
     'provider_runtime_inventory',
     'provider_runtime_target',
     'provider_truth_table',
+    'runtime_bootstrap',
     'runtime_context',
     'settings'
 ]

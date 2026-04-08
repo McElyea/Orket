@@ -96,8 +96,6 @@ class ApiRuntimeStrategyNode(Protocol):
 
     def resolve_asset_id(self, path: str | None, issue_id: str | None) -> str | None: ...
 
-    def create_session_id(self) -> str: ...
-
     def resolve_run_active_invocation(
         self,
         asset_id: str,
@@ -160,27 +158,15 @@ class ApiRuntimeStrategyNode(Protocol):
 
     def preview_unsupported_detail(self, target: dict[str, str], invocation: dict[str, Any]) -> str: ...
 
-    def create_preview_builder(self, model_root: Any) -> Any: ...
-
-    def create_chat_driver(self) -> Any: ...
-
     def resolve_chat_driver_invocation(self, message: str) -> dict[str, Any]: ...
 
     def resolve_member_metrics_workspace(self, project_root: Any, session_id: str) -> Any: ...
 
-    def create_member_metrics_reader(self) -> Any: ...
-
     def resolve_sandbox_workspace(self, project_root: Any) -> Any: ...
-
-    def create_execution_pipeline(self, workspace_root: Any) -> Any: ...
 
     def resolve_sandbox_logs_invocation(self, sandbox_id: str, service: str | None) -> dict[str, Any]: ...
 
     def resolve_api_workspace(self, project_root: Any) -> Any: ...
-
-    def create_engine(self, workspace_root: Any) -> Any: ...
-
-    def create_file_tools(self, project_root: Any) -> Any: ...
 
     def resolve_system_board(self, department: str) -> Any: ...
 
@@ -217,14 +203,6 @@ class SandboxPolicyNode(Protocol):
     def generate_compose_file(self, sandbox: Any, db_password: str, admin_password: str) -> str: ...
 
 
-class EngineRuntimePolicyNode(Protocol):
-    """Decision node: engine bootstrap/runtime wiring choices."""
-
-    def bootstrap_environment(self) -> None: ...
-
-    def resolve_config_root(self, config_root: Any) -> Any: ...
-
-
 class LoaderStrategyNode(Protocol):
     """Decision node: config/model loader path and override policy."""
 
@@ -253,32 +231,6 @@ class ExecutionRuntimeStrategyNode(Protocol):
     def select_epic_collection_build_id(
         self, build_id: str | None, collection_name: str, sanitize_name: Any
     ) -> str: ...
-
-
-class PipelineWiringStrategyNode(Protocol):
-    """Decision node: execution pipeline wiring and subordinate spawn policy."""
-
-    def create_sandbox_orchestrator(self, workspace: Any, organization: Any) -> Any: ...
-
-    def create_webhook_database(self) -> Any: ...
-
-    def create_bug_fix_manager(self, organization: Any, webhook_db: Any) -> Any: ...
-
-    def create_orchestrator(
-        self,
-        workspace: Any,
-        async_cards: Any,
-        snapshots: Any,
-        org: Any,
-        config_root: Any,
-        db_path: str,
-        loader: Any,
-        sandbox_orchestrator: Any,
-    ) -> Any: ...
-
-    def create_sub_pipeline(self, parent_pipeline: Any, epic_workspace: Any, department: str) -> Any: ...
-
-
 class OrchestrationLoopPolicyNode(Protocol):
     """Decision node: execution-loop policy knobs for orchestrator runtime."""
 

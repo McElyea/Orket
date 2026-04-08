@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from orket.application.workflows.protocol_hashing import canonical_json
+from orket.runtime.registry.protocol_hashing import canonical_json
 
 
 class OperationCommitRegistry:

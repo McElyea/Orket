@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
-from orket.application.workflows.tool_invocation_contracts import (
+from orket.runtime.registry.tool_invocation_contracts import (
     PROTOCOL_RECEIPT_SCHEMA_VERSION,
     build_tool_invocation_manifest,
     compute_tool_call_hash,
@@ -155,6 +155,19 @@ async def test_async_protocol_run_ledger_append_event_is_monotonic(tmp_path: Pat
     assert [row["event_seq"] for row in events] == [1, 2]
     assert [row["sequence_number"] for row in events] == [1, 2]
     assert [row["kind"] for row in events] == ["event_a", "event_b"]
+
+
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_uses_injected_timestamp_factory(tmp_path: Path) -> None:
+    """Layer: contract. Verifies touched ledger event timestamps can be supplied by explicit runtime input."""
+    repo = AsyncProtocolRunLedgerRepository(
+        tmp_path,
+        timestamp_factory=lambda: "2025-01-01T00:00:00+00:00",
+    )
+
+    appended = await repo.append_event(session_id="sess-ts-factory", kind="event_a", payload={"x": 1})
+
+    assert appended["timestamp"] == "2025-01-01T00:00:00+00:00"
 
 
 @pytest.mark.asyncio

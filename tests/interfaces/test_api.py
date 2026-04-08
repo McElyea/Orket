@@ -86,6 +86,7 @@ def test_heartbeat():
 
 
 def test_clear_logs_uses_runtime_invocation(monkeypatch):
+    """Layer: integration. Verifies clear-logs uses the explicit API runtime host for file-tool construction."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
@@ -93,7 +94,7 @@ def test_clear_logs_uses_runtime_invocation(monkeypatch):
         async def clear_sink(self, path, content):
             captured["args"] = (path, content)
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_file_tools", lambda _root: FakeFs())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_clear_logs_path",
@@ -112,13 +113,14 @@ def test_clear_logs_uses_runtime_invocation(monkeypatch):
 
 
 def test_clear_logs_rejects_unsupported_runtime_method(monkeypatch):
+    """Layer: contract. Verifies clear-logs still fails closed when runtime invocation policy names a missing file-tool method."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeFs:
         async def write_file(self, path, content):
             return None
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_file_tools", lambda _root: FakeFs())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_clear_logs_invocation",
@@ -131,6 +133,7 @@ def test_clear_logs_rejects_unsupported_runtime_method(monkeypatch):
 
 
 def test_clear_logs_suppresses_permission_errors(monkeypatch):
+    """Layer: integration. Verifies clear-logs degrades truthfully when the explicit API runtime host surfaces permission errors."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
@@ -141,7 +144,7 @@ def test_clear_logs_suppresses_permission_errors(monkeypatch):
     def fake_log_event(name, payload, workspace=None):
         captured["event"] = (name, payload)
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_file_tools", lambda _root: FakeFs())
     monkeypatch.setattr(api_module, "log_event", fake_log_event)
 
     response = client.post("/v1/system/clear-logs", headers={"X-API-Key": "test-key"})
@@ -196,25 +199,27 @@ def test_read_security(monkeypatch):
     assert response.status_code == 403
 
 def test_read_missing_file_returns_404(monkeypatch):
+    """Layer: contract. Verifies system read keeps 404 behavior when file tools come from the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeFs:
         async def read_file(self, path):
             raise FileNotFoundError(path)
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_file_tools", lambda _root: FakeFs())
     response = client.get("/v1/system/read?path=missing.txt", headers={"X-API-Key": "test-key"})
     assert response.status_code == 404
 
 
 def test_read_uses_runtime_not_found_detail(monkeypatch):
+    """Layer: contract. Verifies system read still shapes missing-file detail through runtime policy while using the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeFs:
         async def read_file(self, path):
             raise FileNotFoundError(path)
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_file_tools", lambda _root: FakeFs())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "read_not_found_detail",
@@ -226,6 +231,7 @@ def test_read_uses_runtime_not_found_detail(monkeypatch):
     assert response.json()["detail"] == "Missing by policy: missing.txt"
 
 def test_read_uses_runtime_invocation(monkeypatch):
+    """Layer: integration. Verifies system read routes through explicit host-owned file tools and runtime invocation policy."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
@@ -234,7 +240,7 @@ def test_read_uses_runtime_invocation(monkeypatch):
             captured["path"] = path
             return "ok-content"
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_file_tools", lambda _root: FakeFs())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_read_invocation",
@@ -247,13 +253,14 @@ def test_read_uses_runtime_invocation(monkeypatch):
     assert captured["path"] == "foo.txt"
 
 def test_read_rejects_unsupported_runtime_method(monkeypatch):
+    """Layer: contract. Verifies system read rejects missing file-tool methods after the host-service authority move."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeFs:
         async def read_file(self, path):
             return "ignored"
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_file_tools", lambda _root: FakeFs())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_read_invocation",
@@ -264,13 +271,14 @@ def test_read_rejects_unsupported_runtime_method(monkeypatch):
     assert response.status_code == 400
 
 def test_save_permission_denied_returns_403(monkeypatch):
+    """Layer: contract. Verifies system save keeps permission-denied behavior when file tools come from the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeFs:
         async def write_file(self, path, content):
             raise PermissionError("blocked")
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_file_tools", lambda _root: FakeFs())
     response = client.post(
         "/v1/system/save",
         json={"path": "x.txt", "content": "hello"},
@@ -280,13 +288,14 @@ def test_save_permission_denied_returns_403(monkeypatch):
 
 
 def test_save_uses_runtime_permission_denied_detail(monkeypatch):
+    """Layer: contract. Verifies system save still delegates permission detail shaping to runtime policy after the host-service move."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeFs:
         async def write_file(self, path, content):
             raise PermissionError("blocked")
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_file_tools", lambda _root: FakeFs())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "permission_denied_detail",
@@ -301,6 +310,7 @@ def test_save_uses_runtime_permission_denied_detail(monkeypatch):
     assert response.json()["detail"] == "save denied by policy: blocked"
 
 def test_save_uses_runtime_invocation(monkeypatch):
+    """Layer: integration. Verifies system save routes through explicit host-owned file tools and runtime invocation policy."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
@@ -308,7 +318,7 @@ def test_save_uses_runtime_invocation(monkeypatch):
         async def write_file(self, path, content):
             captured["args"] = (path, content)
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_file_tools", lambda _root: FakeFs())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_save_invocation",
@@ -324,13 +334,14 @@ def test_save_uses_runtime_invocation(monkeypatch):
     assert captured["args"] == ("x.txt", "hello")
 
 def test_save_rejects_unsupported_runtime_method(monkeypatch):
+    """Layer: contract. Verifies system save rejects missing file-tool methods after the host-service authority move."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeFs:
         async def write_file(self, path, content):
             return None
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_file_tools", lambda _root: FakeFs())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_save_invocation",
@@ -935,6 +946,7 @@ def test_system_board_defaults_to_core(monkeypatch):
 
 
 def test_preview_asset_uses_runtime_invocation(monkeypatch):
+    """Layer: integration. Verifies preview construction now comes from the explicit API runtime host while invocation policy stays strategy-owned."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeBuilder:
@@ -961,7 +973,7 @@ def test_preview_asset_uses_runtime_invocation(monkeypatch):
             "unsupported_detail": "Unsupported preview mode 'issue'.",
         },
     )
-    monkeypatch.setattr(api_module.api_runtime_node, "create_preview_builder", lambda _model_root: FakeBuilder())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_preview_builder", lambda _model_root: FakeBuilder())
 
     response = client.get(
         "/v1/system/preview-asset?path=model/core/epics/x.json&issue_id=ISSUE-9",
@@ -972,6 +984,7 @@ def test_preview_asset_uses_runtime_invocation(monkeypatch):
 
 
 def test_preview_asset_rejects_unsupported_mode(monkeypatch):
+    """Layer: contract. Verifies preview routes still fail closed when runtime policy names an unsupported builder method."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeBuilder:
@@ -992,7 +1005,7 @@ def test_preview_asset_rejects_unsupported_mode(monkeypatch):
             "unsupported_detail": "Unsupported preview mode 'custom'.",
         },
     )
-    monkeypatch.setattr(api_module.api_runtime_node, "create_preview_builder", lambda _model_root: FakeBuilder())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_preview_builder", lambda _model_root: FakeBuilder())
 
     response = client.get(
         "/v1/system/preview-asset?path=model/core/epics/x.json",
@@ -1003,6 +1016,7 @@ def test_preview_asset_rejects_unsupported_mode(monkeypatch):
 
 
 def test_preview_asset_uses_runtime_error_detail_for_unsupported_mode(monkeypatch):
+    """Layer: contract. Verifies preview unsupported-detail shaping survives the move to explicit host-owned builder construction."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeBuilder:
@@ -1023,7 +1037,7 @@ def test_preview_asset_uses_runtime_error_detail_for_unsupported_mode(monkeypatc
             "unsupported_detail": f"Unsupported preview invocation 'build_custom_preview' for mode '{target['mode']}'",
         },
     )
-    monkeypatch.setattr(api_module.api_runtime_node, "create_preview_builder", lambda _model_root: FakeBuilder())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_preview_builder", lambda _model_root: FakeBuilder())
 
     response = client.get(
         "/v1/system/preview-asset?path=model/core/epics/x.json",
@@ -1035,6 +1049,7 @@ def test_preview_asset_uses_runtime_error_detail_for_unsupported_mode(monkeypatc
 
 
 def test_chat_driver_uses_runtime_invocation(monkeypatch):
+    """Layer: integration. Verifies chat-driver construction now comes from the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
@@ -1043,7 +1058,7 @@ def test_chat_driver_uses_runtime_invocation(monkeypatch):
             captured["message"] = message
             return f"echo:{message}"
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_chat_driver", lambda: FakeDriver())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_chat_driver", lambda: FakeDriver())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_chat_driver_invocation",
@@ -1062,13 +1077,14 @@ def test_chat_driver_uses_runtime_invocation(monkeypatch):
 
 
 def test_chat_driver_rejects_unsupported_runtime_method(monkeypatch):
+    """Layer: contract. Verifies chat-driver routes still fail closed when runtime policy names a missing driver method."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeDriver:
         async def process_request(self, message):
             return f"echo:{message}"
 
-    monkeypatch.setattr(api_module.api_runtime_node, "create_chat_driver", lambda: FakeDriver())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_chat_driver", lambda: FakeDriver())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_chat_driver_invocation",
@@ -1086,6 +1102,7 @@ def test_chat_driver_rejects_unsupported_runtime_method(monkeypatch):
 
 
 def test_run_active_uses_runtime_invocation(monkeypatch, fresh_runtime_state):
+    """Layer: integration. Verifies run-active now mints session ids through the explicit API runtime host before invoking engine work."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     captured = {}
@@ -1103,7 +1120,7 @@ def test_run_active_uses_runtime_invocation(monkeypatch, fresh_runtime_state):
 
     monkeypatch.setattr(api_module, "engine", FakeEngine())
     monkeypatch.setattr(api_module.runtime_state, "add_task", fake_add_task)
-    monkeypatch.setattr(api_module.api_runtime_node, "create_session_id", lambda: "SESS1234")
+    monkeypatch.setattr(api_module.api_runtime_host, "create_session_id", lambda: "SESS1234")
     monkeypatch.setattr(api_module.api_runtime_node, "resolve_asset_id", lambda path, issue_id: "ISSUE-1")
     monkeypatch.setattr(
         api_module.api_runtime_node,
@@ -1127,8 +1144,9 @@ def test_run_active_uses_runtime_invocation(monkeypatch, fresh_runtime_state):
 
 
 def test_run_active_rejects_unsupported_method(monkeypatch):
+    """Layer: contract. Verifies run-active still rejects missing engine methods after session-id minting moved to the explicit host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module.api_runtime_node, "create_session_id", lambda: "SESSX")
+    monkeypatch.setattr(api_module.api_runtime_host, "create_session_id", lambda: "SESSX")
     monkeypatch.setattr(api_module.api_runtime_node, "resolve_asset_id", lambda path, issue_id: "ISSUE-1")
     monkeypatch.setattr(
         api_module.api_runtime_node,
@@ -1150,8 +1168,9 @@ def test_run_active_rejects_unsupported_method(monkeypatch):
 
 
 def test_run_active_uses_runtime_missing_asset_detail(monkeypatch):
+    """Layer: contract. Verifies run-active missing-asset behavior survives the explicit host session-id seam."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module.api_runtime_node, "create_session_id", lambda: "SESSX")
+    monkeypatch.setattr(api_module.api_runtime_host, "create_session_id", lambda: "SESSX")
     monkeypatch.setattr(api_module.api_runtime_node, "resolve_asset_id", lambda path, issue_id: None)
     monkeypatch.setattr(
         api_module.api_runtime_node,
@@ -1170,6 +1189,7 @@ def test_run_active_uses_runtime_missing_asset_detail(monkeypatch):
 
 
 def test_run_metrics_uses_runtime_workspace(monkeypatch):
+    """Layer: integration. Verifies run metrics now reads member-metrics helpers from the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     captured = {}
@@ -1183,7 +1203,7 @@ def test_run_metrics_uses_runtime_workspace(monkeypatch):
         return {"ok": True, "workspace": str(workspace)}
 
     monkeypatch.setattr(api_module.api_runtime_node, "resolve_member_metrics_workspace", fake_workspace)
-    monkeypatch.setattr(api_module.api_runtime_node, "create_member_metrics_reader", lambda: fake_member_metrics)
+    monkeypatch.setattr(api_module.api_runtime_host, "create_member_metrics_reader", lambda: fake_member_metrics)
 
     response = client.get("/v1/runs/SESS42/metrics", headers={"X-API-Key": "test-key"})
 
@@ -1194,6 +1214,7 @@ def test_run_metrics_uses_runtime_workspace(monkeypatch):
 
 
 def test_sandbox_logs_uses_runtime_pipeline_factory(monkeypatch):
+    """Layer: integration. Verifies sandbox-log pipeline construction now comes from the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     captured = {}
@@ -1215,7 +1236,7 @@ def test_sandbox_logs_uses_runtime_pipeline_factory(monkeypatch):
         return FakePipeline()
 
     monkeypatch.setattr(api_module.api_runtime_node, "resolve_sandbox_workspace", fake_workspace)
-    monkeypatch.setattr(api_module.api_runtime_node, "create_execution_pipeline", fake_create_pipeline)
+    monkeypatch.setattr(api_module.api_runtime_host, "create_execution_pipeline", fake_create_pipeline)
 
     response = client.get(
         "/v1/sandboxes/sb-1/logs?service=api",
@@ -1228,6 +1249,7 @@ def test_sandbox_logs_uses_runtime_pipeline_factory(monkeypatch):
 
 
 def test_sandbox_logs_forwards_optional_service_param(monkeypatch):
+    """Layer: integration. Verifies sandbox-log requests still forward the optional service selector after the host-service move."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
@@ -1240,7 +1262,7 @@ def test_sandbox_logs_forwards_optional_service_param(monkeypatch):
         sandbox_orchestrator = FakeSandboxOrchestrator()
 
     monkeypatch.setattr(api_module.api_runtime_node, "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
-    monkeypatch.setattr(api_module.api_runtime_node, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
 
     response = client.get(
         "/v1/sandboxes/sb-1/logs",
@@ -1253,6 +1275,7 @@ def test_sandbox_logs_forwards_optional_service_param(monkeypatch):
 
 
 def test_sandbox_logs_use_runtime_invocation_policy(monkeypatch):
+    """Layer: integration. Verifies sandbox-log invocation policy still controls the sandbox orchestrator method after the host-service move."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
@@ -1265,7 +1288,7 @@ def test_sandbox_logs_use_runtime_invocation_policy(monkeypatch):
         sandbox_orchestrator = FakeSandboxOrchestrator()
 
     monkeypatch.setattr(api_module.api_runtime_node, "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
-    monkeypatch.setattr(api_module.api_runtime_node, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_sandbox_logs_invocation",
@@ -1283,6 +1306,7 @@ def test_sandbox_logs_use_runtime_invocation_policy(monkeypatch):
 
 
 def test_sandbox_logs_reject_unsupported_runtime_method(monkeypatch):
+    """Layer: contract. Verifies sandbox logs still fail closed when runtime policy names a missing sandbox-orchestrator method."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeSandboxOrchestrator:
@@ -1293,7 +1317,7 @@ def test_sandbox_logs_reject_unsupported_runtime_method(monkeypatch):
         sandbox_orchestrator = FakeSandboxOrchestrator()
 
     monkeypatch.setattr(api_module.api_runtime_node, "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
-    monkeypatch.setattr(api_module.api_runtime_node, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_sandbox_logs_invocation",
@@ -1310,6 +1334,7 @@ def test_sandbox_logs_reject_unsupported_runtime_method(monkeypatch):
 
 
 def test_sandbox_logs_uses_runtime_unsupported_detail(monkeypatch):
+    """Layer: contract. Verifies sandbox-log unsupported-detail shaping survives the move to explicit host-owned pipeline construction."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeSandboxOrchestrator:
@@ -1320,7 +1345,7 @@ def test_sandbox_logs_uses_runtime_unsupported_detail(monkeypatch):
         sandbox_orchestrator = FakeSandboxOrchestrator()
 
     monkeypatch.setattr(api_module.api_runtime_node, "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
-    monkeypatch.setattr(api_module.api_runtime_node, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+    monkeypatch.setattr(api_module.api_runtime_host, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_sandbox_logs_invocation",
@@ -2080,7 +2105,7 @@ def test_run_detail_and_replay_404_paths(monkeypatch):
 @pytest.mark.asyncio
 async def test_run_replay_list_endpoint_returns_turn_index_for_timeline(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.app.state.project_root = tmp_path
+    api_module.create_api_app(project_root=Path(tmp_path).resolve())
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}
@@ -2153,7 +2178,7 @@ async def test_run_replay_list_endpoint_returns_turn_index_for_timeline(monkeypa
 @pytest.mark.asyncio
 async def test_session_replay_endpoint_without_target_returns_timeline(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.app.state.project_root = tmp_path
+    api_module.create_api_app(project_root=Path(tmp_path).resolve())
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}
@@ -2291,7 +2316,7 @@ def test_execution_graph_endpoint_404_when_run_missing(monkeypatch):
 @pytest.mark.asyncio
 async def test_run_token_summary_aggregates_by_role_model_and_turn(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.app.state.project_root = tmp_path
+    api_module.create_api_app(project_root=Path(tmp_path).resolve())
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}
@@ -2412,7 +2437,7 @@ def test_run_token_summary_404_when_run_missing(monkeypatch):
 
 def test_logs_endpoint_filters_and_paginates(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.app.state.project_root = Path(tmp_path).resolve()
+    api_module.create_api_app(project_root=Path(tmp_path).resolve())
 
     default_workspace = Path(tmp_path) / "workspace" / "default"
     default_workspace.mkdir(parents=True, exist_ok=True)
@@ -2537,6 +2562,7 @@ def test_runs_sessions_reject_unsupported_runtime_methods(monkeypatch):
 
 
 def test_session_endpoints_emit_correlation_logs(monkeypatch):
+    """Layer: integration. Verifies session endpoint correlation logs still cover run-metrics reads after the explicit host-service move."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured_events = []
 
@@ -2557,7 +2583,7 @@ def test_session_endpoints_emit_correlation_logs(monkeypatch):
     monkeypatch.setattr(api_module.engine.snapshots, "get", fake_get_snapshot)
     monkeypatch.setattr(api_module.engine.sessions, "get_session_issues", fake_backlog, raising=False)
     monkeypatch.setattr(
-        api_module.api_runtime_node,
+        api_module.api_runtime_host,
         "create_member_metrics_reader",
         lambda: (lambda workspace: {"workspace": str(workspace)}),
     )

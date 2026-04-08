@@ -16,7 +16,7 @@ from orket.application.services.turn_tool_control_plane_support import (
     tool_operation_ref,
     tool_result_ref,
 )
-from orket.application.workflows.protocol_hashing import build_step_id, derive_operation_id
+from orket.runtime.registry.protocol_hashing import build_step_id, derive_operation_id
 from orket.core.domain.control_plane_effect_journal import validate_effect_journal_chain
 from orket.core.domain.execution import ToolCall, ToolCallErrorClass
 

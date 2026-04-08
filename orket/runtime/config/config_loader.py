@@ -122,6 +122,12 @@ class ConfigLoader:
         raw = await self._load_asset_raw_async(category, name, self.department)
         return model_type.model_validate_json(raw)
 
+    async def load_environment_asset_async(self, name: str) -> Any:
+        from orket.schema import validate_authoritative_environment_config_json
+
+        raw = await self._load_asset_raw_async("environments", name, self.department)
+        return validate_authoritative_environment_config_json(raw)
+
     def _load_asset_raw(self, category: str, name: str, dept: str) -> str:
         return self._run_async(self._load_asset_raw_async(category, name, dept))
 

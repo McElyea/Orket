@@ -24,7 +24,7 @@ from orket.runtime.protocol_error_codes import (
     format_protocol_error,
 )
 
-from .protocol_hashing import VALIDATOR_VERSION, default_protocol_hash, default_tool_schema_hash, hash_canonical_json
+from orket.runtime.registry.protocol_hashing import VALIDATOR_VERSION, default_protocol_hash, default_tool_schema_hash, hash_canonical_json
 
 
 class ResponseParser:

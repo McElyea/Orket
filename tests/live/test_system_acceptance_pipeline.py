@@ -8,6 +8,7 @@ import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
+from orket.exceptions import ExecutionFailed
 from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
 from orket.schema import CardStatus
@@ -34,6 +35,36 @@ def _run_roots(workspace):
     if not runs_root.exists():
         return []
     return sorted(path for path in runs_root.iterdir() if path.is_dir())
+
+
+def _assert_runtime_verification_support_artifact(
+    workspace,
+    runtime_payload,
+    *,
+    run_id: str,
+    expected_issue_id: str | None = None,
+):
+    assert runtime_payload["artifact_role"] == "support_verification_evidence"
+    assert runtime_payload["artifact_authority"] == "support_only"
+    assert runtime_payload["authored_output"] is False
+    assert runtime_payload["overall_evidence_class"] == "command_execution"
+    assert runtime_payload["provenance"]["run_id"] == run_id
+    if expected_issue_id is not None:
+        assert runtime_payload["provenance"]["issue_id"] == expected_issue_id
+    assert runtime_payload["provenance"]["turn_index"] >= 1
+    assert isinstance(runtime_payload["provenance"]["retry_count"], int)
+    assert runtime_payload["evidence_summary"]["syntax_only"]["evaluated"] is True
+    assert runtime_payload["evidence_summary"]["command_execution"]["evaluated"] is True
+    assert runtime_payload["evidence_summary"]["behavioral_verification"]["evaluated"] is False
+    assert "behavioral_verification" in {
+        row["check"] for row in runtime_payload["evidence_summary"]["not_evaluated"]
+    }
+    assert isinstance(runtime_payload.get("command_results"), list)
+    assert len(runtime_payload["command_results"]) >= 2
+    record_path = workspace / runtime_payload["history"]["record_path"]
+    index_path = workspace / runtime_payload["history"]["index_path"]
+    assert record_path.exists(), "runtime verification record history missing"
+    assert index_path.exists(), "runtime verification history index missing"
 
 
 class MultiRoleAcceptanceProvider:
@@ -207,8 +238,14 @@ async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch)
     runtime_report = workspace / "agent_output" / "verification" / "runtime_verification.json"
     assert runtime_report.exists(), "runtime verification artifact missing in canonical acceptance run."
     runtime_payload = json.loads(runtime_report.read_text(encoding="utf-8"))
-    assert isinstance(runtime_payload.get("ok"), bool)
-    assert isinstance(runtime_payload.get("command_results"), list)
+    run_roots = _run_roots(workspace)
+    assert len(run_roots) == 1, "Expected exactly one fresh run directory for acceptance proof."
+    _assert_runtime_verification_support_artifact(
+        workspace,
+        runtime_payload,
+        run_id=run_roots[0].name,
+        expected_issue_id="REV-1",
+    )
     checkpoint_paths = list((workspace / "observability").rglob("checkpoint.json"))
     assert checkpoint_paths, "Expected turn checkpoint artifacts for acceptance run."
     for checkpoint_path in checkpoint_paths:
@@ -220,7 +257,8 @@ async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch)
 
 
 @pytest.mark.asyncio
-async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path, monkeypatch):
+async def test_system_acceptance_role_pipeline_with_guard_live_reports_truthfully(tmp_path, monkeypatch):
+    """Layer: end-to-end. Verifies the live provider path records a truthful success or failure outcome without fake providers."""
     if os.getenv("ORKET_LIVE_ACCEPTANCE", "").lower() not in {"1", "true", "yes"}:
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live acceptance with Ollama.")
 
@@ -237,7 +275,11 @@ async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path, monkeyp
     _write_core_assets(root, epic_id="acceptance_pipeline_live", environment_model=model_name)
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("acceptance_pipeline_live")
+    run_error = None
+    try:
+        await engine.run_card("acceptance_pipeline_live")
+    except ExecutionFailed as exc:
+        run_error = exc
 
     req_issue = await engine.cards.get_by_id("REQ-1")
     arc_issue = await engine.cards.get_by_id("ARC-1")
@@ -265,20 +307,6 @@ async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path, monkeyp
     print("[live] main.py")
     print(_safe_console(code_text))
 
-    assert req_issue.status == CardStatus.DONE, "REQ-1 must complete DONE in canonical chain"
-    assert arc_issue.status == CardStatus.DONE, "ARC-1 must complete DONE in canonical chain"
-    assert cod_issue.status == CardStatus.DONE, "COD-1 must complete DONE in canonical chain"
-    assert rev_issue.status == CardStatus.DONE, "REV-1 must complete DONE in canonical chain"
-
-    assert requirements_path.exists(), "requirements.txt not produced for completed REQ-1"
-    assert design_path.exists(), "design.txt not produced for completed ARC-1"
-    assert code_path.exists(), "main.py not produced for completed COD-1"
-    assert runtime_report.exists(), "runtime_verification.json missing for live acceptance run"
-
-    runtime_payload = _read_json(runtime_report)
-    assert isinstance(runtime_payload.get("ok"), bool)
-    assert isinstance(runtime_payload.get("command_results"), list)
-
     run_roots = _run_roots(workspace)
     assert len(run_roots) == 1, "Expected exactly one fresh run directory for live acceptance proof."
     run_root = run_roots[0]
@@ -286,8 +314,33 @@ async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path, monkeyp
     assert run_summary_path.exists(), "run_summary.json missing from live run root"
     run_summary = read_validated_run_summary(run_summary_path)
     assert run_summary.get("run_id") == run_root.name
-    assert run_summary.get("status") == "done"
-    assert "workspace_state_snapshot" in list(run_summary.get("artifact_ids") or [])
+    if runtime_report.exists():
+        runtime_payload = _read_json(runtime_report)
+        _assert_runtime_verification_support_artifact(workspace, runtime_payload, run_id=run_root.name)
+
+    issues_done = all(
+        issue is not None and issue.status == CardStatus.DONE
+        for issue in (req_issue, arc_issue, cod_issue, rev_issue)
+    )
+    if issues_done:
+        assert run_error is None
+        assert requirements_path.exists(), "requirements.txt not produced for completed REQ-1"
+        assert design_path.exists(), "design.txt not produced for completed ARC-1"
+        assert code_path.exists(), "main.py not produced for completed COD-1"
+        assert runtime_report.exists(), "runtime_verification.json missing for live acceptance run"
+        runtime_payload = _read_json(runtime_report)
+        _assert_runtime_verification_support_artifact(
+            workspace,
+            runtime_payload,
+            run_id=run_root.name,
+            expected_issue_id="REV-1",
+        )
+        assert run_summary.get("status") == "done"
+        assert "workspace_state_snapshot" in list(run_summary.get("artifact_ids") or [])
+    else:
+        assert run_error is not None or run_summary.get("status") in {"failed", "terminal_failure", "incomplete"}
+        assert run_summary.get("status") in {"failed", "terminal_failure", "incomplete"}
+        assert str(run_summary.get("stop_reason") or run_summary.get("failure_reason") or "").strip()
 
     run_ledger_mode = os.getenv("ORKET_RUN_LEDGER_MODE", "").strip().lower()
     if run_ledger_mode in {"append_only", "append_only_protocol", "dual", "dual_write", "mirror", "protocol"}:

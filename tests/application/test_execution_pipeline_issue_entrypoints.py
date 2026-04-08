@@ -13,6 +13,7 @@ from orket.runtime.execution_pipeline import ExecutionPipeline
 async def test_run_card_routes_atomic_issue_via_normalized_dispatcher() -> None:
     """Layer: unit. Verifies the canonical card surface dispatches through one normalized resolver."""
     pipeline = object.__new__(ExecutionPipeline)
+    pipeline._initialized = True
     seen: dict[str, object] = {}
 
     async def _resolve(card_id: str):  # type: ignore[no-untyped-def]
@@ -274,7 +275,7 @@ async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypat
             seen["sub_calls"].append((epic_id, self._department, self._epic_workspace, kwargs))
             return {"epic_id": epic_id, "department": self._department}
 
-    class _PipelineWiringNode:
+    class _PipelineWiringService:
         def create_sub_pipeline(self, *, parent_pipeline: object, epic_workspace: Path, department: str) -> object:
             seen["parent_pipeline"] = parent_pipeline
             return _SubPipeline(department=department, epic_workspace=epic_workspace)
@@ -284,8 +285,9 @@ async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypat
             seen["bug_fix_phase"] = collection_id
 
     pipeline.loader = _Loader()
+    pipeline.runtime_inputs = SimpleNamespace(create_session_id=lambda: "collection-session")
     pipeline.execution_runtime_node = _RuntimeNode()
-    pipeline.pipeline_wiring_node = _PipelineWiringNode()
+    pipeline.pipeline_wiring_service = _PipelineWiringService()
     pipeline.bug_fix_manager = _BugFixManager()
     monkeypatch.setattr(execution_pipeline_module, "log_event", lambda *_args, **_kwargs: None)
 

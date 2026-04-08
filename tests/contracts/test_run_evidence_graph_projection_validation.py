@@ -8,7 +8,7 @@ import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
-from orket.application.workflows.tool_invocation_contracts import build_tool_invocation_manifest
+from orket.runtime.registry.tool_invocation_contracts import build_tool_invocation_manifest
 from orket.core.contracts import AttemptRecord, CheckpointRecord, RunRecord
 from orket.core.domain import (
     AttemptState,

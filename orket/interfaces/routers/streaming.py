@@ -13,6 +13,7 @@ def register_streaming_routes(
     *,
     api_key_name: str,
     api_runtime_node_getter: Callable[[], Any],
+    runtime_host_getter: Callable[[], Any],
     interaction_manager_getter: Callable[[], Any],
     stream_bus_getter: Callable[[], Any],
     runtime_state: Any,
@@ -29,6 +30,7 @@ def register_streaming_routes(
         warning_event = api_runtime_node.websocket_query_compat_warning_event(
             bool((not header_key) and query_key and supplied_key == query_key),
             input_ref="/ws/events",
+            timestamp_utc=runtime_host_getter().utc_now_iso(),
         )
         if warning_event:
             log_event("security_compat_fallback_used", warning_event, project_root_getter())
@@ -54,6 +56,7 @@ def register_streaming_routes(
         warning_event = api_runtime_node.websocket_query_compat_warning_event(
             bool((not header_key) and query_key and supplied_key == query_key),
             input_ref=f"/ws/interactions/{session_id}",
+            timestamp_utc=runtime_host_getter().utc_now_iso(),
         )
         if warning_event:
             log_event("security_compat_fallback_used", warning_event, project_root_getter())

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
-from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.runtime.registry import protocol_hashing
 from orket.runtime.run_ledger_projection import project_run_ledger_record
 
 
@@ -87,8 +87,8 @@ async def compare_run_ledger_rows(
             }
         )
 
-    sqlite_digest = hash_canonical_json(sqlite_row) if sqlite_row is not None else None
-    protocol_digest = hash_canonical_json(protocol_row) if protocol_row is not None else None
+    sqlite_digest = protocol_hashing.hash_canonical_json(sqlite_row) if sqlite_row is not None else None
+    protocol_digest = protocol_hashing.hash_canonical_json(protocol_row) if protocol_row is not None else None
     return {
         "session_id": normalized_session_id,
         "parity_ok": len(differences) == 0,

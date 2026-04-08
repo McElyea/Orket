@@ -8,8 +8,8 @@ from orket.runtime.protocol_error_codes import (
     format_protocol_error,
 )
 
-from .protocol_hashing import hash_canonical_json
-from .tool_invocation_contracts import normalize_tool_args
+from orket.runtime.registry.protocol_hashing import hash_canonical_json
+from orket.runtime.registry.tool_invocation_contracts import normalize_tool_args
 
 _VALID_DETERMINISM_CLASSES = {"pure", "workspace", "external"}
 _DETERMINISM_RANK = {"pure": 0, "workspace": 1, "external": 2}

@@ -8,8 +8,8 @@ import orket.runtime.execution_pipeline_run_summary as execution_pipeline_run_su
 import orket.runtime.run_summary as run_summary_module
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.services.turn_tool_control_plane_support import attempt_id_for, run_id_for
-from orket.application.workflows.protocol_hashing import hash_framed_fields
-from orket.application.workflows.tool_invocation_contracts import (
+from orket.runtime.registry.protocol_hashing import hash_framed_fields
+from orket.runtime.registry.tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
@@ -323,8 +323,8 @@ async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, 
     assert ledger["summary_json"]["control_plane"]["attempt_state"] == "attempt_waiting"
     assert ledger["summary_json"]["control_plane"]["step_id"] == ledger["artifact_json"]["control_plane_step_record"]["step_id"]
     packet1 = ledger["summary_json"]["truthful_runtime_packet1"]
-    assert packet1["provenance"]["primary_output_kind"] == "artifact"
-    assert packet1["classification"]["truth_classification"] == "direct"
+    assert packet1["provenance"]["primary_output_kind"] == "none"
+    assert packet1["classification"] == {"classification_applicable": False}
     assert packet1["packet1_conformance"]["status"] == "conformant"
     assert "gitea_export" not in ledger["summary_json"]["artifact_ids"]
     assert ledger["artifact_json"]["workspace"] == str(workspace)
@@ -497,7 +497,7 @@ async def test_run_ledger_harvests_local_prompt_fallback_telemetry(
     assert packet1["provenance"]["actual_profile"] == "ollama.qwen.chatml.v1"
     assert packet1["provenance"]["fallback_occurred"] is True
     assert packet1["provenance"]["execution_profile"] == "fallback"
-    assert packet1["classification"]["truth_classification"] == "degraded"
+    assert packet1["classification"] == {"classification_applicable": False}
     assert packet1["defects"]["defect_families"] == ["silent_degraded_success"]
     assert packet1["packet1_conformance"]["status"] == "non_conformant"
 
@@ -552,7 +552,7 @@ async def test_run_ledger_marks_corrective_reprompt_runs_as_repaired(
     assert packet1["provenance"]["repair_occurred"] is True
     assert packet1["provenance"]["intended_model"] != PACKET1_MISSING_TOKEN
     assert packet1["provenance"]["intended_profile"] != PACKET1_MISSING_TOKEN
-    assert packet1["classification"]["truth_classification"] == "repaired"
+    assert packet1["classification"] == {"classification_applicable": False}
     assert packet1["defects"]["defect_families"] == ["silent_repaired_success"]
     assert packet1["packet1_conformance"]["status"] == "non_conformant"
     assert packet2["repair_ledger"]["repair_occurred"] is True

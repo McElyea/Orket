@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
-from orket.application.workflows.protocol_hashing import build_step_id, derive_operation_id
+from orket.runtime.registry.protocol_hashing import build_step_id, derive_operation_id
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_executor_control_plane import write_turn_checkpoint_and_publish_if_needed
 from orket.core.contracts import StepRecord

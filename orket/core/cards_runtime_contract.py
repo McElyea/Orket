@@ -17,6 +17,8 @@ DEFAULT_REQUIREMENTS_PATH = "agent_output/requirements.txt"
 DEFAULT_ARCHITECTURE_PATH = "agent_output/design.txt"
 DEFAULT_SOURCE_ATTRIBUTION_PATH = "agent_output/source_attribution_receipt.json"
 DEFAULT_RUNTIME_VERIFICATION_PATH = "agent_output/verification/runtime_verification.json"
+DEFAULT_RUNTIME_VERIFICATION_INDEX_PATH = "agent_output/verification/runtime_verification_index.json"
+DEFAULT_RUNTIME_VERIFICATION_RECORDS_DIR = "agent_output/verification/runtime_verifier_records"
 
 _RUNTIME_PARAM_KEYS = (
     "cards_runtime",

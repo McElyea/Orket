@@ -3,7 +3,6 @@ from __future__ import annotations
 import inspect
 import os
 import re
-import uuid
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -483,21 +482,6 @@ networks:
         raise ValueError(f"Unsupported tech stack: {sandbox.tech_stack}")
 
 
-class DefaultEngineRuntimePolicyNode:
-    """
-    Built-in engine runtime policy node.
-    Preserves environment bootstrap and config-root fallback behavior.
-    """
-
-    def bootstrap_environment(self) -> None:
-        from orket.settings import load_env
-
-        load_env()
-
-    def resolve_config_root(self, config_root: Any) -> Any:
-        return config_root or Path().resolve()
-
-
 class DefaultLoaderStrategyNode:
     """
     Built-in loader strategy node.
@@ -548,77 +532,22 @@ class DefaultExecutionRuntimeStrategyNode:
     """
 
     def select_run_id(self, session_id: str | None) -> str:
-        return session_id or str(uuid.uuid4())[:8]
+        if not session_id:
+            raise ValueError("session_id is required")
+        return session_id
 
     def select_epic_build_id(self, build_id: str | None, epic_name: str, sanitize_name: Any) -> str:
         return build_id or f"build-{sanitize_name(epic_name)}"
 
     def select_epic_collection_session_id(self, session_id: str | None) -> str:
-        return session_id or str(uuid.uuid4())[:8]
+        if not session_id:
+            raise ValueError("session_id is required")
+        return session_id
 
     def select_epic_collection_build_id(
         self, build_id: str | None, collection_name: str, sanitize_name: Any
     ) -> str:
         return build_id or f"epic-collection-build-{sanitize_name(collection_name)}"
-
-
-class DefaultPipelineWiringStrategyNode:
-    """
-    Built-in execution-pipeline wiring strategy node.
-    Preserves current pipeline composition and subordinate sub-pipeline spawn behavior.
-    """
-
-    def create_sandbox_orchestrator(self, workspace: Any, organization: Any) -> Any:
-        from orket.services.sandbox_orchestrator import SandboxOrchestrator
-
-        return SandboxOrchestrator(workspace, organization=organization)
-
-    def create_webhook_database(self) -> Any:
-        from orket.adapters.vcs.webhook_db import WebhookDatabase
-
-        return WebhookDatabase()
-
-    def create_bug_fix_manager(self, organization: Any, webhook_db: Any) -> Any:
-        from orket.core.domain.bug_fix_phase import BugFixPhaseManager
-
-        return BugFixPhaseManager(
-            organization_config=organization.process_rules if organization else {},
-            db=webhook_db,
-        )
-
-    def create_orchestrator(
-        self,
-        workspace: Any,
-        async_cards: Any,
-        snapshots: Any,
-        org: Any,
-        config_root: Any,
-        db_path: str,
-        loader: Any,
-        sandbox_orchestrator: Any,
-    ) -> Any:
-        from orket.application.workflows.orchestrator import Orchestrator
-
-        return Orchestrator(
-            workspace=workspace,
-            async_cards=async_cards,
-            snapshots=snapshots,
-            org=org,
-            config_root=config_root,
-            db_path=db_path,
-            loader=loader,
-            sandbox_orchestrator=sandbox_orchestrator,
-        )
-
-    def create_sub_pipeline(self, parent_pipeline: Any, epic_workspace: Any, department: str) -> Any:
-        return parent_pipeline.__class__(
-            epic_workspace,
-            department,
-            db_path=parent_pipeline.db_path,
-            config_root=parent_pipeline.config_root,
-            decision_nodes=parent_pipeline.decision_nodes,
-        )
-
 
 class DefaultOrchestrationLoopPolicyNode:
     """

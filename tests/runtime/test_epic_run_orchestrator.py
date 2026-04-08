@@ -108,6 +108,9 @@ class _Loader:
     async def load_asset_async(self, asset_kind: str, asset_name: str, _model: object) -> Any:
         return self._assets[(asset_kind, asset_name)]
 
+    async def load_environment_asset_async(self, asset_name: str) -> Any:
+        return self._assets[("environments", asset_name)]
+
 
 class _ControlPlaneRecord:
     def __init__(self, value: str) -> None:
@@ -173,6 +176,7 @@ async def _no_export(**_kwargs: Any) -> None:
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_epic_run_orchestrator_runs_with_isolated_collaborators(tmp_path: Path) -> None:
+    """Layer: integration. Verifies epic orchestration now consumes explicit runtime inputs outside the decision-node layer."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     cards_repo = _CardsRepo()
@@ -211,13 +215,14 @@ async def test_epic_run_orchestrator_runs_with_isolated_collaborators(tmp_path: 
         workspace=workspace,
         department="core",
         organization=SimpleNamespace(architecture=SimpleNamespace(idesign_threshold=10)),
+        runtime_input_service=SimpleNamespace(create_session_id=lambda: "sess-epic-runner"),
         execution_runtime_node=SimpleNamespace(
-            select_run_id=lambda session_id: str(session_id or "sess-epic-runner"),
+            select_run_id=lambda session_id: str(session_id),
             select_epic_build_id=lambda build_id, epic_name, sanitize_fn: str(
                 build_id or f"build-{sanitize_fn(epic_name)}"
             ),
         ),
-        pipeline_wiring_node=SimpleNamespace(),
+        pipeline_wiring_service=SimpleNamespace(),
         cards_repo=cards_repo,
         sessions_repo=sessions_repo,
         snapshots_repo=snapshots_repo,

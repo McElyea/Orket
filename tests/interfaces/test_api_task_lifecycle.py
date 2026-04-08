@@ -71,6 +71,7 @@ async def test_runtime_state_get_task_returns_none_when_only_completed_tasks_rem
 
 @pytest.mark.asyncio
 async def test_heartbeat_active_tasks_converges_after_run_active_completion(monkeypatch, fresh_runtime_state):
+    """Layer: integration. Verifies run-active task tracking now mints session ids through the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     session_id = "hbtask01"
 
@@ -79,7 +80,7 @@ async def test_heartbeat_active_tasks_converges_after_run_active_completion(monk
         return {"ok": True}
 
     monkeypatch.setattr(api_module.engine, "fake_run", fake_run, raising=False)
-    monkeypatch.setattr(api_module.api_runtime_node, "create_session_id", lambda: session_id)
+    monkeypatch.setattr(api_module.api_runtime_host, "create_session_id", lambda: session_id)
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_run_active_invocation",
@@ -121,6 +122,7 @@ async def test_heartbeat_active_tasks_converges_after_run_active_completion(monk
 
 @pytest.mark.asyncio
 async def test_concurrent_run_active_task_cleanup_stress(monkeypatch, fresh_runtime_state):
+    """Layer: integration. Verifies concurrent run-active cleanup stays correct when session ids come from the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     base = "hbconcur"
     counter = {"n": 0}
@@ -134,7 +136,7 @@ async def test_concurrent_run_active_task_cleanup_stress(monkeypatch, fresh_runt
         return f"{base}-{counter['n']}"
 
     monkeypatch.setattr(api_module.engine, "fake_run", fake_run, raising=False)
-    monkeypatch.setattr(api_module.api_runtime_node, "create_session_id", _new_session_id)
+    monkeypatch.setattr(api_module.api_runtime_host, "create_session_id", _new_session_id)
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_run_active_invocation",

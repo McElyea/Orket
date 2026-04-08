@@ -11,6 +11,7 @@ from typing import Any
 import aiofiles
 
 from orket.core.domain.guard_contract import GuardContract, GuardViolation
+from orket.application.services.runtime_verifier_evidence import annotate_runtime_verifier_evidence
 
 _COMMAND_OUTPUT_LIMIT = 2000
 _COMMAND_FAILURE_SUMMARY_LIMIT = 240
@@ -24,6 +25,8 @@ class RuntimeVerificationResult:
     errors: list[str]
     command_results: list[dict[str, Any]]
     failure_breakdown: dict[str, int]
+    overall_evidence_class: str
+    evidence_summary: dict[str, Any]
     guard_contract: GuardContract
 
 
@@ -69,8 +72,10 @@ class RuntimeVerifier:
         commands = command_plan.get("commands", [])
         policy_source = str(command_plan.get("source", "none"))
         timeout_sec = self._resolve_runtime_timeout_seconds()
-        for command in commands:
+        stdout_contract = self._resolve_stdout_contract()
+        for index, command in enumerate(commands, start=1):
             result = await self._run_command(command, timeout_sec, policy_source)
+            result["command_id"] = f"command:{index:03d}"
             command_results.append(result)
             if result.get("returncode", 1) != 0:
                 failure_class = str(result.get("failure_class") or "command_failed")
@@ -84,6 +89,12 @@ class RuntimeVerifier:
             command_results=command_results,
             failure_breakdown=failure_breakdown,
             errors=errors,
+            contract=stdout_contract,
+        )
+        command_results, overall_evidence_class, evidence_summary = annotate_runtime_verifier_evidence(
+            checked_files=checked_files,
+            command_results=command_results,
+            stdout_contract=stdout_contract,
         )
 
         deployment_missing = await self._validate_deployment_artifacts_if_required()
@@ -98,6 +109,8 @@ class RuntimeVerifier:
             errors=errors,
             command_results=command_results,
             failure_breakdown=failure_breakdown,
+            overall_evidence_class=overall_evidence_class,
+            evidence_summary=evidence_summary,
             guard_contract=guard_contract,
         )
 
@@ -494,8 +507,9 @@ class RuntimeVerifier:
         command_results: list[dict[str, Any]],
         failure_breakdown: dict[str, int],
         errors: list[str],
+        contract: dict[str, Any] | None = None,
     ) -> None:
-        contract = self._resolve_stdout_contract()
+        contract = dict(contract or self._resolve_stdout_contract())
         expect_json_stdout = bool(contract.get("expect_json_stdout"))
         json_assertions = list(contract.get("json_assertions") or [])
         if not expect_json_stdout and not json_assertions:

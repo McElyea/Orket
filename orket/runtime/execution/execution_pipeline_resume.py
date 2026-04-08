@@ -12,9 +12,10 @@ from orket.utils import sanitize_name
 class ExecutionPipelineResumeMixin:
     if TYPE_CHECKING:
         loader: Any
+        runtime_inputs: Any
         execution_runtime_node: Any
         workspace: Path
-        pipeline_wiring_node: Any
+        pipeline_wiring_service: Any
         bug_fix_manager: Any
         async_cards: Any
         orchestrator: Any
@@ -28,14 +29,15 @@ class ExecutionPipelineResumeMixin:
         model_override: str | None = None,
     ) -> dict[str, Any]:
         collection = await self.loader.load_asset_async("rocks", collection_name, RockConfig)
-        sid = self.execution_runtime_node.select_epic_collection_session_id(session_id)
+        requested_session_id = session_id or self.runtime_inputs.create_session_id()
+        sid = self.execution_runtime_node.select_epic_collection_session_id(requested_session_id)
         active_build = self.execution_runtime_node.select_epic_collection_build_id(
             build_id, collection_name, sanitize_name
         )
         results = []
         for entry in collection.epics:
             epic_ws = self.workspace / entry["epic"]
-            sub_pipeline = self.pipeline_wiring_node.create_sub_pipeline(
+            sub_pipeline = self.pipeline_wiring_service.create_sub_pipeline(
                 parent_pipeline=self,
                 epic_workspace=epic_ws,
                 department=entry["department"],

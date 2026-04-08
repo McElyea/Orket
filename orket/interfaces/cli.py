@@ -486,7 +486,12 @@ async def run_cli() -> None:
                 raise ValueError("--replay-turn format must be <session_id>:<issue_id>:<turn_index>[:role]")
             session_id, issue_id, turn_index = parts[0], parts[1], int(parts[2])
             role = parts[3] if len(parts) == 4 else None
-            replay = engine.replay_turn(session_id=session_id, issue_id=issue_id, turn_index=turn_index, role=role)
+            replay = engine.replay_turn_diagnostics(
+                session_id=session_id,
+                issue_id=issue_id,
+                turn_index=turn_index,
+                role=role,
+            )
             print(json.dumps(replay, indent=2, ensure_ascii=False))
             return
 

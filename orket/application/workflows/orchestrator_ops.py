@@ -1,15 +1,12 @@
 import asyncio
 import inspect
 import json
-import os
 import re
 from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from orket.adapters.storage.async_file_tools import AsyncFileTools
-from orket.application.services.cards_odr_stage import run_cards_odr_prebuild
 from orket.application.services.dependency_manager import (
     DependencyManager,
     DependencyValidationError,
@@ -18,11 +15,19 @@ from orket.application.services.deployment_planner import (
     DeploymentPlanner,
     DeploymentValidationError,
 )
-from orket.application.services.guard_agent import GuardAgent
+from orket.application.services.orchestrator_review_preflight_service import (
+    OrchestratorReviewPreflightService,
+)
+from orket.application.services.orchestrator_turn_preparation_service import (
+    OrchestratorTurnPreparationService,
+    TurnPreparationInput,
+)
+from orket.application.services.orchestrator_turn_success_handler import (
+    OrchestratorTurnSuccessHandler,
+)
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.application.services.prompt_resolver import PromptResolver
 from orket.application.services.runtime_policy import (
-    allowed_architecture_patterns,
     resolve_architecture_mode,
     resolve_frontend_framework_mode,
     resolve_local_prompting_allow_fallback,
@@ -32,34 +37,32 @@ from orket.application.services.runtime_policy import (
     resolve_protocol_determinism_controls,
     resolve_small_project_builder_variant,
 )
-from orket.application.services.runtime_verifier import RuntimeVerifier, build_runtime_guard_contract
+from orket.application.services.runtime_verifier import RuntimeVerifier
 from orket.application.services.scaffolder import Scaffolder, ScaffoldValidationError
-from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
+from orket.application.services.orchestrator_turn_context_builder import (
+    OrchestratorTurnContextBuilder,
+    TurnContextBuildInput,
+)
+from orket.application.services.orchestrator_failure_handler import OrchestratorFailureHandler
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, resolve_cards_runtime
 from orket.core.domain.guard_review import GuardReviewPayload
-from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
 from orket.core.domain.state_machine import StateMachine
-from orket.core.domain.verification_scope import build_verification_scope
 from orket.core.domain.workitem_transition import WorkItemTransitionService
 from orket.core.policies.tool_gate import ToolGate
 from orket.decision_nodes.contracts import PlanningInput
 from orket.exceptions import CardNotFound, ExecutionFailed
 from orket.logging import log_event
 from orket.orchestration.models import ModelSelector
-from orket.orchestration.notes import Note
 from orket.runtime.settings import resolve_bool, resolve_str
-from orket.runtime.truthful_memory_policy import render_reference_context_rows
 from orket.runtime_paths import resolve_control_plane_db_path
 from orket.schema import (
     CardStatus,
-    DialectConfig,
     EnvironmentConfig,
     EpicConfig,
     IssueConfig,
     RoleConfig,
     SeatConfig,
-    SkillConfig,
     TeamConfig,
     WaitReason,
 )
@@ -125,18 +128,6 @@ def _select_prompt_strategy_model(
     return str(select_model(role=role, asset_config=asset_config))
 
 
-def _normalize_turn_contract_override_list(value: Any, *, lowercase: bool = False) -> list[str] | None:
-    if not isinstance(value, list):
-        return None
-    normalized: list[str] = []
-    for item in value:
-        token = str(item).strip()
-        if not token:
-            continue
-        normalized.append(token.lower() if lowercase else token)
-    return normalized
-
-
 def _should_suppress_reference_context_for_cards_runtime(cards_runtime: dict[str, Any] | None) -> bool:
     runtime = dict(cards_runtime or {})
     profile = str(runtime.get("execution_profile") or runtime.get("base_execution_profile") or "").strip().lower()
@@ -157,9 +148,8 @@ def _org_process_rules(org: Any) -> dict[str, Any]:
     return process_rules if isinstance(process_rules, dict) else {}
 
 
-def _user_settings() -> dict[str, Any]:
-    settings = load_user_settings()
-    return settings if isinstance(settings, dict) else {}
+def _user_settings(self: Any) -> dict[str, Any]:
+    return self.support_services.load_user_settings()
 
 
 def _normalize_wait_reason_token(value: Any) -> str | None:
@@ -223,7 +213,7 @@ def _apply_issue_transition_locally(
 
 
 def _resolve_architecture_mode(self: Any) -> str:
-    user_settings = _user_settings()
+    user_settings = _user_settings(self)
     raw = resolve_str(
         "ORKET_ARCHITECTURE_MODE",
         process_rules=_org_process_rules(self.org),
@@ -235,7 +225,7 @@ def _resolve_architecture_mode(self: Any) -> str:
 
 
 def _resolve_frontend_framework_mode(self: Any) -> str:
-    user_settings = _user_settings()
+    user_settings = _user_settings(self)
     raw = resolve_str(
         "ORKET_FRONTEND_FRAMEWORK_MODE",
         process_rules=_org_process_rules(self.org),
@@ -256,7 +246,7 @@ def _resolve_architecture_pattern(self: Any) -> str | None:
 
 
 def _resolve_project_surface_profile(self: Any) -> str:
-    user_settings = _user_settings()
+    user_settings = _user_settings(self)
     raw = resolve_str(
         "ORKET_PROJECT_SURFACE_PROFILE",
         process_rules=_org_process_rules(self.org),
@@ -268,7 +258,7 @@ def _resolve_project_surface_profile(self: Any) -> str:
 
 
 def _resolve_small_project_builder_variant(self: Any) -> str:
-    user_settings = _user_settings()
+    user_settings = _user_settings(self)
     raw = resolve_str(
         "ORKET_SMALL_PROJECT_BUILDER_VARIANT",
         process_rules=_org_process_rules(self.org),
@@ -280,7 +270,7 @@ def _resolve_small_project_builder_variant(self: Any) -> str:
 
 
 def _resolve_protocol_governed_enabled(self: Any) -> bool:
-    user_settings = _user_settings()
+    user_settings = _user_settings(self)
     return bool(resolve_bool(
         "ORKET_PROTOCOL_GOVERNED_ENABLED",
         "ORKET_PROTOCOL_GOVERNED",
@@ -293,7 +283,7 @@ def _resolve_protocol_governed_enabled(self: Any) -> bool:
 
 
 def _resolve_protocol_max_response_bytes(self: Any) -> int:
-    user_settings = _user_settings()
+    user_settings = _user_settings(self)
     raw = resolve_str(
         "ORKET_PROTOCOL_MAX_RESPONSE_BYTES",
         process_rules=_org_process_rules(self.org),
@@ -310,7 +300,7 @@ def _resolve_protocol_max_response_bytes(self: Any) -> int:
 
 
 def _resolve_protocol_max_tool_calls(self: Any) -> int:
-    user_settings = _user_settings()
+    user_settings = _user_settings(self)
     raw = resolve_str(
         "ORKET_PROTOCOL_MAX_TOOL_CALLS",
         process_rules=_org_process_rules(self.org),
@@ -328,7 +318,7 @@ def _resolve_protocol_max_tool_calls(self: Any) -> int:
 
 def _resolve_protocol_determinism_context(self: Any) -> dict[str, Any]:
     process_rules = _org_process_rules(self.org)
-    user_settings = _user_settings()
+    user_settings = _user_settings(self)
     controls = resolve_protocol_determinism_controls(
         timezone_values=[
             resolve_str(
@@ -411,7 +401,7 @@ def _resolve_protocol_determinism_context(self: Any) -> dict[str, Any]:
 
 def _resolve_local_prompting_mode(self: Any) -> str:
     process_rules = _org_process_rules(self.org)
-    user_settings = _user_settings()
+    user_settings = _user_settings(self)
     return str(resolve_local_prompting_mode(
         resolve_str(
             "ORKET_LOCAL_PROMPTING_MODE",
@@ -427,7 +417,7 @@ def _resolve_local_prompting_mode(self: Any) -> str:
 
 def _resolve_local_prompting_allow_fallback(self: Any) -> bool:
     process_rules = _org_process_rules(self.org)
-    user_settings = _user_settings()
+    user_settings = _user_settings(self)
     return bool(
         resolve_local_prompting_allow_fallback(
             resolve_str(
@@ -445,7 +435,7 @@ def _resolve_local_prompting_allow_fallback(self: Any) -> bool:
 
 def _resolve_local_prompting_fallback_profile_id(self: Any) -> str:
     process_rules = _org_process_rules(self.org)
-    user_settings = _user_settings()
+    user_settings = _user_settings(self)
     return str(resolve_local_prompting_fallback_profile_id(
         resolve_str(
             "ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID",
@@ -993,20 +983,12 @@ async def execute_epic(
         log_event("scaffolder_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
         project_surface_profile = self._resolve_project_surface_profile()
         architecture_pattern = self._resolve_architecture_pattern()
-        try:
-            scaffolder = Scaffolder(
-                workspace_root=self.workspace,
-                file_tools=AsyncFileTools(self.workspace),
-                organization=self.org,
-                project_surface_profile=project_surface_profile,
-                architecture_pattern=architecture_pattern,
-            )
-        except TypeError:
-            scaffolder = Scaffolder(
-                workspace_root=self.workspace,
-                file_tools=AsyncFileTools(self.workspace),
-                organization=self.org,
-            )
+        scaffolder = self.support_services.create_scaffolder(
+            workspace_root=self.workspace,
+            organization=self.org,
+            project_surface_profile=project_surface_profile,
+            architecture_pattern=architecture_pattern,
+        )
         try:
             scaffold_result = await scaffolder.ensure()
         except ScaffoldValidationError as exc:
@@ -1033,20 +1015,12 @@ async def execute_epic(
         log_event("dependency_manager_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
         project_surface_profile = self._resolve_project_surface_profile()
         architecture_pattern = self._resolve_architecture_pattern()
-        try:
-            dependency_manager = DependencyManager(
-                workspace_root=self.workspace,
-                file_tools=AsyncFileTools(self.workspace),
-                organization=self.org,
-                project_surface_profile=project_surface_profile,
-                architecture_pattern=architecture_pattern,
-            )
-        except TypeError:
-            dependency_manager = DependencyManager(
-                workspace_root=self.workspace,
-                file_tools=AsyncFileTools(self.workspace),
-                organization=self.org,
-            )
+        dependency_manager = self.support_services.create_dependency_manager(
+            workspace_root=self.workspace,
+            organization=self.org,
+            project_surface_profile=project_surface_profile,
+            architecture_pattern=architecture_pattern,
+        )
         try:
             dependency_result = await dependency_manager.ensure()
         except DependencyValidationError as exc:
@@ -1072,20 +1046,12 @@ async def execute_epic(
         log_event("deployment_planner_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
         project_surface_profile = self._resolve_project_surface_profile()
         architecture_pattern = self._resolve_architecture_pattern()
-        try:
-            deployment_planner = DeploymentPlanner(
-                workspace_root=self.workspace,
-                file_tools=AsyncFileTools(self.workspace),
-                organization=self.org,
-                project_surface_profile=project_surface_profile,
-                architecture_pattern=architecture_pattern,
-            )
-        except TypeError:
-            deployment_planner = DeploymentPlanner(
-                workspace_root=self.workspace,
-                file_tools=AsyncFileTools(self.workspace),
-                organization=self.org,
-            )
+        deployment_planner = self.support_services.create_deployment_planner(
+            workspace_root=self.workspace,
+            organization=self.org,
+            project_surface_profile=project_surface_profile,
+            architecture_pattern=architecture_pattern,
+        )
         try:
             deployment_result = await deployment_planner.ensure()
         except DeploymentValidationError as exc:
@@ -1412,478 +1378,81 @@ async def _execute_issue_turn(
     cards_runtime = resolve_cards_runtime(issue=issue)
     is_review_turn = self.loop_policy_node.is_review_turn(issue.status)
     dependency_context = await self._build_dependency_context(issue)
-    runtime_result = None
-
-    if is_review_turn and not self._is_runtime_verifier_disabled():
-        log_event(
-            "runtime_verifier_started",
-            {"run_id": run_id, "issue_id": issue.id},
-            self.workspace,
-        )
-        try:
-            runtime_verifier = RuntimeVerifier(
-                self.workspace,
-                organization=self.org,
-                project_surface_profile=self._resolve_project_surface_profile(),
-                architecture_pattern=self._resolve_architecture_pattern(),
-                artifact_contract=dict(cards_runtime.get("artifact_contract") or {}),
-                issue_params=dict(getattr(issue, "params", {}) or {}),
-            )
-        except TypeError:
-            runtime_verifier = RuntimeVerifier(
-                self.workspace,
-                organization=self.org,
-            )
-        runtime_result = await runtime_verifier.verify()
-        guard_contract = getattr(runtime_result, "guard_contract", None)
-        if guard_contract is None:
-            guard_contract = build_runtime_guard_contract(
-                ok=bool(getattr(runtime_result, "ok", False)),
-                errors=list(getattr(runtime_result, "errors", []) or []),
-            )
-        existing_fingerprints = []
-        if isinstance(getattr(issue, "params", None), dict):
-            raw = issue.params.get("guard_retry_fingerprints", [])
-            if isinstance(raw, list):
-                existing_fingerprints = [str(item).strip() for item in raw if str(item).strip()]
-        guard_decision = GuardAgent(self.org).evaluate(
-            contract=guard_contract,
-            retry_count=int(getattr(issue, "retry_count", 0) or 0),
-            max_retries=int(getattr(issue, "max_retries", 0) or 0),
-            output_text="\n".join(list(getattr(runtime_result, "errors", []) or [])),
-            seen_fingerprints=existing_fingerprints,
-        )
-        if not isinstance(getattr(issue, "params", None), dict):
-            issue.params = {}
-        issue.params["guard_retry_fingerprints"] = existing_fingerprints[-10:]
-        runtime_report = {
-            "run_id": run_id,
-            "issue_id": issue.id,
-            "ok": bool(runtime_result.ok),
-            "checked_files": list(runtime_result.checked_files),
-            "errors": list(runtime_result.errors),
-            "command_results": list(getattr(runtime_result, "command_results", []) or []),
-            "failure_breakdown": dict(getattr(runtime_result, "failure_breakdown", {}) or {}),
-            "guard_contract": guard_contract.model_dump(),
-            "guard_decision": guard_decision.as_dict(),
-            "timestamp": datetime.now(UTC).isoformat(),
-        }
-        await AsyncFileTools(self.workspace).write_file(
-            "agent_output/verification/runtime_verification.json",
-            json.dumps(runtime_report, indent=2),
-        )
-        log_event(
-            "runtime_verifier_completed",
-            {
-                "run_id": run_id,
-                "issue_id": issue.id,
-                "ok": runtime_result.ok,
-                "checked_files": len(runtime_result.checked_files),
-                "errors": len(runtime_result.errors),
-                "failure_breakdown": dict(getattr(runtime_result, "failure_breakdown", {}) or {}),
-            },
-            self.workspace,
-        )
-        if not runtime_result.ok:
-            if guard_decision.action == "retry":
-                issue.retry_count = guard_decision.next_retry_count
-                _set_issue_runtime_retry_note(
-                    issue,
-                    "runtime_guard_retry_scheduled: " + " | ".join(runtime_result.errors[:3]),
-                )
-                await self._request_issue_transition(
-                    issue=issue,
-                    target_status=CardStatus.READY,
-                    reason="runtime_guard_retry_scheduled",
-                    metadata={"run_id": run_id, "retry_count": issue.retry_count},
-                )
-                await self.async_cards.save(issue.model_dump())
-                log_event(
-                    "guard_retry_scheduled",
-                    {
-                        "run_id": run_id,
-                        "issue_id": issue.id,
-                        "retry_count": issue.retry_count,
-                        "max_retries": issue.max_retries,
-                        "reason": "runtime_verification_failed",
-                        "guard_contract": guard_contract.model_dump(),
-                        "guard_decision": guard_decision.as_dict(),
-                    },
-                    self.workspace,
-                )
-                self.notes.add(
-                    Note(
-                        from_role="system",
-                        content="RUNTIME VERIFIER FAILED (RETRY): " + " | ".join(runtime_result.errors[:2]),
-                        step_index=len(self.transcript),
-                    )
-                )
-            else:
-                _clear_issue_runtime_retry_note(issue)
-                issue.note = "runtime_guard_terminal_failure: " + (
-                    guard_decision.terminal_reason.code if guard_decision.terminal_reason else "unknown"
-                )
-                await self._request_issue_transition(
-                    issue=issue,
-                    target_status=CardStatus.BLOCKED,
-                    reason="runtime_guard_terminal_failure",
-                    metadata={"run_id": run_id},
-                )
-                await self.async_cards.save(issue.model_dump())
-                log_event(
-                    "guard_terminal_failure",
-                    {
-                        "run_id": run_id,
-                        "issue_id": issue.id,
-                        "retry_count": issue.retry_count,
-                        "max_retries": issue.max_retries,
-                        "reason": "runtime_verification_failed",
-                        "guard_contract": guard_contract.model_dump(),
-                        "guard_decision": guard_decision.as_dict(),
-                    },
-                    self.workspace,
-                )
-                self.notes.add(
-                    Note(
-                        from_role="system",
-                        content="RUNTIME VERIFIER TERMINAL FAILURE: " + " | ".join(runtime_result.errors[:2]),
-                        step_index=len(self.transcript),
-                    )
-                )
-            return
-        _clear_issue_runtime_retry_note(issue)
-
-    # RUN EMPIRICAL VERIFICATION (FIT) for review turns when a contract exists.
-    if is_review_turn:
-        verification_contract = getattr(issue, "verification", None)
-        fixture_path = str(getattr(verification_contract, "fixture_path", "") or "").strip()
-        scenarios = getattr(verification_contract, "scenarios", None) or []
-        if fixture_path or scenarios:
-            verification_result = await self.verify_issue(issue.id, run_id=run_id)
-            v_msg = (
-                f"EMPIRICAL VERIFICATION RESULT: {verification_result.passed}/{verification_result.total_scenarios} Passed."
-            )
-            self.notes.add(Note(from_role="system", content=v_msg, step_index=len(self.transcript)))
-
-    # Select Seat via router decision node
-    seat_name = self.router_node.route(issue, team, is_review_turn)
-    small_policy = self._resolve_small_project_team_policy(epic, team)
-    if small_policy["active"] and not is_review_turn:
-        normalized_seat = str(seat_name or "").strip().lower()
-        if normalized_seat not in {"code_reviewer", "reviewer", "integrity_guard"}:
-            seat_name = str(small_policy["builder_seat"])
-    runtime_builder_seat = str(issue.seat or "").strip() or "coder"
-    runtime_reviewer_seat = "integrity_guard"
-    if small_policy.get("active"):
-        runtime_builder_seat = str(small_policy.get("builder_seat") or runtime_builder_seat)
-        runtime_reviewer_seat = str(small_policy.get("reviewer_seat") or runtime_reviewer_seat)
-    cards_runtime = resolve_cards_runtime(
+    preflight = OrchestratorReviewPreflightService(
+        workspace_root=self.workspace,
+        organization=self.org,
+        support_services=self.support_services,
+        async_cards=self.async_cards,
+        notes=self.notes,
+        transcript=self.transcript,
+        request_issue_transition=self._request_issue_transition,
+        verify_issue=self.verify_issue,
+        resolve_project_surface_profile=self._resolve_project_surface_profile,
+        resolve_architecture_pattern=self._resolve_architecture_pattern,
+        is_runtime_verifier_disabled=self._is_runtime_verifier_disabled,
+        set_issue_runtime_retry_note=_set_issue_runtime_retry_note,
+        clear_issue_runtime_retry_note=_clear_issue_runtime_retry_note,
+    )
+    preflight_result = await preflight.run(
         issue=issue,
-        builder_seat=runtime_builder_seat,
-        reviewer_seat=runtime_reviewer_seat,
-    )
-    invalid_profile_reason = str(cards_runtime.get("invalid_profile_reason") or "").strip()
-    if invalid_profile_reason:
-        await self._request_issue_transition(
-            issue=issue,
-            target_status=CardStatus.BLOCKED,
-            reason="governance_violation",
-            metadata={
-                "run_id": run_id,
-                "error": invalid_profile_reason,
-                "execution_profile": cards_runtime.get("execution_profile"),
-            },
-        )
-        log_event(
-            "cards_runtime_preflight_failed",
-            {
-                "run_id": run_id,
-                "issue_id": issue.id,
-                "execution_profile": cards_runtime.get("execution_profile"),
-                "artifact_contract": cards_runtime.get("artifact_contract"),
-                "error": invalid_profile_reason,
-            },
-            self.workspace,
-        )
-        return
-
-    seat_obj = team.seats.get(sanitize_name(seat_name))
-    if not seat_obj:
-        await self._request_issue_transition(
-            issue=issue,
-            target_status=self.loop_policy_node.missing_seat_status(),
-            reason="missing_seat",
-            metadata={"seat": seat_name, "run_id": run_id},
-        )
-        return
-
-    is_guard_turn = is_review_turn and ("integrity_guard" in list(seat_obj.roles))
-    turn_status = self.loop_policy_node.turn_status_for_issue(is_review_turn)
-    turn_index = len(self.transcript) + 1
-    if is_guard_turn:
-        turn_status = CardStatus.AWAITING_GUARD_REVIEW
-    current_issue_status = getattr(issue, "status", None)
-    if not (resume_mode and current_issue_status == turn_status):
-        await self._request_issue_transition(
-            issue=issue,
-            target_status=turn_status,
-            assignee=seat_name,
-            reason="turn_dispatch",
-            metadata={"run_id": run_id, "review_turn": is_review_turn, "turn_index": turn_index},
-            roles=list(seat_obj.roles),
-        )
-    elif hasattr(issue, "assignee") and getattr(issue, "assignee", None) is None:
-        issue.assignee = seat_name
-        await self.async_cards.save(issue.model_dump())
-        log_event(
-            "resume_turn_dispatch_preserved",
-            {
-                "run_id": run_id,
-                "issue_id": issue.id,
-                "seat": seat_name,
-                "status": turn_status.value if hasattr(turn_status, "value") else str(turn_status),
-                "turn_index": turn_index,
-            },
-            self.workspace,
-        )
-
-    # Prepare Role & Model
-    roles_to_load = self.loop_policy_node.role_order_for_turn(list(seat_obj.roles), is_review_turn)
-
-    async def _load_asset(category: str, name: str, model_type: Any) -> Any:
-        async_loader = getattr(self.loader, "load_asset_async", None)
-        if callable(async_loader):
-            try:
-                return await async_loader(category, name, model_type)
-            except TypeError:
-                # Backward compatibility for legacy loader stubs used in focused tests.
-                pass
-        return self.loader.load_asset(category, name, model_type)
-
-    try:
-        role_config = await _load_asset("roles", roles_to_load[0], RoleConfig)
-    except CardNotFound:
-        await self._request_issue_transition(
-            issue=issue,
-            target_status=CardStatus.IN_PROGRESS,
-            reason="missing_role_asset",
-            metadata={"role": roles_to_load[0], "run_id": run_id, "turn_index": turn_index},
-            roles=roles_to_load,
-        )
-        log_event(
-            "missing_role_asset",
-            {"run_id": run_id, "issue_id": issue.id, "role": roles_to_load[0]},
-            self.workspace,
-        )
-        return
-    selected_model = _select_prompt_strategy_model(
-        prompt_strategy_node=prompt_strategy_node,
-        role=roles_to_load[0],
-        asset_config=epic,
-        override=model_override,
-    )
-    model_selection_decision = {}
-    if hasattr(prompt_strategy_node, "model_selector"):
-        selector = prompt_strategy_node.model_selector
-        if hasattr(selector, "get_last_selection_decision"):
-            model_selection_decision = dict(selector.get_last_selection_decision() or {})
-    if model_selection_decision:
-        log_event(
-            "model_selection_decision",
-            {
-                "run_id": run_id,
-                "issue_id": issue.id,
-                "role": roles_to_load[0],
-                "decision": model_selection_decision,
-            },
-            self.workspace,
-        )
-    dialect_name = prompt_strategy_node.select_dialect(selected_model)
-    dialect = await _load_asset("dialects", dialect_name, DialectConfig)
-    provider = self.model_client_node.create_provider(selected_model, env)
-    client = self.model_client_node.create_client(provider)
-    if bool(cards_runtime.get("odr_active")) and not is_review_turn:
-        odr_auditor_model = (
-            str(cards_runtime.get("odr_auditor_model") or "").strip()
-            or str(os.environ.get("ORKET_ODR_AUDITOR_MODEL") or "").strip()
-            or selected_model
-        )
-        odr_auditor_provider = None
-        try:
-            odr_auditor_provider = self.model_client_node.create_provider(odr_auditor_model, env)
-            odr_auditor_client = self.model_client_node.create_client(odr_auditor_provider)
-            odr_result = await run_cards_odr_prebuild(
-                workspace=self.workspace,
-                issue=issue,
-                run_id=run_id,
-                selected_model=selected_model,
-                cards_runtime=cards_runtime,
-                model_client=client,
-                auditor_client=odr_auditor_client,
-                async_cards=self.async_cards,
-            )
-        except (RuntimeError, ValueError, TypeError, OSError, AttributeError):
-            await _close_provider_transport(provider)
-            raise
-        finally:
-            if odr_auditor_provider is not None:
-                await _close_provider_transport(odr_auditor_provider)
-        cards_runtime = resolve_cards_runtime(
-            issue=issue,
-            builder_seat=runtime_builder_seat,
-            reviewer_seat=runtime_reviewer_seat,
-        )
-        await provider.clear_context()
-        if not bool(odr_result.get("odr_accepted")):
-            await self._request_issue_transition(
-                issue=issue,
-                target_status=CardStatus.BLOCKED,
-                reason="odr_prebuild_failed",
-                metadata={
-                    "run_id": run_id,
-                    "odr_stop_reason": odr_result.get("odr_stop_reason"),
-                    "odr_termination_reason": odr_result.get("odr_termination_reason"),
-                    "odr_final_auditor_verdict": odr_result.get("odr_final_auditor_verdict"),
-                    "execution_profile": cards_runtime.get("execution_profile"),
-                },
-            )
-            await _close_provider_transport(provider)
-            return
-
-    # Compile Prompt
-    skill = SkillConfig(
-        name=role_config.name or seat_name,
-        intent=role_config.description,
-        responsibilities=[ro.description for ro in [role_config]],
-        tools=role_config.tools,
-        prompt_metadata=dict(getattr(role_config, "prompt_metadata", {}) or {}),
-    )
-    skill_tool_bindings = synthesize_role_tool_profile_bindings(role_config.tools)
-    # Phase 6.4: RAG (Memory Context)
-    search_query = (issue.name or "") + " " + (issue.note or "")
-    memories = await self.memory.search(search_query.strip())
-    memory_context = render_reference_context_rows(memories)
-
-    prompt_mode = self._resolve_prompt_resolver_mode()
-    selection_policy = self._resolve_prompt_selection_policy()
-    selection_strict = self._resolve_prompt_selection_strict()
-    exact_version = self._resolve_prompt_version_exact()
-    prompt_patch = self._resolve_prompt_patch()
-    prompt_patch_label = self._resolve_prompt_patch_label()
-    architecture_governance = getattr(epic, "architecture_governance", None)
-    idesign_enabled = bool(getattr(architecture_governance, "idesign", False))
-    if not isinstance(getattr(issue, "params", None), dict):
-        issue.params = {}
-    issue.params["idesign_enabled"] = idesign_enabled
-    provisional_context = self._build_turn_context(
         run_id=run_id,
-        issue=issue,
-        seat_name=seat_name,
-        roles_to_load=roles_to_load,
-        turn_status=turn_status,
-        selected_model=selected_model,
-        dependency_context=dependency_context,
-        runtime_verifier_ok=(None if runtime_result is None else bool(runtime_result.ok)),
-        prompt_metadata={},
-        prompt_layers={},
-        idesign_enabled=idesign_enabled,
-        resume_mode=resume_mode,
-        skill_tool_bindings=skill_tool_bindings,
+        is_review_turn=is_review_turn,
         cards_runtime=cards_runtime,
     )
-    prompt_metadata: dict[str, Any] = {
-        "prompt_id": "legacy.prompt_compiler",
-        "prompt_version": "legacy",
-        "prompt_checksum": "",
-        "resolver_policy": "compiler",
-        "selection_policy": selection_policy,
-        "role_status": "legacy",
-        "dialect_status": "legacy",
-    }
-    prompt_layers: dict[str, Any] = {
-        "role_base": {"name": str(skill.name or "").strip().lower(), "version": "legacy"},
-        "dialect_adapter": {"name": str(dialect.model_family or "").strip().lower(), "version": "legacy"},
-        "guards": [],
-        "context_profile": "default",
-    }
-    if prompt_mode == "resolver":
-        role_rule_ids = list((getattr(role_config, "prompt_metadata", {}) or {}).get("owned_rule_ids", []) or [])
-        dialect_rule_ids = list((getattr(dialect, "prompt_metadata", {}) or {}).get("owned_rule_ids", []) or [])
-        runtime_guard_rule_ids: list[str] = resolve_runtime_guard_rule_ids(None)
-        guard_layers: list[str] = ["hallucination"]
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            configured_rule_ids = self.org.process_rules.get("runtime_guard_rule_ids")
-            if isinstance(configured_rule_ids, list):
-                runtime_guard_rule_ids = resolve_runtime_guard_rule_ids(configured_rule_ids)
-            configured_layers = self.org.process_rules.get("prompt_guard_layers")
-            if isinstance(configured_layers, list) and configured_layers:
-                guard_layers = [str(item) for item in configured_layers if str(item).strip()]
-        resolution = PromptResolver.resolve(
-            skill=skill,
-            dialect=dialect,
-            context={
-                "prompt_context_profile": "long_project" if memory_context else "default",
-                "prompt_resolver_policy": "resolver_v1",
-                "prompt_selection_policy": selection_policy,
-                "prompt_selection_strict": selection_strict,
-                "prompt_version_exact": exact_version,
-                "stage_gate_mode": provisional_context.get("stage_gate_mode"),
-                "required_action_tools": provisional_context.get("required_action_tools", []),
-                "required_statuses": provisional_context.get("required_statuses", []),
-                "required_read_paths": provisional_context.get("required_read_paths", []),
-                "required_write_paths": provisional_context.get("required_write_paths", []),
-                "protocol_governed_enabled": provisional_context.get("protocol_governed_enabled", False),
-                "prompt_rule_ids": role_rule_ids + dialect_rule_ids,
-                "runtime_guard_rule_ids": runtime_guard_rule_ids,
-            },
-            guards=guard_layers,
-            selection_policy=selection_policy,
-            patch=(prompt_patch or None),
-        )
-        system_desc = resolution.system_prompt
-        prompt_metadata = dict(resolution.metadata)
-        prompt_layers = dict(resolution.layers)
-    else:
-        system_desc = PromptCompiler.compile(
-            skill,
-            dialect,
-            protocol_governed_enabled=bool(provisional_context.get("protocol_governed_enabled", False)),
-            patch=(prompt_patch or None),
-        )
-    suppress_reference_context = _should_suppress_reference_context_for_cards_runtime(cards_runtime)
-    if memory_context and not suppress_reference_context:
-        system_desc += f"\n\nPROJECT CONTEXT (PAST DECISIONS):\n{memory_context}"
+    runtime_result = preflight_result.runtime_result
+    if preflight_result.stop_execution:
+        return
 
-    import hashlib
-
-    prompt_metadata["prompt_checksum"] = hashlib.sha256(system_desc.encode("utf-8")).hexdigest()[:16]
-    if prompt_patch:
-        prompt_patch_checksum = hashlib.sha256(prompt_patch.encode("utf-8")).hexdigest()[:16]
-        prompt_metadata["prompt_patch_applied"] = True
-        prompt_metadata["prompt_patch_label"] = prompt_patch_label or "runtime_patch"
-        prompt_metadata["prompt_patch_checksum"] = prompt_patch_checksum
-        prompt_layers["patch"] = {
-            "applied": True,
-            "label": prompt_patch_label or "runtime_patch",
-            "checksum": prompt_patch_checksum,
-        }
-
-    context = self._build_turn_context(
-        run_id=run_id,
-        issue=issue,
-        seat_name=seat_name,
-        roles_to_load=roles_to_load,
-        turn_status=turn_status,
-        selected_model=selected_model,
-        dependency_context=dependency_context,
-        runtime_verifier_ok=(None if runtime_result is None else bool(runtime_result.ok)),
-        prompt_metadata=prompt_metadata,
-        prompt_layers=prompt_layers,
-        idesign_enabled=idesign_enabled,
-        resume_mode=resume_mode,
-        skill_tool_bindings=skill_tool_bindings,
-        cards_runtime=cards_runtime,
+    preparation_service = OrchestratorTurnPreparationService(
+        workspace_root=self.workspace,
+        organization=self.org,
+        loader=self.loader,
+        async_cards=self.async_cards,
+        memory=self.memory,
+        transcript=self.transcript,
+        router_node=self.router_node,
+        loop_policy_node=self.loop_policy_node,
+        model_client_node=self.model_client_node,
+        support_services=self.support_services,
+        request_issue_transition=self._request_issue_transition,
+        resolve_small_project_team_policy=self._resolve_small_project_team_policy,
+        build_turn_context=self._build_turn_context,
+        resolve_prompt_resolver_mode=self._resolve_prompt_resolver_mode,
+        resolve_prompt_selection_policy=self._resolve_prompt_selection_policy,
+        resolve_prompt_selection_strict=self._resolve_prompt_selection_strict,
+        resolve_prompt_version_exact=self._resolve_prompt_version_exact,
+        resolve_prompt_patch=self._resolve_prompt_patch,
+        resolve_prompt_patch_label=self._resolve_prompt_patch_label,
+        close_provider_transport=_close_provider_transport,
+        select_prompt_strategy_model=_select_prompt_strategy_model,
+        should_suppress_reference_context_for_cards_runtime=_should_suppress_reference_context_for_cards_runtime,
     )
+    preparation = await preparation_service.prepare(
+        data=TurnPreparationInput(
+            issue=issue,
+            epic=epic,
+            team=team,
+            env=env,
+            run_id=run_id,
+            prompt_strategy_node=prompt_strategy_node,
+            dependency_context=dependency_context,
+            runtime_result=runtime_result,
+            resume_mode=resume_mode,
+            model_override=model_override,
+        )
+    )
+    if preparation.stop_execution:
+        return
+    seat_name = str(preparation.seat_name)
+    roles_to_load = list(preparation.roles_to_load or [])
+    turn_status = preparation.turn_status or CardStatus.IN_PROGRESS
+    turn_index = int(preparation.turn_index or 1)
+    is_guard_turn = bool(preparation.is_guard_turn)
+    role_config = preparation.role_config
+    provider = preparation.provider
+    client = preparation.client
+    context = dict(preparation.context or {})
+    system_desc = str(preparation.system_prompt or "")
     try:
         log_event(
             "orchestrator_dispatch",
@@ -1901,138 +1470,39 @@ async def _execute_issue_turn(
         )
 
         if result.success:
-            self.transcript.append(result.turn)
-            updated_issue = await self.async_cards.get_by_id(issue.id)
-            if is_guard_turn:
-                guard_payload = self._extract_guard_review_payload(result.turn.content or "")
-                guard_event = self._resolve_guard_event(updated_issue.status)
-                if guard_event == "guard_rejected":
-                    guard_validation = self._validate_guard_rejection_payload(guard_payload)
-                    if not guard_validation.get("valid", False):
-                        request_id = await self._create_pending_gate_request(
-                            run_id=run_id,
-                            issue_id=issue.id,
-                            seat_name=seat_name,
-                            reason=str(guard_validation.get("reason") or "invalid_guard_payload"),
-                            payload=guard_payload.model_dump(),
-                            issue=issue,
-                            turn_status=turn_status,
-                        )
-                        log_event(
-                            "gate_request_created",
-                            {
-                                "run_id": run_id,
-                                "request_id": request_id,
-                                "issue_id": issue.id,
-                                "seat": seat_name,
-                                "request_type": "guard_rejection_payload",
-                            },
-                            self.workspace,
-                        )
-                        log_event(
-                            "guard_payload_invalid",
-                            {
-                                "run_id": run_id,
-                                "issue_id": issue.id,
-                                "seat": seat_name,
-                                "request_id": request_id,
-                                "reason": guard_validation.get("reason"),
-                                "payload": guard_payload.model_dump(),
-                            },
-                            self.workspace,
-                        )
-                        failure_result = SimpleNamespace(
-                            error=(
-                                "Deterministic failure: invalid guard rejection payload "
-                                f"({guard_validation.get('reason')})."
-                            ),
-                            violations=[],
-                        )
-                        await self._handle_failure(
-                            issue,
-                            failure_result,
-                            run_id,
-                            roles_to_load,
-                            turn_index=turn_index,
-                        )
-                        return
-                if guard_event:
-                    log_event(
-                        guard_event,
-                        {
-                            "run_id": run_id,
-                            "issue_id": issue.id,
-                            "seat": seat_name,
-                            "review_payload": guard_payload.model_dump(),
-                        },
-                        self.workspace,
-                    )
-                    log_event(
-                        "guard_review_payload",
-                        {
-                            "run_id": run_id,
-                            "issue_id": issue.id,
-                            "payload": guard_payload.model_dump(),
-                        },
-                        self.workspace,
-                    )
-
-            success_eval = self.evaluator_node.evaluate_success(
-                issue=issue,
-                updated_issue=updated_issue,
-                turn=result.turn,
-                seat_name=seat_name,
-                is_review_turn=is_review_turn,
+            success_handler = OrchestratorTurnSuccessHandler(
+                workspace_root=self.workspace,
+                transcript=self.transcript,
+                async_cards=self.async_cards,
+                memory=self.memory,
+                evaluator_node=self.evaluator_node,
+                issue_control_plane=getattr(self, "issue_control_plane", None),
+                request_issue_transition=self._request_issue_transition,
+                trigger_sandbox=self._trigger_sandbox,
+                is_sandbox_disabled=self._is_sandbox_disabled,
+                save_checkpoint=self._save_checkpoint,
+                create_pending_gate_request=self._create_pending_gate_request,
+                validate_guard_rejection_payload=self._validate_guard_rejection_payload,
+                extract_guard_review_payload=self._extract_guard_review_payload,
+                resolve_guard_event=self._resolve_guard_event,
+                handle_failure=self._handle_failure,
             )
-
-            # Record significant turns in memory
-            if success_eval.get("remember_decision"):
-                await self.memory.remember(
-                    content=f"Decision by {seat_name} on {issue.id}: {result.turn.content[:200]}...",
-                    metadata={
-                        "issue_id": issue.id,
-                        "role": seat_name,
-                        "type": "decision",
-                        "write_rationale": "successful_turn_decision_summary",
-                    },
-                )
-
-            # Sandbox triggering
-            success_actions = self.evaluator_node.success_post_actions(success_eval)
-            if self.evaluator_node.should_trigger_sandbox(success_actions):
-                if self._is_sandbox_disabled():
-                    log_event(
-                        "sandbox_trigger_skipped_policy",
-                        {"run_id": run_id, "issue_id": issue.id, "seat": seat_name},
-                        self.workspace,
-                    )
-                else:
-                    await self._trigger_sandbox(epic, run_id=run_id)
-                next_status = self.evaluator_node.next_status_after_success(success_actions)
-                if next_status is not None:
-                    await self._request_issue_transition(
-                        issue=issue,
-                        target_status=next_status,
-                        reason="post_success_evaluator",
-                        metadata={"run_id": run_id, "seat": seat_name, "turn_index": turn_index},
-                        roles=roles_to_load,
-                    )
-
-            await provider.clear_context()
-            await self._save_checkpoint(run_id, epic, team, env, active_build)
-            issue_control_plane = getattr(self, "issue_control_plane", None)
-            if issue_control_plane is not None:
-                latest_issue = await self.async_cards.get_by_id(issue.id)
-                observed_status = issue.status
-                if isinstance(latest_issue, dict):
-                    observed_status = latest_issue.get("status", observed_status)
-                elif latest_issue is not None:
-                    observed_status = getattr(latest_issue, "status", observed_status)
-                await issue_control_plane.close_from_observed_status(
-                    session_id=run_id,
-                    issue_id=issue.id,
-                    observed_status=observed_status,
-                )
+            await success_handler.handle(
+                issue=issue,
+                result=result,
+                provider=provider,
+                run_id=run_id,
+                seat_name=seat_name,
+                roles_to_load=roles_to_load,
+                turn_index=turn_index,
+                turn_status=turn_status,
+                is_guard_turn=is_guard_turn,
+                is_review_turn=is_review_turn,
+                epic=epic,
+                team=team,
+                env=env,
+                active_build=active_build,
+            )
         else:
             await self._handle_failure(
                 issue,
@@ -2182,484 +1652,49 @@ def _build_turn_context(
     cards_runtime: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     turn_index = len(self.transcript) + 1
-    cards_runtime = dict(cards_runtime or resolve_cards_runtime(issue=issue))
-    required_action_tools = []
-    required_tools_fn = getattr(self.loop_policy_node, "required_action_tools_for_seat", None)
-    if callable(required_tools_fn):
-        try:
-            required_action_tools = list(
-                required_tools_fn(
-                    seat_name=seat_name,
-                    issue=issue,
-                    turn_status=turn_status,
-                )
-                or []
-            )
-        except TypeError:
-            required_action_tools = list(required_tools_fn(seat_name) or [])
-
-    required_statuses = []
-    required_statuses_fn = getattr(self.loop_policy_node, "required_statuses_for_seat", None)
-    if callable(required_statuses_fn):
-        try:
-            required_statuses = list(
-                required_statuses_fn(
-                    seat_name=seat_name,
-                    issue=issue,
-                    turn_status=turn_status,
-                )
-                or []
-            )
-        except TypeError:
-            required_statuses = list(required_statuses_fn(seat_name) or [])
-
-    required_read_paths = []
-    required_read_paths_fn = getattr(self.loop_policy_node, "required_read_paths_for_seat", None)
-    if callable(required_read_paths_fn):
-        try:
-            required_read_paths = list(
-                required_read_paths_fn(
-                    seat_name=seat_name,
-                    issue=issue,
-                    turn_status=turn_status,
-                )
-                or []
-            )
-        except TypeError:
-            required_read_paths = list(required_read_paths_fn(seat_name) or [])
-
-    required_write_paths = []
-    required_write_paths_fn = getattr(self.loop_policy_node, "required_write_paths_for_seat", None)
-    if callable(required_write_paths_fn):
-        try:
-            required_write_paths = list(
-                required_write_paths_fn(
-                    seat_name=seat_name,
-                    issue=issue,
-                    turn_status=turn_status,
-                )
-                or []
-            )
-        except TypeError:
-            required_write_paths = list(required_write_paths_fn(seat_name) or [])
-
-    params = getattr(issue, "params", None)
-    normalized_issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
-    normalized_seat_name = str(seat_name or "").strip().lower()
-    raw_turn_contract = params.get("turn_contract") if isinstance(params, dict) else None
-    turn_contract: dict[str, Any] = (
-        dict(raw_turn_contract)
-        if (
-            isinstance(raw_turn_contract, dict)
-            and normalized_issue_seat
-            and normalized_issue_seat == normalized_seat_name
-        )
-        else {}
+    builder = OrchestratorTurnContextBuilder(
+        workspace_root=self.workspace,
+        org=self.org,
+        loop_policy_node=self.loop_policy_node,
+        pending_gates=self.pending_gates,
+        history_context_getter=lambda current_seat: self._history_context(seat_name=current_seat),
+        create_pending_tool_approval_request=self._create_pending_tool_approval_request,
+        resolve_architecture_mode=self._resolve_architecture_mode,
+        resolve_frontend_framework_mode=self._resolve_frontend_framework_mode,
+        resolve_project_surface_profile=self._resolve_project_surface_profile,
+        resolve_small_project_builder_variant=self._resolve_small_project_builder_variant,
+        resolve_workflow_profile=self._resolve_workflow_profile,
+        resolve_verification_scope_limits=self._resolve_verification_scope_limits,
+        resolve_protocol_governed_enabled=self._resolve_protocol_governed_enabled,
+        resolve_protocol_max_response_bytes=self._resolve_protocol_max_response_bytes,
+        resolve_protocol_max_tool_calls=self._resolve_protocol_max_tool_calls,
+        resolve_protocol_determinism_context=self._resolve_protocol_determinism_context,
+        resolve_local_prompting_mode=self._resolve_local_prompting_mode,
+        resolve_local_prompting_allow_fallback=self._resolve_local_prompting_allow_fallback,
+        resolve_local_prompting_fallback_profile_id=self._resolve_local_prompting_fallback_profile_id,
+        active_capabilities_allowed=getattr(self, "active_capabilities_allowed", None),
+        active_run_determinism_class=getattr(self, "active_run_determinism_class", None),
+        active_compatibility_mappings=getattr(self, "active_compatibility_mappings", None),
     )
-    override_action_tools = _normalize_turn_contract_override_list(turn_contract.get("required_action_tools"))
-    if override_action_tools is not None:
-        required_action_tools = override_action_tools
-    override_statuses = _normalize_turn_contract_override_list(turn_contract.get("required_statuses"), lowercase=True)
-    if override_statuses is not None:
-        required_statuses = override_statuses
-    override_read_paths = _normalize_turn_contract_override_list(turn_contract.get("required_read_paths"))
-    if override_read_paths is not None:
-        required_read_paths = override_read_paths
-    override_write_paths = _normalize_turn_contract_override_list(turn_contract.get("required_write_paths"))
-    if override_write_paths is not None:
-        required_write_paths = override_write_paths
-    raw_required_comment_min_length = turn_contract.get("required_comment_min_length")
-    required_comment_min_length = None
-    if raw_required_comment_min_length is not None:
-        try:
-            required_comment_min_length = max(1, int(raw_required_comment_min_length))
-        except (TypeError, ValueError):
-            required_comment_min_length = None
-    required_comment_contains = (
-        _normalize_turn_contract_override_list(turn_contract.get("required_comment_contains")) or []
-    )
-    runtime_verifier_contract = (
-        dict(params.get("runtime_verifier") or {})
-        if (
-            isinstance(params, dict)
-            and isinstance(params.get("runtime_verifier"), dict)
-            and normalized_issue_seat
-            and normalized_issue_seat == normalized_seat_name
-        )
-        else {}
-    )
-    profile_traits = dict(cards_runtime.get("profile_traits") or {})
-    profile_intent = str(profile_traits.get("intent") or "").strip().lower()
-    runtime_verifier_issue_override = bool(runtime_verifier_contract) and profile_intent in {"write_artifact", "build_app"}
-    if not bool(profile_traits.get("runtime_verifier_allowed", True)) and not runtime_verifier_issue_override:
-        runtime_verifier_contract = {}
-
-    gate_mode = "auto"
-    gate_mode_fn = getattr(self.loop_policy_node, "gate_mode_for_seat", None)
-    if callable(gate_mode_fn):
-        try:
-            gate_mode = str(
-                gate_mode_fn(
-                    seat_name=seat_name,
-                    issue=issue,
-                    turn_status=turn_status,
-                )
-            )
-        except TypeError:
-            gate_mode = str(gate_mode_fn(seat_name))
-
-    approval_required_tools = []
-    approval_tools_fn = getattr(self.loop_policy_node, "approval_required_tools_for_seat", None)
-    if callable(approval_tools_fn):
-        try:
-            approval_required_tools = list(
-                approval_tools_fn(
-                    seat_name=seat_name,
-                    issue=issue,
-                    turn_status=turn_status,
-                )
-                or []
-            )
-        except TypeError:
-            approval_required_tools = list(approval_tools_fn(seat_name) or [])
-
-    if approval_required_tools and gate_mode == "auto":
-        gate_mode = "approval_required"
-
-    async def _find_existing_tool_approval_request(
-        *,
-        tool_name: str,
-        tool_args: dict[str, Any],
-        allowed_statuses: set[str],
-    ) -> dict[str, Any] | None:
-        list_requests = getattr(self.pending_gates, "list_requests", None)
-        if not callable(list_requests):
-            return None
-        from orket.application.services.turn_tool_control_plane_support import run_id_for as turn_tool_run_id_for
-
-        expected_target_ref = turn_tool_run_id_for(
-            session_id=run_id,
-            issue_id=issue.id,
-            role_name=seat_name,
-            turn_index=int(turn_index),
-        )
-        rows = await list_requests(session_id=run_id, limit=1000)
-        for row in rows:
-            status_token = str(row.get("status") or "").strip().lower()
-            if status_token not in allowed_statuses:
-                continue
-            if str(row.get("issue_id") or "").strip() != issue.id:
-                continue
-            if str(row.get("seat_name") or "").strip() != seat_name:
-                continue
-            if str(row.get("request_type") or "").strip() != "tool_approval":
-                continue
-            if str(row.get("reason") or "").strip() != f"approval_required_tool:{tool_name}":
-                continue
-            payload = row.get("payload_json")
-            if not isinstance(payload, dict):
-                continue
-            if str(payload.get("tool") or "").strip() != tool_name:
-                continue
-            if dict(payload.get("args") or {}) != dict(tool_args or {}):
-                continue
-            if payload.get("turn_index") != int(turn_index):
-                continue
-            target_ref = str(payload.get("control_plane_target_ref") or "").strip()
-            if target_ref != expected_target_ref:
-                raise RuntimeError(
-                    "approved governed turn-tool approval drifted from the admitted governed turn target"
-                )
-            return dict(row)
-        return None
-
-    async def _pending_gate_request_writer(*, tool_name: str, tool_args: dict[str, Any]) -> str:
-        existing = await _find_existing_tool_approval_request(
-            tool_name=tool_name,
-            tool_args=tool_args,
-            allowed_statuses={"pending"},
-        )
-        if existing is not None:
-            return str(existing.get("request_id") or "")
-        return str(await self._create_pending_tool_approval_request(
+    return builder.build(
+        TurnContextBuildInput(
             run_id=run_id,
             issue=issue,
             seat_name=seat_name,
-            gate_mode=gate_mode,
+            roles_to_load=roles_to_load,
+            turn_status=turn_status,
+            selected_model=selected_model,
             turn_index=turn_index,
-            tool_name=tool_name,
-            tool_args=tool_args,
-        ))
-
-    async def _approved_tool_request_lookup(*, tool_name: str, tool_args: dict[str, Any]) -> str | None:
-        existing = await _find_existing_tool_approval_request(
-            tool_name=tool_name,
-            tool_args=tool_args,
-            allowed_statuses={"approved"},
+            dependency_context=dependency_context,
+            runtime_verifier_ok=runtime_verifier_ok,
+            prompt_metadata=prompt_metadata,
+            prompt_layers=prompt_layers,
+            idesign_enabled=idesign_enabled,
+            resume_mode=resume_mode,
+            skill_tool_bindings=skill_tool_bindings,
+            cards_runtime=cards_runtime,
         )
-        if existing is None:
-            return None
-        resolution = existing.get("resolution_json")
-        if isinstance(resolution, dict) and str(resolution.get("decision") or "").strip().lower() != "approve":
-            return None
-        return str(existing.get("request_id") or "").strip() or None
-
-    architecture_mode = self._resolve_architecture_mode()
-    frontend_framework_mode = self._resolve_frontend_framework_mode()
-    project_surface_profile = self._resolve_project_surface_profile()
-    small_project_builder_variant = self._resolve_small_project_builder_variant()
-    is_architect_seat = str(seat_name).strip().lower() == "architect"
-    forced_pattern = None
-    if architecture_mode == "force_monolith":
-        forced_pattern = "monolith"
-    elif architecture_mode == "force_microservices":
-        forced_pattern = "microservices"
-    forced_frontend_framework = None
-    if frontend_framework_mode == "force_vue":
-        forced_frontend_framework = "vue"
-    elif frontend_framework_mode == "force_react":
-        forced_frontend_framework = "react"
-    elif frontend_framework_mode == "force_angular":
-        forced_frontend_framework = "angular"
-    scope_limits = self._resolve_verification_scope_limits()
-    architecture_patterns = allowed_architecture_patterns()
-    process_rules = (
-        self.org.process_rules if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else {}
     )
-    allowed_tool_rings = [
-        str(token).strip().lower()
-        for token in (process_rules.get("allowed_tool_rings") or ["core"])
-        if str(token).strip()
-    ]
-    if not allowed_tool_rings:
-        allowed_tool_rings = ["core"]
-
-    raw_active_capabilities = getattr(self, "active_capabilities_allowed", None)
-    if isinstance(raw_active_capabilities, list) and raw_active_capabilities:
-        allowed_capability_profiles = [
-            str(token).strip().lower() for token in raw_active_capabilities if str(token).strip()
-        ]
-    else:
-        allowed_capability_profiles = [
-            str(token).strip().lower()
-            for token in (process_rules.get("allowed_capability_profiles") or ["workspace"])
-            if str(token).strip()
-        ]
-    if not allowed_capability_profiles:
-        allowed_capability_profiles = ["workspace"]
-    run_namespace_scope = f"issue:{issue.id}"
-
-    run_determinism_class = (
-        str(
-            getattr(self, "active_run_determinism_class", None)
-            or process_rules.get("run_determinism_class")
-            or "workspace"
-        )
-        .strip()
-        .lower()
-    )
-    if run_determinism_class not in {"pure", "workspace", "external"}:
-        run_determinism_class = "workspace"
-    raw_compatibility_mappings = getattr(self, "active_compatibility_mappings", None)
-    if isinstance(raw_compatibility_mappings, dict):
-        compatibility_mappings = {
-            str(tool_name).strip(): dict(mapping or {})
-            for tool_name, mapping in raw_compatibility_mappings.items()
-            if str(tool_name).strip() and isinstance(mapping, dict)
-        }
-    else:
-        compatibility_mappings = {}
-
-    raw_max_tool_execution_time = process_rules.get("skill_max_execution_time")
-    raw_max_tool_memory = process_rules.get("skill_max_memory")
-    try:
-        max_tool_execution_time = (
-            float(raw_max_tool_execution_time) if raw_max_tool_execution_time is not None else None
-        )
-    except (TypeError, ValueError):
-        max_tool_execution_time = None
-    try:
-        max_tool_memory = float(raw_max_tool_memory) if raw_max_tool_memory is not None else None
-    except (TypeError, ValueError):
-        max_tool_memory = None
-    resolved_skill_tool_bindings = {
-        str(key).strip(): dict(value or {}) for key, value in (skill_tool_bindings or {}).items() if str(key).strip()
-    }
-    profile_versions = sorted(
-        {
-            str((row or {}).get("tool_profile_version") or "").strip()
-            for row in resolved_skill_tool_bindings.values()
-            if str((row or {}).get("tool_profile_version") or "").strip()
-        }
-    )
-    tool_profile_version = profile_versions[0] if len(profile_versions) == 1 else "unknown-v1"
-    protocol_governed_enabled = self._resolve_protocol_governed_enabled()
-    max_response_bytes = self._resolve_protocol_max_response_bytes()
-    max_tool_calls = self._resolve_protocol_max_tool_calls()
-    determinism_controls = self._resolve_protocol_determinism_context()
-    local_prompting_mode = self._resolve_local_prompting_mode()
-    local_prompting_allow_fallback = self._resolve_local_prompting_allow_fallback()
-    local_prompting_fallback_profile_id = self._resolve_local_prompting_fallback_profile_id()
-    prompt_budget_enabled = bool(protocol_governed_enabled)
-    prompt_budget_enabled_raw = process_rules.get("prompt_budget_enabled")
-    if isinstance(prompt_budget_enabled_raw, bool):
-        prompt_budget_enabled = prompt_budget_enabled_raw
-    elif isinstance(prompt_budget_enabled_raw, str):
-        prompt_budget_enabled = prompt_budget_enabled_raw.strip().lower() in {"1", "true", "yes", "on", "enabled"}
-
-    prompt_budget_require_backend_tokenizer = False
-    prompt_budget_require_backend_tokenizer_raw = process_rules.get("prompt_budget_require_backend_tokenizer")
-    if isinstance(prompt_budget_require_backend_tokenizer_raw, bool):
-        prompt_budget_require_backend_tokenizer = prompt_budget_require_backend_tokenizer_raw
-    elif isinstance(prompt_budget_require_backend_tokenizer_raw, str):
-        prompt_budget_require_backend_tokenizer = prompt_budget_require_backend_tokenizer_raw.strip().lower() in {
-            "1",
-            "true",
-            "yes",
-            "on",
-            "enabled",
-        }
-    prompt_budget_policy_path = (
-        str(process_rules.get("prompt_budget_policy_path") or "core/policies/prompt_budget.yaml").strip()
-        or "core/policies/prompt_budget.yaml"
-    )
-    available_required_read_paths: list[str] = []
-    for raw_path in required_read_paths:
-        path_token = str(raw_path).strip()
-        if not path_token:
-            continue
-        candidate = (self.workspace / path_token).resolve()
-        if candidate.exists():
-            available_required_read_paths.append(path_token)
-
-    declared_interfaces = list(required_action_tools) + list(approval_required_tools)
-    if not required_action_tools:
-        fallback_interfaces = list(resolved_skill_tool_bindings.keys()) or [
-            "read_file",
-            "write_file",
-            "update_issue_status",
-        ]
-        for fallback_interface in fallback_interfaces:
-            if fallback_interface not in declared_interfaces:
-                declared_interfaces.append(fallback_interface)
-    if available_required_read_paths and "read_file" not in declared_interfaces:
-        declared_interfaces.append("read_file")
-    if required_write_paths and "write_file" not in declared_interfaces:
-        declared_interfaces.append("write_file")
-    if required_statuses and "update_issue_status" not in declared_interfaces:
-        declared_interfaces.append("update_issue_status")
-
-    return {
-        "session_id": run_id,
-        "issue_id": issue.id,
-        "workspace": str(self.workspace),
-        "role": seat_name,
-        "roles": roles_to_load,
-        "current_status": turn_status.value,
-        "selected_model": selected_model,
-        "turn_index": turn_index,
-        "dependency_context": dependency_context
-        or {
-            "depends_on": issue.depends_on,
-            "dependency_count": len(issue.depends_on),
-            "dependency_statuses": {},
-            "unresolved_dependencies": [],
-        },
-        "required_action_tools": required_action_tools,
-        "required_statuses": required_statuses,
-        "required_read_paths": required_read_paths,
-        "required_write_paths": required_write_paths,
-        "required_comment_min_length": required_comment_min_length,
-        "required_comment_contains": required_comment_contains,
-        "execution_profile": str(cards_runtime.get("execution_profile") or ""),
-        "base_execution_profile": str(cards_runtime.get("base_execution_profile") or ""),
-        "builder_seat_choice": str(cards_runtime.get("builder_seat_choice") or ""),
-        "reviewer_seat_choice": str(cards_runtime.get("reviewer_seat_choice") or ""),
-        "profile_traits": profile_traits,
-        "seat_coercion": dict(cards_runtime.get("seat_coercion") or {}),
-        "artifact_contract": dict(cards_runtime.get("artifact_contract") or {}),
-        "scenario_truth": dict(cards_runtime.get("scenario_truth") or {}),
-        "odr_active": bool(cards_runtime.get("odr_active")),
-        "odr_valid": cards_runtime.get("odr_valid"),
-        "odr_pending_decisions": cards_runtime.get("odr_pending_decisions"),
-        "odr_stop_reason": cards_runtime.get("odr_stop_reason"),
-        "odr_termination_reason": cards_runtime.get("odr_termination_reason"),
-        "odr_final_auditor_verdict": cards_runtime.get("odr_final_auditor_verdict"),
-        "odr_artifact_path": str(cards_runtime.get("odr_artifact_path") or ""),
-        "odr_requirement": str(cards_runtime.get("odr_requirement") or ""),
-        "verification_scope": build_verification_scope(
-            workspace=list(available_required_read_paths) + list(required_write_paths),
-            active_context=list(available_required_read_paths),
-            passive_context=[],
-            archived_context=[],
-            declared_interfaces=declared_interfaces,
-            strict_grounding=True,
-            forbidden_phrases=[],
-            enforce_path_hardening=True,
-            consistency_tool_calls_only=True,
-            max_workspace_items=scope_limits.get("max_workspace_items"),
-            max_active_context_items=scope_limits.get("max_active_context_items"),
-            max_passive_context_items=scope_limits.get("max_passive_context_items"),
-            max_archived_context_items=scope_limits.get("max_archived_context_items"),
-            max_total_context_items=scope_limits.get("max_total_context_items"),
-        ),
-        "stage_gate_mode": gate_mode,
-        "approval_required_tools": approval_required_tools,
-        "runtime_verifier_ok": runtime_verifier_ok,
-        "runtime_verifier_contract": runtime_verifier_contract,
-        "runtime_retry_note": str(params.get("runtime_retry_note") or "") if isinstance(params, dict) else "",
-        "prompt_metadata": prompt_metadata or {},
-        "prompt_layers": prompt_layers or {},
-        "architecture_mode": architecture_mode,
-        "frontend_framework_mode": frontend_framework_mode,
-        "project_surface_profile": project_surface_profile,
-        "small_project_builder_variant": small_project_builder_variant,
-        "workflow_profile": self._resolve_workflow_profile(),
-        "architecture_decision_required": bool(is_architect_seat),
-        "architecture_decision_path": "agent_output/design.txt",
-        "architecture_allowed_patterns": architecture_patterns,
-        "architecture_forced_pattern": forced_pattern,
-        "frontend_framework_allowed": ["vue", "react", "angular"],
-        "frontend_framework_forced": forced_frontend_framework,
-        "idesign_enabled": bool(idesign_enabled),
-        "create_pending_gate_request": _pending_gate_request_writer,
-        "resolve_granted_tool_approval": _approved_tool_request_lookup,
-        "resume_mode": bool(resume_mode),
-        "history": self._history_context(seat_name=seat_name),
-        "skill_contract_enforced": bool(resolved_skill_tool_bindings),
-        "skill_tool_bindings": resolved_skill_tool_bindings,
-        "tool_profile_version": tool_profile_version,
-        "allowed_tool_rings": allowed_tool_rings,
-        "allowed_capability_profiles": allowed_capability_profiles,
-        "allowed_namespace_scopes": [run_namespace_scope],
-        "capabilities_allowed": allowed_capability_profiles,
-        "run_namespace_scope": run_namespace_scope,
-        "run_determinism_class": run_determinism_class,
-        "run_determinism_policy": run_determinism_class,
-        "compatibility_mappings": compatibility_mappings,
-        "max_tool_execution_time": max_tool_execution_time,
-        "max_tool_memory": max_tool_memory,
-        "protocol_governed_enabled": protocol_governed_enabled,
-        "max_response_bytes": max_response_bytes,
-        "max_tool_calls": max_tool_calls,
-        "timezone": determinism_controls["timezone"],
-        "locale": determinism_controls["locale"],
-        "network_mode": determinism_controls["network_mode"],
-        "network_allowlist_values": determinism_controls["network_allowlist_values"],
-        "network_allowlist_hash": determinism_controls["network_allowlist_hash"],
-        "clock_mode": determinism_controls["clock_mode"],
-        "clock_artifact_ref": determinism_controls["clock_artifact_ref"],
-        "clock_artifact_hash": determinism_controls["clock_artifact_hash"],
-        "env_allowlist": determinism_controls["env_allowlist"],
-        "env_allowlist_values": determinism_controls["env_allowlist_values"],
-        "env_allowlist_hash": determinism_controls["env_allowlist_hash"],
-        "local_prompting_mode": local_prompting_mode,
-        "local_prompting_allow_fallback": local_prompting_allow_fallback,
-        "local_prompting_fallback_profile_id": local_prompting_fallback_profile_id,
-        "prompt_budget_enabled": prompt_budget_enabled,
-        "prompt_budget_require_backend_tokenizer": prompt_budget_require_backend_tokenizer,
-        "prompt_budget_policy_path": prompt_budget_policy_path,
-    }
 
 
 async def _build_dependency_context(self: Any, issue: IssueConfig) -> dict[str, Any]:
@@ -2786,129 +1821,21 @@ async def _handle_failure(
     *,
     turn_index: int | None = None,
 ) -> None:
-    from orket.core.domain.failure_reporter import FailureReporter
-
-    await FailureReporter.generate_report(
-        workspace=self.workspace,
-        session_id=run_id,
-        card_id=issue.id,
-        violation=result.error or "Unknown failure",
+    handler = OrchestratorFailureHandler(
+        workspace_root=self.workspace,
         transcript=self.transcript,
-        roles=roles,
+        async_cards=self.async_cards,
+        evaluator_node=self.evaluator_node,
+        request_issue_transition=self._request_issue_transition,
+        is_issue_idesign_enabled=lambda current_issue: self._is_issue_idesign_enabled(current_issue),
+        normalize_governance_violation_message=lambda message: self._normalize_governance_violation_message(message),
     )
-
-    eval_decision = self.evaluator_node.evaluate_failure(issue, result)
-    issue.retry_count = eval_decision.get("next_retry_count", issue.retry_count)
-    action = eval_decision.get("action")
-    failure_exception_class = self.evaluator_node.failure_exception_class(action)
-
-    # Mechanical governance violations are terminal for the issue.
-    if action == "governance_violation":
-        failure_status = self.evaluator_node.status_for_failure_action(action)
-        metadata = {"run_id": run_id, "error": result.error}
-        if turn_index is not None:
-            metadata["turn_index"] = turn_index
-        await self._request_issue_transition(
-            issue=issue,
-            target_status=failure_status,
-            reason="governance_violation",
-            metadata=metadata,
-            roles=roles,
-        )
-        await self.async_cards.save(issue.model_dump())
-        message = self.evaluator_node.governance_violation_message(result.error)
-        if not self._is_issue_idesign_enabled(issue):
-            message = self._normalize_governance_violation_message(message)
-        raise failure_exception_class(message)
-
-    if action == "approval_pending":
-        event_name = self.evaluator_node.failure_event_name(action)
-        if event_name:
-            log_event(
-                event_name,
-                {"run_id": run_id, "issue_id": issue.id, "error": result.error},
-                self.workspace,
-            )
-        await self.async_cards.save(issue.model_dump())
-        raise failure_exception_class(str(result.error or "Approval required before execution."))
-
-    if action == "catastrophic":
-        event_name = self.evaluator_node.failure_event_name(action)
-        if event_name:
-            log_event(
-                event_name,
-                {"run_id": run_id, "issue_id": issue.id, "retry_count": issue.retry_count, "error": result.error},
-                self.workspace,
-            )
-        failure_status = self.evaluator_node.status_for_failure_action(action)
-        metadata = {"run_id": run_id, "error": result.error}
-        if turn_index is not None:
-            metadata["turn_index"] = turn_index
-        await self._request_issue_transition(
-            issue=issue,
-            target_status=failure_status,
-            reason="catastrophic_failure",
-            metadata=metadata,
-            roles=roles,
-        )
-        await self.async_cards.save(issue.model_dump())
-
-        # Catastrophic failure shuts down the session
-        from orket.state import runtime_state
-
-        if self.evaluator_node.should_cancel_session(action):
-            tasks = await runtime_state.get_tasks(run_id)
-            for task in tasks:
-                if task.done():
-                    continue
-                cancel_result = task.cancel()
-                if asyncio.iscoroutine(cancel_result):
-                    await cancel_result
-
-        raise failure_exception_class(self.evaluator_node.catastrophic_failure_message(issue.id, issue.max_retries))
-
-    if action != "retry":
-        raise failure_exception_class(self.evaluator_node.unexpected_failure_action_message(action, issue.id))
-
-    # Log retry and reset to READY
-    event_name = self.evaluator_node.failure_event_name(action)
-    if event_name:
-        log_event(
-            event_name,
-            {
-                "run_id": run_id,
-                "issue_id": issue.id,
-                "retry_count": issue.retry_count,
-                "max_retries": issue.max_retries,
-                "error": result.error,
-            },
-            self.workspace,
-        )
-
-    metadata = {
-        "run_id": run_id,
-        "retry_count": issue.retry_count,
-        "max_retries": issue.max_retries,
-        "error": result.error,
-    }
-    if turn_index is not None:
-        metadata["turn_index"] = turn_index
-    await self._request_issue_transition(
+    await handler.handle(
         issue=issue,
-        target_status=self.evaluator_node.status_for_failure_action(action),
-        reason="retry_scheduled",
-        metadata=metadata,
+        result=result,
+        run_id=run_id,
         roles=roles,
-    )
-    await self.async_cards.save(issue.model_dump())
-
-    raise failure_exception_class(
-        self.evaluator_node.retry_failure_message(
-            issue.id,
-            issue.retry_count,
-            issue.max_retries,
-            result.error,
-        )
+        turn_index=turn_index,
     )
 
 

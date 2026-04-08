@@ -197,6 +197,37 @@ async def test_execute_epic_runs_scaffolder_stage(orchestrator, tmp_path, monkey
 
 
 @pytest.mark.asyncio
+async def test_execute_epic_support_services_can_override_scaffolder(orchestrator, tmp_path, monkeypatch):
+    """Layer: integration. Verifies execute_epic uses the explicit orchestrator support-service seam for scaffolder construction."""
+    orch, cards, _loader = orchestrator
+    epic = SimpleNamespace(name="Scoped Support Epic", issues=[], references=[])
+    team = SimpleNamespace(seats={})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+    cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
+    cards.get_independent_ready_issues.side_effect = [[]]
+    (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
+
+    hit = {"count": 0}
+
+    class _FakeScaffolder:
+        async def ensure(self):
+            hit["count"] += 1
+            return {"created_directories": [], "created_files": []}
+
+    monkeypatch.setattr(orch.support_services, "create_scaffolder", lambda **kwargs: _FakeScaffolder())
+
+    await orch.execute_epic(
+        active_build="build-support-seam",
+        run_id="run-support-seam",
+        epic=epic,
+        team=team,
+        env=env,
+    )
+
+    assert hit["count"] == 1
+
+
+@pytest.mark.asyncio
 async def test_execute_epic_passes_microservices_pattern_to_stabilizers(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
@@ -1071,6 +1102,7 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
 
 @pytest.mark.asyncio
 async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orchestrator, monkeypatch):
+    """Layer: contract. Verifies post-verifier review gating with a patched runtime-verifier result."""
     orch, cards, _loader = orchestrator
     issue = IssueConfig(
         id="REV-1",
@@ -1111,6 +1143,48 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
                 ok=False,
                 checked_files=["agent_output/main.py"],
                 errors=["SyntaxError: invalid syntax", "runtime stdout assertion failed: path=blocked_state"],
+                command_results=[
+                    {
+                        "command_id": "command:001",
+                        "command_display": "python -m compileall -q agent_output",
+                        "working_directory": ".",
+                        "returncode": 1,
+                        "outcome": "fail",
+                        "failure_class": "command_failed",
+                        "evidence_class": "syntax_only",
+                    }
+                ],
+                failure_breakdown={"command_failed": 1},
+                overall_evidence_class="syntax_only",
+                evidence_summary={
+                    "syntax_only": {
+                        "evaluated": True,
+                        "checked_files": ["agent_output/main.py"],
+                        "commands": [
+                            {
+                                "command_id": "command:001",
+                                "command_display": "python -m compileall -q agent_output",
+                                "working_directory": ".",
+                                "outcome": "fail",
+                                "returncode": 1,
+                                "failure_class": "command_failed",
+                            }
+                        ],
+                    },
+                    "command_execution": {"evaluated": False, "commands": []},
+                    "behavioral_verification": {
+                        "evaluated": False,
+                        "stdout_contract_requested": False,
+                        "json_assertion_count": 0,
+                        "commands": [],
+                    },
+                    "not_evaluated": [
+                        {
+                            "check": "behavioral_verification",
+                            "reason": "no runtime stdout contract requested behavioral verification",
+                        }
+                    ],
+                },
             )
 
     monkeypatch.setattr("orket.application.workflows.orchestrator.RuntimeVerifier", _RuntimeVerifier)
@@ -1138,10 +1212,20 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
         "SyntaxError: invalid syntax | runtime stdout assertion failed: path=blocked_state"
     )
     report_path = orch.workspace / "agent_output" / "verification" / "runtime_verification.json"
+    index_path = orch.workspace / "agent_output" / "verification" / "runtime_verification_index.json"
     assert report_path.exists()
+    assert index_path.exists()
     report = json.loads(report_path.read_text(encoding="utf-8"))
     assert report["ok"] is False
-    assert report["issue_id"] == "REV-1"
+    assert report["artifact_role"] == "support_verification_evidence"
+    assert report["artifact_authority"] == "support_only"
+    assert report["authored_output"] is False
+    assert report["overall_evidence_class"] == "syntax_only"
+    assert report["provenance"]["issue_id"] == "REV-1"
+    assert report["provenance"]["turn_index"] == 1
+    assert report["provenance"]["retry_count"] == 0
+    assert report["history"]["index_path"] == "agent_output/verification/runtime_verification_index.json"
+    assert (orch.workspace / report["history"]["record_path"]).exists()
     assert isinstance(report.get("command_results"), list)
     assert isinstance(report.get("failure_breakdown"), dict)
     assert report.get("guard_contract", {}).get("result") == "fail"
@@ -1150,6 +1234,7 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
 
 @pytest.mark.asyncio
 async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_exhausted(orchestrator, monkeypatch):
+    """Layer: contract. Verifies patched runtime-verifier failures stop retrying once the retry budget is exhausted."""
     orch, cards, _loader = orchestrator
     issue = IssueConfig(
         id="REV-1",
@@ -1191,6 +1276,25 @@ async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_ex
                 ok=False,
                 checked_files=["agent_output/main.py"],
                 errors=["SyntaxError: invalid syntax"],
+                command_results=[],
+                failure_breakdown={},
+                overall_evidence_class="not_evaluated",
+                evidence_summary={
+                    "syntax_only": {"evaluated": True, "checked_files": ["agent_output/main.py"], "commands": []},
+                    "command_execution": {"evaluated": False, "commands": []},
+                    "behavioral_verification": {
+                        "evaluated": False,
+                        "stdout_contract_requested": False,
+                        "json_assertion_count": 0,
+                        "commands": [],
+                    },
+                    "not_evaluated": [
+                        {
+                            "check": "behavioral_verification",
+                            "reason": "no runtime stdout contract requested behavioral verification",
+                        }
+                    ],
+                },
             )
 
     monkeypatch.setattr("orket.application.workflows.orchestrator.RuntimeVerifier", _RuntimeVerifier)
@@ -1219,6 +1323,7 @@ async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_ex
 
 @pytest.mark.asyncio
 async def test_execute_issue_turn_marks_terminal_failure_for_repeated_guard_fingerprint(orchestrator, monkeypatch):
+    """Layer: contract. Verifies repeated patched runtime-verifier failures collapse into a terminal guard decision."""
     orch, cards, _loader = orchestrator
     seen_fingerprints = []
     seed_decision = GuardAgent().evaluate(
@@ -1269,6 +1374,25 @@ async def test_execute_issue_turn_marks_terminal_failure_for_repeated_guard_fing
                 ok=False,
                 checked_files=["agent_output/main.py"],
                 errors=["SyntaxError: invalid syntax"],
+                command_results=[],
+                failure_breakdown={},
+                overall_evidence_class="not_evaluated",
+                evidence_summary={
+                    "syntax_only": {"evaluated": True, "checked_files": ["agent_output/main.py"], "commands": []},
+                    "command_execution": {"evaluated": False, "commands": []},
+                    "behavioral_verification": {
+                        "evaluated": False,
+                        "stdout_contract_requested": False,
+                        "json_assertion_count": 0,
+                        "commands": [],
+                    },
+                    "not_evaluated": [
+                        {
+                            "check": "behavioral_verification",
+                            "reason": "no runtime stdout contract requested behavioral verification",
+                        }
+                    ],
+                },
             )
 
     monkeypatch.setattr("orket.application.workflows.orchestrator.RuntimeVerifier", _RuntimeVerifier)
@@ -2391,6 +2515,54 @@ def test_build_turn_context_includes_runtime_retry_note(orchestrator):
     )
 
     assert context["runtime_retry_note"] == "runtime_guard_retry_scheduled: timeout after 60s"
+
+
+def test_build_turn_context_uses_transcript_length_for_turn_index(orchestrator):
+    """Layer: unit."""
+    orch, _cards, _loader = orchestrator
+    orch.transcript = [
+        SimpleNamespace(role="coder", issue_id="I1", content="first"),
+        SimpleNamespace(role="reviewer", issue_id="I1", content="second"),
+    ]
+    orch._history_context = lambda seat_name=None: []
+    issue = IssueConfig(id="WR-ART-2A", seat="coder", summary="Retry simulator artifact")
+
+    context = orch._build_turn_context(
+        run_id="run-artifact-turn-index",
+        issue=issue,
+        seat_name="coder",
+        roles_to_load=["coder"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+
+    assert context["turn_index"] == 3
+
+
+def test_build_turn_context_invalid_tool_limits_fail_closed(orchestrator):
+    """Layer: unit."""
+    orch, _cards, _loader = orchestrator
+    orch.org = SimpleNamespace(
+        process_rules={
+            "skill_max_execution_time": "not-a-number",
+            "skill_max_memory": "still-not-a-number",
+        }
+    )
+    issue = IssueConfig(id="WR-ART-2B", seat="coder", summary="Retry simulator artifact")
+
+    context = orch._build_turn_context(
+        run_id="run-artifact-tool-limits",
+        issue=issue,
+        seat_name="coder",
+        roles_to_load=["coder"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+
+    assert context["max_tool_execution_time"] is None
+    assert context["max_tool_memory"] is None
 
 
 def test_build_turn_context_defaults_to_monolith_and_vue(orchestrator):

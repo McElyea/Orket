@@ -5,6 +5,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
 from orket.application.services.control_plane_workload_catalog import (
     build_cards_workload_contract,
@@ -32,7 +33,7 @@ from orket.runtime.epic_run_types import (
 from orket.runtime.phase_c_runtime_truth import normalize_truthful_runtime_policy
 from orket.runtime.route_decision_artifact import build_route_decision_artifact
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
-from orket.schema import CardStatus, EnvironmentConfig, EpicConfig, TeamConfig
+from orket.schema import CardStatus, EpicConfig, TeamConfig
 from orket.utils import get_eos_sprint, sanitize_name
 
 
@@ -41,8 +42,9 @@ class EpicRunOrchestrator:
     workspace: Path
     department: str
     organization: Any
+    runtime_input_service: RuntimeInputService
     execution_runtime_node: Any
-    pipeline_wiring_node: Any
+    pipeline_wiring_service: Any
     cards_repo: CardsRepository
     sessions_repo: SessionsRepository
     snapshots_repo: SnapshotsRepository
@@ -98,12 +100,13 @@ class EpicRunOrchestrator:
     ) -> EpicRunSetup:
         epic = await self.loader.load_asset_async("epics", epic_name, EpicConfig)
         team = await self.loader.load_asset_async("teams", epic.team, TeamConfig)
-        env = await self.loader.load_asset_async("environments", epic.environment, EnvironmentConfig)
+        env = await self.loader.load_environment_asset_async(epic.environment)
         if model_override:
             env = env.model_copy(update={"model": model_override})
         epic_params = epic.params if isinstance(epic.params, dict) else {}
         self._validate_idesign_policy(epic=epic, issue_count=len(epic.issues))
-        run_id = self.execution_runtime_node.select_run_id(session_id)
+        requested_run_id = session_id or self.runtime_input_service.create_session_id()
+        run_id = self.execution_runtime_node.select_run_id(requested_run_id)
         active_build = self.execution_runtime_node.select_epic_build_id(build_id, epic_name, sanitize_name)
         cards_workload_contract = build_cards_workload_contract(
             epic=epic,
@@ -218,7 +221,7 @@ class EpicRunOrchestrator:
             run_id=setup.run_id,
             workload_kind="epic",
             execution_runtime_node=self.execution_runtime_node,
-            pipeline_wiring_node=self.pipeline_wiring_node,
+            pipeline_wiring_service=self.pipeline_wiring_service,
             target_issue_id=setup.target_issue_id,
             resume_mode=setup.resume_mode,
             deterministic_mode_enabled=bool(deterministic_mode_contract.get("deterministic_mode_enabled")),

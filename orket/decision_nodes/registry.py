@@ -4,13 +4,11 @@ from typing import Any
 
 from orket.decision_nodes.api_runtime_strategy_node import DefaultApiRuntimeStrategyNode
 from orket.decision_nodes.builtins import (
-    DefaultEngineRuntimePolicyNode,
     DefaultEvaluatorNode,
     DefaultExecutionRuntimeStrategyNode,
     DefaultLoaderStrategyNode,
     DefaultModelClientPolicyNode,
     DefaultOrchestrationLoopPolicyNode,
-    DefaultPipelineWiringStrategyNode,
     DefaultPlannerNode,
     DefaultPromptStrategyNode,
     DefaultRouterNode,
@@ -19,13 +17,11 @@ from orket.decision_nodes.builtins import (
 )
 from orket.decision_nodes.contracts import (
     ApiRuntimeStrategyNode,
-    EngineRuntimePolicyNode,
     EvaluatorNode,
     ExecutionRuntimeStrategyNode,
     LoaderStrategyNode,
     ModelClientPolicyNode,
     OrchestrationLoopPolicyNode,
-    PipelineWiringStrategyNode,
     PlannerNode,
     PromptStrategyNode,
     RouterNode,
@@ -48,13 +44,9 @@ class DecisionNodeRegistry:
         self._tool_strategy_nodes: dict[str, ToolStrategyNode] = {"default": DefaultToolStrategyNode()}
         self._api_runtime_nodes: dict[str, ApiRuntimeStrategyNode] = {"default": DefaultApiRuntimeStrategyNode()}
         self._sandbox_policy_nodes: dict[str, SandboxPolicyNode] = {"default": DefaultSandboxPolicyNode()}
-        self._engine_runtime_nodes: dict[str, EngineRuntimePolicyNode] = {"default": DefaultEngineRuntimePolicyNode()}
         self._loader_strategy_nodes: dict[str, LoaderStrategyNode] = {"default": DefaultLoaderStrategyNode()}
         self._execution_runtime_nodes: dict[str, ExecutionRuntimeStrategyNode] = {
             "default": DefaultExecutionRuntimeStrategyNode()
-        }
-        self._pipeline_wiring_nodes: dict[str, PipelineWiringStrategyNode] = {
-            "default": DefaultPipelineWiringStrategyNode()
         }
         self._orchestration_loop_nodes: dict[str, OrchestrationLoopPolicyNode] = {
             "default": DefaultOrchestrationLoopPolicyNode()
@@ -82,17 +74,11 @@ class DecisionNodeRegistry:
     def register_sandbox_policy(self, name: str, node: SandboxPolicyNode) -> None:
         self._sandbox_policy_nodes[name] = node
 
-    def register_engine_runtime(self, name: str, node: EngineRuntimePolicyNode) -> None:
-        self._engine_runtime_nodes[name] = node
-
     def register_loader_strategy(self, name: str, node: LoaderStrategyNode) -> None:
         self._loader_strategy_nodes[name] = node
 
     def register_execution_runtime(self, name: str, node: ExecutionRuntimeStrategyNode) -> None:
         self._execution_runtime_nodes[name] = node
-
-    def register_pipeline_wiring(self, name: str, node: PipelineWiringStrategyNode) -> None:
-        self._pipeline_wiring_nodes[name] = node
 
     def register_orchestration_loop(self, name: str, node: OrchestrationLoopPolicyNode) -> None:
         self._orchestration_loop_nodes[name] = node
@@ -105,8 +91,7 @@ class DecisionNodeRegistry:
         Register a module-provided set of decision nodes using explicit keys.
         Supported keys:
         planner, router, prompt_strategy, evaluator, tool_strategy, api_runtime,
-        sandbox_policy, engine_runtime, loader_strategy, execution_runtime,
-        pipeline_wiring, orchestration_loop, model_client.
+        sandbox_policy, loader_strategy, execution_runtime, orchestration_loop, model_client.
         """
         key = str(module_id or "").strip()
         if not key:
@@ -130,14 +115,10 @@ class DecisionNodeRegistry:
                 self.register_api_runtime(key, node)
             elif slot == "sandbox_policy":
                 self.register_sandbox_policy(key, node)
-            elif slot == "engine_runtime":
-                self.register_engine_runtime(key, node)
             elif slot == "loader_strategy":
                 self.register_loader_strategy(key, node)
             elif slot == "execution_runtime":
                 self.register_execution_runtime(key, node)
-            elif slot == "pipeline_wiring":
-                self.register_pipeline_wiring(key, node)
             elif slot == "orchestration_loop":
                 self.register_orchestration_loop(key, node)
             elif slot == "model_client":
@@ -204,17 +185,6 @@ class DecisionNodeRegistry:
 
         return self._sandbox_policy_nodes.get(sandbox_policy_name, self._sandbox_policy_nodes["default"])
 
-    def resolve_engine_runtime(self, organization: Any = None) -> EngineRuntimePolicyNode:
-        engine_runtime_name = "default"
-        if organization and getattr(organization, "process_rules", None):
-            engine_runtime_name = organization.process_rules.get("engine_runtime_node", "default")
-
-        env_override = get_setting("ORKET_ENGINE_RUNTIME_NODE")
-        if isinstance(env_override, str) and env_override.strip():
-            engine_runtime_name = env_override.strip()
-
-        return self._engine_runtime_nodes.get(engine_runtime_name, self._engine_runtime_nodes["default"])
-
     def resolve_loader_strategy(self, organization: Any = None) -> LoaderStrategyNode:
         loader_strategy_name = "default"
         if organization and getattr(organization, "process_rules", None):
@@ -238,20 +208,6 @@ class DecisionNodeRegistry:
         return self._execution_runtime_nodes.get(
             execution_runtime_name,
             self._execution_runtime_nodes["default"],
-        )
-
-    def resolve_pipeline_wiring(self, organization: Any = None) -> PipelineWiringStrategyNode:
-        pipeline_wiring_name = "default"
-        if organization and getattr(organization, "process_rules", None):
-            pipeline_wiring_name = organization.process_rules.get("pipeline_wiring_node", "default")
-
-        env_override = get_setting("ORKET_PIPELINE_WIRING_NODE")
-        if isinstance(env_override, str) and env_override.strip():
-            pipeline_wiring_name = env_override.strip()
-
-        return self._pipeline_wiring_nodes.get(
-            pipeline_wiring_name,
-            self._pipeline_wiring_nodes["default"],
         )
 
     def resolve_orchestration_loop(self, organization: Any = None) -> OrchestrationLoopPolicyNode:

@@ -8,10 +8,7 @@ from typing import Any, Protocol
 import aiofiles
 
 from orket.application.services.turn_tool_control_plane_support import effect_id_for
-from orket.application.workflows.tool_invocation_contracts import (
-    compute_tool_call_hash,
-    normalize_tool_invocation_manifest,
-)
+from orket.runtime.registry import tool_invocation_contracts
 from orket.naming import sanitize_name
 
 
@@ -83,7 +80,7 @@ def _resolve_receipt_contract(
     receipt: dict[str, Any],
     session_id: str,
 ) -> tuple[dict[str, Any], str, dict[str, Any]]:
-    manifest = normalize_tool_invocation_manifest(
+    manifest = tool_invocation_contracts.normalize_tool_invocation_manifest(
         manifest=receipt.get("tool_invocation_manifest")
         if isinstance(receipt.get("tool_invocation_manifest"), dict)
         else None,
@@ -96,7 +93,7 @@ def _resolve_receipt_contract(
     observed_hash = str(receipt.get("tool_call_hash") or "").strip()
     if not observed_hash:
         raise ValueError("E_TOOL_CALL_HASH_REQUIRED")
-    expected_hash = compute_tool_call_hash(
+    expected_hash = tool_invocation_contracts.compute_tool_call_hash(
         tool_name=str(manifest.get("tool_name") or ""),
         tool_args=tool_args,
         tool_contract_version=str(manifest.get("tool_contract_version") or ""),

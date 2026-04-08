@@ -29,8 +29,6 @@ from orket.runtime.workspace_hygiene_rules import (
 import orket.runtime.run_start_contract_artifacts as run_start_contract_artifacts
 import orket.runtime.run_start_artifacts as run_start_artifacts
 
-pytestmark = pytest.mark.integration
-
 client = TestClient(app)
 
 
@@ -39,7 +37,7 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
-def _write_epic_assets(root: Path, epic_id: str) -> None:
+def _write_epic_assets(root: Path, epic_id: str, *, environment_payload: dict[str, Any] | None = None) -> None:
     _write_json(
         root / "model" / "core" / "teams" / "standard.json",
         {
@@ -54,12 +52,11 @@ def _write_epic_assets(root: Path, epic_id: str) -> None:
     )
     _write_json(
         root / "model" / "core" / "environments" / "standard.json",
-        {
+        environment_payload
+        or {
             "name": "standard",
-            "language": "python",
-            "runtime": "python",
             "model": "test-model",
-            "rules": [],
+            "temperature": 0.0,
         },
     )
     _write_json(
@@ -135,11 +132,13 @@ async def _assert_run_start_policy_block(
     assert execute_calls["count"] == 0
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_workspace_hygiene_policy_violation_blocks_run_before_model_call(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Layer: contract. Verifies run-start policy validation fails closed before orchestrator model work."""
     def _invalid_workspace_rules() -> dict[str, Any]:
         payload = workspace_hygiene_rules_snapshot()
         payload["rules"] = []
@@ -156,11 +155,13 @@ async def test_workspace_hygiene_policy_violation_blocks_run_before_model_call(
     )
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_source_attribution_policy_violation_blocks_run_before_model_call(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Layer: contract. Verifies source-attribution policy validation fails closed before orchestrator model work."""
     def _invalid_source_attribution_policy() -> dict[str, Any]:
         payload = source_attribution_policy_snapshot()
         payload["modes"] = []
@@ -177,11 +178,13 @@ async def test_source_attribution_policy_violation_blocks_run_before_model_call(
     )
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_trust_language_policy_violation_blocks_run_before_model_call(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Layer: contract. Verifies trust-language policy validation fails closed before orchestrator model work."""
     def _invalid_trust_language_policy() -> dict[str, Any]:
         payload = trust_language_review_policy_snapshot()
         payload["claims"] = []
@@ -198,6 +201,45 @@ async def test_trust_language_policy_violation_blocks_run_before_model_call(
     )
 
 
+@pytest.mark.contract
+@pytest.mark.asyncio
+async def test_unknown_environment_key_blocks_run_before_model_call(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: contract. Verifies authoritative runtime environment loading fails closed before orchestrator model work."""
+    _write_epic_assets(
+        tmp_path,
+        "environment-config-policy-block",
+        environment_payload={
+            "name": "standard",
+            "model": "test-model",
+            "legacy_key": "ignored-before-packet-2",
+        },
+    )
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=str(tmp_path / "runtime.db"),
+        config_root=tmp_path,
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
+    )
+    execute_calls = {"count": 0}
+
+    async def _spy_execute_epic(**_: Any) -> None:
+        execute_calls["count"] += 1
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _spy_execute_epic)
+
+    with pytest.raises(ValueError, match="E_ENVIRONMENT_CONFIG_UNKNOWN_KEYS:legacy_key"):
+        await pipeline.run_epic(
+            "environment-config-policy-block",
+            build_id="build-environment-config-policy-block",
+            session_id="sess-environment-config-policy-block",
+        )
+
+    assert execute_calls["count"] == 0
+
+
 class _NoOpToolbox:
     def __init__(self) -> None:
         self.calls = 0
@@ -208,8 +250,10 @@ class _NoOpToolbox:
         return {"ok": True}
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_tool_gate_violation_blocks_before_tool_execution(tmp_path: Path) -> None:
+    """Layer: integration. Verifies tool-gate policy rejects out-of-workspace effects before tool execution."""
     dispatcher = ToolDispatcher(
         tool_gate=ToolGate(organization=None, workspace_root=tmp_path),
         middleware=TurnLifecycleInterceptors([]),
@@ -242,7 +286,9 @@ async def test_tool_gate_violation_blocks_before_tool_execution(tmp_path: Path) 
     assert toolbox.calls == 0
 
 
+@pytest.mark.integration
 def test_nervous_system_flag_violation_blocks_projection_pack(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: integration. Verifies disabled nervous-system projection pack requests fail closed at the API boundary."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.delenv("ORKET_ENABLE_NERVOUS_SYSTEM", raising=False)
 

@@ -24,7 +24,7 @@ from orket.runtime_paths import resolve_live_acceptance_db_path
 
 DEFAULT_TEST = (
     "tests/live/test_system_acceptance_pipeline.py::"
-    "test_system_acceptance_role_pipeline_with_guard_live"
+    "test_system_acceptance_role_pipeline_with_guard_live_reports_truthfully"
 )
 
 
@@ -524,7 +524,8 @@ def _aggregate(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         )
         model_stats["runs"] += 1
         canonical_success = bool(result.get("passed")) and bool(result.get("chain_complete"))
-        if result.get("session_status", "").startswith("skipped_"):
+        session_status = str(result.get("session_status") or "")
+        if session_status.startswith("skipped_"):
             model_stats["skipped"] += 1
         elif canonical_success:
             model_stats["passed"] += 1

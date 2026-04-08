@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
-from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.runtime.registry import protocol_hashing
 from orket.runtime.contract_bootstrap import load_runtime_contract_snapshots
 from orket.runtime.replay_compatibility import (
     evaluate_replay_compatibility,
@@ -120,7 +120,7 @@ def runtime_contract_hash(
         "tool_contract_snapshot_hash": snapshot.get("tool_contract_snapshot_hash"),
         "runtime_policy_versions": policies,
     }
-    return hash_canonical_json(payload)
+    return protocol_hashing.hash_canonical_json(payload)
 
 
 class ProtocolReplayEngine:
@@ -218,7 +218,7 @@ class ProtocolReplayEngine:
 
         summary["operation_count"] = len(summary["operations"])
         summary["receipt_count"] = len(summary["receipt_inventory"])
-        summary["state_digest"] = hash_canonical_json(
+        summary["state_digest"] = protocol_hashing.hash_canonical_json(
             {
                 # Equivalent fresh runs must compare on governed replay state, not run identity.
                 "run_type": summary["run_type"],

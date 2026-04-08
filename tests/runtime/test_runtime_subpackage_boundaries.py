@@ -9,7 +9,7 @@ DOMAIN_PACKAGES = frozenset({"config", "evidence", "execution", "policy", "regis
 
 
 def test_runtime_flat_modules_are_one_release_alias_shims() -> None:
-    """Layer: contract. Verifies migrated flat runtime modules stay compatibility aliases only."""
+    """Layer: contract. Structural only; verifies migrated flat runtime modules stay compatibility aliases only."""
     for path in sorted(RUNTIME_ROOT.glob("*.py")):
         if path.name == "__init__.py":
             continue
@@ -19,7 +19,7 @@ def test_runtime_flat_modules_are_one_release_alias_shims() -> None:
 
 
 def test_runtime_domain_packages_declare_complete_public_surfaces() -> None:
-    """Layer: contract. Verifies each runtime subpackage owns an explicit module surface."""
+    """Layer: contract. Structural only; verifies each runtime subpackage owns an explicit module surface."""
     for package_name in sorted(DOMAIN_PACKAGES):
         package_path = RUNTIME_ROOT / package_name
         module_names = {path.stem for path in package_path.glob("*.py") if path.name != "__init__.py"}
@@ -29,7 +29,7 @@ def test_runtime_domain_packages_declare_complete_public_surfaces() -> None:
 
 
 def test_runtime_domain_modules_do_not_import_peer_domain_private_modules() -> None:
-    """Layer: contract. Verifies cross-domain imports go through package public surfaces."""
+    """Layer: contract. Structural only; verifies cross-domain imports go through package public surfaces."""
     violations: list[str] = []
     for package_name in sorted(DOMAIN_PACKAGES):
         for path in sorted((RUNTIME_ROOT / package_name).glob("*.py")):

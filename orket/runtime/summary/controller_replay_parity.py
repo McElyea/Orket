@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.runtime.registry import protocol_hashing
 
 _PARITY_KIND = "controller_replay_parity_v1"
 
@@ -126,10 +126,10 @@ def compare_controller_replay_outputs(
         "parity_ok": len(differences) == 0,
         "difference_count": len(differences),
         "differences": differences,
-        "expected_digest": hash_canonical_json(expected_normalized),
-        "actual_digest": hash_canonical_json(actual_normalized),
-        "expected_projection_digest": hash_canonical_json(expected_projection),
-        "actual_projection_digest": hash_canonical_json(actual_projection),
+        "expected_digest": protocol_hashing.hash_canonical_json(expected_normalized),
+        "actual_digest": protocol_hashing.hash_canonical_json(actual_normalized),
+        "expected_projection_digest": protocol_hashing.hash_canonical_json(expected_projection),
+        "actual_projection_digest": protocol_hashing.hash_canonical_json(actual_projection),
         "expected": expected_normalized,
         "actual": actual_normalized,
     }

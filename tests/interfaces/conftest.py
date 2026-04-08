@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from pathlib import Path
 
 
 class LazyApiTestClient:
@@ -56,6 +57,7 @@ def fresh_api_client(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyP
     fresh_state = state_module.GlobalState()
     monkeypatch.setattr(state_module, "runtime_state", fresh_state)
     monkeypatch.setattr(api_module, "runtime_state", fresh_state)
+    api_module.create_api_app(project_root=Path(api_module._resolve_default_project_root()).resolve())
     previous = request.module.client
     lazy_client = LazyApiTestClient(app)
     request.module.client = lazy_client

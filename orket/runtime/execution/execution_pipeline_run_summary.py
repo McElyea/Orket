@@ -302,9 +302,6 @@ class ExecutionPipelineRunSummaryMixin:
             resolved_artifacts["artifact_provenance_facts"] = merged_artifact_provenance_facts
         if cards_runtime_artifacts:
             resolved_artifacts.update(cards_runtime_artifacts)
-        runtime_verification_path = str(packet1_artifacts.get("runtime_verification_path") or "").strip()
-        if runtime_verification_path:
-            resolved_artifacts["runtime_verification_path"] = runtime_verification_path
         try:
             run_identity = resolved_artifacts.get("run_identity")
             started_at = None

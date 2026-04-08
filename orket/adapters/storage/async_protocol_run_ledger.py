@@ -3,12 +3,13 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from orket.application.workflows.protocol_hashing import hash_canonical_json
-from orket.application.workflows.tool_invocation_contracts import (
+from orket.runtime.registry.protocol_hashing import hash_canonical_json
+from orket.runtime.registry.tool_invocation_contracts import (
     PROTOCOL_RECEIPT_SCHEMA_VERSION,
     compute_tool_call_hash,
     normalize_tool_invocation_manifest,
@@ -32,6 +33,10 @@ _TOOL_INVOCATION_KINDS = {"tool_call", "operation_result", "tool_result"}
 _TOOL_RESULT_KINDS = {"operation_result", "tool_result"}
 
 
+def _default_event_timestamp() -> str:
+    return datetime.now(UTC).isoformat()
+
+
 def _parse_event_timestamp(value: Any) -> datetime | None:
     raw = str(value or "").strip()
     if not raw:
@@ -53,10 +58,17 @@ def _coerce_int(value: Any) -> int | None:
 class AsyncProtocolRunLedgerRepository:
     """Async wrapper over append-only LPJ-C32 run ledger files."""
 
-    def __init__(self, root: str | Path, *, max_tool_invocations_per_run: int = 200) -> None:
+    def __init__(
+        self,
+        root: str | Path,
+        *,
+        max_tool_invocations_per_run: int = 200,
+        timestamp_factory: Callable[[], str] | None = None,
+    ) -> None:
         self.root = Path(root)
         self._lock = asyncio.Lock()
         self.max_tool_invocations_per_run = max(int(max_tool_invocations_per_run), 1)
+        self._timestamp_factory = timestamp_factory or _default_event_timestamp
 
     def _events_path(self, session_id: str) -> Path:
         return self.root / "runs" / str(session_id).strip() / "events.log"
@@ -314,7 +326,9 @@ class AsyncProtocolRunLedgerRepository:
         **extra: Any,
     ) -> dict[str, Any]:
         resolved_session_id = str(session_id or "").strip()
-        timestamp = datetime.now(UTC).isoformat()
+        timestamp = str(self._timestamp_factory()).strip()
+        if not timestamp:
+            raise ValueError("E_LEDGER_TIMESTAMP_REQUIRED")
         return {
             "ledger_schema_version": "1.0",
             "kind": str(kind),

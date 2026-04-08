@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.runtime.registry import protocol_hashing
 
 
 def capture_workspace_state_snapshot(
@@ -51,7 +51,7 @@ def _workspace_inventory(
 
 
 def _inventory_hash(rows: list[dict[str, Any]]) -> str:
-    return hash_canonical_json(rows)
+    return protocol_hashing.hash_canonical_json(rows)
 
 
 def _sha256_file(path: Path) -> str:

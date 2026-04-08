@@ -8,7 +8,7 @@ from typing import Any
 
 import google_crc32c
 
-from orket.application.workflows.protocol_hashing import canonical_json
+from orket.runtime.registry.protocol_hashing import canonical_json
 from orket.runtime.protocol_error_codes import (
     E_LEDGER_CORRUPT,
     E_LEDGER_PARSE,

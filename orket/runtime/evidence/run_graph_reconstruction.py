@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
-from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.runtime.registry import protocol_hashing
 
 RUN_GRAPH_SCHEMA_VERSION = "1.0"
 _TOOL_RESULT_KINDS = {"operation_result", "tool_result"}
@@ -119,7 +119,7 @@ def reconstruct_run_graph(
                 "operation_id": str(event.get("operation_id") or "").strip(),
                 "tool_name": str(event.get("tool_name") or event.get("tool") or "").strip(),
                 "ok": bool(result_payload.get("ok", False)),
-                "artifact_digest": hash_canonical_json(result_payload),
+                "artifact_digest": protocol_hashing.hash_canonical_json(result_payload),
             }
             linked_call_id = call_nodes.get(call_sequence_number)
             if linked_call_id is not None:
@@ -169,7 +169,7 @@ def reconstruct_run_graph(
                 "type": "artifact",
                 "artifact_kind": "compat_translation",
                 "event_seq": event_seq,
-                "artifact_digest": hash_canonical_json(compat_translation),
+                "artifact_digest": protocol_hashing.hash_canonical_json(compat_translation),
                 "compat_tool_name": str(compat_translation.get("compat_tool_name") or "").strip(),
             }
             _add_edge(
@@ -219,7 +219,7 @@ def reconstruct_run_graph(
         "nodes": node_rows,
         "edges": edge_rows,
     }
-    payload["graph_digest"] = hash_canonical_json(
+    payload["graph_digest"] = protocol_hashing.hash_canonical_json(
         {
             "run_id": run_id,
             "nodes": node_rows,
@@ -371,7 +371,7 @@ def _add_run_artifact_nodes(
             "artifact_kind": f"{kind}.artifact",
             "artifact_name": str(artifact_name),
             "source_event_seq": event_seq,
-            "artifact_digest": hash_canonical_json(
+            "artifact_digest": protocol_hashing.hash_canonical_json(
                 artifact_value
                 if isinstance(artifact_value, (dict, list, str, int, float, bool)) or artifact_value is None
                 else str(artifact_value)

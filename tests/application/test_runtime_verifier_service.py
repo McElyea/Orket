@@ -23,7 +23,12 @@ async def test_runtime_verifier_passes_valid_python(tmp_path: Path):
     assert len(result.command_results) == 1
     assert result.command_results[0]["returncode"] == 0
     assert result.command_results[0]["policy_source"] == "profile_default:python"
+    assert result.command_results[0]["evidence_class"] == "syntax_only"
     assert result.failure_breakdown == {}
+    assert result.overall_evidence_class == "syntax_only"
+    assert result.evidence_summary["syntax_only"]["evaluated"] is True
+    assert result.evidence_summary["command_execution"]["evaluated"] is False
+    assert result.evidence_summary["behavioral_verification"]["evaluated"] is False
     assert result.guard_contract.result == "pass"
     assert result.guard_contract.terminal_failure is False
     assert result.guard_contract.terminal_reason is None
@@ -64,6 +69,8 @@ async def test_runtime_verifier_runs_policy_commands(tmp_path: Path):
     assert len(result.command_results) == 1
     assert result.command_results[0]["returncode"] == 0
     assert result.command_results[0]["policy_source"] == "policy_override"
+    assert result.command_results[0]["evidence_class"] == "command_execution"
+    assert result.overall_evidence_class == "command_execution"
 
 
 @pytest.mark.asyncio
@@ -129,9 +136,12 @@ async def test_runtime_verifier_runs_issue_scoped_behavioral_commands(tmp_path: 
     assert result.command_results[1]["exit_code"] == 0
     assert result.command_results[2]["command_text"] == "python agent_output/main.py"
     assert result.command_results[2]["working_directory"] == "."
+    assert result.command_results[2]["evidence_class"] == "behavioral_verification"
     assert result.command_results[2]["stdout_contract_ok"] is True
     assert result.command_results[2]["stdout_json"]["validated_count"] == 2
     assert result.command_results[2]["stdout_json"]["cycle_policy"] == "validation_rejects_cycle"
+    assert result.overall_evidence_class == "behavioral_verification"
+    assert result.evidence_summary["behavioral_verification"]["evaluated"] is True
 
 
 @pytest.mark.asyncio
@@ -451,8 +461,10 @@ async def test_runtime_verifier_runs_app_entrypoint_when_artifact_contract_is_ap
     assert result.ok is True
     assert len(result.command_results) == 2
     assert result.command_results[-1]["command_display"].endswith("agent_output/main.py")
+    assert result.command_results[-1]["evidence_class"] == "behavioral_verification"
     assert result.command_results[-1]["stdout_contract_ok"] is True
     assert result.command_results[-1]["stdout_json"]["files_count"] == 1
+    assert result.overall_evidence_class == "behavioral_verification"
 
 
 @pytest.mark.asyncio
@@ -470,6 +482,8 @@ async def test_runtime_verifier_does_not_run_entrypoint_when_artifact_contract_i
     assert result.ok is True
     assert len(result.command_results) == 1
     assert result.command_results[0]["command_display"].endswith("-m compileall -q agent_output")
+    assert result.command_results[0]["evidence_class"] == "syntax_only"
+    assert result.overall_evidence_class == "syntax_only"
 
 
 @pytest.mark.asyncio
@@ -574,3 +588,22 @@ def test_build_runtime_guard_contract_surfaces_multiple_errors_and_truncation() 
     assert contract.violations[0].message == "first failure"
     assert contract.violations[1].evidence == "x" * 240
     assert contract.violations[1].evidence_truncated is True
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_reports_not_evaluated_when_no_targets_or_commands(tmp_path: Path) -> None:
+    """Layer: contract. Verifies empty verifier runs report not-evaluated evidence instead of implying proof."""
+    result = await RuntimeVerifier(tmp_path).verify()
+
+    assert result.ok is True
+    assert result.checked_files == []
+    assert result.command_results == []
+    assert result.overall_evidence_class == "not_evaluated"
+    assert result.evidence_summary["syntax_only"]["evaluated"] is False
+    assert result.evidence_summary["command_execution"]["evaluated"] is False
+    assert result.evidence_summary["behavioral_verification"]["evaluated"] is False
+    assert {item["check"] for item in result.evidence_summary["not_evaluated"]} == {
+        "syntax_only",
+        "command_execution",
+        "behavioral_verification",
+    }

@@ -20,6 +20,23 @@ from scripts.probes.probe_support import is_environment_blocker, json_safe
 DEFAULT_OUTPUT = "benchmarks/results/audit/replay_turn.json"
 
 
+def _load_replay_source(
+    *,
+    workspace: Path,
+    session_id: str,
+    issue_id: str,
+    turn_index: int,
+    role: str | None,
+) -> dict[str, Any]:
+    engine = OrchestrationEngine(Path(workspace).resolve())
+    return engine.replay_turn(
+        session_id=str(session_id),
+        issue_id=str(issue_id),
+        turn_index=int(turn_index),
+        role=role,
+    )
+
+
 async def _default_replay_call(
     *,
     messages: list[dict[str, str]],
@@ -47,8 +64,9 @@ async def replay_turn_report(
     model_override: str | None = None,
     replay_call: Callable[..., Awaitable[dict[str, Any]]] | None = None,
 ) -> dict[str, Any]:
-    engine = OrchestrationEngine(Path(workspace).resolve())
-    replay_source = engine.replay_turn(
+    replay_source = await asyncio.to_thread(
+        _load_replay_source,
+        workspace=Path(workspace).resolve(),
         session_id=str(session_id),
         issue_id=str(issue_id),
         turn_index=int(turn_index),

@@ -4,13 +4,12 @@ from orket.decision_nodes.registry import DecisionNodeRegistry
 
 
 def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
+    """Layer: contract. Verifies process-rule overrides still resolve for the surviving decision-node families."""
     monkeypatch.delenv("ORKET_API_RUNTIME_NODE", raising=False)
     monkeypatch.delenv("ORKET_TOOL_STRATEGY_NODE", raising=False)
     monkeypatch.delenv("ORKET_SANDBOX_POLICY_NODE", raising=False)
-    monkeypatch.delenv("ORKET_ENGINE_RUNTIME_NODE", raising=False)
     monkeypatch.delenv("ORKET_LOADER_STRATEGY_NODE", raising=False)
     monkeypatch.delenv("ORKET_EXECUTION_RUNTIME_NODE", raising=False)
-    monkeypatch.delenv("ORKET_PIPELINE_WIRING_NODE", raising=False)
 
     registry = DecisionNodeRegistry()
 
@@ -20,7 +19,6 @@ def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
         {
             "parse_allowed_origins": lambda self, v: ["custom"],
             "resolve_asset_id": lambda self, p, i: "X",
-            "create_session_id": lambda self: "SID",
         },
     )()
     tool_custom = type("ToolCustom", (), {"compose": lambda self, toolbox: {}})()
@@ -32,14 +30,6 @@ def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
             "build_compose_project": lambda self, sandbox_id: "project-custom",
             "get_database_url": lambda self, tech_stack, ports, db_password="": "db://custom",
             "generate_compose_file": lambda self, sandbox, db_password, admin_password: "version: '3.8'",
-        },
-    )()
-    engine_custom = type(
-        "EngineCustom",
-        (),
-        {
-            "bootstrap_environment": lambda self: None,
-            "resolve_config_root": lambda self, config_root: config_root,
         },
     )()
     loader_custom = type(
@@ -58,54 +48,36 @@ def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
         "ExecutionCustom",
         (),
         {
-            "select_run_id": lambda self, session_id: "RUN",
             "select_epic_build_id": lambda self, build_id, epic_name, sanitize_name: "BUILD",
-            "select_epic_collection_session_id": lambda self, session_id: "COLLECTIONRUN",
             "select_epic_collection_build_id": lambda self, build_id, collection_name, sanitize_name: "COLLECTIONBUILD",
-        },
-    )()
-    pipeline_custom = type(
-        "PipelineCustom",
-        (),
-        {
-            "create_sandbox_orchestrator": lambda self, workspace, organization: object(),
-            "create_webhook_database": lambda self: object(),
-            "create_bug_fix_manager": lambda self, organization, webhook_db: object(),
-            "create_orchestrator": lambda self, workspace, async_cards, snapshots, org, config_root, db_path, loader, sandbox_orchestrator: object(),
-            "create_sub_pipeline": lambda self, parent_pipeline, epic_workspace, department: object(),
         },
     )()
 
     registry.register_api_runtime("api-custom", api_custom)
     registry.register_tool_strategy("tool-custom", tool_custom)
     registry.register_sandbox_policy("sandbox-custom", sandbox_custom)
-    registry.register_engine_runtime("engine-custom", engine_custom)
     registry.register_loader_strategy("loader-custom", loader_custom)
     registry.register_execution_runtime("execution-custom", execution_custom)
-    registry.register_pipeline_wiring("pipeline-custom", pipeline_custom)
 
     org = SimpleNamespace(
         process_rules={
             "api_runtime_node": "api-custom",
             "tool_strategy_node": "tool-custom",
             "sandbox_policy_node": "sandbox-custom",
-            "engine_runtime_node": "engine-custom",
             "loader_strategy_node": "loader-custom",
             "execution_runtime_node": "execution-custom",
-            "pipeline_wiring_node": "pipeline-custom",
         }
     )
 
     assert registry.resolve_api_runtime(org) is api_custom
     assert registry.resolve_tool_strategy(org) is tool_custom
     assert registry.resolve_sandbox_policy(org) is sandbox_custom
-    assert registry.resolve_engine_runtime(org) is engine_custom
     assert registry.resolve_loader_strategy(org) is loader_custom
     assert registry.resolve_execution_runtime(org) is execution_custom
-    assert registry.resolve_pipeline_wiring(org) is pipeline_custom
 
 
 def test_runtime_override_matrix_env_precedence(monkeypatch):
+    """Layer: contract. Verifies env overrides still win over process rules on the surviving API runtime seam."""
     registry = DecisionNodeRegistry()
     api_custom = type(
         "ApiCustom",
@@ -113,7 +85,6 @@ def test_runtime_override_matrix_env_precedence(monkeypatch):
         {
             "parse_allowed_origins": lambda self, v: ["custom"],
             "resolve_asset_id": lambda self, p, i: "X",
-            "create_session_id": lambda self: "SID",
         },
     )()
     registry.register_api_runtime("api-custom", api_custom)

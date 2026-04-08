@@ -133,6 +133,7 @@ async def test_engine_run_card_forwards_model_override(monkeypatch):
 
 
 def test_engine_replay_turn_reads_artifacts(monkeypatch, tmp_path):
+    """Layer: unit. Verifies replay diagnostics are explicitly artifact-only on both the canonical and compatibility surfaces."""
     fake_pipeline = _FakePipeline()
 
     monkeypatch.setattr("orket.settings.load_env", lambda: None)
@@ -147,12 +148,65 @@ def test_engine_replay_turn_reads_artifacts(monkeypatch, tmp_path):
     (turn_dir / "parsed_tool_calls.json").write_text(json.dumps([{"tool": "write_file"}]), encoding="utf-8")
 
     engine = OrchestrationEngine(tmp_path)
-    replay = engine.replay_turn(session_id="run-1", issue_id="ISSUE-1", turn_index=1, role="developer")
+    replay = engine.replay_turn_diagnostics(
+        session_id="run-1",
+        issue_id="ISSUE-1",
+        turn_index=1,
+        role="developer",
+    )
+    compatibility_replay = engine.replay_turn(
+        session_id="run-1",
+        issue_id="ISSUE-1",
+        turn_index=1,
+        role="developer",
+    )
 
+    assert replay["diagnostics_class"] == "artifact_observability_only"
     assert replay["checkpoint"]["run_id"] == "run-1"
     assert replay["messages"][0]["role"] == "system"
     assert replay["model_response"] == "response"
     assert replay["parsed_tool_calls"][0]["tool"] == "write_file"
+    assert compatibility_replay["diagnostics_class"] == "artifact_observability_only"
+
+
+def test_engine_uses_explicit_control_plane_service_composition(monkeypatch, tmp_path):
+    """Layer: unit. Verifies engine control-plane dependencies are composed through the extracted service builder."""
+    fake_pipeline = _FakePipeline()
+
+    monkeypatch.setattr("orket.settings.load_env", lambda: None)
+    monkeypatch.setattr("orket.orchestration.engine.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.orchestration.engine.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
+
+    fake_services = type(
+        "_FakeControlPlaneServices",
+        (),
+        {
+            "pending_gates": object(),
+            "control_plane_repository": object(),
+            "control_plane_execution_repository": object(),
+            "control_plane_publication": object(),
+            "tool_approval_control_plane_operator": object(),
+            "kernel_action_control_plane": object(),
+            "kernel_action_control_plane_operator": object(),
+            "kernel_action_control_plane_view": object(),
+        },
+    )()
+
+    monkeypatch.setattr(
+        "orket.orchestration.engine.build_engine_control_plane_services",
+        lambda db_path: fake_services,
+    )
+
+    engine = OrchestrationEngine(tmp_path)
+
+    assert engine.pending_gates is fake_services.pending_gates
+    assert engine.control_plane_repository is fake_services.control_plane_repository
+    assert engine.control_plane_execution_repository is fake_services.control_plane_execution_repository
+    assert engine.control_plane_publication is fake_services.control_plane_publication
+    assert engine.tool_approval_control_plane_operator is fake_services.tool_approval_control_plane_operator
+    assert engine.kernel_action_control_plane is fake_services.kernel_action_control_plane
+    assert engine.kernel_action_control_plane_operator is fake_services.kernel_action_control_plane_operator
+    assert engine.kernel_action_control_plane_view is fake_services.kernel_action_control_plane_view
 
 
 def test_engine_kernel_gateway_path(monkeypatch, tmp_path):

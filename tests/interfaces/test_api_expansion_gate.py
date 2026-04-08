@@ -86,7 +86,7 @@ async def test_api_expansion_gate_execution_graph_contract(monkeypatch, tmp_path
 
 def test_api_expansion_gate_token_summary_contract(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.app.state.project_root = Path(tmp_path).resolve()
+    api_module.create_api_app(project_root=Path(tmp_path).resolve())
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}

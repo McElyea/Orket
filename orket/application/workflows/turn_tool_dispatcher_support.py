@@ -18,7 +18,7 @@ from orket.runtime.protocol_error_codes import (
     format_protocol_error,
 )
 
-from .protocol_hashing import hash_clock_artifact_ref, hash_env_allowlist, hash_network_allowlist
+from orket.runtime.registry.protocol_hashing import hash_clock_artifact_ref, hash_env_allowlist, hash_network_allowlist
 
 _VALID_TOOL_RINGS = {"core", "compatibility", "experimental"}
 _VALID_DETERMINISM_CLASSES = {"pure", "workspace", "external"}

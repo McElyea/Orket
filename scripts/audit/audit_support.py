@@ -27,7 +27,23 @@ COMMON_VOLATILE_KEYS = {
 }
 SURFACE_VOLATILE_KEYS = {
     "checkpoint": {"prompt_hash"},
+    "run_summary": {
+        "attempt_id",
+        "configuration_snapshot_id",
+        "current_attempt_id",
+        "policy_snapshot_id",
+        "step_receipt_refs",
+        "step_resources_touched",
+    },
     "runtime_verification": {"command_display"},
+}
+_RUNTIME_VERIFICATION_SUPPORT_ROLE = "support_verification_evidence"
+_RUNTIME_VERIFICATION_SUPPORT_AUTHORITY = "support_only"
+_RUNTIME_VERIFICATION_EVIDENCE_CLASSES = {
+    "syntax_only",
+    "command_execution",
+    "behavioral_verification",
+    "not_evaluated",
 }
 
 
@@ -167,6 +183,41 @@ def contract_verdict_candidates(summary: dict[str, Any]) -> list[dict[str, Any]]
     return rows
 
 
+def validate_runtime_verification_support_artifact(payload: dict[str, Any]) -> list[str]:
+    missing: list[str] = []
+    if str(payload.get("artifact_role") or "").strip() != _RUNTIME_VERIFICATION_SUPPORT_ROLE:
+        missing.append("artifact_role")
+    if str(payload.get("artifact_authority") or "").strip() != _RUNTIME_VERIFICATION_SUPPORT_AUTHORITY:
+        missing.append("artifact_authority")
+    if payload.get("authored_output") is not False:
+        missing.append("authored_output")
+    if str(payload.get("overall_evidence_class") or "").strip() not in _RUNTIME_VERIFICATION_EVIDENCE_CLASSES:
+        missing.append("overall_evidence_class")
+    evidence_summary = payload.get("evidence_summary")
+    if not isinstance(evidence_summary, dict):
+        missing.append("evidence_summary")
+    else:
+        for key in ("syntax_only", "command_execution", "behavioral_verification", "not_evaluated"):
+            if key not in evidence_summary:
+                missing.append(f"evidence_summary.{key}")
+    provenance = payload.get("provenance")
+    if not isinstance(provenance, dict):
+        missing.append("provenance")
+    else:
+        for key in ("run_id", "issue_id", "turn_index", "retry_count", "record_id", "recorded_at"):
+            if key not in provenance:
+                missing.append(f"provenance.{key}")
+    history = payload.get("history")
+    if not isinstance(history, dict):
+        missing.append("history")
+    else:
+        for key in ("latest_path", "index_path", "record_path"):
+            token = str(history.get(key) or "").strip()
+            if not token:
+                missing.append(f"history.{key}")
+    return missing
+
+
 def evaluate_run_completeness(*, workspace: Path, session_id: str) -> dict[str, Any]:
     workspace_root = Path(workspace).resolve()
     run_summary_path = workspace_root / "runs" / str(session_id).strip() / "run_summary.json"
@@ -245,8 +296,10 @@ def evaluate_run_completeness(*, workspace: Path, session_id: str) -> dict[str, 
             continue
         payload = load_json_object(resolved_path)
         missing_fields = [field for field in required_fields if field not in payload]
+        if str(candidate["name"]) == "cards_runtime_verification" and payload:
+            missing_fields.extend(validate_runtime_verification_support_artifact(payload))
         exists = resolved_path.exists()
-        valid = exists and (not required_fields or not missing_fields) and bool(payload)
+        valid = exists and not missing_fields and bool(payload)
         verdict_rows.append(
             {
                 "name": str(candidate["name"]),
@@ -353,6 +406,7 @@ def build_identity_replacements(
     issue_ids = sorted(issue_ids)
     for index, issue_id in enumerate(issue_ids):
         tokens[issue_id] = f"__ISSUE_{index}__"
+        tokens[issue_id.lower()] = f"__ISSUE_{index}__"
     rows = sorted(tokens.items(), key=lambda item: len(item[0]), reverse=True)
     return [(raw, replacement) for raw, replacement in rows if raw]
 

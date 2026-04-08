@@ -59,6 +59,12 @@ def write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
 
 
+async def seed_runtime_settings_context() -> None:
+    from orket.settings import load_user_settings_async, set_runtime_settings_context
+
+    set_runtime_settings_context(user_settings=await load_user_settings_async())
+
+
 @contextmanager
 def applied_probe_env(
     *,

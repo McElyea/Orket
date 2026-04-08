@@ -23,7 +23,7 @@ from ..services.turn_tool_control_plane_resource_lifecycle import (
     reservation_id_for_run,
 )
 from ..services.turn_tool_control_plane_service import TurnToolControlPlaneService
-from .tool_invocation_contracts import build_tool_invocation_manifest, compute_tool_call_hash
+from orket.runtime.registry.tool_invocation_contracts import build_tool_invocation_manifest, compute_tool_call_hash
 from .turn_path_resolver import PathResolver
 from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
 from .turn_tool_dispatcher_control_plane import publish_step_if_needed

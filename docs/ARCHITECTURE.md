@@ -1,6 +1,6 @@
 # Orket Architecture (Target State)
 
-Last updated: 2026-03-10
+Last updated: 2026-04-08
 Status: Active target architecture (transitioning)
 
 Canonical architecture specification for the Orket runtime.
@@ -29,20 +29,25 @@ Current-state operational authority that remains active during migration:
 
 ## Known Current Exceptions
 
-As of 2026-03-10, these divergences are known and accepted as transition debt:
+As of 2026-04-08, these divergences are known and accepted as transition debt:
 
 1. Dependency layering exceptions:
    1. `orket/interfaces/api.py` imports decision-node registry directly.
    2. `orket/interfaces/coordinator_api.py` and `orket/interfaces/orket_bundle_cli.py` import core/domain types directly.
-   3. `orket/adapters/storage/async_protocol_run_ledger.py` and `orket/adapters/storage/protocol_append_only_ledger.py` import application workflow modules.
 2. Decision-node purity exceptions:
-   1. `orket/decision_nodes/api_runtime_strategy_node.py` and `orket/decision_nodes/builtins.py` still include environment/time/uuid/path/runtime-construction logic.
-3. Deterministic runtime clock/input exceptions:
+   1. `orket/decision_nodes/api_runtime_strategy_node.py` and `orket/decision_nodes/builtins.py` still include environment/path/provider policy logic, but API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths now live in explicit services.
+3. API transport compatibility exception:
+   1. `orket/interfaces/api.py` still exports minimal module-level compatibility aliases for `engine`, `api_runtime_host`, `stream_bus`, `interaction_manager`, `extension_manager`, and `extension_runtime_service`, but authoritative live ownership now lives on `app.state.api_runtime_context`.
+4. Deterministic runtime clock/input exceptions:
    1. Some application paths still use wall-clock helpers directly (for example `time.time()` / `datetime.now(...)`) instead of injected runtime inputs.
-4. Observability schema transition:
+5. Replay diagnostics compatibility exception:
+   1. `orket/orchestration/engine.py` still exposes `replay_turn()` as a compatibility wrapper, but the canonical engine replay surface is `replay_turn_diagnostics()` and both surfaces are explicitly artifact-backed diagnostics rather than replay-verdict authority.
+6. Runtime verification support-artifact compatibility exception:
+   1. `runtime_verification.json` remains the latest-path name for verifier support artifacts, but it is not authored-output authority; canonical verifier history now lives through `runtime_verification_index.json` plus per-record artifacts under `runtime_verifier_records/`.
+7. Observability schema transition:
    1. `docs/architecture/event_taxonomy.md` remains the canonical event-field authority for current runtime events.
    2. The observability identity model below is target-state and must be versioned during migration.
-5. Transitional runtime specifics:
+8. Transitional runtime specifics:
    1. Durable-path defaults and `ReviewRun` v0 notes remain active current-state authority (documented in this file under sections 20 and 24).
 
 ## 1. Purpose

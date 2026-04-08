@@ -1,42 +1,33 @@
 import asyncio
-import json
-from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
-from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
-from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_repositories import (
-    AsyncPendingGateRepository,
     AsyncSessionRepository,
     AsyncSnapshotRepository,
     AsyncSuccessRepository,
 )
-from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
-from orket.application.services.kernel_action_control_plane_operator_service import (
-    KernelActionControlPlaneOperatorService,
-)
-from orket.application.services.kernel_action_control_plane_resource_lifecycle import reservation_id_for_run
-from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
-from orket.application.services.kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
-from orket.application.services.kernel_action_pending_approval_reservation import (
-    publish_pending_kernel_approval_hold_if_needed,
-)
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
-from orket.application.services.tool_approval_control_plane_operator_service import (
-    ToolApprovalControlPlaneOperatorService,
-)
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
 from orket.orchestration import engine_approvals
-from orket.orchestration.engine_services import CardArchiver, KernelGatewayFacade, SandboxManager, SessionController
+from orket.orchestration.engine_kernel_async_service import KernelAsyncControlPlaneService
+from orket.orchestration.engine_services import (
+    CardArchiver,
+    KernelGatewayFacade,
+    ReplayDiagnosticsService,
+    SandboxManager,
+    SessionController,
+    build_engine_control_plane_services,
+)
+from orket.runtime.config.runtime_bootstrap import DEFAULT_RUNTIME_BOOTSTRAP_SERVICE
 from orket.runtime.config_loader import ConfigLoader
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
 from orket.runtime.runtime_context import OrketRuntimeContext
-from orket.runtime_paths import resolve_control_plane_db_path
 
 
 class OrchestrationEngine:
@@ -55,10 +46,13 @@ class OrchestrationEngine:
         run_ledger_repo: Any | None = None,
         decision_nodes: DecisionNodeRegistry | None = None,
         kernel_gateway: KernelV1Gateway | None = None,
+        runtime_bootstrap_service: Any | None = None,
+        runtime_inputs: RuntimeInputService | None = None,
     ) -> None:
         self.decision_nodes = decision_nodes or DecisionNodeRegistry()
-        self.engine_runtime_node = self.decision_nodes.resolve_engine_runtime()
-        self.engine_runtime_node.bootstrap_environment()
+        self.runtime_bootstrap_service = runtime_bootstrap_service or DEFAULT_RUNTIME_BOOTSTRAP_SERVICE
+        self.runtime_inputs = runtime_inputs or RuntimeInputService()
+        self.runtime_bootstrap_service.bootstrap_environment()
         self.runtime_context = OrketRuntimeContext.from_env(
             workspace_root=workspace_root,
             department=department,
@@ -72,7 +66,7 @@ class OrchestrationEngine:
             decision_nodes=self.decision_nodes,
             config_loader_factory=ConfigLoader,
             config_loader_kwargs={"decision_nodes": self.decision_nodes},
-            config_root_resolver=self.engine_runtime_node.resolve_config_root,
+            config_root_resolver=self.runtime_bootstrap_service.resolve_config_root,
             run_ledger_factory=build_run_ledger_repository,
             telemetry_sink=self._emit_run_ledger_telemetry,
         )
@@ -91,35 +85,37 @@ class OrchestrationEngine:
         self.snapshots = self.runtime_context.snapshots_repo
         self.success = self.runtime_context.success_repo
         self.run_ledger = self.runtime_context.run_ledger
-        self.pending_gates = AsyncPendingGateRepository(self.db_path)
-        self.control_plane_repository = AsyncControlPlaneRecordRepository(resolve_control_plane_db_path())
-        self.control_plane_execution_repository = AsyncControlPlaneExecutionRepository(resolve_control_plane_db_path())
-        self.control_plane_publication = ControlPlanePublicationService(repository=self.control_plane_repository)
-        self.tool_approval_control_plane_operator = ToolApprovalControlPlaneOperatorService(
-            publication=self.control_plane_publication
-        )
-        self.kernel_action_control_plane = KernelActionControlPlaneService(
-            execution_repository=self.control_plane_execution_repository,
-            publication=self.control_plane_publication,
-        )
-        self.kernel_action_control_plane_operator = KernelActionControlPlaneOperatorService(
-            publication=self.control_plane_publication
-        )
-        self.kernel_action_control_plane_view = KernelActionControlPlaneViewService(
-            record_repository=self.control_plane_repository,
-            execution_repository=self.control_plane_execution_repository,
-        )
+        control_plane_services = build_engine_control_plane_services(db_path=self.db_path)
+        self.pending_gates = control_plane_services.pending_gates
+        self.control_plane_repository = control_plane_services.control_plane_repository
+        self.control_plane_execution_repository = control_plane_services.control_plane_execution_repository
+        self.control_plane_publication = control_plane_services.control_plane_publication
+        self.tool_approval_control_plane_operator = control_plane_services.tool_approval_control_plane_operator
+        self.kernel_action_control_plane = control_plane_services.kernel_action_control_plane
+        self.kernel_action_control_plane_operator = control_plane_services.kernel_action_control_plane_operator
+        self.kernel_action_control_plane_view = control_plane_services.kernel_action_control_plane_view
         self.kernel_gateway = kernel_gateway or KernelV1Gateway()
 
         self._pipeline = ExecutionPipeline(
             self.workspace_root,
             self.department,
             runtime_context=self.runtime_context,
+            runtime_inputs=self.runtime_inputs,
         )
         self.sandbox_manager = SandboxManager(getattr(self._pipeline, "sandbox_orchestrator", None))
         self.session_controller = SessionController(self.workspace_root)
         self.card_archiver = CardArchiver(self.cards)
         self.kernel_gateway_facade = KernelGatewayFacade(self.kernel_gateway)
+        self.replay_diagnostics = ReplayDiagnosticsService(self.workspace_root)
+        self.kernel_async_control_plane = KernelAsyncControlPlaneService(
+            gateway_facade=self.kernel_gateway_facade,
+            kernel_action_control_plane=self.kernel_action_control_plane,
+            kernel_action_control_plane_operator=self.kernel_action_control_plane_operator,
+            kernel_action_control_plane_view=self.kernel_action_control_plane_view,
+            control_plane_repository=self.control_plane_repository,
+            control_plane_publication=self.control_plane_publication,
+            get_approval=lambda approval_id: self.get_approval(approval_id),
+        )
         self._initialize_lock = asyncio.Lock()
         self._initialized = False
 
@@ -257,7 +253,7 @@ class OrchestrationEngine:
         """Halts an active session by signaling the runtime state."""
         cancelled_active_task = await self.session_controller.halt(session_id)
         if operator_actor_ref:
-            timestamp = datetime.now(UTC).isoformat()
+            timestamp = self.runtime_inputs.utc_now_iso()
             target_ref = f"session:{session_id}"
             await self.control_plane_publication.publish_operator_action(
                 action_id=f"session-operator-action:{session_id}:halt:{timestamp}",
@@ -342,42 +338,27 @@ class OrchestrationEngine:
             limit=limit,
         )
 
+    def replay_turn_diagnostics(
+        self, session_id: str, issue_id: str, turn_index: int, role: str | None = None
+    ) -> dict[str, Any]:
+        """Artifact-backed diagnostics only. This is not the canonical replay-verdict authority path."""
+        return self.replay_diagnostics.replay_turn_diagnostics(
+            session_id=session_id,
+            issue_id=issue_id,
+            turn_index=turn_index,
+            role=role,
+        )
+
     def replay_turn(
         self, session_id: str, issue_id: str, turn_index: int, role: str | None = None
     ) -> dict[str, Any]:
-        """
-        Replay diagnostics for one turn from persisted observability artifacts.
-        """
-        run_root = self.workspace_root / "observability" / session_id / issue_id
-        if not run_root.exists():
-            raise FileNotFoundError(f"No observability artifacts found for run={session_id} issue={issue_id}")
-
-        prefix = f"{turn_index:03d}_"
-        candidates = [p for p in run_root.iterdir() if p.is_dir() and p.name.startswith(prefix)]
-        if role:
-            role_suffix = role.lower().replace(" ", "_")
-            candidates = [p for p in candidates if p.name.endswith(role_suffix)]
-        if not candidates:
-            raise FileNotFoundError(f"No turn artifacts found for turn_index={turn_index}")
-
-        target = sorted(candidates)[0]
-        checkpoint_path = target / "checkpoint.json"
-        messages_path = target / "messages.json"
-        model_path = target / "model_response.txt"
-        parsed_tools_path = target / "parsed_tool_calls.json"
-
-        def _read_json(path: Path) -> Any:
-            if not path.exists():
-                return None
-            return json.loads(path.read_text(encoding="utf-8"))
-
-        return {
-            "turn_dir": str(target),
-            "checkpoint": _read_json(checkpoint_path),
-            "messages": _read_json(messages_path),
-            "model_response": model_path.read_text(encoding="utf-8") if model_path.exists() else None,
-            "parsed_tool_calls": _read_json(parsed_tools_path),
-        }
+        """Compatibility wrapper over replay diagnostics only; do not treat this as canonical replay truth."""
+        return self.replay_turn_diagnostics(
+            session_id=session_id,
+            issue_id=issue_id,
+            turn_index=turn_index,
+            role=role,
+        )
 
     def kernel_start_run(self, request: dict[str, Any]) -> dict[str, Any]:
         return self.kernel_gateway_facade.start_run(request)
@@ -407,140 +388,19 @@ class OrchestrationEngine:
         return self.kernel_gateway_facade.admit_proposal(request)
 
     async def kernel_admit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
-        response = self.kernel_gateway_facade.admit_proposal(request)
-        ledger = self.kernel_gateway_facade.list_ledger_events(
-            {
-                "contract_version": "kernel_api/v1",
-                "session_id": request.get("session_id"),
-                "trace_id": request.get("trace_id"),
-                "limit": 200,
-            }
-        )
-        run, _attempt = await self.kernel_action_control_plane.record_admission(
-            request=request,
-            response=response,
-            ledger_items=list(ledger.get("items") or []),
-        )
-        await publish_pending_kernel_approval_hold_if_needed(
-            engine=self,
-            session_id=str(request.get("session_id") or ""),
-            trace_id=str(request.get("trace_id") or ""),
-            proposal=dict(request.get("proposal") or {}),
-            response=response,
-        )
-        view_service = getattr(self, "kernel_action_control_plane_view", None)
-        if view_service is not None:
-            return cast(dict[str, Any], await view_service.augment_kernel_response(
-                response=response,
-                session_id=str(request.get("session_id") or ""),
-                trace_id=str(request.get("trace_id") or ""),
-            ))
-        reservation = await self.control_plane_repository.get_latest_reservation_record(
-            reservation_id=reservation_id_for_run(run_id=run.run_id)
-        )
-        if reservation is not None:
-            return {
-                **response,
-                "control_plane_run_id": run.run_id,
-                "control_plane_reservation_id": reservation.reservation_id,
-            }
-        return response
+        return await self.kernel_async_control_plane.admit_proposal_async(request)
 
     def kernel_commit_proposal(self, request: dict[str, Any]) -> dict[str, Any]:
         return self.kernel_gateway_facade.commit_proposal(request)
 
     async def kernel_commit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
-        response = self.kernel_gateway_facade.commit_proposal(request)
-        ledger = self.kernel_gateway_facade.list_ledger_events(
-            {
-                "contract_version": "kernel_api/v1",
-                "session_id": request.get("session_id"),
-                "trace_id": request.get("trace_id"),
-                "limit": 400,
-            }
-        )
-        await self.kernel_action_control_plane.record_commit(
-            request=request,
-            response=response,
-            ledger_items=list(ledger.get("items") or []),
-        )
-        view_service = getattr(self, "kernel_action_control_plane_view", None)
-        if view_service is None:
-            return response
-        return cast(dict[str, Any], await view_service.augment_kernel_response(
-            response=response,
-            session_id=str(request.get("session_id") or ""),
-            trace_id=str(request.get("trace_id") or ""),
-        ))
+        return await self.kernel_async_control_plane.commit_proposal_async(request)
 
     def kernel_end_session(self, request: dict[str, Any]) -> dict[str, Any]:
         return self.kernel_gateway_facade.end_session(request)
 
     async def kernel_end_session_async(self, request: dict[str, Any]) -> dict[str, Any]:
-        response = self.kernel_gateway_facade.end_session(request)
-        ledger = self.kernel_gateway_facade.list_ledger_events(
-            {
-                "contract_version": "kernel_api/v1",
-                "session_id": request.get("session_id"),
-                "trace_id": request.get("trace_id"),
-                "limit": 200,
-            }
-        )
-        closed = await self.kernel_action_control_plane.record_session_end(
-            request=request,
-            response=response,
-            ledger_items=list(ledger.get("items") or []),
-        )
-        operator_actor_ref = str(request.get("operator_actor_ref") or "").strip()
-        attestation_scope = str(request.get("attestation_scope") or "").strip()
-        attestation_payload_raw = request.get("attestation_payload")
-        attestation_payload = (
-            dict(attestation_payload_raw)
-            if isinstance(attestation_payload_raw, dict)
-            else {}
-        )
-        if attestation_scope and not operator_actor_ref:
-            raise ValueError(
-                "kernel end-session attestation requires authenticated operator actor reference"
-            )
-        if closed is not None and operator_actor_ref:
-            run, _attempt, _final_truth = closed
-            session_end_timestamp = next(
-                (
-                    str(item.get("created_at") or "").strip()
-                    for item in reversed(list(ledger.get("items") or []))
-                    if str(item.get("event_type") or "") == "session.ended"
-                ),
-                "",
-            )
-            await self.kernel_action_control_plane_operator.publish_cancel_run_command(
-                actor_ref=operator_actor_ref,
-                session_id=str(request.get("session_id") or ""),
-                trace_id=str(request.get("trace_id") or ""),
-                timestamp=session_end_timestamp or str(run.creation_timestamp),
-                receipt_ref=f"kernel-ledger-event:{response.get('event_digest')}",
-                reason=str(request.get("reason") or "").strip() or None,
-            )
-            if attestation_scope:
-                await self.kernel_action_control_plane_operator.publish_run_attestation(
-                    actor_ref=operator_actor_ref,
-                    session_id=str(request.get("session_id") or ""),
-                    trace_id=str(request.get("trace_id") or ""),
-                    timestamp=session_end_timestamp or str(run.creation_timestamp),
-                    receipt_ref=f"kernel-ledger-event:{response.get('event_digest')}",
-                    request_id=str(request.get("request_id") or "").strip() or None,
-                    precondition_basis_ref=f"kernel-session-end:{str(request.get('reason') or '').strip() or 'unspecified'}",
-                    attestation_scope=attestation_scope,
-                    attestation_payload=attestation_payload,
-                )
-        view_service = getattr(self, "kernel_action_control_plane_view", None)
-        if view_service is None:
-            return response
-        return cast(dict[str, Any], await view_service.augment_kernel_response(
-            response=response,
-            session_id=str(request.get("session_id") or ""),
-            trace_id=str(request.get("trace_id") or ""),
-        ))
+        return await self.kernel_async_control_plane.end_session_async(request)
 
     def kernel_list_ledger_events(self, request: dict[str, Any]) -> dict[str, Any]:
         return self.kernel_gateway_facade.list_ledger_events(request)

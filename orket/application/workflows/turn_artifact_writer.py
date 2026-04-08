@@ -9,8 +9,8 @@ from orket.core.domain.execution import ExecutionTurn
 from orket.naming import sanitize_name
 from orket.schema import IssueConfig, RoleConfig
 
-from .protocol_hashing import ProtocolCanonicalizationError, hash_canonical_json, hash_framed_fields
-from .tool_invocation_contracts import (
+from orket.runtime.registry.protocol_hashing import ProtocolCanonicalizationError, hash_canonical_json, hash_framed_fields
+from orket.runtime.registry.tool_invocation_contracts import (
     PROTOCOL_RECEIPT_SCHEMA_VERSION,
     compute_tool_call_hash,
     normalize_tool_invocation_manifest,

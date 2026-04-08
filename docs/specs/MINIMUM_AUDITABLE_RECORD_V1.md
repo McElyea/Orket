@@ -1,6 +1,6 @@
 # Minimum Auditable Record V1
 
-Last updated: 2026-03-18
+Last updated: 2026-04-08
 Status: Active
 Owner: Orket Core
 Phase authority: `docs/projects/archive/techdebt/AH03182026/Closeout.md`
@@ -22,7 +22,10 @@ This contract currently governs the remediated cards and explicit ODR surfaces a
 
 1. cards runs emitting `run_summary.json`
 2. per-turn observability directories under `observability/<session_id>/`
-3. cards contract-verdict artifacts such as `agent_output/verification/runtime_verification.json`
+3. cards support-verification artifacts such as:
+   1. `agent_output/verification/runtime_verification.json`
+   2. `agent_output/verification/runtime_verification_index.json`
+   3. per-record verifier artifacts under `agent_output/verification/runtime_verifier_records/`
 4. explicit ODR refinement artifacts referenced from cards run summary via `odr_artifact_path`
 
 Out of scope for MAR v1:
@@ -99,13 +102,31 @@ Current bounded examples:
 
 The MAR is incomplete if run-summary or verification surfaces claim an authored output that is absent on disk.
 
+Support verification artifacts do not satisfy the Authored Output Group unless the governing run contract explicitly says the verification artifact is itself the operator-facing product.
+
 ### 4.4 Contract Verdict Group
 
 At least one authoritative contract-verdict surface must exist so a reviewer can evaluate whether the run met its task contract.
 
 Current allowed surfaces:
 
-1. cards runtime verification artifact at `agent_output/verification/runtime_verification.json`
+1. cards latest runtime-verification support artifact at `agent_output/verification/runtime_verification.json`, provided it records:
+   1. `artifact_role=support_verification_evidence`
+   2. `artifact_authority=support_only`
+   3. `authored_output=false`
+   4. `overall_evidence_class`
+   5. `evidence_summary.syntax_only`
+   6. `evidence_summary.command_execution`
+   7. `evidence_summary.behavioral_verification`
+   8. `evidence_summary.not_evaluated`
+   9. `provenance.run_id`
+   10. `provenance.issue_id`
+   11. `provenance.turn_index`
+   12. `provenance.retry_count`
+   13. `provenance.record_id`
+   14. `provenance.recorded_at`
+   15. `history.index_path`
+   16. `history.record_path`
 2. explicit ODR refinement artifact referenced by `run_summary.odr_artifact_path`, provided it records:
    1. `history_rounds`
    2. `odr_stop_reason`
@@ -113,6 +134,9 @@ Current allowed surfaces:
    4. `odr_pending_decisions`
 
 `run_summary.json` remains required, but run summary alone is not sufficient for MAR question 3 when no task-specific verdict artifact exists.
+
+`runtime_verification.json` is a support-verification artifact, not an authored output.
+Its fixed latest path is allowed only because the verifier now preserves materially distinct history in `runtime_verification_index.json` and per-record artifacts under `runtime_verifier_records/`.
 
 ### 4.5 Stability Evidence Group
 

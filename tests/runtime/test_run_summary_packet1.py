@@ -172,6 +172,26 @@ def test_packet1_no_primary_output_omits_classification() -> None:
 
 
 # Layer: contract
+def test_packet1_runtime_verification_path_does_not_become_primary_output_implicitly() -> None:
+    payload = build_run_summary_payload(
+        run_id="sess-packet1-support-artifact",
+        status="done",
+        failure_reason=None,
+        started_at=_STARTED_AT,
+        ended_at=_FINALIZED_AT,
+        tool_names=[],
+        artifacts={
+            "run_identity": _run_identity(run_id="sess-packet1-support-artifact"),
+            "runtime_verification_path": "agent_output/verification/runtime_verification.json",
+        },
+    )
+    packet1 = payload[_PACKET1_KEY]
+
+    assert packet1["provenance"]["primary_output_kind"] == "none"
+    assert packet1["classification"] == {"classification_applicable": False}
+
+
+# Layer: contract
 def test_packet1_defect_taxonomy_contract() -> None:
     packet1 = _packet1_payload(
         packet1_facts={

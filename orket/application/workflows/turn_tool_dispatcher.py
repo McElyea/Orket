@@ -15,7 +15,7 @@ from orket.schema import IssueConfig
 from ..services.governed_turn_tool_approval_continuation_service import (
     supports_governed_turn_tool_approval_continuation,
 )
-from .protocol_hashing import (
+from orket.runtime.registry.protocol_hashing import (
     VALIDATOR_VERSION,
     build_step_id,
     default_protocol_hash,

@@ -3,11 +3,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from orket.application.workflows.protocol_hashing import (
-    hash_clock_artifact_ref,
-    hash_env_allowlist,
-    hash_network_allowlist,
-)
+from orket.runtime.registry import protocol_hashing
 from orket.runtime.protocol_error_codes import E_NETWORK_MODE_INVALID_PREFIX
 
 DEFAULT_TIMEZONE = "UTC"
@@ -159,11 +155,11 @@ def build_determinism_controls(
         "locale": resolved_locale,
         "network_mode": resolved_network_mode,
         "network_allowlist": resolved_network_allowlist,
-        "network_allowlist_hash": hash_network_allowlist(resolved_network_allowlist),
+        "network_allowlist_hash": protocol_hashing.hash_network_allowlist(resolved_network_allowlist),
         "clock_mode": resolved_clock_mode,
         "clock_artifact_ref": resolved_clock_artifact_ref,
-        "clock_artifact_hash": hash_clock_artifact_ref(resolved_clock_artifact_ref),
+        "clock_artifact_hash": protocol_hashing.hash_clock_artifact_ref(resolved_clock_artifact_ref),
         "env_allowlist": resolved_allowlist,
         "env_snapshot": env_snapshot,
-        "env_allowlist_hash": hash_env_allowlist(env_snapshot),
+        "env_allowlist_hash": protocol_hashing.hash_env_allowlist(env_snapshot),
     }

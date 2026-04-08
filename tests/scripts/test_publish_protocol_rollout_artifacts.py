@@ -8,7 +8,7 @@ from pathlib import Path
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
-from orket.application.workflows.tool_invocation_contracts import (
+from orket.runtime.registry.tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )

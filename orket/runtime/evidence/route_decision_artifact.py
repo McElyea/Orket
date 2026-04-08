@@ -10,7 +10,7 @@ def build_route_decision_artifact(
     run_id: str,
     workload_kind: str,
     execution_runtime_node: Any,
-    pipeline_wiring_node: Any,
+    pipeline_wiring_service: Any,
     target_issue_id: str | None,
     resume_mode: bool,
     deterministic_mode_enabled: bool,
@@ -31,8 +31,8 @@ def build_route_decision_artifact(
         "resume_mode": bool(resume_mode),
         "reason_code": reason_code,
         "deterministic_mode_enabled": bool(deterministic_mode_enabled),
-        "decision_nodes": {
+        "runtime_components": {
             "execution_runtime_node": type(execution_runtime_node).__name__,
-            "pipeline_wiring_node": type(pipeline_wiring_node).__name__,
+            "pipeline_wiring_service": type(pipeline_wiring_service).__name__,
         },
     }

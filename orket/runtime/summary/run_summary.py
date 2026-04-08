@@ -600,16 +600,6 @@ def _build_packet1_extension(
 
 def _collect_packet1_facts(artifacts: dict[str, Any]) -> dict[str, Any]:
     packet1_facts = _normalize_packet1_facts(artifacts.get("packet1_facts"))
-    runtime_verification_path = str(artifacts.get("runtime_verification_path") or "").strip()
-    if (
-        runtime_verification_path
-        and "primary_artifact_output" not in packet1_facts
-        and "primary_work_artifact_output" not in packet1_facts
-    ):
-        packet1_facts["primary_artifact_output"] = {
-            "id": runtime_verification_path,
-            "kind": "artifact",
-        }
     if "intended_provider" not in packet1_facts:
         packet1_facts["intended_provider"] = "ollama"
     if "actual_provider" not in packet1_facts:

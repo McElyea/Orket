@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from scripts.audit.audit_support import normalize_json_surface
 from scripts.audit.compare_two_runs import build_report as build_compare_report
 from scripts.audit.replay_turn import replay_turn_report
 from scripts.audit.verify_run_completeness import build_report as build_verify_report
@@ -19,6 +20,96 @@ def _write_text(path: Path, content: str) -> None:
 
 def _write_json(path: Path, payload: dict) -> None:
     _write_text(path, json.dumps(payload, indent=2, ensure_ascii=True) + "\n")
+
+
+def _runtime_verification_support_payload(*, session_id: str, issue_id: str) -> dict:
+    record_path = (
+        f"agent_output/verification/runtime_verifier_records/{session_id}/{issue_id.lower()}/"
+        "turn_0001_retry_0000.json"
+    )
+    return {
+        "schema_version": "runtime_verification.latest.v2",
+        "artifact_role": "support_verification_evidence",
+        "artifact_authority": "support_only",
+        "authored_output": False,
+        "ok": True,
+        "overall_evidence_class": "command_execution",
+        "evidence_summary": {
+            "syntax_only": {
+                "evaluated": True,
+                "checked_files": ["agent_output/main.py"],
+                "commands": [
+                    {
+                        "command_id": "command:001",
+                        "command_display": "python -m compileall -q agent_output",
+                        "working_directory": ".",
+                        "outcome": "pass",
+                        "returncode": 0,
+                    }
+                ],
+            },
+            "command_execution": {
+                "evaluated": True,
+                "commands": [
+                    {
+                        "command_id": "command:002",
+                        "command_display": "python agent_output/main.py",
+                        "working_directory": ".",
+                        "outcome": "pass",
+                        "returncode": 0,
+                    }
+                ],
+            },
+            "behavioral_verification": {
+                "evaluated": False,
+                "stdout_contract_requested": False,
+                "json_assertion_count": 0,
+                "commands": [],
+            },
+            "not_evaluated": [
+                {
+                    "check": "behavioral_verification",
+                    "reason": "no runtime stdout contract requested behavioral verification",
+                }
+            ],
+        },
+        "checked_files": ["agent_output/main.py"],
+        "errors": [],
+        "command_results": [
+            {
+                "command_id": "command:001",
+                "command_display": "python -m compileall -q agent_output",
+                "working_directory": ".",
+                "outcome": "pass",
+                "returncode": 0,
+                "evidence_class": "syntax_only",
+            },
+            {
+                "command_id": "command:002",
+                "command_display": "python agent_output/main.py",
+                "working_directory": ".",
+                "outcome": "pass",
+                "returncode": 0,
+                "evidence_class": "command_execution",
+            },
+        ],
+        "failure_breakdown": {},
+        "guard_contract": {"result": "pass"},
+        "guard_decision": {"action": "continue"},
+        "provenance": {
+            "run_id": session_id,
+            "issue_id": issue_id,
+            "turn_index": 1,
+            "retry_count": 0,
+            "record_id": f"runtime-verification:{session_id}:{issue_id.lower()}:turn:0001:retry:0000",
+            "recorded_at": "2026-03-18T12:00:00Z",
+        },
+        "history": {
+            "latest_path": "agent_output/verification/runtime_verification.json",
+            "index_path": "agent_output/verification/runtime_verification_index.json",
+            "record_path": record_path,
+        },
+    }
 
 
 def _build_cards_run(
@@ -81,15 +172,38 @@ def _build_cards_run(
         )
     if not omit_output:
         _write_text(workspace / output_path, output_text)
+    runtime_verification_payload = _runtime_verification_support_payload(session_id=session_id, issue_id=issue_id)
+    _write_json(workspace / "agent_output" / "verification" / "runtime_verification.json", runtime_verification_payload)
     _write_json(
-        workspace / "agent_output" / "verification" / "runtime_verification.json",
+        workspace / runtime_verification_payload["history"]["record_path"],
+        runtime_verification_payload,
+    )
+    _write_json(
+        workspace / "agent_output" / "verification" / "runtime_verification_index.json",
         {
-            "run_id": session_id,
-            "issue_id": issue_id,
-            "ok": True,
-            "checked_files": [output_path],
-            "errors": [],
-            "timestamp": "2026-03-18T12:00:00Z",
+            "schema_version": "runtime_verification.index.v1",
+            "artifact_role": "support_verification_history_index",
+            "artifact_authority": "support_only",
+            "authored_output": False,
+            "latest_path": "agent_output/verification/runtime_verification.json",
+            "latest_record_id": runtime_verification_payload["provenance"]["record_id"],
+            "latest_record_path": runtime_verification_payload["history"]["record_path"],
+            "index_path": "agent_output/verification/runtime_verification_index.json",
+            "history_count": 1,
+            "records": [
+                {
+                    "record_id": runtime_verification_payload["provenance"]["record_id"],
+                    "record_path": runtime_verification_payload["history"]["record_path"],
+                    "run_id": session_id,
+                    "issue_id": issue_id,
+                    "turn_index": 1,
+                    "retry_count": 0,
+                    "seat_name": "code_reviewer",
+                    "recorded_at": "2026-03-18T12:00:00Z",
+                    "ok": True,
+                    "overall_evidence_class": "command_execution",
+                }
+            ],
         },
     )
     _write_json(
@@ -205,6 +319,23 @@ def test_verify_run_completeness_flags_missing_parsed_tool_calls_when_tool_mode_
 
 # Layer: contract
 @pytest.mark.contract
+def test_verify_run_completeness_rejects_runtime_verification_without_support_semantics(tmp_path: Path) -> None:
+    workspace = tmp_path / "cards-weak-verifier"
+    _build_cards_run(workspace, session_id="run-c", issue_id="ISSUE-C")
+
+    runtime_path = workspace / "agent_output" / "verification" / "runtime_verification.json"
+    payload = json.loads(runtime_path.read_text(encoding="utf-8"))
+    payload.pop("artifact_role")
+    _write_json(runtime_path, payload)
+
+    report = build_verify_report(workspace=workspace, session_id="run-c")
+
+    assert report["mar_complete"] is False
+    assert any("artifact_role" in item for item in report["missing_evidence"])
+
+
+# Layer: contract
+@pytest.mark.contract
 def test_verify_run_completeness_accepts_odr_only_run_surface(tmp_path: Path) -> None:
     workspace = tmp_path / "odr-complete"
     _build_odr_run(workspace, session_id="run-odr", issue_id="ODR-ISSUE")
@@ -255,6 +386,55 @@ def test_compare_two_runs_excludes_fresh_identity_differences(tmp_path: Path) ->
     assert payload["verdict"] == "stable"
     assert payload["first_in_scope_diff"] is None
     assert payload["excluded_fresh_identity_differences"]
+
+
+# Layer: unit
+@pytest.mark.unit
+def test_normalize_run_summary_excludes_fresh_control_plane_identity_fields() -> None:
+    left = {
+        "run_id": "run-a",
+        "status": "done",
+        "control_plane": {
+            "projection_source": "control_plane_records",
+            "projection_only": True,
+            "run_id": "cards-epic-run:run-a:build-a:20260318T120000Z",
+            "attempt_id": "cards-epic-run:run-a:build-a:20260318T120000Z:attempt:0001",
+            "current_attempt_id": "cards-epic-run:run-a:build-a:20260318T120000Z:attempt:0001",
+            "configuration_snapshot_id": "cards-epic-config:run-a:build-a",
+            "policy_snapshot_id": "cards-epic-policy:run-a:build-a",
+            "step_id": "cards-epic-step:run-a:build-a",
+            "step_receipt_refs": ["cards-epic-receipt:run-a:build-a"],
+            "step_resources_touched": ["build:build-a", "epic:probe"],
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_completed",
+            "run_state": "completed",
+        },
+    }
+    right = {
+        "run_id": "run-b",
+        "status": "done",
+        "control_plane": {
+            "projection_source": "control_plane_records",
+            "projection_only": True,
+            "run_id": "cards-epic-run:run-b:build-b:20260318T120500Z",
+            "attempt_id": "cards-epic-run:run-b:build-b:20260318T120500Z:attempt:0001",
+            "current_attempt_id": "cards-epic-run:run-b:build-b:20260318T120500Z:attempt:0001",
+            "configuration_snapshot_id": "cards-epic-config:run-b:build-b",
+            "policy_snapshot_id": "cards-epic-policy:run-b:build-b",
+            "step_id": "cards-epic-step:run-b:build-b",
+            "step_receipt_refs": ["cards-epic-receipt:run-b:build-b"],
+            "step_resources_touched": ["build:build-b", "epic:probe"],
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_completed",
+            "run_state": "completed",
+        },
+    }
+
+    assert normalize_json_surface(left, surface_kind="run_summary", replacements=[]) == normalize_json_surface(
+        right,
+        surface_kind="run_summary",
+        replacements=[],
+    )
 
 
 # Layer: integration

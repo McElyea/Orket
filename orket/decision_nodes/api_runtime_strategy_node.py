@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import os
-import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +28,13 @@ class DefaultApiRuntimeStrategyNode:
             return query_key
         return None
 
-    def websocket_query_compat_warning_event(self, query_key_used: bool, *, input_ref: str) -> dict[str, Any] | None:
+    def websocket_query_compat_warning_event(
+        self,
+        query_key_used: bool,
+        *,
+        input_ref: str,
+        timestamp_utc: str,
+    ) -> dict[str, Any] | None:
         if not query_key_used:
             return None
         if self.security_mode() != "compat":
@@ -41,7 +46,7 @@ class DefaultApiRuntimeStrategyNode:
             "mode": self.security_mode(),
             "reason": "query_auth_used",
             "input_ref": input_ref,
-            "timestamp_utc": datetime.now(UTC).isoformat(),
+            "timestamp_utc": timestamp_utc,
         }
 
     def default_allowed_origins_value(self) -> str:
@@ -67,9 +72,6 @@ class DefaultApiRuntimeStrategyNode:
         if path:
             return Path(path).stem
         return None
-
-    def create_session_id(self) -> str:
-        return str(uuid.uuid4())[:8]
 
     def resolve_run_active_invocation(
         self,
@@ -221,16 +223,6 @@ class DefaultApiRuntimeStrategyNode:
     def preview_unsupported_detail(self, target: dict[str, str], invocation: dict[str, Any]) -> str:
         return f"Unsupported preview mode '{target['mode']}'."
 
-    def create_preview_builder(self, model_root: Any) -> Any:
-        from orket.preview import PreviewBuilder
-
-        return PreviewBuilder(model_root)
-
-    def create_chat_driver(self) -> Any:
-        from orket.driver import OrketDriver
-
-        return OrketDriver()
-
     def resolve_chat_driver_invocation(self, message: str) -> dict[str, Any]:
         return {"method_name": "process_request", "args": [message]}
 
@@ -240,34 +232,14 @@ class DefaultApiRuntimeStrategyNode:
             return workspace
         return project_root / "workspace" / "default"
 
-    def create_member_metrics_reader(self) -> Any:
-        from orket.logging import get_member_metrics
-
-        return get_member_metrics
-
     def resolve_sandbox_workspace(self, project_root: Any) -> Any:
         return project_root / "workspace" / "default"
-
-    def create_execution_pipeline(self, workspace_root: Any) -> Any:
-        from orket.orket import ExecutionPipeline
-
-        return ExecutionPipeline(workspace_root)
 
     def resolve_sandbox_logs_invocation(self, sandbox_id: str, service: str | None) -> dict[str, Any]:
         return {"method_name": "get_logs", "args": [sandbox_id, service]}
 
     def resolve_api_workspace(self, project_root: Any) -> Any:
         return project_root / "workspace" / "default"
-
-    def create_engine(self, workspace_root: Any) -> Any:
-        from orket.orchestration.engine import OrchestrationEngine
-
-        return OrchestrationEngine(workspace_root)
-
-    def create_file_tools(self, project_root: Any) -> Any:
-        from orket.adapters.storage.async_file_tools import AsyncFileTools
-
-        return AsyncFileTools(project_root)
 
     def resolve_system_board(self, department: str) -> Any:
         from orket.board import get_board_hierarchy

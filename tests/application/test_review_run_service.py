@@ -288,7 +288,7 @@ def test_run_pr_fetches_snapshot_once_in_code_only_mode(monkeypatch, tmp_path: P
 
 
 def test_review_run_failure_closes_control_plane_run_failed(tmp_path: Path, monkeypatch) -> None:
-    """Layer: integration. Verifies review-run execution errors close the durable control-plane run truthfully."""
+    """Layer: contract. Verifies review-run execution errors close durable control-plane truth on the real service path."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     (repo / "a.txt").write_text("one\n", encoding="utf-8")
@@ -327,7 +327,7 @@ def test_review_run_failure_closes_control_plane_run_failed(tmp_path: Path, monk
 
 
 def test_review_run_service_rejects_control_plane_summary_identifier_drift(tmp_path: Path, monkeypatch) -> None:
-    """Layer: integration. Verifies review-run execution fails closed if projected control-plane ids drift."""
+    """Layer: contract. Verifies review-run execution fails closed if a patched projection source reports identifier drift."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     (repo / "a.txt").write_text("one\n", encoding="utf-8")
@@ -386,7 +386,7 @@ def test_review_run_service_rejects_incomplete_control_plane_lifecycle_projectio
     summary_overrides: dict[str, object],
     expected_error: str,
 ) -> None:
-    """Layer: integration. Verifies review-run execution fails closed if projected lifecycle state is incomplete."""
+    """Layer: contract. Verifies review-run execution fails closed if a patched projection source reports incomplete lifecycle state."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     (repo / "a.txt").write_text("one\n", encoding="utf-8")
@@ -460,7 +460,7 @@ def test_review_run_service_rejects_orphaned_control_plane_identifier_hierarchy(
     summary_overrides: dict[str, object],
     expected_error: str,
 ) -> None:
-    """Layer: integration. Verifies review-run execution fails closed if lower-level projected ids outlive their parent ids."""
+    """Layer: contract. Verifies review-run execution fails closed if a patched projection source leaves orphaned lower-level ids."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     (repo / "a.txt").write_text("one\n", encoding="utf-8")
@@ -546,7 +546,7 @@ def test_review_run_service_rejects_orphaned_control_plane_projection_metadata(
     summary_overrides: dict[str, object],
     expected_error: str,
 ) -> None:
-    """Layer: integration. Verifies review-run execution fails closed if attempt or step metadata survives after its projected id drops."""
+    """Layer: contract. Verifies review-run execution fails closed if a patched projection source leaves orphaned attempt or step metadata."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     (repo / "a.txt").write_text("one\n", encoding="utf-8")

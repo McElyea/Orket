@@ -16,7 +16,7 @@ from orket.application.services.kernel_action_control_plane_resource_lifecycle i
     reservation_id_for_run,
     resource_id_for_run,
 )
-from orket.application.workflows.tool_invocation_contracts import build_tool_invocation_manifest
+from orket.runtime.registry.tool_invocation_contracts import build_tool_invocation_manifest
 from orket.core.contracts import AttemptRecord, CheckpointRecord, RunRecord, StepRecord
 from orket.core.domain import (
     AttemptState,

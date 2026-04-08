@@ -30,6 +30,7 @@ def build_system_router(
     project_root_getter: Callable[[], Path],
     runtime_state: Any,
     api_runtime_node_getter: Callable[[], Any],
+    runtime_host_getter: Callable[[], Any],
     now_local: Callable[[], Any],
     get_metrics_snapshot: Callable[[], dict[str, Any]],
     log_event: Callable[[str, dict[str, Any], Path], None],
@@ -51,9 +52,10 @@ def build_system_router(
     @router.post("/system/clear-logs")
     async def clear_logs() -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
+        runtime_host = runtime_host_getter()
         project_root = project_root_getter()
         log_path = api_runtime_node.resolve_clear_logs_path()
-        fs = api_runtime_node.create_file_tools(project_root)
+        fs = runtime_host.create_file_tools(project_root)
         try:
             invocation = api_runtime_node.resolve_clear_logs_invocation(log_path)
             await invoke_async_method(fs, invocation, "clear logs")
@@ -100,7 +102,8 @@ def build_system_router(
     @router.get("/system/read")
     async def read_system_file(path: str) -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
-        fs = api_runtime_node.create_file_tools(project_root_getter())
+        runtime_host = runtime_host_getter()
+        fs = runtime_host.create_file_tools(project_root_getter())
         try:
             invocation = api_runtime_node.resolve_read_invocation(path)
             content = await invoke_async_method(fs, invocation, "read")
@@ -116,7 +119,8 @@ def build_system_router(
     @router.post("/system/save")
     async def save_system_file(req: SaveFileRequest) -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
-        fs = api_runtime_node.create_file_tools(project_root_getter())
+        runtime_host = runtime_host_getter()
+        fs = runtime_host.create_file_tools(project_root_getter())
         try:
             invocation = api_runtime_node.resolve_save_invocation(req.path, req.content)
             await invoke_async_method(fs, invocation, "save")
@@ -186,9 +190,10 @@ def build_system_router(
     @router.post("/system/run-active")
     async def run_active_asset(req: RunAssetRequest) -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
+        runtime_host = runtime_host_getter()
         engine = engine_getter()
         project_root = project_root_getter()
-        session_id = api_runtime_node.create_session_id()
+        session_id = runtime_host.create_session_id()
 
         asset_id = api_runtime_node.resolve_asset_id(req.path, req.issue_id)
         if not asset_id:
@@ -226,15 +231,17 @@ def build_system_router(
     @router.get("/system/preview-asset")
     async def preview_asset(path: str, issue_id: str | None = None) -> Any:
         api_runtime_node = api_runtime_node_getter()
+        runtime_host = runtime_host_getter()
         target = api_runtime_node.resolve_preview_target(path, issue_id)
         invocation = api_runtime_node.resolve_preview_invocation(target, issue_id)
-        builder = api_runtime_node.create_preview_builder(project_root_getter() / "model")
+        builder = runtime_host.create_preview_builder(project_root_getter() / "model")
         return await invoke_async_method(builder, invocation, "preview")
 
     @router.post("/system/chat-driver")
     async def chat_driver(req: ChatDriverRequest) -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
-        driver = api_runtime_node.create_chat_driver()
+        runtime_host = runtime_host_getter()
+        driver = runtime_host.create_chat_driver()
         invocation = api_runtime_node.resolve_chat_driver_invocation(req.message)
         response = await invoke_async_method(driver, invocation, "chat driver")
         return {"response": response}

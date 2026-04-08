@@ -25,6 +25,7 @@ from scripts.probes.probe_support import (
     protocol_events,
     run_summary,
     runtime_events,
+    seed_runtime_settings_context,
     write_probe_runtime_root,
     write_report,
     workspace_log_records,
@@ -202,6 +203,7 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         ollama_host=str(args.ollama_host or "").strip() or None,
         disable_sandbox=True,
     ):
+        await seed_runtime_settings_context()
         pipeline = ExecutionPipeline(
             workspace=workspace,
             department="core",

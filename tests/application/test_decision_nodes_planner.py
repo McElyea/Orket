@@ -441,6 +441,7 @@ def test_registry_tool_strategy_env_override_wins(monkeypatch):
 
 
 def test_default_api_runtime_strategy_parity(monkeypatch):
+    """Layer: contract. Verifies the API runtime strategy contract now stays on pure request-shaping and path-selection behavior."""
     node = DefaultApiRuntimeStrategyNode()
 
     assert node.default_allowed_origins_value() == "http://localhost:5173,http://127.0.0.1:5173"
@@ -458,7 +459,6 @@ def test_default_api_runtime_strategy_parity(monkeypatch):
     assert node.resolve_asset_id(path="model/core/issues/demo.json", issue_id=None) == "demo"
     assert node.resolve_asset_id(path=None, issue_id="ISSUE-1") == "ISSUE-1"
     assert node.resolve_asset_id(path=None, issue_id=None) is None
-    assert len(node.create_session_id()) == 8
     assert node.resolve_run_active_invocation(
         asset_id="ISSUE-1",
         build_id="BUILD-1",
@@ -555,7 +555,6 @@ def test_default_api_runtime_strategy_parity(monkeypatch):
         "args": ["hello"],
     }
     assert node.resolve_member_metrics_workspace(Path("/tmp/root"), "missing") == Path("/tmp/root/workspace/default")
-    assert callable(node.create_member_metrics_reader())
     assert node.resolve_sandbox_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
     assert node.resolve_sandbox_logs_invocation("sb-1", "api") == {
         "method_name": "get_logs",
@@ -568,15 +567,13 @@ def test_default_api_runtime_strategy_parity(monkeypatch):
 
 
 def test_registry_resolves_custom_api_runtime_from_process_rules(monkeypatch):
+    """Layer: contract. Verifies process rules can still override the surviving API runtime strategy seam."""
     class CustomApiRuntime:
         def parse_allowed_origins(self, origins_value):
             return ["http://custom"]
 
         def resolve_asset_id(self, path, issue_id):
             return "X"
-
-        def create_session_id(self):
-            return "SESSIONX"
 
     monkeypatch.delenv("ORKET_API_RUNTIME_NODE", raising=False)
 
@@ -591,15 +588,13 @@ def test_registry_resolves_custom_api_runtime_from_process_rules(monkeypatch):
 
 
 def test_registry_api_runtime_env_override_wins(monkeypatch):
+    """Layer: contract. Verifies env overrides still win for the surviving API runtime strategy seam."""
     class CustomApiRuntime:
         def parse_allowed_origins(self, origins_value):
             return ["http://custom"]
 
         def resolve_asset_id(self, path, issue_id):
             return "X"
-
-        def create_session_id(self):
-            return "SESSIONX"
 
     monkeypatch.setenv("ORKET_API_RUNTIME_NODE", "custom-api")
 
@@ -664,29 +659,6 @@ def test_registry_sandbox_policy_env_override_wins(monkeypatch):
     assert registry.resolve_sandbox_policy(org) is custom
 
 
-def test_registry_resolves_default_engine_runtime():
-    registry = DecisionNodeRegistry()
-    node = registry.resolve_engine_runtime()
-    from orket.decision_nodes.builtins import DefaultEngineRuntimePolicyNode
-    assert isinstance(node, DefaultEngineRuntimePolicyNode)
-
-
-def test_registry_engine_runtime_env_override_wins(monkeypatch):
-    class CustomEngineRuntime:
-        def bootstrap_environment(self):
-            return None
-
-        def resolve_config_root(self, config_root):
-            return config_root
-
-    monkeypatch.setenv("ORKET_ENGINE_RUNTIME_NODE", "custom-engine")
-    registry = DecisionNodeRegistry()
-    custom = CustomEngineRuntime()
-    registry.register_engine_runtime("custom-engine", custom)
-    org = SimpleNamespace(process_rules={"engine_runtime_node": "default"})
-    assert registry.resolve_engine_runtime(org) is custom
-
-
 def test_registry_resolves_default_loader_strategy():
     registry = DecisionNodeRegistry()
     from orket.decision_nodes.builtins import DefaultLoaderStrategyNode
@@ -722,12 +694,14 @@ def test_registry_loader_strategy_env_override_wins(monkeypatch):
 
 
 def test_registry_resolves_default_execution_runtime():
+    """Layer: contract. Verifies execution runtime strategy now requires explicit session ids while retaining build-id policy hooks."""
     registry = DecisionNodeRegistry()
     from orket.decision_nodes.builtins import DefaultExecutionRuntimeStrategyNode
     node = registry.resolve_execution_runtime()
     assert isinstance(node, DefaultExecutionRuntimeStrategyNode)
-    assert len(node.select_run_id(None)) == 8
+    assert node.select_run_id("RUN-1") == "RUN-1"
     assert node.select_epic_build_id(None, "My Epic", lambda s: s.lower().replace(" ", "-")) == "build-my-epic"
+    assert node.select_epic_collection_session_id("RUN-2") == "RUN-2"
     assert (
         node.select_epic_collection_build_id(None, "My Collection", lambda s: s.lower().replace(" ", "-"))
         == "epic-collection-build-my-collection"
@@ -735,6 +709,7 @@ def test_registry_resolves_default_execution_runtime():
 
 
 def test_registry_execution_runtime_env_override_wins(monkeypatch):
+    """Layer: contract. Verifies env overrides still win for the surviving execution runtime strategy seam."""
     class CustomExecutionRuntime:
         def select_run_id(self, session_id):
             return "RUNX"
@@ -754,37 +729,6 @@ def test_registry_execution_runtime_env_override_wins(monkeypatch):
     registry.register_execution_runtime("custom-runtime", custom)
     org = SimpleNamespace(process_rules={"execution_runtime_node": "default"})
     assert registry.resolve_execution_runtime(org) is custom
-
-
-def test_registry_resolves_default_pipeline_wiring():
-    registry = DecisionNodeRegistry()
-    from orket.decision_nodes.builtins import DefaultPipelineWiringStrategyNode
-    assert isinstance(registry.resolve_pipeline_wiring(), DefaultPipelineWiringStrategyNode)
-
-
-def test_registry_pipeline_wiring_env_override_wins(monkeypatch):
-    class CustomPipelineWiring:
-        def create_sandbox_orchestrator(self, workspace, organization):
-            return object()
-
-        def create_webhook_database(self):
-            return object()
-
-        def create_bug_fix_manager(self, organization, webhook_db):
-            return object()
-
-        def create_orchestrator(self, workspace, async_cards, snapshots, org, config_root, db_path, loader, sandbox_orchestrator):
-            return object()
-
-        def create_sub_pipeline(self, parent_pipeline, epic_workspace, department):
-            return object()
-
-    monkeypatch.setenv("ORKET_PIPELINE_WIRING_NODE", "custom-pipeline")
-    registry = DecisionNodeRegistry()
-    custom = CustomPipelineWiring()
-    registry.register_pipeline_wiring("custom-pipeline", custom)
-    org = SimpleNamespace(process_rules={"pipeline_wiring_node": "default"})
-    assert registry.resolve_pipeline_wiring(org) is custom
 
 
 def test_registry_resolves_default_orchestration_loop_policy():

@@ -158,6 +158,46 @@ def test_guard_terminal_reason_count_from_events() -> None:
     assert loop._guard_terminal_reason_count(events, "HALLUCINATION_PERSISTENT") == 1
 
 
+def test_live_acceptance_loop_default_target_tracks_truthful_live_test() -> None:
+    loop = _load_script_module(
+        "run_live_acceptance_loop_default_target",
+        "scripts/acceptance/run_live_acceptance_loop.py",
+    )
+
+    assert (
+        loop.DEFAULT_TEST
+        == "tests/live/test_system_acceptance_pipeline.py::"
+        "test_system_acceptance_role_pipeline_with_guard_live_reports_truthfully"
+    )
+
+
+def test_live_acceptance_loop_aggregate_handles_missing_session_status() -> None:
+    loop = _load_script_module(
+        "run_live_acceptance_loop_aggregate_missing_status",
+        "scripts/acceptance/run_live_acceptance_loop.py",
+    )
+
+    summary = loop._aggregate(
+        [
+            {
+                "model": "qwen2.5-coder:14b",
+                "passed": False,
+                "chain_complete": False,
+                "session_status": None,
+                "duration_s": 1.25,
+            }
+        ]
+    )
+
+    assert summary["qwen2.5-coder:14b"] == {
+        "runs": 1,
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0,
+        "avg_duration_s": 1.25,
+    }
+
+
 def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> None:
     reporter = _load_script_module(
         "report_live_acceptance_patterns",

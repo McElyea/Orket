@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.42] - 2026-04-08 - "The BR04082026 Truthful Closeout Cut"
+
+### Added
+- **Techdebt Lane Archive**: Added the archived `BR04082026` closeout packet, archived requirements and implementation authorities, and the runtime-verification support-artifact contract delta for the completed seven-packet lane.
+- **Live Script Regression Coverage**: Added targeted coverage for live-acceptance wrapper drift, probe runtime-settings bootstrap, replay-turn event-loop bootstrap, and compare normalization of fresh control-plane identity fields.
+
+### Changed
+- **Runtime Authority And Orchestrator Boundaries**: Completed the `BR04082026` authority-hardening lane across decision-node authority removal on touched live paths, app-scoped API runtime ownership, engine/orchestrator service extraction, and runtime registry ownership realignment.
+- **Verifier And Audit Truthfulness**: Reclassified runtime verification as support-only evidence with preserved history, stopped implicit promotion of verifier artifacts to primary authored output, tightened MAR/audit validation, and made the live acceptance and audit operators behave truthfully on success, failure, divergence, and fresh-run identity noise.
+- **Live Operator Reliability**: Repaired the live acceptance loop default target, probe script runtime-settings bootstrap, replay-turn bootstrap, and live compare normalization so the maintained script surfaces execute successfully against the current runtime architecture.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No action required. Live proof was exercised against a local Ollama model and local API/webhook transport only.
+
 ## [0.4.41] - 2026-04-07 - "The Remediation Completion Closeout Cut"
 
 ### Added

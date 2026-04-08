@@ -53,7 +53,6 @@ class ExecutionPipelineRuntimeArtifactsMixin:
         repair_entries: list[dict[str, Any]] | None = None,
         artifact_provenance_facts: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        runtime_verification_path = self.workspace / "agent_output" / "verification" / "runtime_verification.json"
         runtime_telemetry = await self._resolve_packet1_runtime_telemetry(run_id=run_id)
         repair_facts = self._build_packet1_repair_facts(repair_entries or [])
         packet1_facts = {
@@ -65,16 +64,6 @@ class ExecutionPipelineRuntimeArtifactsMixin:
         )
         if primary_work_artifact:
             packet1_facts["primary_work_artifact_output"] = primary_work_artifact
-        if runtime_verification_path.exists():
-            if "primary_work_artifact_output" not in packet1_facts:
-                packet1_facts["primary_artifact_output"] = {
-                    "id": "agent_output/verification/runtime_verification.json",
-                    "kind": "artifact",
-                }
-            return {
-                "runtime_verification_path": str(runtime_verification_path),
-                "packet1_facts": packet1_facts,
-            }
         return {"packet1_facts": packet1_facts}
 
     async def _resolve_packet2_artifacts(
