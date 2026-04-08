@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -27,8 +28,11 @@ def test_response_parser_extracts_tool_calls(tmp_path: Path) -> None:
     assert turn.issue_id == "ISSUE-1"
     assert len(turn.tool_calls) == 1
     assert turn.tool_calls[0].tool == "write_file"
+    assert turn.raw["extraction_strategy"] == "stack_json"
     assert captured and captured[0]["filename"] == "tool_parser_diagnostics.json"
     assert captured[1]["filename"] == "parsed_tool_calls.json"
+    assert captured[2]["filename"] == "tool_parser_summary.json"
+    assert json.loads(captured[2]["content"]) == {"extraction_strategy": "stack_json"}
 
 
 def test_response_parser_falls_back_to_native_tool_calls_when_content_is_empty(tmp_path: Path) -> None:
@@ -62,8 +66,13 @@ def test_response_parser_falls_back_to_native_tool_calls_when_content_is_empty(t
     assert len(turn.tool_calls) == 1
     assert turn.tool_calls[0].tool == "write_file"
     assert turn.tool_calls[0].args["path"] == "agent_output/main.py"
+    assert turn.raw["extraction_strategy"] == "provider_native_tool_calls"
     assert captured[1]["filename"] == "parsed_tool_calls.json"
     assert "agent_output/main.py" in captured[1]["content"]
+    assert captured[2]["filename"] == "tool_parser_summary.json"
+    assert json.loads(captured[2]["content"]) == {
+        "extraction_strategy": "provider_native_tool_calls",
+    }
 
 
 def test_response_parser_marks_partial_recovery_failure_without_recovery_tool(tmp_path: Path) -> None:

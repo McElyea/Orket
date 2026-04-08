@@ -6,6 +6,8 @@ from typing import Any
 
 from orket.adapters.tools.registry import DEFAULT_TOOL_REGISTRY, ToolRegistry
 
+MAX_STRINGIFY_EXPR = 8192
+
 
 @dataclass(frozen=True)
 class ToolRecoveryResult:
@@ -271,6 +273,8 @@ class ToolParser:
         )
         if len(dsl_blocks) > 1:
             for i in range(1, len(dsl_blocks), 2):
+                if i + 1 >= len(dsl_blocks):
+                    break
                 tool_name = dsl_blocks[i]
                 block_content = dsl_blocks[i + 1]
                 path_match = re.search(r"(?:path|PATH):\s*([^\n]+)", block_content)
@@ -336,6 +340,10 @@ class ToolParser:
             in_string = False
             escaped = False
             while pos < len(blob):
+                if pos - expr_start > MAX_STRINGIFY_EXPR:
+                    out.append(blob[marker_idx:])
+                    idx = len(blob)
+                    break
                 ch = blob[pos]
                 if in_string:
                     if escaped:
@@ -355,6 +363,8 @@ class ToolParser:
                             break
                 pos += 1
 
+            if idx == len(blob):
+                break
             if depth != 0:
                 out.append(blob[marker_idx:])
                 break

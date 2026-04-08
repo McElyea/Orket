@@ -88,6 +88,25 @@ class ToolApprovalContinuationProvider:
         )
 
 
+class RawJsonProvider:
+    async def complete(self, messages):
+        turn_context = extract_turn_prompt_context(messages)
+        active_role = str(turn_context.get("role") or "").strip().lower()
+        current_status = str(turn_context.get("current_status") or "").strip().lower()
+        if current_status == "code_review" or active_role in {"reviewer_seat", "code_reviewer"}:
+            return ModelResponse(
+                content='{"tool": "update_issue_status", "args": {"status": "done"}}',
+                raw={"model": "dummy", "total_tokens": 40},
+            )
+        return ModelResponse(
+            content=(
+                '{"tool": "write_file", "args": {"path": "agent_output/raw.txt", "content": "ok"}}\n'
+                '{"tool": "update_issue_status", "args": {"status": "code_review"}}'
+            ),
+            raw={"model": "dummy", "total_tokens": 80},
+        )
+
+
 def _build_assets(root, *, with_guard: bool, epic_id: str):
     (root / "config").mkdir()
     for d in ["epics", "roles", "dialects", "teams", "environments"]:
@@ -326,4 +345,27 @@ async def test_system_acceptance_tool_approval_continues_same_governed_run(tmp_p
     assert reservation.status is ReservationStatus.RELEASED
     assert issue.status == CardStatus.DONE
     assert (workspace / "agent_output" / "approved.txt").read_text(encoding="utf-8") == "approved"
+
+
+@pytest.mark.asyncio
+async def test_system_acceptance_raw_json_tool_calls_complete_flow(tmp_path, monkeypatch):
+    """Layer: integration."""
+    root = tmp_path
+    workspace = root / "workspace"
+    workspace.mkdir()
+    (workspace / "agent_output").mkdir()
+    (workspace / "verification").mkdir()
+    db_path = str(root / "acceptance_raw_json.db")
+
+    _build_assets(root, with_guard=False, epic_id="acceptance_raw_json")
+    _patch_provider(monkeypatch, RawJsonProvider())
+    monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
+
+    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
+    await engine.run_card("acceptance_raw_json")
+
+    issue = await engine.cards.get_by_id("ISSUE-A")
+    assert issue.status == CardStatus.DONE
+    assert (workspace / "agent_output" / "raw.txt").read_text(encoding="utf-8") == "ok"
 

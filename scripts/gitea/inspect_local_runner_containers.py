@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import logging
 import platform
 import sqlite3
 import sys
@@ -20,6 +21,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
 DEFAULT_GITEA_DB = "infrastructure/gitea/gitea/gitea.db"
 RUNNER_IMAGE_PREFIX = "gitea/act_runner"
 KNOWN_RETRY_SIGNATURE = "instance address is empty"
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -27,6 +29,14 @@ class CommandResult:
     returncode: int
     stdout: str
     stderr: str
+
+
+def _resolved_posix(path: Path) -> str:
+    return path.resolve().as_posix()
+
+
+def _resolved_path(path: Path) -> Path:
+    return path.resolve()
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -46,6 +56,7 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip docker log tail collection when classifying unregistered runner containers.",
     )
+    parser.add_argument("--log-tail", type=int, default=40, help="Number of docker log lines to inspect per container.")
     return parser
 
 
@@ -56,8 +67,9 @@ async def run_command(*cmd: str) -> CommandResult:
         stderr=asyncio.subprocess.PIPE,
     )
     stdout_bytes, stderr_bytes = await process.communicate()
+    rc = process.returncode
     return CommandResult(
-        returncode=int(process.returncode or 0),
+        returncode=int(rc) if rc is not None else -1,
         stdout=stdout_bytes.decode("utf-8", errors="replace"),
         stderr=stderr_bytes.decode("utf-8", errors="replace"),
     )
@@ -67,13 +79,17 @@ def _load_registered_runners(path: Path) -> set[str]:
     if not path.exists():
         return set()
 
-    connection = sqlite3.connect(path)
     try:
-        cursor = connection.cursor()
-        cursor.execute("SELECT name FROM action_runner WHERE deleted IS NULL")
-        return {str(row[0]).strip() for row in cursor.fetchall() if row and str(row[0]).strip()}
-    finally:
-        connection.close()
+        connection = sqlite3.connect(path, timeout=10)
+        try:
+            cursor = connection.cursor()
+            cursor.execute("SELECT name FROM action_runner WHERE deleted IS NULL")
+            return {str(row[0]).strip() for row in cursor.fetchall() if row and str(row[0]).strip()}
+        finally:
+            connection.close()
+    except sqlite3.OperationalError as exc:
+        LOGGER.warning("gitea_db_locked", extra={"path": str(path), "error": str(exc)})
+        return set()
 
 
 async def _list_runner_container_names() -> tuple[list[str], list[str]]:
@@ -110,11 +126,11 @@ async def _inspect_runner_containers(names: list[str]) -> list[dict[str, Any]]:
     return list(json.loads(result.stdout))
 
 
-async def _collect_logs(container_name: str, skip_logs: bool) -> str:
+async def _collect_logs(container_name: str, skip_logs: bool, log_tail: int = 40) -> str:
     if skip_logs:
         return ""
-    result = await run_command("docker", "logs", "--tail", "40", container_name)
-    return (result.stdout or "") + (result.stderr or "")
+    result = await run_command("docker", "logs", "--tail", str(max(0, int(log_tail))), container_name)
+    return (result.stdout or "") + "\n--- stderr ---\n" + (result.stderr or "")
 
 
 def classify_runner_container(
@@ -238,6 +254,7 @@ async def build_runner_container_report(
     gitea_db: Path,
     execute_stray_cleanup: bool,
     skip_logs: bool,
+    log_tail: int = 40,
 ) -> dict[str, Any]:
     warnings: list[str] = []
     registered_runner_names = _load_registered_runners(gitea_db)
@@ -249,11 +266,11 @@ async def build_runner_container_report(
     cleanup_actions: list[dict[str, Any]] = []
     for inspect_payload in inspect_payloads:
         name = str(inspect_payload.get("Name") or "").lstrip("/")
-        log_tail = await _collect_logs(name, skip_logs=skip_logs)
+        log_tail_content = await _collect_logs(name, skip_logs=skip_logs, log_tail=log_tail)
         assessment = classify_runner_container(
             inspect_payload,
             registered_runner_names=registered_runner_names,
-            log_tail=log_tail,
+            log_tail=log_tail_content,
         )
         containers.append(assessment)
 
@@ -285,10 +302,14 @@ async def build_runner_container_report(
     if execute_stray_cleanup and any(action["returncode"] != 0 for action in cleanup_actions):
         status = "FAIL"
 
+    repo_root_posix, gitea_db_posix = await asyncio.gather(
+        asyncio.to_thread(_resolved_posix, repo_root),
+        asyncio.to_thread(_resolved_posix, gitea_db),
+    )
     return {
         "schema_version": "gitea.local_runner_container_inspection.v1",
-        "repo_root": repo_root.resolve().as_posix(),
-        "gitea_db": gitea_db.resolve().as_posix(),
+        "repo_root": repo_root_posix,
+        "gitea_db": gitea_db_posix,
         "policy": {
             "name": "container_done_teardown_required",
             "version": "2026-03-12",
@@ -350,8 +371,8 @@ def _print_report(report: dict[str, Any]) -> None:
 
 async def _async_main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
-    repo_root = Path(str(args.repo_root)).resolve()
-    gitea_db = (repo_root / str(args.gitea_db)).resolve()
+    repo_root = await asyncio.to_thread(_resolved_path, Path(str(args.repo_root)))
+    gitea_db = await asyncio.to_thread(_resolved_path, repo_root / str(args.gitea_db))
 
     try:
         report = await build_runner_container_report(
@@ -359,6 +380,7 @@ async def _async_main(argv: list[str] | None = None) -> int:
             gitea_db=gitea_db,
             execute_stray_cleanup=bool(args.execute_stray_cleanup),
             skip_logs=bool(args.skip_logs),
+            log_tail=int(args.log_tail),
         )
     except (RuntimeError, sqlite3.Error, json.JSONDecodeError) as exc:
         print(f"Runner container inspection failed: {exc}")

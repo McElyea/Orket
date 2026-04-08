@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import json
+import logging
 import os
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
@@ -61,6 +62,8 @@ from orket.streaming import (
 )
 from orket.time_utils import now_local
 from orket.workloads import is_builtin_workload, run_builtin_workload, validate_builtin_workload_start
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _resolve_api_runtime_node() -> Any:
@@ -418,6 +421,27 @@ def _read_api_key_env(name: str) -> str | None:
     return stripped or None
 
 
+def _env_flag_enabled(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _enforce_insecure_no_api_key_startup_policy() -> bool:
+    insecure_bypass = _env_flag_enabled("ORKET_ALLOW_INSECURE_NO_API_KEY")
+    if not insecure_bypass:
+        return False
+
+    LOGGER.critical(
+        "orket_insecure_no_api_key_enabled",
+        extra={"warning": "API authentication is disabled. Never set this in non-local environments."},
+    )
+    environment = str(os.getenv("ORKET_ENV") or "").strip().lower()
+    if environment in {"production", "staging"}:
+        raise RuntimeError(
+            "ORKET_ALLOW_INSECURE_NO_API_KEY is forbidden when ORKET_ENV is production or staging."
+        )
+    return True
+
+
 def _log_api_auth_rejection(
     *,
     request_path: str,
@@ -488,7 +512,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     log_subscriber = _on_log_record_factory(loop)
     subscribe_to_events(log_subscriber)
     expected_key = _read_api_key_env("ORKET_API_KEY")
-    insecure_bypass = os.getenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "").strip().lower() in {"1", "true", "yes", "on"}
+    insecure_bypass = _enforce_insecure_no_api_key_startup_policy()
     log_event(
         "api_security_posture",
         {

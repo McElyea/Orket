@@ -14,6 +14,9 @@ def test_baseline_retention_weekly_workflow_uses_one_artifact_directory() -> Non
     assert f"mkdir -p {expected_dir}" in workflow_text
     assert f"> {expected_dir}/baseline_health_weekly.json" in workflow_text
     assert f"> {expected_dir}/baseline_prune_weekly.json" in workflow_text
+    assert f"> {expected_dir}/baseline_prune_apply_weekly.json" in workflow_text
     assert f"{expected_dir}/baseline_health_weekly.json" in workflow_text
     assert f"{expected_dir}/baseline_prune_weekly.json" in workflow_text
+    assert f"{expected_dir}/baseline_prune_apply_weekly.json" in workflow_text
+    assert "if: ${{ github.event_name == 'schedule' }}" in workflow_text
     assert unexpected_dir not in workflow_text

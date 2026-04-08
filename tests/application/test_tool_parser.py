@@ -86,6 +86,20 @@ CONTENT: New task"""
     assert results[0]["args"]["path"] == "task.txt"
 
 
+# Layer: unit
+def test_parse_legacy_dsl_trailing_tool_marker_does_not_raise():
+    results = ToolParser.parse("I will write next.\n[write_file]")
+
+    assert results == []
+
+
+# Layer: unit
+def test_normalize_json_stringify_leaves_oversized_expression_unchanged():
+    text = "before JSON.stringify(" + ("x" * 8200) + ") after"
+
+    assert ToolParser.normalize_json_stringify(text) == text
+
+
 def test_parse_tool_calls_envelope():
     text = """
     {"thought": "Plan", "tool_calls": [

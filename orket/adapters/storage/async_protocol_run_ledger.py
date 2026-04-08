@@ -9,6 +9,7 @@ from typing import Any
 
 from orket.application.workflows.protocol_hashing import hash_canonical_json
 from orket.application.workflows.tool_invocation_contracts import (
+    PROTOCOL_RECEIPT_SCHEMA_VERSION,
     compute_tool_call_hash,
     normalize_tool_invocation_manifest,
 )
@@ -674,6 +675,7 @@ class AsyncProtocolRunLedgerRepository:
                 last_seq = seq
 
         normalized = dict(receipt or {})
+        normalized["schema_version"] = str(normalized.get("schema_version") or PROTOCOL_RECEIPT_SCHEMA_VERSION)
         receipt_digest = str(normalized.get("receipt_digest") or "").strip()
         if not receipt_digest:
             digest_payload = dict(normalized)

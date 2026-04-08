@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-from fastapi.testclient import TestClient
 
 import orket.interfaces.api as api_module
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
@@ -29,7 +28,6 @@ from orket.core.domain import (
     ResidualUncertaintyClassification,
     ResultClass,
 )
-from orket.interfaces.api import app
 from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_engine_approvals import (
@@ -44,7 +42,7 @@ from tests.application.test_sandbox_control_plane_execution_service import InMem
 pytestmark = pytest.mark.integration
 
 
-client = TestClient(app)
+client = None
 
 
 def test_list_approvals_routes_to_engine(monkeypatch) -> None:

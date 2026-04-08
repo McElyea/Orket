@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import random
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -16,12 +17,12 @@ from orket.kernel.v1.canonical import odr_canonical_json_bytes, odr_raw_signatur
 from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, run_round  # noqa: E402
 
 
-def _load_fixture(path: Path) -> Dict[str, Any]:
+def _load_fixture(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _permute_fixture(fixture: Dict[str, Any], seed: int, perm_index: int) -> Dict[str, Any]:
-    payload = json.loads(json.dumps(fixture))
+def _permute_fixture(fixture: dict[str, Any], seed: int, perm_index: int) -> dict[str, Any]:
+    payload = copy.deepcopy(fixture)
     rng = random.Random(seed + (perm_index * 7919))
     graph = payload.get("graph", {})
     for key in ("nodes", "edges", "relationships", "links", "refs"):
@@ -31,7 +32,7 @@ def _permute_fixture(fixture: Dict[str, Any], seed: int, perm_index: int) -> Dic
     return payload
 
 
-def _run_fixture_rounds(payload: Dict[str, Any], round_limit: int) -> Dict[str, Any]:
+def _run_fixture_rounds(payload: dict[str, Any], round_limit: int) -> dict[str, Any]:
     cfg = ReactorConfig()
     state = ReactorState()
     rounds = payload.get("rounds", [])

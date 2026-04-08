@@ -5,21 +5,19 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-from fastapi.testclient import TestClient
 
 import orket.interfaces.api as api_module
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
-from orket.interfaces.api import app
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_engine_approvals import _FakePendingGates, _tool_approval_row
 
 pytestmark = pytest.mark.integration
 
 
-client = TestClient(app)
+client = None
 
 
 def test_get_approval_returns_409_for_unsupported_packet1_status(monkeypatch) -> None:

@@ -6,7 +6,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-from fastapi.testclient import TestClient
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
@@ -17,11 +16,10 @@ from orket.application.services.kernel_action_control_plane_operator_service imp
 )
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 from orket.application.services.kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
-from orket.interfaces.api import app
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
 
-client = TestClient(app)
+client = None
 DEFAULT_COMPARE_FIXTURE_PATH = Path("tests/interfaces/fixtures/kernel_compare_realistic_fixture.json")
 CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
 

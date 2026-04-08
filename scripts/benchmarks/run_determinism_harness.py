@@ -9,11 +9,10 @@ import shlex
 import subprocess
 import tempfile
 import time
-from decimal import Decimal, ROUND_HALF_UP
 from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any
-
 
 MINIMUM_RUNS_FOR_DETERMINISM_CLAIM = 2
 
@@ -344,8 +343,9 @@ def _run_once(
             check=False,
         )
         elapsed_ms = round((time.perf_counter() - started) * 1000.0, 3)
-        raw_output = (result.stdout or "") + "\n" + (result.stderr or "")
-        runner_payload = _extract_last_json_object(raw_output)
+        stdout_only = result.stdout or ""
+        debug_output = stdout_only + "\n--- stderr ---\n" + (result.stderr or "")
+        runner_payload = _extract_last_json_object(stdout_only)
         telemetry = _normalize_telemetry(
             runner_payload=runner_payload,
             elapsed_ms=elapsed_ms,
@@ -368,7 +368,7 @@ def _run_once(
 
         combined_payload = {
             "exit_code": int(result.returncode),
-            "stdout_stderr": raw_output,
+            "stdout_stderr": stdout_only,
             "artifacts": artifact_payload,
         }
         normalized = _normalize_text(
@@ -385,7 +385,7 @@ def _run_once(
             "duration_ms": elapsed_ms,
             "cost_usd": 0.0,
             "telemetry": telemetry,
-            "normalized_output_preview": normalized[:300],
+            "normalized_output_preview": debug_output[:300],
         }
 
 
@@ -510,6 +510,10 @@ def main() -> int:
             )
 
     total_tasks = len(tasks)
+    determinism_rate_valid = int(args.runs) >= MINIMUM_RUNS_FOR_DETERMINISM_CLAIM
+    determinism_warnings: list[str] = []
+    if not determinism_rate_valid:
+        determinism_warnings.append("WARNING: runs_per_task=1 cannot prove determinism")
     report: dict[str, Any] = {
         "schema_version": "1.1.3",
         "report_generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
@@ -534,6 +538,9 @@ def main() -> int:
         "total_tasks": total_tasks,
         "deterministic_tasks": deterministic_count,
         "determinism_rate": (deterministic_count / total_tasks) if total_tasks else 0.0,
+        "determinism_rate_valid": determinism_rate_valid,
+        "determinism_rate_validity": "valid only when runs_per_task >= 2",
+        "warnings": determinism_warnings,
         "avg_latency_ms": round(sum(latency_samples) / len(latency_samples), 3) if latency_samples else 0.0,
         "avg_cost_usd": round(sum(cost_samples) / len(cost_samples), 6) if cost_samples else 0.0,
         "details": details,

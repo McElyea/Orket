@@ -6,6 +6,8 @@ from pathlib import Path
 
 from scripts.protocol.check_protocol_enforce_cutover_readiness import main
 
+SELF_SIGNED_APPROVER = "Orket Core (local quality workspace)"
+
 
 def _write_manifest(
     path: Path,
@@ -13,6 +15,8 @@ def _write_manifest(
     window_id: str,
     status: str,
     signoff_pass: bool,
+    approver: str = "",
+    steps: list[dict[str, object]] | None = None,
     failed_steps: list[str] | None = None,
     parity_invalid_projection_field_counts: dict[str, dict[str, int]] | None = None,
     rollout_parity_invalid_projection_field_counts: dict[str, dict[str, int]] | None = None,
@@ -22,9 +26,11 @@ def _write_manifest(
         "window": {"id": window_id, "date": "2026-03-06"},
         "status": status,
         "failed_steps": list(failed_steps or []),
+        "steps": list(steps or []),
         "signoff": {
             "all_gates_passed": signoff_pass,
             "gate_status": "PASS" if signoff_pass else "FAIL",
+            "approver": approver,
             "parity_invalid_projection_field_counts": dict(parity_invalid_projection_field_counts or {}),
             "rollout_parity_invalid_projection_field_counts": dict(
                 rollout_parity_invalid_projection_field_counts or {}
@@ -112,3 +118,31 @@ def test_check_protocol_enforce_cutover_readiness_preserves_invalid_projection_c
     assert payload["windows"][1]["rollout_parity_invalid_projection_field_counts"]["sqlite"] == {
         "summary_json": 1
     }
+
+
+def test_check_protocol_enforce_cutover_readiness_flags_self_attested_only(tmp_path: Path) -> None:
+    """Layer: contract. Verifies readiness output preserves self-signed approver risk as structured truth."""
+    a = tmp_path / "a.json"
+    b = tmp_path / "b.json"
+    out = tmp_path / "readiness.json"
+    _write_manifest(a, window_id="window_a", status="PASS", signoff_pass=True, approver=SELF_SIGNED_APPROVER)
+    _write_manifest(
+        b,
+        window_id="window_b",
+        status="PASS",
+        signoff_pass=True,
+        steps=[
+            {
+                "name": "record_window_signoff",
+                "argv": ["python", "record.py", "--approver", SELF_SIGNED_APPROVER],
+            }
+        ],
+    )
+
+    exit_code = main(["--manifest", str(a), "--manifest", str(b), "--out", str(out), "--strict"])
+
+    assert exit_code == 0
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["ready"] is True
+    assert payload["self_attested_only"] is True
+    assert [row["approver"] for row in payload["windows"]] == [SELF_SIGNED_APPROVER, SELF_SIGNED_APPROVER]

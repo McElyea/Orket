@@ -11,6 +11,7 @@ from orket.schema import IssueConfig, RoleConfig
 
 from .protocol_hashing import ProtocolCanonicalizationError, hash_canonical_json, hash_framed_fields
 from .tool_invocation_contracts import (
+    PROTOCOL_RECEIPT_SCHEMA_VERSION,
     compute_tool_call_hash,
     normalize_tool_invocation_manifest,
 )
@@ -394,6 +395,7 @@ class TurnArtifactWriter:
         receipt: dict[str, Any],
     ) -> dict[str, Any]:
         base_receipt = dict(receipt or {})
+        base_receipt["schema_version"] = str(base_receipt.get("schema_version") or PROTOCOL_RECEIPT_SCHEMA_VERSION)
         manifest = normalize_tool_invocation_manifest(
             manifest=base_receipt.get("tool_invocation_manifest")
             if isinstance(base_receipt.get("tool_invocation_manifest"), dict)

@@ -42,6 +42,14 @@ jobs:
             --dry-run \
             > benchmarks/results/quant/quant_sweep/baseline_prune_weekly.json
 
+      - name: Baseline Prune (Apply)
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          python scripts/benchmarks/manage_baselines.py prune \
+            --storage-root "${{ github.event.inputs.storage_root || '.orket/durable/diagnostics/baselines' }}" \
+            --keep-last "${{ github.event.inputs.keep_last || '10' }}" \
+            > benchmarks/results/quant/quant_sweep/baseline_prune_apply_weekly.json
+
       - name: Upload Retention Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -49,3 +57,4 @@ jobs:
           path: |
             benchmarks/results/quant/quant_sweep/baseline_health_weekly.json
             benchmarks/results/quant/quant_sweep/baseline_prune_weekly.json
+            benchmarks/results/quant/quant_sweep/baseline_prune_apply_weekly.json

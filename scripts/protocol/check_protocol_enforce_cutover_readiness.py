@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import Any
+
+SELF_SIGNED_APPROVER = "Orket Core (local quality workspace)"
 
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
@@ -65,6 +67,28 @@ def _as_dict(value: Any) -> dict[str, Any]:
     return {}
 
 
+def _arg_value(argv: list[Any], name: str) -> str:
+    tokens = [str(item) for item in argv]
+    for index, token in enumerate(tokens):
+        if token == name and index + 1 < len(tokens):
+            return tokens[index + 1].strip()
+    return ""
+
+
+def _extract_approver(payload: dict[str, Any], signoff: dict[str, Any]) -> str:
+    direct = str(signoff.get("approver") or payload.get("approver") or "").strip()
+    if direct:
+        return direct
+    for step in _as_list(payload.get("steps")):
+        step_payload = _as_dict(step)
+        if str(step_payload.get("name") or "").strip() != "record_window_signoff":
+            continue
+        approver = _arg_value(_as_list(step_payload.get("argv")), "--approver")
+        if approver:
+            return approver
+    return ""
+
+
 def _window_row(*, path: Path, payload: dict[str, Any]) -> dict[str, Any]:
     window = _as_dict(payload.get("window"))
     signoff = _as_dict(payload.get("signoff"))
@@ -72,6 +96,7 @@ def _window_row(*, path: Path, payload: dict[str, Any]) -> dict[str, Any]:
     status = str(payload.get("status") or "").strip().upper()
     schema = str(payload.get("schema_version") or "").strip()
     signoff_pass = bool(signoff.get("all_gates_passed", False))
+    approver = _extract_approver(payload, signoff)
     parity_invalid_counts = normalize_invalid_projection_field_counts(signoff.get("parity_invalid_projection_field_counts"))
     rollout_invalid_counts = normalize_invalid_projection_field_counts(
         signoff.get("rollout_parity_invalid_projection_field_counts")
@@ -85,6 +110,7 @@ def _window_row(*, path: Path, payload: dict[str, Any]) -> dict[str, Any]:
         "failed_steps": [str(item) for item in failed_steps],
         "failed_step_count": len(failed_steps),
         "signoff_all_gates_passed": signoff_pass,
+        "approver": approver,
         "parity_invalid_projection_field_counts": parity_invalid_counts,
         "rollout_parity_invalid_projection_field_counts": rollout_invalid_counts,
         "passes": status == "PASS" and signoff_pass and len(failed_steps) == 0,
@@ -99,6 +125,7 @@ def _evaluate_rows(
     require_distinct_window_ids: bool,
 ) -> dict[str, Any]:
     passing = [row for row in rows if bool(row.get("passes"))]
+    approvers = [str(row.get("approver") or "").strip() for row in rows if str(row.get("approver") or "").strip()]
     passing_ids = [str(row.get("window_id") or "") for row in passing if str(row.get("window_id") or "").strip()]
     distinct_ids = sorted({token for token in passing_ids if token})
     invalid_projection_rows = [
@@ -128,6 +155,7 @@ def _evaluate_rows(
         "passing_windows": len(passing),
         "distinct_passing_window_ids": len(distinct_ids),
         "passing_window_ids": distinct_ids,
+        "self_attested_only": bool(approvers) and all(approver == SELF_SIGNED_APPROVER for approver in approvers),
         "windows_with_invalid_projection_counts": len(invalid_projection_rows),
         "parity_invalid_projection_field_counts": merge_invalid_projection_field_counts(
             rows, "parity_invalid_projection_field_counts"
@@ -161,6 +189,7 @@ def evaluate_cutover_readiness(
         "passing_windows": int(verdict["passing_windows"]),
         "distinct_passing_window_ids": int(verdict["distinct_passing_window_ids"]),
         "passing_window_ids": list(verdict["passing_window_ids"]),
+        "self_attested_only": bool(verdict["self_attested_only"]),
         "windows_with_invalid_projection_counts": int(verdict["windows_with_invalid_projection_counts"]),
         "parity_invalid_projection_field_counts": dict(verdict["parity_invalid_projection_field_counts"]),
         "rollout_parity_invalid_projection_field_counts": dict(

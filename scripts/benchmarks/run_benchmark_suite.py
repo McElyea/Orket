@@ -9,7 +9,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run benchmark determinism harness and scoring in one command.")
     parser.add_argument("--task-bank", default="benchmarks/task_bank/v1/tasks.json")
     parser.add_argument("--policy", default="model/core/contracts/benchmark_scoring_policy.json")
-    parser.add_argument("--runs", type=int, default=1)
+    parser.add_argument("--runs", type=int, default=2)
     parser.add_argument("--runtime-target", "--venue", dest="runtime_target", default="standard")
     parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="default")
     parser.add_argument("--runner-template", required=True)

@@ -21,6 +21,7 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
         "python scripts/protocol/run_protocol_determinism_campaign.py --runs-root .ci/protocol_quality_workspace/runs --run-id run-a --baseline-run-id run-a --strict --out benchmarks/results/protocol/protocol_governed/protocol_replay_campaign.json",
         "python scripts/protocol/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol/protocol_governed/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict",
         "python scripts/protocol/summarize_protocol_error_codes.py --input benchmarks/results/protocol/protocol_governed/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol/protocol_governed/protocol_error_code_summary.json",
+        "python -m pytest -q tests/kernel/v1/test_odr_determinism_gate.py -k gate_pr",
         "python scripts/acceptance/run_monolith_variant_matrix.py --out benchmarks/results/acceptance/monolith_variant_matrix.json",
         "python scripts/acceptance/check_monolith_readiness_gate.py --matrix benchmarks/results/acceptance/monolith_variant_matrix.json --policy model/core/contracts/monolith_readiness_policy.json --allow-plan-only",
         "python scripts/acceptance/check_microservices_unlock.py --matrix benchmarks/results/acceptance/monolith_variant_matrix.json --readiness-policy model/core/contracts/monolith_readiness_policy.json --unlock-policy model/core/contracts/microservices_unlock_policy.json --live-report benchmarks/results/acceptance/live_acceptance_patterns.json --out benchmarks/results/acceptance/microservices_unlock_check.json",
@@ -28,10 +29,14 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
         "python scripts/gitea/check_gitea_state_hardening.py --execute --out benchmarks/results/gitea/gitea_state_hardening_check.json --require-ready",
         "python scripts/gitea/check_gitea_state_phase3_readiness.py --execute --pilot-readiness benchmarks/results/gitea/gitea_state_pilot_readiness.json --hardening-readiness benchmarks/results/gitea/gitea_state_hardening_check.json --out benchmarks/results/gitea/gitea_state_phase3_readiness.json --require-ready",
         "python scripts/acceptance/run_architecture_pilot_matrix.py --out benchmarks/results/acceptance/architecture_pilot_matrix.json",
-        "python scripts/benchmarks/run_benchmark_suite.py --task-bank benchmarks/task_bank/v1/tasks.json --policy model/core/contracts/benchmark_scoring_policy.json --runs 1 --venue standard --flow default --runner-template 'python scripts/benchmarks/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}' --raw-out benchmarks/results/benchmarks/benchmark_determinism_report.json --scored-out benchmarks/results/benchmarks/benchmark_scored_report.json",
+        "python scripts/benchmarks/run_benchmark_suite.py --task-bank benchmarks/task_bank/v1/tasks.json --policy model/core/contracts/benchmark_scoring_policy.json --runs 2 --venue standard --flow default --runner-template 'python scripts/benchmarks/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}' --raw-out benchmarks/results/benchmarks/benchmark_determinism_report.json --scored-out benchmarks/results/benchmarks/benchmark_scored_report.json",
         "python scripts/benchmarks/check_orchestration_overhead_consistency.py --report benchmarks/results/benchmarks/benchmark_determinism_report.json --out benchmarks/results/benchmarks/orchestration_overhead_consistency.json",
         "python scripts/security/check_telemetry_artifact_fields.py --report benchmarks/results/benchmarks/benchmark_determinism_report.json --out benchmarks/results/security/telemetry_artifact_fields_check.json",
         "python scripts/benchmarks/check_benchmark_scoring_gate.py --scored-report benchmarks/results/benchmarks/benchmark_scored_report.json --policy model/core/contracts/benchmark_scoring_policy.json --out benchmarks/results/benchmarks/benchmark_scoring_gate.json --require-thresholds",
+        "python scripts/ci/memory_fixture_smoke.py --profile quality --out-dir benchmarks/results/benchmarks/memory",
+        "python scripts/ci/sandbox_leak_gate.py",
+        "python scripts/ci/migration_smoke_validator.py --runtime-db .ci/runtime.db --webhook-db .ci/webhook.db --bootstrap",
+        "python scripts/ci/migration_smoke_validator.py --runtime-db .ci/runtime.db --webhook-db .ci/webhook.db --validate",
         "python scripts/benchmarks/check_memory_determinism.py",
         "python scripts/benchmarks/compare_memory_determinism.py",
         "python scripts/replay/compare_replay_artifacts.py",
@@ -63,3 +68,13 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
         "quality workflow gates must be present in both architecture_gates and quality jobs: "
         + ", ".join(missing_dupes)
     )
+
+
+def test_nightly_benchmark_workflow_uses_valid_determinism_runs_and_extracted_fixture() -> None:
+    """Layer: contract. Verifies nightly benchmark determinism and memory fixture smoke remain workflow-level gates."""
+    workflow_path = Path(".gitea/workflows/nightly-benchmark.yml")
+    text = workflow_path.read_text(encoding="utf-8")
+
+    assert "--runs 2" in text
+    assert "python scripts/ci/memory_fixture_smoke.py --profile nightly --out-dir benchmarks/results/benchmarks/memory" in text
+    assert "python - <<'PY'" not in text

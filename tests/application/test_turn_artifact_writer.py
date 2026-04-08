@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from orket.application.workflows.tool_invocation_contracts import (
+    PROTOCOL_RECEIPT_SCHEMA_VERSION,
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
@@ -127,6 +128,7 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Pa
     assert receipt_log.exists()
     rows = [json.loads(line) for line in receipt_log.read_text(encoding="utf-8").splitlines() if line.strip()]
     assert rows[0]["receipt_seq"] == 1
+    assert rows[0]["schema_version"] == PROTOCOL_RECEIPT_SCHEMA_VERSION
     assert rows[0]["receipt_digest"] == receipt["receipt_digest"]
     manifest_payload = rows[0]["tool_invocation_manifest"]
     assert manifest_payload["tool_name"] == "write_file"

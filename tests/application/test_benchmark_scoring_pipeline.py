@@ -31,8 +31,11 @@ def _fake_report_for_tiers() -> dict[str, Any]:
         "task_bank": "benchmarks/task_bank/v1/tasks.json",
         "venue": "standard",
         "flow": "default",
-        "runs_per_task": 1,
+        "runs_per_task": 2,
         "determinism_rate": 1.0,
+        "determinism_rate_valid": True,
+        "determinism_rate_validity": "valid only when runs_per_task >= 2",
+        "warnings": [],
         "details": details,
     }
 
@@ -51,6 +54,9 @@ def test_score_report_emits_per_task_and_tier_aggregates() -> None:
     assert set(scored["aggregate_tier_scores"].keys()) == {"1", "2", "3", "4", "5", "6"}
     assert scored["failing_tasks"] == []
     assert scored["determinism_rate"] == 1.0
+    assert scored["determinism_rate_valid"] is True
+    assert scored["determinism_rate_validity"] == "valid only when runs_per_task >= 2"
+    assert scored["warnings"] == []
     assert scored["avg_latency_ms"] == 12.5
     assert scored["avg_cost_usd"] == 0.001
 
@@ -87,6 +93,9 @@ def test_score_report_treats_single_run_determinism_as_not_proven() -> None:
         "flow": "default",
         "runs_per_task": 1,
         "determinism_rate": 0.0,
+        "determinism_rate_valid": False,
+        "determinism_rate_validity": "valid only when runs_per_task >= 2",
+        "warnings": ["WARNING: runs_per_task=1 cannot prove determinism"],
         "details": {
             "001": {
                 "tier": 1,
@@ -109,3 +118,5 @@ def test_score_report_treats_single_run_determinism_as_not_proven() -> None:
     assert task["determinism_note"] == "single_run_insufficient"
     assert "determinism_not_proven" in task["reason_codes"]
     assert "deterministic_output" not in task["reason_codes"]
+    assert scored["determinism_rate_valid"] is False
+    assert scored["warnings"] == ["WARNING: runs_per_task=1 cannot prove determinism"]

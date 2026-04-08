@@ -5,6 +5,27 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.40] - 2026-04-07 - "The Priority Now Techdebt Completion Cut"
+
+### Added
+- **CI Helper Script Gates**: Added named memory fixture, migration smoke validator, and sandbox leak gate scripts with regression coverage, replacing inline workflow heredoc blocks.
+- **Runtime Truth Regression Coverage**: Added coverage for protocol receipt schema version defaults, turn tool run id structure, protocol ledger duplicate sequence rejection, raw-JSON acceptance, benchmark determinism validity, and cutover self-attestation reporting.
+- **Techdebt Closeout Archive**: Added the archived `TD04072026B` techdebt closeout packet and moved the completed action plan and review inputs out of the active maintenance lane.
+
+### Changed
+- **Benchmark And Workflow Validity**: Raised benchmark determinism runs to two by default, recorded determinism validity warnings, separated stderr from determinism hashes, added scheduled baseline pruning, and wired the ODR determinism subset into PR workflow checks.
+- **Runtime And Parser Safety**: Hardened runtime verifier cwd containment, timeout return-code handling, OOM classification, JSON assertion failures, guard evidence truncation metadata, legacy DSL parsing, and oversized `JSON.stringify` normalization.
+- **API And Artifact Observability**: Made insecure no-API-key startup mode loud and non-production-only, recorded tool extraction strategy in turn artifacts and completion logs, and normalized protocol receipt schema version handling.
+- **Roadmap And Authority Alignment**: Cleared `Priority Now`, archived the completed finite techdebt packet, and kept the active techdebt folder limited to standing maintenance authority.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- None.
+
 ## [0.4.39] - 2026-04-07 - "The Runtime Subpackage Techdebt Closeout Cut"
 
 ### Added

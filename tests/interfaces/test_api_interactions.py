@@ -1,14 +1,13 @@
 import asyncio
 
 import pytest
-from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
 import orket.interfaces.api as api_module
 import orket.marshaller.cli as marshaller_cli
 from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus
 
-client = TestClient(api_module.app)
+client = None
 
 
 def test_interaction_websocket_requires_api_key(monkeypatch):

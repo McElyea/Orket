@@ -2,13 +2,11 @@ import json
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 
 import orket.interfaces.api as api_module
-from orket.interfaces.api import app
 from orket.schema import CardStatus
 
-client = TestClient(app)
+client = None
 
 
 def test_api_expansion_gate_model_assignments_contract(monkeypatch):

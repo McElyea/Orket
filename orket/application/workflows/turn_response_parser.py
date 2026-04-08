@@ -49,6 +49,7 @@ class ResponseParser:
 
         parser_diag: list[dict[str, Any]] = []
         partial_parse_error: dict[str, Any] | None = None
+        extraction_strategy = "none"
 
         def capture(stage: str, data: dict[str, Any]) -> None:
             parser_diag.append({"stage": stage, "data": data})
@@ -69,8 +70,10 @@ class ResponseParser:
             capture("strict_parse_success", {"tool_call_count": len(envelope["tool_calls"])})
             parsed_calls = list(envelope["tool_calls"])
             content = envelope["content"]
+            extraction_strategy = "strict_envelope"
         else:
             parsed_calls = ToolParser.parse(content, diagnostics=capture)
+            extraction_strategy = self._parser_extraction_strategy(parser_diag)
             partial_parse_error = self._partial_recovery_error(
                 parsed_calls=parsed_calls,
                 parser_diag=parser_diag,
@@ -86,6 +89,8 @@ class ResponseParser:
                     diagnostics=capture,
                     allowed_tool_names=self._allowed_native_tool_names(context, raw_payload),
                 )
+                extraction_strategy = "provider_native_tool_calls" if parsed_calls else "none"
+        raw_payload["extraction_strategy"] = extraction_strategy
         if protocol_metadata:
             raw_payload.update(protocol_metadata)
         if partial_parse_error is not None:
@@ -121,6 +126,14 @@ class ResponseParser:
             filename="parsed_tool_calls.json",
             content=json.dumps(parsed_calls, indent=2, ensure_ascii=False),
         )
+        self.write_turn_artifact(
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            filename="tool_parser_summary.json",
+            content=json.dumps({"extraction_strategy": extraction_strategy}, indent=2, ensure_ascii=False),
+        )
 
         tool_calls = [
             ToolCall(
@@ -144,6 +157,17 @@ class ResponseParser:
             error=None if partial_parse_error is None else str(partial_parse_error["error"]),
             error_class=ToolCallErrorClass.PARSE_PARTIAL if partial_parse_error else None,
         )
+
+    def _parser_extraction_strategy(self, parser_diag: list[dict[str, Any]]) -> str:
+        for diag in reversed(parser_diag):
+            if diag.get("stage") != "parse_success":
+                continue
+            data = diag.get("data")
+            if isinstance(data, dict):
+                strategy = str(data.get("strategy") or "").strip()
+                if strategy:
+                    return strategy
+        return "none"
 
     def _allowed_native_tool_names(self, context: dict[str, Any], raw_payload: dict[str, Any]) -> set[str]:
         declared_native_tool_names = raw_payload.get("openai_native_tool_names")

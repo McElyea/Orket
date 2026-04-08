@@ -182,6 +182,11 @@ def score_report(
         "flow": execution_mode,
         "runs_per_task": report_payload.get("runs_per_task"),
         "determinism_rate": report_payload.get("determinism_rate"),
+        "determinism_rate_valid": bool(report_payload.get("determinism_rate_valid", False)),
+        "determinism_rate_validity": str(
+            report_payload.get("determinism_rate_validity") or "valid only when runs_per_task >= 2"
+        ),
+        "warnings": list(report_payload.get("warnings") or []) if isinstance(report_payload.get("warnings"), list) else [],
         "avg_latency_ms": round(sum(latency_samples) / len(latency_samples), 3) if latency_samples else 0.0,
         "avg_cost_usd": round(sum(cost_samples) / len(cost_samples), 6) if cost_samples else 0.0,
         "overall_avg_score": overall_avg_score,

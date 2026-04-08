@@ -3,10 +3,20 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
-from scripts.gitea.inspect_local_runner_containers import classify_runner_container, main
+import pytest
+
+from scripts.gitea.inspect_local_runner_containers import (
+    CommandResult,
+    _collect_logs,
+    _load_registered_runners,
+    classify_runner_container,
+    main,
+    run_command,
+)
 
 
 def _inspect_payload(
@@ -122,7 +132,8 @@ def test_inspection_main_writes_diff_ledger_report(tmp_path: Path, monkeypatch) 
             ),
         ]
 
-    async def fake_collect_logs(name: str, *, skip_logs: bool):
+    async def fake_collect_logs(name: str, *, skip_logs: bool, log_tail: int = 40):
+        assert log_tail == 40
         if name == "brave_wright":
             return "Error: instance address is empty"
         return ""
@@ -226,7 +237,8 @@ def test_inspection_main_treats_container_name_as_live_registration_when_env_nam
             )
         ]
 
-    async def fake_collect_logs(_name: str, *, skip_logs: bool):
+    async def fake_collect_logs(_name: str, *, skip_logs: bool, log_tail: int = 40):
+        assert log_tail == 40
         return ""
 
     monkeypatch.setattr(
@@ -250,3 +262,62 @@ def test_inspection_main_treats_container_name_as_live_registration_when_env_nam
     assert payload["status"] == "FAIL"
     assert payload["stale_registrations"] == []
     assert payload["containers"][0]["observed_registration_name"] == "codex-ephemeral"
+
+
+@pytest.mark.asyncio
+async def test_run_command_maps_missing_returncode_to_negative_one(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: unit. Verifies subprocess returncode None is not reported as success."""
+
+    class FakeProcess:
+        returncode = None
+
+        async def communicate(self):
+            return b"out", b"err"
+
+    async def fake_create_subprocess_exec(*_cmd, stdout, stderr):
+        assert stdout == asyncio.subprocess.PIPE
+        assert stderr == asyncio.subprocess.PIPE
+        return FakeProcess()
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_create_subprocess_exec)
+
+    result = await run_command("docker", "ps")
+
+    assert result.returncode == -1
+    assert result.stdout == "out"
+    assert result.stderr == "err"
+
+
+@pytest.mark.asyncio
+async def test_collect_logs_uses_log_tail_and_separates_stderr(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: unit. Verifies docker stdout/stderr logs remain distinguishable in inspection evidence."""
+    calls: list[tuple[str, ...]] = []
+
+    async def fake_run_command(*cmd: str) -> CommandResult:
+        calls.append(cmd)
+        return CommandResult(returncode=0, stdout="stdout-log", stderr="stderr-log")
+
+    monkeypatch.setattr("scripts.gitea.inspect_local_runner_containers.run_command", fake_run_command)
+
+    logs = await _collect_logs("runner-1", skip_logs=False, log_tail=7)
+
+    assert calls == [("docker", "logs", "--tail", "7", "runner-1")]
+    assert logs == "stdout-log\n--- stderr ---\nstderr-log"
+
+
+def test_load_registered_runners_returns_empty_when_sqlite_is_locked(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: unit. Verifies transient SQLite lock failures do not crash inspection."""
+    db_path = tmp_path / "gitea.db"
+    db_path.write_text("", encoding="utf-8")
+
+    def fake_connect(*_args, **_kwargs):
+        import sqlite3
+
+        raise sqlite3.OperationalError("database is locked")
+
+    monkeypatch.setattr("scripts.gitea.inspect_local_runner_containers.sqlite3.connect", fake_connect)
+
+    assert _load_registered_runners(db_path) == set()

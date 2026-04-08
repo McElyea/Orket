@@ -6,14 +6,12 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
 import orket.interfaces.api as api_module
-from orket.interfaces.api import app
 from orket.schema import CardStatus
 
-client = TestClient(app)
+client = None
 
 def test_health_check():
     response = client.get("/health")
@@ -39,6 +37,26 @@ def test_version_blocks_insecure_bypass_in_production_profile(monkeypatch):
     monkeypatch.setenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "true")
     response = client.get("/v1/version")
     assert response.status_code == 403
+
+
+def test_insecure_no_api_key_startup_policy_logs_critical(monkeypatch, caplog):
+    """Layer: unit."""
+    monkeypatch.setenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "true")
+    monkeypatch.setenv("ORKET_ENV", "local")
+
+    with caplog.at_level("CRITICAL", logger=api_module.LOGGER.name):
+        assert api_module._enforce_insecure_no_api_key_startup_policy() is True
+
+    assert "orket_insecure_no_api_key_enabled" in caplog.text
+
+
+def test_insecure_no_api_key_startup_policy_rejects_production(monkeypatch):
+    """Layer: unit."""
+    monkeypatch.setenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "true")
+    monkeypatch.setenv("ORKET_ENV", "production")
+
+    with pytest.raises(RuntimeError, match="forbidden when ORKET_ENV is production or staging"):
+        api_module._enforce_insecure_no_api_key_startup_policy()
 
 def test_version_authenticated(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")

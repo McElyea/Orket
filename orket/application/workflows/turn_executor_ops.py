@@ -195,6 +195,7 @@ async def execute_turn(
                 "local_prompt_profile_id": str((turn.raw or {}).get("profile_id") or ""),
                 "local_prompt_task_class": str((turn.raw or {}).get("task_class") or ""),
                 "local_prompting_mode": str((turn.raw or {}).get("local_prompting_mode") or ""),
+                "extraction_strategy": str((turn.raw or {}).get("extraction_strategy") or ""),
                 "execution_profile": context.get("execution_profile"),
                 "builder_seat_choice": context.get("builder_seat_choice"),
                 "reviewer_seat_choice": context.get("reviewer_seat_choice"),

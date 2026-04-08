@@ -322,58 +322,7 @@ jobs:
       - name: "Smoke: memory trace fixture contract and comparator identity check"
         run: |
           mkdir -p benchmarks/results/benchmarks/memory
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          trace = {
-              "run_id": "quality-memory-run",
-              "workflow_id": "quality-memory-workflow",
-              "memory_snapshot_id": "snapshot-0",
-              "visibility_mode": "read_only",
-              "model_config_id": "model-config",
-              "policy_set_id": "policy-set",
-              "determinism_trace_schema_version": "memory.determinism_trace.v1",
-              "events": [
-                  {
-                      "event_id": "evt-0",
-                      "index": 0,
-                      "role": "coder",
-                      "interceptor": "before_prompt",
-                      "decision_type": "prompt_build",
-                      "tool_calls": [],
-                      "guardrails_triggered": [],
-                      "retrieval_event_ids": ["ret-0"],
-                  }
-              ],
-          }
-          retrieval = {
-              "events": [
-                  {
-                      "retrieval_event_id": "ret-0",
-                      "run_id": "quality-memory-run",
-                      "event_id": "evt-0",
-                      "policy_id": "retrieval-policy",
-                      "policy_version": "v1",
-                      "query_normalization_version": "json-v1",
-                      "query_fingerprint": "abc123",
-                      "retrieval_mode": "text_to_vector",
-                      "candidate_count": 1,
-                      "selected_records": [],
-                      "applied_filters": {},
-                      "retrieval_trace_schema_version": "memory.retrieval_trace.v1",
-                  }
-              ]
-          }
-          trace_path = Path("benchmarks/results/benchmarks/memory/memory_trace_fixture_left.json")
-          retrieval_path = Path("benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_left.json")
-          trace_compare_path = Path("benchmarks/results/benchmarks/memory/memory_trace_fixture_right.json")
-          retrieval_compare_path = Path("benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_right.json")
-          trace_path.write_text(json.dumps(trace, indent=2) + "\n", encoding="utf-8")
-          retrieval_path.write_text(json.dumps(retrieval, indent=2) + "\n", encoding="utf-8")
-          trace_compare_path.write_text(json.dumps(trace, indent=2) + "\n", encoding="utf-8")
-          retrieval_compare_path.write_text(json.dumps(retrieval, indent=2) + "\n", encoding="utf-8")
-          PY
+          python scripts/ci/memory_fixture_smoke.py --profile quality --out-dir benchmarks/results/benchmarks/memory
           python scripts/benchmarks/check_memory_determinism.py \
             --trace benchmarks/results/benchmarks/memory/memory_trace_fixture_left.json \
             --retrieval-trace benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_left.json \
@@ -489,7 +438,7 @@ jobs:
 
       - name: Run benchmark suite scoring smoke
         run: |
-          python scripts/benchmarks/run_benchmark_suite.py --task-bank benchmarks/task_bank/v1/tasks.json --policy model/core/contracts/benchmark_scoring_policy.json --runs 1 --venue standard --flow default --runner-template 'python scripts/benchmarks/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}' --raw-out benchmarks/results/benchmarks/benchmark_determinism_report.json --scored-out benchmarks/results/benchmarks/benchmark_scored_report.json
+          python scripts/benchmarks/run_benchmark_suite.py --task-bank benchmarks/task_bank/v1/tasks.json --policy model/core/contracts/benchmark_scoring_policy.json --runs 2 --venue standard --flow default --runner-template 'python scripts/benchmarks/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}' --raw-out benchmarks/results/benchmarks/benchmark_determinism_report.json --scored-out benchmarks/results/benchmarks/benchmark_scored_report.json
 
       - name: Enforce orchestration overhead telemetry consistency
         run: |
@@ -594,51 +543,7 @@ jobs:
         env:
           ORKET_SANDBOX_LEAK_ALLOWLIST: ""
         run: |
-          python - <<'PY'
-          import json
-          import os
-          import subprocess
-          import sys
-
-          allow = {
-              item.strip()
-              for item in os.getenv("ORKET_SANDBOX_LEAK_ALLOWLIST", "").split(",")
-              if item.strip()
-          }
-
-          def lines(*cmd: str) -> list[str]:
-              completed = subprocess.run(cmd, capture_output=True, text=True, check=False)
-              return sorted(line.strip() for line in completed.stdout.splitlines() if line.strip())
-
-          try:
-              projects = json.loads(subprocess.run(
-                  ["docker-compose", "ls", "--format", "json"],
-                  capture_output=True,
-                  text=True,
-                  check=False,
-              ).stdout or "[]")
-          except json.JSONDecodeError:
-              projects = []
-
-          leaks = sorted(
-              name
-              for name in (str(item.get("Name") or "") for item in projects)
-              if name.startswith("orket-sandbox-") and name not in allow
-          )
-          containers = [name for name in lines("docker", "ps", "-a", "--filter", "label=orket.managed=true", "--format", "{{.Names}}") if name not in allow]
-          networks = [name for name in lines("docker", "network", "ls", "--filter", "label=orket.managed=true", "--format", "{{.Name}}") if name not in allow]
-          volumes = [name for name in lines("docker", "volume", "ls", "--filter", "label=orket.managed=true", "--format", "{{.Name}}") if name not in allow]
-
-          if leaks or containers or networks or volumes:
-              print("Sandbox leak gate failed")
-              print(f"compose_projects={leaks}")
-              print(f"containers={containers}")
-              print(f"networks={networks}")
-              print(f"volumes={volumes}")
-              sys.exit(1)
-
-          print("Sandbox leak gate passed")
-          PY
+          python scripts/ci/sandbox_leak_gate.py
 
   docker_smoke:
     runs-on: ubuntu-latest
@@ -691,21 +596,7 @@ jobs:
 
       - name: Bootstrap runtime/webhook schemas
         run: |
-          python - <<'PY'
-          import asyncio
-          from pathlib import Path
-          from orket.infrastructure.async_card_repository import AsyncCardRepository
-          from orket.services.webhook_db import WebhookDatabase
-
-          async def main():
-              repo = AsyncCardRepository(".ci/runtime.db")
-              await repo.get_by_build("_migration_smoke_bootstrap_")
-              webhook = WebhookDatabase(Path(".ci/webhook.db"))
-              await webhook.get_active_prs()
-
-          asyncio.run(main())
-          print("Schema bootstrap completed")
-          PY
+          python scripts/ci/migration_smoke_validator.py --runtime-db .ci/runtime.db --webhook-db .ci/webhook.db --bootstrap
 
       - name: Run migration smoke
         run: |
@@ -713,15 +604,4 @@ jobs:
 
       - name: Validate migration tables
         run: |
-          python - <<'PY'
-          import sqlite3
-          for db in [".ci/runtime.db", ".ci/webhook.db"]:
-              conn = sqlite3.connect(db)
-              cur = conn.cursor()
-              cur.execute("SELECT COUNT(*) FROM _schema_migrations")
-              count = cur.fetchone()[0]
-              if count < 1:
-                  raise SystemExit(f"No migrations recorded for {db}")
-              conn.close()
-          print("Migration smoke validation passed")
-          PY
+          python scripts/ci/migration_smoke_validator.py --runtime-db .ci/runtime.db --webhook-db .ci/webhook.db --validate

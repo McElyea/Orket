@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.application.services.runtime_verifier import RuntimeVerifier
+from orket.application.services.runtime_verifier import RuntimeVerifier, build_runtime_guard_contract
 
 
 @pytest.mark.asyncio
@@ -47,7 +47,7 @@ async def test_runtime_verifier_fails_invalid_python(tmp_path: Path):
     assert result.guard_contract.severity == "strict"
     assert result.guard_contract.terminal_failure is False
     assert result.guard_contract.terminal_reason is None
-    assert result.guard_contract.violations[0].rule_id == "RUNTIME_VERIFIER.FAIL"
+    assert result.guard_contract.violations[0].rule_id == "RUNTIME_VERIFIER.FAIL.0"
     assert result.guard_contract.violations[0].evidence
 
 
@@ -153,7 +153,7 @@ async def test_runtime_verifier_supports_nested_list_json_assertions(tmp_path: P
                 ],
                 "expect_json_stdout": True,
                 "json_assertions": [
-                    {"path": "layers.1.1", "op": "eq", "value": "task3"},
+                    {"path": "layers[1][1]", "op": "eq", "value": "task3"},
                 ],
             }
         },
@@ -520,3 +520,57 @@ async def test_runtime_verifier_classifies_stdout_json_parse_failures(tmp_path: 
     assert result.command_results[-1]["stdout_contract_ok"] is False
     assert result.command_results[-1]["stdout_contract_error"] == "json_parse_failed"
     assert result.failure_breakdown.get("stdout_json_parse_failed", 0) >= 1
+
+
+def test_runtime_verifier_resolve_command_cwd_rejects_escape_with_relative_workspace_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: unit. Verifies relative workspace roots are resolved before containment checks."""
+    monkeypatch.chdir(tmp_path)
+
+    assert RuntimeVerifier._resolve_command_cwd("../../../etc", Path()) is None
+
+
+def test_runtime_verifier_classifies_oom_returncode() -> None:
+    """Layer: unit. Verifies Linux OOM/SIGKILL exit status is explicit in failure breakdowns."""
+    assert RuntimeVerifier._failure_class_from_returncode(137) == "oom_killed"
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_unknown_json_assertion_op_is_explicit_failure(tmp_path: Path):
+    """Layer: contract. Verifies unsupported stdout assertion ops fail loudly instead of silently returning false."""
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "main.py").write_text("import json\nprint(json.dumps({'files_count': 1}))\n", encoding="utf-8")
+
+    result = await RuntimeVerifier(
+        tmp_path,
+        artifact_contract={"kind": "app", "entrypoint_path": "agent_output/main.py"},
+        issue_params={
+            "runtime_verifier": {
+                "expect_json_stdout": True,
+                "json_assertions": [
+                    {"path": "files_count", "op": "approximately", "value": 1},
+                ],
+            }
+        },
+    ).verify()
+
+    assert result.ok is False
+    assert result.command_results[-1]["failure_class"] == "stdout_assertion_failed"
+    assert "unknown assertion op" in "\n".join(result.errors)
+
+
+def test_build_runtime_guard_contract_surfaces_multiple_errors_and_truncation() -> None:
+    """Layer: unit. Verifies guard contracts preserve one violation per runtime verifier error."""
+    contract = build_runtime_guard_contract(ok=False, errors=["first failure", "x" * 300])
+
+    assert len(contract.violations) == 2
+    assert [violation.rule_id for violation in contract.violations] == [
+        "RUNTIME_VERIFIER.FAIL.0",
+        "RUNTIME_VERIFIER.FAIL.1",
+    ]
+    assert contract.violations[0].message == "first failure"
+    assert contract.violations[1].evidence == "x" * 240
+    assert contract.violations[1].evidence_truncated is True

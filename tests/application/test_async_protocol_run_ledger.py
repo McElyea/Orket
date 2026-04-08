@@ -6,6 +6,7 @@ import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.workflows.tool_invocation_contracts import (
+    PROTOCOL_RECEIPT_SCHEMA_VERSION,
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
@@ -272,10 +273,16 @@ async def test_async_protocol_run_ledger_append_receipt_assigns_seq_and_digest(t
     )
     assert first["receipt_seq"] == 1
     assert second["receipt_seq"] == 2
+    assert first["schema_version"] == PROTOCOL_RECEIPT_SCHEMA_VERSION
+    assert second["schema_version"] == PROTOCOL_RECEIPT_SCHEMA_VERSION
     assert len(str(first["receipt_digest"])) == 64
     assert len(str(second["receipt_digest"])) == 64
     rows = await repo.list_receipts("sess-receipt")
     assert [row["receipt_seq"] for row in rows] == [1, 2]
+    assert [row["schema_version"] for row in rows] == [
+        PROTOCOL_RECEIPT_SCHEMA_VERSION,
+        PROTOCOL_RECEIPT_SCHEMA_VERSION,
+    ]
 
 
 @pytest.mark.asyncio

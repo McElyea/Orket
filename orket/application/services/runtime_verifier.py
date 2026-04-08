@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,6 +14,7 @@ from orket.core.domain.guard_contract import GuardContract, GuardViolation
 
 _COMMAND_OUTPUT_LIMIT = 2000
 _COMMAND_FAILURE_SUMMARY_LIMIT = 240
+_KNOWN_JSON_ASSERTION_OPS = {"eq", "ne", "contains", "len_gte", "gt", "gte", "lt", "lte"}
 
 
 @dataclass(frozen=True)
@@ -334,7 +336,8 @@ class RuntimeVerifier:
                 }
             stdout = stdout_bytes.decode("utf-8", errors="replace")
             stderr = stderr_bytes.decode("utf-8", errors="replace")
-            returncode = int(process.returncode or 0)
+            rc = process.returncode
+            returncode = int(rc) if rc is not None else -1
             return {
                 "command_text": display,
                 "command_display": display,
@@ -452,6 +455,7 @@ class RuntimeVerifier:
 
     @staticmethod
     def _resolve_command_cwd(raw_cwd: str, workspace_root: Path) -> Path | None:
+        workspace_root = workspace_root.resolve()
         token = str(raw_cwd or ".").strip() or "."
         candidate = Path(token)
         if not candidate.is_absolute():
@@ -465,6 +469,8 @@ class RuntimeVerifier:
     def _failure_class_from_returncode(returncode: int) -> str:
         if returncode == 0:
             return "none"
+        if returncode == 137:
+            return "oom_killed"
         if returncode == 124:
             return "timeout"
         if returncode in {126, 127}:
@@ -542,7 +548,12 @@ class RuntimeVerifier:
             except KeyError:
                 failures.append(f"runtime stdout assertion path missing: {path}")
                 continue
-            if not self._json_assertion_matches(actual=actual, op=op, expected=expected):
+            try:
+                assertion_matched = self._json_assertion_matches(actual=actual, op=op, expected=expected)
+            except ValueError as exc:
+                failures.append(f"runtime stdout assertion invalid: {exc}")
+                continue
+            if not assertion_matched:
                 failures.append(
                     f"runtime stdout assertion failed: path={path} op={op} expected={expected!r} actual={actual!r}"
                 )
@@ -551,7 +562,7 @@ class RuntimeVerifier:
     @staticmethod
     def _resolve_json_path(payload: Any, path: str) -> Any:
         current = payload
-        for token in [segment for segment in str(path).split(".") if segment]:
+        for token in [segment for segment in re.split(r"[.\[\]]", str(path)) if segment]:
             if isinstance(current, dict) and token in current:
                 current = current[token]
                 continue
@@ -569,6 +580,8 @@ class RuntimeVerifier:
 
     @staticmethod
     def _json_assertion_matches(*, actual: Any, op: str, expected: Any) -> bool:
+        if op not in _KNOWN_JSON_ASSERTION_OPS:
+            raise ValueError(f"unknown assertion op: {op!r}. Known ops: {sorted(_KNOWN_JSON_ASSERTION_OPS)}")
         if op == "eq":
             return bool(actual == expected)
         if op == "ne":
@@ -615,13 +628,15 @@ def build_runtime_guard_contract(*, ok: bool, errors: list[str]) -> GuardContrac
         result="fail",
         violations=[
             GuardViolation(
-                rule_id="RUNTIME_VERIFIER.FAIL",
+                rule_id=f"RUNTIME_VERIFIER.FAIL.{index}",
                 code="RUNTIME_VERIFIER_FAILED",
-                message="Runtime verification checks failed.",
+                message=str(error)[:480] or "Runtime verification checks failed.",
                 location="output",
                 severity="strict",
-                evidence=(errors[0][:240] if errors else None),
+                evidence=(str(error)[:240] if str(error) else None),
+                evidence_truncated=len(str(error)) > 240,
             )
+            for index, error in enumerate(errors)
         ],
         severity="strict",
         fix_hint="Fix runtime verification failures and rerun.",

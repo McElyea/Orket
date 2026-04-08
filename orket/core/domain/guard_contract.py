@@ -23,6 +23,7 @@ class GuardViolation(BaseModel):
     location: GuardLocation
     severity: GuardSeverity
     evidence: str | None = None
+    evidence_truncated: bool = False
 
 
 class LoopEscalation(BaseModel):

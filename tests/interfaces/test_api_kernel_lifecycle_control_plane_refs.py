@@ -17,7 +17,7 @@ from orket.interfaces.api import app
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
 
-client = TestClient(app)
+client = None
 
 
 def _install_control_plane(monkeypatch) -> tuple[

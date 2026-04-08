@@ -94,6 +94,17 @@ def test_append_only_run_ledger_rejects_out_of_order_explicit_event_seq(tmp_path
     assert exc.value.code == "E_LEDGER_SEQ"
 
 
+def test_append_only_run_ledger_rejects_duplicate_explicit_event_seq(tmp_path: Path) -> None:
+    """Layer: unit. Verifies append-time monotonicity rejects duplicate or regressed event sequences."""
+    path = tmp_path / "runs" / "r1" / "events.log"
+    ledger = AppendOnlyRunLedger(path)
+
+    _ = ledger.append_event({"event_seq": 1, "kind": "run_started"})
+    with pytest.raises(LedgerFramingError) as exc:
+        ledger.append_event({"event_seq": 1, "kind": "duplicate"})
+    assert exc.value.code == "E_LEDGER_SEQ"
+
+
 def test_append_only_run_ledger_replay_survives_partial_tail(tmp_path: Path) -> None:
     path = tmp_path / "runs" / "r1" / "events.log"
     ledger = AppendOnlyRunLedger(path)

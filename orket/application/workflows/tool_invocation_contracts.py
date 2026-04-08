@@ -9,6 +9,7 @@ _RUNTIME_ONLY_METADATA_KEYS = {"trace_id", "debug_flags", "retry_count"}
 _VALID_RINGS = {"core", "compatibility", "experimental"}
 _VALID_DETERMINISM_CLASSES = {"pure", "workspace", "external"}
 _VALID_NAMESPACE_SCOPE_RULES = {"run_scope_only", "declared_scope_subset"}
+PROTOCOL_RECEIPT_SCHEMA_VERSION = "protocol_receipt.v1"
 
 
 def normalize_tool_invocation_manifest(
