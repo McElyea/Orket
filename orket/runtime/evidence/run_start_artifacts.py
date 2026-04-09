@@ -20,6 +20,7 @@ _DETERMINISM_RANK = {
     "external": 2,
 }
 _RUN_IDENTITY_SCOPE = "session_bootstrap"
+_RUN_IDENTITY_PROJECTION_SOURCE = "session_bootstrap_artifacts"
 
 
 def capture_run_start_artifacts(
@@ -170,6 +171,7 @@ def _resolve_run_identity(
         "workload": workload,
         "start_time": start_time,
         "identity_scope": _RUN_IDENTITY_SCOPE,
+        "projection_source": _RUN_IDENTITY_PROJECTION_SOURCE,
         "projection_only": True,
     }
     _write_json(path, payload)
@@ -188,6 +190,7 @@ def validate_run_identity_projection(
     workload = str(value.get("workload") or "").strip()
     start_time = str(value.get("start_time") or "").strip()
     identity_scope = str(value.get("identity_scope") or "").strip()
+    projection_source = str(value.get("projection_source") or "").strip()
 
     if not run_id:
         raise ValueError(_run_identity_error(error_prefix, "run_id_required"))
@@ -197,6 +200,8 @@ def validate_run_identity_projection(
         raise ValueError(_run_identity_error(error_prefix, "start_time_required"))
     if identity_scope != _RUN_IDENTITY_SCOPE:
         raise ValueError(_run_identity_error(error_prefix, "identity_scope_invalid"))
+    if projection_source != _RUN_IDENTITY_PROJECTION_SOURCE:
+        raise ValueError(_run_identity_error(error_prefix, "projection_source_invalid"))
     if value.get("projection_only") is not True:
         raise ValueError(_run_identity_error(error_prefix, "projection_only_invalid"))
 
@@ -205,6 +210,7 @@ def validate_run_identity_projection(
         "workload": workload,
         "start_time": start_time,
         "identity_scope": _RUN_IDENTITY_SCOPE,
+        "projection_source": _RUN_IDENTITY_PROJECTION_SOURCE,
         "projection_only": True,
     }
 

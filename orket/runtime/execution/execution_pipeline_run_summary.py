@@ -40,6 +40,7 @@ class ExecutionPipelineRunSummaryMixin:
         async def _resolve_cards_runtime_artifacts(
             self,
             *,
+            artifacts: dict[str, Any],
             run_id: str,
             session_status: str,
             failure_reason: str | None,
@@ -262,6 +263,7 @@ class ExecutionPipelineRunSummaryMixin:
         repair_entries = await self._resolve_packet2_repair_entries(run_id=run_id)
         artifact_provenance_artifacts = await self._resolve_artifact_provenance_artifacts(run_id=run_id)
         cards_runtime_artifacts = await self._resolve_cards_runtime_artifacts(
+            artifacts=resolved_artifacts,
             run_id=run_id,
             session_status=session_status,
             failure_reason=failure_reason,

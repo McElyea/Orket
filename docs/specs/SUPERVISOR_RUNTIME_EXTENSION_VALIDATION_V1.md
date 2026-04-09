@@ -1,6 +1,6 @@
 # Supervisor Runtime Extension Validation V1
 
-Last updated: 2026-03-31
+Last updated: 2026-04-08
 Status: Active
 Owner: Orket Core
 Source requirements: `docs/projects/archive/SupervisorRuntime/SRF03312026-LANE-CLOSEOUT/SUPERVISOR_RUNTIME_FOUNDATIONS_REQUIREMENTS.md`
@@ -10,6 +10,8 @@ Related authority:
 2. `CURRENT_AUTHORITY.md`
 3. `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_V1.md`
 4. `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_V1.md`
+5. `docs/specs/TOOL_EXECUTION_GATE_V1.md`
+6. `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`
 
 ## Authority posture
 
@@ -110,6 +112,10 @@ For Packet 1, the host remains authoritative for:
 5. auditability
 
 Packet 1 does not treat validation, installability, or discoverability as permission to bypass host-owned runtime governance.
+
+Validation success also does not freeze tool-execution authorization scope:
+1. extension actions that normalize back into `run_card(...)` return to the canonical host runtime gate story described by `docs/specs/TOOL_EXECUTION_GATE_V1.md`
+2. SDK capability registry authorization remains a separate host-owned runtime concern governed by `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`
 
 ## Canonical seams and proof entrypoints
 

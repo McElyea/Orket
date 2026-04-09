@@ -294,26 +294,29 @@ class Agent:
                 )
                 continue
 
-            # --- TOOL GATE: Pre-execution validation ---
-            if self.tool_gate:
-                roles = context.get("roles", [self.name])
-                gate_error = await self.tool_gate.validate(tool_name, args, context, roles)
-                if gate_error:
-                    turn.tool_calls.append(
-                        ToolCall(
-                            tool=tool_name,
-                            args=args,
-                            error=f"[GATE] {gate_error}",
-                            error_class=ToolCallErrorClass.GATE_BLOCKED,
-                        )
+            roles = context.get("roles", [self.name])
+            gate_error = await self._gate_violation_for_direct_tool_execution(
+                tool_name=tool_name,
+                args=args,
+                context=context,
+                roles=roles,
+            )
+            if gate_error:
+                turn.tool_calls.append(
+                    ToolCall(
+                        tool=tool_name,
+                        args=args,
+                        error=f"[GATE] {gate_error}",
+                        error_class=ToolCallErrorClass.GATE_BLOCKED,
                     )
-                    log_event(
-                        "tool_blocked",
-                        {"tool": tool_name, "args": args, "reason": gate_error},
-                        workspace,
-                        role=self.name,
-                    )
-                    continue
+                )
+                log_event(
+                    "tool_blocked",
+                    {"tool": tool_name, "args": args, "reason": gate_error},
+                    workspace,
+                    role=self.name,
+                )
+                continue
 
             # --- TOOL EXECUTION ---
             tool_fn = self.tools[tool_name]
@@ -411,6 +414,21 @@ class Agent:
 
     def _journaling_enabled(self) -> bool:
         return self.journal is not None and not isinstance(self.journal, NullControlPlaneAuthorityService)
+
+    async def _gate_violation_for_direct_tool_execution(
+        self,
+        *,
+        tool_name: str,
+        args: dict[str, Any],
+        context: dict[str, Any],
+        roles: list[str],
+    ) -> str | None:
+        if self.tool_gate is None:
+            return (
+                "Legacy Agent.run direct tool execution is blocked without tool_gate authority. "
+                "Route through the canonical governed dispatcher path instead."
+            )
+        return await self.tool_gate.validate(tool_name, args, context, roles)
 
 
 def _required_journal_context(context: dict[str, Any], key: str) -> str:

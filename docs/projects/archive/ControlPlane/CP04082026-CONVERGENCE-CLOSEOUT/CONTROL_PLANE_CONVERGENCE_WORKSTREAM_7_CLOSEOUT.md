@@ -1,8 +1,10 @@
 # Control-Plane Convergence Workstream 7 Closeout
-Last updated: 2026-03-28
-Status: Partial closeout artifact
+Last updated: 2026-04-08
+Status: Archived partial closeout artifact
 Owner: Orket Core
 Workstream: 7 - Namespace and safe-tooling universalization
+
+Closeout authority: `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CLOSEOUT.md`
 
 ## Objective
 
@@ -56,8 +58,8 @@ Representative tests changed or added:
 6. `tests/integration/test_orchestrator_scheduler_control_plane.py`
 
 Docs changed:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-2. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_7_CLOSEOUT.md`
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_7_CLOSEOUT.md`
 
 ## Proof executed
 
@@ -68,6 +70,12 @@ Observed result: `success`
 Commands executed for the slices recorded here:
 1. `ORKET_DISABLE_SANDBOX=1 python -m pytest -q tests/application/test_turn_tool_dispatcher_policy_enforcement.py tests/application/test_turn_tool_dispatcher_compatibility.py tests/application/test_turn_tool_control_plane_preflight_guards.py tests/integration/test_turn_executor_control_plane.py tests/platform/test_no_old_namespaces.py tests/integration/test_orchestrator_scheduler_control_plane.py`
    Result: `34 passed`
+2. `python -m pytest -q tests/application/test_turn_tool_dispatcher_policy_enforcement.py tests/application/test_turn_tool_dispatcher_compatibility.py`
+   Result: `13 passed in 0.25s`
+3. `python -m pytest -q tests/application/test_turn_tool_control_plane_preflight_guards.py tests/integration/test_turn_executor_control_plane.py tests/integration/test_orchestrator_scheduler_control_plane.py`
+   Result: `19 passed in 4.54s`
+4. `python -m pytest -q tests/platform/test_no_old_namespaces.py`
+   Result: `2 passed in 46.55s`
 
 ## Compatibility exits
 
@@ -92,13 +100,14 @@ Remaining gaps:
 2. broader runtime workloads, scheduling, resource targeting, and child composition still do not share one universal namespace authority surface
 3. broader governed mutation paths still need to fail closed on undeclared capability scope and journal-free mutation through the same safe-tooling boundary
 4. `CE-08` remains open
+5. the representative `Slice 7A` proof set was re-verified on `2026-04-08`, so that slice no longer belongs at the front of the open convergence queue even though `CE-08` remains open
 
 ## Authority-story updates landed with these slices
 
 The following authority docs were updated in this closeout-recording slice:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-2. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_7_CLOSEOUT.md`
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_7_CLOSEOUT.md`
 
 ## Verdict
 
-Workstream 7 now has a truthful partial closeout artifact for the explicit namespace and safe-tooling hardening already landed on the governed turn-tool and scheduler-owned mutation paths, but the workstream remains open until the broader runtime shares that same fail-closed namespace and capability boundary.
+Workstream 7 now has a truthful partial closeout artifact for the explicit namespace and safe-tooling hardening already landed on the governed turn-tool and scheduler-owned mutation paths, but the workstream remains open until the broader runtime shares that same fail-closed namespace and capability boundary. The representative `Slice 7A` proof set was re-verified on `2026-04-08`, so the next truthful Workstream 7 work now continues through follow-on `Slice 7B`.

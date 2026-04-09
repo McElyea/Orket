@@ -30,6 +30,7 @@ def _run_identity(*, run_id: str, workload: str = "run-summary-test") -> dict[st
         "workload": workload,
         "start_time": _STARTED_AT,
         "identity_scope": "session_bootstrap",
+        "projection_source": "session_bootstrap_artifacts",
         "projection_only": True,
     }
 
@@ -265,25 +266,56 @@ def test_run_summary_emits_odr_cards_runtime_fields() -> None:
             "cards_runtime_facts": {
                 "execution_profile": "odr_prebuild_builder_guard_v1",
                 "stop_reason": "completed",
+                "resolution_state": "resolved",
                 "odr_active": True,
+                "audit_mode": "independent",
                 "odr_valid": True,
                 "odr_pending_decisions": 0,
                 "odr_stop_reason": "STABLE_DIFF_FLOOR",
                 "odr_termination_reason": "convergence",
                 "odr_final_auditor_verdict": "approved",
                 "odr_artifact_path": "observability/sess-summary-odr/ISSUE-1/odr_refinement.json",
+                "last_valid_round_index": 2,
+                "last_emitted_round_index": 3,
             },
         },
     )
 
+    assert payload["cards_runtime_resolution_state"] == "resolved"
     assert payload["execution_profile"] == "odr_prebuild_builder_guard_v1"
     assert payload["odr_active"] is True
+    assert payload["audit_mode"] == "independent"
     assert payload["odr_valid"] is True
     assert payload["odr_pending_decisions"] == 0
     assert payload["odr_stop_reason"] == "STABLE_DIFF_FLOOR"
     assert payload["odr_termination_reason"] == "convergence"
     assert payload["odr_final_auditor_verdict"] == "approved"
     assert payload["odr_artifact_path"] == "observability/sess-summary-odr/ISSUE-1/odr_refinement.json"
+    assert payload["last_valid_round_index"] == 2
+    assert payload["last_emitted_round_index"] == 3
+
+
+# Layer: contract
+def test_run_summary_emits_cards_runtime_resolution_state_without_empty_odr_projection() -> None:
+    payload = build_run_summary_payload(
+        run_id="sess-summary-cards-runtime-state",
+        status="failed",
+        failure_reason="log_missing",
+        started_at=_STARTED_AT,
+        ended_at=_FINALIZED_AT,
+        tool_names=[],
+        artifacts={
+            "run_identity": _run_identity(run_id="sess-summary-cards-runtime-state", workload="cards-runtime"),
+            "cards_runtime_facts": {
+                "resolution_state": "log_missing",
+            },
+        },
+    )
+
+    assert payload["cards_runtime"]["resolution_state"] == "log_missing"
+    assert payload["cards_runtime_resolution_state"] == "log_missing"
+    assert "execution_profile" not in payload
+    assert "stop_reason" not in payload
 
 
 # Layer: contract

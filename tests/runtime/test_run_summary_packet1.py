@@ -19,6 +19,7 @@ def _run_identity(*, run_id: str) -> dict[str, str | bool]:
         "workload": "packet1-summary",
         "start_time": _STARTED_AT,
         "identity_scope": "session_bootstrap",
+        "projection_source": "session_bootstrap_artifacts",
         "projection_only": True,
     }
 

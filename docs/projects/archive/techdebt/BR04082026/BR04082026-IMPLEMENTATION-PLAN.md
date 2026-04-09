@@ -38,7 +38,7 @@ The work is intentionally split into bounded packets so each slice can:
 5. `docs/ARCHITECTURE.md`
 6. [docs/projects/archive/techdebt/BR04082026/BR04082026-REQUIREMENTS.md](docs/projects/archive/techdebt/BR04082026/BR04082026-REQUIREMENTS.md)
 7. [docs/specs/MINIMUM_AUDITABLE_RECORD_V1.md](docs/specs/MINIMUM_AUDITABLE_RECORD_V1.md)
-8. [docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md](docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md)
+8. [docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md)
 9. [orket/decision_nodes/contracts.py](orket/decision_nodes/contracts.py)
 10. [orket/decision_nodes/api_runtime_strategy_node.py](orket/decision_nodes/api_runtime_strategy_node.py)
 11. [orket/decision_nodes/builtins.py](orket/decision_nodes/builtins.py)
@@ -256,7 +256,7 @@ Primary surfaces:
 1. [orket/orchestration/engine.py](orket/orchestration/engine.py)
 2. [orket/orchestration/engine_services.py](orket/orchestration/engine_services.py)
 3. [orket/application/services/orchestrator_issue_control_plane_service.py](orket/application/services/orchestrator_issue_control_plane_service.py)
-4. [docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md](docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md) if touched
+4. [docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md) if touched
 
 Actions:
 

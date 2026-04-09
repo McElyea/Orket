@@ -180,3 +180,36 @@ def test_get_member_metrics_returns_aggregated_roles(tmp_path: Path) -> None:
     metrics = get_member_metrics(tmp_path)
     assert metrics["coder"]["tokens"] == 13
     assert metrics["coder"]["lines_written"] == 2
+
+
+def test_log_event_persists_sdk_capability_authorization_fields(tmp_path: Path) -> None:
+    log_event(
+        "sdk_capability_call_blocked",
+        {
+            "session_id": "sdk-run-1",
+            "run_id": "sdk-run-1",
+            "extension_id": "demo.ext",
+            "workload_id": "sdk_v1",
+            "capability_id": "memory.write",
+            "capability_family": "memory_write",
+            "authorization_basis": "host_authorized_capability_registry_v1",
+            "declared": True,
+            "admitted": False,
+            "side_effect_observed": False,
+            "denial_class": "denied",
+        },
+        workspace=tmp_path,
+    )
+
+    artifact_event = _load_last_log_record(tmp_path / "agent_output" / "observability" / "runtime_events.jsonl")
+    assert artifact_event["event"] == "sdk_capability_call_blocked"
+    assert artifact_event["run_id"] == "sdk-run-1"
+    assert artifact_event["extension_id"] == "demo.ext"
+    assert artifact_event["workload_id"] == "sdk_v1"
+    assert artifact_event["capability_id"] == "memory.write"
+    assert artifact_event["capability_family"] == "memory_write"
+    assert artifact_event["authorization_basis"] == "host_authorized_capability_registry_v1"
+    assert artifact_event["declared"] is True
+    assert artifact_event["admitted"] is False
+    assert artifact_event["side_effect_observed"] is False
+    assert artifact_event["denial_class"] == "denied"

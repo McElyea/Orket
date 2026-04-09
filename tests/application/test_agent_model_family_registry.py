@@ -171,6 +171,42 @@ async def test_agent_tool_gate_blocks_before_direct_tool_execution(monkeypatch, 
 
 
 @pytest.mark.asyncio
+async def test_agent_direct_tool_execution_requires_tool_gate(monkeypatch, tmp_path: Path) -> None:
+    """Layer: unit. Verifies legacy Agent.run fails closed before any direct tool call when no gate is present."""
+    monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
+    calls: list[dict[str, Any]] = []
+
+    class _ToolProvider:
+        model = "unknown-7b"
+
+        async def complete(
+            self,
+            messages: list[dict[str, str]],
+            runtime_context: dict[str, Any] | None = None,
+        ) -> str:
+            return '{"tool":"write_file","args":{"path":"agent_output/a.txt","content":"blocked"}}'
+
+    async def _tool(args: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+        calls.append(dict(args))
+        return {"ok": True}
+
+    agent = Agent(
+        "coder",
+        "description",
+        {"write_file": _tool},
+        _ToolProvider(),
+        config_root=tmp_path,
+        strict_config=False,
+    )
+
+    turn = await agent.run({"description": "do work"}, {"issue_id": "ISSUE-1", "roles": ["coder"]}, tmp_path)
+
+    assert calls == []
+    assert turn.tool_calls[0].error_class is ToolCallErrorClass.GATE_BLOCKED
+    assert "tool_gate authority" in str(turn.tool_calls[0].error)
+
+
+@pytest.mark.asyncio
 async def test_agent_partial_parse_failure_returns_structured_turn_without_recovery_tool(
     monkeypatch,
     tmp_path: Path,
@@ -222,6 +258,10 @@ async def test_agent_run_records_optional_effect_journal_entry(monkeypatch, tmp_
     async def _tool(args: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         return {"ok": True, "path": args["path"]}
 
+    class _AllowAllGate:
+        async def validate(self, tool_name: str, args: dict[str, Any], context: dict[str, Any], roles: list[str]) -> str | None:
+            return None
+
     agent = Agent(
         "coder",
         "description",
@@ -230,6 +270,7 @@ async def test_agent_run_records_optional_effect_journal_entry(monkeypatch, tmp_
         config_root=tmp_path,
         strict_config=False,
         journal=ControlPlaneAuthorityService(),
+        tool_gate=_AllowAllGate(),
     )
 
     turn = await agent.run(

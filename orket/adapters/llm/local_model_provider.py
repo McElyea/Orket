@@ -113,6 +113,7 @@ class LocalModelProvider:
         self._provider_managed_client_id = id(self.client)
         self._closed = False
         self._openai_session_epoch = 0
+        self._seen_context_epochs: set[int] = set()
         self._runtime_target: ProviderRuntimeTarget | None = None
 
     @staticmethod
@@ -211,6 +212,13 @@ class LocalModelProvider:
         if epoch == 0:
             return base_session_id
         return f"{base_session_id}-ctx{epoch}"
+
+    def _context_reset_status(self, *, provider_session_epoch: int) -> str:
+        if self.provider_backend != "openai_compat":
+            return "stateless_backend"
+        if int(provider_session_epoch) in self._seen_context_epochs:
+            return "context_unknown"
+        return "fresh_context"
 
     def _resolve_provider_backend(self) -> str:
         return _map_provider_backend(self._provider_override or _read_provider_env())
@@ -346,6 +354,8 @@ class LocalModelProvider:
                     "provider_backend": "ollama",
                     "model": self.model,
                     "requested_model": self.requested_model,
+                    "provider_session_epoch": None,
+                    "context_reset_status": "stateless_backend",
                     "retries": attempt,
                     "latency_ms": int((time.perf_counter() - started_at) * 1000),
                     "response_chars": len(content),
@@ -443,6 +453,7 @@ class LocalModelProvider:
         )
         orket_session_id = self._resolve_request_session_id(base_session_id)
         orket_session_epoch = max(0, int(getattr(self, "_openai_session_epoch", 0) or 0))
+        context_reset_status = self._context_reset_status(provider_session_epoch=orket_session_epoch)
         orket_request_id = f"orket-{time.time_ns()}"
         prompt_fingerprint = build_prompt_fingerprint(payload)
 
@@ -504,6 +515,8 @@ class LocalModelProvider:
                     "base_url": self.openai_base_url,
                     "model": self.model,
                     "requested_model": self.requested_model,
+                    "provider_session_epoch": orket_session_epoch,
+                    "context_reset_status": context_reset_status,
                     "retries": attempt,
                     "latency_ms": latency_ms,
                     "response_chars": len(content),
@@ -532,6 +545,7 @@ class LocalModelProvider:
                     "openai_native_payload_overrides": dict(native_payload_overrides),
                 }
                 raw.update(local_prompting_policy.telemetry())
+                self._seen_context_epochs.add(orket_session_epoch)
                 return ModelResponse(content=content, raw=raw)
 
             except (TimeoutError, httpx.TimeoutException, ModelTimeoutError) as exc:

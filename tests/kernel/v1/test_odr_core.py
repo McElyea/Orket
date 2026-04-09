@@ -365,6 +365,8 @@ async def test_run_live_refinement_exposes_valid_history_trace() -> None:
         "DECISION_REQUIRED(retention_days): retention period not yet specified.",
     ]
     assert result["valid_history_v"] == ["The system must encrypt all backups at rest."]
+    assert result["last_valid_round_index"] == 1
+    assert result["last_emitted_round_index"] == 3
     assert result["odr_failure_mode"] == "semantic_invalid"
 
 
@@ -452,6 +454,8 @@ async def test_run_live_refinement_sets_format_violation_failure_mode() -> None:
     assert result["stop_reason"] == "FORMAT_VIOLATION"
     assert result["odr_valid"] is False
     assert result["odr_failure_mode"] == "format_violation"
+    assert result["last_valid_round_index"] == 0
+    assert result["last_emitted_round_index"] == 1
 
 
 def test_leading_preface_before_header_is_shape_violation() -> None:

@@ -266,7 +266,12 @@ def load_from_files(
             continue
         try:
             content = _run_git(repo_root, ["show", f"{ref}:{path}"])
-        except ReviewError:
+        except ReviewError as exc:
+            if (
+                exc.command[:2] == ["git", "show"]
+                and "does not exist in" in exc.stderr
+            ):
+                raise FileNotFoundError(path) from exc
             raise
         changed_files.append(ChangedFile(path=path, status="selected", additions=0, deletions=0))
         context_blobs.append(ContextBlob(path=path, content=content))

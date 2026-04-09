@@ -1,8 +1,10 @@
 # Control-Plane Convergence Workstream 1 Closeout
-Last updated: 2026-03-29
-Status: Partial closeout artifact
+Last updated: 2026-04-08
+Status: Archived partial closeout artifact
 Owner: Orket Core
 Workstream: 1 - Canonical workload, run, and attempt promotion
+
+Closeout authority: `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CLOSEOUT.md`
 
 ## Objective
 
@@ -15,7 +17,7 @@ Closed or narrowed slices captured here:
 4. invocation-scoped top-level cards epic run, attempt, and start-step publication
 5. manual review-run run, attempt, and start-step publication plus control-plane-backed read projection
 6. cards `run_summary.json` read projection of durable cards-epic run, attempt, and start-step truth
-7. fresh `run_start_artifacts` `run_identity.json` demotion to explicit session-bootstrap projection-only evidence, with bootstrap reuse plus summary consumers now failing closed if that framing drifts
+7. fresh `run_start_artifacts` `run_identity.json` demotion to explicit session-bootstrap projection-only evidence with `projection_source=session_bootstrap_artifacts`, with bootstrap reuse plus summary consumers now failing closed if that framing drifts
 8. fresh `retry_classification_policy` demotion to explicit projection-only, non-authoritative attempt-history guidance
 9. fresh review-run manifests now explicitly point execution-state authority at durable control-plane records while marking lane outputs non-authoritative for run/attempt state
 10. governed kernel direct API and async engine responses now surface canonical durable `control_plane_step_id` refs when step truth exists instead of dropping that step identity on the response contract
@@ -57,7 +59,7 @@ Closed or narrowed slices captured here:
 46. runtime-policy microservices unlock reads now fail closed when the persisted unlock artifact is structurally malformed, reuse the same structural unlock-report validator as microservices pilot decision, and default to the canonical acceptance artifact paths instead of stale pre-acceptance output paths
 47. runtime-policy pilot-stability reads now also fail closed when the persisted pilot-stability artifact is internally inconsistent, with the shared acceptance-report validator rejecting drift between top-level `stable` / `failures`, per-check stability evidence, and `artifact_count`
 48. runtime-policy microservices unlock reads and microservices pilot decision now also fail closed when the persisted unlock artifact is internally inconsistent, with the shared acceptance-report validator rejecting drift between top-level `unlocked` / `failures` and per-criterion `ok` / `failures` detail
-49. persisted `run_summary.json` validators, shared summary loaders, summary builders, finalize helpers, and reconstruction now also reject drifted `run_identity` projection framing plus mismatched `run_identity.run_id`, and finalize-time bootstrap validation now degrades cleanly instead of aborting closeout while excluding transient invalid bootstrap identity from degraded summary output
+49. persisted `run_summary.json` validators, shared summary loaders, summary builders, finalize helpers, and reconstruction now also reject drifted `run_identity` projection framing including the required `projection_source=session_bootstrap_artifacts` marker plus mismatched `run_identity.run_id`, and finalize-time bootstrap validation now degrades cleanly instead of aborting closeout while excluding transient invalid bootstrap identity from degraded summary output
 50. review consistency-signature report validation now also rejects malformed nested baseline/default/strict/replay signature contract fields including required digests, deterministic finding-row code/severity/message/path/span/details shape, deterministic-lane version, executed-check lists, and truncation framing before producer write or persisted report trust
 51. fresh review manifest plus deterministic/model-assisted lane artifact serialization and shared validated review-bundle payload and artifact loaders now also reject missing manifest or lane-payload `run_id`, fresh manifest or lane-payload `control_plane_run_id` that drifts from the same artifact `run_id`, manifest or lane attempt or step refs that drift outside the declared `control_plane_run_id` lineage, missing lane-payload `control_plane_run_id` / `control_plane_attempt_id` / `control_plane_step_id` when the manifest declares them, lower-level manifest or lane `control_plane_attempt_id` / `control_plane_step_id` refs that survive after parent run or attempt refs drop, plus manifest or lane-payload `run_id`, `control_plane_run_id`, `control_plane_attempt_id`, and `control_plane_step_id` drift, instead of validating execution-authority markers alone
 52. review diff, PR, and files CLI paths now surface review-result serialization drift at this boundary as structured `E_REVIEW_RUN_FAILED` output instead of leaking an uncaught exception when embedded manifest control-plane refs have been dropped
@@ -242,8 +244,8 @@ Docs changed:
 14. `docs/architecture/CONTRACT_DELTA_REVIEWRUN_ANSWER_KEY_SCORE_REPORT_2026-03-29.md`
 15. `docs/architecture/CONTRACT_DELTA_RUN_SUMMARY_CONTROL_PLANE_ATTEMPT_IDENTITY_2026-03-28.md`
 16. `docs/specs/PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md`
-17. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-18. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`
+17. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+18. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`
 
 ## Proof executed
 
@@ -681,6 +683,18 @@ Commands executed for the slices recorded here:
      Result: `passed`
 215. `python -m pytest -q tests/application/test_control_plane_workload_authority_governance.py tests/runtime/test_extension_components.py tests/runtime/test_extension_manager.py tests/application/test_register_meta_breaker_extension.py tests/application/test_register_textmystery_bridge_extension.py tests/interfaces/test_cli_extensions.py`
      Result: `71 passed in 20.42s`
+216. `$env:ORKET_DISABLE_SANDBOX='1'; python -m pytest -q tests/application/test_control_plane_authority_service.py tests/integration/test_turn_executor_control_plane.py`
+     Result: `16 passed in 4.37s`
+217. `$env:ORKET_DISABLE_SANDBOX='1'; python -m pytest -q tests/integration/test_orchestrator_issue_control_plane.py tests/integration/test_gitea_state_worker_control_plane.py`
+     Result: `10 passed in 4.05s`
+218. `$env:ORKET_DISABLE_SANDBOX='1'; python -m pytest -q tests/integration/test_async_control_plane_execution_repository.py tests/application/test_control_plane_workload_authority_governance.py`
+     Result: `34 passed in 15.73s`
+219. `python scripts/governance/check_docs_project_hygiene.py`
+     Result: `passed`
+220. `python -m pytest -q tests/platform/test_current_authority_map.py`
+     Result: `7 passed in 0.04s`
+221. `python -m pytest -q tests/platform/test_no_old_namespaces.py`
+     Result: `2 passed in 99.62s (0:01:39)`
 216. `python scripts/governance/check_docs_project_hygiene.py`
      Result: `passed`
 217. `python -m pytest -q tests/application/test_control_plane_workload_authority_governance.py`
@@ -737,6 +751,22 @@ Commands executed for the slices recorded here:
     Result: `63 passed in 18.00s`
 243. `python scripts/governance/check_docs_project_hygiene.py`
     Result: `passed`
+244. `python -m pytest -q tests/application/test_control_plane_workload_authority_governance.py tests/runtime/test_extension_manager.py tests/runtime/test_controller_dispatcher.py tests/interfaces/test_sessions_router_protocol_replay.py tests/interfaces/test_api_interactions.py tests/interfaces/test_cli_startup_semantics.py`
+    Result: `98 passed in 36.26s`
+245. `python -m pytest -q tests/runtime/test_run_identity_projection.py tests/runtime/test_run_start_artifacts.py tests/runtime/test_run_start_retry_classification_policy_immutability.py tests/runtime/test_run_summary_projection_validation.py tests/runtime/test_run_summary.py tests/scripts/test_common_run_summary_support.py tests/application/test_execution_pipeline_cards_epic_control_plane.py tests/application/test_execution_pipeline_run_ledger.py`
+    Result: `120 passed in 13.74s`
+246. `python -m pytest -q tests/application/test_review_run_service.py tests/application/test_review_run_result_contract.py tests/integration/test_review_run_live_paths.py tests/interfaces/test_review_cli.py tests/application/test_review_bundle_validation.py tests/application/test_reviewrun_answer_key_scoring.py tests/application/test_reviewrun_consistency.py tests/application/test_code_review_probe.py tests/scripts/test_check_1000_consistency.py`
+    Result: `145 passed in 13.08s`
+247. `python -m pytest -q tests/runtime/test_retry_classification_policy.py tests/runtime/test_runtime_truth_drift_checker.py tests/scripts/test_check_retry_classification_policy.py tests/scripts/test_run_runtime_truth_acceptance_gate.py`
+    Result: `87 passed in 9.32s`
+248. `$env:ORKET_DISABLE_SANDBOX='1'; python -m pytest -q tests/runtime/test_run_identity_projection.py tests/runtime/test_run_start_artifacts.py tests/runtime/test_run_start_retry_classification_policy_immutability.py`
+    Result: `34 passed in 1.66s`
+249. `$env:ORKET_DISABLE_SANDBOX='1'; python -m pytest -q tests/runtime/test_run_summary_projection_validation.py tests/runtime/test_run_summary.py tests/scripts/test_common_run_summary_support.py`
+    Result: `57 passed in 0.26s`
+250. `$env:ORKET_DISABLE_SANDBOX='1'; python -m pytest -q tests/application/test_review_run_service.py tests/application/test_review_bundle_validation.py tests/application/test_reviewrun_answer_key_scoring.py tests/application/test_reviewrun_consistency.py tests/scripts/test_check_1000_consistency.py`
+    Result: `89 passed in 7.50s`
+251. `$env:ORKET_DISABLE_SANDBOX='1'; python -m pytest -q tests/runtime/test_retry_classification_policy.py tests/runtime/test_runtime_truth_drift_checker.py tests/scripts/test_check_retry_classification_policy.py tests/scripts/test_run_runtime_truth_acceptance_gate.py`
+    Result: `87 passed in 9.09s`
 
 ## Compatibility exits
 
@@ -760,7 +790,7 @@ The slices recorded here now use this lock:
 
 The current workload-authority matrix for governed start paths is:
 
-This matrix is now machine-enforced by `tests/application/test_control_plane_workload_authority_governance.py`. That governance test fails if a non-test module directly consumes workload authority from `control_plane_workload_catalog.py` without explicit matrix coverage, if touched catalog-resolved publishers reintroduce local `workload_id` / `workload_version` authority aliases, if the retired workload-adapter shim reappears or non-test repo code imports it, if non-test repo code imports the retired extension manifest alias, if non-CLI runtime callsites drift back onto `run_epic(...)`, `run_issue(...)`, or `run_rock(...)` compatibility wrappers, if public runtime wrappers stop collapsing back to `run_card(...)`, if the extension run-action adapter drifts back to treating `run_rock` as part of its primary run-op set instead of explicit legacy alias normalization, if the canonical `run_card(...)` dispatcher starts minting workload authority directly instead of routing into internal entrypoints, if the interaction sessions router drifts back to a metadata-returning extension workload lookup instead of the validation-only `has_manifest_entry(...)` probe, if live benchmark tooling drifts back onto the legacy `--rock` CLI alias, back to rock-named runtime identifiers or `run_mode="rock"` in benchmark run metadata, or back to default `live-rock` execution-mode metadata, or if rock routing regains standalone workload-authority status.
+This matrix is now machine-enforced by `tests/application/test_control_plane_workload_authority_governance.py`. That governance test fails if a non-test module directly consumes workload authority from `control_plane_workload_catalog.py` without explicit matrix coverage, if touched catalog-resolved publishers reintroduce local `workload_id` / `workload_version` authority aliases, if the retired workload-adapter shim reappears or non-test repo code imports it, if non-test repo code imports the retired extension manifest alias, if non-CLI runtime callsites drift back onto `run_epic(...)`, `run_issue(...)`, or `run_rock(...)` compatibility wrappers, if public runtime wrappers stop collapsing back to `run_card(...)`, if the extension run-action adapter drifts back to treating `run_rock` as part of its primary run-op set instead of explicit legacy alias normalization, if the canonical `run_card(...)` dispatcher starts minting workload authority directly instead of routing into internal entrypoints, if governed turn-tool runtime entrypoints drift away from the exact adapter-only routing helpers that invoke `TurnToolControlPlaneService` without minting workload authority locally, if the interaction sessions router drifts back to a metadata-returning extension workload lookup instead of the validation-only `has_manifest_entry(...)` probe, if live benchmark tooling drifts back onto the legacy `--rock` CLI alias, back to rock-named runtime identifiers or `run_mode="rock"` in benchmark run metadata, or back to default `live-rock` execution-mode metadata, or if rock routing regains standalone workload-authority status.
 
 | Start path | Current authority status | Truthful note |
 | --- | --- | --- |
@@ -770,7 +800,7 @@ This matrix is now machine-enforced by `tests/application/test_control_plane_wor
 | manual review-run | `catalog-resolved` | `ReviewRunControlPlaneService` consumes `REVIEW_RUN_WORKLOAD` from the shared catalog and now carries that canonical `WorkloadRecord` directly into run publication instead of restating workload string pairs. |
 | sandbox runtime | `catalog-resolved` | sandbox start paths consume `sandbox_runtime_workload_for_tech_stack(...)` from the shared catalog. |
 | kernel action | `catalog-resolved` | `KernelActionControlPlaneService` consumes `KERNEL_ACTION_WORKLOAD` and now carries that canonical `WorkloadRecord` directly into run publication instead of restating workload string pairs. |
-| governed turn-tool | `catalog-resolved` | `TurnToolControlPlaneService` consumes `TURN_TOOL_WORKLOAD` and now carries that canonical `WorkloadRecord` directly into run publication instead of restating workload string pairs. |
+| governed turn-tool | `catalog-resolved` | `TurnToolControlPlaneService` consumes `TURN_TOOL_WORKLOAD` and now carries that canonical `WorkloadRecord` directly into run publication instead of restating workload string pairs; `orket/application/workflows/turn_executor_control_plane.py` and `orket/application/workflows/turn_tool_dispatcher_control_plane.py` remain adapter-only routing seams that invoke that service without minting workload authority locally. |
 | orchestrator issue dispatch | `catalog-resolved` | `OrchestratorIssueControlPlaneService` consumes `ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD` and now carries that canonical `WorkloadRecord` directly into run publication instead of restating workload string pairs. |
 | orchestrator scheduler mutation | `catalog-resolved` | `OrchestratorSchedulerControlPlaneService` consumes `ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD` and now carries that canonical `WorkloadRecord` through namespace-mutation helpers instead of restating workload string pairs. |
 | orchestrator child workload composition | `catalog-resolved` | `OrchestratorSchedulerControlPlaneService` consumes `ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD` and now carries that canonical `WorkloadRecord` through namespace-mutation helpers instead of restating workload string pairs. |
@@ -784,7 +814,7 @@ Surviving surfaces that remain allowed for now:
 1. extension-manifest workload metadata surfaces under `orket/extensions/`
    Reason: extension manifest parsing now stays separated from canonical control-plane workload authority, the old runtime workload-adapter shim is retired entirely, and extension manifest metadata now lives behind the private `_ExtensionManifestEntry` type with `ExtensionRecord` storing that metadata on `manifest_entries`, installed extension catalog persistence now writes `manifest_entries` and only compatibility-reads legacy persisted `workloads` rows while the external extension manifest contract still truthfully keeps its `workloads` array, the older private `_ExtensionManifestWorkload` noun, the public `ExtensionManifestWorkload` noun, the older `ExtensionWorkloadDescriptor` noun, the old `manifest_workloads` field, the old installed-catalog `workloads` field, and the old manifest `WorkloadRecord` alias retired from active extension surfaces, no outward `ExtensionManifestWorkload` re-export through `orket.extensions`, no outward `ExtensionManifestWorkload` runtime attribute on `orket.extensions.manager`, and no outward generic `ExtensionManager.resolve_workload(...)` or `ExtensionCatalog.resolve_manifest_entry(...)` surface beyond the private manifest-entry helpers `_resolve_manifest_entry(...)`, but these remaining manifest-facing surfaces are still temporary because broader runtime start paths, rocks, and extension entrypoints do not yet consume one universal governed workload authority surface directly.
 2. `orket/runtime/run_start_artifacts.py`
-   Reason: immutable session-scoped runtime bootstrap evidence is still valid as a projection and evidence package. Fresh `run_identity` payloads now explicitly mark that surface as session-bootstrap projection-only evidence and bootstrap reuse plus summary builders, reconstruction, validators, and consumers now reject framing drift or enclosing-summary `run_id` mismatch, but it still cannot truthfully hold invocation-scoped cards epic run ids.
+   Reason: immutable session-scoped runtime bootstrap evidence is still valid as a projection and evidence package. Fresh `run_identity` payloads now explicitly mark that surface as session-bootstrap projection-only evidence with `projection_source=session_bootstrap_artifacts`, and bootstrap reuse plus summary builders, reconstruction, validators, and consumers now reject framing drift or enclosing-summary `run_id` mismatch, but it still cannot truthfully hold invocation-scoped cards epic run ids.
 3. `orket/runtime/run_summary.py`
    Reason: legacy runtime summary output remains an active projection surface for cards runs and other runtime proof paths. Cards summaries now project durable cards-epic run or attempt or step state from persisted records, the dedicated `control_plane` block now fails closed if explicit projection framing drifts, if projected lower-level ids survive after dropping parent run or attempt ids, if projected runs drop core run metadata while still carrying `run_id`, if projected attempts survive without attempt state or a positive attempt ordinal, if projected attempt state or ordinal survives after projected `attempt_id` drops, if projected `current_attempt_id` survives after projected `attempt_id` drops, if projected `current_attempt_id` drifts from projected `attempt_id`, or if projected attempts or steps drift outside the projected run lineage or projected steps survive without `step_kind` or if projected `step_kind` survives after projected `step_id` drops, and shared probe/workload, audit, and training consumers now validate the summary contract before trusting it, but the broader summary surface is not yet demoted lane-wide to projection-only closure behavior.
 4. `orket/application/review/lanes/`
@@ -805,12 +835,13 @@ Surviving surfaces that remain allowed for now:
 Workstream 1 is not complete.
 
 Remaining gaps:
-1. `Workload` still lacks one universal governed start-path authority across every runtime start path; cards, ODR, and extension workload execution now route through the shared resolver, touched catalog-resolved publishers now carry canonical `WorkloadRecord` objects instead of local workload string-pair aliases, `run_card(...)` is now the sole public runtime surface over one normalized dispatcher, the private catalog-local helper names are now de-exported and locked to their exact owner paths, private extension manifest metadata is now mechanically contained inside `orket/extensions/`, interaction-session extension workload validation now uses a boolean `has_manifest_entry(...)` probe instead of a metadata-returning lookup surface, controller dispatch now checks extension child eligibility through the manager-owned boolean probes `has_manifest_entry(...)` and `uses_sdk_contract(...)` instead of resolving private manifest-entry tuples directly, the extension run-action adapter now treats `run_rock` only as explicit legacy alias normalization onto `run_card(...)`, internal rock routing is colder because it no longer survives as a rock-named helper seam, no longer returns a rock-shaped runtime payload, and its default build token no longer carries the older `rock-build-...` prefix, the named runtime recommendation surface now points to `python main.py --card <card_id>` while `--rock` survives only as a legacy alias, live benchmark tooling now also shells through `--card` instead of the legacy alias, no longer emits rock-named runtime identifiers or `run_mode="rock"` in benchmark run metadata, and now defaults benchmark execution-mode metadata to `live-card`, and active runtime callsites now prefer that canonical surface directly, but broader runtime entrypoints and remaining workload-local nouns still are not fully closed.
+1. `Workload` still lacks one universal governed start-path authority across every runtime start path; cards, ODR, and extension workload execution now route through the shared resolver, touched catalog-resolved publishers now carry canonical `WorkloadRecord` objects instead of local workload string-pair aliases, `run_card(...)` is now the sole public runtime surface over one normalized dispatcher, the private catalog-local helper names are now de-exported and locked to their exact owner paths, private extension manifest metadata is now mechanically contained inside `orket/extensions/`, interaction-session extension workload validation now uses a boolean `has_manifest_entry(...)` probe instead of a metadata-returning lookup surface, controller dispatch now checks extension child eligibility through the manager-owned boolean probes `has_manifest_entry(...)` and `uses_sdk_contract(...)` instead of resolving private manifest-entry tuples directly, the governed turn-tool runtime entrypoints in `orket/application/workflows/turn_executor_control_plane.py` and `orket/application/workflows/turn_tool_dispatcher_control_plane.py` are now guarded as exact adapter-only routing seams into `TurnToolControlPlaneService`, the extension run-action adapter now treats `run_rock` only as explicit legacy alias normalization onto `run_card(...)`, internal rock routing is colder because it no longer survives as a rock-named helper seam, no longer returns a rock-shaped runtime payload, and its default build token no longer carries the older `rock-build-...` prefix, the named runtime recommendation surface now points to `python main.py --card <card_id>` while `--rock` survives only as a legacy alias, live benchmark tooling now also shells through `--card` instead of the legacy alias, no longer emits rock-named runtime identifiers or `run_mode="rock"` in benchmark run metadata, and now defaults benchmark execution-mode metadata to `live-card`, and active runtime callsites now prefer that canonical surface directly, but broader runtime entrypoints and remaining workload-local nouns still are not fully closed.
    The matrix is now a closure gate instead of passive inventory, so any new direct workload-authority consumer that is not classified there is blocker drift immediately.
 2. `Run` still has legacy read surfaces under `run_start_artifacts.py`, `run_summary.py`, and observability trees that can still look authoritative.
 3. `Attempt` still is not universal across broader retry and recovery behavior.
 4. `Step` still is not universal across broader runtime execution paths.
 5. `CE-01` and `CE-02` both remain open.
+6. the recorded Workstream 1 `Slice 1A` through `Slice 1D` proof sets were re-verified on `2026-04-08`, follow-on `Slice 1E` and `Slice 1F` completed on `2026-04-08`, and those slices no longer belong at the front of the open convergence queue even though their owning exits remain open
 
 Current blocker on the next obvious `CE-02` cut:
 1. `run_start_artifacts.py` is session-scoped and immutable, while top-level cards epic control-plane run ids are invocation-scoped. Forcing invocation-scoped identity into that surface would create stale or dishonest authority on same-session reentry.
@@ -837,4 +868,4 @@ The following authority docs were updated in the same slices recorded here:
 
 Workstream 1 has materially narrowed `CE-01` and `CE-02`, but it is still open.
 
-The next truthful Workstream 1 work should still prioritize workload convergence ahead of lane-celebration or new breadth: keep remaining workload-local surfaces adapter-only, extend the start-path matrix until every governed start path is catalog-resolved or projection-resolved through the one seam, and then demote the remaining legacy run and attempt read surfaces without pushing invocation-scoped control-plane identity into immutable session-scoped artifacts.
+The recorded Workstream 1 `Slice 1A` through `Slice 1D` proof sets were re-verified on `2026-04-08`, follow-on `Slice 1E` and `Slice 1F` completed on `2026-04-08`, and those slices remain truthful, so they no longer belong at the front of the open convergence queue. Workstream 1 is still open because `CE-01` and `CE-02` remain unresolved, the `Workload` row still reads `conflicting`, and the active lane queue now continues through `Slice 2B`.

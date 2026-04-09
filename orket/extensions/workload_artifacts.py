@@ -6,6 +6,7 @@ from typing import Any
 from orket.capabilities.audio_player import build_audio_player
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
+from orket.capabilities.sdk_static_provider import StaticLLMCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
@@ -16,6 +17,7 @@ from orket_extension_sdk.capabilities import CapabilityRegistry
 from .artifact_provenance import ArtifactProvenanceBuilder
 from .contracts import Workload
 from .reproducibility import ReproducibilityEnforcer
+from .sdk_capability_authorization import FIRST_SLICE_CAPABILITIES
 
 
 class WorkloadArtifacts:
@@ -31,21 +33,28 @@ class WorkloadArtifacts:
         workspace: Path,
         artifact_root: Path,
         input_config: dict[str, Any],
+        admitted_capabilities: set[str] | None = None,
+        extra_first_slice_capabilities: set[str] | None = None,
     ) -> CapabilityRegistry:
         registry = CapabilityRegistry()
         registry.register("workspace.root", str(workspace))
         registry.register("artifact.root", str(artifact_root))
+        narrowed_first_slice = set(admitted_capabilities or ())
+        child_extra_first_slice = set(extra_first_slice_capabilities or ())
+        enabled_first_slice = narrowed_first_slice | child_extra_first_slice
         configured = input_config.get("capabilities")
         if isinstance(configured, dict):
             items = sorted((str(key).strip(), value) for key, value in configured.items())
             for capability_id, provider in items:
+                if admitted_capabilities is not None and capability_id in FIRST_SLICE_CAPABILITIES and capability_id not in enabled_first_slice:
+                    continue
                 if capability_id and not registry.has(capability_id):
-                    registry.register(capability_id, provider)
+                    registry.register(capability_id, WorkloadArtifacts._materialize_configured_provider(capability_id, provider))
         if not registry.has("tts.speak"):
             registry.register("tts.speak", build_tts_provider(input_config=input_config))
         if not registry.has("audio.play"):
             registry.register("audio.play", build_audio_player(input_config=input_config))
-        if not registry.has("model.generate"):
+        if (admitted_capabilities is None or "model.generate" in enabled_first_slice) and not registry.has("model.generate"):
             requested_model = str(input_config.get("model") or input_config.get("model_id") or "").strip()
             raw_temperature = input_config.get("temperature", 0.2)
             try:
@@ -65,7 +74,9 @@ class WorkloadArtifacts:
                     seed=seed,
                 ),
             )
-        if not registry.has("memory.write") or not registry.has("memory.query"):
+        if (admitted_capabilities is None and (not registry.has("memory.write") or not registry.has("memory.query"))) or (
+            admitted_capabilities is not None and enabled_first_slice.intersection({"memory.query", "memory.write"})
+        ):
             raw_memory_settings = input_config.get("memory")
             memory_settings: dict[str, Any] = (
                 {str(key): value for key, value in raw_memory_settings.items()}
@@ -84,9 +95,9 @@ class WorkloadArtifacts:
                 db_path=(workspace / ".orket" / "durable" / "db" / "extension_memory.db"),
                 controls=controls,
             )
-            if not registry.has("memory.write"):
+            if (admitted_capabilities is None or "memory.write" in enabled_first_slice) and not registry.has("memory.write"):
                 registry.register("memory.write", memory_provider)
-            if not registry.has("memory.query"):
+            if (admitted_capabilities is None or "memory.query" in enabled_first_slice) and not registry.has("memory.query"):
                 registry.register("memory.query", memory_provider)
         if not registry.has("speech.transcribe"):
             registry.register("speech.transcribe", HostSTTCapabilityProvider())
@@ -173,3 +184,14 @@ class WorkloadArtifacts:
             return float(value)
         except (TypeError, ValueError):
             return float(default)
+
+    @staticmethod
+    def _materialize_configured_provider(capability_id: str, provider: Any) -> Any:
+        if capability_id == "model.generate" and isinstance(provider, dict):
+            provider_kind = str(provider.get("provider") or provider.get("kind") or "").strip().lower()
+            if provider_kind == "static_llm":
+                return StaticLLMCapabilityProvider(
+                    text=str(provider.get("text") or ""),
+                    model=str(provider.get("model") or "static-test-model"),
+                )
+        return provider

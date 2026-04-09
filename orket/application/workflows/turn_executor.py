@@ -63,6 +63,8 @@ class TurnExecutor:
         middleware: TurnLifecycleInterceptors | None = None,
         control_plane_service: TurnToolControlPlaneService | None = None,
     ) -> None:
+        if tool_gate is None:
+            raise TypeError("TurnExecutor requires tool_gate authority on the canonical turn-tool path")
         self.state = state_machine
         self.tool_gate = tool_gate
         self.workspace = workspace

@@ -13,6 +13,7 @@ from orket.runtime.execution_pipeline import ExecutionPipeline
 @pytest.mark.asyncio
 async def test_run_gitea_state_loop_requires_gitea_mode():
     pipeline = object.__new__(ExecutionPipeline)
+    pipeline._initialized = True
     pipeline.state_backend_mode = "local"
 
     with pytest.raises(ValueError, match="state_backend_mode='gitea'"):
@@ -23,6 +24,7 @@ async def test_run_gitea_state_loop_requires_gitea_mode():
 async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeypatch, tmp_path):
     """Layer: unit. Verifies the Gitea state loop dispatches claimed cards through the canonical card surface."""
     pipeline = object.__new__(ExecutionPipeline)
+    pipeline._initialized = True
     pipeline.state_backend_mode = "gitea"
     pipeline.org = SimpleNamespace(process_rules={})
     called_cards = []

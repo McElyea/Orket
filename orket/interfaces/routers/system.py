@@ -8,6 +8,8 @@ from typing import Any, cast
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from orket.interfaces.operator_view_support import build_provider_status_view, build_system_health_view
+
 
 class SaveFileRequest(BaseModel):
     path: str
@@ -173,6 +175,22 @@ def build_system_router(
             "generated_at": now_local().isoformat(),
             "filters": {"roles": role_filter or None},
         }
+
+    @router.get("/system/provider-status")
+    async def get_provider_status(roles: str | None = None) -> dict[str, Any]:
+        assignments = await get_model_assignments(roles=roles)
+        return build_provider_status_view(list(assignments.get("items") or []))
+
+    @router.get("/system/health-view")
+    async def get_system_health_view(roles: str | None = None) -> dict[str, Any]:
+        heartbeat_payload = await heartbeat()
+        metrics_payload = await get_metrics()
+        provider_status = await get_provider_status(roles=roles)
+        return build_system_health_view(
+            heartbeat=heartbeat_payload,
+            metrics=metrics_payload,
+            provider_status=provider_status,
+        )
 
     @router.get("/system/teams")
     async def get_system_teams(department: str | None = None) -> dict[str, Any]:

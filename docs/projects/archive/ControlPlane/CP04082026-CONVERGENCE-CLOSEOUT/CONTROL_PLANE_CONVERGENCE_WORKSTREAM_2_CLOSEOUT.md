@@ -1,8 +1,10 @@
 # Control-Plane Convergence Workstream 2 Closeout
-Last updated: 2026-03-27
-Status: Partial closeout artifact
+Last updated: 2026-04-08
+Status: Archived partial closeout artifact
 Owner: Orket Core
 Workstream: 2 - Reservation, lease, and resource universalization
+
+Closeout authority: `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CLOSEOUT.md`
 
 ## Objective
 
@@ -127,8 +129,8 @@ Representative tests changed or added:
 37. `tests/integration/test_gitea_state_worker_control_plane.py`
 
 Docs changed:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-2. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_2_CLOSEOUT.md`
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_2_CLOSEOUT.md`
 3. `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
 4. `CURRENT_AUTHORITY.md`
 
@@ -193,6 +195,8 @@ Commands executed for the slices recorded here:
    Result: `9 passed`
 27. `ORKET_DISABLE_SANDBOX=1 python -m pytest -q tests/integration/test_gitea_state_worker_control_plane.py`
    Result: `9 passed`
+28. `python -m pytest -q tests/contracts/test_control_plane_reservation_contract.py tests/contracts/test_control_plane_lease_contract.py tests/interfaces/test_coordinator_api_control_plane.py tests/integration/test_orchestrator_scheduler_control_plane.py tests/integration/test_gitea_state_worker_control_plane.py`
+   Result: `41 passed in 3.42s`
 
 ## Compatibility exits
 
@@ -217,3 +221,18 @@ The main remaining gaps are:
 2. reservation publication is still not universal across every admission and scheduling path
 3. lease publication is still not universal across every governed ownership and mutation path
 4. broader orphan, stale, invalidation, and cleanup handling is still reconstructable mainly through lease history plus subsystem-local state outside the newly-covered resource publication paths
+5. the recorded Workstream 2 `Slice 2A` proof set was re-verified on `2026-04-08`, so that slice no longer belongs at the front of the open convergence queue even though `CE-03` remains open
+
+## Authority-story updates landed with these slices
+
+The following authority docs were updated in the same slices recorded here:
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_2_CLOSEOUT.md`
+3. `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
+4. `CURRENT_AUTHORITY.md`
+
+## Verdict
+
+Workstream 2 has a truthful partial closeout artifact for the recorded shared resource-registry and ownership-convergence slices, but it is still open.
+
+The recorded Workstream 2 `Slice 2A` proof set was re-verified on `2026-04-08` and remains truthful, so it no longer belongs at the front of the open convergence queue. `CE-03` remains open because broader read-side adoption and still-uncovered ownership paths remain outside the recorded closeout claim, so the active follow-on queue now continues through `Slice 2B`.

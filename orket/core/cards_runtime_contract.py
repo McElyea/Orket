@@ -236,12 +236,15 @@ def summarize_cards_runtime_issues(issue_payloads: list[dict[str, Any]]) -> dict
             "seat_coercion",
             "artifact_contract",
             "scenario_truth",
+            "audit_mode",
             "odr_valid",
             "odr_pending_decisions",
             "odr_stop_reason",
             "odr_termination_reason",
             "odr_final_auditor_verdict",
             "odr_artifact_path",
+            "last_valid_round_index",
+            "last_emitted_round_index",
         ):
             if key in row:
                 summary[key] = row[key]
@@ -449,6 +452,7 @@ def _normalize_odr_result(value: Any) -> dict[str, Any]:
     payload = _dict_payload(value)
     normalized: dict[str, Any] = {}
     for key in (
+        "audit_mode",
         "odr_valid",
         "odr_pending_decisions",
         "odr_stop_reason",
@@ -457,6 +461,8 @@ def _normalize_odr_result(value: Any) -> dict[str, Any]:
         "odr_artifact_path",
         "odr_requirement",
         "odr_rounds_completed",
+        "last_valid_round_index",
+        "last_emitted_round_index",
         "odr_accepted",
     ):
         if key not in payload:

@@ -1,8 +1,10 @@
 # Control-Plane Convergence Workstream 6 Closeout
-Last updated: 2026-03-28
-Status: Partial closeout artifact
+Last updated: 2026-04-08
+Status: Archived partial closeout artifact
 Owner: Orket Core
 Workstream: 6 - Final-truth closure unification
+
+Closeout authority: `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CLOSEOUT.md`
 
 ## Objective
 
@@ -57,8 +59,8 @@ Representative tests changed or added:
 4. `tests/integration/test_gitea_state_worker_control_plane.py`
 
 Docs changed:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-2. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_6_CLOSEOUT.md`
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_6_CLOSEOUT.md`
 
 ## Proof executed
 
@@ -69,6 +71,8 @@ Observed result: `success`
 Commands executed for the slices recorded here:
 1. `ORKET_DISABLE_SANDBOX=1 python -m pytest -q tests/contracts/test_control_plane_final_truth_contract.py tests/integration/test_sandbox_terminal_outcome_service.py tests/integration/test_turn_tool_control_plane_closeout.py tests/integration/test_gitea_state_worker_control_plane.py`
    Result: `25 passed`
+2. `python -m pytest -q tests/contracts/test_control_plane_final_truth_contract.py tests/runtime/test_run_summary_packet2.py tests/runtime/test_run_summary_packet1.py tests/integration/test_sandbox_terminal_outcome_service.py tests/integration/test_turn_tool_control_plane_closeout.py tests/integration/test_gitea_state_worker_control_plane.py tests/integration/test_sandbox_orchestrator_lifecycle.py`
+   Result: `54 passed in 6.92s`
 
 ## Compatibility exits
 
@@ -93,13 +97,14 @@ Remaining gaps:
 2. older summary-backed closure surfaces still need to be explicitly projection-only everywhere they survive
 3. closure input wiring from effect, operator, and reconciliation authority is still not universal on all terminal paths
 4. `CE-07` remains open
+5. the representative `Slice 6A` proof set was re-verified on `2026-04-08`, so that slice no longer belongs at the front of the open convergence queue even though `CE-07` remains open
 
 ## Authority-story updates landed with these slices
 
 The following authority docs were updated in this closeout-recording slice:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-2. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_6_CLOSEOUT.md`
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_6_CLOSEOUT.md`
 
 ## Verdict
 
-Workstream 6 now has a truthful partial closeout artifact for the first-class final-truth publication already landed on the main sandbox, governed kernel, governed turn-tool, and Gitea worker terminal paths, but the workstream remains open until terminal closure is universally gated on `FinalTruthRecord` and legacy summary-backed closure surfaces stop acting like alternate authorities.
+Workstream 6 now has a truthful partial closeout artifact for the first-class final-truth publication already landed on the main sandbox, governed kernel, governed turn-tool, and Gitea worker terminal paths, but the workstream remains open until terminal closure is universally gated on `FinalTruthRecord` and legacy summary-backed closure surfaces stop acting like alternate authorities. The representative `Slice 6A` proof set was re-verified on `2026-04-08`, so the next truthful Workstream 6 work now continues through follow-on `Slice 6B`.

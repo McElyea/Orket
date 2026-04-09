@@ -11,8 +11,10 @@ Describe the serious architecture target from the current Orket runtime toward a
 This document is planning rationale and architecture direction.
 It is not the active implementation authority for the lane.
 
-The active follow-on convergence implementation authority is:
-1. [docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md](docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md)
+No active ControlPlane implementation lane remains after the completed convergence closeout.
+
+The latest archived convergence implementation authority is:
+1. [docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md)
 
 The archived packet-v2 implementation authority is:
 1. [docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md)

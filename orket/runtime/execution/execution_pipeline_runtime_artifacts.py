@@ -169,13 +169,19 @@ class ExecutionPipelineRuntimeArtifactsMixin:
     async def _resolve_cards_runtime_artifacts(
         self,
         *,
+        artifacts: dict[str, Any],
         run_id: str,
         session_status: str,
         failure_reason: str | None,
     ) -> dict[str, Any]:
+        if not self._cards_runtime_resolution_applicable(artifacts):
+            return {}
+        existing_summary = artifacts.get("cards_runtime_facts")
+        if isinstance(existing_summary, dict) and existing_summary:
+            return {}
         log_path = self.workspace / "orket.log"
         if not log_path.exists():
-            return {}
+            return self._cards_runtime_resolution_artifact("log_missing")
         issues: dict[str, dict[str, Any]] = {}
         try:
             async with aiofiles.open(log_path, encoding="utf-8") as handle:
@@ -213,10 +219,13 @@ class ExecutionPipelineRuntimeArtifactsMixin:
                         "artifact_contract",
                         "scenario_truth",
                         "odr_active",
+                        "audit_mode",
                         "odr_stop_reason",
                         "odr_valid",
                         "odr_pending_decisions",
                         "odr_artifact_path",
+                        "last_valid_round_index",
+                        "last_emitted_round_index",
                     ):
                         if key not in data:
                             continue
@@ -228,11 +237,14 @@ class ExecutionPipelineRuntimeArtifactsMixin:
                         if isinstance(value, (list, dict)) and not value:
                             continue
                         row[key] = value
-        except OSError:
-            return {}
+        except OSError as exc:
+            return self._cards_runtime_resolution_artifact("resolution_failed", error=exc)
+        if not issues:
+            return self._cards_runtime_resolution_artifact("no_events_found")
         summary = summarize_cards_runtime_issues(list(issues.values()))
         if not summary:
-            return {}
+            return self._cards_runtime_resolution_artifact("no_events_found")
+        summary["resolution_state"] = "resolved"
         summary["stop_reason"] = self._resolve_cards_stop_reason(
             session_status=session_status,
             failure_reason=failure_reason,
@@ -244,6 +256,32 @@ class ExecutionPipelineRuntimeArtifactsMixin:
         if scenario_truth_alignment:
             summary["scenario_truth_alignment"] = scenario_truth_alignment
         return {"cards_runtime_facts": summary}
+
+    @staticmethod
+    def _cards_runtime_resolution_applicable(artifacts: dict[str, Any]) -> bool:
+        run_identity = artifacts.get("run_identity")
+        workload = str(run_identity.get("workload") or "").strip().lower() if isinstance(run_identity, dict) else ""
+        control_plane_run = artifacts.get("control_plane_run_record")
+        workload_id = (
+            str(control_plane_run.get("workload_id") or "").strip().lower()
+            if isinstance(control_plane_run, dict)
+            else ""
+        )
+        return workload.startswith("cards") or workload_id.startswith("cards")
+
+    @staticmethod
+    def _cards_runtime_resolution_artifact(
+        resolution_state: str,
+        *,
+        error: Exception | None = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {"resolution_state": str(resolution_state).strip()}
+        if error is not None:
+            payload["resolution_error"] = {
+                "error_type": type(error).__name__,
+                "error": str(error),
+            }
+        return {"cards_runtime_facts": payload}
 
     @staticmethod
     def _resolve_cards_stop_reason(*, session_status: str, failure_reason: str | None) -> str:

@@ -8,9 +8,9 @@ It is intentionally narrow:
 1. Agent behavior rules remain in `AGENTS.md`.
 2. Contributor workflow rules remain in `docs/CONTRIBUTOR.md`.
 3. This file tracks what is authoritative right now.
-4. Control-plane convergence checkpoint and any explicit reopen sequencing stay in `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`; this file should name the live authority seams, not reproduce lane closeout detail.
+4. ControlPlane implementation sequencing is historical and archived under `docs/projects/archive/ControlPlane/`; this file should name the live authority seams, not reproduce lane closeout detail.
 
-ControlPlane is currently paused after a truthful partial-convergence checkpoint. This file records only live seams and does not imply an active convergence queue.
+The bounded ControlPlane convergence lane completed on 2026-04-08. Its archived implementation authority now lives at `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`, the paired archived requirements companion lives beside it, and `docs/projects/ControlPlane/orket_control_plane_packet/` remains the active ControlPlane requirements authority. This file still records only live seams; no active ControlPlane implementation queue remains in `docs/ROADMAP.md`.
 
 This file does not define:
 1. all supported features,
@@ -68,7 +68,7 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
 42. Canonical authenticated interaction cancel (`/v1/interactions/{session_id}/cancel`) now publishes durable interaction-scoped `OperatorActionRecord` `cancel_run` commands (session-scope or turn-scope targeting) with authenticated non-secret actor fingerprints on the default API interaction-control path via `orket/interfaces/routers/sessions.py` and `orket/interfaces/api.py`
 43. Canonical top-level cards epic execution now publishes one invocation-scoped control-plane `RunRecord`, one initial `AttemptRecord`, and one invocation-start `StepRecord` per `run_epic(...)` call, with durable policy/config snapshots derived from the canonical cards workload contract and terminal or waiting lifecycle transitions reflected back into run-ledger artifacts plus an additive `run_summary.json` `control_plane` projection that reads those durable records instead of inventing separate cards-epic run truth, and that legacy summary block now explicitly self-identifies as `projection_only` with source `control_plane_records` and fails closed if that framing drifts, if lower-level projected control-plane ids survive without the parent ids they depend on, if a projected cards run drops core run metadata while still carrying `run_id`, if projected attempt ids survive without attempt state or a positive attempt ordinal, if projected attempt state or ordinal survives after projected `attempt_id` drops, if projected `current_attempt_id` survives after projected `attempt_id` drops, if projected `current_attempt_id` drifts from projected `attempt_id` when both are present, if projected attempt ids drift outside the projected run lineage, or if projected step ids drift outside the projected run lineage, survive without `step_kind`, or keep projected `step_kind` after projected `step_id` drops via `orket/application/services/cards_epic_control_plane_service.py`, `orket/runtime/execution_pipeline.py`, `orket/runtime/run_summary.py`, and `orket/runtime/run_summary_control_plane.py`
 44. Canonical manual review-run execution now publishes one first-class control-plane `RunRecord`, one initial `AttemptRecord`, and one `review_run_start` `StepRecord` per review invocation, with durable policy/config snapshots derived from the canonical review-run workload contract and surfaced back through `run_manifest.json` plus review result and CLI `control_plane` summary projection fields that read from those durable records, now explicitly self-identify as `projection_only` with source `control_plane_records`, and fail closed if that framing drifts, if projected run or attempt or step refs drift from the enclosing review result run identity and manifest control-plane refs, if lower-level projected attempt or step refs survive after parent run or attempt refs drop, if projected attempt state or ordinal survives after projected `attempt_id` drops, if projected `step_kind` survives after projected `step_id` drops, if projected attempt or step refs drift outside the projected run lineage, if the embedded manifest drops control-plane refs still carried by the returned summary, or if that returned summary keeps projected run, attempt, or step ids while dropping projected run metadata, attempt state or ordinal, or step kind; the embedded review-result `manifest` surface now also validates those persisted execution-authority markers before leaving the process and fails closed if they drift, if it omits those returned control-plane refs, if its attempt or step refs drift outside the declared `control_plane_run_id` lineage, or if top-level review-run identity is empty, while `orket review diff`, `orket review pr`, and `orket review files` now surface that serialization failure as structured `E_REVIEW_RUN_FAILED` output instead of an uncaught exception; fresh review manifests plus persisted deterministic-decision and model-assisted-critique artifacts now also declare `execution_state_authority=control_plane_records`, mark lane outputs non-authoritative for execution state, carry canonical review-run run/attempt/step refs, require non-empty manifest and lane-payload `run_id`, reject fresh manifest or lane-payload `control_plane_run_id` that drifts from the artifact `run_id`, reject fresh manifest or lane attempt or step refs that drift outside the declared `control_plane_run_id` lineage, require lane-payload `control_plane_run_id` / `control_plane_attempt_id` / `control_plane_step_id` whenever the manifest declares them, reject lower-level manifest or lane control-plane refs that survive after parent run or attempt refs drop, and fail closed if those execution-authority markers drift; `orket review replay --run-dir`, direct `orket review replay --snapshot ... --policy ...` when those files target canonical bundle artifacts from the same run directory, the review answer-key scoring path, the review consistency-signature path, and the persisted `check_1000_consistency.py` validator now also validate persisted review-bundle authority markers plus required manifest and lane-payload `run_id`, required lane-payload `control_plane_*` refs when the manifest declares them, lower-level manifest or lane control-plane refs that survive without parent run or attempt refs, manifest or lane attempt or step refs that drift outside the declared `control_plane_run_id` lineage, and persisted manifest and lane-payload run or control-plane refs before treating bundle artifacts as trustworthy evidence and fail closed if those markers or refs drift, with replay, scoring, and consistency now consuming shared validated review-bundle payload or artifact loaders instead of validating markers and then rereading lane JSON or replay inputs ad hoc, review answer-key scoring now also emits explicitly versioned `reviewrun_answer_key_score_v1` reports with required top-level `run_id` plus fixture/snapshot/policy provenance fields, required nested deterministic/model-assisted score blocks whose aggregate totals must stay aligned with the per-issue rows they summarize, explicit model reasoning/fix weights needed to prove reasoning and fix subtotals against those same rows, required per-issue row shape, and disabled model blocks that cannot carry derived model activity, and workload-side code-review probe score consumers now fail closed if that score-report contract drifts at the nested block, aggregate, issue-row, or top-level provenance level instead of trusting ad hoc dict shape, workload-side code-review probe bundles that reuse that shared scoring seam now also emit aligned bundle-local `run_id` values on deterministic and model-assisted lane payloads, failing closed before artifact persistence when that bundle-local `run_id` is empty so the same validation rejects missing or drifted bundle run identity instead of silently accepting lane-local omissions, the review consistency report producer now also validates its own report contract before write through the shared consistency-report validator so drifted `contract_version` or other malformed contract framing never persists as review-local JSON while truthful failed outcomes can still persist as failed reports, and the persisted `check_1000_consistency.py` validator now also fails closed before trusting report JSON when `contract_version` drifts, when those default, strict, replay, or baseline report `run_id` values are empty, when required nested baseline/default/strict/replay signature digests, deterministic finding-row code/severity/message/path/span/details shape, deterministic-lane version, executed-check lists, or truncation framing drift, or when scenario-local `truncation_check` digests, byte counts, or boolean flags drift instead of trusting shallow `ok` or counter fields alone; API run-detail/session-status views, governance dashboard seed metrics, protocol/sqlite run-ledger parity consumers, protocol/sqlite run-ledger parity-campaign rows, protocol rollout evidence bundle summaries, protocol enforce-window signoff payloads, protocol enforce-window capture manifests, and protocol cutover-readiness summaries now also consume one shared validated run-ledger projection family, while the SQLite run-ledger adapter preserves malformed persisted `summary_json` or `artifact_json` payloads long enough for that seam to detect them, and rollout/signoff/cutover now also share one protocol invalid-projection detail helper instead of carrying divergent local parsers, so malformed surfaces fail closed instead of leaking raw payloads, disappearing inside the adapter, being normalized into false-green parity, or being collapsed into generic parity-campaign mismatch counts inside campaign rows, rollout summaries, signoff gates, capture manifests, or cutover-readiness outputs; human CLI output now also surfaces durable review run/attempt/step refs and start-step kind from that same control-plane summary instead of collapsing the surface to state-only text, so deterministic/model-assisted lane outputs do not masquerade as standalone run or attempt or step truth via `orket/application/services/review_run_control_plane_service.py`, `orket/application/review/control_plane_projection.py`, `orket/application/review/bundle_validation.py`, `orket/application/review/run_service.py`, `orket/application/review/models.py`, `orket/application/services/run_ledger_summary_projection.py`, `orket/runtime/run_ledger_projection.py`, `orket/runtime/run_ledger_parity.py`, `orket/runtime/protocol_ledger_parity_campaign.py`, `orket/adapters/storage/async_repositories.py`, `orket/interfaces/orket_bundle_cli.py`, `scripts/reviewrun/score_answer_key.py`, `scripts/reviewrun/score_answer_key_contract.py`, `scripts/reviewrun/run_1000_consistency.py`, `scripts/reviewrun/check_1000_consistency.py`, `scripts/workloads/code_review_probe.py`, `scripts/workloads/code_review_probe_support.py`, `scripts/workloads/code_review_probe_reporting.py`, `scripts/protocol/parity_projection_support.py`, `scripts/protocol/publish_protocol_rollout_artifacts.py`, `scripts/protocol/record_protocol_enforce_window_signoff.py`, `scripts/protocol/run_protocol_enforce_window_capture.py`, and `scripts/protocol/check_protocol_enforce_cutover_readiness.py`
-45. Canonical `run_start_artifacts` bootstrap evidence remains immutable and session-scoped, and fresh `run_identity.json` payloads now explicitly mark that surface as `identity_scope=session_bootstrap` plus `projection_only=true`; bootstrap reuse plus legacy run-summary builders, finalize helpers, reconstruction, and summary-contract validators now also fail closed if that framing drifts or if `run_identity.run_id` mismatches the enclosing summary `run_id`, and finalize-time bootstrap validation now degrades cleanly instead of aborting closeout while excluding transient invalid bootstrap identity from degraded summary output, so session-bootstrap evidence does not masquerade as invocation-scoped control-plane run authority via `orket/runtime/run_start_artifacts.py`, `orket/runtime/run_summary.py`, and `orket/runtime/execution_pipeline.py`
+45. Canonical `run_start_artifacts` bootstrap evidence remains immutable and session-scoped, and fresh `run_identity.json` payloads now explicitly mark that surface as `identity_scope=session_bootstrap`, `projection_source=session_bootstrap_artifacts`, and `projection_only=true`; bootstrap reuse plus legacy run-summary builders, finalize helpers, reconstruction, and summary-contract validators now also fail closed if that framing drifts or if `run_identity.run_id` mismatches the enclosing summary `run_id`, and finalize-time bootstrap validation now degrades cleanly instead of aborting closeout while excluding transient invalid bootstrap identity from degraded summary output, so session-bootstrap evidence does not masquerade as invocation-scoped control-plane run authority via `orket/runtime/run_start_artifacts.py`, `orket/runtime/run_summary.py`, and `orket/runtime/execution_pipeline.py`
 46. Canonical `retry_classification_policy` now explicitly declares `projection_only=true` with `projection_source=retry_classification_rules` plus `attempt_history_authoritative=false`, run-start contract capture now validates that framing before persisting `retry_classification_policy.json`, the retry-policy checker now normalizes malformed report output into a fail-closed error report before diff-ledger write, rejects report payloads whose embedded snapshot is not itself a valid retry-policy snapshot, falls back to the canonical retry-policy snapshot when malformed producer output omits or drifts that embedded snapshot, and the runtime-truth acceptance gate now validates both the retry-policy report contract and the persisted run-level `retry_classification_policy.json` artifact before trusting top-level `ok`, `signal_count`, or mere file presence while preserving explicit fail-closed error detail from validated retry-policy reports instead of collapsing them into generic false state, making that runtime contract snapshot classification guidance only instead of hidden attempt-history authority via `orket/runtime/retry_classification_policy.py`, `orket/runtime/run_start_contract_artifacts.py`, `scripts/governance/check_retry_classification_policy.py`, and `scripts/governance/run_runtime_truth_acceptance_gate.py`
 47. Canonical sandbox lifecycle now publishes first-class shared `ResourceRecord` snapshots on create, create-accepted, active health verification, renew, reacquire, reconciliation, terminal, and cleaned transitions, authenticated sandbox cancel now records a durable operator command carrying the canonical shared sandbox `resource_id` in `affected_resource_refs`, and sandbox operator views now read the latest resource id, kind, current state, and orphan classification from that durable store while also surfacing those latest operator-action affected transition/resource refs via `orket/application/services/sandbox_control_plane_operator_service.py`, `orket/application/services/sandbox_control_plane_resource_service.py`, `orket/application/services/sandbox_runtime_lifecycle_service.py`, `orket/application/services/sandbox_lifecycle_reconciliation_service.py`, `orket/application/services/sandbox_terminal_outcome_service.py`, `orket/application/services/sandbox_runtime_cleanup_service.py`, `orket/application/services/sandbox_lifecycle_view_service.py`, `orket/application/services/control_plane_publication_service.py`, and `orket/adapters/storage/async_control_plane_record_repository.py`
 48. Canonical script-side legacy `run_summary.json` consumers now fail closed before trusting malformed projection framing through one shared validated run-summary loader: shared probe/workload helpers, MAR audit completeness and compare surfaces, and training-data extraction all consume that loader and reject summary payloads whose projection-backed blocks drift away from explicit projection semantics via `scripts/common/run_summary_support.py`, `scripts/probes/probe_support.py`, `scripts/audit/audit_support.py`, `scripts/audit/compare_two_runs.py`, and `scripts/training/extract_training_data.py`
@@ -99,6 +99,8 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
 71. Canonical API runtime ownership now lives on the FastAPI app-scoped context `app.state.api_runtime_context` in `orket/interfaces/api.py` with the context contract defined in `orket/interfaces/api_runtime_context.py`; `create_api_app()` replaces that app-scoped context for the active project root, while module-level `engine`, `api_runtime_host`, `stream_bus`, `interaction_manager`, `extension_manager`, and `extension_runtime_service` remain minimal compatibility aliases that mirror or are adopted into that context and are not the authoritative owner, and the env-sensitive `StreamBus` plus `InteractionManager` remain lazy so request-time runtime flags still control their live behavior truthfully
 72. Canonical engine control-plane composition now builds through `orket/orchestration/engine_services.py::build_engine_control_plane_services(...)`, async kernel control-plane publication and response augmentation now live in `orket/orchestration/engine_kernel_async_service.py::KernelAsyncControlPlaneService`, the default orchestrator issue-dispatch lifecycle truth remains owned by `orket/application/services/orchestrator_issue_control_plane_service.py` rather than `orket/orchestration/engine.py`, and engine-targeted replay is now explicitly diagnostics-only through `OrchestrationEngine.replay_turn_diagnostics(...)` while `replay_turn(...)` remains only as a compatibility wrapper over the same artifact-backed diagnostics surface; the touched API and CLI replay entrypoints now call `replay_turn_diagnostics(...)` explicitly
 73. Canonical runtime-verification support artifacts now use `agent_output/verification/runtime_verification.json` as the latest support-only verifier record, `agent_output/verification/runtime_verification_index.json` as the stable history index, and `agent_output/verification/runtime_verifier_records/<run_id>/<issue_id>/turn_<turn_index>_retry_<retry_count>.json` as the preserved per-record family; those artifacts must record `artifact_role=support_verification_evidence`, `artifact_authority=support_only`, `authored_output=false`, `overall_evidence_class`, and `evidence_summary` over `syntax_only`, `command_execution`, `behavioral_verification`, and `not_evaluated` together with run, issue, turn, and retry provenance, and runtime-summary or MAR paths must not promote the verifier artifact to the primary authored output by default
+74. Canonical Tool Execution Gate authority now lives in `docs/specs/TOOL_EXECUTION_GATE_V1.md`; the shipped first slice closes the supported `run_card(...) -> TurnExecutor -> ToolDispatcher` path plus normalized extension actions that re-enter `run_card(...)`, requires construction-time `tool_gate` authority on that supported path, keeps direct `ToolDispatcher.execute_tools(...)`, direct `ToolBox.execute(...)`, and direct card-family method invocation inventory-only internal seams, keeps direct `Agent.run(...)` as retained legacy compatibility that now fail-closes before any direct tool call when `tool_gate` authority is missing, keeps SDK capability registry invocation out of scope under `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`, and fixes the canonical audit command and stable output path at `python scripts/security/build_tool_gate_audit.py --strict` and `benchmarks/results/security/tool_gate_audit.json`
+75. Canonical Card Viewer/Runner operator surface now lives in `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`; the first truthful operator slice reads through `GET /v1/cards/view`, `GET /v1/cards/{card_id}/view`, `GET /v1/runs/view`, `GET /v1/runs/{session_id}/view`, `GET /v1/system/provider-status`, and `GET /v1/system/health-view`, uses `POST /v1/system/run-active` as the canonical run/rerun action, admits lifecycle categories `prebuild_blocked`, `artifact_run_failed`, `artifact_run_completed_unverified`, `artifact_run_verified`, and `degraded_completed`, and admits card filter buckets `open`, `running`, `blocked`, `review`, `terminal_failure`, and `completed` via `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/operator_view_models.py`, `orket/interfaces/operator_view_support.py`, `orket/interfaces/routers/cards.py`, `orket/interfaces/routers/runs.py`, `orket/interfaces/routers/system.py`, and `orket/interfaces/api.py`
 
 ## Machine-Readable Authority Map (v1)
 
@@ -193,20 +195,58 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_V1.md",
         "docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_V1.md"
       ],
-      "operating_principles_source": "docs/specs/ORKET_OPERATING_PRINCIPLES.md",
-      "determinism_gate_policy_source": "docs/specs/ORKET_DETERMINISM_GATE_POLICY.md",
-      "terraform_plan_reviewer_v1_contract_source": "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md",
-      "local_prompting_contract_source": "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
-      "run_evidence_graph_contract_source": "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
-      "sources": [
-        "docs/README.md",
-        "docs/ROADMAP.md",
-        "docs/CONTRIBUTOR.md"
-      ]
-    },
-    "supervisor_runtime_session_boundary": {
-      "continuity_identifier": "session_id",
-      "session_start_route": "POST /v1/interactions/sessions",
+        "operating_principles_source": "docs/specs/ORKET_OPERATING_PRINCIPLES.md",
+        "determinism_gate_policy_source": "docs/specs/ORKET_DETERMINISM_GATE_POLICY.md",
+        "card_viewer_runner_surface_contract_source": "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md",
+        "terraform_plan_reviewer_v1_contract_source": "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md",
+        "local_prompting_contract_source": "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
+        "run_evidence_graph_contract_source": "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
+        "sources": [
+          "docs/README.md",
+          "docs/ROADMAP.md",
+          "docs/CONTRIBUTOR.md",
+          "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md"
+        ]
+      },
+      "card_viewer_runner_surface": {
+        "contract_source": "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md",
+        "cards_list_route": "GET /v1/cards/view",
+        "card_detail_route": "GET /v1/cards/{card_id}/view",
+        "runs_list_route": "GET /v1/runs/view",
+        "run_detail_route": "GET /v1/runs/{session_id}/view",
+        "provider_status_route": "GET /v1/system/provider-status",
+        "system_health_route": "GET /v1/system/health-view",
+        "run_action_route": "POST /v1/system/run-active",
+        "lifecycle_categories": [
+          "prebuild_blocked",
+          "artifact_run_failed",
+          "artifact_run_completed_unverified",
+          "artifact_run_verified",
+          "degraded_completed"
+        ],
+        "card_filter_tokens": [
+          "open",
+          "running",
+          "blocked",
+          "review",
+          "terminal_failure",
+          "completed"
+        ],
+        "sources": [
+          "CURRENT_AUTHORITY.md",
+          "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md",
+          "docs/API_FRONTEND_CONTRACT.md",
+          "orket/interfaces/operator_view_models.py",
+          "orket/interfaces/operator_view_support.py",
+          "orket/interfaces/routers/cards.py",
+          "orket/interfaces/routers/runs.py",
+          "orket/interfaces/routers/system.py",
+          "orket/interfaces/api.py"
+        ]
+      },
+      "supervisor_runtime_session_boundary": {
+        "continuity_identifier": "session_id",
+        "session_start_route": "POST /v1/interactions/sessions",
       "turn_attachment_route": "POST /v1/interactions/{session_id}/turns",
       "inspection_routes": [
         "GET /v1/sessions/{session_id}",
@@ -316,6 +356,34 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "tests/integration/test_orchestrator_issue_control_plane.py"
       ]
     },
+    "tool_execution_gate_surface": {
+      "contract_source": "docs/specs/TOOL_EXECUTION_GATE_V1.md",
+      "supported_path": [
+        "orket/runtime/execution/execution_pipeline_card_dispatch.py::ExecutionPipelineCardDispatchMixin.run_card",
+        "orket/application/workflows/turn_executor.py::TurnExecutor.execute_turn",
+        "orket/application/workflows/turn_tool_dispatcher.py::ToolDispatcher.execute_tools"
+      ],
+      "normalized_primary_path": "orket/extensions/runtime.py::ExtensionEngineAdapter.execute_action",
+      "construction_time_gate_requirement": true,
+      "legacy_fail_closed_surface": "orket/agents/agent.py::Agent.run",
+      "legacy_fail_closed_rule": "block_before_any_direct_tool_call_without_tool_gate",
+      "internal_only_inventory": [
+        "orket/application/workflows/turn_tool_dispatcher.py::ToolDispatcher.execute_tools",
+        "orket/tools.py::ToolBox.execute",
+        "orket/runtime/execution/execution_pipeline_card_dispatch.py::ExecutionPipelineCardDispatchMixin._run_issue_entry"
+      ],
+      "out_of_scope_lane": "docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md",
+      "audit_operator_path": "python scripts/security/build_tool_gate_audit.py --strict",
+      "audit_output_path": "benchmarks/results/security/tool_gate_audit.json",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/specs/TOOL_EXECUTION_GATE_V1.md",
+        "docs/architecture/event_taxonomy.md",
+        "scripts/security/build_tool_gate_audit.py",
+        "tests/application/test_tool_gate_enforcement_closure.py",
+        "tests/scripts/test_build_tool_gate_audit.py"
+      ]
+    },
     "runtime_verification_support_artifacts": {
       "latest_path": "agent_output/verification/runtime_verification.json",
       "history_index_path": "agent_output/verification/runtime_verification_index.json",
@@ -393,6 +461,8 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
       "terraform_plan_review_live_smoke_output_path": ".orket/durable/observability/terraform_plan_review_live_smoke.json",
       "local_model_coding_challenge_operator_path": "python scripts/benchmarks/run_local_model_coding_challenge.py --provider <provider> --model <model_id> --epic challenge_workflow_runtime",
       "local_model_coding_challenge_output_path": "benchmarks/staging/General/local_model_coding_challenge_report.json",
+      "tool_gate_audit_operator_path": "python scripts/security/build_tool_gate_audit.py --strict",
+      "tool_gate_audit_output_path": "benchmarks/results/security/tool_gate_audit.json",
       "prompt_reforger_gemma_inventory_operator_path": "python scripts/prompt_lab/run_prompt_reforger_gemma_tool_use_inventory.py",
       "prompt_reforger_gemma_inventory_output_path": "benchmarks/staging/General/prompt_reforger_gemma_tool_use_inventory.json",
       "prompt_reforger_gemma_score_operator_path": "python scripts/prompt_lab/score_prompt_reforger_gemma_tool_use_corpus.py --run-summary <run_summary> --observability-root <observability_root>",
@@ -407,9 +477,11 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "docs/CONTRIBUTOR.md",
         "docs/projects/PromptReforgerToolCompatibility/PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md",
         "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
+        "docs/specs/TOOL_EXECUTION_GATE_V1.md",
         "docs/architecture/event_taxonomy.md",
         "docs/process/PUBLISHED_ARTIFACTS_POLICY.md",
         "scripts/observability/emit_run_evidence_graph.py",
+        "scripts/security/build_tool_gate_audit.py",
         "scripts/prompt_lab/run_prompt_reforger_gemma_tool_use_inventory.py",
         "scripts/prompt_lab/run_functiongemma_tool_call_judge.py",
         "scripts/prompt_lab/run_prompt_reforger_gemma_tool_use_cycle.py",
@@ -554,7 +626,7 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
     "control_plane_workload_authority": {
       "canonical_catalog": "orket/application/services/control_plane_workload_catalog.py",
       "external_authority_seam": "orket/application/services/control_plane_workload_catalog.py::resolve_control_plane_workload",
-      "matrix_gate_doc": "docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md",
+      "matrix_gate_doc": "docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md",
       "authority_inputs": [
         "catalog_workload",
         "workload_contract_v1",
@@ -571,13 +643,15 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "tests/application/test_control_plane_workload_authority_governance.py",
         "tests/runtime/test_cards_workload_adapter.py"
       ],
-      "note": "Only resolve_control_plane_workload(...) is an externally blessed workload-authority seam. The governed start-path matrix in the Workstream 1 closeout is a closure gate, so governance fails if a non-test module consumes workload authority from the catalog without explicit matrix coverage, if touched catalog-resolved publishers reintroduce local workload_id/workload_version aliases, if non-CLI runtime callsites drift back onto run_epic(...), run_issue(...), or run_rock(...) compatibility wrappers, if public wrappers stop collapsing to run_card(...), or if the canonical run_card(...) dispatcher starts minting workload authority directly instead of routing into internal entrypoints. The canonical public runtime execution surface is run_card(...); run_issue(...), run_epic(...), and run_rock(...) survive only as thin convenience wrappers, with the legacy CLI --rock alias kept hidden and routed directly to run_card(...) as compatibility-only CLI input. Cards, ODR, and extension workload execution now resolve through the catalog seam, the cards, ODR, and extension start paths use catalog-local helper resolution instead of assembling WorkloadAuthorityInput(...) in runtime entrypoints, controller dispatch now checks extension child eligibility through the manager-owned boolean probes has_manifest_entry(...) and uses_sdk_contract(...) instead of resolving private manifest-entry tuples directly, internal rock routing remains routing-only debt through the generic epic-collection path, extension manifest metadata remains private internal metadata under orket/extensions/, and broader runtime start-path workload authority is still not universal.",
+      "note": "Only resolve_control_plane_workload(...) is an externally blessed workload-authority seam. The governed start-path matrix in the Workstream 1 closeout is a closure gate, so governance fails if a non-test module consumes workload authority from the catalog without explicit matrix coverage, if touched catalog-resolved publishers reintroduce local workload_id/workload_version aliases, if non-CLI runtime callsites drift back onto run_epic(...), run_issue(...), or run_rock(...) compatibility wrappers, if public wrappers stop collapsing to run_card(...), if the canonical run_card(...) dispatcher starts minting workload authority directly instead of routing into internal entrypoints, or if governed turn-tool runtime entrypoints drift away from the exact adapter-only routing helpers in orket/application/workflows/turn_executor_control_plane.py and orket/application/workflows/turn_tool_dispatcher_control_plane.py that invoke TurnToolControlPlaneService without minting workload authority locally. The canonical public runtime execution surface is run_card(...); run_issue(...), run_epic(...), and run_rock(...) survive only as thin convenience wrappers, with the legacy CLI --rock alias kept hidden and routed directly to run_card(...) as compatibility-only CLI input. Cards, ODR, and extension workload execution now resolve through the catalog seam, the cards, ODR, and extension start paths use catalog-local helper resolution instead of assembling WorkloadAuthorityInput(...) in runtime entrypoints, controller dispatch now checks extension child eligibility through the manager-owned boolean probes has_manifest_entry(...) and uses_sdk_contract(...) instead of resolving private manifest-entry tuples directly, internal rock routing remains routing-only debt through the generic epic-collection path, extension manifest metadata remains private internal metadata under orket/extensions/, and broader runtime start-path workload authority is still not universal.",
       "sources": [
         "CURRENT_AUTHORITY.md",
         "orket/application/services/control_plane_workload_catalog.py",
         "orket/application/services/kernel_action_control_plane_service.py",
         "orket/application/services/review_run_control_plane_service.py",
         "orket/application/services/turn_tool_control_plane_service.py",
+        "orket/application/workflows/turn_executor_control_plane.py",
+        "orket/application/workflows/turn_tool_dispatcher_control_plane.py",
         "orket/application/services/orchestrator_issue_control_plane_service.py",
         "orket/application/services/orchestrator_scheduler_control_plane_service.py",
         "orket/application/services/orchestrator_scheduler_control_plane_mutation.py",
@@ -589,7 +663,7 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "orket/runtime/epic_run_orchestrator.py",
         "scripts/odr/run_arbiter.py",
         "tests/application/test_control_plane_workload_authority_governance.py",
-        "docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md",
+        "docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md",
         "docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md"
       ]
     },
@@ -712,6 +786,12 @@ Agent model-family resolution uses `orket/agents/model_family_registry.py`, defa
 
 Legacy `Agent.run()` has an opt-in `ControlPlaneAuthorityService` journal seam. Without `journal`, tool effects are log-only; with `journal`, successful and failed tool executions publish `EffectJournalEntryRecord` payloads using `ToolCallErrorClass` and context-provided run authority, and journal publication failures are not silently swallowed.
 
+The canonical supported runtime tool-execution gate story currently centers on the `run_card(...)` family collapsing into `TurnExecutor` and the governed `ToolDispatcher.execute_tools(...)` seam. On that path, pre-execution admission is composed inside the dispatcher from `ToolGate.validate(...)`, dispatcher policy checks in `orket/application/workflows/turn_tool_dispatcher_support.py::tool_policy_violation(...)`, and bounded approval gating; direct `ToolDispatcher` use is internal-only.
+
+Legacy `Agent.run()` direct tool execution remains noncanonical compatibility debt rather than a co-equal supported runtime gate surface because it still accepts an optional `tool_gate` and only gates when one is present.
+
+Extension engine actions that normalize onto `run_card(...)` inherit that canonical governed runtime path, while SDK capability registry invocations inside extension workloads remain a separate authorization problem rather than part of the canonical tool-dispatch authority story.
+
 `EnvironmentConfig` still warns and drops unknown keys at the compatibility Pydantic boundary, but authoritative runtime environment loading now fails closed with `E_ENVIRONMENT_CONFIG_UNKNOWN_KEYS:<keys>` before model work when a touched runtime path supplies undeclared keys.
 
 Session transcripts are schema-bound through `TranscriptTurn` / `ToolCallRecord` at `orket/session.py`; legacy dict rows are defensively migrated on `Session` construction and serialized back as versioned transcript turns.
@@ -721,6 +801,8 @@ Session transcripts are schema-bound through `TranscriptTurn` / `ToolCallRecord`
 Runtime implementation modules are physically grouped under bounded `orket/runtime/config/`, `orket/runtime/evidence/`, `orket/runtime/execution/`, `orket/runtime/policy/`, `orket/runtime/registry/`, and `orket/runtime/summary/` subpackages with explicit package `__all__` surfaces. The old flat `orket.runtime.<module>` imports are one-release alias shims that preserve compatibility while resolving to the migrated implementation modules; new direct cross-domain imports must go through package public surfaces and are guarded by `tests/runtime/test_runtime_subpackage_boundaries.py`.
 
 SDK extension workloads run in a child interpreter through `orket/extensions/sdk_workload_runner.py` and `orket/extensions/sdk_workload_subprocess.py`. SDK workload loading statically rejects undeclared standard-library imports, and subprocess execution installs both a manifest-declared stdlib `sys.meta_path` finder and scoped `__import__` guard so dynamic undeclared imports fail before extension code can reuse already-loaded host modules. Legacy workloads retain compatibility behavior: internal Orket imports remain blocked, and stdlib allowlist enforcement applies only when the legacy manifest declares allowed modules.
+
+The shipped SDK capability-authorization first slice is host-owned through `host_authorized_capability_registry_v1` at `orket/extensions/workload_executor.py`, `orket/extensions/sdk_capability_authorization.py`, `orket/extensions/workload_artifacts.py`, `orket/extensions/sdk_capability_runtime.py`, `orket/extensions/sdk_workload_runner.py`, and `orket/extensions/sdk_workload_subprocess.py`; the parent now emits a host-issued authorization envelope, the child revalidates that envelope before workload code executes, and the governed runtime seam fail-closes `model.generate`, `memory.query`, and `memory.write` with distinct `undeclared_use`, `denied`, `admitted_unavailable`, and `authorization_drift` truth while preserving `declared_capabilities`, `admitted_capabilities`, `instantiated_capabilities`, and `used_capabilities` distinctly in provenance and the canonical audit artifact at `benchmarks/results/extensions/extension_capability_audit.json` generated by `python scripts/extensions/build_extension_capability_audit.py --strict`.
 
 Factory-built agents from `orket/agents/agent_factory.py` fail closed to the union of tools declared by the seat's configured roles. Seats without roles or with missing role configs raise `AgentConfigurationError` and emit error events instead of inheriting the full toolbox.
 

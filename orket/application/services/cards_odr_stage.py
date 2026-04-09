@@ -25,6 +25,20 @@ def _coerce_int(value: object) -> int | None:
     return None
 
 
+def _normalize_model_identity(value: object) -> str:
+    return str(value or "").strip().lower()
+
+
+def _resolve_audit_mode(*, selected_model: str, auditor_model: str) -> str:
+    if (
+        _normalize_model_identity(selected_model)
+        and _normalize_model_identity(auditor_model)
+        and _normalize_model_identity(selected_model) != _normalize_model_identity(auditor_model)
+    ):
+        return "independent"
+    return "self_audit_fallback"
+
+
 def _build_odr_task(*, issue: Any, cards_runtime: dict[str, Any]) -> str:
     artifact_contract = dict(cards_runtime.get("artifact_contract") or {})
     required_write_paths = list(artifact_contract.get("required_write_paths") or [])
@@ -203,16 +217,18 @@ async def run_cards_odr_prebuild(
         max_rounds_accepted=_odr_max_rounds_accepted(issue),
     )
     artifact_path = f"observability/{str(run_id).strip()}/{str(getattr(issue, 'id', '')).strip()}/odr_refinement.json"
+    auditor_model = str(
+        getattr(auditor_client, "model", "")
+        or getattr(getattr(auditor_client, "provider", None), "model", "")
+        or selected_model
+    )
     artifact_payload = {
         "schema_version": "cards.odr.prebuild.v1",
         "run_id": str(run_id),
         "issue_id": str(getattr(issue, "id", "")),
         "selected_model": str(selected_model),
-        "auditor_model": str(
-            getattr(auditor_client, "model", "")
-            or getattr(getattr(auditor_client, "provider", None), "model", "")
-            or selected_model
-        ),
+        "auditor_model": auditor_model,
+        "audit_mode": _resolve_audit_mode(selected_model=selected_model, auditor_model=auditor_model),
         "execution_profile": str(cards_runtime.get("execution_profile") or ""),
         "odr_active": True,
         "task": task,
@@ -234,6 +250,9 @@ async def run_cards_odr_prebuild(
         "odr_artifact_path": artifact_path,
         "odr_requirement": str(result.get("final_requirement") or "").strip(),
         "odr_rounds_completed": int(result.get("rounds_completed") or 0),
+        "audit_mode": _resolve_audit_mode(selected_model=selected_model, auditor_model=auditor_model),
+        "last_valid_round_index": int(result.get("last_valid_round_index") or 0),
+        "last_emitted_round_index": int(result.get("last_emitted_round_index") or 0),
         "odr_max_rounds": effective_max_rounds,
         "odr_max_rounds_accepted": _odr_max_rounds_accepted(issue),
         "odr_accepted": accepted,

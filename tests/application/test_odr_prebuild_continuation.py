@@ -174,7 +174,10 @@ async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
         return odr_result
 
     monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", lambda skill, dialect, **kwargs: "SYSTEM")
-    monkeypatch.setattr("orket.application.workflows.orchestrator_ops.run_cards_odr_prebuild", _fake_odr_prebuild)
+    monkeypatch.setattr(
+        "orket.application.services.orchestrator_turn_preparation_service.run_cards_odr_prebuild",
+        _fake_odr_prebuild,
+    )
 
     orch.memory = _Memory()
     orch.model_client_node = _ModelClientNode()
@@ -317,7 +320,10 @@ async def test_execute_issue_turn_uses_configured_odr_auditor_model(
         return odr_result
 
     monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", lambda skill, dialect, **kwargs: "SYSTEM")
-    monkeypatch.setattr("orket.application.workflows.orchestrator_ops.run_cards_odr_prebuild", _fake_odr_prebuild)
+    monkeypatch.setattr(
+        "orket.application.services.orchestrator_turn_preparation_service.run_cards_odr_prebuild",
+        _fake_odr_prebuild,
+    )
 
     model_client_node = _ModelClientNode()
     orch.memory = _Memory()

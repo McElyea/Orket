@@ -329,6 +329,7 @@ class EpicRunFinalizer:
         )
         if alignment:
             summary["scenario_truth_alignment"] = alignment
+        summary["resolution_state"] = "resolved"
         return summary
 
     async def _finalize_failure_run(

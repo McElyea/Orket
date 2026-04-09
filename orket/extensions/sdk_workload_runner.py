@@ -4,12 +4,27 @@ import asyncio
 import json
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from orket_extension_sdk.result import WorkloadResult
 
 from .models import ExtensionRecord, _ExtensionManifestEntry
+from .sdk_capability_authorization import SdkAuthorizationEnvelope, SdkCapabilityAuditCase
+
+
+@dataclass(frozen=True)
+class SdkSubprocessRunResult:
+    workload_result: WorkloadResult
+    capability_report: dict[str, Any]
+
+
+class SdkSubprocessRunError(RuntimeError):
+    def __init__(self, message: str, *, error_code: str = "", capability_report: dict[str, Any] | None = None) -> None:
+        super().__init__(message)
+        self.error_code = error_code
+        self.capability_report = dict(capability_report or {})
 
 
 async def run_sdk_workload_in_subprocess(
@@ -18,7 +33,10 @@ async def run_sdk_workload_in_subprocess(
     workload: _ExtensionManifestEntry,
     sdk_ctx: Any,
     input_payload: dict[str, Any],
-) -> WorkloadResult:
+    authorization_envelope: SdkAuthorizationEnvelope,
+    audit_case: SdkCapabilityAuditCase,
+    child_extra_capabilities: tuple[str, ...] = (),
+) -> SdkSubprocessRunResult:
     """Run SDK workload code outside the host interpreter with manifest import limits."""
     request_payload = {
         "extension": {
@@ -41,6 +59,9 @@ async def run_sdk_workload_in_subprocess(
             "config": dict(sdk_ctx.config),
         },
         "input_payload": dict(input_payload),
+        "authorization_envelope": authorization_envelope.to_payload(),
+        "audit_case": audit_case.as_dict(),
+        "child_extra_capabilities": list(child_extra_capabilities),
     }
     try:
         request_bytes = json.dumps(request_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -62,9 +83,6 @@ async def run_sdk_workload_in_subprocess(
             stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await process.communicate()
-        if process.returncode != 0:
-            detail = _trim_process_output(stderr or stdout)
-            raise RuntimeError(f"E_SDK_WORKLOAD_SUBPROCESS_FAILED: {detail}")
         try:
             result_bytes = await asyncio.to_thread(result_path.read_bytes)
         except FileNotFoundError as exc:
@@ -74,7 +92,18 @@ async def run_sdk_workload_in_subprocess(
         result_payload = json.loads(result_bytes.decode("utf-8"))
     except json.JSONDecodeError as exc:
         raise RuntimeError("E_SDK_WORKLOAD_SUBPROCESS_RESULT_INVALID_JSON") from exc
-    return WorkloadResult.model_validate(result_payload)
+    if process.returncode != 0:
+        detail = str(result_payload.get("error_message") or _trim_process_output(stderr or stdout))
+        error_code = str(result_payload.get("error_code") or "")
+        raise SdkSubprocessRunError(
+            f"E_SDK_WORKLOAD_SUBPROCESS_FAILED: {detail}",
+            error_code=error_code,
+            capability_report=dict(result_payload.get("capability_report", {})),
+        )
+    return SdkSubprocessRunResult(
+        workload_result=WorkloadResult.model_validate(result_payload["workload_result"]),
+        capability_report=dict(result_payload.get("capability_report", {})),
+    )
 
 
 def _trim_process_output(payload: bytes, *, limit: int = 4000) -> str:

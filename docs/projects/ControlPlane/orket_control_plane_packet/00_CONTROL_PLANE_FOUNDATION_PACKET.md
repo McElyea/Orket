@@ -90,7 +90,7 @@ Cross-coupled design that allows later surfaces to redefine earlier nouns is pro
 ### Planning companions
 
 1. `09_OS_MASTER_PLAN.md`
-2. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
 3. `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`
 
 ## Cross-packet invariants
@@ -187,10 +187,12 @@ This packet is ready for implementation planning because it now includes:
 4. explicit operator evidence boundaries
 5. the missing companion requirement families needed by the master plan
 
-## Active implementation authority
+## Implementation authority history
 
-The active follow-on convergence implementation authority is:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+No active ControlPlane implementation lane remains after the completed convergence closeout.
+
+The latest archived convergence implementation authority is:
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
 
 The archived packet-v2 implementation authority for this lane is:
 1. `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`

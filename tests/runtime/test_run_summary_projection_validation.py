@@ -15,6 +15,7 @@ def _run_identity(*, run_id: str) -> dict[str, object]:
         "workload": "summary-projection-validation",
         "start_time": _STARTED_AT,
         "identity_scope": "session_bootstrap",
+        "projection_source": "session_bootstrap_artifacts",
         "projection_only": True,
     }
 
@@ -228,6 +229,7 @@ def test_run_summary_rejects_projection_blocks_without_projection_only(
     ("field_name", "field_value", "expected_error"),
     [
         ("identity_scope", "invocation_scope", "run_summary_run_identity_identity_scope_invalid"),
+        ("projection_source", "legacy_bootstrap", "run_summary_run_identity_projection_source_invalid"),
         ("projection_only", False, "run_summary_run_identity_projection_only_invalid"),
     ],
 )
@@ -256,6 +258,7 @@ def test_run_summary_rejects_run_identity_projection_drift(
     ("field_name", "field_value", "expected_error"),
     [
         ("identity_scope", "invocation_scope", "run_summary_run_identity_identity_scope_invalid"),
+        ("projection_source", "legacy_bootstrap", "run_summary_run_identity_projection_source_invalid"),
         ("projection_only", False, "run_summary_run_identity_projection_only_invalid"),
     ],
 )

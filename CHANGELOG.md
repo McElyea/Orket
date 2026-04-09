@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.43] - 2026-04-09 - "The ControlPlane Archive And Capability Gate Cut"
+
+### Added
+- **Capability Gate Authorities**: Added the archived Extension Capability Authorization closeout packet, the durable `EXTENSION_CAPABILITY_AUTHORIZATION_V1`, `TOOL_EXECUTION_GATE_V1`, and `CARD_VIEWER_RUNNER_SURFACE_V1` specs, matching contract deltas, operator view models and router surfaces, and audit builders for extension capability and tool-gate evidence.
+- **Regression Coverage**: Added targeted regression coverage for operator views, capability authorization, tool-gate closure, local provider context reset, runtime artifact projection, and the new cards/operator runner surfaces.
+
+### Changed
+- **ControlPlane Roadmap Truth**: Archived the completed ControlPlane convergence lane under `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/`, removed it from `Priority Now`, and kept the accepted control-plane packet as reference-only active authority that now requires an explicit roadmap reopen for any future implementation work.
+- **Governed Workload And Operator Surfaces**: Hardened workload execution and artifact provenance flow across cards ODR staging, workload executor/subprocess handling, run-start identity projection, run-summary/runtime-artifact generation, and operator-visible API surfaces so capability and projection authority stay explicit on the touched paths.
+- **Runtime And Interface Alignment**: Updated API/frontend contracts, event taxonomy, supervisor runtime validation references, local provider behavior, logging, and extension/runtime support paths so the code, tests, and active authority docs stay synchronized after the capability-gate and runner-surface changes.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. The touched capability-gate and operator-view surfaces are internal/runtime-governed updates and future ControlPlane implementation work now requires an explicit roadmap reopen.
+
 ## [0.4.42] - 2026-04-08 - "The BR04082026 Truthful Closeout Cut"
 
 ### Added

@@ -107,7 +107,12 @@ class OrchestrationEngine:
         self.card_archiver = CardArchiver(self.cards)
         self.kernel_gateway_facade = KernelGatewayFacade(self.kernel_gateway)
         self.replay_diagnostics = ReplayDiagnosticsService(self.workspace_root)
-        self.kernel_async_control_plane = KernelAsyncControlPlaneService(
+        self.kernel_async_control_plane = self._build_kernel_async_control_plane()
+        self._initialize_lock = asyncio.Lock()
+        self._initialized = False
+
+    def _build_kernel_async_control_plane(self) -> KernelAsyncControlPlaneService:
+        return KernelAsyncControlPlaneService(
             gateway_facade=self.kernel_gateway_facade,
             kernel_action_control_plane=self.kernel_action_control_plane,
             kernel_action_control_plane_operator=self.kernel_action_control_plane_operator,
@@ -116,8 +121,6 @@ class OrchestrationEngine:
             control_plane_publication=self.control_plane_publication,
             get_approval=lambda approval_id: self.get_approval(approval_id),
         )
-        self._initialize_lock = asyncio.Lock()
-        self._initialized = False
 
     async def initialize(self) -> None:
         if self._initialized:
@@ -388,18 +391,21 @@ class OrchestrationEngine:
         return self.kernel_gateway_facade.admit_proposal(request)
 
     async def kernel_admit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
+        self.kernel_async_control_plane = self._build_kernel_async_control_plane()
         return await self.kernel_async_control_plane.admit_proposal_async(request)
 
     def kernel_commit_proposal(self, request: dict[str, Any]) -> dict[str, Any]:
         return self.kernel_gateway_facade.commit_proposal(request)
 
     async def kernel_commit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
+        self.kernel_async_control_plane = self._build_kernel_async_control_plane()
         return await self.kernel_async_control_plane.commit_proposal_async(request)
 
     def kernel_end_session(self, request: dict[str, Any]) -> dict[str, Any]:
         return self.kernel_gateway_facade.end_session(request)
 
     async def kernel_end_session_async(self, request: dict[str, Any]) -> dict[str, Any]:
+        self.kernel_async_control_plane = self._build_kernel_async_control_plane()
         return await self.kernel_async_control_plane.end_session_async(request)
 
     def kernel_list_ledger_events(self, request: dict[str, Any]) -> dict[str, Any]:

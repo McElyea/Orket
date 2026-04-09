@@ -7,11 +7,17 @@ import importlib.abc
 import inspect
 import json
 import sys
-import traceback
 from pathlib import Path
 from typing import Any
 
 from orket.extensions.import_guard import ExtensionImportGuard
+from orket.extensions.sdk_capability_authorization import (
+    SdkAuthorizationEnvelope,
+    SdkCapabilityAuditCase,
+    capability_family,
+    revalidate_child_capabilities,
+)
+from orket.extensions.sdk_capability_runtime import build_governed_sdk_capability_registry
 from orket.extensions.workload_artifacts import WorkloadArtifacts
 from orket.extensions.workload_loader import WorkloadLoader
 from orket_extension_sdk.result import WorkloadResult
@@ -74,29 +80,30 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     request_path = Path(args[0])
     result_path = Path(args[1])
-    try:
-        request = json.loads(request_path.read_bytes().decode("utf-8"))
-        result = _run_request(request)
-        result_path.write_bytes(json.dumps(result.model_dump(mode="json"), sort_keys=True).encode("utf-8"))
+    request = json.loads(request_path.read_bytes().decode("utf-8"))
+    result = _run_request(request)
+    result_path.write_bytes(json.dumps(result, sort_keys=True).encode("utf-8"))
+    if bool(result.get("ok", False)):
         return 0
-    except Exception as exc:
-        sys.stderr.write(f"{type(exc).__name__}: {exc}\n")
-        traceback.print_exc(file=sys.stderr)
-        return 1
+    sys.stderr.write(f"{result.get('error_code')}: {result.get('error_message')}\n")
+    return 1
 
 
-def _run_request(request: dict[str, Any]) -> WorkloadResult:
+def _run_request(request: dict[str, Any]) -> dict[str, Any]:
     extension = dict(request["extension"])
     workload = dict(request["workload"])
     context = dict(request["context"])
     extension_root = Path(str(extension["path"])).resolve()
     entrypoint = str(workload["entrypoint"])
-    module_name, attr_name = WorkloadLoader.parse_sdk_entrypoint(entrypoint)
     allowed_stdlib_modules = {
         str(item).split(".", 1)[0]
         for item in extension.get("allowed_stdlib_modules", [])
         if str(item).strip()
     }
+    context_or_failure = _build_context(extension, workload, context, request)
+    if "ok" in context_or_failure:
+        return context_or_failure
+    sdk_context, tracker = context_or_failure
 
     sys.path.insert(0, str(extension_root))
     sys.meta_path.insert(
@@ -107,16 +114,28 @@ def _run_request(request: dict[str, Any]) -> WorkloadResult:
     )
     builtins.__import__ = _guarded_import(import_hook, builtins.__import__)
     importlib.import_module = _guarded_import_module(import_hook, importlib.import_module)
-    module = importlib.import_module(module_name)
-    target = getattr(module, attr_name, None)
-    run_callable = _resolve_run_callable(target, entrypoint)
-    sdk_context = _build_context(extension, workload, context)
-    result = run_callable(sdk_context, dict(request.get("input_payload", {})))
-    if inspect.isawaitable(result):
-        result = asyncio.run(result)
-    if not isinstance(result, WorkloadResult):
-        raise ValueError("E_SDK_WORKLOAD_RESULT_INVALID")
-    return result
+    try:
+        module_name, attr_name = WorkloadLoader.parse_sdk_entrypoint(entrypoint)
+        module = importlib.import_module(module_name)
+        target = getattr(module, attr_name, None)
+        run_callable = _resolve_run_callable(target, entrypoint)
+        result = run_callable(sdk_context, dict(request.get("input_payload", {})))
+        if inspect.isawaitable(result):
+            result = asyncio.run(result)
+        if not isinstance(result, WorkloadResult):
+            raise ValueError("E_SDK_WORKLOAD_RESULT_INVALID")
+    except Exception as exc:
+        return {
+            "ok": False,
+            "error_code": type(exc).__name__,
+            "error_message": str(exc),
+            "capability_report": tracker.build_report(),
+        }
+    return {
+        "ok": True,
+        "workload_result": result.model_dump(mode="json"),
+        "capability_report": tracker.build_report(),
+    }
 
 
 def _resolve_run_callable(target: Any, entrypoint: str) -> Any:
@@ -138,14 +157,80 @@ def _resolve_run_callable(target: Any, entrypoint: str) -> Any:
     raise ValueError(f"E_SDK_ENTRYPOINT_INVALID: {entrypoint}")
 
 
-def _build_context(extension: dict[str, Any], workload: dict[str, Any], context: dict[str, Any]) -> WorkloadContext:
+def _build_context(
+    extension: dict[str, Any],
+    workload: dict[str, Any],
+    context: dict[str, Any],
+    request: dict[str, Any],
+) -> tuple[WorkloadContext, Any] | dict[str, Any]:
     workspace_root = Path(str(context["workspace_root"]))
     output_dir = Path(str(context["output_dir"]))
     input_config = dict(context.get("config", {}))
-    capability_registry = WorkloadArtifacts.build_sdk_capability_registry(
+    envelope = SdkAuthorizationEnvelope.from_payload(dict(request["authorization_envelope"]))
+    audit_case = SdkCapabilityAuditCase(**dict(request.get("audit_case") or {}))
+    raw_registry = WorkloadArtifacts.build_sdk_capability_registry(
         workspace=workspace_root,
         artifact_root=output_dir,
         input_config=input_config,
+        admitted_capabilities=set(envelope.admitted_capabilities),
+        extra_first_slice_capabilities={
+            str(item).strip() for item in list(request.get("child_extra_capabilities", [])) if str(item).strip()
+        },
+    )
+    try:
+        instantiated_capabilities = revalidate_child_capabilities(envelope=envelope, raw_registry=raw_registry)
+    except ValueError as exc:
+        drift_caps = sorted(set(raw_registry._providers).intersection({"memory.query", "memory.write", "model.generate"}) - set(envelope.admitted_capabilities))
+        return {
+            "ok": False,
+            "error_code": "E_SDK_CAPABILITY_AUTHORIZATION_DRIFT",
+            "error_message": str(exc),
+            "capability_report": {
+                "authorization_surface": "host_authorized_capability_registry_v1",
+                "authorization_basis": envelope.authorization_basis,
+                "policy_version": envelope.policy_version,
+                "authorization_digest": envelope.authorization_digest,
+                "declared_capabilities": list(envelope.declared_capabilities),
+                "admitted_capabilities": list(envelope.admitted_capabilities),
+                "instantiated_capabilities": sorted(str(capability_id) for capability_id in raw_registry._providers),
+                "used_capabilities": [],
+                "audit_case": audit_case.as_dict(),
+                "call_records": [
+                    {
+                        "capability_id": capability_id,
+                        "capability_family": capability_family(capability_id),
+                        "declared": capability_id in envelope.declared_capabilities,
+                        "admitted": capability_id in envelope.admitted_capabilities,
+                        "observed_result": "blocked",
+                        "side_effect_observed": False,
+                        "denial_class": "authorization_drift",
+                        "error_code": "E_SDK_CAPABILITY_AUTHORIZATION_DRIFT",
+                        "error_message": str(exc),
+                    }
+                    for capability_id in drift_caps
+                ],
+                "blocked_calls": [
+                    {
+                        "capability_id": capability_id,
+                        "capability_family": capability_family(capability_id),
+                        "declared": capability_id in envelope.declared_capabilities,
+                        "admitted": capability_id in envelope.admitted_capabilities,
+                        "observed_result": "blocked",
+                        "side_effect_observed": False,
+                        "denial_class": "authorization_drift",
+                        "error_code": "E_SDK_CAPABILITY_AUTHORIZATION_DRIFT",
+                        "error_message": str(exc),
+                    }
+                    for capability_id in drift_caps
+                ],
+            },
+        }
+    capability_registry, tracker = build_governed_sdk_capability_registry(
+        raw_registry=raw_registry,
+        envelope=envelope,
+        workspace_root=workspace_root,
+        audit_case=audit_case,
+        instantiated_capabilities=instantiated_capabilities,
     )
     return WorkloadContext(
         extension_id=str(extension["extension_id"]),
@@ -157,7 +242,7 @@ def _build_context(extension: dict[str, Any], workload: dict[str, Any], context:
         capabilities=capability_registry,
         seed=int(context.get("seed", 0) or 0),
         config=input_config,
-    )
+    ), tracker
 
 
 def _is_importlib_bootstrap_frame(path: Path) -> bool:

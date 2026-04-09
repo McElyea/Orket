@@ -74,6 +74,8 @@ async def test_run_cards_odr_prebuild_uses_issue_odr_max_rounds_override(
             "task": str(kwargs["task"]),
             "rounds": [],
             "rounds_completed": 1,
+            "last_valid_round_index": 1,
+            "last_emitted_round_index": 1,
             "stop_reason": "MAX_ROUNDS",
             "history_v": [],
             "history_rounds": [{"round": 1, "pending_decision_count": 0}],
@@ -109,6 +111,9 @@ async def test_run_cards_odr_prebuild_uses_issue_odr_max_rounds_override(
 
     assert captured_kwargs["max_rounds"] == 1
     assert captured_kwargs["auditor_client"] is model_client
+    assert summary["audit_mode"] == "self_audit_fallback"
+    assert summary["last_valid_round_index"] == 1
+    assert summary["last_emitted_round_index"] == 1
     assert summary["odr_max_rounds"] == 1
     assert summary["odr_accepted"] is True
     assert summary["odr_termination_reason"] == "round_cap"
@@ -131,6 +136,8 @@ async def test_run_cards_odr_prebuild_records_completed_event_for_valid_max_roun
             "task": str(kwargs["task"]),
             "rounds": [],
             "rounds_completed": 8,
+            "last_valid_round_index": 8,
+            "last_emitted_round_index": 8,
             "stop_reason": "MAX_ROUNDS",
             "history_v": [],
             "history_rounds": [{"round": 8, "pending_decision_count": 0}],
@@ -169,6 +176,9 @@ async def test_run_cards_odr_prebuild_records_completed_event_for_valid_max_roun
     )
 
     assert summary["odr_accepted"] is True
+    assert summary["audit_mode"] == "independent"
+    assert summary["last_valid_round_index"] == 8
+    assert summary["last_emitted_round_index"] == 8
     assert summary["odr_stop_reason"] == "MAX_ROUNDS"
     assert issue.params["odr_result"]["odr_accepted"] is True
     assert save_spy.calls
@@ -176,6 +186,7 @@ async def test_run_cards_odr_prebuild_records_completed_event_for_valid_max_roun
     artifact = _load_json(tmp_path / summary["odr_artifact_path"])
     assert artifact["accepted"] is True
     assert artifact["auditor_model"] == "qwen2.5:7b"
+    assert artifact["audit_mode"] == "independent"
     assert artifact["odr_stop_reason"] == "MAX_ROUNDS"
     assert artifact["termination_reason"] == "round_cap"
     assert artifact["final_auditor_verdict"] == "approved"

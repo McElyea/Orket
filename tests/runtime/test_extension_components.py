@@ -22,6 +22,7 @@ from orket.extensions.manifest_parser import ManifestParser
 from orket.extensions.models import CONTRACT_STYLE_LEGACY
 from orket.extensions.reproducibility import ReproducibilityEnforcer
 from orket.extensions.runtime import ExtensionEngineAdapter, RunContext
+from orket.extensions.sdk_capability_authorization import HostCapabilityControls, build_host_authorization_envelope
 from orket.extensions.workload_artifacts import WorkloadArtifacts
 from orket.extensions.workload_executor import WorkloadExecutor
 from orket.extensions.workload_loader import WorkloadLoader
@@ -433,3 +434,33 @@ def test_extension_catalog_manifest_lookup_is_internal_only() -> None:
     """Layer: unit. Verifies extension catalog no longer exposes a public-looking manifest lookup method."""
     assert not hasattr(ExtensionCatalog, "resolve_manifest_entry")
     assert hasattr(ExtensionCatalog, "_resolve_manifest_entry")
+
+
+def test_build_host_authorization_envelope_can_narrow_first_slice_admission() -> None:
+    """Layer: unit. Verifies the host envelope can deny declared first-slice capabilities without mutating declaration truth."""
+    envelope = build_host_authorization_envelope(
+        extension_id="demo.ext",
+        workload_id="sdk_v1",
+        run_id="sdk-run",
+        declared_capabilities=["memory.query", "memory.write", "tts.speak"],
+        controls=HostCapabilityControls(admit_only=("memory.query",)),
+    )
+
+    assert envelope.declared_capabilities == ("memory.query", "memory.write", "tts.speak")
+    assert envelope.admitted_capabilities == ("memory.query", "tts.speak")
+    assert envelope.authorization_digest.startswith("sha256:")
+
+
+def test_workload_artifacts_build_sdk_capability_registry_respects_admitted_first_slice_capabilities(tmp_path: Path) -> None:
+    """Layer: unit. Verifies raw child instantiation does not auto-register denied first-slice providers."""
+    artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
+    registry = artifacts.build_sdk_capability_registry(
+        workspace=tmp_path / "workspace",
+        artifact_root=tmp_path / "artifacts",
+        input_config={},
+        admitted_capabilities={"memory.query"},
+    )
+
+    assert registry.has("memory.query") is True
+    assert registry.has("memory.write") is False
+    assert registry.has("model.generate") is False

@@ -738,7 +738,7 @@ async def test_run_sdk_workload_provenance_verbose_mode_includes_raw_payloads(tm
 
 
 @pytest.mark.asyncio
-async def test_run_sdk_workload_missing_required_capability_fails_closed(tmp_path):
+async def test_run_sdk_workload_declared_invalid_capability_fails_closed(tmp_path):
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo, required_capabilities=["clock.now"])
@@ -747,7 +747,7 @@ async def test_run_sdk_workload_missing_required_capability_fails_closed(tmp_pat
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
-    with pytest.raises(ValueError, match="E_SDK_CAPABILITY_MISSING"):
+    with pytest.raises(ValueError, match="E_SDK_CAPABILITY_DECLARED_INVALID"):
         await manager.run_workload(
             workload_id="sdk_v1",
             input_config={"seed": 5},

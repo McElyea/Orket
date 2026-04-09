@@ -51,6 +51,7 @@ from orket.interfaces.api_runtime_context import (
 from orket.interfaces.routers.cards import build_cards_router
 from orket.interfaces.routers.extension_runtime import build_extension_runtime_router
 from orket.interfaces.routers.kernel import build_kernel_router
+from orket.interfaces.routers.runs import build_runs_router
 from orket.interfaces.routers.sessions import build_sessions_router
 from orket.interfaces.routers.settings import build_settings_router
 from orket.interfaces.routers.streaming import register_streaming_routes
@@ -733,6 +734,7 @@ async def get_version() -> dict[str, str]:
 
 v1_router.include_router(build_kernel_router(lambda: _get_engine()))
 v1_router.include_router(build_cards_router(lambda: _get_engine(), lambda: api_runtime_node))
+v1_router.include_router(build_runs_router(lambda: _get_engine()))
 v1_router.include_router(
     build_settings_router(
         settings_order=SETTINGS_ORDER,

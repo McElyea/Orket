@@ -1,8 +1,10 @@
 # Control-Plane Convergence Workstream 4 Closeout
-Last updated: 2026-03-28
-Status: Partial closeout artifact
+Last updated: 2026-04-08
+Status: Archived partial closeout artifact
 Owner: Orket Core
 Workstream: 4 - Checkpoint and recovery authority universalization
+
+Closeout authority: `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CLOSEOUT.md`
 
 ## Objective
 
@@ -61,8 +63,8 @@ Representative tests changed or added:
 6. `tests/integration/test_turn_executor_control_plane.py`
 
 Docs changed:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-2. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_4_CLOSEOUT.md`
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_4_CLOSEOUT.md`
 
 ## Proof executed
 
@@ -73,6 +75,8 @@ Observed result: `success`
 Commands executed for the slices recorded here:
 1. `ORKET_DISABLE_SANDBOX=1 python -m pytest -q tests/contracts/test_control_plane_recovery_contract.py tests/application/test_sandbox_control_plane_checkpoint_service.py tests/application/test_kernel_action_control_plane_pre_effect_recovery.py tests/integration/test_sandbox_runtime_recovery_service.py tests/application/test_turn_tool_control_plane_preflight_guards.py tests/integration/test_turn_executor_control_plane.py`
    Result: `42 passed`
+2. `python -m pytest -q tests/contracts/test_control_plane_recovery_contract.py tests/application/test_sandbox_control_plane_checkpoint_service.py tests/application/test_kernel_action_control_plane_pre_effect_recovery.py tests/integration/test_sandbox_runtime_recovery_service.py tests/application/test_turn_tool_control_plane_preflight_guards.py tests/integration/test_turn_executor_control_plane.py`
+   Result: `42 passed in 4.62s`
 
 ## Compatibility exits
 
@@ -97,13 +101,14 @@ Remaining gaps:
 2. untouched resume paths still need explicit proof that snapshot or saved-state presence alone cannot authorize continuation
 3. broader restart-policy and non-sandbox recovery behavior still does not publish one universal recovery authority family
 4. `CE-05` remains open
+5. the representative `Slice 4A` proof set was re-verified on `2026-04-08`, so that slice no longer belongs at the front of the open convergence queue even though `CE-05` remains open
 
 ## Authority-story updates landed with these slices
 
 The following authority docs were updated in this closeout-recording slice:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-2. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_4_CLOSEOUT.md`
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_4_CLOSEOUT.md`
 
 ## Verdict
 
-Workstream 4 now has a truthful partial closeout artifact for the checkpoint and recovery slices already landed on the sandbox reclaimable path, the governed turn pre-effect recovery path, and the Gitea worker claimed-card path, but the workstream remains open until supervisor-owned checkpoint and recovery authority is universal across the broader governed runtime.
+Workstream 4 now has a truthful partial closeout artifact for the checkpoint and recovery slices already landed on the sandbox reclaimable path, the governed turn pre-effect recovery path, and the Gitea worker claimed-card path, but the workstream remains open until supervisor-owned checkpoint and recovery authority is universal across the broader governed runtime. The representative `Slice 4A` proof set was re-verified on `2026-04-08`, so the next truthful Workstream 4 work now continues through follow-on `Slice 4B`.

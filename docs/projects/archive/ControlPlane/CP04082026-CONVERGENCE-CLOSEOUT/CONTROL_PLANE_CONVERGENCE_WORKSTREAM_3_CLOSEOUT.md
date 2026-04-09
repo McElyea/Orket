@@ -1,8 +1,10 @@
 # Control-Plane Convergence Workstream 3 Closeout
-Last updated: 2026-03-27
-Status: Partial closeout artifact
+Last updated: 2026-04-08
+Status: Archived partial closeout artifact
 Owner: Orket Core
 Workstream: 3 - Effect journal default-path convergence
+
+Closeout authority: `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CLOSEOUT.md`
 
 ## Objective
 
@@ -51,8 +53,8 @@ Representative tests changed or added:
 14. `tests/scripts/test_common_run_summary_support.py`
 
 Docs changed:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-2. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_3_CLOSEOUT.md`
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_3_CLOSEOUT.md`
 3. `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
 4. `CURRENT_AUTHORITY.md`
 5. `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md`
@@ -80,6 +82,8 @@ Commands executed for the slices recorded here:
    Result: `2 passed, 10 skipped`
 6. `ORKET_DISABLE_SANDBOX=1 python -m pytest -q tests/scripts/test_common_run_summary_support.py tests/scripts/test_truthful_runtime_live_proof_summary_validation.py tests/live/test_run_summary_support.py`
    Result: `6 passed`
+7. `python -m pytest -q tests/contracts/test_control_plane_effect_journal_contract.py tests/application/test_control_plane_publication_service.py tests/runtime/test_protocol_receipt_materializer.py tests/runtime/test_run_summary_packet1.py tests/runtime/test_run_summary_packet2.py tests/runtime/test_run_summary_artifact_provenance.py`
+   Result: `47 passed in 0.31s`
 
 ## Compatibility exits
 
@@ -106,11 +110,12 @@ Remaining gaps:
 2. broader legacy receipt/artifact surfaces still survive beyond the protocol receipt materializer
 3. final-truth publication still is not universally consuming effect history directly
 4. `CE-04` remains open
+5. the representative `Slice 3A` proof set was re-verified on `2026-04-08`, so that slice no longer belongs at the front of the open convergence queue even though `CE-04` remains open
 
 ## Authority-story updates landed with these slices
 
 The following authority docs were updated in the same slices recorded here:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
 2. `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
 3. `CURRENT_AUTHORITY.md`
 
@@ -118,4 +123,4 @@ The following authority docs were updated in the same slices recorded here:
 
 Workstream 3 has started with a truthful projection-only demotion of legacy protocol receipt replay and broader fail-closed handling for legacy summary-backed proof consumers, including governance recorders and live proof tests, but it is still open.
 
-The next truthful Workstream 3 work should push explicit projection-only framing and durable effect-journal consumption further into the remaining legacy artifact and read-model surfaces.
+The representative `Slice 3A` proof set was re-verified on `2026-04-08` and remains truthful, so it no longer belongs at the front of the open convergence queue. The next truthful Workstream 3 work now continues through follow-on `Slice 3B`.

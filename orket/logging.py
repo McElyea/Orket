@@ -222,6 +222,7 @@ RUNTIME_EVENT_SCHEMA_VERSION = "v1"
 RUNTIME_EVENT_ARTIFACT_EVENTS = {
     "determinism_violation", "packet1_emission_failure", "session_start", "session_end", "turn_start",
     "turn_complete", "turn_failed", "runtime_verifier_completed", "guard_retry_scheduled", "guard_terminal_failure",
+    "sdk_capability_call_start", "sdk_capability_call_blocked", "sdk_capability_call_result", "sdk_capability_call_exception",
 }
 
 
@@ -232,9 +233,19 @@ def _build_runtime_event(event: str, data: dict[str, Any], role: str) -> dict[st
         "event": str(event or "").strip(),
         "role": str(role or payload.get("role") or "system"),
         "session_id": str(payload.get("session_id") or ""),
+        "run_id": str(payload.get("run_id") or ""),
         "issue_id": str(payload.get("issue_id") or ""),
         "turn_index": int(payload.get("turn_index") or 0),
         "turn_trace_id": str(payload.get("turn_trace_id") or ""),
+        "extension_id": str(payload.get("extension_id") or ""),
+        "workload_id": str(payload.get("workload_id") or ""),
+        "capability_id": str(payload.get("capability_id") or ""),
+        "capability_family": str(payload.get("capability_family") or ""),
+        "authorization_basis": str(payload.get("authorization_basis") or ""),
+        "declared": payload.get("declared"),
+        "admitted": payload.get("admitted"),
+        "side_effect_observed": payload.get("side_effect_observed"),
+        "denial_class": str(payload.get("denial_class") or ""),
         "selected_model": str(payload.get("selected_model") or ""),
         "prompt_id": str(payload.get("prompt_id") or ""),
         "prompt_version": str(payload.get("prompt_version") or ""),

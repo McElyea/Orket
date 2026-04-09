@@ -18,6 +18,7 @@ def _run_identity_path(*, workspace: Path, run_id: str) -> Path:
     ("field_name", "field_value", "expected_error"),
     [
         ("identity_scope", "invocation_scope", "E_RUN_IDENTITY_SCHEMA:identity_scope_invalid"),
+        ("projection_source", "legacy_bootstrap", "E_RUN_IDENTITY_SCHEMA:projection_source_invalid"),
         ("projection_only", False, "E_RUN_IDENTITY_SCHEMA:projection_only_invalid"),
     ],
 )

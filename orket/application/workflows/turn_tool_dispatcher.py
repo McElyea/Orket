@@ -74,6 +74,8 @@ class ToolDispatcher:
         tool_validation_error_factory: Callable[[list[str]], Exception] | None = None,
         control_plane_service: TurnToolControlPlaneService | None = None,
     ) -> None:
+        if tool_gate is None:
+            raise TypeError("ToolDispatcher requires tool_gate authority before tool execution can begin")
         self.tool_gate = tool_gate
         self.middleware = middleware
         self.workspace = workspace

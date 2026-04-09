@@ -43,7 +43,7 @@ def test_interaction_stream_flow_emits_commit_final(monkeypatch):
         assert "commit_final" in event_types
 
 
-def test_interaction_session_start_registers_runtime_surface(monkeypatch):
+def test_interaction_session_start_registers_runtime_surface(monkeypatch, fresh_runtime_state):
     """Layer: integration. Verifies the API start path records interaction-session ownership in GlobalState's transport registry."""
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")

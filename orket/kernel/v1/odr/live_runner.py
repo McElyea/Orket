@@ -12,6 +12,13 @@ def _response_content(response: Any) -> str:
     return str(getattr(response, "content", "") or "").strip()
 
 
+def _last_valid_round_index(history_rounds: list[dict[str, Any]]) -> int:
+    for row in reversed(history_rounds):
+        if str(row.get("validity_verdict") or "") == "valid":
+            return int(row.get("round") or 0)
+    return 0
+
+
 async def run_live_refinement(
     *,
     task: str,
@@ -91,6 +98,10 @@ async def run_live_refinement(
         "task": str(task),
         "rounds": rounds,
         "rounds_completed": len(state.history_rounds),
+        "last_valid_round_index": _last_valid_round_index(state.history_rounds),
+        "last_emitted_round_index": int(final_trace.get("round") or len(state.history_rounds) or 0)
+        if isinstance(final_trace, dict)
+        else len(state.history_rounds),
         "stop_reason": stop_reason or None,
         "history_v": list(state.history_v),
         "valid_history_v": list(state.valid_history_v),

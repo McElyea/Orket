@@ -196,6 +196,7 @@ class ArtifactProvenanceBuilder:
         artifact_root: Path,
         department: str,
         control_plane_workload_record: dict[str, Any],
+        sdk_capability_report: dict[str, Any],
     ) -> dict[str, Any]:
         verbose = self._provenance_verbose_enabled()
         governed_identity = build_extension_governed_identity(
@@ -242,6 +243,7 @@ class ArtifactProvenanceBuilder:
                 "entrypoint": workload.entrypoint,
                 "required_capabilities": list(workload.required_capabilities),
             },
+            "sdk_capability_authorization": dict(sdk_capability_report),
             "control_plane_workload_record": dict(control_plane_workload_record),
             "department": department,
             "input_config": input_config if verbose else {},

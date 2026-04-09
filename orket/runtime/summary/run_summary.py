@@ -157,20 +157,30 @@ def build_run_summary_payload(
     cards_runtime = _build_cards_runtime_extension(artifacts=artifacts)
     if cards_runtime:
         payload["cards_runtime"] = cards_runtime
-        payload["execution_profile"] = str(cards_runtime.get("execution_profile") or "")
-        payload["stop_reason"] = str(cards_runtime.get("stop_reason") or "")
-        payload["odr_active"] = bool(cards_runtime.get("odr_active", False))
+        execution_profile = str(cards_runtime.get("execution_profile") or "").strip()
+        if execution_profile:
+            payload["execution_profile"] = execution_profile
+        stop_reason = str(cards_runtime.get("stop_reason") or "").strip()
+        if stop_reason:
+            payload["stop_reason"] = stop_reason
+        if "odr_active" in cards_runtime:
+            payload["odr_active"] = bool(cards_runtime.get("odr_active"))
+        if str(cards_runtime.get("resolution_state") or "").strip():
+            payload["cards_runtime_resolution_state"] = str(cards_runtime.get("resolution_state") or "").strip()
         for key in (
             "builder_seat_choice",
             "reviewer_seat_choice",
             "seat_coercion",
             "artifact_contract",
+            "audit_mode",
             "odr_valid",
             "odr_pending_decisions",
             "odr_stop_reason",
             "odr_termination_reason",
             "odr_final_auditor_verdict",
             "odr_artifact_path",
+            "last_valid_round_index",
+            "last_emitted_round_index",
         ):
             if key in cards_runtime:
                 payload[key] = cards_runtime[key]

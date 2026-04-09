@@ -59,7 +59,7 @@ The behavioral contract implied by the return value `"fallback"` is "your event 
 
 ## BH-5. The ControlPlane convergence lane is paused with known incomplete behaviors
 
-**Affected:** `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+**Affected:** `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
 
 The control plane convergence plan is explicitly paused. The plan documents eight known gaps that are not yet closed:
 

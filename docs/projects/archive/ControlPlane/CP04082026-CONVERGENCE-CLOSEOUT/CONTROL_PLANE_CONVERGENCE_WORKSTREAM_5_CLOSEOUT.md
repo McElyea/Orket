@@ -1,8 +1,10 @@
 # Control-Plane Convergence Workstream 5 Closeout
-Last updated: 2026-03-28
-Status: Partial closeout artifact
+Last updated: 2026-04-08
+Status: Archived partial closeout artifact
 Owner: Orket Core
 Workstream: 5 - Reconciliation and operator-action convergence
+
+Closeout authority: `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CLOSEOUT.md`
 
 ## Objective
 
@@ -61,8 +63,8 @@ Representative tests changed or added:
 6. `tests/integration/test_gitea_state_worker_control_plane.py`
 
 Docs changed:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-2. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_5_CLOSEOUT.md`
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_5_CLOSEOUT.md`
 
 ## Proof executed
 
@@ -73,6 +75,8 @@ Observed result: `success`
 Commands executed for the slices recorded here:
 1. `ORKET_DISABLE_SANDBOX=1 python -m pytest -q tests/interfaces/test_api_nervous_system_operator_surfaces.py tests/application/test_tool_approval_control_plane_operator_service.py tests/application/test_pending_gate_control_plane_operator_service.py tests/application/test_kernel_action_control_plane_operator_service.py tests/integration/test_sandbox_lifecycle_reconciliation_service.py tests/integration/test_gitea_state_worker_control_plane.py`
    Result: `23 passed`
+2. `python -m pytest -q tests/interfaces/test_api_nervous_system_operator_surfaces.py tests/application/test_tool_approval_control_plane_operator_service.py tests/application/test_pending_gate_control_plane_operator_service.py tests/application/test_kernel_action_control_plane_operator_service.py tests/integration/test_sandbox_lifecycle_reconciliation_service.py tests/integration/test_gitea_state_worker_control_plane.py`
+   Result: `26 passed in 4.05s`
 
 ## Compatibility exits
 
@@ -97,13 +101,14 @@ Remaining gaps:
 2. broader non-sandbox operator surfaces still are not published through one universal operator-action authority family
 3. final-truth consumers still need wider direct input wiring from reconciliation and operator-action records beyond the already-covered paths
 4. `CE-06` remains open
+5. the representative `Slice 5A` proof set was re-verified on `2026-04-08`, so that slice no longer belongs at the front of the open convergence queue even though `CE-06` remains open
 
 ## Authority-story updates landed with these slices
 
 The following authority docs were updated in this closeout-recording slice:
-1. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-2. `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_5_CLOSEOUT.md`
+1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_5_CLOSEOUT.md`
 
 ## Verdict
 
-Workstream 5 now has a truthful partial closeout artifact for the reconciliation and operator-action slices already landed on the sandbox, governed turn, approval, kernel, and Gitea paths, but the workstream remains open until those authority families are universal across broader runtime divergence and operator behavior.
+Workstream 5 now has a truthful partial closeout artifact for the reconciliation and operator-action slices already landed on the sandbox, governed turn, approval, kernel, and Gitea paths, but the workstream remains open until those authority families are universal across broader runtime divergence and operator behavior. The representative `Slice 5A` proof set was re-verified on `2026-04-08`, so the next truthful Workstream 5 work now continues through follow-on `Slice 5B`.

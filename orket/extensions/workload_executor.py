@@ -20,8 +20,9 @@ from .governed_identity import (
 )
 from .models import ExtensionRecord, ExtensionRunResult, _ExtensionManifestEntry
 from .reproducibility import ReproducibilityEnforcer
+from .sdk_capability_authorization import build_host_authorization_envelope, split_host_capability_controls
 from .runtime import ExtensionEngineAdapter, RunContext
-from .sdk_workload_runner import run_sdk_workload_in_subprocess
+from .sdk_workload_runner import SdkSubprocessRunError, run_sdk_workload_in_subprocess
 from .workload_artifacts import WorkloadArtifacts
 from .workload_loader import WorkloadLoader
 
@@ -157,27 +158,21 @@ class WorkloadExecutor:
         department: str,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
+        runtime_input_config, host_controls = split_host_capability_controls(dict(input_config))
         input_digest = hashlib.sha256(
             json.dumps(input_config, sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
-        artifact_root = self.artifacts.artifact_root(
-            extension.extension_id, workload.workload_id, input_digest, input_config
-        )
+        run_id = f"sdk-{input_digest[:16]}"
+        artifact_root = self.artifacts.artifact_root(extension.extension_id, workload.workload_id, input_digest, input_config)
         artifact_root.mkdir(parents=True, exist_ok=True)
-        capability_registry = self.artifacts.build_sdk_capability_registry(
-            workspace=workspace,
-            artifact_root=artifact_root,
-            input_config=input_config,
-        )
-        missing_capabilities = capability_registry.preflight(list(workload.required_capabilities))
-        if missing_capabilities:
-            raise ValueError("E_SDK_CAPABILITY_MISSING: " + ", ".join(missing_capabilities))
+        authorization_envelope = build_host_authorization_envelope(extension_id=extension.extension_id, workload_id=workload.workload_id, run_id=run_id, declared_capabilities=list(workload.required_capabilities), controls=host_controls)
+        capability_registry = self.artifacts.build_sdk_capability_registry(workspace=workspace, artifact_root=artifact_root, input_config=runtime_input_config, admitted_capabilities=set(authorization_envelope.admitted_capabilities))
 
         if interaction_context is not None:
             await self._emit_default_model_events(interaction_context, sdk=True)
 
         sdk_ctx = self._build_sdk_context(
-            extension, workload, input_config, workspace, artifact_root, capability_registry, input_digest
+            extension, workload, runtime_input_config, workspace, artifact_root, capability_registry, run_id
         )
         module_name, _attr_name = WorkloadLoader.parse_sdk_entrypoint(workload.entrypoint)
         await asyncio.to_thread(
@@ -187,30 +182,35 @@ class WorkloadExecutor:
             allowed_stdlib_modules=extension.allowed_stdlib_modules,
             enforce_declared_stdlib=True,
         )
-        result = await run_sdk_workload_in_subprocess(
-            extension=extension,
-            workload=workload,
-            sdk_ctx=sdk_ctx,
-            input_payload=dict(input_config),
-        )
-        await asyncio.to_thread(self.artifacts.validate_sdk_artifacts, result, artifact_root)
+        subprocess_error: SdkSubprocessRunError | None = None
+        try:
+            subprocess_result = await run_sdk_workload_in_subprocess(
+                extension=extension,
+                workload=workload,
+                sdk_ctx=sdk_ctx,
+                input_payload=dict(runtime_input_config),
+                authorization_envelope=authorization_envelope,
+                audit_case=host_controls.audit_case,
+                child_extra_capabilities=host_controls.child_extra_capabilities,
+            )
+            capability_report = subprocess_result.capability_report
+            result = subprocess_result.workload_result
+            await asyncio.to_thread(self.artifacts.validate_sdk_artifacts, result, artifact_root)
+            run_result: dict[str, Any] = {
+                "status": "ok" if result.ok else "error",
+                "output": result.output,
+                "issues": [issue.model_dump(mode="json") for issue in result.issues],
+                "artifacts": [artifact.model_dump(mode="json") for artifact in result.artifacts],
+                "metrics": result.metrics,
+            }
+            summary = {"ok": result.ok, "status": run_result["status"], "output": result.output, "issue_count": len(result.issues), "artifact_count": len(result.artifacts)}
+        except SdkSubprocessRunError as exc:
+            subprocess_error = exc
+            capability_report = dict(exc.capability_report)
+            run_result = {"status": "error", "output": {}, "issues": [{"code": exc.error_code or "sdk_workload_subprocess_failed", "message": str(exc), "severity": "error"}], "artifacts": [], "metrics": {}}
+            summary = {"ok": False, "status": "error", "output": {}, "issue_count": 1, "artifact_count": 0}
 
-        run_result: dict[str, Any] = {
-            "status": "ok" if result.ok else "error",
-            "output": result.output,
-            "issues": [issue.model_dump(mode="json") for issue in result.issues],
-            "artifacts": [artifact.model_dump(mode="json") for artifact in result.artifacts],
-            "metrics": result.metrics,
-        }
-        summary = {
-            "ok": result.ok,
-            "status": run_result["status"],
-            "output": result.output,
-            "issue_count": len(result.issues),
-            "artifact_count": len(result.artifacts),
-        }
-
-        if interaction_context is not None:
+        if interaction_context is not None and subprocess_error is None:
             await interaction_context.emit_event(
                 StreamEventType.TURN_FINAL, {"authoritative": True, "summary": summary}
             )
@@ -239,7 +239,7 @@ class WorkloadExecutor:
             self.artifacts.build_sdk_provenance,
             extension=extension,
             workload=workload,
-            input_config=input_config,
+            input_config=runtime_input_config,
             input_digest=input_digest,
             run_result=run_result,
             summary=summary,
@@ -247,11 +247,14 @@ class WorkloadExecutor:
             artifact_root=artifact_root,
             department=department,
             control_plane_workload_record=control_plane_workload_record,
+            sdk_capability_report=capability_report,
         )
         provenance_path = artifact_root / "provenance.json"
         await asyncio.to_thread(self._write_json_file, provenance_path, provenance)
         artifact_manifest_hash = f"sha256:{str(artifact_manifest.get('manifest_sha256') or '').strip()}"
         provenance_hash = await asyncio.to_thread(self._digest_file, provenance_path)
+        if subprocess_error is not None:
+            raise subprocess_error
 
         return ExtensionRunResult(
             extension_id=extension.extension_id,
@@ -336,14 +339,14 @@ class WorkloadExecutor:
         workspace: Path,
         artifact_root: Path,
         capability_registry: Any,
-        input_digest: str,
+        run_id: str,
     ) -> Any:
         from orket_extension_sdk.workload import WorkloadContext as SDKWorkloadContext
 
         return SDKWorkloadContext(
             extension_id=extension.extension_id,
             workload_id=workload.workload_id,
-            run_id=f"sdk-{input_digest[:16]}",
+            run_id=run_id,
             workspace_root=workspace,
             input_dir=workspace,
             output_dir=artifact_root,

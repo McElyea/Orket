@@ -93,6 +93,20 @@ EXPECTED_GOVERNED_START_PATH_MATRIX = {
         "paths": set(),
     },
 }
+TURN_TOOL_RUNTIME_ENTRYPOINT_METHOD_OWNERS = {
+    "begin_execution": {
+        "orket/application/workflows/turn_executor_control_plane.py",
+        "orket/application/workflows/turn_tool_dispatcher_control_plane.py",
+    },
+    "publish_preflight_failure": {"orket/application/workflows/turn_tool_dispatcher_control_plane.py"},
+    "publish_step_result": {"orket/application/workflows/turn_tool_dispatcher_control_plane.py"},
+    "finalize_execution": {"orket/application/workflows/turn_tool_dispatcher_control_plane.py"},
+    "ensure_reentry_allowed": {"orket/application/workflows/turn_executor_control_plane.py"},
+}
+TURN_TOOL_ADAPTER_ONLY_RUNTIME_ENTRYPOINTS = {
+    "orket/application/workflows/turn_executor_control_plane.py",
+    "orket/application/workflows/turn_tool_dispatcher_control_plane.py",
+}
 CATALOG_RESOLVED_IDENTITY_ALIAS_BANS = {
     "orket/application/services/gitea_state_control_plane_execution_service.py": {
         "WORKLOAD_ID",
@@ -203,12 +217,12 @@ def _builder_violations(path: Path) -> list[str]:
     return sorted(set(violations))
 
 
-def _parse_workload_authority_matrix() -> dict[str, str]:
+def _parse_workload_authority_matrix_rows() -> dict[str, dict[str, str]]:
     text = WORKLOAD_AUTHORITY_MATRIX_DOC.read_text(encoding="utf-8")
     start_marker = "The current workload-authority matrix for governed start paths is:"
     end_marker = "## Surviving projection-only or still-temporary surfaces"
     section = text.split(start_marker, 1)[1].split(end_marker, 1)[0]
-    rows: dict[str, str] = {}
+    rows: dict[str, dict[str, str]] = {}
     for line in section.splitlines():
         stripped = line.strip()
         if not stripped.startswith("|"):
@@ -219,7 +233,10 @@ def _parse_workload_authority_matrix() -> dict[str, str]:
         start_path, status, truthful_note = parts
         if start_path == "Start path" or start_path == "---" or status == "---" or truthful_note == "---":
             continue
-        rows[start_path] = status.strip("`")
+        rows[start_path] = {
+            "status": status.strip("`"),
+            "truthful_note": truthful_note,
+        }
     return rows
 
 
@@ -237,6 +254,32 @@ def _catalog_authority_consumer_paths() -> set[str]:
                 consumers.add(_relative_path(path))
                 break
     return consumers
+
+
+def _turn_tool_control_plane_method_callers() -> dict[str, set[str]]:
+    callers = {method_name: set() for method_name in TURN_TOOL_RUNTIME_ENTRYPOINT_METHOD_OWNERS}
+    for path in _iter_python_files():
+        relative_path = _relative_path(path)
+        tree = ast.parse(path.read_text(encoding="utf-8-sig"), filename=str(path))
+        imports_turn_tool_service = False
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            module = str(node.module or "")
+            if not module.endswith("turn_tool_control_plane_service"):
+                continue
+            if any(alias.name == "TurnToolControlPlaneService" for alias in node.names):
+                imports_turn_tool_service = True
+                break
+        if not imports_turn_tool_service:
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+                continue
+            method_name = node.func.attr
+            if method_name in callers:
+                callers[method_name].add(relative_path)
+    return {method_name: owners for method_name, owners in callers.items() if owners}
 
 
 def _import_violations(*, module_names: set[str], imported_names: set[str] | None = None) -> dict[str, list[str]]:
@@ -397,11 +440,11 @@ def test_only_workload_authority_seam_mints_control_plane_workload_records() -> 
 
 
 def test_governed_start_path_matrix_stays_classified_and_exact() -> None:
-    matrix = _parse_workload_authority_matrix()
+    matrix_rows = _parse_workload_authority_matrix_rows()
     expected_statuses = {
         start_path: meta["status"] for start_path, meta in EXPECTED_GOVERNED_START_PATH_MATRIX.items()
     }
-    assert matrix == expected_statuses
+    assert {start_path: row["status"] for start_path, row in matrix_rows.items()} == expected_statuses
 
 
 def test_only_matrix_covered_modules_consume_catalog_workload_authority() -> None:
@@ -411,6 +454,19 @@ def test_only_matrix_covered_modules_consume_catalog_workload_authority() -> Non
         for path in meta["paths"]
     }
     assert _catalog_authority_consumer_paths() == expected_paths
+
+
+def test_governed_turn_tool_runtime_entrypoints_stay_owned_by_exact_adapter_only_helpers() -> None:
+    assert _turn_tool_control_plane_method_callers() == TURN_TOOL_RUNTIME_ENTRYPOINT_METHOD_OWNERS
+
+
+def test_governed_turn_tool_matrix_note_names_adapter_only_runtime_entrypoints() -> None:
+    matrix_rows = _parse_workload_authority_matrix_rows()
+    truthful_note = matrix_rows["governed turn-tool"]["truthful_note"]
+
+    assert "adapter-only routing seams" in truthful_note
+    for relative_path in TURN_TOOL_ADAPTER_ONLY_RUNTIME_ENTRYPOINTS:
+        assert relative_path in truthful_note
 
 
 def test_catalog_resolved_publishers_do_not_restate_workload_identity_as_string_aliases() -> None:

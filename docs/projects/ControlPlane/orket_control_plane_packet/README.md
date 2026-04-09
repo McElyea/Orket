@@ -19,7 +19,7 @@ This packet now represents the accepted authority set required to move from arch
 - `10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md`
 - `11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md`
 - `12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md`
-- `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+- `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
 - `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`
 
 ## Authority posture
@@ -35,7 +35,7 @@ This packet is now split into four roles:
    - `10` through `12`
 4. planning:
    - `09_OS_MASTER_PLAN.md` for architecture direction only
-   - `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md` for the paused partial-convergence checkpoint and any explicit reopen sequencing
+   - `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md` for the completed convergence-lane sequencing record
    - `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md` for archived packet-v2 execution sequencing
 
 ## Important guardrails
@@ -58,11 +58,13 @@ The accepted packet is indexed for planning under:
 
 The packet remains the active requirements authority.
 
-The convergence checkpoint and explicit-reopen authority is:
+No active ControlPlane implementation lane remains after the completed convergence closeout.
 
-- `docs/projects/ControlPlane/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+The latest archived convergence implementation authority is:
 
-That lane is currently paused after a truthful partial-convergence checkpoint. It reopens only by explicit roadmap or packet choice.
+- `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+
+That bounded lane was reopened and closed on `2026-04-08`; the archived closeout lives at `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CLOSEOUT.md`. Future ControlPlane implementation work must reopen explicitly through `docs/ROADMAP.md`.
 
 The prior packet-v2 implementation lane remains archived at:
 

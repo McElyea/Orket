@@ -293,6 +293,7 @@ class OrchestratorTurnContextBuilder:
             "artifact_contract": dict(cards_runtime.get("artifact_contract") or {}),
             "scenario_truth": dict(cards_runtime.get("scenario_truth") or {}),
             "odr_active": bool(cards_runtime.get("odr_active")),
+            "audit_mode": str(cards_runtime.get("audit_mode") or ""),
             "odr_valid": cards_runtime.get("odr_valid"),
             "odr_pending_decisions": cards_runtime.get("odr_pending_decisions"),
             "odr_stop_reason": cards_runtime.get("odr_stop_reason"),
@@ -300,6 +301,8 @@ class OrchestratorTurnContextBuilder:
             "odr_final_auditor_verdict": cards_runtime.get("odr_final_auditor_verdict"),
             "odr_artifact_path": str(cards_runtime.get("odr_artifact_path") or ""),
             "odr_requirement": str(cards_runtime.get("odr_requirement") or ""),
+            "last_valid_round_index": int(cards_runtime.get("last_valid_round_index") or 0),
+            "last_emitted_round_index": int(cards_runtime.get("last_emitted_round_index") or 0),
             "verification_scope": build_verification_scope(
                 workspace=list(available_required_read_paths) + list(required_write_paths),
                 active_context=list(available_required_read_paths),

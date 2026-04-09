@@ -27,20 +27,36 @@ This document defines canonical runtime events and minimum fields.
 ## Tool Lifecycle
 1. `tool_call_start`
    - `issue_id`, `session_id`, `turn_index`, `tool`, `args`
-2. `tool_call_result`
+2. `tool_call_blocked`
+   - `issue_id`, `session_id`, `turn_index`, `tool`, `args`, `reason`
+3. `tool_approval_required`
+   - `issue_id`, `session_id`, `turn_index`, `tool`, `request_id`, `stage_gate_mode`
+4. `tool_approval_granted`
+   - `issue_id`, `session_id`, `turn_index`, `tool`, `request_id`, `stage_gate_mode`
+5. `tool_call_result`
    - `issue_id`, `session_id`, `turn_index`, `tool`, `ok`, `error`
-3. `tool_call_exception`
+6. `tool_call_exception`
    - `issue_id`, `session_id`, `turn_index`, `tool`, `error`
-4. `tool_call_replayed`
+7. `tool_call_replayed`
    - `issue_id`, `session_id`, `turn_index`, `tool`
-5. `determinism_violation`
+8. `determinism_violation`
    - `issue_id`, `session_id`, `turn_index`, `tool`, `error`, `error_code`, `determinism_class`, `capability_profile`, `tool_contract_version`, `side_effect_signal_keys`
-6. `tool_timeout`
+9. `tool_timeout`
    - `tool`, `timeout_seconds`, `ok`, `error`
-7. `interceptor_error`
+10. `interceptor_error`
    - `hook`, `interceptor`, `error`
+11. `sdk_capability_call_start`
+   - `extension_id`, `workload_id`, `run_id`, `capability_id`, `capability_family`, `authorization_basis`, `declared`, `admitted`, `side_effect_observed`
+12. `sdk_capability_call_blocked`
+   - `extension_id`, `workload_id`, `run_id`, `capability_id`, `capability_family`, `authorization_basis`, `declared`, `admitted`, `side_effect_observed`, `denial_class`
+13. `sdk_capability_call_result`
+   - `extension_id`, `workload_id`, `run_id`, `capability_id`, `capability_family`, `authorization_basis`, `declared`, `admitted`, `side_effect_observed`
+14. `sdk_capability_call_exception`
+   - `extension_id`, `workload_id`, `run_id`, `capability_id`, `capability_family`, `authorization_basis`, `declared`, `admitted`, `side_effect_observed`, `error_code`, `error`
 
 `determinism_violation` is emitted to the runtime event artifact stream at `agent_output/observability/runtime_events.jsonl` when a tool's observed side effects contradict its declared determinism class.
+
+Legacy `tool_blocked` from direct `Agent.run(...)` remains compatibility telemetry and is not part of the canonical governed turn-tool event family.
 
 ## Agent Factory Lifecycle
 1. `seat_no_roles_configured`
@@ -72,9 +88,9 @@ This document defines canonical runtime events and minimum fields.
 8. `turn_failed`
    - `issue_id`, `session_id`, `turn_index`, `turn_trace_id`, `type`, `error`
 9. `odr_prebuild_completed`
-   - `session_id`, `issue_id`, `execution_profile`, `odr_active`, `selected_model`, `odr_run_id`, `odr_valid`, `odr_pending_decisions`, `odr_stop_reason`, `odr_artifact_path`, `odr_requirement`, `odr_rounds_completed`, `odr_accepted`
+   - `session_id`, `issue_id`, `execution_profile`, `odr_active`, `selected_model`, `odr_run_id`, `audit_mode`, `odr_valid`, `odr_pending_decisions`, `odr_stop_reason`, `odr_artifact_path`, `odr_requirement`, `odr_rounds_completed`, `last_valid_round_index`, `last_emitted_round_index`, `odr_accepted`
 10. `odr_prebuild_failed`
-   - `session_id`, `issue_id`, `execution_profile`, `odr_active`, `selected_model`, `odr_run_id`, `odr_valid`, `odr_pending_decisions`, `odr_stop_reason`, `odr_artifact_path`, `odr_requirement`, `odr_rounds_completed`, `odr_accepted`
+   - `session_id`, `issue_id`, `execution_profile`, `odr_active`, `selected_model`, `odr_run_id`, `audit_mode`, `odr_valid`, `odr_pending_decisions`, `odr_stop_reason`, `odr_artifact_path`, `odr_requirement`, `odr_rounds_completed`, `last_valid_round_index`, `last_emitted_round_index`, `odr_accepted`
 11. `turn_retry_scheduled`
    - `issue_id`, `role`, `session_id`, `turn_index`, `retry_count`, `max_retries`, `backoff_seconds`, `error_type`, `error`
 12. `turn_retry_exhausted`
