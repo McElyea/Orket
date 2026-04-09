@@ -42,7 +42,7 @@ Precedence for overlapping topics is:
 1. `CURRENT_AUTHORITY.md` for present-tense shipped behavior,
 2. `docs/ROADMAP.md` for lane posture,
 3. `docs/ARCHITECTURE.md` for canonical result vocabulary,
-4. `docs/projects/ControlPlane/orket_control_plane_packet/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md` for `FinalTruthRecord` and shared control-plane enums,
+4. `docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md` for `FinalTruthRecord` and shared control-plane enums,
 5. `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md` for boundary-scoped packet-1 truth classification, classification precedence, and packet-1 defect triggers,
 6. `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md` for emitted-versus-derivable runtime truth, including derivable terminal-summary truth,
 7. `docs/specs/MINIMUM_AUDITABLE_RECORD_V1.md` for `replay_ready` and `stability_status` surfaces,

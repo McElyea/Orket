@@ -36,7 +36,7 @@ Representative proof commands executed for the documentation slice:
 Docs changed:
 1. `docs/ROADMAP.md`
 2. `CURRENT_AUTHORITY.md`
-3. `docs/projects/ControlPlane/orket_control_plane_packet/README.md`
+3. `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`
 4. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
 5. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`
 6. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_2_CLOSEOUT.md`
@@ -50,8 +50,8 @@ Docs changed:
 Authority surfaces checked for agreement in this slice:
 1. `docs/ROADMAP.md`
 2. `CURRENT_AUTHORITY.md`
-3. `docs/projects/ControlPlane/orket_control_plane_packet/README.md`
-4. `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
+3. `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`
+4. `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
 5. `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`
 6. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
 7. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`
@@ -85,7 +85,7 @@ Workstream 8 compatibility-exit posture affected by the slices recorded here:
 Surviving surfaces that remain allowed for now:
 1. `docs/ROADMAP.md`
    Reason: the roadmap must keep the active reopened queue visible until the convergence completion gate is truthfully met or the lane is explicitly retired again.
-2. `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
+2. `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
    Reason: the crosswalk remains a current-state honesty document, not a completion claim.
 3. `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`
    Reason: the archived packet-v2 closeout remains historical authority and must not be reopened silently.
@@ -105,7 +105,7 @@ Remaining gaps:
 The following authority docs were updated in this closeout-recording slice:
 1. `docs/ROADMAP.md`
 2. `CURRENT_AUTHORITY.md`
-3. `docs/projects/ControlPlane/orket_control_plane_packet/README.md`
+3. `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`
 4. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
 5. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`
 6. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_2_CLOSEOUT.md`

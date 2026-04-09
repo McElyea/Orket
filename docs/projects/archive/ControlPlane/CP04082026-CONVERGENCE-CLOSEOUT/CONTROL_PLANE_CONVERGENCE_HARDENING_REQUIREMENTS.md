@@ -15,7 +15,7 @@ Closeout authority:
 This document is the archived scoped requirements companion for the completed ControlPlane convergence lane formerly recorded in `docs/ROADMAP.md`.
 It is not the implementation authority.
 
-The active ControlPlane requirements authority remains the accepted packet under `docs/projects/ControlPlane/orket_control_plane_packet/`.
+The active ControlPlane requirements authority remains the accepted packet under `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`.
 The paired archived implementation authority is `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`.
 The earlier packet-v2 implementation sequencing lane remains archived under `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/`.
 

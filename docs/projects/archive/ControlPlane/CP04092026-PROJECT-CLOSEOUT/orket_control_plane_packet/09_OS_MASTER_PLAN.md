@@ -1,5 +1,5 @@
 # Orket OS Master Plan
-Last updated: 2026-03-23
+Last updated: 2026-04-09
 Status: Accepted architecture direction; not active implementation authority
 Owner: Orket Core
 Lane type: Strategic architecture / planning rationale
@@ -11,7 +11,17 @@ Describe the serious architecture target from the current Orket runtime toward a
 This document is planning rationale and architecture direction.
 It is not the active implementation authority for the lane.
 
-No active ControlPlane implementation lane remains after the completed convergence closeout.
+The active remaining-work implementation authority now lives at:
+1. [docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/CONTROL_PLANE_PROJECT_CLOSEOUT_READINESS_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/CONTROL_PLANE_PROJECT_CLOSEOUT_READINESS_IMPLEMENTATION_PLAN.md)
+
+The durable Workstream 1 workload/run authority companion is:
+1. [docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md](docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md)
+
+The closed residual Workstream 1 execution record is:
+1. [docs/projects/archive/ControlPlane/CP04092026-WORKSTREAM-1-FOLLOW-ON-CLOSEOUT/CONTROL_PLANE_WORKLOAD_RUN_AUTHORITY_FOLLOW_ON_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP04092026-WORKSTREAM-1-FOLLOW-ON-CLOSEOUT/CONTROL_PLANE_WORKLOAD_RUN_AUTHORITY_FOLLOW_ON_IMPLEMENTATION_PLAN.md)
+
+The completed 2026-04-09 convergence reopen archive is:
+1. [docs/projects/archive/ControlPlane/CP04092026-CONVERGENCE-REOPEN-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_REOPEN_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP04092026-CONVERGENCE-REOPEN-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_REOPEN_IMPLEMENTATION_PLAN.md)
 
 The latest archived convergence implementation authority is:
 1. [docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md)
@@ -60,6 +70,8 @@ The most important authority surfaces in that family are:
 6. reconciliation and operator semantics
 7. effect journal and checkpoint authority
 8. namespace and safe-tooling contracts
+
+The legacy project-local packet requirement paths now survive only as compatibility redirects.
 
 ## Recommended control-plane architecture
 
@@ -145,9 +157,9 @@ The following constraints are now frozen as part of the accepted packet:
 ## Planning status
 
 The missing companion contracts that previously blocked implementation planning now exist:
-1. [10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md)
-2. [11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md)
-3. [12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md)
+1. [docs/specs/10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md](docs/specs/10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md)
+2. [docs/specs/11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md](docs/specs/11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md)
+3. [docs/specs/12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md](docs/specs/12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md)
 
 The lane's implementation sequencing archive lives in:
 1. [docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md](docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md)

@@ -1,6 +1,6 @@
 # Reconciliation Authority Requirements
-Last updated: 2026-03-23
-Status: Accepted for implementation planning
+Last updated: 2026-04-09
+Status: Active durable spec authority
 Owner: Orket Core
 Lane type: Control-plane foundation / truth repair
 
@@ -10,7 +10,7 @@ Define the authority, triggers, outputs, and constraints of reconciliation so Or
 
 ## Authority note
 
-Shared reconciliation enums and operator input classes are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/projects/ControlPlane/orket_control_plane_packet/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Shared reconciliation enums and operator input classes are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 ## Core assertion
 

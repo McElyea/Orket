@@ -4,7 +4,7 @@
 - Change title: Control-plane lease publication identity and sandbox lease truth wiring
 - Owner: Orket Core
 - Date: 2026-03-23
-- Affected contract(s): `orket/core/contracts/control_plane_models.py`, `orket/core/contracts/repositories.py`, `docs/projects/ControlPlane/orket_control_plane_packet/01_EXECUTION_OBJECT_MODEL_REQUIREMENTS.md`, `docs/projects/ControlPlane/orket_control_plane_packet/05_RESOURCE_LEASE_AND_OWNERSHIP_REQUIREMENTS.md`, `CURRENT_AUTHORITY.md`
+- Affected contract(s): `orket/core/contracts/control_plane_models.py`, `orket/core/contracts/repositories.py`, `docs/specs/01_EXECUTION_OBJECT_MODEL_REQUIREMENTS.md`, `docs/specs/05_RESOURCE_LEASE_AND_OWNERSHIP_REQUIREMENTS.md`, `CURRENT_AUTHORITY.md`
 
 ## Delta
 - Current behavior: `LeaseRecord` exists as a first-class noun, but it has no publication identity and the default sandbox runtime does not publish durable lease truth; lease state remains implicit inside sandbox lifecycle rows.

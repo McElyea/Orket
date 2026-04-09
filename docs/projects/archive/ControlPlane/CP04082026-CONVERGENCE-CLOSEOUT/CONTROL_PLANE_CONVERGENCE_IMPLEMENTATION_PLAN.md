@@ -14,7 +14,7 @@ Closeout authority:
 
 This document is the archived implementation authority for the completed ControlPlane convergence lane formerly recorded in `docs/ROADMAP.md`.
 
-The active ControlPlane requirements authority remains the accepted packet under `docs/projects/ControlPlane/orket_control_plane_packet/`.
+The active ControlPlane requirements authority remains the accepted packet under `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`.
 The paired archived requirements companion is `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_HARDENING_REQUIREMENTS.md`.
 The last accepted packet-v2 implementation sequencing lane remains archived under `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/`.
 This archived record preserves the active-lane sequencing and slice history that closed the bounded convergence lane.
@@ -22,8 +22,8 @@ This archived record preserves the active-lane sequencing and slice history that
 ## Source authorities
 
 This plan is bounded by:
-1. `docs/projects/ControlPlane/orket_control_plane_packet/README.md`
-2. `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
+1. `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`
+2. `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
 3. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_HARDENING_REQUIREMENTS.md`
 4. `docs/ROADMAP.md`
 5. `docs/ARCHITECTURE.md`
@@ -197,7 +197,7 @@ Their representative proof sets remain green, but their owning compatibility exi
 4. Legacy authority to demote: unclassified raw workload-id entrypoints, manifest-presence-only extension workload admission, and compatibility-only routing surfaces that can still read like standalone workload authority instead of adapter-only starts that collapse through the one governed workload seam
 5. Required proof commands: `python -m pytest -q tests/application/test_control_plane_workload_authority_governance.py tests/runtime/test_extension_manager.py tests/runtime/test_controller_dispatcher.py`; `python -m pytest -q tests/interfaces/test_sessions_router_protocol_replay.py tests/interfaces/test_api_interactions.py tests/interfaces/test_cli_startup_semantics.py`
 6. Compatibility exits narrowed or closed: `CE-01`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/WORKLOAD_CONTRACT_V1.md` if workload-start classification or compatibility wording changes materially
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/WORKLOAD_CONTRACT_V1.md` if workload-start classification or compatibility wording changes materially
 8. Slice exit condition: every touched extension or compatibility start surface is either represented truthfully in the governed start-path matrix with a canonical workload-authority classification or explicitly documented as non-governed adapter-only routing, and no touched entrypoint mints or implies standalone workload authority outside the governed matrix
 
 ### Slice 1B - Cards bootstrap and run-summary projection demotion
@@ -208,7 +208,7 @@ Their representative proof sets remain green, but their owning compatibility exi
 4. Legacy authority to demote: session-bootstrap `run_identity` reuse and cards summary-backed run, attempt, or step state that can still read like primary authority or tempt invocation-scoped control-plane identity into immutable session-scoped artifacts
 5. Required proof commands: `python -m pytest -q tests/runtime/test_run_identity_projection.py tests/runtime/test_run_start_artifacts.py tests/runtime/test_run_start_retry_classification_policy_immutability.py`; `python -m pytest -q tests/runtime/test_run_summary_projection_validation.py tests/runtime/test_run_summary.py tests/scripts/test_common_run_summary_support.py`; `python -m pytest -q tests/application/test_execution_pipeline_cards_epic_control_plane.py tests/application/test_execution_pipeline_run_ledger.py`
 6. Compatibility exits narrowed or closed: `CE-02`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md` if cards runtime projection framing changes materially
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md` if cards runtime projection framing changes materially
 8. Slice exit condition: touched cards bootstrap and summary surfaces self-identify as projection-only, fail closed on run, attempt, or step lineage drift or metadata incompleteness, and no immutable session-scoped artifact is forced to carry invocation-scoped control-plane identity
 
 ### Slice 1C - Review bundle and result authority hardening
@@ -219,7 +219,7 @@ Their representative proof sets remain green, but their owning compatibility exi
 4. Legacy authority to demote: review-lane-local execution-state surfaces, fresh or persisted review-bundle JSON, returned review-result or CLI control-plane summaries, and score or consistency outputs that can still look authoritative when manifest, run, attempt, or step refs drift or go missing
 5. Required proof commands: `python -m pytest -q tests/application/test_review_run_service.py tests/application/test_review_run_result_contract.py tests/integration/test_review_run_live_paths.py tests/interfaces/test_review_cli.py`; `python -m pytest -q tests/application/test_review_bundle_validation.py tests/application/test_reviewrun_answer_key_scoring.py tests/application/test_reviewrun_consistency.py tests/application/test_code_review_probe.py`; `python -m pytest -q tests/scripts/test_check_1000_consistency.py`
 6. Compatibility exits narrowed or closed: `CE-02`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/REVIEW_RUN_V0.md`; `docs/guides/REVIEW_RUN_CLI.md`; and any contract-delta note required by review bundle, consistency-report, or answer-key score hardening
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/REVIEW_RUN_V0.md`; `docs/guides/REVIEW_RUN_CLI.md`; and any contract-delta note required by review bundle, consistency-report, or answer-key score hardening
 8. Slice exit condition: touched review manifests, lane artifacts, result payloads, CLI views, replay paths, score reports, and consistency reports reject missing or drifted control-plane lineage before serialization, persistence, or trust while still allowing truthful failed outcomes to persist as failed evidence
 
 ### Slice 1D - Retry-classification projection hardening
@@ -230,7 +230,7 @@ Their representative proof sets remain green, but their owning compatibility exi
 4. Legacy authority to demote: retry-local attempt-history snapshots and acceptance reports that can still read like authority through loose JSON shape, malformed embedded snapshots, or shallow green fields instead of validated projection framing
 5. Required proof commands: `python -m pytest -q tests/runtime/test_retry_classification_policy.py tests/runtime/test_runtime_truth_drift_checker.py`; `python -m pytest -q tests/scripts/test_check_retry_classification_policy.py tests/scripts/test_run_runtime_truth_acceptance_gate.py`
 6. Compatibility exits narrowed or closed: `CE-02`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; and any contract-delta note required by retry-policy report or acceptance-gate hardening
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; and any contract-delta note required by retry-policy report or acceptance-gate hardening
 8. Slice exit condition: retry-policy artifacts and acceptance gates validate canonical projection framing plus current-snapshot alignment before persistence or trust, and run-level retry artifacts stop reading like standalone attempt-history authority
 
 ### Slice 2A - Shared resource-registry projection and residual ownership convergence
@@ -241,7 +241,7 @@ Their representative proof sets remain green, but their owning compatibility exi
 4. Legacy authority to demote: lease-centric or subsystem-local ownership summaries that still bypass one shared resource-registry projection
 5. Required proof commands: `python -m pytest -q tests/contracts/test_control_plane_reservation_contract.py tests/contracts/test_control_plane_lease_contract.py`; `python -m pytest -q tests/interfaces/test_coordinator_api_control_plane.py tests/integration/test_orchestrator_scheduler_control_plane.py tests/integration/test_gitea_state_worker_control_plane.py`
 6. Compatibility exits narrowed or closed: `CE-03`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_2_CLOSEOUT.md`; `CURRENT_AUTHORITY.md` if any supported operator or approval read models gain new canonical resource projections
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_2_CLOSEOUT.md`; `CURRENT_AUTHORITY.md` if any supported operator or approval read models gain new canonical resource projections
 8. Slice exit condition: targeted non-sandbox read surfaces consume one shared resource-registry story and no touched ownership path still relies on lease-only or subsystem-local truth where shared resource truth exists
 
 ## Additional re-verified recorded slices
@@ -257,7 +257,7 @@ Their representative proof sets remain green, but their owning compatibility exi
 4. Legacy authority to demote: artifact-backed, receipt-backed, or summary-backed effect readbacks that still present themselves as primary effect truth
 5. Required proof commands: `python -m pytest -q tests/contracts/test_control_plane_effect_journal_contract.py tests/application/test_control_plane_publication_service.py`; `python -m pytest -q tests/runtime/test_protocol_receipt_materializer.py tests/runtime/test_run_summary_packet1.py tests/runtime/test_run_summary_packet2.py tests/runtime/test_run_summary_artifact_provenance.py`
 6. Compatibility exits narrowed or closed: `CE-04`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_3_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; any touched legacy truth-contract doc that still frames summary output as authority
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_3_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; any touched legacy truth-contract doc that still frames summary output as authority
 8. Slice exit condition: every touched legacy effect read surface self-identifies as projection-only with explicit source framing, and touched read models consume durable effect-journal linkage before receipt or summary evidence
 
 ### Slice 4A - Checkpoint policy map and explicit resume enforcement
@@ -268,7 +268,7 @@ Their representative proof sets remain green, but their owning compatibility exi
 4. Legacy authority to demote: snapshot existence, saved-state presence, and service-local recovery heuristics that can still imply resumability without accepted checkpoint authority
 5. Required proof commands: `python -m pytest -q tests/contracts/test_control_plane_recovery_contract.py tests/application/test_sandbox_control_plane_checkpoint_service.py`; `python -m pytest -q tests/application/test_kernel_action_control_plane_pre_effect_recovery.py tests/integration/test_sandbox_runtime_recovery_service.py tests/application/test_turn_tool_control_plane_preflight_guards.py tests/integration/test_turn_executor_control_plane.py`
 6. Compatibility exits narrowed or closed: `CE-05`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_4_CLOSEOUT.md`; `CURRENT_AUTHORITY.md` if resume or recovery entrypoint contracts change
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_4_CLOSEOUT.md`; `CURRENT_AUTHORITY.md` if resume or recovery entrypoint contracts change
 8. Slice exit condition: touched resume or recovery paths fail closed unless accepted checkpoint plus explicit recovery decision truth exists, and snapshot presence alone no longer authorizes continuation
 
 ### Slice 5A - Endpoint-local operator and reconciliation authority collapse
@@ -279,7 +279,7 @@ Their representative proof sets remain green, but their owning compatibility exi
 4. Legacy authority to demote: endpoint-local, log-local, or policy-local operator and divergence behavior that still acts as hidden control-plane authority
 5. Required proof commands: `python -m pytest -q tests/interfaces/test_api_nervous_system_operator_surfaces.py tests/application/test_tool_approval_control_plane_operator_service.py`; `python -m pytest -q tests/application/test_pending_gate_control_plane_operator_service.py tests/application/test_kernel_action_control_plane_operator_service.py tests/integration/test_sandbox_lifecycle_reconciliation_service.py tests/integration/test_gitea_state_worker_control_plane.py`
 6. Compatibility exits narrowed or closed: `CE-06`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_5_CLOSEOUT.md`; `CURRENT_AUTHORITY.md` if authenticated operator or approval surfaces change their canonical control-plane payloads
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_5_CLOSEOUT.md`; `CURRENT_AUTHORITY.md` if authenticated operator or approval surfaces change their canonical control-plane payloads
 8. Slice exit condition: touched operator and reconciliation paths publish through one first-class record family, and read models preserve command versus risk-acceptance versus attestation split explicitly
 
 ### Slice 7A - Namespace authority and safe-tooling expansion beyond current governed paths
@@ -290,7 +290,7 @@ Their representative proof sets remain green, but their owning compatibility exi
 4. Legacy authority to demote: ambient namespace visibility, compatibility-only tool mappings, and mutation paths that can still run without one explicit namespace and safe-tooling contract
 5. Required proof commands: `python -m pytest -q tests/application/test_turn_tool_dispatcher_policy_enforcement.py tests/application/test_turn_tool_dispatcher_compatibility.py`; `python -m pytest -q tests/application/test_turn_tool_control_plane_preflight_guards.py tests/integration/test_turn_executor_control_plane.py tests/integration/test_orchestrator_scheduler_control_plane.py`; `python -m pytest -q tests/platform/test_no_old_namespaces.py`
 6. Compatibility exits narrowed or closed: `CE-08`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_7_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/WORKLOAD_CONTRACT_V1.md` if workload or namespace contract framing changes materially
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_7_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/WORKLOAD_CONTRACT_V1.md` if workload or namespace contract framing changes materially
 8. Slice exit condition: touched mutation paths fail closed on undeclared namespace or capability scope, and broader workload composition preserves explicit namespace inheritance or override rules instead of ambient access
 
 ### Slice 6A - Final-truth closure unification after namespace hardening
@@ -301,14 +301,14 @@ Their representative proof sets remain green, but their owning compatibility exi
 4. Legacy authority to demote: run-summary and packet-1 style closure surfaces that can still read like alternate final-truth authorities
 5. Required proof commands: `python -m pytest -q tests/contracts/test_control_plane_final_truth_contract.py tests/runtime/test_run_summary_packet2.py tests/runtime/test_run_summary_packet1.py`; `python -m pytest -q tests/integration/test_sandbox_terminal_outcome_service.py tests/integration/test_turn_tool_control_plane_closeout.py tests/integration/test_gitea_state_worker_control_plane.py tests/integration/test_sandbox_orchestrator_lifecycle.py`
 6. Compatibility exits narrowed or closed: `CE-07`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_6_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md` if any surviving projection contract remains
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_6_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md` if any surviving projection contract remains
 8. Slice exit condition: every touched terminal path emits `FinalTruthRecord` before successful closeout, and touched legacy summary surfaces are projection-only or retired instead of authoring terminal truth
 
 ### Slice 8A - Documentation and authority-story convergence closeout
 
 1. Workstream: 8
 2. Crosswalk rows: any row changed by the converged code slices in the same batch
-3. Exact doc surfaces: `docs/ROADMAP.md`; `docs/projects/ControlPlane/orket_control_plane_packet/README.md`; `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`; this plan; the active workstream closeout artifact touched by the same slice
+3. Exact doc surfaces: `docs/ROADMAP.md`; `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`; `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`; this plan; the active workstream closeout artifact touched by the same slice
 4. Legacy authority to demote: stale or contradictory lane wording, unstated compatibility exits, or closeout claims that drift away from code and proof
 5. Required proof commands: `python scripts/governance/check_docs_project_hygiene.py`; `python -m pytest -q tests/platform/test_no_old_namespaces.py`
 6. Compatibility exits narrowed or closed: whichever exit ids the paired code slice truthfully narrows or closes; never claim a close without updating the ledger and the relevant closeout artifact in the same change
@@ -328,7 +328,7 @@ They are no longer the open queue for this active lane, but their owning compati
 4. Legacy authority to demote: remaining workload-local runtime entrypoints and child-composition seams that can still initiate governed execution or carry workload identity outside one governed matrix-classified authority path
 5. Required proof commands: `python -m pytest -q tests/application/test_control_plane_authority_service.py tests/integration/test_turn_executor_control_plane.py`; `python -m pytest -q tests/integration/test_orchestrator_issue_control_plane.py tests/integration/test_gitea_state_worker_control_plane.py`; `python -m pytest -q tests/integration/test_async_control_plane_execution_repository.py tests/application/test_control_plane_workload_authority_governance.py`
 6. Compatibility exits narrowed or closed: `CE-01`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/WORKLOAD_CONTRACT_V1.md` if workload-start classification or workload-authority framing changes materially
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/WORKLOAD_CONTRACT_V1.md` if workload-start classification or workload-authority framing changes materially
 8. Slice exit condition: every touched governed runtime entrypoint either consumes one matrix-classified workload authority path or is explicitly documented as adapter-only routing, and no touched child-composition or runtime seam keeps workload-local authority nouns outside the governed matrix
 
 ### Slice 1F - Remaining run and attempt projection demotion outside the recorded cards or review cuts
@@ -339,7 +339,7 @@ They are no longer the open queue for this active lane, but their owning compati
 4. Legacy authority to demote: surviving run-, attempt-, and step-like summary, bootstrap, review-lane, and retry-local surfaces that can still read like primary authority after the recorded cards, review, and retry hardening slices
 5. Required proof commands: `python -m pytest -q tests/runtime/test_run_identity_projection.py tests/runtime/test_run_start_artifacts.py tests/runtime/test_run_start_retry_classification_policy_immutability.py`; `python -m pytest -q tests/runtime/test_run_summary_projection_validation.py tests/runtime/test_run_summary.py tests/scripts/test_common_run_summary_support.py`; `python -m pytest -q tests/application/test_review_run_service.py tests/application/test_review_bundle_validation.py tests/application/test_reviewrun_answer_key_scoring.py tests/application/test_reviewrun_consistency.py tests/scripts/test_check_1000_consistency.py`; `python -m pytest -q tests/runtime/test_retry_classification_policy.py tests/runtime/test_runtime_truth_drift_checker.py tests/scripts/test_check_retry_classification_policy.py tests/scripts/test_run_runtime_truth_acceptance_gate.py`
 6. Compatibility exits narrowed or closed: `CE-02`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; and any touched review or runtime truth contract that changes projection framing materially
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; and any touched review or runtime truth contract that changes projection framing materially
 8. Slice exit condition: touched non-authoritative run, attempt, and step projections self-identify as projection-only, fail closed on lineage drift or metadata incompleteness, and no touched bootstrap or observability surface can be mistaken for invocation-scoped control-plane authority
 
 ## Historical open convergence slice queue at final reopen
@@ -358,7 +358,7 @@ If a slice expands or splits materially, update this queue in the same change ra
 4. Legacy authority to demote: lease-centric or subsystem-local ownership summaries and uncovered admission or ownership paths that still bypass one shared resource-registry projection
 5. Required proof commands: `python -m pytest -q tests/contracts/test_control_plane_reservation_contract.py tests/contracts/test_control_plane_lease_contract.py`; `python -m pytest -q tests/interfaces/test_coordinator_api_control_plane.py tests/interfaces/test_api_kernel_lifecycle_control_plane_refs.py tests/interfaces/test_api_approvals.py`; `python -m pytest -q tests/integration/test_orchestrator_scheduler_control_plane.py tests/integration/test_gitea_state_worker_control_plane.py tests/application/test_control_plane_target_resource_refs.py`
 6. Compatibility exits narrowed or closed: `CE-03`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_2_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_2_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`
 8. Slice exit condition: touched governed read surfaces and uncovered ownership paths consume one shared resource-registry story, and no touched admission or ownership path relies on lease-only or subsystem-local truth where shared resource truth exists
 
 ### Slice 3B - Effect-journal-first closure and remaining legacy read-model demotion
@@ -369,7 +369,7 @@ If a slice expands or splits materially, update this queue in the same change ra
 4. Legacy authority to demote: remaining artifact-, receipt-, and summary-backed effect or closure readbacks that still read like primary effect truth instead of effect-journal projections
 5. Required proof commands: `python -m pytest -q tests/contracts/test_control_plane_effect_journal_contract.py tests/application/test_control_plane_publication_service.py`; `python -m pytest -q tests/runtime/test_protocol_receipt_materializer.py tests/runtime/test_run_summary_packet1.py tests/runtime/test_run_summary_packet2.py tests/runtime/test_run_summary_artifact_provenance.py`; `python -m pytest -q tests/integration/test_turn_executor_control_plane_evidence.py tests/integration/test_turn_tool_control_plane_closeout.py tests/integration/test_orchestrator_issue_control_plane.py`
 6. Compatibility exits narrowed or closed: `CE-04`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_3_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; and any touched truth-contract doc that still frames artifact or summary output as authority
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_3_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; and any touched truth-contract doc that still frames artifact or summary output as authority
 8. Slice exit condition: every touched legacy effect read surface self-identifies as projection-only with explicit effect-journal source framing, and touched closure or read models consume durable effect history before artifact or receipt evidence
 
 ### Slice 4B - Resume authority collapse on remaining snapshot and restart-policy seams
@@ -380,7 +380,7 @@ If a slice expands or splits materially, update this queue in the same change ra
 4. Legacy authority to demote: snapshot existence, saved-state presence, and service-local restart heuristics that still imply resumability without accepted checkpoint plus recovery-decision truth
 5. Required proof commands: `python -m pytest -q tests/contracts/test_control_plane_recovery_contract.py tests/application/test_sandbox_control_plane_checkpoint_service.py`; `python -m pytest -q tests/application/test_kernel_action_control_plane_pre_effect_recovery.py tests/integration/test_sandbox_runtime_recovery_service.py`; `python -m pytest -q tests/application/test_turn_tool_control_plane_preflight_guards.py tests/integration/test_turn_executor_control_plane.py`
 6. Compatibility exits narrowed or closed: `CE-05`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_4_CLOSEOUT.md`; `CURRENT_AUTHORITY.md` if resume or recovery entrypoint contracts change
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_4_CLOSEOUT.md`; `CURRENT_AUTHORITY.md` if resume or recovery entrypoint contracts change
 8. Slice exit condition: touched resume or recovery paths fail closed unless accepted checkpoint plus explicit recovery-decision truth exists, and snapshot or saved-state presence alone cannot authorize continuation on any touched path
 
 ### Slice 5B - Non-sandbox operator and reconciliation publication expansion
@@ -391,7 +391,7 @@ If a slice expands or splits materially, update this queue in the same change ra
 4. Legacy authority to demote: endpoint-local, log-local, and non-sandbox operator or divergence behavior that still acts as hidden control-plane authority outside the recorded sandbox, approval, governed turn, governed kernel, and Gitea slices
 5. Required proof commands: `python -m pytest -q tests/interfaces/test_api_nervous_system_operator_surfaces.py tests/application/test_tool_approval_control_plane_operator_service.py`; `python -m pytest -q tests/application/test_pending_gate_control_plane_operator_service.py tests/application/test_kernel_action_control_plane_operator_service.py`; `python -m pytest -q tests/integration/test_sandbox_lifecycle_reconciliation_service.py tests/integration/test_gitea_state_worker_control_plane.py`
 6. Compatibility exits narrowed or closed: `CE-06`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_5_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_5_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`
 8. Slice exit condition: touched operator and reconciliation paths publish through one first-class record family, and read models preserve command versus risk-acceptance versus attestation split explicitly across the touched non-sandbox surfaces
 
 ### Slice 7B - Namespace and capability fail-closed expansion on remaining governed mutation paths
@@ -402,7 +402,7 @@ If a slice expands or splits materially, update this queue in the same change ra
 4. Legacy authority to demote: ambient namespace visibility, undeclared capability scope, and journal-free mutation on broader runtime workloads and scheduling beyond the recorded governed turn-tool and scheduler-owned mutation slices
 5. Required proof commands: `python -m pytest -q tests/application/test_turn_tool_dispatcher_policy_enforcement.py tests/application/test_turn_tool_dispatcher_compatibility.py`; `python -m pytest -q tests/application/test_turn_tool_control_plane_preflight_guards.py tests/integration/test_turn_executor_control_plane.py tests/integration/test_orchestrator_scheduler_control_plane.py`; `python -m pytest -q tests/platform/test_no_old_namespaces.py`
 6. Compatibility exits narrowed or closed: `CE-08`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_7_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/WORKLOAD_CONTRACT_V1.md` if workload or namespace contract framing changes materially
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_7_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/WORKLOAD_CONTRACT_V1.md` if workload or namespace contract framing changes materially
 8. Slice exit condition: touched mutation paths fail closed on undeclared namespace or capability scope, and broader workload composition preserves explicit namespace inheritance or override rules instead of ambient access
 
 ### Slice 6B - Remaining terminal closeout fail-closed final-truth gating
@@ -413,14 +413,14 @@ If a slice expands or splits materially, update this queue in the same change ra
 4. Legacy authority to demote: surviving summary-backed or packet-1-style closeout surfaces and terminal paths that can still succeed without published final truth
 5. Required proof commands: `python -m pytest -q tests/contracts/test_control_plane_final_truth_contract.py tests/runtime/test_run_summary_packet2.py tests/runtime/test_run_summary_packet1.py`; `python -m pytest -q tests/integration/test_sandbox_terminal_outcome_service.py tests/integration/test_turn_tool_control_plane_closeout.py`; `python -m pytest -q tests/integration/test_gitea_state_worker_control_plane.py tests/integration/test_sandbox_orchestrator_lifecycle.py`
 6. Compatibility exits narrowed or closed: `CE-07`
-7. Same-change doc updates: `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_6_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md` if any surviving projection contract remains
+7. Same-change doc updates: `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_6_CLOSEOUT.md`; `CURRENT_AUTHORITY.md`; `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md` if any surviving projection contract remains
 8. Slice exit condition: every touched terminal path emits `FinalTruthRecord` before successful closeout, and no touched legacy summary surface authors terminal truth instead of projecting it
 
 ### Slice 8B - Lane-wide closeout synchronization after the follow-on convergence cuts
 
 1. Workstream: 8
 2. Crosswalk rows: any row changed by the converged code slices in the same batch
-3. Exact doc surfaces: `docs/ROADMAP.md`; `docs/projects/ControlPlane/orket_control_plane_packet/README.md`; `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`; this plan; `CURRENT_AUTHORITY.md`; and the touched workstream closeout artifacts
+3. Exact doc surfaces: `docs/ROADMAP.md`; `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`; `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`; this plan; `CURRENT_AUTHORITY.md`; and the touched workstream closeout artifacts
 4. Legacy authority to demote: stale queue wording, contradictory compatibility-exit posture, or closeout claims that drift away from the re-verified recorded slices plus the follow-on cuts
 5. Required proof commands: `python scripts/governance/check_docs_project_hygiene.py`; `python -m pytest -q tests/platform/test_current_authority_map.py tests/platform/test_no_old_namespaces.py`
 6. Compatibility exits narrowed or closed: whichever exit ids the paired code slices truthfully narrow or close; never claim a close without updating the ledger and the relevant closeout artifact in the same change
@@ -778,7 +778,7 @@ Required deliverables:
 6. each workstream has a stable closeout artifact that records crosswalk deltas, compatibility exits, surviving projection-only surfaces, proofs, and remaining gaps
 
 Authority map:
-1. authority docs that must agree: `docs/ROADMAP.md`; `docs/projects/ControlPlane/orket_control_plane_packet/README.md`; `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`; this plan; the paired convergence requirements doc
+1. authority docs that must agree: `docs/ROADMAP.md`; `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`; `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`; `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/CLOSEOUT.md`; this plan; the paired convergence requirements doc
 2. governance checks that must pass when roadmap or project wording changes: `python scripts/governance/check_docs_project_hygiene.py`
 3. proof and closeout surfaces that must stop claiming a different lane story: closeout docs, README notes, and any future convergence closeout material
 4. execution rule: no workstream may be marked complete unless its closeout artifact, crosswalk rows, compatibility exits, and proof commands already tell the same story as the code

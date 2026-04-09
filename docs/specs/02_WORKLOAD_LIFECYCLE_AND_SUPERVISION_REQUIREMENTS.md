@@ -1,6 +1,6 @@
 # Workload Lifecycle and Supervision Requirements
-Last updated: 2026-03-23
-Status: Accepted for implementation planning
+Last updated: 2026-04-09
+Status: Active durable spec authority
 Owner: Orket Core
 Lane type: Control-plane foundation
 
@@ -10,7 +10,7 @@ Define the legal lifecycle of governed workloads and the supervisor authority th
 
 ## Authority note
 
-Shared state enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/projects/ControlPlane/orket_control_plane_packet/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Shared state enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 This document defines the semantics, guardrails, and supervisory rules for those states.
 

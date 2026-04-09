@@ -23,7 +23,7 @@ This plan is bounded by:
 2. `docs/ROADMAP.md`
 3. `docs/ARCHITECTURE.md`
 4. `CURRENT_AUTHORITY.md`
-5. `docs/projects/ControlPlane/orket_control_plane_packet/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md`
+5. `docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md`
 6. `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md`
 7. `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md`
 8. `docs/specs/MINIMUM_AUDITABLE_RECORD_V1.md`

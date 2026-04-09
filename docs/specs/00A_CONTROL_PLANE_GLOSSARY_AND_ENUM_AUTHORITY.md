@@ -1,6 +1,6 @@
 # Control-Plane Glossary and Enum Authority
-Last updated: 2026-03-23
-Status: Accepted for implementation planning
+Last updated: 2026-04-09
+Status: Active durable spec authority
 Owner: Orket Core
 Lane type: Control-plane foundation / canonical authority
 

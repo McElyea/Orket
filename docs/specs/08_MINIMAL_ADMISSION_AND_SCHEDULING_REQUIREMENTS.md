@@ -1,6 +1,6 @@
 # Minimal Admission and Scheduling Requirements
-Last updated: 2026-03-23
-Status: Accepted for implementation planning
+Last updated: 2026-04-09
+Status: Active durable spec authority
 Owner: Orket Core
 Lane type: Control-plane foundation / minimal scheduler
 
@@ -10,7 +10,7 @@ Define the minimum admission and scheduling semantics required so execution, ret
 
 ## Authority note
 
-Reservation and lease enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/projects/ControlPlane/orket_control_plane_packet/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Reservation and lease enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 ## Core assertion
 

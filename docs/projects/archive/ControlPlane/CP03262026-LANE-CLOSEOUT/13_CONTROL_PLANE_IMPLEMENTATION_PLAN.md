@@ -10,28 +10,28 @@ Source contract index: [docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md](docs/specs/
 Turn the accepted ControlPlane packet v2 into an implementation-sequenced lane that:
 1. lands canonical control-plane contracts first
 2. keeps current-state migration honest
-3. avoids letting [09_OS_MASTER_PLAN.md](docs/projects/ControlPlane/orket_control_plane_packet/09_OS_MASTER_PLAN.md) act as shadow implementation authority
+3. avoids letting [09_OS_MASTER_PLAN.md](docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/09_OS_MASTER_PLAN.md) act as shadow implementation authority
 
 This plan was the active execution authority for the ControlPlane lane.
-[09_OS_MASTER_PLAN.md](docs/projects/ControlPlane/orket_control_plane_packet/09_OS_MASTER_PLAN.md) remains architecture direction and planning rationale only.
+[09_OS_MASTER_PLAN.md](docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/09_OS_MASTER_PLAN.md) remains architecture direction and planning rationale only.
 
 ## Source authorities
 
 1. [docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md](docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md)
-2. [00_CONTROL_PLANE_FOUNDATION_PACKET.md](docs/projects/ControlPlane/orket_control_plane_packet/00_CONTROL_PLANE_FOUNDATION_PACKET.md)
-3. [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/projects/ControlPlane/orket_control_plane_packet/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md)
-4. [00B_CURRENT_STATE_CROSSWALK.md](docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md)
-5. [01_EXECUTION_OBJECT_MODEL_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/01_EXECUTION_OBJECT_MODEL_REQUIREMENTS.md)
-6. [02_WORKLOAD_LIFECYCLE_AND_SUPERVISION_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/02_WORKLOAD_LIFECYCLE_AND_SUPERVISION_REQUIREMENTS.md)
-7. [03_FAILURE_TAXONOMY_AND_RECOVERY_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/03_FAILURE_TAXONOMY_AND_RECOVERY_REQUIREMENTS.md)
-8. [04_CAPABILITY_AND_EFFECT_MODEL_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/04_CAPABILITY_AND_EFFECT_MODEL_REQUIREMENTS.md)
-9. [05_RESOURCE_LEASE_AND_OWNERSHIP_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/05_RESOURCE_LEASE_AND_OWNERSHIP_REQUIREMENTS.md)
-10. [06_RECONCILIATION_AUTHORITY_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/06_RECONCILIATION_AUTHORITY_REQUIREMENTS.md)
-11. [07_OPERATOR_CONTROL_SURFACE_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/07_OPERATOR_CONTROL_SURFACE_REQUIREMENTS.md)
-12. [08_MINIMAL_ADMISSION_AND_SCHEDULING_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/08_MINIMAL_ADMISSION_AND_SCHEDULING_REQUIREMENTS.md)
-13. [10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md)
-14. [11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md)
-15. [12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md](docs/projects/ControlPlane/orket_control_plane_packet/12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md)
+2. [00_CONTROL_PLANE_FOUNDATION_PACKET.md](docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00_CONTROL_PLANE_FOUNDATION_PACKET.md)
+3. [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md)
+4. [00B_CURRENT_STATE_CROSSWALK.md](docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md)
+5. [01_EXECUTION_OBJECT_MODEL_REQUIREMENTS.md](docs/specs/01_EXECUTION_OBJECT_MODEL_REQUIREMENTS.md)
+6. [02_WORKLOAD_LIFECYCLE_AND_SUPERVISION_REQUIREMENTS.md](docs/specs/02_WORKLOAD_LIFECYCLE_AND_SUPERVISION_REQUIREMENTS.md)
+7. [03_FAILURE_TAXONOMY_AND_RECOVERY_REQUIREMENTS.md](docs/specs/03_FAILURE_TAXONOMY_AND_RECOVERY_REQUIREMENTS.md)
+8. [04_CAPABILITY_AND_EFFECT_MODEL_REQUIREMENTS.md](docs/specs/04_CAPABILITY_AND_EFFECT_MODEL_REQUIREMENTS.md)
+9. [05_RESOURCE_LEASE_AND_OWNERSHIP_REQUIREMENTS.md](docs/specs/05_RESOURCE_LEASE_AND_OWNERSHIP_REQUIREMENTS.md)
+10. [06_RECONCILIATION_AUTHORITY_REQUIREMENTS.md](docs/specs/06_RECONCILIATION_AUTHORITY_REQUIREMENTS.md)
+11. [07_OPERATOR_CONTROL_SURFACE_REQUIREMENTS.md](docs/specs/07_OPERATOR_CONTROL_SURFACE_REQUIREMENTS.md)
+12. [08_MINIMAL_ADMISSION_AND_SCHEDULING_REQUIREMENTS.md](docs/specs/08_MINIMAL_ADMISSION_AND_SCHEDULING_REQUIREMENTS.md)
+13. [10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md](docs/specs/10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md)
+14. [11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md](docs/specs/11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md)
+15. [12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md](docs/specs/12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md)
 16. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 17. [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
 
@@ -88,7 +88,7 @@ The highest-risk missing areas are:
 6. broader supervisor-owned checkpoint creation still is not live on runtime execution paths beyond sandbox reclaimable checkpoint-backed new-attempt recovery, governed turn execution's pre-effect same-attempt checkpoint boundary, and the Gitea worker path's pre-effect `resume_forbidden` checkpoint boundary
 7. namespace and safe-tooling gates are now live on the default turn-tool path across both protocol and non-protocol turns, the authenticated kernel-action path now enforces fail-closed `session:<session_id>` namespace scope authority for governed runs and commit-step truth, and default orchestrator issue-dispatch plus scheduler-owned mutation and team-replan child issue creation paths now publish explicit issue-scoped namespace reservation and lease authority with fail-closed namespace-scope drift rejection on reused-run and closeout checks, but broader runtime tooling, workload composition, scheduling, and resource targeting still do not share one explicit namespace authority surface
 
-Implementation slices must reference [00B_CURRENT_STATE_CROSSWALK.md](docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md) to name what current surface is being promoted, replaced, or declared missing.
+Implementation slices must reference [00B_CURRENT_STATE_CROSSWALK.md](docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md) to name what current surface is being promoted, replaced, or declared missing.
 
 ## Workstream A - Control-plane contract types and snapshot objects
 
@@ -96,7 +96,7 @@ Objective:
 1. land the canonical code-level contract family for control-plane nouns, enums, and durable snapshot objects
 
 Required deliverables:
-1. code-level enum and object definitions matching [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/projects/ControlPlane/orket_control_plane_packet/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md)
+1. code-level enum and object definitions matching [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md)
 2. first-class `Reservation`
 3. first-class `FinalTruthRecord`
 4. durable resolved policy snapshot object
@@ -239,7 +239,7 @@ Live proofs required where the implementation touches real external or sandbox b
 
 ## Stop conditions
 
-1. Stop and narrow scope if the lane starts inventing a second control-plane vocabulary outside [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/projects/ControlPlane/orket_control_plane_packet/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+1. Stop and narrow scope if the lane starts inventing a second control-plane vocabulary outside [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 2. Stop and narrow scope if an implementation slice cannot name its current-state crosswalk row.
 3. Stop and split the lane if namespace work turns into a full multitenant platform redesign.
 4. Stop and split the lane if tooling integration attempts to bypass the effect journal or supervisor.

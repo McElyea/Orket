@@ -1,6 +1,6 @@
 # Orket Control-Plane Foundation Packet
-Last updated: 2026-03-23
-Status: Accepted for implementation planning
+Last updated: 2026-04-09
+Status: Planning companion; durable spec extracted
 Owner: Orket Core
 Lane type: Control-plane foundation
 
@@ -67,31 +67,36 @@ Cross-coupled design that allows later surfaces to redefine earlier nouns is pro
 
 ### Shared authority
 
-1. `00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md`
+1. [docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md)
 
 ### Current-state honesty
 
-1. `00B_CURRENT_STATE_CROSSWALK.md`
+1. [docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md](docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md)
 
 ### Requirement authorities
 
-1. `01_EXECUTION_OBJECT_MODEL_REQUIREMENTS.md`
-2. `02_WORKLOAD_LIFECYCLE_AND_SUPERVISION_REQUIREMENTS.md`
-3. `03_FAILURE_TAXONOMY_AND_RECOVERY_REQUIREMENTS.md`
-4. `04_CAPABILITY_AND_EFFECT_MODEL_REQUIREMENTS.md`
-5. `05_RESOURCE_LEASE_AND_OWNERSHIP_REQUIREMENTS.md`
-6. `06_RECONCILIATION_AUTHORITY_REQUIREMENTS.md`
-7. `07_OPERATOR_CONTROL_SURFACE_REQUIREMENTS.md`
-8. `08_MINIMAL_ADMISSION_AND_SCHEDULING_REQUIREMENTS.md`
-9. `10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md`
-10. `11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md`
-11. `12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md`
+1. [docs/specs/01_EXECUTION_OBJECT_MODEL_REQUIREMENTS.md](docs/specs/01_EXECUTION_OBJECT_MODEL_REQUIREMENTS.md)
+2. [docs/specs/02_WORKLOAD_LIFECYCLE_AND_SUPERVISION_REQUIREMENTS.md](docs/specs/02_WORKLOAD_LIFECYCLE_AND_SUPERVISION_REQUIREMENTS.md)
+3. [docs/specs/03_FAILURE_TAXONOMY_AND_RECOVERY_REQUIREMENTS.md](docs/specs/03_FAILURE_TAXONOMY_AND_RECOVERY_REQUIREMENTS.md)
+4. [docs/specs/04_CAPABILITY_AND_EFFECT_MODEL_REQUIREMENTS.md](docs/specs/04_CAPABILITY_AND_EFFECT_MODEL_REQUIREMENTS.md)
+5. [docs/specs/05_RESOURCE_LEASE_AND_OWNERSHIP_REQUIREMENTS.md](docs/specs/05_RESOURCE_LEASE_AND_OWNERSHIP_REQUIREMENTS.md)
+6. [docs/specs/06_RECONCILIATION_AUTHORITY_REQUIREMENTS.md](docs/specs/06_RECONCILIATION_AUTHORITY_REQUIREMENTS.md)
+7. [docs/specs/07_OPERATOR_CONTROL_SURFACE_REQUIREMENTS.md](docs/specs/07_OPERATOR_CONTROL_SURFACE_REQUIREMENTS.md)
+8. [docs/specs/08_MINIMAL_ADMISSION_AND_SCHEDULING_REQUIREMENTS.md](docs/specs/08_MINIMAL_ADMISSION_AND_SCHEDULING_REQUIREMENTS.md)
+9. [docs/specs/10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md](docs/specs/10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md)
+10. [docs/specs/11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md](docs/specs/11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md)
+11. [docs/specs/12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md](docs/specs/12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md)
+
+The legacy project-local requirement paths now survive only as compatibility redirects and are not active authority.
 
 ### Planning companions
 
 1. `09_OS_MASTER_PLAN.md`
-2. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
-3. `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`
+2. `docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md`
+3. `docs/projects/archive/ControlPlane/CP04092026-WORKSTREAM-1-FOLLOW-ON-CLOSEOUT/CONTROL_PLANE_WORKLOAD_RUN_AUTHORITY_FOLLOW_ON_IMPLEMENTATION_PLAN.md`
+4. `docs/projects/archive/ControlPlane/CP04092026-CONVERGENCE-REOPEN-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_REOPEN_IMPLEMENTATION_PLAN.md`
+5. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
+6. `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md`
 
 ## Cross-packet invariants
 
@@ -189,9 +194,19 @@ This packet is ready for implementation planning because it now includes:
 
 ## Implementation authority history
 
-No active ControlPlane implementation lane remains after the completed convergence closeout.
+Active remaining-work implementation authority now lives at:
+1. `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/CONTROL_PLANE_PROJECT_CLOSEOUT_READINESS_IMPLEMENTATION_PLAN.md`
 
-The latest archived convergence implementation authority is:
+The durable Workstream 1 workload/run authority companion is:
+1. `docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md`
+
+The closed residual Workstream 1 execution record is:
+1. `docs/projects/archive/ControlPlane/CP04092026-WORKSTREAM-1-FOLLOW-ON-CLOSEOUT/CONTROL_PLANE_WORKLOAD_RUN_AUTHORITY_FOLLOW_ON_IMPLEMENTATION_PLAN.md`
+
+The completed 2026-04-09 convergence reopen archive is:
+1. `docs/projects/archive/ControlPlane/CP04092026-CONVERGENCE-REOPEN-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_REOPEN_IMPLEMENTATION_PLAN.md`
+
+The latest archived convergence implementation record is:
 1. `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`
 
 The archived packet-v2 implementation authority for this lane is:

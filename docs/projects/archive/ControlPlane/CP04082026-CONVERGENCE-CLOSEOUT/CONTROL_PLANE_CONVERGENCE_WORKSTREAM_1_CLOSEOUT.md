@@ -231,7 +231,7 @@ Docs changed:
 1. `docs/specs/WORKLOAD_CONTRACT_V1.md`
 2. `docs/specs/REVIEW_RUN_V0.md`
 3. `docs/guides/REVIEW_RUN_CLI.md`
-4. `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
+4. `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
 5. `CURRENT_AUTHORITY.md`
 6. `docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md`
 7. `docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md`
@@ -849,7 +849,7 @@ Current blocker on the next obvious `CE-02` cut:
 ## Authority-story updates landed with these slices
 
 The following authority docs were updated in the same slices recorded here:
-1. `docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
+1. `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md`
 2. `CURRENT_AUTHORITY.md`
 3. `docs/specs/WORKLOAD_CONTRACT_V1.md`
 4. `docs/specs/REVIEW_RUN_V0.md`

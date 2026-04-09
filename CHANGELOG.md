@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.44] - 2026-04-09 - "The ControlPlane Spec Extraction And OrketUI Staging Cut"
+
+### Added
+- **Durable ControlPlane Spec Set**: Added the durable ControlPlane packet spec files under `docs/specs/`, the governed workload start-path matrix, and the archived `CP04092026` ControlPlane closeout records so post-closeout authority no longer depends on an active project folder.
+- **OrketUI Future-Lane Packet**: Added the staged OrketUI future-lane authority packet consisting of the product-definition requirements doc, host seam map, and extension object model with explicit split-repo and non-authoritative BFF posture.
+
+### Changed
+- **ControlPlane Authority Posture**: Retired the non-archive `docs/projects/ControlPlane/` packet folder, moved active ControlPlane authority references onto `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md` plus `docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md`, and updated roadmap, current-authority, archive, and product-plan references to match the project closeout.
+- **OrketUI Execution Gating**: Clarified that OrketUI remains staged only, that the separate extension repo must carry the selected mockups plus a source-of-truth note and initial shell/BFF scaffold before the lane is execution-ready, and that write-like UI actions remain blocked until they map to admitted host seams or new core specs are extracted first.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. Future ControlPlane implementation must reopen through `docs/ROADMAP.md`, and OrketUI remains staged future-lane authority only until the separate extension repo and any missing write-seam specs exist.
+
 ## [0.4.43] - 2026-04-09 - "The ControlPlane Archive And Capability Gate Cut"
 
 ### Added

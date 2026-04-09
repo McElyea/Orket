@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-04-08
+Last updated: 2026-04-09
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -8,9 +8,9 @@ It is intentionally narrow:
 1. Agent behavior rules remain in `AGENTS.md`.
 2. Contributor workflow rules remain in `docs/CONTRIBUTOR.md`.
 3. This file tracks what is authoritative right now.
-4. ControlPlane implementation sequencing is historical and archived under `docs/projects/archive/ControlPlane/`; this file should name the live authority seams, not reproduce lane closeout detail.
+4. ControlPlane implementation sequencing and project closeout history remain archived under `docs/projects/archive/ControlPlane/`, while the durable governed workload start-path matrix now lives at `docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md`; this file should name the live authority seams, not reproduce slice-by-slice closeout detail.
 
-The bounded ControlPlane convergence lane completed on 2026-04-08. Its archived implementation authority now lives at `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md`, the paired archived requirements companion lives beside it, and `docs/projects/ControlPlane/orket_control_plane_packet/` remains the active ControlPlane requirements authority. This file still records only live seams; no active ControlPlane implementation queue remains in `docs/ROADMAP.md`.
+The ControlPlane project closeout completed on 2026-04-09 and is archived at `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/`. Durable ControlPlane contract authority now lives under `docs/specs/` via `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`, the durable governed workload start-path matrix now lives at `docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md`, and no non-archive `docs/projects/ControlPlane/` folder remains. Future ControlPlane implementation work must reopen explicitly through `docs/ROADMAP.md`.
 
 This file does not define:
 1. all supported features,
@@ -107,7 +107,7 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
 ```json
 {
   "version": 1,
-  "last_updated": "2026-04-08",
+  "last_updated": "2026-04-09",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -626,7 +626,7 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
     "control_plane_workload_authority": {
       "canonical_catalog": "orket/application/services/control_plane_workload_catalog.py",
       "external_authority_seam": "orket/application/services/control_plane_workload_catalog.py::resolve_control_plane_workload",
-      "matrix_gate_doc": "docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md",
+      "matrix_gate_doc": "docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md",
       "authority_inputs": [
         "catalog_workload",
         "workload_contract_v1",
@@ -635,15 +635,13 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
       "internal_helpers_not_authority": [
         "orket/application/services/control_plane_workload_catalog.py::build_cards_workload_contract"
       ],
-      "compatibility_adapters": [
-        "orket/runtime/workload_adapters.py"
-      ],
+      "compatibility_adapters": [],
       "status": "partial",
       "governance_tests": [
         "tests/application/test_control_plane_workload_authority_governance.py",
         "tests/runtime/test_cards_workload_adapter.py"
       ],
-      "note": "Only resolve_control_plane_workload(...) is an externally blessed workload-authority seam. The governed start-path matrix in the Workstream 1 closeout is a closure gate, so governance fails if a non-test module consumes workload authority from the catalog without explicit matrix coverage, if touched catalog-resolved publishers reintroduce local workload_id/workload_version aliases, if non-CLI runtime callsites drift back onto run_epic(...), run_issue(...), or run_rock(...) compatibility wrappers, if public wrappers stop collapsing to run_card(...), if the canonical run_card(...) dispatcher starts minting workload authority directly instead of routing into internal entrypoints, or if governed turn-tool runtime entrypoints drift away from the exact adapter-only routing helpers in orket/application/workflows/turn_executor_control_plane.py and orket/application/workflows/turn_tool_dispatcher_control_plane.py that invoke TurnToolControlPlaneService without minting workload authority locally. The canonical public runtime execution surface is run_card(...); run_issue(...), run_epic(...), and run_rock(...) survive only as thin convenience wrappers, with the legacy CLI --rock alias kept hidden and routed directly to run_card(...) as compatibility-only CLI input. Cards, ODR, and extension workload execution now resolve through the catalog seam, the cards, ODR, and extension start paths use catalog-local helper resolution instead of assembling WorkloadAuthorityInput(...) in runtime entrypoints, controller dispatch now checks extension child eligibility through the manager-owned boolean probes has_manifest_entry(...) and uses_sdk_contract(...) instead of resolving private manifest-entry tuples directly, internal rock routing remains routing-only debt through the generic epic-collection path, extension manifest metadata remains private internal metadata under orket/extensions/, and broader runtime start-path workload authority is still not universal.",
+      "note": "Only resolve_control_plane_workload(...) is an externally blessed workload-authority seam. The governed start-path matrix in the durable matrix companion is a closure gate, so governance fails if a non-test module consumes workload authority from the catalog without explicit matrix coverage, if touched catalog-resolved publishers reintroduce local workload_id/workload_version aliases, if non-CLI runtime callsites drift back onto run_epic(...), run_issue(...), or run_rock(...) compatibility wrappers, if public wrappers stop collapsing to run_card(...), if the canonical run_card(...) dispatcher starts minting workload authority directly instead of routing into internal entrypoints, or if governed turn-tool runtime entrypoints drift away from the exact adapter-only routing helpers in orket/application/workflows/turn_executor_control_plane.py and orket/application/workflows/turn_tool_dispatcher_control_plane.py that invoke TurnToolControlPlaneService without minting workload authority locally. The canonical public runtime execution surface is run_card(...); run_issue(...), run_epic(...), and run_rock(...) survive only as thin convenience wrappers, with the legacy CLI --rock alias kept hidden and routed directly to run_card(...) as compatibility-only CLI input. Cards, ODR, and extension workload execution resolve through the catalog seam, the cards, ODR, and extension start paths use catalog-local helper resolution instead of assembling WorkloadAuthorityInput(...) in runtime entrypoints, controller dispatch checks extension child eligibility through the manager-owned boolean probes has_manifest_entry(...) and uses_sdk_contract(...) instead of resolving private manifest-entry tuples directly, and internal rock routing remains routing-only debt through the generic epic-collection path.",
       "sources": [
         "CURRENT_AUTHORITY.md",
         "orket/application/services/control_plane_workload_catalog.py",
@@ -656,15 +654,13 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "orket/application/services/orchestrator_scheduler_control_plane_service.py",
         "orket/application/services/orchestrator_scheduler_control_plane_mutation.py",
         "orket/application/services/gitea_state_control_plane_execution_service.py",
-        "orket/runtime/workload_adapters.py",
         "orket/extensions/manager.py",
         "orket/extensions/artifact_provenance.py",
         "orket/runtime/execution_pipeline.py",
         "orket/runtime/epic_run_orchestrator.py",
         "scripts/odr/run_arbiter.py",
         "tests/application/test_control_plane_workload_authority_governance.py",
-        "docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/CONTROL_PLANE_CONVERGENCE_IMPLEMENTATION_PLAN.md",
-        "docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md"
+        "docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md"
       ]
     },
     "governed_turn_tool_namespace_policy": {

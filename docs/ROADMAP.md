@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-04-08
+Last updated: 2026-04-09
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
@@ -33,7 +33,6 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| ControlPlane | packet-active | reference-only | `docs/projects/ControlPlane/` | Orket Core | The accepted control-plane packet and current-state crosswalk remain active requirements authority under `docs/projects/ControlPlane/orket_control_plane_packet/`; the bounded convergence lane completed on `2026-04-08` and is archived at `docs/projects/archive/ControlPlane/CP04082026-CONVERGENCE-CLOSEOUT/`, and the earlier packet-v2 implementation lane remains archived at `docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/`; future ControlPlane implementation work must reopen explicitly through `docs/ROADMAP.md`. |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | PromptReforgerToolCompatibility | paused-checkpoint | paused | `docs/projects/PromptReforgerToolCompatibility/` | Orket Core | Paused after the truthful 2026-04-04 portability checkpoint. `PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; the FunctionGemma judge blocker is now cleared through the admitted native-tool path, keep Prompt Reforger service truth in `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`, keep Gemma 4 deferred, and keep Qwen out of the core lane unless a later explicit cross-family baseline is requested. |
 | techdebt | standing-maintenance | maintenance | `docs/projects/techdebt/` | Orket Core | Standing recurring maintenance remains under `Recurring-Maintenance-Checklist.md`, `LIVE-RUNTIME-PROOF-RECOVERY-PLAN.md`, and `README.md`; completed cycle archives live under `docs/projects/archive/techdebt/`. |

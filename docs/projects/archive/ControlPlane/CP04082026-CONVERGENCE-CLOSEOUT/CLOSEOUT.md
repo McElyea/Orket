@@ -28,7 +28,7 @@ The bounded ControlPlane convergence lane tracked in `docs/ROADMAP.md` is closed
 Closeout facts:
 1. the active follow-on queue was exhausted on `2026-04-08`; the representative recorded `Slice 1A` through `Slice 7A` proof sets remained green, `Slice 1E` and `Slice 1F` completed, and the queued follow-on `Slice 2B`, `Slice 3B`, `Slice 4B`, `Slice 5B`, `Slice 7B`, and `Slice 6B` proof sets also passed without requiring further code changes in this closeout change
 2. Workstream 8 then synchronized the roadmap, packet docs, current-authority snapshot, and archive posture so no active ControlPlane implementation lane remains in `Priority Now`
-3. the accepted control-plane packet under `docs/projects/ControlPlane/orket_control_plane_packet/` remains the active ControlPlane requirements authority and current-state honesty set
+3. the accepted control-plane packet under `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md` remains the active ControlPlane requirements authority and current-state honesty set
 4. future ControlPlane implementation work now requires an explicit roadmap reopen instead of continuing from a stale queued slice
 
 ## Verification
