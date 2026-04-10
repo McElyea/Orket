@@ -48,8 +48,10 @@ from orket.interfaces.api_runtime_context import (
     get_api_runtime_context,
     set_api_runtime_context,
 )
+from orket.interfaces.routers.card_authoring import build_card_authoring_router
 from orket.interfaces.routers.cards import build_cards_router
 from orket.interfaces.routers.extension_runtime import build_extension_runtime_router
+from orket.interfaces.routers.flows import build_flows_router
 from orket.interfaces.routers.kernel import build_kernel_router
 from orket.interfaces.routers.runs import build_runs_router
 from orket.interfaces.routers.sessions import build_sessions_router
@@ -734,6 +736,15 @@ async def get_version() -> dict[str, str]:
 
 v1_router.include_router(build_kernel_router(lambda: _get_engine()))
 v1_router.include_router(build_cards_router(lambda: _get_engine(), lambda: api_runtime_node))
+v1_router.include_router(build_card_authoring_router(lambda: _get_engine(), lambda: _project_root()))
+v1_router.include_router(
+    build_flows_router(
+        engine_getter=lambda: _get_engine(),
+        project_root_getter=lambda: _project_root(),
+        schedule_async_invocation_task=_schedule_async_invocation_task,
+        session_id_factory=lambda: _get_api_runtime_host().create_session_id(),
+    )
+)
 v1_router.include_router(build_runs_router(lambda: _get_engine()))
 v1_router.include_router(
     build_settings_router(

@@ -1,5 +1,5 @@
 # ControlPlane Governed Start-Path Matrix
-Last updated: 2026-04-09
+Last updated: 2026-04-10
 Status: Active durable governance companion
 Owner: Orket Core
 
@@ -36,7 +36,7 @@ This matrix is machine-enforced by `tests/application/test_control_plane_workloa
 | manual review-run | `catalog-resolved` | `ReviewRunControlPlaneService` consumes `REVIEW_RUN_WORKLOAD` from the shared catalog and carries that canonical `WorkloadRecord` directly into run publication. |
 | sandbox runtime | `catalog-resolved` | sandbox start paths consume `sandbox_runtime_workload_for_tech_stack(...)` from the shared catalog. |
 | kernel action | `catalog-resolved` | `KernelActionControlPlaneService` consumes `KERNEL_ACTION_WORKLOAD` and carries that canonical `WorkloadRecord` directly into run publication. |
-| governed turn-tool | `catalog-resolved` | `TurnToolControlPlaneService` consumes `TURN_TOOL_WORKLOAD` and carries that canonical `WorkloadRecord` directly into run publication; `turn_executor_control_plane.py` and `turn_tool_dispatcher_control_plane.py` remain adapter-only routing seams that do not mint workload authority locally. |
+| governed turn-tool | `catalog-resolved` | `TurnToolControlPlaneService` consumes `TURN_TOOL_WORKLOAD` and carries that canonical `WorkloadRecord` directly into run publication; `orket/application/workflows/turn_executor_control_plane.py` and `orket/application/workflows/turn_tool_dispatcher_control_plane.py` remain adapter-only routing seams that do not mint workload authority locally. |
 | orchestrator issue dispatch | `catalog-resolved` | `OrchestratorIssueControlPlaneService` consumes `ORCHESTRATOR_ISSUE_DISPATCH_WORKLOAD` and carries that canonical `WorkloadRecord` directly into run publication. |
 | orchestrator scheduler mutation | `catalog-resolved` | `OrchestratorSchedulerControlPlaneService` consumes `ORCHESTRATOR_SCHEDULER_TRANSITION_WORKLOAD` and carries that canonical `WorkloadRecord` through namespace-mutation helpers. |
 | orchestrator child workload composition | `catalog-resolved` | `OrchestratorSchedulerControlPlaneService` consumes `ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD` and carries that canonical `WorkloadRecord` through namespace-mutation helpers. |

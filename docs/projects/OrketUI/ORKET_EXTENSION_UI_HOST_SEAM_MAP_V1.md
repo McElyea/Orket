@@ -1,16 +1,16 @@
 # ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1
 
 Last updated: 2026-04-09
-Status: Draft staged future-lane support doc
-Authority status: Staging only. Not current implementation authority until explicitly adopted.
+Status: Active shipped provenance support doc
+Authority status: Active Orket-side shipped provenance support doc. Subordinate to shipped host authority and not itself a new host-seam grant.
 Owner: Orket Core
-Related docs: [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](docs/projects/future/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/future/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md), [docs/specs/COMPANION_UI_MVP_CONTRACT.md](docs/specs/COMPANION_UI_MVP_CONTRACT.md), [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md), [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
+Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md), [docs/specs/COMPANION_UI_MVP_CONTRACT.md](docs/specs/COMPANION_UI_MVP_CONTRACT.md), [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md), [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
 
 ## Purpose
 
-Name the allowed canonical host seams an Orket UI extension may consume without first extracting new core specs.
+Name the allowed canonical host seams an OrketUI extension may consume without first extracting new core specs.
 
-This doc exists so the future UI lane does not quietly invent host truth through BFF convenience, inferred routes, private runtime access, or old prototype knowledge.
+This doc exists so the OrketUI lane does not quietly invent host truth through BFF convenience, inferred routes, private runtime access, or old prototype knowledge.
 
 ## Authority precedence
 
@@ -44,10 +44,21 @@ Without new core work, the extension may rely only on host inputs already admitt
 
 1. [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md)
 2. [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md)
-3. [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md)
-4. host-current seams named in [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
+3. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md)
+4. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md)
+5. [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md)
+6. host-current seams named in [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
 
 Older UI code, prototype HTML, generated mockups, and remembered route shapes are not authority.
+
+## Shipped OrketUI host specs
+
+The OrketUI lane now has shipped host specs for the bounded current write slice in:
+
+1. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md)
+2. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md)
+
+Those specs are now adopted into the active host authority set.
 
 ## Allowed canonical host routes and events
 
@@ -97,8 +108,31 @@ The extension BFF may consume only admitted host routes and events that are alre
 5. `GET /v1/cards/{card_id}/history`
 6. `GET /v1/cards/{card_id}/guard-history`
 7. `GET /v1/cards/{card_id}/comments`
+8. `POST /v1/cards`
+9. `PUT /v1/cards/{card_id}`
+10. `POST /v1/cards/validate`
 
-These admitted card surfaces are inspection or read-model surfaces. They do not, by themselves, authorize card creation, save, or validation writes for this extension lane.
+The card read surfaces remain inspection and read-model surfaces.
+The three card-authoring routes above are now the admitted write seams for create, save, and validation.
+
+### Flow authoring baseline
+
+1. `GET /v1/flows`
+2. `GET /v1/flows/{flow_id}`
+3. `POST /v1/flows`
+4. `PUT /v1/flows/{flow_id}`
+5. `POST /v1/flows/validate`
+6. `POST /v1/flows/{flow_id}/runs`
+
+The current admitted flow-run slice is bounded:
+
+1. persisted flow definitions use neutral node kinds only
+2. run initiation currently requires exactly one `card` node
+3. run initiation does not admit `branch` or `merge`
+4. the assigned card must already exist on the host card surface
+5. the assigned card must resolve on the canonical run-card surface
+6. the assigned card must resolve to the `issue` runtime target
+7. `200` plus returned `session_id` is authoritative run acceptance only; later run completion remains governed by the existing runtime policy and epic environment
 
 ### Generic extension-runtime baseline
 
@@ -118,7 +152,7 @@ Where the extension needs already-admitted host runtime capabilities, it may con
 
 This remains host-owned capability behavior behind the BFF. It does not authorize direct browser calls to host routes.
 
-These admitted generic extension-runtime routes also do not, by themselves, authorize flow-authoring persistence semantics for OrketUI.
+These admitted generic extension-runtime routes also do not, by themselves, authorize card-authoring or flow-authoring semantics for OrketUI.
 
 ## Prompt Reforger seam note
 
@@ -160,25 +194,23 @@ If a required input is not on an admitted seam, the truthful next step is new co
 4. The UI must preserve host identifiers from confirmed host payloads and must not replace them with projection-only IDs.
 5. The UI must not narrate host success from local intent alone.
 
-## Product actions that still require seam proof
+## Product actions now bound to admitted seams
 
-This future lane names product actions such as:
+This lane names product actions such as:
 
 1. `create card`
 2. `save card`
 3. `validate card`
 4. `save flow`
-5. `run flow`
+5. `validate flow`
+6. `run flow`
 
-Naming those actions in staged product requirements does not admit a host write seam by itself.
+Those actions now map to admitted host seams for the bounded shipped slice.
 
-Each such action must satisfy one of the following before implementation claims are made:
+That does not authorize the UI to imply broader behavior than the current host contract actually ships, especially for multi-node flow execution beyond the admitted single-card issue-target run path.
 
-1. it maps directly onto an already-admitted host seam with current authority backing
-2. a new core spec extracts the required host seam first
+The current action-by-action result for that inventory is recorded in [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md).
 
-If neither is true, the action remains blocked as product intent only.
+## Change gate for implementation
 
-## Change gate for future implementation
-
-If a proposed UI feature depends on host data or actions outside this seam map, the feature is blocked on new core spec extraction first.
+If a proposed UI feature depends on host data or actions outside this seam map, the feature is blocked on new core spec extraction or explicit host-surface expansion first.

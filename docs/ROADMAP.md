@@ -6,7 +6,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. None.
+_No active non-maintenance priority items._
 
 ## Maintenance (Non-Priority)
 
@@ -34,6 +34,7 @@ Every non-archive project under `docs/projects/` must appear here.
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
+| OrketUI | shipped-reference | reference | `docs/projects/OrketUI/` | Orket Core | Shipped Orket-side provenance packet for the separate OrketUI extension. The completed lane record lives under `docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/`; future OrketUI expansion must reopen as a new explicit roadmap lane. |
 | PromptReforgerToolCompatibility | paused-checkpoint | paused | `docs/projects/PromptReforgerToolCompatibility/` | Orket Core | Paused after the truthful 2026-04-04 portability checkpoint. `PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; the FunctionGemma judge blocker is now cleared through the admitted native-tool path, keep Prompt Reforger service truth in `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`, keep Gemma 4 deferred, and keep Qwen out of the core lane unless a later explicit cross-family baseline is requested. |
 | techdebt | standing-maintenance | maintenance | `docs/projects/techdebt/` | Orket Core | Standing recurring maintenance remains under `Recurring-Maintenance-Checklist.md`, `LIVE-RUNTIME-PROOF-RECOVERY-PLAN.md`, and `README.md`; completed cycle archives live under `docs/projects/archive/techdebt/`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane. |

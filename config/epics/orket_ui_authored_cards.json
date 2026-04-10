@@ -1,0 +1,526 @@
+{
+  "issues": [
+    {
+      "id": "CARD-D4FA9D15",
+      "summary": "New Requirement Card",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Describe the operator-facing objective.",
+      "requirements": "Write the next truthful card prompt here.",
+      "note": "",
+      "params": {
+        "authoring_revision_id": "crv_901a5693bc1f402286bf70c24229e961",
+        "authoring_saved_at": "2026-04-10T02:25:57.086356+00:00",
+        "authoring_payload": {
+          "name": "New Requirement Card",
+          "purpose": "Describe the operator-facing objective.",
+          "card_kind": "requirement",
+          "prompt": "Write the next truthful card prompt here.",
+          "inputs": [],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Definition",
+          "notes": "",
+          "constraints": [],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Write the next truthful card prompt here.",
+        "purpose": "Describe the operator-facing objective.",
+        "display_category": "Definition",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [],
+        "inputs": [],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    },
+    {
+      "id": "CARD-11D8FC7D",
+      "summary": "New Requirement Card",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Describe the operator-facing objective.",
+      "requirements": "Write the next truthful card prompt here.",
+      "note": "",
+      "params": {
+        "authoring_revision_id": "crv_cca4f23fb17b41899d0479d3ea0e86b0",
+        "authoring_saved_at": "2026-04-10T02:26:56.878439+00:00",
+        "authoring_payload": {
+          "name": "New Requirement Card",
+          "purpose": "Describe the operator-facing objective.",
+          "card_kind": "requirement",
+          "prompt": "Write the next truthful card prompt here.",
+          "inputs": [],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Definition",
+          "notes": "",
+          "constraints": [],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Write the next truthful card prompt here.",
+        "purpose": "Describe the operator-facing objective.",
+        "display_category": "Definition",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [],
+        "inputs": [],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    },
+    {
+      "id": "CARD-1CF414EE",
+      "summary": "New Requirement Card",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Describe the operator-facing objective.",
+      "requirements": "Write the next truthful card prompt here.",
+      "note": "",
+      "params": {
+        "authoring_revision_id": "crv_6f12d33ace9347c78c553436e5e97edb",
+        "authoring_saved_at": "2026-04-10T02:29:13.324026+00:00",
+        "authoring_payload": {
+          "name": "New Requirement Card",
+          "purpose": "Describe the operator-facing objective.",
+          "card_kind": "requirement",
+          "prompt": "Write the next truthful card prompt here.",
+          "inputs": [],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Definition",
+          "notes": "",
+          "constraints": [],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Write the next truthful card prompt here.",
+        "purpose": "Describe the operator-facing objective.",
+        "display_category": "Definition",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [],
+        "inputs": [],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    },
+    {
+      "id": "CARD-9A86E64A",
+      "summary": "New Requirement Card",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Describe the operator-facing objective.",
+      "requirements": "Write the next truthful card prompt here.",
+      "note": "",
+      "params": {
+        "authoring_revision_id": "crv_1f0a60d7062f470bbfaed4e2ab97dd8b",
+        "authoring_saved_at": "2026-04-10T02:29:40.710192+00:00",
+        "authoring_payload": {
+          "name": "New Requirement Card",
+          "purpose": "Describe the operator-facing objective.",
+          "card_kind": "requirement",
+          "prompt": "Write the next truthful card prompt here.",
+          "inputs": [],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Definition",
+          "notes": "",
+          "constraints": [],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Write the next truthful card prompt here.",
+        "purpose": "Describe the operator-facing objective.",
+        "display_category": "Definition",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [],
+        "inputs": [],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    },
+    {
+      "id": "CARD-8201372B",
+      "summary": "New Requirement Card",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Describe the operator-facing objective.",
+      "requirements": "Write the next truthful card prompt here.",
+      "note": "",
+      "params": {
+        "authoring_revision_id": "crv_3177e65dc62846a0ae682226ab12dc98",
+        "authoring_saved_at": "2026-04-10T02:30:21.238764+00:00",
+        "authoring_payload": {
+          "name": "New Requirement Card",
+          "purpose": "Describe the operator-facing objective.",
+          "card_kind": "requirement",
+          "prompt": "Write the next truthful card prompt here.",
+          "inputs": [],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Definition",
+          "notes": "",
+          "constraints": [],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Write the next truthful card prompt here.",
+        "purpose": "Describe the operator-facing objective.",
+        "display_category": "Definition",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [],
+        "inputs": [],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    },
+    {
+      "id": "CARD-4C43CD39",
+      "summary": "New Requirement Card",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Describe the operator-facing objective.",
+      "requirements": "Write the next truthful card prompt here.",
+      "note": "",
+      "params": {
+        "authoring_revision_id": "crv_4cdbddb606fe408ea874372ea95251e5",
+        "authoring_saved_at": "2026-04-10T15:19:01.961474+00:00",
+        "authoring_payload": {
+          "name": "New Requirement Card",
+          "purpose": "Describe the operator-facing objective.",
+          "card_kind": "requirement",
+          "prompt": "Write the next truthful card prompt here.",
+          "inputs": [],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Definition",
+          "notes": "",
+          "constraints": [],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Write the next truthful card prompt here.",
+        "purpose": "Describe the operator-facing objective.",
+        "display_category": "Definition",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [],
+        "inputs": [],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    },
+    {
+      "id": "CARD-F32DBACE",
+      "summary": "New Requirement Card",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Describe the operator-facing objective.",
+      "requirements": "Write the next truthful card prompt here.",
+      "note": "",
+      "params": {
+        "authoring_revision_id": "crv_1674ba96fb674496a1128716fccc5c72",
+        "authoring_saved_at": "2026-04-10T20:22:18.508384+00:00",
+        "authoring_payload": {
+          "name": "New Requirement Card",
+          "purpose": "Describe the operator-facing objective.",
+          "card_kind": "requirement",
+          "prompt": "Write the next truthful card prompt here.",
+          "inputs": [],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Definition",
+          "notes": "",
+          "constraints": [],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Write the next truthful card prompt here.",
+        "purpose": "Describe the operator-facing objective.",
+        "display_category": "Definition",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [],
+        "inputs": [],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    },
+    {
+      "id": "CARD-67B49E55",
+      "summary": "New Requirement Card",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Describe the operator-facing objective.",
+      "requirements": "Write the next truthful card prompt here.",
+      "note": "",
+      "params": {
+        "authoring_revision_id": "crv_c073cfc88bea4199919c386f4bcef3f4",
+        "authoring_saved_at": "2026-04-10T20:23:56.433308+00:00",
+        "authoring_payload": {
+          "name": "New Requirement Card",
+          "purpose": "Describe the operator-facing objective.",
+          "card_kind": "requirement",
+          "prompt": "Write the next truthful card prompt here.",
+          "inputs": [],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Definition",
+          "notes": "",
+          "constraints": [],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Write the next truthful card prompt here.",
+        "purpose": "Describe the operator-facing objective.",
+        "display_category": "Definition",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [],
+        "inputs": [],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    },
+    {
+      "id": "CARD-80FA0DFA",
+      "summary": "New Requirement Card",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Describe the operator-facing objective.",
+      "requirements": "Write the next truthful card prompt here.",
+      "note": "",
+      "params": {
+        "authoring_revision_id": "crv_79c75a17f6b24b58bf2700cedb05dcf8",
+        "authoring_saved_at": "2026-04-10T20:24:09.839363+00:00",
+        "authoring_payload": {
+          "name": "New Requirement Card",
+          "purpose": "Describe the operator-facing objective.",
+          "card_kind": "requirement",
+          "prompt": "Write the next truthful card prompt here.",
+          "inputs": [],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Definition",
+          "notes": "",
+          "constraints": [],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Write the next truthful card prompt here.",
+        "purpose": "Describe the operator-facing objective.",
+        "display_category": "Definition",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [],
+        "inputs": [],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    }
+  ],
+  "id": "orket_ui_authored_cards",
+  "name": "orket_ui_authored_cards",
+  "description": "Synthetic runtime projection for OrketUI-authored issue cards.",
+  "team": "standard",
+  "environment": "standard",
+  "architecture_governance": {
+    "idesign": false,
+    "pattern": "Standard"
+  }
+}

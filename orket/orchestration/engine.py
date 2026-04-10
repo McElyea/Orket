@@ -197,6 +197,11 @@ class OrchestrationEngine:
             model_override=model_override,
         )
 
+    async def resolve_run_card_target(self, card_id: str) -> tuple[str, str | None]:
+        """Expose canonical runtime-target resolution for preflight callers."""
+        await self.initialize()
+        return await self._pipeline._resolve_run_card_target(card_id)
+
     async def run_rock(
         self,
         rock_name: str,

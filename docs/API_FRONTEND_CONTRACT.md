@@ -1,6 +1,6 @@
-﻿# Frontend API Contract
+# Frontend API Contract
 
-Last verified against `orket/interfaces/api.py`: 2026-04-08
+Last verified against `orket/interfaces/api.py`: 2026-04-09
 
 ## Authentication
 1. `/v1/*` endpoints require `X-API-Key`.
@@ -113,7 +113,18 @@ Last verified against `orket/interfaces/api.py`: 2026-04-08
 5. `GET /v1/cards/{card_id}/history`
 6. `GET /v1/cards/{card_id}/guard-history`
 7. `GET /v1/cards/{card_id}/comments`
-8. `POST /v1/cards/archive`
+8. `POST /v1/cards`
+9. `PUT /v1/cards/{card_id}`
+10. `POST /v1/cards/validate`
+11. `POST /v1/cards/archive`
+
+## Flows
+1. `GET /v1/flows`
+2. `GET /v1/flows/{flow_id}`
+3. `POST /v1/flows`
+4. `PUT /v1/flows/{flow_id}`
+5. `POST /v1/flows/validate`
+6. `POST /v1/flows/{flow_id}/runs`
 
 ## Sandboxes
 1. `GET /v1/sandboxes`
@@ -159,27 +170,36 @@ Last verified against `orket/interfaces/api.py`: 2026-04-08
 27. `GET /v1/protocol/runs/{run_id}/ledger-parity` supports optional `sqlite_db_path`.
 28. `GET /v1/protocol/ledger-parity/campaign` supports repeated `session_id`; optional `sqlite_db_path`, `discover_limit`.
 29. Caller-provided `runs_root` and `sqlite_db_path` on the protocol replay or parity surfaces fail closed when they escape the workspace root.
-30. `POST /v1/cards/archive` requires at least one selector: `card_ids`, `build_id`, or `related_tokens`.
-31. `GET /v1/cards/view` supports optional `build_id`, `session_id`, `status`, `filter`, `limit`, `offset`; `filter` admits `open`, `running`, `blocked`, `review`, `terminal_failure`, and `completed`.
-32. `GET /v1/cards/view`, `GET /v1/cards/{card_id}/view`, `GET /v1/runs/view`, and `GET /v1/runs/{session_id}/view` are the canonical operator-facing Card Viewer/Runner read surfaces and return the stable read models defined in `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`.
-33. `GET /v1/runs/view` supports optional `limit`.
-34. `POST /v1/system/run-active` body supports: `path`, `build_id`, `type`, `issue_id`; it remains the canonical run/rerun action for the Card Viewer/Runner slice.
-35. `GET /v1/system/provider-status` and `GET /v1/system/health-view` support optional `roles`.
-36. `PATCH /v1/settings` accepts runtime setting updates defined in `SETTINGS_SCHEMA`.
-37. Orket host does not mount Companion-named product routes; clients that need Companion product behavior must go through the external Companion BFF.
-38. `extension_id` on `/v1/extensions/{extension_id}/runtime/*` must be a non-empty admitted id segment matching `[A-Za-z0-9._-]{1,128}`.
-39. `GET /v1/extensions/{extension_id}/runtime/status` returns capability availability plus `voice_state`, `voice_silence_delay_sec`, and `active_sessions`.
-40. `GET /v1/extensions/{extension_id}/runtime/models` supports optional `provider`; current default is `ollama`.
-41. `POST /v1/extensions/{extension_id}/runtime/llm/generate` requires: `user_message`; supports optional `system_prompt`, `max_tokens`, `temperature`, `stop_sequences`, `provider`, `model`.
-42. `POST /v1/extensions/{extension_id}/runtime/memory/query` requires: `scope` with admitted values `session_memory`, `profile_memory`, or `episodic_memory`; `session_id` is required for non-profile scopes; supports optional `query`, `limit`.
-43. `POST /v1/extensions/{extension_id}/runtime/memory/write` requires: `scope`, `key`; `session_id` is required for non-profile scopes; supports optional `metadata`.
-44. `POST /v1/extensions/{extension_id}/runtime/memory/clear` requires: `scope` with admitted values `session_memory` or `episodic_memory`, plus `session_id`.
-45. `POST /v1/extensions/{extension_id}/runtime/voice/control` requires: `command` with admitted values `start`, `stop`, or `submit`; supports optional `silence_delay_sec`.
-46. `POST /v1/extensions/{extension_id}/runtime/voice/transcribe` requires: `audio_b64`; supports optional `mime_type`, `language_hint`.
-47. `POST /v1/extensions/{extension_id}/runtime/tts/synthesize` requires: `text`; supports optional `voice_id`, `emotion_hint`, `speed`.
-48. `GET /v1/marshaller/runs` supports optional `limit`.
-49. `GET /v1/marshaller/runs/{run_id}` supports optional `attempt_index`.
-50. `WS /ws/interactions/{session_id}` is a session-scoped interaction event stream and fails closed when stream events v1 is disabled.
+30. `POST /v1/cards` body requires `draft` with the admitted `CardDraftWriteModel` fields from [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md).
+31. `PUT /v1/cards/{card_id}` body requires `draft` and supports optional `expected_revision_id`; it fails closed with `404` when the card does not exist and `409` on revision conflict. For issue-target authored cards, successful `POST` and `PUT` also upsert the bounded runtime projection at `config/epics/orket_ui_authored_cards.json` so the current admitted flow-run slice can resolve those cards on the canonical run-card surface.
+32. `POST /v1/cards/validate` body requires `draft`; it is non-persisting and does not mint a host `card_id`.
+33. `POST /v1/cards/archive` requires at least one selector: `card_ids`, `build_id`, or `related_tokens`.
+34. `GET /v1/cards/view` supports optional `build_id`, `session_id`, `status`, `filter`, `limit`, `offset`; `filter` admits `open`, `running`, `blocked`, `review`, `terminal_failure`, and `completed`.
+35. `GET /v1/cards/view`, `GET /v1/cards/{card_id}/view`, `GET /v1/runs/view`, and `GET /v1/runs/{session_id}/view` are the canonical operator-facing Card Viewer/Runner read surfaces and return the stable read models defined in `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`.
+36. `GET /v1/runs/view` supports optional `limit`.
+37. `GET /v1/flows` supports optional `limit` and `offset`.
+38. `POST /v1/flows` body requires `definition` with the admitted `FlowDefinitionWriteModel` fields from [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md).
+39. `PUT /v1/flows/{flow_id}` body requires `definition` and supports optional `expected_revision_id`; it fails closed with `404` when the flow does not exist and `409` on revision conflict.
+40. `POST /v1/flows/validate` body requires `definition`; it is non-persisting and does not mint a host `flow_id`.
+41. `POST /v1/flows/{flow_id}/runs` supports optional `expected_revision_id`; the current admitted run slice is bounded to exactly one `card` node, forbids `branch` and `merge`, requires the assigned card on the host card surface, requires that card to resolve on the canonical run-card surface including the bounded authored-card runtime projection documented by [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md) when applicable, and requires that card to resolve to the `issue` runtime target.
+42. `POST /v1/flows/{flow_id}/runs` returns authoritative acceptance through `session_id` when it succeeds; later run completion remains governed by the existing runtime policy and epic environment.
+43. `POST /v1/system/run-active` body supports: `path`, `build_id`, `type`, `issue_id`; it remains the canonical run/rerun action for the Card Viewer/Runner slice.
+44. `GET /v1/system/provider-status` and `GET /v1/system/health-view` support optional `roles`.
+45. `PATCH /v1/settings` accepts runtime setting updates defined in `SETTINGS_SCHEMA`.
+46. Orket host does not mount Companion-named product routes; clients that need Companion product behavior must go through the external Companion BFF.
+47. `extension_id` on `/v1/extensions/{extension_id}/runtime/*` must be a non-empty admitted id segment matching `[A-Za-z0-9._-]{1,128}`.
+48. `GET /v1/extensions/{extension_id}/runtime/status` returns capability availability plus `voice_state`, `voice_silence_delay_sec`, and `active_sessions`.
+49. `GET /v1/extensions/{extension_id}/runtime/models` supports optional `provider`; current default is `ollama`.
+50. `POST /v1/extensions/{extension_id}/runtime/llm/generate` requires: `user_message`; supports optional `system_prompt`, `max_tokens`, `temperature`, `stop_sequences`, `provider`, `model`.
+51. `POST /v1/extensions/{extension_id}/runtime/memory/query` requires: `scope` with admitted values `session_memory`, `profile_memory`, or `episodic_memory`; `session_id` is required for non-profile scopes; supports optional `query`, `limit`.
+52. `POST /v1/extensions/{extension_id}/runtime/memory/write` requires: `scope`, `key`; `session_id` is required for non-profile scopes; supports optional `metadata`.
+53. `POST /v1/extensions/{extension_id}/runtime/memory/clear` requires: `scope` with admitted values `session_memory` or `episodic_memory`, plus `session_id`.
+54. `POST /v1/extensions/{extension_id}/runtime/voice/control` requires: `command` with admitted values `start`, `stop`, or `submit`; supports optional `silence_delay_sec`.
+55. `POST /v1/extensions/{extension_id}/runtime/voice/transcribe` requires: `audio_b64`; supports optional `mime_type`, `language_hint`.
+56. `POST /v1/extensions/{extension_id}/runtime/tts/synthesize` requires: `text`; supports optional `voice_id`, `emotion_hint`, `speed`.
+57. `GET /v1/marshaller/runs` supports optional `limit`.
+58. `GET /v1/marshaller/runs/{run_id}` supports optional `attempt_index`.
+59. `WS /ws/interactions/{session_id}` is a session-scoped interaction event stream and fails closed when stream events v1 is disabled.
 
 ## Compatibility Rule
 When routes or payload shapes change, update this document in the same PR.

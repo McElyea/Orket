@@ -101,6 +101,8 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
 73. Canonical runtime-verification support artifacts now use `agent_output/verification/runtime_verification.json` as the latest support-only verifier record, `agent_output/verification/runtime_verification_index.json` as the stable history index, and `agent_output/verification/runtime_verifier_records/<run_id>/<issue_id>/turn_<turn_index>_retry_<retry_count>.json` as the preserved per-record family; those artifacts must record `artifact_role=support_verification_evidence`, `artifact_authority=support_only`, `authored_output=false`, `overall_evidence_class`, and `evidence_summary` over `syntax_only`, `command_execution`, `behavioral_verification`, and `not_evaluated` together with run, issue, turn, and retry provenance, and runtime-summary or MAR paths must not promote the verifier artifact to the primary authored output by default
 74. Canonical Tool Execution Gate authority now lives in `docs/specs/TOOL_EXECUTION_GATE_V1.md`; the shipped first slice closes the supported `run_card(...) -> TurnExecutor -> ToolDispatcher` path plus normalized extension actions that re-enter `run_card(...)`, requires construction-time `tool_gate` authority on that supported path, keeps direct `ToolDispatcher.execute_tools(...)`, direct `ToolBox.execute(...)`, and direct card-family method invocation inventory-only internal seams, keeps direct `Agent.run(...)` as retained legacy compatibility that now fail-closes before any direct tool call when `tool_gate` authority is missing, keeps SDK capability registry invocation out of scope under `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`, and fixes the canonical audit command and stable output path at `python scripts/security/build_tool_gate_audit.py --strict` and `benchmarks/results/security/tool_gate_audit.json`
 75. Canonical Card Viewer/Runner operator surface now lives in `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`; the first truthful operator slice reads through `GET /v1/cards/view`, `GET /v1/cards/{card_id}/view`, `GET /v1/runs/view`, `GET /v1/runs/{session_id}/view`, `GET /v1/system/provider-status`, and `GET /v1/system/health-view`, uses `POST /v1/system/run-active` as the canonical run/rerun action, admits lifecycle categories `prebuild_blocked`, `artifact_run_failed`, `artifact_run_completed_unverified`, `artifact_run_verified`, and `degraded_completed`, and admits card filter buckets `open`, `running`, `blocked`, `review`, `terminal_failure`, and `completed` via `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/operator_view_models.py`, `orket/interfaces/operator_view_support.py`, `orket/interfaces/routers/cards.py`, `orket/interfaces/routers/runs.py`, `orket/interfaces/routers/system.py`, and `orket/interfaces/api.py`
+76. Canonical Card Authoring surface now lives in `docs/specs/CARD_AUTHORING_SURFACE_V1.md`; the current shipped host slice admits `POST /v1/cards`, `PUT /v1/cards/{card_id}`, and `POST /v1/cards/validate`, mints canonical host `card_id` plus card authoring `revision_id`, persists host authoring payload and revision markers on the canonical card surface, upserts issue-target authored cards into the bounded runtime projection `config/epics/orket_ui_authored_cards.json` for canonical run-card resolution, and fail-closes stale saves with `409 revision_conflict` via `docs/specs/CARD_AUTHORING_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/card_authoring.py`, `orket/application/services/card_authoring_service.py`, `orket/application/services/card_authoring_runtime_projection_service.py`, and `orket/interfaces/api.py`
+77. Canonical Flow Authoring surface now lives in `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`; the current shipped host slice admits `GET /v1/flows`, `GET /v1/flows/{flow_id}`, `POST /v1/flows`, `PUT /v1/flows/{flow_id}`, `POST /v1/flows/validate`, and bounded `POST /v1/flows/{flow_id}/runs`, persists flow truth at `.orket/durable/db/orket_ui_flows.sqlite3` via `orket/runtime_paths.py::resolve_flow_authoring_db_path`, admits neutral node kinds `start`, `card`, `branch`, `merge`, and `final`, composes with the authored-card runtime projection for current run-card resolution, bounds current run initiation to exactly one `card` node that resolves to the canonical `issue` runtime target, and treats `200` plus returned `session_id` as authoritative acceptance only while downstream run completion remains governed by the existing runtime policy via `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/flows.py`, `orket/application/services/flow_authoring_service.py`, `orket/adapters/storage/async_flow_repository.py`, `orket/runtime_paths.py`, and `orket/interfaces/api.py`
 
 ## Machine-Readable Authority Map (v1)
 
@@ -198,6 +200,8 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "operating_principles_source": "docs/specs/ORKET_OPERATING_PRINCIPLES.md",
         "determinism_gate_policy_source": "docs/specs/ORKET_DETERMINISM_GATE_POLICY.md",
         "card_viewer_runner_surface_contract_source": "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md",
+        "card_authoring_surface_contract_source": "docs/specs/CARD_AUTHORING_SURFACE_V1.md",
+        "flow_authoring_surface_contract_source": "docs/specs/FLOW_AUTHORING_SURFACE_V1.md",
         "terraform_plan_reviewer_v1_contract_source": "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md",
         "local_prompting_contract_source": "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
         "run_evidence_graph_contract_source": "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
@@ -205,7 +209,9 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
           "docs/README.md",
           "docs/ROADMAP.md",
           "docs/CONTRIBUTOR.md",
-          "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md"
+          "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md",
+          "docs/specs/CARD_AUTHORING_SURFACE_V1.md",
+          "docs/specs/FLOW_AUTHORING_SURFACE_V1.md"
         ]
       },
       "card_viewer_runner_surface": {
@@ -241,6 +247,68 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
           "orket/interfaces/routers/cards.py",
           "orket/interfaces/routers/runs.py",
           "orket/interfaces/routers/system.py",
+          "orket/interfaces/api.py"
+        ]
+      },
+      "card_authoring_surface": {
+        "contract_source": "docs/specs/CARD_AUTHORING_SURFACE_V1.md",
+        "create_route": "POST /v1/cards",
+        "update_route": "PUT /v1/cards/{card_id}",
+        "validate_route": "POST /v1/cards/validate",
+        "request_wrapper": "draft",
+        "stale_save_guard": "expected_revision_id",
+        "host_persistence_shape": "IssueRecord.params.authoring_payload + authoring_revision_id + authoring_saved_at",
+        "runtime_projection_epic_id": "orket_ui_authored_cards",
+        "runtime_projection_path": "config/epics/orket_ui_authored_cards.json",
+        "runtime_projection_runtime_target": "issue",
+        "not_found_status_code": 404,
+        "conflict_status_code": 409,
+        "sources": [
+          "CURRENT_AUTHORITY.md",
+          "docs/specs/CARD_AUTHORING_SURFACE_V1.md",
+          "docs/API_FRONTEND_CONTRACT.md",
+          "orket/interfaces/routers/card_authoring.py",
+          "orket/application/services/card_authoring_service.py",
+          "orket/application/services/card_authoring_runtime_projection_service.py",
+          "orket/interfaces/api.py"
+        ]
+      },
+      "flow_authoring_surface": {
+        "contract_source": "docs/specs/FLOW_AUTHORING_SURFACE_V1.md",
+        "list_route": "GET /v1/flows",
+        "detail_route": "GET /v1/flows/{flow_id}",
+        "create_route": "POST /v1/flows",
+        "update_route": "PUT /v1/flows/{flow_id}",
+        "validate_route": "POST /v1/flows/validate",
+        "run_route": "POST /v1/flows/{flow_id}/runs",
+        "stale_save_guard": "expected_revision_id",
+        "storage_path": ".orket/durable/db/orket_ui_flows.sqlite3",
+        "storage_resolver": "orket/runtime_paths.py::resolve_flow_authoring_db_path",
+        "run_card_resolution_support": "config/epics/orket_ui_authored_cards.json via card authoring runtime projection",
+        "admitted_node_kinds": [
+          "start",
+          "card",
+          "branch",
+          "merge",
+          "final"
+        ],
+        "bounded_run_slice": [
+          "exactly_one_card_node",
+          "branch_and_merge_forbidden_on_run_initiation",
+          "assigned_card_present_on_host_card_surface",
+          "assigned_card_resolves_on_canonical_run_card_surface",
+          "assigned_card_resolves_to_issue_runtime_target"
+        ],
+        "run_success_scope": "accepted_session_id_only",
+        "downstream_completion_authority": "existing_runtime_policy_after_handoff",
+        "sources": [
+          "CURRENT_AUTHORITY.md",
+          "docs/specs/FLOW_AUTHORING_SURFACE_V1.md",
+          "docs/API_FRONTEND_CONTRACT.md",
+          "orket/interfaces/routers/flows.py",
+          "orket/application/services/flow_authoring_service.py",
+          "orket/adapters/storage/async_flow_repository.py",
+          "orket/runtime_paths.py",
           "orket/interfaces/api.py"
         ]
       },

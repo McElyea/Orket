@@ -34,6 +34,7 @@ class ApiRuntimeHostService:
 
         return ExecutionPipeline(
             workspace_root or self.project_root / "workspace" / "default",
+            config_root=self.project_root,
             runtime_inputs=self.runtime_inputs,
         )
 
@@ -42,6 +43,7 @@ class ApiRuntimeHostService:
 
         return OrchestrationEngine(
             workspace_root or self.project_root / "workspace" / "default",
+            config_root=self.project_root,
             runtime_inputs=self.runtime_inputs,
         )
 

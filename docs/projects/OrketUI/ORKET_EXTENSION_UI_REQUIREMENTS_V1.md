@@ -1,11 +1,12 @@
 # ORKET_EXTENSION_UI_REQUIREMENTS_V1
 
 Last updated: 2026-04-09
-Status: Draft staged future-lane product definition
-Authority status: Staging only. Not current implementation authority. Read with [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/future/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md) and [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/future/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md).
+Status: Active shipped provenance requirements
+Authority status: Active Orket-side shipped provenance authority. Not host implementation authority and not permission for new host-seam invention. Read with [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md), and [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md).
 Owner: Orket Core
 Scope: UI extension requirements for a card-driven Orket extension with external BFF
 Audience: extension author, UI implementer, API/BFF implementer, Orket host maintainers
+Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
 
 ## 1. Purpose
 
@@ -24,38 +25,66 @@ This document is a requirements document. It does not prescribe a specific front
 
 ## 1.1 Authority posture
 
-This doc is future-lane product definition and staged requirements only.
+This doc is active shipped product and provenance authority for the bounded current OrketUI slice on the Orket side.
 
-It does not, by itself, authorize implementation or new host-seam invention.
+It does not, by itself, authorize new host-seam invention or replace the separate extension repo as the implementation authority holder.
 
 This repo carries provenance for the extension lane and preserves why the work exists. The extension implementation itself remains a separate project rather than part of core Orket.
 
-The future-lane authority packet for this extension consists of:
+The current Orket-side shipped provenance packet for this extension consists of:
 
-1. [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](docs/projects/future/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md)
-2. [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/future/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md)
-3. [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/future/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md)
+1. [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md)
+2. [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md)
+3. [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md)
+4. [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md)
+5. [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md)
 
-Any future implementation work for this lane must remain subordinate to [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), and the narrower future-lane support docs [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/future/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md) and [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/future/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md).
+Any future implementation expansion for OrketUI must remain subordinate to [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), and the narrower support docs [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md) and [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md).
 
 If this doc conflicts with current shipped authority, current shipped authority wins.
 
-## 1.2 Current execution blockers
+## 1.2 Current shipped slice and bounded caveat
 
-The lane is not execution-ready until both of the following are true:
+The external repo bootstrap blocker is cleared in the current observed OrketUI working tree.
 
-1. a separate extension repo exists as the implementation authority holder and carries the selected mockup artifacts, a source-of-truth note or README, and an initial shell/BFF scaffold
-2. any UI action that requires host write authority maps to an already-admitted host seam or is preceded by new core spec extraction
-
-Mockup artifacts alone are not sufficient to satisfy blocker 1.
-
-The separate extension repo does not count as the implementation authority holder for this lane until all of the following are present together:
+`C:\Source\OrketUI` now carries all three required bootstrap pieces together:
 
 1. the selected mockup package
-2. a source-of-truth note or README
+2. a top-level source-of-truth note or README
 3. an initial shell/BFF scaffold
 
+The lane is now execution-ready and already beyond the initial read-backed shell and BFF slice.
+
+The write-seam core-spec extraction blocker is now cleared through:
+
+1. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md)
+2. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md)
+
+The bounded current write-surface blocker is also cleared:
+
+1. the host now ships and admits the bounded card-authoring routes
+2. the host now ships and admits the bounded flow-authoring routes
+3. the OrketUI BFF now consumes those seams truthfully for the current slice
+
+The current action-by-action write inventory is recorded in [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md).
+
+Cross-surface acceptance proof for the bounded current slice is now completed and recorded in [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md).
+
+The remaining bounded caveat for the current slice is:
+
+1. `run flow` is admitted only as a bounded single-card issue-target run-acceptance seam
+2. `200` plus returned `session_id` is authoritative run acceptance only
+3. later run completion remains governed by the existing runtime policy and epic environment after handoff
+
+The current scaffold proof already boots a shell/BFF and serves:
+
+1. `/healthz`
+2. `/api/meta`
+3. `/api/host/health`
+
 Companion is a useful precedent for the split-repo BFF posture. It is not authority for OrketUI-specific routes, object nouns, or write semantics.
+
+Future OrketUI expansion beyond the bounded current slice must reopen as a new explicit roadmap lane.
 
 ## 2. Core architectural posture
 
@@ -107,7 +136,7 @@ R-018. The UI SHALL NOT require core Orket to know about tabs, routes, screen la
 
 R-019. The UI SHALL NOT be a chat-first shell.
 
-R-020. The UI SHALL NOT be a dark terminal-style “mission control” surface.
+R-020. The UI SHALL NOT be a dark terminal-style "mission control" surface.
 
 R-021. The UI SHALL NOT rely on fictional infrastructure metrics, invented governance machinery, or decorative runtime theater.
 
@@ -175,7 +204,7 @@ R-039. Contextual utilities that do not need continuous visibility SHOULD live i
 
 ## 7. Shared domain vocabulary
 
-Host-owned nouns versus extension-owned projections for this lane are defined in [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/future/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md).
+Host-owned nouns versus extension-owned projections for this lane are defined in [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md).
 
 R-040. The extension SHALL use a stable extension vocabulary for at least the following concepts:
 
@@ -263,7 +292,7 @@ R-055. The extension SHALL prefer readable structure, spacing, and hierarchy ove
 
 ## 10. BFF requirements
 
-Allowed host-facing seams for the extension BFF are defined in [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/future/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md).
+Allowed host-facing seams for the extension BFF are defined in [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md).
 
 ### 10.1 Boundary and authority
 
@@ -367,7 +396,7 @@ R-073. The Cards tab SHALL support no-card, loading, unsaved, invalid, save-succ
 
 R-074. The prompt SHALL remain visible and editable as a first-class field.
 
-R-075. The Cards tab SHALL NOT hide the prompt behind an “advanced” drawer by default.
+R-075. The Cards tab SHALL NOT hide the prompt behind an "advanced" drawer by default.
 
 R-076. The Cards tab SHALL NOT collapse card semantics into generic workflow-node language.
 
@@ -798,13 +827,13 @@ R-140. The first implementation slice SHOULD prioritize:
 
 R-141. Early implementation MAY use placeholder data, but placeholder data SHALL use extension vocabulary rather than generic workflow-builder or infrastructure-theater terminology.
 
-UI actions named in this doc as product requirements, including `create card`, `save card`, `validate card`, `save flow`, and `run flow`, remain staged product intent only unless they map to admitted host seams or new core specs are extracted first.
+UI actions named in this doc as product requirements, including `create card`, `save card`, `validate card`, `save flow`, `validate flow`, and `run flow`, now have admitted host seams for the bounded current slice. The UI SHALL keep those actions inside the shipped contract scope and SHALL NOT imply broader host flow-execution truth than the current single-card issue-target run surface.
 
-## 15. Future acceptance targets
+## 15. Lane acceptance targets
 
-These are future-lane product acceptance targets, not current execution-proof gates.
+These are lane acceptance targets, not current execution-proof gates.
 
-R-142. The UI extension is acceptable only if core Orket remains agnostic to the UI’s routes, tabs, visual design, and browser session model.
+R-142. The UI extension is acceptable only if core Orket remains agnostic to the UI's routes, tabs, visual design, and browser session model.
 
 R-143. The UI extension is acceptable only if the extension BFF remains non-authoritative with respect to host runtime truth.
 

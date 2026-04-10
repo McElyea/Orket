@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-04-08
+Last reviewed: 2026-04-09
 
 This index is the canonical map for markdown docs under `docs/`, excluding `docs/projects/**` and excluding non-markdown artifacts such as schemas, JSON snapshots, and YAML scenarios.
 
@@ -74,6 +74,8 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 47. `docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md`
 48. `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`
 49. `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`
+50. `docs/specs/CARD_AUTHORING_SURFACE_V1.md`
+51. `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -148,6 +150,7 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 35. `docs/architecture/VOLATILITY_BASELINE.md`
 36. `docs/architecture/dependency_graph_snapshot.md`
 37. `docs/architecture/CONTRACT_DELTA_CARD_VIEWER_RUNNER_SURFACE_2026-04-08.md`
+38. `docs/architecture/CONTRACT_DELTA_ORKET_UI_WRITE_SURFACES_2026-04-09.md`
 
 ## Releases
 1. `docs/releases/0.4.0/PROOF_REPORT.md`

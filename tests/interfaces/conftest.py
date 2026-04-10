@@ -34,6 +34,9 @@ class LazyApiTestClient:
     def post(self, *args: Any, **kwargs: Any) -> Any:
         return self._live_client().post(*args, **kwargs)
 
+    def put(self, *args: Any, **kwargs: Any) -> Any:
+        return self._live_client().put(*args, **kwargs)
+
     def patch(self, *args: Any, **kwargs: Any) -> Any:
         return self._live_client().patch(*args, **kwargs)
 

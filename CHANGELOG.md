@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.45] - 2026-04-10 - "The OrketUI Authoring Surface Cut"
+
+### Added
+- **Card Authoring Surface**: Added the governed host card create, save, and validate API slice with canonical revision ids, stale-save conflict handling, authored-card runtime projection, matching contract docs, and API regression coverage.
+- **Flow Authoring Surface**: Added the persisted flow list, detail, create, save, validate, and bounded single-card run initiation API slice with durable SQLite storage, canonical runtime-target preflight, matching contract docs, and API regression coverage.
+
+### Changed
+- **OrketUI Authority Posture**: Moved the Orket-side OrketUI authority packet into a shipped reference project, archived the completed lane closeout, extracted write-surface specs, and aligned roadmap, docs index, API contract, current authority, and contract delta references.
+- **Flow Persistence Truthfulness**: Kept corrupted persisted flow payloads fail-closed instead of silently substituting an empty payload during flow repository deserialization.
+- **ControlPlane Governance Gate**: Retargeted the workload-authority matrix test to the durable governed start-path spec after the ControlPlane active-project folder was archived.
+- **Local Temp Hygiene**: Ignored the documented `sandbox_temp_codex/` local temp root so repository-wide staging no longer tries to traverse an unreadable sandbox artifact.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. OrketUI and host-agnostic authoring clients should use the new governed host card and flow authoring surfaces instead of minting host ids, revision ids, or run acceptance outside Orket.
+
 ## [0.4.44] - 2026-04-09 - "The ControlPlane Spec Extraction And OrketUI Staging Cut"
 
 ### Added

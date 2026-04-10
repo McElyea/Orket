@@ -82,6 +82,7 @@ orket_storage/
 .pytest_*
 pytest_tmp/
 sandbox_pytest/
+sandbox_temp_codex/
 .ruff_cache/
 benchmarks/results/
 benchmarks/staging/**

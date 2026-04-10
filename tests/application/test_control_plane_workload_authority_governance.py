@@ -11,7 +11,7 @@ SCAN_ROOTS = (
     REPO_ROOT / "scripts",
 )
 WORKLOAD_AUTHORITY_MATRIX_DOC = (
-    REPO_ROOT / "docs" / "projects" / "ControlPlane" / "CONTROL_PLANE_CONVERGENCE_WORKSTREAM_1_CLOSEOUT.md"
+    REPO_ROOT / "docs" / "specs" / "CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md"
 )
 ALLOWED_PATHS = {
     REPO_ROOT / "orket" / "application" / "services" / "control_plane_workload_catalog.py",
@@ -219,9 +219,7 @@ def _builder_violations(path: Path) -> list[str]:
 
 def _parse_workload_authority_matrix_rows() -> dict[str, dict[str, str]]:
     text = WORKLOAD_AUTHORITY_MATRIX_DOC.read_text(encoding="utf-8")
-    start_marker = "The current workload-authority matrix for governed start paths is:"
-    end_marker = "## Surviving projection-only or still-temporary surfaces"
-    section = text.split(start_marker, 1)[1].split(end_marker, 1)[0]
+    section = text.split("## Governed Start-Path Matrix", 1)[1].split("\n## ", 1)[0]
     rows: dict[str, dict[str, str]] = {}
     for line in section.splitlines():
         stripped = line.strip()
