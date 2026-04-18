@@ -1,15 +1,28 @@
 import sys
 import traceback
+from pathlib import Path
 
 import uvicorn
 
 from orket.interfaces.server_launcher import LauncherConfigError
 from orket.interfaces.server_launcher import build_api_server_arg_parser
 from orket.interfaces.server_launcher import resolve_api_launch_settings_from_namespace
+from orket.runtime import CompositionConfig
 from orket.runtime import create_api_app
+import orket.settings as settings_module
 from orket.utils import get_reload_excludes
 
-app = create_api_app()
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+
+
+def _bootstrap_server_environment() -> None:
+    settings_module.ENV_FILE = PROJECT_ROOT / ".env"
+    settings_module.load_env()
+
+
+_bootstrap_server_environment()
+app = create_api_app(CompositionConfig(project_root=PROJECT_ROOT))
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-04-09
+Last reviewed: 2026-04-18
 
 This index is the canonical map for markdown docs under `docs/`, excluding `docs/projects/**` and excluding non-markdown artifacts such as schemas, JSON snapshots, and YAML scenarios.
 
@@ -76,6 +76,12 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 49. `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`
 50. `docs/specs/CARD_AUTHORING_SURFACE_V1.md`
 51. `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`
+52. `docs/specs/TRUSTED_RUN_WITNESS_V1.md`
+53. `docs/specs/TRUSTED_RUN_INVARIANTS_V1.md`
+54. `docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md`
+55. `docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md`
+56. `docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md`
+57. `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -106,6 +112,7 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 5. `docs/guides/REVIEW_RUN_CLI.md`
 6. `docs/guides/controller-workload-authoring.md`
 7. `docs/runbooks/controller-workload-operator.md`
+8. `docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md`
 
 ## ODR Research
 1. `docs/odr/requirements.md`
@@ -151,6 +158,10 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 36. `docs/architecture/dependency_graph_snapshot.md`
 37. `docs/architecture/CONTRACT_DELTA_CARD_VIEWER_RUNNER_SURFACE_2026-04-08.md`
 38. `docs/architecture/CONTRACT_DELTA_ORKET_UI_WRITE_SURFACES_2026-04-09.md`
+39. `docs/architecture/CONTRACT_DELTA_TRUSTED_RUN_INVARIANTS_V1_2026-04-18.md`
+40. `docs/architecture/CONTRACT_DELTA_CONTROL_PLANE_WITNESS_SUBSTRATE_V1_2026-04-18.md`
+41. `docs/architecture/CONTRACT_DELTA_OFFLINE_TRUSTED_RUN_VERIFIER_V1_2026-04-18.md`
+42. `docs/architecture/CONTRACT_DELTA_FIRST_USEFUL_WORKFLOW_SLICE_V1_2026-04-18.md`
 
 ## Releases
 1. `docs/releases/0.4.0/PROOF_REPORT.md`

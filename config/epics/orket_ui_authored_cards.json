@@ -512,6 +512,260 @@
         }
       },
       "metrics": {}
+    },
+    {
+      "id": "CARD-505598C6",
+      "summary": "Codex live card create proof 20260411181852",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Verify OrketUI create-card credentials and host connectivity.",
+      "requirements": "Confirm the OrketUI create-card path reaches the host-backed card authoring seam.",
+      "note": "Created by Codex during local live verification.",
+      "params": {
+        "authoring_revision_id": "crv_4b4e38003f344c90ad43b6acfe301bcb",
+        "authoring_saved_at": "2026-04-12T00:18:53.049856+00:00",
+        "authoring_payload": {
+          "name": "Codex live card create proof 20260411181852",
+          "purpose": "Verify OrketUI create-card credentials and host connectivity.",
+          "card_kind": "requirement",
+          "prompt": "Confirm the OrketUI create-card path reaches the host-backed card authoring seam.",
+          "inputs": [
+            "live test"
+          ],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Verification",
+          "notes": "Created by Codex during local live verification.",
+          "constraints": [
+            "Do not bypass the BFF."
+          ],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Confirm the OrketUI create-card path reaches the host-backed card authoring seam.",
+        "purpose": "Verify OrketUI create-card credentials and host connectivity.",
+        "display_category": "Verification",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [
+          "Do not bypass the BFF."
+        ],
+        "inputs": [
+          "live test"
+        ],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    },
+    {
+      "id": "CARD-7035AEA7",
+      "summary": "Codex normal-port card create proof 20260411182021",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Verify OrketUI create-card credentials on the normal UI port.",
+      "requirements": "Confirm the OrketUI normal-port create-card path reaches the host-backed card authoring seam.",
+      "note": "Created by Codex during local live verification on port 3010.",
+      "params": {
+        "authoring_revision_id": "crv_3ec577c6069f4348a8937daf864ee2d3",
+        "authoring_saved_at": "2026-04-12T00:20:21.513926+00:00",
+        "authoring_payload": {
+          "name": "Codex normal-port card create proof 20260411182021",
+          "purpose": "Verify OrketUI create-card credentials on the normal UI port.",
+          "card_kind": "requirement",
+          "prompt": "Confirm the OrketUI normal-port create-card path reaches the host-backed card authoring seam.",
+          "inputs": [
+            "live test"
+          ],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Verification",
+          "notes": "Created by Codex during local live verification on port 3010.",
+          "constraints": [
+            "Do not bypass the BFF."
+          ],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Confirm the OrketUI normal-port create-card path reaches the host-backed card authoring seam.",
+        "purpose": "Verify OrketUI create-card credentials on the normal UI port.",
+        "display_category": "Verification",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [
+          "Do not bypass the BFF."
+        ],
+        "inputs": [
+          "live test"
+        ],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    },
+    {
+      "id": "CARD-82BEC5AD",
+      "summary": "Codex server-env-bootstrap proof 20260411211912",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Verify python server.py loads the Orket repo .env and OrketUI can create cards through the BFF.",
+      "requirements": "Confirm the OrketUI create-card path reaches POST /v1/cards with matching host credentials.",
+      "note": "Created by Codex during live verification after server.py env bootstrap fix.",
+      "params": {
+        "authoring_revision_id": "crv_6a1fa0e156e84e99a1e58394f74d380a",
+        "authoring_saved_at": "2026-04-12T03:19:12.495533+00:00",
+        "authoring_payload": {
+          "name": "Codex server-env-bootstrap proof 20260411211912",
+          "purpose": "Verify python server.py loads the Orket repo .env and OrketUI can create cards through the BFF.",
+          "card_kind": "requirement",
+          "prompt": "Confirm the OrketUI create-card path reaches POST /v1/cards with matching host credentials.",
+          "inputs": [
+            "live credential test"
+          ],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Verification",
+          "notes": "Created by Codex during live verification after server.py env bootstrap fix.",
+          "constraints": [
+            "Do not bypass the BFF.",
+            "Do not disable host auth."
+          ],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Confirm the OrketUI create-card path reaches POST /v1/cards with matching host credentials.",
+        "purpose": "Verify python server.py loads the Orket repo .env and OrketUI can create cards through the BFF.",
+        "display_category": "Verification",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [
+          "Do not bypass the BFF.",
+          "Do not disable host auth."
+        ],
+        "inputs": [
+          "live credential test"
+        ],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
+    },
+    {
+      "id": "CARD-DA362DA4",
+      "summary": "New Requirement Card",
+      "seat": "requirements_analyst",
+      "status": "ready",
+      "priority": 2.0,
+      "description": "Describe the operator-facing objective.",
+      "requirements": "Write the next truthful card prompt here.",
+      "note": "",
+      "params": {
+        "authoring_revision_id": "crv_4a9e2be93bc74eee8c70285c5cfbde47",
+        "authoring_saved_at": "2026-04-12T03:22:23.723889+00:00",
+        "authoring_payload": {
+          "name": "New Requirement Card",
+          "purpose": "Describe the operator-facing objective.",
+          "card_kind": "requirement",
+          "prompt": "Write the next truthful card prompt here.",
+          "inputs": [],
+          "expected_outputs": [
+            "summary.md"
+          ],
+          "expected_output_type": "markdown",
+          "display_category": "Definition",
+          "notes": "",
+          "constraints": [],
+          "approval_expectation": "operator_review",
+          "artifact_expectation": "summary.md"
+        },
+        "prompt": "Write the next truthful card prompt here.",
+        "purpose": "Describe the operator-facing objective.",
+        "display_category": "Definition",
+        "expected_output_type": "markdown",
+        "approval_expectation": "operator_review",
+        "artifact_expectation": "summary.md",
+        "constraints": [],
+        "inputs": [],
+        "expected_outputs": [
+          "summary.md"
+        ],
+        "original_card_kind": "requirement"
+      },
+      "depends_on": [],
+      "verification": {
+        "authoring_validation": {
+          "is_valid": true,
+          "errors": [],
+          "warnings": [
+            "Extension-local card kind was normalized onto host issue semantics; original label remains in authoring metadata."
+          ],
+          "summary": "Card authoring payload is valid.",
+          "reason_codes": [
+            "card_authoring.valid"
+          ]
+        }
+      },
+      "metrics": {}
     }
   ],
   "id": "orket_ui_authored_cards",

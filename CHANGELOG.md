@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.46] - 2026-04-18 - "The Proof Witness Archive Cut"
+
+### Added
+- **Proof Witness Authority Set**: Added the durable trusted-run witness, invariant, control-plane substrate, offline verifier, first useful workflow slice, and trust-reason/publication-boundary specs together with their contract deltas, proof guide, proof scripts, and regression coverage.
+- **Proof Archive Packet**: Added the archived `Proof` closeout records for the trusted-run witness, control-plane witness substrate, mathematical foundation, offline verifier, first useful workflow slice, trust-reason adoption lane, and the archived Proof packet ancestor.
+
+### Changed
+- **Proof Roadmap And Authority Posture**: Completed the full Proof packet, cleared `Priority Now`, archived the former future Proof packet under `docs/projects/archive/Proof/`, and aligned roadmap, docs index, README, and current-authority references to the bounded shipped proof surfaces.
+- **Bounded Public Trust Wording**: Added the proof-backed `trusted_repo_config_change_v1` evaluator path and publication boundary, keeping public trust claims capped at `verdict_deterministic` and explicitly excluding replay and text determinism.
+- **API Entrypoint Environment Bootstrap**: Made `python server.py` bootstrap the repo-root `.env` and construct the API app with the resolved project root so host-backed OrketUI calls use the expected local credentials and runtime context.
+- **OrketUI Authored Card Evidence**: Preserved the additional authored-card records created during local OrketUI host-authoring verification.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. Use the new proof guide and bounded trust contract when referring to the shipped `trusted_repo_config_change_v1` trust slice.
+
 ## [0.4.45] - 2026-04-10 - "The OrketUI Authoring Surface Cut"
 
 ### Added

@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-04-09
+Last updated: 2026-04-18
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -96,13 +96,14 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
 68. Canonical governed local-model tool-turn prompt shape now compacts at source in `orket/application/workflows/turn_message_builder.py` through shared `orket/runtime/compact_turn_packet.py`, producing one minimal model-facing `system` prompt plus one bounded `TURN PACKET` `user` prompt and eliminating the old stacked block labels such as `Execution Context JSON`, `Artifact Contract JSON`, `Artifact Semantic Contract`, `Scenario Truth Contract`, `Turn Success Contract`, `Write Path Contract`, `Read Path Contract`, `Hallucination Verification Scope`, `Guard Decision Contract`, `Guard Rejection Contract`, and `Protocol Response Contract`; the LM Studio Gemma 4 OpenAI-compatible lane preserves the native `system` role, reuses that shared compact packet, collapses any remaining adjacent governed `user` prompt blocks into one merged `user` turn only as a safety net if upstream legacy messages still arrive, records outbound request-shape telemetry as `openai_request_message_count`, `openai_request_role_sequence`, and `openai_request_role_counts` in model raw artifacts, records compacted-packet telemetry through `local_prompting_warnings`, keeps bounded native declared-path `read_file` and `write_file` schemas on admitted turns with `reasoning_effort=none`, falls back guard/native declared-path `read_file` exposure from explicit turn requirements to artifact-contract review or required read surfaces plus verification-scope active or provided context when those explicit lists are empty, applies a tighter deterministic effective context cap on Gemma multi-write tool turns, and treats recorded provider telemetry `openai_native_tool_names` as the authoritative native-tool allowlist for parser-side undeclared or exact-duplicate call filtering before execution via `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_MESSAGE_SHAPE_2026-04-03.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_TOOL_TURN_CONFORMANCE_2026-04-03.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_COMPACT_TURN_PACKET_2026-04-04.md`, `orket/application/workflows/turn_message_builder.py`, `orket/runtime/compact_turn_packet.py`, `orket/adapters/llm/local_prompting_policy.py`, `orket/adapters/llm/local_model_provider.py`, `orket/adapters/llm/openai_native_tools.py`, and `orket/application/workflows/turn_response_parser.py`
 69. Canonical local-model coding challenge benchmark harness path is `python scripts/benchmarks/run_local_model_coding_challenge.py --provider <provider> --model <model_id> --epic challenge_workflow_runtime`, and its stable staged report path is `benchmarks/staging/General/local_model_coding_challenge_report.json`; reruns append `diff_ledger` history instead of creating timestamp-only report files
 70. Canonical ProductFlow governed `write_file` proof authority now lives in `docs/specs/PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_V1.md` and `docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md`; the canonical commands are `ORKET_DISABLE_SANDBOX=1 python scripts/productflow/run_governed_write_file_flow.py`, `python scripts/productflow/build_operator_review_package.py --run-id <run_id>`, and `python scripts/productflow/run_replay_review.py --run-id <run_id>`, the stable proof artifact family lives at `benchmarks/results/productflow/governed_write_file_live_run.json`, `runs/<session_id>/productflow_review_index.json`, `benchmarks/results/productflow/operator_review_proof.json`, and `benchmarks/results/productflow/replay_review.json`, ProductFlow `run_id` resolution now fails closed unless exactly one approval row carries `control_plane_target_ref == <run_id>` for the bounded `approval_required_tool:write_file` seam and the matching `runs/<session_id>/run_summary.json` validates, operator review proof is expected to succeed on that same governed run, and replay review is expected to report a same-run truthful blocker with `replay_ready=false`, `stability_status=not_evaluable`, and explicit `missing_evidence` rather than a stable replay claim via `scripts/productflow/run_governed_write_file_flow.py`, `scripts/productflow/build_operator_review_package.py`, `scripts/productflow/run_replay_review.py`, `scripts/productflow/productflow_support.py`, `scripts/observability/emit_run_evidence_graph.py`, `docs/specs/PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_V1.md`, and `docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md`
-71. Canonical API runtime ownership now lives on the FastAPI app-scoped context `app.state.api_runtime_context` in `orket/interfaces/api.py` with the context contract defined in `orket/interfaces/api_runtime_context.py`; `create_api_app()` replaces that app-scoped context for the active project root, while module-level `engine`, `api_runtime_host`, `stream_bus`, `interaction_manager`, `extension_manager`, and `extension_runtime_service` remain minimal compatibility aliases that mirror or are adopted into that context and are not the authoritative owner, and the env-sensitive `StreamBus` plus `InteractionManager` remain lazy so request-time runtime flags still control their live behavior truthfully
-72. Canonical engine control-plane composition now builds through `orket/orchestration/engine_services.py::build_engine_control_plane_services(...)`, async kernel control-plane publication and response augmentation now live in `orket/orchestration/engine_kernel_async_service.py::KernelAsyncControlPlaneService`, the default orchestrator issue-dispatch lifecycle truth remains owned by `orket/application/services/orchestrator_issue_control_plane_service.py` rather than `orket/orchestration/engine.py`, and engine-targeted replay is now explicitly diagnostics-only through `OrchestrationEngine.replay_turn_diagnostics(...)` while `replay_turn(...)` remains only as a compatibility wrapper over the same artifact-backed diagnostics surface; the touched API and CLI replay entrypoints now call `replay_turn_diagnostics(...)` explicitly
-73. Canonical runtime-verification support artifacts now use `agent_output/verification/runtime_verification.json` as the latest support-only verifier record, `agent_output/verification/runtime_verification_index.json` as the stable history index, and `agent_output/verification/runtime_verifier_records/<run_id>/<issue_id>/turn_<turn_index>_retry_<retry_count>.json` as the preserved per-record family; those artifacts must record `artifact_role=support_verification_evidence`, `artifact_authority=support_only`, `authored_output=false`, `overall_evidence_class`, and `evidence_summary` over `syntax_only`, `command_execution`, `behavioral_verification`, and `not_evaluated` together with run, issue, turn, and retry provenance, and runtime-summary or MAR paths must not promote the verifier artifact to the primary authored output by default
-74. Canonical Tool Execution Gate authority now lives in `docs/specs/TOOL_EXECUTION_GATE_V1.md`; the shipped first slice closes the supported `run_card(...) -> TurnExecutor -> ToolDispatcher` path plus normalized extension actions that re-enter `run_card(...)`, requires construction-time `tool_gate` authority on that supported path, keeps direct `ToolDispatcher.execute_tools(...)`, direct `ToolBox.execute(...)`, and direct card-family method invocation inventory-only internal seams, keeps direct `Agent.run(...)` as retained legacy compatibility that now fail-closes before any direct tool call when `tool_gate` authority is missing, keeps SDK capability registry invocation out of scope under `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`, and fixes the canonical audit command and stable output path at `python scripts/security/build_tool_gate_audit.py --strict` and `benchmarks/results/security/tool_gate_audit.json`
-75. Canonical Card Viewer/Runner operator surface now lives in `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`; the first truthful operator slice reads through `GET /v1/cards/view`, `GET /v1/cards/{card_id}/view`, `GET /v1/runs/view`, `GET /v1/runs/{session_id}/view`, `GET /v1/system/provider-status`, and `GET /v1/system/health-view`, uses `POST /v1/system/run-active` as the canonical run/rerun action, admits lifecycle categories `prebuild_blocked`, `artifact_run_failed`, `artifact_run_completed_unverified`, `artifact_run_verified`, and `degraded_completed`, and admits card filter buckets `open`, `running`, `blocked`, `review`, `terminal_failure`, and `completed` via `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/operator_view_models.py`, `orket/interfaces/operator_view_support.py`, `orket/interfaces/routers/cards.py`, `orket/interfaces/routers/runs.py`, `orket/interfaces/routers/system.py`, and `orket/interfaces/api.py`
-76. Canonical Card Authoring surface now lives in `docs/specs/CARD_AUTHORING_SURFACE_V1.md`; the current shipped host slice admits `POST /v1/cards`, `PUT /v1/cards/{card_id}`, and `POST /v1/cards/validate`, mints canonical host `card_id` plus card authoring `revision_id`, persists host authoring payload and revision markers on the canonical card surface, upserts issue-target authored cards into the bounded runtime projection `config/epics/orket_ui_authored_cards.json` for canonical run-card resolution, and fail-closes stale saves with `409 revision_conflict` via `docs/specs/CARD_AUTHORING_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/card_authoring.py`, `orket/application/services/card_authoring_service.py`, `orket/application/services/card_authoring_runtime_projection_service.py`, and `orket/interfaces/api.py`
-77. Canonical Flow Authoring surface now lives in `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`; the current shipped host slice admits `GET /v1/flows`, `GET /v1/flows/{flow_id}`, `POST /v1/flows`, `PUT /v1/flows/{flow_id}`, `POST /v1/flows/validate`, and bounded `POST /v1/flows/{flow_id}/runs`, persists flow truth at `.orket/durable/db/orket_ui_flows.sqlite3` via `orket/runtime_paths.py::resolve_flow_authoring_db_path`, admits neutral node kinds `start`, `card`, `branch`, `merge`, and `final`, composes with the authored-card runtime projection for current run-card resolution, bounds current run initiation to exactly one `card` node that resolves to the canonical `issue` runtime target, and treats `200` plus returned `session_id` as authoritative acceptance only while downstream run completion remains governed by the existing runtime policy via `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/flows.py`, `orket/application/services/flow_authoring_service.py`, `orket/adapters/storage/async_flow_repository.py`, `orket/runtime_paths.py`, and `orket/interfaces/api.py`
+71. Canonical Trusted Run Witness v1 proof authority now lives in `docs/specs/TRUSTED_RUN_WITNESS_V1.md`, `docs/specs/TRUSTED_RUN_INVARIANTS_V1.md`, `docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md`, `docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md`, `docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md`, and `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md`; admitted compare scopes are ProductFlow governed `write_file` as `trusted_run_productflow_write_file_v1` and the First Useful Workflow Slice as `trusted_repo_config_change_v1`, both using operator surface `trusted_run_witness_report.v1`, invariant model surface `trusted_run_invariant_model.v1`, substrate model surface `control_plane_witness_substrate.v1`, witness bundle schema `trusted_run.witness_bundle.v1`, and canonical offline claim command `python scripts/proof/verify_offline_trusted_run_claim.py --input <evidence_path>`; ProductFlow keeps canonical campaign output `benchmarks/results/proof/trusted_run_witness_verification.json` and offline output `benchmarks/results/proof/offline_trusted_run_verifier.json`, while the useful workflow slice uses `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change.py`, `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change_campaign.py`, live output `benchmarks/results/proof/trusted_repo_change_live_run.json`, validator output `benchmarks/results/proof/trusted_repo_change_validator.json`, campaign output `benchmarks/results/proof/trusted_repo_change_witness_verification.json`, offline output `benchmarks/results/proof/trusted_repo_change_offline_verifier.json`, and witness bundle root `workspace/trusted_repo_change/runs/<session_id>/trusted_run_witness_bundle.json`; a single bundle remains `non_deterministic_lab_only`, while a campaign may claim `verdict_deterministic` only when at least two equivalent runs verify with stable contract-verdict signature, stable invariant-model signature, stable substrate signature, stable must-catch outcomes, and for `trusted_repo_config_change_v1` a stable validator signature; public proof-backed trust wording for that useful workflow slice is now governed by `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md` and `docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md`, must stay scoped to `trusted_repo_config_change_v1`, must stop at `verdict_deterministic`, and must explicitly say replay and text determinism are not yet proven and that the slice is proof-only and fixture-bounded; the offline verifier may only preserve or downgrade claims from existing evidence via `scripts/proof/trusted_run_witness_contract.py`, `scripts/proof/trusted_run_invariant_model.py`, `scripts/proof/control_plane_witness_substrate.py`, `scripts/proof/offline_trusted_run_verifier.py`, `scripts/proof/trusted_run_witness_support.py`, `scripts/proof/trusted_repo_change_contract.py`, `scripts/proof/trusted_repo_change_verifier.py`, `scripts/proof/trusted_repo_change_workflow.py`, `scripts/proof/trusted_repo_change_offline.py`, `scripts/proof/build_trusted_run_witness_bundle.py`, `scripts/proof/verify_trusted_run_witness_bundle.py`, `scripts/proof/verify_offline_trusted_run_claim.py`, `scripts/proof/run_trusted_run_witness_campaign.py`, `scripts/proof/run_trusted_repo_change.py`, and `scripts/proof/run_trusted_repo_change_campaign.py`
+72. Canonical API runtime ownership now lives on the FastAPI app-scoped context `app.state.api_runtime_context` in `orket/interfaces/api.py` with the context contract defined in `orket/interfaces/api_runtime_context.py`; `create_api_app()` replaces that app-scoped context for the active project root, while module-level `engine`, `api_runtime_host`, `stream_bus`, `interaction_manager`, `extension_manager`, and `extension_runtime_service` remain minimal compatibility aliases that mirror or are adopted into that context and are not the authoritative owner, and the env-sensitive `StreamBus` plus `InteractionManager` remain lazy so request-time runtime flags still control their live behavior truthfully
+73. Canonical engine control-plane composition now builds through `orket/orchestration/engine_services.py::build_engine_control_plane_services(...)`, async kernel control-plane publication and response augmentation now live in `orket/orchestration/engine_kernel_async_service.py::KernelAsyncControlPlaneService`, the default orchestrator issue-dispatch lifecycle truth remains owned by `orket/application/services/orchestrator_issue_control_plane_service.py` rather than `orket/orchestration/engine.py`, and engine-targeted replay is now explicitly diagnostics-only through `OrchestrationEngine.replay_turn_diagnostics(...)` while `replay_turn(...)` remains only as a compatibility wrapper over the same artifact-backed diagnostics surface; the touched API and CLI replay entrypoints now call `replay_turn_diagnostics(...)` explicitly
+74. Canonical runtime-verification support artifacts now use `agent_output/verification/runtime_verification.json` as the latest support-only verifier record, `agent_output/verification/runtime_verification_index.json` as the stable history index, and `agent_output/verification/runtime_verifier_records/<run_id>/<issue_id>/turn_<turn_index>_retry_<retry_count>.json` as the preserved per-record family; those artifacts must record `artifact_role=support_verification_evidence`, `artifact_authority=support_only`, `authored_output=false`, `overall_evidence_class`, and `evidence_summary` over `syntax_only`, `command_execution`, `behavioral_verification`, and `not_evaluated` together with run, issue, turn, and retry provenance, and runtime-summary or MAR paths must not promote the verifier artifact to the primary authored output by default
+75. Canonical Tool Execution Gate authority now lives in `docs/specs/TOOL_EXECUTION_GATE_V1.md`; the shipped first slice closes the supported `run_card(...) -> TurnExecutor -> ToolDispatcher` path plus normalized extension actions that re-enter `run_card(...)`, requires construction-time `tool_gate` authority on that supported path, keeps direct `ToolDispatcher.execute_tools(...)`, direct `ToolBox.execute(...)`, and direct card-family method invocation inventory-only internal seams, keeps direct `Agent.run(...)` as retained legacy compatibility that now fail-closes before any direct tool call when `tool_gate` authority is missing, keeps SDK capability registry invocation out of scope under `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`, and fixes the canonical audit command and stable output path at `python scripts/security/build_tool_gate_audit.py --strict` and `benchmarks/results/security/tool_gate_audit.json`
+76. Canonical Card Viewer/Runner operator surface now lives in `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`; the first truthful operator slice reads through `GET /v1/cards/view`, `GET /v1/cards/{card_id}/view`, `GET /v1/runs/view`, `GET /v1/runs/{session_id}/view`, `GET /v1/system/provider-status`, and `GET /v1/system/health-view`, uses `POST /v1/system/run-active` as the canonical run/rerun action, admits lifecycle categories `prebuild_blocked`, `artifact_run_failed`, `artifact_run_completed_unverified`, `artifact_run_verified`, and `degraded_completed`, and admits card filter buckets `open`, `running`, `blocked`, `review`, `terminal_failure`, and `completed` via `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/operator_view_models.py`, `orket/interfaces/operator_view_support.py`, `orket/interfaces/routers/cards.py`, `orket/interfaces/routers/runs.py`, `orket/interfaces/routers/system.py`, and `orket/interfaces/api.py`
+77. Canonical Card Authoring surface now lives in `docs/specs/CARD_AUTHORING_SURFACE_V1.md`; the current shipped host slice admits `POST /v1/cards`, `PUT /v1/cards/{card_id}`, and `POST /v1/cards/validate`, mints canonical host `card_id` plus card authoring `revision_id`, persists host authoring payload and revision markers on the canonical card surface, upserts issue-target authored cards into the bounded runtime projection `config/epics/orket_ui_authored_cards.json` for canonical run-card resolution, and fail-closes stale saves with `409 revision_conflict` via `docs/specs/CARD_AUTHORING_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/card_authoring.py`, `orket/application/services/card_authoring_service.py`, `orket/application/services/card_authoring_runtime_projection_service.py`, and `orket/interfaces/api.py`
+78. Canonical Flow Authoring surface now lives in `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`; the current shipped host slice admits `GET /v1/flows`, `GET /v1/flows/{flow_id}`, `POST /v1/flows`, `PUT /v1/flows/{flow_id}`, `POST /v1/flows/validate`, and bounded `POST /v1/flows/{flow_id}/runs`, persists flow truth at `.orket/durable/db/orket_ui_flows.sqlite3` via `orket/runtime_paths.py::resolve_flow_authoring_db_path`, admits neutral node kinds `start`, `card`, `branch`, `merge`, and `final`, composes with the authored-card runtime projection for current run-card resolution, bounds current run initiation to exactly one `card` node that resolves to the canonical `issue` runtime target, and treats `200` plus returned `session_id` as authoritative acceptance only while downstream run completion remains governed by the existing runtime policy via `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/flows.py`, `orket/application/services/flow_authoring_service.py`, `orket/adapters/storage/async_flow_repository.py`, `orket/runtime_paths.py`, and `orket/interfaces/api.py`
 
 ## Machine-Readable Authority Map (v1)
 
@@ -512,6 +513,20 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
       "productflow_review_index_path": "runs/<session_id>/productflow_review_index.json",
       "productflow_operator_review_proof_output_path": "benchmarks/results/productflow/operator_review_proof.json",
       "productflow_replay_review_output_path": "benchmarks/results/productflow/replay_review.json",
+      "trusted_run_witness_campaign_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_run_witness_campaign.py",
+      "trusted_run_witness_builder_operator_path": "python scripts/proof/build_trusted_run_witness_bundle.py --run-id <run_id>",
+      "trusted_run_witness_verifier_operator_path": "python scripts/proof/verify_trusted_run_witness_bundle.py --bundle <bundle_path>",
+      "offline_trusted_run_verifier_operator_path": "python scripts/proof/verify_offline_trusted_run_claim.py --input <evidence_path>",
+      "trusted_run_witness_bundle_path": "runs/<session_id>/trusted_run_witness_bundle.json",
+      "trusted_run_witness_verification_output_path": "benchmarks/results/proof/trusted_run_witness_verification.json",
+      "offline_trusted_run_verifier_output_path": "benchmarks/results/proof/offline_trusted_run_verifier.json",
+      "trusted_repo_change_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change.py",
+      "trusted_repo_change_campaign_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change_campaign.py",
+      "trusted_repo_change_live_run_output_path": "benchmarks/results/proof/trusted_repo_change_live_run.json",
+      "trusted_repo_change_validator_output_path": "benchmarks/results/proof/trusted_repo_change_validator.json",
+      "trusted_repo_change_witness_verification_output_path": "benchmarks/results/proof/trusted_repo_change_witness_verification.json",
+      "trusted_repo_change_offline_verifier_output_path": "benchmarks/results/proof/trusted_repo_change_offline_verifier.json",
+      "trusted_repo_change_bundle_path": "workspace/trusted_repo_change/runs/<session_id>/trusted_run_witness_bundle.json",
       "run_evidence_graph_default_views": [
         "full_lineage",
         "failure_path",
@@ -554,7 +569,23 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "scripts/prompt_lab/run_functiongemma_tool_call_judge.py",
         "scripts/prompt_lab/run_prompt_reforger_gemma_tool_use_cycle.py",
         "scripts/prompt_lab/README.md",
-        "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md"
+        "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md",
+        "docs/specs/TRUSTED_RUN_WITNESS_V1.md",
+        "docs/specs/TRUSTED_RUN_INVARIANTS_V1.md",
+        "docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md",
+        "docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md",
+        "docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md",
+        "scripts/proof/trusted_run_invariant_model.py",
+        "scripts/proof/control_plane_witness_substrate.py",
+        "scripts/proof/offline_trusted_run_verifier.py",
+        "scripts/proof/verify_offline_trusted_run_claim.py",
+        "scripts/proof/run_trusted_run_witness_campaign.py",
+        "scripts/proof/trusted_repo_change_contract.py",
+        "scripts/proof/trusted_repo_change_verifier.py",
+        "scripts/proof/trusted_repo_change_workflow.py",
+        "scripts/proof/trusted_repo_change_offline.py",
+        "scripts/proof/run_trusted_repo_change.py",
+        "scripts/proof/run_trusted_repo_change_campaign.py"
       ]
     },
     "productflow_governed_write_file_review_surface": {
@@ -586,6 +617,66 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "scripts/productflow/build_operator_review_package.py",
         "scripts/productflow/run_replay_review.py",
         "scripts/observability/emit_run_evidence_graph.py"
+      ]
+    },
+    "trusted_run_witness_v1": {
+      "spec": "docs/specs/TRUSTED_RUN_WITNESS_V1.md",
+      "invariant_spec": "docs/specs/TRUSTED_RUN_INVARIANTS_V1.md",
+      "substrate_spec": "docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md",
+      "offline_verifier_spec": "docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md",
+      "useful_workflow_spec": "docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md",
+      "compare_scope": "trusted_run_productflow_write_file_v1",
+      "admitted_compare_scopes": [
+        "trusted_run_productflow_write_file_v1",
+        "trusted_repo_config_change_v1"
+      ],
+      "operator_surface": "trusted_run_witness_report.v1",
+      "offline_verifier_schema": "offline_trusted_run_verifier.v1",
+      "contract_verdict_surface": "trusted_run_contract_verdict.v1",
+      "invariant_model_surface": "trusted_run_invariant_model.v1",
+      "substrate_model_surface": "control_plane_witness_substrate.v1",
+      "witness_bundle_schema": "trusted_run.witness_bundle.v1",
+      "bundle_path": "runs/<session_id>/trusted_run_witness_bundle.json",
+      "verification_output_path": "benchmarks/results/proof/trusted_run_witness_verification.json",
+      "offline_verifier_output_path": "benchmarks/results/proof/offline_trusted_run_verifier.json",
+      "campaign_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_run_witness_campaign.py",
+      "offline_verifier_operator_path": "python scripts/proof/verify_offline_trusted_run_claim.py --input <evidence_path>",
+      "trusted_repo_change": {
+        "compare_scope": "trusted_repo_config_change_v1",
+        "contract_verdict_surface": "trusted_repo_change_contract_verdict.v1",
+        "validator_surface": "trusted_repo_config_validator.v1",
+        "workflow_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change.py",
+        "campaign_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change_campaign.py",
+        "live_run_output_path": "benchmarks/results/proof/trusted_repo_change_live_run.json",
+        "validator_output_path": "benchmarks/results/proof/trusted_repo_change_validator.json",
+        "verification_output_path": "benchmarks/results/proof/trusted_repo_change_witness_verification.json",
+        "offline_verifier_output_path": "benchmarks/results/proof/trusted_repo_change_offline_verifier.json",
+        "bundle_path": "workspace/trusted_repo_change/runs/<session_id>/trusted_run_witness_bundle.json"
+      },
+      "single_run_claim_tier": "non_deterministic_lab_only",
+      "campaign_target_claim_tier": "verdict_deterministic",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/specs/TRUSTED_RUN_WITNESS_V1.md",
+        "docs/specs/TRUSTED_RUN_INVARIANTS_V1.md",
+        "docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md",
+        "docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md",
+        "docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md",
+        "scripts/proof/trusted_run_invariant_model.py",
+        "scripts/proof/control_plane_witness_substrate.py",
+        "scripts/proof/trusted_run_witness_contract.py",
+        "scripts/proof/offline_trusted_run_verifier.py",
+        "scripts/proof/trusted_run_witness_support.py",
+        "scripts/proof/trusted_repo_change_contract.py",
+        "scripts/proof/trusted_repo_change_verifier.py",
+        "scripts/proof/trusted_repo_change_workflow.py",
+        "scripts/proof/trusted_repo_change_offline.py",
+        "scripts/proof/build_trusted_run_witness_bundle.py",
+        "scripts/proof/verify_trusted_run_witness_bundle.py",
+        "scripts/proof/verify_offline_trusted_run_claim.py",
+        "scripts/proof/run_trusted_run_witness_campaign.py",
+        "scripts/proof/run_trusted_repo_change.py",
+        "scripts/proof/run_trusted_repo_change_campaign.py"
       ]
     },
     "control_plane_storage": {
@@ -863,6 +954,8 @@ Session transcripts are schema-bound through `TranscriptTurn` / `ToolCallRecord`
 `OpenClawJsonlSubprocessAdapter.run_requests()` returns `PartialAdapterResult`, preserving `responses`, `completed_count`, and `failed_at` on subprocess failure so callers can avoid unsafe full replay of already-completed adapter requests.
 
 Runtime implementation modules are physically grouped under bounded `orket/runtime/config/`, `orket/runtime/evidence/`, `orket/runtime/execution/`, `orket/runtime/policy/`, `orket/runtime/registry/`, and `orket/runtime/summary/` subpackages with explicit package `__all__` surfaces. The old flat `orket.runtime.<module>` imports are one-release alias shims that preserve compatibility while resolving to the migrated implementation modules; new direct cross-domain imports must go through package public surfaces and are guarded by `tests/runtime/test_runtime_subpackage_boundaries.py`.
+
+The canonical API runtime entrypoint `python server.py` bootstraps environment values from the repo-root `.env` before FastAPI app construction. This preserves the normal `load_env()` precedence rule: explicit process environment variables remain authoritative over `.env` values.
 
 SDK extension workloads run in a child interpreter through `orket/extensions/sdk_workload_runner.py` and `orket/extensions/sdk_workload_subprocess.py`. SDK workload loading statically rejects undeclared standard-library imports, and subprocess execution installs both a manifest-declared stdlib `sys.meta_path` finder and scoped `__import__` guard so dynamic undeclared imports fail before extension code can reuse already-loaded host modules. Legacy workloads retain compatibility behavior: internal Orket imports remain blocked, and stdlib allowlist enforcement applies only when the legacy manifest declares allowed modules.
 

@@ -31,6 +31,18 @@ This README is intentionally narrow. It describes the repo entrypoints and curre
 
 For the exact current boundary, use [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md) instead of inferring from older docs or broad product language.
 
+## Bounded Proof Slice
+
+Orket currently ships one proof-backed external trust slice for `trusted_repo_config_change_v1`.
+
+- Current truthful claim ceiling for that slice: `verdict_deterministic`
+- Current posture: proof-only and fixture-bounded
+- Not yet proven for that slice: replay determinism and text determinism
+
+The practical trust reason for that slice is that Orket can package approval, effect, validator, final-truth, and claim-tier evidence into a witness bundle and refuse stronger claims when that evidence is missing.
+
+Use [docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md](docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md) for the evaluator path and [docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md](docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md) for the publication boundary.
+
 ## Quick Start
 
 1. Install dependencies:
@@ -53,6 +65,8 @@ Use `vision` only for image-processing features; base runtime installs no longer
 ```bash
 cp .env.example .env
 ```
+
+The API runtime entrypoint loads this repo-local `.env` before app construction. Explicit environment variables already set in the launching shell still take precedence.
 
 3. Start the default runtime:
 
