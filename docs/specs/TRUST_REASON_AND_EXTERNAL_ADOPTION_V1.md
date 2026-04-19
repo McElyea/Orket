@@ -1,6 +1,6 @@
 # Trust Reason And External Adoption v1
 
-Last updated: 2026-04-18
+Last updated: 2026-04-19
 Status: Active
 Owner: Orket Core
 
@@ -9,6 +9,7 @@ Primary dependencies:
 2. `docs/specs/TRUSTED_RUN_WITNESS_V1.md`
 3. `docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md`
 4. `docs/specs/ORKET_DETERMINISM_GATE_POLICY.md`
+5. `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`
 
 ## Purpose
 
@@ -147,6 +148,42 @@ TRAD-V1-061: Current shipped proof is not sufficient for:
 TRAD-V1-062: README or other public wording governed by this contract MUST link to at least one durable proof authority doc or evaluator guide. It MUST NOT rely on unsupported marketing prose.
 
 TRAD-V1-063: Broader product-level trust repositioning is deferred until at least one of:
-1. a non-fixture workflow slice has equivalent proof quality
+1. a non-fixture workflow slice has equivalent proof quality and a truthful non-fixture evaluator path
 2. stronger replay-backed proof exists on a shipped externally useful compare scope
 3. a later explicitly adopted lane revises this boundary with new evidence
+
+TRAD-V1-064: `trusted_terraform_plan_decision_v1` does not yet satisfy `TRAD-V1-063`. A provider-backed governed proof operator path now exists, but current public authority still lacks admitted successful provider-backed evidence for that scope and its admitted `verdict_deterministic` campaign evidence still comes from the bounded local harness.
+
+TRAD-V1-065: The Terraform publication-readiness gate is:
+
+```text
+python scripts/proof/check_trusted_terraform_publication_readiness.py
+```
+
+That gate writes `benchmarks/results/proof/trusted_terraform_plan_decision_publication_readiness.json` and MUST report `publication_decision=ready_for_publication_boundary_update` before this contract may admit `trusted_terraform_plan_decision_v1` into the externally publishable public trust slice.
+
+TRAD-V1-066: The Terraform publication-gate sequence is:
+
+```text
+python scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py
+```
+
+That sequence writes `benchmarks/results/proof/trusted_terraform_plan_decision_publication_gate.json`, fails fast on missing required live-provider inputs by default, reruns the prerequisite proof commands only when live preflight passes or `--force-local-evidence` is supplied, preserves the readiness gate result, and MUST report `publication_decision=ready_for_publication_boundary_update` before any same-change authority update may propose Terraform public admission.
+
+TRAD-V1-067: The Terraform publication-gate sequence MUST record live-provider preflight status without recording credential values. Missing required non-secret inputs, including `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI`, `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID`, and `AWS_REGION` or `AWS_DEFAULT_REGION`, keep Terraform public admission blocked.
+
+TRAD-V1-068: The no-spend Terraform live setup preflight is:
+
+```text
+python scripts/proof/check_trusted_terraform_live_setup_preflight.py
+```
+
+That preflight writes `benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_preflight.json`, MUST execute zero provider calls, MUST block generated placeholder S3 URIs, and MAY be used before a live attempt to inspect required inputs, planned AWS operations, and least-privilege action hints. A passing setup preflight is not publication evidence by itself.
+
+TRAD-V1-069: The no-spend Terraform live setup packet generator is:
+
+```text
+python scripts/proof/prepare_trusted_terraform_live_setup_packet.py
+```
+
+That generator writes `benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_packet.json` and local setup files under `workspace/trusted_terraform_live_setup/`, MUST execute zero provider calls, MUST NOT write credential values, and MAY be used to prepare the low-cost provider-backed attempt. A generated setup packet is not publication evidence by itself.

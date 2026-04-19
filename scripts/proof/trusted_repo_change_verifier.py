@@ -20,9 +20,22 @@ from scripts.proof.trusted_repo_change_contract import (
     now_utc_iso,
     stable_json_digest,
 )
+from scripts.proof.trusted_scope_family_support import (
+    ValidatorBackedScopeConfig,
+    build_bundle_verification_failures,
+    build_validator_backed_campaign_report,
+)
 
 INVARIANT_MODEL_SCHEMA_VERSION = "trusted_run_invariant_model.v1"
 SUBSTRATE_SCHEMA_VERSION = "control_plane_witness_substrate.v1"
+_CONFIG = ValidatorBackedScopeConfig(
+    compare_scope=TRUSTED_REPO_COMPARE_SCOPE,
+    operator_surface=OPERATOR_SURFACE,
+    fallback_claim_tier=FALLBACK_CLAIM_TIER,
+    target_claim_tier=TARGET_CLAIM_TIER,
+    bundle_schema_version=BUNDLE_SCHEMA_VERSION,
+    report_schema_version=REPORT_SCHEMA_VERSION,
+)
 
 
 def evaluate_trusted_repo_change_invariants(bundle: dict[str, Any]) -> dict[str, Any]:
@@ -139,12 +152,21 @@ def evaluate_trusted_repo_change_substrate(bundle: dict[str, Any]) -> dict[str, 
 
 
 def verify_trusted_repo_change_bundle_payload(bundle: dict[str, Any], *, evidence_ref: str = "") -> dict[str, Any]:
+    from scripts.proof.trusted_run_proof_foundation import evaluate_offline_verifier_non_interference
+
     clean = _without_diff_ledger(bundle)
     included_verdict = _as_dict(clean.get("contract_verdict"))
     recomputed = build_contract_verdict(clean)
     invariant_model = evaluate_trusted_repo_change_invariants(clean)
     substrate_model = evaluate_trusted_repo_change_substrate(clean)
-    failures = _verification_failures(included_verdict, recomputed, invariant_model, substrate_model)
+    non_interference = evaluate_offline_verifier_non_interference()
+    failures = build_bundle_verification_failures(
+        included_verdict,
+        recomputed,
+        invariant_model,
+        substrate_model,
+        side_effect_free=non_interference.get("result") == "pass",
+    )
     validator = _as_dict(clean.get("validator_result"))
     return {
         "schema_version": REPORT_SCHEMA_VERSION,
@@ -161,10 +183,13 @@ def verify_trusted_repo_change_bundle_payload(bundle: dict[str, Any], *, evidenc
         "policy_digest": _text(clean.get("policy_digest")),
         "control_bundle_ref": _text(clean.get("control_bundle_ref")),
         "evidence_ref": evidence_ref,
-        "side_effect_free_verification": True,
+        "side_effect_free_verification": non_interference.get("result") == "pass",
         "contract_verdict": recomputed,
         "trusted_run_invariant_model": invariant_model,
         "control_plane_witness_substrate": substrate_model,
+        "offline_verifier_non_interference_signature_digest": _text(
+            non_interference.get("non_interference_signature_digest")
+        ),
         "validator_signature_digest": _text(validator.get("validator_signature_digest")),
         "included_contract_verdict_digest": _text(included_verdict.get("verdict_signature_digest")),
         "recomputed_contract_verdict_digest": _text(recomputed.get("verdict_signature_digest")),
@@ -181,102 +206,13 @@ def build_trusted_repo_change_campaign_report(
     bundle_refs: list[str] | None = None,
     live_proof_refs: list[str] | None = None,
 ) -> dict[str, Any]:
-    clean_reports = [_without_diff_ledger(report) for report in reports]
-    successes = [report for report in clean_reports if report.get("observed_result") == "success"]
-    verdict_digests = _digest_set(successes, "contract_verdict", "verdict_signature_digest")
-    validator_digests = {_text(report.get("validator_signature_digest")) for report in successes}
-    invariant_digests = {_text(report.get("invariant_model_signature_digest")) for report in successes}
-    substrate_digests = {_text(report.get("substrate_signature_digest")) for report in successes}
-    validator_digests.discard("")
-    invariant_digests.discard("")
-    substrate_digests.discard("")
-    must_catch_sets = {tuple(report.get("must_catch_outcomes") or []) for report in successes}
-    side_effect_free = bool(successes) and all(report.get("side_effect_free_verification") is True for report in successes)
-    stable = _campaign_stable(clean_reports, successes, verdict_digests, validator_digests, invariant_digests, substrate_digests, must_catch_sets, side_effect_free)
-    return {
-        "schema_version": REPORT_SCHEMA_VERSION,
-        "recorded_at_utc": now_utc_iso(),
-        "proof_kind": "live",
-        "observed_path": "primary" if clean_reports else "blocked",
-        "observed_result": "success" if stable else ("partial success" if successes else "failure"),
-        "claim_tier": TARGET_CLAIM_TIER if stable else FALLBACK_CLAIM_TIER,
-        "compare_scope": TRUSTED_REPO_COMPARE_SCOPE,
-        "operator_surface": OPERATOR_SURFACE,
-        "run_count": len(clean_reports),
-        "successful_verification_count": len(successes),
-        "verdict_signature_digests": sorted(verdict_digests),
-        "validator_signature_digests": sorted(validator_digests),
-        "invariant_model_signature_digests": sorted(invariant_digests),
-        "substrate_signature_digests": sorted(substrate_digests),
-        "must_catch_outcomes": list(MUST_CATCH_OUTCOMES),
-        "must_catch_outcomes_stable": len(must_catch_sets) == 1 if successes else False,
-        "validator_signature_stable": len(validator_digests) == 1 if successes else False,
-        "invariant_model_signature_stable": len(invariant_digests) == 1 if successes else False,
-        "substrate_signature_stable": len(substrate_digests) == 1 if successes else False,
-        "side_effect_free_verification": side_effect_free,
-        "bundle_refs": list(bundle_refs or []),
-        "live_proof_refs": list(live_proof_refs or []),
-        "bundle_reports": clean_reports,
-        "missing_evidence": _campaign_failures(clean_reports, stable, verdict_digests, validator_digests, invariant_digests, substrate_digests, side_effect_free),
-    }
-
-
-def _verification_failures(verdict: dict[str, Any], recomputed: dict[str, Any], invariant: dict[str, Any], substrate: dict[str, Any]) -> list[str]:
-    failures: list[str] = []
-    if not verdict:
-        failures.append("contract_verdict_missing")
-    if _text(verdict.get("verdict_signature_digest")) != _text(recomputed.get("verdict_signature_digest")):
-        failures.append("contract_verdict_drift")
-    if recomputed.get("verdict") != "pass":
-        failures.extend(str(item) for item in recomputed.get("failures") or [])
-    if invariant.get("result") != "pass":
-        failures.extend(str(item) for item in invariant.get("failures") or [])
-    if substrate.get("result") != "pass":
-        failures.extend(str(item) for item in substrate.get("failures") or [])
-    return _unique(failures)
-
-
-def _campaign_stable(clean_reports: list[dict[str, Any]], successes: list[dict[str, Any]], *digest_sets: Any) -> bool:
-    side_effect_free = bool(digest_sets[-1])
-    signature_sets = digest_sets[:-2]
-    must_catch_sets = digest_sets[-2]
-    return (
-        len(clean_reports) >= 2
-        and len(successes) == len(clean_reports)
-        and all(len(items) == 1 for items in signature_sets)
-        and len(must_catch_sets) == 1
-        and side_effect_free
+    return build_validator_backed_campaign_report(
+        reports,
+        config=_CONFIG,
+        must_catch_outcomes=list(MUST_CATCH_OUTCOMES),
+        bundle_refs=bundle_refs,
+        live_proof_refs=live_proof_refs,
     )
-
-
-def _campaign_failures(
-    reports: list[dict[str, Any]],
-    stable: bool,
-    verdict: set[str],
-    validator: set[str],
-    invariant: set[str],
-    substrate: set[str],
-    side_effect_free: bool,
-) -> list[str]:
-    if stable:
-        return []
-    failures: list[str] = []
-    if len(reports) < 2:
-        failures.append("repeat_evidence_missing")
-    if any(report.get("observed_result") != "success" for report in reports):
-        failures.append("bundle_verification_failed")
-    for reason, items in (("verdict_signature_not_stable", verdict), ("validator_signature_not_stable", validator), ("invariant_model_signature_not_stable", invariant), ("substrate_signature_not_stable", substrate)):
-        if len(items) != 1:
-            failures.append(reason)
-    if not side_effect_free:
-        failures.append("verifier_side_effect_absence_not_mechanically_proven")
-    return _unique(failures)
-
-
-def _digest_set(reports: list[dict[str, Any]], key: str, digest_key: str) -> set[str]:
-    values = {_text(_as_dict(report.get(key)).get(digest_key)) for report in reports}
-    values.discard("")
-    return values
 
 
 def _transition_trace(checks: list[dict[str, str]]) -> list[dict[str, str]]:

@@ -21,6 +21,7 @@ Admitted ProductFlow slice identity:
 7. text identity placeholder schema: `offline_text_identity_evidence.v1`
 8. canonical offline verifier output: `benchmarks/results/proof/offline_trusted_run_verifier.json`
 9. canonical command: `python scripts/proof/verify_offline_trusted_run_claim.py --input <evidence_path>`
+10. canonical proof-foundation output: `benchmarks/results/proof/trusted_run_proof_foundation.json`
 
 Admitted First Useful Workflow Slice identity:
 
@@ -31,12 +32,25 @@ Admitted First Useful Workflow Slice identity:
 5. canonical offline verifier output: `benchmarks/results/proof/trusted_repo_change_offline_verifier.json`
 6. canonical command: `python scripts/proof/verify_offline_trusted_run_claim.py --input benchmarks/results/proof/trusted_repo_change_witness_verification.json --claim verdict_deterministic --output benchmarks/results/proof/trusted_repo_change_offline_verifier.json`
 
+Admitted internal Terraform plan decision identity:
+
+1. compare scope: `trusted_terraform_plan_decision_v1`
+2. operator surface: `trusted_run_witness_report.v1`
+3. durable contract: `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`
+4. canonical campaign output: `benchmarks/results/proof/trusted_terraform_plan_decision_witness_verification.json`
+5. canonical offline verifier output: `benchmarks/results/proof/trusted_terraform_plan_decision_offline_verifier.json`
+6. canonical command: `python scripts/proof/verify_offline_trusted_run_claim.py --input benchmarks/results/proof/trusted_terraform_plan_decision_witness_verification.json --claim verdict_deterministic --output benchmarks/results/proof/trusted_terraform_plan_decision_offline_verifier.json`
+
 This contract depends on:
 
 1. `docs/specs/ORKET_DETERMINISM_GATE_POLICY.md`
 2. `docs/specs/TRUSTED_RUN_WITNESS_V1.md`
 3. `docs/specs/TRUSTED_RUN_INVARIANTS_V1.md`
 4. `docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md`
+5. `docs/specs/TRUSTED_CHANGE_SCOPE_ADMISSION_STANDARD_V1.md`
+6. `docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md`
+
+Durable family admission and admitted-scope catalog authority now lives in `docs/specs/TRUSTED_CHANGE_SCOPE_ADMISSION_STANDARD_V1.md` and `docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md`.
 
 ## Boundary
 
@@ -53,6 +67,8 @@ It MUST NOT:
 7. publish artifacts outside its own verifier report
 
 It MAY write its own JSON report with the repository diff-ledger writer convention.
+
+The current structural non-interference proof for this boundary is `python scripts/proof/verify_trusted_run_proof_foundation.py`, which writes `benchmarks/results/proof/trusted_run_proof_foundation.json`.
 
 ## Supported Input Modes
 
@@ -137,6 +153,8 @@ The first slice applies this ladder:
 | `text_deterministic` | Verdict or replay evidence plus byte identity or declared output-hash identity on the same compare scope. | forbidden unless future evidence schema is proven |
 
 When higher-claim evidence is missing but lower evidence is complete, the verifier MUST preserve the lower claim and report the higher claim as forbidden.
+
+For `trusted_repo_config_change_v1` and `trusted_terraform_plan_decision_v1`, `verdict_deterministic` also requires a stable scope-local validator signature across the repeated successful reports.
 
 When minimum lab evidence fails, the verifier MUST set:
 

@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-04-18
+Last updated: 2026-04-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -96,7 +96,9 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
 68. Canonical governed local-model tool-turn prompt shape now compacts at source in `orket/application/workflows/turn_message_builder.py` through shared `orket/runtime/compact_turn_packet.py`, producing one minimal model-facing `system` prompt plus one bounded `TURN PACKET` `user` prompt and eliminating the old stacked block labels such as `Execution Context JSON`, `Artifact Contract JSON`, `Artifact Semantic Contract`, `Scenario Truth Contract`, `Turn Success Contract`, `Write Path Contract`, `Read Path Contract`, `Hallucination Verification Scope`, `Guard Decision Contract`, `Guard Rejection Contract`, and `Protocol Response Contract`; the LM Studio Gemma 4 OpenAI-compatible lane preserves the native `system` role, reuses that shared compact packet, collapses any remaining adjacent governed `user` prompt blocks into one merged `user` turn only as a safety net if upstream legacy messages still arrive, records outbound request-shape telemetry as `openai_request_message_count`, `openai_request_role_sequence`, and `openai_request_role_counts` in model raw artifacts, records compacted-packet telemetry through `local_prompting_warnings`, keeps bounded native declared-path `read_file` and `write_file` schemas on admitted turns with `reasoning_effort=none`, falls back guard/native declared-path `read_file` exposure from explicit turn requirements to artifact-contract review or required read surfaces plus verification-scope active or provided context when those explicit lists are empty, applies a tighter deterministic effective context cap on Gemma multi-write tool turns, and treats recorded provider telemetry `openai_native_tool_names` as the authoritative native-tool allowlist for parser-side undeclared or exact-duplicate call filtering before execution via `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_MESSAGE_SHAPE_2026-04-03.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_TOOL_TURN_CONFORMANCE_2026-04-03.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_COMPACT_TURN_PACKET_2026-04-04.md`, `orket/application/workflows/turn_message_builder.py`, `orket/runtime/compact_turn_packet.py`, `orket/adapters/llm/local_prompting_policy.py`, `orket/adapters/llm/local_model_provider.py`, `orket/adapters/llm/openai_native_tools.py`, and `orket/application/workflows/turn_response_parser.py`
 69. Canonical local-model coding challenge benchmark harness path is `python scripts/benchmarks/run_local_model_coding_challenge.py --provider <provider> --model <model_id> --epic challenge_workflow_runtime`, and its stable staged report path is `benchmarks/staging/General/local_model_coding_challenge_report.json`; reruns append `diff_ledger` history instead of creating timestamp-only report files
 70. Canonical ProductFlow governed `write_file` proof authority now lives in `docs/specs/PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_V1.md` and `docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md`; the canonical commands are `ORKET_DISABLE_SANDBOX=1 python scripts/productflow/run_governed_write_file_flow.py`, `python scripts/productflow/build_operator_review_package.py --run-id <run_id>`, and `python scripts/productflow/run_replay_review.py --run-id <run_id>`, the stable proof artifact family lives at `benchmarks/results/productflow/governed_write_file_live_run.json`, `runs/<session_id>/productflow_review_index.json`, `benchmarks/results/productflow/operator_review_proof.json`, and `benchmarks/results/productflow/replay_review.json`, ProductFlow `run_id` resolution now fails closed unless exactly one approval row carries `control_plane_target_ref == <run_id>` for the bounded `approval_required_tool:write_file` seam and the matching `runs/<session_id>/run_summary.json` validates, operator review proof is expected to succeed on that same governed run, and replay review is expected to report a same-run truthful blocker with `replay_ready=false`, `stability_status=not_evaluable`, and explicit `missing_evidence` rather than a stable replay claim via `scripts/productflow/run_governed_write_file_flow.py`, `scripts/productflow/build_operator_review_package.py`, `scripts/productflow/run_replay_review.py`, `scripts/productflow/productflow_support.py`, `scripts/observability/emit_run_evidence_graph.py`, `docs/specs/PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_V1.md`, and `docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md`
-71. Canonical Trusted Run Witness v1 proof authority now lives in `docs/specs/TRUSTED_RUN_WITNESS_V1.md`, `docs/specs/TRUSTED_RUN_INVARIANTS_V1.md`, `docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md`, `docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md`, `docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md`, and `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md`; admitted compare scopes are ProductFlow governed `write_file` as `trusted_run_productflow_write_file_v1` and the First Useful Workflow Slice as `trusted_repo_config_change_v1`, both using operator surface `trusted_run_witness_report.v1`, invariant model surface `trusted_run_invariant_model.v1`, substrate model surface `control_plane_witness_substrate.v1`, witness bundle schema `trusted_run.witness_bundle.v1`, and canonical offline claim command `python scripts/proof/verify_offline_trusted_run_claim.py --input <evidence_path>`; ProductFlow keeps canonical campaign output `benchmarks/results/proof/trusted_run_witness_verification.json` and offline output `benchmarks/results/proof/offline_trusted_run_verifier.json`, while the useful workflow slice uses `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change.py`, `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change_campaign.py`, live output `benchmarks/results/proof/trusted_repo_change_live_run.json`, validator output `benchmarks/results/proof/trusted_repo_change_validator.json`, campaign output `benchmarks/results/proof/trusted_repo_change_witness_verification.json`, offline output `benchmarks/results/proof/trusted_repo_change_offline_verifier.json`, and witness bundle root `workspace/trusted_repo_change/runs/<session_id>/trusted_run_witness_bundle.json`; a single bundle remains `non_deterministic_lab_only`, while a campaign may claim `verdict_deterministic` only when at least two equivalent runs verify with stable contract-verdict signature, stable invariant-model signature, stable substrate signature, stable must-catch outcomes, and for `trusted_repo_config_change_v1` a stable validator signature; public proof-backed trust wording for that useful workflow slice is now governed by `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md` and `docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md`, must stay scoped to `trusted_repo_config_change_v1`, must stop at `verdict_deterministic`, and must explicitly say replay and text determinism are not yet proven and that the slice is proof-only and fixture-bounded; the offline verifier may only preserve or downgrade claims from existing evidence via `scripts/proof/trusted_run_witness_contract.py`, `scripts/proof/trusted_run_invariant_model.py`, `scripts/proof/control_plane_witness_substrate.py`, `scripts/proof/offline_trusted_run_verifier.py`, `scripts/proof/trusted_run_witness_support.py`, `scripts/proof/trusted_repo_change_contract.py`, `scripts/proof/trusted_repo_change_verifier.py`, `scripts/proof/trusted_repo_change_workflow.py`, `scripts/proof/trusted_repo_change_offline.py`, `scripts/proof/build_trusted_run_witness_bundle.py`, `scripts/proof/verify_trusted_run_witness_bundle.py`, `scripts/proof/verify_offline_trusted_run_claim.py`, `scripts/proof/run_trusted_run_witness_campaign.py`, `scripts/proof/run_trusted_repo_change.py`, and `scripts/proof/run_trusted_repo_change_campaign.py`
+71. Canonical Trusted Run Witness v1 proof authority now lives in `docs/specs/TRUSTED_RUN_WITNESS_V1.md`, `docs/specs/TRUSTED_RUN_INVARIANTS_V1.md`, `docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md`, `docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md`, `docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md`, `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md`, and `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`; admitted compare scopes are ProductFlow governed `write_file` as `trusted_run_productflow_write_file_v1`, the First Useful Workflow Slice as `trusted_repo_config_change_v1`, and Terraform plan decision as `trusted_terraform_plan_decision_v1`, all using operator surface `trusted_run_witness_report.v1`, invariant model surface `trusted_run_invariant_model.v1`, substrate model surface `control_plane_witness_substrate.v1`, witness bundle schema `trusted_run.witness_bundle.v1`, canonical offline claim command `python scripts/proof/verify_offline_trusted_run_claim.py --input <evidence_path>`, and canonical proof-foundation command `python scripts/proof/verify_trusted_run_proof_foundation.py`; ProductFlow keeps canonical campaign output `benchmarks/results/proof/trusted_run_witness_verification.json`, offline output `benchmarks/results/proof/offline_trusted_run_verifier.json`, and proof-foundation output `benchmarks/results/proof/trusted_run_proof_foundation.json`; the useful workflow slice uses `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change.py`, `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change_campaign.py`, live output `benchmarks/results/proof/trusted_repo_change_live_run.json`, validator output `benchmarks/results/proof/trusted_repo_change_validator.json`, campaign output `benchmarks/results/proof/trusted_repo_change_witness_verification.json`, offline output `benchmarks/results/proof/trusted_repo_change_offline_verifier.json`, and witness bundle root `workspace/trusted_repo_change/runs/<session_id>/trusted_run_witness_bundle.json`; the Terraform plan decision slice uses `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_terraform_plan_decision.py`, `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_terraform_plan_decision_campaign.py`, provider-backed governed proof command `python scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py --output benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json`, no-spend live setup preflight `python scripts/proof/check_trusted_terraform_live_setup_preflight.py`, publication readiness gate `python scripts/proof/check_trusted_terraform_publication_readiness.py`, publication gate sequence `python scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py`, live output `benchmarks/results/proof/trusted_terraform_plan_decision_live_run.json`, provider-backed governed proof output `benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json`, live setup preflight output `benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_preflight.json`, publication readiness output `benchmarks/results/proof/trusted_terraform_plan_decision_publication_readiness.json`, publication gate output `benchmarks/results/proof/trusted_terraform_plan_decision_publication_gate.json`, validator output `benchmarks/results/proof/trusted_terraform_plan_decision_validator.json`, campaign output `benchmarks/results/proof/trusted_terraform_plan_decision_witness_verification.json`, offline output `benchmarks/results/proof/trusted_terraform_plan_decision_offline_verifier.json`, and witness bundle root `workspace/trusted_terraform_plan_decision/runs/<session_id>/trusted_run_witness_bundle.json`; `TRI-INV-031` and all admitted witness verifier surfaces now derive `side_effect_free_verification` from the structural proof-foundation artifact rather than from an asserted constant; `trusted_terraform_plan_decision_v1` is now admitted internally under `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md` and `docs/guides/TRUSTED_TERRAFORM_PLAN_DECISION_SCOPE_GUIDE.md`, but it is not yet externally publishable and not yet part of the current public trust slice because successful provider-backed governed-proof evidence is not yet admitted public evidence and the publication readiness/gate commands must fail closed until that evidence exists; a single bundle remains `non_deterministic_lab_only`, while a campaign may claim `verdict_deterministic` only when at least two equivalent runs verify with stable contract-verdict signature, stable invariant-model signature, stable substrate signature, stable must-catch outcomes, and for `trusted_repo_config_change_v1` plus `trusted_terraform_plan_decision_v1` a stable validator signature; public proof-backed trust wording remains governed by `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md`, currently applies only to `trusted_repo_config_change_v1`, must stop at `verdict_deterministic`, and must explicitly say replay and text determinism are not yet proven and that the slice is proof-only and fixture-bounded; the offline verifier may only preserve or downgrade claims from existing evidence via `scripts/proof/trusted_run_witness_contract.py`, `scripts/proof/trusted_run_invariant_model.py`, `scripts/proof/control_plane_witness_substrate.py`, `scripts/proof/offline_trusted_run_verifier.py`, `scripts/proof/trusted_run_proof_foundation.py`, `scripts/proof/trusted_run_non_interference.py`, `scripts/proof/trusted_run_witness_support.py`, `scripts/proof/trusted_scope_family_support.py`, `scripts/proof/trusted_scope_family_claims.py`, `scripts/proof/trusted_scope_family_common.py`, `scripts/proof/trusted_repo_change_contract.py`, `scripts/proof/trusted_repo_change_verifier.py`, `scripts/proof/trusted_repo_change_workflow.py`, `scripts/proof/trusted_repo_change_offline.py`, `scripts/proof/trusted_terraform_plan_decision_contract.py`, `scripts/proof/trusted_terraform_plan_decision_verifier.py`, `scripts/proof/trusted_terraform_plan_decision_workflow.py`, `scripts/proof/trusted_terraform_plan_decision_bundle_support.py`, `scripts/proof/trusted_terraform_plan_decision_offline.py`, `scripts/proof/terraform_plan_review_live_support.py`, `scripts/proof/build_trusted_run_witness_bundle.py`, `scripts/proof/verify_trusted_run_witness_bundle.py`, `scripts/proof/verify_offline_trusted_run_claim.py`, `scripts/proof/verify_trusted_run_proof_foundation.py`, `scripts/proof/run_trusted_run_witness_campaign.py`, `scripts/proof/run_trusted_repo_change.py`, `scripts/proof/run_trusted_repo_change_campaign.py`, `scripts/proof/run_trusted_terraform_plan_decision.py`, `scripts/proof/run_trusted_terraform_plan_decision_campaign.py`, `scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py`, `scripts/proof/check_trusted_terraform_live_setup_preflight.py`, `scripts/proof/check_trusted_terraform_publication_readiness.py`, and `scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py`
+Trusted Terraform live setup packet addition: `python scripts/proof/prepare_trusted_terraform_live_setup_packet.py` is the canonical no-spend setup packet generator for the provider-backed governed-proof attempt. It writes `benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_packet.json` and local ignored packet files under `workspace/trusted_terraform_live_setup/`, executes zero provider calls, writes no credential values, and does not constitute publication evidence.
+
 72. Canonical API runtime ownership now lives on the FastAPI app-scoped context `app.state.api_runtime_context` in `orket/interfaces/api.py` with the context contract defined in `orket/interfaces/api_runtime_context.py`; `create_api_app()` replaces that app-scoped context for the active project root, while module-level `engine`, `api_runtime_host`, `stream_bus`, `interaction_manager`, `extension_manager`, and `extension_runtime_service` remain minimal compatibility aliases that mirror or are adopted into that context and are not the authoritative owner, and the env-sensitive `StreamBus` plus `InteractionManager` remain lazy so request-time runtime flags still control their live behavior truthfully
 73. Canonical engine control-plane composition now builds through `orket/orchestration/engine_services.py::build_engine_control_plane_services(...)`, async kernel control-plane publication and response augmentation now live in `orket/orchestration/engine_kernel_async_service.py::KernelAsyncControlPlaneService`, the default orchestrator issue-dispatch lifecycle truth remains owned by `orket/application/services/orchestrator_issue_control_plane_service.py` rather than `orket/orchestration/engine.py`, and engine-targeted replay is now explicitly diagnostics-only through `OrchestrationEngine.replay_turn_diagnostics(...)` while `replay_turn(...)` remains only as a compatibility wrapper over the same artifact-backed diagnostics surface; the touched API and CLI replay entrypoints now call `replay_turn_diagnostics(...)` explicitly
 74. Canonical runtime-verification support artifacts now use `agent_output/verification/runtime_verification.json` as the latest support-only verifier record, `agent_output/verification/runtime_verification_index.json` as the stable history index, and `agent_output/verification/runtime_verifier_records/<run_id>/<issue_id>/turn_<turn_index>_retry_<retry_count>.json` as the preserved per-record family; those artifacts must record `artifact_role=support_verification_evidence`, `artifact_authority=support_only`, `authored_output=false`, `overall_evidence_class`, and `evidence_summary` over `syntax_only`, `command_execution`, `behavioral_verification`, and `not_evaluated` together with run, issue, turn, and retry provenance, and runtime-summary or MAR paths must not promote the verifier artifact to the primary authored output by default
@@ -625,13 +627,33 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
       "substrate_spec": "docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md",
       "offline_verifier_spec": "docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md",
       "useful_workflow_spec": "docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md",
+      "terraform_plan_decision_scope_spec": "docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md",
+      "terraform_plan_decision_scope_guide": "docs/guides/TRUSTED_TERRAFORM_PLAN_DECISION_SCOPE_GUIDE.md",
+      "scope_admission_standard_spec": "docs/specs/TRUSTED_CHANGE_SCOPE_ADMISSION_STANDARD_V1.md",
+      "scope_catalog_spec": "docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md",
       "compare_scope": "trusted_run_productflow_write_file_v1",
       "admitted_compare_scopes": [
         "trusted_run_productflow_write_file_v1",
-        "trusted_repo_config_change_v1"
+        "trusted_repo_config_change_v1",
+        "trusted_terraform_plan_decision_v1"
       ],
+      "current_public_trust_slice_compare_scope": "trusted_repo_config_change_v1",
+      "terraform_plan_decision_publication_status": "internal_admitted_only_not_public",
+      "terraform_plan_decision_publication_blocker": "successful provider-backed governed-proof evidence is not yet admitted public evidence; current admitted campaign evidence still comes from the bounded local harness over Terraform reviewer v1",
+      "terraform_plan_decision_runtime_smoke_operator_path": "python scripts/reviewrun/run_terraform_plan_review_live_smoke.py --out benchmarks/results/proof/terraform_plan_review_live_smoke.json",
+      "terraform_plan_decision_governed_runtime_operator_path": "python scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py --output benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json",
+      "terraform_plan_decision_live_setup_packet_operator_path": "python scripts/proof/prepare_trusted_terraform_live_setup_packet.py",
+      "terraform_plan_decision_live_setup_packet_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_packet.json",
+      "terraform_plan_decision_live_setup_packet_root": "workspace/trusted_terraform_live_setup/",
+      "terraform_plan_decision_live_setup_preflight_operator_path": "python scripts/proof/check_trusted_terraform_live_setup_preflight.py",
+      "terraform_plan_decision_live_setup_preflight_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_preflight.json",
+      "terraform_plan_decision_publication_readiness_operator_path": "python scripts/proof/check_trusted_terraform_publication_readiness.py",
+      "terraform_plan_decision_publication_readiness_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_publication_readiness.json",
+      "terraform_plan_decision_publication_gate_operator_path": "python scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py",
+      "terraform_plan_decision_publication_gate_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_publication_gate.json",
       "operator_surface": "trusted_run_witness_report.v1",
       "offline_verifier_schema": "offline_trusted_run_verifier.v1",
+      "proof_foundation_schema": "trusted_run_proof_foundation.v1",
       "contract_verdict_surface": "trusted_run_contract_verdict.v1",
       "invariant_model_surface": "trusted_run_invariant_model.v1",
       "substrate_model_surface": "control_plane_witness_substrate.v1",
@@ -639,8 +661,16 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
       "bundle_path": "runs/<session_id>/trusted_run_witness_bundle.json",
       "verification_output_path": "benchmarks/results/proof/trusted_run_witness_verification.json",
       "offline_verifier_output_path": "benchmarks/results/proof/offline_trusted_run_verifier.json",
+      "proof_foundation_output_path": "benchmarks/results/proof/trusted_run_proof_foundation.json",
       "campaign_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_run_witness_campaign.py",
       "offline_verifier_operator_path": "python scripts/proof/verify_offline_trusted_run_claim.py --input <evidence_path>",
+      "proof_foundation_operator_path": "python scripts/proof/verify_trusted_run_proof_foundation.py",
+      "validator_backed_scope_family_helper": "scripts/proof/trusted_scope_family_support.py",
+      "validator_backed_scope_family_support_modules": [
+        "scripts/proof/trusted_scope_family_support.py",
+        "scripts/proof/trusted_scope_family_claims.py",
+        "scripts/proof/trusted_scope_family_common.py"
+      ],
       "trusted_repo_change": {
         "compare_scope": "trusted_repo_config_change_v1",
         "contract_verdict_surface": "trusted_repo_change_contract_verdict.v1",
@@ -653,6 +683,30 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "offline_verifier_output_path": "benchmarks/results/proof/trusted_repo_change_offline_verifier.json",
         "bundle_path": "workspace/trusted_repo_change/runs/<session_id>/trusted_run_witness_bundle.json"
       },
+      "trusted_terraform_plan_decision": {
+        "compare_scope": "trusted_terraform_plan_decision_v1",
+        "contract_verdict_surface": "trusted_terraform_plan_decision_contract_verdict.v1",
+        "validator_surface": "trusted_terraform_plan_decision_validator.v1",
+        "workflow_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_terraform_plan_decision.py",
+        "campaign_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_terraform_plan_decision_campaign.py",
+        "governed_runtime_operator_path": "python scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py --output benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json",
+        "live_setup_packet_operator_path": "python scripts/proof/prepare_trusted_terraform_live_setup_packet.py",
+        "live_setup_preflight_operator_path": "python scripts/proof/check_trusted_terraform_live_setup_preflight.py",
+        "publication_readiness_operator_path": "python scripts/proof/check_trusted_terraform_publication_readiness.py",
+        "publication_gate_operator_path": "python scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py",
+        "live_run_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_run.json",
+        "governed_runtime_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json",
+        "live_setup_packet_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_packet.json",
+        "live_setup_packet_root": "workspace/trusted_terraform_live_setup/",
+        "live_setup_preflight_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_preflight.json",
+        "publication_readiness_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_publication_readiness.json",
+        "publication_gate_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_publication_gate.json",
+        "validator_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_validator.json",
+        "verification_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_witness_verification.json",
+        "offline_verifier_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_offline_verifier.json",
+        "bundle_path": "workspace/trusted_terraform_plan_decision/runs/<session_id>/trusted_run_witness_bundle.json",
+        "runtime_smoke_operator_path": "python scripts/reviewrun/run_terraform_plan_review_live_smoke.py --out benchmarks/results/proof/terraform_plan_review_live_smoke.json"
+      },
       "single_run_claim_tier": "non_deterministic_lab_only",
       "campaign_target_claim_tier": "verdict_deterministic",
       "sources": [
@@ -662,21 +716,45 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
         "docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md",
         "docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md",
         "docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md",
+        "docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md",
+        "docs/specs/TRUSTED_CHANGE_SCOPE_ADMISSION_STANDARD_V1.md",
+        "docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md",
+        "docs/guides/TRUSTED_TERRAFORM_PLAN_DECISION_SCOPE_GUIDE.md",
         "scripts/proof/trusted_run_invariant_model.py",
         "scripts/proof/control_plane_witness_substrate.py",
         "scripts/proof/trusted_run_witness_contract.py",
         "scripts/proof/offline_trusted_run_verifier.py",
+        "scripts/proof/trusted_run_proof_foundation.py",
+        "scripts/proof/trusted_run_non_interference.py",
         "scripts/proof/trusted_run_witness_support.py",
+        "scripts/proof/trusted_scope_family_support.py",
+        "scripts/proof/trusted_scope_family_claims.py",
+        "scripts/proof/trusted_scope_family_common.py",
         "scripts/proof/trusted_repo_change_contract.py",
         "scripts/proof/trusted_repo_change_verifier.py",
         "scripts/proof/trusted_repo_change_workflow.py",
         "scripts/proof/trusted_repo_change_offline.py",
+        "scripts/proof/trusted_terraform_plan_decision_contract.py",
+        "scripts/proof/trusted_terraform_plan_decision_verifier.py",
+        "scripts/proof/trusted_terraform_plan_decision_workflow.py",
+        "scripts/proof/trusted_terraform_plan_decision_bundle_support.py",
+        "scripts/proof/trusted_terraform_plan_decision_offline.py",
+        "scripts/proof/terraform_plan_review_live_support.py",
         "scripts/proof/build_trusted_run_witness_bundle.py",
         "scripts/proof/verify_trusted_run_witness_bundle.py",
         "scripts/proof/verify_offline_trusted_run_claim.py",
+        "scripts/proof/verify_trusted_run_proof_foundation.py",
         "scripts/proof/run_trusted_run_witness_campaign.py",
         "scripts/proof/run_trusted_repo_change.py",
-        "scripts/proof/run_trusted_repo_change_campaign.py"
+        "scripts/proof/run_trusted_repo_change_campaign.py",
+        "scripts/proof/run_trusted_terraform_plan_decision.py",
+        "scripts/proof/run_trusted_terraform_plan_decision_campaign.py",
+        "scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py",
+        "scripts/proof/prepare_trusted_terraform_live_setup_packet.py",
+        "scripts/proof/check_trusted_terraform_live_setup_preflight.py",
+        "scripts/proof/check_trusted_terraform_publication_readiness.py",
+        "scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py",
+        "scripts/reviewrun/run_terraform_plan_review_live_smoke.py"
       ]
     },
     "control_plane_storage": {

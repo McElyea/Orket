@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-04-18
+Last reviewed: 2026-04-19
 
 This index is the canonical map for markdown docs under `docs/`, excluding `docs/projects/**` and excluding non-markdown artifacts such as schemas, JSON snapshots, and YAML scenarios.
 
@@ -82,6 +82,9 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 55. `docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md`
 56. `docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md`
 57. `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md`
+58. `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`
+59. `docs/specs/TRUSTED_CHANGE_SCOPE_ADMISSION_STANDARD_V1.md`
+60. `docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -113,6 +116,7 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 6. `docs/guides/controller-workload-authoring.md`
 7. `docs/runbooks/controller-workload-operator.md`
 8. `docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md`
+9. `docs/guides/TRUSTED_TERRAFORM_PLAN_DECISION_SCOPE_GUIDE.md`
 
 ## ODR Research
 1. `docs/odr/requirements.md`
@@ -162,6 +166,14 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 40. `docs/architecture/CONTRACT_DELTA_CONTROL_PLANE_WITNESS_SUBSTRATE_V1_2026-04-18.md`
 41. `docs/architecture/CONTRACT_DELTA_OFFLINE_TRUSTED_RUN_VERIFIER_V1_2026-04-18.md`
 42. `docs/architecture/CONTRACT_DELTA_FIRST_USEFUL_WORKFLOW_SLICE_V1_2026-04-18.md`
+43. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_PLAN_DECISION_V1_2026-04-18.md`
+44. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_PLAN_DECISION_INTERNAL_ADMISSION_2026-04-18.md`
+45. `docs/architecture/CONTRACT_DELTA_TRUSTED_CHANGE_SCOPE_FAMILY_AUTHORITY_2026-04-18.md`
+46. `docs/architecture/CONTRACT_DELTA_GOVERNED_PROOF_PUBLICATION_BLOCKER_CLARIFICATION_2026-04-18.md`
+47. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_PUBLICATION_READINESS_GATE_2026-04-19.md`
+48. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_PUBLICATION_GATE_SEQUENCE_2026-04-19.md`
+49. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_LIVE_SETUP_PREFLIGHT_2026-04-19.md`
+50. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_LIVE_SETUP_PACKET_2026-04-19.md`
 
 ## Releases
 1. `docs/releases/0.4.0/PROOF_REPORT.md`

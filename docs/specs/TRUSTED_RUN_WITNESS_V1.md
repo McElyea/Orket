@@ -10,6 +10,10 @@ The first slice is deliberately narrow. It does not claim full replay determinis
 
 The second admitted slice is the First Useful Workflow Slice in `docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md`. It uses the same witness bundle and report schemas with compare scope `trusted_repo_config_change_v1`, but it has its own contract verdict surface and validator surface. ProductFlow evidence MUST NOT be relabeled as the useful workflow slice.
 
+The third admitted internal-only slice is Terraform plan decision in `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`. It uses the same witness bundle and report schemas with compare scope `trusted_terraform_plan_decision_v1`, but it has its own contract verdict surface and validator surface and is not yet part of the current externally publishable public trust slice.
+
+Durable family admission and admitted-scope catalog authority now lives in `docs/specs/TRUSTED_CHANGE_SCOPE_ADMISSION_STANDARD_V1.md` and `docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md`.
+
 ## Claim Surface
 
 First slice identity:
@@ -23,8 +27,9 @@ First slice identity:
 7. canonical witness bundle root: `runs/<session_id>/trusted_run_witness_bundle.json`
 8. canonical verifier proof output: `benchmarks/results/proof/trusted_run_witness_verification.json`
 9. canonical offline claim verifier output: `benchmarks/results/proof/offline_trusted_run_verifier.json`
-10. target claim tier: `verdict_deterministic`
-11. single-run fallback claim tier: `non_deterministic_lab_only`
+10. canonical proof-foundation output: `benchmarks/results/proof/trusted_run_proof_foundation.json`
+11. target claim tier: `verdict_deterministic`
+12. single-run fallback claim tier: `non_deterministic_lab_only`
 
 The first slice extends the canonical ProductFlow governed `write_file` path:
 
@@ -45,6 +50,16 @@ Second slice identity:
 5. bounded output path: `repo/config/trusted-change.json`
 6. canonical fixture workspace: `workspace/trusted_repo_change/`
 7. durable contract: `docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md`
+
+Third slice identity:
+
+1. compare scope: `trusted_terraform_plan_decision_v1`
+2. operator surface: `trusted_run_witness_report.v1`
+3. contract verdict surface: `trusted_terraform_plan_decision_contract_verdict.v1`
+4. validator surface: `trusted_terraform_plan_decision_validator.v1`
+5. canonical fixture workspace: `workspace/trusted_terraform_plan_decision/`
+6. canonical witness bundle root: `workspace/trusted_terraform_plan_decision/runs/<session_id>/trusted_run_witness_bundle.json`
+7. durable contract: `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`
 
 ## Bundle Schema
 
@@ -142,6 +157,8 @@ The first implementation MUST NOT claim `text_deterministic` unless byte identit
 ## Verification
 
 Verification over a witness bundle MUST be side-effect free. The verifier MAY write its own report artifact, but bundle evaluation itself must be pure inspection.
+
+The current structural proof for that boundary is the canonical proof-foundation command `python scripts/proof/verify_trusted_run_proof_foundation.py`, which writes `benchmarks/results/proof/trusted_run_proof_foundation.json`. `TRI-INV-031` and the witness verifier `side_effect_free_verification` field derive from that proof surface rather than from an asserted constant.
 
 The verifier report MUST include `trusted_run_invariant_model`, `invariant_model_signature_digest`, `control_plane_witness_substrate`, and `substrate_signature_digest`. Missing or failing invariant or substrate output is missing evidence and blocks verifier success.
 

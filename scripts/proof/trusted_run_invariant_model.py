@@ -25,9 +25,12 @@ INVARIANT_MODEL_SCHEMA_VERSION = "trusted_run_invariant_model.v1"
 
 
 def evaluate_trusted_run_invariants(bundle: dict[str, Any]) -> dict[str, Any]:
+    from scripts.proof.trusted_run_proof_foundation import evaluate_offline_verifier_non_interference
+
     authority = _as_dict(bundle.get("authority_lineage"))
     observed = _as_dict(bundle.get("observed_effect"))
     verdict = _as_dict(bundle.get("contract_verdict"))
+    non_interference = evaluate_offline_verifier_non_interference()
     failures: list[str] = []
     blockers: list[str] = []
     checks: list[dict[str, Any]] = []
@@ -78,7 +81,12 @@ def evaluate_trusted_run_invariants(bundle: dict[str, Any]) -> dict[str, Any]:
     check("TRI-INV-028", _contract_verdict_digest_ok(verdict), "contract_verdict_drift", "included verdict digest")
     check("TRI-INV-029", bundle.get("claim_tier") == FALLBACK_CLAIM_TIER, "single_bundle_claim_tier_must_be_lab_only", "single-bundle claim tier")
     check("TRI-INV-030", bundle.get("claim_tier") != TARGET_CLAIM_TIER, "repeat_evidence_missing", "campaign-only deterministic claim")
-    check("TRI-INV-031", True, "", "bundle evaluation is pure inspection; mutation proof is covered by contract tests")
+    check(
+        "TRI-INV-031",
+        non_interference.get("result") == "pass",
+        "verifier_side_effect_absence_not_mechanically_proven",
+        f"offline verifier non-interference {non_interference.get('non_interference_signature_digest') or 'missing'}",
+    )
     check("TRI-INV-032", bundle.get("claim_tier") != "replay_deterministic", "replay_deterministic_evidence_missing", "replay claim guard")
     check("TRI-INV-033", bundle.get("claim_tier") != "text_deterministic", "text_deterministic_evidence_missing", "text determinism claim guard")
 

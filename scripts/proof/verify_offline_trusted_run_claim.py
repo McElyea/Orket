@@ -19,6 +19,8 @@ from scripts.proof.offline_trusted_run_verifier import (
 )
 from scripts.proof.trusted_repo_change_contract import TRUSTED_REPO_COMPARE_SCOPE
 from scripts.proof.trusted_repo_change_offline import evaluate_trusted_repo_change_offline_claim
+from scripts.proof.trusted_terraform_plan_decision_contract import TRUSTED_TERRAFORM_COMPARE_SCOPE
+from scripts.proof.trusted_terraform_plan_decision_offline import evaluate_trusted_terraform_plan_decision_offline_claim
 from scripts.proof.trusted_run_witness_support import relative_to_repo
 
 
@@ -59,11 +61,12 @@ def main(argv: list[str] | None = None) -> int:
     input_path = Path(str(args.input)).resolve()
     output_path = Path(str(args.output)).resolve()
     payload = _load_json_object(input_path)
-    evaluator = (
-        evaluate_trusted_repo_change_offline_claim
-        if payload.get("compare_scope") == TRUSTED_REPO_COMPARE_SCOPE
-        else evaluate_offline_trusted_run_claim
-    )
+    if payload.get("compare_scope") == TRUSTED_REPO_COMPARE_SCOPE:
+        evaluator = evaluate_trusted_repo_change_offline_claim
+    elif payload.get("compare_scope") == TRUSTED_TERRAFORM_COMPARE_SCOPE:
+        evaluator = evaluate_trusted_terraform_plan_decision_offline_claim
+    else:
+        evaluator = evaluate_offline_trusted_run_claim
     report = evaluator(
         payload,
         input_mode=str(args.input_mode),

@@ -102,6 +102,7 @@ def build_contract_verdict(bundle: dict[str, Any]) -> dict[str, Any]:
 
 def verify_witness_bundle_payload(bundle: dict[str, Any], *, evidence_ref: str = "") -> dict[str, Any]:
     from scripts.proof.control_plane_witness_substrate import evaluate_control_plane_witness_substrate
+    from scripts.proof.trusted_run_proof_foundation import evaluate_offline_verifier_non_interference
     from scripts.proof.trusted_run_invariant_model import evaluate_trusted_run_invariants
 
     clean_bundle = _without_diff_ledger(bundle)
@@ -113,6 +114,7 @@ def verify_witness_bundle_payload(bundle: dict[str, Any], *, evidence_ref: str =
     recomputed = build_contract_verdict(clean_bundle)
     invariant_model = evaluate_trusted_run_invariants(clean_bundle)
     substrate_model = evaluate_control_plane_witness_substrate(clean_bundle)
+    non_interference = evaluate_offline_verifier_non_interference()
     included_digest = str(included_verdict.get("verdict_signature_digest") or "")
     recomputed_digest = str(recomputed.get("verdict_signature_digest") or "")
     if included_digest and included_digest != recomputed_digest:
@@ -142,10 +144,14 @@ def verify_witness_bundle_payload(bundle: dict[str, Any], *, evidence_ref: str =
         "policy_digest": str(clean_bundle.get("policy_digest") or ""),
         "control_bundle_ref": str(clean_bundle.get("control_bundle_ref") or ""),
         "evidence_ref": evidence_ref,
-        "side_effect_free_verification": True,
+        "side_effect_free_verification": non_interference.get("result") == "pass",
         "contract_verdict": recomputed,
         "trusted_run_invariant_model": invariant_model,
         "control_plane_witness_substrate": substrate_model,
+        "offline_verifier_non_interference": non_interference,
+        "offline_verifier_non_interference_signature_digest": str(
+            non_interference.get("non_interference_signature_digest") or ""
+        ),
         "included_contract_verdict_digest": included_digest,
         "recomputed_contract_verdict_digest": recomputed_digest,
         "invariant_model_signature_digest": str(invariant_model.get("invariant_signature_digest") or ""),

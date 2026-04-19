@@ -52,7 +52,16 @@ The First Useful Workflow Slice model is scoped to:
 6. bounded output path: `repo/config/trusted-change.json`
 7. expected config schema: `trusted_repo_change.config.v1`
 
-The ProductFlow model uses `TRI-INV-*` invariant ids. The First Useful Workflow Slice model uses `TRC-INV-*` invariant ids so the useful workflow can add validator-specific checks without relabeling ProductFlow invariants.
+The Terraform plan decision model is scoped to:
+
+1. compare scope: `trusted_terraform_plan_decision_v1`
+2. witness bundle schema: `trusted_run.witness_bundle.v1`
+3. contract verdict surface: `trusted_terraform_plan_decision_contract_verdict.v1`
+4. validator surface: `trusted_terraform_plan_decision_validator.v1`
+5. verifier report surface: `trusted_run_witness_report.v1`
+6. bounded decision artifact: Terraform plan reviewer `final_review.json`
+
+The ProductFlow model uses `TRI-INV-*` invariant ids. The First Useful Workflow Slice model uses `TRC-INV-*` invariant ids so the useful workflow can add validator-specific checks without relabeling ProductFlow invariants. The Terraform plan decision model uses `TTPD-INV-*` invariant ids so Terraform-specific review-decision and audit-publication checks stay scope-local.
 
 The model observes these record families through serialized witness evidence:
 
@@ -167,7 +176,7 @@ TRI-INV-029: A single accepted bundle MUST remain `non_deterministic_lab_only`.
 
 TRI-INV-030: `verdict_deterministic` MUST require at least two successful verifier reports with stable verdict and invariant signatures.
 
-TRI-INV-031: Bundle verification MUST be side-effect free with respect to workflow state.
+TRI-INV-031: Bundle verification MUST be side-effect free with respect to workflow state, with the current structural proof carried by `trusted_run_proof_foundation.v1`.
 
 TRI-INV-032: A campaign MUST NOT claim `replay_deterministic` without replay evidence satisfying `docs/specs/ORKET_DETERMINISM_GATE_POLICY.md`.
 
@@ -187,6 +196,8 @@ As of this contract, the ProductFlow trusted-run bundle surface is expected to c
 6. verifier side-effect absence at bundle-evaluation scope
 
 If a later runtime cannot supply those fields, verifier output must expose the blocker instead of accepting the bundle.
+
+The canonical structural proof artifact for the fixed ProductFlow Workstream 1 target set is `trusted_run_proof_foundation.v1`, written by `python scripts/proof/verify_trusted_run_proof_foundation.py` to `benchmarks/results/proof/trusted_run_proof_foundation.json`.
 
 ## Negative Corruption Matrix
 
@@ -239,4 +250,4 @@ Signature material MUST include:
 6. campaign-relevant claim-tier guard status
 7. missing-proof blockers
 
-`verdict_deterministic` requires a stable contract-verdict signature and a stable invariant signature. For `trusted_repo_config_change_v1`, campaign promotion also requires a stable `trusted_repo_config_validator.v1` signature.
+`verdict_deterministic` requires a stable contract-verdict signature and a stable invariant signature. For `trusted_repo_config_change_v1` and `trusted_terraform_plan_decision_v1`, campaign promotion also requires a stable validator signature on the scope-local validator surface.

@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.47] - 2026-04-19 - "The Governed Proof Terraform Gate Cut"
+
+### Added
+- **Governed-Proof Live Lane**: Added the active governed-proof implementation lane under `docs/projects/governed-proof/` together with its mechanism target map, scope candidate matrix, and scope admission/catalog drafting surfaces.
+- **Trusted Terraform Compare Scope**: Added the durable `trusted_terraform_plan_decision_v1` spec, evaluator guide, contract deltas, workflow scripts, verifier/offline-claim support, shared scope-family helpers, and governed-proof regression coverage for the first externally useful non-fixture scope.
+- **Terraform Provider-Backed Proof Operator Surfaces**: Added the no-spend live setup packet generator, no-spend live setup preflight, provider-backed runtime smoke wrapper, publication-readiness gate, and one-shot publication-gate sequence for the Terraform governed-proof path.
+
+### Changed
+- **Trusted-Run Authority Posture**: Expanded the admitted internal compare-scope authority to carry `trusted_terraform_plan_decision_v1`, aligned `CURRENT_AUTHORITY.md`, roadmap/docs index references, and updated trust/publication wording to keep Terraform public admission blocked until provider-backed evidence succeeds.
+- **Proof Foundation And Offline Claim Wiring**: Added the canonical proof-foundation verifier path, carried the six fixed Workstream 1 targets into durable outputs, and made admitted witness/offline-verifier surfaces derive `side_effect_free_verification` from proof evidence rather than from an asserted constant.
+- **Terraform Publication Gate Truthfulness**: Kept the fast-fail publication-gate path blocked by default when live AWS inputs are absent while preserving the blocked readiness result in the aggregate gate output.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. Use `python scripts/proof/prepare_trusted_terraform_live_setup_packet.py`, then `python scripts/proof/check_trusted_terraform_live_setup_preflight.py`, then the Terraform publication gate only after real AWS-backed inputs are available.
+
 ## [0.4.46] - 2026-04-18 - "The Proof Witness Archive Cut"
 
 ### Added

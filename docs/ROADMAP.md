@@ -6,7 +6,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-No active priority now.
+1. governed-proof strategic lane -- Authority: `docs/projects/governed-proof/ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md`.
 
 ## Maintenance (Non-Priority)
 
@@ -33,6 +33,7 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
+| governed-proof | active-live-lane | P1 | `docs/projects/governed-proof/` | Orket Core | Active strategic lane for proof-strengthening, first externally publishable trusted change scope delivery, and scope-family productization. Canonical execution authority is `ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md`. |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | OrketUI | shipped-reference | reference | `docs/projects/OrketUI/` | Orket Core | Shipped Orket-side provenance packet for the separate OrketUI extension. The completed lane record lives under `docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/`; future OrketUI expansion must reopen as a new explicit roadmap lane. |
 | PromptReforgerToolCompatibility | paused-checkpoint | paused | `docs/projects/PromptReforgerToolCompatibility/` | Orket Core | Paused after the truthful 2026-04-04 portability checkpoint. `PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; the FunctionGemma judge blocker is now cleared through the admitted native-tool path, keep Prompt Reforger service truth in `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`, keep Gemma 4 deferred, and keep Qwen out of the core lane unless a later explicit cross-family baseline is requested. |

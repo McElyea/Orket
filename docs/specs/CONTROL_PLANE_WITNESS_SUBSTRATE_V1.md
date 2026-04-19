@@ -35,7 +35,17 @@ The First Useful Workflow Slice substrate contract is scoped to:
 6. substrate model surface: `control_plane_witness_substrate.v1`
 7. verifier report surface: `trusted_run_witness_report.v1`
 
-For `trusted_repo_config_change_v1`, `validator_result` is a required authority family. The substrate model must fail closed when the validator is missing, failing, or disconnected from the bounded output artifact.
+The Terraform plan decision substrate contract is scoped to:
+
+1. compare scope: `trusted_terraform_plan_decision_v1`
+2. witness bundle schema: `trusted_run.witness_bundle.v1`
+3. contract verdict surface: `trusted_terraform_plan_decision_contract_verdict.v1`
+4. validator surface: `trusted_terraform_plan_decision_validator.v1`
+5. invariant model surface: `trusted_run_invariant_model.v1`
+6. substrate model surface: `control_plane_witness_substrate.v1`
+7. verifier report surface: `trusted_run_witness_report.v1`
+
+For `trusted_repo_config_change_v1` and `trusted_terraform_plan_decision_v1`, `validator_result` is a required authority family. The substrate model must fail closed when the validator is missing, failing, or disconnected from the bounded output artifact.
 
 This spec depends on:
 
@@ -146,4 +156,4 @@ Verifier reports SHOULD include a `control_plane_witness_substrate` block with:
 
 The substrate signature must be stable across equivalent successful runs and exclude timestamps, run-specific identifiers, session-specific paths, and generated ids.
 
-`verdict_deterministic` requires stable contract-verdict, invariant-model, substrate-model, and must-catch signatures. For `trusted_repo_config_change_v1`, it also requires a stable validator signature.
+`verdict_deterministic` requires stable contract-verdict, invariant-model, substrate-model, and must-catch signatures. For `trusted_repo_config_change_v1` and `trusted_terraform_plan_decision_v1`, it also requires a stable validator signature.
