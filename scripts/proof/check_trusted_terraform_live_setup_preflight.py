@@ -14,9 +14,11 @@ if str(REPO_ROOT) not in sys.path:
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from scripts.proof.terraform_plan_review_live_support import (
     LiveTerraformReviewConfig,
+    bedrock_smoke_runtime_operation,
     live_config_from_env,
     missing_required_env,
     parse_s3_bucket_key,
+    supported_bedrock_smoke_model,
 )
 from scripts.proof.trusted_terraform_plan_decision_contract import (
     PROOF_RESULTS_ROOT,
@@ -128,7 +130,7 @@ def _validation_failures(config: LiveTerraformReviewConfig) -> list[str]:
         else:
             if _contains_placeholder(bucket) or _contains_placeholder(key):
                 failures.append("s3_uri_placeholder_not_replaced")
-    if str(config.model_id).strip() and not str(config.model_id).startswith("anthropic."):
+    if str(config.model_id).strip() and not supported_bedrock_smoke_model(str(config.model_id)):
         failures.append("unsupported_bedrock_model_for_smoke")
     if not str(config.table_name).strip():
         failures.append("dynamodb_table_name_missing")
@@ -147,7 +149,12 @@ def _provider_calls_planned(config: LiveTerraformReviewConfig) -> list[dict[str,
             pass
     return [
         {"service": "s3", "operation": "GetObject", "count": 1, "resource_hint": f"s3://{bucket}/{key}" if bucket and key else "plan_s3_uri"},
-        {"service": "bedrock-runtime", "operation": "InvokeModel", "count": 1, "resource_hint": str(config.model_id or "model_id")},
+        {
+            "service": "bedrock-runtime",
+            "operation": bedrock_smoke_runtime_operation(str(config.model_id)),
+            "count": 1,
+            "resource_hint": str(config.model_id or "model_id"),
+        },
         {"service": "dynamodb", "operation": "PutItem", "count": 1, "resource_hint": str(config.table_name or "TerraformReviews")},
     ]
 
@@ -168,6 +175,7 @@ def _config_summary(config: LiveTerraformReviewConfig) -> dict[str, Any]:
     return {
         "plan_s3_uri_present": bool(str(config.plan_s3_uri).strip()),
         "model_id": str(config.model_id or ""),
+        "bedrock_runtime_operation": bedrock_smoke_runtime_operation(str(config.model_id)),
         "region": str(config.region or ""),
         "table_name": str(config.table_name or ""),
         "execution_trace_ref": str(config.execution_trace_ref or ""),

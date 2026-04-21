@@ -1,6 +1,6 @@
 # Staged Benchmark Candidates
 
-Last updated: 2026-04-04
+Last updated: 2026-04-19
 
 This directory is the review lane for benchmark artifacts awaiting explicit publication approval.
 
@@ -34,6 +34,7 @@ This directory is the review lane for benchmark artifacts awaiting explicit publ
 | STAGE-GEN-015 | General | `General/prompt_reforger_qwen25_coder_7b_probe.json` | Prompt Reforger Qwen2.5-Coder-7B Probe Run | Candidate live cross-family probe on Ollama `qwen2.5-coder:7b` against `challenge_workflow_runtime`, reaching CWR-04 with partial success before a runtime stdout assertion failure. |  | `prompt_reforger`, `cross_family_probe`, `qwen25_coder_7b`, `live_run`, `partial_success` |
 | STAGE-GEN-016 | General | `General/prompt_reforger_qwen25_coder_7b_probe_score.json` | Prompt Reforger Qwen2.5-Coder-7B Probe Score | Candidate structural score for the exploratory Ollama `qwen2.5-coder:7b` probe, clearing all 5 frozen bootstrap slices and outperforming the current Gemma 4B portability baseline. |  | `prompt_reforger`, `cross_family_probe`, `qwen25_coder_7b`, `frozen_corpus_clear`, `portability_comparison` |
 | STAGE-GEN-017 | General | `General/prompt_reforger_guide_model_comparison.json` | Prompt Reforger Guide-Model Comparison Checkpoint | Candidate live guide-model comparison checkpoint for the frozen Gemma tool-use corpus, showing degraded Qwen guide generation, blocked LM Studio Gemma guide warmup, and an environment blocker on target-side quality comparison because the portability baseline target did not produce a score report. |  | `prompt_reforger`, `guide_model_comparison`, `candidate_generation_quality`, `environment_blocker`, `qwen_generation_partial` |
+| STAGE-GEN-018 | General | `General/governed_repo_change_packet_adversarial_benchmark_2026-04-19.json` | Governed Repo Change Packet Adversarial Benchmark | Candidate mixed benchmark for the first governed repo change packet, showing six failure classes where the standalone packet verifier fails closed while the baseline comparator remains success-shaped or ambiguous. | `verdict_deterministic` on `trusted_repo_config_change_v1`<br>surface `trusted_run_witness_report.v1`<br>class `workspace` | `governed_change_packet`, `repo_change_packet`, `adversarial_benchmark`, `standalone_verifier`, `workflow_plus_logs_plus_approvals` |
 
 ## Staging Workflow
 1. Copy candidate artifact(s) into the correct category folder.

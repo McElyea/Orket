@@ -10,6 +10,8 @@ Primary dependencies:
 3. `docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md`
 4. `docs/specs/ORKET_DETERMINISM_GATE_POLICY.md`
 5. `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`
+6. `docs/specs/GOVERNED_CHANGE_PACKET_V1.md`
+7. `docs/specs/GOVERNED_CHANGE_PACKET_STANDALONE_VERIFIER_V1.md`
 
 ## Purpose
 
@@ -23,9 +25,11 @@ This contract is intentionally narrow. It does not redefine the whole product. I
 |---|---|
 | compare scope | `trusted_repo_config_change_v1` |
 | claim tier ceiling | `verdict_deterministic` |
+| governed change packet schema | `governed_change_packet.v1` |
 | witness bundle schema | `trusted_run.witness_bundle.v1` |
 | offline verifier report schema | `offline_trusted_run_verifier.v1` |
-| evaluator guide | `docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md` |
+| standalone packet verifier schema | `governed_change_packet_standalone_verifier.v1` |
+| evaluator guide | `docs/guides/GOVERNED_REPO_CHANGE_PACKET_GUIDE.md` |
 
 TRAD-V1-001: All public trust, witness, offline-verification, determinism, or falsifiable-success wording governed by this contract MUST stay bounded to the admitted external trust slice above.
 
@@ -44,8 +48,8 @@ TRAD-V1-011: The canonical expanded trust reason is:
 ```text
 For admitted compare scopes such as `trusted_repo_config_change_v1`, Orket can
 package approval, effect, validator, final-truth, and claim-tier evidence into
-an offline-verifiable witness bundle and refuse stronger claims when that
-evidence is missing.
+an inspectable governed change packet plus underlying witness authority and
+refuse stronger claims when that evidence is missing.
 ```
 
 TRAD-V1-012: The trust reason MUST be framed as claim discipline over workflow success evidence. It MUST NOT depend on broad claims that:
@@ -60,9 +64,11 @@ TRAD-V1-020: Public wording MAY say the following for `trusted_repo_config_chang
 1. Orket ships a proof-only witnessable workflow slice.
 2. Orket emits a `trusted_run.witness_bundle.v1` bundle for that slice.
 3. Orket emits an offline verifier report for that slice.
+4. Orket emits a `governed_change_packet.v1` entry artifact for that slice.
+5. Orket emits a standalone packet verifier report for that slice.
 4. Orket fails closed on denial, validator failure, missing authority evidence, and unsupported higher claims for that slice.
-5. A two-run campaign on that slice currently reaches `verdict_deterministic`.
-6. Orket refuses stronger claims than the evidence supports for that slice.
+6. A two-run campaign on that slice currently reaches `verdict_deterministic`.
+7. Orket refuses stronger claims than the evidence supports for that slice.
 
 TRAD-V1-021: Generic repo-description wording that does not make trust, determinism, or witness claims MAY remain compare-scope-free.
 
@@ -92,16 +98,15 @@ TRAD-V1-031: ProductFlow's current replay posture MUST remain truthfully reporte
 
 TRAD-V1-040: The minimum skeptical-evaluator path MUST include:
 1. one positive approved-run proof
-2. one offline verifier step
+2. one standalone packet verifier step
 3. at least one shipped negative proof
 4. inspection of the witness bundle or equivalent primary authority artifact
 
 TRAD-V1-041: The canonical positive path is:
 
 ```text
-ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change.py --scenario approved --output benchmarks/results/proof/trusted_repo_change_live_run.json
-ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change_campaign.py
-python scripts/proof/verify_offline_trusted_run_claim.py --input benchmarks/results/proof/trusted_repo_change_witness_verification.json --claim verdict_deterministic --output benchmarks/results/proof/trusted_repo_change_offline_verifier.json
+ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_governed_repo_change_packet.py
+python scripts/proof/verify_governed_change_packet.py --input benchmarks/results/proof/governed_repo_change_packet.json --output benchmarks/results/proof/governed_repo_change_packet_verifier.json
 ```
 
 TRAD-V1-042: The canonical negative path is at least one of:
@@ -124,10 +129,15 @@ TRAD-V1-050: Public proof-backed evaluator material for this slice MUST identify
 | witness bundle | `workspace/trusted_repo_change/runs/<session_id>/trusted_run_witness_bundle.json` | primary authority artifact |
 | campaign report | `benchmarks/results/proof/trusted_repo_change_witness_verification.json` | authority-bearing proof output |
 | offline verifier report | `benchmarks/results/proof/trusted_repo_change_offline_verifier.json` | authority-bearing proof output |
+| governed change packet | `benchmarks/results/proof/governed_repo_change_packet.json` | primary operator entry artifact |
+| packet verifier report | `benchmarks/results/proof/governed_repo_change_packet_verifier.json` | authority-bearing proof output |
+| trusted-kernel model report | `benchmarks/results/proof/governed_change_packet_trusted_kernel_model.json` | authority-bearing proof output |
 | denial proof | `benchmarks/results/proof/trusted_repo_change_denial.json` | negative proof output |
 | validator-failure proof | `benchmarks/results/proof/trusted_repo_change_validator_failure.json` | negative proof output |
 
-TRAD-V1-051: Human narrative material such as packet guides, implementation closeouts, and README summaries is support-only. Those materials MUST NOT replace the witness bundle, campaign report, or offline verifier report as proof authority.
+TRAD-V1-051: Human narrative material such as packet guides, implementation closeouts, and README summaries is support-only. Those materials MUST NOT replace the witness bundle, campaign report, offline verifier report, or packet verifier report as proof authority.
+
+TRAD-V1-051A: The governed change packet is an operator entry artifact, not a substitute authority surface. Packet projections MUST NOT outrank the witness bundle, campaign report, offline verifier report, or packet verifier report.
 
 TRAD-V1-052: Public evaluator material MUST distinguish authority-bearing proof artifacts from support-only narrative material.
 

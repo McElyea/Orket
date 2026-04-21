@@ -20,9 +20,13 @@ INSPECTED_MODULES = (
     "scripts/proof/trusted_scope_family_common.py",
     "scripts/proof/trusted_repo_change_offline.py",
     "scripts/proof/trusted_repo_change_verifier.py",
+    "scripts/proof/governed_change_packet_contract.py",
+    "scripts/proof/governed_change_packet_trusted_kernel.py",
+    "scripts/proof/governed_change_packet_verifier.py",
     "scripts/proof/trusted_terraform_plan_decision_offline.py",
     "scripts/proof/trusted_terraform_plan_decision_verifier.py",
     "scripts/proof/verify_offline_trusted_run_claim.py",
+    "scripts/proof/verify_governed_change_packet.py",
 )
 FORBIDDEN_IMPORT_PREFIXES = (
     "orket",

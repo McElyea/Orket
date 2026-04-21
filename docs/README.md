@@ -82,9 +82,12 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 55. `docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md`
 56. `docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md`
 57. `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md`
-58. `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`
-59. `docs/specs/TRUSTED_CHANGE_SCOPE_ADMISSION_STANDARD_V1.md`
-60. `docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md`
+58. `docs/specs/GOVERNED_CHANGE_PACKET_TRUSTED_KERNEL_V1.md`
+59. `docs/specs/GOVERNED_CHANGE_PACKET_V1.md`
+60. `docs/specs/GOVERNED_CHANGE_PACKET_STANDALONE_VERIFIER_V1.md`
+61. `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`
+62. `docs/specs/TRUSTED_CHANGE_SCOPE_ADMISSION_STANDARD_V1.md`
+63. `docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -116,7 +119,8 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 6. `docs/guides/controller-workload-authoring.md`
 7. `docs/runbooks/controller-workload-operator.md`
 8. `docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md`
-9. `docs/guides/TRUSTED_TERRAFORM_PLAN_DECISION_SCOPE_GUIDE.md`
+9. `docs/guides/GOVERNED_REPO_CHANGE_PACKET_GUIDE.md`
+10. `docs/guides/TRUSTED_TERRAFORM_PLAN_DECISION_SCOPE_GUIDE.md`
 
 ## ODR Research
 1. `docs/odr/requirements.md`
@@ -174,6 +178,7 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 48. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_PUBLICATION_GATE_SEQUENCE_2026-04-19.md`
 49. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_LIVE_SETUP_PREFLIGHT_2026-04-19.md`
 50. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_LIVE_SETUP_PACKET_2026-04-19.md`
+51. `docs/architecture/CONTRACT_DELTA_GOVERNED_CHANGE_PACKET_V1_2026-04-19.md`
 
 ## Releases
 1. `docs/releases/0.4.0/PROOF_REPORT.md`

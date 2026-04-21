@@ -53,7 +53,7 @@ Expected result: the first two commands produce the admitted local-harness gover
 
 ```text
 ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI=<s3://bucket/path/to/terraform-plan.json>
-ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID=<bedrock-model-id>
+ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID=<bedrock-model-or-inference-profile-id>
 AWS_REGION=<region>
 ```
 
@@ -66,7 +66,7 @@ python scripts/proof/prepare_trusted_terraform_live_setup_packet.py
 python scripts/proof/check_trusted_terraform_live_setup_preflight.py
 ```
 
-Expected result: the setup packet writes `benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_packet.json` plus local files under `workspace/trusted_terraform_live_setup/` without provider calls or credential values. The preflight records `provider_calls_executed=[]`, blocks unreplaced setup-packet S3 placeholders, records the exact planned call set (`S3 GetObject`, `Bedrock Runtime InvokeModel`, `DynamoDB PutItem`), and reports local configuration blockers before credentials or provider APIs are used.
+Expected result: the setup packet writes `benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_packet.json` plus local files under `workspace/trusted_terraform_live_setup/` without provider calls or credential values. The preflight records `provider_calls_executed=[]`, blocks unreplaced setup-packet S3 placeholders, records the exact planned call set (`S3 GetObject`, `Bedrock Runtime InvokeModel` for direct `anthropic.*` ids or Anthropic inference-profile ids, `Bedrock Runtime Converse` for direct `amazon.nova-*` ids or Nova inference-profile ids such as `us.amazon.nova-lite-v1:0`, and `DynamoDB PutItem`), and reports local configuration blockers before credentials or provider APIs are used.
 
 5. Inspect the separate provider-backed runtime smoke seam:
 

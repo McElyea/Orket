@@ -189,7 +189,7 @@ That preflight is no-spend and MUST NOT call AWS. It validates local configurati
 Required:
 
 1. `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI`: S3 URI for the authoritative Terraform JSON plan input.
-2. `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID`: Bedrock model id for the advisory summary path.
+2. `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID`: Bedrock model or inference-profile id for the advisory summary path.
 3. `AWS_REGION` or `AWS_DEFAULT_REGION`: AWS region for S3, Bedrock Runtime, and DynamoDB clients.
 4. valid AWS credentials from the standard AWS provider chain.
 
@@ -199,6 +199,8 @@ Optional:
 2. `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_CREATED_AT`: fixed request timestamp for reproducible smoke input.
 3. `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_TRACE_REF`: execution trace ref.
 4. `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_POLICY_BUNDLE_ID`: policy bundle id; defaults to `terraform_plan_reviewer_v1`.
+
+The current setup packet defaults `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID` to `us.amazon.nova-lite-v1:0` so the low-cost provider-backed attempt stays portable in the AWS Regions where Bedrock requires a cross-Region inference profile instead of a direct on-demand Nova foundation-model id. The live summary seam currently admits direct `anthropic.*` model ids plus Anthropic inference-profile ids (`us.anthropic.*`, `global.anthropic.*`, or matching inference-profile ARNs) through `InvokeModel`, and direct `amazon.nova-*` model ids plus Nova inference-profile ids (`us.amazon.nova-*`, `global.amazon.nova-*`, or matching inference-profile ARNs) through `Converse`. Unsupported model ids MUST fail closed in no-spend preflight and setup-packet readiness before provider calls are attempted.
 
 The publication gate sequence records missing required non-secret environment names in `live_environment_preflight` and fails fast before rerunning local proof steps when those inputs are absent. Operators MAY pass `--force-local-evidence` to regenerate local proof artifacts while keeping publication blocked. The gate MUST NOT record AWS credential values.
 

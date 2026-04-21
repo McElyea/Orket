@@ -1,6 +1,6 @@
 {
   "catalog_v": "1.0.0",
-  "updated_on": "2026-04-04",
+  "updated_on": "2026-04-19",
   "root": "benchmarks/staging",
   "highlight_id": "STAGE-GEN-017",
   "artifacts": [
@@ -284,6 +284,26 @@
       ],
       "source_path": "benchmarks/staging/General/prompt_reforger_guide_model_comparison.json",
       "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-018",
+      "category": "General",
+      "path": "General/governed_repo_change_packet_adversarial_benchmark_2026-04-19.json",
+      "title": "Governed Repo Change Packet Adversarial Benchmark",
+      "summary": "Candidate mixed benchmark for the first governed repo change packet, showing six failure classes where the standalone packet verifier fails closed while the baseline comparator remains success-shaped or ambiguous.",
+      "signals": [
+        "governed_change_packet",
+        "repo_change_packet",
+        "adversarial_benchmark",
+        "standalone_verifier",
+        "workflow_plus_logs_plus_approvals"
+      ],
+      "source_path": "benchmarks/staging/General/governed_repo_change_packet_adversarial_benchmark_2026-04-19.json",
+      "publish_reviewed": false,
+      "claim_tier": "verdict_deterministic",
+      "compare_scope": "trusted_repo_config_change_v1",
+      "operator_surface": "trusted_run_witness_report.v1",
+      "determinism_class": "workspace"
     }
   ]
 }

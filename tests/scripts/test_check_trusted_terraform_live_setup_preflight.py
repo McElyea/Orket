@@ -84,3 +84,23 @@ def test_live_setup_preflight_rejects_template_placeholder_s3_uri() -> None:
     assert report["observed_result"] == "environment blocker"
     assert "s3_uri_placeholder_not_replaced" in report["blocking_reasons"]
     assert report["provider_calls_executed"] == []
+
+
+def test_live_setup_preflight_accepts_nova_inference_profile_and_records_converse_operation() -> None:
+    """Layer: contract. Verifies the setup preflight admits Nova inference profiles and records Converse truthfully."""
+    report = build_live_setup_preflight_report(
+        config=LiveTerraformReviewConfig(
+            plan_s3_uri="s3://orket-smoke/terraform/plan.json",
+            model_id="us.amazon.nova-lite-v1:0",
+            region="us-east-1",
+            table_name="TerraformReviews",
+        )
+    )
+
+    assert report["observed_result"] == "success"
+    assert report["provider_calls_planned"] == [
+        {"service": "s3", "operation": "GetObject", "count": 1, "resource_hint": "s3://orket-smoke/terraform/plan.json"},
+        {"service": "bedrock-runtime", "operation": "Converse", "count": 1, "resource_hint": "us.amazon.nova-lite-v1:0"},
+        {"service": "dynamodb", "operation": "PutItem", "count": 1, "resource_hint": "TerraformReviews"},
+    ]
+    assert report["config_summary"]["bedrock_runtime_operation"] == "Converse"

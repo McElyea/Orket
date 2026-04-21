@@ -8,6 +8,7 @@ from scripts.proof.run_trusted_terraform_plan_decision_runtime_smoke import (
     execute_trusted_terraform_plan_decision_runtime_smoke,
     main,
 )
+from scripts.proof.terraform_plan_review_live_support import LiveBedrockSummarizer, is_environment_blocker
 from scripts.proof.terraform_plan_review_fixture_support import run_fixture_case
 
 
@@ -62,3 +63,44 @@ def test_runtime_smoke_wrapper_can_package_live_like_result(tmp_path: Path, monk
     assert payload["publish_decision"] == "normal_publish"
     assert payload["witness_bundle_ref"].endswith("trusted_run_witness_bundle.json")
     assert payload["witness_report"]["observed_result"] == "success"
+
+
+def test_live_bedrock_summarizer_uses_converse_for_nova_inference_profiles() -> None:
+    """Layer: contract. Verifies the advisory Bedrock summary path uses Converse for Amazon Nova inference profiles."""
+
+    class _FakeClient:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, dict]] = []
+
+        def converse(self, **kwargs):  # type: ignore[no-untyped-def]
+            self.calls.append(("converse", dict(kwargs)))
+            return {
+                "output": {"message": {"content": [{"text": "safe to publish"}]}},
+                "ResponseMetadata": {"RequestId": "nova-request-123"},
+            }
+
+    client = _FakeClient()
+    summarizer = LiveBedrockSummarizer(client=client, model_id="us.amazon.nova-lite-v1:0")
+    payload = __import__("asyncio").run(
+        summarizer.summarize(
+            {
+                "risk_verdict": "normal_publish",
+                "forbidden_operation_hits": [],
+                "action_counts": {"create": 1},
+            }
+        )
+    )
+
+    assert client.calls[0][0] == "converse"
+    assert client.calls[0][1]["modelId"] == "us.amazon.nova-lite-v1:0"
+    assert client.calls[0][1]["messages"][0]["role"] == "user"
+    assert payload["summary"] == "safe to publish"
+    assert payload["raw_completion_ref"] == "nova-request-123"
+
+
+def test_bedrock_daily_token_throttle_is_treated_as_environment_blocker() -> None:
+    """Layer: contract. Verifies Bedrock daily token exhaustion is reported as an environment blocker."""
+
+    ThrottlingException = type("ThrottlingException", (Exception,), {})
+
+    assert is_environment_blocker(ThrottlingException("Too many tokens per day, please wait before trying again."))

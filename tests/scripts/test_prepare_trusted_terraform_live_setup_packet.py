@@ -46,7 +46,7 @@ def test_setup_packet_cli_writes_no_spend_template_packet(tmp_path: Path) -> Non
 
 
 def test_setup_packet_with_real_resource_names_is_live_ready_but_not_proof(tmp_path: Path) -> None:
-    """Layer: contract. Verifies concrete resource names produce a ready setup packet without AWS calls."""
+    """Layer: contract. Verifies concrete resource names produce a ready setup packet with a truthful Nova profile policy."""
     packet_root = tmp_path / "packet"
     payload = prepare_setup_packet(
         packet_root=packet_root,
@@ -54,7 +54,7 @@ def test_setup_packet_with_real_resource_names_is_live_ready_but_not_proof(tmp_p
         bucket="orket-smoke-proof-bucket-123456",
         key="proof/terraform-plan.json",
         region="us-west-2",
-        model_id="anthropic.fake-model",
+        model_id="us.amazon.nova-lite-v1:0",
         table_name="TerraformReviewsSmoke",
         created_at="2026-04-19T00:00:00Z",
         execution_trace_ref="trusted-terraform-plan-decision-live-runtime",
@@ -71,11 +71,15 @@ def test_setup_packet_with_real_resource_names_is_live_ready_but_not_proof(tmp_p
     assert "ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI=s3://orket-smoke-proof-bucket-123456/proof/terraform-plan.json" in env_template
     assert "AWS_ACCESS_KEY" not in env_template
     assert "aws s3api create-bucket" in setup_commands
+    assert payload["provider_calls_planned_for_live_governed_proof"][1]["operation"] == "Converse"
     assert policy["Statement"][0]["Action"] == ["s3:GetObject"]
+    assert policy["Statement"][1]["Resource"] == [
+        "arn:aws:bedrock:us-west-2:<account-id>:inference-profile/us.amazon.nova-lite-v1:0"
+    ]
     assert policy["Statement"][2]["Action"] == ["dynamodb:PutItem"]
 
 
-def test_setup_packet_flags_non_anthropic_model_before_live_execution(tmp_path: Path) -> None:
+def test_setup_packet_flags_unsupported_model_before_live_execution(tmp_path: Path) -> None:
     """Layer: contract. Verifies unsupported model ids stay visible as live-execution blockers."""
     payload = prepare_setup_packet(
         packet_root=tmp_path / "packet",

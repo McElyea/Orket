@@ -24,6 +24,9 @@ This contract depends on:
 3. `docs/specs/TRUSTED_RUN_INVARIANTS_V1.md`
 4. `docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md`
 5. `docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md`
+6. `docs/specs/GOVERNED_CHANGE_PACKET_TRUSTED_KERNEL_V1.md`
+7. `docs/specs/GOVERNED_CHANGE_PACKET_V1.md`
+8. `docs/specs/GOVERNED_CHANGE_PACKET_STANDALONE_VERIFIER_V1.md`
 
 Those specs remain the authority for claim tiers, witness bundle shape, invariant model shape, substrate model shape, and offline claim assignment. This spec defines the new compare scope and useful workflow contract.
 
@@ -40,6 +43,8 @@ The admitted slice identity is:
 | validator surface | `trusted_repo_config_validator.v1` |
 | invariant model surface | `trusted_run_invariant_model.v1` |
 | substrate model surface | `control_plane_witness_substrate.v1` |
+| governed change packet schema | `governed_change_packet.v1` |
+| packet verifier surface | `governed_change_packet_standalone_verifier.v1` |
 | target claim tier | `verdict_deterministic` |
 | single-run fallback claim tier | `non_deterministic_lab_only` |
 
@@ -49,6 +54,9 @@ The canonical operator commands are:
 ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change.py
 ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change_campaign.py
 python scripts/proof/verify_offline_trusted_run_claim.py --input benchmarks/results/proof/trusted_repo_change_witness_verification.json --claim verdict_deterministic --output benchmarks/results/proof/trusted_repo_change_offline_verifier.json
+ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_governed_repo_change_packet.py
+python scripts/proof/verify_governed_change_packet.py --input benchmarks/results/proof/governed_repo_change_packet.json --output benchmarks/results/proof/governed_repo_change_packet_verifier.json
+python scripts/proof/verify_governed_change_packet_trusted_kernel.py --output benchmarks/results/proof/governed_change_packet_trusted_kernel_model.json
 ```
 
 The stable proof artifact paths are:
@@ -60,6 +68,9 @@ The stable proof artifact paths are:
 | witness campaign report | `benchmarks/results/proof/trusted_repo_change_witness_verification.json` |
 | offline verifier report | `benchmarks/results/proof/trusted_repo_change_offline_verifier.json` |
 | witness bundle | `workspace/trusted_repo_change/runs/<session_id>/trusted_run_witness_bundle.json` |
+| governed change packet | `benchmarks/results/proof/governed_repo_change_packet.json` |
+| packet verifier report | `benchmarks/results/proof/governed_repo_change_packet_verifier.json` |
+| trusted-kernel model report | `benchmarks/results/proof/governed_change_packet_trusted_kernel_model.json` |
 
 Rerunnable JSON outputs MUST use the repository diff-ledger writer convention.
 
@@ -79,7 +90,7 @@ The workflow MUST:
 4. terminal-stop before mutation when approval is denied
 5. run the deterministic validator after mutation and before success final truth
 6. publish final truth only after artifact, effect evidence, and validator result agree
-7. emit a witness bundle and an offline verifier report
+7. emit a witness bundle, an offline verifier report, and a governed change packet
 8. keep all proof paths repo-relative or workspace-relative unless a source contract requires otherwise
 
 The workflow MUST NOT mutate Orket source files, global user state, external services, or paths outside the declared fixture workspace.
@@ -150,8 +161,12 @@ The witness bundle MUST preserve or reference:
 | final truth | target-side final truth record | missing final truth fails verification |
 | witness bundle | `trusted_run.witness_bundle.v1` | missing bundle blocks offline verification |
 | offline verifier report | `offline_trusted_run_verifier.v1` | missing report blocks claim assignment proof |
+| governed change packet | `governed_change_packet.v1` | missing packet blocks the primary outside-operator packet path |
+| packet verifier report | `governed_change_packet_standalone_verifier.v1` | missing report blocks standalone packet verification |
 
-Review packages, run graphs, Packet projections, logs, and human summaries MAY support review but MUST NOT replace required authority.
+The governed change packet may be the primary operator entry artifact, but it MUST NOT replace the required authority rows above.
+
+Review packages, run graphs, packet projections, logs, and human summaries MAY support review but MUST NOT replace required authority.
 
 ## Contract Verdict
 

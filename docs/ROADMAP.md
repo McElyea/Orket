@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-04-18
+Last updated: 2026-04-20
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. governed-proof strategic lane -- Authority: `docs/projects/governed-proof/ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md`.
+No active non-maintenance priority lane.
 
 ## Maintenance (Non-Priority)
 
@@ -14,6 +14,8 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Paused / Checkpointed Lanes
 
+1. NorthStar second governed change packet family admission lane -- Paused after the truthful 2026-04-20 Terraform public-admission checkpoint. Authority: `docs/projects/northstar-governed-change-packets/ORKET_NORTHSTAR_SECOND_GOVERNED_CHANGE_PACKET_FAMILY_IMPLEMENTATION_PLAN.md`. Reopen only when a bounded change can truthfully provide the required non-secret live inputs `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI`, `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID`, and `AWS_REGION` or `AWS_DEFAULT_REGION`, rerun the full Workstream 2 proof envelope, and re-evaluate the publication-readiness and publication-gate outputs in the same change, or when the lane is explicitly reopened for retirement.
+1. governed-proof strategic lane -- Paused after the truthful 2026-04-19 provider-backed Bedrock checkpoint. Authority: `docs/projects/governed-proof/ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md`. Reopen only when a bounded change can run the admitted provider-backed governed-proof path with non-zero Bedrock inference quota, or when the lane is explicitly reopened for retirement.
 1. Prompt Reforger Gemma tool-use lane -- Paused after the truthful 2026-04-04 portability checkpoint. Authority: `docs/projects/PromptReforgerToolCompatibility/PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md`. Reopen only for a bounded change set that clears the frozen portability corpus, with same-change rerun of the canonical inventory, cycle, and judge artifacts.
 
 ## Staged / Waiting (Externally Gated)
@@ -33,7 +35,8 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| governed-proof | active-live-lane | P1 | `docs/projects/governed-proof/` | Orket Core | Active strategic lane for proof-strengthening, first externally publishable trusted change scope delivery, and scope-family productization. Canonical execution authority is `ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md`. |
+| governed-proof | paused-checkpoint | paused | `docs/projects/governed-proof/` | Orket Core | Paused after the truthful 2026-04-19 provider-backed Bedrock checkpoint. `ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; reopen only when a bounded change can use an AWS account or Region with non-zero Bedrock inference quota for the admitted provider-backed governed-proof path, or for explicit retirement. |
+| northstar-governed-change-packets | paused-checkpoint | paused | `docs/projects/northstar-governed-change-packets/` | Orket Core | Paused after the truthful 2026-04-20 Terraform public-admission checkpoint. `ORKET_NORTHSTAR_SECOND_GOVERNED_CHANGE_PACKET_FAMILY_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; reopen only when a bounded change can truthfully provide the required non-secret live inputs, rerun the full Workstream 2 proof envelope, and re-evaluate the publication-readiness and publication-gate outputs in the same change, or for explicit retirement. |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | OrketUI | shipped-reference | reference | `docs/projects/OrketUI/` | Orket Core | Shipped Orket-side provenance packet for the separate OrketUI extension. The completed lane record lives under `docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/`; future OrketUI expansion must reopen as a new explicit roadmap lane. |
 | PromptReforgerToolCompatibility | paused-checkpoint | paused | `docs/projects/PromptReforgerToolCompatibility/` | Orket Core | Paused after the truthful 2026-04-04 portability checkpoint. `PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; the FunctionGemma judge blocker is now cleared through the admitted native-tool path, keep Prompt Reforger service truth in `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`, keep Gemma 4 deferred, and keep Qwen out of the core lane unless a later explicit cross-family baseline is requested. |

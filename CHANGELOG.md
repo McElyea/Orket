@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.48] - 2026-04-20 - "The Governed Packet And Terraform Pause Cut"
+
+### Added
+- **Governed Change Packet Authority Set**: Added the durable governed change packet specs, trusted-kernel model/verifier surfaces, operator guide, proof scripts, adversarial benchmark runner, archive closeout packet, and regression coverage for the repo-change packet path.
+- **NorthStar Second-Family Lane**: Added the active-then-paused NorthStar second governed change packet family requirements and implementation-plan docs for evaluating `trusted_terraform_plan_decision_v1` as a possible second externally admitted packet family.
+
+### Changed
+- **Terraform Provider-Backed Gate Truthfulness**: Expanded the Terraform live setup and preflight support surfaces, widened truthful Bedrock summary model handling for the no-spend/live-preflight path, aligned trusted Terraform scope/trust docs and proof-foundation coverage, and kept public admission fail-closed when provider-backed evidence is still environment-blocked.
+- **Roadmap And Lane Posture**: Activated the NorthStar second-family lane, ran its admission proof envelope, then paused the lane truthfully after the publication-readiness and publication-gate sequence remained blocked on missing required non-secret live inputs.
+- **Authority And Staging Sync**: Synchronized current-authority metadata, docs index/roadmap references, staged benchmark catalog/readme surfaces, and recurring maintenance evidence so the committed repo reflects the current governed-packet and Terraform gate posture.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use `docs/guides/GOVERNED_REPO_CHANGE_PACKET_GUIDE.md` for the governed repo-change packet evaluator path.
+- For any future Terraform public-admission reopen, provide `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI`, `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID`, and `AWS_REGION` or `AWS_DEFAULT_REGION`, then rerun the full Workstream 2 proof envelope before proposing a trust-boundary update.
+
 ## [0.4.47] - 2026-04-19 - "The Governed Proof Terraform Gate Cut"
 
 ### Added

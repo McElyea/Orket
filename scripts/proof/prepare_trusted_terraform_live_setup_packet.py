@@ -13,6 +13,11 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+from scripts.proof.terraform_plan_review_live_support import (
+    bedrock_smoke_resource_arn,
+    bedrock_smoke_runtime_operation,
+    supported_bedrock_smoke_model,
+)
 from scripts.proof.trusted_terraform_plan_decision_contract import (
     PROOF_RESULTS_ROOT,
     TRUSTED_TERRAFORM_COMPARE_SCOPE,
@@ -27,7 +32,7 @@ DEFAULT_PLAN_FIXTURE = REPO_ROOT / "tests" / "fixtures" / "terraform_plan_review
 DEFAULT_BUCKET = "<replace-with-globally-unique-smoke-bucket>"
 DEFAULT_KEY = "orket/trusted-terraform-plan-decision/terraform-plan-safe-smoke.plan.json"
 DEFAULT_REGION = "us-east-1"
-DEFAULT_MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
+DEFAULT_MODEL_ID = "us.amazon.nova-lite-v1:0"
 DEFAULT_TABLE_NAME = "TerraformReviews"
 DEFAULT_TRACE_REF = "trusted-terraform-plan-decision-live-runtime"
 DEFAULT_CREATED_AT = "2026-04-19T00:00:00Z"
@@ -44,7 +49,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--bucket", default=DEFAULT_BUCKET, help="Target S3 bucket name or placeholder.")
     parser.add_argument("--key", default=DEFAULT_KEY, help="Target S3 object key for the plan fixture.")
     parser.add_argument("--region", default=DEFAULT_REGION, help="AWS region for generated commands and env templates.")
-    parser.add_argument("--model-id", default=DEFAULT_MODEL_ID, help="Bedrock model id for the advisory summary path.")
+    parser.add_argument(
+        "--model-id",
+        default=DEFAULT_MODEL_ID,
+        help="Bedrock model or inference-profile id for the advisory summary path.",
+    )
     parser.add_argument("--table-name", default=DEFAULT_TABLE_NAME, help="DynamoDB table name for audit publication.")
     parser.add_argument("--created-at", default=DEFAULT_CREATED_AT, help="Fixed smoke request timestamp.")
     parser.add_argument("--execution-trace-ref", default=DEFAULT_TRACE_REF, help="Live proof execution trace ref.")
@@ -283,7 +292,8 @@ def _checklist_markdown(config: dict[str, str]) -> str:
             "",
             f"Planned S3 URI: `{_s3_uri(config)}`",
             f"Planned DynamoDB table: `{config['table_name']}`",
-            f"Planned Bedrock model id: `{config['model_id']}`",
+            f"Planned Bedrock model or inference-profile id: `{config['model_id']}`",
+            f"Planned Bedrock inference operation: `{bedrock_smoke_runtime_operation(config['model_id'])}`",
             "",
         ]
     )
@@ -303,7 +313,7 @@ def _runtime_policy(config: dict[str, str]) -> dict[str, Any]:
                 "Sid": "InvokeConfiguredBedrockModel",
                 "Effect": "Allow",
                 "Action": ["bedrock:InvokeModel"],
-                "Resource": [f"arn:aws:bedrock:{config['region']}::foundation-model/{config['model_id']}"],
+                "Resource": [bedrock_smoke_resource_arn(config["model_id"], config["region"])],
             },
             {
                 "Sid": "WriteTerraformReviewAudit",
@@ -328,7 +338,12 @@ def _setup_calls(config: dict[str, str]) -> list[dict[str, Any]]:
 def _live_calls(config: dict[str, str]) -> list[dict[str, Any]]:
     return [
         {"service": "s3", "operation": "GetObject", "count": 1, "resource_hint": _s3_uri(config)},
-        {"service": "bedrock-runtime", "operation": "InvokeModel", "count": 1, "resource_hint": config["model_id"]},
+        {
+            "service": "bedrock-runtime",
+            "operation": bedrock_smoke_runtime_operation(config["model_id"]),
+            "count": 1,
+            "resource_hint": config["model_id"],
+        },
         {"service": "dynamodb", "operation": "PutItem", "count": 1, "resource_hint": config["table_name"]},
     ]
 
@@ -357,7 +372,7 @@ def _live_execution_blockers(config: dict[str, str]) -> list[str]:
         blockers.append("s3_key_missing")
     if not config["region"]:
         blockers.append("region_missing")
-    if not config["model_id"].startswith("anthropic."):
+    if not supported_bedrock_smoke_model(config["model_id"]):
         blockers.append("unsupported_bedrock_model_for_smoke")
     if not config["table_name"]:
         blockers.append("dynamodb_table_name_missing")

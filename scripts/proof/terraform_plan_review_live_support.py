@@ -12,6 +12,15 @@ from urllib.parse import urlparse
 from orket.application.terraform_review.models import TerraformPlanReviewRequest
 from orket.application.terraform_review.service import TerraformPlanReviewService
 
+SUPPORTED_BEDROCK_SMOKE_MODEL_PREFIXES = (
+    "anthropic.",
+    "us.anthropic.",
+    "global.anthropic.",
+    "amazon.nova-",
+    "us.amazon.nova-",
+    "global.amazon.nova-",
+)
+
 
 def now_utc_iso() -> str:
     return datetime.now(UTC).isoformat().replace("+00:00", "Z")
@@ -41,6 +50,63 @@ def live_config_from_env() -> LiveTerraformReviewConfig:
     )
 
 
+def _normalized_bedrock_smoke_target(model_id: str) -> str:
+    return str(model_id or "").strip()
+
+
+def _bedrock_smoke_target_suffix(model_id: str) -> str:
+    normalized = _normalized_bedrock_smoke_target(model_id)
+    if normalized.startswith("arn:") and "/" in normalized:
+        return normalized.rsplit("/", 1)[-1]
+    return normalized
+
+
+def bedrock_smoke_target_kind(model_id: str) -> str:
+    normalized = _normalized_bedrock_smoke_target(model_id)
+    if normalized.startswith("arn:"):
+        if ":inference-profile/" in normalized or ":application-inference-profile/" in normalized:
+            return "inference_profile"
+        return "foundation_model"
+    if normalized.startswith(("us.", "global.")):
+        return "inference_profile"
+    return "foundation_model"
+
+
+def bedrock_smoke_model_family(model_id: str) -> str:
+    normalized = _bedrock_smoke_target_suffix(model_id)
+    if normalized.startswith(("anthropic.", "us.anthropic.", "global.anthropic.")):
+        return "anthropic"
+    if normalized.startswith(("amazon.nova-", "us.amazon.nova-", "global.amazon.nova-")):
+        return "amazon_nova"
+    return ""
+
+
+def supported_bedrock_smoke_model(model_id: str) -> bool:
+    return bool(bedrock_smoke_model_family(model_id))
+
+
+def bedrock_smoke_runtime_operation(model_id: str) -> str:
+    family = bedrock_smoke_model_family(model_id)
+    if family == "amazon_nova":
+        return "Converse"
+    if family == "anthropic":
+        return "InvokeModel"
+    return "Unsupported"
+
+
+def bedrock_smoke_resource_arn(model_id: str, region: str, account_id: str = "<account-id>") -> str:
+    normalized = _normalized_bedrock_smoke_target(model_id)
+    if not normalized:
+        return ""
+    if normalized.startswith("arn:"):
+        return normalized
+    normalized_region = str(region or "<region>").strip()
+    if bedrock_smoke_target_kind(normalized) == "inference_profile":
+        normalized_account = str(account_id or "<account-id>").strip()
+        return f"arn:aws:bedrock:{normalized_region}:{normalized_account}:inference-profile/{normalized}"
+    return f"arn:aws:bedrock:{normalized_region}::foundation-model/{normalized}"
+
+
 def missing_required_env(config: LiveTerraformReviewConfig) -> list[str]:
     missing: list[str] = []
     if not str(config.plan_s3_uri).strip():
@@ -55,8 +121,15 @@ def missing_required_env(config: LiveTerraformReviewConfig) -> list[str]:
 def is_environment_blocker(exc: Exception) -> bool:
     name = exc.__class__.__name__
     text = str(exc)
-    return name in {"NoCredentialsError", "NoRegionError", "EndpointConnectionError"} or any(
-        token in text for token in ("UnrecognizedClientException", "AccessDenied", "expired token")
+    return name in {"NoCredentialsError", "NoRegionError", "EndpointConnectionError", "ThrottlingException", "ServiceQuotaExceededException"} or any(
+        token in text
+        for token in (
+            "UnrecognizedClientException",
+            "AccessDenied",
+            "expired token",
+            "Too many tokens per day",
+            "quota",
+        )
     )
 
 
@@ -91,14 +164,20 @@ class LiveBedrockSummarizer:
         self.model_id = model_id
 
     async def summarize(self, request: dict[str, Any]) -> dict[str, Any]:
-        if not self.model_id.startswith("anthropic."):
-            raise RuntimeError(f"unsupported_bedrock_model_for_smoke:{self.model_id}")
         prompt = (
             "Explain this Terraform plan review result in 2 short sentences.\n"
             f"Risk verdict: {request.get('risk_verdict')}\n"
             f"Forbidden hits: {json.dumps(request.get('forbidden_operation_hits') or [])}\n"
             f"Action counts: {json.dumps(request.get('action_counts') or {})}\n"
         )
+        family = bedrock_smoke_model_family(self.model_id)
+        if family == "anthropic":
+            return await asyncio.to_thread(self._summarize_with_anthropic_invoke_model, prompt)
+        if family == "amazon_nova":
+            return await asyncio.to_thread(self._summarize_with_converse, prompt)
+        raise RuntimeError(f"unsupported_bedrock_model_for_smoke:{self.model_id}")
+
+    def _summarize_with_anthropic_invoke_model(self, prompt: str) -> dict[str, Any]:
         body = json.dumps(
             {
                 "anthropic_version": "bedrock-2023-05-31",
@@ -107,28 +186,47 @@ class LiveBedrockSummarizer:
                 "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
             }
         )
-
-        def _invoke() -> dict[str, Any]:
-            response = self.client.invoke_model(
-                modelId=self.model_id,
-                body=body,
-                contentType="application/json",
-                accept="application/json",
-            )
-            return json.loads(response["body"].read())
-
-        payload = await asyncio.to_thread(_invoke)
-        text_parts = [
-            str(item.get("text") or "").strip()
-            for item in list(payload.get("content") or [])
-            if isinstance(item, dict) and str(item.get("type") or "") == "text"
-        ]
-        summary = " ".join(part for part in text_parts if part).strip()
+        response = self.client.invoke_model(
+            modelId=self.model_id,
+            body=body,
+            contentType="application/json",
+            accept="application/json",
+        )
+        payload = json.loads(response["body"].read())
+        summary = _join_text_parts(list(payload.get("content") or []))
         return {
             "summary": summary,
             "review_focus_areas": ["Validate live smoke adapter path."],
-            "raw_completion_ref": str(payload.get("id") or "bedrock.invoke_model"),
+            "raw_completion_ref": str(
+                payload.get("id") or response.get("ResponseMetadata", {}).get("RequestId") or "bedrock.invoke_model"
+            ),
         }
+
+    def _summarize_with_converse(self, prompt: str) -> dict[str, Any]:
+        response = self.client.converse(
+            modelId=self.model_id,
+            messages=[{"role": "user", "content": [{"text": prompt}]}],
+            inferenceConfig={"maxTokens": 128, "temperature": 0, "topP": 0.9},
+        )
+        output = response.get("output", {})
+        message = output.get("message", {}) if isinstance(output, dict) else {}
+        summary = _join_text_parts(list(message.get("content") or []))
+        return {
+            "summary": summary,
+            "review_focus_areas": ["Validate live smoke adapter path."],
+            "raw_completion_ref": str(response.get("ResponseMetadata", {}).get("RequestId") or "bedrock.converse"),
+        }
+
+
+def _join_text_parts(items: list[Any]) -> str:
+    text_parts = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        text = str(item.get("text") or "").strip()
+        if text:
+            text_parts.append(text)
+    return " ".join(text_parts).strip()
 
 
 class RecordingDynamoPublisher:

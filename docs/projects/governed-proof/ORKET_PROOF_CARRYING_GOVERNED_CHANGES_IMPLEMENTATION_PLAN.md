@@ -1,7 +1,7 @@
 # Orket Proof-Carrying Governed Changes Implementation Plan
 
 Last updated: 2026-04-19
-Status: Active live lane
+Status: Paused checkpoint
 Owner: Orket Core
 
 Accepted requirements: `docs/projects/governed-proof/ORKET_PROOF_CARRYING_GOVERNED_CHANGES_REQUIREMENTS_V1.md`
@@ -232,7 +232,7 @@ Close the lane only when the product-level trust story is supported by admitted 
 
 ### Current checkpoint
 
-Blocked on 2026-04-18 while all of the following remain true in current repo authority:
+Paused on 2026-04-19 after all remaining local Workstream 5 code, docs, and truthful live-provider diagnostics were exhausted, while all of the following remain true in current repo authority:
 
 1. `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md` still admits only `trusted_repo_config_change_v1` as the current externally publishable public trust slice.
 2. `trusted_terraform_plan_decision_v1` remains internally admitted only under `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`.
@@ -243,7 +243,17 @@ Blocked on 2026-04-18 while all of the following remain true in current repo aut
 7. `python scripts/proof/check_trusted_terraform_publication_readiness.py` remains the fail-closed Workstream 5 gate and must report `publication_decision=ready_for_publication_boundary_update` before Terraform publication widening can be proposed.
 8. `python scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py` remains the one-shot Workstream 5 gate sequence, fails fast by default when live provider inputs are absent, and must preserve blocked readiness until provider-backed governed-proof evidence succeeds.
 9. `scripts/reviewrun/run_terraform_plan_review_live_smoke.py` remains the separate provider-backed runtime smoke seam for `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`.
-10. the lane stays active on `docs/ROADMAP.md` until successful provider-backed governed-proof evidence supports a truthful public-boundary update or explicit retirement change lands.
+10. the current AWS account exposes Bedrock model and inference-profile catalog visibility, but the Bedrock Service Quotas surface reports `0.0` usable Nova inference capacity for the tested live path, including `Cross-region model inference requests per minute for Amazon Nova Lite`, `Cross-region model inference tokens per minute for Amazon Nova Lite`, and `Model invocation max tokens per day for Amazon Nova Lite (doubled for cross-region calls)`.
+11. provider-backed Bedrock calls therefore continue to fail as truthful environment blockers with `ThrottlingException: Too many tokens per day, please wait before trying again.` even on the portable Nova inference-profile path.
+12. the lane is paused on `docs/ROADMAP.md` until a bounded reopen change can use an AWS account or Region with non-zero Bedrock inference quota for the admitted provider-backed governed-proof path, or an explicit retirement decision lands instead.
+
+### Reopen criteria
+
+Reopen this lane only when one of the following is true:
+
+1. the current AWS account has non-zero Bedrock inference quota for the admitted Terraform governed-proof path and the reopen change reruns `python scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py --output benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json`, `python scripts/proof/check_trusted_terraform_publication_readiness.py`, and `python scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py`, or
+2. a different AWS account with truthful Bedrock access and non-zero quota is intentionally adopted for the provider-backed governed-proof path and the reopen change updates same-change authority as needed before rerunning the same three commands, or
+3. the lane is explicitly reopened for retirement instead of proof completion.
 
 ## Strategic Completion Gate
 

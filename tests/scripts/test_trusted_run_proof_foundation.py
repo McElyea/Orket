@@ -20,6 +20,9 @@ def test_proof_foundation_report_covers_all_workstream_one_targets() -> None:
     assert len(report["foundation_targets"]) == 6
     assert {item["status"] for item in report["foundation_targets"]} == {"pass"}
     assert report["non_interference"]["result"] == "pass"
+    inspected = {item["relative_path"] for item in report["non_interference"]["inspected_files"]}
+    assert "scripts/proof/governed_change_packet_contract.py" in inspected
+    assert "scripts/proof/governed_change_packet_trusted_kernel.py" in inspected
     assert report["report_signature_digest"].startswith("sha256:")
 
 
