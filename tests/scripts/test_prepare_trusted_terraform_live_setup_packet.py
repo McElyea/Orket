@@ -105,6 +105,32 @@ def test_setup_packet_with_palmyra_x4_geo_inference_id_is_live_ready(tmp_path: P
     ]
 
 
+def test_setup_packet_with_palmyra_x5_geo_inference_id_is_live_ready(tmp_path: Path) -> None:
+    """Layer: contract. Verifies concrete resource names produce a ready setup packet for Palmyra X5."""
+    packet_root = tmp_path / "packet"
+    payload = prepare_setup_packet(
+        packet_root=packet_root,
+        plan_fixture=Path("tests/fixtures/terraform_plan_reviewer_v1/create_update_only.plan.json"),
+        bucket="orket-smoke-proof-bucket-123456",
+        key="proof/terraform-plan.json",
+        region="us-east-1",
+        model_id="us.writer.palmyra-x5-v1:0",
+        table_name="TerraformReviewsSmoke",
+        created_at="2026-04-19T00:00:00Z",
+        execution_trace_ref="trusted-terraform-plan-decision-live-runtime",
+        policy_bundle_id="terraform_plan_reviewer_v1",
+    )
+
+    policy = _load(packet_root / "least-privilege-runtime-policy.json")
+
+    assert payload["live_execution_ready"] is True
+    assert payload["provider_calls_executed"] == []
+    assert payload["provider_calls_planned_for_live_governed_proof"][1]["operation"] == "Converse"
+    assert policy["Statement"][1]["Resource"] == [
+        "arn:aws:bedrock:us-east-1:<account-id>:inference-profile/us.writer.palmyra-x5-v1:0"
+    ]
+
+
 def test_setup_packet_flags_unsupported_model_before_live_execution(tmp_path: Path) -> None:
     """Layer: contract. Verifies unsupported model ids stay visible as live-execution blockers."""
     payload = prepare_setup_packet(

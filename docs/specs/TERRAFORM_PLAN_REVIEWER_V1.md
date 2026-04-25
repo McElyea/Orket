@@ -1,6 +1,6 @@
 # Terraform Plan Reviewer V1
 
-Last updated: 2026-04-23
+Last updated: 2026-04-24
 Status: Active
 Owner: Orket Core
 Source requirements: [docs/projects/archive/terraform-plan-review/TP03222026/requirements.md](docs/projects/archive/terraform-plan-review/TP03222026/requirements.md)
@@ -44,6 +44,7 @@ Approved live-smoke Bedrock summary families:
 * Anthropic Claude direct model ids and inference-profile ids through `InvokeModel`
 * Amazon Nova direct model ids and inference-profile ids through `Converse`
 * Writer Palmyra X4 direct model id `writer.palmyra-x4-v1:0` and US geo inference id `us.writer.palmyra-x4-v1:0` through `Converse`
+* Writer Palmyra X5 direct model id `writer.palmyra-x5-v1:0` and US geo inference id `us.writer.palmyra-x5-v1:0` through `Converse`
 
 Forbidden capabilities:
 

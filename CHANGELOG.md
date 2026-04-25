@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.50] - 2026-04-25 - "The Palmyra X5 Smoke Maintenance Cut"
+
+### Added
+- **Writer Palmyra X5 Live Smoke Support**: Added Palmyra X5 direct and US geo inference-profile ids to the Terraform plan reviewer live-smoke model family, setup packet path, preflight reporting, runbook, NorthStar smoke setup plan, and contract coverage.
+- **TD04252026 Maintenance Evidence**: Added the recurring maintenance report for the TD04252026 cycle with passing gate audit, docs hygiene, and canonical pytest results.
+
+### Changed
+- **Provider Attempt Truthfulness**: Tightened Terraform runtime-smoke failure summarization so Bedrock and DynamoDB failures preserve the preceding S3/Bedrock attempt sequence instead of under-reporting prior provider interactions.
+- **Extension Control-Plane Test Authority**: Updated extension import-guard tests to use a real control-plane workload record and aligned the private manifest import-owner governance test with the existing extension support module.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. Palmyra X5 remains part of the same explicit AWS live-smoke opt-in path as the existing Terraform reviewer Bedrock smoke models.
+
 ## [0.4.49] - 2026-04-24 - "The NorthStar Smoke And Capability Trust Cut"
 
 ### Added

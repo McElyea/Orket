@@ -6,6 +6,10 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.services.control_plane_workload_catalog import (
+    WorkloadAuthorityInput,
+    resolve_control_plane_workload,
+)
 from orket.extensions.import_guard import ExtensionImportGuard
 from orket.extensions.models import CONTRACT_STYLE_SDK_V0, ExtensionRecord, _ExtensionManifestEntry
 from orket.extensions.reproducibility import ReproducibilityEnforcer
@@ -51,6 +55,22 @@ def _sdk_records(
         allowed_stdlib_modules=("importlib",),
     )
     return extension, workload
+
+
+def _control_plane_workload_record(extension: ExtensionRecord, workload: _ExtensionManifestEntry) -> dict:
+    return resolve_control_plane_workload(
+        WorkloadAuthorityInput(
+            kind="extension_manifest_workload",
+            workload_id=workload.workload_id,
+            workload_version=workload.workload_version,
+            extension_id=extension.extension_id,
+            extension_version=extension.extension_version,
+            entrypoint=workload.entrypoint,
+            required_capabilities=workload.required_capabilities,
+            contract_style=workload.contract_style or extension.contract_style,
+            manifest_digest_sha256=extension.manifest_digest_sha256,
+        )
+    ).model_dump(mode="json")
 
 
 def test_extension_import_guard_prefix_policy() -> None:
@@ -102,7 +122,7 @@ async def test_sdk_run_blocks_dynamic_internal_orket_import_and_does_not_leak_gu
         await executor.run_sdk_workload(
             extension=extension,
             workload=workload,
-            control_plane_workload_record={},
+            control_plane_workload_record=_control_plane_workload_record(extension, workload),
             input_config={},
             workspace=workspace,
             department="core",
@@ -147,7 +167,7 @@ async def test_sdk_run_allows_dynamic_sdk_imports(tmp_path: Path) -> None:
     result = await executor.run_sdk_workload(
         extension=extension,
         workload=workload,
-        control_plane_workload_record={},
+        control_plane_workload_record=_control_plane_workload_record(extension, workload),
         input_config={},
         workspace=workspace,
         department="core",

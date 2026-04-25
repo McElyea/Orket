@@ -160,9 +160,73 @@ def test_live_bedrock_summarizer_uses_converse_for_palmyra_x4() -> None:
     assert payload["raw_completion_ref"] == "palmyra-request-123"
 
 
+def test_live_bedrock_summarizer_uses_converse_for_palmyra_x5() -> None:
+    """Layer: contract. Verifies the advisory Bedrock summary path uses Converse for Palmyra X5."""
+
+    class _FakeClient:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, dict]] = []
+
+        def converse(self, **kwargs):  # type: ignore[no-untyped-def]
+            self.calls.append(("converse", dict(kwargs)))
+            return {
+                "output": {"message": {"content": [{"text": "safe to publish"}]}},
+                "ResponseMetadata": {"RequestId": "palmyra-x5-request-123"},
+            }
+
+    client = _FakeClient()
+    summarizer = LiveBedrockSummarizer(client=client, model_id="us.writer.palmyra-x5-v1:0")
+    payload = __import__("asyncio").run(
+        summarizer.summarize(
+            {
+                "risk_verdict": "normal_publish",
+                "forbidden_operation_hits": [],
+                "action_counts": {"create": 1},
+            }
+        )
+    )
+
+    assert client.calls[0][0] == "converse"
+    assert client.calls[0][1]["modelId"] == "us.writer.palmyra-x5-v1:0"
+    assert client.calls[0][1]["messages"][0]["role"] == "user"
+    assert payload["summary"] == "safe to publish"
+    assert payload["raw_completion_ref"] == "palmyra-x5-request-123"
+
+
 def test_bedrock_daily_token_throttle_is_treated_as_environment_blocker() -> None:
     """Layer: contract. Verifies Bedrock daily token exhaustion is reported as an environment blocker."""
 
     ThrottlingException = type("ThrottlingException", (Exception,), {})
 
     assert is_environment_blocker(ThrottlingException("Too many tokens per day, please wait before trying again."))
+
+
+def test_runtime_smoke_bedrock_failure_summary_records_prior_s3_attempt(tmp_path: Path, monkeypatch) -> None:
+    """Layer: contract. Verifies Bedrock failures do not erase the preceding S3 read attempt."""
+
+    async def _fake_run_live_review(*, workspace: Path, config: LiveTerraformReviewConfig):
+        del workspace, config
+        raise RuntimeError("An error occurred (ThrottlingException) when calling the Converse operation: Too many tokens per day")
+
+    monkeypatch.setattr(
+        "scripts.proof.run_trusted_terraform_plan_decision_runtime_smoke.run_live_review",
+        _fake_run_live_review,
+    )
+    payload = execute_trusted_terraform_plan_decision_runtime_smoke(
+        workspace_root=tmp_path / "workspace",
+        run_index=1,
+        config=LiveTerraformReviewConfig(
+            plan_s3_uri="s3://orket-northstar-test/proof/terraform-plan.json",
+            model_id="us.writer.palmyra-x5-v1:0",
+            region="us-east-1",
+            table_name="TerraformReviewsNorthstar_test",
+        ),
+    )
+
+    assert payload["observed_result"] == "environment blocker"
+    assert payload["provider_interaction_summary"][0]["operation"] == "GetObject"
+    assert payload["provider_interaction_summary"][0]["status"] == "attempted"
+    assert payload["provider_interaction_summary"][1]["operation"] == "Converse"
+    assert payload["provider_interaction_summary"][1]["status"] == "attempted"
+    assert payload["provider_interaction_summary"][2]["operation"] == "PutItem"
+    assert payload["provider_interaction_summary"][2]["status"] == "not_attempted"

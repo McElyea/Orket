@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-04-23
+Last reviewed: 2026-04-24
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -347,7 +347,7 @@ Optional flags:
    - `--out .orket/durable/observability/terraform_plan_review_live_smoke.json`
    - `--execution-trace-ref terraform-plan-review-live-smoke`
    - `--policy-bundle-id terraform_plan_reviewer_v1`
-Supported smoke model families are defined in `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`; current examples include Anthropic Claude, Amazon Nova, and Writer Palmyra X4 (`writer.palmyra-x4-v1:0` or `us.writer.palmyra-x4-v1:0`).
+Supported smoke model families are defined in `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`; current examples include Anthropic Claude, Amazon Nova, Writer Palmyra X4 (`writer.palmyra-x4-v1:0` or `us.writer.palmyra-x4-v1:0`), and Writer Palmyra X5 (`writer.palmyra-x5-v1:0` or `us.writer.palmyra-x5-v1:0`).
 
 4. Canonical smoke output:
    - `.orket/durable/observability/terraform_plan_review_live_smoke.json`

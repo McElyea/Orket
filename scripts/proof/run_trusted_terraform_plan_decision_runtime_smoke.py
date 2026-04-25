@@ -362,10 +362,10 @@ def _adapter_calls_from_failure_reason(reason: str) -> list[str]:
     if "GetObject" in text or "NoSuchBucket" in text or "NoSuchKey" in text:
         attempted.append("read_s3_object")
     if "Converse" in text or "InvokeModel" in text or "bedrock" in text.lower():
-        attempted.append("invoke_bedrock_model")
+        attempted.extend(["read_s3_object", "invoke_bedrock_model"])
     if "PutItem" in text or "dynamodb" in text.lower() or "ResourceNotFoundException" in text:
-        attempted.append("put_dynamodb_item")
-    return attempted
+        attempted.extend(["read_s3_object", "invoke_bedrock_model", "put_dynamodb_item"])
+    return sorted(set(attempted))
 
 
 def _blocker_taxonomy(reason: str) -> str:

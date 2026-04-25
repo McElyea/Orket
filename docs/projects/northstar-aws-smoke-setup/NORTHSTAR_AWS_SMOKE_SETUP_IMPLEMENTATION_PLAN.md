@@ -77,7 +77,9 @@ The disposable live setup must use:
 3. Bedrock:
    - one supported model id or inference-profile id from `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`,
    - Palmyra X4 direct model id `writer.palmyra-x4-v1:0`,
-   - preferred US geo inference id `us.writer.palmyra-x4-v1:0` when available.
+   - preferred Palmyra X4 US geo inference id `us.writer.palmyra-x4-v1:0` when available,
+   - Palmyra X5 direct model id `writer.palmyra-x5-v1:0`,
+   - preferred Palmyra X5 US geo inference id `us.writer.palmyra-x5-v1:0` when available.
 
 ## External AWS Source Constraints
 
@@ -92,12 +94,21 @@ The lane depends on these current AWS-documented facts:
 2. AWS Palmyra X4 parameters:
    - source: `https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-palmyra-x4.html`,
    - records the Writer Palmyra X4 native request and response shape for Bedrock Runtime invocation.
-3. AWS Bedrock Converse API:
+3. AWS Palmyra X5 model card:
+   - source: `https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-writer-palmyra-x5.html`,
+   - lists the Bedrock Runtime endpoint,
+   - lists model id `writer.palmyra-x5-v1:0`,
+   - lists US geo inference id `us.writer.palmyra-x5-v1:0`,
+   - lists `Invoke` and `Converse` as supported APIs.
+4. AWS Palmyra X5 parameters:
+   - source: `https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-palmyra-x5.html`,
+   - records the Writer Palmyra X5 native request and response shape for Bedrock Runtime invocation.
+5. AWS Bedrock Converse API:
    - source: `https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference-call.html`,
    - states that `Converse` requires permission for `bedrock:InvokeModel`.
-4. Orket local contract:
+6. Orket local contract:
    - source: `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`,
-   - admits Writer Palmyra X4 direct and US geo inference ids through the patched `Converse` runtime path.
+   - admits Writer Palmyra X4 and X5 direct and US geo inference ids through the patched `Converse` runtime path.
 
 ## Required AWS Call And Permission Envelope
 

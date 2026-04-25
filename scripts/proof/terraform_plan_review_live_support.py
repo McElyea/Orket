@@ -21,6 +21,8 @@ SUPPORTED_BEDROCK_SMOKE_MODEL_PREFIXES = (
     "global.amazon.nova-",
     "writer.palmyra-x4-",
     "us.writer.palmyra-x4-",
+    "writer.palmyra-x5-",
+    "us.writer.palmyra-x5-",
 )
 
 
@@ -86,6 +88,8 @@ def bedrock_smoke_model_family(model_id: str) -> str:
         return "amazon_nova"
     if normalized.startswith(("writer.palmyra-x4-", "us.writer.palmyra-x4-")):
         return "writer_palmyra_x4"
+    if normalized.startswith(("writer.palmyra-x5-", "us.writer.palmyra-x5-")):
+        return "writer_palmyra_x5"
     return ""
 
 
@@ -95,7 +99,7 @@ def supported_bedrock_smoke_model(model_id: str) -> bool:
 
 def bedrock_smoke_runtime_operation(model_id: str) -> str:
     family = bedrock_smoke_model_family(model_id)
-    if family in {"amazon_nova", "writer_palmyra_x4"}:
+    if family in {"amazon_nova", "writer_palmyra_x4", "writer_palmyra_x5"}:
         return "Converse"
     if family == "anthropic":
         return "InvokeModel"
@@ -181,7 +185,7 @@ class LiveBedrockSummarizer:
         family = bedrock_smoke_model_family(self.model_id)
         if family == "anthropic":
             return await asyncio.to_thread(self._summarize_with_anthropic_invoke_model, prompt)
-        if family in {"amazon_nova", "writer_palmyra_x4"}:
+        if family in {"amazon_nova", "writer_palmyra_x4", "writer_palmyra_x5"}:
             return await asyncio.to_thread(self._summarize_with_converse, prompt)
         raise RuntimeError(f"unsupported_bedrock_model_for_smoke:{self.model_id}")
 

@@ -154,6 +154,7 @@ PRIVATE_EXTENSION_MANIFEST_IMPORT_OWNERS = {
     "orket/extensions/manifest_parser.py",
     "orket/extensions/sdk_workload_runner.py",
     "orket/extensions/workload_executor.py",
+    "orket/extensions/workload_executor_support.py",
     "orket/extensions/workload_loader.py",
 }
 RUNTIME_PIPELINE_METHOD_OWNERS = (
