@@ -13,6 +13,7 @@ from orket.application.services.control_plane_workload_catalog import (
     WorkloadAuthorityInput,
     resolve_control_plane_workload,
 )
+from orket.capabilities.sync_bridge import run_coro_sync
 from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.extensions.catalog import ExtensionCatalog
@@ -26,9 +27,10 @@ from orket.extensions.sdk_capability_authorization import HostCapabilityControls
 from orket.extensions.workload_artifacts import WorkloadArtifacts
 from orket.extensions.workload_executor import WorkloadExecutor
 from orket.extensions.workload_loader import WorkloadLoader
+from orket.services.scoped_memory_store import ScopedMemoryStore
 from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
 from orket_extension_sdk.llm import LLMProvider
-from orket_extension_sdk.memory import MemoryWriteRequest
+from orket_extension_sdk.memory import MemoryQueryRequest, MemoryWriteRequest
 from orket_extension_sdk.result import ArtifactRef, WorkloadResult
 
 
@@ -337,6 +339,39 @@ def test_workload_artifacts_build_sdk_capability_registry_honors_memory_toggles(
     assert profile_write.ok is True
 
 
+def test_workload_artifacts_build_sdk_capability_registry_scopes_extension_memory(tmp_path: Path) -> None:
+    """Layer: integration. Verifies SDK extension memory writes are namespaced per extension while SDK responses stay unscoped."""
+    artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
+    workspace = tmp_path / "workspace"
+    registry = artifacts.build_sdk_capability_registry(
+        workspace=workspace,
+        artifact_root=tmp_path / "artifacts",
+        input_config={},
+        extension_id="demo.ext",
+    )
+    provider = registry.memory_writer()
+
+    write_response = provider.write(
+        MemoryWriteRequest(scope="profile_memory", key="companion_setting.role_id", value="strategist")
+    )
+    query_response = provider.query(
+        MemoryQueryRequest(scope="profile_memory", query="key:companion_setting.role_id", limit=5)
+    )
+
+    assert write_response.ok is True
+    assert write_response.key == "companion_setting.role_id"
+    assert query_response.ok is True
+    assert query_response.records[0].key == "companion_setting.role_id"
+
+    row = run_coro_sync(
+        ScopedMemoryStore(workspace / ".orket" / "durable" / "db" / "extension_memory.db").read_profile(
+            key="ext:demo.ext:companion_setting.role_id"
+        )
+    )
+    assert row is not None
+    assert row.key == "ext:demo.ext:companion_setting.role_id"
+
+
 def test_workload_artifacts_build_sdk_capability_registry_honors_voice_bounds(tmp_path: Path) -> None:
     """Layer: integration. Verifies voice-turn controller receives bounded silence-delay defaults from input config."""
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
@@ -436,8 +471,8 @@ def test_extension_catalog_manifest_lookup_is_internal_only() -> None:
     assert hasattr(ExtensionCatalog, "_resolve_manifest_entry")
 
 
-def test_build_host_authorization_envelope_can_narrow_first_slice_admission() -> None:
-    """Layer: unit. Verifies the host envelope can deny declared first-slice capabilities without mutating declaration truth."""
+def test_build_host_authorization_envelope_can_narrow_governed_capability_admission() -> None:
+    """Layer: unit. Verifies the host envelope can deny declared governed capabilities without mutating declaration truth."""
     envelope = build_host_authorization_envelope(
         extension_id="demo.ext",
         workload_id="sdk_v1",
@@ -447,20 +482,25 @@ def test_build_host_authorization_envelope_can_narrow_first_slice_admission() ->
     )
 
     assert envelope.declared_capabilities == ("memory.query", "memory.write", "tts.speak")
-    assert envelope.admitted_capabilities == ("memory.query", "tts.speak")
+    assert envelope.admitted_capabilities == ("memory.query",)
     assert envelope.authorization_digest.startswith("sha256:")
 
 
-def test_workload_artifacts_build_sdk_capability_registry_respects_admitted_first_slice_capabilities(tmp_path: Path) -> None:
-    """Layer: unit. Verifies raw child instantiation does not auto-register denied first-slice providers."""
+def test_workload_artifacts_build_sdk_capability_registry_respects_admitted_governed_capabilities(tmp_path: Path) -> None:
+    """Layer: unit. Verifies raw child instantiation does not auto-register denied governed providers."""
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
     registry = artifacts.build_sdk_capability_registry(
         workspace=tmp_path / "workspace",
         artifact_root=tmp_path / "artifacts",
         input_config={},
-        admitted_capabilities={"memory.query"},
+        admitted_capabilities={"memory.query", "tts.speak"},
     )
 
     assert registry.has("memory.query") is True
     assert registry.has("memory.write") is False
     assert registry.has("model.generate") is False
+    assert registry.has("tts.speak") is True
+    assert registry.has("speech.transcribe") is False
+    assert registry.has("audio.play") is False
+    assert registry.has("speech.play_clip") is False
+    assert registry.has("voice.turn_control") is False

@@ -39,10 +39,18 @@ def set_control_plane_artifacts(
     control_plane_run: Any,
     control_plane_attempt: Any,
     control_plane_step: Any,
+    control_plane_checkpoint: Any | None = None,
+    control_plane_checkpoint_acceptance: Any | None = None,
 ) -> None:
     artifacts["control_plane_run_record"] = control_plane_run.model_dump(mode="json")
     artifacts["control_plane_attempt_record"] = control_plane_attempt.model_dump(mode="json")
     artifacts["control_plane_step_record"] = control_plane_step.model_dump(mode="json")
+    if control_plane_checkpoint is not None:
+        artifacts["control_plane_checkpoint_record"] = control_plane_checkpoint.model_dump(mode="json")
+    if control_plane_checkpoint_acceptance is not None:
+        artifacts["control_plane_checkpoint_acceptance_record"] = control_plane_checkpoint_acceptance.model_dump(
+            mode="json"
+        )
 
 
 async def await_infrastructure(operation: str, awaitable: Any) -> Any:

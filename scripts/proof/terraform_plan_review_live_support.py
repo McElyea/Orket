@@ -19,6 +19,8 @@ SUPPORTED_BEDROCK_SMOKE_MODEL_PREFIXES = (
     "amazon.nova-",
     "us.amazon.nova-",
     "global.amazon.nova-",
+    "writer.palmyra-x4-",
+    "us.writer.palmyra-x4-",
 )
 
 
@@ -35,6 +37,8 @@ class LiveTerraformReviewConfig:
     created_at: str = ""
     execution_trace_ref: str = "terraform-plan-review-live-smoke"
     policy_bundle_id: str = "terraform_plan_reviewer_v1"
+    expected_plan_hash: str = ""
+    smoke_owner_marker: str = ""
     forbidden_operations: list[str] = field(default_factory=lambda: ["destroy", "replace"])
 
 
@@ -47,6 +51,8 @@ def live_config_from_env() -> LiveTerraformReviewConfig:
         created_at=os.getenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_CREATED_AT", now_utc_iso()),
         execution_trace_ref=os.getenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_TRACE_REF", "terraform-plan-review-live-smoke"),
         policy_bundle_id=os.getenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_POLICY_BUNDLE_ID", "terraform_plan_reviewer_v1"),
+        expected_plan_hash=os.getenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_EXPECTED_PLAN_HASH", ""),
+        smoke_owner_marker=os.getenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_OWNER_MARKER", ""),
     )
 
 
@@ -78,6 +84,8 @@ def bedrock_smoke_model_family(model_id: str) -> str:
         return "anthropic"
     if normalized.startswith(("amazon.nova-", "us.amazon.nova-", "global.amazon.nova-")):
         return "amazon_nova"
+    if normalized.startswith(("writer.palmyra-x4-", "us.writer.palmyra-x4-")):
+        return "writer_palmyra_x4"
     return ""
 
 
@@ -87,7 +95,7 @@ def supported_bedrock_smoke_model(model_id: str) -> bool:
 
 def bedrock_smoke_runtime_operation(model_id: str) -> str:
     family = bedrock_smoke_model_family(model_id)
-    if family == "amazon_nova":
+    if family in {"amazon_nova", "writer_palmyra_x4"}:
         return "Converse"
     if family == "anthropic":
         return "InvokeModel"
@@ -173,7 +181,7 @@ class LiveBedrockSummarizer:
         family = bedrock_smoke_model_family(self.model_id)
         if family == "anthropic":
             return await asyncio.to_thread(self._summarize_with_anthropic_invoke_model, prompt)
-        if family == "amazon_nova":
+        if family in {"amazon_nova", "writer_palmyra_x4"}:
             return await asyncio.to_thread(self._summarize_with_converse, prompt)
         raise RuntimeError(f"unsupported_bedrock_model_for_smoke:{self.model_id}")
 

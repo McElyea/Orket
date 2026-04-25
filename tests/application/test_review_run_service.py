@@ -22,8 +22,9 @@ from orket.application.review.models import (
     TruncationReport,
 )
 from orket.application.review.run_service import ReviewRunService, _resolve_token
+from orket.application.services.review_run_control_plane_service import ReviewRunControlPlaneService
 from orket.capabilities.sync_bridge import run_coro_sync
-from orket.core.domain import AttemptState, RunState
+from orket.core.domain import AttemptState, ResultClass, RunState
 
 
 def _git(repo: Path, *args: str) -> None:
@@ -75,6 +76,11 @@ def test_review_run_diff_writes_bundle_and_replay(tmp_path: Path) -> None:
     assert run.control_plane["run_state"] == "completed"
     assert run.control_plane["attempt_state"] == "attempt_completed"
     assert run.control_plane["step_kind"] == "review_run_start"
+    assert run.control_plane["checkpoint_id"] == ReviewRunControlPlaneService.checkpoint_id_for(
+        attempt_id=run.manifest["control_plane_attempt_id"]
+    )
+    assert run.control_plane["checkpoint_resumability_class"] == "resume_forbidden"
+    assert run.control_plane["checkpoint_acceptance_outcome"] == "checkpoint_accepted"
     deterministic_payload = json.loads((run_dir / "deterministic_decision.json").read_text(encoding="utf-8"))
     assert deterministic_payload["execution_state_authority"] == "control_plane_records"
     assert deterministic_payload["lane_output_execution_state_authoritative"] is False
@@ -101,8 +107,29 @@ def test_review_run_diff_writes_bundle_and_replay(tmp_path: Path) -> None:
     configuration_snapshot = run_coro_sync(
         record_repo.get_resolved_configuration_snapshot(snapshot_id=persisted_run.configuration_snapshot_id)
     )
+    checkpoint = run_coro_sync(
+        record_repo.get_checkpoint(
+            checkpoint_id=ReviewRunControlPlaneService.checkpoint_id_for(
+                attempt_id=run.manifest["control_plane_attempt_id"]
+            )
+        )
+    )
     assert policy_snapshot is not None
     assert configuration_snapshot is not None
+    assert checkpoint is not None
+    checkpoint_acceptance = run_coro_sync(record_repo.get_checkpoint_acceptance(checkpoint_id=checkpoint.checkpoint_id))
+    assert checkpoint.resumability_class.value == "resume_forbidden"
+    assert checkpoint_acceptance is not None
+    assert checkpoint_acceptance.outcome.value == "checkpoint_accepted"
+    final_truth = run_coro_sync(record_repo.get_final_truth(run_id=run.run_id))
+    assert final_truth is not None
+    assert final_truth.result_class is ResultClass.SUCCESS
+    effects = run_coro_sync(record_repo.list_effect_journal_entries(run_id=run.run_id))
+    assert [entry.effect_id for entry in effects] == [
+        ReviewRunControlPlaneService.effect_id_for(run_id=run.run_id, stage="start"),
+        ReviewRunControlPlaneService.effect_id_for(run_id=run.run_id, stage="closeout"),
+    ]
+    assert effects[-1].observed_result_ref == final_truth.authoritative_result_ref
 
     snapshot = json.loads((run_dir / "snapshot.json").read_text(encoding="utf-8"))
     policy = json.loads((run_dir / "policy_resolved.json").read_text(encoding="utf-8"))
@@ -115,6 +142,7 @@ def test_review_run_diff_writes_bundle_and_replay(tmp_path: Path) -> None:
     assert replay.control_plane["projection_source"] == REVIEW_CONTROL_PLANE_PROJECTION_SOURCE
     assert replay.control_plane["projection_only"] is True
     assert replay.control_plane["run_state"] == "completed"
+    assert replay.control_plane["checkpoint_acceptance_outcome"] == "checkpoint_accepted"
     replay_dir = Path(replay.artifact_dir)
     first_decision = json.loads((run_dir / "deterministic_decision.json").read_text(encoding="utf-8"))
     replay_decision = json.loads((replay_dir / "deterministic_decision.json").read_text(encoding="utf-8"))
@@ -315,6 +343,7 @@ def test_review_run_failure_closes_control_plane_run_failed(tmp_path: Path, monk
         service.run_diff(repo_root=repo, base_ref=base, head_ref=head, bounds=SnapshotBounds())
 
     execution_repo = AsyncControlPlaneExecutionRepository(control_plane_db)
+    record_repo = AsyncControlPlaneRecordRepository(control_plane_db)
     persisted_run = run_coro_sync(execution_repo.get_run_record(run_id=run_id))
     assert persisted_run is not None
     assert persisted_run.lifecycle_state is RunState.FAILED_TERMINAL
@@ -324,6 +353,21 @@ def test_review_run_failure_closes_control_plane_run_failed(tmp_path: Path, monk
     assert persisted_attempt is not None
     assert persisted_attempt.attempt_state is AttemptState.FAILED
     assert persisted_attempt.failure_class == "review_run_RuntimeError"
+    checkpoint = run_coro_sync(
+        record_repo.get_checkpoint(checkpoint_id=ReviewRunControlPlaneService.checkpoint_id_for(attempt_id=f"{run_id}:attempt:0001"))
+    )
+    final_truth = run_coro_sync(record_repo.get_final_truth(run_id=run_id))
+    assert checkpoint is not None
+    checkpoint_acceptance = run_coro_sync(record_repo.get_checkpoint_acceptance(checkpoint_id=checkpoint.checkpoint_id))
+    assert checkpoint_acceptance is not None
+    assert final_truth is not None
+    assert final_truth.result_class is ResultClass.FAILED
+    effects = run_coro_sync(record_repo.list_effect_journal_entries(run_id=run_id))
+    assert [entry.effect_id for entry in effects] == [
+        ReviewRunControlPlaneService.effect_id_for(run_id=run_id, stage="start"),
+        ReviewRunControlPlaneService.effect_id_for(run_id=run_id, stage="closeout"),
+    ]
+    assert effects[-1].observed_result_ref == final_truth.authoritative_result_ref
 
 
 def test_review_run_service_rejects_control_plane_summary_identifier_drift(tmp_path: Path, monkeypatch) -> None:

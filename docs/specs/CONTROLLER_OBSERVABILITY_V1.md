@@ -1,6 +1,6 @@
 ﻿# CONTROLLER_OBSERVABILITY_V1
 
-Last updated: 2026-03-08
+Last updated: 2026-04-23
 Status: Active
 Owner: Orket Core
 
@@ -24,7 +24,7 @@ This specification defines:
 4. canonical event field definitions
 5. correlation guarantees with provenance records
 
-Observability events provide operational telemetry only.
+Observability events provide projection-only operational telemetry only.
 
 The authoritative execution record remains the provenance artifacts defined in `CONTROLLER_WORKLOAD_V1.md`.
 
@@ -107,6 +107,8 @@ Required fields:
 | Field | Description |
 |---|---|
 | `event` | fixed event name `controller_run` |
+| `projection_source` | fixed projection source `controller_runtime_facts` |
+| `projection_only` | fixed value `true` |
 | `run_id` | unique controller run identifier |
 | `controller_workload` | controller workload identifier |
 | `execution_depth` | runtime execution depth |
@@ -196,15 +198,17 @@ Cardinality rule:
 
 `controller_run` payload fields must serialize in exactly this order:
 1. `event`
-2. `run_id`
-3. `controller_workload`
-4. `execution_depth`
-5. `declared_fanout`
-6. `accepted_fanout`
-7. `requested_caps`
-8. `enforced_caps`
-9. `result`
-10. `error_code`
+2. `projection_source`
+3. `projection_only`
+4. `run_id`
+5. `controller_workload`
+6. `execution_depth`
+7. `declared_fanout`
+8. `accepted_fanout`
+9. `requested_caps`
+10. `enforced_caps`
+11. `result`
+12. `error_code`
 
 Nested objects such as `requested_caps` and `enforced_caps` must use the canonical key order defined in `CONTROLLER_WORKLOAD_V1.md`.
 
@@ -213,6 +217,8 @@ Nested objects such as `requested_caps` and `enforced_caps` must use the canonic
 ```json
 {
   "event": "controller_run",
+  "projection_source": "controller_runtime_facts",
+  "projection_only": true,
   "run_id": "run_42",
   "controller_workload": "controller_workload",
   "execution_depth": 0,
@@ -241,6 +247,8 @@ Required fields:
 | Field | Description |
 |---|---|
 | `event` | fixed event name `controller_child` |
+| `projection_source` | fixed projection source `controller_runtime_facts` |
+| `projection_only` | fixed value `true` |
 | `run_id` | controller run identifier |
 | `child_index` | deterministic child execution index |
 | `execution_order` | identical to `child_index` |
@@ -320,20 +328,24 @@ The envelope-invalid and max-fanout-exceeded cases are the only exceptions to th
 
 `controller_child` payload fields must serialize in exactly this order:
 1. `event`
-2. `run_id`
-3. `child_index`
-4. `execution_order`
-5. `child_workload`
-6. `status`
-7. `requested_timeout`
-8. `enforced_timeout`
-9. `error_code`
+2. `projection_source`
+3. `projection_only`
+4. `run_id`
+5. `child_index`
+6. `execution_order`
+7. `child_workload`
+8. `status`
+9. `requested_timeout`
+10. `enforced_timeout`
+11. `error_code`
 
 ### 6.8 Example
 
 ```json
 {
   "event": "controller_child",
+  "projection_source": "controller_runtime_facts",
+  "projection_only": true,
   "run_id": "run_42",
   "child_index": 3,
   "execution_order": 3,
@@ -390,6 +402,10 @@ They must not:
 1. replace provenance records
 2. mutate prior child provenance artifacts
 3. introduce execution state not present in provenance
+
+All controller observability events must also preserve explicit projection framing:
+1. `projection_source = "controller_runtime_facts"`
+2. `projection_only = true`
 
 Provenance remains the authoritative deterministic execution record defined in `CONTROLLER_WORKLOAD_V1.md`.
 
@@ -540,9 +556,11 @@ Authority model:
 The schema artifact must exist and must encode, at minimum:
 1. `declared_fanout` as integer or null
 2. `accepted_fanout` as non-negative integer
-3. allowed result enumeration
-4. allowed status enumeration
-5. required fields and field types for both event kinds
+3. fixed `projection_source = "controller_runtime_facts"`
+4. fixed `projection_only = true`
+5. allowed result enumeration
+6. allowed status enumeration
+7. required fields and field types for both event kinds
 
 Contract tests must validate observability payloads against the schema artifact.
 

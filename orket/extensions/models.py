@@ -77,6 +77,7 @@ class ExtensionRunResult:
     provenance_hash: str = ""
     determinism_class: str = ""
     control_plane_workload_record: dict[str, Any] = field(default_factory=dict)
+    control_plane: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

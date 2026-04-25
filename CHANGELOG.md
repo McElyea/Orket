@@ -5,6 +5,27 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.49] - 2026-04-24 - "The NorthStar Smoke And Capability Trust Cut"
+
+### Added
+- **NorthStar Disposable AWS Smoke Setup**: Added the no-spend packet generator, fixture generation and validation, explicit live AWS setup/cleanup runners, credential scanning, operator runbook, and regression coverage for the disposable NorthStar S3/DynamoDB smoke path.
+- **Trust Kernel Conformance Pack**: Added the finite trust-kernel model, portable conformance-pack spec and guide, proof runner, schema surfaces, and archived trust-kernel conformance closeout packet.
+- **Jon IAM Migration Helper**: Added the AWS CLI-only PowerShell migration helper for moving Orket/NorthStar IAM permissions into the `OrketNorthstarWork` customer-managed policy, with backup, dry-run, quota, and same-user safety guards.
+
+### Changed
+- **Extension Capability Authority**: Expanded extension capability authorization, workload provenance, memory namespace isolation, controller observability, and control-plane projection surfaces with aligned specs, schema updates, audit generation, and runtime tests.
+- **Terraform Live Smoke Truthfulness**: Tightened live setup preflight, provider-backed runtime smoke, publication gate, and NorthStar handoff behavior so setup evidence, live runtime blockers, cleanup state, and public-admission posture remain distinct.
+- **Roadmap And Authority Posture**: Added the active NorthStar AWS smoke setup lane, archived completed trust-kernel conformance work, and aligned roadmap/current-authority/docs index references.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- For NorthStar live smoke, use the generated setup packet and explicit live AWS setup/cleanup flags; live runtime evidence remains blocked when Bedrock quota reports `ThrottlingException`.
+- For Jon IAM cleanup, run the delete/detach phase from a separate administrator principal if the active caller is the target IAM user with no group authority.
+
 ## [0.4.48] - 2026-04-20 - "The Governed Packet And Terraform Pause Cut"
 
 ### Added

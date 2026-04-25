@@ -1,0 +1,341 @@
+{
+  "schema_version": "trusted_run.witness_bundle.v1",
+  "bundle_id": "trusted-terraform-bundle:trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+  "recorded_at_utc": "2026-04-24T03:13:04.131878Z",
+  "run_id": "trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+  "session_id": "trusted-terraform-plan-decision-runtime-smoke-01",
+  "compare_scope": "trusted_terraform_plan_decision_v1",
+  "operator_surface": "trusted_run_witness_report.v1",
+  "claim_tier": "non_deterministic_lab_only",
+  "policy_digest": "sha256:181edf22b37c9a79efd50a0b96b5137a193dec4e8a901dfb5678cd77296767b8",
+  "policy_snapshot_ref": "trusted-terraform-policy:trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+  "configuration_snapshot_ref": "trusted-terraform-config:trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+  "control_bundle_ref": "manual_tmp_test/pytest_run_fresh_0423/test_runtime_smoke_wrapper_can0/workspace/runs/trusted-terraform-plan-decision-runtime-smoke-01/trusted_terraform_plan_decision_run_authority.json",
+  "control_bundle_digest": "sha256:dcaf3d517e816473364ff7976bc4c409c87b445ebbd599fe7c84642b3c9ea89a",
+  "resolution_basis": {
+    "flow_request_ref": "manual_tmp_test/pytest_run_fresh_0423/test_runtime_smoke_wrapper_can0/workspace/runs/trusted-terraform-plan-decision-runtime-smoke-01/trusted_terraform_plan_decision_flow.json",
+    "run_authority_ref": "manual_tmp_test/pytest_run_fresh_0423/test_runtime_smoke_wrapper_can0/workspace/runs/trusted-terraform-plan-decision-runtime-smoke-01/trusted_terraform_plan_decision_run_authority.json",
+    "validator_ref": "manual_tmp_test/pytest_run_fresh_0423/test_runtime_smoke_wrapper_can0/workspace/runs/trusted-terraform-plan-decision-runtime-smoke-01/trusted_terraform_plan_decision_validator.json",
+    "audit_publication_ref": "manual_tmp_test/pytest_run_fresh_0423/test_runtime_smoke_wrapper_can0/workspace/runs/trusted-terraform-plan-decision-runtime-smoke-01/trusted_terraform_plan_decision_audit_publication.json"
+  },
+  "trusted_terraform_plan_decision_slice": {
+    "plan_s3_uri": "s3://terraform-review-fixtures/explicit_destroy.plan.json",
+    "execution_trace_ref": "trace-explicit_destroy",
+    "policy_bundle_id": "terraform_plan_reviewer_v1"
+  },
+  "artifact_refs": [
+    {
+      "kind": "run_authority",
+      "path": "runs/trusted-terraform-plan-decision-runtime-smoke-01/trusted_terraform_plan_decision_run_authority.json",
+      "digest": "sha256:30e1f9d588b9d5e93275b20929c97d44b822d55918b3d6ddb4a19144d0a257e0",
+      "exists": true
+    },
+    {
+      "kind": "validator_report",
+      "path": "runs/trusted-terraform-plan-decision-runtime-smoke-01/trusted_terraform_plan_decision_validator.json",
+      "digest": "sha256:8162483718c2b3255aa537355a3c4b96c791bd443aa5b1c245e7e67e14ee4471",
+      "exists": true
+    },
+    {
+      "kind": "input_artifact",
+      "path": "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/input_artifact.json",
+      "digest": "sha256:e8c98cbec1ea8bd0674df6a0a10d485ff6442402d6f889df6f6ae319d202f418",
+      "exists": true
+    },
+    {
+      "kind": "deterministic_analysis",
+      "path": "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/deterministic_analysis.json",
+      "digest": "sha256:caffc3c675a068bafa0f1e18b7920a83f6de6e275076acd75c440584415ef2b0",
+      "exists": true
+    },
+    {
+      "kind": "model_summary",
+      "path": "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/model_summary.json",
+      "digest": "sha256:64fc90499937f7e0d159c3259909171963e26c294e5754eecd3f6e75020f4987",
+      "exists": true
+    },
+    {
+      "kind": "final_review",
+      "path": "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/final_review.json",
+      "digest": "sha256:b68f485d3e2552bff7fa00363f42c0145ec6ba80eb3425ad5fb8f729d64a408b",
+      "exists": true
+    },
+    {
+      "kind": "governance_artifact",
+      "path": "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/governance_artifact.json",
+      "digest": "sha256:edb276aceaad5a7584ee0640f433b7f0654470e148d85ae643c699b3ddfcdb62",
+      "exists": true
+    },
+    {
+      "kind": "artifact_manifest",
+      "path": "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/manifest.json",
+      "digest": "sha256:a74e7b76f1097bf50cebddd9eebf7805e9f4dcafa11cd53ad608950d36e925c6",
+      "exists": true
+    },
+    {
+      "kind": "audit_publication",
+      "path": "runs/trusted-terraform-plan-decision-runtime-smoke-01/trusted_terraform_plan_decision_audit_publication.json",
+      "digest": "sha256:0fce3b2334ecfe1ff5bc3bc0040a836427d5ae13d2fdfca52d763cc91a304de7",
+      "exists": true
+    }
+  ],
+  "authority_lineage": {
+    "governed_input": {
+      "schema_version": "trusted_terraform_plan_decision.flow_request.v1",
+      "request_id": "trusted-terraform-plan-decision-request:trusted-terraform-plan-decision-runtime-smoke-01",
+      "run_id": "trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+      "session_id": "trusted-terraform-plan-decision-runtime-smoke-01",
+      "case_name": "provider_backed_runtime_smoke",
+      "plan_s3_uri": "s3://terraform-review-fixtures/explicit_destroy.json",
+      "forbidden_operations": [
+        "destroy",
+        "replace"
+      ],
+      "policy_bundle_id": "terraform_plan_reviewer_v1",
+      "execution_trace_ref": "trace-explicit_destroy",
+      "task": "Witness one bounded Terraform plan review decision under the governed-proof wrapper."
+    },
+    "run": {
+      "run_id": "trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+      "run_state": "completed",
+      "current_attempt_id": "trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001:attempt:0001",
+      "current_attempt_state": "attempt_completed",
+      "final_truth_record_id": "trusted-terraform-final-truth:trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+      "policy_snapshot_id": "trusted-terraform-policy:trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+      "configuration_snapshot_id": "trusted-terraform-config:trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+      "session_id": "trusted-terraform-plan-decision-runtime-smoke-01"
+    },
+    "step": {
+      "step_count": 1,
+      "latest_step_id": "trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001:step:publish-review",
+      "latest_resources_touched": [
+        "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/final_review.json"
+      ]
+    },
+    "review_decision": {
+      "risk_verdict": "risky_for_v1_policy",
+      "publish_decision": "normal_publish",
+      "summary_status": "summary_available",
+      "final_verdict_source": "deterministic_analysis"
+    },
+    "audit_publication": {
+      "publication_id": "trusted-terraform-audit:trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+      "table_name": "TerraformReviews",
+      "item": {
+        "plan_hash": "sha256:6826e3073cd17e7a61289d3be5af06841c5b61b8c1dae1930a7765d1bd94eb2d",
+        "plan_s3_uri": "s3://terraform-review-fixtures/explicit_destroy.plan.json",
+        "risk_verdict": "risky_for_v1_policy",
+        "forbidden_operation_hits": [
+          {
+            "operation": "destroy",
+            "address": "aws_s3_bucket.logs",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "resource_type": "aws_s3_bucket"
+          }
+        ],
+        "resource_change_summary": {
+          "total_changes": 2,
+          "action_counts": {
+            "create": 0,
+            "update": 1,
+            "destroy": 1,
+            "replace": 0,
+            "no-op": 0
+          }
+        },
+        "model_id": "bedrock.fake",
+        "summary": "Deterministic review completed.",
+        "summary_status": "summary_available",
+        "policy_bundle_id": "terraform_plan_reviewer_v1",
+        "execution_trace_ref": "trace-explicit_destroy",
+        "created_at": "2026-03-22T00:00:00Z",
+        "stored_in_dynamodb": false
+      },
+      "audit_item_digest": "sha256:eb5f1e85bee447a3f308d7b322d5f88f362dc9153d6338ac4ba9cd1409964a29"
+    },
+    "effect_journal": {
+      "effect_entry_count": 2,
+      "latest_step_id": "trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001:step:publish-review",
+      "latest_authorization_basis_ref": "trusted-terraform-policy:trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+      "latest_intended_target_ref": "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/final_review.json",
+      "latest_observed_result_ref": "sha256:edeef9e526861179a5ea4bfe9c1f6343453c8b5f100b9603fe05f7599fcf214d",
+      "latest_uncertainty_classification": "no_residual_uncertainty"
+    },
+    "final_truth": {
+      "final_truth_record_id": "trusted-terraform-final-truth:trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+      "result_class": "success",
+      "evidence_sufficiency_classification": "evidence_sufficient"
+    }
+  },
+  "validator_result": {
+    "schema_version": "trusted_terraform_plan_decision_validator.v1",
+    "recorded_at_utc": "2026-04-24T03:13:04.098424Z",
+    "compare_scope": "trusted_terraform_plan_decision_v1",
+    "operator_surface": "trusted_run_witness_report.v1",
+    "expected_review_artifact_path": "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/final_review.json",
+    "review_artifact_digest": "sha256:b68f485d3e2552bff7fa00363f42c0145ec6ba80eb3425ad5fb8f729d64a408b",
+    "deterministic_analysis_digest": "sha256:114e7a058d74cc3b115a0d9e9bc4c9b4fe3c22fefd8cbd148372fa12ae9d9923",
+    "governance_artifact_digest": "sha256:5369c93cd211d6e4b924045bd1834311f86285f02741a92ea3daeead97e8b825",
+    "audit_publication_digest": "sha256:eb5f1e85bee447a3f308d7b322d5f88f362dc9153d6338ac4ba9cd1409964a29",
+    "validation_result": "pass",
+    "passed_checks": [
+      {
+        "id": "plan_input_valid_json",
+        "status": "pass"
+      },
+      {
+        "id": "deterministic_analysis_complete",
+        "status": "pass"
+      },
+      {
+        "id": "review_artifact_path",
+        "status": "pass"
+      },
+      {
+        "id": "plan_hash_preserved",
+        "status": "pass"
+      },
+      {
+        "id": "forbidden_hits_preserved",
+        "status": "pass"
+      },
+      {
+        "id": "risk_verdict_matches_deterministic_rule",
+        "status": "pass"
+      },
+      {
+        "id": "publish_decision_requires_complete_analysis",
+        "status": "pass"
+      },
+      {
+        "id": "summary_cannot_override_verdict",
+        "status": "pass"
+      },
+      {
+        "id": "audit_publication_alignment",
+        "status": "pass"
+      },
+      {
+        "id": "forbidden_mutation_boundary",
+        "status": "pass"
+      }
+    ],
+    "failed_checks": [],
+    "missing_evidence": [],
+    "validator_signature_digest": "sha256:edeef9e526861179a5ea4bfe9c1f6343453c8b5f100b9603fe05f7599fcf214d"
+  },
+  "observed_effect": {
+    "expected_output_artifact_path": "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/final_review.json",
+    "actual_output_artifact_path": "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/final_review.json",
+    "output_exists": true,
+    "artifact_digest": "sha256:b68f485d3e2552bff7fa00363f42c0145ec6ba80eb3425ad5fb8f729d64a408b",
+    "risk_verdict": "risky_for_v1_policy",
+    "publish_decision": "normal_publish",
+    "summary_status": "summary_available",
+    "final_verdict_source": "deterministic_analysis",
+    "deterministic_analysis_complete": true,
+    "audit_publication_present": true,
+    "forbidden_mutations": []
+  },
+  "contract_verdict": {
+    "schema_version": "trusted_terraform_plan_decision_contract_verdict.v1",
+    "compare_scope": "trusted_terraform_plan_decision_v1",
+    "operator_surface": "trusted_run_witness_report.v1",
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "schema",
+        "status": "pass"
+      },
+      {
+        "id": "compare_scope",
+        "status": "pass"
+      },
+      {
+        "id": "operator_surface",
+        "status": "pass"
+      },
+      {
+        "id": "claim_tier",
+        "status": "pass"
+      },
+      {
+        "id": "policy_configuration",
+        "status": "pass"
+      },
+      {
+        "id": "governed_input",
+        "status": "pass"
+      },
+      {
+        "id": "review_artifact_path",
+        "status": "pass"
+      },
+      {
+        "id": "review_artifact_digest",
+        "status": "pass"
+      },
+      {
+        "id": "validator_present",
+        "status": "pass"
+      },
+      {
+        "id": "validator_passed",
+        "status": "pass"
+      },
+      {
+        "id": "audit_publication",
+        "status": "pass"
+      },
+      {
+        "id": "forbidden_mutations",
+        "status": "pass"
+      },
+      {
+        "id": "effect_journal",
+        "status": "pass"
+      },
+      {
+        "id": "final_truth",
+        "status": "pass"
+      },
+      {
+        "id": "run_id_lineage",
+        "status": "pass"
+      }
+    ],
+    "failures": [],
+    "must_catch_outcomes": [
+      "invalid_json_plan_input",
+      "forbidden_operation_hits_drift",
+      "risk_verdict_drift",
+      "publish_without_complete_analysis",
+      "audit_publication_without_publish",
+      "undeclared_durable_mutation",
+      "compare_scope_missing_or_unsupported",
+      "operator_surface_missing",
+      "missing_final_truth"
+    ],
+    "verdict_signature_digest": "sha256:8d0a21438bbdfc13fe5912f024eea13b110da14db6bb9256648e23787c429645"
+  },
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-04-24T03:13:04.132253Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:262dc5c35cd64b748f1d08a89bda28e7db21cfb63f297f26ddccb29219a22400",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 460,
+        "paths_total_reference": 460,
+        "churn_paths": 460,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

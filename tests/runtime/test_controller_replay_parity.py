@@ -34,8 +34,21 @@ def test_compare_controller_replay_outputs_detects_status_drift() -> None:
             ],
         },
         "controller_observability_projection": [
-            {"event": "controller_run", "result": "success", "error_code": None},
-            {"event": "controller_child", "child_index": 0, "status": "success", "error_code": None},
+            {
+                "event": "controller_run",
+                "projection_only": True,
+                "projection_source": "controller_runtime_facts",
+                "result": "success",
+                "error_code": None,
+            },
+            {
+                "event": "controller_child",
+                "projection_only": True,
+                "projection_source": "controller_runtime_facts",
+                "child_index": 0,
+                "status": "success",
+                "error_code": None,
+            },
         ],
     }
     actual = {
@@ -58,9 +71,17 @@ def test_compare_controller_replay_outputs_detects_status_drift() -> None:
             ],
         },
         "controller_observability_projection": [
-            {"event": "controller_run", "result": "failed", "error_code": "controller.child_execution_failed"},
+            {
+                "event": "controller_run",
+                "projection_only": True,
+                "projection_source": "controller_runtime_facts",
+                "result": "failed",
+                "error_code": "controller.child_execution_failed",
+            },
             {
                 "event": "controller_child",
+                "projection_only": True,
+                "projection_source": "controller_runtime_facts",
                 "child_index": 0,
                 "status": "failure",
                 "error_code": "controller.child_execution_failed",

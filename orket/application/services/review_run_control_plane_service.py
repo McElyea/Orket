@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -10,11 +12,25 @@ from orket.application.review.models import ReviewSnapshot
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots, snapshot_digest
 from orket.application.services.control_plane_workload_catalog import REVIEW_RUN_WORKLOAD
-from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
+from orket.core.contracts import (
+    AttemptRecord,
+    CheckpointRecord,
+    RunRecord,
+    StepRecord,
+)
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AttemptState,
+    AuthoritySourceClass,
     CapabilityClass,
+    CheckpointReobservationClass,
+    CheckpointResumabilityClass,
+    ClosureBasisClassification,
+    CompletionClassification,
+    DegradationClassification,
+    EvidenceSufficiencyClassification,
+    ResidualUncertaintyClassification,
+    ResultClass,
     RunState,
     validate_attempt_state_transition,
     validate_run_state_transition,
@@ -48,7 +64,7 @@ class ReviewRunControlPlaneService:
         resolved_policy_payload: dict[str, object],
         auth_source: str,
         model_assisted_enabled: bool,
-    ) -> tuple[RunRecord, AttemptRecord, StepRecord]:
+    ) -> tuple[RunRecord, AttemptRecord, StepRecord, CheckpointRecord]:
         created_at = self._utc_now()
         attempt_id = self.attempt_id_for(run_id=run_id)
         admission_ref = self.admission_ref_for(snapshot=snapshot)
@@ -117,7 +133,40 @@ class ReviewRunControlPlaneService:
                 closure_classification="step_completed",
             )
         )
-        return run, attempt, step
+        start_effect = await self._ensure_effect(
+            run=run,
+            attempt=attempt,
+            step=step,
+            stage="start",
+        )
+        checkpoint = await self.publication.publish_checkpoint(
+            checkpoint=CheckpointRecord(
+                checkpoint_id=self.checkpoint_id_for(attempt_id=attempt.attempt_id),
+                parent_ref=attempt.attempt_id,
+                creation_timestamp=created_at,
+                state_snapshot_ref=run.configuration_snapshot_id,
+                resumability_class=CheckpointResumabilityClass.RESUME_FORBIDDEN,
+                invalidation_conditions=[
+                    "review_snapshot_drift",
+                    "review_policy_digest_drift",
+                    "review_auth_source_drift",
+                ],
+                dependent_resource_ids=self._resources_touched(snapshot=snapshot),
+                dependent_effect_refs=[],
+                policy_digest=run.policy_digest,
+                integrity_verification_ref=self.checkpoint_integrity_ref(run=run),
+            )
+        )
+        await self.publication.accept_checkpoint(
+            acceptance_id=self.checkpoint_acceptance_id_for(attempt_id=attempt.attempt_id),
+            checkpoint=checkpoint,
+            supervisor_authority_ref=f"review-run-supervisor:{run.run_id}",
+            decision_timestamp=checkpoint.creation_timestamp,
+            required_reobservation_class=CheckpointReobservationClass.FULL,
+            integrity_verification_ref=checkpoint.integrity_verification_ref,
+            journal_entries=[start_effect],
+        )
+        return run, attempt, step, checkpoint
 
     async def finalize_completed(self, *, run_id: str) -> tuple[RunRecord, AttemptRecord]:
         return await self._finalize(run_id=run_id, failed=False, failure_class="")
@@ -158,6 +207,18 @@ class ReviewRunControlPlaneService:
         if step is not None:
             summary["step_id"] = step.step_id
             summary["step_kind"] = step.step_kind
+        checkpoint = await self.publication.repository.get_checkpoint(
+            checkpoint_id=self.checkpoint_id_for(attempt_id=attempt.attempt_id)
+        )
+        if checkpoint is not None:
+            summary["checkpoint_id"] = checkpoint.checkpoint_id
+            summary["checkpoint_resumability_class"] = checkpoint.resumability_class.value
+            acceptance = await self.publication.repository.get_checkpoint_acceptance(
+                checkpoint_id=checkpoint.checkpoint_id
+            )
+            if acceptance is not None:
+                summary["checkpoint_acceptance_outcome"] = acceptance.outcome.value
+                summary["checkpoint_acceptance_id"] = acceptance.acceptance_id
         return summary
 
     async def _finalize(
@@ -191,7 +252,49 @@ class ReviewRunControlPlaneService:
         validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=next_attempt_state)
         attempt = await self.execution_repository.save_attempt_record(record=attempt.model_copy(update=attempt_update))
         validate_run_state_transition(current_state=run.lifecycle_state, next_state=next_run_state)
-        run = await self.execution_repository.save_run_record(record=run.model_copy(update={"lifecycle_state": next_run_state}))
+        closeout_ref = self.closeout_ref_for(run_id=run_id, failed=failed, failure_class=failure_class)
+        step = await self.execution_repository.save_step_record(
+            record=StepRecord(
+                step_id=self.closeout_step_id_for(run_id=run_id),
+                attempt_id=attempt.attempt_id,
+                step_kind="review_run_closeout",
+                input_ref=self.start_step_id_for(run_id=run_id),
+                output_ref=closeout_ref,
+                capability_used=CapabilityClass.DETERMINISTIC_COMPUTE,
+                resources_touched=[],
+                observed_result_classification="review_run_failed" if failed else "review_run_completed",
+                receipt_refs=[closeout_ref],
+                closure_classification="step_completed",
+            )
+        )
+        await self._ensure_effect(
+            run=run,
+            attempt=attempt,
+            step=step,
+            stage="closeout",
+        )
+        truth = await self.publication.publish_final_truth(
+            final_truth_record_id=self.final_truth_id_for(run_id=run_id),
+            run_id=run_id,
+            result_class=ResultClass.FAILED if failed else ResultClass.SUCCESS,
+            completion_classification=(
+                CompletionClassification.UNSATISFIED if failed else CompletionClassification.SATISFIED
+            ),
+            evidence_sufficiency_classification=EvidenceSufficiencyClassification.SUFFICIENT,
+            residual_uncertainty_classification=ResidualUncertaintyClassification.NONE,
+            degradation_classification=DegradationClassification.NONE,
+            closure_basis=ClosureBasisClassification.NORMAL_EXECUTION,
+            authority_sources=[AuthoritySourceClass.RECEIPT_EVIDENCE],
+            authoritative_result_ref=closeout_ref,
+        )
+        run = await self.execution_repository.save_run_record(
+            record=run.model_copy(
+                update={
+                    "lifecycle_state": next_run_state,
+                    "final_truth_record_id": truth.final_truth_record_id,
+                }
+            )
+        )
         return run, attempt
 
     @staticmethod
@@ -203,8 +306,47 @@ class ReviewRunControlPlaneService:
         return f"{run_id}:step:start"
 
     @staticmethod
+    def closeout_step_id_for(*, run_id: str) -> str:
+        return f"{run_id}:step:closeout"
+
+    @staticmethod
     def admission_ref_for(*, snapshot: ReviewSnapshot) -> str:
         return f"review-run-snapshot:{snapshot.snapshot_digest}"
+
+    @staticmethod
+    def closeout_ref_for(*, run_id: str, failed: bool, failure_class: str) -> str:
+        suffix = str(failure_class or "failed").strip() if failed else "completed"
+        return f"{run_id}:closeout:{suffix}"
+
+    @staticmethod
+    def checkpoint_id_for(*, attempt_id: str) -> str:
+        return f"review-run-checkpoint:{attempt_id}"
+
+    @staticmethod
+    def checkpoint_acceptance_id_for(*, attempt_id: str) -> str:
+        return f"review-run-checkpoint-acceptance:{attempt_id}"
+
+    @staticmethod
+    def effect_id_for(*, run_id: str, stage: str) -> str:
+        return f"review-run-effect:{run_id}:{stage}"
+
+    @staticmethod
+    def final_truth_id_for(*, run_id: str) -> str:
+        return f"{run_id}:final_truth"
+
+    @staticmethod
+    def checkpoint_integrity_ref(*, run: RunRecord) -> str:
+        raw = json.dumps(
+            {
+                "run_id": run.run_id,
+                "policy_digest": run.policy_digest,
+                "configuration_digest": run.configuration_digest,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+        ).encode("ascii")
+        return f"review-run-checkpoint-integrity:sha256:{hashlib.sha256(raw).hexdigest()}"
 
     async def _require_run(self, *, run_id: str) -> RunRecord:
         run = await self.execution_repository.get_run_record(run_id=run_id)
@@ -231,6 +373,33 @@ class ReviewRunControlPlaneService:
     @staticmethod
     def _utc_now() -> str:
         return datetime.now(UTC).isoformat()
+
+    async def _ensure_effect(
+        self,
+        *,
+        run: RunRecord,
+        attempt: AttemptRecord,
+        step: StepRecord,
+        stage: str,
+    ):
+        effect_id = self.effect_id_for(run_id=run.run_id, stage=stage)
+        existing = await self.publication.repository.list_effect_journal_entries(run_id=run.run_id)
+        for entry in existing:
+            if entry.effect_id == effect_id:
+                return entry
+        return await self.publication.append_effect_journal_entry(
+            journal_entry_id=f"review-run-journal:{run.run_id}:{stage}",
+            effect_id=effect_id,
+            run_id=run.run_id,
+            attempt_id=attempt.attempt_id,
+            step_id=step.step_id,
+            authorization_basis_ref=run.admission_decision_receipt_ref,
+            publication_timestamp=self._utc_now(),
+            intended_target_ref=f"review-run:{run.run_id}:lifecycle",
+            observed_result_ref=step.output_ref,
+            uncertainty_classification=ResidualUncertaintyClassification.NONE,
+            integrity_verification_ref=step.output_ref or run.admission_decision_receipt_ref,
+        )
 
 
 def build_review_run_control_plane_service(

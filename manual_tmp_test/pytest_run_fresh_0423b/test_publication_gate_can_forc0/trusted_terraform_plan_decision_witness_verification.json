@@ -1,0 +1,1 @@
+{"schema_version": "trusted_run_witness_report.v1", "compare_scope": "trusted_terraform_plan_decision_v1", "observed_result": "success", "claim_tier": "verdict_deterministic", "run_count": 2}

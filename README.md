@@ -19,17 +19,11 @@ This README is intentionally narrow. It describes the repo entrypoints and curre
 - A runtime and API for orchestration, turns, cards, and workflow state.
 - Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the named card runtime.
 - Governed turn-tool execution with fail-closed namespace enforcement on the governed path.
-- Control-plane persistence for selected live lanes, including sandbox orchestration, governed turn-tool execution, governed kernel actions, approval-gated reservation and operator flows, coordinator reservation and lease flows, and the Gitea state worker path.
+- Control-plane persistence for selected live lanes, including sandbox orchestration, governed turn-tool execution, governed kernel actions, cards epic execution, manual review-run execution, extension workload execution, approval-gated reservation and operator flows, coordinator reservation and lease flows, and the Gitea state worker path.
+- Controller child results and controller observability events that self-identify as projection-only runtime facts instead of standalone execution authority.
 - Deterministic and observability-oriented runtime artifacts under the normal workspace and durable `.orket/` paths.
 
-## What Is Not Universally True Yet
-
-- Control-plane authority is not universal across all admission, scheduling, workload execution, and operator surfaces.
-- Effect-journal publication is not yet the default truth path for all workload and tool execution.
-- Namespace and safe-tooling enforcement are stronger on the governed turn-tool path than on the rest of the runtime.
-- Broader supervisor-owned checkpoint creation is still partial.
-
-For the exact current boundary, use [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md) instead of inferring from older docs or broad product language.
+For broader compatibility and migration boundaries beyond this narrow README, use [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) instead of inferring from older docs or broad product language.
 
 ## Bounded Proof Slice
 

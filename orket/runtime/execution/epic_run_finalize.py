@@ -267,6 +267,8 @@ class EpicRunFinalizer:
             control_plane_run=control_plane_run,
             control_plane_attempt=control_plane_attempt,
             control_plane_step=context.control_plane_start_step,
+            control_plane_checkpoint=context.control_plane_checkpoint,
+            control_plane_checkpoint_acceptance=context.control_plane_checkpoint_acceptance,
         )
         cards_runtime_summary = self._cards_runtime_summary(backlog=backlog, session_status=session_status)
         if cards_runtime_summary:
@@ -353,6 +355,8 @@ class EpicRunFinalizer:
             control_plane_run=control_plane_run,
             control_plane_attempt=control_plane_attempt,
             control_plane_step=context.control_plane_start_step,
+            control_plane_checkpoint=context.control_plane_checkpoint,
+            control_plane_checkpoint_acceptance=context.control_plane_checkpoint_acceptance,
         )
         receipt_projection = await await_infrastructure(
             "materialize protocol receipts",

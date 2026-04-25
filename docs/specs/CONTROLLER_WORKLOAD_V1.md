@@ -1,6 +1,6 @@
 # Controller Workload Contract v1
 
-Last updated: 2026-03-08
+Last updated: 2026-04-23
 Status: Active
 Owner: Orket Core
 
@@ -19,6 +19,7 @@ Owner: Orket Core
 5. Runtime behavior is fail-closed.
 6. Error surfaces use stable error codes.
 7. Equivalent inputs must produce identical canonical summary serialization.
+8. Operator-facing child projection framing remains explicit and non-authoritative.
 
 ## SDK Layering (Normative)
 1. SDK exposes controller orchestration as an optional layer at `orket_extension_sdk.workloads.controller`.
@@ -129,6 +130,19 @@ Each child result must include:
 6. `enforced_caps`
 7. `artifact_refs`
 8. `normalized_error`
+
+When a child workload returns control-plane projection framing, `artifact_refs` may include one stable `control_plane_projection` entry.
+
+That entry must:
+1. use `kind = control_plane_projection`
+2. include `projection_source`
+3. include `projection_only = true`
+4. include `execution_state_authority`
+5. include `lane_output_execution_state_authoritative`
+6. exclude run-specific control-plane ids so equivalent child runs preserve canonical summary determinism
+
+The `control_plane_projection` entry is projection framing only.
+It must not replace child provenance artifacts or claim standalone execution authority.
 
 Provenance ordering rule:
 1. Child provenance appears in execution order and must not be post-sorted.

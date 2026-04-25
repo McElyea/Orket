@@ -22,6 +22,8 @@
       "additionalProperties": false,
       "required": [
         "event",
+        "projection_source",
+        "projection_only",
         "run_id",
         "controller_workload",
         "execution_depth",
@@ -35,6 +37,12 @@
       "properties": {
         "event": {
           "const": "controller_run"
+        },
+        "projection_source": {
+          "const": "controller_runtime_facts"
+        },
+        "projection_only": {
+          "const": true
         },
         "run_id": {
           "type": "string",
@@ -130,6 +138,8 @@
       "additionalProperties": false,
       "required": [
         "event",
+        "projection_source",
+        "projection_only",
         "run_id",
         "child_index",
         "execution_order",
@@ -142,6 +152,12 @@
       "properties": {
         "event": {
           "const": "controller_child"
+        },
+        "projection_source": {
+          "const": "controller_runtime_facts"
+        },
+        "projection_only": {
+          "const": true
         },
         "run_id": {
           "type": "string",

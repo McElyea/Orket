@@ -34,6 +34,35 @@ def test_runtime_smoke_cli_marks_missing_env_as_environment_blocker(tmp_path: Pa
     assert isinstance(payload.get("diff_ledger"), list)
 
 
+def test_runtime_smoke_failure_summary_records_failed_s3_attempt(tmp_path: Path, monkeypatch) -> None:
+    """Layer: contract. Verifies failed provider calls remain visible in blocked live proof output."""
+
+    async def _fake_run_live_review(*, workspace: Path, config: LiveTerraformReviewConfig):
+        del workspace, config
+        raise RuntimeError("An error occurred (NoSuchBucket) when calling the GetObject operation: missing")
+
+    monkeypatch.setattr(
+        "scripts.proof.run_trusted_terraform_plan_decision_runtime_smoke.run_live_review",
+        _fake_run_live_review,
+    )
+    payload = execute_trusted_terraform_plan_decision_runtime_smoke(
+        workspace_root=tmp_path / "workspace",
+        run_index=1,
+        config=LiveTerraformReviewConfig(
+            plan_s3_uri="s3://missing-bucket/proof/terraform-plan.json",
+            model_id="us.writer.palmyra-x4-v1:0",
+            region="us-east-1",
+            table_name="TerraformReviewsSmoke_test",
+        ),
+    )
+
+    assert payload["observed_result"] == "failure"
+    assert payload["blocker_taxonomy"] == "missing_object"
+    assert payload["provider_interaction_summary"][0]["operation"] == "GetObject"
+    assert payload["provider_interaction_summary"][0]["status"] == "attempted"
+    assert payload["provider_interaction_summary"][1]["status"] == "not_attempted"
+
+
 def test_runtime_smoke_wrapper_can_package_live_like_result(tmp_path: Path, monkeypatch) -> None:
     """Layer: contract. Verifies the runtime-backed wrapper can package a real-service-shaped result into a witness bundle."""
 
@@ -96,6 +125,39 @@ def test_live_bedrock_summarizer_uses_converse_for_nova_inference_profiles() -> 
     assert client.calls[0][1]["messages"][0]["role"] == "user"
     assert payload["summary"] == "safe to publish"
     assert payload["raw_completion_ref"] == "nova-request-123"
+
+
+def test_live_bedrock_summarizer_uses_converse_for_palmyra_x4() -> None:
+    """Layer: contract. Verifies the advisory Bedrock summary path uses Converse for Palmyra X4."""
+
+    class _FakeClient:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, dict]] = []
+
+        def converse(self, **kwargs):  # type: ignore[no-untyped-def]
+            self.calls.append(("converse", dict(kwargs)))
+            return {
+                "output": {"message": {"content": [{"text": "safe to publish"}]}},
+                "ResponseMetadata": {"RequestId": "palmyra-request-123"},
+            }
+
+    client = _FakeClient()
+    summarizer = LiveBedrockSummarizer(client=client, model_id="writer.palmyra-x4-v1:0")
+    payload = __import__("asyncio").run(
+        summarizer.summarize(
+            {
+                "risk_verdict": "normal_publish",
+                "forbidden_operation_hits": [],
+                "action_counts": {"create": 1},
+            }
+        )
+    )
+
+    assert client.calls[0][0] == "converse"
+    assert client.calls[0][1]["modelId"] == "writer.palmyra-x4-v1:0"
+    assert client.calls[0][1]["messages"][0]["role"] == "user"
+    assert payload["summary"] == "safe to publish"
+    assert payload["raw_completion_ref"] == "palmyra-request-123"
 
 
 def test_bedrock_daily_token_throttle_is_treated_as_environment_blocker() -> None:

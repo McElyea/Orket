@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
+from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.application.services.config_precedence_resolver import ConfigPrecedenceResolver
 from orket.extensions.manager import ExtensionManager
 
@@ -358,11 +360,23 @@ def _assert_governed_identity(result) -> None:
     assert provenance["provenance_ref"] == "provenance.json"
     assert provenance["determinism_class"] == result.determinism_class
     assert provenance["control_bundle"]["input_identity"] == result.plan_hash
+    assert provenance["execution_state_authority"] == "control_plane_records"
+    assert provenance["lane_output_execution_state_authoritative"] is False
+    assert provenance["control_plane"] == result.control_plane
     control_plane_workload_record = provenance["control_plane_workload_record"]
     assert result.control_plane_workload_record == control_plane_workload_record
     assert control_plane_workload_record["workload_id"] == result.workload_id
     assert control_plane_workload_record["output_contract_ref"] == "extension_run_result_identity_v1"
     assert control_plane_workload_record["workload_digest"].startswith("sha256:")
+    assert result.control_plane["projection_only"] is True
+    assert result.control_plane["projection_source"] == "control_plane_records"
+    assert result.control_plane["execution_state_authority"] == "control_plane_records"
+    assert result.control_plane["lane_output_execution_state_authoritative"] is False
+    assert result.control_plane["control_plane_run_id"]
+    assert result.control_plane["control_plane_attempt_id"]
+    assert result.control_plane["control_plane_start_step_id"]
+    assert result.control_plane["control_plane_checkpoint_id"]
+    assert result.control_plane["control_plane_final_truth_record_id"]
 
     assert artifact_manifest["claim_tier"] == result.claim_tier
     assert artifact_manifest["compare_scope"] == result.compare_scope
@@ -372,6 +386,10 @@ def _assert_governed_identity(result) -> None:
     assert artifact_manifest["plan_hash"] == result.plan_hash
     assert artifact_manifest["provenance_ref"] == "provenance.json"
     assert artifact_manifest["determinism_class"] == result.determinism_class
+
+
+def _control_plane_db_path(project_root: Path) -> Path:
+    return project_root / ".orket" / "durable" / "db" / "control_plane_records.sqlite3"
 
 
 def test_list_extensions_from_catalog(tmp_path):
@@ -622,6 +640,43 @@ async def test_run_workload_emits_provenance(tmp_path):
     assert await _path_exists(Path(result.provenance_path))
     assert await _path_exists(Path(result.artifact_root) / "artifact_manifest.json")
     _assert_governed_identity(result)
+
+
+@pytest.mark.asyncio
+async def test_run_workload_publishes_control_plane_execution_and_checkpoint(tmp_path):
+    """Layer: integration. Verifies legacy extension workload execution publishes run, checkpoint, effect, and final-truth records."""
+    repo = tmp_path / "ext_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_test_extension_repo(repo)
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager.install_from_repo(str(repo))
+
+    result = await manager.run_workload(
+        workload_id="mystery_v1",
+        input_config={"seed": 9},
+        workspace=tmp_path / "workspace" / "default",
+        department="core",
+    )
+
+    execution_repo = AsyncControlPlaneExecutionRepository(_control_plane_db_path(tmp_path))
+    record_repo = AsyncControlPlaneRecordRepository(_control_plane_db_path(tmp_path))
+    run = await execution_repo.get_run_record(run_id=result.control_plane["control_plane_run_id"])
+    attempt = await execution_repo.get_attempt_record(attempt_id=result.control_plane["control_plane_attempt_id"])
+    checkpoint = await record_repo.get_checkpoint(checkpoint_id=result.control_plane["control_plane_checkpoint_id"])
+    acceptance = await record_repo.get_checkpoint_acceptance(checkpoint_id=result.control_plane["control_plane_checkpoint_id"])
+    final_truth = await record_repo.get_final_truth(run_id=result.control_plane["control_plane_run_id"])
+    effects = await record_repo.list_effect_journal_entries(run_id=result.control_plane["control_plane_run_id"])
+
+    assert run is not None
+    assert attempt is not None
+    assert checkpoint is not None
+    assert acceptance is not None
+    assert final_truth is not None
+    assert attempt.attempt_state.value == "attempt_completed"
+    assert final_truth.final_truth_record_id == result.control_plane["control_plane_final_truth_record_id"]
+    assert len(effects) == 2
+    assert effects[0].step_id == result.control_plane["control_plane_start_step_id"]
+    assert effects[-1].step_id == result.control_plane["control_plane_closeout_step_id"]
 
 
 @pytest.mark.asyncio

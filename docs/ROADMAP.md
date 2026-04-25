@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-04-20
+Last updated: 2026-04-24
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-No active non-maintenance priority lane.
+1. NorthStar disposable AWS smoke setup lane -- Active; no-spend setup is implemented and live completion is blocked pending explicit AWS setup/cleanup opt-in. Implementation plan: `docs/projects/northstar-aws-smoke-setup/NORTHSTAR_AWS_SMOKE_SETUP_IMPLEMENTATION_PLAN.md`.
 
 ## Maintenance (Non-Priority)
 
@@ -35,6 +35,7 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
+| northstar-aws-smoke-setup | active-blocked | P0 | `docs/projects/northstar-aws-smoke-setup/` | Orket Core | No-spend setup, randomized fixtures, and blocked handoff are implemented; live completion is blocked pending explicit AWS setup/cleanup opt-in. This lane does not publicly admit `trusted_terraform_plan_decision_v1`. |
 | governed-proof | paused-checkpoint | paused | `docs/projects/governed-proof/` | Orket Core | Paused after the truthful 2026-04-19 provider-backed Bedrock checkpoint. `ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; reopen only when a bounded change can use an AWS account or Region with non-zero Bedrock inference quota for the admitted provider-backed governed-proof path, or for explicit retirement. |
 | northstar-governed-change-packets | paused-checkpoint | paused | `docs/projects/northstar-governed-change-packets/` | Orket Core | Paused after the truthful 2026-04-20 Terraform public-admission checkpoint. `ORKET_NORTHSTAR_SECOND_GOVERNED_CHANGE_PACKET_FAMILY_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; reopen only when a bounded change can truthfully provide the required non-secret live inputs, rerun the full Workstream 2 proof envelope, and re-evaluate the publication-readiness and publication-gate outputs in the same change, or for explicit retirement. |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |

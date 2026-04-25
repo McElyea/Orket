@@ -15,6 +15,7 @@ if str(REPO_ROOT) not in sys.path:
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from scripts.proof.terraform_plan_review_live_support import (
     LiveTerraformReviewConfig,
+    bedrock_smoke_runtime_operation,
     is_environment_blocker,
     live_config_from_env,
     missing_required_env,
@@ -58,6 +59,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--created-at", default=env.created_at)
     parser.add_argument("--execution-trace-ref", default="trusted-terraform-plan-decision-live-runtime")
     parser.add_argument("--policy-bundle-id", default=env.policy_bundle_id)
+    parser.add_argument("--expected-plan-hash", default=env.expected_plan_hash)
+    parser.add_argument("--smoke-owner-marker", default=env.smoke_owner_marker)
     parser.add_argument("--json", action="store_true", help="Print the persisted live runtime proof JSON.")
     return parser.parse_args(argv)
 
@@ -162,6 +165,8 @@ def main(argv: list[str] | None = None) -> int:
         created_at=str(args.created_at),
         execution_trace_ref=str(args.execution_trace_ref),
         policy_bundle_id=str(args.policy_bundle_id),
+        expected_plan_hash=str(args.expected_plan_hash),
+        smoke_owner_marker=str(args.smoke_owner_marker),
     )
     payload = execute_trusted_terraform_plan_decision_runtime_smoke(
         workspace_root=Path(str(args.workspace_root)),
@@ -254,6 +259,16 @@ def _base_payload(
         "run_id": context["run_id"],
         "session_id": context["session_id"],
         "plan_s3_uri": str(config.plan_s3_uri),
+        "s3_input_ref": str(config.plan_s3_uri),
+        "bedrock_model_id": str(config.model_id),
+        "aws_region": str(config.region),
+        "dynamodb_table": str(config.table_name),
+        "plan_hash": str(config.expected_plan_hash or ""),
+        "provider_interaction_summary": _provider_interaction_summary(
+            config,
+            attempted=_adapter_calls_from_failure_reason(reason),
+        ),
+        "blocker_taxonomy": _blocker_taxonomy(reason),
         "publish_decision": "no_publish",
         "risk_verdict": "",
         "summary_status": "summary_not_attempted",
@@ -296,6 +311,16 @@ def _success_payload(
         "run_id": context["run_id"],
         "session_id": context["session_id"],
         "plan_s3_uri": str(config.plan_s3_uri),
+        "s3_input_ref": str(config.plan_s3_uri),
+        "bedrock_model_id": str(config.model_id),
+        "aws_region": str(config.region),
+        "dynamodb_table": str(config.table_name),
+        "plan_hash": str(workflow_result["input_artifact"].get("plan_hash") or config.expected_plan_hash or ""),
+        "provider_interaction_summary": _provider_interaction_summary(
+            config,
+            attempted=list(workflow_result["governance_artifact"].get("adapter_calls_attempted") or []),
+        ),
+        "blocker_taxonomy": "",
         "publish_decision": governance["publish_decision"],
         "risk_verdict": workflow_result["final_review"]["risk_verdict"],
         "summary_status": workflow_result["final_review"]["summary_status"],
@@ -306,6 +331,58 @@ def _success_payload(
         "validator_result": validator,
         "witness_report": report,
     }
+
+
+def _provider_interaction_summary(config: LiveTerraformReviewConfig, *, attempted: list[str]) -> list[dict[str, str]]:
+    return [
+        {
+            "service": "s3",
+            "operation": "GetObject",
+            "resource_ref": str(config.plan_s3_uri),
+            "status": "attempted" if "read_s3_object" in attempted else "not_attempted",
+        },
+        {
+            "service": "bedrock-runtime",
+            "operation": bedrock_smoke_runtime_operation(str(config.model_id)),
+            "resource_ref": str(config.model_id),
+            "status": "attempted" if "invoke_bedrock_model" in attempted else "not_attempted",
+        },
+        {
+            "service": "dynamodb",
+            "operation": "PutItem",
+            "resource_ref": str(config.table_name),
+            "status": "attempted" if "put_dynamodb_item" in attempted else "not_attempted",
+        },
+    ]
+
+
+def _adapter_calls_from_failure_reason(reason: str) -> list[str]:
+    text = str(reason or "")
+    attempted: list[str] = []
+    if "GetObject" in text or "NoSuchBucket" in text or "NoSuchKey" in text:
+        attempted.append("read_s3_object")
+    if "Converse" in text or "InvokeModel" in text or "bedrock" in text.lower():
+        attempted.append("invoke_bedrock_model")
+    if "PutItem" in text or "dynamodb" in text.lower() or "ResourceNotFoundException" in text:
+        attempted.append("put_dynamodb_item")
+    return attempted
+
+
+def _blocker_taxonomy(reason: str) -> str:
+    text = str(reason or "")
+    if text.startswith("missing_required_env"):
+        return "missing_configuration"
+    if "NoCredentials" in text or "credentials" in text or "UnrecognizedClient" in text:
+        return "missing_credentials"
+    if "AccessDenied" in text or "not authorized" in text:
+        return "missing_permission"
+    if "NoSuchKey" in text or "NoSuchBucket" in text or "404" in text:
+        return "missing_object"
+    if "unsupported_bedrock_model" in text:
+        return "unsupported_model"
+    if "ResourceNotFoundException" in text or "table" in text.lower():
+        return "table_unavailable"
+    return "runtime_failure" if text else ""
 
 
 if __name__ == "__main__":

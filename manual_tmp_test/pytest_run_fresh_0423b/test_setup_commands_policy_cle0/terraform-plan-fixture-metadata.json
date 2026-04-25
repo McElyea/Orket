@@ -1,0 +1,44 @@
+{
+  "schema_version": "trusted_terraform_plan_fixture_metadata.v1",
+  "fixture_seed": "fixture-seed",
+  "fixture_kind": "safe_create_update",
+  "expected_verdict": "safe_for_v1_policy",
+  "resource_names": [
+    "aws_lb.smoke_5d3556a8",
+    "aws_dynamodb_table.smoke_ec5f2e37",
+    "aws_dynamodb_table.smoke_c22839b5"
+  ],
+  "action_mix": {
+    "create": 1,
+    "update": 1,
+    "destroy": 0,
+    "replace": 0,
+    "no-op": 1
+  },
+  "plan_hash": "sha256:748695fbb37011b98ccca248acecf2c9beea34642012c12b93cb41832f159b57",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "recorded_at_utc": "2026-04-24T03:13:51.400305Z",
+  "plan_path": "manual_tmp_test/pytest_run_fresh_0423b/test_setup_commands_policy_cle0/terraform-plan.json",
+  "metadata_path": "manual_tmp_test/pytest_run_fresh_0423b/test_setup_commands_policy_cle0/terraform-plan-fixture-metadata.json",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-04-24T03:13:51.401006Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:78f910a4670631839210fd465d4aede9fae57ba6e91c438ddf6267e99221bafe",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 38,
+        "paths_total_reference": 38,
+        "churn_paths": 38,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

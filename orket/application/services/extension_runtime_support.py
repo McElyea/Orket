@@ -2,27 +2,22 @@ from __future__ import annotations
 
 import asyncio
 import os
-import re
 from pathlib import Path
 from typing import Any
 
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+from orket.services.extension_memory_namespace import (
+    profile_key,
+    profile_prefix,
+    query_extension_profile_records,
+    scoped_session_id as _scoped_session_id,
+    unscoped_profile_key,
+    validate_extension_id,
+)
 from orket.services.scoped_memory_store import ScopedMemoryRecord, ScopedMemoryStore
 from orket_extension_sdk.audio import VoiceInfo
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
-
-_EXTENSION_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
-
-
-def validate_extension_id(extension_id: str) -> str:
-    normalized = str(extension_id or "").strip()
-    if not normalized:
-        raise ValueError("E_EXTENSION_RUNTIME_EXTENSION_ID_REQUIRED")
-    if not _EXTENSION_ID_RE.fullmatch(normalized):
-        raise ValueError("E_EXTENSION_RUNTIME_EXTENSION_ID_INVALID")
-    return normalized
-
 
 def validate_memory_scope(scope: str) -> str:
     normalized = str(scope or "").strip()
@@ -39,27 +34,7 @@ def validate_clear_scope(scope: str) -> str:
 
 
 def scoped_session_id(extension_id: str, session_id: str) -> str:
-    normalized_session_id = str(session_id or "").strip()
-    if not normalized_session_id:
-        raise ValueError("E_EXTENSION_RUNTIME_SESSION_ID_REQUIRED")
-    return f"ext:{extension_id}:{normalized_session_id}"
-
-
-def profile_prefix(extension_id: str) -> str:
-    return f"ext:{extension_id}:"
-
-
-def profile_key(extension_id: str, key: str) -> str:
-    return f"{profile_prefix(extension_id)}{str(key or '').strip()}"
-
-
-def unscoped_profile_key(extension_id: str, key: str) -> str:
-    prefix = profile_prefix(extension_id)
-    if key.startswith(prefix):
-        return key[len(prefix) :]
-    return key
-
-
+    return _scoped_session_id(extension_id, session_id, require_session_id=True)
 def serialize_record(extension_id: str, record: ScopedMemoryRecord) -> dict[str, Any]:
     key = unscoped_profile_key(extension_id, record.key) if record.scope == "profile_memory" else str(record.key or "")
     session_id = ""
@@ -103,20 +78,12 @@ async def query_profile_records(
         row = await memory_store.read_profile(key=profile_key(extension_id, requested_key))
         return [row] if row is not None else []
 
-    rows = await memory_store.list_profile(limit=2000)
-    prefix = profile_prefix(extension_id)
-    filtered: list[ScopedMemoryRecord] = []
-    needle = normalized_query.lower()
-    for row in rows:
-        if not row.key.startswith(prefix):
-            continue
-        plain_key = unscoped_profile_key(extension_id, row.key)
-        if needle and needle not in plain_key.lower() and needle not in str(row.value or "").lower():
-            continue
-        filtered.append(row)
-        if len(filtered) >= limit:
-            break
-    return filtered
+    return await query_extension_profile_records(
+        memory_store=memory_store,
+        extension_id=extension_id,
+        query=normalized_query,
+        limit=limit,
+    )
 
 
 async def generate_response(

@@ -1,0 +1,77 @@
+{
+  "schema_version": "trusted_terraform_plan_decision_validator.v1",
+  "recorded_at_utc": "2026-04-24T03:13:51.628412Z",
+  "compare_scope": "trusted_terraform_plan_decision_v1",
+  "operator_surface": "trusted_run_witness_report.v1",
+  "expected_review_artifact_path": "runtime/trusted-terraform-plan-decision-runtime-smoke-01/terraform_plan_reviews/trace-explicit_destroy/final_review.json",
+  "review_artifact_digest": "sha256:b68f485d3e2552bff7fa00363f42c0145ec6ba80eb3425ad5fb8f729d64a408b",
+  "deterministic_analysis_digest": "sha256:114e7a058d74cc3b115a0d9e9bc4c9b4fe3c22fefd8cbd148372fa12ae9d9923",
+  "governance_artifact_digest": "sha256:5369c93cd211d6e4b924045bd1834311f86285f02741a92ea3daeead97e8b825",
+  "audit_publication_digest": "sha256:eb5f1e85bee447a3f308d7b322d5f88f362dc9153d6338ac4ba9cd1409964a29",
+  "validation_result": "pass",
+  "passed_checks": [
+    {
+      "id": "plan_input_valid_json",
+      "status": "pass"
+    },
+    {
+      "id": "deterministic_analysis_complete",
+      "status": "pass"
+    },
+    {
+      "id": "review_artifact_path",
+      "status": "pass"
+    },
+    {
+      "id": "plan_hash_preserved",
+      "status": "pass"
+    },
+    {
+      "id": "forbidden_hits_preserved",
+      "status": "pass"
+    },
+    {
+      "id": "risk_verdict_matches_deterministic_rule",
+      "status": "pass"
+    },
+    {
+      "id": "publish_decision_requires_complete_analysis",
+      "status": "pass"
+    },
+    {
+      "id": "summary_cannot_override_verdict",
+      "status": "pass"
+    },
+    {
+      "id": "audit_publication_alignment",
+      "status": "pass"
+    },
+    {
+      "id": "forbidden_mutation_boundary",
+      "status": "pass"
+    }
+  ],
+  "failed_checks": [],
+  "missing_evidence": [],
+  "validator_signature_digest": "sha256:edeef9e526861179a5ea4bfe9c1f6343453c8b5f100b9603fe05f7599fcf214d",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-04-24T03:13:51.628546Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:3d19c5b9e22a070a9bbeeb18c3ce9af4663a827963c4642fc3ecd3f97cc8a89d",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 75,
+        "paths_total_reference": 75,
+        "churn_paths": 75,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

@@ -66,6 +66,9 @@ async def test_observability_batch_is_ordered_and_schema_valid() -> None:
     assert events[0]["declared_fanout"] == 3
     assert events[0]["result"] == "failed"
     assert events[0]["error_code"] == "controller.child_execution_failed"
+    assert events[0]["projection_source"] == controller_observability.CONTROLLER_OBSERVABILITY_PROJECTION_SOURCE
+    assert events[0]["projection_only"] is True
+    assert all(event["projection_only"] is True for event in events[1:])
 
 
 @pytest.mark.asyncio
@@ -201,6 +204,8 @@ async def test_controller_workload_observability_emission_and_fail_closed(
     assert summary["status"] == "failed"
     assert run_event["event"] == "controller_run"
     assert run_event["result"] == "failed"
+    assert run_event["projection_source"] == controller_observability.CONTROLLER_OBSERVABILITY_PROJECTION_SOURCE
+    assert run_event["projection_only"] is True
     assert [event["status"] for event in child_events] == ["success", "failure"]
     assert run_event["result"] != "blocked"
     assert output["controller_observability_projection"]
@@ -263,6 +268,7 @@ async def test_controller_workload_enablement_policy_blocks_run(
     assert output["controller_summary"]["error_code"] == "controller.disabled_by_policy"
     assert output["controller_observability_events"][0]["result"] == "blocked"
     assert output["controller_observability_events"][0]["error_code"] == "controller.disabled_by_policy"
+    assert output["controller_observability_events"][0]["projection_only"] is True
     assert output["controller_observability_events"][1:] == []
 
     monkeypatch.setenv("ORKET_CONTROLLER_ENABLED", "1")
@@ -279,3 +285,6 @@ async def test_controller_workload_enablement_policy_blocks_run(
     blocked_department_output = blocked_department_run.summary["output"]
     assert blocked_department_output["controller_summary"]["status"] == "blocked"
     assert blocked_department_output["controller_summary"]["error_code"] == "controller.disabled_by_policy"
+    assert blocked_department_output["controller_observability_events"][0]["projection_source"] == (
+        controller_observability.CONTROLLER_OBSERVABILITY_PROJECTION_SOURCE
+    )

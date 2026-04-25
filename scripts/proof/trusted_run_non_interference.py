@@ -18,6 +18,7 @@ INSPECTED_MODULES = (
     "scripts/proof/trusted_scope_family_support.py",
     "scripts/proof/trusted_scope_family_claims.py",
     "scripts/proof/trusted_scope_family_common.py",
+    "scripts/proof/finite_trust_kernel_model.py",
     "scripts/proof/trusted_repo_change_offline.py",
     "scripts/proof/trusted_repo_change_verifier.py",
     "scripts/proof/governed_change_packet_contract.py",

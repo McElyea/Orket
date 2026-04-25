@@ -78,6 +78,7 @@ def run_publication_gate(*, results_root: Path, output: Path | None = None, forc
         "observed_result": observed_result,
         "publication_decision": publication_decision,
         "public_trust_slice_action": str(readiness_payload.get("public_trust_slice_action") or "do_not_widen_public_trust_slice"),
+        "truth_boundary_checks": _truth_boundary_checks(paths),
         "execution_mode": "forced_local_evidence" if force_local_evidence and live_env_preflight["status"] != "pass" else "full_gate_sequence",
         "readiness_schema_version": str(readiness_payload.get("schema_version") or ""),
         "readiness_output_ref": relative_to_repo(paths.readiness),
@@ -196,6 +197,7 @@ def _preflight_blocked_report(*, paths: GatePaths, live_env_preflight: dict[str,
         "observed_result": "environment blocker",
         "publication_decision": "blocked",
         "public_trust_slice_action": "do_not_widen_public_trust_slice",
+        "truth_boundary_checks": _truth_boundary_checks(paths),
         "execution_mode": "preflight_blocked",
         "readiness_schema_version": str(readiness_payload.get("schema_version") or ""),
         "readiness_observed_result": str(readiness_payload.get("observed_result") or ""),
@@ -223,6 +225,39 @@ def _live_environment_preflight() -> dict[str, Any]:
         "missing_env": missing,
         "aws_credentials_source": "standard AWS provider chain; not inspected or recorded",
     }
+
+
+def _truth_boundary_checks(paths: GatePaths) -> list[dict[str, Any]]:
+    setup_dir = REPO_ROOT / "workspace" / "trusted_terraform_live_setup"
+    runtime_payload = _load_json(paths.runtime)
+    runtime_success = runtime_payload.get("observed_result") == "success"
+    return [
+        {
+            "id": "setup_packet_alone_not_admission_evidence",
+            "status": "pass",
+            "input_present": (setup_dir / "trusted_terraform_plan_decision_live_setup_packet.json").exists(),
+            "admission_evidence": False,
+        },
+        {
+            "id": "fixture_generation_alone_not_admission_evidence",
+            "status": "pass",
+            "input_present": (setup_dir / "terraform-plan-fixture-metadata.json").exists(),
+            "admission_evidence": False,
+        },
+        {
+            "id": "aws_setup_success_alone_not_admission_evidence",
+            "status": "pass",
+            "input_present": (setup_dir / "aws-setup-result.json").exists(),
+            "admission_evidence": False,
+        },
+        {
+            "id": "runtime_smoke_success_is_live_smoke_only",
+            "status": "pass" if runtime_success else "blocked",
+            "input_present": paths.runtime.exists(),
+            "admission_evidence": False,
+            "northstar_admission_state": "paused_until_same_change_proof_envelope_rerun",
+        },
+    ]
 
 
 def _execute_step(step: GateStep) -> dict[str, Any]:

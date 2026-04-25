@@ -33,6 +33,7 @@ class WorkloadArtifacts:
         workspace: Path,
         artifact_root: Path,
         input_config: dict[str, Any],
+        extension_id: str = "",
         admitted_capabilities: set[str] | None = None,
         extra_first_slice_capabilities: set[str] | None = None,
     ) -> CapabilityRegistry:
@@ -46,15 +47,40 @@ class WorkloadArtifacts:
         if isinstance(configured, dict):
             items = sorted((str(key).strip(), value) for key, value in configured.items())
             for capability_id, provider in items:
-                if admitted_capabilities is not None and capability_id in FIRST_SLICE_CAPABILITIES and capability_id not in enabled_first_slice:
+                if not WorkloadArtifacts._capability_enabled(
+                    capability_id=capability_id,
+                    admitted_capabilities=admitted_capabilities,
+                    enabled_first_slice=enabled_first_slice,
+                ):
                     continue
                 if capability_id and not registry.has(capability_id):
                     registry.register(capability_id, WorkloadArtifacts._materialize_configured_provider(capability_id, provider))
-        if not registry.has("tts.speak"):
+        if (
+            WorkloadArtifacts._capability_enabled(
+                capability_id="tts.speak",
+                admitted_capabilities=admitted_capabilities,
+                enabled_first_slice=enabled_first_slice,
+            )
+            and not registry.has("tts.speak")
+        ):
             registry.register("tts.speak", build_tts_provider(input_config=input_config))
-        if not registry.has("audio.play"):
+        if (
+            WorkloadArtifacts._capability_enabled(
+                capability_id="audio.play",
+                admitted_capabilities=admitted_capabilities,
+                enabled_first_slice=enabled_first_slice,
+            )
+            and not registry.has("audio.play")
+        ):
             registry.register("audio.play", build_audio_player(input_config=input_config))
-        if (admitted_capabilities is None or "model.generate" in enabled_first_slice) and not registry.has("model.generate"):
+        if (
+            WorkloadArtifacts._capability_enabled(
+                capability_id="model.generate",
+                admitted_capabilities=admitted_capabilities,
+                enabled_first_slice=enabled_first_slice,
+            )
+            and not registry.has("model.generate")
+        ):
             requested_model = str(input_config.get("model") or input_config.get("model_id") or "").strip()
             raw_temperature = input_config.get("temperature", 0.2)
             try:
@@ -74,8 +100,14 @@ class WorkloadArtifacts:
                     seed=seed,
                 ),
             )
-        if (admitted_capabilities is None and (not registry.has("memory.write") or not registry.has("memory.query"))) or (
-            admitted_capabilities is not None and enabled_first_slice.intersection({"memory.query", "memory.write"})
+        if any(
+            WorkloadArtifacts._capability_enabled(
+                capability_id=capability_id,
+                admitted_capabilities=admitted_capabilities,
+                enabled_first_slice=enabled_first_slice,
+            )
+            and not registry.has(capability_id)
+            for capability_id in ("memory.write", "memory.query")
         ):
             raw_memory_settings = input_config.get("memory")
             memory_settings: dict[str, Any] = (
@@ -94,14 +126,43 @@ class WorkloadArtifacts:
             memory_provider = SQLiteMemoryCapabilityProvider(
                 db_path=(workspace / ".orket" / "durable" / "db" / "extension_memory.db"),
                 controls=controls,
+                extension_id=extension_id,
             )
-            if (admitted_capabilities is None or "memory.write" in enabled_first_slice) and not registry.has("memory.write"):
+            if (
+                WorkloadArtifacts._capability_enabled(
+                    capability_id="memory.write",
+                    admitted_capabilities=admitted_capabilities,
+                    enabled_first_slice=enabled_first_slice,
+                )
+                and not registry.has("memory.write")
+            ):
                 registry.register("memory.write", memory_provider)
-            if (admitted_capabilities is None or "memory.query" in enabled_first_slice) and not registry.has("memory.query"):
+            if (
+                WorkloadArtifacts._capability_enabled(
+                    capability_id="memory.query",
+                    admitted_capabilities=admitted_capabilities,
+                    enabled_first_slice=enabled_first_slice,
+                )
+                and not registry.has("memory.query")
+            ):
                 registry.register("memory.query", memory_provider)
-        if not registry.has("speech.transcribe"):
+        if (
+            WorkloadArtifacts._capability_enabled(
+                capability_id="speech.transcribe",
+                admitted_capabilities=admitted_capabilities,
+                enabled_first_slice=enabled_first_slice,
+            )
+            and not registry.has("speech.transcribe")
+        ):
             registry.register("speech.transcribe", HostSTTCapabilityProvider())
-        if not registry.has("voice.turn_control"):
+        if (
+            WorkloadArtifacts._capability_enabled(
+                capability_id="voice.turn_control",
+                admitted_capabilities=admitted_capabilities,
+                enabled_first_slice=enabled_first_slice,
+            )
+            and not registry.has("voice.turn_control")
+        ):
             raw_voice_settings = input_config.get("voice")
             voice_settings: dict[str, Any] = (
                 {str(key): value for key, value in raw_voice_settings.items()}
@@ -125,7 +186,14 @@ class WorkloadArtifacts:
                     ),
                 ),
             )
-        if not registry.has("speech.play_clip"):
+        if (
+            WorkloadArtifacts._capability_enabled(
+                capability_id="speech.play_clip",
+                admitted_capabilities=admitted_capabilities,
+                enabled_first_slice=enabled_first_slice,
+            )
+            and not registry.has("speech.play_clip")
+        ):
             registry.register("speech.play_clip", NullAudioPlayer())
         return registry
 
@@ -184,6 +252,17 @@ class WorkloadArtifacts:
             return float(value)
         except (TypeError, ValueError):
             return float(default)
+
+    @staticmethod
+    def _capability_enabled(
+        *,
+        capability_id: str,
+        admitted_capabilities: set[str] | None,
+        enabled_first_slice: set[str],
+    ) -> bool:
+        if admitted_capabilities is None:
+            return True
+        return capability_id not in FIRST_SLICE_CAPABILITIES or capability_id in enabled_first_slice
 
     @staticmethod
     def _materialize_configured_provider(capability_id: str, provider: Any) -> Any:

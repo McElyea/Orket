@@ -317,11 +317,26 @@ class Agent:
                     role=self.name,
                 )
                 continue
+            journal_error = self._journal_violation_for_direct_tool_execution(context=context)
+            if journal_error:
+                turn.tool_calls.append(
+                    ToolCall(
+                        tool=tool_name,
+                        args=args,
+                        error=f"[GATE] {journal_error}",
+                        error_class=ToolCallErrorClass.GATE_BLOCKED,
+                    )
+                )
+                log_event(
+                    "tool_blocked",
+                    {"tool": tool_name, "args": args, "reason": journal_error},
+                    workspace,
+                    role=self.name,
+                )
+                continue
 
             # --- TOOL EXECUTION ---
             tool_fn = self.tools[tool_name]
-            if self._journaling_enabled():
-                _required_journal_context(context, "run_id")
             try:
                 res = (
                     await tool_fn(args, context=context)
@@ -414,6 +429,18 @@ class Agent:
 
     def _journaling_enabled(self) -> bool:
         return self.journal is not None and not isinstance(self.journal, NullControlPlaneAuthorityService)
+
+    def _journal_violation_for_direct_tool_execution(self, *, context: dict[str, Any]) -> str | None:
+        if not self._journaling_enabled():
+            return (
+                "Legacy Agent.run direct tool execution is blocked without effect-journal authority. "
+                "Route through the canonical governed dispatcher path instead."
+            )
+        try:
+            _required_journal_context(context, "run_id")
+        except ValueError as exc:
+            return str(exc)
+        return None
 
     async def _gate_violation_for_direct_tool_execution(
         self,

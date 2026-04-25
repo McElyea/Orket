@@ -1,0 +1,90 @@
+{
+  "schema_version": "trusted_terraform_plan_fixture_check.v1",
+  "recorded_at_utc": "2026-04-24T03:13:03.607819Z",
+  "proof_kind": "structural",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "plan_fixture": "manual_tmp_test/pytest_run_fresh_0423/test_disposable_packet_has_no_0/terraform-plan.json",
+  "metadata": {
+    "schema_version": "trusted_terraform_plan_fixture_metadata.v1",
+    "fixture_seed": "fixture-seed",
+    "fixture_kind": "safe_create_update",
+    "expected_verdict": "safe_for_v1_policy",
+    "resource_names": [
+      "aws_lb.smoke_5d3556a8",
+      "aws_dynamodb_table.smoke_ec5f2e37",
+      "aws_dynamodb_table.smoke_c22839b5"
+    ],
+    "action_mix": {
+      "create": 1,
+      "update": 1,
+      "destroy": 0,
+      "replace": 0,
+      "no-op": 1
+    },
+    "plan_hash": "sha256:748695fbb37011b98ccca248acecf2c9beea34642012c12b93cb41832f159b57",
+    "observed_path": "primary",
+    "observed_result": "success",
+    "recorded_at_utc": "2026-04-24T03:13:03.598639Z",
+    "plan_path": "manual_tmp_test/pytest_run_fresh_0423/test_disposable_packet_has_no_0/terraform-plan.json",
+    "metadata_path": "manual_tmp_test/pytest_run_fresh_0423/test_disposable_packet_has_no_0/terraform-plan-fixture-metadata.json"
+  },
+  "expected_verdict": "safe_for_v1_policy",
+  "actual_verdict": "safe_for_v1_policy",
+  "blocking_reasons": [],
+  "plan_hash": "sha256:748695fbb37011b98ccca248acecf2c9beea34642012c12b93cb41832f159b57",
+  "unsupported_actions": [],
+  "deterministic_analysis": {
+    "analysis_complete": true,
+    "resource_changes": [
+      {
+        "address": "aws_lb.smoke_5d3556a8",
+        "provider_name": "registry.terraform.io/hashicorp/aws",
+        "resource_type": "aws_lb",
+        "action": "no-op"
+      },
+      {
+        "address": "aws_dynamodb_table.smoke_ec5f2e37",
+        "provider_name": "registry.terraform.io/hashicorp/aws",
+        "resource_type": "aws_dynamodb_table",
+        "action": "update"
+      },
+      {
+        "address": "aws_dynamodb_table.smoke_c22839b5",
+        "provider_name": "registry.terraform.io/hashicorp/aws",
+        "resource_type": "aws_dynamodb_table",
+        "action": "create"
+      }
+    ],
+    "action_counts": {
+      "create": 1,
+      "update": 1,
+      "destroy": 0,
+      "replace": 0,
+      "no-op": 1
+    },
+    "forbidden_operation_hits": [],
+    "warnings": [],
+    "analysis_confidence": "complete"
+  },
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-04-24T03:13:03.608208Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:80ffb3b01e1f2d4945666ceb449acf32f096345bb8e4be5a1219fb2633d470bb",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 105,
+        "paths_total_reference": 105,
+        "churn_paths": 105,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

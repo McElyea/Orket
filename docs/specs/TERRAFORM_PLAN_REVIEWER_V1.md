@@ -1,6 +1,6 @@
 # Terraform Plan Reviewer V1
 
-Last updated: 2026-03-22
+Last updated: 2026-04-23
 Status: Active
 Owner: Orket Core
 Source requirements: [docs/projects/archive/terraform-plan-review/TP03222026/requirements.md](docs/projects/archive/terraform-plan-review/TP03222026/requirements.md)
@@ -38,6 +38,12 @@ Allowed capabilities:
 * invoke one approved Bedrock model for summarization
 * write the final audit record to DynamoDB table `TerraformReviews`
 * emit runtime observability logs
+
+Approved live-smoke Bedrock summary families:
+
+* Anthropic Claude direct model ids and inference-profile ids through `InvokeModel`
+* Amazon Nova direct model ids and inference-profile ids through `Converse`
+* Writer Palmyra X4 direct model id `writer.palmyra-x4-v1:0` and US geo inference id `us.writer.palmyra-x4-v1:0` through `Converse`
 
 Forbidden capabilities:
 

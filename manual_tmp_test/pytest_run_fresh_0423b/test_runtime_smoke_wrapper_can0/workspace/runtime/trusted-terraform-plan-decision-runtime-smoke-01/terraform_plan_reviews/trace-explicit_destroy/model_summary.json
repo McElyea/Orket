@@ -1,0 +1,10 @@
+{
+  "model_id": "bedrock.fake",
+  "summary": "Deterministic review completed.",
+  "review_focus_areas": [
+    "Validate policy-sensitive Terraform actions."
+  ],
+  "summary_status": "summary_available",
+  "advisory_errors": [],
+  "raw_completion_ref": "fake:model:001"
+}

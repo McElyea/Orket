@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "northstar_disposable_aws_smoke_packet_v1.json",
+  "title": "NorthStar Disposable AWS Smoke Packet v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "observed_path",
+    "observed_result",
+    "provider_calls_executed",
+    "bucket",
+    "key",
+    "s3_plan_uri",
+    "table_name",
+    "region",
+    "model_id",
+    "fixture_metadata",
+    "setup_packet",
+    "admission_evidence"
+  ],
+  "properties": {
+    "schema_version": { "const": "northstar_disposable_aws_smoke_packet.v1" },
+    "observed_path": { "enum": ["primary", "fallback", "degraded", "blocked"] },
+    "observed_result": { "enum": ["success", "failure", "partial success", "environment blocker"] },
+    "provider_calls_executed": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "bucket": { "type": "string", "minLength": 3 },
+    "key": { "type": "string", "minLength": 1 },
+    "s3_plan_uri": { "type": "string", "pattern": "^s3://.+" },
+    "table_name": { "type": "string", "minLength": 3 },
+    "region": { "type": "string", "minLength": 1 },
+    "model_id": { "type": "string", "minLength": 1 },
+    "fixture_metadata": {
+      "type": "object",
+      "required": ["fixture_seed", "fixture_kind", "expected_verdict", "plan_hash", "observed_path", "observed_result"],
+      "properties": {
+        "fixture_seed": { "type": "string", "minLength": 1 },
+        "fixture_kind": { "enum": ["safe_create_update", "risky_delete_replace"] },
+        "expected_verdict": { "enum": ["safe_for_v1_policy", "risky_for_v1_policy"] },
+        "plan_hash": { "type": "string", "pattern": "^sha256:" },
+        "observed_path": { "enum": ["primary", "fallback", "degraded", "blocked"] },
+        "observed_result": { "enum": ["success", "failure", "partial success", "environment blocker"] }
+      },
+      "additionalProperties": true
+    },
+    "setup_packet": {
+      "type": "object",
+      "required": ["provider_calls_executed", "provider_calls_planned_for_setup_commands", "provider_calls_planned_for_cleanup_commands"],
+      "properties": {
+        "provider_calls_executed": { "type": "array", "maxItems": 0 },
+        "provider_calls_planned_for_setup_commands": { "type": "array" },
+        "provider_calls_planned_for_cleanup_commands": { "type": "array" }
+      },
+      "additionalProperties": true
+    },
+    "admission_evidence": {
+      "enum": ["absent", "blocked"]
+    }
+  },
+  "not": {
+    "required": ["public_admission", "replay_deterministic", "text_deterministic"]
+  },
+  "additionalProperties": true
+}

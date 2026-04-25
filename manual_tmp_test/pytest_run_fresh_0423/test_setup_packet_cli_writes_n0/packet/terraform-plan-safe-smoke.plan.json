@@ -1,0 +1,21 @@
+{
+  "format_version": "1.1",
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.logs",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_s3_bucket",
+      "change": {
+        "actions": ["create"]
+      }
+    },
+    {
+      "address": "aws_iam_role.app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_iam_role",
+      "change": {
+        "actions": ["update"]
+      }
+    }
+  ]
+}

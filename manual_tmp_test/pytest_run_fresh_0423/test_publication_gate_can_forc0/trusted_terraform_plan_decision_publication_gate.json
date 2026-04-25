@@ -1,0 +1,142 @@
+{
+  "schema_version": "trusted_terraform_plan_decision_publication_gate.v1",
+  "recorded_at_utc": "2026-04-24T03:13:04.225165Z",
+  "proof_kind": "mixed",
+  "compare_scope": "trusted_terraform_plan_decision_v1",
+  "observed_path": "blocked",
+  "observed_result": "environment blocker",
+  "publication_decision": "blocked",
+  "public_trust_slice_action": "do_not_widen_public_trust_slice",
+  "truth_boundary_checks": [
+    {
+      "id": "setup_packet_alone_not_admission_evidence",
+      "status": "pass",
+      "input_present": false,
+      "admission_evidence": false
+    },
+    {
+      "id": "fixture_generation_alone_not_admission_evidence",
+      "status": "pass",
+      "input_present": false,
+      "admission_evidence": false
+    },
+    {
+      "id": "aws_setup_success_alone_not_admission_evidence",
+      "status": "pass",
+      "input_present": false,
+      "admission_evidence": false
+    },
+    {
+      "id": "runtime_smoke_success_is_live_smoke_only",
+      "status": "blocked",
+      "input_present": true,
+      "admission_evidence": false,
+      "northstar_admission_state": "paused_until_same_change_proof_envelope_rerun"
+    }
+  ],
+  "execution_mode": "forced_local_evidence",
+  "readiness_schema_version": "trusted_terraform_plan_decision_publication_readiness.v1",
+  "readiness_output_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_publication_readiness.json",
+  "gate_output_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_publication_gate.json",
+  "live_environment_preflight": {
+    "status": "blocked",
+    "required_env": [
+      "ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI",
+      "ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID",
+      "AWS_REGION or AWS_DEFAULT_REGION"
+    ],
+    "missing_env": [
+      "ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI",
+      "ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID",
+      "AWS_REGION"
+    ],
+    "aws_credentials_source": "standard AWS provider chain; not inspected or recorded"
+  },
+  "blocking_reasons": [
+    "runtime_environment_blocker:missing_required_env:AWS_REGION"
+  ],
+  "steps": [
+    {
+      "id": "proof_foundation",
+      "command": "python scripts/proof/verify_trusted_run_proof_foundation.py --output C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_publication_gate_can_forc0\\trusted_run_proof_foundation.json",
+      "output_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_run_proof_foundation.json",
+      "exit_code": 0,
+      "stdout": "foundation ok",
+      "observed_result": "success",
+      "claim_status": "",
+      "claim_tier": "",
+      "publication_decision": "",
+      "blocking_reasons": []
+    },
+    {
+      "id": "terraform_campaign",
+      "command": "python scripts/proof/run_trusted_terraform_plan_decision_campaign.py --output C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_publication_gate_can_forc0\\trusted_terraform_plan_decision_witness_verification.json",
+      "output_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_witness_verification.json",
+      "exit_code": 0,
+      "stdout": "campaign ok",
+      "observed_result": "success",
+      "claim_status": "",
+      "claim_tier": "verdict_deterministic",
+      "publication_decision": "",
+      "blocking_reasons": []
+    },
+    {
+      "id": "terraform_offline_claim",
+      "command": "python scripts/proof/verify_offline_trusted_run_claim.py --input C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_publication_gate_can_forc0\\trusted_terraform_plan_decision_witness_verification.json --claim verdict_deterministic --output C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_publication_gate_can_forc0\\trusted_terraform_plan_decision_offline_verifier.json",
+      "output_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_offline_verifier.json",
+      "exit_code": 0,
+      "stdout": "offline ok",
+      "observed_result": "success",
+      "claim_status": "allowed",
+      "claim_tier": "verdict_deterministic",
+      "publication_decision": "",
+      "blocking_reasons": []
+    },
+    {
+      "id": "provider_backed_governed_runtime",
+      "command": "python scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py --output C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_publication_gate_can_forc0\\trusted_terraform_plan_decision_live_runtime.json",
+      "output_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_live_runtime.json",
+      "exit_code": 1,
+      "stdout": "runtime",
+      "observed_result": "environment blocker",
+      "claim_status": "",
+      "claim_tier": "",
+      "publication_decision": "",
+      "blocking_reasons": []
+    },
+    {
+      "id": "terraform_publication_readiness",
+      "command": "python scripts/proof/check_trusted_terraform_publication_readiness.py --foundation-input C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_publication_gate_can_forc0\\trusted_run_proof_foundation.json --campaign-input C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_publication_gate_can_forc0\\trusted_terraform_plan_decision_witness_verification.json --offline-input C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_publication_gate_can_forc0\\trusted_terraform_plan_decision_offline_verifier.json --runtime-input C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_publication_gate_can_forc0\\trusted_terraform_plan_decision_live_runtime.json --output C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_publication_gate_can_forc0\\trusted_terraform_plan_decision_publication_readiness.json",
+      "output_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_publication_readiness.json",
+      "exit_code": 1,
+      "stdout": "readiness",
+      "observed_result": "environment blocker",
+      "claim_status": "",
+      "claim_tier": "",
+      "publication_decision": "blocked",
+      "blocking_reasons": [
+        "runtime_environment_blocker:missing_required_env:AWS_REGION"
+      ]
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-04-24T03:13:04.225751Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:d0af40c41900a1d05009a9b3c54a12e1b996ebe3cc30af42625c0861f3465a37",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 188,
+        "paths_total_reference": 188,
+        "churn_paths": 188,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

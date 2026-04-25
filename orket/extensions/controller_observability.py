@@ -11,8 +11,11 @@ from jsonschema.exceptions import ValidationError as JsonSchemaValidationError
 
 from orket_extension_sdk.controller import ControllerRunSummary, canonical_json
 
+CONTROLLER_OBSERVABILITY_PROJECTION_SOURCE = "controller_runtime_facts"
 _CONTROLLER_RUN_FIELDS = (
     "event",
+    "projection_source",
+    "projection_only",
     "run_id",
     "controller_workload",
     "execution_depth",
@@ -26,6 +29,8 @@ _CONTROLLER_RUN_FIELDS = (
 _DEFAULT_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "controller_observability_v1.json"
 _CONTROLLER_CHILD_FIELDS = (
     "event",
+    "projection_source",
+    "projection_only",
     "run_id",
     "child_index",
     "execution_order",
@@ -57,6 +62,8 @@ def emit_controller_run(
 ) -> dict[str, Any]:
     event = {
         "event": "controller_run",
+        "projection_source": CONTROLLER_OBSERVABILITY_PROJECTION_SOURCE,
+        "projection_only": True,
         "run_id": run_id,
         "controller_workload": controller_workload,
         "execution_depth": execution_depth,
@@ -82,6 +89,8 @@ def emit_controller_child(
 ) -> dict[str, Any]:
     event = {
         "event": "controller_child",
+        "projection_source": CONTROLLER_OBSERVABILITY_PROJECTION_SOURCE,
+        "projection_only": True,
         "run_id": run_id,
         "child_index": child_index,
         "execution_order": child_index,
@@ -232,6 +241,7 @@ __all__ = [
     "ObservabilityBatchSink",
     "canonical_projection",
     "canonicalize_event",
+    "CONTROLLER_OBSERVABILITY_PROJECTION_SOURCE",
     "emit_controller_child",
     "emit_controller_run",
     "emit_observability_batch",

@@ -95,6 +95,11 @@ async def test_run_epic_publishes_invocation_scoped_control_plane_run_for_incomp
     assert control_plane["attempt_state"] == "attempt_waiting"
     assert control_plane["step_id"] == step_record["step_id"]
     assert control_plane["step_kind"] == "cards_epic_session_start"
+    assert control_plane["checkpoint_id"] == CardsEpicControlPlaneService.checkpoint_id_for(
+        attempt_id=attempt_record["attempt_id"]
+    )
+    assert control_plane["checkpoint_resumability_class"] == "resume_forbidden"
+    assert control_plane["checkpoint_acceptance_outcome"] == "checkpoint_accepted"
 
     run = await pipeline.orchestrator.control_plane_execution_repository.get_run_record(run_id=run_record["run_id"])
     attempt = await pipeline.orchestrator.control_plane_execution_repository.get_attempt_record(
@@ -109,6 +114,12 @@ async def test_run_epic_publishes_invocation_scoped_control_plane_run_for_incomp
     configuration_snapshot = await pipeline.orchestrator.control_plane_repository.get_resolved_configuration_snapshot(
         snapshot_id=run_record["configuration_snapshot_id"]
     )
+    checkpoint = await pipeline.orchestrator.control_plane_repository.get_checkpoint(
+        checkpoint_id=CardsEpicControlPlaneService.checkpoint_id_for(attempt_id=attempt_record["attempt_id"])
+    )
+    checkpoint_acceptance = await pipeline.orchestrator.control_plane_repository.get_checkpoint_acceptance(
+        checkpoint_id=CardsEpicControlPlaneService.checkpoint_id_for(attempt_id=attempt_record["attempt_id"])
+    )
 
     assert run is not None
     assert run.lifecycle_state.value == "waiting_on_observation"
@@ -120,6 +131,17 @@ async def test_run_epic_publishes_invocation_scoped_control_plane_run_for_incomp
     assert policy_snapshot.policy_payload["entry_mode"] == "cards_epic_run"
     assert configuration_snapshot is not None
     assert configuration_snapshot.configuration_payload["session_id"] == "sess-cards-cp-incomplete"
+    assert checkpoint is not None
+    assert checkpoint.resumability_class.value == "resume_forbidden"
+    assert checkpoint_acceptance is not None
+    assert checkpoint_acceptance.outcome.value == "checkpoint_accepted"
+    effects = await pipeline.orchestrator.control_plane_repository.list_effect_journal_entries(run_id=run_record["run_id"])
+    assert [entry.effect_id for entry in effects] == [
+        CardsEpicControlPlaneService.effect_id_for(run_id=run_record["run_id"], stage="start"),
+        CardsEpicControlPlaneService.effect_id_for(run_id=run_record["run_id"], stage="wait"),
+    ]
+    assert effects[0].step_id == CardsEpicControlPlaneService.start_step_id_for(run_id=run_record["run_id"])
+    assert effects[1].step_id == CardsEpicControlPlaneService.closeout_step_id_for(run_id=run_record["run_id"])
 
 
 # Layer: integration
@@ -171,18 +193,32 @@ async def test_run_epic_publishes_completed_control_plane_run_for_success_path(
     assert control_plane["run_state"] == "completed"
     assert control_plane["attempt_id"] == attempt_record["attempt_id"]
     assert control_plane["attempt_state"] == "attempt_completed"
+    assert control_plane["checkpoint_id"] == CardsEpicControlPlaneService.checkpoint_id_for(
+        attempt_id=attempt_record["attempt_id"]
+    )
+    assert control_plane["checkpoint_acceptance_outcome"] == "checkpoint_accepted"
     final_truth = await pipeline.orchestrator.control_plane_repository.get_final_truth(run_id=run_record["run_id"])
     closeout_step = await pipeline.orchestrator.control_plane_execution_repository.get_step_record(
         step_id=CardsEpicControlPlaneService.closeout_step_id_for(run_id=run_record["run_id"])
     )
+    checkpoint = await pipeline.orchestrator.control_plane_repository.get_checkpoint(
+        checkpoint_id=CardsEpicControlPlaneService.checkpoint_id_for(attempt_id=attempt_record["attempt_id"])
+    )
     assert final_truth is not None
     assert final_truth.result_class is ResultClass.SUCCESS
+    assert checkpoint is not None
     assert final_truth.authoritative_result_ref == CardsEpicControlPlaneService.closeout_ref_for(
         run_id=run_record["run_id"],
         session_status="done",
     )
     assert closeout_step is not None
     assert closeout_step.output_ref == final_truth.authoritative_result_ref
+    effects = await pipeline.orchestrator.control_plane_repository.list_effect_journal_entries(run_id=run_record["run_id"])
+    assert [entry.effect_id for entry in effects] == [
+        CardsEpicControlPlaneService.effect_id_for(run_id=run_record["run_id"], stage="start"),
+        CardsEpicControlPlaneService.effect_id_for(run_id=run_record["run_id"], stage="closeout"),
+    ]
+    assert effects[-1].observed_result_ref == final_truth.authoritative_result_ref
 
 
 # Layer: integration

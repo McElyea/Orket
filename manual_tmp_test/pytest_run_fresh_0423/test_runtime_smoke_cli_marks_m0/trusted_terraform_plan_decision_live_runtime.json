@@ -1,0 +1,72 @@
+{
+  "schema_version": "trusted_terraform_plan_decision_live_runtime.v1",
+  "recorded_at_utc": "2026-04-24T03:13:04.071770Z",
+  "proof_kind": "live",
+  "runtime_mode": "provider_backed_smoke",
+  "observed_path": "blocked",
+  "observed_result": "environment blocker",
+  "workflow_result": "environment blocker",
+  "execution_status": "environment_blocker",
+  "reason": "missing_required_env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI,ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID,AWS_REGION",
+  "claim_tier": "non_deterministic_lab_only",
+  "compare_scope": "trusted_terraform_plan_decision_v1",
+  "operator_surface": "trusted_run_witness_report.v1",
+  "run_id": "trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+  "session_id": "trusted-terraform-plan-decision-runtime-smoke-01",
+  "plan_s3_uri": "",
+  "s3_input_ref": "",
+  "bedrock_model_id": "",
+  "aws_region": "",
+  "dynamodb_table": "TerraformReviews",
+  "plan_hash": "",
+  "provider_interaction_summary": [
+    {
+      "service": "s3",
+      "operation": "GetObject",
+      "resource_ref": "",
+      "status": "not_attempted"
+    },
+    {
+      "service": "bedrock-runtime",
+      "operation": "Unsupported",
+      "resource_ref": "",
+      "status": "not_attempted"
+    },
+    {
+      "service": "dynamodb",
+      "operation": "PutItem",
+      "resource_ref": "TerraformReviews",
+      "status": "not_attempted"
+    }
+  ],
+  "blocker_taxonomy": "missing_configuration",
+  "publish_decision": "no_publish",
+  "risk_verdict": "",
+  "summary_status": "summary_not_attempted",
+  "flow_request_ref": "",
+  "run_authority_ref": "",
+  "validator_ref": "",
+  "witness_bundle_ref": "",
+  "validator_result": {},
+  "witness_report": {},
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-04-24T03:13:04.071934Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:3c5f637553aea47b0dc0338cce3d988ccba9b1b0273282568e079a5e5c9a1c2b",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 86,
+        "paths_total_reference": 86,
+        "churn_paths": 86,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

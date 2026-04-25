@@ -1,7 +1,7 @@
 # Extension Capability Authorization V1
 
-Last updated: 2026-04-08
-Status: Active (implemented first-slice authority)
+Last updated: 2026-04-23
+Status: Active (implemented shipped-slice authority)
 Owner: Orket Core
 Archived lane requirements: `docs/projects/archive/ExtensionCapabilityAuthorization/ECA04082026-LANE-CLOSEOUT/EXTENSION_CAPABILITY_AUTHORIZATION_REQUIREMENTS.md`
 Implementation closeout authority: `docs/projects/archive/ExtensionCapabilityAuthorization/ECA04082026-LANE-CLOSEOUT/CLOSEOUT.md`
@@ -13,21 +13,23 @@ Related authority:
 
 ## Authority posture
 
-This document is the durable contract authority for the shipped Extension Capability Authorization first slice.
+This document is the durable contract authority for the shipped Extension Capability Authorization slice.
 
 It freezes:
 1. the canonical SDK capability authorization seam
 2. the host-to-child authorization envelope contract
 3. the capability authorization vocabulary and family matrix
-4. the deny-truth, telemetry, and audit-artifact contract for the first slice
+4. the deny-truth, telemetry, and audit-artifact contract for the shipped slice
+5. the shipped-slice control-plane execution publication boundary inside extension workload runs
 
-The implemented scope is limited to the first shipped slice:
+The implemented scope is limited to the shipped slice:
 1. host-issued authorization envelopes
 2. child-side revalidation across the subprocess boundary
-3. governed runtime enforcement for `model.generate`, `memory.query`, and `memory.write`
+3. governed runtime enforcement for `model.generate`, `memory.query`, `memory.write`, `speech.transcribe`, `tts.speak`, `audio.play`, `speech.play_clip`, and `voice.turn_control`
 4. emitted `sdk_capability_call_*` telemetry plus provenance and the canonical audit artifact
+5. first-class control-plane publication of extension workload start, shipped-slice capability-call steps/effects, pre-effect checkpoint, closeout, and terminal final truth
 
-This document does not claim broader closure for voice, TTS, audio, or turn-control capability families.
+This document does not claim that SDK capability registry invocation is part of the governed tool-dispatch lane.
 
 ## Purpose and scope
 
@@ -55,7 +57,8 @@ It is not runtime authorization.
 
 1. Engine-delegated extension actions that normalize into `run_card(...)` remain governed by `docs/specs/TOOL_EXECUTION_GATE_V1.md`.
 2. SDK capability authorization is a separate lane because capability registry invocation is not the same authority model as governed tool dispatch.
-3. Validation success under `orket ext validate <extension_root> --strict --json` remains declaration admissibility evidence only and does not grant runtime capability execution authority.
+3. The shipped slice now publishes its runtime execution into the enclosing extension workload control-plane run/effect boundary, but that does not make capability registry invocation part of the governed tool-dispatch lane.
+4. Validation success under `orket ext validate <extension_root> --strict --json` remains declaration admissibility evidence only and does not grant runtime capability execution authority.
 
 ## Authorization envelope
 
@@ -169,6 +172,21 @@ When a capability call is blocked for authorization reasons, provenance must pre
 `denial_class` must distinguish among `declared_invalid`, `undeclared_use`, `denied`, `admitted_unavailable`, and `authorization_drift`.
 Blocked-call provenance must not collapse those truths into a generic missing-capability shape.
 
+## Control-plane execution publication
+
+The shipped slice must publish capability execution into the enclosing extension workload control-plane run.
+
+Required publication on the shipped-slice runtime path:
+1. one extension workload `RunRecord`, initial `AttemptRecord`, and start `StepRecord`
+2. one supervisor-owned pre-effect `resume_forbidden` checkpoint plus acceptance
+3. one first-class `StepRecord` plus `EffectJournalEntryRecord` for each shipped-slice capability call in `call_records`
+4. one terminal closeout `StepRecord` plus `EffectJournalEntryRecord`
+5. one terminal `FinalTruthRecord`
+
+The operator-facing extension workload provenance/result surfaces may summarize that execution state, but they must self-identify as `projection_only` with source `control_plane_records`.
+
+For the shipped first slice, host-owned namespace enforcement must also scope stored SDK profile/session memory rows by extension id on the `memory.query` / `memory.write` path.
+
 ## Audit artifact schema
 
 The lane must publish a durable JSON audit artifact with schema `extension_capability_audit.v1`.
@@ -198,23 +216,33 @@ Each row must include at least:
 Deny and allow cases must not be mixed in one row.
 `denial_class` must preserve the observed deny truth when a case blocks for authorization reasons and must not collapse multiple deny classes into one generic blocked outcome.
 
-## First-slice proof requirements
+## Shipped-slice proof requirements
 
-The first implementation slice is limited to:
+The current shipped slice covers:
 1. `model.generate`
 2. `memory.query`
 3. `memory.write`
+4. `speech.transcribe`
+5. `tts.speak`
+6. `audio.play`
+7. `speech.play_clip`
+8. `voice.turn_control`
 
 This slice must prove:
 1. admitted read without write
 2. admitted write without read
-3. deny of undeclared use
-4. deny of declared-but-not-admitted use
-5. child-side authorization drift failure
+3. admitted model generation on a deterministic provider seam
+4. admitted voice/audio/turn-control execution across the shipped non-memory families
+5. deny of undeclared use
+6. deny of declared-but-not-admitted use, including a non-memory capability family
+7. child-side authorization drift failure
+8. shipped-slice capability calls publish into extension workload control-plane execution/effect truth
+9. shipped-slice SDK memory storage stays extension-scoped
 
 Current canonical proof entrypoints:
 1. `python -m pytest -q tests/runtime/test_extension_components.py`
 2. `python -m pytest -q tests/runtime/test_extension_manager.py`
 3. `python -m pytest -q tests/core/test_runtime_event_logging.py`
 4. `python -m pytest -q tests/runtime/test_extension_capability_authorization.py`
-5. `python scripts/extensions/build_extension_capability_audit.py --strict`
+5. `python -m pytest -q tests/scripts/test_build_extension_capability_audit.py`
+6. `python scripts/extensions/build_extension_capability_audit.py --strict`

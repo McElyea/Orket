@@ -1,0 +1,17 @@
+{
+  "artifact_dir": "C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_runtime_smoke_wrapper_can0\\workspace\\runtime\\trusted-terraform-plan-decision-runtime-smoke-01\\terraform_plan_reviews\\trace-explicit_destroy",
+  "artifact_paths": {
+    "input_artifact": "C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_runtime_smoke_wrapper_can0\\workspace\\runtime\\trusted-terraform-plan-decision-runtime-smoke-01\\terraform_plan_reviews\\trace-explicit_destroy\\input_artifact.json",
+    "deterministic_analysis": "C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_runtime_smoke_wrapper_can0\\workspace\\runtime\\trusted-terraform-plan-decision-runtime-smoke-01\\terraform_plan_reviews\\trace-explicit_destroy\\deterministic_analysis.json",
+    "model_summary": "C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_runtime_smoke_wrapper_can0\\workspace\\runtime\\trusted-terraform-plan-decision-runtime-smoke-01\\terraform_plan_reviews\\trace-explicit_destroy\\model_summary.json",
+    "final_review": "C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_runtime_smoke_wrapper_can0\\workspace\\runtime\\trusted-terraform-plan-decision-runtime-smoke-01\\terraform_plan_reviews\\trace-explicit_destroy\\final_review.json",
+    "governance_artifact": "C:\\Source\\Orket\\manual_tmp_test\\pytest_run_fresh_0423\\test_runtime_smoke_wrapper_can0\\workspace\\runtime\\trusted-terraform-plan-decision-runtime-smoke-01\\terraform_plan_reviews\\trace-explicit_destroy\\governance_artifact.json"
+  },
+  "artifact_hashes": {
+    "input_artifact": "sha256:f04030447c7b654d10a7655ba25da246bd7496ee127b160e82b23edce2cf1d9c",
+    "deterministic_analysis": "sha256:114e7a058d74cc3b115a0d9e9bc4c9b4fe3c22fefd8cbd148372fa12ae9d9923",
+    "model_summary": "sha256:f23d45cbf535529f2906a20de9e17cb6b3341a089a3d14b3f2c7eb2d9ec76590",
+    "final_review": "sha256:2d4a5a84d2fb5c9b448a7eb0bcdc413b3a0cc96b1eec035c589097675a153bb0",
+    "governance_artifact": "sha256:5369c93cd211d6e4b924045bd1834311f86285f02741a92ea3daeead97e8b825"
+  }
+}

@@ -12,6 +12,7 @@ from typing import Any
 
 from orket.extensions.import_guard import ExtensionImportGuard
 from orket.extensions.sdk_capability_authorization import (
+    FIRST_SLICE_CAPABILITIES,
     SdkAuthorizationEnvelope,
     SdkCapabilityAuditCase,
     capability_family,
@@ -172,6 +173,7 @@ def _build_context(
         workspace=workspace_root,
         artifact_root=output_dir,
         input_config=input_config,
+        extension_id=str(extension["extension_id"]),
         admitted_capabilities=set(envelope.admitted_capabilities),
         extra_first_slice_capabilities={
             str(item).strip() for item in list(request.get("child_extra_capabilities", [])) if str(item).strip()
@@ -180,7 +182,7 @@ def _build_context(
     try:
         instantiated_capabilities = revalidate_child_capabilities(envelope=envelope, raw_registry=raw_registry)
     except ValueError as exc:
-        drift_caps = sorted(set(raw_registry._providers).intersection({"memory.query", "memory.write", "model.generate"}) - set(envelope.admitted_capabilities))
+        drift_caps = sorted(set(raw_registry._providers).intersection(FIRST_SLICE_CAPABILITIES) - set(envelope.admitted_capabilities))
         return {
             "ok": False,
             "error_code": "E_SDK_CAPABILITY_AUTHORIZATION_DRIFT",

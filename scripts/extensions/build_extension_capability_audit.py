@@ -63,6 +63,43 @@ MODEL_GENERATE_SOURCE = "\n".join(
         "    return WorkloadResult(ok=True, output={'text': response.text, 'model': response.model})",
     ]
 )
+VOICE_FAMILY_SOURCE = "\n".join(
+    [
+        "from __future__ import annotations",
+        "from orket_extension_sdk import WorkloadResult",
+        "from orket_extension_sdk.audio import AudioClip",
+        "from orket_extension_sdk.voice import TranscribeRequest, VoiceTurnControlRequest",
+        "",
+        "def run_workload(ctx, payload):",
+        "    transcribed = ctx.capabilities.stt().transcribe(TranscribeRequest(audio_bytes=b''))",
+        "    clip = ctx.capabilities.tts().synthesize('hello there', voice_id='null')",
+        "    ctx.capabilities.audio_player().play(clip, blocking=False)",
+        "    ctx.capabilities.speech_player().play(",
+        "        AudioClip(sample_rate=22050, channels=1, samples=b'\\x00\\x01', format='pcm_s16le'),",
+        "        blocking=False,",
+        "    )",
+        "    turn = ctx.capabilities.voice_turn_controller().control(VoiceTurnControlRequest(command='start'))",
+        "    return WorkloadResult(",
+        "        ok=True,",
+        "        output={",
+        "            'stt_ok': transcribed.ok,",
+        "            'transcribe_error_code': transcribed.error_code or '',",
+        "            'turn_state': turn.state,",
+        "            'clip_format': clip.format,",
+        "        },",
+        "    )",
+    ]
+)
+TTS_SPEAK_SOURCE = "\n".join(
+    [
+        "from __future__ import annotations",
+        "from orket_extension_sdk import WorkloadResult",
+        "",
+        "def run_workload(ctx, payload):",
+        "    clip = ctx.capabilities.tts().synthesize('blocked proof', voice_id='null')",
+        "    return WorkloadResult(ok=True, output={'clip_format': clip.format})",
+    ]
+)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -133,7 +170,12 @@ async def _run_case(project_root: Path, case: dict[str, Any]) -> None:
             raise
 
 
-def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
+def _collect_rows(
+    project_root: Path,
+    *,
+    expected_results_by_test_case: dict[str, str],
+    expected_call_results_by_test_case: dict[str, dict[str, str]],
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for provenance_path in sorted((project_root / "workspace" / "extensions").rglob("provenance.json")):
         payload = json.loads(provenance_path.read_text(encoding="utf-8"))
@@ -141,12 +183,15 @@ def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
         if not isinstance(auth, dict):
             continue
         audit_case = dict(auth.get("audit_case") or {})
+        test_case = str(audit_case.get("test_case") or "")
+        expected_call_results = expected_call_results_by_test_case.get(test_case, {})
         for call_record in list(auth.get("call_records") or []):
             if not isinstance(call_record, dict):
                 continue
+            capability_id = str(call_record.get("capability_id") or "")
             rows.append(
                 {
-                    "test_case": str(audit_case.get("test_case") or ""),
+                    "test_case": test_case,
                     "extension_id": payload["extension"]["extension_id"],
                     "workload_id": payload["workload"]["workload_id"],
                     "authorization_surface": auth.get("authorization_surface", "host_authorized_capability_registry_v1"),
@@ -157,7 +202,10 @@ def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
                     "authorization_basis": auth.get("authorization_basis", ""),
                     "policy_version": auth.get("policy_version", ""),
                     "authorization_digest": auth.get("authorization_digest", ""),
-                    "expected_result": str(audit_case.get("expected_result") or ""),
+                    "expected_result": expected_call_results.get(
+                        capability_id,
+                        expected_results_by_test_case.get(test_case, str(audit_case.get("expected_result") or "")),
+                    ),
                     "observed_result": str(call_record.get("observed_result") or ""),
                     "denial_class": str(call_record.get("denial_class") or ""),
                     "proof_ref": str(audit_case.get("proof_ref") or PROOF_REF),
@@ -216,16 +264,68 @@ def _build_cases() -> list[dict[str, Any]]:
             "input_config": _controls(test_case="model_generate_allowed", expected_result="success", admit_only=["model.generate"]),
             "capabilities": {"model.generate": {"provider": "static_llm", "text": "static capability proof", "model": "static-model"}},
         },
+        {
+            "test_case": "voice_families_governed",
+            "expected_result": "mixed",
+            "module_source": VOICE_FAMILY_SOURCE,
+            "required_capabilities": [
+                "speech.transcribe",
+                "tts.speak",
+                "audio.play",
+                "speech.play_clip",
+                "voice.turn_control",
+            ],
+            "input_config": _controls(
+                test_case="voice_families_governed",
+                expected_result="mixed",
+                admit_only=[
+                    "speech.transcribe",
+                    "tts.speak",
+                    "audio.play",
+                    "speech.play_clip",
+                    "voice.turn_control",
+                ],
+            ),
+            "expected_call_results": {
+                "speech.transcribe": "failure",
+                "tts.speak": "success",
+                "audio.play": "success",
+                "speech.play_clip": "success",
+                "voice.turn_control": "success",
+            },
+        },
+        {
+            "test_case": "tts_speak_denied",
+            "expected_result": "blocked",
+            "module_source": TTS_SPEAK_SOURCE,
+            "required_capabilities": ["tts.speak", "memory.query"],
+            "input_config": _controls(
+                test_case="tts_speak_denied",
+                expected_result="blocked",
+                admit_only=["memory.query"],
+            ),
+        },
     ]
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    cases = _build_cases()
     with tempfile.TemporaryDirectory(prefix="orket-extension-capability-audit-") as temp_dir:
         project_root = Path(temp_dir).resolve()
-        for case in _build_cases():
+        for case in cases:
             asyncio.run(_run_case(project_root, case))
-        rows = _collect_rows(project_root)
+        rows = _collect_rows(
+            project_root,
+            expected_results_by_test_case={
+                str(case["test_case"]): str(case["expected_result"])
+                for case in cases
+            },
+            expected_call_results_by_test_case={
+                str(case["test_case"]): dict(case.get("expected_call_results") or {})
+                for case in cases
+            },
+        )
     payload = {
         "schema_version": "extension_capability_audit.v1",
         "authorization_surface": "host_authorized_capability_registry_v1",
@@ -233,7 +333,7 @@ def main(argv: list[str] | None = None) -> int:
     }
     persisted = write_payload_with_diff_ledger(Path(str(args.out)).resolve(), payload)
     if bool(args.strict):
-        expected_cases = {case["test_case"] for case in _build_cases()}
+        expected_cases = {case["test_case"] for case in cases}
         observed_cases = {row["test_case"] for row in rows}
         if expected_cases != observed_cases:
             return 1

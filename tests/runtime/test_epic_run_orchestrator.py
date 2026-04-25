@@ -123,11 +123,15 @@ class _ControlPlaneRecord:
 
 
 class _ControlPlaneService:
-    async def begin_execution(self, **_: Any) -> tuple[_ControlPlaneRecord, _ControlPlaneRecord, _ControlPlaneRecord]:
+    async def begin_execution(
+        self, **_: Any
+    ) -> tuple[_ControlPlaneRecord, _ControlPlaneRecord, _ControlPlaneRecord, _ControlPlaneRecord, _ControlPlaneRecord]:
         return (
             _ControlPlaneRecord("run-record"),
             _ControlPlaneRecord("attempt-record"),
             _ControlPlaneRecord("step-record"),
+            _ControlPlaneRecord("checkpoint-record"),
+            _ControlPlaneRecord("checkpoint-acceptance-record"),
         )
 
     async def finalize_execution(self, **_: Any) -> tuple[_ControlPlaneRecord, _ControlPlaneRecord]:

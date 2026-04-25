@@ -1,15 +1,27 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import UTC, datetime
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots, snapshot_digest
-from orket.core.contracts import AttemptRecord, RunRecord, StepRecord, WorkloadRecord
+from orket.core.contracts import (
+    AttemptRecord,
+    CheckpointAcceptanceRecord,
+    CheckpointRecord,
+    EffectJournalEntryRecord,
+    RunRecord,
+    StepRecord,
+    WorkloadRecord,
+)
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AttemptState,
     AuthoritySourceClass,
     CapabilityClass,
+    CheckpointReobservationClass,
+    CheckpointResumabilityClass,
     ClosureBasisClassification,
     CompletionClassification,
     DegradationClassification,
@@ -49,7 +61,7 @@ class CardsEpicControlPlaneService:
         workload: WorkloadRecord,
         resume_mode: bool,
         target_issue_id: str | None,
-    ) -> tuple[RunRecord, AttemptRecord, StepRecord]:
+    ) -> tuple[RunRecord, AttemptRecord, StepRecord, CheckpointRecord, CheckpointAcceptanceRecord]:
         created_at = self._utc_now()
         run_id = self.run_id_for(session_id=session_id, build_id=build_id, created_at=created_at)
         attempt_id = self.attempt_id_for(run_id=run_id)
@@ -126,7 +138,40 @@ class CardsEpicControlPlaneService:
                 closure_classification="step_completed",
             )
         )
-        return run, attempt, step
+        start_effect = await self._ensure_effect(
+            run=run,
+            attempt=attempt,
+            step=step,
+            stage="start",
+        )
+        checkpoint = await self.publication.publish_checkpoint(
+            checkpoint=CheckpointRecord(
+                checkpoint_id=self.checkpoint_id_for(attempt_id=attempt.attempt_id),
+                parent_ref=attempt.attempt_id,
+                creation_timestamp=created_at,
+                state_snapshot_ref=run.configuration_snapshot_id,
+                resumability_class=CheckpointResumabilityClass.RESUME_FORBIDDEN,
+                invalidation_conditions=[
+                    "cards_epic_resume_mode_drift",
+                    "cards_epic_target_issue_drift",
+                    "cards_epic_build_drift",
+                ],
+                dependent_resource_ids=step.resources_touched,
+                dependent_effect_refs=[],
+                policy_digest=run.policy_digest,
+                integrity_verification_ref=self.checkpoint_integrity_ref(run=run),
+            )
+        )
+        checkpoint_acceptance = await self.publication.accept_checkpoint(
+            acceptance_id=self.checkpoint_acceptance_id_for(attempt_id=attempt.attempt_id),
+            checkpoint=checkpoint,
+            supervisor_authority_ref=f"cards-epic-supervisor:{run.run_id}",
+            decision_timestamp=checkpoint.creation_timestamp,
+            required_reobservation_class=CheckpointReobservationClass.FULL,
+            integrity_verification_ref=checkpoint.integrity_verification_ref,
+            journal_entries=[start_effect],
+        )
+        return run, attempt, step, checkpoint, checkpoint_acceptance
 
     async def finalize_execution(
         self,
@@ -165,7 +210,7 @@ class CardsEpicControlPlaneService:
         validate_run_state_transition(current_state=run.lifecycle_state, next_state=next_run_state)
         run_update: dict[str, object] = {"lifecycle_state": next_run_state}
         if next_run_state in {RunState.COMPLETED, RunState.FAILED_TERMINAL}:
-            await self.execution_repository.save_step_record(
+            closeout_step = await self.execution_repository.save_step_record(
                 record=StepRecord(
                     step_id=self.closeout_step_id_for(run_id=run_id),
                     attempt_id=attempt.attempt_id,
@@ -178,6 +223,12 @@ class CardsEpicControlPlaneService:
                     receipt_refs=[closeout_ref],
                     closure_classification="step_completed",
                 )
+            )
+            await self._ensure_effect(
+                run=run,
+                attempt=attempt,
+                step=closeout_step,
+                stage="closeout",
             )
             truth = await self.publication.publish_final_truth(
                 final_truth_record_id=self.final_truth_id_for(run_id=run_id),
@@ -196,6 +247,27 @@ class CardsEpicControlPlaneService:
                 authoritative_result_ref=closeout_ref,
             )
             run_update["final_truth_record_id"] = truth.final_truth_record_id
+        else:
+            closeout_step = await self.execution_repository.save_step_record(
+                record=StepRecord(
+                    step_id=self.closeout_step_id_for(run_id=run_id),
+                    attempt_id=attempt.attempt_id,
+                    step_kind="cards_epic_session_wait",
+                    input_ref=self.start_step_id_for(run_id=run_id),
+                    output_ref=closeout_ref,
+                    capability_used=CapabilityClass.DETERMINISTIC_COMPUTE,
+                    resources_touched=[],
+                    observed_result_classification=f"cards_epic_session_{status}",
+                    receipt_refs=[closeout_ref],
+                    closure_classification="step_completed",
+                )
+            )
+            await self._ensure_effect(
+                run=run,
+                attempt=attempt,
+                step=closeout_step,
+                stage="wait",
+            )
         run = await self.execution_repository.save_run_record(record=run.model_copy(update=run_update))
         return run, attempt
 
@@ -233,6 +305,36 @@ class CardsEpicControlPlaneService:
     def final_truth_id_for(*, run_id: str) -> str:
         return f"{run_id}:final_truth"
 
+    @staticmethod
+    def checkpoint_id_for(*, attempt_id: str) -> str:
+        return f"cards-epic-checkpoint:{attempt_id}"
+
+    @staticmethod
+    def checkpoint_acceptance_id_for(*, attempt_id: str) -> str:
+        return f"cards-epic-checkpoint-acceptance:{attempt_id}"
+
+    @staticmethod
+    def effect_id_for(*, run_id: str, stage: str) -> str:
+        return f"cards-epic-effect:{run_id}:{sanitize_name(str(stage or 'unknown'))}"
+
+    @staticmethod
+    def journal_entry_id_for(*, run_id: str, stage: str) -> str:
+        return f"cards-epic-journal:{run_id}:{sanitize_name(str(stage or 'unknown'))}"
+
+    @staticmethod
+    def checkpoint_integrity_ref(*, run: RunRecord) -> str:
+        raw = json.dumps(
+            {
+                "run_id": run.run_id,
+                "policy_digest": run.policy_digest,
+                "configuration_digest": run.configuration_digest,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+        ).encode("ascii")
+        return f"cards-epic-checkpoint-integrity:sha256:{hashlib.sha256(raw).hexdigest()}"
+
     async def _require_run(self, *, run_id: str) -> RunRecord:
         run = await self.execution_repository.get_run_record(run_id=run_id)
         if run is None:
@@ -259,6 +361,33 @@ class CardsEpicControlPlaneService:
             normalized = f"{normalized[:-1]}+00:00"
         parsed = datetime.fromisoformat(normalized)
         return parsed.astimezone(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+
+    async def _ensure_effect(
+        self,
+        *,
+        run: RunRecord,
+        attempt: AttemptRecord,
+        step: StepRecord,
+        stage: str,
+    ) -> EffectJournalEntryRecord:
+        effect_id = self.effect_id_for(run_id=run.run_id, stage=stage)
+        existing = await self.publication.repository.list_effect_journal_entries(run_id=run.run_id)
+        for entry in existing:
+            if entry.effect_id == effect_id:
+                return entry
+        return await self.publication.append_effect_journal_entry(
+            journal_entry_id=self.journal_entry_id_for(run_id=run.run_id, stage=stage),
+            effect_id=effect_id,
+            run_id=run.run_id,
+            attempt_id=attempt.attempt_id,
+            step_id=step.step_id,
+            authorization_basis_ref=run.admission_decision_receipt_ref,
+            publication_timestamp=self._utc_now(),
+            intended_target_ref=f"cards-epic-run:{run.run_id}:lifecycle",
+            observed_result_ref=step.output_ref,
+            uncertainty_classification=ResidualUncertaintyClassification.NONE,
+            integrity_verification_ref=step.output_ref or run.admission_decision_receipt_ref,
+        )
 
 
 __all__ = [

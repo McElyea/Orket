@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-04-07
+Last reviewed: 2026-04-23
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -289,6 +289,31 @@ python scripts/benchmarks/check_volatility_boundaries.py
 python scripts/governance/sync_published_index.py --check
 ```
 
+## Trust Kernel Conformance Pack
+Authority: `docs/specs/FINITE_TRUST_KERNEL_MODEL_V1.md`, `docs/specs/PORTABLE_TRUST_CONFORMANCE_PACK_V1.md`, `docs/guides/TRUST_KERNEL_CONFORMANCE_PACK_GUIDE.md`
+
+1. Canonical local conformance command:
+```powershell
+$env:ORKET_DISABLE_SANDBOX='1'
+python scripts/proof/run_trust_conformance_pack.py
+```
+2. Supplied-fixture verification mode:
+```powershell
+$env:ORKET_DISABLE_SANDBOX='1'
+python scripts/proof/run_trust_conformance_pack.py --verify-fixture --packet <path-to-governed-change-packet.json>
+```
+3. Canonical output artifacts:
+   - `benchmarks/results/proof/trust_conformance_summary.json`
+   - `benchmarks/results/proof/finite_trust_kernel_model.json`
+   - `benchmarks/results/proof/governed_repo_change_packet.json`
+   - `benchmarks/results/proof/governed_repo_change_packet_verifier.json`
+4. Operator interpretation:
+   - the admitted compare scope is `trusted_repo_config_change_v1` only
+   - the claim ceiling is `verdict_deterministic`
+   - the command does not use AWS, remote providers, network services, or sandbox resource creation
+   - the command does not prove replay determinism, text determinism, or a new compare scope
+   - the conformance summary and finite-model report are claim-supporting derived evidence; they do not replace witness, validator, offline-verifier, or packet-verifier authority
+
 ## Terraform Plan Reviewer
 Authority: `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`
 
@@ -315,13 +340,14 @@ Optional environment:
 
 3. Thin live AWS smoke with explicit flags:
 ```bash
-python scripts/reviewrun/run_terraform_plan_review_live_smoke.py --plan-s3-uri s3://<bucket>/<key> --model-id anthropic.<model_id> --region <aws_region>
+python scripts/reviewrun/run_terraform_plan_review_live_smoke.py --plan-s3-uri s3://<bucket>/<key> --model-id <bedrock_model_or_inference_profile_id> --region <aws_region>
 ```
 Optional flags:
    - `--table-name TerraformReviews`
    - `--out .orket/durable/observability/terraform_plan_review_live_smoke.json`
    - `--execution-trace-ref terraform-plan-review-live-smoke`
    - `--policy-bundle-id terraform_plan_reviewer_v1`
+Supported smoke model families are defined in `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`; current examples include Anthropic Claude, Amazon Nova, and Writer Palmyra X4 (`writer.palmyra-x4-v1:0` or `us.writer.palmyra-x4-v1:0`).
 
 4. Canonical smoke output:
    - `.orket/durable/observability/terraform_plan_review_live_smoke.json`

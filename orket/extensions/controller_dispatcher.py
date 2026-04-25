@@ -52,6 +52,27 @@ class _ChildOutcome:
     error_code: str | None
 
 
+def _artifact_refs_for_run_result(run_result: Any) -> list[dict[str, Any]]:
+    refs = [
+        {"kind": "artifact_root", "path": str(run_result.artifact_root)},
+        {"kind": "provenance", "path": str(run_result.provenance_path)},
+    ]
+    control_plane = dict(getattr(run_result, "control_plane", {}) or {})
+    if control_plane:
+        refs.append(
+            {
+                "kind": "control_plane_projection",
+                "projection_source": str(control_plane.get("projection_source") or "control_plane_records"),
+                "projection_only": bool(control_plane.get("projection_only") is True),
+                "execution_state_authority": str(control_plane.get("execution_state_authority") or ""),
+                "lane_output_execution_state_authoritative": bool(
+                    control_plane.get("lane_output_execution_state_authoritative")
+                ),
+            }
+        )
+    return refs
+
+
 class ControllerDispatcher:
     """Sequential controller dispatcher using ExtensionManager as the only child authority."""
 
@@ -294,10 +315,7 @@ class ControllerDispatcher:
                     enforced_timeout=enforced_timeout_value,
                     requested_caps=caps.requested,
                     enforced_caps=caps.enforced,
-                    artifact_refs=[
-                        {"kind": "artifact_root", "path": str(run_result.artifact_root)},
-                        {"kind": "provenance", "path": str(run_result.provenance_path)},
-                    ],
+                    artifact_refs=_artifact_refs_for_run_result(run_result),
                     normalized_error=None,
                     summary=run_summary,
                 ),
@@ -313,10 +331,7 @@ class ControllerDispatcher:
                 requested_caps=caps.requested,
                 enforced_caps=caps.enforced,
                 summary=run_summary,
-                artifact_refs=[
-                    {"kind": "artifact_root", "path": str(run_result.artifact_root)},
-                    {"kind": "provenance", "path": str(run_result.provenance_path)},
-                ],
+                artifact_refs=_artifact_refs_for_run_result(run_result),
             ),
             error_code=ERROR_CHILD_EXECUTION_FAILED,
         )

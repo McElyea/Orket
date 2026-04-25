@@ -1,0 +1,222 @@
+{
+  "schema_version": "trusted_terraform_plan_decision_live_setup_packet.v1",
+  "recorded_at_utc": "2026-04-24T03:13:03.673634Z",
+  "proof_kind": "structural",
+  "packet_kind": "no_spend_live_run_setup",
+  "compare_scope": "trusted_terraform_plan_decision_v1",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "publication_decision": "not_evaluated",
+  "provider_calls_executed": [],
+  "live_execution_ready": true,
+  "live_execution_blockers": [],
+  "credential_handling": {
+    "credential_values_recorded": false,
+    "credentials_inspected": false,
+    "credentials_written_to_packet": false,
+    "credentials_expected_source": "standard AWS provider chain outside generated packet files"
+  },
+  "bucket": "orket-smoke-8804d8890306",
+  "key": "proof/terraform-plan.json",
+  "region": "us-east-1",
+  "model_id": "us.writer.palmyra-x4-v1:0",
+  "table_name": "TerraformReviewsSmoke_8804d8890306",
+  "s3_plan_uri": "s3://orket-smoke-8804d8890306/proof/terraform-plan.json",
+  "packet_root": "manual_tmp_test/pytest_run_fresh_0423/test_setup_commands_policy_cle0",
+  "packet_files": [
+    {
+      "path": "manual_tmp_test/pytest_run_fresh_0423/test_setup_commands_policy_cle0/terraform-plan-safe-smoke.plan.json",
+      "digest": "sha256:c845cdb6aedfbc165c63adba7fd65c473d6ad8f74a48e0bc5d698bd672c6ed20",
+      "size_bytes": 756
+    },
+    {
+      "path": "manual_tmp_test/pytest_run_fresh_0423/test_setup_commands_policy_cle0/live-run.env.template",
+      "digest": "sha256:42c3ae0975eee21bd73e659c5d18b2b99eb4a37b2dc7b51f627993e3882938a0",
+      "size_bytes": 808
+    },
+    {
+      "path": "manual_tmp_test/pytest_run_fresh_0423/test_setup_commands_policy_cle0/live-run-env.ps1.template",
+      "digest": "sha256:ed08137f741b658db0f46ff59e34a28311e73b148b97a9cd44794b113e35d29c",
+      "size_bytes": 898
+    },
+    {
+      "path": "manual_tmp_test/pytest_run_fresh_0423/test_setup_commands_policy_cle0/aws-cli-setup-commands.ps1",
+      "digest": "sha256:738ff517e65716007ec5e40d96ece6f2a9b35dd623f35e62c7551d288e965e9e",
+      "size_bytes": 1288
+    },
+    {
+      "path": "manual_tmp_test/pytest_run_fresh_0423/test_setup_commands_policy_cle0/aws-cli-cleanup-commands.ps1",
+      "digest": "sha256:82ed7374bb62b57fa9873505215eed34ee388e564e557ed078069f7dc56fbb03",
+      "size_bytes": 510
+    },
+    {
+      "path": "manual_tmp_test/pytest_run_fresh_0423/test_setup_commands_policy_cle0/least-privilege-runtime-policy.json",
+      "digest": "sha256:1f27d676d0c57d202508f3513cc171bc369e3ae22f23f6d920a091cb4bc52cbf",
+      "size_bytes": 829
+    },
+    {
+      "path": "manual_tmp_test/pytest_run_fresh_0423/test_setup_commands_policy_cle0/live-run-checklist.md",
+      "digest": "sha256:367d96e91e302a62fbf5f76da2e0b3608c62c5321ac4f7da0c5e09b52caa33e8",
+      "size_bytes": 1516
+    }
+  ],
+  "provider_calls_planned_for_setup_commands": [
+    {
+      "service": "s3",
+      "operation": "CreateBucket",
+      "iam_action": "s3:CreateBucket",
+      "count": 1,
+      "resource_hint": "orket-smoke-8804d8890306"
+    },
+    {
+      "service": "s3",
+      "operation": "PutPublicAccessBlock",
+      "iam_action": "s3:PutPublicAccessBlock",
+      "count": 1,
+      "resource_hint": "orket-smoke-8804d8890306"
+    },
+    {
+      "service": "s3",
+      "operation": "PutObject",
+      "iam_action": "s3:PutObject",
+      "count": 1,
+      "resource_hint": "s3://orket-smoke-8804d8890306/proof/terraform-plan.json"
+    },
+    {
+      "service": "dynamodb",
+      "operation": "CreateTable",
+      "iam_action": "dynamodb:CreateTable",
+      "count": 1,
+      "resource_hint": "TerraformReviewsSmoke_8804d8890306"
+    },
+    {
+      "service": "dynamodb",
+      "operation": "DescribeTable",
+      "iam_action": "dynamodb:DescribeTable",
+      "count": "waiter",
+      "resource_hint": "TerraformReviewsSmoke_8804d8890306"
+    }
+  ],
+  "provider_calls_planned_for_live_governed_proof": [
+    {
+      "service": "s3",
+      "operation": "GetObject",
+      "iam_action": "s3:GetObject",
+      "count": 1,
+      "resource_hint": "s3://orket-smoke-8804d8890306/proof/terraform-plan.json"
+    },
+    {
+      "service": "bedrock-runtime",
+      "operation": "Converse",
+      "iam_action": "bedrock:InvokeModel",
+      "count": 1,
+      "resource_hint": "us.writer.palmyra-x4-v1:0"
+    },
+    {
+      "service": "dynamodb",
+      "operation": "PutItem",
+      "iam_action": "dynamodb:PutItem",
+      "count": 1,
+      "resource_hint": "TerraformReviewsSmoke_8804d8890306"
+    }
+  ],
+  "provider_calls_planned_for_cleanup_commands": [
+    {
+      "service": "s3",
+      "operation": "DeleteObject",
+      "iam_action": "s3:DeleteObject",
+      "count": 1,
+      "resource_hint": "s3://orket-smoke-8804d8890306/proof/terraform-plan.json"
+    },
+    {
+      "service": "s3",
+      "operation": "DeleteBucket",
+      "iam_action": "s3:DeleteBucket",
+      "count": 1,
+      "resource_hint": "orket-smoke-8804d8890306"
+    },
+    {
+      "service": "dynamodb",
+      "operation": "DeleteTable",
+      "iam_action": "dynamodb:DeleteTable",
+      "count": 1,
+      "resource_hint": "TerraformReviewsSmoke_8804d8890306"
+    },
+    {
+      "service": "dynamodb",
+      "operation": "DescribeTable",
+      "iam_action": "dynamodb:DescribeTable",
+      "count": "waiter",
+      "resource_hint": "TerraformReviewsSmoke_8804d8890306"
+    }
+  ],
+  "provider_actions_planned": [
+    "s3:CreateBucket",
+    "s3:PutPublicAccessBlock",
+    "s3:PutObject",
+    "dynamodb:CreateTable",
+    "dynamodb:DescribeTable",
+    "s3:GetObject",
+    "bedrock:InvokeModel",
+    "dynamodb:PutItem",
+    "s3:DeleteObject",
+    "s3:DeleteBucket",
+    "dynamodb:DeleteTable"
+  ],
+  "least_privilege_runtime_actions": [
+    {
+      "action": "s3:GetObject",
+      "resource_hint": "s3://orket-smoke-8804d8890306/proof/terraform-plan.json"
+    },
+    {
+      "action": "bedrock:InvokeModel",
+      "resource_hint": "us.writer.palmyra-x4-v1:0"
+    },
+    {
+      "action": "dynamodb:PutItem",
+      "resource_hint": "TerraformReviewsSmoke_8804d8890306"
+    }
+  ],
+  "setup_action_checklist": [
+    "choose_unique_s3_bucket",
+    "configure_aws_credentials_outside_repo",
+    "create_s3_bucket",
+    "upload_plan_fixture",
+    "create_pay_per_request_dynamodb_table",
+    "run_no_spend_preflight"
+  ],
+  "expected_plan_hash": "sha256:748695fbb37011b98ccca248acecf2c9beea34642012c12b93cb41832f159b57",
+  "smoke_owner_marker": "northstar-disposable-aws-smoke:8804d8890306",
+  "next_commands": [
+    "python scripts/proof/check_trusted_terraform_live_setup_preflight.py --plan-s3-uri s3://orket-smoke-8804d8890306/proof/terraform-plan.json --model-id us.writer.palmyra-x4-v1:0 --region us-east-1 --table-name TerraformReviewsSmoke_8804d8890306",
+    "python scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py --output benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json",
+    "python scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py"
+  ],
+  "limitations": [
+    "generates local setup files only",
+    "does not call AWS",
+    "does not create or verify S3, DynamoDB, Bedrock, or IAM resources",
+    "does not prove credential validity or provider access",
+    "does not provide publication evidence by itself"
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-04-24T03:13:03.673980Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:c90b827dcc8b8054cd7a9aaec21a382f975744f855e87cbbd36f2184f91a4dd7",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 302,
+        "paths_total_reference": 302,
+        "churn_paths": 302,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

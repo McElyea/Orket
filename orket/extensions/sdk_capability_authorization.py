@@ -10,7 +10,16 @@ from orket_extension_sdk.capabilities import CapabilityRegistry, load_capability
 AUTHORIZATION_SURFACE = "host_authorized_capability_registry_v1"
 AUTHORIZATION_POLICY_VERSION = "extension_capability_authorization.v1"
 HOST_CONTROLS_INPUT_KEY = "__orket_host_capability_authorization__"
-FIRST_SLICE_CAPABILITIES = ("model.generate", "memory.query", "memory.write")
+FIRST_SLICE_CAPABILITIES = (
+    "audio.play",
+    "memory.query",
+    "memory.write",
+    "model.generate",
+    "speech.play_clip",
+    "speech.transcribe",
+    "tts.speak",
+    "voice.turn_control",
+)
 STRUCTURAL_CONTEXT_CAPABILITIES = ("artifact.root", "workspace.root")
 _CAPABILITY_FAMILIES = {
     "model.generate": "model_io",

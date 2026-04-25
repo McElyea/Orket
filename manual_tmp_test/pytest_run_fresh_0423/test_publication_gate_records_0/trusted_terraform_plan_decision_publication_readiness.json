@@ -1,0 +1,1 @@
+{"schema_version": "trusted_terraform_plan_decision_publication_readiness.v1", "observed_result": "environment blocker", "publication_decision": "blocked", "blocking_reasons": ["runtime_environment_blocker:missing_required_env:AWS_REGION"]}

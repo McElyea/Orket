@@ -1,0 +1,55 @@
+{
+  "publication_id": "trusted-terraform-audit:trusted-terraform-run:trusted-terraform-plan-decision-runtime-smoke-01:0001",
+  "table_name": "TerraformReviews",
+  "item": {
+    "plan_hash": "sha256:6826e3073cd17e7a61289d3be5af06841c5b61b8c1dae1930a7765d1bd94eb2d",
+    "plan_s3_uri": "s3://terraform-review-fixtures/explicit_destroy.plan.json",
+    "risk_verdict": "risky_for_v1_policy",
+    "forbidden_operation_hits": [
+      {
+        "operation": "destroy",
+        "address": "aws_s3_bucket.logs",
+        "provider_name": "registry.terraform.io/hashicorp/aws",
+        "resource_type": "aws_s3_bucket"
+      }
+    ],
+    "resource_change_summary": {
+      "total_changes": 2,
+      "action_counts": {
+        "create": 0,
+        "update": 1,
+        "destroy": 1,
+        "replace": 0,
+        "no-op": 0
+      }
+    },
+    "model_id": "bedrock.fake",
+    "summary": "Deterministic review completed.",
+    "summary_status": "summary_available",
+    "policy_bundle_id": "terraform_plan_reviewer_v1",
+    "execution_trace_ref": "trace-explicit_destroy",
+    "created_at": "2026-03-22T00:00:00Z",
+    "stored_in_dynamodb": false
+  },
+  "audit_item_digest": "sha256:eb5f1e85bee447a3f308d7b322d5f88f362dc9153d6338ac4ba9cd1409964a29",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-04-24T03:13:51.626354Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:cbf334c621830e0933b02534379754a0f8f281da3ec4b6d0c5a8e2da7eafe2ef",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 51,
+        "paths_total_reference": 51,
+        "churn_paths": 51,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

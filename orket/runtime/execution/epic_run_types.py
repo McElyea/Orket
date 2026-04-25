@@ -109,6 +109,8 @@ class EpicRunContext:
     control_plane_run: Any
     control_plane_attempt: Any
     control_plane_start_step: Any
+    control_plane_checkpoint: Any
+    control_plane_checkpoint_acceptance: Any
     run_contract_artifacts: dict[str, Any]
 
 

@@ -294,6 +294,47 @@ async def test_agent_run_records_optional_effect_journal_entry(monkeypatch, tmp_
 
 
 @pytest.mark.asyncio
+async def test_agent_direct_tool_execution_requires_journal_authority(monkeypatch, tmp_path: Path) -> None:
+    """Layer: unit. Verifies legacy Agent.run blocks direct tool execution without effect-journal authority."""
+    monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
+    calls: list[dict[str, Any]] = []
+
+    class _ToolProvider:
+        model = "unknown-7b"
+
+        async def complete(
+            self,
+            messages: list[dict[str, str]],
+            runtime_context: dict[str, Any] | None = None,
+        ) -> str:
+            return '{"tool":"write_file","args":{"path":"a.txt","content":"blocked"}}'
+
+    class _AllowAllGate:
+        async def validate(self, tool_name: str, args: dict[str, Any], context: dict[str, Any], roles: list[str]) -> str | None:
+            return None
+
+    async def _tool(args: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+        calls.append(dict(args))
+        return {"ok": True}
+
+    agent = Agent(
+        "coder",
+        "description",
+        {"write_file": _tool},
+        _ToolProvider(),
+        config_root=tmp_path,
+        strict_config=False,
+        tool_gate=_AllowAllGate(),
+    )
+
+    turn = await agent.run({"description": "do work"}, {"issue_id": "ISSUE-1", "roles": ["coder"]}, tmp_path)
+
+    assert calls == []
+    assert turn.tool_calls[0].error_class is ToolCallErrorClass.GATE_BLOCKED
+    assert "effect-journal authority" in str(turn.tool_calls[0].error)
+
+
+@pytest.mark.asyncio
 async def test_agent_run_renders_context_as_delimited_labeled_data(monkeypatch, tmp_path: Path) -> None:
     """Layer: unit. Verifies user-controlled context is rendered as labeled data instead of inline instructions."""
     monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)

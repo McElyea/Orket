@@ -1,0 +1,25 @@
+{
+  "execution_status": "success",
+  "publish_decision": "normal_publish",
+  "policy_violation_type": "",
+  "blocked_capability": "",
+  "durable_mutations_attempted": [
+    "dynamodb:TerraformReviews"
+  ],
+  "durable_mutations_allowed": [
+    "dynamodb:TerraformReviews"
+  ],
+  "adapter_calls_attempted": [
+    "read_s3_object",
+    "invoke_bedrock_model",
+    "put_dynamodb_item"
+  ],
+  "adapter_calls_blocked": [],
+  "deterministic_analysis_complete": true,
+  "summary_status": "summary_available",
+  "final_verdict_source": "deterministic_analysis",
+  "policy_bundle_id": "terraform_plan_reviewer_v1",
+  "execution_trace_ref": "trace-explicit_destroy",
+  "observed_path_classification": "primary",
+  "observed_result_classification": "success"
+}

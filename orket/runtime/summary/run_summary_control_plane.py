@@ -4,7 +4,7 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
-from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
+from orket.core.contracts import AttemptRecord, CheckpointAcceptanceRecord, CheckpointRecord, RunRecord, StepRecord
 
 _ModelT = TypeVar("_ModelT", bound=BaseModel)
 
@@ -13,7 +13,18 @@ def build_control_plane_summary_projection(*, artifacts: dict[str, Any]) -> dict
     run_record = _validated_record(artifacts.get("control_plane_run_record"), RunRecord)
     attempt_record = _validated_record(artifacts.get("control_plane_attempt_record"), AttemptRecord)
     step_record = _validated_record(artifacts.get("control_plane_step_record"), StepRecord)
-    if run_record is None and attempt_record is None and step_record is None:
+    checkpoint_record = _validated_record(artifacts.get("control_plane_checkpoint_record"), CheckpointRecord)
+    checkpoint_acceptance_record = _validated_record(
+        artifacts.get("control_plane_checkpoint_acceptance_record"),
+        CheckpointAcceptanceRecord,
+    )
+    if (
+        run_record is None
+        and attempt_record is None
+        and step_record is None
+        and checkpoint_record is None
+        and checkpoint_acceptance_record is None
+    ):
         return None
 
     payload: dict[str, Any] = {
@@ -76,6 +87,12 @@ def build_control_plane_summary_projection(*, artifacts: dict[str, Any]) -> dict
         receipt_refs = [str(token).strip() for token in (step_record.get("receipt_refs") or []) if str(token).strip()]
         if receipt_refs:
             payload["step_receipt_refs"] = receipt_refs
+    if checkpoint_record is not None:
+        payload["checkpoint_id"] = checkpoint_record["checkpoint_id"]
+        payload["checkpoint_resumability_class"] = checkpoint_record["resumability_class"]
+    if checkpoint_acceptance_record is not None:
+        payload["checkpoint_acceptance_id"] = checkpoint_acceptance_record["acceptance_id"]
+        payload["checkpoint_acceptance_outcome"] = checkpoint_acceptance_record["outcome"]
     return payload
 
 

@@ -1,0 +1,1 @@
+{"schema_version": "offline_trusted_run_verifier.v1", "compare_scope": "trusted_terraform_plan_decision_v1", "observed_result": "success", "claim_status": "allowed", "claim_tier": "verdict_deterministic"}

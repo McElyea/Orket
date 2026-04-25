@@ -1,0 +1,89 @@
+{
+  "schema_version": "trusted_terraform_plan_decision_publication_readiness.v1",
+  "recorded_at_utc": "2026-04-24T03:13:04.219670Z",
+  "proof_kind": "mixed",
+  "compare_scope": "trusted_terraform_plan_decision_v1",
+  "observed_path": "blocked",
+  "observed_result": "environment blocker",
+  "publication_decision": "blocked",
+  "public_trust_slice_action": "do_not_widen_public_trust_slice",
+  "claim_tier_ceiling": "internal_only",
+  "required_checks": [
+    "proof_foundation_success",
+    "terraform_campaign_verdict_deterministic",
+    "terraform_offline_claim_allowed",
+    "provider_backed_governed_runtime_success"
+  ],
+  "passed_checks": [
+    "proof_foundation_success",
+    "terraform_campaign_verdict_deterministic",
+    "terraform_offline_claim_allowed"
+  ],
+  "failed_checks": [
+    {
+      "id": "provider_backed_governed_runtime_success",
+      "status": "blocked",
+      "input_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_live_runtime.json",
+      "blocking_reasons": [
+        "runtime_environment_blocker:missing_required_env:AWS_REGION"
+      ]
+    }
+  ],
+  "blocking_reasons": [
+    "runtime_environment_blocker:missing_required_env:AWS_REGION"
+  ],
+  "input_refs": {
+    "proof_foundation": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_run_proof_foundation.json",
+    "campaign": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_witness_verification.json",
+    "offline_claim": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_offline_verifier.json",
+    "provider_backed_runtime": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_live_runtime.json"
+  },
+  "checks": [
+    {
+      "id": "proof_foundation_success",
+      "status": "pass",
+      "input_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_run_proof_foundation.json",
+      "blocking_reasons": []
+    },
+    {
+      "id": "terraform_campaign_verdict_deterministic",
+      "status": "pass",
+      "input_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_witness_verification.json",
+      "blocking_reasons": []
+    },
+    {
+      "id": "terraform_offline_claim_allowed",
+      "status": "pass",
+      "input_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_offline_verifier.json",
+      "blocking_reasons": []
+    },
+    {
+      "id": "provider_backed_governed_runtime_success",
+      "status": "blocked",
+      "input_ref": "manual_tmp_test/pytest_run_fresh_0423/test_publication_gate_can_forc0/trusted_terraform_plan_decision_live_runtime.json",
+      "blocking_reasons": [
+        "runtime_environment_blocker:missing_required_env:AWS_REGION"
+      ]
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-04-24T03:13:04.220380Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:6e29b2377f939ebc1c93595507b5d53ac372898ab2c5377797bd07d0ed4d27d0",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 92,
+        "paths_total_reference": 92,
+        "churn_paths": 92,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

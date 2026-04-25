@@ -1,6 +1,6 @@
 # ReviewRun v0 Contract
 
-Last reviewed: 2026-03-28
+Last reviewed: 2026-04-23
 
 ## Summary
 `ReviewRun` is a manual, snapshot-driven review primitive.
@@ -132,10 +132,11 @@ Review-lane artifact authority markers:
 Result projection requirement:
 1. The returned review result and CLI JSON surface may include a `control_plane` summary projection.
 2. When present, that projection must declare `projection_source: control_plane_records` and `projection_only: true`.
-3. When present, that projection must preserve projected lifecycle state: if `run_id` is present, it must also carry `run_state`, `workload_id`, `workload_version`, `policy_snapshot_id`, and `configuration_snapshot_id`; if `attempt_id` is present, it must also carry `attempt_state` and a positive `attempt_ordinal`; if `step_id` is present, it must also carry `step_kind`.
-4. When present, that projection must also preserve control-plane id hierarchy: if `attempt_id` or `step_id` is present, `run_id` must also be present, if `step_id` is present, `attempt_id` must also be present, if `attempt_state` or `attempt_ordinal` is present, `attempt_id` must also be present, and if `step_kind` is present, `step_id` must also be present.
-5. When present, that projection's `run_id` must match the enclosing review result `run_id`, its `attempt_id` and `step_id` must stay in that projected run lineage, its `attempt_id` and `step_id` must match the embedded manifest control-plane refs when those refs are present, and the embedded manifest must preserve matching `control_plane_run_id` / `control_plane_attempt_id` / `control_plane_step_id` refs whenever the returned projection carries them.
-6. That projection is read from durable control-plane records and is not a second authority surface.
-7. The embedded `manifest` returned through review result and CLI JSON must also fail closed if its persisted execution-authority markers or control-plane run identity drift, if its attempt or step refs drift outside the declared `control_plane_run_id` lineage, or if it omits control-plane refs still carried by the returned `control_plane` projection.
-8. Review CLI commands must surface that serialization failure as a normal structured review error instead of an uncaught exception.
-9. Review-lane artifacts remain review evidence and decision input/output only; they are not execution-state authority.
+3. When present, that projection may also surface the supervisor-owned pre-effect checkpoint summary through `checkpoint_id`, `checkpoint_resumability_class`, `checkpoint_acceptance_id`, and `checkpoint_acceptance_outcome`.
+4. When present, that projection must preserve projected lifecycle state: if `run_id` is present, it must also carry `run_state`, `workload_id`, `workload_version`, `policy_snapshot_id`, and `configuration_snapshot_id`; if `attempt_id` is present, it must also carry `attempt_state` and a positive `attempt_ordinal`; if `step_id` is present, it must also carry `step_kind`.
+5. When present, that projection must also preserve control-plane id hierarchy: if `attempt_id` or `step_id` is present, `run_id` must also be present, if `step_id` is present, `attempt_id` must also be present, if `attempt_state` or `attempt_ordinal` is present, `attempt_id` must also be present, if `step_kind` is present, `step_id` must also be present, if `checkpoint_id` is present, `attempt_id` plus `checkpoint_resumability_class` must also be present, and if `checkpoint_acceptance_id` or `checkpoint_acceptance_outcome` is present, `checkpoint_id` must also be present.
+6. When present, that projection's `run_id` must match the enclosing review result `run_id`, its `attempt_id`, `step_id`, `checkpoint_id`, and `checkpoint_acceptance_id` must stay in that projected run or attempt lineage, its `attempt_id` and `step_id` must match the embedded manifest control-plane refs when those refs are present, and the embedded manifest must preserve matching `control_plane_run_id` / `control_plane_attempt_id` / `control_plane_step_id` refs whenever the returned projection carries them.
+7. That projection is read from durable control-plane records and is not a second authority surface.
+8. The embedded `manifest` returned through review result and CLI JSON must also fail closed if its persisted execution-authority markers or control-plane run identity drift, if its attempt or step refs drift outside the declared `control_plane_run_id` lineage, or if it omits control-plane refs still carried by the returned `control_plane` projection.
+9. Review CLI commands must surface that serialization failure as a normal structured review error instead of an uncaught exception.
+10. Review-lane artifacts remain review evidence and decision input/output only; they are not execution-state authority.

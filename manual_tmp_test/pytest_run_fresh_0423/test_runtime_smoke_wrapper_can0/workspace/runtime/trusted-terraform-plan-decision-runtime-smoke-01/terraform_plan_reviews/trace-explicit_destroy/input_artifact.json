@@ -1,0 +1,8 @@
+{
+  "plan_s3_uri": "s3://terraform-review-fixtures/explicit_destroy.plan.json",
+  "plan_hash": "sha256:6826e3073cd17e7a61289d3be5af06841c5b61b8c1dae1930a7765d1bd94eb2d",
+  "size_bytes": 461,
+  "content_type": "application/json",
+  "parse_mode": "terraform_json_plan",
+  "fetch_error": ""
+}

@@ -1,0 +1,35 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadSmokeTerraformPlan",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::orket-smoke-proof-bucket-123456/proof/terraform-plan.json"
+      ]
+    },
+    {
+      "Sid": "InvokeConfiguredBedrockModel",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:us-east-1:<account-id>:inference-profile/us.writer.palmyra-x4-v1:0"
+      ]
+    },
+    {
+      "Sid": "WriteTerraformReviewAudit",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:us-east-1:<account-id>:table/TerraformReviewsSmoke"
+      ]
+    }
+  ]
+}

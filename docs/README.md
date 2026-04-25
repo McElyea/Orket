@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-04-19
+Last reviewed: 2026-04-23
 
 This index is the canonical map for markdown docs under `docs/`, excluding `docs/projects/**` and excluding non-markdown artifacts such as schemas, JSON snapshots, and YAML scenarios.
 
@@ -88,6 +88,8 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 61. `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`
 62. `docs/specs/TRUSTED_CHANGE_SCOPE_ADMISSION_STANDARD_V1.md`
 63. `docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md`
+64. `docs/specs/FINITE_TRUST_KERNEL_MODEL_V1.md`
+65. `docs/specs/PORTABLE_TRUST_CONFORMANCE_PACK_V1.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -121,6 +123,7 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 8. `docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md`
 9. `docs/guides/GOVERNED_REPO_CHANGE_PACKET_GUIDE.md`
 10. `docs/guides/TRUSTED_TERRAFORM_PLAN_DECISION_SCOPE_GUIDE.md`
+11. `docs/guides/TRUST_KERNEL_CONFORMANCE_PACK_GUIDE.md`
 
 ## ODR Research
 1. `docs/odr/requirements.md`
@@ -179,6 +182,7 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 49. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_LIVE_SETUP_PREFLIGHT_2026-04-19.md`
 50. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_LIVE_SETUP_PACKET_2026-04-19.md`
 51. `docs/architecture/CONTRACT_DELTA_GOVERNED_CHANGE_PACKET_V1_2026-04-19.md`
+52. `docs/architecture/CONTRACT_DELTA_EXTENSION_CAPABILITY_SLICE_AND_PROJECTION_SURFACES_2026-04-23.md`
 
 ## Releases
 1. `docs/releases/0.4.0/PROOF_REPORT.md`

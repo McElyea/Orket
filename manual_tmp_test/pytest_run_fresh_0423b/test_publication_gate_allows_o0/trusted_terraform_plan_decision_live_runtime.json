@@ -1,0 +1,1 @@
+{"schema_version": "trusted_terraform_plan_decision_live_runtime.v1", "compare_scope": "trusted_terraform_plan_decision_v1", "observed_result": "success", "execution_status": "success", "reason": "", "witness_bundle_ref": "workspace/trusted_terraform_plan_decision/runs/session/trusted_run_witness_bundle.json", "witness_report": {"observed_result": "success"}}

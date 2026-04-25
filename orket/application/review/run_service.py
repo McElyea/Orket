@@ -423,7 +423,7 @@ class ReviewRunService:
         control_plane_attempt_id = ""
         control_plane_step_id = ""
         try:
-            _, control_plane_attempt, control_plane_step = run_coro_sync(
+            _, control_plane_attempt, control_plane_step, _control_plane_checkpoint = run_coro_sync(
                 self.review_control_plane_service.begin_execution(
                     run_id=run_id,
                     snapshot=snapshot,

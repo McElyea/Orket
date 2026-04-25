@@ -1,0 +1,35 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadSmokeTerraformPlan",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::orket-smoke-proof-bucket-123456/proof/terraform-plan.json"
+      ]
+    },
+    {
+      "Sid": "InvokeConfiguredBedrockModel",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:us-west-2::foundation-model/cohere.fake-model"
+      ]
+    },
+    {
+      "Sid": "WriteTerraformReviewAudit",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:us-west-2:<account-id>:table/TerraformReviewsSmoke"
+      ]
+    }
+  ]
+}

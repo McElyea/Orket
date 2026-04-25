@@ -1,0 +1,11 @@
+# Generated local template. Do not put AWS secret values in this file.
+$env:AWS_REGION = "us-east-1"
+$env:AWS_DEFAULT_REGION = "us-east-1"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI = "s3://orket-smoke-8804d8890306/proof/terraform-plan.json"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID = "us.writer.palmyra-x4-v1:0"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_TABLE = "TerraformReviewsSmoke_8804d8890306"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_CREATED_AT = "2026-04-19T00:00:00Z"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_TRACE_REF = "northstar-disposable-aws-smoke"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_POLICY_BUNDLE_ID = "terraform_plan_reviewer_v1"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_EXPECTED_PLAN_HASH = "sha256:748695fbb37011b98ccca248acecf2c9beea34642012c12b93cb41832f159b57"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_OWNER_MARKER = "northstar-disposable-aws-smoke:8804d8890306"

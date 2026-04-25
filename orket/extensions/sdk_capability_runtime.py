@@ -6,8 +6,18 @@ from typing import Any, Callable, TypeVar
 
 from orket.logging import log_event
 from orket_extension_sdk.capabilities import CapabilityRegistry
+from orket_extension_sdk.audio import AudioClip, AudioPlayer, NullAudioPlayer, TTSProvider, VoiceInfo
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse, LLMProvider
 from orket_extension_sdk.memory import MemoryProvider, MemoryQueryRequest, MemoryQueryResponse, MemoryWriteRequest, MemoryWriteResponse
+from orket_extension_sdk.voice import (
+    STTProvider,
+    TranscribeRequest,
+    TranscribeResponse,
+    VoiceTurnControlRequest,
+    VoiceTurnControlResponse,
+    VoiceTurnController,
+    VoiceTurnState,
+)
 
 from .sdk_capability_authorization import (
     FIRST_SLICE_CAPABILITIES,
@@ -255,6 +265,107 @@ class GovernedMemoryProvider:
         return self._tracker.invoke("memory.query", operation, side_effect_observed=lambda _response: False)
 
 
+class GovernedSTTProvider:
+    def __init__(self, *, tracker: SdkCapabilityTracker, delegate: STTProvider | None) -> None:
+        self._tracker = tracker
+        self._delegate = delegate
+
+    def transcribe(self, request: TranscribeRequest) -> TranscribeResponse:
+        operation = (lambda: self._delegate.transcribe(request)) if self._delegate is not None else None
+        return self._tracker.invoke("speech.transcribe", operation, side_effect_observed=lambda _response: False)
+
+
+class GovernedTTSProvider:
+    def __init__(self, *, tracker: SdkCapabilityTracker, delegate: TTSProvider | None) -> None:
+        self._tracker = tracker
+        self._delegate = delegate
+
+    def synthesize(
+        self,
+        text: str,
+        voice_id: str,
+        emotion_hint: str = "neutral",
+        speed: float = 1.0,
+    ) -> AudioClip:
+        operation = (
+            lambda: self._delegate.synthesize(
+                text,
+                voice_id,
+                emotion_hint=emotion_hint,
+                speed=speed,
+            )
+        ) if self._delegate is not None else None
+        return self._tracker.invoke("tts.speak", operation, side_effect_observed=lambda _clip: False)
+
+    def list_voices(self) -> list[VoiceInfo]:
+        if self._delegate is None:
+            return []
+        return self._delegate.list_voices()
+
+
+class GovernedAudioPlayer:
+    def __init__(
+        self,
+        *,
+        tracker: SdkCapabilityTracker,
+        delegate: AudioPlayer | None,
+        capability_id: str,
+    ) -> None:
+        self._tracker = tracker
+        self._delegate = delegate
+        self._capability_id = capability_id
+
+    def play(self, clip: AudioClip, blocking: bool = False) -> None:
+        operation = (lambda: self._invoke_play(clip=clip, blocking=blocking)) if self._delegate is not None else None
+        self._tracker.invoke(
+            self._capability_id,
+            operation,
+            side_effect_observed=self._side_effect_observed,
+        )
+
+    def stop(self) -> None:
+        operation = self._invoke_stop if self._delegate is not None else None
+        self._tracker.invoke(
+            self._capability_id,
+            operation,
+            side_effect_observed=self._side_effect_observed,
+        )
+
+    def _invoke_play(self, *, clip: AudioClip, blocking: bool) -> AudioPlayer:
+        if self._delegate is None:
+            raise ValueError("E_SDK_CAPABILITY_UNAVAILABLE")
+        self._delegate.play(clip, blocking=blocking)
+        return self._delegate
+
+    def _invoke_stop(self) -> AudioPlayer:
+        if self._delegate is None:
+            raise ValueError("E_SDK_CAPABILITY_UNAVAILABLE")
+        self._delegate.stop()
+        return self._delegate
+
+    @staticmethod
+    def _side_effect_observed(delegate: AudioPlayer) -> bool:
+        return not isinstance(delegate, NullAudioPlayer)
+
+
+class GovernedVoiceTurnController:
+    def __init__(self, *, tracker: SdkCapabilityTracker, delegate: VoiceTurnController | None) -> None:
+        self._tracker = tracker
+        self._delegate = delegate
+
+    def control(self, request: VoiceTurnControlRequest) -> VoiceTurnControlResponse:
+        operation = (lambda: self._delegate.control(request)) if self._delegate is not None else None
+        return self._tracker.invoke(
+            "voice.turn_control",
+            operation,
+            side_effect_observed=lambda response: bool(getattr(response, "ok", False)),
+        )
+
+    def state(self) -> VoiceTurnState:
+        operation = self._delegate.state if self._delegate is not None else None
+        return self._tracker.invoke("voice.turn_control", operation, side_effect_observed=lambda _state: False)
+
+
 def build_governed_sdk_capability_registry(
     *,
     raw_registry: CapabilityRegistry,
@@ -277,6 +388,11 @@ def build_governed_sdk_capability_registry(
     )
     memory_delegate = raw_providers.get("memory.write") or raw_providers.get("memory.query")
     llm_delegate = raw_providers.get("model.generate")
+    stt_delegate = raw_providers.get("speech.transcribe")
+    tts_delegate = raw_providers.get("tts.speak")
+    audio_delegate = raw_providers.get("audio.play")
+    speech_player_delegate = raw_providers.get("speech.play_clip")
+    voice_turn_delegate = raw_providers.get("voice.turn_control")
     governed_registry.register(
         "model.generate",
         GovernedLLMProvider(tracker=tracker, delegate=llm_delegate if isinstance(llm_delegate, LLMProvider) else None),
@@ -293,6 +409,37 @@ def build_governed_sdk_capability_registry(
         GovernedMemoryProvider(
             tracker=tracker,
             delegate=memory_delegate if isinstance(memory_delegate, MemoryProvider) else None,
+        ),
+    )
+    governed_registry.register(
+        "speech.transcribe",
+        GovernedSTTProvider(tracker=tracker, delegate=stt_delegate if isinstance(stt_delegate, STTProvider) else None),
+    )
+    governed_registry.register(
+        "tts.speak",
+        GovernedTTSProvider(tracker=tracker, delegate=tts_delegate if isinstance(tts_delegate, TTSProvider) else None),
+    )
+    governed_registry.register(
+        "audio.play",
+        GovernedAudioPlayer(
+            tracker=tracker,
+            delegate=audio_delegate if isinstance(audio_delegate, AudioPlayer) else None,
+            capability_id="audio.play",
+        ),
+    )
+    governed_registry.register(
+        "speech.play_clip",
+        GovernedAudioPlayer(
+            tracker=tracker,
+            delegate=speech_player_delegate if isinstance(speech_player_delegate, AudioPlayer) else None,
+            capability_id="speech.play_clip",
+        ),
+    )
+    governed_registry.register(
+        "voice.turn_control",
+        GovernedVoiceTurnController(
+            tracker=tracker,
+            delegate=voice_turn_delegate if isinstance(voice_turn_delegate, VoiceTurnController) else None,
         ),
     )
     return governed_registry, tracker

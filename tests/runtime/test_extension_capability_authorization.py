@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
+from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.extensions.manager import ExtensionManager
 
 PROOF_REF = "python -m pytest -q tests/runtime/test_extension_capability_authorization.py"
@@ -48,6 +50,43 @@ MODEL_GENERATE_SOURCE = "\n".join(
         "        GenerateRequest(system_prompt='system', user_message='hello world')",
         "    )",
         "    return WorkloadResult(ok=True, output={'text': response.text, 'model': response.model})",
+    ]
+)
+VOICE_FAMILY_SOURCE = "\n".join(
+    [
+        "from __future__ import annotations",
+        "from orket_extension_sdk import WorkloadResult",
+        "from orket_extension_sdk.audio import AudioClip",
+        "from orket_extension_sdk.voice import TranscribeRequest, VoiceTurnControlRequest",
+        "",
+        "def run_workload(ctx, payload):",
+        "    transcribed = ctx.capabilities.stt().transcribe(TranscribeRequest(audio_bytes=b''))",
+        "    clip = ctx.capabilities.tts().synthesize('hello there', voice_id='null')",
+        "    ctx.capabilities.audio_player().play(clip, blocking=False)",
+        "    ctx.capabilities.speech_player().play(",
+        "        AudioClip(sample_rate=22050, channels=1, samples=b'\\x00\\x01', format='pcm_s16le'),",
+        "        blocking=False,",
+        "    )",
+        "    turn = ctx.capabilities.voice_turn_controller().control(VoiceTurnControlRequest(command='start'))",
+        "    return WorkloadResult(",
+        "        ok=True,",
+        "        output={",
+        "            'stt_ok': transcribed.ok,",
+        "            'transcribe_error_code': transcribed.error_code or '',",
+        "            'turn_state': turn.state,",
+        "            'clip_format': clip.format,",
+        "        },",
+        "    )",
+    ]
+)
+TTS_SPEAK_SOURCE = "\n".join(
+    [
+        "from __future__ import annotations",
+        "from orket_extension_sdk import WorkloadResult",
+        "",
+        "def run_workload(ctx, payload):",
+        "    clip = ctx.capabilities.tts().synthesize('blocked proof', voice_id='null')",
+        "    return WorkloadResult(ok=True, output={'clip_format': clip.format})",
     ]
 )
 
@@ -127,6 +166,10 @@ def _runtime_event_names(workspace: Path) -> list[str]:
     return [json.loads(line)["event"] for line in runtime_events.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def _control_plane_db_path(project_root: Path) -> Path:
+    return project_root / ".orket" / "durable" / "db" / "control_plane_records.sqlite3"
+
+
 @pytest.mark.asyncio
 async def test_sdk_capability_authorization_allows_admitted_memory_query_without_write(tmp_path: Path) -> None:
     """Layer: integration. Verifies the real subprocess path admits `memory.query` independently of `memory.write`."""
@@ -147,6 +190,18 @@ async def test_sdk_capability_authorization_allows_admitted_memory_query_without
     assert auth["call_records"][0]["observed_result"] == "success"
     assert "sdk_capability_call_start" in _runtime_event_names(workspace)
     assert "sdk_capability_call_result" in _runtime_event_names(workspace)
+    assert result.control_plane["control_plane_capability_step_ids"]
+    execution_repo = AsyncControlPlaneExecutionRepository(_control_plane_db_path(tmp_path))
+    record_repo = AsyncControlPlaneRecordRepository(_control_plane_db_path(tmp_path))
+    run = await execution_repo.get_run_record(run_id=result.control_plane["control_plane_run_id"])
+    checkpoint = await record_repo.get_checkpoint(checkpoint_id=result.control_plane["control_plane_checkpoint_id"])
+    final_truth = await record_repo.get_final_truth(run_id=result.control_plane["control_plane_run_id"])
+    effects = await record_repo.list_effect_journal_entries(run_id=result.control_plane["control_plane_run_id"])
+    assert run is not None
+    assert checkpoint is not None
+    assert final_truth is not None
+    assert len(effects) == 3
+    assert effects[1].step_id == result.control_plane["control_plane_capability_step_ids"][0]
 
 
 @pytest.mark.asyncio
@@ -247,3 +302,65 @@ async def test_sdk_capability_authorization_allows_admitted_model_generate_with_
     assert auth["admitted_capabilities"] == ["model.generate"]
     assert auth["used_capabilities"] == ["model.generate"]
     assert auth["call_records"][0]["capability_id"] == "model.generate"
+
+
+@pytest.mark.asyncio
+async def test_sdk_capability_authorization_governs_voice_and_audio_families(tmp_path: Path) -> None:
+    """Layer: integration. Verifies the real subprocess path publishes non-memory/model capability families into control-plane execution truth."""
+    required_capabilities = [
+        "speech.transcribe",
+        "tts.speak",
+        "audio.play",
+        "speech.play_clip",
+        "voice.turn_control",
+    ]
+    manager = _install_manager(tmp_path, module_source=VOICE_FAMILY_SOURCE, required_capabilities=required_capabilities)
+    result = await manager.run_workload(
+        workload_id="sdk_auth_v1",
+        input_config=_host_controls(
+            test_case="voice_families_governed",
+            expected_result="success",
+            admit_only=required_capabilities,
+        ),
+        workspace=tmp_path / "workspace" / "default",
+        department="core",
+    )
+
+    provenance = _load_provenance(Path(result.provenance_path))
+    auth = provenance["sdk_capability_authorization"]
+    observed = {record["capability_id"]: record["observed_result"] for record in auth["call_records"]}
+    assert auth["admitted_capabilities"] == sorted(required_capabilities)
+    assert auth["used_capabilities"] == sorted(required_capabilities)
+    assert observed == {
+        "audio.play": "success",
+        "speech.play_clip": "success",
+        "speech.transcribe": "failure",
+        "tts.speak": "success",
+        "voice.turn_control": "success",
+    }
+    assert len(result.control_plane["control_plane_capability_step_ids"]) == 5
+    record_repo = AsyncControlPlaneRecordRepository(_control_plane_db_path(tmp_path))
+    effects = await record_repo.list_effect_journal_entries(run_id=result.control_plane["control_plane_run_id"])
+    assert len(effects) == 7
+
+
+@pytest.mark.asyncio
+async def test_sdk_capability_authorization_blocks_declared_but_denied_tts_speak(tmp_path: Path) -> None:
+    """Layer: integration. Verifies non-memory/model governed capability denial uses the same fail-closed host admission surface."""
+    manager = _install_manager(tmp_path, module_source=TTS_SPEAK_SOURCE, required_capabilities=["tts.speak", "memory.query"])
+
+    with pytest.raises(RuntimeError, match="E_SDK_CAPABILITY_DENIED: tts.speak"):
+        await manager.run_workload(
+            workload_id="sdk_auth_v1",
+            input_config=_host_controls(
+                test_case="tts_speak_denied",
+                expected_result="blocked",
+                admit_only=["memory.query"],
+            ),
+            workspace=tmp_path / "workspace" / "default",
+            department="core",
+        )
+
+    auth = _latest_provenance(tmp_path)["sdk_capability_authorization"]
+    assert auth["blocked_calls"][0]["capability_id"] == "tts.speak"
+    assert auth["blocked_calls"][0]["denial_class"] == "denied"

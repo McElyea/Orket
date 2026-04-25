@@ -18,6 +18,7 @@ from scripts.proof.terraform_plan_review_live_support import (
     bedrock_smoke_runtime_operation,
     supported_bedrock_smoke_model,
 )
+from scripts.proof.trusted_terraform_smoke_names import contains_placeholder
 from scripts.proof.trusted_terraform_plan_decision_contract import (
     PROOF_RESULTS_ROOT,
     TRUSTED_TERRAFORM_COMPARE_SCOPE,
@@ -46,6 +47,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--packet-root", default=str(DEFAULT_PACKET_ROOT), help="Directory for generated setup files.")
     parser.add_argument("--output", default=str(DEFAULT_SETUP_PACKET_OUTPUT), help="Stable setup-packet report path.")
     parser.add_argument("--plan-fixture", default=str(DEFAULT_PLAN_FIXTURE), help="Local Terraform JSON plan fixture to copy.")
+    parser.add_argument("--plan-fixture-path", default="", help="Alias for --plan-fixture used by disposable smoke wrappers.")
     parser.add_argument("--bucket", default=DEFAULT_BUCKET, help="Target S3 bucket name or placeholder.")
     parser.add_argument("--key", default=DEFAULT_KEY, help="Target S3 object key for the plan fixture.")
     parser.add_argument("--region", default=DEFAULT_REGION, help="AWS region for generated commands and env templates.")
@@ -58,6 +60,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--created-at", default=DEFAULT_CREATED_AT, help="Fixed smoke request timestamp.")
     parser.add_argument("--execution-trace-ref", default=DEFAULT_TRACE_REF, help="Live proof execution trace ref.")
     parser.add_argument("--policy-bundle-id", default=DEFAULT_POLICY_BUNDLE_ID, help="Terraform reviewer policy bundle id.")
+    parser.add_argument("--expected-plan-hash", default="", help="Expected Terraform plan hash for generated fixture checks.")
+    parser.add_argument("--smoke-owner-marker", default="", help="Non-secret owner marker for disposable smoke resources.")
     parser.add_argument("--json", action="store_true", help="Print the persisted setup-packet report JSON.")
     return parser.parse_args(argv)
 
@@ -74,6 +78,8 @@ def prepare_setup_packet(
     created_at: str,
     execution_trace_ref: str,
     policy_bundle_id: str,
+    expected_plan_hash: str = "",
+    smoke_owner_marker: str = "",
 ) -> dict[str, Any]:
     packet_root = packet_root.resolve()
     plan_fixture = plan_fixture.resolve()
@@ -82,8 +88,9 @@ def prepare_setup_packet(
     packet_root.mkdir(parents=True, exist_ok=True)
 
     plan_file = packet_root / "terraform-plan-safe-smoke.plan.json"
-    plan_payload = json.loads(plan_fixture.read_text(encoding="utf-8"))
-    _write_json(plan_file, plan_payload)
+    plan_bytes = plan_fixture.read_bytes()
+    json.loads(plan_bytes.decode("utf-8"))
+    _write_bytes(plan_file, plan_bytes)
 
     config = {
         "bucket": bucket.strip(),
@@ -94,6 +101,8 @@ def prepare_setup_packet(
         "created_at": created_at.strip(),
         "execution_trace_ref": execution_trace_ref.strip(),
         "policy_bundle_id": policy_bundle_id.strip(),
+        "expected_plan_hash": expected_plan_hash.strip(),
+        "smoke_owner_marker": smoke_owner_marker.strip(),
     }
     files = _write_packet_files(packet_root=packet_root, plan_file=plan_file, config=config)
     file_refs = [_file_ref(path) for path in [plan_file, *files]]
@@ -126,13 +135,22 @@ def _setup_packet_report(
             "credentials_written_to_packet": False,
             "credentials_expected_source": "standard AWS provider chain outside generated packet files",
         },
+        "bucket": config["bucket"],
+        "key": config["key"],
+        "region": config["region"],
+        "model_id": config["model_id"],
+        "table_name": config["table_name"],
         "s3_plan_uri": _s3_uri(config),
         "packet_root": relative_to_repo(packet_root),
         "packet_files": file_refs,
         "provider_calls_planned_for_setup_commands": _setup_calls(config),
         "provider_calls_planned_for_live_governed_proof": _live_calls(config),
+        "provider_calls_planned_for_cleanup_commands": _cleanup_calls(config),
+        "provider_actions_planned": _provider_actions(config),
         "least_privilege_runtime_actions": _least_privilege_runtime_actions(config),
         "setup_action_checklist": _setup_action_checklist(config),
+        "expected_plan_hash": config["expected_plan_hash"],
+        "smoke_owner_marker": config["smoke_owner_marker"],
         "next_commands": [
             f"python scripts/proof/check_trusted_terraform_live_setup_preflight.py --plan-s3-uri {_s3_uri(config)} --model-id {config['model_id']} --region {config['region']} --table-name {config['table_name']}",
             "python scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py --output benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json",
@@ -150,9 +168,10 @@ def _setup_packet_report(
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
+    plan_fixture_arg = str(args.plan_fixture_path).strip() or str(args.plan_fixture)
     payload = prepare_setup_packet(
         packet_root=Path(str(args.packet_root)),
-        plan_fixture=Path(str(args.plan_fixture)),
+        plan_fixture=Path(plan_fixture_arg),
         bucket=str(args.bucket),
         key=str(args.key),
         region=str(args.region),
@@ -161,6 +180,8 @@ def main(argv: list[str] | None = None) -> int:
         created_at=str(args.created_at),
         execution_trace_ref=str(args.execution_trace_ref),
         policy_bundle_id=str(args.policy_bundle_id),
+        expected_plan_hash=str(args.expected_plan_hash),
+        smoke_owner_marker=str(args.smoke_owner_marker),
     )
     output = Path(str(args.output)).resolve()
     persisted = write_payload_with_diff_ledger(output, payload)
@@ -209,6 +230,8 @@ def _env_template(config: dict[str, str]) -> str:
             f"ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_CREATED_AT={config['created_at']}",
             f"ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_TRACE_REF={config['execution_trace_ref']}",
             f"ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_POLICY_BUNDLE_ID={config['policy_bundle_id']}",
+            f"ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_EXPECTED_PLAN_HASH={config['expected_plan_hash']}",
+            f"ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_OWNER_MARKER={config['smoke_owner_marker']}",
             "",
         ]
     )
@@ -225,6 +248,8 @@ def _powershell_env_template(config: dict[str, str]) -> str:
         f"$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_CREATED_AT = \"{config['created_at']}\"",
         f"$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_TRACE_REF = \"{config['execution_trace_ref']}\"",
         f"$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_POLICY_BUNDLE_ID = \"{config['policy_bundle_id']}\"",
+        f"$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_EXPECTED_PLAN_HASH = \"{config['expected_plan_hash']}\"",
+        f"$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_OWNER_MARKER = \"{config['smoke_owner_marker']}\"",
         "",
     ]
     return "\n".join(rows)
@@ -239,6 +264,7 @@ def _setup_commands(*, plan_file: Path, config: dict[str, str]) -> str:
             f"$Key = \"{config['key']}\"",
             f"$TableName = \"{config['table_name']}\"",
             f"$PlanPath = \"{plan_file}\"",
+            f"$SmokeOwnerMarker = \"{config['smoke_owner_marker']}\"",
             "",
             "if ($Bucket -like \"<*\") { throw \"Replace the bucket placeholder before running setup.\" }",
             "if ($Region -eq \"us-east-1\") {",
@@ -247,7 +273,7 @@ def _setup_commands(*, plan_file: Path, config: dict[str, str]) -> str:
             "  aws s3api create-bucket --bucket $Bucket --region $Region --create-bucket-configuration \"LocationConstraint=$Region\"",
             "}",
             "aws s3api put-public-access-block --bucket $Bucket --public-access-block-configuration \"BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true\"",
-            "aws s3 cp $PlanPath \"s3://$Bucket/$Key\"",
+            "aws s3api put-object --bucket $Bucket --key $Key --body $PlanPath --metadata \"orket-smoke-owner=$SmokeOwnerMarker\"",
             "aws dynamodb create-table --table-name $TableName --region $Region --billing-mode PAY_PER_REQUEST --attribute-definitions AttributeName=plan_hash,AttributeType=S --key-schema AttributeName=plan_hash,KeyType=HASH",
             "aws dynamodb wait table-exists --table-name $TableName --region $Region",
             "",
@@ -294,6 +320,8 @@ def _checklist_markdown(config: dict[str, str]) -> str:
             f"Planned DynamoDB table: `{config['table_name']}`",
             f"Planned Bedrock model or inference-profile id: `{config['model_id']}`",
             f"Planned Bedrock inference operation: `{bedrock_smoke_runtime_operation(config['model_id'])}`",
+            f"Expected plan hash: `{config['expected_plan_hash'] or 'not-recorded'}`",
+            f"Smoke owner marker: `{config['smoke_owner_marker'] or 'not-recorded'}`",
             "",
         ]
     )
@@ -327,25 +355,80 @@ def _runtime_policy(config: dict[str, str]) -> dict[str, Any]:
 
 def _setup_calls(config: dict[str, str]) -> list[dict[str, Any]]:
     return [
-        {"service": "s3", "operation": "CreateBucket", "count": 1, "resource_hint": config["bucket"]},
-        {"service": "s3", "operation": "PutPublicAccessBlock", "count": 1, "resource_hint": config["bucket"]},
-        {"service": "s3", "operation": "PutObject", "count": 1, "resource_hint": _s3_uri(config)},
-        {"service": "dynamodb", "operation": "CreateTable", "count": 1, "resource_hint": config["table_name"]},
-        {"service": "dynamodb", "operation": "DescribeTable", "count": "waiter", "resource_hint": config["table_name"]},
+        {"service": "s3", "operation": "CreateBucket", "iam_action": "s3:CreateBucket", "count": 1, "resource_hint": config["bucket"]},
+        {
+            "service": "s3",
+            "operation": "PutPublicAccessBlock",
+            "iam_action": "s3:PutPublicAccessBlock",
+            "count": 1,
+            "resource_hint": config["bucket"],
+        },
+        {"service": "s3", "operation": "PutObject", "iam_action": "s3:PutObject", "count": 1, "resource_hint": _s3_uri(config)},
+        {
+            "service": "dynamodb",
+            "operation": "CreateTable",
+            "iam_action": "dynamodb:CreateTable",
+            "count": 1,
+            "resource_hint": config["table_name"],
+        },
+        {
+            "service": "dynamodb",
+            "operation": "DescribeTable",
+            "iam_action": "dynamodb:DescribeTable",
+            "count": "waiter",
+            "resource_hint": config["table_name"],
+        },
     ]
 
 
 def _live_calls(config: dict[str, str]) -> list[dict[str, Any]]:
     return [
-        {"service": "s3", "operation": "GetObject", "count": 1, "resource_hint": _s3_uri(config)},
+        {"service": "s3", "operation": "GetObject", "iam_action": "s3:GetObject", "count": 1, "resource_hint": _s3_uri(config)},
         {
             "service": "bedrock-runtime",
             "operation": bedrock_smoke_runtime_operation(config["model_id"]),
+            "iam_action": "bedrock:InvokeModel",
             "count": 1,
             "resource_hint": config["model_id"],
         },
-        {"service": "dynamodb", "operation": "PutItem", "count": 1, "resource_hint": config["table_name"]},
+        {
+            "service": "dynamodb",
+            "operation": "PutItem",
+            "iam_action": "dynamodb:PutItem",
+            "count": 1,
+            "resource_hint": config["table_name"],
+        },
     ]
+
+
+def _cleanup_calls(config: dict[str, str]) -> list[dict[str, Any]]:
+    return [
+        {"service": "s3", "operation": "DeleteObject", "iam_action": "s3:DeleteObject", "count": 1, "resource_hint": _s3_uri(config)},
+        {"service": "s3", "operation": "DeleteBucket", "iam_action": "s3:DeleteBucket", "count": 1, "resource_hint": config["bucket"]},
+        {
+            "service": "dynamodb",
+            "operation": "DeleteTable",
+            "iam_action": "dynamodb:DeleteTable",
+            "count": 1,
+            "resource_hint": config["table_name"],
+        },
+        {
+            "service": "dynamodb",
+            "operation": "DescribeTable",
+            "iam_action": "dynamodb:DescribeTable",
+            "count": "waiter",
+            "resource_hint": config["table_name"],
+        },
+    ]
+
+
+def _provider_actions(config: dict[str, str]) -> list[str]:
+    actions = []
+    for call in [*_setup_calls(config), *_live_calls(config), *_cleanup_calls(config)]:
+        action = str(call.get("iam_action") or "")
+        if action and action not in actions:
+            actions.append(action)
+    return actions
 
 
 def _least_privilege_runtime_actions(config: dict[str, str]) -> list[dict[str, str]]:
@@ -384,7 +467,7 @@ def _s3_uri(config: dict[str, str]) -> str:
 
 
 def _is_placeholder(value: str) -> bool:
-    return value.strip().startswith("<") and value.strip().endswith(">")
+    return contains_placeholder(value)
 
 
 def _file_ref(path: Path) -> dict[str, Any]:
@@ -398,6 +481,11 @@ def _file_ref(path: Path) -> dict[str, Any]:
 def _write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+def _write_bytes(path: Path, payload: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(payload)
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:

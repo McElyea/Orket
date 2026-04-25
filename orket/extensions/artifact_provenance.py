@@ -127,6 +127,7 @@ class ArtifactProvenanceBuilder:
         artifact_root: Path,
         department: str,
         control_plane_workload_record: dict[str, Any],
+        control_plane_execution: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         input_digest = hashlib.sha256(
             json.dumps(input_config, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -156,6 +157,9 @@ class ArtifactProvenanceBuilder:
                 artifact_root=str(artifact_root),
                 reliable_mode_enabled=self.reproducibility.reliable_mode_enabled(),
             ),
+            "execution_state_authority": "control_plane_records" if control_plane_execution else "",
+            "lane_output_execution_state_authoritative": False,
+            "control_plane": dict(control_plane_execution or {}),
             "extension": {
                 "extension_id": extension.extension_id,
                 "extension_version": extension.extension_version,
@@ -197,6 +201,7 @@ class ArtifactProvenanceBuilder:
         department: str,
         control_plane_workload_record: dict[str, Any],
         sdk_capability_report: dict[str, Any],
+        control_plane_execution: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         verbose = self._provenance_verbose_enabled()
         governed_identity = build_extension_governed_identity(
@@ -223,6 +228,9 @@ class ArtifactProvenanceBuilder:
                 artifact_root=str(artifact_root),
                 reliable_mode_enabled=self.reproducibility.reliable_mode_enabled(),
             ),
+            "execution_state_authority": "control_plane_records" if control_plane_execution else "",
+            "lane_output_execution_state_authoritative": False,
+            "control_plane": dict(control_plane_execution or {}),
             "contract_style": CONTRACT_STYLE_SDK_V0,
             "extension": {
                 "extension_id": extension.extension_id,

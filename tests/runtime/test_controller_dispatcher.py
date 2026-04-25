@@ -350,6 +350,11 @@ async def test_controller_dispatcher_integration_runtime_path_and_determinism(tm
     out_two = success_two.summary["output"]["controller_summary"]
     assert out_one["status"] == "success"
     assert [row["target_workload"] for row in out_one["child_results"]] == ["sdk_child_a_v1", "sdk_child_b_v1"]
+    for child in out_one["child_results"]:
+        artifact_kinds = [row["kind"] for row in child["artifact_refs"]]
+        assert artifact_kinds == ["artifact_root", "provenance", "control_plane_projection"]
+        assert child["artifact_refs"][2]["projection_only"] is True
+        assert child["artifact_refs"][2]["projection_source"] == "control_plane_records"
     assert success_one.summary["output"]["controller_summary_canonical"] == success_two.summary["output"]["controller_summary_canonical"]
     assert out_one == out_two
 

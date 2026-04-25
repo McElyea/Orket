@@ -1,0 +1,52 @@
+{
+  "schema_version": "trusted_terraform_disposable_aws_setup_result.v1",
+  "recorded_at_utc": "2026-04-24T03:13:03.776797Z",
+  "proof_kind": "structural",
+  "packet_dir": "manual_tmp_test/pytest_run_fresh_0423/test_disposable_smoke_no_spend0",
+  "packet_ref": "manual_tmp_test/pytest_run_fresh_0423/test_disposable_smoke_no_spend0/northstar-disposable-aws-smoke-packet.json",
+  "observed_path": "blocked",
+  "observed_result": "environment blocker",
+  "publication_decision": "not_evaluated",
+  "admission_evidence": "absent",
+  "provider_calls_executed": [],
+  "blocking_reasons": [
+    "live_aws_setup_opt_in_flags_missing"
+  ],
+  "resource_refs": {
+    "s3_plan_uri": "s3://orket-smoke-e32df7ff87a1/proof/terraform-plan.json",
+    "bucket": "orket-smoke-e32df7ff87a1",
+    "key": "proof/terraform-plan.json",
+    "dynamodb_table": "TerraformReviewsSmoke_e32df7ff87a1",
+    "bedrock_model_id": "us.writer.palmyra-x4-v1:0",
+    "aws_region": "us-east-1",
+    "plan_hash": "sha256:748695fbb37011b98ccca248acecf2c9beea34642012c12b93cb41832f159b57"
+  },
+  "live_env_values": {
+    "AWS_REGION": "us-east-1",
+    "AWS_DEFAULT_REGION": "us-east-1",
+    "ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI": "s3://orket-smoke-e32df7ff87a1/proof/terraform-plan.json",
+    "ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID": "us.writer.palmyra-x4-v1:0",
+    "ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_TABLE": "TerraformReviewsSmoke_e32df7ff87a1",
+    "ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_EXPECTED_PLAN_HASH": "sha256:748695fbb37011b98ccca248acecf2c9beea34642012c12b93cb41832f159b57"
+  },
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-04-24T03:13:03.777138Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:cbb1dc32cfb96b11069ceaac8203d30570098bf74488629f056aeb586e65d271",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 50,
+        "paths_total_reference": 50,
+        "churn_paths": 50,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

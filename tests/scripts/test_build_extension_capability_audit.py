@@ -18,4 +18,14 @@ def test_build_extension_capability_audit_writes_diff_ledger_payload(tmp_path: P
     assert isinstance(payload.get("rows"), list)
     assert any(row["test_case"] == "memory_query_allowed" for row in payload["rows"])
     assert any(row["test_case"] == "child_drift_memory_write" for row in payload["rows"])
+    assert any(
+        row["test_case"] == "voice_families_governed"
+        and row["observed_result"] == "failure"
+        for row in payload["rows"]
+    )
+    assert any(
+        row["test_case"] == "tts_speak_denied"
+        and row["denial_class"] == "denied"
+        for row in payload["rows"]
+    )
     assert isinstance(payload.get("diff_ledger"), list)

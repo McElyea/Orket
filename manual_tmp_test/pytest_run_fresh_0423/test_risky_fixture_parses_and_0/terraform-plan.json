@@ -1,0 +1,36 @@
+{
+  "format_version": "1.1",
+  "resource_changes": [
+    {
+      "address": "aws_iam_role.smoke_3593c365",
+      "change": {
+        "actions": [
+          "update"
+        ]
+      },
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_iam_role"
+    },
+    {
+      "address": "aws_lb.smoke_cd04f9e2",
+      "change": {
+        "actions": [
+          "delete"
+        ]
+      },
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_lb"
+    },
+    {
+      "address": "aws_s3_bucket.smoke_c59f131a",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ]
+      },
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_s3_bucket"
+    }
+  ]
+}

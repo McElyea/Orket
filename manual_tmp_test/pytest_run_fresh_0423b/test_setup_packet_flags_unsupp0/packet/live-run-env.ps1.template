@@ -1,0 +1,11 @@
+# Generated local template. Do not put AWS secret values in this file.
+$env:AWS_REGION = "us-west-2"
+$env:AWS_DEFAULT_REGION = "us-west-2"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI = "s3://orket-smoke-proof-bucket-123456/proof/terraform-plan.json"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID = "cohere.fake-model"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_TABLE = "TerraformReviewsSmoke"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_CREATED_AT = "2026-04-19T00:00:00Z"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_TRACE_REF = "trusted-terraform-plan-decision-live-runtime"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_POLICY_BUNDLE_ID = "terraform_plan_reviewer_v1"
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_EXPECTED_PLAN_HASH = ""
+$env:ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_OWNER_MARKER = ""

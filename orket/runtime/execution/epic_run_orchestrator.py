@@ -226,7 +226,13 @@ class EpicRunOrchestrator:
             resume_mode=setup.resume_mode,
             deterministic_mode_enabled=bool(deterministic_mode_contract.get("deterministic_mode_enabled")),
         )
-        control_plane_run, control_plane_attempt, control_plane_start_step = (
+        (
+            control_plane_run,
+            control_plane_attempt,
+            control_plane_start_step,
+            control_plane_checkpoint,
+            control_plane_checkpoint_acceptance,
+        ) = (
             await self.cards_epic_control_plane.begin_execution(
                 session_id=setup.run_id,
                 build_id=setup.build_id,
@@ -256,6 +262,8 @@ class EpicRunOrchestrator:
             control_plane_run=control_plane_run,
             control_plane_attempt=control_plane_attempt,
             control_plane_start_step=control_plane_start_step,
+            control_plane_checkpoint=control_plane_checkpoint,
+            control_plane_checkpoint_acceptance=control_plane_checkpoint_acceptance,
             run_contract_artifacts=run_contract_artifacts,
         )
         await self._start_run_ledger(context)
@@ -297,6 +305,8 @@ class EpicRunOrchestrator:
             control_plane_run=context.control_plane_run,
             control_plane_attempt=context.control_plane_attempt,
             control_plane_step=context.control_plane_start_step,
+            control_plane_checkpoint=context.control_plane_checkpoint,
+            control_plane_checkpoint_acceptance=context.control_plane_checkpoint_acceptance,
         )
         await self.run_ledger.start_run(
             session_id=context.setup.run_id,

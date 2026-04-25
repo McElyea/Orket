@@ -1,0 +1,35 @@
+{
+  "format_version": "1.1",
+  "resource_changes": [
+    {
+      "address": "aws_dynamodb_table.smoke_6454d5e8",
+      "change": {
+        "actions": [
+          "no-op"
+        ]
+      },
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_dynamodb_table"
+    },
+    {
+      "address": "aws_lb.smoke_38678c36",
+      "change": {
+        "actions": [
+          "update"
+        ]
+      },
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_lb"
+    },
+    {
+      "address": "aws_s3_bucket.smoke_f13e9c92",
+      "change": {
+        "actions": [
+          "create"
+        ]
+      },
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_s3_bucket"
+    }
+  ]
+}
