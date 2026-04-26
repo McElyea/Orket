@@ -30,6 +30,17 @@ pip install -e "./orket_extension_sdk[tts,testing]"
 - Standard workload result models
 - Extension-focused test helpers
 
+## Versioning And Compatibility
+
+`orket_extension_sdk` has its own semantic version sourced from
+`orket_extension_sdk.__version__`; it does not follow the Orket core engine
+version.
+
+SDK `0.Y.Z` is compatible with Orket core `0.Y.*` through `0.(Y+2).*` for the
+public SDK surface unless release notes explicitly narrow that window. Internal
+`orket.*` imports and host-private runtime models are outside the compatibility
+guarantee.
+
 ## Lifecycle Interceptors
 
 The extension SDK does not register `TurnLifecycleInterceptor` instances.

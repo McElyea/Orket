@@ -4,26 +4,29 @@ from .biased_first_player import BiasedFirstPlayerRuleSystem
 from .deadlock import DeadlockRuleSystem
 from .illegal_action import IllegalActionRuleSystem
 from .loop import LoopRuleSystem
+from ..contracts import RuleSystem
 
 
-ToyRuleSystem = (
-    LoopRuleSystem
-    | DeadlockRuleSystem
-    | IllegalActionRuleSystem
-    | BiasedFirstPlayerRuleSystem
-)
+TOY_RULESYSTEMS: dict[str, type[RuleSystem]] = {
+    "toy_loop": LoopRuleSystem,
+    "loop": LoopRuleSystem,
+    "toy_deadlock": DeadlockRuleSystem,
+    "deadlock": DeadlockRuleSystem,
+    "toy_illegal_action": IllegalActionRuleSystem,
+    "illegal_action": IllegalActionRuleSystem,
+    "toy_biased_first_player": BiasedFirstPlayerRuleSystem,
+    "biased_first_player": BiasedFirstPlayerRuleSystem,
+    "toy_golden_determinism": LoopRuleSystem,
+    "golden_determinism": LoopRuleSystem,
+}
 
 
-def build_toy_rulesystem(rulesystem_id: str) -> ToyRuleSystem:
+def build_toy_rulesystem(rulesystem_id: str) -> RuleSystem:
     normalized = str(rulesystem_id or "").strip().lower()
-    if normalized in {"toy_loop", "loop"}:
-        return LoopRuleSystem()
-    if normalized in {"toy_deadlock", "deadlock"}:
-        return DeadlockRuleSystem()
-    if normalized in {"toy_illegal_action", "illegal_action"}:
-        return IllegalActionRuleSystem()
-    if normalized in {"toy_biased_first_player", "biased_first_player"}:
-        return BiasedFirstPlayerRuleSystem()
-    if normalized in {"toy_golden_determinism", "golden_determinism"}:
-        return LoopRuleSystem()
-    raise ValueError(f"Unknown rulesystem_id '{rulesystem_id}'")
+    rulesystem_class = TOY_RULESYSTEMS.get(normalized)
+    if rulesystem_class is None:
+        raise ValueError(f"Unknown rulesystem_id '{rulesystem_id}'")
+    rulesystem = rulesystem_class()
+    if not isinstance(rulesystem, RuleSystem):
+        raise TypeError(f"Registered RuleSystem '{rulesystem_id}' does not satisfy the RuleSystem protocol")
+    return rulesystem

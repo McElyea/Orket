@@ -13,8 +13,9 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from collections.abc import Coroutine
 from pathlib import Path
-from typing import Any, Coroutine, TypeVar
+from typing import Any, TypeVar
 
 import aiofiles
 
@@ -88,7 +89,7 @@ class AsyncFileTools:
         Write content to file asynchronously.
         """
         path = self._resolve_safe_path(path_str, write=True)
-        path.parent.mkdir(parents=True, exist_ok=True)
+        await asyncio.to_thread(path.parent.mkdir, parents=True, exist_ok=True)
 
         if not isinstance(content, str):
             content = json.dumps(content, indent=2)
@@ -96,6 +97,14 @@ class AsyncFileTools:
         async with aiofiles.open(path, mode="w", encoding="utf-8") as f:
             await f.write(content)
 
+        return str(path)
+
+    async def create_directory(self, path_str: str) -> str:
+        """
+        Create a workspace-scoped directory asynchronously.
+        """
+        path = self._resolve_safe_path(path_str, write=True)
+        await asyncio.to_thread(path.mkdir, parents=True, exist_ok=True)
         return str(path)
 
     async def list_directory(self, path_str: str = ".") -> list[str]:
@@ -114,6 +123,9 @@ class AsyncFileTools:
 
     def write_file_sync(self, path_str: str, content: str | dict[str, Any]) -> str:
         return self._run_async(self.write_file(path_str, content))
+
+    def create_directory_sync(self, path_str: str) -> str:
+        return self._run_async(self.create_directory(path_str))
 
     def list_directory_sync(self, path_str: str = ".") -> list[str]:
         return self._run_async(self.list_directory(path_str))

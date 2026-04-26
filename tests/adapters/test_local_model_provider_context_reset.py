@@ -32,13 +32,13 @@ async def test_openai_compat_context_reset_status_tracks_epoch_rotation(monkeypa
         transport=httpx.MockTransport(_handler),
     )
 
-    first = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"seat_id": "seat-42"})
+    first = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"run_id": "run-42"})
     await provider.clear_context()
-    second = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"seat_id": "seat-42"})
-    third = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"seat_id": "seat-42"})
+    second = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"run_id": "run-42"})
+    third = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"run_id": "run-42"})
     await provider.close()
 
-    assert seen_session_ids == ["seat-42", "seat-42-ctx1", "seat-42-ctx1"]
+    assert seen_session_ids == ["run-42", "run-42-ctx1", "run-42-ctx1"]
     assert first.raw["provider_session_epoch"] == 0
     assert second.raw["provider_session_epoch"] == 1
     assert third.raw["provider_session_epoch"] == 1

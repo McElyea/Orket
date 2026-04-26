@@ -5,6 +5,28 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-04-26 - "The Governed Outward Pipeline Cut"
+
+### Added
+- **Outward Governed Runtime Loop**: Added the NorthstarRefocus outward-facing pipeline covering API and CLI work submission, approval queue review, approve/deny/timeout decisions, persisted run inspection, live event streaming, ledger export, offline ledger verification, built-in connector hardening, and outbound policy-gate enforcement.
+- **Ledger Export v1 Contract**: Added `ledger_export.v1` as the operator-visible export and offline verification contract for outward pipeline run events, including canonical hash-chain verification, partial-view anchors, event groups, and export audit semantics.
+- **Release Proof Report**: Added the `0.5.0` minor-release proof report for the completed NorthstarRefocus roadmap lane.
+
+### Changed
+- **Roadmap And Authority Posture**: Archived the completed NorthstarRefocus lane, moved the NorthStar disposable AWS smoke setup lane to paused checkpoint status pending Bedrock access, and aligned current authority, runbook, security, API, and connector docs to the shipped outward pipeline surface.
+- **Startup And Outbound Safety**: Hardened outward API startup posture, CORS defaults, outbound projection redaction, connector validation, HTTP allowlisting, and policy-safe serialization before operator-visible responses.
+
+### Stability Statement
+- The stable surfaces for this release are the local outward API/CLI governed-run loop, approval decision surfaces, persisted outward run inspection, `ledger_export.v1`, and offline ledger verification. Graphical UI, third-party connector discovery, durable SSE pub/sub, legacy artifact import, and paused provider-backed AWS/Bedrock proof lanes remain outside this release.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. Operators running the outward API must configure `ORKET_API_KEY`; browser clients must explicitly configure trusted CORS origins through `ORKET_ALLOWED_ORIGINS`.
+
 ## [0.4.50] - 2026-04-25 - "The Palmyra X5 Smoke Maintenance Cut"
 
 ### Added
@@ -14,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Provider Attempt Truthfulness**: Tightened Terraform runtime-smoke failure summarization so Bedrock and DynamoDB failures preserve the preceding S3/Bedrock attempt sequence instead of under-reporting prior provider interactions.
 - **Extension Control-Plane Test Authority**: Updated extension import-guard tests to use a real control-plane workload record and aligned the private manifest import-owner governance test with the existing extension support module.
+- **Challenge Corpus Adapter Naming**: Renamed the fake attack-corpus adapter surface to the challenge-corpus adapter path and log vocabulary.
 
 ### Compatibility
 - `compatibility_status`: `preserved`
@@ -701,7 +724,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Regression Coverage For Behavioral Review Findings**: Added targeted regression coverage for run-ledger naming/parity behavior, protocol timestamp/run reconstruction, process-rules object access, provider timeout/cancel handling, reprompt artifact overwrite, and the fake OpenClaw empty-corpus edge.
 
 ### Changed
-- **Behavioral Review Remediation Completion**: Completed the remaining Wave 2 and Wave 3 fixes across the turn executor, run ledger, protocol ledger, execution pipeline, streaming providers, ODR tooling, and OpenClaw torture adapter paths.
+- **Behavioral Review Remediation Completion**: Completed the remaining Wave 2 and Wave 3 fixes across the turn executor, run ledger, protocol ledger, execution pipeline, streaming providers, ODR tooling, and challenge-corpus adapter paths.
 - **Run Ledger Authority Naming**: Renamed the dual-write compatibility repository implementation to a protocol-primary, SQLite-lifecycle-mirror authority while preserving the external `dual_write` runtime policy mode for config compatibility.
 - **Roadmap And Techdebt Lane Closeout**: Archived the behavioral review source and remediation plan, removed the completed non-recurring lane from `Priority Now`, and returned `docs/projects/techdebt/` to standing maintenance only.
 

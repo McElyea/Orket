@@ -9,6 +9,7 @@ from orket.core.domain import AttemptState, RunState
 
 ADMITTED_GOVERNED_TURN_TOOL_APPROVAL_CONTINUATION_TOOLS = frozenset(
     {
+        "create_directory",
         "create_issue",
         "write_file",
     }

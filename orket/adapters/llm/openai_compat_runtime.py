@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import uuid
 from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlparse
@@ -146,34 +147,46 @@ def validate_openai_messages(messages: list[dict[str, Any]]) -> list[str]:
     return invalid
 
 
-def extract_openai_content(payload: dict[str, Any]) -> str:
-    def _extract_text(value: Any) -> str:
+def extract_openai_content(payload: dict[str, Any]) -> str | None:
+    def _extract_text(value: Any) -> str | None:
+        if value is None:
+            return ""
         if isinstance(value, str):
             return value
         if isinstance(value, list):
             parts: list[str] = []
             for item in value:
                 if not isinstance(item, dict):
-                    continue
+                    return None
                 text = item.get("text")
+                if text is None:
+                    continue
                 if isinstance(text, str):
                     parts.append(text)
+                    continue
+                return None
             return "".join(parts)
-        return ""
+        return None
 
     choices = payload.get("choices")
     if not isinstance(choices, list) or not choices:
-        return ""
+        return None
     first = choices[0]
     if not isinstance(first, dict):
-        return ""
+        return None
     message = first.get("message")
     if not isinstance(message, dict):
-        return ""
+        return None
     content = _extract_text(message.get("content"))
+    if content is None:
+        return None
     if content.strip():
         return content
     reasoning_content = _extract_text(message.get("reasoning_content"))
+    if reasoning_content is None:
+        return None
+    if not reasoning_content.strip():
+        return ""
     return recover_structured_reasoning_answer(reasoning_content)
 
 
@@ -198,8 +211,11 @@ def _to_int(value: Any) -> int | None:
         return value
     if isinstance(value, float) and float(value).is_integer():
         return int(value)
-    if isinstance(value, str) and value.strip().isdigit():
-        return int(value.strip())
+    if isinstance(value, str):
+        try:
+            return int(value.strip())
+        except ValueError:
+            return None
     return None
 
 
@@ -280,7 +296,7 @@ def build_orket_session_id(
     preferred = str(preferred_session_id or "").strip()
     if preferred:
         return preferred
-    for key in ("seat_id", "thread_id", "run_id", "session_id"):
+    for key in ("run_id", "session_id", "thread_id"):
         value = str(runtime_context.get(key) or "").strip()
         if value:
             return value
@@ -292,7 +308,7 @@ def build_orket_session_id(
     digest = hashlib.sha256(
         json.dumps(fallback_payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
     ).hexdigest()
-    return f"derived-{digest[:16]}"
+    return f"derived-{digest[:16]}-{uuid.uuid4().hex[:12]}"
 
 
 def build_prompt_fingerprint(payload: dict[str, Any]) -> str:

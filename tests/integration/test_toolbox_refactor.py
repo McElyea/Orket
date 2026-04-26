@@ -28,6 +28,7 @@ def test_tool_map_default_parity(tmp_path):
     assert sorted(tool_map.keys()) == sorted([
         "read_file",
         "write_file",
+        "create_directory",
         "list_directory",
         "image_analyze",
         "image_generate",

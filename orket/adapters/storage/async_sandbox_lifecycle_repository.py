@@ -8,6 +8,7 @@ from typing import Awaitable, Callable, TypeVar
 import aiosqlite
 from pydantic import ValidationError
 
+from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.adapters.storage.sandbox_lifecycle_row_serialization import (
     deserialize_event_row,
     deserialize_operation_row,
@@ -148,7 +149,7 @@ class AsyncSandboxLifecycleRepository:
         row_factory: bool = False,
         commit: bool = False,
     ) -> ResultT:
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             if row_factory:
                 conn.row_factory = aiosqlite.Row
             await self._ensure_initialized(conn)

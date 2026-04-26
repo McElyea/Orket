@@ -1,6 +1,6 @@
 # Orket Determinism Gate Policy
 
-Last updated: 2026-03-19
+Last updated: 2026-04-25
 Status: Active
 Owner: Orket Core
 
@@ -97,6 +97,12 @@ Requires:
 1. all evidence required for `replay_deterministic` or `verdict_deterministic`
 2. byte-identical output or identical declared output hash
 3. explicit declaration of the bytes or hashes in scope
+
+ODR and local-model text identity rule:
+1. ODR, local-model, and prompt-refinement lanes must not claim `text_deterministic` when model output wording can vary across equivalent runs.
+2. If semantic or verdict surfaces are stable while prose varies, the highest allowed claim is `verdict_deterministic`.
+3. If the verdict surface itself varies, the lane remains `non_deterministic_lab_only` until a new campaign proves a higher tier.
+4. Variance ranges must be published with the evidence artifact before any product-facing determinism claim. Missing variance data blocks the claim rather than defaulting to confidence.
 
 ### `non_deterministic_lab_only`
 

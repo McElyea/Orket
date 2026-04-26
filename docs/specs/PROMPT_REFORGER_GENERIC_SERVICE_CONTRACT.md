@@ -2,7 +2,7 @@
 
 Owner: Orket Core
 Status: Active
-Last updated: 2026-04-03
+Last updated: 2026-04-25
 
 ## Purpose
 
@@ -45,6 +45,18 @@ A qualifying service run is one whose final result is either `certified` or `cer
 A `certified_with_limits` bundle may be frozen only when the narrowed acceptance envelope, unsupported cases, and fallback or review requirements are explicitly recorded in the frozen bundle.
 
 If no run qualifies for bundle freeze, the truthful outcome is one or more `unsupported` or non-qualifying results without manufacturing a qualifying bundle.
+
+## Portability Tier Claims
+
+Prompt Reforger must not claim local-model portability for a model family or size class until that exact target clears the frozen portability corpus or a narrower explicitly named corpus.
+
+Current portable-model claim boundaries:
+
+1. `gemma-3-4b-it-qat` and other sub-7B targets are `unsupported` for product portability claims until they clear the frozen portability corpus.
+2. Sub-7B failures may remain lab evidence, but they must be labeled `unsupported` or `non_deterministic_lab_only` rather than deferred success.
+3. A lower corpus bar is allowed only if the corpus is renamed as a narrower tier, for example `minimal_portability_3_slice_v1`; it must not be described as clearing the frozen 5-slice portability corpus.
+4. For operator guidance, the current truthful minimum target remains the smallest model tier that clears the active frozen corpus with the declared runtime controls. If no local model clears it, the minimum remains unpublished rather than guessed.
+5. Any future 4B portability promotion must include the model id, quantization, provider, hardware/VRAM envelope, corpus id, pass/fail count, and exact artifact path.
 
 ## Request Envelope
 

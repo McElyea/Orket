@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -52,6 +53,21 @@ class OrketRuntimeContext:
         initialize = getattr(self.run_ledger, "initialize", None)
         if callable(initialize):
             await initialize()
+
+    async def close(self) -> None:
+        for target in (
+            self.run_ledger,
+            self.success_repo,
+            self.snapshots_repo,
+            self.sessions_repo,
+            self.cards_repo,
+        ):
+            close = getattr(target, "aclose", None) or getattr(target, "close", None)
+            if not callable(close):
+                continue
+            maybe_awaitable = close()
+            if inspect.isawaitable(maybe_awaitable):
+                await maybe_awaitable
 
     @classmethod
     def from_env(

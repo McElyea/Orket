@@ -8,6 +8,7 @@ import aiosqlite
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
+from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.runtime.run_ledger_parity import compare_run_ledger_rows
 
 
@@ -41,7 +42,7 @@ async def _discover_sqlite_session_ids(*, sqlite_db: Path, limit: int) -> list[s
     if not await asyncio.to_thread(sqlite_db.exists):
         return []
     rows: list[str] = []
-    async with aiosqlite.connect(str(sqlite_db)) as conn:
+    async with connect_sqlite_wal(sqlite_db) as conn:
         conn.row_factory = aiosqlite.Row
         cursor = await conn.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'run_ledger' LIMIT 1")
         has_table = await cursor.fetchone()

@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 import aiosqlite
 
+from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.runtime.truthful_memory_policy import evaluate_memory_write_policy
 
 from .profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
@@ -48,7 +49,7 @@ class ScopedMemoryStore:
 
     async def ensure_initialized(self) -> None:
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
-        async with aiosqlite.connect(self._db_path) as conn:
+        async with connect_sqlite_wal(self._db_path) as conn:
             await conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS extension_memory (
@@ -180,7 +181,7 @@ class ScopedMemoryStore:
     async def clear_session(self, *, session_id: str) -> int:
         await self.ensure_initialized()
         resolved_session = self.normalize_session_id("session_memory", session_id)
-        async with aiosqlite.connect(self._db_path) as conn:
+        async with connect_sqlite_wal(self._db_path) as conn:
             cursor = await conn.execute(
                 """
                 DELETE FROM extension_memory
@@ -194,7 +195,7 @@ class ScopedMemoryStore:
     async def clear_episodic(self, *, session_id: str) -> int:
         await self.ensure_initialized()
         resolved_session = self.normalize_session_id("episodic_memory", session_id)
-        async with aiosqlite.connect(self._db_path) as conn:
+        async with connect_sqlite_wal(self._db_path) as conn:
             cursor = await conn.execute(
                 """
                 DELETE FROM extension_episodic_memory
@@ -309,7 +310,7 @@ class ScopedMemoryStore:
         metadata: dict[str, Any],
     ) -> ScopedMemoryRecord:
         await self.ensure_initialized()
-        async with aiosqlite.connect(self._db_path) as conn:
+        async with connect_sqlite_wal(self._db_path) as conn:
             await conn.execute(
                 """
                 INSERT INTO extension_episodic_memory
@@ -347,7 +348,7 @@ class ScopedMemoryStore:
         metadata: dict[str, Any],
     ) -> ScopedMemoryRecord:
         await self.ensure_initialized()
-        async with aiosqlite.connect(self._db_path) as conn:
+        async with connect_sqlite_wal(self._db_path) as conn:
             await conn.execute(
                 """
                 INSERT INTO extension_memory
@@ -401,7 +402,7 @@ class ScopedMemoryStore:
         return rows[0] if rows else None
 
     async def _query_records(self, *, sql: str, args: tuple[Any, ...]) -> list[ScopedMemoryRecord]:
-        async with aiosqlite.connect(self._db_path) as conn:
+        async with connect_sqlite_wal(self._db_path) as conn:
             cursor = await conn.execute(sql, args)
             rows = await cursor.fetchall()
         return [_row_to_record(tuple(row)) for row in rows]

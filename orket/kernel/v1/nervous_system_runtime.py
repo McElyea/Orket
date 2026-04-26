@@ -37,6 +37,7 @@ from .nervous_system_runtime_state import (
 from .nervous_system_tokens import (
     invalidate_tokens_for_session,
 )
+from .outbound_policy_gate import apply_outbound_policy_gate
 
 _POLICY_FLAG_KEYS = (
     "policy_forbidden",
@@ -75,6 +76,14 @@ def projection_pack_v1(request: dict[str, Any]) -> dict[str, Any]:
         tool_context_summary = {}
     if not isinstance(tool_context_summary, dict):
         raise ValueError("tool_context_summary must be an object")
+    outbound_policy_config = request.get("outbound_policy")
+    if outbound_policy_config is not None and not isinstance(outbound_policy_config, dict):
+        raise ValueError("outbound_policy must be an object")
+    policy_context, policy_gate_report = apply_outbound_policy_gate(policy_context, outbound_policy_config)
+    tool_context_summary, tool_context_gate_report = apply_outbound_policy_gate(
+        tool_context_summary,
+        outbound_policy_config,
+    )
 
     contract_digest = digest_of(
         {
@@ -94,6 +103,14 @@ def projection_pack_v1(request: dict[str, Any]) -> dict[str, Any]:
         },
         "policy_summary": {
             "policy_digest": policy_digest,
+            "outbound_policy_gate": {
+                "applied": True,
+                "redaction_count": int(policy_gate_report["redaction_count"])
+                + int(tool_context_gate_report["redaction_count"]),
+                "redacted_paths": sorted(
+                    set(policy_gate_report["redacted_paths"]) | set(tool_context_gate_report["redacted_paths"])
+                ),
+            },
         },
         "tool_context_summary": tool_context_summary,
     }

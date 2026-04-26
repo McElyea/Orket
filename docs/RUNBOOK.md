@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-04-24
+Last reviewed: 2026-04-25
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -79,10 +79,16 @@ Compatibility-only CLI alias:
 ```bash
 curl http://localhost:8082/health
 ```
+
+Expected default body:
+```json
+{ "status": "ok" }
+```
 2. API version:
 ```bash
 curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/version
 ```
+All authenticated `/v1/*` HTTP responses include `X-Orket-Version`.
 3. API heartbeat and metrics:
 ```bash
 curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/system/heartbeat
@@ -95,6 +101,52 @@ curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/system/metrics
 curl http://localhost:8080/health
 ```
 
+## Outward Pipeline Ledger
+The Phase 4 outward ledger path uses API-backed export and offline verification:
+
+```bash
+orket ledger export <run_id> --out ledger.json
+orket ledger export <run_id> --types proposals,decisions --out ledger.partial.json
+orket ledger verify ledger.json
+orket ledger summary <run_id>
+```
+
+`orket ledger verify <file.json>` is offline and does not require a running Orket instance. Filtered exports verify as partial views anchored to the canonical ledger hash; they do not claim omitted event payload verification.
+
+## Outward Pipeline Connectors
+The Phase 5 built-in connector harness is local and uses the same registry-backed invocation rules as outward execution:
+
+```bash
+orket connectors list
+orket connectors show write_file
+orket connectors test create_directory --args "{\"path\":\"demo-dir\"}"
+```
+
+HTTP connectors require exact-host allowlisting:
+
+```bash
+set ORKET_CONNECTOR_HTTP_ALLOWLIST=example.com
+orket connectors test http_get --args "{\"url\":\"https://example.com\"}"
+```
+
+## Outward Pipeline Policy Gate
+The outbound policy gate can be configured with environment variables:
+
+```bash
+set ORKET_OUTBOUND_POLICY_PII_FIELD_PATHS=items.*.args_preview.path
+set ORKET_OUTBOUND_POLICY_FORBIDDEN_PATTERNS=BLOCKME
+set ORKET_OUTBOUND_POLICY_ALLOWED_OUTPUT_FIELDS={"proposal_made":["event_type","payload"]}
+```
+
+Or use a JSON config file and point API startup at it:
+
+```bash
+set ORKET_OUTBOUND_POLICY_CONFIG_PATH=config/outbound_policy.json
+python server.py
+```
+
+If configured redaction touches stored ledger event payload bytes, default ledger export returns a partial verified view instead of a false full ledger.
+
 ## HTTP Surface Scope
 Authority: `docs/API_FRONTEND_CONTRACT.md`
 
@@ -103,25 +155,70 @@ Authority: `docs/API_FRONTEND_CONTRACT.md`
 3. Companion product routes remain BFF-owned and are not a core Orket host route family.
 
 ## Runtime Control and Approval Examples
-1. Start one active run from an operator-selected path:
+1. Submit one outward-facing queued run:
+```bash
+orket run submit --description "Write a CSV parser" --instruction "Implement and test the parser"
+```
+2. Inspect one outward-facing run:
+```bash
+orket run status <run_id>
+```
+3. List queued outward-facing runs:
+```bash
+orket run list --status queued
+```
+4. Submit one outward-facing run with an explicit governed `write_file` proposal:
+```bash
+curl -X POST http://127.0.0.1:8082/v1/runs -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"run_id\":\"demo-write\",\"task\":{\"description\":\"Write approved file\",\"instruction\":\"Call write_file\",\"acceptance_contract\":{\"governed_tool_call\":{\"tool\":\"write_file\",\"args\":{\"path\":\"approved.txt\",\"content\":\"approved content\"}}}},\"policy_overrides\":{\"approval_required_tools\":[\"write_file\"]}}"
+```
+5. List pending outward-facing approval proposals:
+```bash
+orket approvals list
+```
+6. Review one outward-facing approval proposal:
+```bash
+orket approvals review <proposal_id>
+```
+7. Approve one outward-facing approval proposal:
+```bash
+orket approvals approve <proposal_id> --note "operator-reviewed"
+```
+8. Deny one outward-facing approval proposal:
+```bash
+orket approvals deny <proposal_id> --reason "operator rejected"
+```
+9. Inspect outward-facing run events:
+```bash
+orket run events <run_id> --types proposal_pending_approval,proposal_approved
+```
+10. Inspect the derived outward-facing run summary:
+```bash
+orket run summary <run_id>
+```
+11. Watch outward-facing run events:
+```bash
+orket run watch <run_id>
+```
+12. Start one active run from an operator-selected path:
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/system/run-active -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"path\":\"<project_relative_path>\"}"
 ```
-2. Inspect one governed run:
+13. Inspect one governed run:
 ```bash
 curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/runs/<session_id>
 ```
-3. Inspect one approval and resolve it on the canonical Packet 1 path:
+14. Inspect one approval and resolve it on the canonical Packet 1 path:
 ```bash
 curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/approvals/<approval_id>
 ```
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/approvals/<approval_id>/decision -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"decision\":\"approve\",\"notes\":\"operator-reviewed\"}"
 ```
-4. The active approval-checkpoint family admits three bounded shipped slices only: governed kernel `NEEDS_APPROVAL` on the default `session:<session_id>` namespace scope, plus governed turn-tool `write_file` and `create_issue` approval-required continuation on the default `issue:<issue_id>` namespace scope.
-5. Packet 1 admits `approve` and `deny` only on this surface. `notes` and `edited_proposal` remain bounded operator metadata and do not create an alternate resume path.
-6. On the bounded turn-tool `write_file` and `create_issue` slices, `approve` continues the same governed run on the already-selected `control_plane_target_ref`, while `deny` terminal-stops that same governed turn-tool run.
-7. Canonical live proof for the shipped approval slice:
+15. The outward-facing approval surface admits `approve` and `deny` only for stored outward proposals. It does not expose approve-and-pause; the outward execution slice continues explicit registered governed connector calls after approval.
+16. The active approval-checkpoint family admits four bounded shipped slices only: governed kernel `NEEDS_APPROVAL` on the default `session:<session_id>` namespace scope, plus governed turn-tool `write_file`, `create_directory`, and `create_issue` approval-required continuation on the default `issue:<issue_id>` namespace scope.
+17. Packet 1 admits `approve` and `deny` only on this surface. `notes` and `edited_proposal` remain bounded operator metadata and do not create an alternate resume path.
+18. On the bounded turn-tool `write_file`, `create_directory`, and `create_issue` slices, `approve` continues the same governed run on the already-selected `control_plane_target_ref`, while `deny` terminal-stops that same governed turn-tool run.
+19. Canonical live proof for the shipped approval slice:
 ```bash
 ORKET_DISABLE_SANDBOX=1 python scripts/nervous_system/run_nervous_system_live_evidence.py
 ```

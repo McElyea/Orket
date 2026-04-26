@@ -1,7 +1,9 @@
 import os
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from orket.naming import sanitize_name
 from orket.time_utils import now_local
@@ -10,6 +12,7 @@ LOG_DIR = "logs"
 CONSOLE_LEVELS = {"debug": 10, "info": 20, "warn": 30, "error": 40}
 __all__ = [
     "CONSOLE_LEVELS",
+    "dedupe_ordered",
     "ensure_log_dir",
     "get_eos_sprint",
     "get_current_level",
@@ -17,6 +20,18 @@ __all__ = [
     "reset_current_level_cache",
     "sanitize_name",
 ]
+
+
+def dedupe_ordered(values: Iterable[Any]) -> list[str]:
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        token = str(value or "").strip()
+        if not token or token in seen:
+            continue
+        seen.add(token)
+        ordered.append(token)
+    return ordered
 
 
 @lru_cache(maxsize=8)

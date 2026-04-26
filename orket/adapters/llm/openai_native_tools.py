@@ -1,19 +1,16 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping
 from typing import Any
 
+from orket.utils import dedupe_ordered
+
+LOGGER = logging.getLogger(__name__)
+
 
 def _dedupe(values: list[str]) -> list[str]:
-    ordered: list[str] = []
-    seen: set[str] = set()
-    for value in values:
-        token = str(value or '').strip()
-        if not token or token in seen:
-            continue
-        seen.add(token)
-        ordered.append(token)
-    return ordered
+    return dedupe_ordered(values)
 
 
 def _scope_map(runtime_context: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -33,9 +30,19 @@ def _normalized_tools(runtime_context: Mapping[str, Any]) -> list[str]:
     if required_action_tools:
         return required_action_tools
     scope = _scope_map(runtime_context)
-    return _dedupe(
+    declared_tools = _dedupe(
         [str(tool).strip() for tool in (scope.get('declared_interfaces') or []) if str(tool).strip()]
     )
+    if declared_tools:
+        return declared_tools
+    LOGGER.warning(
+        "openai_native_tools_empty_tool_scope",
+        extra={
+            "runtime_context_keys": sorted(str(key) for key in runtime_context),
+            "fallback_sources": ["required_action_tools", "verification_scope.declared_interfaces"],
+        },
+    )
+    return []
 
 
 def _normalized_read_paths(runtime_context: Mapping[str, Any]) -> list[str]:

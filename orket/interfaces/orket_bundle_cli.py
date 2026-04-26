@@ -1,18 +1,26 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
+import os
 import shutil
 import sys
+import tomllib
 import zipfile
 from importlib import metadata
 from pathlib import Path, PurePosixPath
 from typing import Any
 
 import httpx
-import tomllib
 from pydantic import ValidationError
 
+from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
+from orket.application.services.outward_connector_service import (
+    OutwardConnectorArgumentError,
+    OutwardConnectorNotFoundError,
+    OutwardConnectorService,
+)
 from orket.application.review.bundle_validation import ReviewBundleError, load_review_replay_artifacts
 from orket.application.review.models import ReviewSnapshot, SnapshotBounds
 from orket.application.review.run_service import ReviewRunService
@@ -21,6 +29,7 @@ from orket.core.domain.orket_manifest import (
     is_engine_compatible,
     resolve_model_selection,
 )
+from orket.core.domain.outward_ledger import verify_ledger_export
 from orket.interfaces.api_generation import run_api_add_transaction
 from orket.interfaces.refactor_transaction import run_refactor_transaction
 from orket.interfaces.scaffold_init import run_scaffold_init
@@ -49,6 +58,8 @@ ERROR_EXT_TEMPLATE_MISSING = "E_EXT_TEMPLATE_MISSING"
 ERROR_EXT_TARGET_EXISTS = "E_EXT_TARGET_EXISTS"
 ERROR_REVIEW_ARGUMENTS = "E_REVIEW_ARGUMENTS"
 ERROR_REVIEW_RUN_FAILED = "E_REVIEW_RUN_FAILED"
+ERROR_RUN_API_FAILED = "E_RUN_API_FAILED"
+ERROR_CONNECTOR_FAILED = "E_CONNECTOR_FAILED"
 
 
 def _default_review_workspace() -> str:
@@ -610,6 +621,208 @@ def init_external_extension(target: Path, *, force: bool = False) -> dict[str, A
     }
 
 
+def _run_api_base_url() -> str:
+    return str(os.getenv("ORKET_API_URL") or "http://127.0.0.1:8082").rstrip("/")
+
+
+def _run_api_headers() -> dict[str, str]:
+    api_key = str(os.getenv("ORKET_API_KEY") or "").strip()
+    return {"X-API-Key": api_key} if api_key else {}
+
+
+def _run_api_request(
+    method: str,
+    path: str,
+    *,
+    payload: dict[str, Any] | None = None,
+    params: dict[str, Any] | None = None,
+) -> tuple[int, Any]:
+    with httpx.Client(base_url=_run_api_base_url(), timeout=30.0) as client:
+        response = client.request(
+            method,
+            path,
+            headers=_run_api_headers(),
+            json=payload,
+            params=params,
+        )
+    try:
+        body: Any = response.json()
+    except json.JSONDecodeError:
+        body = {"detail": response.text}
+    return response.status_code, body
+
+
+def _read_instruction(args: argparse.Namespace) -> str:
+    inline = str(getattr(args, "instruction", "") or "").strip()
+    file_path = str(getattr(args, "instruction_file", "") or "").strip()
+    if inline:
+        return inline
+    if file_path:
+        return Path(file_path).read_text(encoding="utf-8")
+    return ""
+
+
+def _handle_run_command(args: argparse.Namespace) -> int:
+    command = str(getattr(args, "run_command", "") or "").strip()
+    try:
+        if command == "submit":
+            policy_overrides: dict[str, Any] = {}
+            tools = [str(item).strip() for item in list(getattr(args, "approval_required_tools", []) or []) if str(item).strip()]
+            if tools:
+                policy_overrides["approval_required_tools"] = tools
+            if getattr(args, "max_turns", None) is not None:
+                policy_overrides["max_turns"] = int(args.max_turns)
+            if getattr(args, "approval_timeout_seconds", None) is not None:
+                policy_overrides["approval_timeout_seconds"] = int(args.approval_timeout_seconds)
+            payload: dict[str, Any] = {
+                "task": {
+                    "description": str(args.description or ""),
+                    "instruction": _read_instruction(args),
+                }
+            }
+            if str(getattr(args, "run_id", "") or "").strip():
+                payload["run_id"] = str(args.run_id).strip()
+            if str(getattr(args, "namespace", "") or "").strip():
+                payload["namespace"] = str(args.namespace).strip()
+            if policy_overrides:
+                payload["policy_overrides"] = policy_overrides
+            status_code, body = _run_api_request("POST", "/v1/runs", payload=payload)
+        elif command == "status":
+            status_code, body = _run_api_request("GET", f"/v1/runs/{args.run_id}")
+        elif command == "list":
+            params = {
+                key: value
+                for key, value in {
+                    "status": getattr(args, "status", None),
+                    "limit": getattr(args, "limit", None),
+                    "offset": getattr(args, "offset", None),
+                }.items()
+                if value is not None and str(value).strip() != ""
+            }
+            status_code, body = _run_api_request("GET", "/v1/runs", params=params)
+        elif command == "events":
+            params = {
+                key: value
+                for key, value in {
+                    "types": getattr(args, "types", None),
+                    "from_turn": getattr(args, "from_turn", None),
+                    "to_turn": getattr(args, "to_turn", None),
+                    "agent_id": getattr(args, "agent_id", None),
+                }.items()
+                if value is not None and str(value).strip() != ""
+            }
+            status_code, body = _run_api_request("GET", f"/v1/runs/{args.run_id}/events", params=params)
+        elif command == "summary":
+            status_code, body = _run_api_request("GET", f"/v1/runs/{args.run_id}/summary")
+        elif command == "watch":
+            params = {"types": args.types} if str(getattr(args, "types", "") or "").strip() else None
+            status_code, body = _run_api_request("GET", f"/v1/runs/{args.run_id}/events/stream", params=params)
+        else:
+            status_code, body = 2, {"detail": "Unsupported run command"}
+    except (OSError, ValueError, httpx.HTTPError) as exc:
+        status_code, body = 1, {"code": ERROR_RUN_API_FAILED, "detail": str(exc)}
+
+    print(json.dumps(body, indent=2, ensure_ascii=False))
+    return 0 if 200 <= int(status_code) < 300 else 1
+
+
+def _handle_approvals_command(args: argparse.Namespace) -> int:
+    command = str(getattr(args, "approvals_command", "") or "").strip()
+    try:
+        if command in {"list", "watch"}:
+            status = str(getattr(args, "status", "") or "pending").strip() or "pending"
+            status_code, body = _run_api_request("GET", "/v1/approvals", params={"status": status})
+        elif command == "review":
+            status_code, body = _run_api_request("GET", f"/v1/approvals/{args.proposal_id}")
+        elif command == "approve":
+            status_code, body = _run_api_request(
+                "POST",
+                f"/v1/approvals/{args.proposal_id}/approve",
+                payload={"note": str(getattr(args, "note", "") or "") or None},
+            )
+        elif command == "deny":
+            status_code, body = _run_api_request(
+                "POST",
+                f"/v1/approvals/{args.proposal_id}/deny",
+                payload={"reason": str(args.reason or ""), "note": str(getattr(args, "note", "") or "") or None},
+            )
+        else:
+            status_code, body = 2, {"detail": "Unsupported approvals command"}
+    except (OSError, ValueError, httpx.HTTPError) as exc:
+        status_code, body = 1, {"code": ERROR_RUN_API_FAILED, "detail": str(exc)}
+
+    print(json.dumps(body, indent=2, ensure_ascii=False))
+    return 0 if 200 <= int(status_code) < 300 else 1
+
+
+def _handle_ledger_command(args: argparse.Namespace) -> int:
+    command = str(getattr(args, "ledger_command", "") or "").strip()
+    try:
+        if command == "export":
+            params = {
+                key: value
+                for key, value in {
+                    "types": getattr(args, "types", None),
+                    "include_pii": bool(getattr(args, "include_pii", False)),
+                }.items()
+                if value is not None and str(value).strip() != ""
+            }
+            status_code, body = _run_api_request("GET", f"/v1/runs/{args.run_id}/ledger", params=params)
+            if 200 <= int(status_code) < 300:
+                Path(str(args.out)).write_text(json.dumps(body, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        elif command == "verify":
+            raw = Path(str(args.file)).read_text(encoding="utf-8")
+            body = verify_ledger_export(json.loads(raw))
+            status_code = 200 if body["result"] in {"valid", "partial_valid"} else 1
+        elif command == "summary":
+            status_code, body = _run_api_request("GET", f"/v1/runs/{args.run_id}/ledger/verify")
+        else:
+            status_code, body = 2, {"detail": "Unsupported ledger command"}
+    except (OSError, ValueError, json.JSONDecodeError, httpx.HTTPError) as exc:
+        status_code, body = 1, {"code": ERROR_RUN_API_FAILED, "detail": str(exc)}
+
+    print(json.dumps(body, indent=2, ensure_ascii=False))
+    return 0 if 200 <= int(status_code) < 300 else 1
+
+
+def _connector_http_allowlist() -> tuple[str, ...]:
+    raw = str(os.getenv("ORKET_CONNECTOR_HTTP_ALLOWLIST") or "")
+    return tuple(host.strip().lower() for host in raw.split(",") if host.strip())
+
+
+def _connector_service(workspace_root: str) -> OutwardConnectorService:
+    return OutwardConnectorService(
+        connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
+        workspace_root=Path(workspace_root).resolve(),
+        http_allowlist=_connector_http_allowlist(),
+    )
+
+
+def _handle_connectors_command(args: argparse.Namespace) -> int:
+    command = str(getattr(args, "connectors_command", "") or "").strip()
+    service = _connector_service(str(getattr(args, "workspace", "") or "."))
+    try:
+        if command == "list":
+            status_code, body = 200, service.list_connectors()
+        elif command == "show":
+            status_code, body = 200, service.show_connector(str(args.name))
+        elif command == "test":
+            raw_args = json.loads(str(args.args or "{}"))
+            body = asyncio.run(service.invoke(str(args.name), raw_args))
+            status_code = 200 if body.get("outcome") == "success" else 1
+        else:
+            status_code, body = 2, {"detail": "Unsupported connectors command"}
+    except OutwardConnectorArgumentError as exc:
+        status_code, body = 1, {"code": ERROR_CONNECTOR_FAILED, "connector_name": exc.connector_name, "errors": exc.errors}
+    except OutwardConnectorNotFoundError as exc:
+        status_code, body = 1, {"code": ERROR_CONNECTOR_FAILED, "detail": str(exc)}
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+        status_code, body = 1, {"code": ERROR_CONNECTOR_FAILED, "detail": str(exc)}
+
+    print(json.dumps(body, indent=2, ensure_ascii=False))
+    return 0 if 200 <= int(status_code) < 300 else 1
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="orket", description="Orket bundle tools.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -770,6 +983,80 @@ def _parser() -> argparse.ArgumentParser:
     review_replay.add_argument("--fail-on-blocked", action="store_true")
     review_replay.add_argument("--verbose", action="store_true")
     review_replay.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
+    run_parser = subparsers.add_parser("run", help="Outward pipeline run commands.")
+    run_sub = run_parser.add_subparsers(dest="run_command", required=True)
+    run_submit = run_sub.add_parser("submit", help="Submit outward-facing work through the API.")
+    run_submit.add_argument("--run-id", default="", help="Optional stable run id.")
+    run_submit.add_argument("--namespace", default="", help="Optional namespace; defaults to issue:<run_id>.")
+    run_submit.add_argument("--description", required=True, help="Task description.")
+    run_submit.add_argument("--instruction", default="", help="Task instruction.")
+    run_submit.add_argument("--instruction-file", default="", help="Read task instruction from a file.")
+    run_submit.add_argument("--approval-required-tools", action="append", default=[], help="Approval-required tool name.")
+    run_submit.add_argument("--max-turns", type=int, default=None)
+    run_submit.add_argument("--approval-timeout-seconds", type=int, default=None)
+
+    run_status = run_sub.add_parser("status", help="Fetch outward-facing run status through the API.")
+    run_status.add_argument("run_id")
+
+    run_list = run_sub.add_parser("list", help="List outward-facing runs through the API.")
+    run_list.add_argument("--status", default="")
+    run_list.add_argument("--limit", type=int, default=20)
+    run_list.add_argument("--offset", type=int, default=0)
+
+    run_events = run_sub.add_parser("events", help="Fetch outward-facing run events through the API.")
+    run_events.add_argument("run_id")
+    run_events.add_argument("--types", default="")
+    run_events.add_argument("--from-turn", type=int, default=None)
+    run_events.add_argument("--to-turn", type=int, default=None)
+    run_events.add_argument("--agent-id", default="")
+
+    run_summary = run_sub.add_parser("summary", help="Fetch outward-facing run summary through the API.")
+    run_summary.add_argument("run_id")
+
+    run_watch = run_sub.add_parser("watch", help="Watch outward-facing run events through the API stream.")
+    run_watch.add_argument("run_id")
+    run_watch.add_argument("--types", default="")
+
+    approvals_parser = subparsers.add_parser("approvals", help="Outward pipeline approval commands.")
+    approvals_sub = approvals_parser.add_subparsers(dest="approvals_command", required=True)
+    approvals_list = approvals_sub.add_parser("list", help="List pending outward approvals through the API.")
+    approvals_list.add_argument("--status", default="pending")
+    approvals_review = approvals_sub.add_parser("review", help="Review one outward approval proposal.")
+    approvals_review.add_argument("proposal_id")
+    approvals_approve = approvals_sub.add_parser("approve", help="Approve one outward approval proposal.")
+    approvals_approve.add_argument("proposal_id")
+    approvals_approve.add_argument("--note", default="")
+    approvals_deny = approvals_sub.add_parser("deny", help="Deny one outward approval proposal.")
+    approvals_deny.add_argument("proposal_id")
+    approvals_deny.add_argument("--reason", required=True)
+    approvals_deny.add_argument("--note", default="")
+    approvals_watch = approvals_sub.add_parser("watch", help="Poll pending outward approvals once.")
+    approvals_watch.add_argument("--status", default="pending")
+
+    ledger_parser = subparsers.add_parser("ledger", help="Outward pipeline ledger commands.")
+    ledger_sub = ledger_parser.add_subparsers(dest="ledger_command", required=True)
+    ledger_export = ledger_sub.add_parser("export", help="Export an outward run ledger through the API.")
+    ledger_export.add_argument("run_id")
+    ledger_export.add_argument("--types", default="")
+    ledger_export.add_argument("--include-pii", action="store_true")
+    ledger_export.add_argument("--out", required=True)
+    ledger_verify = ledger_sub.add_parser("verify", help="Verify a ledger export file offline.")
+    ledger_verify.add_argument("file")
+    ledger_summary = ledger_sub.add_parser("summary", help="Fetch live ledger verification summary through the API.")
+    ledger_summary.add_argument("run_id")
+
+    connectors_parser = subparsers.add_parser("connectors", help="Outward pipeline built-in connector commands.")
+    connectors_sub = connectors_parser.add_subparsers(dest="connectors_command", required=True)
+    connectors_list = connectors_sub.add_parser("list", help="List built-in connector metadata.")
+    connectors_list.add_argument("--workspace", default=".", help="Workspace root for local connector context.")
+    connectors_show = connectors_sub.add_parser("show", help="Show one built-in connector metadata record.")
+    connectors_show.add_argument("name")
+    connectors_show.add_argument("--workspace", default=".", help="Workspace root for local connector context.")
+    connectors_test = connectors_sub.add_parser("test", help="Invoke one built-in connector through the local harness.")
+    connectors_test.add_argument("name")
+    connectors_test.add_argument("--args", required=True, help="Connector args as JSON.")
+    connectors_test.add_argument("--workspace", default=".", help="Workspace root for local connector context.")
 
     add_reforge_subparser(subparsers)
     return parser
@@ -1141,6 +1428,14 @@ def main(argv: list[str] | None = None) -> int:
             return 1
     elif args.command == "reforge":
         return handle_reforge(args)
+    elif args.command == "run":
+        return _handle_run_command(args)
+    elif args.command == "approvals":
+        return _handle_approvals_command(args)
+    elif args.command == "ledger":
+        return _handle_ledger_command(args)
+    elif args.command == "connectors":
+        return _handle_connectors_command(args)
     else:
         print(json.dumps({"ok": False, "error": "unsupported_command"}, ensure_ascii=False))
         return 2

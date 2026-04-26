@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import os
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, Protocol
 
 from orket.application.services.gitea_state_pilot import (
     collect_gitea_state_pilot_inputs,
@@ -15,22 +16,34 @@ from orket.application.services.runtime_policy import (
 from orket.settings import load_user_settings
 
 
+class ProcessRules(Protocol):
+    def get(self, key: str, default: Any = None) -> Any: ...
+
+
+class Organization(Protocol):
+    process_rules: Mapping[str, Any] | ProcessRules | Any
+
+
+def process_rule_value(organization: Organization | None, key: str, default: Any = "") -> Any:
+    process_rules = getattr(organization, "process_rules", None) if organization else None
+    if process_rules is None:
+        return default
+    if isinstance(process_rules, Mapping):
+        return process_rules.get(key, default)
+    getter = getattr(process_rules, "get", None)
+    if callable(getter):
+        return getter(key, default)
+    return getattr(process_rules, key, default)
+
+
 class OrchestrationConfig:
     """Configuration resolution and validation for orchestration runtime mode."""
 
-    def __init__(self, org: Any) -> None:
+    def __init__(self, org: Organization | None) -> None:
         self.org = org
 
     def _process_rule(self, key: str) -> str:
-        process_rules = getattr(self.org, "process_rules", None) if self.org else None
-        if isinstance(process_rules, dict):
-            return str(process_rules.get(key, "")).strip()
-        getter = getattr(process_rules, "get", None)
-        if callable(getter):
-            return str(getter(key, "")).strip()
-        if process_rules is not None:
-            return str(getattr(process_rules, key, "")).strip()
-        return ""
+        return str(process_rule_value(self.org, key, "")).strip()
 
     def resolve_state_backend_mode(self, *, user_settings: dict[str, Any] | None = None) -> str:
         env_raw = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip()

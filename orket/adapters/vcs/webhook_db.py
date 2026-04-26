@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiosqlite
 
+from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.logging import log_event
 from orket.runtime_paths import resolve_webhook_db_path
 
@@ -52,7 +53,7 @@ class WebhookDatabase:
             if self._initialized:
                 return
 
-            async with aiosqlite.connect(self.db_path) as conn:
+            async with connect_sqlite_wal(self.db_path) as conn:
                 await conn.execute("""
                     CREATE TABLE IF NOT EXISTS pr_review_cycles (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -126,7 +127,7 @@ class WebhookDatabase:
         await self._ensure_initialized()
         pr_key = f"{repo_full_name}#{pr_number}"
 
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute("SELECT cycle_count FROM pr_review_cycles WHERE pr_key = ?", (pr_key,))
             row = await cursor.fetchone()
@@ -139,7 +140,7 @@ class WebhookDatabase:
         await self._ensure_initialized()
         pr_key = f"{repo_full_name}#{pr_number}"
 
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             # Insert or update
             await conn.execute(
@@ -170,7 +171,7 @@ class WebhookDatabase:
         if not normalized_event_id:
             return True
         await self._ensure_initialized()
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             cursor = await conn.execute(
                 """
                 INSERT OR IGNORE INTO webhook_event_dedupe (event_id, event_type, pr_key)
@@ -195,7 +196,7 @@ class WebhookDatabase:
         pr_key = f"{repo_full_name}#{pr_number}"
         cycle_count = await self.get_pr_cycle_count(repo_full_name, pr_number)
 
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             await conn.execute(
                 """
                 INSERT INTO review_failures (pr_key, cycle_number, reviewer, reason)
@@ -213,7 +214,7 @@ class WebhookDatabase:
         await self._ensure_initialized()
         pr_key = f"{repo_full_name}#{pr_number}"
 
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute(
                 """
@@ -231,7 +232,7 @@ class WebhookDatabase:
     async def save_bug_fix_phase(self, phase: Any) -> None:
         """Save a bug fix phase to the database."""
         await self._ensure_initialized()
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             await conn.execute(
                 """
                 INSERT OR REPLACE INTO bug_fix_phases (rock_id, data_json, status, updated_at)
@@ -246,7 +247,7 @@ class WebhookDatabase:
         await self._ensure_initialized()
         from orket.core.domain.bug_fix_phase import BugFixPhase
 
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute("SELECT data_json FROM bug_fix_phases WHERE rock_id = ?", (rock_id,))
             row = await cursor.fetchone()
@@ -261,7 +262,7 @@ class WebhookDatabase:
         await self._ensure_initialized()
         pr_key = f"{repo_full_name}#{pr_number}"
 
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             await conn.execute(
                 """
                 UPDATE pr_review_cycles
@@ -278,7 +279,7 @@ class WebhookDatabase:
         Get all active PR review cycles.
         """
         await self._ensure_initialized()
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute("""
                 SELECT pr_key, repo_full_name, pr_number, cycle_count, created_at, updated_at

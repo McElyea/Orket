@@ -9,6 +9,7 @@ import pytest
 from orket.adapters.storage.async_control_plane_execution_repository import (
     AsyncControlPlaneExecutionRepository,
 )
+from orket.adapters.storage.sqlite_connection import current_journal_mode
 from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
 from orket.core.domain import AttemptState, RunState, SideEffectBoundaryClass
 
@@ -80,3 +81,28 @@ async def test_async_control_plane_execution_repository_persists_run_and_attempt
     assert [record.attempt_id for record in listed_attempts] == ["sandbox-attempt:sb-1:00000001"]
     assert loaded_step == step
     assert [record.step_id for record in listed_steps] == ["tool-op-1"]
+
+
+@pytest.mark.asyncio
+async def test_async_control_plane_execution_repository_enables_wal_mode(tmp_path: Path) -> None:
+    """Layer: integration. Verifies control-plane execution storage selects WAL mode on the real SQLite file."""
+    db_path = tmp_path / "control_plane.sqlite3"
+    repository = AsyncControlPlaneExecutionRepository(db_path)
+
+    await repository.save_run_record(
+        record=RunRecord(
+            run_id="run-wal",
+            workload_id="sandbox-workload:test",
+            workload_version="docker_sandbox_runtime.v1",
+            policy_snapshot_id="sandbox-policy:test",
+            policy_digest="sha256:policy",
+            configuration_snapshot_id="sandbox-config:test",
+            configuration_digest="sha256:config",
+            creation_timestamp="2026-04-25T00:00:00+00:00",
+            admission_decision_receipt_ref="sandbox-reservation:test",
+            lifecycle_state=RunState.EXECUTING,
+            current_attempt_id="attempt-wal",
+        )
+    )
+
+    assert await current_journal_mode(db_path) == "wal"

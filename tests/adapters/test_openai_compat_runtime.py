@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from orket.adapters.llm.openai_compat_runtime import extract_openai_content, validate_openai_messages
+from orket.adapters.llm.openai_compat_runtime import (
+    build_orket_session_id,
+    extract_openai_content,
+    extract_openai_usage,
+    validate_openai_messages,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -186,6 +191,56 @@ def test_extract_openai_content_returns_raw_reasoning_when_no_recoverable_sectio
     }
 
     assert extract_openai_content(payload) == "Thinking Process:\n1. Analyze the request.\n2. Draft a response."
+
+
+def test_extract_openai_content_returns_none_for_structural_failure() -> None:
+    """Layer: unit. Verifies broken provider envelopes are distinguishable from empty model text."""
+    assert extract_openai_content({}) is None
+    assert extract_openai_content({"choices": []}) is None
+    assert extract_openai_content({"choices": [{"delta": {"content": "stream fragment"}}]}) is None
+    assert extract_openai_content({"choices": [{"message": {"content": [{"text": 7}]}}]}) is None
+
+
+def test_extract_openai_content_allows_legitimate_empty_message() -> None:
+    """Layer: unit. Verifies empty assistant text remains distinct from structural failure."""
+    payload = {"choices": [{"message": {"role": "assistant", "content": "", "reasoning_content": ""}}]}
+
+    assert extract_openai_content(payload) == ""
+
+
+def test_extract_openai_usage_accepts_negative_integer_strings() -> None:
+    """Layer: unit. Verifies integer parsing fails closed only for non-integer strings."""
+    assert extract_openai_usage({"usage": {"prompt_tokens": "-2", "completion_tokens": "3"}}) == (-2, 3, 1)
+    assert extract_openai_usage({"usage": {"prompt_tokens": "1.5", "completion_tokens": "3"}}) == (None, 3, None)
+
+
+def test_build_orket_session_id_does_not_use_seat_id_as_session_authority() -> None:
+    """Layer: unit. Verifies role/seat identifiers do not become provider session identifiers."""
+    session_id = build_orket_session_id(
+        runtime_context={"seat_id": "seat-42", "run_id": "run-42"},
+        model="model-a",
+        provider_name="provider-a",
+        fallback_messages=[{"role": "user", "content": "hello"}],
+    )
+
+    assert session_id == "run-42"
+
+
+def test_build_orket_session_id_fallback_is_collision_resistant() -> None:
+    """Layer: unit. Verifies identical prompts without explicit run context do not collide."""
+    kwargs = {
+        "runtime_context": {},
+        "model": "model-a",
+        "provider_name": "provider-a",
+        "fallback_messages": [{"role": "user", "content": "hello"}],
+    }
+
+    first = build_orket_session_id(**kwargs)
+    second = build_orket_session_id(**kwargs)
+
+    assert first != second
+    assert first.startswith("derived-")
+    assert second.startswith("derived-")
 
 
 def test_validate_openai_messages_reports_original_role_value() -> None:

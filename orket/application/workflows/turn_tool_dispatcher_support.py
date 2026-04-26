@@ -17,8 +17,12 @@ from orket.runtime.protocol_error_codes import (
     E_TOOL_SEQUENCE,
     format_protocol_error,
 )
-
-from orket.runtime.registry.protocol_hashing import hash_clock_artifact_ref, hash_env_allowlist, hash_network_allowlist
+from orket.runtime.registry.protocol_hashing import (
+    hash_clock_artifact_ref,
+    hash_env_allowlist,
+    hash_network_allowlist,
+)
+from orket.utils import dedupe_ordered
 
 _VALID_TOOL_RINGS = {"core", "compatibility", "experimental"}
 _VALID_DETERMINISM_CLASSES = {"pure", "workspace", "external"}
@@ -340,12 +344,7 @@ def _allowed_namespace_scopes(*, context: dict[str, Any], issue_id: str) -> set[
 
 
 def _deduped(values: list[str]) -> list[str]:
-    deduped: list[str] = []
-    for value in values:
-        token = str(value).strip()
-        if token and token not in deduped:
-            deduped.append(token)
-    return deduped
+    return dedupe_ordered(values)
 
 
 def build_execution_capsule(context: dict[str, Any]) -> dict[str, Any]:

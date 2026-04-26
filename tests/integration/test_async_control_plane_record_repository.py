@@ -10,6 +10,7 @@ from orket.adapters.storage.async_control_plane_record_repository import (
     AsyncControlPlaneRecordRepository,
     ControlPlaneRecordConflictError,
 )
+from orket.adapters.storage.sqlite_connection import current_journal_mode
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.core.contracts import CheckpointRecord, ResolvedConfigurationSnapshot, ResolvedPolicySnapshot
 from orket.core.domain import (
@@ -185,6 +186,25 @@ async def test_async_control_plane_record_repository_persists_publication_flow(t
     assert latest_holder_reservation is not None
     assert latest_holder_reservation.status is ReservationStatus.PROMOTED_TO_LEASE
     assert final_truth.final_truth_record_id == loaded_truth.final_truth_record_id
+
+
+@pytest.mark.asyncio
+async def test_async_control_plane_record_repository_enables_wal_mode(tmp_path: Path) -> None:
+    """Layer: integration. Verifies control-plane record storage selects WAL mode on the real SQLite file."""
+    db_path = tmp_path / "control_plane.sqlite3"
+    repository = AsyncControlPlaneRecordRepository(db_path)
+
+    await repository.save_resolved_policy_snapshot(
+        snapshot=ResolvedPolicySnapshot(
+            snapshot_id="policy-wal",
+            snapshot_digest="sha256:policy-wal",
+            created_at="2026-04-25T00:00:00+00:00",
+            source_refs=["test"],
+            policy_payload={"mode": "test"},
+        )
+    )
+
+    assert await current_journal_mode(db_path) == "wal"
 
 
 @pytest.mark.asyncio

@@ -15,6 +15,7 @@ import aiosqlite
 
 from orket.core.contracts.repositories import SessionRepository, SnapshotRepository
 from orket.runtime.result_error_invariants import validate_result_error_invariant
+from .sqlite_connection import connect_sqlite_wal, ensure_wal_mode
 
 
 class AsyncSessionRepository(SessionRepository):
@@ -27,7 +28,7 @@ class AsyncSessionRepository(SessionRepository):
         self._lock = asyncio.Lock()
 
     async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
-        await conn.execute("PRAGMA journal_mode=WAL")
+        await ensure_wal_mode(conn)
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS sessions (
                 id TEXT PRIMARY KEY,
@@ -44,7 +45,7 @@ class AsyncSessionRepository(SessionRepository):
         await conn.commit()
 
     async def get_session(self, session_id: str) -> dict[str, Any] | None:
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             await self._ensure_initialized(conn)
             cursor = await conn.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
@@ -52,7 +53,7 @@ class AsyncSessionRepository(SessionRepository):
             return dict(row) if row else None
 
     async def start_session(self, session_id: str, data: dict[str, Any]) -> None:
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
                 """
@@ -73,7 +74,7 @@ class AsyncSessionRepository(SessionRepository):
             await conn.commit()
 
     async def get_recent_runs(self, limit: int = 10) -> list[dict[str, Any]]:
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             await self._ensure_initialized(conn)
             cursor = await conn.execute("SELECT * FROM sessions ORDER BY start_time DESC LIMIT ?", (limit,))
@@ -86,7 +87,7 @@ class AsyncSessionRepository(SessionRepository):
 
         This intentionally mirrors legacy repository behavior used by `/v1/runs/{session_id}/backlog`.
         """
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             await self._ensure_initialized(conn)
 
@@ -124,7 +125,7 @@ class AsyncSessionRepository(SessionRepository):
     async def complete_session(
         self, session_id: str, status: str, transcript: list[dict[str, Any]]
     ) -> None:
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
                 "UPDATE sessions SET status = ?, transcript = ?, end_time = ? WHERE id = ?",
@@ -160,7 +161,7 @@ class AsyncSnapshotRepository(SnapshotRepository):
     async def record(
         self, session_id: str, config: dict[str, Any], logs: list[dict[str, Any]]
     ) -> None:
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
                 """
@@ -173,7 +174,7 @@ class AsyncSnapshotRepository(SnapshotRepository):
             await conn.commit()
 
     async def get(self, session_id: str) -> dict[str, Any] | None:
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             await self._ensure_initialized(conn)
             cursor = await conn.execute("SELECT * FROM session_snapshots WHERE session_id = ?", (session_id,))
@@ -210,7 +211,7 @@ class AsyncSuccessRepository:
     async def record_success(
         self, session_id: str, success_type: str, artifact_ref: str, human_ack: str | None = None
     ) -> None:
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
                 """
@@ -270,7 +271,7 @@ class AsyncRunLedgerRepository:
         artifacts: dict[str, Any] | None = None,
     ) -> None:
         now = datetime.now(UTC).isoformat()
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
                 """
@@ -314,7 +315,7 @@ class AsyncRunLedgerRepository:
             failure_reason=failure_reason,
         )
         now = str(finalized_at or datetime.now(UTC).isoformat())
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             await self._ensure_initialized(conn)
 
             if summary is None and artifacts is None:
@@ -378,7 +379,7 @@ class AsyncRunLedgerRepository:
             await conn.commit()
 
     async def get_run(self, session_id: str) -> dict[str, Any] | None:
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             await self._ensure_initialized(conn)
             cursor = await conn.execute("SELECT * FROM run_ledger WHERE session_id = ?", (session_id,))
@@ -452,7 +453,7 @@ class AsyncPendingGateRepository:
     ) -> str:
         request_id = str(uuid.uuid4())[:8]
         now = str(created_at or datetime.now(UTC).isoformat())
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
                 """
@@ -488,7 +489,7 @@ class AsyncPendingGateRepository:
         resolution: dict[str, Any] | None = None,
     ) -> None:
         now = datetime.now(UTC).isoformat()
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
                 """
@@ -507,7 +508,7 @@ class AsyncPendingGateRepository:
         status: str | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             await self._ensure_initialized(conn)
 

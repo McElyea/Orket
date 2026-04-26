@@ -81,7 +81,7 @@ def _proposal_envelope(
         "proposal_type": "action.tool_call",
         "created_at": _now_utc(),
         "source": {
-            "source_id": "fake-openclaw-adapter-torture",
+            "source_id": "fake-challenge-corpus-adapter",
             "source_type": "agent_adapter",
             "trust_tier": "untrusted",
             "model": {"provider": "local", "name": "fake-attack-brain", "version": "0.1"},
@@ -138,7 +138,7 @@ def _select_case_id(request: dict[str, Any], known_case_ids: list[str]) -> str:
     if requested:
         return requested
     if len(known_case_ids) == 1:
-        LOGGER.warning("openclaw_torture_adapter_auto_selected_single_case", extra={"case_id": known_case_ids[0]})
+        LOGGER.warning("challenge_corpus_adapter_auto_selected_single_case", extra={"case_id": known_case_ids[0]})
         return known_case_ids[0]
     return ""
 

@@ -4,9 +4,6 @@ from dataclasses import dataclass, field
 from typing import Any
 
 AgentId = str
-State = Any
-Action = Any
-Observation = Any
 
 
 @dataclass(frozen=True)

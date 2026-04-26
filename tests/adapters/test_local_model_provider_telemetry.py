@@ -349,14 +349,35 @@ async def test_local_model_provider_rejects_non_openai_roles(monkeypatch: pytest
 
 
 @pytest.mark.asyncio
+async def test_local_model_provider_blocks_structurally_invalid_openai_response(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies broken provider response envelopes do not become empty assistant success."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="dummy")
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"choices": [{"delta": {"content": "stream-only"}}]})
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    with pytest.raises(ModelProviderError, match="missing choices\\[0\\]\\.message"):
+        await provider.complete([{"role": "user", "content": "hello"}])
+    await provider.close()
+
+
+@pytest.mark.asyncio
 async def test_local_model_provider_uses_runtime_context_for_orket_session_id(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
     provider = LocalModelProvider(model="dummy")
 
     async def _handler(request: httpx.Request) -> httpx.Response:
-        assert request.headers["x-orket-session-id"] == "seat-42"
-        assert request.headers["x-client-session"] == "seat-42"
+        assert request.headers["x-orket-session-id"] == "run-42"
+        assert request.headers["x-client-session"] == "run-42"
         return httpx.Response(
             200,
             json={
@@ -372,10 +393,10 @@ async def test_local_model_provider_uses_runtime_context_for_orket_session_id(mo
     )
     response = await provider.complete(
         [{"role": "user", "content": "hello"}],
-        runtime_context={"seat_id": "seat-42"},
+        runtime_context={"seat_id": "seat-42", "run_id": "run-42"},
     )
     await provider.close()
-    assert response.raw["orket_session_id"] == "seat-42"
+    assert response.raw["orket_session_id"] == "run-42"
     assert response.raw["orket_session_epoch"] == 0
 
 
@@ -972,12 +993,12 @@ async def test_local_model_provider_clear_context_rotates_openai_session_id(monk
         base_url="http://127.0.0.1:1234/v1",
         transport=httpx.MockTransport(_handler),
     )
-    first = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"seat_id": "seat-42"})
+    first = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"run_id": "run-42"})
     await provider.clear_context()
-    second = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"seat_id": "seat-42"})
+    second = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"run_id": "run-42"})
     await provider.close()
 
-    assert seen_session_ids == ["seat-42", "seat-42-ctx1"]
+    assert seen_session_ids == ["run-42", "run-42-ctx1"]
     assert first.raw["orket_session_epoch"] == 0
     assert second.raw["orket_session_epoch"] == 1
 

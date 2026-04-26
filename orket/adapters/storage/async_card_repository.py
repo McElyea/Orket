@@ -22,6 +22,7 @@ from orket.schema import CardStatus
 from .card_archive_ops import CardArchiveOps
 from .card_migrations import CardMigrations
 from .card_misc_ops import CardMiscOps
+from .sqlite_connection import connect_sqlite_wal
 
 ResultT = TypeVar("ResultT")
 
@@ -91,7 +92,7 @@ class AsyncCardRepository(CardRepository):
         write: bool = False,
     ) -> ResultT:
         async def _run_operation() -> ResultT:
-            async with aiosqlite.connect(self.db_path) as conn:
+            async with connect_sqlite_wal(self.db_path) as conn:
                 if row_factory:
                     conn.row_factory = aiosqlite.Row
                 await self._ensure_initialized(conn)

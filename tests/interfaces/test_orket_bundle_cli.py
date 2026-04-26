@@ -5,6 +5,9 @@ import json
 import zipfile
 from pathlib import Path
 
+import httpx
+
+import orket.interfaces.orket_bundle_cli as cli_module
 from orket.interfaces.orket_bundle_cli import (
     ERROR_ENGINE_INCOMPATIBLE,
     ERROR_GUARD_FILE_MISSING,
@@ -197,3 +200,271 @@ def test_cli_sdk_requires_command(capsys) -> None:
     assert code == 1
     assert payload["ok"] is False
     assert payload["errors"][0]["code"] == ERROR_SDK_COMMAND_REQUIRED
+
+
+def test_run_submit_cli_uses_api_and_prints_response(monkeypatch, capsys) -> None:
+    """Layer: contract. Verifies outward run CLI submits through the API client only."""
+    requests: list[dict] = []
+
+    class _FakeClient:
+        def __init__(self, *, base_url: str, timeout: float) -> None:
+            assert base_url == "http://127.0.0.1:9999"
+            assert timeout == 30.0
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, _exc_type, _exc, _tb) -> None:
+            return None
+
+        def request(self, method: str, path: str, **kwargs):
+            requests.append({"method": method, "path": path, **kwargs})
+            request = httpx.Request(method, f"http://127.0.0.1:9999{path}")
+            return httpx.Response(200, json={"run_id": "run-cli", "status": "queued"}, request=request)
+
+    monkeypatch.setenv("ORKET_API_URL", "http://127.0.0.1:9999")
+    monkeypatch.setenv("ORKET_API_KEY", "secret")
+    monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
+
+    code = cli_module.main(["run", "submit", "--description", "Demo", "--instruction", "Do it"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload["run_id"] == "run-cli"
+    assert requests == [
+        {
+            "method": "POST",
+            "path": "/v1/runs",
+            "headers": {"X-API-Key": "secret"},
+            "json": {"task": {"description": "Demo", "instruction": "Do it"}},
+            "params": None,
+        }
+    ]
+
+
+def test_run_status_cli_prints_api_payload(monkeypatch, capsys) -> None:
+    """Layer: contract. Verifies outward run status CLI displays the API payload."""
+
+    class _FakeClient:
+        def __init__(self, *, base_url: str, timeout: float) -> None:
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, _exc_type, _exc, _tb) -> None:
+            return None
+
+        def request(self, method: str, path: str, **kwargs):
+            request = httpx.Request(method, f"http://127.0.0.1:8082{path}")
+            return httpx.Response(
+                200,
+                json={"run_id": "run-cli", "status": "queued", "current_turn": 0},
+                request=request,
+            )
+
+    monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
+
+    code = cli_module.main(["run", "status", "run-cli"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload == {"run_id": "run-cli", "status": "queued", "current_turn": 0}
+
+
+def test_run_list_cli_sends_status_filter(monkeypatch, capsys) -> None:
+    """Layer: contract. Verifies outward run list CLI delegates filtering to the API."""
+    requests: list[dict] = []
+
+    class _FakeClient:
+        def __init__(self, *, base_url: str, timeout: float) -> None:
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, _exc_type, _exc, _tb) -> None:
+            return None
+
+        def request(self, method: str, path: str, **kwargs):
+            requests.append({"method": method, "path": path, **kwargs})
+            request = httpx.Request(method, f"http://127.0.0.1:8082{path}")
+            return httpx.Response(200, json={"items": [], "count": 0}, request=request)
+
+    monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
+
+    code = cli_module.main(["run", "list", "--status", "queued"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload == {"items": [], "count": 0}
+    assert requests[0]["method"] == "GET"
+    assert requests[0]["path"] == "/v1/runs"
+    assert requests[0]["params"] == {"status": "queued", "limit": 20, "offset": 0}
+
+
+def test_approvals_cli_delegates_list_review_and_decisions(monkeypatch, capsys) -> None:
+    """Layer: contract. Verifies outward approvals CLI commands are API-client wrappers."""
+    requests: list[dict] = []
+    monkeypatch.delenv("ORKET_API_KEY", raising=False)
+
+    class _FakeClient:
+        def __init__(self, *, base_url: str, timeout: float) -> None:
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, _exc_type, _exc, _tb) -> None:
+            return None
+
+        def request(self, method: str, path: str, **kwargs):
+            requests.append({"method": method, "path": path, **kwargs})
+            request = httpx.Request(method, f"http://127.0.0.1:8082{path}")
+            return httpx.Response(200, json={"ok": True, "path": path}, request=request)
+
+    monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
+
+    assert cli_module.main(["approvals", "list"]) == 0
+    _ = json.loads(capsys.readouterr().out)
+    assert cli_module.main(["approvals", "review", "proposal-1"]) == 0
+    _ = json.loads(capsys.readouterr().out)
+    assert cli_module.main(["approvals", "approve", "proposal-1", "--note", "safe"]) == 0
+    _ = json.loads(capsys.readouterr().out)
+    assert cli_module.main(["approvals", "deny", "proposal-2", "--reason", "unsafe"]) == 0
+    _ = json.loads(capsys.readouterr().out)
+
+    assert requests == [
+        {
+            "method": "GET",
+            "path": "/v1/approvals",
+            "headers": {},
+            "json": None,
+            "params": {"status": "pending"},
+        },
+        {
+            "method": "GET",
+            "path": "/v1/approvals/proposal-1",
+            "headers": {},
+            "json": None,
+            "params": None,
+        },
+        {
+            "method": "POST",
+            "path": "/v1/approvals/proposal-1/approve",
+            "headers": {},
+            "json": {"note": "safe"},
+            "params": None,
+        },
+        {
+            "method": "POST",
+            "path": "/v1/approvals/proposal-2/deny",
+            "headers": {},
+            "json": {"reason": "unsafe", "note": None},
+            "params": None,
+        },
+    ]
+
+
+def test_run_inspection_cli_delegates_events_summary_and_watch(monkeypatch, capsys) -> None:
+    """Layer: contract. Verifies outward run inspection CLI commands are API-client wrappers."""
+    requests: list[dict] = []
+    monkeypatch.delenv("ORKET_API_KEY", raising=False)
+
+    class _FakeClient:
+        def __init__(self, *, base_url: str, timeout: float) -> None:
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, _exc_type, _exc, _tb) -> None:
+            return None
+
+        def request(self, method: str, path: str, **kwargs):
+            requests.append({"method": method, "path": path, **kwargs})
+            request = httpx.Request(method, f"http://127.0.0.1:8082{path}")
+            return httpx.Response(200, json={"ok": True, "path": path}, request=request)
+
+    monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
+
+    assert cli_module.main(["run", "events", "run-1", "--types", "tool_invoked", "--from-turn", "1"]) == 0
+    _ = json.loads(capsys.readouterr().out)
+    assert cli_module.main(["run", "summary", "run-1"]) == 0
+    _ = json.loads(capsys.readouterr().out)
+    assert cli_module.main(["run", "watch", "run-1", "--types", "run_completed"]) == 0
+    _ = json.loads(capsys.readouterr().out)
+
+    assert requests == [
+        {
+            "method": "GET",
+            "path": "/v1/runs/run-1/events",
+            "headers": {},
+            "json": None,
+            "params": {"types": "tool_invoked", "from_turn": 1},
+        },
+        {
+            "method": "GET",
+            "path": "/v1/runs/run-1/summary",
+            "headers": {},
+            "json": None,
+            "params": None,
+        },
+        {
+            "method": "GET",
+            "path": "/v1/runs/run-1/events/stream",
+            "headers": {},
+            "json": None,
+            "params": {"types": "run_completed"},
+        },
+    ]
+
+
+def test_connectors_cli_lists_shows_and_tests_local_harness(tmp_path: Path, capsys) -> None:
+    """Layer: contract. Verifies built-in connector CLI uses the local Phase 5 harness."""
+    list_code = cli_module.main(["connectors", "list", "--workspace", str(tmp_path)])
+    listed = json.loads(capsys.readouterr().out)
+    show_code = cli_module.main(["connectors", "show", "write_file", "--workspace", str(tmp_path)])
+    shown = json.loads(capsys.readouterr().out)
+    test_code = cli_module.main(
+        [
+            "connectors",
+            "test",
+            "create_directory",
+            "--args",
+            json.dumps({"path": "made"}),
+            "--workspace",
+            str(tmp_path),
+        ]
+    )
+    tested = json.loads(capsys.readouterr().out)
+
+    assert list_code == 0
+    assert {item["name"] for item in listed["items"]} >= {"write_file", "delete_file", "http_get", "run_command"}
+    assert show_code == 0
+    assert shown["name"] == "write_file"
+    assert test_code == 0
+    assert set(tested) == {"connector_name", "args_hash", "result_summary", "duration_ms", "outcome"}
+    assert tested["outcome"] == "success"
+    assert (tmp_path / "made").is_dir()
+
+
+def test_connectors_cli_rejects_invalid_args_before_harness_invocation(tmp_path: Path, capsys) -> None:
+    """Layer: contract. Verifies connector CLI reports field-level validation errors."""
+    code = cli_module.main(
+        [
+            "connectors",
+            "test",
+            "write_file",
+            "--args",
+            json.dumps({"path": "missing-content.txt"}),
+            "--workspace",
+            str(tmp_path),
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 1
+    assert payload["code"] == cli_module.ERROR_CONNECTOR_FAILED
+    assert payload["errors"] == [{"field": "content", "reason": "required"}]
+    assert (tmp_path / "missing-content.txt").exists() is False

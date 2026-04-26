@@ -7,6 +7,7 @@ from typing import Any
 
 import aiosqlite
 
+from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.runtime.truthful_memory_policy import (
     classify_memory_trust_level,
     evaluate_memory_write_policy,
@@ -47,7 +48,7 @@ class MemoryStore:
         async with self._init_lock:
             if self._initialized:
                 return
-            async with aiosqlite.connect(self.db_path) as conn:
+            async with connect_sqlite_wal(self.db_path) as conn:
                 await conn.execute("""
                     CREATE TABLE IF NOT EXISTS project_memory (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -93,7 +94,7 @@ class MemoryStore:
         keywords = self._keywords_for_content(content)
         content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
 
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             existing_cursor = await conn.execute(
                 "SELECT id FROM project_memory WHERE content_hash = ?",
                 (content_hash,),
@@ -118,7 +119,7 @@ class MemoryStore:
         query_terms = self._fts_query_terms(query)
 
         results: list[dict[str, Any]] = []
-        async with aiosqlite.connect(self.db_path) as conn:
+        async with connect_sqlite_wal(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             if query_terms:
                 fts_query = " OR ".join(f'"{term}"' for term in query_terms)

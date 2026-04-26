@@ -65,6 +65,9 @@ async def test_memory_store_initializes_once_under_concurrent_calls(monkeypatch,
         def __init__(self, rows=None) -> None:
             self._rows = list(rows or [])
 
+        async def fetchone(self):
+            return self._rows[0] if self._rows else ("wal",)
+
         async def fetchall(self):
             return list(self._rows)
 
@@ -92,7 +95,7 @@ async def test_memory_store_initializes_once_under_concurrent_calls(monkeypatch,
         async def commit(self) -> None:
             return None
 
-    def _connect(_path: str) -> _FakeConnection:
+    def _connect(_path: str, **_kwargs: object) -> _FakeConnection:
         connects["count"] += 1
         return _FakeConnection()
 

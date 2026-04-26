@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from orket.application.services.governed_turn_tool_approval_continuation_service import (
+    ADMITTED_GOVERNED_TURN_TOOL_APPROVAL_CONTINUATION_TOOLS,
+)
 from orket.application.workflows.turn_tool_dispatcher_support import (
     determinism_violation_details_for_result,
     determinism_violation_for_result,
@@ -125,3 +128,8 @@ def test_determinism_violation_details_for_result_returns_structured_failure_pay
     assert details["tool_contract_version"] == "2.0.0"
     assert "tool_name_side_effect" in details["side_effect_signal_keys"]
     assert "changed_files" in details["side_effect_signal_keys"]
+
+
+# Layer: unit
+def test_governed_approval_continuation_family_includes_create_directory() -> None:
+    assert "create_directory" in ADMITTED_GOVERNED_TURN_TOOL_APPROVAL_CONTINUATION_TOOLS

@@ -19,15 +19,12 @@ from orket.adapters.llm.local_prompting_policy import LocalPromptingPolicyResult
 from orket.adapters.llm.openai_compat_runtime import (
     build_orket_session_id,
     build_prompt_fingerprint,
-    extract_openai_content,
-    extract_openai_timings,
-    extract_openai_tool_calls,
-    extract_openai_usage,
     normalize_openai_base_url,
     select_response_headers,
     validate_openai_messages,
 )
 from orket.adapters.llm.openai_native_tools import build_openai_native_tooling
+from orket.adapters.llm.provider_extractors import extractor_for_provider
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.logging import log_event
 from orket.runtime.provider_runtime_target import ProviderRuntimeTarget
@@ -145,12 +142,6 @@ class LocalModelProvider:
         return default_seed
 
     @staticmethod
-    def _ns_to_ms(value: Any) -> float | None:
-        if not isinstance(value, (int, float)):
-            return None
-        return float(value) / 1_000_000.0
-
-    @staticmethod
     def _native_tool_names(native_tools: list[dict[str, Any]]) -> list[str]:
         names: list[str] = []
         for tool in native_tools:
@@ -165,45 +156,10 @@ class LocalModelProvider:
         return names
 
     @staticmethod
-    def _normalize_ollama_tool_calls(tool_calls: Any) -> list[dict[str, Any]]:
-        if not isinstance(tool_calls, list):
-            return []
-        normalized: list[dict[str, Any]] = []
-        for item in tool_calls:
-            if isinstance(item, dict):
-                function_payload = item.get("function")
-                if not isinstance(function_payload, dict):
-                    continue
-                function_name = str(function_payload.get("name") or "").strip()
-                if not function_name:
-                    continue
-                payload: dict[str, Any] = {
-                    "type": str(item.get("type") or "function"),
-                    "function": {
-                        "name": function_name,
-                        "arguments": function_payload.get("arguments"),
-                    },
-                }
-                call_id = str(item.get("id") or "").strip()
-                if call_id:
-                    payload["id"] = call_id
-                normalized.append(payload)
-                continue
-
-            function_payload = getattr(item, "function", None)
-            function_name = str(getattr(function_payload, "name", "") or "").strip()
-            if not function_name:
-                continue
-            normalized.append(
-                {
-                    "type": "function",
-                    "function": {
-                        "name": function_name,
-                        "arguments": getattr(function_payload, "arguments", None),
-                    },
-                }
-            )
-        return normalized
+    def _ns_to_ms(value: Any) -> float | None:
+        if not isinstance(value, (int, float)):
+            return None
+        return float(value) / 1_000_000.0
 
     def _resolve_request_session_id(self, base_session_id: str) -> str:
         if self.provider_backend != "openai_compat":
@@ -322,17 +278,14 @@ class LocalModelProvider:
                     timeout=self.timeout,
                 )
 
-                content = response.get("message", {}).get("content", "")
-                tool_calls = self._normalize_ollama_tool_calls(response.get("message", {}).get("tool_calls"))
-                prompt_tokens = response.get("prompt_eval_count")
-                completion_tokens = response.get("eval_count")
-                total_tokens = None
-                if isinstance(prompt_tokens, int) and isinstance(completion_tokens, int):
-                    total_tokens = prompt_tokens + completion_tokens
-
-                prompt_ms = self._ns_to_ms(response.get("prompt_eval_duration"))
-                predicted_ms = self._ns_to_ms(response.get("eval_duration"))
-                total_ms = self._ns_to_ms(response.get("total_duration"))
+                latency_ms = int((time.perf_counter() - started_at) * 1000)
+                extractor = extractor_for_provider("ollama")
+                content = extractor.extract_content(response)
+                if content is None:
+                    raise ValueError("Ollama response missing message.content structure.")
+                tool_calls = extractor.extract_tool_calls(response)
+                prompt_tokens, completion_tokens, total_tokens = extractor.extract_usage(response)
+                prompt_ms, predicted_ms, total_ms = extractor.extract_timings(response, latency_ms)
 
                 raw = {
                     "ollama": response,
@@ -357,7 +310,7 @@ class LocalModelProvider:
                     "provider_session_epoch": None,
                     "context_reset_status": "stateless_backend",
                     "retries": attempt,
-                    "latency_ms": int((time.perf_counter() - started_at) * 1000),
+                    "latency_ms": latency_ms,
                     "response_chars": len(content),
                     "ollama_request_format": request_format or None,
                     "ollama_format_fallback_used": False,
@@ -478,11 +431,14 @@ class LocalModelProvider:
                 parsed = response.json()
                 if not isinstance(parsed, dict):
                     raise ValueError("OpenAI-compatible response must be a JSON object.")
-                content = extract_openai_content(parsed)
-                tool_calls = extract_openai_tool_calls(parsed)
+                extractor = extractor_for_provider(self.provider_name)
+                content = extractor.extract_content(parsed)
+                if content is None:
+                    raise ValueError("OpenAI-compatible response missing choices[0].message content structure.")
+                tool_calls = extractor.extract_tool_calls(parsed)
                 latency_ms = int((time.perf_counter() - started_at) * 1000)
-                prompt_tokens, completion_tokens, total_tokens = extract_openai_usage(parsed)
-                prompt_ms, predicted_ms, total_ms = extract_openai_timings(parsed, latency_ms)
+                prompt_tokens, completion_tokens, total_tokens = extractor.extract_usage(parsed)
+                prompt_ms, predicted_ms, total_ms = extractor.extract_timings(parsed, latency_ms)
                 outbound_role_sequence = [
                     str(message.get("role") or "").strip().lower()
                     for message in messages

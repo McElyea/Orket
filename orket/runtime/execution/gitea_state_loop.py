@@ -29,6 +29,7 @@ from orket.application.services.runtime_policy import (
     resolve_gitea_worker_max_idle_streak,
     resolve_gitea_worker_max_iterations,
 )
+from orket.orchestration.orchestration_config import Organization, process_rule_value
 from orket.runtime.settings import resolve_str
 from orket.runtime_paths import resolve_control_plane_db_path
 from orket.settings import load_user_settings_async
@@ -39,8 +40,12 @@ RunCardCallback = Callable[[str], Awaitable[Any]]
 @dataclass(frozen=True)
 class GiteaStateLoopRunner:
     state_backend_mode: str
-    organization: Any
+    organization: Organization | None
     run_card: RunCardCallback
+
+    def __post_init__(self) -> None:
+        if self.state_backend_mode != "gitea":
+            raise ValueError("run_gitea_state_loop requires state_backend_mode='gitea'")
 
     async def run(
         self,
@@ -55,8 +60,6 @@ class GiteaStateLoopRunner:
         idle_sleep_seconds: float = 0.0,
         summary_out: str | Path | None = None,
     ) -> dict[str, Any]:
-        if self.state_backend_mode != "gitea":
-            raise ValueError("run_gitea_state_loop requires state_backend_mode='gitea'")
         inputs = self._collect_ready_inputs()
         limits = await self._resolve_limits(
             max_iterations=max_iterations,
@@ -130,15 +133,7 @@ class GiteaStateLoopRunner:
         }
 
     def _process_rule(self, key: str, default: Any = None) -> Any:
-        process_rules = getattr(self.organization, "process_rules", None) if self.organization else None
-        if process_rules is None:
-            return default
-        if isinstance(process_rules, dict):
-            return process_rules.get(key, default)
-        getter = getattr(process_rules, "get", None)
-        if callable(getter):
-            return getter(key, default)
-        return getattr(process_rules, key, default)
+        return process_rule_value(self.organization, key, default)
 
     @staticmethod
     def _build_worker(
@@ -181,7 +176,7 @@ class GiteaStateLoopRunner:
 async def run_gitea_state_loop(
     *,
     state_backend_mode: str,
-    organization: Any,
+    organization: Organization | None,
     run_card: RunCardCallback,
     worker_id: str,
     fetch_limit: int = 5,

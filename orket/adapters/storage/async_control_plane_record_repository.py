@@ -6,6 +6,7 @@ from typing import Awaitable, Callable, TypeVar
 
 import aiosqlite
 
+from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.core.contracts.control_plane_effect_journal_models import (
     CheckpointAcceptanceRecord,
     EffectJournalEntryRecord,
@@ -230,7 +231,7 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
         row_factory: bool = False,
         commit: bool = False,
     ) -> ResultT:
-        async with self._lock, aiosqlite.connect(self.db_path) as conn:
+        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             if row_factory:
                 conn.row_factory = aiosqlite.Row
             if not self._initialized:

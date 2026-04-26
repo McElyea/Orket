@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 from pathlib import Path
 from typing import Any
 
@@ -110,6 +111,7 @@ class OrchestrationEngine:
         self.kernel_async_control_plane = self._build_kernel_async_control_plane()
         self._initialize_lock = asyncio.Lock()
         self._initialized = False
+        self._closed = False
 
     def _build_kernel_async_control_plane(self) -> KernelAsyncControlPlaneService:
         return KernelAsyncControlPlaneService(
@@ -131,6 +133,18 @@ class OrchestrationEngine:
             await self.runtime_context.initialize()
             await self._pipeline.initialize()
             self._initialized = True
+
+    async def close(self) -> None:
+        if self._closed:
+            return
+        for target in (self._pipeline, self.runtime_context):
+            close = getattr(target, "aclose", None) or getattr(target, "close", None)
+            if not callable(close):
+                continue
+            maybe_awaitable = close()
+            if inspect.isawaitable(maybe_awaitable):
+                await maybe_awaitable
+        self._closed = True
 
     async def _emit_run_ledger_telemetry(self, payload: dict[str, Any]) -> None:
         log_event(

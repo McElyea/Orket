@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hmac
 import os
 from datetime import timedelta
 from pathlib import Path
@@ -57,7 +58,8 @@ class DefaultApiRuntimeStrategyNode:
 
     def is_api_key_valid(self, expected_key: str | None, provided_key: str | None) -> bool:
         if expected_key:
-            return provided_key == expected_key
+            candidate = str(provided_key or "")
+            return hmac.compare_digest(candidate, expected_key)
         if self.security_profile() == "production":
             return False
         insecure_bypass = os.getenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "").strip().lower()

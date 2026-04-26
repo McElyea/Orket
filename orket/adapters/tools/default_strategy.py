@@ -8,6 +8,7 @@ def compose_default_tool_map(toolbox: Any) -> dict[str, Callable[..., Any]]:
     return {
         "read_file": toolbox.fs.read_file,
         "write_file": toolbox.fs.write_file,
+        "create_directory": toolbox.fs.create_directory,
         "list_directory": toolbox.fs.list_directory,
         "image_analyze": toolbox.vision.image_analyze,
         "image_generate": toolbox.vision.image_generate,

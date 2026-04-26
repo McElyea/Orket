@@ -4,15 +4,10 @@ from __future__ import annotations
 
 import hashlib
 
-from fastapi.testclient import TestClient
-
 import orket.interfaces.api as api_module
-from orket.interfaces.api import app
-
-client = TestClient(app)
 
 
-def test_sandbox_operator_list_exposes_required_lifecycle_fields(monkeypatch):
+def test_sandbox_operator_list_exposes_required_lifecycle_fields(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     async def fake_get_sandboxes():
@@ -67,7 +62,7 @@ def test_sandbox_operator_list_exposes_required_lifecycle_fields(monkeypatch):
 
     monkeypatch.setattr(api_module.engine, "get_sandboxes", fake_get_sandboxes)
 
-    response = client.get("/v1/sandboxes", headers={"X-API-Key": "test-key"})
+    response = test_client.get("/v1/sandboxes", headers={"X-API-Key": "test-key"})
 
     assert response.status_code == 200
     body = response.json()
@@ -122,7 +117,7 @@ def test_sandbox_operator_list_exposes_required_lifecycle_fields(monkeypatch):
     )
 
 
-def test_sandbox_operator_stop_returns_conflict_when_reconciliation_blocked(monkeypatch):
+def test_sandbox_operator_stop_returns_conflict_when_reconciliation_blocked(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     async def fake_stop_sandbox(_sandbox_id, *, operator_actor_ref=None):
@@ -136,7 +131,7 @@ def test_sandbox_operator_stop_returns_conflict_when_reconciliation_blocked(monk
         lambda sandbox_id: {"method_name": "stop_sandbox", "args": [sandbox_id]},
     )
 
-    response = client.post("/v1/sandboxes/sb-2/stop", headers={"X-API-Key": "test-key"})
+    response = test_client.post("/v1/sandboxes/sb-2/stop", headers={"X-API-Key": "test-key"})
 
     assert response.status_code == 409
     assert response.json()["detail"] == "Sandbox sb-2 is blocked by requires_reconciliation=true"

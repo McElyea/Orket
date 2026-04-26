@@ -53,7 +53,7 @@ jobs:
         run: |
           ${{ matrix.package.install_command }}
 
-      - name: Stamp version preview (CalVer)
+      - name: Validate CalVer preview
         run: |
           python scripts/ci/stamp_calver.py --pyproject "${{ matrix.package.pyproject }}" --package-path "${{ matrix.package.path }}" --dry-run
 

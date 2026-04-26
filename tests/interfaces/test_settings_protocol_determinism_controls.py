@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
-
 import orket.interfaces.api as api_module
-from orket.interfaces.api import app
-
-client = TestClient(app)
 
 
-def test_runtime_policy_options_exposes_protocol_determinism_fields(monkeypatch):
+def test_runtime_policy_options_exposes_protocol_determinism_fields(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    response = client.get("/v1/system/runtime-policy/options", headers={"X-API-Key": "test-key"})
+    response = test_client.get("/v1/system/runtime-policy/options", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
     payload = response.json()
     assert payload["run_ledger_mode"]["default"] == "sqlite"
@@ -32,7 +27,7 @@ def test_runtime_policy_options_exposes_protocol_determinism_fields(monkeypatch)
     assert payload["local_prompting_fallback_profile_id"]["input_style"] == "text"
 
 
-def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch):
+def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "dual_write")
     monkeypatch.setenv("ORKET_PROTOCOL_TIMEZONE", "America/Denver")
@@ -77,7 +72,7 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
         )(),
     )
 
-    response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
+    response = test_client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
     payload = response.json()
     assert payload["run_ledger_mode"] == "dual_write"
@@ -91,13 +86,13 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
     assert payload["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
 
 
-def test_runtime_policy_update_saves_protocol_determinism_fields(monkeypatch):
+def test_runtime_policy_update_saves_protocol_determinism_fields(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {"existing": True})
     monkeypatch.setattr(api_module, "save_user_settings", lambda settings: captured.update({"settings": settings}))
 
-    response = client.post(
+    response = test_client.post(
         "/v1/system/runtime-policy",
         json={
             "run_ledger_mode": "dual_write",
@@ -125,14 +120,14 @@ def test_runtime_policy_update_saves_protocol_determinism_fields(monkeypatch):
     assert captured["settings"]["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
 
 
-def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch):
+def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
     captured = {}
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {"existing": "x"})
     monkeypatch.setattr(api_module, "save_user_settings", lambda settings: captured.update({"settings": settings}))
 
-    response = client.patch(
+    response = test_client.patch(
         "/v1/settings",
         json={
             "run_ledger_mode": "dual_write",
@@ -160,12 +155,12 @@ def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch):
     assert captured["settings"]["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
 
 
-def test_settings_patch_rejects_invalid_protocol_network_mode(monkeypatch):
+def test_settings_patch_rejects_invalid_protocol_network_mode(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
 
-    response = client.patch(
+    response = test_client.patch(
         "/v1/settings",
         json={"protocol_network_mode": "internet"},
         headers={"X-API-Key": "test-key"},
@@ -175,7 +170,7 @@ def test_settings_patch_rejects_invalid_protocol_network_mode(monkeypatch):
     assert any(err["field"] == "protocol_network_mode" and err["code"] == "invalid_value" for err in detail["errors"])
 
 
-def test_settings_get_reports_protocol_determinism_sources(monkeypatch):
+def test_settings_get_reports_protocol_determinism_sources(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_PROTOCOL_TIMEZONE", "America/Denver")
     monkeypatch.setenv("ORKET_PROTOCOL_LOCALE", "en_US.UTF-8")
@@ -204,7 +199,7 @@ def test_settings_get_reports_protocol_determinism_sources(monkeypatch):
         )(),
     )
 
-    response = client.get("/v1/settings", headers={"X-API-Key": "test-key"})
+    response = test_client.get("/v1/settings", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
     settings = response.json()["settings"]
     assert settings["protocol_timezone"]["value"] == "America/Denver"
@@ -218,7 +213,7 @@ def test_settings_get_reports_protocol_determinism_sources(monkeypatch):
     assert settings["run_ledger_mode"]["source"] == "user"
 
 
-def test_settings_get_keeps_run_ledger_mode_source_stable_under_env_override(monkeypatch):
+def test_settings_get_keeps_run_ledger_mode_source_stable_under_env_override(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "protocol")
     monkeypatch.setattr(
@@ -232,7 +227,7 @@ def test_settings_get_keeps_run_ledger_mode_source_stable_under_env_override(mon
         type("Org", (), {"process_rules": {}})(),
     )
 
-    response = client.get("/v1/settings", headers={"X-API-Key": "test-key"})
+    response = test_client.get("/v1/settings", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
     settings = response.json()["settings"]
     assert settings["run_ledger_mode"]["value"] == "protocol"

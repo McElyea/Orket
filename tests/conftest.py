@@ -151,6 +151,63 @@ def db_path(test_root):
     return str(test_root / "orket_test.db")
 
 
+@pytest.fixture
+def api_key_env(monkeypatch):
+    """Layer: unit. Provides a per-test API key env value for API tests."""
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    return "test-key"
+
+
+@pytest.fixture
+def test_client(tmp_path, api_key_env):
+    """Layer: integration. Provides a fresh API TestClient per test."""
+    from fastapi.testclient import TestClient
+
+    from orket.interfaces.api import create_api_app
+
+    client = TestClient(create_api_app(project_root=tmp_path))
+    try:
+        yield client
+    finally:
+        client.close()
+
+
+@pytest.fixture
+async def async_engine(tmp_path):
+    """Layer: integration. Provides an OrchestrationEngine with teardown."""
+    from orket.orchestration.engine import OrchestrationEngine
+
+    engine = OrchestrationEngine(
+        workspace_root=tmp_path / "workspace",
+        db_path=str(tmp_path / "orket.db"),
+        config_root=tmp_path,
+    )
+    try:
+        yield engine
+    finally:
+        await engine.close()
+
+
+@pytest.fixture(autouse=True)
+async def close_direct_orchestration_engines(monkeypatch):
+    """Layer: integration. Closes direct OrchestrationEngine constructions after each test."""
+    from orket.orchestration.engine import OrchestrationEngine
+
+    original_init = OrchestrationEngine.__init__
+    engines = []
+
+    def tracked_init(self, *args, **kwargs):
+        original_init(self, *args, **kwargs)
+        engines.append(self)
+
+    monkeypatch.setattr(OrchestrationEngine, "__init__", tracked_init)
+    try:
+        yield
+    finally:
+        for engine in reversed(engines):
+            await engine.close()
+
+
 @pytest.fixture(autouse=True)
 def fail_closed_sandbox_creation(monkeypatch):
     # The general pytest suite fails closed on Docker sandbox creation.

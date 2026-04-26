@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = [
     'compact_turn_packet',
     'config_loader',
+    'cors_config',
     'defaults',
     'local_prompt_profiles',
     'model_profile_bios',
@@ -12,5 +13,6 @@ __all__ = [
     'provider_truth_table',
     'runtime_bootstrap',
     'runtime_context',
-    'settings'
+    'settings',
+    'startup_checks'
 ]

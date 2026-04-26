@@ -76,7 +76,13 @@ class KernelRebuildPendingApprovalsRequest(BaseModel):
     session_id: str
 
 
-def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
+def build_kernel_router(
+    engine_getter: Callable[[], Any],
+    *,
+    outward_approval_service_getter: Callable[[], Any] | None = None,
+    outward_execution_service_getter: Callable[[], Any] | None = None,
+    outbound_filter: Callable[[Any, str], Any] | None = None,
+) -> APIRouter:
     router = APIRouter()
 
     async def _augment_kernel_response_with_control_plane_refs(
@@ -338,6 +344,13 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    router.include_router(build_approvals_router(engine_getter))
+    router.include_router(
+        build_approvals_router(
+            engine_getter,
+            outward_approval_service_getter=outward_approval_service_getter,
+            outward_execution_service_getter=outward_execution_service_getter,
+            outbound_filter=outbound_filter,
+        )
+    )
 
     return router

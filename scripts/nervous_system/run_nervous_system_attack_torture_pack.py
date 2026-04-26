@@ -275,13 +275,13 @@ async def _run_torture(corpus_path: Path) -> dict[str, Any]:
     ]
 
     adapter = OpenClawJsonlSubprocessAdapter(
-        command=[sys.executable, "tools/fake_openclaw_adapter_torture.py"],
+        command=[sys.executable, "tools/fake_challenge_corpus_adapter.py"],
         io_timeout_seconds=15.0,
     )
     adapter_result = await adapter.run_requests(requests)
     if not adapter_result.ok:
         raise RuntimeError(
-            f"fake OpenClaw torture adapter failed after {adapter_result.completed_count} responses: {adapter_result.error}"
+            f"fake challenge-corpus adapter failed after {adapter_result.completed_count} responses: {adapter_result.error}"
         )
     responses = adapter_result.responses
     if len(responses) != len(cases):
@@ -305,7 +305,7 @@ async def _run_torture(corpus_path: Path) -> dict[str, Any]:
         "adapter_run": {
             "mode": "subprocess_jsonl",
             "path": "primary",
-            "command": [sys.executable, "tools/fake_openclaw_adapter_torture.py"],
+            "command": [sys.executable, "tools/fake_challenge_corpus_adapter.py"],
             "request_count": len(requests),
             "response_count": len(responses),
             "completed_count": adapter_result.completed_count,

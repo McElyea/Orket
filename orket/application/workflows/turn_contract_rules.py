@@ -303,7 +303,7 @@ def security_scope_diagnostics(turn: ExecutionTurn, context: dict[str, Any]) -> 
     if enforce_path_hardening:
         for call in turn.tool_calls or []:
             tool_name = str(call.tool or "").strip()
-            if tool_name not in {"read_file", "write_file", "list_directory", "list_dir"}:
+            if tool_name not in {"read_file", "write_file", "create_directory", "list_directory", "list_dir"}:
                 continue
             path = str(call.args.get("path", "")).strip()
             if not path:

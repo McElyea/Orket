@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 from pathlib import Path
 from typing import Any
 
@@ -11,21 +12,21 @@ from orket.adapters.storage.async_repositories import (
     AsyncSuccessRepository,
 )
 from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
-from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
-from orket.orchestration.orchestration_config import OrchestrationConfig
+from orket.orchestration.orchestration_config import OrchestrationConfig, process_rule_value
 from orket.runtime.config_loader import ConfigLoader
 from orket.runtime.epic_run_orchestrator import EpicRunOrchestrator
 from orket.runtime.epic_run_types import EpicRunCallbacks
+from orket.runtime.execution.pipeline_wiring_service import PipelineWiringService
 from orket.runtime.execution_pipeline_artifact_provenance import ExecutionPipelineArtifactProvenanceMixin
 from orket.runtime.execution_pipeline_card_dispatch import ExecutionPipelineCardDispatchMixin
 from orket.runtime.execution_pipeline_ledger_events import ExecutionPipelineLedgerEventsMixin
 from orket.runtime.execution_pipeline_resume import ExecutionPipelineResumeMixin
 from orket.runtime.execution_pipeline_run_summary import ExecutionPipelineRunSummaryMixin
 from orket.runtime.execution_pipeline_runtime_artifacts import ExecutionPipelineRuntimeArtifactsMixin
-from orket.runtime.execution.pipeline_wiring_service import PipelineWiringService
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
 from orket.runtime.runtime_context import OrketRuntimeContext
 from orket.runtime.workload_shell import SharedWorkloadShell
@@ -132,6 +133,7 @@ class ExecutionPipeline(
         self.workload_shell = SharedWorkloadShell()
         self._initialize_lock = asyncio.Lock()
         self._initialized = False
+        self._closed = False
 
     async def initialize(self) -> None:
         if self._initialized:
@@ -142,15 +144,24 @@ class ExecutionPipeline(
             await self.runtime_context.initialize()
             self._initialized = True
 
+    async def close(self) -> None:
+        if self._closed:
+            return
+        for target in (
+            self.sandbox_orchestrator,
+            self.webhook_db,
+            self.runtime_context,
+        ):
+            close = getattr(target, "aclose", None) or getattr(target, "close", None)
+            if not callable(close):
+                continue
+            maybe_awaitable = close()
+            if inspect.isawaitable(maybe_awaitable):
+                await maybe_awaitable
+        self._closed = True
+
     def _process_rules_value(self, key: str) -> str:
-        process_rules = getattr(self.org, "process_rules", None) if self.org else None
-        if process_rules is None:
-            return ""
-        if isinstance(process_rules, dict) or hasattr(process_rules, "get"):
-            value = process_rules.get(key, "")
-        else:
-            value = getattr(process_rules, key, "")
-        return str(value or "").strip()
+        return str(process_rule_value(self.org, key, "") or "").strip()
 
     def _resolve_state_backend_mode(self) -> str:
         user_settings = getattr(self, "user_settings", None)

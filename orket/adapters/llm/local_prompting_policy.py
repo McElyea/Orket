@@ -22,6 +22,7 @@ from orket.runtime.local_prompt_profiles import (
     LocalPromptProfile,
     load_local_prompt_profile_registry_file,
 )
+from orket.utils import dedupe_ordered
 
 E_LOCAL_PROMPT_MODE_INVALID = "E_LOCAL_PROMPT_MODE_INVALID"
 E_LOCAL_PROMPT_TASK_CLASS_INVALID = "E_LOCAL_PROMPT_TASK_CLASS_INVALID"
@@ -211,15 +212,7 @@ def _apply_reasoning_suppression_hint(
 
 
 def _dedupe_in_order(values: list[str]) -> list[str]:
-    ordered: list[str] = []
-    seen: set[str] = set()
-    for value in values:
-        token = str(value or "").strip()
-        if not token or token in seen:
-            continue
-        seen.add(token)
-        ordered.append(token)
-    return ordered
+    return dedupe_ordered(values)
 
 
 def _estimate_tokens(text: str) -> int:

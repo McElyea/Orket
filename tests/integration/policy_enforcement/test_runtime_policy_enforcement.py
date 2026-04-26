@@ -5,14 +5,14 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
 
+import orket.runtime.run_start_artifacts as run_start_artifacts
+import orket.runtime.run_start_contract_artifacts as run_start_contract_artifacts
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.policies.tool_gate import ToolGate
-from orket.interfaces.api import app
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.runtime.source_attribution_policy import (
     source_attribution_policy_snapshot,
@@ -26,10 +26,6 @@ from orket.runtime.workspace_hygiene_rules import (
     validate_workspace_hygiene_rules,
     workspace_hygiene_rules_snapshot,
 )
-import orket.runtime.run_start_contract_artifacts as run_start_contract_artifacts
-import orket.runtime.run_start_artifacts as run_start_artifacts
-
-client = TestClient(app)
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -287,12 +283,12 @@ async def test_tool_gate_violation_blocks_before_tool_execution(tmp_path: Path) 
 
 
 @pytest.mark.integration
-def test_nervous_system_flag_violation_blocks_projection_pack(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_nervous_system_flag_violation_blocks_projection_pack(monkeypatch: pytest.MonkeyPatch, test_client) -> None:
     """Layer: integration. Verifies disabled nervous-system projection pack requests fail closed at the API boundary."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.delenv("ORKET_ENABLE_NERVOUS_SYSTEM", raising=False)
 
-    response = client.post(
+    response = test_client.post(
         "/v1/kernel/projection-pack",
         headers={"X-API-Key": "test-key"},
         json={

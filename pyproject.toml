@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.4.50"
+version = "0.5.0"
 description = "Local-first workflow runtime for card-based execution"
 authors = [
     { name = "Jonathan McElyea" }
@@ -140,5 +140,5 @@ branch = true
 omit = ["tests/*", "scripts/*", "benchmarks/*"]
 
 [tool.coverage.report]
-fail_under = 60
+fail_under = 70
 show_missing = true

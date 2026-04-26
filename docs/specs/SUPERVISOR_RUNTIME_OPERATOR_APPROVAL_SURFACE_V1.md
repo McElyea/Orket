@@ -1,6 +1,6 @@
 # Supervisor Runtime Operator Approval Surface V1
 
-Last updated: 2026-03-31
+Last updated: 2026-04-25
 Status: Active
 Owner: Orket Core
 Source requirements: `docs/projects/archive/SupervisorRuntime/SRF03312026-LANE-CLOSEOUT/SUPERVISOR_RUNTIME_FOUNDATIONS_REQUIREMENTS.md`
@@ -20,6 +20,7 @@ It does not create a general operator platform and it does not authorize endpoin
 ## Purpose
 
 Define the smallest truthful operator surface that can inspect and resolve the selected approval-checkpoint runtime slice without becoming a hidden runtime authority center.
+The selected lifecycle family is defined by `docs/specs/SUPERVISOR_RUNTIME_APPROVAL_CHECKPOINT_V1.md`; as of this update, it includes governed kernel `NEEDS_APPROVAL` plus the bounded governed turn-tool `write_file`, `create_directory`, and `create_issue` slices.
 
 ## Scope
 
@@ -84,6 +85,7 @@ For the selected Packet 1 surface:
 3. Packet 1 still admits only the selected approve-or-deny lifecycle for the chosen runtime slice
 4. optional payload members must not silently broaden Packet 1 into a second execution-authority path
 5. conflicting or contradictory decisions must fail closed rather than rewriting prior runtime truth
+6. admitting `create_directory` does not add a route, decision value, payload member, or manual resume surface; it only adds one bounded tool name to the companion checkpoint contract.
 
 ## Fail-closed projection behavior
 

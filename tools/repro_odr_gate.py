@@ -21,9 +21,14 @@ def _load_fixture(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _permutation_stream_seed(seed: int, perm_index: int) -> int:
+    digest = hashlib.sha256(f"{int(seed)}:{int(perm_index)}".encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big")
+
+
 def _permute_fixture(fixture: dict[str, Any], seed: int, perm_index: int) -> dict[str, Any]:
     payload = copy.deepcopy(fixture)
-    rng = random.Random(seed + (perm_index * 7919))
+    rng = random.Random(_permutation_stream_seed(seed, perm_index))
     graph = payload.get("graph", {})
     for key in ("nodes", "edges", "relationships", "links", "refs"):
         values = graph.get(key)

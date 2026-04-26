@@ -8,6 +8,8 @@ from typing import Any, TypeVar
 
 import aiosqlite
 
+from .sqlite_connection import connect_sqlite_wal
+
 ResultT = TypeVar("ResultT")
 
 
@@ -41,7 +43,7 @@ class AsyncFlowRepository:
         row_factory: bool = False,
     ) -> ResultT:
         async def _run() -> ResultT:
-            async with aiosqlite.connect(self.db_path) as conn:
+            async with connect_sqlite_wal(self.db_path) as conn:
                 if row_factory:
                     conn.row_factory = aiosqlite.Row
                 await self._ensure_initialized(conn)

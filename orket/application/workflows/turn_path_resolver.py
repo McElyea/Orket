@@ -9,7 +9,7 @@ from orket.core.domain.execution import ExecutionTurn
 class PathResolver:
     """Stateless path resolution helpers for turn contract checks."""
 
-    _PATH_TOOL_NAMES = {"read_file", "write_file", "list_directory", "list_dir"}
+    _PATH_TOOL_NAMES = {"read_file", "write_file", "create_directory", "list_directory", "list_dir"}
 
     @staticmethod
     def required_read_paths(context: dict[str, Any], workspace: Path) -> list[str]:

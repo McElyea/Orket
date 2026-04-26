@@ -32,9 +32,14 @@ def _load_fixture(name: str) -> dict[str, Any]:
     return json.loads(_fixture_path(name).read_text(encoding="utf-8"))
 
 
+def _permutation_stream_seed(seed: int, perm_index: int) -> int:
+    digest = hashlib.sha256(f"{int(seed)}:{int(perm_index)}".encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big")
+
+
 def _permute_fixture(fixture: dict[str, Any], seed: int, perm_index: int) -> dict[str, Any]:
     payload = json.loads(json.dumps(fixture))
-    rng = random.Random(seed + (perm_index * 7919))
+    rng = random.Random(_permutation_stream_seed(seed, perm_index))
     graph = payload.get("graph", {})
     for key in ("nodes", "edges", "relationships", "links", "refs"):
         values = graph.get(key)
@@ -529,3 +534,12 @@ def test_code_leak_shape_detection_fires() -> None:
     assert leaked["stop_reason"] == "CODE_LEAK"
     assert leaked["trace"]["metrics"]["code_leak_hit"] is True
     assert leaked["trace"]["code_leak_matches_hard"]
+
+
+def test_permutation_stream_seed_separates_adjacent_indexes() -> None:
+    fixture = _load_fixture("odr_torture_pack.json")
+
+    first = _permute_fixture(fixture, SEED, 1)["graph"]["nodes"]
+    second = _permute_fixture(fixture, SEED, 2)["graph"]["nodes"]
+
+    assert first != second
