@@ -1,0 +1,15 @@
+{
+  "acceptance_result": "accepted_for_proposal",
+  "extracted_args_hash": "1591458b183d21b1d1dee3e0f2f8d1c44fa67fd065a9bb239e868a5a3103f8e2",
+  "extracted_args_preview": {
+    "content": "[REDACTED]",
+    "path": "workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/produced_artifact.txt"
+  },
+  "extracted_tool_name": "write_file",
+  "extractor_version": "outward_model_tool_call_extractor.v1",
+  "model_response_content_sha256": "43ca3a14522465bba7d3af36e002ebdf40ab4dedc36bb586c41c647db50e1be7",
+  "namespace": "live_governed_run_v1_20260426T183304Z",
+  "proposal_id": "proposal:live-governed-run-v1-20260426t183304z:write_file:0001",
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "schema_version": "outward_proposal_extraction.v1"
+}

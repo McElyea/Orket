@@ -1,0 +1,14 @@
+{
+  "checked_event_count": 10,
+  "errors": [
+    "event_hash mismatch at position 4",
+    "chain_hash mismatch at position 4",
+    "previous_chain_hash mismatch at position 5"
+  ],
+  "event_count": 10,
+  "export_scope": "all",
+  "ledger_hash": "b382919d0e99322cbfbb00ef2e5b1507037ba357bf417683bb17f8d842161efe",
+  "result": "invalid",
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "schema_version": "ledger_export.v1"
+}

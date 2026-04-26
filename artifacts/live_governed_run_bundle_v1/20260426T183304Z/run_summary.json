@@ -1,0 +1,24 @@
+{
+  "completed_at": "2026-04-26T18:33:18.673109+00:00",
+  "current_turn": 1,
+  "event_count": 10,
+  "event_counts": {
+    "commitment_recorded": 1,
+    "proposal_approved": 1,
+    "proposal_made": 1,
+    "proposal_pending_approval": 1,
+    "run_completed": 1,
+    "run_started": 1,
+    "run_submitted": 1,
+    "tool_invoked": 1,
+    "turn_completed": 1,
+    "turn_started": 1
+  },
+  "max_turns": 20,
+  "pending_proposals_count": 0,
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "started_at": "2026-04-26T18:33:07.890146+00:00",
+  "status": "completed",
+  "stop_reason": null,
+  "terminal": true
+}

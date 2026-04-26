@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-04-26 - "The Live Governed Proof Bundle Cut"
+
+### Added
+- **Live Governed Run Proof Bundle**: Added the final `live_governed_run_bundle_v1` evidence packet proving a local outward pipeline run with live Ollama model invocation, model-output-derived proposal extraction, approval-before-effect, outward evidence graph capture, full and partial ledger verification, tamper failure, redaction, and manifest hashing.
+- **Outward Model Evidence Trail**: Added sanitized outward model prompt, response, invocation, and proposal-extraction evidence files, and anchored model invocation and response hashes into the `proposal_made` ledger payload.
+- **Outward Pipeline Evidence Graph**: Added direct outward `run_id` support to the run-evidence graph emitter so outward runs no longer depend on legacy `runs/<session_id>/` graph assumptions.
+
+### Changed
+- **Governed Outward Execution**: Changed the explicit outward execution slice so `acceptance_contract.governed_tool_call` constrains the governed tool family while the approval proposal is created from the validated live model-produced tool call.
+- **Runbook Proof Workflow**: Documented the live governed run evidence bundle workflow, synthetic-shortcut probe pattern, outward graph command, offline ledger verification sequence, and public claim boundaries.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. Public proof operators should use the runbook workflow and keep synthetic-shortcut probes, redaction, partial-ledger verification, and tamper verification in the bundle report.
+
 ## [0.5.0] - 2026-04-26 - "The Governed Outward Pipeline Cut"
 
 ### Added

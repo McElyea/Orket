@@ -1,0 +1,13 @@
+{
+  "ORKET_DISABLE_SANDBOX": "1",
+  "api_base_url": "http://127.0.0.1:55818",
+  "model_name": "qwen2.5-coder:7b",
+  "orket_version": "0.4.31",
+  "orket_version_header": "0.4.31",
+  "orket_version_header_capture_endpoint": "http://127.0.0.1:52308/v1/version",
+  "os": "Windows-11-10.0.26200-SP0",
+  "provider_endpoint": "http://127.0.0.1:11434",
+  "provider_name": "ollama",
+  "python_version": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+  "schema_version": "live_governed_run_environment.v1"
+}

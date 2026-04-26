@@ -1,0 +1,11 @@
+workspace_root=C:\Source\Orket\workspace\live_governed_run_v1_20260426T183304Z\runs\live-governed-run-v1-20260426t183304z
+produced_artifact=C:\Source\Orket\workspace\live_governed_run_v1_20260426T183304Z\runs\live-governed-run-v1-20260426t183304z\produced_artifact.txt
+produced_artifact_exists=True
+contract_shortcut_artifact=C:\Source\Orket\workspace\live_governed_run_v1_20260426T183304Z\runs\live-governed-run-v1-20260426t183304z\contract_shortcut_should_not_write.txt
+contract_shortcut_artifact_exists=False
+files:
+workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/model_invocation.json
+workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/model_prompt_redacted.json
+workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/model_response_redacted.json
+workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/produced_artifact.txt
+workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/proposal_extraction.json

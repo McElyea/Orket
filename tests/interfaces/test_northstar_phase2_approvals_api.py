@@ -13,6 +13,7 @@ from orket.adapters.storage.outward_run_store import OutwardRunStore
 from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
 from orket.application.services.outward_approval_service import OutwardApprovalService
 from orket.application.services.outward_run_service import OutwardRunService
+from tests.helpers.outward_model import patch_outward_model_client
 
 
 async def _seed_pending(db_path, *, run_id: str = "run-api-approval") -> str:
@@ -48,6 +49,7 @@ def _client(tmp_path, monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, str]
     db_path = tmp_path / "phase2-control-plane.sqlite3"
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_OUTWARD_PIPELINE_DB_PATH", str(db_path))
+    patch_outward_model_client(monkeypatch, args={"path": "api-approved.txt", "content": "api approved"})
     return TestClient(api_module.create_api_app(project_root=tmp_path)), str(db_path)
 
 

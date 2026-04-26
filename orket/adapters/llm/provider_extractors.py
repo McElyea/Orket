@@ -12,44 +12,44 @@ from orket.adapters.llm.openai_compat_runtime import (
 
 
 class ProviderExtractor(Protocol):
-    def extract_content(self, payload: Mapping[str, Any]) -> str | None: ...
+    def extract_content(self, payload: Any) -> str | None: ...
 
-    def extract_tool_calls(self, payload: Mapping[str, Any]) -> list[dict[str, Any]]: ...
+    def extract_tool_calls(self, payload: Any) -> list[dict[str, Any]]: ...
 
-    def extract_usage(self, payload: Mapping[str, Any]) -> tuple[int | None, int | None, int | None]: ...
+    def extract_usage(self, payload: Any) -> tuple[int | None, int | None, int | None]: ...
 
-    def extract_timings(self, payload: Mapping[str, Any], latency_ms: int) -> tuple[float, float, float]: ...
+    def extract_timings(self, payload: Any, latency_ms: int) -> tuple[float, float, float]: ...
 
 
 class OpenAIExtractor:
-    def extract_content(self, payload: Mapping[str, Any]) -> str | None:
-        return extract_openai_content(dict(payload))
+    def extract_content(self, payload: Any) -> str | None:
+        return extract_openai_content(dict(payload)) if isinstance(payload, Mapping) else None
 
-    def extract_tool_calls(self, payload: Mapping[str, Any]) -> list[dict[str, Any]]:
-        return extract_openai_tool_calls(dict(payload))
+    def extract_tool_calls(self, payload: Any) -> list[dict[str, Any]]:
+        return extract_openai_tool_calls(dict(payload)) if isinstance(payload, Mapping) else []
 
-    def extract_usage(self, payload: Mapping[str, Any]) -> tuple[int | None, int | None, int | None]:
-        return extract_openai_usage(dict(payload))
+    def extract_usage(self, payload: Any) -> tuple[int | None, int | None, int | None]:
+        return extract_openai_usage(dict(payload)) if isinstance(payload, Mapping) else (None, None, None)
 
-    def extract_timings(self, payload: Mapping[str, Any], latency_ms: int) -> tuple[float, float, float]:
-        return extract_openai_timings(dict(payload), latency_ms)
+    def extract_timings(self, payload: Any, latency_ms: int) -> tuple[float, float, float]:
+        return extract_openai_timings(dict(payload), latency_ms) if isinstance(payload, Mapping) else (0.0, float(latency_ms), float(latency_ms))
 
 
 class OllamaExtractor:
-    def extract_content(self, payload: Mapping[str, Any]) -> str | None:
-        message = payload.get("message")
-        if not isinstance(message, Mapping):
+    def extract_content(self, payload: Any) -> str | None:
+        message = _get_value(payload, "message")
+        if message is None:
             return None
-        content = message.get("content")
+        content = _get_value(message, "content")
         if content is None:
             return ""
         return content if isinstance(content, str) else None
 
-    def extract_tool_calls(self, payload: Mapping[str, Any]) -> list[dict[str, Any]]:
-        message = payload.get("message")
-        if not isinstance(message, Mapping):
+    def extract_tool_calls(self, payload: Any) -> list[dict[str, Any]]:
+        message = _get_value(payload, "message")
+        if message is None:
             return []
-        raw_tool_calls = message.get("tool_calls")
+        raw_tool_calls = _get_value(message, "tool_calls")
         if not isinstance(raw_tool_calls, list):
             return []
         normalized: list[dict[str, Any]] = []
@@ -74,8 +74,8 @@ class OllamaExtractor:
                 normalized.append(payload_item)
                 continue
 
-            function_payload = getattr(item, "function", None)
-            function_name = str(getattr(function_payload, "name", "") or "").strip()
+            function_payload = _get_value(item, "function")
+            function_name = str(_get_value(function_payload, "name") or "").strip()
             if not function_name:
                 continue
             normalized.append(
@@ -83,24 +83,24 @@ class OllamaExtractor:
                     "type": "function",
                     "function": {
                         "name": function_name,
-                        "arguments": getattr(function_payload, "arguments", None),
+                        "arguments": _get_value(function_payload, "arguments"),
                     },
                 }
             )
         return normalized
 
-    def extract_usage(self, payload: Mapping[str, Any]) -> tuple[int | None, int | None, int | None]:
-        prompt_tokens = payload.get("prompt_eval_count")
-        completion_tokens = payload.get("eval_count")
+    def extract_usage(self, payload: Any) -> tuple[int | None, int | None, int | None]:
+        prompt_tokens = _get_value(payload, "prompt_eval_count")
+        completion_tokens = _get_value(payload, "eval_count")
         prompt = prompt_tokens if isinstance(prompt_tokens, int) else None
         completion = completion_tokens if isinstance(completion_tokens, int) else None
         total = prompt + completion if isinstance(prompt, int) and isinstance(completion, int) else None
         return prompt, completion, total
 
-    def extract_timings(self, payload: Mapping[str, Any], latency_ms: int) -> tuple[float, float, float]:
-        prompt_ms = _ns_to_ms(payload.get("prompt_eval_duration"))
-        predicted_ms = _ns_to_ms(payload.get("eval_duration"))
-        total_ms = _ns_to_ms(payload.get("total_duration"))
+    def extract_timings(self, payload: Any, latency_ms: int) -> tuple[float, float, float]:
+        prompt_ms = _ns_to_ms(_get_value(payload, "prompt_eval_duration"))
+        predicted_ms = _ns_to_ms(_get_value(payload, "eval_duration"))
+        total_ms = _ns_to_ms(_get_value(payload, "total_duration"))
         if total_ms is None:
             total_ms = float(latency_ms)
         if prompt_ms is None and predicted_ms is None:
@@ -117,6 +117,12 @@ def _ns_to_ms(value: Any) -> float | None:
     if not isinstance(value, (int, float)):
         return None
     return float(value) / 1_000_000.0
+
+
+def _get_value(payload: Any, key: str) -> Any:
+    if isinstance(payload, Mapping):
+        return payload.get(key)
+    return getattr(payload, key, None)
 
 
 PROVIDER_EXTRACTORS: dict[str, ProviderExtractor] = {

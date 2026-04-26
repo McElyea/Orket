@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 import orket.interfaces.api as api_module
 from orket.core.domain.outward_ledger import verify_ledger_export
+from tests.helpers.outward_model import patch_outward_model_client
 
 
 def _client(tmp_path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
@@ -24,6 +25,7 @@ def _client(tmp_path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_OUTWARD_PIPELINE_DB_PATH", str(db_path))
     monkeypatch.setenv("ORKET_OUTBOUND_POLICY_CONFIG_PATH", str(policy_path))
+    patch_outward_model_client(monkeypatch, args={"path": "phase6.txt", "content": "safe"})
     return TestClient(api_module.create_api_app(project_root=tmp_path))
 
 

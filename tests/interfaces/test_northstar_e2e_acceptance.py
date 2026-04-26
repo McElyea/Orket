@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 import orket.interfaces.api as api_module
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
 from orket.core.domain.outward_ledger import verify_ledger_export
+from tests.helpers.outward_model import patch_outward_model_client
 
 
 class _FrozenRuntimeInputs:
@@ -40,6 +41,7 @@ def _client(
     monkeypatch: pytest.MonkeyPatch,
     *,
     clock: _FrozenRuntimeInputs | None = None,
+    model_args: dict[str, object] | None = None,
 ) -> TestClient:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_OUTWARD_PIPELINE_DB_PATH", str(tmp_path / "northstar-e2e.sqlite3"))
@@ -53,6 +55,7 @@ def _client(
             "_build_api_runtime_host",
             lambda root: ApiRuntimeHostService(Path(root), runtime_inputs=clock),  # type: ignore[arg-type]
         )
+    patch_outward_model_client(monkeypatch, args=model_args)
     return TestClient(api_module.create_api_app(project_root=tmp_path))
 
 
@@ -110,7 +113,7 @@ def _offline_verified_ledger(client: TestClient, run_id: str) -> dict:
 @pytest.mark.end_to_end
 def test_northstar_e2e_acceptance_approval_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: end-to-end. Verifies submit -> approve -> effect -> inspect -> export -> offline verify."""
-    client = _client(tmp_path, monkeypatch)
+    client = _client(tmp_path, monkeypatch, model_args={"path": "approved.txt", "content": "approved"})
     target = tmp_path / "approved.txt"
     try:
         _submit_write_run(client, run_id="e2e-approval", path="approved.txt", content="approved")
@@ -139,7 +142,7 @@ def test_northstar_e2e_acceptance_approval_path(tmp_path: Path, monkeypatch: pyt
 @pytest.mark.end_to_end
 def test_northstar_e2e_acceptance_denial_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: end-to-end. Verifies submit -> deny -> no effect -> failed run -> ledger offline verify."""
-    client = _client(tmp_path, monkeypatch)
+    client = _client(tmp_path, monkeypatch, model_args={"path": "denied.txt", "content": "denied"})
     target = tmp_path / "denied.txt"
     try:
         _submit_write_run(client, run_id="e2e-denial", path="denied.txt", content="denied")
@@ -169,7 +172,7 @@ def test_northstar_e2e_acceptance_denial_path(tmp_path: Path, monkeypatch: pytes
 def test_northstar_e2e_acceptance_timeout_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: end-to-end. Verifies submit -> no operator action -> timeout deny -> ledger offline verify."""
     clock = _FrozenRuntimeInputs("2026-04-25T12:00:00+00:00")
-    client = _client(tmp_path, monkeypatch, clock=clock)
+    client = _client(tmp_path, monkeypatch, clock=clock, model_args={"path": "timeout.txt", "content": "timeout"})
     target = tmp_path / "timeout.txt"
     try:
         _submit_write_run(

@@ -1,0 +1,454 @@
+{
+  "edges": [
+    {
+      "from": "run:live-governed-run-v1-20260426t183304z",
+      "kind": "starts",
+      "to": "event:run:live-governed-run-v1-20260426t183304z:submitted"
+    },
+    {
+      "from": "event:run:live-governed-run-v1-20260426t183304z:submitted",
+      "kind": "ordered_after",
+      "to": "event:run:live-governed-run-v1-20260426t183304z:0100:started"
+    },
+    {
+      "from": "event:run:live-governed-run-v1-20260426t183304z:0100:started",
+      "kind": "ordered_after",
+      "to": "event:run:live-governed-run-v1-20260426t183304z:0200:turn:1:started"
+    },
+    {
+      "from": "event:run:live-governed-run-v1-20260426t183304z:0200:turn:1:started",
+      "kind": "ordered_after",
+      "to": "event:run:live-governed-run-v1-20260426t183304z:0300:proposal:write_file"
+    },
+    {
+      "from": "event:run:live-governed-run-v1-20260426t183304z:0300:proposal:write_file",
+      "kind": "ordered_after",
+      "to": "event:proposal:live-governed-run-v1-20260426t183304z:write_file:0001:0001:proposal_pending_approval"
+    },
+    {
+      "from": "event:proposal:live-governed-run-v1-20260426t183304z:write_file:0001:0001:proposal_pending_approval",
+      "kind": "ordered_after",
+      "to": "event:proposal:live-governed-run-v1-20260426t183304z:write_file:0001:0002:proposal_approved"
+    },
+    {
+      "from": "event:proposal:live-governed-run-v1-20260426t183304z:write_file:0001:0002:proposal_approved",
+      "kind": "ordered_after",
+      "to": "event:run:live-governed-run-v1-20260426t183304z:0400:tool:write_file"
+    },
+    {
+      "from": "event:run:live-governed-run-v1-20260426t183304z:0400:tool:write_file",
+      "kind": "ordered_after",
+      "to": "event:run:live-governed-run-v1-20260426t183304z:0500:commitment:write_file"
+    },
+    {
+      "from": "event:run:live-governed-run-v1-20260426t183304z:0500:commitment:write_file",
+      "kind": "ordered_after",
+      "to": "event:run:live-governed-run-v1-20260426t183304z:0600:turn:1:completed"
+    },
+    {
+      "from": "event:run:live-governed-run-v1-20260426t183304z:0600:turn:1:completed",
+      "kind": "ordered_after",
+      "to": "event:run:live-governed-run-v1-20260426t183304z:0700:completed"
+    },
+    {
+      "from": "event:run:live-governed-run-v1-20260426t183304z:0300:proposal:write_file",
+      "kind": "created",
+      "to": "proposal:proposal:live-governed-run-v1-20260426t183304z:write_file:0001"
+    },
+    {
+      "from": "event:run:live-governed-run-v1-20260426t183304z:0700:completed",
+      "kind": "hashes_to",
+      "to": "ledger:live-governed-run-v1-20260426t183304z"
+    }
+  ],
+  "events": [
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T18:33:07.858058+00:00",
+      "chain_hash": "a592b82aa9f75645e666cd745515ff3c60b0699f58d95f389e88c261a64ead3b",
+      "event_hash": "7827e8d64fa42790a46b56c2f2fc7953bbed06dc47999b8a3d61d524a478515d",
+      "event_id": "run:live-governed-run-v1-20260426t183304z:submitted",
+      "event_type": "run_submitted",
+      "payload": {
+        "namespace": "live_governed_run_v1_20260426T183304Z",
+        "policy_overrides": {
+          "approval_required_tools": [
+            "write_file"
+          ],
+          "approval_timeout_seconds": 600
+        },
+        "run_id": "live-governed-run-v1-20260426t183304z",
+        "status": "queued",
+        "submitted_at": "2026-04-26T18:33:07.858058+00:00",
+        "task_description": "Create the live governed evidence artifact for the NorthstarRefocus outward pipeline."
+      },
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "turn": 0
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T18:33:07.901929+00:00",
+      "chain_hash": "ecbdb409a3660ce1a7a10546696ecffc1e64909931d36432ce60ea4633ef02a0",
+      "event_hash": "955d1ca58e5d9bd79bfc6f8a37fdf603c967a5b0911e0292f39db988c336bc4f",
+      "event_id": "run:live-governed-run-v1-20260426t183304z:0100:started",
+      "event_type": "run_started",
+      "payload": {
+        "run_id": "live-governed-run-v1-20260426t183304z",
+        "started_at": "2026-04-26T18:33:07.890146+00:00",
+        "status": "running"
+      },
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "turn": 0
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T18:33:07.911340+00:00",
+      "chain_hash": "dbb08fda2b432fd402d3e36fb1f9fe1a952a23c8126a9be74223d150c6052e23",
+      "event_hash": "c5e16f9337738259fb854fe8eec107f32f133ec37b4fb801b22d6135b02b2422",
+      "event_id": "run:live-governed-run-v1-20260426t183304z:0200:turn:1:started",
+      "event_type": "turn_started",
+      "payload": {
+        "agent_id": "outward-agent",
+        "run_id": "live-governed-run-v1-20260426t183304z",
+        "turn": 1
+      },
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T18:33:18.448743+00:00",
+      "chain_hash": "cea08b2ebc90e2a1a02afafdbe9171ea4861c5cdba6667b05947a81bac76a997",
+      "event_hash": "0b692bba21478697cde6dc360b9b543050e6976c9571200e65c231e8a6ea4552",
+      "event_id": "run:live-governed-run-v1-20260426t183304z:0300:proposal:write_file",
+      "event_type": "proposal_made",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/produced_artifact.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "model_invocation_ref": "workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/model_invocation.json",
+        "model_invocation_sha256": "2c5044981d9001fee6dcb1c7b796ac9c1dd2cd1310f3353506f8b6b1e9f26605",
+        "model_name": "qwen2.5-coder:7b",
+        "model_response_content_sha256": "43ca3a14522465bba7d3af36e002ebdf40ab4dedc36bb586c41c647db50e1be7",
+        "namespace": "live_governed_run_v1_20260426T183304Z",
+        "proposal_extraction_ref": "workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/proposal_extraction.json",
+        "provider_name": "ollama",
+        "run_id": "live-governed-run-v1-20260426t183304z",
+        "tool": "write_file",
+        "tool_args_hash": "1591458b183d21b1d1dee3e0f2f8d1c44fa67fd065a9bb239e868a5a3103f8e2",
+        "tool_name": "write_file"
+      },
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T18:33:18.469158+00:00",
+      "chain_hash": "145439084893b8538afaefeff727341a21008a02a03dc5f79b55c11611e10276",
+      "event_hash": "dca95af9da6f8900315ea457d86bcc4522908cbf4fe0f12e7611e0366b23d0df",
+      "event_id": "proposal:live-governed-run-v1-20260426t183304z:write_file:0001:0001:proposal_pending_approval",
+      "event_type": "proposal_pending_approval",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/produced_artifact.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "expires_at": "2026-04-26T18:43:18.469167+00:00",
+        "namespace": "live_governed_run_v1_20260426T183304Z",
+        "proposal_id": "proposal:live-governed-run-v1-20260426t183304z:write_file:0001",
+        "risk_level": "write",
+        "run_id": "live-governed-run-v1-20260426t183304z",
+        "status": "pending",
+        "submitted_at": "2026-04-26T18:33:18.469158+00:00",
+        "tool": "write_file"
+      },
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T18:33:18.600667+00:00",
+      "chain_hash": "3221dc72b29f22c68f0a6c85483a331aa285c85b0eb5ab97050e727e3b9ee3a8",
+      "event_hash": "286715d493aa05f898004d1cf640cdfec04bfe22e570194f913a8eafed959393",
+      "event_id": "proposal:live-governed-run-v1-20260426t183304z:write_file:0001:0002:proposal_approved",
+      "event_type": "proposal_approved",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/produced_artifact.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "decided_at": "2026-04-26T18:33:18.600667+00:00",
+        "decision": "approve",
+        "expires_at": "2026-04-26T18:43:18.469167+00:00",
+        "namespace": "live_governed_run_v1_20260426T183304Z",
+        "note": "approved for live governed run bundle v1 proof",
+        "operator_ref": "api_key_fingerprint:sha256:7c4a81f2e9758e4b3287a442566d76fa04362e8b2b5bd230df6707e9ac83724a",
+        "proposal_id": "proposal:live-governed-run-v1-20260426t183304z:write_file:0001",
+        "reason": null,
+        "risk_level": "write",
+        "run_id": "live-governed-run-v1-20260426t183304z",
+        "status": "approved",
+        "submitted_at": "2026-04-26T18:33:18.469158+00:00",
+        "tool": "write_file"
+      },
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T18:33:18.663044+00:00",
+      "chain_hash": "29e8a1378c5ebb919e5a2d92b38c7297bb097e84fef9019cadeb56650757e006",
+      "event_hash": "1f0446d380b2c0612ce93fad9682bdd2ca426e8908221acda566d9e5498dc90c",
+      "event_id": "run:live-governed-run-v1-20260426t183304z:0400:tool:write_file",
+      "event_type": "tool_invoked",
+      "payload": {
+        "args_hash": "1591458b183d21b1d1dee3e0f2f8d1c44fa67fd065a9bb239e868a5a3103f8e2",
+        "connector_name": "write_file",
+        "duration_ms": 0,
+        "outcome": "success",
+        "result_summary": {
+          "ok": true,
+          "path": "C:\\Source\\Orket\\workspace\\live_governed_run_v1_20260426T183304Z\\runs\\live-governed-run-v1-20260426t183304z\\produced_artifact.txt"
+        }
+      },
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T18:33:18.676641+00:00",
+      "chain_hash": "4b68592d4af134864bf5c84ced2c26c31e6e6af9b89c6440413d5b7fc4e2cfe7",
+      "event_hash": "125bf99838a18657b66b79f90a70bdea89fb2b4813744c0366fe55d13da71bae",
+      "event_id": "run:live-governed-run-v1-20260426t183304z:0500:commitment:write_file",
+      "event_type": "commitment_recorded",
+      "payload": {
+        "outcome": "committed",
+        "run_id": "live-governed-run-v1-20260426t183304z",
+        "tool": "write_file"
+      },
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T18:33:18.689883+00:00",
+      "chain_hash": "7a190637b1d3a6123a6428b88a5ea8765d8e2aa6b81f9906cffda616e2e4449a",
+      "event_hash": "b97db9a1c66586629408a35b72ac911551b36fe37a4fefabd515882830fdfd99",
+      "event_id": "run:live-governed-run-v1-20260426t183304z:0600:turn:1:completed",
+      "event_type": "turn_completed",
+      "payload": {
+        "outcome": "success",
+        "run_id": "live-governed-run-v1-20260426t183304z",
+        "turn": 1
+      },
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T18:33:18.713111+00:00",
+      "chain_hash": "b382919d0e99322cbfbb00ef2e5b1507037ba357bf417683bb17f8d842161efe",
+      "event_hash": "8649dba913a6cc52b17192b96169d87833c3873b76d3628bee19ac872a548af8",
+      "event_id": "run:live-governed-run-v1-20260426t183304z:0700:completed",
+      "event_type": "run_completed",
+      "payload": {
+        "completed_at": "2026-04-26T18:33:18.673109+00:00",
+        "run_id": "live-governed-run-v1-20260426t183304z",
+        "status": "completed"
+      },
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "turn": 1
+    }
+  ],
+  "generated_at": "2026-04-26T18:33:19.586408Z",
+  "graph_kind": "outward_pipeline",
+  "graph_result": "complete",
+  "ledger_references": {
+    "event_count": 10,
+    "export_scope": "all",
+    "ledger_hash": "b382919d0e99322cbfbb00ef2e5b1507037ba357bf417683bb17f8d842161efe",
+    "schema_version": "ledger_export.v1",
+    "verification_result": "valid"
+  },
+  "namespace": "live_governed_run_v1_20260426T183304Z",
+  "nodes": [
+    {
+      "id": "run:live-governed-run-v1-20260426t183304z",
+      "kind": "outward_run",
+      "label": "live-governed-run-v1-20260426t183304z",
+      "status": "completed"
+    },
+    {
+      "id": "ledger:live-governed-run-v1-20260426t183304z",
+      "kind": "ledger_reference",
+      "label": "b382919d0e99322cbfbb00ef2e5b1507037ba357bf417683bb17f8d842161efe"
+    },
+    {
+      "chain_hash": "a592b82aa9f75645e666cd745515ff3c60b0699f58d95f389e88c261a64ead3b",
+      "event_hash": "7827e8d64fa42790a46b56c2f2fc7953bbed06dc47999b8a3d61d524a478515d",
+      "id": "event:run:live-governed-run-v1-20260426t183304z:submitted",
+      "kind": "run_event",
+      "label": "run_submitted"
+    },
+    {
+      "chain_hash": "ecbdb409a3660ce1a7a10546696ecffc1e64909931d36432ce60ea4633ef02a0",
+      "event_hash": "955d1ca58e5d9bd79bfc6f8a37fdf603c967a5b0911e0292f39db988c336bc4f",
+      "id": "event:run:live-governed-run-v1-20260426t183304z:0100:started",
+      "kind": "run_event",
+      "label": "run_started"
+    },
+    {
+      "chain_hash": "dbb08fda2b432fd402d3e36fb1f9fe1a952a23c8126a9be74223d150c6052e23",
+      "event_hash": "c5e16f9337738259fb854fe8eec107f32f133ec37b4fb801b22d6135b02b2422",
+      "id": "event:run:live-governed-run-v1-20260426t183304z:0200:turn:1:started",
+      "kind": "run_event",
+      "label": "turn_started"
+    },
+    {
+      "chain_hash": "cea08b2ebc90e2a1a02afafdbe9171ea4861c5cdba6667b05947a81bac76a997",
+      "event_hash": "0b692bba21478697cde6dc360b9b543050e6976c9571200e65c231e8a6ea4552",
+      "id": "event:run:live-governed-run-v1-20260426t183304z:0300:proposal:write_file",
+      "kind": "run_event",
+      "label": "proposal_made"
+    },
+    {
+      "chain_hash": "145439084893b8538afaefeff727341a21008a02a03dc5f79b55c11611e10276",
+      "event_hash": "dca95af9da6f8900315ea457d86bcc4522908cbf4fe0f12e7611e0366b23d0df",
+      "id": "event:proposal:live-governed-run-v1-20260426t183304z:write_file:0001:0001:proposal_pending_approval",
+      "kind": "run_event",
+      "label": "proposal_pending_approval"
+    },
+    {
+      "chain_hash": "3221dc72b29f22c68f0a6c85483a331aa285c85b0eb5ab97050e727e3b9ee3a8",
+      "event_hash": "286715d493aa05f898004d1cf640cdfec04bfe22e570194f913a8eafed959393",
+      "id": "event:proposal:live-governed-run-v1-20260426t183304z:write_file:0001:0002:proposal_approved",
+      "kind": "run_event",
+      "label": "proposal_approved"
+    },
+    {
+      "chain_hash": "29e8a1378c5ebb919e5a2d92b38c7297bb097e84fef9019cadeb56650757e006",
+      "event_hash": "1f0446d380b2c0612ce93fad9682bdd2ca426e8908221acda566d9e5498dc90c",
+      "id": "event:run:live-governed-run-v1-20260426t183304z:0400:tool:write_file",
+      "kind": "run_event",
+      "label": "tool_invoked"
+    },
+    {
+      "chain_hash": "4b68592d4af134864bf5c84ced2c26c31e6e6af9b89c6440413d5b7fc4e2cfe7",
+      "event_hash": "125bf99838a18657b66b79f90a70bdea89fb2b4813744c0366fe55d13da71bae",
+      "id": "event:run:live-governed-run-v1-20260426t183304z:0500:commitment:write_file",
+      "kind": "run_event",
+      "label": "commitment_recorded"
+    },
+    {
+      "chain_hash": "7a190637b1d3a6123a6428b88a5ea8765d8e2aa6b81f9906cffda616e2e4449a",
+      "event_hash": "b97db9a1c66586629408a35b72ac911551b36fe37a4fefabd515882830fdfd99",
+      "id": "event:run:live-governed-run-v1-20260426t183304z:0600:turn:1:completed",
+      "kind": "run_event",
+      "label": "turn_completed"
+    },
+    {
+      "chain_hash": "b382919d0e99322cbfbb00ef2e5b1507037ba357bf417683bb17f8d842161efe",
+      "event_hash": "8649dba913a6cc52b17192b96169d87833c3873b76d3628bee19ac872a548af8",
+      "id": "event:run:live-governed-run-v1-20260426t183304z:0700:completed",
+      "kind": "run_event",
+      "label": "run_completed"
+    },
+    {
+      "id": "proposal:proposal:live-governed-run-v1-20260426t183304z:write_file:0001",
+      "kind": "approval_proposal",
+      "label": "write_file"
+    }
+  ],
+  "proposals": [
+    {
+      "args_preview": {
+        "content": "[REDACTED]",
+        "path": "workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/produced_artifact.txt"
+      },
+      "context_summary": "model-produced governed tool call from live provider response",
+      "decided_at": "2026-04-26T18:33:18.600667+00:00",
+      "decision": "approve",
+      "expires_at": "2026-04-26T18:43:18.469167+00:00",
+      "namespace": "live_governed_run_v1_20260426T183304Z",
+      "note": "approved for live governed run bundle v1 proof",
+      "operator_ref": "api_key_fingerprint:sha256:7c4a81f2e9758e4b3287a442566d76fa04362e8b2b5bd230df6707e9ac83724a",
+      "proposal_id": "proposal:live-governed-run-v1-20260426t183304z:write_file:0001",
+      "reason": null,
+      "risk_level": "write",
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "status": "approved",
+      "submitted_at": "2026-04-26T18:33:18.469158+00:00",
+      "tool": "write_file"
+    }
+  ],
+  "run": {
+    "completed_at": "2026-04-26T18:33:18.673109+00:00",
+    "current_turn": 1,
+    "max_turns": 20,
+    "namespace": "live_governed_run_v1_20260426T183304Z",
+    "pending_proposals": [],
+    "run_id": "live-governed-run-v1-20260426t183304z",
+    "started_at": "2026-04-26T18:33:07.890146+00:00",
+    "status": "completed",
+    "stop_reason": null,
+    "submitted_at": "2026-04-26T18:33:07.858058+00:00"
+  },
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "schema_version": "outward_run_evidence_graph.v1",
+  "selected_views": [
+    "full_lineage",
+    "failure_path",
+    "resource_authority_path",
+    "closure_path"
+  ],
+  "summary": {
+    "completed_at": "2026-04-26T18:33:18.673109+00:00",
+    "current_turn": 1,
+    "event_count": 10,
+    "event_counts": {
+      "commitment_recorded": 1,
+      "proposal_approved": 1,
+      "proposal_made": 1,
+      "proposal_pending_approval": 1,
+      "run_completed": 1,
+      "run_started": 1,
+      "run_submitted": 1,
+      "tool_invoked": 1,
+      "turn_completed": 1,
+      "turn_started": 1
+    },
+    "max_turns": 20,
+    "pending_proposals_count": 0,
+    "run_id": "live-governed-run-v1-20260426t183304z",
+    "started_at": "2026-04-26T18:33:07.890146+00:00",
+    "status": "completed",
+    "stop_reason": null,
+    "terminal": true
+  },
+  "tool_invocations": [
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T18:33:18.663044+00:00",
+      "chain_hash": "29e8a1378c5ebb919e5a2d92b38c7297bb097e84fef9019cadeb56650757e006",
+      "event_hash": "1f0446d380b2c0612ce93fad9682bdd2ca426e8908221acda566d9e5498dc90c",
+      "event_id": "run:live-governed-run-v1-20260426t183304z:0400:tool:write_file",
+      "event_type": "tool_invoked",
+      "payload": {
+        "args_hash": "1591458b183d21b1d1dee3e0f2f8d1c44fa67fd065a9bb239e868a5a3103f8e2",
+        "connector_name": "write_file",
+        "duration_ms": 0,
+        "outcome": "success",
+        "result_summary": {
+          "ok": true,
+          "path": "C:\\Source\\Orket\\workspace\\live_governed_run_v1_20260426T183304Z\\runs\\live-governed-run-v1-20260426t183304z\\produced_artifact.txt"
+        }
+      },
+      "run_id": "live-governed-run-v1-20260426t183304z",
+      "turn": 1
+    }
+  ]
+}

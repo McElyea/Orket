@@ -1,0 +1,12 @@
+{
+  "completed_at": "2026-04-26T18:33:18.673109+00:00",
+  "current_turn": 1,
+  "max_turns": 20,
+  "namespace": "live_governed_run_v1_20260426T183304Z",
+  "pending_proposals": [],
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "started_at": "2026-04-26T18:33:07.890146+00:00",
+  "status": "completed",
+  "stop_reason": null,
+  "submitted_at": "2026-04-26T18:33:07.858058+00:00"
+}

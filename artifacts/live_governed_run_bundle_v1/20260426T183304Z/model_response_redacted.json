@@ -1,0 +1,16 @@
+{
+  "content_redacted": "{\"args\": {\"content\": \"[REDACTED]\", \"path\": \"workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/produced_artifact.txt\"}, \"tool\": \"write_file\"}",
+  "extracted_tool_call_redacted": {
+    "args": {
+      "content": "[REDACTED]",
+      "path": "workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/produced_artifact.txt"
+    },
+    "tool": "write_file"
+  },
+  "model_response_content_sha256": "43ca3a14522465bba7d3af36e002ebdf40ab4dedc36bb586c41c647db50e1be7",
+  "namespace": "live_governed_run_v1_20260426T183304Z",
+  "response_material_kind": "content",
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "schema_version": "outward_model_response_redacted.v1",
+  "tool_calls_redacted": []
+}

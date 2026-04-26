@@ -1,0 +1,10 @@
+{
+  "checked_event_count": 3,
+  "errors": [],
+  "event_count": 10,
+  "export_scope": "partial_view",
+  "ledger_hash": "b382919d0e99322cbfbb00ef2e5b1507037ba357bf417683bb17f8d842161efe",
+  "result": "partial_valid",
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "schema_version": "ledger_export.v1"
+}

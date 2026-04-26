@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-04-25
+Last reviewed: 2026-04-26
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -113,6 +113,48 @@ orket ledger summary <run_id>
 
 `orket ledger verify <file.json>` is offline and does not require a running Orket instance. Filtered exports verify as partial views anchored to the canonical ledger hash; they do not claim omitted event payload verification.
 
+## Live Governed Run Evidence Bundle
+Use this workflow when you need public proof that the outward pipeline invoked a live model provider, derived a governed connector proposal from model output, gated the connector effect on approval, and verified ledger integrity offline.
+
+1. Start the API with a fresh outward pipeline DB, sandbox disabled for routine local proof, and a real configured provider/model:
+```powershell
+$env:ORKET_DISABLE_SANDBOX="1"
+$env:ORKET_OUTWARD_PIPELINE_DB_PATH=".tmp/live_governed_run_bundle_v1.sqlite3"
+$env:ORKET_LLM_PROVIDER="ollama"
+$env:ORKET_MODEL_STREAM_REAL_PROVIDER="ollama"
+$env:ORKET_MODEL_STREAM_REAL_MODEL_ID="<model_id>"
+python server.py --host 127.0.0.1 --port 8082
+```
+2. Confirm `/health` returns `{ "status": "ok" }` and capture `X-Orket-Version` from an authenticated `/v1/*` response using case-insensitive header lookup.
+3. Submit `POST /v1/runs` with `task.acceptance_contract.governed_tool_call` as the governed-tool-family gate. For public proof, include an intentional synthetic-shortcut probe: make the acceptance-contract tool args differ from the model-requested tool args in the task instruction.
+4. Capture the submitted request body as `submitted_request.json`. Redact secrets, but preserve the acceptance contract, task instruction, and hashes proving the contract args differ from the model-requested args.
+5. Capture model evidence from `workspace/<namespace>/runs/<run_id>/`:
+   - `model_invocation.json`
+   - `model_prompt_redacted.json`
+   - `model_response_redacted.json`
+   - `proposal_extraction.json`
+6. Capture workspace state before approval, pending approval payload, approval decision, workspace state after approval, produced artifact, final run status, run events, and run summary.
+7. Emit the outward pipeline evidence graph directly from the outward `run_id`:
+```bash
+python scripts/observability/emit_run_evidence_graph.py --run-id <run_id> --workspace-root <workspace_root> --outward-pipeline-db <sqlite_path>
+```
+The expected graph result is `graph_kind=outward_pipeline`, with JSON and SVG artifacts under `workspace/<namespace>/runs/<run_id>/`. Do not substitute legacy ProductFlow or `runs/<session_id>/` graphs for this proof.
+8. Export and verify ledgers:
+```bash
+orket ledger export <run_id> --out ledger_full.json
+orket ledger export <run_id> --types proposals,decisions --out ledger_partial_decisions.json
+orket ledger verify ledger_full.json
+orket ledger verify ledger_partial_decisions.json
+```
+The full export must verify as `valid`; the filtered export must verify as `partial_valid`, not `valid`.
+9. Copy the full ledger, mutate exactly one disclosed payload character, then verify the tampered copy offline. The expected result is `invalid`.
+10. Redact secrets before hashing, write `manifest.json` with SHA-256 hashes for emitted artifacts, and write `bundle_verification_report.md`.
+
+Public claim boundaries to preserve in the report:
+1. This proves one local live outward pipeline run.
+2. It does not prove replay stability, cross-run determinism, cloud readiness, third-party connector auto-discovery, or model-output reproducibility.
+3. It proves governance of the effect, not reproducibility of the model content.
+
 ## Outward Pipeline Connectors
 The Phase 5 built-in connector harness is local and uses the same registry-backed invocation rules as outward execution:
 
@@ -167,10 +209,11 @@ orket run status <run_id>
 ```bash
 orket run list --status queued
 ```
-4. Submit one outward-facing run with an explicit governed `write_file` proposal:
+4. Submit one outward-facing run that gates a model-produced governed `write_file` proposal:
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/runs -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"run_id\":\"demo-write\",\"task\":{\"description\":\"Write approved file\",\"instruction\":\"Call write_file\",\"acceptance_contract\":{\"governed_tool_call\":{\"tool\":\"write_file\",\"args\":{\"path\":\"approved.txt\",\"content\":\"approved content\"}}}},\"policy_overrides\":{\"approval_required_tools\":[\"write_file\"]}}"
 ```
+The acceptance contract selects and constrains the governed tool family; the outward execution service invokes the configured model and creates the approval proposal from the validated model-produced tool call.
 5. List pending outward-facing approval proposals:
 ```bash
 orket approvals list
@@ -474,16 +517,19 @@ python scripts/observability/emit_run_evidence_graph.py --run-id <run_id>
 ```
 
 How to run the shipped run-evidence graph:
-1. Select a covered control-plane `run_id`.
-2. Make sure the corresponding `runs/<session_id>/` artifacts are present under your workspace root.
-3. Run:
+1. Select a covered control-plane or outward pipeline `run_id`.
+2. For legacy control-plane/session graphs, make sure the corresponding `runs/<session_id>/` artifacts are present under your workspace root.
+3. For outward pipeline graphs, provide the outward pipeline SQLite path with `--outward-pipeline-db`; a legacy `runs/<session_id>/` root is not required.
+4. Run:
 ```bash
 python scripts/observability/emit_run_evidence_graph.py --run-id <run_id>
 ```
-4. Open or inspect the generated artifacts:
+5. Open or inspect the generated artifacts:
    - `runs/<session_id>/run_evidence_graph.json`
    - `runs/<session_id>/run_evidence_graph.mmd`
    - `runs/<session_id>/run_evidence_graph.html`
+   - `workspace/<namespace>/runs/<run_id>/run_evidence_graph.json` for outward pipeline graphs
+   - `workspace/<namespace>/runs/<run_id>/run_evidence_graph.svg` for outward pipeline graphs
 
 Optional flags:
 1. Limit rendered views:
@@ -498,11 +544,15 @@ python scripts/observability/emit_run_evidence_graph.py --run-id <run_id> --work
 ```bash
 python scripts/observability/emit_run_evidence_graph.py --run-id <run_id> --control-plane-db <sqlite_path>
 ```
-4. Force a known session id:
+4. Override outward pipeline DB path:
+```bash
+python scripts/observability/emit_run_evidence_graph.py --run-id <run_id> --outward-pipeline-db <sqlite_path>
+```
+5. Force a known session id:
 ```bash
 python scripts/observability/emit_run_evidence_graph.py --run-id <run_id> --session-id <session_id>
 ```
-5. Fix the generation timestamp for deterministic proof runs:
+6. Fix the generation timestamp for deterministic proof runs:
 ```bash
 python scripts/observability/emit_run_evidence_graph.py --run-id <run_id> --generation-timestamp <iso_utc_timestamp>
 ```
@@ -529,7 +579,8 @@ Operator interpretation:
    - `complete`
    - `degraded`
    - `blocked`
-5. If Orket cannot truthfully locate the selected run's `runs/<session_id>/` root, the command fails closed with `E_RUN_SESSION_NOT_LOCATED`.
+5. For outward pipeline runs, `graph_kind=outward_pipeline` means the graph was generated from outward run records, run events, proposal records, tool invocation events, summary, and ledger references.
+6. If Orket cannot truthfully locate either the selected run's `runs/<session_id>/` root or a matching outward run in the outward pipeline store, the command fails closed with `E_RUN_SESSION_NOT_LOCATED`.
 
 Filtered-view vocabulary over the same semantic core, not separate artifact families:
 1. `authority`

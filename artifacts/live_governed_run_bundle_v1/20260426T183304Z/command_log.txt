@@ -1,0 +1,104 @@
+1. `C:\Python314\python.exe scripts/providers/check_model_provider_preflight.py --provider ollama --model-id qwen2.5-coder:7b --timeout 20`
+   - success: returncode=0; stdout=WARMUP_STATUS=OK source=ollama_list resolution_mode=requested resolved_model=qwen2.5-coder:7b
+WARMUP_AVAILABLE_MODELS=Command-R:35B,Mistral-Nemo:12B,deepseek-coder:33B,deepseek-r1:32b,functiongemma:latest,gemma3:27b,gemma3:latest,gpt-oss:120b,gpt-oss:20b,llama3.1:8b,nomic-embed-text:latest,qwen2.5-coder:14b,qwen2.5-coder:7b,qwen2.5:14b,qwen2.5:7b,qwen3-coder:latest
+provider=ollama canonical=ollama base_url=http://127.0.0.1:11434 model_id=qwen2.5-coder:7b
+RESOLVED_MODEL_ID=qwen2.5-coder:7b
+RESOLUTION_MODE=requested
+PREFLIGHT=PASS; stderr=
+2. `C:\Python314\python.exe server.py --host 127.0.0.1 --port 55818 with ORKET_API_KEY=[REDACTED] ORKET_DISABLE_SANDBOX=1`
+   - success: started pid=6156
+3. `HTTP GET http://127.0.0.1:55818/health`
+   - success: HTTP 200; X-Orket-Version=
+4. `HTTP GET http://127.0.0.1:55818/v1/version headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; X-Orket-Version=
+5. `HTTP POST http://127.0.0.1:55818/v1/runs headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; X-Orket-Version=; artifact=submitted_run.json
+6. `HTTP GET http://127.0.0.1:55818/v1/runs/live-governed-run-v1-20260426t183304z headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; X-Orket-Version=; artifact=run_status_before.json
+7. `HTTP GET http://127.0.0.1:55818/v1/approvals?status=pending headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; X-Orket-Version=
+8. `HTTP GET http://127.0.0.1:55818/v1/approvals/proposal%3Alive-governed-run-v1-20260426t183304z%3Awrite_file%3A0001 headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; X-Orket-Version=
+9. `HTTP POST http://127.0.0.1:55818/v1/approvals/proposal%3Alive-governed-run-v1-20260426t183304z%3Awrite_file%3A0001/approve headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; X-Orket-Version=; artifact=approval_decision.json
+10. `HTTP GET http://127.0.0.1:55818/v1/runs/live-governed-run-v1-20260426t183304z headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; X-Orket-Version=; artifact=run_status_after.json
+11. `HTTP GET http://127.0.0.1:55818/v1/runs/live-governed-run-v1-20260426t183304z/ledger headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; X-Orket-Version=; artifact=ledger_full.json
+12. `HTTP GET http://127.0.0.1:55818/v1/runs/live-governed-run-v1-20260426t183304z/ledger?types=proposals%2Cdecisions headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; X-Orket-Version=; artifact=ledger_partial_decisions.json
+13. `HTTP GET http://127.0.0.1:55818/v1/runs/live-governed-run-v1-20260426t183304z/events headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; X-Orket-Version=; artifact=run_events.json
+14. `HTTP GET http://127.0.0.1:55818/v1/runs/live-governed-run-v1-20260426t183304z/summary headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; X-Orket-Version=; artifact=run_summary.json
+15. `C:\Python314\python.exe scripts/observability/emit_run_evidence_graph.py --run-id live-governed-run-v1-20260426t183304z --workspace-root C:\Source\Orket --outward-pipeline-db C:\Source\Orket\.tmp\live_governed_run_bundle_v1_20260426T183304Z.sqlite3`
+   - success: returncode=0; stdout={
+  "event_count": 10,
+  "graph_kind": "outward_pipeline",
+  "graph_result": "complete",
+  "json_path": "C:/Source/Orket/workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/run_evidence_graph.json",
+  "ledger_hash": "b382919d0e99322cbfbb00ef2e5b1507037ba357bf417683bb17f8d842161efe",
+  "ok": true,
+  "proposal_count": 1,
+  "requested_run_id": "live-governed-run-v1-20260426t183304z",
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "schema_version": "1.0",
+  "selected_views": [
+    "full_lineage",
+    "failure_path",
+    "resource_authority_path",
+    "closure_path"
+  ],
+  "session_id": null,
+  "svg_path": "C:/Source/Orket/workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/run_evidence_graph.svg",
+  "tool_invocation_count": 1
+}; stderr=
+16. `Stop Orket server pid=6156`
+   - success: exitcode=1
+17. `C:\Python314\python.exe -m orket.interfaces.orket_bundle_cli ledger verify C:\Source\Orket\artifacts\live_governed_run_bundle_v1\20260426T183304Z\ledger_full.json`
+   - success: returncode=0; stdout={
+  "schema_version": "ledger_export.v1",
+  "result": "valid",
+  "export_scope": "all",
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "ledger_hash": "b382919d0e99322cbfbb00ef2e5b1507037ba357bf417683bb17f8d842161efe",
+  "event_count": 10,
+  "checked_event_count": 10,
+  "errors": []
+}; stderr=
+18. `C:\Python314\python.exe -m orket.interfaces.orket_bundle_cli ledger verify C:\Source\Orket\artifacts\live_governed_run_bundle_v1\20260426T183304Z\ledger_partial_decisions.json`
+   - success: returncode=0; stdout={
+  "schema_version": "ledger_export.v1",
+  "result": "partial_valid",
+  "export_scope": "partial_view",
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "ledger_hash": "b382919d0e99322cbfbb00ef2e5b1507037ba357bf417683bb17f8d842161efe",
+  "event_count": 10,
+  "checked_event_count": 3,
+  "errors": []
+}; stderr=
+19. `C:\Python314\python.exe -m orket.interfaces.orket_bundle_cli ledger verify C:\Source\Orket\artifacts\live_governed_run_bundle_v1\20260426T183304Z\ledger_tampered.json`
+   - success: returncode=1; stdout={
+  "schema_version": "ledger_export.v1",
+  "result": "invalid",
+  "export_scope": "all",
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "ledger_hash": "b382919d0e99322cbfbb00ef2e5b1507037ba357bf417683bb17f8d842161efe",
+  "event_count": 10,
+  "checked_event_count": 10,
+  "errors": [
+    "event_hash mismatch at position 4",
+    "chain_hash mismatch at position 4",
+    "previous_chain_hash mismatch at position 5"
+  ]
+}; stderr=
+20. `python - <inline report_manifest_reconcile>`
+   - success: Reconcile self-referential report/manifest hashes; artifact=bundle_verification_report.md,manifest.json
+21. `C:\Python314\python.exe server.py --host 127.0.0.1 --port 52308 with ORKET_API_KEY=[REDACTED] ORKET_DISABLE_SANDBOX=1`
+   - success: started pid=29568
+22. `HTTP GET http://127.0.0.1:52308/v1/version headers={'X-API-Key':'[REDACTED]'}`
+   - success: HTTP 200; x-orket-version=0.4.31
+23. `Stop Orket server pid=29568`
+   - success: exitcode=1
+24. `python - <inline version_header_capture_reconcile>`
+   - success: updated environment/report/manifest after case-insensitive X-Orket-Version capture; artifact=environment.json,bundle_verification_report.md,manifest.json

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -10,6 +12,7 @@ from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
 from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
 from orket.application.services.outward_approval_service import OutwardApprovalService
+from orket.application.services.outward_model_tool_call_service import OutwardModelToolCallService
 from orket.application.services.outward_run_execution_service import OutwardRunExecutionService
 from orket.application.services.outward_run_service import OutwardRunService
 
@@ -41,7 +44,48 @@ def _approval_service(db_path: Path, clock: _Clock) -> OutwardApprovalService:
     )
 
 
-def _execution_service(db_path: Path, workspace_root: Path, clock: _Clock) -> OutwardRunExecutionService:
+class _FakeModelClient:
+    def __init__(self, *, tool: str, args: dict[str, object]) -> None:
+        self.tool = tool
+        self.args = args
+        self.messages: list[dict[str, str]] = []
+        self.runtime_context: dict[str, object] = {}
+        self.closed = False
+
+    async def complete(self, messages, runtime_context=None):
+        self.messages = list(messages)
+        self.runtime_context = dict(runtime_context or {})
+        return SimpleNamespace(
+            content="",
+            raw={
+                "tool_calls": [{"type": "function", "function": {"name": self.tool, "arguments": self.args}}],
+                "provider_name": "fake-provider",
+                "provider_backend": "fake-provider",
+                "model": "fake-model",
+                "usage": {"prompt_tokens": 11, "completion_tokens": 7, "total_tokens": 18},
+                "latency_ms": 23,
+                "orket_session_id": "fake-session",
+                "openai_compat": {"choices": [{"finish_reason": "tool_calls"}]},
+            },
+        )
+
+    async def close(self) -> None:
+        self.closed = True
+
+
+def _execution_service(
+    db_path: Path,
+    workspace_root: Path,
+    clock: _Clock,
+    *,
+    model_client: _FakeModelClient | None = None,
+    model_tool: str = "write_file",
+    model_args: dict[str, object] | None = None,
+) -> OutwardRunExecutionService:
+    client = model_client or _FakeModelClient(
+        tool=model_tool,
+        args=model_args or {"path": "approved.txt", "content": "approved content"},
+    )
     return OutwardRunExecutionService(
         run_store=OutwardRunStore(db_path),
         event_store=OutwardRunEventStore(db_path),
@@ -49,6 +93,11 @@ def _execution_service(db_path: Path, workspace_root: Path, clock: _Clock) -> Ou
         connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
         workspace_root=workspace_root,
         utc_now=clock,
+        model_tool_call_service=OutwardModelToolCallService(
+            connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
+            workspace_root=workspace_root,
+            model_client_factory=lambda: client,
+        ),
     )
 
 
@@ -65,6 +114,10 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
         utc_now=clock,
     )
     target = tmp_path / "approved.txt"
+    fake_model = _FakeModelClient(
+        tool="write_file",
+        args={"path": "approved.txt", "content": "model approved content"},
+    )
 
     run = await run_service.submit(
         {
@@ -75,7 +128,7 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
                 "acceptance_contract": {
                     "governed_tool_call": {
                         "tool": "write_file",
-                        "args": {"path": "approved.txt", "content": "approved content"},
+                        "args": {"path": "approved.txt", "content": "contract content"},
                     }
                 },
             },
@@ -83,10 +136,15 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
         }
     )
 
-    paused = await _execution_service(db_path, tmp_path, clock).start_if_ready(run.run_id)
+    paused = await _execution_service(db_path, tmp_path, clock, model_client=fake_model).start_if_ready(run.run_id)
 
     assert paused.status == "approval_required"
     assert target.exists() is False
+    assert fake_model.closed is True
+    prompt_payload = json.loads(fake_model.messages[1]["content"])
+    assert prompt_payload["task"]["description"] == "Write approved file"
+    assert prompt_payload["task"]["instruction"] == "Call the governed write_file connector"
+    assert "contract content" not in fake_model.messages[1]["content"]
     proposals = await OutwardApprovalStore(db_path).list(status="pending")
     assert len(proposals) == 1
     assert proposals[0].args_preview["content"] == "[REDACTED]"
@@ -96,7 +154,36 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
     completed = await _execution_service(db_path, tmp_path, clock).continue_after_approval(approved.proposal_id)
 
     assert completed.status == "completed"
-    assert target.read_text(encoding="utf-8") == "approved content"
+    assert target.read_text(encoding="utf-8") == "model approved content"
+    model_invocation = json.loads(
+        (tmp_path / "workspace" / "issue_run-exec" / "runs" / "run-exec" / "model_invocation.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    model_response = json.loads(
+        (tmp_path / "workspace" / "issue_run-exec" / "runs" / "run-exec" / "model_response_redacted.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    proposal_extraction = json.loads(
+        (tmp_path / "workspace" / "issue_run-exec" / "runs" / "run-exec" / "proposal_extraction.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert model_invocation["provider_name"] == "fake-provider"
+    assert model_invocation["model_name"] == "fake-model"
+    assert model_invocation["session_id"] == "fake-session"
+    assert model_invocation["prompt_token_count"] == 11
+    assert model_invocation["completion_token_count"] == 7
+    assert model_invocation["duration_ms"] == 23
+    assert model_invocation["finish_reason"] == "tool_calls"
+    assert model_invocation["model_invocation_ref"] == "workspace/issue_run-exec/runs/run-exec/model_invocation.json"
+    assert model_invocation["model_response_content_sha256"]
+    assert model_response["extracted_tool_call_redacted"]["tool"] == "write_file"
+    assert model_response["extracted_tool_call_redacted"]["args"]["content"] == "[REDACTED]"
+    assert proposal_extraction["proposal_id"] == "proposal:run-exec:write_file:0001"
+    assert proposal_extraction["acceptance_result"] == "accepted_for_proposal"
+    assert proposal_extraction["model_response_content_sha256"] == model_invocation["model_response_content_sha256"]
     events = await OutwardRunEventStore(db_path).list_for_run("run-exec")
     assert [event.event_type for event in events] == [
         "run_submitted",
@@ -112,7 +199,13 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
     ]
     tool_event = next(event for event in events if event.event_type == "tool_invoked")
     assert tool_event.payload["args_hash"]
-    assert "approved content" not in str(tool_event.payload)
+    proposal_event = next(event for event in events if event.event_type == "proposal_made")
+    assert proposal_event.payload["model_invocation_ref"] == "workspace/issue_run-exec/runs/run-exec/model_invocation.json"
+    assert proposal_event.payload["model_invocation_sha256"]
+    assert proposal_event.payload["model_response_content_sha256"] == model_invocation["model_response_content_sha256"]
+    assert proposal_event.payload["tool_name"] == "write_file"
+    assert proposal_event.payload["tool_args_hash"] == proposal_extraction["extracted_args_hash"]
+    assert "model approved content" not in str(tool_event.payload)
 
 
 @pytest.mark.integration
@@ -145,7 +238,12 @@ async def test_outward_execution_denial_keeps_effect_absent(tmp_path) -> None:
         }
     )
 
-    await _execution_service(db_path, tmp_path, clock).start_if_ready(run.run_id)
+    await _execution_service(
+        db_path,
+        tmp_path,
+        clock,
+        model_args={"path": "denied.txt", "content": "denied content"},
+    ).start_if_ready(run.run_id)
     proposal = (await OutwardApprovalStore(db_path).list(status="pending"))[0]
     denied = await _approval_service(db_path, clock).deny(
         proposal.proposal_id,
@@ -192,7 +290,13 @@ async def test_outward_execution_delete_file_uses_hardened_connector_after_appro
         }
     )
 
-    paused = await _execution_service(db_path, tmp_path, clock).start_if_ready(run.run_id)
+    paused = await _execution_service(
+        db_path,
+        tmp_path,
+        clock,
+        model_tool="delete_file",
+        model_args={"path": "delete-me.txt"},
+    ).start_if_ready(run.run_id)
     assert paused.status == "approval_required"
     assert target.exists() is True
 
@@ -230,7 +334,7 @@ async def test_outward_execution_rejects_invalid_connector_args_before_proposal(
                 "acceptance_contract": {
                     "governed_tool_call": {
                         "tool": "write_file",
-                        "args": {"path": "missing-content.txt"},
+                        "args": {"path": "missing-content.txt", "content": "contract content"},
                     }
                 },
             },
@@ -238,9 +342,14 @@ async def test_outward_execution_rejects_invalid_connector_args_before_proposal(
         }
     )
 
-    failed = await _execution_service(db_path, tmp_path, clock).start_if_ready(run.run_id)
+    failed = await _execution_service(
+        db_path,
+        tmp_path,
+        clock,
+        model_args={"path": "missing-content.txt"},
+    ).start_if_ready(run.run_id)
 
     assert failed.status == "failed"
     assert (tmp_path / "missing-content.txt").exists() is False
     assert await OutwardApprovalStore(db_path).list(status="pending") == []
-    assert "invalid connector args" in str(failed.stop_reason)
+    assert "invalid model connector args" in str(failed.stop_reason)

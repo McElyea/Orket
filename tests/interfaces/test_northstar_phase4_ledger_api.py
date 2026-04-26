@@ -7,12 +7,14 @@ from fastapi.testclient import TestClient
 
 import orket.interfaces.api as api_module
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
+from tests.helpers.outward_model import patch_outward_model_client
 
 
 def _client(tmp_path, monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, str]:
     db_path = tmp_path / "phase4-control-plane.sqlite3"
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_OUTWARD_PIPELINE_DB_PATH", str(db_path))
+    patch_outward_model_client(monkeypatch, args={"path": "phase4.txt", "content": "phase4"})
     return TestClient(api_module.create_api_app(project_root=tmp_path)), str(db_path)
 
 

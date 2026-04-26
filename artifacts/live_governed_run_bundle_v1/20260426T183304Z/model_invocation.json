@@ -1,0 +1,19 @@
+{
+  "completion_token_count": 122,
+  "duration_ms": 10191,
+  "error_type": null,
+  "finish_reason": null,
+  "model_invocation_ref": "workspace/live_governed_run_v1_20260426T183304Z/runs/live-governed-run-v1-20260426t183304z/model_invocation.json",
+  "model_name": "qwen2.5-coder:7b",
+  "model_response_content_sha256": "43ca3a14522465bba7d3af36e002ebdf40ab4dedc36bb586c41c647db50e1be7",
+  "namespace": "live_governed_run_v1_20260426T183304Z",
+  "prompt_token_count": 534,
+  "provider_name": "ollama",
+  "result": "tool_call_extracted",
+  "run_id": "live-governed-run-v1-20260426t183304z",
+  "schema_version": "outward_model_invocation.v1",
+  "session_id": null,
+  "tool_args_hash": "1591458b183d21b1d1dee3e0f2f8d1c44fa67fd065a9bb239e868a5a3103f8e2",
+  "tool_name": "write_file",
+  "turn_number": 1
+}
