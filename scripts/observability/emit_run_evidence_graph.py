@@ -28,7 +28,6 @@ from orket.application.services.outward_ledger_service import OutwardLedgerServi
 from orket.application.services.outward_run_inspection_service import OutwardRunInspectionService
 from orket.runtime.run_evidence_graph import (
     RUN_EVIDENCE_GRAPH_DEFAULT_VIEWS,
-    RUN_EVIDENCE_GRAPH_VIEW_ORDER,
     write_run_evidence_graph_artifact,
 )
 from orket.runtime.run_evidence_graph_projection import project_run_evidence_graph_primary_lineage
@@ -230,8 +229,10 @@ def _outward_graph_payload(
         {"from": f"event:{left['event_id']}", "to": f"event:{right['event_id']}", "kind": "ordered_after"}
         for left, right in zip(events, events[1:], strict=False)
     )
+    proposal_event_ids = [event["event_id"] for event in events if event.get("event_type") == "proposal_made"]
     for proposal in proposals:
-        edges.append({"from": f"event:run:{run['run_id']}:0300:proposal:{proposal['tool']}", "to": f"proposal:{proposal['proposal_id']}", "kind": "created"})
+        if proposal_event_ids:
+            edges.append({"from": f"event:{proposal_event_ids.pop(0)}", "to": f"proposal:{proposal['proposal_id']}", "kind": "created"})
     edges.append({"from": f"event:{events[-1]['event_id']}", "to": f"ledger:{run['run_id']}", "kind": "hashes_to"} if events else {})
     return {
         "schema_version": "outward_run_evidence_graph.v1",

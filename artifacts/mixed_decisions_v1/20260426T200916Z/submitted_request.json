@@ -1,0 +1,66 @@
+{
+  "endpoint": "POST /v1/runs",
+  "public_path_evidence": {
+    "observed_extractions": [
+      {
+        "acceptance_result": "accepted_for_proposal",
+        "extracted_args_hash": "04d065497a85b866bfb7f6304381508d38ae06df94f54b89c2a29b4762eb28e1",
+        "extracted_tool_name": "write_file",
+        "model_response_content_sha256": "04860d091f036139b0926224151c79caa8d21c0369af603c366db40dfad6a397",
+        "proposal_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0001",
+        "turn": 1
+      },
+      {
+        "acceptance_result": "accepted_for_proposal",
+        "extracted_args_hash": "416bacb84adff61cb17c1f580927ebd15e18d17f0e639e1c536749fb054713d5",
+        "extracted_tool_name": "write_file",
+        "model_response_content_sha256": "fc207a8826c23c5573214939dca3fa3742f1b474a6335b50c13215783770c1ec",
+        "proposal_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0002",
+        "turn": 2
+      }
+    ],
+    "proposal_count_from_model_extractions": 2,
+    "proposal_derived_from_model_output": true,
+    "proposal_made_event_ids": [
+      "run:mixed-decisions-v1-20260426t200916z:01:0300:proposal:write_file:0001",
+      "run:mixed-decisions-v1-20260426t200916z:02:0300:proposal:write_file:0001"
+    ]
+  },
+  "public_path_note": "Proposals are derived from model_response/proposal_extraction artifacts, not direct acceptance_contract args.",
+  "run_workspace": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z",
+  "scenario": "mixed_decisions_v1",
+  "schema_version": "submitted_request_redacted.v1",
+  "submitted_request_body": {
+    "namespace": "mixed_decisions_v1_20260426T200916Z",
+    "policy_overrides": {
+      "approval_required_tools": [
+        "write_file"
+      ],
+      "approval_timeout_seconds": 600,
+      "max_turns": 2
+    },
+    "run_id": "mixed-decisions-v1-20260426t200916z",
+    "task": {
+      "acceptance_contract": {
+        "governed_tool_sequence": [
+          {
+            "args": {
+              "content": "CONTRACT_ONE",
+              "path": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/contract_one_should_not_write.txt"
+            },
+            "tool": "write_file"
+          },
+          {
+            "args": {
+              "content": "CONTRACT_TWO",
+              "path": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/contract_two_should_not_write.txt"
+            },
+            "tool": "write_file"
+          }
+        ]
+      },
+      "description": "Request two distinct governed writes.",
+      "instruction": "This is a two-turn mixed approval proof. If current_turn_number is 1, call write_file with path workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/approved_output.txt and content MIXED_APPROVED::mixed-decisions-v1-20260426t200916z. If current_turn_number is 2, do not repeat the first path; call write_file with path workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/denied_output.txt and content MIXED_DENIED::mixed-decisions-v1-20260426t200916z."
+    }
+  }
+}

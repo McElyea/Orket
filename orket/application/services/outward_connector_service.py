@@ -28,6 +28,13 @@ class OutwardConnectorArgumentError(ValueError):
         self.errors = errors
 
 
+class OutwardConnectorPolicyError(PermissionError):
+    def __init__(self, connector_name: str, reason: str) -> None:
+        super().__init__(reason)
+        self.connector_name = connector_name
+        self.reason = reason
+
+
 class OutwardConnectorService:
     def __init__(
         self,
@@ -61,7 +68,24 @@ class OutwardConnectorService:
             raise OutwardConnectorArgumentError(metadata.name, errors)
         return dict(args)
 
+    def validate_policy(self, connector_name: str, args: dict[str, Any]) -> None:
+        metadata = self._require_metadata(connector_name)
+        validated_args = self.validate_args(metadata.name, args)
+        try:
+            if metadata.name == "read_file":
+                self.executor.file_tools.async_fs._resolve_safe_path(str(validated_args.get("path") or ""), write=False)
+            elif metadata.name in {"write_file", "create_directory", "delete_file"}:
+                self.executor.file_tools.async_fs._resolve_safe_path(str(validated_args.get("path") or ""), write=True)
+            elif metadata.name in {"http_get", "http_post"}:
+                self.executor._require_allowlisted_url(str(validated_args.get("url") or ""))
+        except (PermissionError, OSError, ValueError, TypeError) as exc:
+            raise OutwardConnectorPolicyError(metadata.name, str(exc)) from exc
+
     async def invoke(self, connector_name: str, args: dict[str, Any]) -> dict[str, Any]:
+        event_payload, _result = await self.invoke_with_result(connector_name, args)
+        return event_payload
+
+    async def invoke_with_result(self, connector_name: str, args: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
         metadata = self._require_metadata(connector_name)
         validated_args = self.validate_args(metadata.name, args)
         try:
@@ -81,13 +105,14 @@ class OutwardConnectorService:
                 "timeout_seconds": float(metadata.timeout_seconds),
             }
             outcome = "timeout"
-        return {
+        event_payload = {
             "connector_name": metadata.name,
             "args_hash": _args_hash(validated_args),
             "result_summary": _result_summary(result),
             "duration_ms": 0,
             "outcome": outcome,
         }
+        return event_payload, dict(result)
 
     def _require_metadata(self, connector_name: str) -> BuiltInConnectorMetadata:
         metadata = self.connector_registry.get(connector_name)
@@ -148,5 +173,6 @@ __all__ = [
     "OutwardConnectorArgumentError",
     "OutwardConnectorError",
     "OutwardConnectorNotFoundError",
+    "OutwardConnectorPolicyError",
     "OutwardConnectorService",
 ]

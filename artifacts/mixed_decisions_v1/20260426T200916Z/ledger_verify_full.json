@@ -1,0 +1,10 @@
+{
+  "schema_version": "ledger_export.v1",
+  "result": "valid",
+  "export_scope": "all",
+  "run_id": "mixed-decisions-v1-20260426t200916z",
+  "ledger_hash": "c5afa7188d9e064114094e93e2d3378dea63656269fec55a7dbfd61f8ae3501e",
+  "event_count": 16,
+  "checked_event_count": 16,
+  "errors": []
+}

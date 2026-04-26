@@ -1,0 +1,455 @@
+{
+  "canonical": {
+    "event_count": 17,
+    "genesis": "GENESIS",
+    "ledger_hash": "a0ef0b0e8ab529ed63d3ec545a02ee0239da83a5c4c57a8f4a0bb5c494ca1299",
+    "ordering": [
+      "run_id",
+      "turn",
+      "at",
+      "event_id"
+    ]
+  },
+  "contains_pii": false,
+  "events": [
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T20:09:19.037462+00:00",
+      "chain_hash": "a56ee3cd9ae96971ea5ef4478669486cee3cc8095914990410b90d52622f0f85",
+      "event_group": "all",
+      "event_hash": "9602771089340efcb971ac1fdcdfec6e4be742b586e4b7e9e9bd2414aeb4e6db",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:submitted",
+      "event_type": "run_submitted",
+      "payload": {
+        "namespace": "Multi_step_approved_v1_20260426T200916Z",
+        "policy_overrides": {
+          "approval_required_tools": [
+            "read_file",
+            "write_file"
+          ],
+          "approval_timeout_seconds": 600,
+          "max_turns": 2
+        },
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "status": "queued",
+        "submitted_at": "2026-04-26T20:09:19.037462+00:00",
+        "task_description": "Read a seed list and write it sorted."
+      },
+      "position": 1,
+      "previous_chain_hash": "GENESIS",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 0
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:19.083263+00:00",
+      "chain_hash": "267d417ccc8e89ad76603d0224684bb36092c203c8ff44c258f95753cc29e48e",
+      "event_group": "all",
+      "event_hash": "968005db3f2d7bafd5f3d1db08b457826f2be85b4d2820671c103f4f26e05b58",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:0100:started",
+      "event_type": "run_started",
+      "payload": {
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "started_at": "2026-04-26T20:09:19.071020+00:00",
+        "status": "running"
+      },
+      "position": 2,
+      "previous_chain_hash": "a56ee3cd9ae96971ea5ef4478669486cee3cc8095914990410b90d52622f0f85",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 0
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:19.092680+00:00",
+      "chain_hash": "ba0e135d84bf1cb89e05ca662b2bad2b68932c7aaa028050d0d462f89a1a518d",
+      "event_group": "all",
+      "event_hash": "15e50f6a1a5c1d86a5028e2b051084cfb26aee14d234718d99f8e6855be7690f",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:01:0200:turn:started",
+      "event_type": "turn_started",
+      "payload": {
+        "agent_id": "outward-agent",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "turn": 1
+      },
+      "position": 3,
+      "previous_chain_hash": "267d417ccc8e89ad76603d0224684bb36092c203c8ff44c258f95753cc29e48e",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:22.003687+00:00",
+      "chain_hash": "539b73f8aef08628112566dcfabf4c9a7c8d390b745ee380be3bf8de3e623e84",
+      "event_group": "proposals",
+      "event_hash": "db292f88757641bfeafd2c7b3b1b26645209ce75dd6d96c19d27d23947c8206b",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:01:0300:proposal:read_file:0001",
+      "event_type": "proposal_made",
+      "payload": {
+        "args_preview": {
+          "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/seed_items.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "model_invocation_ref": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/model_invocation_turn_1.json",
+        "model_invocation_sha256": "61dcacf0680df71591fe315a6f36798f58c31d6a2f5bc76a1213dcef77f224c1",
+        "model_name": "qwen2.5-coder:7b",
+        "model_response_content_sha256": "c871e1bb42a44ba0cc86624c94e576a111bfb6960288972ec264e810bfa9d2eb",
+        "namespace": "multi_step_approved_v1_20260426T200916Z",
+        "proposal_extraction_ref": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/proposal_extraction_turn_1.json",
+        "provider_name": "ollama",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "tool": "read_file",
+        "tool_args_hash": "16a7b903b865e44804a87a5a9425c11a67159383615f70cd6c415ae84f34960d",
+        "tool_name": "read_file"
+      },
+      "position": 4,
+      "previous_chain_hash": "ba0e135d84bf1cb89e05ca662b2bad2b68932c7aaa028050d0d462f89a1a518d",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T20:09:22.028047+00:00",
+      "chain_hash": "973344e18522d75c9b8123eb8b59baf5a65009cf3397ac3516feec05895fd0f7",
+      "event_group": "proposals",
+      "event_hash": "fbc03006a0d606cbfe3af37709dc918d62ef01eb9a0deabccdadbead5a4d1931",
+      "event_id": "proposal:multi-step-approved-v1-20260426t200916z:read_file:0001:0001:proposal_pending_approval",
+      "event_type": "proposal_pending_approval",
+      "payload": {
+        "args_preview": {
+          "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/seed_items.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "expires_at": "2026-04-26T20:19:22.028055+00:00",
+        "namespace": "multi_step_approved_v1_20260426T200916Z",
+        "proposal_id": "proposal:multi-step-approved-v1-20260426t200916z:read_file:0001",
+        "risk_level": "read",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "status": "pending",
+        "submitted_at": "2026-04-26T20:09:22.028047+00:00",
+        "tool": "read_file"
+      },
+      "position": 5,
+      "previous_chain_hash": "539b73f8aef08628112566dcfabf4c9a7c8d390b745ee380be3bf8de3e623e84",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T20:09:22.108202+00:00",
+      "chain_hash": "a51f3830c719a6f2ca6d768161b4f96d0641683917b2ef7c606a1ec5315f69a1",
+      "event_group": "decisions",
+      "event_hash": "3c86094dcd299e6ffcfea366393005a36bae0127a046f05fc8e99db64df01ad4",
+      "event_id": "proposal:multi-step-approved-v1-20260426t200916z:read_file:0001:0002:proposal_approved",
+      "event_type": "proposal_approved",
+      "payload": {
+        "args_preview": {
+          "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/seed_items.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "decided_at": "2026-04-26T20:09:22.108202+00:00",
+        "decision": "approve",
+        "expires_at": "2026-04-26T20:19:22.028055+00:00",
+        "namespace": "multi_step_approved_v1_20260426T200916Z",
+        "note": "approved scenario proposal 1",
+        "operator_ref": "api_key_fingerprint:sha256:2c0c07403b7ab95cfc6732ff2f553b72695624629a121a8117a433460c2cd117",
+        "proposal_id": "proposal:multi-step-approved-v1-20260426t200916z:read_file:0001",
+        "reason": null,
+        "risk_level": "read",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "status": "approved",
+        "submitted_at": "2026-04-26T20:09:22.028047+00:00",
+        "tool": "read_file"
+      },
+      "position": 6,
+      "previous_chain_hash": "973344e18522d75c9b8123eb8b59baf5a65009cf3397ac3516feec05895fd0f7",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:22.159536+00:00",
+      "chain_hash": "8cc343895ae716006a0248bb0ba0e147bb97e5b15ff705eb23ee8b18402a28d7",
+      "event_group": "tools",
+      "event_hash": "95e3cdfadd6fddfd749ad9a4b136061748ef268c1cf00102cd899fdf9cc90f02",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:01:0400:tool:read_file:0001",
+      "event_type": "tool_invoked",
+      "payload": {
+        "args_hash": "16a7b903b865e44804a87a5a9425c11a67159383615f70cd6c415ae84f34960d",
+        "connector_name": "read_file",
+        "duration_ms": 0,
+        "outcome": "success",
+        "result_summary": {
+          "content_bytes": 18,
+          "ok": true
+        }
+      },
+      "position": 7,
+      "previous_chain_hash": "a51f3830c719a6f2ca6d768161b4f96d0641683917b2ef7c606a1ec5315f69a1",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:22.176833+00:00",
+      "chain_hash": "d8762f03c6c36ddab544b076e41fd3efbb8d778155ef4143b877ed582b06ae04",
+      "event_group": "commitments",
+      "event_hash": "f787b2a0d56a1657d6e0ddf717b81df21da16c5887aae7717175a9ab0f1316b4",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:01:0500:commitment:read_file:0001",
+      "event_type": "commitment_recorded",
+      "payload": {
+        "outcome": "success",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "tool": "read_file"
+      },
+      "position": 8,
+      "previous_chain_hash": "8cc343895ae716006a0248bb0ba0e147bb97e5b15ff705eb23ee8b18402a28d7",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:22.186431+00:00",
+      "chain_hash": "6d8a136d37ce4e502c5116e4830564c30cec794369aa6c32375db5b2d5803c71",
+      "event_group": "all",
+      "event_hash": "95fdec9a35ef89a9aa5c8ca748de092f070010221d8f33f16e85ea74474caa40",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:01:0600:turn:completed",
+      "event_type": "turn_completed",
+      "payload": {
+        "outcome": "success",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "turn": 1
+      },
+      "position": 9,
+      "previous_chain_hash": "d8762f03c6c36ddab544b076e41fd3efbb8d778155ef4143b877ed582b06ae04",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:22.203805+00:00",
+      "chain_hash": "9a0f46200f2a8f0edbde14bd95ab9b3fa0fd1d918eb82e6602e7e50c42bed2c2",
+      "event_group": "all",
+      "event_hash": "32b2147299eab9deab4021dada1412e85c58476f5822fdaf190146d2b65a302c",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:02:0200:turn:started",
+      "event_type": "turn_started",
+      "payload": {
+        "agent_id": "outward-agent",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "turn": 2
+      },
+      "position": 10,
+      "previous_chain_hash": "6d8a136d37ce4e502c5116e4830564c30cec794369aa6c32375db5b2d5803c71",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 2
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:23.338461+00:00",
+      "chain_hash": "385170ced1605dd6aae049ccea74b311af39c7d7568c9d90b6edaf44a8de7c10",
+      "event_group": "proposals",
+      "event_hash": "2c335635056559dc2bd2dcb5087a6dfbce8425de938201726bad659376ff27f2",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:02:0300:proposal:write_file:0001",
+      "event_type": "proposal_made",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/sorted_items.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "model_invocation_ref": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/model_invocation_turn_2.json",
+        "model_invocation_sha256": "5da019c422bfbe813391aaa3c7e727cfc1599cfd3e87b08deb56546544800a58",
+        "model_name": "qwen2.5-coder:7b",
+        "model_response_content_sha256": "4e0c10d4a8d7e24d072c728f9bd6c40d0f23d93ecdd4cb88e68344dab0d49561",
+        "namespace": "multi_step_approved_v1_20260426T200916Z",
+        "proposal_extraction_ref": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/proposal_extraction_turn_2.json",
+        "provider_name": "ollama",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "tool": "write_file",
+        "tool_args_hash": "20946477677d400c95e9aba4f67f835e2f25da52150564830fa186da30bd50c8",
+        "tool_name": "write_file"
+      },
+      "position": 11,
+      "previous_chain_hash": "9a0f46200f2a8f0edbde14bd95ab9b3fa0fd1d918eb82e6602e7e50c42bed2c2",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 2
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T20:09:23.352156+00:00",
+      "chain_hash": "43b50a8c18f73154ee9a4a93aacec0d641770adaaee870c0873937257895e121",
+      "event_group": "proposals",
+      "event_hash": "b4edb7982ca70d45a119e1ad0cad0ecafa85f5623b05404e1a780d4c12cfca64",
+      "event_id": "proposal:multi-step-approved-v1-20260426t200916z:write_file:0002:0001:proposal_pending_approval",
+      "event_type": "proposal_pending_approval",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/sorted_items.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "expires_at": "2026-04-26T20:19:23.352163+00:00",
+        "namespace": "multi_step_approved_v1_20260426T200916Z",
+        "proposal_id": "proposal:multi-step-approved-v1-20260426t200916z:write_file:0002",
+        "risk_level": "write",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "status": "pending",
+        "submitted_at": "2026-04-26T20:09:23.352156+00:00",
+        "tool": "write_file"
+      },
+      "position": 12,
+      "previous_chain_hash": "385170ced1605dd6aae049ccea74b311af39c7d7568c9d90b6edaf44a8de7c10",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 2
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T20:09:23.404432+00:00",
+      "chain_hash": "ae807b50696064b03fe38c0fd1b42d0c02f40369f96ff48dac1e1fb98f8e39cb",
+      "event_group": "decisions",
+      "event_hash": "1ab6f070125aa6490d6f9101f3174d19536450f8aa6b9ed86ee9008388769eb4",
+      "event_id": "proposal:multi-step-approved-v1-20260426t200916z:write_file:0002:0002:proposal_approved",
+      "event_type": "proposal_approved",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/sorted_items.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "decided_at": "2026-04-26T20:09:23.404432+00:00",
+        "decision": "approve",
+        "expires_at": "2026-04-26T20:19:23.352163+00:00",
+        "namespace": "multi_step_approved_v1_20260426T200916Z",
+        "note": "approved scenario proposal 2",
+        "operator_ref": "api_key_fingerprint:sha256:2c0c07403b7ab95cfc6732ff2f553b72695624629a121a8117a433460c2cd117",
+        "proposal_id": "proposal:multi-step-approved-v1-20260426t200916z:write_file:0002",
+        "reason": null,
+        "risk_level": "write",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "status": "approved",
+        "submitted_at": "2026-04-26T20:09:23.352156+00:00",
+        "tool": "write_file"
+      },
+      "position": 13,
+      "previous_chain_hash": "43b50a8c18f73154ee9a4a93aacec0d641770adaaee870c0873937257895e121",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 2
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:23.454916+00:00",
+      "chain_hash": "748218e0943121c8ca4c45affc3d51687760cd073ff25e3cc460a15ee72804f6",
+      "event_group": "tools",
+      "event_hash": "af5bd8169159d40f1602affc4993d352b33ed41063e654519e9e9f8910bacd6c",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:02:0400:tool:write_file:0002",
+      "event_type": "tool_invoked",
+      "payload": {
+        "args_hash": "20946477677d400c95e9aba4f67f835e2f25da52150564830fa186da30bd50c8",
+        "connector_name": "write_file",
+        "duration_ms": 0,
+        "outcome": "success",
+        "result_summary": {
+          "ok": true,
+          "path": "C:\\Source\\Orket\\workspace\\multi_step_approved_v1_20260426T200916Z\\runs\\multi-step-approved-v1-20260426t200916z\\sorted_items.txt"
+        }
+      },
+      "position": 14,
+      "previous_chain_hash": "ae807b50696064b03fe38c0fd1b42d0c02f40369f96ff48dac1e1fb98f8e39cb",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 2
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:23.472799+00:00",
+      "chain_hash": "f378e498b03035a5c45bb5c8549cd0e826a2483dc4f117d2e5054ec27d5c103e",
+      "event_group": "commitments",
+      "event_hash": "1d5920643f587355079929658c4cdeb6f965848eb6963ce284089d79787da9ee",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:02:0500:commitment:write_file:0002",
+      "event_type": "commitment_recorded",
+      "payload": {
+        "outcome": "success",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "tool": "write_file"
+      },
+      "position": 15,
+      "previous_chain_hash": "748218e0943121c8ca4c45affc3d51687760cd073ff25e3cc460a15ee72804f6",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 2
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:23.481949+00:00",
+      "chain_hash": "3769864ac2dc8a2a363ad76792d8264ca94f74e6567d0c0947cbbcabbe974502",
+      "event_group": "all",
+      "event_hash": "a6338e2930d11fce37d3b7b8a54a79bb10ba95ab5adde60a1b23911038844706",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:02:0600:turn:completed",
+      "event_type": "turn_completed",
+      "payload": {
+        "outcome": "success",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "turn": 2
+      },
+      "position": 16,
+      "previous_chain_hash": "f378e498b03035a5c45bb5c8549cd0e826a2483dc4f117d2e5054ec27d5c103e",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 2
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:23.498430+00:00",
+      "chain_hash": "a0ef0b0e8ab529ed63d3ec545a02ee0239da83a5c4c57a8f4a0bb5c494ca1299",
+      "event_group": "all",
+      "event_hash": "1994f0b542b00f598929c5ecfb9af35f8a223d4310da0171840111c684917be9",
+      "event_id": "run:multi-step-approved-v1-20260426t200916z:0700:completed",
+      "event_type": "run_completed",
+      "payload": {
+        "completed_at": "2026-04-26T20:09:23.488671+00:00",
+        "outcome": "success",
+        "run_id": "multi-step-approved-v1-20260426t200916z",
+        "status": "completed"
+      },
+      "position": 17,
+      "previous_chain_hash": "3769864ac2dc8a2a363ad76792d8264ca94f74e6567d0c0947cbbcabbe974502",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "turn": 2
+    }
+  ],
+  "export_scope": "all",
+  "include_pii": false,
+  "omitted_spans": [],
+  "policy_snapshot": {
+    "ledger_payload_model": "policy_safe_by_construction",
+    "outbound_policy_gate": "applied_before_serialization",
+    "payload_bytes": "unchanged"
+  },
+  "run_id": "multi-step-approved-v1-20260426t200916z",
+  "schema_version": "ledger_export.v1",
+  "summary": {
+    "completed_at": "2026-04-26T20:09:23.488671+00:00",
+    "current_turn": 2,
+    "event_count": 17,
+    "event_counts": {
+      "commitment_recorded": 2,
+      "proposal_approved": 2,
+      "proposal_made": 2,
+      "proposal_pending_approval": 2,
+      "run_completed": 1,
+      "run_started": 1,
+      "run_submitted": 1,
+      "tool_invoked": 2,
+      "turn_completed": 2,
+      "turn_started": 2
+    },
+    "exported_event_count": 17,
+    "max_turns": 2,
+    "run_id": "multi-step-approved-v1-20260426t200916z",
+    "status": "completed",
+    "stop_reason": null
+  },
+  "types": [
+    "all"
+  ],
+  "verification": {
+    "meaning": "full canonical ledger",
+    "result": "valid"
+  }
+}

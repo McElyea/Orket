@@ -58,6 +58,22 @@ This document defines canonical runtime events and minimum fields.
 
 Legacy `tool_blocked` from direct `Agent.run(...)` remains compatibility telemetry and is not part of the canonical governed turn-tool event family.
 
+## Outward Pipeline Ledger Lifecycle
+1. `proposal_made`
+   - `run_id`, `namespace`, `tool`, `args_preview`, `context_summary`, `model_invocation_ref`, `model_invocation_sha256`, `model_response_content_sha256`, `proposal_extraction_ref`, `provider_name`, `model_name`, `tool_name`, `tool_args_hash`
+2. `proposal_pending_approval`
+   - `proposal_id`, `run_id`, `namespace`, `tool`, `args_preview`, `context_summary`, `risk_level`, `submitted_at`, `expires_at`, `status`
+3. `proposal_approved`
+   - `proposal_id`, `run_id`, `namespace`, `tool`, `decision`, `operator_ref`, `decided_at`, `status`
+4. `proposal_denied`
+   - `proposal_id`, `run_id`, `namespace`, `tool`, `decision`, `operator_ref`, `reason`, `decided_at`, `status`
+5. `proposal_policy_rejected`
+   - `run_id`, `tool`, `args_preview`, `policy_result`, `reason`, `tool_args_hash`
+6. `tool_invoked`
+   - `connector_name`, `args_hash`, `result_summary`, `duration_ms`, `outcome`
+7. `commitment_recorded`
+   - `run_id`, `tool`, `outcome`
+
 ## Agent Factory Lifecycle
 1. `seat_no_roles_configured`
    - `team`, `seat`

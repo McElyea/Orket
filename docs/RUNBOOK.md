@@ -126,13 +126,13 @@ $env:ORKET_MODEL_STREAM_REAL_MODEL_ID="<model_id>"
 python server.py --host 127.0.0.1 --port 8082
 ```
 2. Confirm `/health` returns `{ "status": "ok" }` and capture `X-Orket-Version` from an authenticated `/v1/*` response using case-insensitive header lookup.
-3. Submit `POST /v1/runs` with `task.acceptance_contract.governed_tool_call` as the governed-tool-family gate. For public proof, include an intentional synthetic-shortcut probe: make the acceptance-contract tool args differ from the model-requested tool args in the task instruction.
+3. Submit `POST /v1/runs` with `task.acceptance_contract.governed_tool_call` as the single governed-tool-family gate, or `task.acceptance_contract.governed_tool_sequence` for ordered multi-turn proof. For public proof, include an intentional synthetic-shortcut probe when useful: make the acceptance-contract tool args differ from the model-requested tool args in the task instruction.
 4. Capture the submitted request body as `submitted_request.json`. Redact secrets, but preserve the acceptance contract, task instruction, and hashes proving the contract args differ from the model-requested args.
 5. Capture model evidence from `workspace/<namespace>/runs/<run_id>/`:
-   - `model_invocation.json`
-   - `model_prompt_redacted.json`
-   - `model_response_redacted.json`
-   - `proposal_extraction.json`
+   - `model_invocation.json` plus `model_invocation_turn_<n>.json` for each model turn
+   - `model_prompt_redacted.json` plus `model_prompt_redacted_turn_<n>.json`
+   - `model_response_redacted.json` plus `model_response_redacted_turn_<n>.json`
+   - `proposal_extraction.json` plus `proposal_extraction_turn_<n>.json`
 6. Capture workspace state before approval, pending approval payload, approval decision, workspace state after approval, produced artifact, final run status, run events, and run summary.
 7. Emit the outward pipeline evidence graph directly from the outward `run_id`:
 ```bash
@@ -154,6 +154,8 @@ Public claim boundaries to preserve in the report:
 1. This proves one local live outward pipeline run.
 2. It does not prove replay stability, cross-run determinism, cloud readiness, third-party connector auto-discovery, or model-output reproducibility.
 3. It proves governance of the effect, not reproducibility of the model content.
+
+For denial-path proof, use the public approval denial endpoint and verify `proposal_denied`, no `tool_invoked` event for the denied proposal, terminal run status `completed`, and absence of the target effect. For out-of-scope path proof, verify `proposal_policy_rejected` appears in the ledger before any human approval proposal and that the attempted path is visible in policy-safe proposal artifacts.
 
 ## Outward Pipeline Connectors
 The Phase 5 built-in connector harness is local and uses the same registry-backed invocation rules as outward execution:

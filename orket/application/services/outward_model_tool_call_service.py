@@ -15,6 +15,7 @@ from orket.application.services.outward_model_observability import (
     record_proposal_extraction_acceptance,
     write_model_evidence,
 )
+from orket.application.services.outward_run_execution_plan import current_step_index, previous_tool_results
 from orket.core.domain.outward_runs import OutwardRunRecord
 from orket.exceptions import ModelProviderError
 
@@ -156,8 +157,9 @@ class OutwardModelToolCallService:
         *,
         run: OutwardRunRecord,
         model_result: OutwardModelToolCallResult,
-        proposal_id: str,
+        proposal_id: str | None,
         pii_fields: tuple[str, ...],
+        acceptance_result: str = "accepted_for_proposal",
     ) -> dict[str, Any]:
         return await record_proposal_extraction_acceptance(
             workspace_root=self.workspace_root,
@@ -166,6 +168,7 @@ class OutwardModelToolCallService:
             tool_call=model_result.tool_call,
             pii_fields=pii_fields,
             proposal_id=proposal_id,
+            acceptance_result=acceptance_result,
         )
 
 
@@ -190,6 +193,9 @@ def _prompt_messages(
             "description": str(run.task.get("description") or ""),
             "instruction": str(run.task.get("instruction") or ""),
         },
+        "current_turn_number": int(run.current_turn or 1),
+        "current_sequence_step_index": current_step_index(run),
+        "previous_governed_tool_results": previous_tool_results(run),
         "required_governed_tool": expected_tool,
         "available_governed_connector_schemas": connector_schemas,
     }
@@ -199,7 +205,9 @@ def _prompt_messages(
             "content": (
                 "You are the Orket outward execution planner. Produce exactly one governed connector "
                 "tool call for the requested task. Do not perform side effects yourself. If native tool "
-                "calling is unavailable, respond as JSON: {\"tool\":\"<name>\",\"args\":{...}}."
+                "calling is unavailable, respond as JSON: {\"tool\":\"<name>\",\"args\":{...}}. "
+                "For later turns, use previous governed tool results as input context and produce only the "
+                "next requested step. Do not repeat a previous write_file path unless the task explicitly asks."
             ),
         },
         {

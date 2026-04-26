@@ -1,0 +1,15 @@
+{
+  "args_preview": {
+    "content": "[REDACTED]",
+    "path": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/approved_output.txt"
+  },
+  "context_summary": "model-produced governed tool call from live provider response",
+  "expires_at": "2026-04-26T20:27:16.576768+00:00",
+  "namespace": "mixed_decisions_v1_20260426T200916Z",
+  "proposal_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0001",
+  "risk_level": "write",
+  "run_id": "mixed-decisions-v1-20260426t200916z",
+  "status": "pending",
+  "submitted_at": "2026-04-26T20:17:16.576761+00:00",
+  "tool": "write_file"
+}

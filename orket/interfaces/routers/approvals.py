@@ -42,6 +42,11 @@ def build_approvals_router(
             return
         await outward_execution_service_getter().continue_after_approval(proposal_id)
 
+    async def _continue_outward_run_after_denial(proposal_id: str) -> None:
+        if outward_execution_service_getter is None:
+            return
+        await outward_execution_service_getter().continue_after_denial(proposal_id)
+
     @router.get("/approvals")
     async def list_approvals(
         status: str | None = Query(default=None),
@@ -147,6 +152,7 @@ def build_approvals_router(
                 reason=req.reason,
                 note=req.note,
             )
+            await _continue_outward_run_after_denial(resolved.proposal_id)
         except ValueError as exc:
             detail = str(exc)
             status_code = 404 if "not found" in detail.lower() else 422
@@ -173,6 +179,7 @@ def build_approvals_router(
                             operator_ref=getattr(request.state, "authenticated_actor_ref", None) or "operator:unknown",
                             reason=req.notes or "operator_denied",
                         )
+                        await _continue_outward_run_after_denial(resolved.proposal_id)
                     else:
                         raise HTTPException(status_code=422, detail="decision must be one of: approve, deny")
                 except ValueError as exc:

@@ -1,0 +1,19 @@
+{
+  "completion_token_count": 88,
+  "duration_ms": 782,
+  "error_type": null,
+  "finish_reason": null,
+  "model_invocation_ref": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/model_invocation_turn_2.json",
+  "model_name": "qwen2.5-coder:7b",
+  "model_response_content_sha256": "4e0c10d4a8d7e24d072c728f9bd6c40d0f23d93ecdd4cb88e68344dab0d49561",
+  "namespace": "multi_step_approved_v1_20260426T200916Z",
+  "prompt_token_count": 649,
+  "provider_name": "ollama",
+  "result": "tool_call_extracted",
+  "run_id": "multi-step-approved-v1-20260426t200916z",
+  "schema_version": "outward_model_invocation.v1",
+  "session_id": null,
+  "tool_args_hash": "20946477677d400c95e9aba4f67f835e2f25da52150564830fa186da30bd50c8",
+  "tool_name": "write_file",
+  "turn_number": 2
+}

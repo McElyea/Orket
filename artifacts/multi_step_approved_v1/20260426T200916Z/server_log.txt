@@ -1,0 +1,17 @@
+INFO:     Started server process [34768]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:60701 (Press CTRL+C to quit)
+INFO:     127.0.0.1:60709 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60718 - "GET /v1/version HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60719 - "POST /v1/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60754 - "GET /v1/runs/multi-step-approved-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60755 - "GET /v1/approvals?status=pending&session_id=multi-step-approved-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60756 - "POST /v1/approvals/proposal%3Amulti-step-approved-v1-20260426t200916z%3Aread_file%3A0001/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60760 - "GET /v1/approvals?status=pending&session_id=multi-step-approved-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60761 - "POST /v1/approvals/proposal%3Amulti-step-approved-v1-20260426t200916z%3Awrite_file%3A0002/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60762 - "GET /v1/runs/multi-step-approved-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60763 - "GET /v1/runs/multi-step-approved-v1-20260426t200916z/ledger HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60764 - "GET /v1/runs/multi-step-approved-v1-20260426t200916z/ledger?types=proposals%2Cdecisions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60765 - "GET /v1/runs/multi-step-approved-v1-20260426t200916z/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60766 - "GET /v1/runs/multi-step-approved-v1-20260426t200916z/summary HTTP/1.1" 200 OK

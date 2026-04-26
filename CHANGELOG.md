@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2026-04-26 - "The Multi-Step Governed Evidence Cut"
+
+### Added
+- **Multi-Step Governed Execution**: Added ordered `governed_tool_sequence` support so outward runs can perform one live model-produced governed tool proposal per turn while preserving approval-before-effect execution.
+- **Governed Negative-Path Proof Bundles**: Added denial, mixed-decision, multi-step approval, and out-of-scope policy-rejection evidence packets with ledger verification, tamper checks, and execution graphs.
+
+### Changed
+- **Approval And Policy Outcomes**: Changed denial handling to complete without invoking the denied connector effect, added `proposal_policy_rejected` ledger authority for out-of-scope model proposals, and aligned ledger export groups with the new decision event.
+- **Outward Model Evidence**: Split model prompt/response/invocation evidence into turn-specific artifacts and tightened redaction for model prompt payloads.
+- **Operator Contracts**: Updated current authority, API contract, event taxonomy, ledger export contract, and runbook guidance for multi-turn, denial-path, and policy-rejection proof.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. Operators using public proof bundles should keep denial-path and out-of-scope policy-rejection evidence with the same ledger verification and tamper checks as approved-path proof.
+
 ## [0.5.1] - 2026-04-26 - "The Live Governed Proof Bundle Cut"
 
 ### Added

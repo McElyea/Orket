@@ -1,0 +1,15 @@
+{
+  "content_redacted": "{\"args\": {\"path\": \"workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/seed_items.txt\"}, \"tool\": \"read_file\"}",
+  "extracted_tool_call_redacted": {
+    "args": {
+      "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/seed_items.txt"
+    },
+    "tool": "read_file"
+  },
+  "model_response_content_sha256": "c871e1bb42a44ba0cc86624c94e576a111bfb6960288972ec264e810bfa9d2eb",
+  "namespace": "multi_step_approved_v1_20260426T200916Z",
+  "response_material_kind": "content",
+  "run_id": "multi-step-approved-v1-20260426t200916z",
+  "schema_version": "outward_model_response_redacted.v1",
+  "tool_calls_redacted": []
+}

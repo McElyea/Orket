@@ -1,0 +1,61 @@
+{
+  "messages": [
+    {
+      "content": "You are the Orket outward execution planner. Produce exactly one governed connector tool call for the requested task. Do not perform side effects yourself. If native tool calling is unavailable, respond as JSON: {\"tool\":\"<name>\",\"args\":{...}}. For later turns, use previous governed tool results as input context and produce only the next requested step. Do not repeat a previous write_file path unless the task explicitly asks.",
+      "role": "system"
+    },
+    {
+      "content": "{\n  \"available_governed_connector_schemas\": {\n    \"write_file\": {\n      \"description\": \"Write a workspace file.\",\n      \"parameters\": {\n        \"additionalProperties\": false,\n        \"properties\": {\n          \"content\": \"[REDACTED]\",\n          \"path\": {\n            \"minLength\": 1,\n            \"title\": \"path\",\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"path\",\n          \"content\"\n        ],\n        \"type\": \"object\"\n      },\n      \"risk_level\": \"write\"\n    }\n  },\n  \"current_sequence_step_index\": 1,\n  \"current_turn_number\": 2,\n  \"previous_governed_tool_results\": [\n    {\n      \"proposal_id\": \"proposal:mixed-decisions-v1-20260426t200916z:write_file:0001\",\n      \"result\": {\n        \"ok\": true,\n        \"path\": \"C:\\\\Source\\\\Orket\\\\workspace\\\\mixed_decisions_v1_20260426T200916Z\\\\runs\\\\mixed-decisions-v1-20260426t200916z\\\\approved_output.txt\"\n      },\n      \"step_index\": 0,\n      \"tool\": \"write_file\",\n      \"turn\": 1\n    }\n  ],\n  \"required_governed_tool\": \"write_file\",\n  \"task\": {\n    \"description\": \"Request two distinct governed writes.\",\n    \"instruction\": \"This is a two-turn mixed approval proof. If current_turn_number is 1, call write_file with path workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/approved_output.txt and content MIXED_APPROVED::mixed-decisions-v1-20260426t200916z. If current_turn_number is 2, do not repeat the first path; call write_file with path workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/denied_output.txt and content MIXED_DENIED::mixed-decisions-v1-20260426t200916z.\"\n  }\n}",
+      "role": "user"
+    }
+  ],
+  "namespace": "mixed_decisions_v1_20260426T200916Z",
+  "run_id": "mixed-decisions-v1-20260426t200916z",
+  "runtime_context": {
+    "local_prompt_task_class": "tool_call",
+    "native_tool_choice": "required",
+    "native_tools": [
+      {
+        "function": {
+          "description": "Write a workspace file.",
+          "name": "write_file",
+          "parameters": {
+            "additionalProperties": false,
+            "properties": {
+              "content": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object"
+                  }
+                ],
+                "title": "content"
+              },
+              "path": {
+                "minLength": 1,
+                "title": "path",
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "content"
+            ],
+            "type": "object"
+          }
+        },
+        "type": "function"
+      }
+    ],
+    "outward_namespace": "mixed_decisions_v1_20260426T200916Z",
+    "outward_run_id": "mixed-decisions-v1-20260426t200916z",
+    "required_action_tools": [
+      "write_file"
+    ],
+    "turn_number": 2
+  },
+  "schema_version": "outward_model_prompt_redacted.v1",
+  "turn_number": 2
+}

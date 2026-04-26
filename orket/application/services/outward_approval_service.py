@@ -55,8 +55,9 @@ class OutwardApprovalService:
         if tool not in required_tools:
             raise OutwardApprovalValidationError(f"tool is not approval-required for run: {tool}")
 
+        proposal_number = len(await self.approval_store.list(run_id=run.run_id, status=None, limit=500)) + 1
         proposal = OutwardApprovalProposal(
-            proposal_id=f"proposal:{run.run_id}:{tool}:0001",
+            proposal_id=f"proposal:{run.run_id}:{tool}:{proposal_number:04d}",
             run_id=run.run_id,
             namespace=run.namespace,
             tool=tool,

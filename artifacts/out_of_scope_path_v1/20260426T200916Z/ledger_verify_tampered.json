@@ -1,0 +1,14 @@
+{
+  "schema_version": "ledger_export.v1",
+  "result": "invalid",
+  "export_scope": "all",
+  "run_id": "out-of-scope-path-v1-20260426t200916z",
+  "ledger_hash": "1a79afee7d08f8b0ee29c1fc611199cdeee7d82eb6fe011d725c632a72e842ed",
+  "event_count": 8,
+  "checked_event_count": 8,
+  "errors": [
+    "event_hash mismatch at position 1",
+    "chain_hash mismatch at position 1",
+    "previous_chain_hash mismatch at position 2"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "acceptance_result": "accepted_for_proposal",
+  "extracted_args_hash": "20946477677d400c95e9aba4f67f835e2f25da52150564830fa186da30bd50c8",
+  "extracted_args_preview": {
+    "content": "[REDACTED]",
+    "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/sorted_items.txt"
+  },
+  "extracted_tool_name": "write_file",
+  "extractor_version": "outward_model_tool_call_extractor.v1",
+  "model_response_content_sha256": "4e0c10d4a8d7e24d072c728f9bd6c40d0f23d93ecdd4cb88e68344dab0d49561",
+  "namespace": "multi_step_approved_v1_20260426T200916Z",
+  "proposal_id": "proposal:multi-step-approved-v1-20260426t200916z:write_file:0002",
+  "run_id": "multi-step-approved-v1-20260426t200916z",
+  "schema_version": "outward_proposal_extraction.v1"
+}

@@ -13,7 +13,7 @@ LEDGER_EXPORT_REQUESTED = "ledger_export_requested"
 
 EVENT_GROUPS: dict[str, frozenset[str] | None] = {
     "proposals": frozenset({"proposal_made", "proposal_pending_approval"}),
-    "decisions": frozenset({"proposal_approved", "proposal_denied", "proposal_expired"}),
+    "decisions": frozenset({"proposal_approved", "proposal_denied", "proposal_expired", "proposal_policy_rejected"}),
     "commitments": frozenset({"commitment_recorded"}),
     "tools": frozenset({"tool_invoked"}),
     "audit": frozenset({LEDGER_EXPORT_REQUESTED}),

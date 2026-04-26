@@ -1,0 +1,34 @@
+{
+  "count": 2,
+  "items": [
+    {
+      "args_preview": {
+        "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/seed_items.txt"
+      },
+      "context_summary": "model-produced governed tool call from live provider response",
+      "expires_at": "2026-04-26T20:19:22.028055+00:00",
+      "namespace": "multi_step_approved_v1_20260426T200916Z",
+      "proposal_id": "proposal:multi-step-approved-v1-20260426t200916z:read_file:0001",
+      "risk_level": "read",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "status": "pending",
+      "submitted_at": "2026-04-26T20:09:22.028047+00:00",
+      "tool": "read_file"
+    },
+    {
+      "args_preview": {
+        "content": "[REDACTED]",
+        "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/sorted_items.txt"
+      },
+      "context_summary": "model-produced governed tool call from live provider response",
+      "expires_at": "2026-04-26T20:19:23.352163+00:00",
+      "namespace": "multi_step_approved_v1_20260426T200916Z",
+      "proposal_id": "proposal:multi-step-approved-v1-20260426t200916z:write_file:0002",
+      "risk_level": "write",
+      "run_id": "multi-step-approved-v1-20260426t200916z",
+      "status": "pending",
+      "submitted_at": "2026-04-26T20:09:23.352156+00:00",
+      "tool": "write_file"
+    }
+  ]
+}

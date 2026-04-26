@@ -1,0 +1,12 @@
+{
+  "completed_at": "2026-04-26T20:09:46.484404+00:00",
+  "current_turn": 1,
+  "max_turns": 20,
+  "namespace": "out_of_scope_path_v1_20260426T200916Z",
+  "pending_proposals": [],
+  "run_id": "out-of-scope-path-v1-20260426t200916z",
+  "started_at": "2026-04-26T20:09:45.348549+00:00",
+  "status": "completed",
+  "stop_reason": "Access denied: ../out_of_scope_out-of-scope-path-v1-20260426t200916z.txt is outside allowed boundaries.",
+  "submitted_at": "2026-04-26T20:09:45.314836+00:00"
+}

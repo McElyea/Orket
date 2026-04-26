@@ -1,0 +1,15 @@
+INFO:     Started server process [39116]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:60770 (Press CTRL+C to quit)
+INFO:     127.0.0.1:60778 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60788 - "GET /v1/version HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60789 - "POST /v1/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60792 - "GET /v1/runs/denial-path-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60793 - "GET /v1/approvals?status=pending&session_id=denial-path-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60794 - "POST /v1/approvals/proposal%3Adenial-path-v1-20260426t200916z%3Awrite_file%3A0001/deny HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60795 - "GET /v1/runs/denial-path-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60796 - "GET /v1/runs/denial-path-v1-20260426t200916z/ledger HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60797 - "GET /v1/runs/denial-path-v1-20260426t200916z/ledger?types=proposals%2Cdecisions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60798 - "GET /v1/runs/denial-path-v1-20260426t200916z/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60799 - "GET /v1/runs/denial-path-v1-20260426t200916z/summary HTTP/1.1" 200 OK

@@ -1,0 +1,22 @@
+{
+  "completed_at": "2026-04-26T20:09:46.484404+00:00",
+  "current_turn": 1,
+  "event_count": 8,
+  "event_counts": {
+    "commitment_recorded": 1,
+    "proposal_made": 1,
+    "proposal_policy_rejected": 1,
+    "run_completed": 1,
+    "run_started": 1,
+    "run_submitted": 1,
+    "turn_completed": 1,
+    "turn_started": 1
+  },
+  "max_turns": 20,
+  "pending_proposals_count": 0,
+  "run_id": "out-of-scope-path-v1-20260426t200916z",
+  "started_at": "2026-04-26T20:09:45.348549+00:00",
+  "status": "completed",
+  "stop_reason": "Access denied: ../out_of_scope_out-of-scope-path-v1-20260426t200916z.txt is outside allowed boundaries.",
+  "terminal": true
+}

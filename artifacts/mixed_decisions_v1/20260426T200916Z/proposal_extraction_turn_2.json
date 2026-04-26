@@ -1,0 +1,15 @@
+{
+  "acceptance_result": "accepted_for_proposal",
+  "extracted_args_hash": "416bacb84adff61cb17c1f580927ebd15e18d17f0e639e1c536749fb054713d5",
+  "extracted_args_preview": {
+    "content": "[REDACTED]",
+    "path": "C:\\Source\\Orket\\workspace\\mixed_decisions_v1_20260426T200916Z\\runs\\mixed-decisions-v1-20260426t200916z\\denied_output.txt"
+  },
+  "extracted_tool_name": "write_file",
+  "extractor_version": "outward_model_tool_call_extractor.v1",
+  "model_response_content_sha256": "fc207a8826c23c5573214939dca3fa3742f1b474a6335b50c13215783770c1ec",
+  "namespace": "mixed_decisions_v1_20260426T200916Z",
+  "proposal_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0002",
+  "run_id": "mixed-decisions-v1-20260426t200916z",
+  "schema_version": "outward_proposal_extraction.v1"
+}

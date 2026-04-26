@@ -1,0 +1,19 @@
+{
+  "completion_token_count": 114,
+  "duration_ms": 2811,
+  "error_type": null,
+  "finish_reason": null,
+  "model_invocation_ref": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/model_invocation_turn_1.json",
+  "model_name": "qwen2.5-coder:7b",
+  "model_response_content_sha256": "04860d091f036139b0926224151c79caa8d21c0369af603c366db40dfad6a397",
+  "namespace": "mixed_decisions_v1_20260426T200916Z",
+  "prompt_token_count": 662,
+  "provider_name": "ollama",
+  "result": "tool_call_extracted",
+  "run_id": "mixed-decisions-v1-20260426t200916z",
+  "schema_version": "outward_model_invocation.v1",
+  "session_id": null,
+  "tool_args_hash": "04d065497a85b866bfb7f6304381508d38ae06df94f54b89c2a29b4762eb28e1",
+  "tool_name": "write_file",
+  "turn_number": 1
+}

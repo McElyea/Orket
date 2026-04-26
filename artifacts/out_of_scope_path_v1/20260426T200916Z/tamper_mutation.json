@@ -1,0 +1,6 @@
+{
+  "event_id": "run:out-of-scope-path-v1-20260426t200916z:submitted",
+  "field": "namespace",
+  "new": "O",
+  "old": "o"
+}

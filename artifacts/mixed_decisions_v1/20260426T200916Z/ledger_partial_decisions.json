@@ -1,0 +1,260 @@
+{
+  "canonical": {
+    "event_count": 16,
+    "genesis": "GENESIS",
+    "ledger_hash": "c5afa7188d9e064114094e93e2d3378dea63656269fec55a7dbfd61f8ae3501e",
+    "ordering": [
+      "run_id",
+      "turn",
+      "at",
+      "event_id"
+    ]
+  },
+  "contains_pii": false,
+  "events": [
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:17:16.551859+00:00",
+      "chain_hash": "6aeb5202cd99e5e0eef18c85c26b8298ff2fbb5ffec42b3f6f9b7c6135613738",
+      "event_group": "proposals",
+      "event_hash": "5df40fc2aa84f4ff482808031e8d59f7668675a71efec5a6063c5b46d0a6c2aa",
+      "event_id": "run:mixed-decisions-v1-20260426t200916z:01:0300:proposal:write_file:0001",
+      "event_type": "proposal_made",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/approved_output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "model_invocation_ref": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/model_invocation_turn_1.json",
+        "model_invocation_sha256": "381876ac6510efe09392ad9cb8d0a028a2965a099f45f88a8a730294fc8c15e7",
+        "model_name": "qwen2.5-coder:7b",
+        "model_response_content_sha256": "04860d091f036139b0926224151c79caa8d21c0369af603c366db40dfad6a397",
+        "namespace": "mixed_decisions_v1_20260426T200916Z",
+        "proposal_extraction_ref": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/proposal_extraction_turn_1.json",
+        "provider_name": "ollama",
+        "run_id": "mixed-decisions-v1-20260426t200916z",
+        "tool": "write_file",
+        "tool_args_hash": "04d065497a85b866bfb7f6304381508d38ae06df94f54b89c2a29b4762eb28e1",
+        "tool_name": "write_file"
+      },
+      "position": 4,
+      "previous_chain_hash": "7a35b20b89b251505d298e72dc375c0fe268d5f449164533377faf84b42c1378",
+      "run_id": "mixed-decisions-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T20:17:16.576761+00:00",
+      "chain_hash": "9fd47545c57f2c439eba6e6064c1ddb53f21ec1d4dbe66adff565c1bbc844273",
+      "event_group": "proposals",
+      "event_hash": "a6348d3b6543fb12eeb743aa2836d2804d106f901d6c41f04f07ba8d87bfbdcf",
+      "event_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0001:0001:proposal_pending_approval",
+      "event_type": "proposal_pending_approval",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/approved_output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "expires_at": "2026-04-26T20:27:16.576768+00:00",
+        "namespace": "mixed_decisions_v1_20260426T200916Z",
+        "proposal_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0001",
+        "risk_level": "write",
+        "run_id": "mixed-decisions-v1-20260426t200916z",
+        "status": "pending",
+        "submitted_at": "2026-04-26T20:17:16.576761+00:00",
+        "tool": "write_file"
+      },
+      "position": 5,
+      "previous_chain_hash": "6aeb5202cd99e5e0eef18c85c26b8298ff2fbb5ffec42b3f6f9b7c6135613738",
+      "run_id": "mixed-decisions-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T20:17:16.642789+00:00",
+      "chain_hash": "8fcb1d2cb71a1359c4ec79f830f4f12172afb0da90fd70c7ec789113d23ea58c",
+      "event_group": "decisions",
+      "event_hash": "954b42bd0e1747ade66c650358929ae1a1a656c05d292622228bf496541856cb",
+      "event_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0001:0002:proposal_approved",
+      "event_type": "proposal_approved",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/approved_output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "decided_at": "2026-04-26T20:17:16.642789+00:00",
+        "decision": "approve",
+        "expires_at": "2026-04-26T20:27:16.576768+00:00",
+        "namespace": "mixed_decisions_v1_20260426T200916Z",
+        "note": "approved mixed proposal 1",
+        "operator_ref": "api_key_fingerprint:sha256:2c0c07403b7ab95cfc6732ff2f553b72695624629a121a8117a433460c2cd117",
+        "proposal_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0001",
+        "reason": null,
+        "risk_level": "write",
+        "run_id": "mixed-decisions-v1-20260426t200916z",
+        "status": "approved",
+        "submitted_at": "2026-04-26T20:17:16.576761+00:00",
+        "tool": "write_file"
+      },
+      "position": 6,
+      "previous_chain_hash": "9fd47545c57f2c439eba6e6064c1ddb53f21ec1d4dbe66adff565c1bbc844273",
+      "run_id": "mixed-decisions-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:17:18.012828+00:00",
+      "chain_hash": "869f3ea84eac87095148c0bf8bf324157dacc0d663da66367176edf5346b34cf",
+      "event_group": "proposals",
+      "event_hash": "be477ce7a038361ccf7aab858876fb8406c4857b1f75f49d60fe7e76c66b2879",
+      "event_id": "run:mixed-decisions-v1-20260426t200916z:02:0300:proposal:write_file:0001",
+      "event_type": "proposal_made",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "C:\\Source\\Orket\\workspace\\mixed_decisions_v1_20260426T200916Z\\runs\\mixed-decisions-v1-20260426t200916z\\denied_output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "model_invocation_ref": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/model_invocation_turn_2.json",
+        "model_invocation_sha256": "64a536879bbd15d33f57b536f348699ec03a693870c4c4a42e63b3641ac172d3",
+        "model_name": "qwen2.5-coder:7b",
+        "model_response_content_sha256": "fc207a8826c23c5573214939dca3fa3742f1b474a6335b50c13215783770c1ec",
+        "namespace": "mixed_decisions_v1_20260426T200916Z",
+        "proposal_extraction_ref": "workspace/mixed_decisions_v1_20260426T200916Z/runs/mixed-decisions-v1-20260426t200916z/proposal_extraction_turn_2.json",
+        "provider_name": "ollama",
+        "run_id": "mixed-decisions-v1-20260426t200916z",
+        "tool": "write_file",
+        "tool_args_hash": "416bacb84adff61cb17c1f580927ebd15e18d17f0e639e1c536749fb054713d5",
+        "tool_name": "write_file"
+      },
+      "position": 11,
+      "previous_chain_hash": "b9c848f59678a15c30a5b507ef14cfbd5938711197ff78b74c28da85be47f5af",
+      "run_id": "mixed-decisions-v1-20260426t200916z",
+      "turn": 2
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T20:17:18.026486+00:00",
+      "chain_hash": "3774ffec90841680780fbf7afa97f5738581191d88932f36c3e651bf8bf0a0f2",
+      "event_group": "proposals",
+      "event_hash": "b508f1bde4263445d620b67d552bf2b8cc970f5b65a53aeb32deeaab6e4fcf1a",
+      "event_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0002:0001:proposal_pending_approval",
+      "event_type": "proposal_pending_approval",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "C:\\Source\\Orket\\workspace\\mixed_decisions_v1_20260426T200916Z\\runs\\mixed-decisions-v1-20260426t200916z\\denied_output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "expires_at": "2026-04-26T20:27:18.026493+00:00",
+        "namespace": "mixed_decisions_v1_20260426T200916Z",
+        "proposal_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0002",
+        "risk_level": "write",
+        "run_id": "mixed-decisions-v1-20260426t200916z",
+        "status": "pending",
+        "submitted_at": "2026-04-26T20:17:18.026486+00:00",
+        "tool": "write_file"
+      },
+      "position": 12,
+      "previous_chain_hash": "869f3ea84eac87095148c0bf8bf324157dacc0d663da66367176edf5346b34cf",
+      "run_id": "mixed-decisions-v1-20260426t200916z",
+      "turn": 2
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T20:17:18.088395+00:00",
+      "chain_hash": "3db931dc5300f5ebd0fe7f899cb7c73ce8aaa860b96df9c43f40ea3025cf884f",
+      "event_group": "decisions",
+      "event_hash": "79847736fa4f8465deafee1e0ef2bc32bda6297591c4efb62bf4a9dfb12c5dc8",
+      "event_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0002:0002:proposal_denied",
+      "event_type": "proposal_denied",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "C:\\Source\\Orket\\workspace\\mixed_decisions_v1_20260426T200916Z\\runs\\mixed-decisions-v1-20260426t200916z\\denied_output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "decided_at": "2026-04-26T20:17:18.088395+00:00",
+        "decision": "deny",
+        "expires_at": "2026-04-26T20:27:18.026493+00:00",
+        "namespace": "mixed_decisions_v1_20260426T200916Z",
+        "note": "operator denied second write",
+        "operator_ref": "api_key_fingerprint:sha256:2c0c07403b7ab95cfc6732ff2f553b72695624629a121a8117a433460c2cd117",
+        "proposal_id": "proposal:mixed-decisions-v1-20260426t200916z:write_file:0002",
+        "reason": "mixed denial 2",
+        "risk_level": "write",
+        "run_id": "mixed-decisions-v1-20260426t200916z",
+        "status": "denied",
+        "submitted_at": "2026-04-26T20:17:18.026486+00:00",
+        "tool": "write_file"
+      },
+      "position": 13,
+      "previous_chain_hash": "3774ffec90841680780fbf7afa97f5738581191d88932f36c3e651bf8bf0a0f2",
+      "run_id": "mixed-decisions-v1-20260426t200916z",
+      "turn": 2
+    }
+  ],
+  "export_scope": "partial_view",
+  "include_pii": false,
+  "omitted_spans": [
+    {
+      "from_position": 1,
+      "next_chain_hash": "7a35b20b89b251505d298e72dc375c0fe268d5f449164533377faf84b42c1378",
+      "previous_chain_hash": "GENESIS",
+      "to_position": 3
+    },
+    {
+      "from_position": 7,
+      "next_chain_hash": "b9c848f59678a15c30a5b507ef14cfbd5938711197ff78b74c28da85be47f5af",
+      "previous_chain_hash": "8fcb1d2cb71a1359c4ec79f830f4f12172afb0da90fd70c7ec789113d23ea58c",
+      "to_position": 10
+    },
+    {
+      "from_position": 14,
+      "next_chain_hash": "c5afa7188d9e064114094e93e2d3378dea63656269fec55a7dbfd61f8ae3501e",
+      "previous_chain_hash": "3db931dc5300f5ebd0fe7f899cb7c73ce8aaa860b96df9c43f40ea3025cf884f",
+      "to_position": 16
+    }
+  ],
+  "policy_snapshot": {
+    "ledger_payload_model": "policy_safe_by_construction",
+    "outbound_policy_gate": "applied_before_serialization",
+    "payload_bytes": "unchanged"
+  },
+  "run_id": "mixed-decisions-v1-20260426t200916z",
+  "schema_version": "ledger_export.v1",
+  "summary": {
+    "completed_at": "2026-04-26T20:17:18.088395+00:00",
+    "current_turn": 2,
+    "event_count": 16,
+    "event_counts": {
+      "commitment_recorded": 2,
+      "proposal_approved": 1,
+      "proposal_denied": 1,
+      "proposal_made": 2,
+      "proposal_pending_approval": 2,
+      "run_completed": 1,
+      "run_started": 1,
+      "run_submitted": 1,
+      "tool_invoked": 1,
+      "turn_completed": 2,
+      "turn_started": 2
+    },
+    "exported_event_count": 6,
+    "max_turns": 2,
+    "run_id": "mixed-decisions-v1-20260426t200916z",
+    "status": "completed",
+    "stop_reason": "mixed denial 2"
+  },
+  "types": [
+    "proposals",
+    "decisions"
+  ],
+  "verification": {
+    "meaning": "partial verified view",
+    "result": "partial_valid"
+  }
+}

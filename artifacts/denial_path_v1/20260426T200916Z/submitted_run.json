@@ -1,0 +1,28 @@
+{
+  "completed_at": null,
+  "current_turn": 1,
+  "max_turns": 20,
+  "namespace": "denial_path_v1_20260426T200916Z",
+  "pending_proposals": [
+    {
+      "args_preview": {
+        "content": "[REDACTED]",
+        "path": "workspace/denial_path_v1_20260426T200916Z/runs/denial-path-v1-20260426t200916z/denied_output.txt"
+      },
+      "context_summary": "model-produced governed tool call from live provider response",
+      "expires_at": "2026-04-26T20:19:30.705429+00:00",
+      "namespace": "denial_path_v1_20260426T200916Z",
+      "proposal_id": "proposal:denial-path-v1-20260426t200916z:write_file:0001",
+      "risk_level": "write",
+      "run_id": "denial-path-v1-20260426t200916z",
+      "status": "pending",
+      "submitted_at": "2026-04-26T20:09:30.705421+00:00",
+      "tool": "write_file"
+    }
+  ],
+  "run_id": "denial-path-v1-20260426t200916z",
+  "started_at": "2026-04-26T20:09:29.429212+00:00",
+  "status": "approval_required",
+  "stop_reason": null,
+  "submitted_at": "2026-04-26T20:09:29.397125+00:00"
+}

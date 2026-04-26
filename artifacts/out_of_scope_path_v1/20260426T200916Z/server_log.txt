@@ -1,0 +1,15 @@
+INFO:     Started server process [40952]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:60844 (Press CTRL+C to quit)
+INFO:     127.0.0.1:60853 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60863 - "GET /v1/version HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60864 - "POST /v1/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60868 - "GET /v1/runs/out-of-scope-path-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60869 - "GET /v1/approvals?status=pending&session_id=out-of-scope-path-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60870 - "GET /v1/runs/out-of-scope-path-v1-20260426t200916z/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60871 - "GET /v1/runs/out-of-scope-path-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60872 - "GET /v1/runs/out-of-scope-path-v1-20260426t200916z/ledger HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60873 - "GET /v1/runs/out-of-scope-path-v1-20260426t200916z/ledger?types=proposals%2Cdecisions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60874 - "GET /v1/runs/out-of-scope-path-v1-20260426t200916z/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60875 - "GET /v1/runs/out-of-scope-path-v1-20260426t200916z/summary HTTP/1.1" 200 OK

@@ -1,0 +1,12 @@
+{
+  "completed_at": "2026-04-26T20:09:23.488671+00:00",
+  "current_turn": 2,
+  "max_turns": 2,
+  "namespace": "multi_step_approved_v1_20260426T200916Z",
+  "pending_proposals": [],
+  "run_id": "multi-step-approved-v1-20260426t200916z",
+  "started_at": "2026-04-26T20:09:19.071020+00:00",
+  "status": "completed",
+  "stop_reason": null,
+  "submitted_at": "2026-04-26T20:09:19.037462+00:00"
+}

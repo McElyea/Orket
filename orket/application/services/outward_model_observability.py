@@ -11,16 +11,10 @@ from typing import Any
 
 import aiofiles
 
+from orket.application.services.outward_model_redaction import redact_prompt_messages, redact_value
 from orket.core.domain.outward_runs import OutwardRunRecord
 
 _SLUG_PATTERN = re.compile(r"[^A-Za-z0-9._-]+")
-_SECRET_PATTERNS = (
-    re.compile(r"sk-[A-Za-z0-9_\-]{8,}"),
-    re.compile(r"ghp_[A-Za-z0-9_]{8,}"),
-    re.compile(r"github_pat_[A-Za-z0-9_]{8,}"),
-    re.compile(r"xox[baprs]-[A-Za-z0-9\-]{8,}"),
-    re.compile(r"Bearer\s+[A-Za-z0-9._\-]{12,}"),
-)
 
 
 class OutwardModelObservabilityError(RuntimeError):
@@ -47,12 +41,14 @@ async def write_model_evidence(
     pii_fields: tuple[str, ...],
 ) -> OutwardModelEvidence:
     directory = _evidence_dir(workspace_root=workspace_root, namespace=run.namespace, run_id=run.run_id)
-    refs = _evidence_refs(workspace_root=workspace_root, directory=directory)
+    turn = int(run.current_turn or 1)
+    refs = _evidence_refs(workspace_root=workspace_root, directory=directory, turn=turn)
     prompt_payload = {
         "schema_version": "outward_model_prompt_redacted.v1",
         "run_id": run.run_id,
         "namespace": run.namespace,
-        "messages": _redact(messages),
+        "turn_number": turn,
+        "messages": redact_prompt_messages(messages, pii_fields),
         "runtime_context": _redact(_runtime_context_payload(runtime_context)),
     }
     response_payload = _model_response_payload(
@@ -79,13 +75,21 @@ async def write_model_evidence(
     )
     try:
         await asyncio.to_thread(directory.mkdir, parents=True, exist_ok=True)
-        await _write_json(directory / "model_prompt_redacted.json", prompt_payload)
-        await _write_json(directory / "model_response_redacted.json", response_payload)
-        await _write_json(directory / "proposal_extraction.json", extraction_payload)
-        await _write_json(directory / "model_invocation.json", invocation_payload)
+        files = {
+            _turn_filename("model_prompt_redacted", turn): prompt_payload,
+            _turn_filename("model_response_redacted", turn): response_payload,
+            _turn_filename("proposal_extraction", turn): extraction_payload,
+            _turn_filename("model_invocation", turn): invocation_payload,
+            "model_prompt_redacted.json": prompt_payload,
+            "model_response_redacted.json": response_payload,
+            "proposal_extraction.json": extraction_payload,
+            "model_invocation.json": invocation_payload,
+        }
+        for filename, payload in files.items():
+            await _write_json(directory / filename, payload)
     except OSError as exc:
         raise OutwardModelObservabilityError("model observability write failed") from exc
-    invocation_hash = await _file_sha256(directory / "model_invocation.json")
+    invocation_hash = await _file_sha256(directory / _turn_filename("model_invocation", turn))
     evidence = dict(invocation_payload)
     evidence.update(
         {
@@ -109,19 +113,23 @@ async def record_proposal_extraction_acceptance(
     response: Any | None,
     tool_call: dict[str, Any],
     pii_fields: tuple[str, ...],
-    proposal_id: str,
+    proposal_id: str | None,
+    acceptance_result: str = "accepted_for_proposal",
 ) -> dict[str, Any]:
     directory = _evidence_dir(workspace_root=workspace_root, namespace=run.namespace, run_id=run.run_id)
+    turn = int(run.current_turn or 1)
     payload = _proposal_extraction_payload(
         run=run,
         response=response,
         tool_call=tool_call,
         pii_fields=pii_fields,
         proposal_id=proposal_id,
-        acceptance_result="accepted_for_proposal",
+        acceptance_result=acceptance_result,
     )
+    turn_file = _turn_filename("proposal_extraction", turn)
+    await _write_json(directory / turn_file, payload)
     await _write_json(directory / "proposal_extraction.json", payload)
-    payload["proposal_extraction_sha256"] = await _file_sha256(directory / "proposal_extraction.json")
+    payload["proposal_extraction_sha256"] = await _file_sha256(directory / turn_file)
     return payload
 
 
@@ -233,14 +241,18 @@ def _evidence_dir(*, workspace_root: Path, namespace: str, run_id: str) -> Path:
     return path
 
 
-def _evidence_refs(*, workspace_root: Path, directory: Path) -> dict[str, str]:
+def _evidence_refs(*, workspace_root: Path, directory: Path, turn: int) -> dict[str, str]:
     root = workspace_root.resolve()
     return {
-        "invocation": str((directory / "model_invocation.json").relative_to(root)).replace("\\", "/"),
-        "prompt": str((directory / "model_prompt_redacted.json").relative_to(root)).replace("\\", "/"),
-        "response": str((directory / "model_response_redacted.json").relative_to(root)).replace("\\", "/"),
-        "proposal_extraction": str((directory / "proposal_extraction.json").relative_to(root)).replace("\\", "/"),
+        "invocation": str((directory / _turn_filename("model_invocation", turn)).relative_to(root)).replace("\\", "/"),
+        "prompt": str((directory / _turn_filename("model_prompt_redacted", turn)).relative_to(root)).replace("\\", "/"),
+        "response": str((directory / _turn_filename("model_response_redacted", turn)).relative_to(root)).replace("\\", "/"),
+        "proposal_extraction": str((directory / _turn_filename("proposal_extraction", turn)).relative_to(root)).replace("\\", "/"),
     }
+
+
+def _turn_filename(stem: str, turn: int) -> str:
+    return f"{stem}_turn_{max(1, int(turn))}.json"
 
 
 def _slug(value: str) -> str:
@@ -354,16 +366,7 @@ def _redacted_args(args: Any, pii_fields: tuple[str, ...]) -> dict[str, Any] | N
 
 
 def _redact(value: Any) -> Any:
-    if isinstance(value, str):
-        redacted = value
-        for pattern in _SECRET_PATTERNS:
-            redacted = pattern.sub("[REDACTED]", redacted)
-        return redacted
-    if isinstance(value, list):
-        return [_redact(item) for item in value]
-    if isinstance(value, Mapping):
-        return {str(key): _redact(item) for key, item in value.items()}
-    return value
+    return redact_value(value)
 
 
 __all__ = [

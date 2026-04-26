@@ -1,0 +1,11 @@
+{
+  "ORKET_DISABLE_SANDBOX": "1",
+  "endpoint": "http://127.0.0.1:11434",
+  "model_name": "qwen2.5-coder:7b",
+  "orket_version_header": "0.4.31",
+  "os": "Windows-11-10.0.26200-SP0",
+  "outward_pipeline_db_path": "C:\\Source\\Orket\\.tmp\\out_of_scope_path_v1_20260426T200916Z.sqlite3",
+  "provider_name": "ollama",
+  "python_version": "3.14.0",
+  "schema_version": "environment.v1"
+}

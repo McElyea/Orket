@@ -141,7 +141,7 @@ def test_northstar_e2e_acceptance_approval_path(tmp_path: Path, monkeypatch: pyt
 
 @pytest.mark.end_to_end
 def test_northstar_e2e_acceptance_denial_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Layer: end-to-end. Verifies submit -> deny -> no effect -> failed run -> ledger offline verify."""
+    """Layer: end-to-end. Verifies submit -> deny -> no effect -> completed run -> ledger offline verify."""
     client = _client(tmp_path, monkeypatch, model_args={"path": "denied.txt", "content": "denied"})
     target = tmp_path / "denied.txt"
     try:
@@ -159,7 +159,7 @@ def test_northstar_e2e_acceptance_denial_path(tmp_path: Path, monkeypatch: pytes
         assert denied.status_code == 200
         assert denied.json()["approval"]["status"] == "denied"
         assert target.exists() is False
-        assert status.json()["status"] == "failed"
+        assert status.json()["status"] == "completed"
         assert status.json()["stop_reason"] == "operator rejected"
         decision_events = [event for event in ledger["events"] if event["event_type"] == "proposal_denied"]
         assert decision_events

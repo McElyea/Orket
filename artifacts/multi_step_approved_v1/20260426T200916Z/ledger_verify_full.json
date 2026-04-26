@@ -1,0 +1,10 @@
+{
+  "schema_version": "ledger_export.v1",
+  "result": "valid",
+  "export_scope": "all",
+  "run_id": "multi-step-approved-v1-20260426t200916z",
+  "ledger_hash": "a0ef0b0e8ab529ed63d3ec545a02ee0239da83a5c4c57a8f4a0bb5c494ca1299",
+  "event_count": 17,
+  "checked_event_count": 17,
+  "errors": []
+}

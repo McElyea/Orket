@@ -1,0 +1,19 @@
+{
+  "completion_token_count": 115,
+  "duration_ms": 906,
+  "error_type": null,
+  "finish_reason": null,
+  "model_invocation_ref": "workspace/denial_path_v1_20260426T200916Z/runs/denial-path-v1-20260426t200916z/model_invocation_turn_1.json",
+  "model_name": "qwen2.5-coder:7b",
+  "model_response_content_sha256": "5a873ed9d4dfc0eddd47d8932e883fc25d0fb5f3cfb85e30a4349eba52e5efe9",
+  "namespace": "denial_path_v1_20260426T200916Z",
+  "prompt_token_count": 502,
+  "provider_name": "ollama",
+  "result": "tool_call_extracted",
+  "run_id": "denial-path-v1-20260426t200916z",
+  "schema_version": "outward_model_invocation.v1",
+  "session_id": null,
+  "tool_args_hash": "cd8fc4596e898cfabb605a80b4a58fd24a60f02ef6aec0506a57f1d02498bc85",
+  "tool_name": "write_file",
+  "turn_number": 1
+}

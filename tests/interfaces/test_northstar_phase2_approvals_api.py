@@ -88,7 +88,7 @@ async def test_outward_approval_list_review_approve_and_idempotency(tmp_path, mo
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_outward_approval_deny_api_records_terminal_run(tmp_path, monkeypatch) -> None:
-    """Layer: integration. Verifies outward denial endpoint fails the run and records a decision event."""
+    """Layer: integration. Verifies outward denial endpoint completes the run and records a decision event."""
     client, db_path = _client(tmp_path, monkeypatch)
     proposal_id = await _seed_pending(db_path, run_id="run-deny-api")
     try:
@@ -104,9 +104,10 @@ async def test_outward_approval_deny_api_records_terminal_run(tmp_path, monkeypa
 
     run = await OutwardRunStore(db_path).get("run-deny-api")
     assert run is not None
-    assert run.status == "failed"
+    assert run.status == "completed"
     events = await OutwardRunEventStore(db_path).list_for_run("run-deny-api")
-    assert events[-1].event_type == "proposal_denied"
+    event_types = [event.event_type for event in events]
+    assert event_types.index("proposal_denied") < event_types.index("run_completed")
 
 
 @pytest.mark.integration

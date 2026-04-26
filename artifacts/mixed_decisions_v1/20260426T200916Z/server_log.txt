@@ -1,0 +1,17 @@
+INFO:     Started server process [46168]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:61160 (Press CTRL+C to quit)
+INFO:     127.0.0.1:61161 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61171 - "GET /v1/version HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61172 - "POST /v1/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61205 - "GET /v1/runs/mixed-decisions-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61206 - "GET /v1/approvals?status=pending&session_id=mixed-decisions-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61207 - "POST /v1/approvals/proposal%3Amixed-decisions-v1-20260426t200916z%3Awrite_file%3A0001/approve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61211 - "GET /v1/approvals?status=pending&session_id=mixed-decisions-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61212 - "POST /v1/approvals/proposal%3Amixed-decisions-v1-20260426t200916z%3Awrite_file%3A0002/deny HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61213 - "GET /v1/runs/mixed-decisions-v1-20260426t200916z HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61214 - "GET /v1/runs/mixed-decisions-v1-20260426t200916z/ledger HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61215 - "GET /v1/runs/mixed-decisions-v1-20260426t200916z/ledger?types=proposals%2Cdecisions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61216 - "GET /v1/runs/mixed-decisions-v1-20260426t200916z/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61217 - "GET /v1/runs/mixed-decisions-v1-20260426t200916z/summary HTTP/1.1" 200 OK

@@ -1,0 +1,12 @@
+{
+  "completed_at": "2026-04-26T20:17:18.088395+00:00",
+  "current_turn": 2,
+  "max_turns": 2,
+  "namespace": "mixed_decisions_v1_20260426T200916Z",
+  "pending_proposals": [],
+  "run_id": "mixed-decisions-v1-20260426t200916z",
+  "started_at": "2026-04-26T20:17:13.395228+00:00",
+  "status": "completed",
+  "stop_reason": "mixed denial 2",
+  "submitted_at": "2026-04-26T20:17:13.362449+00:00"
+}

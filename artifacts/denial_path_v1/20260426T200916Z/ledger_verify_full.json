@@ -1,0 +1,10 @@
+{
+  "schema_version": "ledger_export.v1",
+  "result": "valid",
+  "export_scope": "all",
+  "run_id": "denial-path-v1-20260426t200916z",
+  "ledger_hash": "d783edd04d10845cb6da980567e9dd6209e25978cbda1aa7c83e7de117c4447c",
+  "event_count": 9,
+  "checked_event_count": 9,
+  "errors": []
+}

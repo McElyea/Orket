@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<rect width="1200" height="100%" fill="#ffffff"/>
+<text x="24" y="28" font-size="18" font-family="Arial, sans-serif" font-weight="700">Outward run evidence graph: mixed-decisions-v1-20260426t200916z</text>
+<text x="24" y="50" font-size="13" font-family="Consolas, monospace">outward_run: mixed-decisions-v1-20260426t200916z</text>
+<text x="24" y="78" font-size="13" font-family="Consolas, monospace">ledger_reference: c5afa7188d9e064114094e93e2d3378dea63656269fec55a7dbfd61f8ae3501e</text>
+<text x="24" y="106" font-size="13" font-family="Consolas, monospace">run_event: run_submitted</text>
+<text x="24" y="134" font-size="13" font-family="Consolas, monospace">run_event: run_started</text>
+<text x="24" y="162" font-size="13" font-family="Consolas, monospace">run_event: turn_started</text>
+<text x="24" y="190" font-size="13" font-family="Consolas, monospace">run_event: proposal_made</text>
+<text x="24" y="218" font-size="13" font-family="Consolas, monospace">run_event: proposal_pending_approval</text>
+<text x="24" y="246" font-size="13" font-family="Consolas, monospace">run_event: proposal_approved</text>
+<text x="24" y="274" font-size="13" font-family="Consolas, monospace">run_event: tool_invoked</text>
+<text x="24" y="302" font-size="13" font-family="Consolas, monospace">run_event: commitment_recorded</text>
+<text x="24" y="330" font-size="13" font-family="Consolas, monospace">run_event: turn_completed</text>
+<text x="24" y="358" font-size="13" font-family="Consolas, monospace">run_event: turn_started</text>
+<text x="24" y="386" font-size="13" font-family="Consolas, monospace">run_event: proposal_made</text>
+<text x="24" y="414" font-size="13" font-family="Consolas, monospace">run_event: proposal_pending_approval</text>
+<text x="24" y="442" font-size="13" font-family="Consolas, monospace">run_event: proposal_denied</text>
+<text x="24" y="470" font-size="13" font-family="Consolas, monospace">run_event: commitment_recorded</text>
+<text x="24" y="498" font-size="13" font-family="Consolas, monospace">run_event: turn_completed</text>
+<text x="24" y="526" font-size="13" font-family="Consolas, monospace">run_event: run_completed</text>
+<text x="24" y="554" font-size="13" font-family="Consolas, monospace">approval_proposal: write_file</text>
+<text x="24" y="582" font-size="13" font-family="Consolas, monospace">approval_proposal: write_file</text>
+</svg>

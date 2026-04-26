@@ -1,0 +1,16 @@
+{
+  "content_redacted": "{\"args\": {\"content\": \"[REDACTED]\", \"path\": \"workspace/denial_path_v1_20260426T200916Z/runs/denial-path-v1-20260426t200916z/denied_output.txt\"}, \"tool\": \"write_file\"}",
+  "extracted_tool_call_redacted": {
+    "args": {
+      "content": "[REDACTED]",
+      "path": "workspace/denial_path_v1_20260426T200916Z/runs/denial-path-v1-20260426t200916z/denied_output.txt"
+    },
+    "tool": "write_file"
+  },
+  "model_response_content_sha256": "5a873ed9d4dfc0eddd47d8932e883fc25d0fb5f3cfb85e30a4349eba52e5efe9",
+  "namespace": "denial_path_v1_20260426T200916Z",
+  "response_material_kind": "content",
+  "run_id": "denial-path-v1-20260426t200916z",
+  "schema_version": "outward_model_response_redacted.v1",
+  "tool_calls_redacted": []
+}

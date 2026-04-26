@@ -1,0 +1,160 @@
+{
+  "canonical": {
+    "event_count": 9,
+    "genesis": "GENESIS",
+    "ledger_hash": "d783edd04d10845cb6da980567e9dd6209e25978cbda1aa7c83e7de117c4447c",
+    "ordering": [
+      "run_id",
+      "turn",
+      "at",
+      "event_id"
+    ]
+  },
+  "contains_pii": false,
+  "events": [
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-04-26T20:09:30.679779+00:00",
+      "chain_hash": "09f4e407400376ba77eeb980f0a5a73d53c855fc16fd1be4b15e4e51c94c9c6e",
+      "event_group": "proposals",
+      "event_hash": "bdd874d4ba40d91db3714fe3cadf9a9a60b4aed7f6b347736f0066d04d5b1c31",
+      "event_id": "run:denial-path-v1-20260426t200916z:01:0300:proposal:write_file:0001",
+      "event_type": "proposal_made",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/denial_path_v1_20260426T200916Z/runs/denial-path-v1-20260426t200916z/denied_output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "model_invocation_ref": "workspace/denial_path_v1_20260426T200916Z/runs/denial-path-v1-20260426t200916z/model_invocation_turn_1.json",
+        "model_invocation_sha256": "03e512254f0e34ee66d2c409bea20a35269e1b37bfc4a591c036736640aae1c5",
+        "model_name": "qwen2.5-coder:7b",
+        "model_response_content_sha256": "5a873ed9d4dfc0eddd47d8932e883fc25d0fb5f3cfb85e30a4349eba52e5efe9",
+        "namespace": "denial_path_v1_20260426T200916Z",
+        "proposal_extraction_ref": "workspace/denial_path_v1_20260426T200916Z/runs/denial-path-v1-20260426t200916z/proposal_extraction_turn_1.json",
+        "provider_name": "ollama",
+        "run_id": "denial-path-v1-20260426t200916z",
+        "tool": "write_file",
+        "tool_args_hash": "cd8fc4596e898cfabb605a80b4a58fd24a60f02ef6aec0506a57f1d02498bc85",
+        "tool_name": "write_file"
+      },
+      "position": 4,
+      "previous_chain_hash": "93a526355fab5b24209075683d9bf5cb55e93f6c7443a0316abf97bda3342eaa",
+      "run_id": "denial-path-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T20:09:30.705421+00:00",
+      "chain_hash": "a92c4edc1393c3897a38a9e8120d3e144783adbe96c5ce2a1f025bf2b51053c7",
+      "event_group": "proposals",
+      "event_hash": "81d81e5c940230bf58784c6e1eabc526bf937afc0545bae602646ad447434254",
+      "event_id": "proposal:denial-path-v1-20260426t200916z:write_file:0001:0001:proposal_pending_approval",
+      "event_type": "proposal_pending_approval",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/denial_path_v1_20260426T200916Z/runs/denial-path-v1-20260426t200916z/denied_output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "expires_at": "2026-04-26T20:19:30.705429+00:00",
+        "namespace": "denial_path_v1_20260426T200916Z",
+        "proposal_id": "proposal:denial-path-v1-20260426t200916z:write_file:0001",
+        "risk_level": "write",
+        "run_id": "denial-path-v1-20260426t200916z",
+        "status": "pending",
+        "submitted_at": "2026-04-26T20:09:30.705421+00:00",
+        "tool": "write_file"
+      },
+      "position": 5,
+      "previous_chain_hash": "09f4e407400376ba77eeb980f0a5a73d53c855fc16fd1be4b15e4e51c94c9c6e",
+      "run_id": "denial-path-v1-20260426t200916z",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-04-26T20:09:30.774709+00:00",
+      "chain_hash": "680d97cb0077089c2a654b4d2d19060262e5b64e1fd35643533ad06b929fc7c1",
+      "event_group": "decisions",
+      "event_hash": "3b5b62835a8ccbbb39d1931c7d9e6e0bbbcaa6dd75e2bb75ee7df33aabe18175",
+      "event_id": "proposal:denial-path-v1-20260426t200916z:write_file:0001:0002:proposal_denied",
+      "event_type": "proposal_denied",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "workspace/denial_path_v1_20260426T200916Z/runs/denial-path-v1-20260426t200916z/denied_output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "decided_at": "2026-04-26T20:09:30.774709+00:00",
+        "decision": "deny",
+        "expires_at": "2026-04-26T20:19:30.705429+00:00",
+        "namespace": "denial_path_v1_20260426T200916Z",
+        "note": "operator denied for proof",
+        "operator_ref": "api_key_fingerprint:sha256:2c0c07403b7ab95cfc6732ff2f553b72695624629a121a8117a433460c2cd117",
+        "proposal_id": "proposal:denial-path-v1-20260426t200916z:write_file:0001",
+        "reason": "scenario denial 1",
+        "risk_level": "write",
+        "run_id": "denial-path-v1-20260426t200916z",
+        "status": "denied",
+        "submitted_at": "2026-04-26T20:09:30.705421+00:00",
+        "tool": "write_file"
+      },
+      "position": 6,
+      "previous_chain_hash": "a92c4edc1393c3897a38a9e8120d3e144783adbe96c5ce2a1f025bf2b51053c7",
+      "run_id": "denial-path-v1-20260426t200916z",
+      "turn": 1
+    }
+  ],
+  "export_scope": "partial_view",
+  "include_pii": false,
+  "omitted_spans": [
+    {
+      "from_position": 1,
+      "next_chain_hash": "93a526355fab5b24209075683d9bf5cb55e93f6c7443a0316abf97bda3342eaa",
+      "previous_chain_hash": "GENESIS",
+      "to_position": 3
+    },
+    {
+      "from_position": 7,
+      "next_chain_hash": "d783edd04d10845cb6da980567e9dd6209e25978cbda1aa7c83e7de117c4447c",
+      "previous_chain_hash": "680d97cb0077089c2a654b4d2d19060262e5b64e1fd35643533ad06b929fc7c1",
+      "to_position": 9
+    }
+  ],
+  "policy_snapshot": {
+    "ledger_payload_model": "policy_safe_by_construction",
+    "outbound_policy_gate": "applied_before_serialization",
+    "payload_bytes": "unchanged"
+  },
+  "run_id": "denial-path-v1-20260426t200916z",
+  "schema_version": "ledger_export.v1",
+  "summary": {
+    "completed_at": "2026-04-26T20:09:30.774709+00:00",
+    "current_turn": 1,
+    "event_count": 9,
+    "event_counts": {
+      "commitment_recorded": 1,
+      "proposal_denied": 1,
+      "proposal_made": 1,
+      "proposal_pending_approval": 1,
+      "run_completed": 1,
+      "run_started": 1,
+      "run_submitted": 1,
+      "turn_completed": 1,
+      "turn_started": 1
+    },
+    "exported_event_count": 3,
+    "max_turns": 20,
+    "run_id": "denial-path-v1-20260426t200916z",
+    "status": "completed",
+    "stop_reason": "scenario denial 1"
+  },
+  "types": [
+    "proposals",
+    "decisions"
+  ],
+  "verification": {
+    "meaning": "partial verified view",
+    "result": "partial_valid"
+  }
+}

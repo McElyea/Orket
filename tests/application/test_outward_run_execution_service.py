@@ -73,6 +73,37 @@ class _FakeModelClient:
         self.closed = True
 
 
+class _SequenceModelClient:
+    def __init__(self, calls: list[dict[str, object]]) -> None:
+        self.calls = list(calls)
+        self.index = 0
+        self.messages_by_call: list[list[dict[str, str]]] = []
+        self.runtime_contexts: list[dict[str, object]] = []
+        self.closed_count = 0
+
+    async def complete(self, messages, runtime_context=None):
+        call = self.calls[self.index]
+        self.index += 1
+        self.messages_by_call.append(list(messages))
+        self.runtime_contexts.append(dict(runtime_context or {}))
+        return SimpleNamespace(
+            content="",
+            raw={
+                "tool_calls": [{"type": "function", "function": {"name": call["tool"], "arguments": call["args"]}}],
+                "provider_name": "fake-provider",
+                "provider_backend": "fake-provider",
+                "model": "fake-model",
+                "usage": {"prompt_tokens": 11 + self.index, "completion_tokens": 7, "total_tokens": 18 + self.index},
+                "latency_ms": 23,
+                "orket_session_id": f"fake-session-{self.index}",
+                "openai_compat": {"choices": [{"finish_reason": "tool_calls"}]},
+            },
+        )
+
+    async def close(self) -> None:
+        self.closed_count += 1
+
+
 def _execution_service(
     db_path: Path,
     workspace_root: Path,
@@ -177,7 +208,7 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
     assert model_invocation["completion_token_count"] == 7
     assert model_invocation["duration_ms"] == 23
     assert model_invocation["finish_reason"] == "tool_calls"
-    assert model_invocation["model_invocation_ref"] == "workspace/issue_run-exec/runs/run-exec/model_invocation.json"
+    assert model_invocation["model_invocation_ref"] == "workspace/issue_run-exec/runs/run-exec/model_invocation_turn_1.json"
     assert model_invocation["model_response_content_sha256"]
     assert model_response["extracted_tool_call_redacted"]["tool"] == "write_file"
     assert model_response["extracted_tool_call_redacted"]["args"]["content"] == "[REDACTED]"
@@ -200,7 +231,7 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
     tool_event = next(event for event in events if event.event_type == "tool_invoked")
     assert tool_event.payload["args_hash"]
     proposal_event = next(event for event in events if event.event_type == "proposal_made")
-    assert proposal_event.payload["model_invocation_ref"] == "workspace/issue_run-exec/runs/run-exec/model_invocation.json"
+    assert proposal_event.payload["model_invocation_ref"] == "workspace/issue_run-exec/runs/run-exec/model_invocation_turn_1.json"
     assert proposal_event.payload["model_invocation_sha256"]
     assert proposal_event.payload["model_response_content_sha256"] == model_invocation["model_response_content_sha256"]
     assert proposal_event.payload["tool_name"] == "write_file"
@@ -211,7 +242,7 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_outward_execution_denial_keeps_effect_absent(tmp_path) -> None:
-    """Layer: integration. Verifies denial leaves the planned write_file effect absent and fails the run."""
+    """Layer: integration. Verifies denial leaves the planned write_file effect absent and completes cleanly."""
     db_path = tmp_path / "phase2-denied-execution.sqlite3"
     clock = _Clock("2026-04-25T12:00:00+00:00")
     run_service = OutwardRunService(
@@ -250,13 +281,129 @@ async def test_outward_execution_denial_keeps_effect_absent(tmp_path) -> None:
         operator_ref="operator:test",
         reason="not allowed",
     )
+    completed = await _execution_service(db_path, tmp_path, clock).continue_after_denial(denied.proposal_id)
 
     assert denied.status == "denied"
     assert target.exists() is False
-    stored = await OutwardRunStore(db_path).get("run-denied-exec")
-    assert stored is not None
-    assert stored.status == "failed"
-    assert stored.stop_reason == "not allowed"
+    assert completed.status == "completed"
+    assert completed.stop_reason == "not allowed"
+    events = await OutwardRunEventStore(db_path).list_for_run("run-denied-exec")
+    event_types = [event.event_type for event in events]
+    assert "tool_invoked" not in event_types
+    assert event_types.index("proposal_denied") < event_types.index("run_completed")
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_outward_execution_two_step_read_then_write_tracks_turn_boundary(tmp_path) -> None:
+    """Layer: integration. Verifies a two-step governed sequence creates two proposals across two turns."""
+    db_path = tmp_path / "phase2-multi-step.sqlite3"
+    clock = _Clock("2026-04-25T12:00:00+00:00")
+    (tmp_path / "seed.txt").write_text("pear\nbanana\napple\n", encoding="utf-8")
+    model = _SequenceModelClient(
+        [
+            {"tool": "read_file", "args": {"path": "seed.txt"}},
+            {"tool": "write_file", "args": {"path": "sorted.txt", "content": "apple\nbanana\npear\n"}},
+        ]
+    )
+    run_service = OutwardRunService(
+        run_store=OutwardRunStore(db_path),
+        event_store=OutwardRunEventStore(db_path),
+        run_id_factory=lambda: "generated",
+        utc_now=clock,
+    )
+    run = await run_service.submit(
+        {
+            "run_id": "run-two-step",
+            "task": {
+                "description": "Read the seed list and write it sorted.",
+                "instruction": "First read seed.txt, then write sorted.txt with sorted lines.",
+                "acceptance_contract": {
+                    "governed_tool_sequence": [
+                        {"tool": "read_file", "args": {"path": "seed.txt"}},
+                        {"tool": "write_file", "args": {"path": "sorted.txt", "content": "contract probe"}},
+                    ]
+                },
+            },
+            "policy_overrides": {"approval_required_tools": ["read_file", "write_file"], "max_turns": 2},
+        }
+    )
+
+    paused_1 = await _execution_service(db_path, tmp_path, clock, model_client=model).start_if_ready(run.run_id)
+    proposal_1 = (await OutwardApprovalStore(db_path).list(status="pending"))[0]
+    approved_1 = await _approval_service(db_path, clock).approve(proposal_1.proposal_id, operator_ref="operator:test")
+    paused_2 = await _execution_service(db_path, tmp_path, clock, model_client=model).continue_after_approval(approved_1.proposal_id)
+    proposal_2 = (await OutwardApprovalStore(db_path).list(status="pending"))[0]
+
+    assert paused_1.status == "approval_required"
+    assert paused_2.status == "approval_required"
+    assert proposal_1.proposal_id != proposal_2.proposal_id
+    assert proposal_1.tool == "read_file"
+    assert proposal_2.tool == "write_file"
+    assert (tmp_path / "sorted.txt").exists() is False
+    assert "pear" in model.messages_by_call[1][1]["content"]
+
+    approved_2 = await _approval_service(db_path, clock).approve(proposal_2.proposal_id, operator_ref="operator:test")
+    completed = await _execution_service(db_path, tmp_path, clock, model_client=model).continue_after_approval(approved_2.proposal_id)
+
+    assert completed.status == "completed"
+    assert completed.current_turn == 2
+    assert (tmp_path / "sorted.txt").read_text(encoding="utf-8") == "apple\nbanana\npear\n"
+    events = await OutwardRunEventStore(db_path).list_for_run("run-two-step")
+    assert [event.event_type for event in events].count("proposal_made") == 2
+    assert [event.event_type for event in events].count("proposal_approved") == 2
+    assert [event.turn for event in events if event.event_type == "proposal_made"] == [1, 2]
+    assert (tmp_path / "workspace" / "issue_run-two-step" / "runs" / "run-two-step" / "model_invocation_turn_2.json").exists()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_outward_execution_policy_rejects_out_of_scope_model_path_before_approval(tmp_path) -> None:
+    """Layer: integration. Verifies workspace containment rejects an out-of-scope model path before approval."""
+    db_path = tmp_path / "phase2-policy-reject.sqlite3"
+    clock = _Clock("2026-04-25T12:00:00+00:00")
+    run_service = OutwardRunService(
+        run_store=OutwardRunStore(db_path),
+        event_store=OutwardRunEventStore(db_path),
+        run_id_factory=lambda: "generated",
+        utc_now=clock,
+    )
+    run = await run_service.submit(
+        {
+            "run_id": "run-policy-reject",
+            "task": {
+                "description": "Attempt an out-of-scope write",
+                "instruction": "Call write_file outside the workspace.",
+                "acceptance_contract": {
+                    "governed_tool_call": {
+                        "tool": "write_file",
+                        "args": {"path": "contract.txt", "content": "contract probe"},
+                    }
+                },
+            },
+            "policy_overrides": {"approval_required_tools": ["write_file"]},
+        }
+    )
+
+    outside_name = f"{tmp_path.name}-sensitive.txt"
+    completed = await _execution_service(
+        db_path,
+        tmp_path,
+        clock,
+        model_args={"path": f"../{outside_name}", "content": "blocked"},
+    ).start_if_ready(run.run_id)
+
+    assert completed.status == "completed"
+    assert (tmp_path.parent / outside_name).exists() is False
+    assert await OutwardApprovalStore(db_path).list(status="pending") == []
+    events = await OutwardRunEventStore(db_path).list_for_run("run-policy-reject")
+    event_types = [event.event_type for event in events]
+    assert "proposal_made" in event_types
+    assert "proposal_policy_rejected" in event_types
+    assert "proposal_pending_approval" not in event_types
+    rejection = next(event for event in events if event.event_type == "proposal_policy_rejected")
+    assert rejection.payload["args_preview"]["path"] == f"../{outside_name}"
+    assert rejection.payload["policy_result"] == "rejected"
 
 
 @pytest.mark.integration

@@ -1,0 +1,16 @@
+{
+  "content_redacted": "{\"args\": {\"content\": \"[REDACTED]\", \"path\": \"workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/sorted_items.txt\"}, \"tool\": \"write_file\"}",
+  "extracted_tool_call_redacted": {
+    "args": {
+      "content": "[REDACTED]",
+      "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/sorted_items.txt"
+    },
+    "tool": "write_file"
+  },
+  "model_response_content_sha256": "4e0c10d4a8d7e24d072c728f9bd6c40d0f23d93ecdd4cb88e68344dab0d49561",
+  "namespace": "multi_step_approved_v1_20260426T200916Z",
+  "response_material_kind": "content",
+  "run_id": "multi-step-approved-v1-20260426t200916z",
+  "schema_version": "outward_model_response_redacted.v1",
+  "tool_calls_redacted": []
+}

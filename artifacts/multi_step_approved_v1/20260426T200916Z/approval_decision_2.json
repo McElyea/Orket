@@ -1,0 +1,23 @@
+{
+  "approval": {
+    "args_preview": {
+      "content": "[REDACTED]",
+      "path": "workspace/multi_step_approved_v1_20260426T200916Z/runs/multi-step-approved-v1-20260426t200916z/sorted_items.txt"
+    },
+    "context_summary": "model-produced governed tool call from live provider response",
+    "decided_at": "2026-04-26T20:09:23.404432+00:00",
+    "decision": "approve",
+    "expires_at": "2026-04-26T20:19:23.352163+00:00",
+    "namespace": "multi_step_approved_v1_20260426T200916Z",
+    "note": "approved scenario proposal 2",
+    "operator_ref": "api_key_fingerprint:sha256:2c0c07403b7ab95cfc6732ff2f553b72695624629a121a8117a433460c2cd117",
+    "proposal_id": "proposal:multi-step-approved-v1-20260426t200916z:write_file:0002",
+    "reason": null,
+    "risk_level": "write",
+    "run_id": "multi-step-approved-v1-20260426t200916z",
+    "status": "approved",
+    "submitted_at": "2026-04-26T20:09:23.352156+00:00",
+    "tool": "write_file"
+  },
+  "status": "resolved"
+}
