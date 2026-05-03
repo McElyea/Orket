@@ -1,0 +1,179 @@
+{
+  "approval_authority": [
+    {
+      "approval_id": "proposal:run-live-proof:write_file:0001",
+      "approval_record_digest": "1fea79f1160e60e57de4af02c2ec6b78a9571c65893f215e18d81f7705f375cc",
+      "decided_at_iso": "2026-05-02T12:00:07+00:00",
+      "run_id": "run-live-proof",
+      "status": "approved",
+      "tool_args_digest": "56666fc82cbbce8dfe429c938f6b1a451bd1de8fa5b99ec909b242d7e92847c0",
+      "tool_name": "write_file",
+      "turn_index": 1
+    }
+  ],
+  "artifact_refs": [
+    {
+      "artifact_role": "committed_output",
+      "classification": "authority",
+      "digest": "84db311bf4865a2acfd8b31b7cf2c522e994830cd2567f706f30f391c17f77bd",
+      "package_path": "artifacts/committed_output",
+      "path": "live-proof-output.txt"
+    }
+  ],
+  "bundle_id": "bundle:run-live-proof",
+  "claim_tier_request": "outward_lab_only",
+  "compare_scope": "outward_run_write_file_approved_v1",
+  "effect_evidence": [
+    {
+      "approval_id": "proposal:run-live-proof:write_file:0001",
+      "connector_result_digest": "cd6424c644ad940edef89c660a4fdb85185608a4bdcf330dc203066279530470",
+      "event_type": "tool_invoked",
+      "run_id": "run-live-proof",
+      "sequence_index": 7,
+      "tool_args_digest": "56666fc82cbbce8dfe429c938f6b1a451bd1de8fa5b99ec909b242d7e92847c0",
+      "tool_name": "write_file",
+      "turn_index": 1
+    }
+  ],
+  "ledger_evidence": {
+    "event_count": 10,
+    "events": [
+      {
+        "chain_hash": "9cfee6e3573aa31d0b145dc53b1dcf96f3ba9c76040975696653b512c4343dec",
+        "event_hash": "e321b5888d4eb5024decc6c8fa8cab6aaea7e9beca467362edc7484fc5350dd6",
+        "event_payload_digest": "cde5a56ecc1d38d5a88c1c0db183f106819d57a5622edac612aafa141fdbe833",
+        "event_type": "run_submitted",
+        "position": 1,
+        "previous_chain_hash": "GENESIS",
+        "sequence_index": 1
+      },
+      {
+        "chain_hash": "24de137fcd0497f8cf7e889d41e831c3e61bb27b4cc27909b9ce4c37265f5270",
+        "event_hash": "f289671bc7663e87b7c8cfa79e3cb0d42980c4f2a70642597a3b27c576120733",
+        "event_payload_digest": "8cacce95665cfd28ecb54f2964b4919b904f0867c1f643808d86374188a27828",
+        "event_type": "run_started",
+        "position": 2,
+        "previous_chain_hash": "9cfee6e3573aa31d0b145dc53b1dcf96f3ba9c76040975696653b512c4343dec",
+        "sequence_index": 2
+      },
+      {
+        "chain_hash": "812935a371192ab8d128f12e8dd52a5e021f3daf1f5c4ee2c2b81d01729f8633",
+        "event_hash": "f30b44e1c8b4a22c64d10c49e27489bcf9d9492bf06e60063859826c363aa4aa",
+        "event_payload_digest": "1e42a9c369a36ee236485bf14cb0d3923af53ba1b2e4f04f1a634a0bedda3302",
+        "event_type": "turn_started",
+        "position": 3,
+        "previous_chain_hash": "24de137fcd0497f8cf7e889d41e831c3e61bb27b4cc27909b9ce4c37265f5270",
+        "sequence_index": 3
+      },
+      {
+        "chain_hash": "9b692b9536534a179e0dda59c784f081136236f1c2e1b9521e2fd2de9d4266d6",
+        "event_hash": "be94d63d0fe77c161d0e07add3fad4ea878921137d073e894b23f5b428001a58",
+        "event_payload_digest": "6f1e2269f3bba6df68890ec6eb39e460dcf44d6475652ac6f88fc854369a9da1",
+        "event_type": "proposal_made",
+        "position": 4,
+        "previous_chain_hash": "812935a371192ab8d128f12e8dd52a5e021f3daf1f5c4ee2c2b81d01729f8633",
+        "sequence_index": 4
+      },
+      {
+        "chain_hash": "888a9fc3820b855b26ad447a72d31ebbec9c25fb4ea7f77fae2dd60e328118d2",
+        "event_hash": "73855231d8d3df956c3d2351f59e7a02ce2247b5f2ac0d34c5229a595756bdf5",
+        "event_payload_digest": "8712479d1aa0f9b74732d83b13598dc01a556416278d3843340bf64d076f5fbe",
+        "event_type": "proposal_pending_approval",
+        "position": 5,
+        "previous_chain_hash": "9b692b9536534a179e0dda59c784f081136236f1c2e1b9521e2fd2de9d4266d6",
+        "sequence_index": 5
+      },
+      {
+        "chain_hash": "958011ea2f20f06b2bfa50cb2f5496c843ce6b0f017c6f8e7556befb5f2fa821",
+        "event_hash": "91a85da49fa5b069fc8f5a8298fbc8e549d206e01d6e6c97c8d2ef7502d685fd",
+        "event_payload_digest": "1fea79f1160e60e57de4af02c2ec6b78a9571c65893f215e18d81f7705f375cc",
+        "event_type": "proposal_approved",
+        "position": 6,
+        "previous_chain_hash": "888a9fc3820b855b26ad447a72d31ebbec9c25fb4ea7f77fae2dd60e328118d2",
+        "sequence_index": 6
+      },
+      {
+        "chain_hash": "7b6757fa0c1e536ea2b37150542ce7b31298e44374b8cc08a85431de2a8d7560",
+        "event_hash": "cf0f55f7a8c908e0d186d3b1ca67f9fc1f7a6b65cfe01c308e7338030d214366",
+        "event_payload_digest": "5527a083b38825d3484f3c3d98773adf0ed39ca88dfa3359efb9d496d395fa98",
+        "event_type": "tool_invoked",
+        "position": 7,
+        "previous_chain_hash": "958011ea2f20f06b2bfa50cb2f5496c843ce6b0f017c6f8e7556befb5f2fa821",
+        "sequence_index": 7
+      },
+      {
+        "chain_hash": "b3fa1b548d79f75b8fff9bd0c71a3dbba4e62e16450e7ab33cfea316877de25f",
+        "event_hash": "812c88c61fab5f66a4d8edb3281fb95a92453c28b3d05007c072618760601a17",
+        "event_payload_digest": "f20574e5d597351015cf0184a57091b8ce34da63289d41c26767ca330413d8bf",
+        "event_type": "commitment_recorded",
+        "position": 8,
+        "previous_chain_hash": "7b6757fa0c1e536ea2b37150542ce7b31298e44374b8cc08a85431de2a8d7560",
+        "sequence_index": 8
+      },
+      {
+        "chain_hash": "2fb4bb4ea4f6ff24c58359f446371abe6e9737297254b075e01932baa8f6be59",
+        "event_hash": "f902096b744488b2db6cdf160ead16ce69ad6241d42e045e70f6d2c5b54794ce",
+        "event_payload_digest": "4f24490d302317daf8e4d55d66264c90728fc63a6e5631b47693221c32343d3e",
+        "event_type": "turn_completed",
+        "position": 9,
+        "previous_chain_hash": "b3fa1b548d79f75b8fff9bd0c71a3dbba4e62e16450e7ab33cfea316877de25f",
+        "sequence_index": 9
+      },
+      {
+        "chain_hash": "2051bcdf924dac7ba7df3ee7fd220e871dddbeed9579a6a98ea77ab30d957182",
+        "event_hash": "1c35e3eb3fc423a250b746d68f5103a6f2ee63e334ff6f01d8fe27f5f77e6d5b",
+        "event_payload_digest": "60074c359c8c72ef80d2f1965c771e2747d358deaa0606c4b4803b7553442720",
+        "event_type": "run_completed",
+        "position": 10,
+        "previous_chain_hash": "2fb4bb4ea4f6ff24c58359f446371abe6e9737297254b075e01932baa8f6be59",
+        "sequence_index": 10
+      }
+    ],
+    "export_scope": "all",
+    "ledger_export_digest": "56bf4ba697be95e1f69770dcf1bf89b5f7a2c8cdbb72ff85f3fab20b49f45ec1",
+    "ledger_export_package_path": "ledger_export.json",
+    "ledger_export_schema": "ledger_export.v1",
+    "ledger_hash": "2051bcdf924dac7ba7df3ee7fd220e871dddbeed9579a6a98ea77ab30d957182",
+    "run_id": "run-live-proof"
+  },
+  "model_invocation_evidence": [
+    {
+      "model_invocation_digest": "bc4f9e8ddde124605b7308f805e76d2763b1ab5df27cb62fc3997bb2fceb0445",
+      "model_name": "qwen2.5-coder:7b",
+      "model_prompt_redacted_digest": "2431b9ade6561411b5f0418c0d50dfa5ac2d11001bfde9acc8b565b64bad62c7",
+      "model_provider": "ollama",
+      "model_response_redacted_digest": "a1796707d97064d19e6883fe133191cc92873a6690352db193766aabb9b81982",
+      "proposal_extraction_digest": "3dea96f59cb8a13d7d5d9ae32719d1d0d18086d5ca689084aaa959caf4dd177f",
+      "turn_index": 1
+    }
+  ],
+  "operator_surface": "outward_run_witness_report.v1",
+  "package_refs": {
+    "committed_output_path": "artifacts/committed_output",
+    "ledger_export_path": "ledger_export.json"
+  },
+  "policy_identity": {
+    "approval_required_tools": [
+      "write_file"
+    ],
+    "approval_timeout_seconds": 60,
+    "max_turns": 1,
+    "policy_overrides_digest": "7ef5c057513582f3e0cf9e241a9735b27fcbd49da49c4dbe7665627c1fee4b99"
+  },
+  "produced_at_iso": "",
+  "run_authority": {
+    "acceptance_contract_sequence": null,
+    "acceptance_contract_tool": "write_file",
+    "namespace": "issue_run-live-proof",
+    "policy_overrides_digest": "7ef5c057513582f3e0cf9e241a9735b27fcbd49da49c4dbe7665627c1fee4b99",
+    "run_id": "run-live-proof",
+    "run_record_digest": "6c961abcabf3fb41f6914e7b9597ae5d09abadf2d6bea267a56a99c404a9fda9",
+    "run_status": "completed",
+    "status": "completed",
+    "submitted_at_iso": "2026-05-02T12:00:00+00:00",
+    "task_description": "Write the approved outward proof file.",
+    "task_instruction": "Produce exactly one write_file tool call with path live-proof-output.txt and content outward proof live content."
+  },
+  "run_id": "run-live-proof",
+  "schema_version": "outward_run.witness_bundle.v1"
+}

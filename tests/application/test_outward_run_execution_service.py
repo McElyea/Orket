@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -196,6 +197,8 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
             encoding="utf-8"
         )
     )
+    model_prompt_path = tmp_path / "workspace" / "issue_run-exec" / "runs" / "run-exec" / "model_prompt_redacted_turn_1.json"
+    model_response_path = tmp_path / "workspace" / "issue_run-exec" / "runs" / "run-exec" / "model_response_redacted_turn_1.json"
     proposal_extraction = json.loads(
         (tmp_path / "workspace" / "issue_run-exec" / "runs" / "run-exec" / "proposal_extraction.json").read_text(
             encoding="utf-8"
@@ -233,7 +236,10 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
     proposal_event = next(event for event in events if event.event_type == "proposal_made")
     assert proposal_event.payload["model_invocation_ref"] == "workspace/issue_run-exec/runs/run-exec/model_invocation_turn_1.json"
     assert proposal_event.payload["model_invocation_sha256"]
+    assert proposal_event.payload["model_prompt_redacted_sha256"] == hashlib.sha256(model_prompt_path.read_bytes()).hexdigest()
     assert proposal_event.payload["model_response_content_sha256"] == model_invocation["model_response_content_sha256"]
+    assert proposal_event.payload["model_response_redacted_sha256"] == hashlib.sha256(model_response_path.read_bytes()).hexdigest()
+    assert proposal_event.payload["proposal_extraction_sha256"]
     assert proposal_event.payload["tool_name"] == "write_file"
     assert proposal_event.payload["tool_args_hash"] == proposal_extraction["extracted_args_hash"]
     assert "model approved content" not in str(tool_event.payload)

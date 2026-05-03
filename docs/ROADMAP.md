@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-04-25
+Last updated: 2026-05-02
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-No active priority items.
+1. outward run denial fixture proof extension -- Plan: `docs/projects/future/outward-run-proof-kernel-extensions/OUTWARD_RUN_DENIAL_FIXTURE_IMPLEMENTATION_PLAN.md`.
 
 ## Maintenance (Non-Priority)
 
@@ -29,6 +29,8 @@ No active priority items.
 1. protocol-governed local provider compatibility expansion (`vLLM`, `llama.cpp`) -- Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Readiness must be regenerated with `scripts/protocol/check_local_prompting_promotion_readiness.py` before reopen; do not treat local ignored `benchmarks/results/...` output as durable roadmap authority. Reopen only with an explicit scoped implementation request.
 2. marshaller requirements hardening -- Hold until requirements are mature and explicitly approved for execution.
 3. `orket.orket` compatibility shim removal -- Remove the deprecated shim after one techdebt cycle once production imports use `orket.runtime` directly.
+4. remaining outward run proof kernel path-family and extension work -- Plan: `docs/projects/future/outward-run-proof-kernel-extensions/OUTWARD_RUN_PROOF_KERNEL_EXTENSIONS.md`. Reopen only with an explicit scoped implementation request for policy-rejection, out-of-scope, multi-turn, ODR, or posture-widening evidence beyond the approved single-turn and active denial-fixture lanes.
+5. outward run formal methods strengthening -- Plan: `docs/projects/future/outward-run-formal-methods.md`. Reopen only after the archived approved single-turn proof kernel closeout remains green and any proposed formal model maps back to active outward witness and invariant specs.
 
 ## Project Index
 
@@ -43,4 +45,4 @@ Every non-archive project under `docs/projects/` must appear here.
 | OrketUI | shipped-reference | reference | `docs/projects/OrketUI/` | Orket Core | Shipped Orket-side provenance packet for the separate OrketUI extension. The completed lane record lives under `docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/`; future OrketUI expansion must reopen as a new explicit roadmap lane. |
 | PromptReforgerToolCompatibility | paused-checkpoint | paused | `docs/projects/PromptReforgerToolCompatibility/` | Orket Core | Paused after the truthful 2026-04-04 portability checkpoint. `PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; the FunctionGemma judge blocker is now cleared through the admitted native-tool path, keep Prompt Reforger service truth in `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`, keep Gemma 4 deferred, and keep Qwen out of the core lane unless a later explicit cross-family baseline is requested. |
 | techdebt | standing-maintenance | maintenance | `docs/projects/techdebt/` | Orket Core | Standing recurring maintenance remains under `Recurring-Maintenance-Checklist.md`, `LIVE-RUNTIME-PROOF-RECOVERY-PLAN.md`, and `README.md`; completed cycle archives live under `docs/projects/archive/techdebt/`. |
-| future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane; active nested lanes are indexed separately. |
+| future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane, including outward proof-kernel extensions and formal methods; active nested lanes are indexed separately. |

@@ -90,10 +90,16 @@ async def write_model_evidence(
     except OSError as exc:
         raise OutwardModelObservabilityError("model observability write failed") from exc
     invocation_hash = await _file_sha256(directory / _turn_filename("model_invocation", turn))
+    prompt_hash = await _file_sha256(directory / _turn_filename("model_prompt_redacted", turn))
+    response_hash = await _file_sha256(directory / _turn_filename("model_response_redacted", turn))
+    extraction_hash = await _file_sha256(directory / _turn_filename("proposal_extraction", turn))
     evidence = dict(invocation_payload)
     evidence.update(
         {
             "model_invocation_sha256": invocation_hash,
+            "model_prompt_redacted_sha256": prompt_hash,
+            "model_response_redacted_sha256": response_hash,
+            "proposal_extraction_sha256": extraction_hash,
             "model_prompt_ref": refs["prompt"],
             "model_response_ref": refs["response"],
             "proposal_extraction_ref": refs["proposal_extraction"],

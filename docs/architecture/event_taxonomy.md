@@ -60,7 +60,7 @@ Legacy `tool_blocked` from direct `Agent.run(...)` remains compatibility telemet
 
 ## Outward Pipeline Ledger Lifecycle
 1. `proposal_made`
-   - `run_id`, `namespace`, `tool`, `args_preview`, `context_summary`, `model_invocation_ref`, `model_invocation_sha256`, `model_response_content_sha256`, `proposal_extraction_ref`, `provider_name`, `model_name`, `tool_name`, `tool_args_hash`
+   - `run_id`, `namespace`, `tool`, `args_preview`, `context_summary`, `model_invocation_ref`, `model_invocation_sha256`, `model_prompt_redacted_sha256`, `model_response_content_sha256`, `model_response_redacted_sha256`, `proposal_extraction_ref`, `proposal_extraction_sha256`, `provider_name`, `model_name`, `tool_name`, `tool_args_hash`
 2. `proposal_pending_approval`
    - `proposal_id`, `run_id`, `namespace`, `tool`, `args_preview`, `context_summary`, `risk_level`, `submitted_at`, `expires_at`, `status`
 3. `proposal_approved`

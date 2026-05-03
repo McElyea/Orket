@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2026-05-02 - "The Outward Run Proof Kernel Cut"
+
+### Added
+- **Outward Run Proof Kernel**: Added the approved single-turn outward run witness, invariant, claim-tier, and assurance-case contracts, plus package emission, verification, committed-artifact validation, corruption-suite, and campaign tooling for `outward_run_write_file_approved_v1`.
+- **Proof Fixtures And Coverage**: Added frozen approved-path package fixtures and contract/script tests covering witness package verification, assurance validation, artifact validation, corruption detection, and campaign stability.
+
+### Changed
+- **Proposal Evidence Anchors**: Anchored redacted prompt, redacted response, and proposal-extraction hashes into `proposal_made` ledger payloads and aligned current authority plus event taxonomy with the expanded evidence surface.
+- **Roadmap Authority**: Archived the completed outward run proof kernel lane and queued the denial-fixture proof extension as the active priority lane.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. Operators using outward run proof packages should use the new witness package verifier, committed-artifact validator, and corruption suite for approved-path proof claims.
+
 ## [0.5.2] - 2026-04-26 - "The Multi-Step Governed Evidence Cut"
 
 ### Added

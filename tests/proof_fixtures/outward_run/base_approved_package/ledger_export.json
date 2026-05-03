@@ -1,0 +1,291 @@
+{
+  "canonical": {
+    "event_count": 10,
+    "genesis": "GENESIS",
+    "ledger_hash": "2051bcdf924dac7ba7df3ee7fd220e871dddbeed9579a6a98ea77ab30d957182",
+    "ordering": [
+      "run_id",
+      "turn",
+      "at",
+      "event_id"
+    ]
+  },
+  "contains_pii": false,
+  "events": [
+    {
+      "agent_id": "operator",
+      "at": "2026-05-02T12:00:00+00:00",
+      "chain_hash": "9cfee6e3573aa31d0b145dc53b1dcf96f3ba9c76040975696653b512c4343dec",
+      "event_group": "all",
+      "event_hash": "e321b5888d4eb5024decc6c8fa8cab6aaea7e9beca467362edc7484fc5350dd6",
+      "event_id": "run:run-live-proof:submitted",
+      "event_type": "run_submitted",
+      "payload": {
+        "namespace": "issue_run-live-proof",
+        "policy_overrides": {
+          "approval_required_tools": [
+            "write_file"
+          ],
+          "approval_timeout_seconds": 60,
+          "max_turns": 1
+        },
+        "run_id": "run-live-proof",
+        "status": "queued",
+        "submitted_at": "2026-05-02T12:00:00+00:00",
+        "task_description": "Write the approved outward proof file."
+      },
+      "position": 1,
+      "previous_chain_hash": "GENESIS",
+      "run_id": "run-live-proof",
+      "turn": 0
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:02+00:00",
+      "chain_hash": "24de137fcd0497f8cf7e889d41e831c3e61bb27b4cc27909b9ce4c37265f5270",
+      "event_group": "all",
+      "event_hash": "f289671bc7663e87b7c8cfa79e3cb0d42980c4f2a70642597a3b27c576120733",
+      "event_id": "run:run-live-proof:0100:started",
+      "event_type": "run_started",
+      "payload": {
+        "run_id": "run-live-proof",
+        "started_at": "2026-05-02T12:00:01+00:00",
+        "status": "running"
+      },
+      "position": 2,
+      "previous_chain_hash": "9cfee6e3573aa31d0b145dc53b1dcf96f3ba9c76040975696653b512c4343dec",
+      "run_id": "run-live-proof",
+      "turn": 0
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:03+00:00",
+      "chain_hash": "812935a371192ab8d128f12e8dd52a5e021f3daf1f5c4ee2c2b81d01729f8633",
+      "event_group": "all",
+      "event_hash": "f30b44e1c8b4a22c64d10c49e27489bcf9d9492bf06e60063859826c363aa4aa",
+      "event_id": "run:run-live-proof:01:0200:turn:started",
+      "event_type": "turn_started",
+      "payload": {
+        "agent_id": "outward-agent",
+        "run_id": "run-live-proof",
+        "turn": 1
+      },
+      "position": 3,
+      "previous_chain_hash": "24de137fcd0497f8cf7e889d41e831c3e61bb27b4cc27909b9ce4c37265f5270",
+      "run_id": "run-live-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:04+00:00",
+      "chain_hash": "9b692b9536534a179e0dda59c784f081136236f1c2e1b9521e2fd2de9d4266d6",
+      "event_group": "proposals",
+      "event_hash": "be94d63d0fe77c161d0e07add3fad4ea878921137d073e894b23f5b428001a58",
+      "event_id": "run:run-live-proof:01:0300:proposal:write_file:0001",
+      "event_type": "proposal_made",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "live-proof-output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "model_invocation_ref": "workspace/issue_run-live-proof/runs/run-live-proof/model_invocation_turn_1.json",
+        "model_invocation_sha256": "bc4f9e8ddde124605b7308f805e76d2763b1ab5df27cb62fc3997bb2fceb0445",
+        "model_name": "qwen2.5-coder:7b",
+        "model_prompt_redacted_sha256": "2431b9ade6561411b5f0418c0d50dfa5ac2d11001bfde9acc8b565b64bad62c7",
+        "model_response_content_sha256": "a1796707d97064d19e6883fe133191cc92873a6690352db193766aabb9b81982",
+        "model_response_redacted_sha256": "1fcab9b3fc4ad23595080596e4e489a9cc046edd4b67864641292e299278299e",
+        "namespace": "issue_run-live-proof",
+        "proposal_extraction_ref": "workspace/issue_run-live-proof/runs/run-live-proof/proposal_extraction_turn_1.json",
+        "proposal_extraction_sha256": "3dea96f59cb8a13d7d5d9ae32719d1d0d18086d5ca689084aaa959caf4dd177f",
+        "provider_name": "ollama",
+        "run_id": "run-live-proof",
+        "tool": "write_file",
+        "tool_args_hash": "56666fc82cbbce8dfe429c938f6b1a451bd1de8fa5b99ec909b242d7e92847c0",
+        "tool_name": "write_file"
+      },
+      "position": 4,
+      "previous_chain_hash": "812935a371192ab8d128f12e8dd52a5e021f3daf1f5c4ee2c2b81d01729f8633",
+      "run_id": "run-live-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-05-02T12:00:05+00:00",
+      "chain_hash": "888a9fc3820b855b26ad447a72d31ebbec9c25fb4ea7f77fae2dd60e328118d2",
+      "event_group": "proposals",
+      "event_hash": "73855231d8d3df956c3d2351f59e7a02ce2247b5f2ac0d34c5229a595756bdf5",
+      "event_id": "proposal:run-live-proof:write_file:0001:0001:proposal_pending_approval",
+      "event_type": "proposal_pending_approval",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "live-proof-output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "expires_at": "2026-05-02T12:01:06+00:00",
+        "namespace": "issue_run-live-proof",
+        "proposal_id": "proposal:run-live-proof:write_file:0001",
+        "risk_level": "write",
+        "run_id": "run-live-proof",
+        "status": "pending",
+        "submitted_at": "2026-05-02T12:00:05+00:00",
+        "tool": "write_file"
+      },
+      "position": 5,
+      "previous_chain_hash": "9b692b9536534a179e0dda59c784f081136236f1c2e1b9521e2fd2de9d4266d6",
+      "run_id": "run-live-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-05-02T12:00:07+00:00",
+      "chain_hash": "958011ea2f20f06b2bfa50cb2f5496c843ce6b0f017c6f8e7556befb5f2fa821",
+      "event_group": "decisions",
+      "event_hash": "91a85da49fa5b069fc8f5a8298fbc8e549d206e01d6e6c97c8d2ef7502d685fd",
+      "event_id": "proposal:run-live-proof:write_file:0001:0002:proposal_approved",
+      "event_type": "proposal_approved",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "live-proof-output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "decided_at": "2026-05-02T12:00:07+00:00",
+        "decision": "approve",
+        "expires_at": "2026-05-02T12:01:06+00:00",
+        "namespace": "issue_run-live-proof",
+        "note": null,
+        "operator_ref": "operator:codex-live-proof",
+        "proposal_id": "proposal:run-live-proof:write_file:0001",
+        "reason": null,
+        "risk_level": "write",
+        "run_id": "run-live-proof",
+        "status": "approved",
+        "submitted_at": "2026-05-02T12:00:05+00:00",
+        "tool": "write_file"
+      },
+      "position": 6,
+      "previous_chain_hash": "888a9fc3820b855b26ad447a72d31ebbec9c25fb4ea7f77fae2dd60e328118d2",
+      "run_id": "run-live-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:09+00:00",
+      "chain_hash": "7b6757fa0c1e536ea2b37150542ce7b31298e44374b8cc08a85431de2a8d7560",
+      "event_group": "tools",
+      "event_hash": "cf0f55f7a8c908e0d186d3b1ca67f9fc1f7a6b65cfe01c308e7338030d214366",
+      "event_id": "run:run-live-proof:01:0400:tool:write_file:0001",
+      "event_type": "tool_invoked",
+      "payload": {
+        "args_hash": "56666fc82cbbce8dfe429c938f6b1a451bd1de8fa5b99ec909b242d7e92847c0",
+        "connector_name": "write_file",
+        "duration_ms": 0,
+        "outcome": "success",
+        "result_summary": {
+          "ok": true,
+          "path": "C:\\Source\\Orket\\.tmp\\outward-live-proof-attempt-qwen\\workspace-root\\live-proof-output.txt"
+        }
+      },
+      "position": 7,
+      "previous_chain_hash": "958011ea2f20f06b2bfa50cb2f5496c843ce6b0f017c6f8e7556befb5f2fa821",
+      "run_id": "run-live-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:10+00:00",
+      "chain_hash": "b3fa1b548d79f75b8fff9bd0c71a3dbba4e62e16450e7ab33cfea316877de25f",
+      "event_group": "commitments",
+      "event_hash": "812c88c61fab5f66a4d8edb3281fb95a92453c28b3d05007c072618760601a17",
+      "event_id": "run:run-live-proof:01:0500:commitment:write_file:0001",
+      "event_type": "commitment_recorded",
+      "payload": {
+        "outcome": "success",
+        "run_id": "run-live-proof",
+        "tool": "write_file"
+      },
+      "position": 8,
+      "previous_chain_hash": "7b6757fa0c1e536ea2b37150542ce7b31298e44374b8cc08a85431de2a8d7560",
+      "run_id": "run-live-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:11+00:00",
+      "chain_hash": "2fb4bb4ea4f6ff24c58359f446371abe6e9737297254b075e01932baa8f6be59",
+      "event_group": "all",
+      "event_hash": "f902096b744488b2db6cdf160ead16ce69ad6241d42e045e70f6d2c5b54794ce",
+      "event_id": "run:run-live-proof:01:0600:turn:completed",
+      "event_type": "turn_completed",
+      "payload": {
+        "outcome": "success",
+        "run_id": "run-live-proof",
+        "turn": 1
+      },
+      "position": 9,
+      "previous_chain_hash": "b3fa1b548d79f75b8fff9bd0c71a3dbba4e62e16450e7ab33cfea316877de25f",
+      "run_id": "run-live-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:13+00:00",
+      "chain_hash": "2051bcdf924dac7ba7df3ee7fd220e871dddbeed9579a6a98ea77ab30d957182",
+      "event_group": "all",
+      "event_hash": "1c35e3eb3fc423a250b746d68f5103a6f2ee63e334ff6f01d8fe27f5f77e6d5b",
+      "event_id": "run:run-live-proof:0700:completed",
+      "event_type": "run_completed",
+      "payload": {
+        "completed_at": "2026-05-02T12:00:12+00:00",
+        "outcome": "success",
+        "run_id": "run-live-proof",
+        "status": "completed"
+      },
+      "position": 10,
+      "previous_chain_hash": "2fb4bb4ea4f6ff24c58359f446371abe6e9737297254b075e01932baa8f6be59",
+      "run_id": "run-live-proof",
+      "turn": 1
+    }
+  ],
+  "export_scope": "all",
+  "include_pii": false,
+  "omitted_spans": [],
+  "policy_snapshot": {
+    "ledger_payload_model": "policy_safe_by_construction",
+    "outbound_policy_gate": "applied_before_serialization",
+    "payload_bytes": "unchanged"
+  },
+  "run_id": "run-live-proof",
+  "schema_version": "ledger_export.v1",
+  "summary": {
+    "completed_at": "2026-05-02T12:00:12+00:00",
+    "current_turn": 1,
+    "event_count": 10,
+    "event_counts": {
+      "commitment_recorded": 1,
+      "proposal_approved": 1,
+      "proposal_made": 1,
+      "proposal_pending_approval": 1,
+      "run_completed": 1,
+      "run_started": 1,
+      "run_submitted": 1,
+      "tool_invoked": 1,
+      "turn_completed": 1,
+      "turn_started": 1
+    },
+    "exported_event_count": 10,
+    "max_turns": 1,
+    "run_id": "run-live-proof",
+    "status": "completed",
+    "stop_reason": null
+  },
+  "types": [
+    "all"
+  ],
+  "verification": {
+    "meaning": "full canonical ledger",
+    "result": "valid"
+  }
+}

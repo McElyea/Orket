@@ -76,7 +76,7 @@ class _WebhookHandlerProxy:
 
 
 webhook_handler = _WebhookHandlerProxy()
-app.add_event_handler("shutdown", webhook_handler.close)
+app.router.add_event_handler("shutdown", webhook_handler.close)
 
 
 def _resolve_webhook_secret(required: bool = False) -> bytes | None:

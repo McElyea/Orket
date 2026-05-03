@@ -1,0 +1,16 @@
+{
+  "artifact_paths": {
+    "committed_output": "artifacts/committed_output"
+  },
+  "bundle_path": "outward_witness_bundle.json",
+  "compare_scope": "outward_run_write_file_approved_v1",
+  "file_digests": {
+    "artifacts/committed_output": "84db311bf4865a2acfd8b31b7cf2c522e994830cd2567f706f30f391c17f77bd",
+    "ledger_export.json": "56bf4ba697be95e1f69770dcf1bf89b5f7a2c8cdbb72ff85f3fab20b49f45ec1",
+    "outward_witness_bundle.json": "db389b6bb171bf421bda5163195ee34a9d50ebd90892efe82070709f5158515c"
+  },
+  "ledger_export_path": "ledger_export.json",
+  "package_digest": "dc4b144b245adee27785311ab7ce44d3b7a21eb744122d9f5595402bf690a99e",
+  "package_id": "package:run-live-proof",
+  "schema_version": "outward_run_witness_package.v1"
+}
