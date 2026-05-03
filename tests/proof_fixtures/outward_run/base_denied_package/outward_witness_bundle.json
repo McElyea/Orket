@@ -1,0 +1,141 @@
+{
+  "approval_authority": [
+    {
+      "approval_id": "proposal:run-outward-write-file-denied-proof:write_file:0001",
+      "approval_record_digest": "370278a06ee93b9228fa97c3d865cae4d3b5b8ac5a1f0fc0be4745a11d12acf8",
+      "decided_at_iso": "2026-05-02T12:00:07+00:00",
+      "run_id": "run-outward-write-file-denied-proof",
+      "status": "denied",
+      "tool_args_digest": "562ea69d6cbe98208375b4e31d37fadf7cb03d24376725a303f4ede7222867cd",
+      "tool_name": "write_file",
+      "turn_index": 1
+    }
+  ],
+  "artifact_refs": [],
+  "bundle_id": "bundle:run-outward-write-file-denied-proof",
+  "claim_tier_request": "outward_lab_only",
+  "compare_scope": "outward_run_write_file_denied_v1",
+  "effect_evidence": [],
+  "ledger_evidence": {
+    "event_count": 8,
+    "events": [
+      {
+        "chain_hash": "8f07ebd83cc2acdad26e5520d91ad97dfcac0b803f914ac023d4e68346b4214a",
+        "event_hash": "cde05d4b952800b31e2dacf61de5dbc7c54d5ce9fc70939025ed393f019fb93a",
+        "event_payload_digest": "8f39a7e1bb0034123799846d3cfadb83ab911a72db44d1e4644de5d2053e6ea3",
+        "event_type": "run_submitted",
+        "position": 1,
+        "previous_chain_hash": "GENESIS",
+        "sequence_index": 1
+      },
+      {
+        "chain_hash": "a8373fd2057f17763e0ae4cc214bcfbfb897607b8b20c50b6cd7decfce15c6fd",
+        "event_hash": "29f6b9c4c0b736b59d75cfedcb861135efc2165171f1082149ac1a503dede006",
+        "event_payload_digest": "c83783e099b86fb374b524a026d8ac52a6ca97af5ec5d9ade4b86daba61bd952",
+        "event_type": "run_started",
+        "position": 2,
+        "previous_chain_hash": "8f07ebd83cc2acdad26e5520d91ad97dfcac0b803f914ac023d4e68346b4214a",
+        "sequence_index": 2
+      },
+      {
+        "chain_hash": "117bdc9b5204f6fe159d9e8e9cc5e774155c992bf432468e8c3a3c2984e916d6",
+        "event_hash": "9095ff31de9ed5f117f24e00252ebb6772cb704bc49215b59483de3b973156f7",
+        "event_payload_digest": "0b1e7c4e8a852e379880bf98a8d273da2684463469e1e28ff3c459b1fd87ef7a",
+        "event_type": "turn_started",
+        "position": 3,
+        "previous_chain_hash": "a8373fd2057f17763e0ae4cc214bcfbfb897607b8b20c50b6cd7decfce15c6fd",
+        "sequence_index": 3
+      },
+      {
+        "chain_hash": "4d9f798a1dfe487034ae6bcc0c37af138d990a3c4c025dba23025b37c263eb0c",
+        "event_hash": "d2e3e53152eeb62d9be9ba3040ecfb595e9c99b029238c8b8d7bb3670dbacc05",
+        "event_payload_digest": "d17a009ab2a18ff8feefca31118307aa73554d43d16e4d2d8636dcb9ea009470",
+        "event_type": "proposal_made",
+        "position": 4,
+        "previous_chain_hash": "117bdc9b5204f6fe159d9e8e9cc5e774155c992bf432468e8c3a3c2984e916d6",
+        "sequence_index": 4
+      },
+      {
+        "chain_hash": "1921dcf31e30e9ccf97d6d724c8b775505b1bd729fee2e27fb6fc7991e879d6e",
+        "event_hash": "3d51d41d093a9c7d04d94464d5e8b958c0f3af9cc827022be6aa762d67d561d8",
+        "event_payload_digest": "5a2ac6b5530e170d458f9caa090b8f58a8308e26f64e804052db718af909827e",
+        "event_type": "proposal_pending_approval",
+        "position": 5,
+        "previous_chain_hash": "4d9f798a1dfe487034ae6bcc0c37af138d990a3c4c025dba23025b37c263eb0c",
+        "sequence_index": 5
+      },
+      {
+        "chain_hash": "959b8a3c14285dd8e6f3edb18b927a452319635f2bc6573f1278c75a54c27abe",
+        "event_hash": "45fff5c297ec8a5eb2f01087ff7159d13964dfb2ec58fb05ab5b4babf2d5efc5",
+        "event_payload_digest": "370278a06ee93b9228fa97c3d865cae4d3b5b8ac5a1f0fc0be4745a11d12acf8",
+        "event_type": "proposal_denied",
+        "position": 6,
+        "previous_chain_hash": "1921dcf31e30e9ccf97d6d724c8b775505b1bd729fee2e27fb6fc7991e879d6e",
+        "sequence_index": 6
+      },
+      {
+        "chain_hash": "8c30eead7d3c8e56c9c315806f2aba97f59c57ca4b73c48e5be474c0ea211299",
+        "event_hash": "6e29a2d54ecc0fb54bc94844af0f63803e58427a1db882484c978f4109b5341d",
+        "event_payload_digest": "f1045c4d6475177bd8e597e3d90b31618f86d2346ad9f5f408306df520af4a8a",
+        "event_type": "turn_completed",
+        "position": 7,
+        "previous_chain_hash": "959b8a3c14285dd8e6f3edb18b927a452319635f2bc6573f1278c75a54c27abe",
+        "sequence_index": 7
+      },
+      {
+        "chain_hash": "90a88d1a61c7f6dfeab9997ab4dd077fc02ce8d89c123b11551115fd5119b228",
+        "event_hash": "bf98d980ffe61ad3646d929734b4a31f39f74f795fa10c6dc0fda18e025f2b03",
+        "event_payload_digest": "929f14adc2532c941cc862e5b4ec4a5797fb6a011e0f0e4ad656075359be3b89",
+        "event_type": "run_completed",
+        "position": 8,
+        "previous_chain_hash": "8c30eead7d3c8e56c9c315806f2aba97f59c57ca4b73c48e5be474c0ea211299",
+        "sequence_index": 8
+      }
+    ],
+    "export_scope": "all",
+    "ledger_export_digest": "ddcb868e506c120acdc1c92e589c122c3527161907bd945394556261fe2afdb3",
+    "ledger_export_package_path": "ledger_export.json",
+    "ledger_export_schema": "ledger_export.v1",
+    "ledger_hash": "90a88d1a61c7f6dfeab9997ab4dd077fc02ce8d89c123b11551115fd5119b228",
+    "run_id": "run-outward-write-file-denied-proof"
+  },
+  "model_invocation_evidence": [
+    {
+      "model_invocation_digest": "f4a27ec071ef68f6f91ce571f98d414439fc52dff3755a1dab0946da06c9b29d",
+      "model_name": "deterministic-denial-proof-client",
+      "model_prompt_redacted_digest": "7368d7a311f76b168c85e092629749c6518c5e1a89e06cbf57abb87f185abba9",
+      "model_provider": "proof-local",
+      "model_response_redacted_digest": "75f2fb2ff5fa81b3e4864324853fdecec3c0c2669ab2992d7416bf14b848bb92",
+      "proposal_extraction_digest": "7b3b1ad5d4367ed3d36b307490097041fdc6758251685d37610a70ec41676b2f",
+      "turn_index": 1
+    }
+  ],
+  "operator_surface": "outward_run_witness_report.v1",
+  "package_refs": {
+    "ledger_export_path": "ledger_export.json"
+  },
+  "policy_identity": {
+    "approval_required_tools": [
+      "write_file"
+    ],
+    "approval_timeout_seconds": 60,
+    "max_turns": 1,
+    "policy_overrides_digest": "7ef5c057513582f3e0cf9e241a9735b27fcbd49da49c4dbe7665627c1fee4b99"
+  },
+  "produced_at_iso": "",
+  "run_authority": {
+    "acceptance_contract_sequence": null,
+    "acceptance_contract_tool": "write_file",
+    "namespace": "issue_run-outward-write-file-denied-proof",
+    "policy_overrides_digest": "7ef5c057513582f3e0cf9e241a9735b27fcbd49da49c4dbe7665627c1fee4b99",
+    "run_id": "run-outward-write-file-denied-proof",
+    "run_record_digest": "8769a285103608007b7790b96834cd6d7bb1a8b871528e695c36fac4e0fd0f23",
+    "run_status": "completed",
+    "status": "completed",
+    "submitted_at_iso": "2026-05-02T12:00:00+00:00",
+    "task_description": "Write the denied outward proof file.",
+    "task_instruction": "Produce exactly one write_file tool call with path denied-proof-output.txt and content denied proof content."
+  },
+  "run_id": "run-outward-write-file-denied-proof",
+  "schema_version": "outward_run.witness_bundle.v1"
+}

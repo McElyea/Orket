@@ -16,7 +16,6 @@ from orket.core.domain.outward_ledger import chain_hash_for, event_group, event_
 from orket.core.domain.outward_run_events import LedgerEvent
 from scripts.proof.outward_run_witness_contract import compute_package_digest, file_sha256
 
-
 EXPECTED_FAILURES: dict[str, str] = {
     "ORP-CORR-001": "bundle_schema_missing_or_unsupported",
     "ORP-CORR-002": "bundle_schema_missing_or_unsupported",
@@ -38,6 +37,8 @@ EXPECTED_FAILURES: dict[str, str] = {
     "ORP-CORR-024": "tool_args_digest_drift",
     "ORP-CORR-025": "tool_args_digest_drift",
     "ORP-CORR-026": "tool_args_digest_drift",
+    "ORP-CORR-030": "denied_proposal_invoked",
+    "ORP-CORR-031": "policy_rejected_proposal_invoked",
     "ORP-CORR-040": "effect_evidence_missing",
     "ORP-CORR-041": "effect_evidence_missing",
     "ORP-CORR-042": "commitment_missing_after_effect",
@@ -57,6 +58,7 @@ EXPECTED_FAILURES: dict[str, str] = {
     "ORP-CORR-065": "ledger_export_missing",
     "ORP-CORR-066": "ledger_export_digest_mismatch",
     "ORP-CORR-067": "ledger_chain_hash_mismatch",
+    "ORP-CORR-068": "full_ledger_export_required",
     "ORP-CORR-069": "ledger_payload_bytes_missing",
     "ORP-CORR-070": "missing_authority_digest",
     "ORP-CORR-071": "missing_authority_digest",
@@ -69,11 +71,7 @@ EXPECTED_FAILURES: dict[str, str] = {
     "ORP-CORR-082": "claim_tier_not_supported",
 }
 
-MISSING_FIXTURE_CORRUPTIONS = {
-    "ORP-CORR-030": "base_denied_package_missing",
-    "ORP-CORR-031": "base_policy_rejected_package_missing",
-    "ORP-CORR-068": "base_denied_or_policy_rejected_package_missing",
-}
+MISSING_FIXTURE_CORRUPTIONS: dict[str, str] = {}
 
 
 def corrupt_package(*, base: Path, output: Path, corruption_id: str) -> dict[str, Any]:
@@ -109,13 +107,13 @@ def _apply_corruption(root: Path, corruption_id: str) -> None:
         _mutate_bundle(root, lambda bundle: bundle["package_refs"].update({"ledger_export_path": "../ledger_export.json"}))
     elif corruption_id == "ORP-CORR-009":
         _mutate_bundle(root, lambda bundle: bundle["artifact_refs"][0].update({"package_path": "../committed_output"}))
-    elif corruption_id in {"ORP-CORR-010", "ORP-CORR-011", "ORP-CORR-020", "ORP-CORR-021", "ORP-CORR-040", "ORP-CORR-042", "ORP-CORR-043", "ORP-CORR-050", "ORP-CORR-052", "ORP-CORR-055", "ORP-CORR-056"}:
+    elif corruption_id in {"ORP-CORR-010", "ORP-CORR-011", "ORP-CORR-020", "ORP-CORR-021", "ORP-CORR-030", "ORP-CORR-031", "ORP-CORR-040", "ORP-CORR-042", "ORP-CORR-043", "ORP-CORR-050", "ORP-CORR-052", "ORP-CORR-055", "ORP-CORR-056"}:
         _mutate_events(root, lambda events: _event_mutation(events, corruption_id))
     elif corruption_id in {"ORP-CORR-012", "ORP-CORR-013", "ORP-CORR-022", "ORP-CORR-023", "ORP-CORR-024", "ORP-CORR-025", "ORP-CORR-026", "ORP-CORR-041", "ORP-CORR-053", "ORP-CORR-054", "ORP-CORR-070", "ORP-CORR-071", "ORP-CORR-072", "ORP-CORR-073", "ORP-CORR-080", "ORP-CORR-081", "ORP-CORR-082"}:
         _mutate_bundle(root, lambda bundle: _bundle_mutation(bundle, corruption_id))
     elif corruption_id == "ORP-CORR-051":
         _mutate_events(root, lambda events: _set_terminal_outcome(events, "failed"))
-    elif corruption_id in {"ORP-CORR-060", "ORP-CORR-062", "ORP-CORR-064", "ORP-CORR-069"}:
+    elif corruption_id in {"ORP-CORR-060", "ORP-CORR-062", "ORP-CORR-064", "ORP-CORR-068", "ORP-CORR-069"}:
         _mutate_ledger_without_rehash(root, corruption_id)
     elif corruption_id == "ORP-CORR-061":
         _mutate_bundle(root, lambda bundle: bundle["ledger_evidence"].update({"ledger_hash": "bad-ledger-hash"}))
@@ -196,6 +194,14 @@ def _event_mutation(events: list[dict[str, Any]], corruption_id: str) -> None:
     elif corruption_id == "ORP-CORR-021":
         item = events.pop(_index(events, "proposal_approved"))
         events.insert(_index(events, "tool_invoked") + 1, item)
+    elif corruption_id == "ORP-CORR-030":
+        denied = events[_index(events, "proposal_denied")]
+        args_hash = str(events[_index(events, "proposal_made")]["payload"].get("tool_args_hash") or "")
+        events.insert(_index(events, "proposal_denied") + 1, _synthetic_tool_event(denied, args_hash))
+    elif corruption_id == "ORP-CORR-031":
+        rejected = events[_index(events, "proposal_policy_rejected")]
+        args_hash = str(events[_index(events, "proposal_made")]["payload"].get("tool_args_hash") or "")
+        events.insert(_index(events, "proposal_policy_rejected") + 1, _synthetic_tool_event(rejected, args_hash))
     elif corruption_id == "ORP-CORR-040":
         _remove_first(events, "tool_invoked")
     elif corruption_id in {"ORP-CORR-042", "ORP-CORR-055"}:
@@ -216,6 +222,11 @@ def _set_terminal_outcome(events: list[dict[str, Any]], outcome: str) -> None:
     events[_index(events, "run_completed")]["payload"]["outcome"] = outcome
 
 
+def _synthetic_tool_event(denied: dict[str, Any], args_hash: str) -> dict[str, Any]:
+    payload = {"connector_name": "write_file", "args_hash": args_hash, "result_summary": {"ok": True}, "duration_ms": 0, "outcome": "success"}
+    return {"event_id": f"{denied['event_id']}:synthetic_tool_invoked", "event_type": "tool_invoked", "run_id": denied["run_id"], "turn": denied["turn"], "agent_id": "outward-agent", "at": denied["at"], "payload": payload}
+
+
 def _mutate_ledger_without_rehash(root: Path, corruption_id: str) -> None:
     ledger = _read_ledger(root)
     if corruption_id == "ORP-CORR-060":
@@ -224,6 +235,9 @@ def _mutate_ledger_without_rehash(root: Path, corruption_id: str) -> None:
         ledger["events"][1]["position"] = 1
     elif corruption_id == "ORP-CORR-064":
         ledger["canonical"]["ledger_hash"] = "bad-ledger-hash"
+    elif corruption_id == "ORP-CORR-068":
+        ledger["export_scope"] = "partial_view"
+        ledger["verification"] = {"result": "partial_valid"}
     elif corruption_id == "ORP-CORR-069":
         ledger["events"][0].pop("payload", None)
     _write_json(root / "ledger_export.json", ledger)

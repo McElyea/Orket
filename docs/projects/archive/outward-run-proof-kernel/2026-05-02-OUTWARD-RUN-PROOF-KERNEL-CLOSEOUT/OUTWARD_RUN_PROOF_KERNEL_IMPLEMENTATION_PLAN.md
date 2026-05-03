@@ -566,8 +566,8 @@ Accepted proof artifacts:
 6. `tests/proof_fixtures/outward_run/base_approved_package/`
 
 Deferred blockers:
-1. denial fixture package: `base_denied_package_missing`
-2. policy-rejection fixture package: `base_policy_rejected_package_missing`
-3. out-of-scope path-family package: blocked until policy-rejection package exists
+1. denial fixture package: closed later by `docs/projects/archive/outward-run-proof-kernel-extensions/2026-05-02-DENIAL-FIXTURE-CLOSEOUT/`
+2. policy-rejection fixture package: closed later by `docs/projects/archive/outward-run-proof-kernel-extensions/2026-05-02-POLICY-REJECTION-FIXTURE-CLOSEOUT/`
+3. out-of-scope path-family package: blocked until explicitly reopened with its own real-run fixture plan
 
 Public trust wording remains unchanged.

@@ -296,6 +296,7 @@ async def test_outward_execution_denial_keeps_effect_absent(tmp_path) -> None:
     events = await OutwardRunEventStore(db_path).list_for_run("run-denied-exec")
     event_types = [event.event_type for event in events]
     assert "tool_invoked" not in event_types
+    assert "commitment_recorded" not in event_types
     assert event_types.index("proposal_denied") < event_types.index("run_completed")
 
 
@@ -407,9 +408,15 @@ async def test_outward_execution_policy_rejects_out_of_scope_model_path_before_a
     assert "proposal_made" in event_types
     assert "proposal_policy_rejected" in event_types
     assert "proposal_pending_approval" not in event_types
+    assert "tool_invoked" not in event_types
+    assert "commitment_recorded" not in event_types
     rejection = next(event for event in events if event.event_type == "proposal_policy_rejected")
     assert rejection.payload["args_preview"]["path"] == f"../{outside_name}"
     assert rejection.payload["policy_result"] == "rejected"
+    assert rejection.payload["proposal_ref"].startswith("model_proposal:run-policy-reject:1:write_file:")
+    stored = await OutwardRunStore(db_path).get("run-policy-reject")
+    state = stored.task["_outward_execution_state"]
+    assert state["policy_rejections"][0]["proposal_ref"] == rejection.payload["proposal_ref"]
 
 
 @pytest.mark.integration

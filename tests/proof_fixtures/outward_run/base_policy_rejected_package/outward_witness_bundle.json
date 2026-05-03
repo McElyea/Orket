@@ -1,0 +1,134 @@
+{
+  "approval_authority": [],
+  "artifact_refs": [],
+  "bundle_id": "bundle:run-outward-write-file-policy-rejected-proof",
+  "claim_tier_request": "outward_lab_only",
+  "compare_scope": "outward_run_write_file_policy_rejected_v1",
+  "effect_evidence": [],
+  "ledger_evidence": {
+    "event_count": 7,
+    "events": [
+      {
+        "chain_hash": "c741ce22d0f9b2e8bd68c9748b3f4ed5cb006df4484890ae083f719d3c5c07de",
+        "event_hash": "98f2eeaf23249a31dd09a20cdc0e95c9e00a3d776a399cc4a533ad2574b9c23a",
+        "event_payload_digest": "63b2e8252e632c92c72567376b58f99dffeaad51da73ca5552fa99c2019463f6",
+        "event_type": "run_submitted",
+        "position": 1,
+        "previous_chain_hash": "GENESIS",
+        "sequence_index": 1
+      },
+      {
+        "chain_hash": "cc1bb8373a4e6dd0482d5f1991ccfa3c90850d88fcbbe7bbd3fa24a8df9c9791",
+        "event_hash": "143dd841813b96276f4f3195ad211e8e15240e4b38a1c80be6b6782dc1f05440",
+        "event_payload_digest": "20d75406966afe5d0d99bd9d6541a45ee6d0b76ed6a5f2a113f8e8ecdd4eb96c",
+        "event_type": "run_started",
+        "position": 2,
+        "previous_chain_hash": "c741ce22d0f9b2e8bd68c9748b3f4ed5cb006df4484890ae083f719d3c5c07de",
+        "sequence_index": 2
+      },
+      {
+        "chain_hash": "946340874612d451edb79558034f78fd50195b9ed0a67723fd39e290f0efcf53",
+        "event_hash": "7a623410e2fd956586ee58787ac2bbb15def175d7def76f3c47f81ef086255a7",
+        "event_payload_digest": "c934cd40173e031c50c9775db8c41c6f951da2b371a8e30e5fa7e0db253db15e",
+        "event_type": "turn_started",
+        "position": 3,
+        "previous_chain_hash": "cc1bb8373a4e6dd0482d5f1991ccfa3c90850d88fcbbe7bbd3fa24a8df9c9791",
+        "sequence_index": 3
+      },
+      {
+        "chain_hash": "9bd026555886b8b2924285a0c9fded2d1a2e26ffb2b467117391d26645162585",
+        "event_hash": "1a8b14acfea28027f01bbaac6d4f124e7ea7ec552eea9c07ffdd0f10dc88f18c",
+        "event_payload_digest": "3a332c13c7bc0a3ad36b8d9642f9ac9d5e7b8816ddc66301b65e7377fe4e1c50",
+        "event_type": "proposal_made",
+        "position": 4,
+        "previous_chain_hash": "946340874612d451edb79558034f78fd50195b9ed0a67723fd39e290f0efcf53",
+        "sequence_index": 4
+      },
+      {
+        "chain_hash": "74a4c27a0178e85f01ece42a0fc17ca637d6f4fef6e2aef899ddbf9c61286c4a",
+        "event_hash": "25b66a1864e91587a165f09725d9b828647d7cad2648cce3b7e4fc08b8f58c4f",
+        "event_payload_digest": "46bbd92c8288ddd2b60f03b4cde9a71a7d48536a90ab8e71f80c2fec4991bf32",
+        "event_type": "proposal_policy_rejected",
+        "position": 5,
+        "previous_chain_hash": "9bd026555886b8b2924285a0c9fded2d1a2e26ffb2b467117391d26645162585",
+        "sequence_index": 5
+      },
+      {
+        "chain_hash": "f50d3a0bd592e9446e984ada60f73eaea32979f5a13884a1a840c30ad6115cd6",
+        "event_hash": "3daa7a902233bc65dddee6832cd6434e6b9e7390bac1a63b552e73e1c77cd563",
+        "event_payload_digest": "e1471a3457ecb0edcffb62aff508d01ef9fba50363ebcdc4dc3354e6388bc429",
+        "event_type": "turn_completed",
+        "position": 6,
+        "previous_chain_hash": "74a4c27a0178e85f01ece42a0fc17ca637d6f4fef6e2aef899ddbf9c61286c4a",
+        "sequence_index": 6
+      },
+      {
+        "chain_hash": "82d60f1c27f56d0a65e39bc8bd3e2dc7025b3491cf0da9839635c4789842b307",
+        "event_hash": "a8e6b2c41fc8ade0e1d4683f54d4b9c02c66c51f2febd768f14029720fd61c53",
+        "event_payload_digest": "fc1477d3a3c52585b64c6ddd16027bbc63755506581724f80a97ec9416079a14",
+        "event_type": "run_completed",
+        "position": 7,
+        "previous_chain_hash": "f50d3a0bd592e9446e984ada60f73eaea32979f5a13884a1a840c30ad6115cd6",
+        "sequence_index": 7
+      }
+    ],
+    "export_scope": "all",
+    "ledger_export_digest": "9c7d242338df53705410afafdd37ab3c3fa5a880a90ffc0be7a8f1beb89617c1",
+    "ledger_export_package_path": "ledger_export.json",
+    "ledger_export_schema": "ledger_export.v1",
+    "ledger_hash": "82d60f1c27f56d0a65e39bc8bd3e2dc7025b3491cf0da9839635c4789842b307",
+    "run_id": "run-outward-write-file-policy-rejected-proof"
+  },
+  "model_invocation_evidence": [
+    {
+      "model_invocation_digest": "e0454e0cfd1ce75d70aaffeda52bd6b5405bc6d4fd1982801bc8503ff9c37fcb",
+      "model_name": "deterministic-policy-rejection-proof-client",
+      "model_prompt_redacted_digest": "f61898beb0a0b1329bfb2394a2c698d5bc1d1ca9f9493a635a537c72169aaa95",
+      "model_provider": "proof-local",
+      "model_response_redacted_digest": "9e5b1e5e073f8cea1d24fa16290da58051e242a447f323951f8e4e96e0f20a3d",
+      "proposal_extraction_digest": "94e9d2cf67d691f390370dcb61ee5b5e3513d00101d7c2dcb6163cd644a277ce",
+      "turn_index": 1
+    }
+  ],
+  "operator_surface": "outward_run_witness_report.v1",
+  "package_refs": {
+    "ledger_export_path": "ledger_export.json"
+  },
+  "policy_identity": {
+    "approval_required_tools": [
+      "write_file"
+    ],
+    "approval_timeout_seconds": 60,
+    "max_turns": 1,
+    "policy_overrides_digest": "7ef5c057513582f3e0cf9e241a9735b27fcbd49da49c4dbe7665627c1fee4b99"
+  },
+  "policy_rejection_authority": [
+    {
+      "event_position": 5,
+      "policy_event_payload_digest": "46bbd92c8288ddd2b60f03b4cde9a71a7d48536a90ab8e71f80c2fec4991bf32",
+      "policy_result": "rejected",
+      "proposal_ref": "model_proposal:run-outward-write-file-policy-rejected-proof:1:write_file:9654b6493fa444750eb7643f1b0065a0b25464c3db854f4838638e01f57f2780",
+      "reason": "Access denied: ../policy-rejected-proof-output.txt is outside allowed boundaries.",
+      "run_id": "run-outward-write-file-policy-rejected-proof",
+      "tool_args_digest": "9654b6493fa444750eb7643f1b0065a0b25464c3db854f4838638e01f57f2780",
+      "tool_name": "write_file",
+      "turn_index": 1
+    }
+  ],
+  "produced_at_iso": "",
+  "run_authority": {
+    "acceptance_contract_sequence": null,
+    "acceptance_contract_tool": "write_file",
+    "namespace": "issue_run-outward-write-file-policy-rejected-proof",
+    "policy_overrides_digest": "7ef5c057513582f3e0cf9e241a9735b27fcbd49da49c4dbe7665627c1fee4b99",
+    "run_id": "run-outward-write-file-policy-rejected-proof",
+    "run_record_digest": "06c495d4bf8e2b0b073cdcf18584dcd946d6987531e9c20110da6c375a6885be",
+    "run_status": "completed",
+    "status": "completed",
+    "submitted_at_iso": "2026-05-02T12:00:00+00:00",
+    "task_description": "Attempt a policy-rejected outward proof file.",
+    "task_instruction": "Produce exactly one write_file tool call outside the workspace."
+  },
+  "run_id": "run-outward-write-file-policy-rejected-proof",
+  "schema_version": "outward_run.witness_bundle.v1"
+}

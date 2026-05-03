@@ -21,4 +21,4 @@ Define the lane-local outward proof posture ladder enforced by the outward packa
 
 The verifier computes the strongest evidence-supported ceiling and rejects requests above that ceiling with `claim_tier_not_supported`.
 
-A single accepted package can assign only `outward_lab_only`.
+A single accepted approved, denial, or policy-rejection package can assign only `outward_lab_only`.

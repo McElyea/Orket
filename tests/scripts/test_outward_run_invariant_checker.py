@@ -10,7 +10,12 @@ import pytest
 from orket.core.domain.outward_ledger import chain_hash_for, event_group, event_hash_for
 from orket.core.domain.outward_run_events import LedgerEvent
 from scripts.proof.outward_run_invariant_checker import evaluate_outward_run_invariants
-from scripts.proof.outward_run_witness_contract import compute_package_digest, file_sha256
+from scripts.proof.outward_run_witness_contract import (
+    COMPARE_SCOPE_DENIED,
+    COMPARE_SCOPE_POLICY_REJECTED,
+    compute_package_digest,
+    file_sha256,
+)
 from scripts.proof.outward_run_witness_package import load_witness_package
 
 _ARGS_DIGEST = "args-digest"
@@ -34,6 +39,51 @@ def _valid_package(root: Path, *, run_id: str = "run-approved") -> Path:
     artifact.write_bytes(b"model approved content")
     _write_ledger(root, _base_events(run_id))
     bundle = _bundle(run_id, ledger_digest=file_sha256(root / "ledger_export.json"), artifact_digest=file_sha256(artifact))
+    _write_json(root / "outward_witness_bundle.json", bundle)
+    _sync_ledger_evidence(root)
+    return root
+
+
+def _valid_denial_package(root: Path, *, run_id: str = "run-denied") -> Path:
+    root.mkdir(parents=True)
+    _write_ledger(root, _denial_events(run_id))
+    artifact_digest = ""
+    bundle = _bundle(run_id, ledger_digest=file_sha256(root / "ledger_export.json"), artifact_digest=artifact_digest)
+    bundle["bundle_id"] = "bundle-denied"
+    bundle["compare_scope"] = COMPARE_SCOPE_DENIED
+    bundle["approval_authority"][0]["status"] = "denied"
+    bundle["approval_authority"][0]["decided_at_iso"] = "2026-05-02T12:00:07+00:00"
+    bundle["effect_evidence"] = []
+    bundle["artifact_refs"] = []
+    bundle["package_refs"] = {"ledger_export_path": "ledger_export.json"}
+    _write_json(root / "outward_witness_bundle.json", bundle)
+    _sync_ledger_evidence(root)
+    return root
+
+
+def _valid_policy_rejected_package(root: Path, *, run_id: str = "run-policy-rejected") -> Path:
+    root.mkdir(parents=True)
+    _write_ledger(root, _policy_rejected_events(run_id))
+    bundle = _bundle(run_id, ledger_digest=file_sha256(root / "ledger_export.json"), artifact_digest="")
+    bundle["bundle_id"] = "bundle-policy-rejected"
+    bundle["compare_scope"] = COMPARE_SCOPE_POLICY_REJECTED
+    bundle["approval_authority"] = []
+    bundle["effect_evidence"] = []
+    bundle["artifact_refs"] = []
+    bundle["package_refs"] = {"ledger_export_path": "ledger_export.json"}
+    bundle["policy_rejection_authority"] = [
+        {
+            "proposal_ref": _proposal_ref(run_id),
+            "run_id": run_id,
+            "turn_index": 1,
+            "tool_name": "write_file",
+            "tool_args_digest": _ARGS_DIGEST,
+            "policy_result": "rejected",
+            "reason": "path escaped workspace root",
+            "event_position": 5,
+            "policy_event_payload_digest": "policy-event-digest",
+        }
+    ]
     _write_json(root / "outward_witness_bundle.json", bundle)
     _sync_ledger_evidence(root)
     return root
@@ -67,6 +117,79 @@ def _base_events(run_id: str) -> list[dict[str, Any]]:
         _event("turn_completed", run_id, 1, {"run_id": run_id, "turn": 1, "outcome": "success"}),
         _event("run_completed", run_id, 1, {"run_id": run_id, "status": "completed", "outcome": "success"}),
     ]
+
+
+def _denial_events(run_id: str) -> list[dict[str, Any]]:
+    proposal_id = f"proposal:{run_id}:write_file:0001"
+    return [
+        _event("run_submitted", run_id, 0, {"run_id": run_id, "status": "queued"}),
+        _event("run_started", run_id, 0, {"run_id": run_id, "status": "running"}),
+        _event("turn_started", run_id, 1, {"run_id": run_id, "turn": 1}),
+        _event(
+            "proposal_made",
+            run_id,
+            1,
+            {
+                "run_id": run_id,
+                "tool": "write_file",
+                "tool_name": "write_file",
+                "tool_args_hash": _ARGS_DIGEST,
+                "model_invocation_sha256": _MODEL_DIGESTS["model_invocation_digest"],
+                "model_prompt_redacted_sha256": _MODEL_DIGESTS["model_prompt_redacted_digest"],
+                "model_response_content_sha256": _MODEL_DIGESTS["model_response_redacted_digest"],
+                "proposal_extraction_sha256": _MODEL_DIGESTS["proposal_extraction_digest"],
+            },
+        ),
+        _event("proposal_pending_approval", run_id, 1, {"proposal_id": proposal_id, "tool_args_hash": _ARGS_DIGEST}),
+        _event("proposal_denied", run_id, 1, {"proposal_id": proposal_id, "tool_args_hash": _ARGS_DIGEST, "status": "denied"}),
+        _event("turn_completed", run_id, 1, {"run_id": run_id, "turn": 1, "outcome": "denied"}),
+        _event("run_completed", run_id, 1, {"run_id": run_id, "status": "completed", "outcome": "denied"}),
+    ]
+
+
+def _policy_rejected_events(run_id: str) -> list[dict[str, Any]]:
+    return [
+        _event("run_submitted", run_id, 0, {"run_id": run_id, "status": "queued"}),
+        _event("run_started", run_id, 0, {"run_id": run_id, "status": "running"}),
+        _event("turn_started", run_id, 1, {"run_id": run_id, "turn": 1}),
+        _event(
+            "proposal_made",
+            run_id,
+            1,
+            {
+                "run_id": run_id,
+                "tool": "write_file",
+                "tool_name": "write_file",
+                "tool_args_hash": _ARGS_DIGEST,
+                "proposal_ref": _proposal_ref(run_id),
+                "model_invocation_sha256": _MODEL_DIGESTS["model_invocation_digest"],
+                "model_prompt_redacted_sha256": _MODEL_DIGESTS["model_prompt_redacted_digest"],
+                "model_response_content_sha256": _MODEL_DIGESTS["model_response_redacted_digest"],
+                "proposal_extraction_sha256": _MODEL_DIGESTS["proposal_extraction_digest"],
+            },
+        ),
+        _event(
+            "proposal_policy_rejected",
+            run_id,
+            1,
+            {
+                "run_id": run_id,
+                "turn": 1,
+                "tool": "write_file",
+                "tool_name": "write_file",
+                "tool_args_hash": _ARGS_DIGEST,
+                "proposal_ref": _proposal_ref(run_id),
+                "policy_result": "rejected",
+                "reason": "path escaped workspace root",
+            },
+        ),
+        _event("turn_completed", run_id, 1, {"run_id": run_id, "turn": 1, "outcome": "policy_rejected"}),
+        _event("run_completed", run_id, 1, {"run_id": run_id, "status": "completed", "outcome": "policy_rejected"}),
+    ]
+
+
+def _proposal_ref(run_id: str) -> str:
+    return f"model_proposal:{run_id}:1:write_file:{_ARGS_DIGEST}"
 
 
 def _event(event_type: str, run_id: str, turn: int, payload: dict[str, Any]) -> dict[str, Any]:
@@ -257,13 +380,16 @@ def _ledger_hash(root_path: Path | None) -> str:
 
 
 def _rewrite_manifest(root: Path) -> None:
+    existing = json.loads((root / "manifest.json").read_text(encoding="utf-8")) if (root / "manifest.json").exists() else {}
+    bundle = _read_bundle(root) if (root / "outward_witness_bundle.json").exists() else {}
+    artifact_paths = {"committed_output": "artifacts/committed_output"} if (root / "artifacts" / "committed_output").exists() else {}
     manifest = {
         "schema_version": "outward_run_witness_package.v1",
-        "package_id": "package-approved",
-        "compare_scope": "outward_run_write_file_approved_v1",
+        "package_id": str(existing.get("package_id") or "package-approved"),
+        "compare_scope": str(existing.get("compare_scope") or bundle.get("compare_scope") or "outward_run_write_file_approved_v1"),
         "bundle_path": "outward_witness_bundle.json",
         "ledger_export_path": "ledger_export.json",
-        "artifact_paths": {"committed_output": "artifacts/committed_output"},
+        "artifact_paths": artifact_paths,
         "file_digests": {
             path: file_sha256(root / path)
             for path in ["outward_witness_bundle.json", "ledger_export.json", "artifacts/committed_output"]
@@ -278,10 +404,10 @@ def _read_bundle(root: Path) -> dict[str, Any]:
     return json.loads((root / "outward_witness_bundle.json").read_text(encoding="utf-8"))
 
 
-def _load_model(root: Path) -> dict[str, Any]:
+def _load_model(root: Path, *, scope: str = "outward_run_write_file_approved_v1") -> dict[str, Any]:
     loaded = load_witness_package(root)
     assert loaded.package is not None
-    return evaluate_outward_run_invariants(loaded.package)
+    return evaluate_outward_run_invariants(loaded.package, scope=scope)
 
 
 def _mutate_bundle(root: Path, mutator) -> None:
@@ -317,6 +443,112 @@ def test_valid_approved_package_passes_all_single_turn_invariants(tmp_path: Path
     assert model["result"] == "pass"
     assert model["claim_tier_assigned"] == "outward_lab_only"
     assert all(item["status"] == "passed" for item in model["invariants"])
+
+
+def test_valid_denial_package_passes_denial_invariants(tmp_path: Path) -> None:
+    """Layer: unit. Verifies a denial package proves no effect or commitment after denial."""
+    root = _valid_denial_package(tmp_path / "outward_run_witness_package.v1")
+
+    model = _load_model(root, scope=COMPARE_SCOPE_DENIED)
+
+    assert model["result"] == "pass"
+    assert model["claim_tier_assigned"] == "outward_lab_only"
+    assert all(item["status"] == "passed" for item in model["invariants"])
+
+
+def test_valid_policy_rejected_package_passes_policy_invariants(tmp_path: Path) -> None:
+    """Layer: unit. Verifies a policy-rejected package proves no approval, effect, or commitment."""
+    root = _valid_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
+
+    model = _load_model(root, scope=COMPARE_SCOPE_POLICY_REJECTED)
+
+    assert model["result"] == "pass"
+    assert model["claim_tier_assigned"] == "outward_lab_only"
+    assert all(item["status"] == "passed" for item in model["invariants"])
+
+
+def test_denial_package_missing_denial_event_rejects(tmp_path: Path) -> None:
+    """Layer: unit. Verifies denial scope requires a proposal_denied event before terminal truth."""
+    root = _valid_denial_package(tmp_path / "outward_run_witness_package.v1")
+    _mutate_events(root, lambda events: events.pop(5))
+
+    model = _load_model(root, scope=COMPARE_SCOPE_DENIED)
+
+    assert model["result"] == "fail"
+    assert "denial_event_missing" in model["failures"]
+
+
+def test_denial_package_missing_approval_authority_rejects(tmp_path: Path) -> None:
+    """Layer: unit. Verifies denial scope requires approval authority, not only ledger events."""
+    root = _valid_denial_package(tmp_path / "outward_run_witness_package.v1")
+    _mutate_bundle(root, lambda bundle: bundle.update({"approval_authority": []}))
+
+    model = _load_model(root, scope=COMPARE_SCOPE_DENIED)
+
+    assert model["result"] == "fail"
+    assert "approval_authority_missing" in model["failures"]
+
+
+def test_policy_rejected_package_missing_policy_event_rejects(tmp_path: Path) -> None:
+    """Layer: unit. Verifies policy-rejection scope requires proposal_policy_rejected before terminal truth."""
+    root = _valid_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
+    _mutate_events(root, lambda events: events.pop(4))
+
+    model = _load_model(root, scope=COMPARE_SCOPE_POLICY_REJECTED)
+
+    assert model["result"] == "fail"
+    assert "policy_rejection_event_missing" in model["failures"]
+
+
+def test_denial_package_tool_invocation_after_denial_rejects(tmp_path: Path) -> None:
+    """Layer: unit. Verifies a denied proposal cannot be followed by a tool invocation."""
+    root = _valid_denial_package(tmp_path / "outward_run_witness_package.v1")
+    run_id = "run-denied"
+    _mutate_events(
+        root,
+        lambda events: events.insert(6, _event("tool_invoked", run_id, 1, {"connector_name": "write_file", "args_hash": _ARGS_DIGEST})),
+    )
+
+    model = _load_model(root, scope=COMPARE_SCOPE_DENIED)
+
+    assert model["result"] == "fail"
+    assert "denied_proposal_invoked" in model["failures"]
+
+
+def test_policy_rejected_package_tool_invocation_after_rejection_rejects(tmp_path: Path) -> None:
+    """Layer: unit. Verifies a policy-rejected proposal cannot be followed by tool invocation."""
+    root = _valid_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
+    run_id = "run-policy-rejected"
+    _mutate_events(
+        root,
+        lambda events: events.insert(
+            5,
+            _event("tool_invoked", run_id, 1, {"connector_name": "write_file", "args_hash": _ARGS_DIGEST}),
+        ),
+    )
+
+    model = _load_model(root, scope=COMPARE_SCOPE_POLICY_REJECTED)
+
+    assert model["result"] == "fail"
+    assert "policy_rejected_proposal_invoked" in model["failures"]
+
+
+def test_policy_rejected_package_commitment_after_rejection_rejects(tmp_path: Path) -> None:
+    """Layer: unit. Verifies a policy-rejected proposal cannot be followed by a commitment."""
+    root = _valid_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
+    run_id = "run-policy-rejected"
+    _mutate_events(
+        root,
+        lambda events: events.insert(
+            5,
+            _event("commitment_recorded", run_id, 1, {"run_id": run_id, "tool": "write_file", "outcome": "policy_rejected"}),
+        ),
+    )
+
+    model = _load_model(root, scope=COMPARE_SCOPE_POLICY_REJECTED)
+
+    assert model["result"] == "fail"
+    assert "policy_rejected_proposal_committed" in model["failures"]
 
 
 def test_equivalent_successful_packages_have_stable_invariant_signature(tmp_path: Path) -> None:

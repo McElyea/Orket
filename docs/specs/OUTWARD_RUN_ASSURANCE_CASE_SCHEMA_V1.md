@@ -29,4 +29,6 @@ Each row must include:
 3. Single-package verifier commands must consume `--package`.
 4. Campaign rows may consume accepted verifier reports through `run_outward_run_witness_campaign.py`.
 5. Bundle-only verifier commands are forbidden for proof claims.
-6. Public trust wording is out of scope for this schema.
+6. Denial rows may name `outward_run_write_file_denied_v1` only when the package command includes `--scope outward_run_write_file_denied_v1` and authority evidence names full ledger bytes rather than committed artifact bytes.
+7. Policy-rejection rows may name `outward_run_write_file_policy_rejected_v1` only when the package command includes `--scope outward_run_write_file_policy_rejected_v1`, authority evidence names full ledger bytes and `proposal_ref` policy-rejection authority, and committed artifact bytes are absent.
+8. Public trust wording is out of scope for this schema.

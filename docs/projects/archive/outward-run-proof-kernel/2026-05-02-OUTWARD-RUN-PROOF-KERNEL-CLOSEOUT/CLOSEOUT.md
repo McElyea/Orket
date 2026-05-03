@@ -28,13 +28,15 @@ Active durable authority for that completed boundary lives in:
 
 Undone extension work is not closed by this archive. It has been moved to `docs/projects/future/outward-run-proof-kernel-extensions/OUTWARD_RUN_PROOF_KERNEL_EXTENSIONS.md`.
 
-That future lane owns:
+Post-closeout note: the denial fixture slice later completed separately at `docs/projects/archive/outward-run-proof-kernel-extensions/2026-05-02-DENIAL-FIXTURE-CLOSEOUT/`, and the policy-rejection fixture slice later completed separately at `docs/projects/archive/outward-run-proof-kernel-extensions/2026-05-02-POLICY-REJECTION-FIXTURE-CLOSEOUT/`. Those later slices do not change this archive's completed boundary, which remains approved single-turn only.
 
-1. denial, policy-rejection, and out-of-scope package fixtures,
-2. absence-claim corruption paths that require those fixtures,
+The future lane still owns:
+
+1. out-of-scope package fixture,
+2. absence-claim corruption paths that require remaining fixtures,
 3. multi-turn sequence proof,
 4. ODR determinism integration, and
-5. any posture widening beyond the evidence-supported approved-path boundary.
+5. any posture widening beyond the evidence-supported approved, denial, and policy-rejection single-package boundaries.
 
 ## Accepted Verification
 

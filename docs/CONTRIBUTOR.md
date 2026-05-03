@@ -42,7 +42,7 @@
 5. When a non-maintenance lane completes, move plan, closeout, and history docs to `docs/projects/archive/<lane>/` in the same change.
 6. Move long-lived contracts or specs out of completed lanes into `docs/specs/`.
 7. Do not leave `Status: Completed` or `Status: Archived` docs in active `docs/projects/`.
-8. When closing a phase in a multi-phase initiative, archive only phase-scoped docs. Keep the initiative mini-roadmap and current canonical plan active while later phases remain.
+8. When closing a phase or slice in a multi-phase initiative or umbrella lane, archive only phase-scoped or slice-scoped docs. Keep the initiative mini-roadmap, umbrella README, and current canonical plan active while later phases or remaining slices exist. Do not retire the whole lane unless the user explicitly accepts whole-lane retirement.
 9. For `docs/projects/techdebt/`, leave only standing maintenance docs and docs for cycle ids still active in the roadmap.
 
 ## Repository Rules

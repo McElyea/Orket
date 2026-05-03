@@ -31,10 +31,12 @@ from orket.application.services.outward_run_execution_plan import (
     failure_reason,
     invalid_args_event_payload,
     is_last_step,
+    model_proposal_ref,
     model_tool_call,
     proposal_suffix,
     step_event_id,
     task_with_model_tool_call,
+    task_with_policy_rejection,
     task_with_tool_result,
 )
 from orket.core.domain.outward_run_events import LedgerEvent
@@ -150,7 +152,7 @@ class OutwardRunExecutionService:
             return run
         if run.status == "completed":
             return run
-        await self._complete_turn(run, proposal.tool, proposal_id, outcome="denied")
+        await self._complete_turn(run, proposal.tool, proposal_id, outcome="denied", record_commitment=False)
         return await self._complete_terminal(
             run,
             status="completed",
@@ -221,9 +223,21 @@ class OutwardRunExecutionService:
     ) -> OutwardRunRecord:
         evidence = model_result.model_invocation
         model_invocation_ref = str(evidence.get("model_invocation_ref") or "").strip()
+        tool_args_hash = str(evidence.get("tool_args_hash") or args_hash(tool_call["args"]))
+        proposal_ref = model_proposal_ref(
+            run_id=run.run_id,
+            turn=run.current_turn,
+            tool=tool,
+            tool_args_hash=tool_args_hash,
+        )
         run_with_model_call = replace(
             run,
-            task=task_with_model_tool_call(run, tool_call=tool_call, model_invocation_ref=model_invocation_ref),
+            task=task_with_model_tool_call(
+                run,
+                tool_call=tool_call,
+                model_invocation_ref=model_invocation_ref,
+                proposal_ref=proposal_ref,
+            ),
         )
         await self.run_store.update(run_with_model_call)
         await self._append_once(
@@ -247,7 +261,8 @@ class OutwardRunExecutionService:
                 "provider_name": evidence.get("provider_name"),
                 "model_name": evidence.get("model_name"),
                 "tool_name": tool,
-                "tool_args_hash": str(evidence.get("tool_args_hash") or args_hash(tool_call["args"])),
+                "tool_args_hash": tool_args_hash,
+                "proposal_ref": proposal_ref,
             },
         )
         return run_with_model_call
@@ -261,8 +276,26 @@ class OutwardRunExecutionService:
         pii_fields: tuple[str, ...],
         reason: str,
     ) -> OutwardRunRecord:
+        tool_args_hash = args_hash(tool_call["args"])
+        proposal_ref = model_proposal_ref(
+            run_id=run.run_id,
+            turn=run.current_turn,
+            tool=tool,
+            tool_args_hash=tool_args_hash,
+        )
+        run_with_rejection = replace(
+            run,
+            task=task_with_policy_rejection(
+                run,
+                tool=tool,
+                tool_args_hash=tool_args_hash,
+                proposal_ref=proposal_ref,
+                reason=reason,
+            ),
+        )
+        await self.run_store.update(run_with_rejection)
         await self.model_tool_call_service.record_proposal_extraction(
-            run=run,
+            run=run_with_rejection,
             model_result=model_result,
             proposal_id=None,
             pii_fields=pii_fields,
@@ -271,19 +304,27 @@ class OutwardRunExecutionService:
         await self._append_once(
             event_id=step_event_id(run.run_id, run.current_turn, 350, f"proposal_policy_rejected:{tool}"),
             event_type="proposal_policy_rejected",
-            run=run,
+            run=run_with_rejection,
             turn=run.current_turn,
             payload={
                 "run_id": run.run_id,
+                "turn": run.current_turn,
                 "tool": tool,
+                "tool_name": tool,
                 "args_preview": redacted_args_preview(tool_call["args"], pii_fields),
                 "policy_result": "rejected",
                 "reason": reason,
-                "tool_args_hash": args_hash(tool_call["args"]),
+                "tool_args_hash": tool_args_hash,
+                "proposal_ref": proposal_ref,
             },
         )
-        await self._complete_turn(run, tool, "policy", outcome="policy_rejected")
-        return await self._complete_terminal(run, status="completed", stop_reason=reason, outcome="policy_rejected")
+        await self._complete_turn(run_with_rejection, tool, "policy", outcome="policy_rejected", record_commitment=False)
+        return await self._complete_terminal(
+            run_with_rejection,
+            status="completed",
+            stop_reason=reason,
+            outcome="policy_rejected",
+        )
 
     async def _advance_to_next_turn(
         self,
@@ -308,14 +349,23 @@ class OutwardRunExecutionService:
         await self._complete_turn(run, tool, proposal_id, outcome="success")
         return await self._complete_terminal(run, status="completed", stop_reason=None, outcome="success")
 
-    async def _complete_turn(self, run: OutwardRunRecord, tool: str, proposal_id: str, *, outcome: str) -> None:
-        await self._append_once(
-            event_id=step_event_id(run.run_id, run.current_turn, 500, f"commitment:{tool}:{proposal_suffix(proposal_id)}"),
-            event_type="commitment_recorded",
-            run=run,
-            turn=run.current_turn,
-            payload={"run_id": run.run_id, "tool": tool, "outcome": outcome},
-        )
+    async def _complete_turn(
+        self,
+        run: OutwardRunRecord,
+        tool: str,
+        proposal_id: str,
+        *,
+        outcome: str,
+        record_commitment: bool = True,
+    ) -> None:
+        if record_commitment:
+            await self._append_once(
+                event_id=step_event_id(run.run_id, run.current_turn, 500, f"commitment:{tool}:{proposal_suffix(proposal_id)}"),
+                event_type="commitment_recorded",
+                run=run,
+                turn=run.current_turn,
+                payload={"run_id": run.run_id, "tool": tool, "outcome": outcome},
+            )
         await self._append_once(
             event_id=step_event_id(run.run_id, run.current_turn, 600, "turn:completed"),
             event_type="turn_completed",

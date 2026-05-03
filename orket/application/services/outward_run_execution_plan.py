@@ -64,6 +64,7 @@ def task_with_model_tool_call(
     tool_call: dict[str, Any],
     model_invocation_ref: str,
     proposal_id: str | None = None,
+    proposal_ref: str | None = None,
 ) -> dict[str, Any]:
     task = dict(run.task)
     state = _state(run)
@@ -78,6 +79,8 @@ def task_with_model_tool_call(
     }
     if proposal_id:
         entry["proposal_id"] = proposal_id
+    if proposal_ref:
+        entry["proposal_ref"] = proposal_ref
     calls.append(entry)
     state["model_tool_calls"] = calls
     task[MODEL_TOOL_CALL_KEY] = {
@@ -86,6 +89,33 @@ def task_with_model_tool_call(
         "source": "model_output",
         "model_invocation_ref": model_invocation_ref,
     }
+    task[EXECUTION_STATE_KEY] = state
+    return task
+
+
+def task_with_policy_rejection(
+    run: OutwardRunRecord,
+    *,
+    tool: str,
+    tool_args_hash: str,
+    proposal_ref: str,
+    reason: str,
+) -> dict[str, Any]:
+    task = dict(run.task)
+    state = _state(run)
+    rejections = list(state.get("policy_rejections") or [])
+    rejections.append(
+        {
+            "turn": int(run.current_turn or 1),
+            "step_index": current_step_index(run),
+            "tool": tool,
+            "tool_args_hash": tool_args_hash,
+            "proposal_ref": proposal_ref,
+            "reason": reason,
+            "source": "connector_policy_validation",
+        }
+    )
+    state["policy_rejections"] = rejections
     task[EXECUTION_STATE_KEY] = state
     return task
 
@@ -121,6 +151,10 @@ def step_event_id(run_id: str, turn: int, order: int, name: str) -> str:
 def args_hash(args: dict[str, Any]) -> str:
     payload = json.dumps(args, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def model_proposal_ref(*, run_id: str, turn: int, tool: str, tool_args_hash: str) -> str:
+    return f"model_proposal:{run_id}:{int(turn or 1)}:{tool}:{tool_args_hash}"
 
 
 def proposal_suffix(proposal_id: str) -> str:
@@ -194,10 +228,12 @@ __all__ = [
     "failure_reason",
     "invalid_args_event_payload",
     "is_last_step",
+    "model_proposal_ref",
     "model_tool_call",
     "previous_tool_results",
     "proposal_suffix",
     "step_event_id",
     "task_with_model_tool_call",
+    "task_with_policy_rejection",
     "task_with_tool_result",
 ]

@@ -3,7 +3,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.proof.outward_run_witness_contract import compute_package_digest, file_sha256
+from scripts.proof.outward_run_witness_contract import (
+    COMPARE_SCOPE_DENIED,
+    COMPARE_SCOPE_POLICY_REJECTED,
+    compute_package_digest,
+    file_sha256,
+)
 from scripts.proof.outward_run_witness_package import bundle_only_introspection, load_witness_package
 
 
@@ -80,6 +85,72 @@ def _minimal_package(root: Path) -> Path:
     return root
 
 
+def _minimal_denial_package(root: Path) -> Path:
+    package_root = _minimal_package(root)
+    artifact = package_root / "artifacts" / "committed_output"
+    artifact.unlink()
+    bundle = json.loads((package_root / "outward_witness_bundle.json").read_text(encoding="utf-8"))
+    bundle["compare_scope"] = COMPARE_SCOPE_DENIED
+    bundle["artifact_refs"] = []
+    bundle["package_refs"] = {"ledger_export_path": "ledger_export.json"}
+    _write_json(package_root / "outward_witness_bundle.json", bundle)
+    manifest = {
+        "schema_version": "outward_run_witness_package.v1",
+        "package_id": "package-denied-test",
+        "compare_scope": COMPARE_SCOPE_DENIED,
+        "bundle_path": "outward_witness_bundle.json",
+        "ledger_export_path": "ledger_export.json",
+        "artifact_paths": {},
+        "file_digests": {
+            "outward_witness_bundle.json": file_sha256(package_root / "outward_witness_bundle.json"),
+            "ledger_export.json": file_sha256(package_root / "ledger_export.json"),
+        },
+    }
+    manifest["package_digest"] = compute_package_digest(manifest)
+    _write_json(package_root / "manifest.json", manifest)
+    return package_root
+
+
+def _minimal_policy_rejected_package(root: Path) -> Path:
+    package_root = _minimal_package(root)
+    artifact = package_root / "artifacts" / "committed_output"
+    artifact.unlink()
+    bundle = json.loads((package_root / "outward_witness_bundle.json").read_text(encoding="utf-8"))
+    bundle["compare_scope"] = COMPARE_SCOPE_POLICY_REJECTED
+    bundle["approval_authority"] = []
+    bundle["policy_rejection_authority"] = [
+        {
+            "proposal_ref": "model_proposal:run-test:1:write_file:args-digest",
+            "run_id": "run-test",
+            "turn_index": 1,
+            "tool_name": "write_file",
+            "tool_args_digest": "args-digest",
+            "policy_result": "rejected",
+            "reason": "path escaped workspace root",
+            "event_position": 1,
+            "policy_event_payload_digest": "digest",
+        }
+    ]
+    bundle["artifact_refs"] = []
+    bundle["package_refs"] = {"ledger_export_path": "ledger_export.json"}
+    _write_json(package_root / "outward_witness_bundle.json", bundle)
+    manifest = {
+        "schema_version": "outward_run_witness_package.v1",
+        "package_id": "package-policy-rejected-test",
+        "compare_scope": COMPARE_SCOPE_POLICY_REJECTED,
+        "bundle_path": "outward_witness_bundle.json",
+        "ledger_export_path": "ledger_export.json",
+        "artifact_paths": {},
+        "file_digests": {
+            "outward_witness_bundle.json": file_sha256(package_root / "outward_witness_bundle.json"),
+            "ledger_export.json": file_sha256(package_root / "ledger_export.json"),
+        },
+    }
+    manifest["package_digest"] = compute_package_digest(manifest)
+    _write_json(package_root / "manifest.json", manifest)
+    return package_root
+
+
 def test_package_loader_accepts_minimal_valid_package(tmp_path: Path) -> None:
     """Layer: unit. Verifies the package loader accepts package-local manifest, bundle, ledger, and artifact bytes."""
     package_root = _minimal_package(tmp_path / "outward_run_witness_package.v1")
@@ -91,6 +162,30 @@ def test_package_loader_accepts_minimal_valid_package(tmp_path: Path) -> None:
     assert loaded.package is not None
     assert loaded.package.bundle["run_id"] == "run-test"
     assert loaded.package.artifacts["committed_output"] == b"committed\n"
+
+
+def test_package_loader_accepts_minimal_denial_package_without_artifact_refs(tmp_path: Path) -> None:
+    """Layer: unit. Verifies denial packages can omit committed artifact bytes."""
+    package_root = _minimal_denial_package(tmp_path / "outward_run_witness_package.v1")
+
+    loaded = load_witness_package(package_root)
+
+    assert loaded.ok is True
+    assert loaded.failure_code is None
+    assert loaded.package is not None
+    assert loaded.package.artifacts == {}
+
+
+def test_package_loader_accepts_minimal_policy_rejected_package_without_artifact_refs(tmp_path: Path) -> None:
+    """Layer: unit. Verifies policy-rejection packages can omit committed artifact bytes."""
+    package_root = _minimal_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
+
+    loaded = load_witness_package(package_root)
+
+    assert loaded.ok is True
+    assert loaded.failure_code is None
+    assert loaded.package is not None
+    assert loaded.package.artifacts == {}
 
 
 def test_package_loader_fails_closed_for_missing_manifest(tmp_path: Path) -> None:

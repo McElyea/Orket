@@ -1,14 +1,14 @@
 # Outward Run Invariants v1
 
 Last updated: 2026-05-02
-Status: Active durable contract for the approved single-turn outward proof kernel
+Status: Active durable contract for approved, denied, and policy-rejected single-turn outward proof kernels
 Owner: Orket Core
 
 Originating closeout: `docs/projects/archive/outward-run-proof-kernel/2026-05-02-OUTWARD-RUN-PROOF-KERNEL-CLOSEOUT/`
 Slice authority: `docs/projects/archive/outward-run-proof-kernel/2026-05-02-OUTWARD-RUN-PROOF-KERNEL-CLOSEOUT/03-invariant-checker/INVARIANT_CHECKER_SLICE.md`
 Deferred extensions: `docs/projects/future/outward-run-proof-kernel-extensions/OUTWARD_RUN_PROOF_KERNEL_EXTENSIONS.md`
 
-This invariant contract is active for the `outward_run_write_file_approved_v1` single-turn approved path. Denial, policy-rejection, out-of-scope, multi-turn, ODR, and public-trust extensions remain outside this active boundary until their package fixtures and same-change authority updates exist.
+This invariant contract is active for the `outward_run_write_file_approved_v1` single-turn approved path, the `outward_run_write_file_denied_v1` single-turn denial path, and the `outward_run_write_file_policy_rejected_v1` single-turn policy-rejection path. Out-of-scope, multi-turn, ODR, and public-trust extensions remain outside this active boundary until their package fixtures and same-change authority updates exist.
 
 ## Purpose
 
@@ -34,12 +34,12 @@ The `ORP-INV-*` ids are outward-pipeline-local and do not collide with `TRI-INV-
 
 | Field | Value |
 |---|---|
-| Compare scope | `outward_run_write_file_approved_v1` |
+| Compare scope | `outward_run_write_file_approved_v1`; `outward_run_write_file_denied_v1`; `outward_run_write_file_policy_rejected_v1` |
 | Bundle schema | `outward_run.witness_bundle.v1` |
 | Operator surface | `outward_run_witness_report.v1` |
 | Governed tool | `write_file` |
-| Approval path | single human approval |
-| Effect | one file write |
+| Approval path | single human approval or denial |
+| Effect | one file write for approved scope; no tool effect or commitment for denied or policy-rejected scope |
 
 Multi-turn sequence and ODR determinism extensions are deferred and must not block the single-turn model.
 
@@ -59,8 +59,8 @@ Multi-turn sequence and ODR determinism extensions are deferred and must not blo
 | ORP-INV-010 | single-turn core | `commitment_recorded` must follow `tool_invoked`. | `commitment_missing_after_effect` |
 | ORP-INV-011 | single-turn core | `turn_completed` must follow `commitment_recorded`. | `turn_not_completed_after_commitment` |
 | ORP-INV-012 | single-turn core | Proposal model evidence must be present and anchored by matching model invocation, prompt, response, and proposal-extraction digests in the packaged full ledger payload when proposal claims depend on model-produced content. | `model_invocation_digest_drift` or `model_invocation_evidence_not_anchored` |
-| ORP-INV-013 | denial path | Denied proposals must not be invoked. | `denied_proposal_invoked` |
-| ORP-INV-014 | policy path | Policy-rejected proposals must not be invoked. | `policy_rejected_proposal_invoked` |
+| ORP-INV-013 | denial path | Denied proposals must have `proposal_denied` before terminal run truth and must not be followed by `tool_invoked` or `commitment_recorded` for the denied single-turn proposal. | `denial_event_missing` or `denied_proposal_invoked` |
+| ORP-INV-014 | policy path | Policy-rejected proposals must have `proposal_policy_rejected` before terminal run truth and must not be followed by `proposal_approved`, `tool_invoked`, or `commitment_recorded` for the rejected proposal identity. | `policy_rejection_event_missing`, `policy_rejected_proposal_approved`, `policy_rejected_proposal_invoked`, or `policy_rejected_proposal_committed` |
 | ORP-INV-015 | deferred multi-turn | Turn-local sequence ordering must hold for each turn. | `multi_turn_sequence_ordering_violated` |
 | ORP-INV-016 | single-turn core | Ledger ordering indexes must be strictly monotonic with no unexplained gaps. | `ledger_sequence_gap` |
 | ORP-INV-017 | deferred multi-turn | `turn_completed(T)` must precede `turn_started(T+1)`. | `multi_turn_interleaving_violated` |
@@ -99,4 +99,4 @@ Accepted proof artifacts:
 1. `benchmarks/results/proof/outward_run_witness_report.json`
 2. `benchmarks/results/proof/outward_run_corruption_report.json`
 
-The approved-path corruption suite passed for implemented package, ledger, artifact, invariant, and claim-tier corruptions. Denial, policy-rejection, and out-of-scope path-family fixtures remain explicit blockers.
+The approved-path corruption suite passed for implemented package, ledger, artifact, invariant, and claim-tier corruptions. The denial fixture activates ORP-INV-013 and denial-side ORP-INV-022 for `outward_run_write_file_denied_v1`, with ORP-CORR-030 and ORP-CORR-068 falsifiable over `tests/proof_fixtures/outward_run/base_denied_package/`. The policy-rejection fixture activates ORP-INV-014 and policy-rejection-side ORP-INV-022 for `outward_run_write_file_policy_rejected_v1`, with ORP-CORR-031 falsifiable over `tests/proof_fixtures/outward_run/base_policy_rejected_package/`. Out-of-scope path-family fixtures remain explicit blockers.

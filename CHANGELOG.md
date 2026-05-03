@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.4] - 2026-05-03 - "The Policy-Rejection Fixture Cut"
+
+### Added
+- **Policy-Rejection Witness Fixture**: Added the real governed-run `outward_run_write_file_policy_rejected_v1` package fixture, proof runner, verifier support, invariant checks, and contract coverage proving policy rejection before approval, tool invocation, or commitment.
+- **Policy-Rejection Corruption Coverage**: Activated ORP-CORR-031 over the policy-rejected base package and extended the corruption suite to require approved, denied, and policy-rejected bases with zero blocked corruptions for admitted single-turn scopes.
+
+### Changed
+- **Outward Runtime Truth**: Changed policy-rejected outward runs to record stable `proposal_ref` evidence and complete without commitment authority when no tool effect occurred.
+- **Proof Authority And Roadmap**: Archived the policy-rejection fixture slice, updated current authority and outward proof specs, and cleared the active Priority Now roadmap lane while keeping remaining extension families future-hold.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. Operators evaluating policy-rejection proof should use the frozen policy-rejected witness package and `outward_run_write_file_policy_rejected_v1` verifier scope.
+
 ## [0.5.3] - 2026-05-02 - "The Outward Run Proof Kernel Cut"
 
 ### Added

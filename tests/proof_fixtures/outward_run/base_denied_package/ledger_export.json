@@ -1,0 +1,248 @@
+{
+  "canonical": {
+    "event_count": 8,
+    "genesis": "GENESIS",
+    "ledger_hash": "90a88d1a61c7f6dfeab9997ab4dd077fc02ce8d89c123b11551115fd5119b228",
+    "ordering": [
+      "run_id",
+      "turn",
+      "at",
+      "event_id"
+    ]
+  },
+  "contains_pii": false,
+  "events": [
+    {
+      "agent_id": "operator",
+      "at": "2026-05-02T12:00:00+00:00",
+      "chain_hash": "8f07ebd83cc2acdad26e5520d91ad97dfcac0b803f914ac023d4e68346b4214a",
+      "event_group": "all",
+      "event_hash": "cde05d4b952800b31e2dacf61de5dbc7c54d5ce9fc70939025ed393f019fb93a",
+      "event_id": "run:run-outward-write-file-denied-proof:submitted",
+      "event_type": "run_submitted",
+      "payload": {
+        "namespace": "issue_run-outward-write-file-denied-proof",
+        "policy_overrides": {
+          "approval_required_tools": [
+            "write_file"
+          ],
+          "approval_timeout_seconds": 60,
+          "max_turns": 1
+        },
+        "run_id": "run-outward-write-file-denied-proof",
+        "status": "queued",
+        "submitted_at": "2026-05-02T12:00:00+00:00",
+        "task_description": "Write the denied outward proof file."
+      },
+      "position": 1,
+      "previous_chain_hash": "GENESIS",
+      "run_id": "run-outward-write-file-denied-proof",
+      "turn": 0
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:02+00:00",
+      "chain_hash": "a8373fd2057f17763e0ae4cc214bcfbfb897607b8b20c50b6cd7decfce15c6fd",
+      "event_group": "all",
+      "event_hash": "29f6b9c4c0b736b59d75cfedcb861135efc2165171f1082149ac1a503dede006",
+      "event_id": "run:run-outward-write-file-denied-proof:0100:started",
+      "event_type": "run_started",
+      "payload": {
+        "run_id": "run-outward-write-file-denied-proof",
+        "started_at": "2026-05-02T12:00:01+00:00",
+        "status": "running"
+      },
+      "position": 2,
+      "previous_chain_hash": "8f07ebd83cc2acdad26e5520d91ad97dfcac0b803f914ac023d4e68346b4214a",
+      "run_id": "run-outward-write-file-denied-proof",
+      "turn": 0
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:03+00:00",
+      "chain_hash": "117bdc9b5204f6fe159d9e8e9cc5e774155c992bf432468e8c3a3c2984e916d6",
+      "event_group": "all",
+      "event_hash": "9095ff31de9ed5f117f24e00252ebb6772cb704bc49215b59483de3b973156f7",
+      "event_id": "run:run-outward-write-file-denied-proof:01:0200:turn:started",
+      "event_type": "turn_started",
+      "payload": {
+        "agent_id": "outward-agent",
+        "run_id": "run-outward-write-file-denied-proof",
+        "turn": 1
+      },
+      "position": 3,
+      "previous_chain_hash": "a8373fd2057f17763e0ae4cc214bcfbfb897607b8b20c50b6cd7decfce15c6fd",
+      "run_id": "run-outward-write-file-denied-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:04+00:00",
+      "chain_hash": "4d9f798a1dfe487034ae6bcc0c37af138d990a3c4c025dba23025b37c263eb0c",
+      "event_group": "proposals",
+      "event_hash": "d2e3e53152eeb62d9be9ba3040ecfb595e9c99b029238c8b8d7bb3670dbacc05",
+      "event_id": "run:run-outward-write-file-denied-proof:01:0300:proposal:write_file:0001",
+      "event_type": "proposal_made",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "denied-proof-output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "model_invocation_ref": "workspace/issue_run-outward-write-file-denied-proof/runs/run-outward-write-file-denied-proof/model_invocation_turn_1.json",
+        "model_invocation_sha256": "f4a27ec071ef68f6f91ce571f98d414439fc52dff3755a1dab0946da06c9b29d",
+        "model_name": "deterministic-denial-proof-client",
+        "model_prompt_redacted_sha256": "7368d7a311f76b168c85e092629749c6518c5e1a89e06cbf57abb87f185abba9",
+        "model_response_content_sha256": "75f2fb2ff5fa81b3e4864324853fdecec3c0c2669ab2992d7416bf14b848bb92",
+        "model_response_redacted_sha256": "816ca53755a58e429f96428d62ccd6b1a966c1c9497f2d3dfcb09e594f2ba874",
+        "namespace": "issue_run-outward-write-file-denied-proof",
+        "proposal_extraction_ref": "workspace/issue_run-outward-write-file-denied-proof/runs/run-outward-write-file-denied-proof/proposal_extraction_turn_1.json",
+        "proposal_extraction_sha256": "7b3b1ad5d4367ed3d36b307490097041fdc6758251685d37610a70ec41676b2f",
+        "provider_name": "proof-local",
+        "run_id": "run-outward-write-file-denied-proof",
+        "tool": "write_file",
+        "tool_args_hash": "562ea69d6cbe98208375b4e31d37fadf7cb03d24376725a303f4ede7222867cd",
+        "tool_name": "write_file"
+      },
+      "position": 4,
+      "previous_chain_hash": "117bdc9b5204f6fe159d9e8e9cc5e774155c992bf432468e8c3a3c2984e916d6",
+      "run_id": "run-outward-write-file-denied-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-05-02T12:00:05+00:00",
+      "chain_hash": "1921dcf31e30e9ccf97d6d724c8b775505b1bd729fee2e27fb6fc7991e879d6e",
+      "event_group": "proposals",
+      "event_hash": "3d51d41d093a9c7d04d94464d5e8b958c0f3af9cc827022be6aa762d67d561d8",
+      "event_id": "proposal:run-outward-write-file-denied-proof:write_file:0001:0001:proposal_pending_approval",
+      "event_type": "proposal_pending_approval",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "denied-proof-output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "expires_at": "2026-05-02T12:01:06+00:00",
+        "namespace": "issue_run-outward-write-file-denied-proof",
+        "proposal_id": "proposal:run-outward-write-file-denied-proof:write_file:0001",
+        "risk_level": "write",
+        "run_id": "run-outward-write-file-denied-proof",
+        "status": "pending",
+        "submitted_at": "2026-05-02T12:00:05+00:00",
+        "tool": "write_file"
+      },
+      "position": 5,
+      "previous_chain_hash": "4d9f798a1dfe487034ae6bcc0c37af138d990a3c4c025dba23025b37c263eb0c",
+      "run_id": "run-outward-write-file-denied-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "operator",
+      "at": "2026-05-02T12:00:07+00:00",
+      "chain_hash": "959b8a3c14285dd8e6f3edb18b927a452319635f2bc6573f1278c75a54c27abe",
+      "event_group": "decisions",
+      "event_hash": "45fff5c297ec8a5eb2f01087ff7159d13964dfb2ec58fb05ab5b4babf2d5efc5",
+      "event_id": "proposal:run-outward-write-file-denied-proof:write_file:0001:0002:proposal_denied",
+      "event_type": "proposal_denied",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "denied-proof-output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "decided_at": "2026-05-02T12:00:07+00:00",
+        "decision": "deny",
+        "expires_at": "2026-05-02T12:01:06+00:00",
+        "namespace": "issue_run-outward-write-file-denied-proof",
+        "note": null,
+        "operator_ref": "operator:proof-runner",
+        "proposal_id": "proposal:run-outward-write-file-denied-proof:write_file:0001",
+        "reason": "operator denied proof",
+        "risk_level": "write",
+        "run_id": "run-outward-write-file-denied-proof",
+        "status": "denied",
+        "submitted_at": "2026-05-02T12:00:05+00:00",
+        "tool": "write_file"
+      },
+      "position": 6,
+      "previous_chain_hash": "1921dcf31e30e9ccf97d6d724c8b775505b1bd729fee2e27fb6fc7991e879d6e",
+      "run_id": "run-outward-write-file-denied-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:09+00:00",
+      "chain_hash": "8c30eead7d3c8e56c9c315806f2aba97f59c57ca4b73c48e5be474c0ea211299",
+      "event_group": "all",
+      "event_hash": "6e29a2d54ecc0fb54bc94844af0f63803e58427a1db882484c978f4109b5341d",
+      "event_id": "run:run-outward-write-file-denied-proof:01:0600:turn:completed",
+      "event_type": "turn_completed",
+      "payload": {
+        "outcome": "denied",
+        "run_id": "run-outward-write-file-denied-proof",
+        "turn": 1
+      },
+      "position": 7,
+      "previous_chain_hash": "959b8a3c14285dd8e6f3edb18b927a452319635f2bc6573f1278c75a54c27abe",
+      "run_id": "run-outward-write-file-denied-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:10+00:00",
+      "chain_hash": "90a88d1a61c7f6dfeab9997ab4dd077fc02ce8d89c123b11551115fd5119b228",
+      "event_group": "all",
+      "event_hash": "bf98d980ffe61ad3646d929734b4a31f39f74f795fa10c6dc0fda18e025f2b03",
+      "event_id": "run:run-outward-write-file-denied-proof:0700:completed",
+      "event_type": "run_completed",
+      "payload": {
+        "completed_at": "2026-05-02T12:00:07+00:00",
+        "outcome": "denied",
+        "run_id": "run-outward-write-file-denied-proof",
+        "status": "completed"
+      },
+      "position": 8,
+      "previous_chain_hash": "8c30eead7d3c8e56c9c315806f2aba97f59c57ca4b73c48e5be474c0ea211299",
+      "run_id": "run-outward-write-file-denied-proof",
+      "turn": 1
+    }
+  ],
+  "export_scope": "all",
+  "include_pii": false,
+  "omitted_spans": [],
+  "policy_snapshot": {
+    "ledger_payload_model": "policy_safe_by_construction",
+    "outbound_policy_gate": "applied_before_serialization",
+    "payload_bytes": "unchanged"
+  },
+  "run_id": "run-outward-write-file-denied-proof",
+  "schema_version": "ledger_export.v1",
+  "summary": {
+    "completed_at": "2026-05-02T12:00:07+00:00",
+    "current_turn": 1,
+    "event_count": 8,
+    "event_counts": {
+      "proposal_denied": 1,
+      "proposal_made": 1,
+      "proposal_pending_approval": 1,
+      "run_completed": 1,
+      "run_started": 1,
+      "run_submitted": 1,
+      "turn_completed": 1,
+      "turn_started": 1
+    },
+    "exported_event_count": 8,
+    "max_turns": 1,
+    "run_id": "run-outward-write-file-denied-proof",
+    "status": "completed",
+    "stop_reason": "operator denied proof"
+  },
+  "types": [
+    "all"
+  ],
+  "verification": {
+    "meaning": "full canonical ledger",
+    "result": "valid"
+  }
+}

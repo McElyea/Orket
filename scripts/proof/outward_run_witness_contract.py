@@ -6,13 +6,16 @@ import json
 from pathlib import Path
 from typing import Any
 
-
 PACKAGE_SCHEMA_VERSION = "outward_run_witness_package.v1"
 BUNDLE_SCHEMA_VERSION = "outward_run.witness_bundle.v1"
 REPORT_SCHEMA_VERSION = "outward_run_witness_report.v1"
 INVARIANT_SCHEMA_VERSION = "outward_run_invariants.v1"
 CAMPAIGN_SCHEMA_VERSION = "outward_run_campaign_report.v1"
-COMPARE_SCOPE = "outward_run_write_file_approved_v1"
+COMPARE_SCOPE_APPROVED = "outward_run_write_file_approved_v1"
+COMPARE_SCOPE_DENIED = "outward_run_write_file_denied_v1"
+COMPARE_SCOPE_POLICY_REJECTED = "outward_run_write_file_policy_rejected_v1"
+COMPARE_SCOPE = COMPARE_SCOPE_APPROVED
+ADMITTED_COMPARE_SCOPES = frozenset({COMPARE_SCOPE_APPROVED, COMPARE_SCOPE_DENIED, COMPARE_SCOPE_POLICY_REJECTED})
 OPERATOR_SURFACE = "outward_run_witness_report.v1"
 
 DEFAULT_BUNDLE_PATH = "outward_witness_bundle.json"

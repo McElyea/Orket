@@ -1,7 +1,7 @@
 # Slice 01 - Assurance Case Index
 
 Last updated: 2026-05-02
-Status: Archived slice plan - approved-path rows validated; path-family blockers future-hold
+Status: Archived slice plan - approved-path rows validated; denial and policy-rejection rows updated by later slice closeouts
 Owner: Orket Core
 
 Parent closeout: `docs/projects/archive/outward-run-proof-kernel/2026-05-02-OUTWARD-RUN-PROOF-KERNEL-CLOSEOUT/OUTWARD_RUN_PROOF_KERNEL_IMPLEMENTATION_PLAN.md`
@@ -31,6 +31,8 @@ Every artifact that appears in the assurance case index must be classified as ex
 
 ## Assurance Case Index - v1 Draft
 
+Post-closeout note: this archive closed only the approved single-turn boundary. ORP-CLAIM-007 was updated after the separate denial fixture closeout at `docs/projects/archive/outward-run-proof-kernel-extensions/2026-05-02-DENIAL-FIXTURE-CLOSEOUT/`; ORP-CLAIM-008 was updated after the separate policy-rejection fixture closeout at `docs/projects/archive/outward-run-proof-kernel-extensions/2026-05-02-POLICY-REJECTION-FIXTURE-CLOSEOUT/`. Those updates do not imply this approved-path archive closed the whole path-family lane.
+
 The compare scope for all rows is `outward_run_write_file_approved_v1` unless the row explicitly names a path variant.
 
 | Claim ID | Claim | Compare Scope | Operator Surface | Allowed Posture | Invariant IDs | Authority Evidence | Derived / Support Evidence | Verifier Command | Current Blocker |
@@ -41,8 +43,8 @@ The compare scope for all rows is `outward_run_write_file_approved_v1` unless th
 | ORP-CLAIM-004 | The effect was committed and recorded after approval. | `outward_run_write_file_approved_v1` | `outward_run_witness_report.v1` | `outward_lab_only` | ORP-INV-004, ORP-INV-010, ORP-INV-011 | packaged `tool_invoked`, `commitment_recorded`, and `turn_completed` ledger events; `artifacts/committed_output` bytes | run events projection | same | none for approved path; artifact validation: `benchmarks/results/proof/outward_write_file_validation.json` |
 | ORP-CLAIM-005 | The run reached a terminal success state with final-truth evidence. | `outward_run_write_file_approved_v1` | `outward_run_witness_report.v1` | `outward_lab_only` | ORP-INV-003 | packaged `run_completed` ledger event with success-class status; outward run record digest | run summary | same | none for approved path |
 | ORP-CLAIM-006 | The full ledger hash chain is intact. | `outward_run_write_file_approved_v1` | `outward_run_witness_report.v1` | `outward_lab_only` | ORP-INV-006, ORP-INV-016 | full packaged `ledger_export.v1` JSON bytes | ledger export summary | same | none for approved path |
-| ORP-CLAIM-007 | A denied proposal produced no tool invocation or commitment. | `outward_run_write_file_approved_v1` denial path | `outward_run_witness_report.v1` | `outward_lab_only` | ORP-INV-013, ORP-INV-022 | `proposal_denied` ledger event; full `export_scope=all` ledger export proving absence | run events projection | same | denial base fixture required |
-| ORP-CLAIM-008 | A policy-rejected proposal produced no tool invocation or commitment. | `outward_run_write_file_approved_v1` policy path | `outward_run_witness_report.v1` | `outward_lab_only` | ORP-INV-014, ORP-INV-022 | `proposal_policy_rejected` ledger event; full `export_scope=all` ledger export proving absence | run events projection | same | policy-rejection base fixture required |
+| ORP-CLAIM-007 | A denied proposal produced no tool invocation or commitment. | `outward_run_write_file_denied_v1` | `outward_run_witness_report.v1` | `outward_lab_only` | ORP-INV-013, ORP-INV-022 | `tests/proof_fixtures/outward_run/base_denied_package/ledger_export.json`; packaged `proposal_denied` ledger payload; denial approval record digest in package bundle | run events projection | `python scripts/proof/verify_outward_run_witness_package.py --package tests/proof_fixtures/outward_run/base_denied_package --scope outward_run_write_file_denied_v1` | none for denial path; verifier output: `benchmarks/results/proof/outward_run_denied_witness_report.json`; corruption coverage: ORP-CORR-030, ORP-CORR-068 |
+| ORP-CLAIM-008 | A policy-rejected proposal produced no approval, tool invocation, or commitment. | `outward_run_write_file_policy_rejected_v1` | `outward_run_witness_report.v1` | `outward_lab_only` | ORP-INV-014, ORP-INV-022 | `tests/proof_fixtures/outward_run/base_policy_rejected_package/ledger_export.json`; packaged `proposal_policy_rejected` ledger payload; `proposal_ref` policy-rejection authority in package bundle | run events projection | `python scripts/proof/verify_outward_run_witness_package.py --package tests/proof_fixtures/outward_run/base_policy_rejected_package --scope outward_run_write_file_policy_rejected_v1` | none for policy-rejection path; verifier output: `benchmarks/results/proof/outward_run_policy_rejected_witness_report.json`; corruption coverage: ORP-CORR-031 |
 | ORP-CLAIM-009 | An out-of-scope model proposal was rejected before human approval. | `outward_run_write_file_approved_v1` out-of-scope path | `outward_run_witness_report.v1` | `outward_lab_only` | ORP-INV-014, ORP-INV-022 | `proposal_policy_rejected` ledger event with out-of-scope reason; full ledger export proving absence of approval resolution | approval queue projection | same | out-of-scope fixture required |
 | ORP-CLAIM-010 | Equivalent successful evidence produces a stable invariant signature. | `outward_run_write_file_approved_v1` campaign | `outward_run_campaign_report.v1` | `outward_verifier_stable` | ORP-INV-001 through ORP-INV-016, ORP-INV-022 where absence is claimed | two or more accepted verifier reports with matching invariant signatures | campaign report | `python scripts/proof/run_outward_run_witness_campaign.py --report <report-a> --report <report-b> --output <campaign-report>` | none for approved-path verifier stability; path-family absence fixtures still blocked |
 
@@ -55,10 +57,10 @@ The compare scope for all rows is `outward_run_write_file_approved_v1` unless th
 | operator surface | `outward_run_witness_report.v1` for single-run claims; `outward_run_campaign_report.v1` for campaign claim |
 | allowed posture | Drafted above; see Slice 06 |
 | invariant ids | Accepted for approved path through `docs/specs/OUTWARD_RUN_INVARIANTS_V1.md`; path-family rows remain blocked |
-| authority-bearing evidence refs | Accepted for approved path through packaged evidence; denial, policy-rejection, and out-of-scope authority evidence remains blocked |
+| authority-bearing evidence refs | Accepted for approved, denial, and policy-rejection paths through packaged evidence; out-of-scope authority evidence remains blocked |
 | support-only evidence refs | Drafted above |
-| verifier command | Package verifier, artifact validator, corruption suite, and campaign runner implemented for approved path |
-| current blockers | Denial, policy-rejection, and out-of-scope fixtures remain explicit blockers |
+| verifier command | Package verifier, artifact validator, corruption suite, and campaign runner implemented for approved path; denial and policy-rejection package verifiers implemented by separate slice closeouts |
+| current blockers | Out-of-scope fixture remains an explicit blocker |
 
 ## Forbidden Shortcuts
 

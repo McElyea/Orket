@@ -1,0 +1,214 @@
+{
+  "canonical": {
+    "event_count": 7,
+    "genesis": "GENESIS",
+    "ledger_hash": "82d60f1c27f56d0a65e39bc8bd3e2dc7025b3491cf0da9839635c4789842b307",
+    "ordering": [
+      "run_id",
+      "turn",
+      "at",
+      "event_id"
+    ]
+  },
+  "contains_pii": false,
+  "events": [
+    {
+      "agent_id": "operator",
+      "at": "2026-05-02T12:00:00+00:00",
+      "chain_hash": "c741ce22d0f9b2e8bd68c9748b3f4ed5cb006df4484890ae083f719d3c5c07de",
+      "event_group": "all",
+      "event_hash": "98f2eeaf23249a31dd09a20cdc0e95c9e00a3d776a399cc4a533ad2574b9c23a",
+      "event_id": "run:run-outward-write-file-policy-rejected-proof:submitted",
+      "event_type": "run_submitted",
+      "payload": {
+        "namespace": "issue_run-outward-write-file-policy-rejected-proof",
+        "policy_overrides": {
+          "approval_required_tools": [
+            "write_file"
+          ],
+          "approval_timeout_seconds": 60,
+          "max_turns": 1
+        },
+        "run_id": "run-outward-write-file-policy-rejected-proof",
+        "status": "queued",
+        "submitted_at": "2026-05-02T12:00:00+00:00",
+        "task_description": "Attempt a policy-rejected outward proof file."
+      },
+      "position": 1,
+      "previous_chain_hash": "GENESIS",
+      "run_id": "run-outward-write-file-policy-rejected-proof",
+      "turn": 0
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:02+00:00",
+      "chain_hash": "cc1bb8373a4e6dd0482d5f1991ccfa3c90850d88fcbbe7bbd3fa24a8df9c9791",
+      "event_group": "all",
+      "event_hash": "143dd841813b96276f4f3195ad211e8e15240e4b38a1c80be6b6782dc1f05440",
+      "event_id": "run:run-outward-write-file-policy-rejected-proof:0100:started",
+      "event_type": "run_started",
+      "payload": {
+        "run_id": "run-outward-write-file-policy-rejected-proof",
+        "started_at": "2026-05-02T12:00:01+00:00",
+        "status": "running"
+      },
+      "position": 2,
+      "previous_chain_hash": "c741ce22d0f9b2e8bd68c9748b3f4ed5cb006df4484890ae083f719d3c5c07de",
+      "run_id": "run-outward-write-file-policy-rejected-proof",
+      "turn": 0
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:03+00:00",
+      "chain_hash": "946340874612d451edb79558034f78fd50195b9ed0a67723fd39e290f0efcf53",
+      "event_group": "all",
+      "event_hash": "7a623410e2fd956586ee58787ac2bbb15def175d7def76f3c47f81ef086255a7",
+      "event_id": "run:run-outward-write-file-policy-rejected-proof:01:0200:turn:started",
+      "event_type": "turn_started",
+      "payload": {
+        "agent_id": "outward-agent",
+        "run_id": "run-outward-write-file-policy-rejected-proof",
+        "turn": 1
+      },
+      "position": 3,
+      "previous_chain_hash": "cc1bb8373a4e6dd0482d5f1991ccfa3c90850d88fcbbe7bbd3fa24a8df9c9791",
+      "run_id": "run-outward-write-file-policy-rejected-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:04+00:00",
+      "chain_hash": "9bd026555886b8b2924285a0c9fded2d1a2e26ffb2b467117391d26645162585",
+      "event_group": "proposals",
+      "event_hash": "1a8b14acfea28027f01bbaac6d4f124e7ea7ec552eea9c07ffdd0f10dc88f18c",
+      "event_id": "run:run-outward-write-file-policy-rejected-proof:01:0300:proposal:write_file:0001",
+      "event_type": "proposal_made",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "../policy-rejected-proof-output.txt"
+        },
+        "context_summary": "model-produced governed tool call from live provider response",
+        "model_invocation_ref": "workspace/issue_run-outward-write-file-policy-rejected-proof/runs/run-outward-write-file-policy-rejected-proof/model_invocation_turn_1.json",
+        "model_invocation_sha256": "e0454e0cfd1ce75d70aaffeda52bd6b5405bc6d4fd1982801bc8503ff9c37fcb",
+        "model_name": "deterministic-policy-rejection-proof-client",
+        "model_prompt_redacted_sha256": "f61898beb0a0b1329bfb2394a2c698d5bc1d1ca9f9493a635a537c72169aaa95",
+        "model_response_content_sha256": "9e5b1e5e073f8cea1d24fa16290da58051e242a447f323951f8e4e96e0f20a3d",
+        "model_response_redacted_sha256": "dfaf6e1a0f5710631e9dc18b65e5dec5d6fa6eaf6d31a2a9deddac1a72b17761",
+        "namespace": "issue_run-outward-write-file-policy-rejected-proof",
+        "proposal_extraction_ref": "workspace/issue_run-outward-write-file-policy-rejected-proof/runs/run-outward-write-file-policy-rejected-proof/proposal_extraction_turn_1.json",
+        "proposal_extraction_sha256": "94e9d2cf67d691f390370dcb61ee5b5e3513d00101d7c2dcb6163cd644a277ce",
+        "proposal_ref": "model_proposal:run-outward-write-file-policy-rejected-proof:1:write_file:9654b6493fa444750eb7643f1b0065a0b25464c3db854f4838638e01f57f2780",
+        "provider_name": "proof-local",
+        "run_id": "run-outward-write-file-policy-rejected-proof",
+        "tool": "write_file",
+        "tool_args_hash": "9654b6493fa444750eb7643f1b0065a0b25464c3db854f4838638e01f57f2780",
+        "tool_name": "write_file"
+      },
+      "position": 4,
+      "previous_chain_hash": "946340874612d451edb79558034f78fd50195b9ed0a67723fd39e290f0efcf53",
+      "run_id": "run-outward-write-file-policy-rejected-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:05+00:00",
+      "chain_hash": "74a4c27a0178e85f01ece42a0fc17ca637d6f4fef6e2aef899ddbf9c61286c4a",
+      "event_group": "decisions",
+      "event_hash": "25b66a1864e91587a165f09725d9b828647d7cad2648cce3b7e4fc08b8f58c4f",
+      "event_id": "run:run-outward-write-file-policy-rejected-proof:01:0350:proposal_policy_rejected:write_file",
+      "event_type": "proposal_policy_rejected",
+      "payload": {
+        "args_preview": {
+          "content": "[REDACTED]",
+          "path": "../policy-rejected-proof-output.txt"
+        },
+        "policy_result": "rejected",
+        "proposal_ref": "model_proposal:run-outward-write-file-policy-rejected-proof:1:write_file:9654b6493fa444750eb7643f1b0065a0b25464c3db854f4838638e01f57f2780",
+        "reason": "Access denied: ../policy-rejected-proof-output.txt is outside allowed boundaries.",
+        "run_id": "run-outward-write-file-policy-rejected-proof",
+        "tool": "write_file",
+        "tool_args_hash": "9654b6493fa444750eb7643f1b0065a0b25464c3db854f4838638e01f57f2780",
+        "tool_name": "write_file",
+        "turn": 1
+      },
+      "position": 5,
+      "previous_chain_hash": "9bd026555886b8b2924285a0c9fded2d1a2e26ffb2b467117391d26645162585",
+      "run_id": "run-outward-write-file-policy-rejected-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:06+00:00",
+      "chain_hash": "f50d3a0bd592e9446e984ada60f73eaea32979f5a13884a1a840c30ad6115cd6",
+      "event_group": "all",
+      "event_hash": "3daa7a902233bc65dddee6832cd6434e6b9e7390bac1a63b552e73e1c77cd563",
+      "event_id": "run:run-outward-write-file-policy-rejected-proof:01:0600:turn:completed",
+      "event_type": "turn_completed",
+      "payload": {
+        "outcome": "policy_rejected",
+        "run_id": "run-outward-write-file-policy-rejected-proof",
+        "turn": 1
+      },
+      "position": 6,
+      "previous_chain_hash": "74a4c27a0178e85f01ece42a0fc17ca637d6f4fef6e2aef899ddbf9c61286c4a",
+      "run_id": "run-outward-write-file-policy-rejected-proof",
+      "turn": 1
+    },
+    {
+      "agent_id": "outward-agent",
+      "at": "2026-05-02T12:00:08+00:00",
+      "chain_hash": "82d60f1c27f56d0a65e39bc8bd3e2dc7025b3491cf0da9839635c4789842b307",
+      "event_group": "all",
+      "event_hash": "a8e6b2c41fc8ade0e1d4683f54d4b9c02c66c51f2febd768f14029720fd61c53",
+      "event_id": "run:run-outward-write-file-policy-rejected-proof:0700:completed",
+      "event_type": "run_completed",
+      "payload": {
+        "completed_at": "2026-05-02T12:00:07+00:00",
+        "outcome": "policy_rejected",
+        "run_id": "run-outward-write-file-policy-rejected-proof",
+        "status": "completed"
+      },
+      "position": 7,
+      "previous_chain_hash": "f50d3a0bd592e9446e984ada60f73eaea32979f5a13884a1a840c30ad6115cd6",
+      "run_id": "run-outward-write-file-policy-rejected-proof",
+      "turn": 1
+    }
+  ],
+  "export_scope": "all",
+  "include_pii": false,
+  "omitted_spans": [],
+  "policy_snapshot": {
+    "ledger_payload_model": "policy_safe_by_construction",
+    "outbound_policy_gate": "applied_before_serialization",
+    "payload_bytes": "unchanged"
+  },
+  "run_id": "run-outward-write-file-policy-rejected-proof",
+  "schema_version": "ledger_export.v1",
+  "summary": {
+    "completed_at": "2026-05-02T12:00:07+00:00",
+    "current_turn": 1,
+    "event_count": 7,
+    "event_counts": {
+      "proposal_made": 1,
+      "proposal_policy_rejected": 1,
+      "run_completed": 1,
+      "run_started": 1,
+      "run_submitted": 1,
+      "turn_completed": 1,
+      "turn_started": 1
+    },
+    "exported_event_count": 7,
+    "max_turns": 1,
+    "run_id": "run-outward-write-file-policy-rejected-proof",
+    "status": "completed",
+    "stop_reason": "Access denied: ../policy-rejected-proof-output.txt is outside allowed boundaries."
+  },
+  "types": [
+    "all"
+  ],
+  "verification": {
+    "meaning": "full canonical ledger",
+    "result": "valid"
+  }
+}

@@ -1,7 +1,7 @@
 # Slice 04 - Negative Corruption Suite
 
 Last updated: 2026-05-01
-Status: Archived slice plan - approved-path corruptions implemented; path-family corruptions future-hold
+Status: Archived slice plan - approved-path corruptions implemented; denial and policy-rejection corruptions updated by later slice closeouts
 Owner: Orket Core
 
 Parent closeout: `docs/projects/archive/outward-run-proof-kernel/2026-05-02-OUTWARD-RUN-PROOF-KERNEL-CLOSEOUT/OUTWARD_RUN_PROOF_KERNEL_IMPLEMENTATION_PLAN.md`
@@ -28,7 +28,7 @@ The corruption suite operates against one canonical base witness package directo
 | `tests/proof_fixtures/outward_run/base_policy_rejected_package/` | policy rejection path |
 | `tests/proof_fixtures/outward_run/base_multi_turn_approved_package/` | deferred multi-turn path |
 
-Each base package must contain:
+Approved-path base packages must contain:
 
 ```text
 manifest.json
@@ -38,7 +38,7 @@ artifacts/
   committed_output
 ```
 
-Each base package must be a valid `outward_run_witness_package.v1` that the verifier accepts before corruption is applied. Bundle-only fixtures are invalid for this suite because they cannot prove full ledger integrity, absence of omitted events, or committed artifact bytes.
+Denial-path and policy-rejection packages intentionally omit committed artifact bytes because no connector effect occurred. Each base package must be a valid `outward_run_witness_package.v1` for its compare scope that the verifier accepts before corruption is applied. Bundle-only fixtures are invalid for this suite because they cannot prove full ledger integrity, absence of omitted events, or committed artifact bytes where a committed effect is claimed.
 
 ## Corruption Helper Target
 
@@ -96,7 +96,7 @@ The matrix reserves ids through `ORP-CORR-094`. Gaps are intentional and leave r
 | ID | Base Package | Mutation | Expected Failure Code | Invariant |
 |---|---|---|---|---|
 | ORP-CORR-030 | base_denied | add synthetic `tool_invoked` after `proposal_denied` for the same approval id | `denied_proposal_invoked` | ORP-INV-013 |
-| ORP-CORR-031 | base_policy_rejected | add synthetic `tool_invoked` after `proposal_policy_rejected` for the same approval id | `policy_rejected_proposal_invoked` | ORP-INV-014 |
+| ORP-CORR-031 | base_policy_rejected | add synthetic `tool_invoked` after `proposal_policy_rejected` for the same `proposal_ref` | `policy_rejected_proposal_invoked` | ORP-INV-014 |
 
 ### Effect and Commitment Corruptions
 
@@ -158,7 +158,17 @@ The matrix reserves ids through `ORP-CORR-094`. Gaps are intentional and leave r
 Single-turn approved closeout gate:
 1. base approved package fixture exists and verifies,
 2. ORP-CORR-001 through ORP-CORR-082 pass for corruptions that use `base_approved`,
-3. denial, policy-rejection, out-of-scope, and multi-turn ids may remain blocked only with explicit missing-fixture blockers.
+3. at the original approved closeout, denial, policy-rejection, out-of-scope, and multi-turn ids could remain blocked only with explicit missing-fixture blockers.
+
+Post-closeout denial update:
+1. `base_denied_package` now exists through `docs/projects/archive/outward-run-proof-kernel-extensions/2026-05-02-DENIAL-FIXTURE-CLOSEOUT/`;
+2. ORP-CORR-030 and the denial side of ORP-CORR-068 are active over the denied base package;
+3. policy-rejection remained future-hold at that denial closeout, and out-of-scope and multi-turn ids remain future-hold unless reopened explicitly.
+
+Post-closeout policy-rejection update:
+1. `base_policy_rejected_package` now exists through `docs/projects/archive/outward-run-proof-kernel-extensions/2026-05-02-POLICY-REJECTION-FIXTURE-CLOSEOUT/`;
+2. ORP-CORR-031 is active over the policy-rejected base package;
+3. out-of-scope and multi-turn ids remain future-hold unless reopened explicitly.
 
 Single-turn path-family closeout gate:
 1. approval, denial, policy-rejection, and out-of-scope fixtures exist,
@@ -183,11 +193,11 @@ These ids are reserved for Slice 07 and are not part of the single-turn closeout
 
 | Output | Status |
 |---|---|
-| corruption matrix | Approved-path ids implemented; denial, policy-rejection, out-of-scope, and multi-turn ids remain future-hold |
-| deterministic corruption helper | Implemented for approved-path ids |
-| expected reason-code mapping | Implemented for approved-path ids |
-| rerunnable corruption report | Implemented for approved-path suite |
-| assurance-case links | Approved-path links accepted; path-family blockers tracked in future extensions |
+| corruption matrix | Approved-path ids implemented; denial ORP-CORR-030 and denial ORP-CORR-068 implemented by later denial slice; policy-rejection ORP-CORR-031 implemented by later policy-rejection slice; out-of-scope and multi-turn ids remain future-hold |
+| deterministic corruption helper | Implemented for approved-path ids, admitted denial ids, and admitted policy-rejection ids |
+| expected reason-code mapping | Implemented for approved-path ids, admitted denial ids, and admitted policy-rejection ids |
+| rerunnable corruption report | Implemented for approved, denial, and policy-rejection bases |
+| assurance-case links | Approved-path links accepted; denial and policy-rejection links updated after separate slice closeouts; remaining path-family blockers tracked in future extensions |
 
 ## Exit Criteria
 

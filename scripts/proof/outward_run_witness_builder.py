@@ -12,10 +12,12 @@ from orket.application.services.outward_ledger_service import OutwardLedgerServi
 from orket.application.services.outward_run_execution_plan import acceptance_tool_steps
 from orket.core.domain.outward_approvals import OutwardApprovalProposal
 from orket.core.domain.outward_runs import OutwardRunRecord
-
 from scripts.proof.outward_run_witness_contract import (
+    ADMITTED_COMPARE_SCOPES,
     BUNDLE_SCHEMA_VERSION,
     COMPARE_SCOPE,
+    COMPARE_SCOPE_DENIED,
+    COMPARE_SCOPE_POLICY_REJECTED,
     DEFAULT_BUNDLE_PATH,
     DEFAULT_COMMITTED_ARTIFACT_PATH,
     DEFAULT_LEDGER_EXPORT_PATH,
@@ -39,6 +41,7 @@ async def build_outward_run_witness_package(
     output_dir: Path,
     scope: str = COMPARE_SCOPE,
 ) -> dict[str, Any]:
+    clean_scope = _normalize_scope(scope)
     run_store = OutwardRunStore(db_path)
     approval_store = OutwardApprovalStore(db_path)
     event_store = OutwardRunEventStore(db_path)
@@ -52,12 +55,23 @@ async def build_outward_run_witness_package(
         utc_now=lambda: "",
     ).export(run.run_id, types=("all",), include_pii=False, record_request=False)
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-    artifact_source = _committed_output_source(run, workspace_root)
     artifact_target = output_dir / DEFAULT_COMMITTED_ARTIFACT_PATH
-    artifact_target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(artifact_source, artifact_target)
+    output_dir.mkdir(parents=True, exist_ok=True)
     _write_json(output_dir / DEFAULT_LEDGER_EXPORT_PATH, ledger)
+    if clean_scope in {COMPARE_SCOPE_DENIED, COMPARE_SCOPE_POLICY_REJECTED}:
+        if clean_scope == COMPARE_SCOPE_DENIED:
+            _ensure_denial_has_no_effect_artifacts(run, approvals, ledger)
+        else:
+            _ensure_policy_rejection_has_no_effect_artifacts(run, approvals, ledger)
+        if artifact_target.exists():
+            artifact_target.unlink()
+        artifact_source = None
+        artifact_digest = ""
+    else:
+        artifact_source = _committed_output_source(run, workspace_root)
+        artifact_target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(artifact_source, artifact_target)
+        artifact_digest = file_sha256(artifact_target)
 
     bundle = _build_bundle(
         run=run,
@@ -65,14 +79,14 @@ async def build_outward_run_witness_package(
         ledger=ledger,
         workspace_root=workspace_root,
         output_dir=output_dir,
-        scope=scope,
+        scope=clean_scope,
         artifact_source=artifact_source,
-        artifact_digest=file_sha256(artifact_target),
+        artifact_digest=artifact_digest,
     )
     _write_json(output_dir / DEFAULT_BUNDLE_PATH, bundle)
-    manifest = _build_manifest(output_dir=output_dir, scope=scope, package_id=f"package:{run.run_id}")
+    manifest = _build_manifest(output_dir=output_dir, scope=clean_scope, package_id=f"package:{run.run_id}")
     _write_json(output_dir / "manifest.json", manifest)
-    return {"package_path": str(output_dir), "run_id": run.run_id, "compare_scope": scope}
+    return {"package_path": str(output_dir), "run_id": run.run_id, "compare_scope": clean_scope}
 
 
 def _build_bundle(
@@ -83,15 +97,37 @@ def _build_bundle(
     workspace_root: Path,
     output_dir: Path,
     scope: str,
-    artifact_source: Path,
+    artifact_source: Path | None,
     artifact_digest: str,
 ) -> dict[str, Any]:
-    approval = approvals[0] if approvals else None
+    approval = _selected_approval(approvals, scope)
     proposal_event = _first_event(ledger, "proposal_made")
+    policy_rejection_event = _first_event(ledger, "proposal_policy_rejected")
     tool_event = _first_event(ledger, "tool_invoked")
-    tool_name = str((tool_event.get("payload") or {}).get("connector_name") or (approval.tool if approval else ""))
-    tool_args_digest = str((tool_event.get("payload") or {}).get("args_hash") or (proposal_event.get("payload") or {}).get("tool_args_hash") or "")
-    return {
+    policy_payload = policy_rejection_event.get("payload") if isinstance(policy_rejection_event.get("payload"), dict) else {}
+    proposal_payload = proposal_event.get("payload") if isinstance(proposal_event.get("payload"), dict) else {}
+    tool_payload = tool_event.get("payload") if isinstance(tool_event.get("payload"), dict) else {}
+    tool_name = str(
+        tool_payload.get("connector_name")
+        or policy_payload.get("tool_name")
+        or policy_payload.get("tool")
+        or (approval.tool if approval else "")
+    )
+    tool_args_digest = str(tool_payload.get("args_hash") or policy_payload.get("tool_args_hash") or proposal_payload.get("tool_args_hash") or "")
+    artifact_refs: list[dict[str, Any]] = []
+    package_refs: dict[str, Any] = {"ledger_export_path": DEFAULT_LEDGER_EXPORT_PATH}
+    if artifact_source is not None:
+        artifact_refs.append(
+            {
+                "artifact_role": "committed_output",
+                "path": _relative_or_absolute(artifact_source, workspace_root),
+                "package_path": DEFAULT_COMMITTED_ARTIFACT_PATH,
+                "digest": artifact_digest,
+                "classification": "authority",
+            }
+        )
+        package_refs["committed_output_path"] = DEFAULT_COMMITTED_ARTIFACT_PATH
+    bundle = {
         "schema_version": BUNDLE_SCHEMA_VERSION,
         "bundle_id": f"bundle:{run.run_id}",
         "run_id": run.run_id,
@@ -101,24 +137,19 @@ def _build_bundle(
         "claim_tier_request": "outward_lab_only",
         "run_authority": _run_authority(run),
         "approval_authority": [_approval_authority(item, tool_args_digest) for item in approvals],
+        "policy_rejection_authority": (
+            [_policy_rejection_authority(run, policy_rejection_event, tool_name, tool_args_digest)]
+            if scope == COMPARE_SCOPE_POLICY_REJECTED
+            else []
+        ),
         "ledger_evidence": _ledger_evidence(ledger, output_dir),
         "effect_evidence": [_effect_evidence(run, approval, tool_event, tool_name, tool_args_digest)] if tool_event else [],
         "model_invocation_evidence": [_model_evidence(workspace_root, proposal_event)] if proposal_event else [],
         "policy_identity": _policy_identity(run),
-        "artifact_refs": [
-            {
-                "artifact_role": "committed_output",
-                "path": _relative_or_absolute(artifact_source, workspace_root),
-                "package_path": DEFAULT_COMMITTED_ARTIFACT_PATH,
-                "digest": artifact_digest,
-                "classification": "authority",
-            }
-        ],
-        "package_refs": {
-            "ledger_export_path": DEFAULT_LEDGER_EXPORT_PATH,
-            "committed_output_path": DEFAULT_COMMITTED_ARTIFACT_PATH,
-        },
+        "artifact_refs": artifact_refs,
+        "package_refs": package_refs,
     }
+    return bundle
 
 
 def _run_authority(run: OutwardRunRecord) -> dict[str, Any]:
@@ -148,6 +179,27 @@ def _approval_authority(proposal: OutwardApprovalProposal, tool_args_digest: str
         "status": proposal.status,
         "decided_at_iso": proposal.decided_at,
         "approval_record_digest": canonical_json_digest(proposal.to_decision_payload()),
+    }
+
+
+def _policy_rejection_authority(
+    run: OutwardRunRecord,
+    event: dict[str, Any],
+    tool_name: str,
+    tool_args_digest: str,
+) -> dict[str, Any]:
+    payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+    proposal_ref = str(payload.get("proposal_ref") or _legacy_proposal_ref(run.run_id, event, tool_name, tool_args_digest))
+    return {
+        "proposal_ref": proposal_ref,
+        "run_id": run.run_id,
+        "turn_index": int(event.get("turn") or run.current_turn or 1),
+        "tool_name": tool_name,
+        "tool_args_digest": tool_args_digest,
+        "policy_result": str(payload.get("policy_result") or ""),
+        "reason": str(payload.get("reason") or ""),
+        "event_position": int(event.get("position") or 0),
+        "policy_event_payload_digest": canonical_json_digest(payload),
     }
 
 
@@ -231,6 +283,65 @@ def _committed_output_source(run: OutwardRunRecord, workspace_root: Path) -> Pat
     raise OutwardWitnessBuildError("committed_artifact_missing")
 
 
+def _normalize_scope(scope: str) -> str:
+    clean_scope = str(scope or COMPARE_SCOPE).strip() or COMPARE_SCOPE
+    if clean_scope not in ADMITTED_COMPARE_SCOPES:
+        raise OutwardWitnessBuildError("unsupported_compare_scope")
+    return clean_scope
+
+
+def _selected_approval(approvals: list[OutwardApprovalProposal], scope: str) -> OutwardApprovalProposal | None:
+    if scope == COMPARE_SCOPE_POLICY_REJECTED:
+        return None
+    if scope == COMPARE_SCOPE_DENIED:
+        for approval in approvals:
+            if approval.status == "denied":
+                return approval
+    return approvals[0] if approvals else None
+
+
+def _ensure_denial_has_no_effect_artifacts(
+    run: OutwardRunRecord,
+    approvals: list[OutwardApprovalProposal],
+    ledger: dict[str, Any],
+) -> None:
+    if _selected_approval(approvals, COMPARE_SCOPE_DENIED) is None:
+        raise OutwardWitnessBuildError("denial_approval_missing")
+    state = run.task.get("_outward_execution_state")
+    results = state.get("tool_results") if isinstance(state, dict) else []
+    if isinstance(results, list) and any(isinstance(item, dict) for item in results):
+        raise OutwardWitnessBuildError("denied_effect_state_present")
+    denial_position = _first_position(ledger, "proposal_denied")
+    if denial_position is None:
+        raise OutwardWitnessBuildError("denial_event_missing")
+    for event in ledger.get("events") or []:
+        if not isinstance(event, dict) or int(event.get("position") or 0) <= denial_position:
+            continue
+        if event.get("event_type") in {"tool_invoked", "commitment_recorded"}:
+            raise OutwardWitnessBuildError("denied_effect_event_present")
+
+
+def _ensure_policy_rejection_has_no_effect_artifacts(
+    run: OutwardRunRecord,
+    approvals: list[OutwardApprovalProposal],
+    ledger: dict[str, Any],
+) -> None:
+    if approvals:
+        raise OutwardWitnessBuildError("policy_rejected_approval_authority_present")
+    state = run.task.get("_outward_execution_state")
+    results = state.get("tool_results") if isinstance(state, dict) else []
+    if isinstance(results, list) and any(isinstance(item, dict) for item in results):
+        raise OutwardWitnessBuildError("policy_rejected_effect_state_present")
+    rejected_position = _first_position(ledger, "proposal_policy_rejected")
+    if rejected_position is None:
+        raise OutwardWitnessBuildError("policy_rejection_event_missing")
+    for event in ledger.get("events") or []:
+        if not isinstance(event, dict) or int(event.get("position") or 0) <= rejected_position:
+            continue
+        if event.get("event_type") in {"proposal_pending_approval", "proposal_approved", "tool_invoked", "commitment_recorded"}:
+            raise OutwardWitnessBuildError("policy_rejected_effect_event_present")
+
+
 def _resolve_workspace_ref(workspace_root: Path, ref: str) -> Path:
     root = workspace_root.resolve()
     resolved = (root / ref).resolve()
@@ -250,6 +361,11 @@ def _first_event(ledger: dict[str, Any], event_type: str) -> dict[str, Any]:
     return {}
 
 
+def _first_position(ledger: dict[str, Any], event_type: str) -> int | None:
+    event = _first_event(ledger, event_type)
+    return int(event.get("position") or 0) if event else None
+
+
 def _event_summary(event: dict[str, Any]) -> dict[str, Any]:
     return {
         "event_type": event.get("event_type"),
@@ -260,6 +376,10 @@ def _event_summary(event: dict[str, Any]) -> dict[str, Any]:
         "chain_hash": event.get("chain_hash"),
         "event_payload_digest": canonical_json_digest(event.get("payload") or {}),
     }
+
+
+def _legacy_proposal_ref(run_id: str, event: dict[str, Any], tool_name: str, tool_args_digest: str) -> str:
+    return f"model_proposal:{run_id}:{int(event.get('turn') or 1)}:{tool_name}:{tool_args_digest}"
 
 
 def _run_record_payload(run: OutwardRunRecord) -> dict[str, Any]:
@@ -280,18 +400,23 @@ def _run_record_payload(run: OutwardRunRecord) -> dict[str, Any]:
 
 
 def _build_manifest(*, output_dir: Path, scope: str, package_id: str) -> dict[str, Any]:
+    artifact_paths: dict[str, str] = {}
+    file_digests = {
+        DEFAULT_BUNDLE_PATH: file_sha256(output_dir / DEFAULT_BUNDLE_PATH),
+        DEFAULT_LEDGER_EXPORT_PATH: file_sha256(output_dir / DEFAULT_LEDGER_EXPORT_PATH),
+    }
+    artifact_path = output_dir / DEFAULT_COMMITTED_ARTIFACT_PATH
+    if artifact_path.exists():
+        artifact_paths["committed_output"] = DEFAULT_COMMITTED_ARTIFACT_PATH
+        file_digests[DEFAULT_COMMITTED_ARTIFACT_PATH] = file_sha256(artifact_path)
     manifest = {
         "schema_version": PACKAGE_SCHEMA_VERSION,
         "package_id": package_id,
         "compare_scope": scope,
         "bundle_path": DEFAULT_BUNDLE_PATH,
         "ledger_export_path": DEFAULT_LEDGER_EXPORT_PATH,
-        "artifact_paths": {"committed_output": DEFAULT_COMMITTED_ARTIFACT_PATH},
-        "file_digests": {
-            DEFAULT_BUNDLE_PATH: file_sha256(output_dir / DEFAULT_BUNDLE_PATH),
-            DEFAULT_LEDGER_EXPORT_PATH: file_sha256(output_dir / DEFAULT_LEDGER_EXPORT_PATH),
-            DEFAULT_COMMITTED_ARTIFACT_PATH: file_sha256(output_dir / DEFAULT_COMMITTED_ARTIFACT_PATH),
-        },
+        "artifact_paths": artifact_paths,
+        "file_digests": file_digests,
     }
     manifest["package_digest"] = compute_package_digest(manifest)
     return manifest

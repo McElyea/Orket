@@ -1,0 +1,13 @@
+{
+  "artifact_paths": {},
+  "bundle_path": "outward_witness_bundle.json",
+  "compare_scope": "outward_run_write_file_denied_v1",
+  "file_digests": {
+    "ledger_export.json": "ddcb868e506c120acdc1c92e589c122c3527161907bd945394556261fe2afdb3",
+    "outward_witness_bundle.json": "2b8e56d361086b6de8be08ad0263db4d9af5e2d719a60e5dc87052971f1c2b22"
+  },
+  "ledger_export_path": "ledger_export.json",
+  "package_digest": "a745cda050132965863ee3580bf6ae9ae623d6190ba8777acba2093c5a8e19f1",
+  "package_id": "package:run-outward-write-file-denied-proof",
+  "schema_version": "outward_run_witness_package.v1"
+}

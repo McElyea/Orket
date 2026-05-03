@@ -1,10 +1,10 @@
 # Outward Run Denial Fixture Requirements v1
 
 Last updated: 2026-05-02
-Status: Accepted requirements - active implementation plan
+Status: Archived accepted requirements - completed denial fixture lane
 Owner: Orket Core
 
-Implementation plan: `docs/projects/future/outward-run-proof-kernel-extensions/OUTWARD_RUN_DENIAL_FIXTURE_IMPLEMENTATION_PLAN.md`
+Implementation plan: `docs/projects/archive/outward-run-proof-kernel-extensions/2026-05-02-DENIAL-FIXTURE-CLOSEOUT/OUTWARD_RUN_DENIAL_FIXTURE_IMPLEMENTATION_PLAN.md`
 Base closeout: `docs/projects/archive/outward-run-proof-kernel/2026-05-02-OUTWARD-RUN-PROOF-KERNEL-CLOSEOUT/`
 
 ## Acceptance Record

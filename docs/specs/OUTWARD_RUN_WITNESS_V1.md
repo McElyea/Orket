@@ -1,14 +1,14 @@
 # Outward Run Witness v1
 
 Last updated: 2026-05-02
-Status: Active durable contract for the approved single-turn outward proof kernel
+Status: Active durable contract for approved, denied, and policy-rejected single-turn outward proof kernels
 Owner: Orket Core
 
 Originating closeout: `docs/projects/archive/outward-run-proof-kernel/2026-05-02-OUTWARD-RUN-PROOF-KERNEL-CLOSEOUT/`
 Slice authority: `docs/projects/archive/outward-run-proof-kernel/2026-05-02-OUTWARD-RUN-PROOF-KERNEL-CLOSEOUT/02-outward-run-witness-bundle/OUTWARD_RUN_WITNESS_BUNDLE_SLICE.md`
 Deferred extensions: `docs/projects/future/outward-run-proof-kernel-extensions/OUTWARD_RUN_PROOF_KERNEL_EXTENSIONS.md`
 
-This contract is active for the `outward_run_write_file_approved_v1` single-turn approved path proven by the archived outward-run proof kernel closeout. Denial, policy-rejection, out-of-scope, multi-turn, ODR, and public-trust extensions remain outside this active boundary until their package fixtures and same-change authority updates exist.
+This contract is active for the `outward_run_write_file_approved_v1` single-turn approved path proven by the archived outward-run proof kernel closeout, the `outward_run_write_file_denied_v1` single-turn denial path proven by the denial fixture closeout, and the `outward_run_write_file_policy_rejected_v1` single-turn policy-rejection path proven by the policy-rejection fixture closeout. Out-of-scope, multi-turn, ODR, and public-trust extensions remain outside this active boundary until their package fixtures and same-change authority updates exist.
 
 ## Purpose
 
@@ -40,6 +40,8 @@ outward_run_witness_package.v1/
     committed_output
 ```
 
+For `outward_run_write_file_denied_v1` and `outward_run_write_file_policy_rejected_v1`, the package omits `artifacts/committed_output`, `artifact_paths.committed_output`, and committed-output `artifact_refs`. Denial and policy-rejection absence claims are authority-backed by full package-local `ledger_export.v1` bytes with `export_scope=all`, not by fabricated committed artifact bytes.
+
 The verifier consumes package files only. Bundle-only verification may validate schema and internal commitments, but it cannot prove full ledger integrity, event absence, or committed artifact bytes. A bundle-only mode must not return `accepted` for proof claims.
 
 `manifest.json` must include:
@@ -70,12 +72,13 @@ A bundle is a single JSON object inside the witness package. Digest fields are l
 | `claim_tier_request` | string | claim | Lane-local outward claim posture until tier spec is active |
 | `run_authority` | object | authority | Run record projection with digest |
 | `approval_authority` | array | authority | One entry per proposal |
+| `policy_rejection_authority` | array | authority | Required for policy-rejection packages; empty otherwise |
 | `ledger_evidence` | object | authority | Event log and ledger hash evidence |
 | `effect_evidence` | array | authority | One entry per tool invocation |
 | `model_invocation_evidence` | array | derived | Digests must be authority-anchored |
 | `policy_identity` | object | authority | Governing policy at submission time |
-| `artifact_refs` | array | authority/derived | Per-entry classification |
-| `package_refs` | object | authority | Relative package paths for ledger export and artifacts |
+| `artifact_refs` | array | authority/derived | Per-entry classification; empty for admitted denial packages |
+| `package_refs` | object | authority | Relative package paths for ledger export and included artifacts |
 
 ### `run_authority`
 
@@ -105,6 +108,33 @@ Each entry must include:
 8. `approval_record_digest`
 
 Allowed `status` values are `approved`, `denied`, `expired`, and `policy_rejected`.
+
+For `outward_run_write_file_denied_v1`, at least one approval-authority entry must have `status=denied`, the full ledger must contain `proposal_denied`, and the package must not contain `tool_invoked`, `commitment_recorded`, or committed artifact evidence after that denial for the denied proposal.
+
+For `outward_run_write_file_policy_rejected_v1`, `approval_authority` must be empty for the rejected proposal, the full ledger must contain `proposal_policy_rejected`, and the package must not contain `proposal_approved`, `tool_invoked`, `commitment_recorded`, or committed artifact evidence after that rejection for the rejected proposal identity. The rejected proposal identity is:
+
+```text
+(run_id, turn, tool_name, tool_args_hash)
+```
+
+Accepted package evidence exposes the identity as:
+
+```text
+proposal_ref = "model_proposal:<run_id>:<turn>:<tool_name>:<tool_args_hash>"
+```
+
+### `policy_rejection_authority`
+
+Each policy-rejection entry must include:
+1. `proposal_ref`
+2. `run_id`
+3. `turn_index`
+4. `tool_name`
+5. `tool_args_digest`
+6. `policy_result`
+7. `reason`
+8. `event_position`
+9. `policy_event_payload_digest`
 
 ### `ledger_evidence`
 
@@ -192,6 +222,8 @@ A digest without source bytes or a verified ledger anchor is support-only or blo
 
 Any claim requiring absence of a later event must use a full canonical `ledger_export.v1` with `export_scope=all`. Partial views cannot prove absence or completeness.
 
+The admitted denial compare scope is `outward_run_write_file_denied_v1`. The admitted policy-rejection compare scope is `outward_run_write_file_policy_rejected_v1`. Either can assign at most `outward_lab_only` from a single accepted package.
+
 ## Offline Verifier Contract
 
 The offline verifier must:
@@ -209,7 +241,7 @@ The offline verifier may import pure canonicalization helpers when those helpers
 
 ## Missing-Evidence Vocabulary
 
-The active initial blocker vocabulary includes `package_manifest_missing`, `package_manifest_digest_mismatch`, `bundle_missing`, `package_ref_outside_package`, `ledger_export_missing`, `ledger_export_digest_mismatch`, `ledger_payload_bytes_missing`, `committed_artifact_missing`, `artifact_digest_mismatch`, `full_ledger_export_required`, `terminal_status_drift`, and `source_bytes_missing_for_digest` to prevent package-level false authority.
+The active initial blocker vocabulary includes `package_manifest_missing`, `package_manifest_digest_mismatch`, `bundle_missing`, `package_ref_outside_package`, `ledger_export_missing`, `ledger_export_digest_mismatch`, `ledger_payload_bytes_missing`, `committed_artifact_missing`, `artifact_digest_mismatch`, `full_ledger_export_required`, `terminal_status_drift`, `denial_event_missing`, `denied_proposal_invoked`, `denied_effect_artifact_present`, `policy_rejection_event_missing`, `policy_rejected_proposal_invoked`, `policy_rejected_proposal_committed`, `policy_rejected_effect_artifact_present`, and `source_bytes_missing_for_digest` to prevent package-level false authority.
 
 ## Acceptance Record
 
@@ -218,5 +250,9 @@ Accepted commands and artifacts for the active boundary:
 2. `python scripts/proof/verify_outward_run_witness_package.py --package benchmarks/results/proof/outward_run_witness_package.v1 --scope outward_run_write_file_approved_v1 --output benchmarks/results/proof/outward_run_witness_report.json`
 3. `python scripts/proof/validate_outward_write_file_committed.py --package benchmarks/results/proof/outward_run_witness_package.v1 --output benchmarks/results/proof/outward_write_file_validation.json`
 4. `python scripts/proof/run_outward_run_corruption_suite.py --base benchmarks/results/proof/outward_run_witness_package.v1 --output benchmarks/results/proof/outward_run_corruption_report.json`
+5. `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_outward_write_file_denied_proof.py`
+6. `python scripts/proof/verify_outward_run_witness_package.py --package tests/proof_fixtures/outward_run/base_denied_package --scope outward_run_write_file_denied_v1 --output benchmarks/results/proof/outward_run_denied_witness_report.json`
+7. `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_outward_write_file_policy_rejected_proof.py`
+8. `python scripts/proof/verify_outward_run_witness_package.py --package tests/proof_fixtures/outward_run/base_policy_rejected_package --scope outward_run_write_file_policy_rejected_v1 --output benchmarks/results/proof/outward_run_policy_rejected_witness_report.json`
 
-The verifier accepted the package from serialized package bytes only. Public trust wording remains unchanged.
+The verifier accepted approved, denial, and policy-rejection packages from serialized package bytes only. Public trust wording remains unchanged.

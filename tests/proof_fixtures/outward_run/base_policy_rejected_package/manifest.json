@@ -1,0 +1,13 @@
+{
+  "artifact_paths": {},
+  "bundle_path": "outward_witness_bundle.json",
+  "compare_scope": "outward_run_write_file_policy_rejected_v1",
+  "file_digests": {
+    "ledger_export.json": "9c7d242338df53705410afafdd37ab3c3fa5a880a90ffc0be7a8f1beb89617c1",
+    "outward_witness_bundle.json": "4fcfe9d8bc4827c3728953c028af1a623465b5342df013e0ba9237b81c87c278"
+  },
+  "ledger_export_path": "ledger_export.json",
+  "package_digest": "3bf33f9c47c9643ba8d15a122ebbb3b5394f6fb326f48ac37f50790bf30bb55c",
+  "package_id": "package:run-outward-write-file-policy-rejected-proof",
+  "schema_version": "outward_run_witness_package.v1"
+}

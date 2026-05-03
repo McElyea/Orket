@@ -7,25 +7,13 @@ from typing import Any
 from scripts.proof.outward_run_witness_contract import (
     BUNDLE_SCHEMA_VERSION,
     COMPARE_SCOPE,
+    COMPARE_SCOPE_DENIED,
+    COMPARE_SCOPE_POLICY_REJECTED,
     INVARIANT_SCHEMA_VERSION,
     OPERATOR_SURFACE,
 )
 from scripts.proof.outward_run_witness_ledger import verify_committed_artifact, verify_package_ledger
 from scripts.proof.outward_run_witness_package import OutwardRunWitnessPackage
-
-
-_APPROVED_SEQUENCE = [
-    "run_submitted",
-    "run_started",
-    "turn_started",
-    "proposal_made",
-    "proposal_pending_approval",
-    "proposal_approved",
-    "tool_invoked",
-    "commitment_recorded",
-    "turn_completed",
-    "run_completed",
-]
 
 
 def evaluate_outward_run_invariants(
@@ -54,8 +42,37 @@ def evaluate_outward_run_invariants(
     for code in schema_failures:
         check("schema-gate", False, code)
 
+    if scope == COMPARE_SCOPE_POLICY_REJECTED:
+        _evaluate_policy_rejection_path(check, package, bundle, events)
+        failures = list(dict.fromkeys(failures))
+        assigned = "outward_lab_only" if not failures else "none"
+        signature = _invariant_signature(invariants, failures, scope=scope, claim_tier_assigned=assigned)
+        return {
+            "schema_version": INVARIANT_SCHEMA_VERSION,
+            "result": "pass" if not failures else "fail",
+            "claim_tier_assigned": assigned,
+            "invariants": invariants,
+            "failures": failures,
+            "missing_evidence": failures,
+            "invariant_signature": signature,
+        }
+
+    if scope == COMPARE_SCOPE_DENIED:
+        _evaluate_denial_path(check, package, bundle, events)
+        failures = list(dict.fromkeys(failures))
+        assigned = "outward_lab_only" if not failures else "none"
+        signature = _invariant_signature(invariants, failures, scope=scope, claim_tier_assigned=assigned)
+        return {
+            "schema_version": INVARIANT_SCHEMA_VERSION,
+            "result": "pass" if not failures else "fail",
+            "claim_tier_assigned": assigned,
+            "invariants": invariants,
+            "failures": failures,
+            "missing_evidence": failures,
+            "invariant_signature": signature,
+        }
+
     positions = _positions(events)
-    run_id = str(bundle.get("run_id") or "")
     tool_events = [event for event in events if event.get("event_type") == "tool_invoked"]
     commitment_events = [event for event in events if event.get("event_type") == "commitment_recorded"]
     terminal_events = [event for event in events if event.get("event_type") in {"run_completed", "run_failed"}]
@@ -159,6 +176,103 @@ def _schema_failures(bundle: dict[str, Any], scope: str) -> list[str]:
     return failures
 
 
+def _evaluate_denial_path(check, package: OutwardRunWitnessPackage, bundle: dict[str, Any], events: list[dict[str, Any]]) -> None:
+    positions = _positions(events)
+    tool_events = [event for event in events if event.get("event_type") == "tool_invoked"]
+    commitment_events = [event for event in events if event.get("event_type") == "commitment_recorded"]
+    terminal_events = [event for event in events if event.get("event_type") in {"run_completed", "run_failed"}]
+
+    check(
+        "ORP-INV-001",
+        bool(positions.get("run_submitted")) and all(_position(event) > positions["run_submitted"][0] for event in tool_events),
+        "effect_before_admission",
+    )
+    denial_failure = _denial_path_failure(events)
+    terminal_ok = _terminal_truth_ok(
+        bundle,
+        terminal_events,
+        commitment_events,
+        tool_events,
+        expected_outcomes={"denied"},
+        expected_statuses={"completed"},
+        require_commitment_for_tool=False,
+    )
+    check("ORP-INV-003", terminal_ok == "", terminal_ok or "final_truth_missing")
+    check("denial-approval-gate", _denial_approval_authority_present(bundle), "approval_authority_missing")
+    check("ORP-INV-005", _authority_digests_present(bundle, require_artifact=False), _authority_digest_failure(bundle, require_artifact=False))
+    ledger_result = verify_package_ledger(package)
+    check("ORP-INV-006", ledger_result.get("result") == "pass", str(ledger_result.get("failure_code") or "ledger_chain_broken"))
+    tier_ok = str(bundle.get("claim_tier_request") or "outward_lab_only") == "outward_lab_only"
+    check("ORP-INV-007", tier_ok, "claim_tier_not_supported")
+    pending_position = _first_position(events, "proposal_pending_approval")
+    made_position = _first_position(events, "proposal_made")
+    check(
+        "ORP-INV-008",
+        made_position is not None and pending_position is not None and made_position < pending_position,
+        "proposal_ordering_violated",
+    )
+    check("ORP-INV-012", _model_evidence_anchored(bundle, events), _model_evidence_failure(bundle, events))
+    check("ORP-INV-013", denial_failure == "", denial_failure or "denied_proposal_invoked")
+    check("ORP-INV-016", _ledger_positions_monotonic(events), "ledger_sequence_gap")
+    check("ORP-INV-022", str(package.ledger_export.get("export_scope") or "") == "all", "full_ledger_export_required")
+    check("denial-artifact-gate", not _denial_artifact_refs_present(package, bundle), "denied_effect_artifact_present")
+
+
+def _evaluate_policy_rejection_path(
+    check,
+    package: OutwardRunWitnessPackage,
+    bundle: dict[str, Any],
+    events: list[dict[str, Any]],
+) -> None:
+    positions = _positions(events)
+    tool_events = [event for event in events if event.get("event_type") == "tool_invoked"]
+    commitment_events = [event for event in events if event.get("event_type") == "commitment_recorded"]
+    terminal_events = [event for event in events if event.get("event_type") in {"run_completed", "run_failed"}]
+
+    check(
+        "ORP-INV-001",
+        bool(positions.get("run_submitted")) and all(_position(event) > positions["run_submitted"][0] for event in tool_events),
+        "effect_before_admission",
+    )
+    terminal_ok = _terminal_truth_ok(
+        bundle,
+        terminal_events,
+        commitment_events,
+        tool_events,
+        expected_outcomes={"policy_rejected"},
+        expected_statuses={"completed"},
+        require_commitment_for_tool=False,
+    )
+    check("ORP-INV-003", terminal_ok == "", terminal_ok or "final_truth_missing")
+    check(
+        "policy-rejection-gate",
+        _policy_rejection_authority_present(bundle),
+        "policy_rejection_event_missing",
+    )
+    check(
+        "ORP-INV-005",
+        _authority_digests_present(bundle, require_artifact=False) and _policy_rejection_authority_present(bundle),
+        (
+            _authority_digest_failure(bundle, require_artifact=False)
+            if _authority_digests_present(bundle, require_artifact=False)
+            else "missing_authority_digest"
+        )
+        if _policy_rejection_authority_present(bundle)
+        else "policy_rejection_event_missing",
+    )
+    ledger_result = verify_package_ledger(package)
+    check("ORP-INV-006", ledger_result.get("result") == "pass", str(ledger_result.get("failure_code") or "ledger_chain_broken"))
+    tier_ok = str(bundle.get("claim_tier_request") or "outward_lab_only") == "outward_lab_only"
+    check("ORP-INV-007", tier_ok, "claim_tier_not_supported")
+    check("ORP-INV-012", _model_evidence_anchored(bundle, events), _model_evidence_failure(bundle, events))
+    policy_failure = _policy_rejection_path_failure(bundle, events)
+    check("ORP-INV-014", policy_failure == "", policy_failure or "policy_rejected_proposal_invoked")
+    check("ORP-INV-016", _ledger_positions_monotonic(events), "ledger_sequence_gap")
+    check("ORP-INV-022", str(package.ledger_export.get("export_scope") or "") == "all", "full_ledger_export_required")
+    check("policy-artifact-gate", not _denial_artifact_refs_present(package, bundle), "policy_rejected_effect_artifact_present")
+    check("policy-approval-gate", not _policy_rejection_approval_authority_present(bundle), "policy_rejected_approval_authority_present")
+
+
 def _positions(events: list[dict[str, Any]]) -> dict[str, list[int]]:
     result: dict[str, list[int]] = {}
     for event in events:
@@ -180,9 +294,15 @@ def _terminal_truth_ok(
     terminal_events: list[dict[str, Any]],
     commitment_events: list[dict[str, Any]],
     tool_events: list[dict[str, Any]],
+    *,
+    expected_outcomes: set[str] | None = None,
+    expected_statuses: set[str] | None = None,
+    require_commitment_for_tool: bool = True,
 ) -> str:
     if len(terminal_events) != 1:
         return "final_truth_missing" if not terminal_events else "terminal_status_drift"
+    expected_outcomes = expected_outcomes or {"success", "completed"}
+    expected_statuses = expected_statuses or {"completed", "success"}
     terminal_payload = terminal_events[0].get("payload") if isinstance(terminal_events[0].get("payload"), dict) else {}
     run_authority = bundle.get("run_authority") if isinstance(bundle.get("run_authority"), dict) else {}
     statuses = {
@@ -190,35 +310,37 @@ def _terminal_truth_ok(
         str(run_authority.get("run_status") or ""),
         str(terminal_payload.get("status") or ""),
     }
-    if not statuses <= {"completed", "success"}:
+    if not statuses <= expected_statuses:
         return "terminal_status_drift"
-    if str(terminal_payload.get("outcome") or "") not in {"success", "completed"}:
+    if str(terminal_payload.get("outcome") or "") not in expected_outcomes:
         return "final_truth_missing"
-    if tool_events and not commitment_events:
+    if require_commitment_for_tool and tool_events and not commitment_events:
         return "commitment_missing_after_effect"
     return ""
 
 
-def _authority_digests_present(bundle: dict[str, Any]) -> bool:
+def _authority_digests_present(bundle: dict[str, Any], *, require_artifact: bool = True) -> bool:
     run_authority = bundle.get("run_authority") if isinstance(bundle.get("run_authority"), dict) else {}
     approvals = [item for item in bundle.get("approval_authority") or [] if isinstance(item, dict)]
     ledger = bundle.get("ledger_evidence") if isinstance(bundle.get("ledger_evidence"), dict) else {}
     refs = [item for item in bundle.get("artifact_refs") or [] if isinstance(item, dict)]
-    return (
+    base = (
         bool(run_authority.get("run_record_digest"))
         and all(item.get("approval_record_digest") for item in approvals)
         and bool(ledger.get("ledger_export_digest"))
-        and any(ref.get("classification") == "authority" and ref.get("digest") for ref in refs)
     )
+    if not require_artifact:
+        return base
+    return base and any(ref.get("classification") == "authority" and ref.get("digest") for ref in refs)
 
 
-def _authority_digest_failure(bundle: dict[str, Any]) -> str:
+def _authority_digest_failure(bundle: dict[str, Any], *, require_artifact: bool = True) -> str:
     if bundle.get("projection_only_authority") is True:
         return "projection_substituted_for_authority"
     refs = [item for item in bundle.get("artifact_refs") or [] if isinstance(item, dict)]
     if refs and not any(ref.get("classification") == "authority" for ref in refs):
         return "projection_substituted_for_authority"
-    return "missing_authority_digest" if not _authority_digests_present(bundle) else "projection_substituted_for_authority"
+    return "missing_authority_digest" if not _authority_digests_present(bundle, require_artifact=require_artifact) else "projection_substituted_for_authority"
 
 
 def _tool_args_align(bundle: dict[str, Any], events: list[dict[str, Any]]) -> bool:
@@ -247,6 +369,28 @@ def _approval_authority_failure(bundle: dict[str, Any]) -> str:
     return "" if any(item.get("status") == "approved" for item in approvals) else "approval_status_not_approved"
 
 
+def _denial_approval_authority_present(bundle: dict[str, Any]) -> bool:
+    approvals = [item for item in bundle.get("approval_authority") or [] if isinstance(item, dict)]
+    return any(item.get("status") == "denied" and item.get("approval_record_digest") for item in approvals)
+
+
+def _policy_rejection_authority_present(bundle: dict[str, Any]) -> bool:
+    rejections = [item for item in bundle.get("policy_rejection_authority") or [] if isinstance(item, dict)]
+    return any(
+        item.get("proposal_ref")
+        and item.get("tool_name") == "write_file"
+        and item.get("tool_args_digest")
+        and item.get("policy_result") == "rejected"
+        and item.get("reason")
+        and item.get("policy_event_payload_digest")
+        for item in rejections
+    )
+
+
+def _policy_rejection_approval_authority_present(bundle: dict[str, Any]) -> bool:
+    return any(isinstance(item, dict) for item in bundle.get("approval_authority") or [])
+
+
 def _model_evidence_anchored(bundle: dict[str, Any], events: list[dict[str, Any]]) -> bool:
     model = _first_dict(bundle.get("model_invocation_evidence"))
     proposal = _first_payload(events, "proposal_made")
@@ -268,7 +412,18 @@ def _model_evidence_failure(bundle: dict[str, Any], events: list[dict[str, Any]]
 def _denied_proposal_invoked(events: list[dict[str, Any]]) -> bool:
     denied = _first_position(events, "proposal_denied")
     invoked = _first_position(events, "tool_invoked")
-    return denied is not None and invoked is not None and denied < invoked
+    committed = _first_position(events, "commitment_recorded")
+    return denied is not None and ((invoked is not None and denied < invoked) or (committed is not None and denied < committed))
+
+
+def _denial_path_failure(events: list[dict[str, Any]]) -> str:
+    denied = _first_position(events, "proposal_denied")
+    terminal = _first_terminal_position(events)
+    if denied is None or terminal is None or denied > terminal:
+        return "denial_event_missing"
+    if _denied_proposal_invoked(events):
+        return "denied_proposal_invoked"
+    return ""
 
 
 def _policy_rejected_proposal_invoked(events: list[dict[str, Any]]) -> bool:
@@ -277,9 +432,78 @@ def _policy_rejected_proposal_invoked(events: list[dict[str, Any]]) -> bool:
     return rejected is not None and invoked is not None and rejected < invoked
 
 
+def _policy_rejection_path_failure(bundle: dict[str, Any], events: list[dict[str, Any]]) -> str:
+    rejected = _first_policy_rejection_event(events)
+    terminal = _first_terminal_position(events)
+    if rejected is None or terminal is None or _position(rejected) > terminal:
+        return "policy_rejection_event_missing"
+    identity = _policy_rejected_identity(bundle, rejected)
+    rejected_position = _position(rejected)
+    for event in events:
+        if _position(event) <= rejected_position:
+            continue
+        event_type = str(event.get("event_type") or "")
+        if event_type == "proposal_approved" and _same_policy_proposal(identity, event, fallback_same_turn=True):
+            return "policy_rejected_proposal_approved"
+        if event_type == "tool_invoked" and _same_policy_proposal(identity, event, fallback_same_turn=True):
+            return "policy_rejected_proposal_invoked"
+        if event_type == "commitment_recorded" and _same_policy_proposal(identity, event, fallback_same_turn=True):
+            return "policy_rejected_proposal_committed"
+    return ""
+
+
+def _first_policy_rejection_event(events: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for event in events:
+        if event.get("event_type") == "proposal_policy_rejected":
+            return event
+    return None
+
+
+def _policy_rejected_identity(bundle: dict[str, Any], rejected: dict[str, Any]) -> dict[str, str]:
+    payload = rejected.get("payload") if isinstance(rejected.get("payload"), dict) else {}
+    authority = _first_dict(bundle.get("policy_rejection_authority"))
+    run_id = str(payload.get("run_id") or authority.get("run_id") or bundle.get("run_id") or rejected.get("run_id") or "")
+    turn = str(payload.get("turn") or authority.get("turn_index") or rejected.get("turn") or "1")
+    tool = str(payload.get("tool_name") or payload.get("tool") or authority.get("tool_name") or "")
+    digest = str(payload.get("tool_args_hash") or authority.get("tool_args_digest") or "")
+    proposal_ref = str(payload.get("proposal_ref") or authority.get("proposal_ref") or "")
+    if not proposal_ref and run_id and turn and tool and digest:
+        proposal_ref = f"model_proposal:{run_id}:{turn}:{tool}:{digest}"
+    return {"run_id": run_id, "turn": turn, "tool": tool, "tool_args_hash": digest, "proposal_ref": proposal_ref}
+
+
+def _same_policy_proposal(identity: dict[str, str], event: dict[str, Any], *, fallback_same_turn: bool = False) -> bool:
+    payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+    event_ref = str(payload.get("proposal_ref") or "")
+    if event_ref and identity.get("proposal_ref"):
+        return event_ref == identity["proposal_ref"]
+    event_digest = str(payload.get("tool_args_hash") or payload.get("args_hash") or "")
+    event_tool = str(payload.get("tool_name") or payload.get("tool") or payload.get("connector_name") or "")
+    if event_digest and event_tool:
+        return event_digest == identity.get("tool_args_hash") and event_tool == identity.get("tool")
+    if fallback_same_turn:
+        return str(event.get("run_id") or payload.get("run_id") or "") == identity.get("run_id") and str(
+            event.get("turn") or payload.get("turn") or "1"
+        ) == identity.get("turn")
+    return False
+
+
 def _ledger_positions_monotonic(events: list[dict[str, Any]]) -> bool:
     positions = [_position(event) for event in events]
     return positions == list(range(1, len(events) + 1))
+
+
+def _first_terminal_position(events: list[dict[str, Any]]) -> int | None:
+    positions = [_position(event) for event in events if event.get("event_type") in {"run_completed", "run_failed"}]
+    return min(positions) if positions else None
+
+
+def _denial_artifact_refs_present(package: OutwardRunWitnessPackage, bundle: dict[str, Any]) -> bool:
+    artifact_paths = package.manifest.get("artifact_paths")
+    if isinstance(artifact_paths, dict) and artifact_paths:
+        return True
+    refs = [item for item in bundle.get("artifact_refs") or [] if isinstance(item, dict)]
+    return any(str(ref.get("artifact_role") or ref.get("role") or "") == "committed_output" for ref in refs)
 
 
 def _first_dict(value: Any) -> dict[str, Any]:

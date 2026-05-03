@@ -3,9 +3,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.proof.outward_run_witness_contract import REPORT_SCHEMA_VERSION
+from scripts.proof.outward_run_witness_contract import (
+    COMPARE_SCOPE_DENIED,
+    COMPARE_SCOPE_POLICY_REJECTED,
+    REPORT_SCHEMA_VERSION,
+)
 from scripts.proof.verify_outward_run_witness_package import main, verify_package
-from tests.scripts.test_outward_run_invariant_checker import _valid_package
+from tests.scripts.test_outward_run_invariant_checker import (
+    _valid_denial_package,
+    _valid_package,
+    _valid_policy_rejected_package,
+)
 from tests.scripts.test_outward_run_witness_package import _minimal_package
 
 
@@ -58,6 +66,30 @@ def test_verifier_accepts_valid_single_turn_package(tmp_path: Path) -> None:
     package_root = _valid_package(tmp_path / "outward_run_witness_package.v1")
 
     report = verify_package(package_root)
+
+    assert report["schema_version"] == REPORT_SCHEMA_VERSION
+    assert report["result"] == "accepted"
+    assert report["claim_tier_assigned"] == "outward_lab_only"
+    assert report["missing_evidence"] == []
+
+
+def test_verifier_accepts_valid_denial_package(tmp_path: Path) -> None:
+    """Layer: unit. Verifies the package verifier accepts a complete denial-path package."""
+    package_root = _valid_denial_package(tmp_path / "outward_run_witness_package.v1")
+
+    report = verify_package(package_root, scope=COMPARE_SCOPE_DENIED)
+
+    assert report["schema_version"] == REPORT_SCHEMA_VERSION
+    assert report["result"] == "accepted"
+    assert report["claim_tier_assigned"] == "outward_lab_only"
+    assert report["missing_evidence"] == []
+
+
+def test_verifier_accepts_valid_policy_rejected_package(tmp_path: Path) -> None:
+    """Layer: unit. Verifies the package verifier accepts a complete policy-rejection package."""
+    package_root = _valid_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
+
+    report = verify_package(package_root, scope=COMPARE_SCOPE_POLICY_REJECTED)
 
     assert report["schema_version"] == REPORT_SCHEMA_VERSION
     assert report["result"] == "accepted"

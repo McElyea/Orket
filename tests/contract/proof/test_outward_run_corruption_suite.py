@@ -8,8 +8,12 @@ def test_outward_run_corruption_suite_accepts_base_and_rejects_implemented_corru
     report = run_corruption_suite()
 
     assert report["base_result"] == "accepted"
+    assert report["denial_base_result"] == "accepted"
+    assert report["policy_rejected_base_result"] == "accepted"
     assert report["result"] == "accepted"
     assert report["failed_count"] == 0
-    assert report["implemented_count"] >= 49
+    assert report["implemented_count"] >= 51
     blocked_ids = {row["corruption_id"] for row in report["rows"] if row["status"] == "blocked"}
-    assert {"ORP-CORR-030", "ORP-CORR-031", "ORP-CORR-068"} <= blocked_ids
+    assert blocked_ids == set()
+    passing_ids = {row["corruption_id"] for row in report["rows"] if row["status"] == "pass"}
+    assert {"ORP-CORR-030", "ORP-CORR-031", "ORP-CORR-068"} <= passing_ids
