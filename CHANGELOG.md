@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] - 2026-05-04 - "The Trust Handoff And Runtime Shim Removal Cut"
+
+### Added
+- **Trust Handoff Packet 1**: Added the durable single-output policy-compatible trust handoff contract, offline package emitter and verifier, corruption suite, B-admission integration, ledger event authority, API/runtime tests, and archived Packet 1 closeout.
+
+### Changed
+- **Runtime Import Authority**: Removed the deprecated `orket.orket` compatibility shim after the post-release maintenance cycle passed and migrated live imports to `orket.runtime`.
+- **Roadmap Authority**: Archived the completed Trust Handoff Packet 1 lane, cleared the completed shim-removal future lane, and refreshed the dependency graph snapshot.
+
+### Compatibility
+- `compatibility_status`: `changed`
+- `affected_audience`: `legacy_import_callers; proof_operators`
+- `migration_requirement`: `replace from orket.orket imports with from orket.runtime`
+
+### Required Operator or Extension-Author Action
+- Legacy callers that still import `orket.orket` must migrate to `orket.runtime`.
+- Operators using Packet 1 handoff evidence should use `docs/specs/TRUST_HANDOFF_PACKET1_V1.md` and the canonical proof commands listed there.
+
 ## [0.5.4] - 2026-05-03 - "The Policy-Rejection Fixture Cut"
 
 ### Added

@@ -73,6 +73,10 @@ Legacy `tool_blocked` from direct `Agent.run(...)` remains compatibility telemet
    - `connector_name`, `args_hash`, `result_summary`, `duration_ms`, `outcome`
 7. `commitment_recorded`
    - `run_id`, `tool`, `outcome`
+8. `trust_handoff_verified`
+   - `bundle_id`, `source_run_id`, `source_agent_id`, `committed_output_digest`, `source_policy_digest`, `handoff_policy_compatibility_scope_id`, `envelope_digest`, `package_path`
+9. `trust_handoff_rejected`
+   - `rejection_reason`, `rejection_class`, `bundle_id`, `source_run_id`, `package_path`, `result_class`, `evidence_sufficiency`
 
 ## Agent Factory Lifecycle
 1. `seat_no_roles_configured`

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from orket.orket import ConfigLoader
+from orket.runtime import ConfigLoader
 from orket.runtime_paths import resolve_runtime_db_path
 from orket.schema import EpicConfig, RockConfig
 from orket.vendors.base import VendorCard, VendorEpic, VendorInterface, VendorRock

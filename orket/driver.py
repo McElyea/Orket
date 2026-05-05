@@ -14,7 +14,7 @@ from orket.driver_support_conversation import DriverConversationMixin
 from orket.driver_support_resources import DriverResourceMixin
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
-from orket.orket import ConfigLoader
+from orket.runtime import ConfigLoader
 from orket.project_paths import default_model_root, default_project_root, default_workspace_root
 from orket.schema import DialectConfig, SkillConfig
 

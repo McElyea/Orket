@@ -1,6 +1,6 @@
 # Ledger Export v1
 
-Last updated: 2026-04-26
+Last updated: 2026-05-04
 
 Status: Active contract for the NorthstarRefocus outward-facing pipeline Phase 4.
 
@@ -72,6 +72,7 @@ The `types` filter uses event groups, not arbitrary event type prefixes.
 | `decisions` | `proposal_approved`, `proposal_denied`, `proposal_expired`, `proposal_policy_rejected` |
 | `commitments` | `commitment_recorded` |
 | `tools` | `tool_invoked` |
+| `handoffs` | `trust_handoff_verified`, `trust_handoff_rejected` |
 | `audit` | `ledger_export_requested` |
 | `all` | all v1 outward ledger events |
 

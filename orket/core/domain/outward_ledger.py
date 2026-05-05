@@ -16,6 +16,7 @@ EVENT_GROUPS: dict[str, frozenset[str] | None] = {
     "decisions": frozenset({"proposal_approved", "proposal_denied", "proposal_expired", "proposal_policy_rejected"}),
     "commitments": frozenset({"commitment_recorded"}),
     "tools": frozenset({"tool_invoked"}),
+    "handoffs": frozenset({"trust_handoff_verified", "trust_handoff_rejected"}),
     "audit": frozenset({LEDGER_EXPORT_REQUESTED}),
     "all": None,
 }

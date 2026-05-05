@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.orket import ConfigLoader
+from orket.runtime import ConfigLoader
 from orket.schema import EpicConfig, TeamConfig
 
 pytestmark = pytest.mark.unit

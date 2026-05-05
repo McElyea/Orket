@@ -113,6 +113,17 @@ orket ledger summary <run_id>
 
 `orket ledger verify <file.json>` is offline and does not require a running Orket instance. Filtered exports verify as partial views anchored to the canonical ledger hash; they do not claim omitted event payload verification.
 
+## Trust Handoff Packet 1 Proof
+Packet 1 handoff proof packages are host-issued local packages over one committed approved outward source run and one target B run id. The verifier is offline and consumes package bytes only.
+
+```bash
+python scripts/proof/emit_trust_handoff_envelope.py --source-run-id <source_run_id> --target-agent-id <target_run_id> --scope-id <scope_id> --out benchmarks/results/proof/trust_handoff_envelope_package.v1
+python scripts/proof/verify_trust_handoff_envelope.py --package benchmarks/results/proof/trust_handoff_envelope_package.v1 --out benchmarks/results/proof/trust_handoff_verifier_report.json
+python scripts/proof/run_trust_handoff_corruption_suite.py --base benchmarks/results/proof/trust_handoff_envelope_package.v1 --out benchmarks/results/proof/trust_handoff_corruption_report.json
+```
+
+B-side admission is enabled with `task.acceptance_contract.handoff_required=true`. The contract must also include `handoff_policy_compatibility_scope_id`, `handoff_envelope_package_path`, and `expected_source_agent_id`. The submitted B `run_id` is the target agent identity for Packet 1, so it must match the package `target_agent_id`.
+
 ## Live Governed Run Evidence Bundle
 Use this workflow when you need public proof that the outward pipeline invoked a live model provider, derived a governed connector proposal from model output, gated the connector effect on approval, and verified ledger integrity offline.
 

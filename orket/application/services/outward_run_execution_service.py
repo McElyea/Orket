@@ -39,6 +39,7 @@ from orket.application.services.outward_run_execution_plan import (
     task_with_policy_rejection,
     task_with_tool_result,
 )
+from orket.application.services.trust_handoff_admission import TrustHandoffAdmissionService
 from orket.core.domain.outward_run_events import LedgerEvent
 from orket.core.domain.outward_runs import OutwardRunRecord
 
@@ -78,12 +79,22 @@ class OutwardRunExecutionService:
             connector_registry=connector_registry,
             workspace_root=workspace_root,
         )
+        self.trust_handoff_admission = TrustHandoffAdmissionService(
+            run_store=run_store,
+            event_store=event_store,
+            utc_now=utc_now,
+        )
         self.utc_now = utc_now
 
     async def start_if_ready(self, run_id: str) -> OutwardRunRecord:
         run = await self._require_run(run_id)
+        if run.status != "queued":
+            return run
+        run, admitted = await self.trust_handoff_admission.admit_if_required(run)
+        if not admitted:
+            return run
         steps = _acceptance_steps(run)
-        if not steps or run.status != "queued":
+        if not steps:
             return run
 
         started = replace(run, status="running", started_at=run.started_at or self.utc_now(), current_turn=1)

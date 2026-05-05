@@ -4,7 +4,7 @@ from typing import Any
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.logging import log_event
-from orket.orket import ConfigLoader
+from orket.runtime import ConfigLoader
 from orket.project_paths import default_model_root, default_project_root, default_workspace_root
 from orket.schema import EngineRegistry, EpicConfig, RockConfig, TeamConfig
 from orket.settings import load_user_settings, save_user_settings

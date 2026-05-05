@@ -1,6 +1,6 @@
 ﻿import json
 
-from orket.orket import ConfigLoader
+from orket.runtime import ConfigLoader
 from orket.schema import EpicConfig
 
 

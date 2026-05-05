@@ -1,6 +1,6 @@
 # Outward Run Witness v1
 
-Last updated: 2026-05-02
+Last updated: 2026-05-04
 Status: Active durable contract for approved, denied, and policy-rejected single-turn outward proof kernels
 Owner: Orket Core
 
@@ -159,6 +159,16 @@ Digest-only ledger summaries are commitments, not authority for absence or compl
 For ORP-INV-012, model evidence is anchored only if the packaged full ledger export contains the `proposal_made` payload fields naming the model invocation, prompt, response, and proposal-extraction digests, and those digests match the bundle's `model_invocation_evidence` entry.
 
 This proves only that the proposal was recorded with anchored model-evidence digests. It does not prove provider output semantics, replay the model call, or validate that the model reasoned correctly.
+
+### Packet 1 Trust Handoff Source Anchors
+
+`docs/specs/TRUST_HANDOFF_PACKET1_V1.md` consumes approved outward witness packages as source proof authority for a downstream B admission check.
+
+For that Packet 1 handoff use, an approved source witness bundle exposes:
+1. source policy identity at `run_authority.policy_overrides_digest`, used as `source_policy_digest`,
+2. exactly one committed-output authority artifact reference with `artifact_role=committed_output`, `classification=authority`, `package_path=artifacts/committed_output`, and SHA-256 `digest`.
+
+The handoff verifier treats the artifact reference shape as source-output anchor vocabulary. Digest equality to the packaged handoff committed output is checked by the handoff verifier, not by this outward witness contract.
 
 ### Admitted Initial Event Types
 

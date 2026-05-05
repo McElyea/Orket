@@ -8,7 +8,7 @@ from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.agents.agent import Agent
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
-from orket.orket import ConfigLoader
+from orket.runtime import ConfigLoader
 from orket.schema import EpicConfig, RockConfig, TeamConfig
 from orket.utils import sanitize_name
 

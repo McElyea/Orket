@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-05-02
+Last updated: 2026-05-04
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-No active priority items.
+None.
 
 ## Maintenance (Non-Priority)
 
@@ -15,9 +15,9 @@ No active priority items.
 ## Paused / Checkpointed Lanes
 
 1. NorthStar disposable AWS smoke setup lane -- Paused pending Bedrock access. Authority: `docs/projects/northstar-aws-smoke-setup/NORTHSTAR_AWS_SMOKE_SETUP_IMPLEMENTATION_PLAN.md`. Reopen only when Bedrock access is available and the user explicitly requests live completion or reopen.
-1. NorthStar second governed change packet family admission lane -- Paused after the truthful 2026-04-20 Terraform public-admission checkpoint. Authority: `docs/projects/northstar-governed-change-packets/ORKET_NORTHSTAR_SECOND_GOVERNED_CHANGE_PACKET_FAMILY_IMPLEMENTATION_PLAN.md`. Reopen only when a bounded change can truthfully provide the required non-secret live inputs `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI`, `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID`, and `AWS_REGION` or `AWS_DEFAULT_REGION`, rerun the full Workstream 2 proof envelope, and re-evaluate the publication-readiness and publication-gate outputs in the same change, or when the lane is explicitly reopened for retirement.
-1. governed-proof strategic lane -- Paused after the truthful 2026-04-19 provider-backed Bedrock checkpoint. Authority: `docs/projects/governed-proof/ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md`. Reopen only when a bounded change can run the admitted provider-backed governed-proof path with non-zero Bedrock inference quota, or when the lane is explicitly reopened for retirement.
-1. Prompt Reforger Gemma tool-use lane -- Paused after the truthful 2026-04-04 portability checkpoint. Authority: `docs/projects/PromptReforgerToolCompatibility/PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md`. Reopen only for a bounded change set that clears the frozen portability corpus, with same-change rerun of the canonical inventory, cycle, and judge artifacts.
+2. NorthStar second governed change packet family admission lane -- Paused after the truthful 2026-04-20 Terraform public-admission checkpoint. Authority: `docs/projects/northstar-governed-change-packets/ORKET_NORTHSTAR_SECOND_GOVERNED_CHANGE_PACKET_FAMILY_IMPLEMENTATION_PLAN.md`. Reopen only when a bounded change can truthfully provide the required non-secret live inputs `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI`, `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID`, and `AWS_REGION` or `AWS_DEFAULT_REGION`, rerun the full Workstream 2 proof envelope, and re-evaluate the publication-readiness and publication-gate outputs in the same change, or when the lane is explicitly reopened for retirement.
+3. governed-proof strategic lane -- Paused after the truthful 2026-04-19 provider-backed Bedrock checkpoint. Authority: `docs/projects/governed-proof/ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md`. Reopen only when a bounded change can run the admitted provider-backed governed-proof path with non-zero Bedrock inference quota, or when the lane is explicitly reopened for retirement.
+4. Prompt Reforger Gemma tool-use lane -- Paused after the truthful 2026-04-04 portability checkpoint. Authority: `docs/projects/PromptReforgerToolCompatibility/PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md`. Reopen only for a bounded change set that clears the frozen portability corpus, with same-change rerun of the canonical inventory, cycle, and judge artifacts.
 
 ## Staged / Waiting (Externally Gated)
 
@@ -28,9 +28,8 @@ No active priority items.
 
 1. protocol-governed local provider compatibility expansion (`vLLM`, `llama.cpp`) -- Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Readiness must be regenerated with `scripts/protocol/check_local_prompting_promotion_readiness.py` before reopen; do not treat local ignored `benchmarks/results/...` output as durable roadmap authority. Reopen only with an explicit scoped implementation request.
 2. marshaller requirements hardening -- Hold until requirements are mature and explicitly approved for execution.
-3. `orket.orket` compatibility shim removal -- Remove the deprecated shim after one techdebt cycle once production imports use `orket.runtime` directly.
-4. remaining outward run proof kernel path-family and extension work -- Plan: `docs/projects/future/outward-run-proof-kernel-extensions/OUTWARD_RUN_PROOF_KERNEL_EXTENSIONS.md`. Reopen only with an explicit scoped implementation request for out-of-scope, multi-turn, ODR, or posture-widening evidence beyond the approved single-turn, completed denial-fixture, and completed policy-rejection slices.
-5. outward run formal methods strengthening -- Plan: `docs/projects/future/outward-run-formal-methods.md`. Reopen only after the archived approved single-turn proof kernel closeout remains green and any proposed formal model maps back to active outward witness and invariant specs.
+3. remaining outward run proof kernel path-family and extension work -- Plan: `docs/projects/future/outward-run-proof-kernel-extensions/OUTWARD_RUN_PROOF_KERNEL_EXTENSIONS.md`. Reopen only with an explicit scoped implementation request for out-of-scope, multi-turn, ODR, or posture-widening evidence beyond the approved single-turn, completed denial-fixture, and completed policy-rejection slices.
+4. outward run formal methods strengthening -- Plan: `docs/projects/future/outward-run-formal-methods.md`. Reopen only after the archived approved single-turn proof kernel closeout remains green and any proposed formal model maps back to active outward witness and invariant specs.
 
 ## Project Index
 

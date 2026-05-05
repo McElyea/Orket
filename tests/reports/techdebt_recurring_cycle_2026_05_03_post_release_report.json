@@ -1,0 +1,127 @@
+{
+  "schema_version": "techdebt.recurring_cycle.v1",
+  "cycle_id": "2026-05-03-post-release",
+  "status": "pass",
+  "generated_on": "2026-05-03",
+  "sections_executed": [
+    "A",
+    "D"
+  ],
+  "sections_skipped": [
+    {
+      "section": "B",
+      "reason": "Post-release required cycle; no release-candidate or major runtime-policy/protocol behavior change scoped for this pass."
+    },
+    {
+      "section": "C",
+      "reason": "Post-release required cycle; no provider/model/template/runtime-policy change scoped for this pass."
+    }
+  ],
+  "evidence": {
+    "commands": [
+      "python scripts/governance/check_td03052026_gate_audit.py --require-ready --out benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+      "python scripts/governance/check_docs_project_hygiene.py",
+      "python -m pytest -q"
+    ],
+    "results": {
+      "td03052026_gate_audit": "PASS",
+      "docs_project_hygiene": "PASS",
+      "pytest": "PASS (4334 passed, 53 skipped, 6 warnings in 443.40s (0:07:23))"
+    },
+    "cycle_root": "benchmarks/results/techdebt/recurring/2026-05-03-post-release",
+    "tracked_artifact": "benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+    "stdout_log": "benchmarks/results/techdebt/recurring/2026-05-03-post-release/stdout.log",
+    "stderr_log": "benchmarks/results/techdebt/recurring/2026-05-03-post-release/stderr.log",
+    "environment": "benchmarks/results/techdebt/recurring/2026-05-03-post-release/environment.json",
+    "report": "tests/reports/techdebt_recurring_cycle_2026_05_03_post_release_report.json"
+  },
+  "sections": {
+    "A": {
+      "status": "PASS",
+      "command_results": [
+        {
+          "id": "td03052026_gate_audit",
+          "command": "python scripts/governance/check_td03052026_gate_audit.py --require-ready --out benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+          "returncode": 0,
+          "status": "PASS",
+          "detail": "TD03052026 gate audit passed.",
+          "duration_seconds": 0.084
+        },
+        {
+          "id": "docs_project_hygiene",
+          "command": "python scripts/governance/check_docs_project_hygiene.py",
+          "returncode": 0,
+          "status": "PASS",
+          "detail": "Non-archive project folders: OrketUI, PromptReforgerToolCompatibility, future, governed-proof, marshaller, northstar-aws-smoke-setup, northstar-governed-change-packets, techdebt",
+          "duration_seconds": 0.042
+        },
+        {
+          "id": "pytest",
+          "command": "python -m pytest -q",
+          "returncode": 0,
+          "status": "PASS",
+          "detail": "4334 passed, 53 skipped, 6 warnings in 443.40s (0:07:23)",
+          "duration_seconds": 445.283
+        }
+      ]
+    },
+    "B": {
+      "status": "SKIPPED",
+      "reason": "Post-release required cycle; no release-candidate or major runtime-policy/protocol behavior change scoped for this pass."
+    },
+    "C": {
+      "status": "SKIPPED",
+      "reason": "Post-release required cycle; no provider/model/template/runtime-policy change scoped for this pass."
+    },
+    "D": {
+      "status": "PASS",
+      "note": "Reviewed checklist for duplicate or stale recurring items during post-release maintenance cycle; no checklist edit required before bounded shim-removal follow-up."
+    }
+  },
+  "assertions": [
+    {
+      "id": "section_a_td03052026_gate_audit_passed",
+      "passed": true,
+      "detail": "status=PASS; detail=TD03052026 gate audit passed."
+    },
+    {
+      "id": "section_a_docs_project_hygiene_passed",
+      "passed": true,
+      "detail": "status=PASS; detail=Non-archive project folders: OrketUI, PromptReforgerToolCompatibility, future, governed-proof, marshaller, northstar-aws-smoke-setup, northstar-governed-change-packets, techdebt"
+    },
+    {
+      "id": "section_a_canonical_pytest_passed",
+      "passed": true,
+      "detail": "status=PASS; detail=4334 passed, 53 skipped, 6 warnings in 443.40s (0:07:23)"
+    },
+    {
+      "id": "section_d_review_note_recorded",
+      "passed": true,
+      "detail": "Reviewed checklist for duplicate or stale recurring items during post-release maintenance cycle; no checklist edit required before bounded shim-removal follow-up."
+    }
+  ],
+  "notes": [
+    "Section A remains green (G1-G7).",
+    "Reviewed checklist for duplicate or stale recurring items during post-release maintenance cycle; no checklist edit required before bounded shim-removal follow-up."
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-05-03T19:54:57.681203Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:9011fe666cb6d73bcef1596ac7220c791017611611c9fac775dfe3f2120cafb3",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 144,
+        "paths_total_reference": 144,
+        "churn_paths": 144,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

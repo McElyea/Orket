@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.exceptions import CardNotFound
-from orket.orket import ConfigLoader
+from orket.runtime import ConfigLoader
 from orket.schema import EpicConfig, IssueConfig, RockConfig
 
 

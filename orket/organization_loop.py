@@ -4,7 +4,7 @@ from pathlib import Path
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.core.domain.critical_path import CriticalPathEngine
 from orket.logging import log_event
-from orket.orket import ConfigLoader, ExecutionPipeline
+from orket.runtime import ConfigLoader, ExecutionPipeline
 from orket.schema import EpicConfig, OrganizationConfig
 
 
