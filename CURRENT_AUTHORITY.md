@@ -125,7 +125,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 ```json
 {
   "version": 1,
-  "last_updated": "2026-05-04",
+  "last_updated": "2026-05-09",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -218,6 +218,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
         "card_viewer_runner_surface_contract_source": "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md",
         "card_authoring_surface_contract_source": "docs/specs/CARD_AUTHORING_SURFACE_V1.md",
         "flow_authoring_surface_contract_source": "docs/specs/FLOW_AUTHORING_SURFACE_V1.md",
+        "apophenia_external_extension_contract_source": "docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md",
         "terraform_plan_reviewer_v1_contract_source": "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md",
         "local_prompting_contract_source": "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
         "run_evidence_graph_contract_source": "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
@@ -227,7 +228,8 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
           "docs/CONTRIBUTOR.md",
           "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md",
           "docs/specs/CARD_AUTHORING_SURFACE_V1.md",
-          "docs/specs/FLOW_AUTHORING_SURFACE_V1.md"
+          "docs/specs/FLOW_AUTHORING_SURFACE_V1.md",
+          "docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md"
         ]
       },
       "card_viewer_runner_surface": {

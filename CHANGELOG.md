@@ -5,6 +5,22 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.8] - 2026-05-09 - "The Authority Map Test Recovery Cut"
+
+### Changed
+- **Machine-Readable Authority Map**: Synchronized the `CURRENT_AUTHORITY.md` JSON payload date and active spec index with the Apophenia contract promotion so the platform authority-map contract passes again.
+
+### Fixed
+- **Root Pytest Verification Debt**: Recovered the stale authority-map contract failure and proved the canonical `python -m pytest -q` command completes successfully.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. The canonical root test command remains `python -m pytest -q`.
+
 ## [0.5.7] - 2026-05-09 - "The Apophenia Closeout Cut"
 
 ### Added
