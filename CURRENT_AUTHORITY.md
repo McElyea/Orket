@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-05-04
+Last updated: 2026-05-09
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -21,6 +21,8 @@ It defines only the currently authoritative paths that agents and contributors m
 Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the named card runtime, but it is not part of the canonical runtime path list below.
 
 ## Current Canonical Paths
+
+Apophenia external extension durable contract: `docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md`; implementation remains outside Orket core at `C:\Source\Orket-Extensions\Apophenia`, and Orket stays a generic host runtime for Apophenia through generic extension runtime endpoints.
 
 1. Install/bootstrap: `python -m pip install -e ".[dev]"`
 2. Default runtime: `python main.py`

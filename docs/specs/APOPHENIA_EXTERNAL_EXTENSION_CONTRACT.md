@@ -1,15 +1,16 @@
-# Apophenia Contract
+# Apophenia External Extension Contract
 
-Last updated: 2026-05-08
-Status: Phase 0-3 implementation contract. Phase 3 live-observation, layout, and sanitizer gates passed on 2026-05-08.
+Last updated: 2026-05-09
+Status: Active durable contract for the external Apophenia extension. Phase 0-3 implementation and proof gates passed on 2026-05-08.
 
 ## Authority
 
-This contract is the durable execution contract for Apophenia while it remains in `docs/projects/future/apophenia/`.
+This contract is the durable execution contract for Apophenia.
 
-Source documents:
-1. `docs/projects/future/apophenia/apophenia_requirements.md`
-2. `docs/projects/future/apophenia/apophenia_implementation_plan.md`
+Archived source documents:
+1. `docs/projects/archive/apophenia/2026-05-09-CLOSEOUT/apophenia_requirements.md`
+2. `docs/projects/archive/apophenia/2026-05-09-CLOSEOUT/apophenia_implementation_plan.md`
+3. `docs/projects/archive/apophenia/2026-05-09-CLOSEOUT/CLOSEOUT.md`
 
 Orket remains a generic host runtime. Apophenia-specific behavior lives in the BFF layer and Chrome extension. Do not add Apophenia-specific semantics to Orket core runtime paths.
 
@@ -19,7 +20,7 @@ Implementation root: `C:\Source\Orket-Extensions\Apophenia`
 
 All Phase 0+ BFF code, Chrome extension code, local config examples, packaging files, and project-local tests live under the implementation root above.
 
-`C:\Source\Orket` keeps Apophenia planning and contract authority only, unless the user explicitly requests a bounded Orket host-runtime change.
+`C:\Source\Orket` keeps Apophenia contract authority only, unless the user explicitly requests a bounded Orket host-runtime change.
 
 ## Architecture Boundary
 
@@ -258,7 +259,7 @@ toml>=0.10
 
 Do not use `aiofiles` for Apophenia file writes. Use `asyncio.to_thread(path.write_text, ...)`.
 
-The external implementation root owns its own dependency authority. If it does not have a package manifest when Phase 0 starts, create one there. Do not add Apophenia dependencies to Orket's `pyproject.toml` unless Apophenia code is explicitly implemented inside the Orket repo.
+The external implementation root owns its own dependency authority. Do not add Apophenia dependencies to Orket's `pyproject.toml` unless Apophenia code is explicitly implemented inside the Orket repo.
 
 Extension dependency:
 
@@ -321,17 +322,17 @@ max_observations_per_day = 50
 enabled = false
 ```
 
-## Phase Gates
+## Completed Phase Gates
 
-Phase 0 may proceed when:
+Phase 0 completed on 2026-05-08:
 1. This contract exists.
 2. BFF bind, auth, token persistence, Orket URL validation, and `/config` are implemented and verified.
 
-Phase 1 may proceed when:
+Phase 1 completed on 2026-05-08:
 1. Phase 0 is verified.
 2. Content classification, memory writes, truncation, count cap, and fail-closed classifier behavior are implemented and verified.
 
-Phase 2 may proceed when:
+Phase 2 completed on 2026-05-08:
 1. Phase 1 is verified.
 2. Nudge behavior, throttle persistence, input safety, style cleanup, and kill switch are implemented and verified.
 

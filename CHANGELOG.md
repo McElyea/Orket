@@ -5,6 +5,23 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.7] - 2026-05-09 - "The Apophenia Closeout Cut"
+
+### Added
+- **Apophenia Durable Contract**: Promoted the completed Apophenia external-extension contract to `docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md` and named it in the current authority snapshot.
+- **Apophenia Closeout Archive**: Archived the completed Apophenia requirements and implementation plan under `docs/projects/archive/apophenia/2026-05-09-CLOSEOUT/` with a closeout record.
+
+### Changed
+- **Future Lane Hygiene**: Removed the completed Apophenia authority packet from the future project lane so the external implementation has one durable Orket-side contract authority.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `extension_author_only`
+- `migration_requirement`: `update Apophenia contract references from docs/projects/future/apophenia/CONTRACT.md to docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md`
+
+### Required Operator or Extension-Author Action
+- Extension authors should use `docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md` as the Orket-side Apophenia contract authority. The implementation root remains `C:\Source\Orket-Extensions\Apophenia`.
+
 ## [0.5.6] - 2026-05-08 - "The Apophenia Authority Cut"
 
 ### Added
