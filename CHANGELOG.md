@@ -5,6 +5,23 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.6] - 2026-05-08 - "The Apophenia Authority Cut"
+
+### Added
+- **Apophenia Authority Packet**: Added the Apophenia requirements, implementation plan, and durable contract under `docs/projects/future/apophenia/`, pointing Phase 0+ implementation to the external root `C:\Source\Orket-Extensions\Apophenia`.
+- **Phase 3 Proof Closure**: Recorded the completed live-observation, constellation-layout, browser sanitizer, and Python `defusedxml` proof gates for Apophenia.
+
+### Changed
+- **Dependency Authority**: Updated Apophenia's planned Readability dependency authority to `@mozilla/readability` `0.6.0`, matching the external implementation package and avoiding the vulnerable `0.5.0` pin.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `extension_author_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No immediate action required. Apophenia implementation work now uses `C:\Source\Orket-Extensions\Apophenia`; Orket core remains the planning and contract authority only.
+
 ## [0.5.5] - 2026-05-04 - "The Trust Handoff And Runtime Shim Removal Cut"
 
 ### Added
