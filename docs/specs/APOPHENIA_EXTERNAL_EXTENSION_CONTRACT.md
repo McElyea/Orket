@@ -78,7 +78,19 @@ Protected endpoints require `X-Apophenia-Token`.
 | `POST` | `/observe` | yes | Classify, store, return nudge instruction |
 | `GET` | `/diagram/today` | yes | Return today's SVG or `404` |
 | `POST` | `/diagram/generate` | yes | Trigger daily job idempotently |
+| `GET` | `/models?provider={provider}` | yes | Return Orket generic extension runtime model catalog for `ollama`, `lmstudio`, or `openai_compat` |
 | `GET` | `/status` | yes | Return health, observation count, job state |
+
+## Model Selection Contract
+
+Apophenia model selection is a BFF configuration concern, not Chrome extension state.
+
+1. `[llm].provider` defaults to `""`, which delegates provider selection to Orket's runtime default.
+2. `[llm].model` defaults to `""`, which delegates model selection to Orket's runtime default.
+3. Admitted providers are `ollama`, `lmstudio`, and `openai_compat`; an empty provider is also admitted for default resolution.
+4. Classification, connection proposal, and verifier LLM calls must pass the configured provider and model to Orket's generic `/runtime/llm/generate` endpoint.
+5. The BFF `/models` endpoint must delegate to Orket's generic `/runtime/models` endpoint and must not maintain its own model inventory.
+6. Chrome extension content observation must not choose models directly.
 
 ## Date Authority
 
@@ -317,6 +329,10 @@ significance_threshold = 0.6
 [memory]
 retention_days = 7
 max_observations_per_day = 50
+
+[llm]
+provider = ""
+model = ""
 
 [local_first_override]
 enabled = false

@@ -13,7 +13,7 @@ def test_provider_truth_table_snapshot_has_expected_providers() -> None:
     payload = provider_truth_table_snapshot()
     assert payload["schema_version"] == "1.0"
     providers = [row["provider"] for row in payload["providers"]]
-    assert providers == ["ollama", "openai_compat", "lmstudio"]
+    assert providers == ["ollama", "openai_compat", "lmstudio", "llama_cpp"]
 
 
 # Layer: contract
@@ -29,7 +29,7 @@ def test_provider_truth_table_capabilities_use_only_registered_states() -> None:
 
 # Layer: contract
 def test_validate_provider_truth_table_returns_sorted_provider_names() -> None:
-    assert validate_provider_truth_table() == ("lmstudio", "ollama", "openai_compat")
+    assert validate_provider_truth_table() == ("llama_cpp", "lmstudio", "ollama", "openai_compat")
 
 
 # Layer: contract

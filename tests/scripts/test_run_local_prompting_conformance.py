@@ -87,6 +87,31 @@ def test_run_local_prompting_conformance_records_lmstudio_session_mode_in_manife
     assert suite_manifest["lmstudio_session_id_present"] is True
 
 
+def test_run_local_prompting_conformance_accepts_llama_cpp_mock_profile(tmp_path: Path) -> None:
+    out_root = tmp_path / "local_prompting"
+    exit_code = main(
+        [
+            "--provider",
+            "llama_cpp",
+            "--model",
+            "qwen3.6-27b-q4_k_m",
+            "--cases",
+            "1",
+            "--mock",
+            "--strict",
+            "--out-root",
+            str(out_root),
+        ]
+    )
+    assert exit_code == 0
+
+    profile_root = out_root / "conformance" / "llama_cpp" / "llama_cpp.qwen.chatml.v1"
+    assert (profile_root / "strict_json_report.json").exists()
+    render_verification = json.loads((profile_root / "render_verification.json").read_text(encoding="utf-8"))
+    assert render_verification["method"] == "message_payload_audited"
+    assert render_verification["render_observability_classification"] == "message_payload_audited"
+
+
 def test_run_local_prompting_conformance_sanitizes_lmstudio_cache_pre_and_post(tmp_path: Path, monkeypatch) -> None:
     out_root = tmp_path / "local_prompting"
     stages: list[str] = []

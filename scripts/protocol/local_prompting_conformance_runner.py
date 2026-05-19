@@ -91,7 +91,7 @@ async def run_cases(
                 "anti_meta": anti_meta,
             }
         )
-        render_hash = str(raw.get("template_hash") or "")
+        render_hash = str(raw.get("template_hash") or raw.get("prompt_fingerprint") or "")
         if render_hash:
             render_hashes.append(render_hash)
         telemetry_samples.append(

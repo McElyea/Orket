@@ -76,6 +76,30 @@ _PROVIDER_TRUTH_ROWS: tuple[dict[str, Any], ...] = (
             "orket/adapters/llm/local_model_provider.py",
         ],
     },
+    {
+        "provider": "llama_cpp",
+        "canonical_provider": "openai_compat",
+        "capabilities": {
+            "streaming": "conditional",
+            "json_mode": "conditional",
+            "tools": "conditional",
+            "image_input": "unknown",
+            "seed_control": "conditional",
+            "context_length_tokens": "conditional",
+            "repair_tolerance": "supported",
+        },
+        "notes": [
+            "llama.cpp first slice resolves through OpenAI-compatible chat completions while preserving requested_provider=llama_cpp.",
+            "Orket does not start, stop, supervise, or download llama.cpp models in this slice.",
+            "The admitted first profile is llama_cpp.qwen.chatml.v1 with JSON-wrapper tool-call mode.",
+            "Provider support remains unpromoted until the real GGUF preflight and smoke proof gates pass.",
+        ],
+        "evidence_surfaces": [
+            "orket/runtime/config/provider_runtime_target.py",
+            "orket/runtime/config/gguf_model_inventory.py",
+            "orket/adapters/llm/local_model_provider.py",
+        ],
+    },
 )
 
 

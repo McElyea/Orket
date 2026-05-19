@@ -10,7 +10,7 @@ def test_model_profile_bios_snapshot_contains_expected_profiles() -> None:
     payload = model_profile_bios_snapshot()
     assert payload["schema_version"] == "1.0"
     providers = {row["provider"] for row in payload["profiles"]}
-    assert providers == {"ollama", "openai_compat", "lmstudio"}
+    assert providers == {"ollama", "openai_compat", "lmstudio", "llama_cpp"}
 
 
 # Layer: contract

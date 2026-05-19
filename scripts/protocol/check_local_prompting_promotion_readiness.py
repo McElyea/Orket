@@ -290,7 +290,7 @@ def _evaluate_profile(
     probe_mode = str(probe_method.get("mode") or "").strip().lower()
     probe_name = str(probe_method.get("method") or "").strip()
     live_ok = (not require_live) or probe_mode == "live"
-    primary_path_ok = probe_name in {"runtime_response_metadata", "request_payload_hash"}
+    primary_path_ok = probe_name in {"runtime_response_metadata", "request_payload_hash", "message_payload_audited"}
     gates.append(
         _gate(
             "G6_live_primary_path",

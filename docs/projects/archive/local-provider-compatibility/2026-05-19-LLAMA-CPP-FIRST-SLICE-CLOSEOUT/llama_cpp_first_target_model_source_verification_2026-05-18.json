@@ -1,0 +1,29 @@
+{
+  "schema_version": "llama_cpp_first_target_model_source_verification.v1",
+  "captured_date": "2026-05-18",
+  "source": "huggingface",
+  "repo_id": "unsloth/Qwen3.6-27B-GGUF",
+  "repo_url": "https://huggingface.co/unsloth/Qwen3.6-27B-GGUF",
+  "file_url": "https://huggingface.co/unsloth/Qwen3.6-27B-GGUF/blob/main/Qwen3.6-27B-Q4_K_M.gguf",
+  "resolve_url": "https://huggingface.co/unsloth/Qwen3.6-27B-GGUF/resolve/main/Qwen3.6-27B-Q4_K_M.gguf",
+  "filename": "Qwen3.6-27B-Q4_K_M.gguf",
+  "source_revision": "82d411acf4a06cfb8d9b073a5211bf410bfc29bf",
+  "source_license": "apache-2.0",
+  "remote_expected_sha256": "5ed60d0af4650a854b1755bd392f9aef4872643dc25a254bc68043fa638392a0",
+  "remote_size_bytes": 16817244384,
+  "remote_size_display": "16.8 GB",
+  "xet_hash": "85a68868db9ae3eac97b20a123249c5837d43692de58cd3dafd1fbe4d5725b34",
+  "verification_method": [
+    "Hugging Face model API confirmed repo id and license.",
+    "Hugging Face tree API confirmed exact filename, size, LFS SHA256, and Xet hash.",
+    "Hugging Face resolve HEAD headers confirmed X-Repo-Commit, X-Linked-Size, X-Linked-ETag, and X-Xet-Hash.",
+    "Hugging Face range request confirmed Content-Range byte total."
+  ],
+  "observed_headers": {
+    "X-Repo-Commit": "82d411acf4a06cfb8d9b073a5211bf410bfc29bf",
+    "X-Linked-Size": "16817244384",
+    "X-Linked-ETag": "\"5ed60d0af4650a854b1755bd392f9aef4872643dc25a254bc68043fa638392a0\"",
+    "X-Xet-Hash": "85a68868db9ae3eac97b20a123249c5837d43692de58cd3dafd1fbe4d5725b34",
+    "Content-Range": "bytes 0-0/16817244384"
+  }
+}

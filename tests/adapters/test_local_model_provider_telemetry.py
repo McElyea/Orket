@@ -61,6 +61,7 @@ def test_local_model_provider_ns_to_ms_is_type_strict() -> None:
         ("ollama", "ollama", "ollama"),
         ("openai_compat", "openai_compat", "openai_compat"),
         ("lmstudio", "openai_compat", "lmstudio"),
+        ("llama_cpp", "openai_compat", "llama_cpp"),
         ("unknown-provider", "ollama", "ollama"),
     ],
 )
@@ -78,6 +79,19 @@ def test_local_model_provider_maps_provider_env_consistently(
 
     assert provider.provider_backend == expected_backend
     assert provider.provider_name == expected_name
+
+
+def test_local_model_provider_llama_cpp_defaults_to_local_llama_server(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: unit. Verifies llama.cpp does not inherit LM Studio's OpenAI-compatible default URL."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "llama_cpp")
+    monkeypatch.delenv("ORKET_LLM_OPENAI_BASE_URL", raising=False)
+    monkeypatch.delenv("ORKET_MODEL_STREAM_OPENAI_BASE_URL", raising=False)
+
+    provider = LocalModelProvider(model="qwen3.6-27b-q4_k_m")
+
+    assert provider.provider_backend == "openai_compat"
+    assert provider.provider_name == "llama_cpp"
+    assert provider.openai_base_url == "http://127.0.0.1:8080/v1"
 
 
 def test_local_model_provider_explicit_provider_override_beats_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -186,6 +200,85 @@ async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: 
     }
     assert isinstance(response.raw["timings"]["prompt_ms"], float)
     assert isinstance(response.raw["timings"]["predicted_ms"], float)
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_llama_cpp_request_shape_telemetry(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: contract. Verifies llama.cpp records provider lineage and message-payload audit telemetry."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "llama_cpp")
+    provider = LocalModelProvider(model="qwen3.6-27b-q4_k_m")
+
+    async def _fake_resolve(**kwargs: Any) -> ProviderRuntimeTarget:
+        _ = kwargs
+        return ProviderRuntimeTarget(
+            requested_provider="llama_cpp",
+            canonical_provider="openai_compat",
+            requested_model="qwen3.6-27b-q4_k_m",
+            model_id="qwen3.6-27b-q4_k_m",
+            base_url="http://127.0.0.1:8080/v1",
+            resolution_mode="requested",
+            inventory_source="http_models+gguf_inventory",
+            available_models=("qwen3.6-27b-q4_k_m",),
+            loaded_models_before=(),
+            loaded_models_after=(),
+            auto_load_attempted=False,
+            auto_load_performed=False,
+            status="OK",
+            gguf_model_root="D:/models/GGUF",
+            gguf_inventory_status="OK",
+            gguf_models=(
+                {
+                    "alias": "qwen3.6-27b-q4_k_m",
+                    "path": "D:/models/GGUF/Qwen3.6-27B-Q4_K_M.gguf",
+                    "size_bytes": 16817244384,
+                    "digest_status": "pending",
+                    "sha256": "",
+                    "error": "",
+                },
+            ),
+        )
+
+    monkeypatch.setattr(
+        "orket.adapters.llm.local_model_provider_runtime_target.resolve_provider_runtime_target",
+        _fake_resolve,
+    )
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/v1/chat/completions"
+        payload = json.loads(request.content.decode("utf-8"))
+        assert payload["model"] == "qwen3.6-27b-q4_k_m"
+        assert payload["stop"] == ["<|json_end|>", "<|im_end|>", "</s>"]
+        assert payload["top_k"] == 1
+        assert payload["repeat_penalty"] == 1.0
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-llama-cpp",
+                "choices": [{"message": {"role": "assistant", "content": '{"ok":true}'}}],
+                "usage": {"prompt_tokens": 7, "completion_tokens": 3, "total_tokens": 10},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:8080/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    provider._provider_managed_client_id = id(provider.client)
+    response = await provider.complete(
+        [{"role": "user", "content": "Return JSON"}],
+        runtime_context={"protocol_governed_enabled": True, "local_prompt_task_class": "strict_json"},
+    )
+    await provider.close()
+
+    assert response.raw["provider_name"] == "llama_cpp"
+    assert response.raw["runtime_target"]["requested_provider"] == "llama_cpp"
+    assert response.raw["profile_id"] == "llama_cpp.qwen.chatml.v1"
+    assert response.raw["tool_call_mode"] == "json_wrapper"
+    assert response.raw["render_observability_classification"] == "message_payload_audited"
+    assert response.raw["template_hash"] == ""
+    assert response.raw["template_hash_alg"] == ""
+    assert response.raw["request_payload_byte_count"] > 0
+    assert response.raw["openai_request_payload_shape"]["message_count"] == 1
 
 
 @pytest.mark.asyncio

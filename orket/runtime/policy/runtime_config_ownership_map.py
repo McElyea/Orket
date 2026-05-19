@@ -59,6 +59,46 @@ _CONFIG_OWNERSHIP_ROWS: tuple[dict[str, Any], ...] = (
         "domain": "provider_runtime_target",
     },
     {
+        "config_key": "ORKET_LLM_LLAMA_CPP_BASE_URL",
+        "owner": "orket/adapters/llm/local_model_provider.py",
+        "domain": "llama_cpp_provider",
+    },
+    {
+        "config_key": "ORKET_LLAMA_CPP_BASE_URL",
+        "owner": "orket/adapters/llm/local_model_provider.py",
+        "domain": "llama_cpp_provider",
+    },
+    {
+        "config_key": "ORKET_LLM_LLAMA_CPP_API_KEY",
+        "owner": "orket/adapters/llm/local_model_provider.py",
+        "domain": "llama_cpp_provider",
+    },
+    {
+        "config_key": "ORKET_LLAMA_CPP_API_KEY",
+        "owner": "orket/adapters/llm/local_model_provider.py",
+        "domain": "llama_cpp_provider",
+    },
+    {
+        "config_key": "ORKET_LLAMA_CPP_GGUF_MODEL_ROOT",
+        "owner": "orket/runtime/config/gguf_model_inventory.py",
+        "domain": "llama_cpp_gguf_inventory",
+    },
+    {
+        "config_key": "ORKET_LLAMA_CPP_MODEL_ROOT",
+        "owner": "orket/runtime/config/gguf_model_inventory.py",
+        "domain": "llama_cpp_gguf_inventory",
+    },
+    {
+        "config_key": "ORKET_GGUF_MODEL_ROOT",
+        "owner": "orket/runtime/config/gguf_model_inventory.py",
+        "domain": "llama_cpp_gguf_inventory",
+    },
+    {
+        "config_key": "ORKET_LLAMA_CPP_GGUF_DIGEST_POLICY",
+        "owner": "orket/runtime/config/gguf_model_inventory.py",
+        "domain": "llama_cpp_gguf_inventory",
+    },
+    {
         "config_key": "ORKET_PROVIDER_QUARANTINE",
         "owner": "orket/runtime/provider_quarantine_policy.py",
         "domain": "provider_quarantine",

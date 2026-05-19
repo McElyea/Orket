@@ -129,7 +129,12 @@ def _fetch_listing(
             api_key=api_key,
         )
     except httpx.ConnectError:
-        if requested_provider in {"lmstudio", "openai_compat"}:
+        if requested_provider == "llama_cpp":
+            print(
+                "PREFLIGHT=FAIL reason=unreachable detail=llama.cpp OpenAI-compatible endpoint is unreachable. "
+                "Start llama-server and verify ORKET_LLAMA_CPP_BASE_URL."
+            )
+        elif requested_provider in {"lmstudio", "openai_compat"}:
             print(
                 "PREFLIGHT=FAIL reason=unreachable detail=OpenAI-compatible endpoint is unreachable. "
                 "Start LM Studio server and verify ORKET_MODEL_STREAM_OPENAI_BASE_URL."
@@ -228,7 +233,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--provider",
         default=None,
-        choices=["ollama", "openai_compat", "lmstudio"],
+        choices=["ollama", "openai_compat", "lmstudio", "llama_cpp"],
         help="Real provider to preflight (defaults to ORKET_MODEL_STREAM_REAL_PROVIDER or ollama).",
     )
     parser.add_argument("--base-url", default=None, help="Optional provider base URL override.")
@@ -308,7 +313,11 @@ def main() -> int:
     args = _build_parser().parse_args()
     requested_provider = str(args.provider or os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "ollama")).strip().lower() or "ollama"
     requested_model = str(args.model_id or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "")).strip()
-    api_key = str(os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip() or None
+    api_key = (
+        str(os.getenv("ORKET_LLAMA_CPP_API_KEY") or os.getenv("ORKET_LLM_LLAMA_CPP_API_KEY") or "").strip()
+        if requested_provider == "llama_cpp"
+        else str(os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip()
+    ) or None
     sanitize_enabled = bool(args.sanitize_model_cache) and requested_provider == "lmstudio"
     if sanitize_enabled:
         pre_code, pre_error = _run_cache_sanitation(
@@ -330,8 +339,29 @@ def main() -> int:
             model_load_timeout_s=float(args.model_load_timeout_sec),
             model_ttl_sec=int(args.model_ttl_sec),
         )
-    except ProviderRuntimeWarmupError as exc:
+    except httpx.ConnectError:
+        if requested_provider == "llama_cpp":
+            print(
+                "PREFLIGHT=FAIL reason=unreachable detail=llama.cpp OpenAI-compatible endpoint is unreachable. "
+                "Start llama-server and verify ORKET_LLAMA_CPP_BASE_URL."
+            )
+        elif requested_provider in {"lmstudio", "openai_compat"}:
+            print(
+                "PREFLIGHT=FAIL reason=unreachable detail=OpenAI-compatible endpoint is unreachable. "
+                "Start the provider server and verify the configured base URL."
+            )
+        else:
+            print(
+                "PREFLIGHT=FAIL reason=unreachable detail=Ollama endpoint is unreachable. "
+                "Start Ollama and verify OLLAMA_HOST."
+            )
+        print("OBSERVED_PATH=blocked")
+        print("OBSERVED_RESULT=environment blocker")
+        return 1
+    except (ProviderRuntimeWarmupError, httpx.HTTPError) as exc:
         print(f"PREFLIGHT=FAIL reason=warmup_failed detail={exc}")
+        print("OBSERVED_PATH=blocked")
+        print("OBSERVED_RESULT=failure")
         return 1
     resolved_from_warmup = str(warmup.get("resolved_model") or "").strip()
     if resolved_from_warmup:
@@ -347,6 +377,14 @@ def main() -> int:
     loaded_after = [str(model) for model in (warmup.get("loaded_models_after") or []) if str(model).strip()]
     if loaded_after:
         print(f"WARMUP_LOADED_MODELS={','.join(loaded_after)}")
+    if str(warmup.get("status") or "").strip().upper() != "OK":
+        print(
+            "PREFLIGHT=FAIL reason=warmup_blocked "
+            f"detail=status={warmup.get('status')} resolution_mode={warmup.get('resolution_mode')}"
+        )
+        print("OBSERVED_PATH=blocked")
+        print("OBSERVED_RESULT=failure")
+        return 1
     exit_code = _run_preflight_core(
         requested_provider=requested_provider,
         requested_model=requested_model,
@@ -365,6 +403,11 @@ def main() -> int:
         if post_code != 0:
             print(f"PREFLIGHT=FAIL reason=cache_sanitize_post_failed detail={post_error}")
             return 1
+    if exit_code == 0:
+        print("OBSERVED_PATH=primary")
+        print("OBSERVED_RESULT=success")
+        if requested_provider == "llama_cpp" and not bool(args.smoke_stream):
+            print("STREAMING_SMOKE=not_applicable")
     return exit_code
 
 

@@ -45,6 +45,13 @@ def model_profile_bios_snapshot() -> dict[str, Any]:
             "repair_tolerance": _repair_tolerance_for_provider("lmstudio"),
             "hazard_flags": ["session_mode_mismatch"],
         },
+        {
+            "provider": "llama_cpp",
+            "profile_id": "llama-cpp-first-slice",
+            "strictness_profile": "high",
+            "repair_tolerance": _repair_tolerance_for_provider("llama_cpp"),
+            "hazard_flags": ["operator_managed_runtime", "message_payload_audited"],
+        },
     ]
     return {
         "schema_version": "1.0",

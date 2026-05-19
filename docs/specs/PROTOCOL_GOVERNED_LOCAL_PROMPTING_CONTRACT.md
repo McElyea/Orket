@@ -1,7 +1,7 @@
 # Protocol-Governed Local Provider Compatibility Contract (v1.2)
 
-Last updated: 2026-04-04
-Status: Active (contract baseline)  
+Last updated: 2026-05-19
+Status: Active (contract baseline)
 Owner: Orket Core
 
 Reference:
@@ -27,7 +27,7 @@ In scope:
 5. Measurable conformance and upgrade drift gates.
 
 Out of scope:
-1. Installer/wizard UX for LM Studio or Ollama lifecycle management.
+1. Installer/wizard UX for LM Studio, Ollama, or llama.cpp lifecycle management.
 2. General model quality benchmarking beyond protocol-compliance surfaces.
 
 ## 3. Definitions
@@ -265,7 +265,7 @@ Requirements:
 
 Runtime MUST capture enough metadata to explain regressions without storing sensitive prompt content.
 
-Minimum telemetry fields:
+Minimum telemetry fields for rendered-prompt-audited paths:
 1. `provider`
 2. `model`
 3. `profile_id`
@@ -282,6 +282,20 @@ Minimum telemetry fields:
 14. declared native-tool telemetry when native tools are used (for example `openai_native_tool_names`)
 15. native tool-choice telemetry when native tools are used (for example `openai_tool_choice`)
 16. prompt-compaction telemetry when the provider-model lane compacts verbose governed prompt layers (for example `local_prompting_warnings`)
+
+LP-11 request-shape-audited fallback:
+1. For provider paths where the final rendered prompt bytes are not exposed by the provider and are not deterministically reproduced by Orket, runtime MUST NOT fabricate `template_hash`, `template_hash_alg`, or `rendered_prompt_byte_count`.
+2. Such paths MUST instead record:
+   - `render_observability_classification=message_payload_audited`,
+   - OpenAI-compatible message payload shape,
+   - request payload byte count,
+   - selected provider-model profile,
+   - effective stop sequences,
+   - sampling bundle,
+   - model alias,
+   - template-fidelity evidence path selected for promotion.
+3. Promoted providers still require LP-15 render verification unless an explicit accepted waiver records why rendered-prompt-byte auditing is unavailable for that provider path.
+4. If a later runtime path exposes or deterministically reproduces rendered prompt bytes, that path MUST return to rendered-prompt-audited telemetry and record `template_hash`, `template_hash_alg`, and `rendered_prompt_byte_count`.
 
 Requirements:
 1. Validator inputs MUST include `(profile_id, task_class)`.
@@ -350,12 +364,18 @@ This matrix defines baseline expectations using explicit `template_family` seman
 | Ollama | `template_family=inst`; `template_variant=llama3_header` (profile-scoped); `template_source=provider_builtin`; `allowed_roles=[system,user,assistant]`; `system_prompt_mode=native`; stops include model EOT + strict sentinel. | `template_family=chatml`; `template_variant=qwen_chatml`; `template_source=provider_builtin`; preserve delimiter/newline behavior; stops include `<|im_end|>` + strict sentinel. | `template_family=inst`; `template_variant=mistral_inst`; `template_source=provider_builtin`; role/wrapper markers match model metadata; strict sentinel required in structured modes. | `template_family=custom`; `template_variant=deepseek_reasoning`; `template_source=profile_override`; support `system_prompt_mode=user_injection` for R1-style profiles. |
 | LM Studio | `template_family=openai_messages`; `template_variant=lmstudio_openai_chat`; `template_source=provider_builtin`; profile override allowed via explicit profile exception. | `template_family=openai_messages`; `template_variant=lmstudio_chatml_metadata`; `template_source=runtime_metadata`; override only by explicit profile exception. | `template_family=openai_messages`; `template_variant=lmstudio_mistral_chat`; `template_source=provider_builtin`; legacy markers handled via profile override. | `template_family=custom`; `template_variant=deepseek_think_override`; `template_source=profile_override`; thought blocks excluded from strict parsing. |
 | vLLM (future lane) | `template_family=openai_messages`; `template_variant=vllm_llama_chat`; `template_source=runtime_metadata`; explicit parser/template alignment required. | `template_family=chatml`; `template_variant=vllm_qwen_chatml`; `template_source=runtime_metadata`; strict delimiter handling required. | `template_family=inst`; `template_variant=vllm_mistral_inst`; `template_source=profile_override`; parser/tool alignment required. | `template_family=custom`; `template_variant=vllm_deepseek_custom`; `template_source=profile_override`; custom encoding path may be required. |
-| llama.cpp (future lane) | `template_family=inst`; `template_variant=tokenizer_chat_template_llama`; `template_source=runtime_metadata`; enforce BOS/EOS and stop markers. | `template_family=chatml`; `template_variant=tokenizer_chat_template_qwen`; `template_source=runtime_metadata`; explicit fallback template allowed when metadata missing. | `template_family=inst`; `template_variant=tokenizer_chat_template_mistral`; `template_source=runtime_metadata`; wrapper/BOS/EOS must match model card. | `template_family=custom`; `template_variant=tokenizer_chat_template_deepseek`; `template_source=profile_override`; exact marker parity required. |
+| llama.cpp (first-slice implemented; unpromoted) | Deferred until after Qwen promotion proof. | `template_family=chatml`; `template_variant=tokenizer_chat_template_qwen`; `template_source=runtime_metadata`; missing or ambiguous template metadata fails closed for strict task classes unless an explicit profile override is accepted. | Deferred until after Qwen promotion proof. | Deferred until after Qwen promotion proof. |
 
 Notes:
 1. Active promotion lane currently targets `ollama` and `lm_studio`.
-2. `vLLM` and `llama.cpp` remain future compatibility lanes until promoted.
-3. For Ollama profiles shipped with custom Modelfiles, `template_source` is `profile_override` rather than `provider_builtin`.
+2. `vLLM` remains a future compatibility lane until promoted.
+3. `llama.cpp` has a closed first-slice implementation for exactly one Qwen-family GGUF profile, archived at `docs/projects/archive/local-provider-compatibility/2026-05-19-LLAMA-CPP-FIRST-SLICE-CLOSEOUT/`, but it remains unpromoted until promotion-volume and template-audit or whitelist gates in this contract pass in a later explicit roadmap lane.
+4. The accepted first target model for the lane is `unsloth/Qwen3.6-27B-GGUF` file `Qwen3.6-27B-Q4_K_M.gguf` at source revision `82d411acf4a06cfb8d9b073a5211bf410bfc29bf` with model alias `qwen3.6-27b-q4_k_m`, profile id `llama_cpp.qwen.chatml.v1`, model root `D:\models\GGUF`, source license `apache-2.0`, remote expected SHA256 `5ed60d0af4650a854b1755bd392f9aef4872643dc25a254bc68043fa638392a0`, remote size `16817244384` bytes, Xet hash `85a68868db9ae3eac97b20a123249c5837d43692de58cd3dafd1fbe4d5725b34`, local digest algorithm `sha256`, and initial local digest status `pending`.
+5. The first llama.cpp slice is operator-managed server only; Orket does not manage `llama-server` process lifecycle in that slice.
+6. The first llama.cpp slice uses JSON-wrapper tool-call mode. Native llama.cpp tool calling and Hugging Face download helpers are out of scope for first-slice acceptance.
+7. For llama.cpp OpenAI-compatible `/v1/chat/completions`, per-run rendered-prompt bytes are not required unless the runtime path exposes or deterministically reproduces them. First-slice telemetry must record `render_observability_classification=message_payload_audited`, request-shape evidence, selected provider-model profile, stop sequences, sampling bundle, model alias, and request payload byte count; promotion-time template-fidelity evidence must come from server-exposed metadata, llama.cpp template-analysis tooling, Orket-owned tokenizer-template reproduction, or an accepted waiver for the message-payload-audited path.
+8. Streaming smoke is required only for Orket runtime paths that use streaming; the closed first-slice llama.cpp non-streaming proof records streaming as `not_applicable`.
+9. For Ollama profiles shipped with custom Modelfiles, `template_source` is `profile_override` rather than `provider_builtin`.
 
 ## 6. Prompt Assembly Policy
 

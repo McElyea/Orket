@@ -129,6 +129,7 @@ PROVIDER_EXTRACTORS: dict[str, ProviderExtractor] = {
     "openai": OpenAIExtractor(),
     "openai_compat": OpenAIExtractor(),
     "lmstudio": OpenAIExtractor(),
+    "llama_cpp": OpenAIExtractor(),
     "ollama": OllamaExtractor(),
 }
 

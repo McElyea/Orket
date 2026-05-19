@@ -7,6 +7,10 @@ from dataclasses import asdict, dataclass
 from typing import Any, cast
 from urllib.parse import urlparse
 
+from orket.runtime.config.gguf_model_inventory import (
+    GGUFModelInventoryResult,
+    inventory_gguf_models as _inventory_gguf_models_sync,
+)
 from orket.runtime.provider_quarantine_policy import (
     is_model_quarantined,
     is_provider_quarantined,
@@ -49,7 +53,7 @@ _list_ollama_models_sync = _inventory_list_ollama_models_sync
 _list_openai_compat_models_sync = _inventory_list_openai_compat_models_sync
 
 
-PROVIDER_CHOICES = ("ollama", "openai_compat", "lmstudio")
+PROVIDER_CHOICES = ("ollama", "openai_compat", "lmstudio", "llama_cpp")
 
 _BILLION_PATTERN = re.compile(r"(\d+(?:\.\d+)?)b", re.IGNORECASE)
 
@@ -69,6 +73,9 @@ class ProviderRuntimeTarget:
     auto_load_attempted: bool
     auto_load_performed: bool
     status: str
+    gguf_model_root: str = ""
+    gguf_inventory_status: str = "not_applicable"
+    gguf_models: tuple[dict[str, Any], ...] = ()
 
     def to_payload(self) -> dict[str, Any]:
         return asdict(self)
@@ -76,7 +83,7 @@ class ProviderRuntimeTarget:
 
 def normalize_provider(provider: str) -> str:
     raw = str(provider or "").strip().lower()
-    return "openai_compat" if raw in {"lmstudio", "openai_compat"} else "ollama"
+    return "openai_compat" if raw in {"lmstudio", "openai_compat", "llama_cpp"} else "ollama"
 
 
 def effective_provider(provider: str | None, *, default: str) -> str:
@@ -85,7 +92,14 @@ def effective_provider(provider: str | None, *, default: str) -> str:
 
 
 def default_base_url(provider: str) -> str:
-    if normalize_provider(provider) == "openai_compat":
+    requested = effective_provider(provider, default="ollama")
+    if requested == "llama_cpp":
+        for key in ("ORKET_LLM_LLAMA_CPP_BASE_URL", "ORKET_LLAMA_CPP_BASE_URL"):
+            raw = str(os.getenv(key, "")).strip()
+            if raw:
+                return raw
+        return "http://127.0.0.1:8080/v1"
+    if normalize_provider(requested) == "openai_compat":
         for key in ("ORKET_LLM_OPENAI_BASE_URL", "ORKET_MODEL_STREAM_OPENAI_BASE_URL"):
             raw = str(os.getenv(key, "")).strip()
             if raw:
@@ -193,6 +207,8 @@ def choose_model(models: list[str], *, preferred_model: str = "") -> str:
 
 def _supports_lmstudio_cli_warmup(*, provider: str, base_url: str) -> bool:
     requested = effective_provider(provider, default="ollama")
+    if requested == "llama_cpp":
+        return False
     if requested == "lmstudio":
         return True
     if normalize_provider(requested) != "openai_compat":
@@ -234,12 +250,18 @@ async def list_provider_models(
         if canonical == "openai_compat"
         else await _list_ollama_models(base_url=resolved_base_url, timeout_s=timeout_s)
     )
-    return {
+    payload: dict[str, object] = {
         "requested_provider": requested,
         "canonical_provider": canonical,
         "base_url": resolved_base_url,
         "models": models,
     }
+    if requested == "llama_cpp":
+        inventory = await asyncio.to_thread(_inventory_gguf_models_sync)
+        payload["gguf_model_root"] = inventory.model_root
+        payload["gguf_inventory_status"] = inventory.status
+        payload["gguf_models"] = [record.to_payload() for record in inventory.records]
+    return payload
 
 
 def _target_payload(
@@ -257,6 +279,7 @@ def _target_payload(
     auto_load_attempted: bool = False,
     auto_load_performed: bool = False,
     status: str = "OK",
+    gguf_inventory: GGUFModelInventoryResult | None = None,
 ) -> ProviderRuntimeTarget:
     return ProviderRuntimeTarget(
         requested_provider=requested_provider,
@@ -272,6 +295,13 @@ def _target_payload(
         auto_load_attempted=auto_load_attempted,
         auto_load_performed=auto_load_performed,
         status=status,
+        gguf_model_root=str(gguf_inventory.model_root) if gguf_inventory is not None else "",
+        gguf_inventory_status=str(gguf_inventory.status) if gguf_inventory is not None else "not_applicable",
+        gguf_models=(
+            tuple(record.to_payload() for record in gguf_inventory.records)
+            if gguf_inventory is not None
+            else ()
+        ),
     )
 
 
@@ -377,6 +407,11 @@ async def resolve_provider_runtime_target(
             api_key=api_key,
         )
         available_models = [str(model) for model in _object_list(listing.get("models"))]
+        gguf_inventory = (
+            await asyncio.to_thread(_inventory_gguf_models_sync)
+            if requested_provider == "llama_cpp"
+            else None
+        )
         resolved_model = requested_model_token if requested_model_token in available_models else ""
         resolution_mode = "requested" if resolved_model else "unresolved"
         if not resolved_model and (auto_select_model or not requested_model_token):
@@ -397,8 +432,41 @@ async def resolve_provider_runtime_target(
                 resolution_mode="quarantined_model",
                 inventory_source="quarantine_policy",
                 available_models=available_models,
+                gguf_inventory=gguf_inventory,
                 status="BLOCKED",
             )
+        if requested_provider == "llama_cpp":
+            gguf_aliases = {
+                str(record.alias).strip()
+                for record in (gguf_inventory.records if gguf_inventory is not None else ())
+                if str(record.path or "").strip() and record.digest_status != "missing"
+            }
+            if gguf_inventory is None or gguf_inventory.status != "OK":
+                return _target_payload(
+                    requested_provider=requested_provider,
+                    canonical_provider=canonical_provider,
+                    requested_model=requested_model_token,
+                    model_id=resolved_model,
+                    base_url=resolved_base_url,
+                    resolution_mode="gguf_inventory_empty",
+                    inventory_source="http_models+gguf_inventory",
+                    available_models=available_models,
+                    gguf_inventory=gguf_inventory,
+                    status="BLOCKED",
+                )
+            if resolved_model and resolved_model not in gguf_aliases:
+                return _target_payload(
+                    requested_provider=requested_provider,
+                    canonical_provider=canonical_provider,
+                    requested_model=requested_model_token,
+                    model_id=resolved_model,
+                    base_url=resolved_base_url,
+                    resolution_mode="gguf_model_missing",
+                    inventory_source="http_models+gguf_inventory",
+                    available_models=available_models,
+                    gguf_inventory=gguf_inventory,
+                    status="BLOCKED",
+                )
         return _target_payload(
             requested_provider=requested_provider,
             canonical_provider=canonical_provider,
@@ -406,8 +474,9 @@ async def resolve_provider_runtime_target(
             model_id=resolved_model,
             base_url=resolved_base_url,
             resolution_mode=resolution_mode,
-            inventory_source="http_models",
+            inventory_source="http_models+gguf_inventory" if requested_provider == "llama_cpp" else "http_models",
             available_models=available_models,
+            gguf_inventory=gguf_inventory,
             status="OK" if resolved_model else "BLOCKED",
         )
 

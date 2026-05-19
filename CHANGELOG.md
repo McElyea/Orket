@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.9] - 2026-05-19 - "The llama.cpp First-Slice Cut"
+
+### Added
+- **llama.cpp First-Slice Provider Path**: Added unpromoted `llama_cpp` provider support for the operator-managed Qwen GGUF path, including bounded GGUF inventory, profile resolution, OpenAI-compatible invocation, request-shape telemetry, preflight support, conformance harness support, and focused regression coverage.
+- **llama.cpp Closeout Archive**: Archived the completed first-slice implementation lane under `docs/projects/archive/local-provider-compatibility/2026-05-19-LLAMA-CPP-FIRST-SLICE-CLOSEOUT/` with live preflight and conformance-smoke proof.
+
+### Changed
+- **Roadmap Authority**: Cleared the completed llama.cpp Priority Now item and updated current authority plus the local-prompting contract to keep `llama_cpp` implemented but unpromoted until promotion-volume and template-audit gates pass.
+- **Apophenia Model Selection Contract**: Extended the Apophenia external-extension contract with Orket-delegated model selection and model catalog endpoint expectations.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Operators may run the first-slice `llama_cpp` path only as an unpromoted local-provider path. Promotion still requires a later explicit promotion-readiness lane with full corpus volume and ChatML template audit or whitelist evidence.
+
 ## [0.5.8] - 2026-05-09 - "The Authority Map Test Recovery Cut"
 
 ### Changed

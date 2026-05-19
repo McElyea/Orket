@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-05-09
+Last updated: 2026-05-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -23,6 +23,8 @@ Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the name
 ## Current Canonical Paths
 
 Apophenia external extension durable contract: `docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md`; implementation remains outside Orket core at `C:\Source\Orket-Extensions\Apophenia`, and Orket stays a generic host runtime for Apophenia through generic extension runtime endpoints.
+
+llama.cpp first-slice local provider implementation is closed and archived at `docs/projects/archive/local-provider-compatibility/2026-05-19-LLAMA-CPP-FIRST-SLICE-CLOSEOUT/`, including the archived implementation plan, requirements, operator source-build note, source verification artifact, and closeout report; durable contract authority remains in `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`, with the contract delta record at `docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FIRST_SLICE_2026-05-18.md`. Structural support now exists for the `llama_cpp` provider token, bounded GGUF inventory, profile resolution, OpenAI-compatible chat invocation, request-shape telemetry, preflight, and conformance harness paths. Live first-slice proof passed on 2026-05-19 for the operator-managed `qwen3.6-27b-q4_k_m` GGUF path, but promoted `llama_cpp` provider support remains unadmitted because promotion readiness is false until promotion-volume and template-audit or whitelist gates pass in a later explicit roadmap lane.
 
 1. Install/bootstrap: `python -m pip install -e ".[dev]"`
 2. Default runtime: `python main.py`
@@ -125,7 +127,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 ```json
 {
   "version": 1,
-  "last_updated": "2026-05-09",
+  "last_updated": "2026-05-18",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",

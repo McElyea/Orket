@@ -132,3 +132,100 @@ def test_lmstudio_preflight_runs_runtime_warmup_before_preflight(monkeypatch) ->
     assert warmup_calls[0]["provider"] == "lmstudio"
     assert warmup_calls[0]["auto_select_model"] is True
     assert warmup_calls[0]["auto_load_local_model"] is True
+
+
+def test_llama_cpp_preflight_uses_openai_compat_listing_without_lmstudio_sanitation(monkeypatch) -> None:
+    stages: list[str] = []
+
+    def _fake_clear_loaded_models(**kwargs):  # noqa: ANN001
+        stages.append(str(kwargs["stage"]))
+        return {"stage": kwargs["stage"], "status": "OK"}
+
+    monkeypatch.setattr(preflight, "clear_loaded_models", _fake_clear_loaded_models)
+    monkeypatch.setattr(
+        preflight,
+        "warmup_provider_model",
+        lambda **_: {
+            "status": "OK",
+            "inventory_source": "http_models+gguf_inventory",
+            "resolution_mode": "requested",
+            "resolved_model": "qwen3.6-27b-q4_k_m",
+            "available_models": ["qwen3.6-27b-q4_k_m"],
+            "loaded_models_after": [],
+        },
+    )
+    monkeypatch.setattr(
+        preflight,
+        "list_provider_models",
+        lambda **_: {
+            "canonical_provider": "openai_compat",
+            "base_url": "http://127.0.0.1:8080/v1",
+            "models": ["qwen3.6-27b-q4_k_m"],
+        },
+    )
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "check_model_provider_preflight.py",
+            "--provider",
+            "llama_cpp",
+            "--model-id",
+            "qwen3.6-27b-q4_k_m",
+        ],
+    )
+
+    exit_code = preflight.main()
+
+    assert exit_code == 0
+    assert stages == []
+
+
+def test_llama_cpp_preflight_fails_when_warmup_blocks(monkeypatch) -> None:
+    monkeypatch.setattr(
+        preflight,
+        "warmup_provider_model",
+        lambda **_: {
+            "status": "BLOCKED",
+            "inventory_source": "http_models+gguf_inventory",
+            "resolution_mode": "gguf_inventory_empty",
+            "resolved_model": "qwen3.6-27b-q4_k_m",
+            "available_models": ["qwen3.6-27b-q4_k_m"],
+            "loaded_models_after": [],
+        },
+    )
+    monkeypatch.setattr(
+        preflight,
+        "list_provider_models",
+        lambda **_: (_ for _ in ()).throw(AssertionError("blocked warmup should stop before listing")),
+    )
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "check_model_provider_preflight.py",
+            "--provider",
+            "llama_cpp",
+            "--model-id",
+            "qwen3.6-27b-q4_k_m",
+        ],
+    )
+
+    assert preflight.main() == 1
+
+
+def test_llama_cpp_preflight_reports_unreachable_warmup_without_traceback(monkeypatch) -> None:
+    def _raise_connect(**_: object) -> dict[str, object]:
+        raise preflight.httpx.ConnectError("no listener")
+
+    monkeypatch.setattr(preflight, "warmup_provider_model", _raise_connect)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "check_model_provider_preflight.py",
+            "--provider",
+            "llama_cpp",
+            "--model-id",
+            "qwen3.6-27b-q4_k_m",
+        ],
+    )
+
+    assert preflight.main() == 1

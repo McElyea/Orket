@@ -21,6 +21,8 @@ def normalize_provider_for_local_prompt_profile(value: Any) -> str:
     token = str(value or "").strip().lower()
     if token in {"openai_compat", "lmstudio"}:
         return "openai_compat"
+    if token == "llama_cpp":
+        return "llama_cpp"
     return "ollama"
 
 

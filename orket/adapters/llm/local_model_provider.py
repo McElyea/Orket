@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import json
 import os
 import time
 from collections.abc import Mapping
@@ -41,7 +42,7 @@ def _read_provider_env() -> str:
 
 
 def _map_provider_backend(raw: str) -> str:
-    if raw in {"openai_compat", "lmstudio"}:
+    if raw in {"openai_compat", "lmstudio", "llama_cpp"}:
         return "openai_compat"
     return "ollama"
 
@@ -49,6 +50,8 @@ def _map_provider_backend(raw: str) -> str:
 def _map_provider_name(raw: str) -> str:
     if raw == "lmstudio":
         return "lmstudio"
+    if raw == "llama_cpp":
+        return "llama_cpp"
     if raw == "openai_compat":
         return "openai_compat"
     return "ollama"
@@ -184,7 +187,15 @@ class LocalModelProvider:
 
     def _resolve_openai_base_url(self) -> str:
         if self._base_url_override:
-            return normalize_openai_base_url(self._base_url_override, default="http://127.0.0.1:1234/v1")
+            default = "http://127.0.0.1:8080/v1" if self.provider_name == "llama_cpp" else "http://127.0.0.1:1234/v1"
+            return normalize_openai_base_url(self._base_url_override, default=default)
+        if self.provider_name == "llama_cpp":
+            raw = str(
+                os.getenv("ORKET_LLM_LLAMA_CPP_BASE_URL")
+                or os.getenv("ORKET_LLAMA_CPP_BASE_URL")
+                or "http://127.0.0.1:8080/v1"
+            ).strip()
+            return normalize_openai_base_url(raw, default="http://127.0.0.1:8080/v1")
         raw = str(
             os.getenv("ORKET_LLM_OPENAI_BASE_URL")
             or os.getenv("ORKET_MODEL_STREAM_OPENAI_BASE_URL")
@@ -195,6 +206,8 @@ class LocalModelProvider:
     def _resolve_openai_api_key(self) -> str:
         if self._api_key_override:
             return self._api_key_override
+        if self.provider_name == "llama_cpp":
+            return str(os.getenv("ORKET_LLM_LLAMA_CPP_API_KEY") or os.getenv("ORKET_LLAMA_CPP_API_KEY") or "").strip()
         return str(
             os.getenv("ORKET_LLM_OPENAI_API_KEY") or os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY") or ""
         ).strip()
@@ -213,6 +226,7 @@ class LocalModelProvider:
         effective_model = await ensure_provider_runtime_target(self)
         policy = await resolve_local_prompting_policy(
             provider_backend=self.provider_backend,
+            profile_provider=self.provider_name,
             model=effective_model,
             messages=list(messages),
             runtime_context=resolved_context,
@@ -221,6 +235,8 @@ class LocalModelProvider:
             model=self.model,
             runtime_context=resolved_context,
         )
+        if self.provider_name == "llama_cpp" and native_tools:
+            raise ModelProviderError("llama.cpp first slice admits JSON-wrapper tool calls only.")
         if self.provider_backend == "openai_compat":
             return await self._complete_openai_compat(
                 policy.messages,
@@ -409,6 +425,9 @@ class LocalModelProvider:
         context_reset_status = self._context_reset_status(provider_session_epoch=orket_session_epoch)
         orket_request_id = f"orket-{time.time_ns()}"
         prompt_fingerprint = build_prompt_fingerprint(payload)
+        request_payload_byte_count = len(
+            json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        )
 
         headers = {"Content-Type": "application/json"}
         if self.openai_api_key:
@@ -448,6 +467,15 @@ class LocalModelProvider:
                     role: outbound_role_sequence.count(role)
                     for role in sorted(set(outbound_role_sequence))
                 }
+                openai_request_payload_shape = {
+                    "endpoint": "/chat/completions",
+                    "message_count": len(messages),
+                    "role_sequence": outbound_role_sequence,
+                    "has_tools": bool(native_tools),
+                    "has_tool_choice": bool(native_tool_choice),
+                    "stream": bool(payload.get("stream", False)),
+                    "stop_count": len(payload.get("stop") or []),
+                }
 
                 raw = {
                     "openai_compat": parsed,
@@ -480,6 +508,8 @@ class LocalModelProvider:
                     "orket_session_epoch": orket_session_epoch,
                     "orket_request_id": orket_request_id,
                     "prompt_fingerprint": prompt_fingerprint,
+                    "request_payload_byte_count": request_payload_byte_count,
+                    "model_alias": self.model,
                     "orket_trace": {
                         "provider_backend": self.provider_backend,
                         "provider_name": self.provider_name,
@@ -492,6 +522,7 @@ class LocalModelProvider:
                     "openai_request_message_count": len(messages),
                     "openai_request_role_sequence": outbound_role_sequence,
                     "openai_request_role_counts": outbound_role_counts,
+                    "openai_request_payload_shape": openai_request_payload_shape,
                     "openai_native_tool_names": [
                         str((tool.get("function") or {}).get("name") or "").strip()
                         for tool in native_tools

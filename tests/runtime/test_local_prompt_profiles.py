@@ -128,6 +128,25 @@ def test_resolve_profile_normalizes_lmstudio_provider_alias() -> None:
     assert resolved.profile.profile_id == "openai_compat.qwen.v1"
 
 
+def test_resolve_profile_preserves_llama_cpp_provider() -> None:
+    """Layer: contract. Verifies llama.cpp does not collapse to generic openai_compat prompt authority."""
+    registry = load_local_prompt_profile_registry_payload(
+        _payload(
+            [
+                {
+                    "provider": "llama_cpp",
+                    "match": {"model_equals": ["qwen3.6-27b-q4_k_m"]},
+                    "profile": _base_profile("llama_cpp.qwen.chatml.v1"),
+                }
+            ]
+        )
+    )
+
+    resolved = registry.resolve_profile(provider="llama_cpp", model="qwen3.6-27b-q4_k_m")
+    assert resolved.provider == "llama_cpp"
+    assert resolved.profile.profile_id == "llama_cpp.qwen.chatml.v1"
+
+
 def test_resolve_profile_fail_closed_when_no_match() -> None:
     registry = load_local_prompt_profile_registry_payload(
         _payload(

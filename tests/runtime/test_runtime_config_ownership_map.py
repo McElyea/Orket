@@ -15,6 +15,8 @@ def test_runtime_config_ownership_map_snapshot_contains_expected_key() -> None:
     keys = {row["config_key"] for row in payload["rows"]}
     assert "ORKET_STATE_BACKEND_MODE" in keys
     assert "ORKET_PROVIDER_QUARANTINE" in keys
+    assert "ORKET_LLAMA_CPP_BASE_URL" in keys
+    assert "ORKET_LLAMA_CPP_GGUF_MODEL_ROOT" in keys
 
 
 # Layer: contract
@@ -22,6 +24,7 @@ def test_validate_runtime_config_ownership_map_returns_sorted_keys() -> None:
     keys = validate_runtime_config_ownership_map()
     assert "ORKET_STATE_BACKEND_MODE" in keys
     assert "ORKET_PROVIDER_MODEL_QUARANTINE" in keys
+    assert "ORKET_LLAMA_CPP_GGUF_DIGEST_POLICY" in keys
 
 
 # Layer: contract

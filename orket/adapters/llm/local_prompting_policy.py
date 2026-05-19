@@ -90,6 +90,12 @@ def _render_hash(messages: list[dict[str, str]]) -> tuple[str, int]:
     return digest, len(payload)
 
 
+def _render_observability_classification(*, provider: str, profile: LocalPromptProfile) -> str:
+    if provider == "llama_cpp" and profile.template_family != "openai_messages":
+        return "message_payload_audited"
+    return "rendered_prompt_audited"
+
+
 def _profile_registry_with_hash(path: Path) -> tuple[Any, str]:
     resolved = path.resolve()
     stat = resolved.stat()
@@ -305,6 +311,7 @@ def _sampling_bundle(profile: LocalPromptProfile, task_class: str) -> dict[str, 
 
 @dataclass
 class LocalPromptingPolicyResult:
+    provider: str
     mode: str
     task_class: str
     messages: list[dict[str, str]]
@@ -314,9 +321,11 @@ class LocalPromptingPolicyResult:
     template_hash: str
     template_hash_alg: str
     rendered_prompt_byte_count: int
+    render_observability_classification: str
     stop_sequences_by_task_class: dict[str, list[str]]
     effective_stop_sequences: list[str]
     sampling_bundle: dict[str, Any]
+    tool_call_mode: str
     history_policy: str
     allows_thinking_blocks: bool
     thinking_block_format: str
@@ -339,6 +348,9 @@ class LocalPromptingPolicyResult:
         }
         if self.effective_stop_sequences:
             overrides["stop"] = list(self.effective_stop_sequences)
+        if self.profile_id.startswith("llama_cpp."):
+            overrides["top_k"] = int(self.sampling_bundle.get("top_k", 40))
+            overrides["repeat_penalty"] = float(self.sampling_bundle.get("repeat_penalty", 1.0))
         seed_policy = str(self.sampling_bundle.get("seed_policy") or "")
         if seed_policy == "fixed" and self.sampling_bundle.get("seed_value") is not None:
             overrides["seed"] = int(self.sampling_bundle["seed_value"])
@@ -367,6 +379,7 @@ class LocalPromptingPolicyResult:
 
     def telemetry(self) -> dict[str, Any]:
         return {
+            "local_prompt_provider": self.provider,
             "local_prompting_mode": self.mode,
             "task_class": self.task_class,
             "profile_id": self.profile_id,
@@ -375,9 +388,11 @@ class LocalPromptingPolicyResult:
             "template_hash": self.template_hash,
             "template_hash_alg": self.template_hash_alg,
             "rendered_prompt_byte_count": self.rendered_prompt_byte_count,
+            "render_observability_classification": self.render_observability_classification,
             "sampling_bundle": dict(self.sampling_bundle),
             "stop_sequences_by_task_class": dict(self.stop_sequences_by_task_class),
             "effective_stop_sequences": list(self.effective_stop_sequences),
+            "tool_call_mode": self.tool_call_mode,
             "history_policy": self.history_policy,
             "allows_thinking_blocks": self.allows_thinking_blocks,
             "thinking_block_format": self.thinking_block_format,
@@ -396,6 +411,7 @@ class LocalPromptingPolicyResult:
 async def resolve_local_prompting_policy(
     *,
     provider_backend: str,
+    profile_provider: str | None = None,
     model: str,
     messages: list[dict[str, str]],
     runtime_context: dict[str, Any] | None = None,
@@ -425,9 +441,10 @@ async def resolve_local_prompting_policy(
     )
     registry, registry_hash = await asyncio.to_thread(_profile_registry_with_hash, registry_path)
     lmstudio_session_mode, lmstudio_session_id = resolve_lmstudio_session_settings(context, provider_backend)
+    provider_for_profile = str(profile_provider or provider_backend or "").strip().lower()
     try:
         resolved = registry.resolve_profile(
-            provider=provider_backend,
+            provider=provider_for_profile,
             model=model,
             override_profile_id=override_profile_id or None,
             allow_fallback=allow_fallback,
@@ -439,6 +456,7 @@ async def resolve_local_prompting_policy(
         normalized_messages = _canonicalize_messages(messages)
         template_hash, byte_count = _render_hash(normalized_messages)
         return LocalPromptingPolicyResult(
+            provider=provider_for_profile,
             mode=mode,
             task_class=task_class,
             messages=normalized_messages,
@@ -448,9 +466,11 @@ async def resolve_local_prompting_policy(
             template_hash=template_hash,
             template_hash_alg="sha256",
             rendered_prompt_byte_count=byte_count,
+            render_observability_classification="rendered_prompt_audited",
             stop_sequences_by_task_class={},
             effective_stop_sequences=[],
             sampling_bundle={},
+            tool_call_mode="unknown",
             history_policy="unknown",
             allows_thinking_blocks=False,
             thinking_block_format="none",
@@ -527,8 +547,17 @@ async def resolve_local_prompting_policy(
             warnings.append(f"message_shape:user_blocks_collapsed:{collapsed_user_messages}")
     effective_stops = _effective_stops(provider_backend, resolved.profile, task_class)
     sampling_bundle = _sampling_bundle(resolved.profile, task_class)
-    template_hash, byte_count = _render_hash(resolved_messages)
+    render_classification = _render_observability_classification(
+        provider=provider_for_profile,
+        profile=resolved.profile,
+    )
+    if render_classification == "message_payload_audited":
+        template_hash, template_hash_alg, byte_count = "", "", 0
+    else:
+        template_hash, byte_count = _render_hash(resolved_messages)
+        template_hash_alg = "sha256"
     return LocalPromptingPolicyResult(
+        provider=provider_for_profile,
         mode=mode,
         task_class=task_class,
         messages=resolved_messages,
@@ -536,11 +565,13 @@ async def resolve_local_prompting_policy(
         template_family=resolved.profile.template_family,
         template_version=resolved.profile.template_version,
         template_hash=template_hash,
-        template_hash_alg="sha256",
+        template_hash_alg=template_hash_alg,
         rendered_prompt_byte_count=byte_count,
+        render_observability_classification=render_classification,
         stop_sequences_by_task_class=dict(resolved.profile.stop_sequences_by_task_class),
         effective_stop_sequences=effective_stops,
         sampling_bundle=sampling_bundle,
+        tool_call_mode=str(resolved.profile.tool_call_mode),
         history_policy=str(resolved.profile.history_policy),
         allows_thinking_blocks=bool(resolved.profile.allows_thinking_blocks),
         thinking_block_format=str(resolved.profile.thinking_block_format),

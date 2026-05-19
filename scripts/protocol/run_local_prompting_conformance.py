@@ -36,7 +36,7 @@ from orket.runtime.local_prompt_profiles import (
 )
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run local prompting conformance suites.")
-    parser.add_argument("--provider", required=True, help="Provider backend: ollama/openai_compat/lmstudio")
+    parser.add_argument("--provider", required=True, help="Provider backend: ollama/openai_compat/lmstudio/llama_cpp")
     parser.add_argument("--model", required=True, help="Model id")
     parser.add_argument("--cases", type=int, default=10, help="Case count per task class")
     parser.add_argument("--strict-json-cases", type=int, default=0, help="Strict JSON case count override")
@@ -112,7 +112,7 @@ def main(argv: list[str] | None = None) -> int:
     provider_raw = str(args.provider or "").strip().lower()
     provider = "openai_compat" if provider_raw == "lmstudio" else provider_raw
     model = str(args.model or "").strip()
-    if provider not in {"ollama", "openai_compat"}:
+    if provider not in {"ollama", "openai_compat", "llama_cpp"}:
         raise ValueError(f"unsupported provider '{provider_raw}'")
     if not model:
         raise ValueError("model is required")
@@ -230,8 +230,11 @@ def main(argv: list[str] | None = None) -> int:
         "provider": provider,
         "model": model,
         "profile_id": profile_id,
-        "method": "request_payload_hash",
-        "template_hash_alg": "sha256",
+        "method": "request_payload_hash" if provider != "llama_cpp" else "message_payload_audited",
+        "render_observability_classification": (
+            "rendered_prompt_audited" if provider != "llama_cpp" else "message_payload_audited"
+        ),
+        "template_hash_alg": "sha256" if provider != "llama_cpp" else "",
         "strict_json_hash_samples": strict_json["render_hash_samples"],
         "tool_call_hash_samples": tool_call["render_hash_samples"],
     }
@@ -241,7 +244,7 @@ def main(argv: list[str] | None = None) -> int:
         "model": model,
         "profile_id": profile_id,
         "mode": "mock" if bool(args.mock) else "live",
-        "method": "runtime_response_metadata",
+        "method": "runtime_response_metadata" if provider != "llama_cpp" else "message_payload_audited",
     }
     suite_manifest = {
         "schema_version": "local_prompting_suite_manifest.v1",

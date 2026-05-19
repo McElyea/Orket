@@ -3,6 +3,7 @@ from __future__ import annotations
 # Layer: contract
 import pytest
 
+from orket.runtime.config.gguf_model_inventory import GGUFModelInventoryRecord, GGUFModelInventoryResult
 from orket.runtime import provider_runtime_target as runtime_target
 
 
@@ -202,3 +203,112 @@ async def test_resolve_provider_runtime_target_blocks_unknown_provider_input() -
     assert result.resolution_mode == "unknown_provider_input"
     assert result.inventory_source == "unknown_input_policy"
     assert result.canonical_provider == "unknown"
+
+
+@pytest.mark.asyncio
+async def test_resolve_provider_runtime_target_preserves_llama_cpp_lineage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies llama.cpp stays requested-provider distinct over OpenAI-compatible HTTP."""
+
+    async def _fake_models(**_: object) -> list[str]:
+        return ["qwen3.6-27b-q4_k_m"]
+
+    monkeypatch.setattr(runtime_target, "_list_openai_compat_models", _fake_models)
+    monkeypatch.setattr(
+        runtime_target,
+        "_inventory_gguf_models_sync",
+        lambda **_: GGUFModelInventoryResult(
+            model_root="D:/models/GGUF",
+            status="OK",
+            records=(
+                GGUFModelInventoryRecord(
+                    alias="qwen3.6-27b-q4_k_m",
+                    path="D:/models/GGUF/Qwen3.6-27B-Q4_K_M.gguf",
+                    size_bytes=16817244384,
+                    digest_status="pending",
+                ),
+            ),
+        ),
+    )
+
+    result = await runtime_target.resolve_provider_runtime_target(
+        provider="llama_cpp",
+        requested_model="qwen3.6-27b-q4_k_m",
+        base_url=None,
+        timeout_s=5.0,
+        auto_select_model=False,
+        auto_load_local_model=False,
+        model_load_timeout_s=30.0,
+        model_ttl_sec=600,
+    )
+
+    assert result.status == "OK"
+    assert result.requested_provider == "llama_cpp"
+    assert result.canonical_provider == "openai_compat"
+    assert result.base_url == "http://127.0.0.1:8080/v1"
+    assert result.inventory_source == "http_models+gguf_inventory"
+    assert result.gguf_inventory_status == "OK"
+    assert result.gguf_models[0]["digest_status"] == "pending"
+
+
+@pytest.mark.asyncio
+async def test_resolve_provider_runtime_target_blocks_llama_cpp_empty_gguf_inventory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies endpoint presence alone is not promoted into llama.cpp readiness."""
+
+    async def _fake_models(**_: object) -> list[str]:
+        return ["qwen3.6-27b-q4_k_m"]
+
+    monkeypatch.setattr(runtime_target, "_list_openai_compat_models", _fake_models)
+    monkeypatch.setattr(
+        runtime_target,
+        "_inventory_gguf_models_sync",
+        lambda **_: GGUFModelInventoryResult(model_root="D:/models/GGUF", status="BLOCKED", records=()),
+    )
+
+    result = await runtime_target.resolve_provider_runtime_target(
+        provider="llama_cpp",
+        requested_model="qwen3.6-27b-q4_k_m",
+        base_url="http://127.0.0.1:8080/v1",
+        timeout_s=5.0,
+        auto_select_model=False,
+        auto_load_local_model=False,
+        model_load_timeout_s=30.0,
+        model_ttl_sec=600,
+    )
+
+    assert result.status == "BLOCKED"
+    assert result.resolution_mode == "gguf_inventory_empty"
+    assert result.model_id == "qwen3.6-27b-q4_k_m"
+    assert result.gguf_inventory_status == "BLOCKED"
+
+
+@pytest.mark.asyncio
+async def test_resolve_provider_runtime_target_blocks_quarantined_llama_cpp_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies provider quarantine covers the requested llama_cpp provider token."""
+
+    monkeypatch.setenv("ORKET_PROVIDER_QUARANTINE", "llama_cpp")
+
+    async def _unexpected_models(**_: object) -> list[str]:
+        raise AssertionError("quarantined llama.cpp provider should short-circuit inventory")
+
+    monkeypatch.setattr(runtime_target, "_list_openai_compat_models", _unexpected_models)
+
+    result = await runtime_target.resolve_provider_runtime_target(
+        provider="llama_cpp",
+        requested_model="qwen3.6-27b-q4_k_m",
+        base_url="http://127.0.0.1:8080/v1",
+        timeout_s=5.0,
+        auto_select_model=False,
+        auto_load_local_model=False,
+        model_load_timeout_s=30.0,
+        model_ttl_sec=600,
+    )
+
+    assert result.status == "BLOCKED"
+    assert result.resolution_mode == "quarantined_provider"
+    assert result.requested_provider == "llama_cpp"
