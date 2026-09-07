@@ -4,12 +4,13 @@ import argparse
 import ast
 import json
 import sys
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
 from .capabilities import load_capability_vocab, validate_capabilities
 from .import_scan import scan_extension_imports
-from .manifest import ExtensionManifest, load_manifest
+from .manifest import ExtensionManifest, load_manifest, unsupported_agent_host_features
 
 ERROR_SDK_MANIFEST_NOT_FOUND = "E_SDK_MANIFEST_NOT_FOUND"
 ERROR_SDK_ENTRYPOINT_INVALID = "E_SDK_ENTRYPOINT_INVALID"
@@ -99,6 +100,7 @@ def validate_extension(
     *,
     strict: bool = False,
     include_import_scan: bool = False,
+    host_supported_features: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     manifest_path = _resolve_manifest_path(target)
     if manifest_path is None:
@@ -129,6 +131,19 @@ def validate_extension(
 
     for workload in manifest.workloads:
         location = f"workloads.{workload.workload_id}"
+        if host_supported_features is not None:
+            unsupported = unsupported_agent_host_features(
+                workload,
+                supported_features=host_supported_features,
+            )
+            if unsupported:
+                errors.append(
+                    {
+                        "code": "E_AGENT_HOST_FEATURE_UNSUPPORTED",
+                        "location": f"{location}.agent.required_host_features",
+                        "message": ", ".join(unsupported),
+                    }
+                )
         try:
             module_name, attr_name = _parse_entrypoint(workload.entrypoint)
         except ValueError:

@@ -66,14 +66,22 @@
 
 ## Canonical Commands
 
-- Install: `python -m pip install --upgrade pip && python -m pip install -e ".[dev]"`
-- Default runtime: `python main.py`
-- Named card runtime: `python main.py --card <card_id>`
+- Install: `python -m pip install --upgrade pip && python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"`
+- Default runtime: `orket runtime`
+- Named card runtime: `orket runtime --card <card_id>`
 - API runtime: `python server.py`
+- Governed-action quickstart: `orket-quickstart` or `orket-quickstart --decision approve|deny`
+- Governed-run deterministic demo: `orket demo governed-run`
 - Test command: `python -m pytest -q`
 
-Compatibility-only CLI alias:
-`python main.py --rock <rock_name>` remains accepted for existing callers, but it is hidden from normal help and routes to the canonical named card runtime.
+Handled fatal outcomes from `orket runtime` must return a nonzero process status. The
+governed-run demo default is package-owned and must not depend on the caller's current
+working directory.
+
+Compatibility-only source wrapper:
+`python main.py [runtime arguments]` remains supported through `0.5.x`. The hidden
+`--rock <rock_name>` alias remains accepted by that wrapper and `orket runtime`, but
+new callers must use `--card`; removal requires an explicit `0.6.0` contract delta.
 
 ## Release and Versioning
 

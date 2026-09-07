@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Protocol, Sequence
+from typing import Any, Protocol
 
 from orket_extension_sdk.controller import ControllerRunSummary, canonical_json
 from orket_extension_sdk.result import Issue, WorkloadResult

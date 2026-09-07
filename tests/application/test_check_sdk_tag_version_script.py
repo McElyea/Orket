@@ -10,7 +10,7 @@ SCRIPT = Path("scripts/sdk/check_sdk_tag_version.py").resolve()
 def test_check_sdk_tag_version_accepts_matching_tag() -> None:
     """Layer: contract. Verifies SDK release tag gate accepts matching tag/version pairs."""
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--tag", "sdk-v0.1.0", "--repo-root", "."],
+        [sys.executable, str(SCRIPT), "--tag", "sdk-v0.5.0a1", "--repo-root", "."],
         check=False,
         capture_output=True,
         text=True,
@@ -29,4 +29,3 @@ def test_check_sdk_tag_version_rejects_mismatch() -> None:
     )
     assert completed.returncode == 1
     assert "E_SDK_TAG_VERSION_MISMATCH" in completed.stdout
-

@@ -5,6 +5,7 @@ __all__ = [
     'config_loader',
     'cors_config',
     'defaults',
+    'gguf_model_inventory',
     'local_prompt_profiles',
     'model_profile_bios',
     'offline_mode',

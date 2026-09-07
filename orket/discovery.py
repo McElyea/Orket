@@ -4,8 +4,8 @@ from typing import Any
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.logging import log_event
-from orket.runtime import ConfigLoader
 from orket.project_paths import default_model_root, default_project_root, default_workspace_root
+from orket.runtime import ConfigLoader
 from orket.schema import EngineRegistry, EpicConfig, RockConfig, TeamConfig
 from orket.settings import load_user_settings, save_user_settings
 
@@ -164,10 +164,10 @@ def perform_first_run_onboarding() -> str:
     if load_user_settings().get("setup_complete"):
         log_event("discovery_startup_path", {"path": "no_op", "reason": "setup_complete"})
         return "no_op"
+    save_user_settings({"setup_complete": True, "hardware_profile": "auto-detected"})
     print("\n[FIRST RUN] Orket EOS Orkestrated.")
     print("  Recommendation: Use the canonical card entrypoint for initialization to optimize your models.")
-    print("  Command: python main.py --card initialize_orket")
-    save_user_settings({"setup_complete": True, "hardware_profile": "auto-detected"})
+    print("  Command: orket runtime --card initialize_orket")
     log_event("discovery_startup_path", {"path": "first_run_setup", "result": "completed"})
     return "first_run_setup"
 
@@ -252,4 +252,4 @@ def print_orket_manifest(department: str = "core") -> None:
             print(f"  - {epic_name}")
 
     suggestion_rock = assets["rocks"][0] if assets["rocks"] else "..."
-    print(f"\n[COMMAND SUGGESTION]\n  python main.py --card {suggestion_rock} --department {department}\n{'=' * 60}\n")
+    print(f"\n[COMMAND SUGGESTION]\n  orket runtime --card {suggestion_rock} --department {department}\n{'=' * 60}\n")

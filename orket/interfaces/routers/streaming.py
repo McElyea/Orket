@@ -16,13 +16,14 @@ def register_streaming_routes(
     runtime_host_getter: Callable[[], Any],
     interaction_manager_getter: Callable[[], Any],
     stream_bus_getter: Callable[[], Any],
-    runtime_state: Any,
+    runtime_state_getter: Callable[[], Any],
     project_root_getter: Callable[[], Path],
     log_event: Callable[[str, dict[str, Any], Path], None],
 ) -> None:
     @app.websocket("/ws/events")
     async def websocket_events(websocket: WebSocket) -> None:
         api_runtime_node = api_runtime_node_getter()
+        runtime_state = runtime_state_getter()
         expected_key = os.getenv("ORKET_API_KEY")
         header_key = websocket.headers.get(api_key_name) or websocket.headers.get(api_key_name.lower())
         query_key = websocket.query_params.get("api_key")

@@ -2,8 +2,9 @@
 
 import hashlib
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from .capabilities import CapabilityRegistry
 
@@ -28,7 +29,7 @@ class GoldenArtifact:
 
 class FakeCapabilities(CapabilityRegistry):
     @classmethod
-    def from_mapping(cls, mapping: dict[str, Any]) -> "FakeCapabilities":
+    def from_mapping(cls, mapping: dict[str, Any]) -> FakeCapabilities:
         registry = cls()
         for capability_id in sorted(mapping.keys()):
             registry.register(capability_id, mapping[capability_id])

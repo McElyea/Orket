@@ -8,15 +8,15 @@ import orket.runtime.execution_pipeline_run_summary as execution_pipeline_run_su
 import orket.runtime.run_summary as run_summary_module
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.services.turn_tool_control_plane_support import attempt_id_for, run_id_for
+from orket.exceptions import ExecutionFailed
+from orket.logging import log_event
+from orket.naming import sanitize_name
+from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.runtime.registry.protocol_hashing import hash_framed_fields
 from orket.runtime.registry.tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
-from orket.exceptions import ExecutionFailed
-from orket.logging import log_event
-from orket.naming import sanitize_name
-from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.runtime.run_summary import PACKET1_MISSING_TOKEN
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
 from orket.schema import CardStatus
@@ -1868,6 +1868,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_orphaned_projecti
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root, workspace, db_path, monkeypatch):
+    """Layer: contract. Verifies run-ledger bootstrap artifacts preserve current runtime contracts."""
     _write_epic_assets(test_root, "ledger_epic_contract_bootstrap")
 
     pipeline = ExecutionPipeline(
@@ -1914,7 +1915,7 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     assert artifact_json["fail_behavior_registry"]["schema_version"] == "1.0"
     assert artifact_json["provider_truth_table"]["schema_version"] == "1.0"
     provider_rows = artifact_json["provider_truth_table"]["providers"]
-    assert [row["provider"] for row in provider_rows] == ["ollama", "openai_compat", "lmstudio"]
+    assert [row["provider"] for row in provider_rows] == ["ollama", "openai_compat", "lmstudio", "llama_cpp"]
     assert artifact_json["state_transition_registry"]["schema_version"] == "1.0"
     transition_domains = artifact_json["state_transition_registry"]["domains"]
     assert [row["domain"] for row in transition_domains] == ["session", "run", "tool_invocation", "voice", "ui"]

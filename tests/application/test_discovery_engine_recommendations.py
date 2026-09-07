@@ -122,5 +122,5 @@ def test_perform_first_run_onboarding_recommends_canonical_card_entrypoint(monke
 
     assert result == "first_run_setup"
     assert "canonical card entrypoint" in out
-    assert "python main.py --card initialize_orket" in out
+    assert "orket runtime --card initialize_orket" in out
     assert "initialization rock" not in out

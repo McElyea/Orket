@@ -20,8 +20,11 @@ def test_runtime_print_usage_is_whitelisted():
         # Standalone utility script with direct console output.
         "orket/orchestration/project_dumper_small.py",
         # Explicit command-line surfaces with direct user output.
+        "orket/cli.py",
+        "orket/interfaces/governed_agent_cli.py",
         "orket/interfaces/orket_bundle_cli.py",
         "orket/interfaces/prompts_cli.py",
+        "orket/quickstart/governed_action_demo.py",
     }
 
     violations = []

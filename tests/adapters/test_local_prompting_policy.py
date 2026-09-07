@@ -34,6 +34,29 @@ async def test_resolve_local_prompting_policy_selects_matching_profile_for_ollam
 
 
 @pytest.mark.asyncio
+async def test_governed_runtime_limits_cap_generation_without_widening_profile() -> None:
+    """Layer: contract. Host-issued generation limits narrow the selected local profile."""
+
+    result = await resolve_local_prompting_policy(
+        provider_backend="ollama",
+        model="qwen2.5:7b",
+        messages=[{"role": "user", "content": "return json"}],
+        runtime_context={
+            "protocol_governed_enabled": True,
+            "local_prompting_mode": "enforce",
+            "local_prompt_max_output_tokens": 96,
+            "local_prompt_temperature": 0,
+            "local_prompt_stop_sequences": ["<END>"],
+        },
+    )
+
+    assert result.sampling_bundle["max_output_tokens"] == 96
+    assert result.sampling_bundle["temperature"] == 0
+    assert result.effective_stop_sequences[0] == "<END>"
+    assert result.ollama_options_overrides()["num_predict"] == 96
+
+
+@pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_applies_user_injection_for_deepseek_profile() -> None:
     result = await resolve_local_prompting_policy(
         provider_backend="ollama",

@@ -13,6 +13,9 @@ CapabilityId = str
 
 
 _CAPABILITY_VOCAB: dict[str, dict[str, Any]] = {
+    "agent.iteration.v1": {"deterministic": False, "protocol_marker": True},
+    "read_file": {"deterministic": False, "effect_proposal_only": True},
+    "write_file": {"deterministic": False, "effect_proposal_only": True},
     "workspace.root": {"deterministic": True},
     "artifact.root": {"deterministic": True},
     "time.now": {"deterministic": False},

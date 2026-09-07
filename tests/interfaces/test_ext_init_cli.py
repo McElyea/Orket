@@ -44,3 +44,19 @@ def test_ext_init_fails_when_target_exists_without_force(tmp_path: Path, capsys)
     assert code == 2
     assert payload["ok"] is False
     assert payload["errors"][0]["code"] == "E_EXT_TARGET_EXISTS"
+
+
+def test_ext_init_scaffolds_governed_agent_template(tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies the agent template is public-SDK-only and author-valid."""
+    target = tmp_path / "agent_ext"
+
+    code = main(["ext", "init", str(target), "--kind", "agent", "--json"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload["template_kind"] == "agent"
+    assert target.joinpath("extension.yaml").is_file()
+    assert target.joinpath("governed_agent.py").is_file()
+    assert "from orket_extension_sdk import" in target.joinpath("governed_agent.py").read_text(encoding="utf-8")
+    assert "from orket." not in target.joinpath("governed_agent.py").read_text(encoding="utf-8")
+    assert not any(target.glob("*.egg-info"))

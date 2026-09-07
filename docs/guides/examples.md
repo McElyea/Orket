@@ -1,6 +1,6 @@
 ﻿# Orket Examples (Transitional)
 
-Last reviewed: 2026-02-27
+Last reviewed: 2026-07-30
 
 This file is intentionally minimal. Canonical operational examples live in:
 1. `docs/RUNBOOK.md`
@@ -11,7 +11,7 @@ This file is intentionally minimal. Canonical operational examples live in:
 
 ### CLI help
 ```bash
-python main.py --help
+orket runtime --help
 ```
 
 ### API health

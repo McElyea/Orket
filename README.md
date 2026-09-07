@@ -1,13 +1,68 @@
 # Orket
 
-Orket is a local-first workflow runtime for card-based execution with persistent state, tool gating, and multiple operator surfaces.
+Orket is an early local-first runtime for governing AI agent side effects.
 
-This README is intentionally narrow. It describes the repo entrypoints and current truths only.
+The core idea is simple: a model can propose an action, but Orket controls whether that action is allowed, approved, executed, and recorded.
+
+The first demo shows a mock local model proposing a file write. Orket pauses for operator approval, writes the file only if approved, and emits a hash-chained JSONL ledger that can be verified afterward.
+
+## Try the governed-action demo
+
+No network, Ollama, GPU, or `.env` file is required.
+
+```bash
+python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
+orket-quickstart
+python -m orket.quickstart.verify_ledger <ledger>
+```
+
+The demo prints the exact `<ledger>` path to use in the verifier command.
+For a noninteractive run, supply the decision explicitly:
+
+```bash
+orket-quickstart --decision deny
+orket-quickstart --decision approve --workspace <directory>
+```
+
+If interactive input is unavailable, the command exits nonzero with
+`E_QUICKSTART_INPUT_REQUIRED` instead of printing a traceback.
+
+You should see the governance boundary in the terminal:
+
+```text
+GOVERNED ACTION REQUEST
+tool: write_file
+path: quickstart_out/hello_from_orket.txt
+status: waiting_for_operator
+Approve this action? [a]pprove / [d]eny:
+```
+
+If you approve, Orket writes `quickstart_out/hello_from_orket.txt` and records the effect. If you deny or enter anything else, the file is not written and the ledger records why the effect was skipped.
+
+## What this proves
+
+- A model proposal is not treated as execution authority.
+- The operator sees the proposed side effect before it happens.
+- The side effect happens only on approval.
+- The run emits a hash-chained JSONL ledger.
+- The verifier fails if ledger content, ordering, sequence, previous hash, or event hash is changed.
+
+## Claim limits
+
+This is an early project. The quickstart uses a mock local model so the governance loop can be tested without setup tax.
+
+The demo proves the local approval gate, file side effect, and ledger verification path for one governed action. It does not prove broad autonomous-agent safety, production readiness, model quality, replay determinism, or text determinism.
+
+For broader compatibility and migration boundaries, use [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) instead of inferring from older docs or broad product language.
 
 ## Current Repo Truth
 
-- Default runtime entrypoint: `python main.py`
-- Named card runtime entrypoint: `python main.py --card <card_id>`
+- Governed-action demo entrypoint: `orket-quickstart` or `python -m orket.quickstart.governed_action_demo`
+- Governed-run deterministic demo: `orket demo governed-run` using its packaged default; custom scenario path: `orket run scenario examples/governed-run/scenario.yaml`
+- Governed-run inspection and replay: `orket inspect .runs/<run_id>` and `orket replay .runs/<run_id>`
+- Governed-agent path: `orket agent submit ... --deterministic-fixture` or `orket agent submit ... --ollama-model <exact-model>` with optional fixed role overrides; durable inspection, replay, and cancellation are under `orket agent`. Bounded live single/multi-model and application effect proof exists; durable wake/supervisor behavior is not yet admitted.
+- Default runtime entrypoint: `orket runtime`
+- Named card runtime entrypoint: `orket runtime --card <card_id>`
 - API runtime entrypoint: `python server.py`
 - Canonical test command: `python -m pytest -q`
 - Active docs index: [docs/README.md](docs/README.md)
@@ -17,13 +72,11 @@ This README is intentionally narrow. It describes the repo entrypoints and curre
 ## What Exists Today
 
 - A runtime and API for orchestration, turns, cards, and workflow state.
-- Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the named card runtime.
 - Governed turn-tool execution with fail-closed namespace enforcement on the governed path.
 - Control-plane persistence for selected live lanes, including sandbox orchestration, governed turn-tool execution, governed kernel actions, cards epic execution, manual review-run execution, extension workload execution, approval-gated reservation and operator flows, coordinator reservation and lease flows, and the Gitea state worker path.
-- Controller child results and controller observability events that self-identify as projection-only runtime facts instead of standalone execution authority.
 - Deterministic and observability-oriented runtime artifacts under the normal workspace and durable `.orket/` paths.
-
-For broader compatibility and migration boundaries beyond this narrow README, use [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) instead of inferring from older docs or broad product language.
+- Source wrapper `python main.py [runtime arguments]` remains supported through `0.5.x`.
+- Legacy runtime `--rock` remains accepted as a hidden compatibility alias to the named card runtime; new callers use `--card`.
 
 ## Bounded Proof Slice
 
@@ -37,19 +90,19 @@ The practical trust reason for that slice is that Orket can package approval, ef
 
 Use [docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md](docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md) for the evaluator path and [docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md](docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md) for the publication boundary.
 
-## Quick Start
+## Full Runtime Quick Start
 
 1. Install dependencies:
 
 ```bash
 python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
+python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 ```
 
 Optional extras:
 
 ```bash
-python -m pip install -e ".[dev,vision]"
+python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev,vision]"
 ```
 
 Use `vision` only for image-processing features; base runtime installs no longer pull Pillow.
@@ -65,7 +118,7 @@ The API runtime entrypoint loads this repo-local `.env` before app construction.
 3. Start the default runtime:
 
 ```bash
-python main.py
+orket runtime
 ```
 
 4. Start the API server:

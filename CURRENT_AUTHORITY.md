@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-05-19
+Last updated: 2026-09-07
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -18,18 +18,67 @@ This file does not define:
 3. all repository conventions.
 
 It defines only the currently authoritative paths that agents and contributors must treat as canonical unless explicitly directed otherwise.
-Legacy CLI `--rock` remains accepted as a hidden compatibility alias to the named card runtime, but it is not part of the canonical runtime path list below.
+The source wrapper `python main.py [runtime arguments]` remains supported through
+`0.5.x`, and runtime `--rock` remains a hidden compatibility alias to the named
+card runtime. Neither is part of the canonical runtime path list below; removal
+requires an explicit `0.6.0` contract delta.
 
 ## Current Canonical Paths
+
+Governed continuous-agent durable contract authority is
+`docs/specs/GOVERNED_AGENT_LOOP_V1.md`, with active implementation sequencing at
+`docs/projects/governed-agent-loop/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`
+and the accepted initial delta at
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_V1_2026-09-06.md`. The
+contract composes the existing control-plane, extension, approval, checkpoint,
+effect-journal, trust-handoff, and local-provider authorities. Bounded Slices
+0-5 are implemented on CLI/application-service paths. Contract bindings
+are packaged at
+`orket_extension_sdk/schemas/governed_agent_loop_v1.json`, with shared semantic
+validation, immutable models, framed IPC, child proxies, and fixtures in SDK
+`0.5.0a1`. The host advertises `governed_agent_loop.v1` and
+`agent_stdio_ipc.v1` for the dedicated governed-agent catalog path. All raw agent
+discriminators require the strict typed declaration across author validation,
+install, catalog reload, and generic invocation; the generic executor still
+returns `E_AGENT_RUNTIME_NOT_ADMITTED` before run artifacts. Child configuration
+cannot materialize the broker marker or the host-bound `read_file`/`write_file`
+effect proposal capabilities. The admitted path owns a
+durable SQLite repository, application governor, real child process, real host
+broker, two sequential fenced iterations, verifier-backed `FinalTruthRecord`,
+and read-only inspect/replay plus durable cancellation. Submit selects either
+the `deterministic_fixture_not_live_model` path or exact installed Ollama model
+identities with `live_local_model` posture. Live single-model and fixed
+planner/actor/critic proofs record requested/resolved model identity, measured
+usage, latency, finish, and truncation. The issue-scoped application effect path
+composes host observation, pending approval, operator action, reservation,
+existing tool gate/filesystem adapter, effect journal, checkpoint acceptance,
+denial closure, reconciliation, and explicit resume. It does not admit an agent
+API entrypoint, wake queue, continuous supervisor, non-issue effects, or silent
+model substitution.
+
+The implementation review delta is
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_REVIEW_2026-09-06.md`.
+The implemented Slice 0 binding delta is
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_0_2026-09-07.md`.
+Agent admission requires the selected `agent_stdio_ipc.v1` framed-stdio host
+capability broker, `agent.iteration.v1` manifest capability and invocation
+handshake, and fenced iteration ownership. V1 admits
+operator-trusted extension code; Python import guards are not OS containment.
+These constraints are implemented on the dedicated deterministic and live
+Ollama paths. The Slices 3-5 boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICES_3_5_2026-09-07.md`.
 
 Apophenia external extension durable contract: `docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md`; implementation remains outside Orket core at `C:\Source\Orket-Extensions\Apophenia`, and Orket stays a generic host runtime for Apophenia through generic extension runtime endpoints.
 
 llama.cpp first-slice local provider implementation is closed and archived at `docs/projects/archive/local-provider-compatibility/2026-05-19-LLAMA-CPP-FIRST-SLICE-CLOSEOUT/`, including the archived implementation plan, requirements, operator source-build note, source verification artifact, and closeout report; durable contract authority remains in `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`, with the contract delta record at `docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FIRST_SLICE_2026-05-18.md`. Structural support now exists for the `llama_cpp` provider token, bounded GGUF inventory, profile resolution, OpenAI-compatible chat invocation, request-shape telemetry, preflight, and conformance harness paths. Live first-slice proof passed on 2026-05-19 for the operator-managed `qwen3.6-27b-q4_k_m` GGUF path, but promoted `llama_cpp` provider support remains unadmitted because promotion readiness is false until promotion-volume and template-audit or whitelist gates pass in a later explicit roadmap lane.
 
-1. Install/bootstrap: `python -m pip install -e ".[dev]"`
-2. Default runtime: `python main.py`
-3. Named card runtime: `python main.py --card <card_id>`
+1. Install/bootstrap: `python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"`
+2. Default runtime: `orket runtime`
+3. Named card runtime: `orket runtime --card <card_id>`
 4. API runtime: `python server.py`
+   - Governed-action quickstart demo: `python -m orket.quickstart.governed_action_demo` or `orket-quickstart`; scripted operator decisions use `--decision approve|deny`, and unavailable interactive input exits `2` with `E_QUICKSTART_INPUT_REQUIRED`
+   - Governed-run deterministic demo: `orket demo governed-run` uses an installed package-owned default scenario; custom scenario command: `orket run scenario examples/governed-run/scenario.yaml`; inspection and replay: `orket inspect .runs/<run_id>` and `orket replay .runs/<run_id>`
+   - Governed-agent submit: use the common arguments in `docs/RUNBOOK.md`, then exactly one of `--deterministic-fixture` or `--ollama-model <exact-model>`; fixed role overrides are `--planner-model`, `--actor-model`, and `--critic-model`; inspection/replay: `orket agent inspect|replay <run_id> --db <sqlite_path>`; cancellation: `orket agent cancel <run_id> --db <sqlite_path> --action-id <id> --actor-ref <ref> --timestamp-utc <timestamp> --reason <reason> --cancellation-epoch <n>`
 5. Canonical test command: `python -m pytest -q`
 6. Active docs index: `docs/README.md`
 7. Active roadmap: `docs/ROADMAP.md`
@@ -110,7 +159,7 @@ Trusted Terraform Bedrock summary-model admission: `scripts/proof/terraform_plan
 
 Trust Kernel and Portable Conformance completed lane authority is archived under `docs/projects/archive/trust-kernel-conformance/TKC04232026-LANE-CLOSEOUT/`. Workstream 1 finite-model implementation lives in `scripts/proof/finite_trust_kernel_model.py` with contract and structural tests in `tests/scripts/test_finite_trust_kernel_model.py`; Workstream 2 portable conformance implementation lives in `scripts/proof/run_trust_conformance_pack.py` with integration tests in `tests/scripts/test_trust_conformance_pack.py` and evaluator guide `docs/guides/TRUST_KERNEL_CONFORMANCE_PACK_GUIDE.md`. The finite-model signature and conformance summary are claim-supporting only and do not replace witness, validator, offline verifier, or packet verifier authority. The durable contracts are `docs/specs/FINITE_TRUST_KERNEL_MODEL_V1.md` and `docs/specs/PORTABLE_TRUST_CONFORMANCE_PACK_V1.md`; the completed lane adopted only finite trust-kernel model and portable conformance pack workstreams over existing admitted evidence, did not admit a new workflow compare scope, keeps `trusted_repo_manifest_change_v1` deferred as the preferred future non-AWS candidate, and did not upgrade replay-deterministic or text-deterministic claims.
 
-72. Canonical API runtime ownership now lives on the FastAPI app-scoped context `app.state.api_runtime_context` in `orket/interfaces/api.py` with the context contract defined in `orket/interfaces/api_runtime_context.py`; `create_api_app()` replaces that app-scoped context for the active project root, while module-level `engine`, `api_runtime_host`, `stream_bus`, `interaction_manager`, `extension_manager`, and `extension_runtime_service` remain minimal compatibility aliases that mirror or are adopted into that context and are not the authoritative owner, and the env-sensitive `StreamBus` plus `InteractionManager` remain lazy so request-time runtime flags still control their live behavior truthfully
+72. Canonical API runtime ownership now lives in one `orket/application/services/api_runtime_container.py::ApiRuntimeContainer` attached to each FastAPI instance as `app.state.api_runtime_context`; every `orket/interfaces/api.py::create_api_app(...)` call returns a distinct app with a distinct project root, decision node, runtime state, runtime host, engine, outbound-policy snapshot, lazy stream/interaction/extension owners, and tracked background-task set, while HTTP, websocket, and lifespan execution resolve through the active ASGI app and lifespan teardown cancels tracked tasks and closes the app-owned engine idempotently. The module-level `app` plus `api_runtime_node`, `runtime_state`, `engine`, `api_runtime_host`, `stream_bus`, `interaction_manager`, `extension_manager`, and `extension_runtime_service` remain compatibility-only aliases for that default app and cannot be adopted into factory-created apps; outward service/store extraction and removal of the default aliases remain B2 debt.
 73. Canonical engine control-plane composition now builds through `orket/orchestration/engine_services.py::build_engine_control_plane_services(...)`, async kernel control-plane publication and response augmentation now live in `orket/orchestration/engine_kernel_async_service.py::KernelAsyncControlPlaneService`, the default orchestrator issue-dispatch lifecycle truth remains owned by `orket/application/services/orchestrator_issue_control_plane_service.py` rather than `orket/orchestration/engine.py`, and engine-targeted replay is now explicitly diagnostics-only through `OrchestrationEngine.replay_turn_diagnostics(...)` while `replay_turn(...)` remains only as a compatibility wrapper over the same artifact-backed diagnostics surface; the touched API and CLI replay entrypoints now call `replay_turn_diagnostics(...)` explicitly
 74. Canonical runtime-verification support artifacts now use `agent_output/verification/runtime_verification.json` as the latest support-only verifier record, `agent_output/verification/runtime_verification_index.json` as the stable history index, and `agent_output/verification/runtime_verifier_records/<run_id>/<issue_id>/turn_<turn_index>_retry_<retry_count>.json` as the preserved per-record family; those artifacts must record `artifact_role=support_verification_evidence`, `artifact_authority=support_only`, `authored_output=false`, `overall_evidence_class`, and `evidence_summary` over `syntax_only`, `command_execution`, `behavioral_verification`, and `not_evaluated` together with run, issue, turn, and retry provenance, and runtime-summary or MAR paths must not promote the verifier artifact to the primary authored output by default
 75. Canonical Tool Execution Gate authority now lives in `docs/specs/TOOL_EXECUTION_GATE_V1.md`; the shipped first slice closes the supported `run_card(...) -> TurnExecutor -> ToolDispatcher` path plus normalized extension actions that re-enter `run_card(...)`, requires construction-time `tool_gate` authority on that supported path, keeps direct `ToolDispatcher.execute_tools(...)`, direct `ToolBox.execute(...)`, and direct card-family method invocation inventory-only internal seams, keeps direct `Agent.run(...)` as retained legacy compatibility that now fail-closes before any direct tool call when `tool_gate` or effect-journal authority is missing, keeps SDK capability registry invocation out of scope under `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`, and fixes the canonical audit command and stable output path at `python scripts/security/build_tool_gate_audit.py --strict` and `benchmarks/results/security/tool_gate_audit.json`
@@ -121,17 +170,19 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 80. Canonical kernel outbound projection policy now lives in `orket/kernel/v1/outbound_policy_gate.py`, `orket/kernel/v1/nervous_system_runtime.py`, `docs/SECURITY.md`, and `docs/API_FRONTEND_CONTRACT.md`; projection packs scrub configured paths, sensitive-key leaves, email-like values, and built-in leak patterns before digesting and returning `policy_context` or `tool_context_summary`, and report redaction counts plus redacted paths under `policy_summary.outbound_policy_gate`.
 81. Prompt Reforger generic service portability claims now live in `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`; `gemma-3-4b-it-qat` and other sub-7B targets are `unsupported` for product portability claims until exact corpus evidence clears, and lower corpus bars must be named as narrower tiers rather than described as clearing the frozen 5-slice portability corpus.
 82. SDK versioning and core compatibility authority now lives in `docs/requirements/sdk/VERSIONING.md` and `orket_extension_sdk/README.md`; SDK SemVer is independent from core engine versioning, and SDK `0.Y.Z` is compatible with Orket core `0.Y.*` through `0.(Y+2).*` unless a release note explicitly narrows that window.
+83. Architectural Truth Slice A command behavior is governed by `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_SLICE_A_2026-07-29.md`: the runtime boundary propagates handled fatal outcomes as nonzero process exits, synchronous first-run persistence runs outside the active event loop and precedes success narration, `orket-quickstart` exposes help plus explicit `--decision approve|deny` input and a structured exit-2 EOF refusal, and `orket demo governed-run` resolves its default scenario from installed `orket.quickstart` package data rather than the caller's working directory. The rerunnable current-state inventory is `docs/projects/architectural-truth/architectural_truth_baseline.json`, and accountable exception metadata is `docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json`.
+84. Architectural Truth command-root authority is governed by `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_COMMAND_ROOT_2026-07-30.md`: the installed `orket` console script targets `orket.cli:main` as the one canonical command root, `orket runtime` owns the default card runtime, `orket runtime --card <card_id>` owns named-card invocation, and runtime arguments are forwarded into the existing card parser without a duplicate option implementation. `python main.py [runtime arguments]` is a source-wrapper compatibility surface through `0.5.x`; it is eligible for removal only in `0.6.0` after an explicit contract delta and continued installed-root proof. Completion evidence is `docs/projects/architectural-truth/COMMAND_ROOT_PROOF_2026-07-30.md`.
 
 ## Machine-Readable Authority Map (v1)
 
 ```json
 {
   "version": 1,
-  "last_updated": "2026-05-18",
+  "last_updated": "2026-09-07",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
-      "install_command": "python -m pip install -e \".[dev]\"",
+      "install_command": "python -m pip install -e \"./orket_extension_sdk[testing]\" -e \".[dev]\"",
       "sources": [
         "pyproject.toml",
         "docs/CONTRIBUTOR.md",
@@ -141,7 +192,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
     "install_bootstrap": {
       "commands": [
         "python -m pip install --upgrade pip",
-        "python -m pip install -e \".[dev]\""
+        "python -m pip install -e \"./orket_extension_sdk[testing]\" -e \".[dev]\""
       ],
       "sources": [
         "docs/CONTRIBUTOR.md",
@@ -149,13 +200,40 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
       ]
     },
     "runtime_entrypoints": {
-      "cli_default": "python main.py",
-      "cli_named_card": "python main.py --card <card_id>",
-      "cli_legacy_named_rock_alias": "python main.py --rock <rock_name>",
+      "cli_console_entrypoint": "orket.cli:main",
+      "cli_default": "orket runtime",
+      "cli_named_card": "orket runtime --card <card_id>",
+      "cli_source_wrapper_compatibility": "python main.py [runtime arguments]",
+      "cli_source_wrapper_compatibility_status": "supported_through_0.5.x_removal_requires_explicit_0.6.0_contract_delta",
+      "cli_legacy_named_rock_alias": "orket runtime --rock <rock_name>",
+      "cli_source_wrapper_legacy_rock_alias": "python main.py --rock <rock_name>",
       "cli_legacy_named_rock_alias_status": "hidden_compatibility_alias_to_run_card",
       "api": "python server.py",
+      "quickstart_governed_action_demo": "python -m orket.quickstart.governed_action_demo",
+      "quickstart_console_script": "orket-quickstart",
+      "quickstart_scripted_decision": "orket-quickstart --decision approve|deny",
+      "quickstart_eof_exit": "2:E_QUICKSTART_INPUT_REQUIRED",
+      "governed_run_demo": "orket demo governed-run",
+      "governed_run_default_scenario_authority": "orket.quickstart/governed_run_scenario.yaml",
+      "governed_run_scenario": "orket run scenario examples/governed-run/scenario.yaml",
+      "governed_run_inspect": "orket inspect .runs/<run_id>",
+      "governed_run_replay": "orket replay .runs/<run_id>",
+      "governed_run_evidence_bundle": ".runs/<run_id>/",
+      "governed_agent_fixture_submit": "orket agent submit <workload_id> --db <sqlite_path> --catalog <catalog_json> --request <request_json> --creation-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --next-lease-expires-at-utc <timestamp> --deterministic-fixture",
+      "governed_agent_ollama_submit": "orket agent submit <workload_id> --db <sqlite_path> --catalog <catalog_json> --request <request_json> --creation-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --next-lease-expires-at-utc <timestamp> --ollama-model <exact_model> [--planner-model <exact_model> --actor-model <exact_model> --critic-model <exact_model>]",
+      "governed_agent_inspect": "orket agent inspect <run_id> --db <sqlite_path>",
+      "governed_agent_replay": "orket agent replay <run_id> --db <sqlite_path>",
+      "governed_agent_cancel": "orket agent cancel <run_id> --db <sqlite_path> --action-id <id> --actor-ref <ref> --timestamp-utc <timestamp> --reason <reason> --cancellation-epoch <n>",
+      "governed_agent_proof_postures": ["deterministic_fixture_not_live_model", "live_local_model"],
       "sources": [
+        "pyproject.toml",
+        "examples/governed-run/README.md",
+        "docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_SLICE_A_2026-07-29.md",
+        "docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_COMMAND_ROOT_2026-07-30.md",
+        "docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICES_1_2_2026-09-07.md",
+        "docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICES_3_5_2026-09-07.md",
         "docs/CONTRIBUTOR.md",
+        "docs/RUNBOOK.md",
         "README.md"
       ]
     },
@@ -401,9 +479,16 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
     "api_runtime_ownership": {
       "authoritative_owner": "app.state.api_runtime_context",
       "factory": "orket/interfaces/api.py::create_api_app",
+      "factory_identity": "new_fastapi_instance_per_call",
+      "runtime_container": "orket/application/services/api_runtime_container.py::ApiRuntimeContainer",
       "context_contract_module": "orket/interfaces/api_runtime_context.py",
       "transport_module": "orket/interfaces/api.py",
+      "request_owner_resolution": "active_asgi_app",
+      "teardown": "cancel_tracked_tasks_then_idempotent_engine_close",
+      "compatibility_scope": "module_default_app_only",
       "compatibility_aliases": [
+        "api_runtime_node",
+        "runtime_state",
         "engine",
         "api_runtime_host",
         "stream_bus",
@@ -417,6 +502,9 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
       ],
       "sources": [
         "CURRENT_AUTHORITY.md",
+        "docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_API_INSTANCES_B1_2026-07-30.md",
+        "docs/projects/architectural-truth/API_INSTANCE_B1_PROOF_2026-07-30.md",
+        "orket/application/services/api_runtime_container.py",
         "orket/interfaces/api.py",
         "orket/interfaces/api_runtime_context.py",
         "tests/interfaces/test_api_composition_isolation.py",

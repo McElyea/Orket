@@ -69,6 +69,20 @@ def _cli_args(**overrides) -> SimpleNamespace:
     return SimpleNamespace(**base)
 
 
+# Layer: contract
+def test_parse_args_uses_explicit_runtime_vector_and_program_name(monkeypatch) -> None:
+    """Layer: contract. Verifies the installed root can parse runtime args independently of process argv."""
+    monkeypatch.setattr(sys, "argv", ["unexpected-process", "--not-a-runtime-option"])
+
+    args = cli_module.parse_args(
+        ["--card", "named-card", "--workspace", "named-workspace"],
+        prog="orket runtime",
+    )
+
+    assert args.card == "named-card"
+    assert args.workspace == "named-workspace"
+
+
 @pytest.mark.asyncio
 async def test_cli_startup_runs_reconciliation_without_bypass(monkeypatch, capsys) -> None:
     """Layer: integration. Verifies CLI startup executes reconciliation and emits path markers."""
@@ -100,9 +114,10 @@ async def test_cli_startup_runs_reconciliation_without_bypass(monkeypatch, capsy
         lambda: SimpleNamespace(command="extensions", subcommand="list"),
     )
 
-    await cli_module.run_cli()
+    exit_code = await cli_module.run_cli()
     out = capsys.readouterr().out
 
+    assert exit_code == 0
     assert "No extensions installed." in out
     assert reconcile_calls == ["called"]
     assert captures["root_path"] == Path("/fake-root/model")
@@ -129,8 +144,24 @@ def test_perform_first_run_onboarding_marks_first_run(monkeypatch, capsys) -> No
     assert result == "first_run_setup"
     assert saved_settings == [{"setup_complete": True, "hardware_profile": "auto-detected"}]
     assert ("discovery_startup_path", {"path": "first_run_setup", "result": "completed"}) in startup_events
-    assert "python main.py --card initialize_orket" in out
-    assert "python main.py --rock initialize_orket" not in out
+    assert "orket runtime --card initialize_orket" in out
+    assert "orket runtime --rock initialize_orket" not in out
+
+
+# Layer: contract
+def test_perform_first_run_onboarding_does_not_claim_success_before_persistence(monkeypatch, capsys) -> None:
+    """Layer: contract. Verifies first-run narration is emitted only after settings persistence succeeds."""
+    monkeypatch.setattr(discovery_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(
+        discovery_module,
+        "save_user_settings",
+        lambda _payload: (_ for _ in ()).throw(OSError("settings unavailable")),
+    )
+
+    with pytest.raises(OSError, match="settings unavailable"):
+        discovery_module.perform_first_run_onboarding()
+
+    assert capsys.readouterr().out == ""
 
 
 def test_perform_first_run_onboarding_no_op_when_complete(monkeypatch) -> None:
@@ -185,6 +216,51 @@ async def test_cli_startup_warns_when_reconciliation_failed(monkeypatch, capsys)
 
     assert "No extensions installed." in captured.out
     assert "Structural reconciliation failed; continuing in degraded mode." in captured.err
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_cli_startup_runs_sync_setup_outside_the_event_loop(monkeypatch) -> None:
+    """Layer: integration. Verifies sync first-run setup is isolated from the active CLI event loop."""
+    setup_observation = {}
+
+    def _setup():
+        try:
+            cli_module.asyncio.get_running_loop()
+        except RuntimeError:
+            setup_observation["running_loop"] = False
+        else:
+            setup_observation["running_loop"] = True
+        return {"reconciliation": "success", "onboarding": "no_op"}
+
+    monkeypatch.setattr(cli_module, "perform_first_run_setup", _setup)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: SimpleNamespace(command="extensions", subcommand="list"),
+    )
+
+    assert await cli_module.run_cli() == 0
+    assert setup_observation == {"running_loop": False}
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_cli_known_fatal_error_returns_nonzero(monkeypatch, capsys) -> None:
+    """Layer: contract. Verifies handled fatal CLI errors return a failing process status."""
+    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: SimpleNamespace(command="extensions", subcommand="unsupported"),
+    )
+
+    assert await cli_module.run_cli() == 1
+    assert "[FATAL]" in capsys.readouterr().out
 
 
 @pytest.mark.asyncio

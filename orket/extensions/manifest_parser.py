@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from orket_extension_sdk.manifest import ExtensionManifest
 from orket_extension_sdk.manifest import load_manifest as load_sdk_manifest
 
 from .models import (
@@ -183,6 +184,7 @@ class ManifestParser:
         security_policy_version: str = "",
         compat_fallbacks: tuple[str, ...] = (),
     ) -> ExtensionRecord:
+        manifest = ExtensionManifest.model_validate(manifest).model_dump(mode="json")
         extension_id = str(manifest.get("extension_id", "")).strip()
         extension_version = str(manifest.get("extension_version", "")).strip()
         manifest_version = str(manifest.get("manifest_version", "")).strip() or "v0"
@@ -203,6 +205,8 @@ class ManifestParser:
             required_capabilities = tuple(
                 str(cap).strip() for cap in item.get("required_capabilities", []) if str(cap).strip()
             )
+            raw_agent_declaration = item.get("agent")
+            agent_declaration = dict(raw_agent_declaration) if isinstance(raw_agent_declaration, dict) else {}
             manifest_entries.append(
                 _ExtensionManifestEntry(
                     workload_id=workload_id,
@@ -210,6 +214,10 @@ class ManifestParser:
                     entrypoint=str(item.get("entrypoint", "")).strip(),
                     required_capabilities=required_capabilities,
                     contract_style=CONTRACT_STYLE_SDK_V0,
+                    workload_kind=str(item.get("workload_kind", "generic")).strip() or "generic",
+                    input_contract=str(item.get("input_contract", "")).strip(),
+                    output_contract=str(item.get("output_contract", "")).strip(),
+                    agent_declaration=agent_declaration,
                 )
             )
 

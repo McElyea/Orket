@@ -1,5 +1,5 @@
 # ControlPlane Governed Start-Path Matrix
-Last updated: 2026-04-10
+Last updated: 2026-09-07
 Status: Active durable governance companion
 Owner: Orket Core
 
@@ -42,6 +42,7 @@ This matrix is machine-enforced by `tests/application/test_control_plane_workloa
 | orchestrator child workload composition | `catalog-resolved` | `OrchestratorSchedulerControlPlaneService` consumes `ORCHESTRATOR_CHILD_WORKLOAD_COMPOSITION_WORKLOAD` and carries that canonical `WorkloadRecord` through namespace-mutation helpers. |
 | Gitea state worker | `catalog-resolved` | `GiteaStateControlPlaneExecutionService` consumes `GITEA_STATE_WORKER_EXECUTION_WORKLOAD` and carries that canonical `WorkloadRecord` directly into run publication. |
 | extension workload execution | `projection-resolved` | `ExtensionManager.run_workload(...)` resolves one canonical extension `WorkloadRecord` through the shared seam at workload start and carries that same record through the returned extension result and provenance. |
+| governed-agent deterministic fixture | `projection-resolved` | `orket agent submit ... --deterministic-fixture` resolves the persisted agent manifest through `ExtensionManager.resolve_governed_agent_workload(...)`, which projects exactly one canonical extension `WorkloadRecord` through the shared catalog seam; the governor carries that record through parent run creation and both iteration steps. This row admits no live-provider, API, or supervisor start path. |
 | rock entrypoints that initiate governed execution | `routing-only` | the legacy CLI `--rock` alias routes through `run_rock(...)`, a thin wrapper over `run_card(...)`; internal rock routing remains routing-only retirement debt and does not mint standalone rock `WorkloadRecord` authority. |
 
 ## Surviving Projection-Only Or Temporary Surfaces

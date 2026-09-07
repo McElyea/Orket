@@ -17,7 +17,7 @@ from orket_extension_sdk.capabilities import CapabilityRegistry
 from .artifact_provenance import ArtifactProvenanceBuilder
 from .contracts import Workload
 from .reproducibility import ReproducibilityEnforcer
-from .sdk_capability_authorization import FIRST_SLICE_CAPABILITIES
+from .sdk_capability_authorization import FIRST_SLICE_CAPABILITIES, HOST_BOUND_CAPABILITIES
 
 
 class WorkloadArtifacts:
@@ -46,6 +46,11 @@ class WorkloadArtifacts:
         configured = input_config.get("capabilities")
         if isinstance(configured, dict):
             items = sorted((str(key).strip(), value) for key, value in configured.items())
+            forbidden = sorted(capability_id for capability_id, _provider in items if capability_id in HOST_BOUND_CAPABILITIES)
+            if forbidden:
+                raise ValueError(
+                    "E_SDK_HOST_BOUND_CAPABILITY_CONFIG_FORBIDDEN: " + ", ".join(forbidden)
+                )
             for capability_id, provider in items:
                 if not WorkloadArtifacts._capability_enabled(
                     capability_id=capability_id,

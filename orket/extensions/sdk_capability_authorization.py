@@ -21,6 +21,7 @@ FIRST_SLICE_CAPABILITIES = (
     "voice.turn_control",
 )
 STRUCTURAL_CONTEXT_CAPABILITIES = ("artifact.root", "workspace.root")
+HOST_BOUND_CAPABILITIES = ("agent.iteration.v1", "read_file", "write_file")
 _CAPABILITY_FAMILIES = {
     "model.generate": "model_io",
     "memory.query": "memory_read",

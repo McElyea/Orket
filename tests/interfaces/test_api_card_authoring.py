@@ -34,7 +34,7 @@ def _card_draft(**overrides: object) -> dict[str, object]:
 def test_card_authoring_validate_route_accepts_valid_payload(monkeypatch, tmp_path) -> None:
     """Layer: contract."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.create_api_app(project_root=Path(tmp_path).resolve())
+    api_module._configure_default_api_app(project_root=Path(tmp_path).resolve())
 
     response = client.post(
         "/v1/cards/validate",
@@ -53,7 +53,7 @@ def test_card_authoring_create_and_save_round_trip(monkeypatch, tmp_path) -> Non
     """Layer: integration."""
     root = Path(tmp_path).resolve()
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.create_api_app(project_root=root)
+    api_module._configure_default_api_app(project_root=root)
 
     create_response = client.post(
         "/v1/cards",
@@ -116,7 +116,7 @@ def test_card_authoring_create_and_save_round_trip(monkeypatch, tmp_path) -> Non
 def test_card_authoring_save_conflict_fails_closed(monkeypatch, tmp_path) -> None:
     """Layer: contract."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.create_api_app(project_root=Path(tmp_path).resolve())
+    api_module._configure_default_api_app(project_root=Path(tmp_path).resolve())
 
     create_response = client.post(
         "/v1/cards",

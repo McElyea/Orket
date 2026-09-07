@@ -1,6 +1,6 @@
 # Orket Architecture (Target State)
 
-Last updated: 2026-04-08
+Last updated: 2026-07-30
 Status: Active target architecture (transitioning)
 
 Canonical architecture specification for the Orket runtime.
@@ -29,7 +29,13 @@ Current-state operational authority that remains active during migration:
 
 ## Known Current Exceptions
 
-As of 2026-04-08, these divergences are known and accepted as transition debt:
+As of 2026-07-30, these divergences are known and accepted as transition debt:
+
+The owner, reason, status, evidence, and removal condition for current exceptions
+are tracked in
+`docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json`. That
+register also records review-discovered ship-risk and self-deception debt that is
+not accepted as target-architecture conformance.
 
 1. Dependency layering exceptions:
    1. `orket/interfaces/api.py` imports decision-node registry directly.
@@ -37,7 +43,8 @@ As of 2026-04-08, these divergences are known and accepted as transition debt:
 2. Decision-node purity exceptions:
    1. `orket/decision_nodes/api_runtime_strategy_node.py` and `orket/decision_nodes/builtins.py` still include environment/path/provider policy logic, but API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths now live in explicit services.
 3. API transport compatibility exception:
-   1. `orket/interfaces/api.py` still exports minimal module-level compatibility aliases for `engine`, `api_runtime_host`, `stream_bus`, `interaction_manager`, `extension_manager`, and `extension_runtime_service`, but authoritative live ownership now lives on `app.state.api_runtime_context`.
+   1. `create_api_app()` now returns a distinct FastAPI app with an application-owned `ApiRuntimeContainer`, runtime state, host, engine, decision node, outbound-policy snapshot, lazy stream/interaction/extension owners, and tracked task teardown.
+   2. `orket/interfaces/api.py` still exports one compatibility-only module-default app and owner aliases. Those aliases can affect only that default app; removing them and moving outward service/store construction out of the interface module remains B2 debt.
 4. Deterministic runtime clock/input exceptions:
    1. Some application paths still use wall-clock helpers directly (for example `time.time()` / `datetime.now(...)`) instead of injected runtime inputs.
 5. Replay diagnostics compatibility exception:

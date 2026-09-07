@@ -1,14 +1,17 @@
 from __future__ import annotations
 
-import ast
 import argparse
+import ast
 import json
 from collections import Counter
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
 
-from dependency_policy import POLICY_PATH, PROJECT_ROOT, load_dependency_policy
+try:
+    from scripts.governance.dependency_policy import POLICY_PATH, PROJECT_ROOT, load_dependency_policy
+except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
+    from dependency_policy import POLICY_PATH, PROJECT_ROOT, load_dependency_policy
 
 OUTPUT_DIR = PROJECT_ROOT / "docs" / "architecture"
 OUTPUT_JSON = OUTPUT_DIR / "dependency_graph_snapshot.json"
@@ -20,20 +23,19 @@ def _module_from_path(path: Path) -> str:
     return ".".join(rel.parts)
 
 
-def _imports_for_file(path: Path) -> List[str]:
+def _imports_for_file(path: Path) -> list[str]:
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"))
     except (SyntaxError, UnicodeDecodeError, OSError):
         return []
 
-    imports: List[str] = []
+    imports: list[str] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 imports.append(alias.name)
-        elif isinstance(node, ast.ImportFrom):
-            if node.module:
-                imports.append(node.module)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imports.append(node.module)
     return imports
 
 
@@ -44,11 +46,11 @@ def _iter_py_files(root: Path) -> Iterable[Path]:
         yield path
 
 
-def _build_snapshot() -> Dict[str, object]:
+def build_dependency_snapshot() -> dict[str, object]:
     policy = load_dependency_policy()
-    modules: Dict[str, Dict[str, object]] = {}
-    layer_edges: Counter[Tuple[str, str]] = Counter()
-    module_edges: Counter[Tuple[str, str]] = Counter()
+    modules: dict[str, dict[str, object]] = {}
+    layer_edges: Counter[tuple[str, str]] = Counter()
+    module_edges: Counter[tuple[str, str]] = Counter()
     unknown_modules: set[str] = set()
     scanned_files = 0
 
@@ -133,8 +135,8 @@ def _build_snapshot() -> Dict[str, object]:
     }
 
 
-def _to_markdown(snapshot: Dict[str, object]) -> str:
-    lines: List[str] = []
+def _to_markdown(snapshot: dict[str, object]) -> str:
+    lines: list[str] = []
     lines.append("# Dependency Graph Snapshot")
     lines.append("")
     lines.append(f"Generated: `{snapshot['generated_at']}`")
@@ -193,7 +195,7 @@ def main() -> None:
     out_md = args.out_md.resolve()
     out_json.parent.mkdir(parents=True, exist_ok=True)
     out_md.parent.mkdir(parents=True, exist_ok=True)
-    snapshot = _build_snapshot()
+    snapshot = build_dependency_snapshot()
     out_json.write_text(json.dumps(snapshot, indent=2), encoding="utf-8")
     out_md.write_text(_to_markdown(snapshot), encoding="utf-8")
     print(f"Wrote {out_json}")

@@ -1,6 +1,6 @@
 # Supervisor Runtime Extension Validation V1
 
-Last updated: 2026-04-08
+Last updated: 2026-09-06
 Status: Active
 Owner: Orket Core
 Source requirements: `docs/projects/archive/SupervisorRuntime/SRF03312026-LANE-CLOSEOUT/SUPERVISOR_RUNTIME_FOUNDATIONS_REQUIREMENTS.md`
@@ -12,6 +12,7 @@ Related authority:
 4. `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_V1.md`
 5. `docs/specs/TOOL_EXECUTION_GATE_V1.md`
 6. `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`
+7. `docs/specs/GOVERNED_AGENT_LOOP_V1.md`
 
 ## Authority posture
 
@@ -63,6 +64,15 @@ The admitted Packet 1 manifest surface is:
    3. `required_capabilities`
 
 For Packet 1, `required_capabilities` is the admitted capability-declaration surface for the selected host validation path.
+
+Within the same `manifest_version: v0` family, a governed agent workload adds
+the conditional `workload_kind`, `input_contract`, `output_contract`, and typed
+`agent` fields defined by `GOVERNED_AGENT_LOOP_V1.md`. It must declare
+`agent.iteration.v1` and the required host features. Unknown fields inside the
+typed `agent` declaration fail schema validation. Existing non-agent workload
+entries retain their current behavior. Successful validation recognizes package
+shape only; current runtime admission still fails closed until the agent broker
+and invocation handshake are implemented and admitted.
 
 ## Validation path contract
 

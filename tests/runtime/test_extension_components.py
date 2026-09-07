@@ -13,14 +13,19 @@ from orket.application.services.control_plane_workload_catalog import (
     WorkloadAuthorityInput,
     resolve_control_plane_workload,
 )
-from orket.capabilities.sync_bridge import run_coro_sync
 from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
+from orket.capabilities.sync_bridge import run_coro_sync
 from orket.extensions.catalog import ExtensionCatalog
 from orket.extensions.contracts import RunAction, RunPlan
 from orket.extensions.governed_identity import build_governed_identity
 from orket.extensions.manifest_parser import ManifestParser
-from orket.extensions.models import CONTRACT_STYLE_LEGACY
+from orket.extensions.models import (
+    CONTRACT_STYLE_LEGACY,
+    CONTRACT_STYLE_SDK_V0,
+    ExtensionRecord,
+    _ExtensionManifestEntry,
+)
 from orket.extensions.reproducibility import ReproducibilityEnforcer
 from orket.extensions.runtime import ExtensionEngineAdapter, RunContext
 from orket.extensions.sdk_capability_authorization import HostCapabilityControls, build_host_authorization_envelope
@@ -154,6 +159,99 @@ def test_manifest_parser_load_manifest_legacy(tmp_path: Path) -> None:
         manifest_path=loaded.manifest_path,
     )
     assert record.extension_id == "demo.ext"
+
+
+def test_sdk_agent_manifest_metadata_survives_catalog_round_trip(tmp_path: Path) -> None:
+    """Layer: contract. Host catalog storage preserves the typed agent negotiation fields."""
+    parser = ManifestParser()
+    record = parser.sdk_record_from_manifest(
+        {
+            "manifest_version": "v0",
+            "extension_id": "demo.agent",
+            "extension_version": "0.1.0",
+            "workloads": [
+                {
+                    "workload_id": "governed-agent-loop",
+                    "entrypoint": "demo.agent:run",
+                    "required_capabilities": ["agent.iteration.v1"],
+                    "workload_kind": "agent",
+                    "input_contract": "agent_iteration_request.v1",
+                    "output_contract": "agent_iteration_result.v1",
+                    "agent": {
+                        "contract_version": "governed_agent_loop.v1",
+                        "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1"],
+                        "model_profiles": [{"role": "planner", "profile_ref": "local.default"}],
+                        "resource_requirements": {"max_model_calls_per_iteration": 2},
+                    },
+                }
+            ],
+        },
+        source="test",
+        path=tmp_path,
+        manifest_path=tmp_path / "extension.yaml",
+    )
+
+    catalog_path = tmp_path / "catalog.json"
+    catalog_path.write_text(json.dumps({"extensions": [ExtensionCatalog.row_from_record(record)]}), encoding="utf-8")
+    loaded = ExtensionCatalog(catalog_path).list_extensions()[0].manifest_entries[0]
+
+    assert loaded.workload_kind == "agent"
+    assert loaded.input_contract == "agent_iteration_request.v1"
+    assert loaded.output_contract == "agent_iteration_result.v1"
+    assert loaded.agent_declaration["contract_version"] == "governed_agent_loop.v1"
+
+
+@pytest.mark.asyncio
+async def test_generic_sdk_executor_refuses_agent_workload_before_runtime_side_effects(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Layer: integration. Agent declarations cannot fall through the legacy generic subprocess path."""
+    executor = WorkloadExecutor(
+        project_root=tmp_path,
+        reproducibility=ReproducibilityEnforcer(tmp_path),
+        registry_factory=lambda: None,  # type: ignore[arg-type]
+    )
+    workload = _ExtensionManifestEntry(
+        workload_id="governed-agent-loop",
+        workload_version="0.1.0",
+        entrypoint="demo.agent:run",
+        required_capabilities=("agent.iteration.v1",),
+        contract_style=CONTRACT_STYLE_SDK_V0,
+        workload_kind="agent",
+        input_contract="agent_iteration_request.v1",
+        output_contract="agent_iteration_result.v1",
+        agent_declaration={
+            "contract_version": "governed_agent_loop.v1",
+            "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1"],
+        },
+    )
+    extension = ExtensionRecord(
+        extension_id="demo.agent",
+        extension_version="0.1.0",
+        source="test",
+        extension_api_version="v0",
+        path=str(tmp_path),
+        module="",
+        register_callable="",
+        manifest_entries=(workload,),
+        contract_style=CONTRACT_STYLE_SDK_V0,
+    )
+
+    def unexpected_artifact_root(*_args: object, **_kwargs: object) -> Path:
+        raise AssertionError("agent refusal must happen before artifact allocation")
+
+    monkeypatch.setattr(executor.artifacts, "artifact_root", unexpected_artifact_root)
+
+    with pytest.raises(ValueError, match="E_AGENT_RUNTIME_NOT_ADMITTED"):
+        await executor.run_sdk_workload(
+            extension=extension,
+            workload=workload,
+            control_plane_workload_record={},
+            input_config={},
+            workspace=tmp_path / "workspace",
+            department="core",
+        )
+
 
 
 def test_reproducibility_enforcer_reliable_mode_enabled_default(tmp_path: Path) -> None:

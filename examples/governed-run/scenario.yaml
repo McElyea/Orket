@@ -1,0 +1,27 @@
+schema_version: governed_run.scenario.v1
+name: governed-run-core-primitive
+run_id: governed-run-demo
+started_at: "2026-07-12T00:00:00Z"
+completed_at: "2026-07-12T00:00:01Z"
+model:
+  kind: simulated
+  name: deterministic-simulated-model
+policy:
+  version: governed_run_policy.v1
+  shell_allowlist: []
+actions:
+  - id: inspect-files
+    proposed_by: simulated_model
+    kind: list
+    target: examples/governed-run
+    intent: Wants to inspect files
+  - id: edit-config
+    proposed_by: simulated_model
+    kind: edit
+    target: config.yaml
+    intent: Wants to edit config.yaml
+  - id: run-shell-command
+    proposed_by: simulated_model
+    kind: shell
+    command: rm -rf tmp/demo-cache
+    intent: Wants to run shell command

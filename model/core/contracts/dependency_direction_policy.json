@@ -37,6 +37,7 @@
     "policy": "platform",
     "preview": "platform",
     "project_paths": "platform",
+    "quickstart": "interfaces",
     "reforger": "platform",
     "repositories": "platform",
     "runtime": "runtime",

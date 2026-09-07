@@ -2105,7 +2105,7 @@ def test_run_detail_and_replay_404_paths(monkeypatch):
 @pytest.mark.asyncio
 async def test_run_replay_list_endpoint_returns_turn_index_for_timeline(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.create_api_app(project_root=Path(tmp_path).resolve())
+    api_module._configure_default_api_app(project_root=tmp_path)
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}
@@ -2178,7 +2178,7 @@ async def test_run_replay_list_endpoint_returns_turn_index_for_timeline(monkeypa
 @pytest.mark.asyncio
 async def test_session_replay_endpoint_without_target_returns_timeline(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.create_api_app(project_root=Path(tmp_path).resolve())
+    api_module._configure_default_api_app(project_root=tmp_path)
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}
@@ -2316,7 +2316,7 @@ def test_execution_graph_endpoint_404_when_run_missing(monkeypatch):
 @pytest.mark.asyncio
 async def test_run_token_summary_aggregates_by_role_model_and_turn(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.create_api_app(project_root=Path(tmp_path).resolve())
+    api_module._configure_default_api_app(project_root=tmp_path)
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}
@@ -2437,7 +2437,7 @@ def test_run_token_summary_404_when_run_missing(monkeypatch):
 
 def test_logs_endpoint_filters_and_paginates(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module.create_api_app(project_root=Path(tmp_path).resolve())
+    api_module._configure_default_api_app(project_root=tmp_path)
 
     default_workspace = Path(tmp_path) / "workspace" / "default"
     default_workspace.mkdir(parents=True, exist_ok=True)

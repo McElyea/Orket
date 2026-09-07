@@ -29,6 +29,23 @@ pip install -e "./orket_extension_sdk[tts,testing]"
 - Capability registry and provider protocols
 - Standard workload result models
 - Extension-focused test helpers
+- Immutable governed-agent request/result and proposal models
+- Bounded framed-stdio codec, cancellation view, progress reporter, and
+  provider-neutral model/memory capability protocols
+
+## Governed Agent Workloads
+
+Agent workloads use `AsyncAgentWorkload` and receive exactly one
+`AgentIterationRequest` per admitted invocation. Model calls and memory reads go
+through the host-owned `AgentModelCapability` and `AgentMemoryCapability`;
+effects, memory writes, handoffs, and completion values returned by the child
+remain proposals. The child never receives provider credentials or authority to
+continue the parent run.
+
+All public wire models support `from_wire()` and `to_wire()`. Both validate the
+packaged canonical schema and semantic limits. Async frame helpers offload
+schema/resource validation from the event loop. The host may reject an otherwise
+valid author manifest when required runtime features are unavailable.
 
 ## Versioning And Compatibility
 
@@ -40,6 +57,13 @@ SDK `0.Y.Z` is compatible with Orket core `0.Y.*` through `0.(Y+2).*` for the
 public SDK surface unless release notes explicitly narrow that window. Internal
 `orket.*` imports and host-private runtime models are outside the compatibility
 guarantee.
+
+Development prereleases follow the same minor-window calculation but do not
+claim released host compatibility until the built-artifact matrix passes. The
+standalone SDK distribution is the target installed owner of the
+`orket_extension_sdk` namespace. Until the core wheel stops bundling that same
+namespace, install the development SDK only in a separate extension environment;
+mixed core/standalone installs are not an admitted configuration.
 
 ## Lifecycle Interceptors
 
@@ -66,6 +90,18 @@ workloads may not import stdlib modules beyond the runtime base allowlist.
 Legacy workloads keep compatibility behavior: internal Orket imports remain
 blocked, and stdlib allowlist enforcement applies only when the legacy manifest
 declares a non-empty allowlist.
+
+Agent workloads remain inside `manifest_version: v0` but declare
+`workload_kind: agent`, the exact `agent_iteration_request.v1` and
+`agent_iteration_result.v1` contracts, an `agent` block, and the required
+`agent.iteration.v1` capability marker. The typed `agent` block rejects unknown
+fields and must request both `governed_agent_loop.v1` and
+`agent_stdio_ipc.v1`. The canonical wire schema is available through
+`load_governed_agent_schema()` and is included in built distributions.
+
+The current Orket host recognizes and preserves these declarations but refuses
+runtime invocation until the governed agent broker and handshake are admitted.
+Manifest validation success is not runtime-admission evidence.
 
 ## Data Handling Policy
 

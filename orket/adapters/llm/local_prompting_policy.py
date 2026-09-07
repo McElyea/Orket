@@ -309,6 +309,26 @@ def _sampling_bundle(profile: LocalPromptProfile, task_class: str) -> dict[str, 
     return bundle
 
 
+def _apply_runtime_generation_limits(
+    bundle: dict[str, Any],
+    runtime_context: dict[str, Any],
+) -> dict[str, Any]:
+    limited = dict(bundle)
+    raw_max_output = runtime_context.get("local_prompt_max_output_tokens")
+    if raw_max_output is not None:
+        max_output = int(raw_max_output)
+        if max_output < 1:
+            raise ValueError("local_prompt_max_output_tokens must be positive")
+        limited["max_output_tokens"] = min(int(limited.get("max_output_tokens", max_output)), max_output)
+    raw_temperature = runtime_context.get("local_prompt_temperature")
+    if raw_temperature is not None:
+        temperature = float(raw_temperature)
+        if temperature < 0 or temperature > 2:
+            raise ValueError("local_prompt_temperature must be between 0 and 2")
+        limited["temperature"] = temperature
+    return limited
+
+
 @dataclass
 class LocalPromptingPolicyResult:
     provider: str
@@ -546,7 +566,12 @@ async def resolve_local_prompting_policy(
         if collapsed_user_messages > 0:
             warnings.append(f"message_shape:user_blocks_collapsed:{collapsed_user_messages}")
     effective_stops = _effective_stops(provider_backend, resolved.profile, task_class)
-    sampling_bundle = _sampling_bundle(resolved.profile, task_class)
+    requested_stops = context.get("local_prompt_stop_sequences")
+    if requested_stops is not None:
+        if not isinstance(requested_stops, list) or not all(isinstance(item, str) for item in requested_stops):
+            raise ValueError("local_prompt_stop_sequences must be a list of strings")
+        effective_stops = _dedupe_in_order(list(requested_stops) + effective_stops)
+    sampling_bundle = _apply_runtime_generation_limits(_sampling_bundle(resolved.profile, task_class), context)
     render_classification = _render_observability_classification(
         provider=provider_for_profile,
         profile=resolved.profile,

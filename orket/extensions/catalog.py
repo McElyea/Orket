@@ -5,6 +5,11 @@ from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any
 
+from orket_extension_sdk.manifest import (
+    is_agent_workload_payload,
+    validate_workload_manifest_payload,
+)
+
 from .models import CONTRACT_STYLE_LEGACY, ExtensionRecord, _ExtensionManifestEntry
 
 
@@ -56,12 +61,18 @@ class ExtensionCatalog:
             if not isinstance(raw_manifest_entries, list):
                 raw_manifest_entries = []
             for item in raw_manifest_entries:
+                if not isinstance(item, dict):
+                    continue
+                if is_agent_workload_payload(item):
+                    item = validate_workload_manifest_payload(item).model_dump(mode="json")
                 workload_id = str(item.get("workload_id", "")).strip()
                 if not workload_id:
                     continue
                 required_capabilities = tuple(
                     str(cap).strip() for cap in item.get("required_capabilities", []) if str(cap).strip()
                 )
+                raw_agent_declaration = item.get("agent")
+                agent_declaration = dict(raw_agent_declaration) if isinstance(raw_agent_declaration, dict) else {}
                 manifest_entries.append(
                     _ExtensionManifestEntry(
                         workload_id=workload_id,
@@ -69,6 +80,10 @@ class ExtensionCatalog:
                         entrypoint=str(item.get("entrypoint", "")).strip(),
                         required_capabilities=required_capabilities,
                         contract_style=str(item.get("contract_style", "")).strip() or contract_style,
+                        workload_kind=str(item.get("workload_kind", "generic")).strip() or "generic",
+                        input_contract=str(item.get("input_contract", "")).strip(),
+                        output_contract=str(item.get("output_contract", "")).strip(),
+                        agent_declaration=agent_declaration,
                     )
                 )
 
@@ -149,17 +164,36 @@ class ExtensionCatalog:
             "compat_fallbacks": list(record.compat_fallbacks),
             "config_sections": list(record.config_sections),
             "allowed_stdlib_modules": list(record.allowed_stdlib_modules),
-            "manifest_entries": [
-                {
-                    "workload_id": workload.workload_id,
-                    "workload_version": workload.workload_version,
-                    "entrypoint": workload.entrypoint,
-                    "required_capabilities": list(workload.required_capabilities),
-                    "contract_style": workload.contract_style,
-                }
-                for workload in record.manifest_entries
-            ],
+            "manifest_entries": [ExtensionCatalog._row_from_manifest_entry(workload) for workload in record.manifest_entries],
         }
+
+    @staticmethod
+    def _row_from_manifest_entry(workload: _ExtensionManifestEntry) -> dict[str, Any]:
+        row: dict[str, Any] = {
+            "workload_id": workload.workload_id,
+            "workload_version": workload.workload_version,
+            "entrypoint": workload.entrypoint,
+            "required_capabilities": list(workload.required_capabilities),
+            "contract_style": workload.contract_style,
+        }
+        candidate = {
+            **row,
+            "workload_kind": workload.workload_kind,
+            "input_contract": workload.input_contract or None,
+            "output_contract": workload.output_contract or None,
+            "agent": dict(workload.agent_declaration) if workload.agent_declaration else None,
+        }
+        if is_agent_workload_payload(candidate):
+            validated = validate_workload_manifest_payload(candidate).model_dump(mode="json")
+            row.update(
+                {
+                    "workload_kind": validated["workload_kind"],
+                    "input_contract": validated["input_contract"],
+                    "output_contract": validated["output_contract"],
+                    "agent": validated["agent"],
+                }
+            )
+        return row
 
     @staticmethod
     def discover_entry_point_rows() -> list[dict[str, Any]]:

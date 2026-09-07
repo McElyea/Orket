@@ -1,5 +1,5 @@
 # Control-Plane Glossary and Enum Authority
-Last updated: 2026-04-09
+Last updated: 2026-09-06
 Status: Active durable spec authority
 Owner: Orket Core
 Lane type: Control-plane foundation / canonical authority
@@ -325,12 +325,17 @@ Canonical operator command classes:
 
 1. `approve_continue`
 2. `approve_degraded_continue`
-3. `force_reconcile`
-4. `quarantine_run`
-5. `cancel_run`
-6. `release_or_revoke_lease`
-7. `approve_cleanup`
-8. `mark_terminal`
+3. `pause_run`
+4. `force_reconcile`
+5. `quarantine_run`
+6. `cancel_run`
+7. `release_or_revoke_lease`
+8. `approve_cleanup`
+9. `mark_terminal`
+
+`pause_run` is contract-reserved for `governed_agent_loop.v1`. Its presence in
+the vocabulary does not claim a currently admitted runtime path; admission
+remains closed until the governed continuous-agent implementation gates pass.
 
 ## Journal and checkpoint enums
 

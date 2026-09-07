@@ -1,0 +1,135 @@
+{
+  "schema_version": "architectural_truth.exception_register.v1",
+  "owner": "Orket Core",
+  "last_reviewed": "2026-07-30",
+  "exceptions": [
+    {
+      "id": "AT-EX-001",
+      "area": "dependency-policy-model",
+      "status": "active_unaccepted_ship_risk",
+      "reason": "The enforced denylist classifies more layers and permits edges that the normative five-layer architecture does not allow.",
+      "removal_condition": "One ratified manifest defines allowed layers and edges, and the checker fails every unexpected edge unless an exact governed exception exists.",
+      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-01--the-dependency-checker-passes-because-it-checks-a-weaker-architecture"
+    },
+    {
+      "id": "AT-EX-002",
+      "area": "api-runtime-ownership",
+      "status": "active_unaccepted_ship_risk",
+      "reason": "The same-object factory defect is repaired in B1, but the module-default compatibility owner and aliases remain, while outward service/store factories are still interface-owned rather than app-container-owned.",
+      "removal_condition": "B2 removes the module-default owner aliases and interface-owned service/store construction, and proves distinct app-owned outward services, stores, and complete resource teardown.",
+      "evidence": "docs/projects/architectural-truth/API_INSTANCE_B1_PROOF_2026-07-30.md"
+    },
+    {
+      "id": "AT-EX-003",
+      "area": "interface-composition-authority",
+      "status": "active_unaccepted_ship_risk",
+      "reason": "Interface modules construct adapters, decision nodes, orchestration services, and mutable runtime owners.",
+      "removal_condition": "Application-owned composition roots inject facades into transport-only routers, with no runtime owners constructed in interface modules.",
+      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sr-03--the-interface-layer-is-a-composition-and-side-effect-ownership-layer"
+    },
+    {
+      "id": "AT-EX-004",
+      "area": "core-purity",
+      "status": "active_unaccepted_ship_risk",
+      "reason": "Core modules perform file and event effects, read clocks, and import implementation services.",
+      "removal_condition": "The core import/effect inventory is allowlist-clean and deterministic core calls consume all nondeterminism as explicit inputs.",
+      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sr-04--core-is-not-deterministic-dependency-minimal-or-side-effect-free"
+    },
+    {
+      "id": "AT-EX-005",
+      "area": "async-reachable-sync-io",
+      "status": "active_unaccepted_ship_risk",
+      "reason": "Request and CLI event-loop paths can reach synchronous file and subprocess operations.",
+      "removal_condition": "Reachability-aware static inventory and live responsiveness/cancellation tests pass with only explicit standalone-script exemptions.",
+      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sr-05--async-reachable-code-still-performs-synchronous-io"
+    },
+    {
+      "id": "AT-EX-006",
+      "area": "operator-command-root",
+      "status": "active_compatibility_window",
+      "reason": "The installed orket root now owns the runtime command tree, while python main.py remains a source-wrapper compatibility surface through 0.5.x.",
+      "removal_condition": "Installed-root proof remains green and an explicit 0.6.0 contract delta removes python main.py plus the hidden source-wrapper --rock alias.",
+      "evidence": "docs/projects/architectural-truth/COMMAND_ROOT_PROOF_2026-07-30.md"
+    },
+    {
+      "id": "AT-EX-007",
+      "area": "decision-node-explicit-inputs",
+      "status": "active_transition",
+      "reason": "Decision-node strategy selection still reads environment, path, and provider policy outside explicit input snapshots.",
+      "removal_condition": "All decision nodes receive immutable resolved configuration and have no environment or runtime-state reach-through.",
+      "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
+    },
+    {
+      "id": "AT-EX-008",
+      "area": "runtime-clock-inputs",
+      "status": "active_transition",
+      "reason": "Some application and core transitions still read wall-clock time directly.",
+      "removal_condition": "Every deterministic transition receives clock values through explicit runtime inputs.",
+      "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
+    },
+    {
+      "id": "AT-EX-009",
+      "area": "replay-diagnostics-alias",
+      "status": "active_transition",
+      "reason": "replay_turn() remains as a compatibility wrapper around replay_turn_diagnostics().",
+      "removal_condition": "All supported callers use replay_turn_diagnostics() and the compatibility window is explicitly closed.",
+      "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
+    },
+    {
+      "id": "AT-EX-010",
+      "area": "runtime-verification-latest-alias",
+      "status": "active_transition",
+      "reason": "runtime_verification.json remains as a latest-path compatibility artifact beside canonical indexed history.",
+      "removal_condition": "All supported consumers use the canonical verification index and per-record artifacts.",
+      "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
+    },
+    {
+      "id": "AT-EX-011",
+      "area": "observability-schema-transition",
+      "status": "active_transition",
+      "reason": "The current event taxonomy remains authoritative while the target identity model is not fully versioned.",
+      "removal_condition": "The target identity schema is versioned, migrated, and named as current event authority.",
+      "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
+    },
+    {
+      "id": "AT-EX-012",
+      "area": "runtime-path-and-review-v0-transition",
+      "status": "active_transition",
+      "reason": "Durable-path defaults and ReviewRun v0 remain current-state specifics inside the target architecture document.",
+      "removal_condition": "Those specifics move to accepted durable contracts or are retired with migration proof.",
+      "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
+    },
+    {
+      "id": "AT-EX-013",
+      "area": "test-taxonomy-enforcement",
+      "status": "active_self_deception_debt",
+      "reason": "The checker vocabulary omits end_to_end, relies on nearby prose, and leaves most tests unlabeled.",
+      "removal_condition": "Pytest markers are canonical, strict taxonomy reports zero missing tests, and public-surface requirements are enforced.",
+      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-03--test-taxonomy-is-declared-partially-imitated-and-not-enforced"
+    },
+    {
+      "id": "AT-EX-014",
+      "area": "noop-checker-type-only-noise",
+      "status": "active_self_deception_debt",
+      "reason": "The critical-path no-op checker reports type-only ellipsis signatures as runtime no-ops.",
+      "removal_condition": "The checker excludes type-only declarations and has regression tests with zero known false positives.",
+      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-05--quality-gates-are-red-or-noisy-while-selected-architecture-tests-remain-green"
+    },
+    {
+      "id": "AT-EX-015",
+      "area": "ruff-backlog",
+      "status": "active_self_deception_debt",
+      "reason": "The repository lint gate is red, so selected green checks do not constitute a release-ready quality envelope.",
+      "removal_condition": "Ruff passes over the canonical governed scope without suppressing categories to clear the count.",
+      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-05--quality-gates-are-red-or-noisy-while-selected-architecture-tests-remain-green"
+    },
+    {
+      "id": "AT-EX-016",
+      "area": "authority-snapshot-maintainability",
+      "status": "active_self_deception_debt",
+      "reason": "CURRENT_AUTHORITY.md mixes live authority with an append-only implementation history.",
+      "removal_condition": "A small validated manifest is canonical and generates a bounded human snapshot and historical closeout records.",
+      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-04--current_authoritymd-is-an-append-only-change-log-presented-as-a-narrow-snapshot"
+    }
+  ]
+}

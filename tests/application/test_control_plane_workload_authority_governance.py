@@ -88,6 +88,10 @@ EXPECTED_GOVERNED_START_PATH_MATRIX = {
         "status": "projection-resolved",
         "paths": {"orket/extensions/manager.py"},
     },
+    "governed-agent deterministic fixture": {
+        "status": "projection-resolved",
+        "paths": {"orket/extensions/manager.py"},
+    },
     "rock entrypoints that initiate governed execution": {
         "status": "routing-only",
         "paths": set(),
@@ -150,6 +154,7 @@ PRIVATE_CATALOG_HELPER_IMPORT_OWNERS = {
 PRIVATE_EXTENSION_MANIFEST_IMPORT_OWNERS = {
     "orket/extensions/artifact_provenance.py",
     "orket/extensions/catalog.py",
+    "orket/extensions/governed_agent_catalog.py",
     "orket/extensions/manager.py",
     "orket/extensions/manifest_parser.py",
     "orket/extensions/sdk_workload_runner.py",

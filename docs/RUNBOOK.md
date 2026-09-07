@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-04-26
+Last reviewed: 2026-09-07
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -10,7 +10,7 @@ Exact HTTP route and payload catalog authority lives in `docs/API_FRONTEND_CONTR
 1. Install dependencies:
 ```bash
 python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
+python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 ```
 2. Configure environment:
 ```bash
@@ -18,11 +18,11 @@ copy .env.example .env
 ```
 3. CLI runtime:
 ```bash
-python main.py
+orket runtime
 ```
 4. Named card runtime:
 ```bash
-python main.py --card <card_id>
+orket runtime --card <card_id>
 ```
 5. API runtime (safe default profile, local-only bind `http://127.0.0.1:8082`):
 ```bash
@@ -46,19 +46,21 @@ Requires webhook credentials in environment or `.env`:
 ## Engine Launch Examples
 1. Default CLI runtime:
 ```bash
-python main.py
+orket runtime
 ```
 2. Run one named card:
 ```bash
-python main.py --card <card_id>
+orket runtime --card <card_id>
 ```
 3. API runtime:
 ```bash
 python server.py
 ```
 
-Compatibility-only CLI alias:
-`python main.py --rock <rock_name>` remains accepted for older callers, but it is hidden from `python main.py --help` and routes to the canonical named card runtime.
+Compatibility-only source wrapper:
+`python main.py [runtime arguments]` remains supported through `0.5.x`. The hidden
+`--rock <rock_name>` alias remains accepted by that wrapper and `orket runtime`, but
+new callers must use `--card`; removal requires an explicit `0.6.0` contract delta.
 
 ## API Launcher Precedence
 1. CLI arguments (`--host`, `--port`, `--profile`, `--reload/--no-reload`)
@@ -356,28 +358,73 @@ curl -H "X-API-Key: <api_key>" "http://127.0.0.1:8082/v1/protocol/runs/<run_id>/
    - caller-provided `runs_root` and `sqlite_db_path` must remain under the configured workspace root or the request fails closed
 
 ## CLI Commands
-Use `python main.py` for runtime commands.
+Use `orket runtime` for runtime commands.
 
 1. Help:
 ```bash
-python main.py --help
+orket runtime --help
 ```
 2. Show board:
 ```bash
-python main.py --board
+orket runtime --board
 ```
 3. Run an epic:
 ```bash
-python main.py --epic <epic_name>
+orket runtime --epic <epic_name>
 ```
 4. Replay one turn:
 ```bash
-python main.py --replay-turn <session_id>:<issue_id>:<turn_index>[:role]
+orket runtime --replay-turn <session_id>:<issue_id>:<turn_index>[:role]
 ```
 5. Archive related cards:
 ```bash
-python main.py --archive-related <token> --archive-reason "manual archive"
+orket runtime --archive-related <token> --archive-reason "manual archive"
 ```
+
+## Governed-Agent Bounded CLI
+
+The admitted agent CLI requires a persisted extension catalog and a validated
+initial `agent_iteration_request.v1` JSON. Select exactly one provider posture.
+
+```bash
+orket agent submit <workload_id> --db <sqlite_path> --catalog <catalog_json> --request <request_json> --creation-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --next-lease-expires-at-utc <timestamp> --deterministic-fixture --json
+```
+
+For a live single-model Ollama run, replace `--deterministic-fixture` with
+`--ollama-model <exact-installed-model>`. For fixed multi-model roles, add
+`--planner-model`, `--actor-model`, and `--critic-model`; omitted role overrides
+use the exact default model. Model auto-selection and auto-load are disabled.
+
+```bash
+orket agent submit <workload_id> --db <sqlite_path> --catalog <catalog_json> --request <request_json> --creation-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --next-lease-expires-at-utc <timestamp> --ollama-model qwen2.5:7b --actor-model qwen2.5-coder:7b --json
+```
+
+Read durable state without mutation:
+
+```bash
+orket agent inspect <run_id> --db <sqlite_path> --json
+orket agent replay <run_id> --db <sqlite_path> --json
+```
+
+Publish an operator cancellation:
+
+```bash
+orket agent cancel <run_id> --db <sqlite_path> --action-id <id> --actor-ref <ref> --timestamp-utc <timestamp> --reason <reason> --cancellation-epoch <n> --json
+```
+
+The CLI prints `proof_posture=deterministic_fixture_not_live_model` or
+`proof_posture=live_local_model`, plus observed path/result, resolved targets,
+and durable iteration/model receipts. A model-target failure or invalid model
+JSON fails explicitly; it does not fall back silently.
+
+The currently proven agent effect path is application-owned, not a separate
+extension or generic CLI executor. It admits only exact issue-scoped `read_file`
+observation and approval-required `write_file`, and resumes only after observed
+or reconciled receipts plus an accepted checkpoint and explicit operator action.
+There is no governed-agent HTTP API, wake queue, or continuous supervisor yet.
+Cancellation invoked in a later CLI process cannot reap a child owned by an
+already-exited process; in-process operator cancellation owns child cancel/reap,
+while the CLI command durably fences and closes the recorded run.
 
 ## External Extension Package, Publish, and Validation
 Authority: `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_V1.md`, `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_V1.md`, `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_VALIDATION_V1.md`

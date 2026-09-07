@@ -13,17 +13,32 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 import httpx
+import yaml
 from pydantic import ValidationError
 
 from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
+from orket.application.review.bundle_validation import ReviewBundleError, load_review_replay_artifacts
+from orket.application.review.models import ReviewSnapshot, SnapshotBounds
+from orket.application.review.run_service import ReviewRunService
+from orket.application.services.governed_agent_admission import (
+    SUPPORTED_GOVERNED_AGENT_HOST_FEATURES,
+)
+from orket.application.services.governed_run_demo_rendering import (
+    render_inspection,
+    render_replay,
+)
+from orket.application.services.governed_run_demo_service import (
+    DEFAULT_GOVERNED_RUN_SCENARIO,
+    inspect_governed_run_bundle,
+    is_governed_run_bundle,
+    replay_governed_run_bundle,
+    run_governed_run_scenario,
+)
 from orket.application.services.outward_connector_service import (
     OutwardConnectorArgumentError,
     OutwardConnectorNotFoundError,
     OutwardConnectorService,
 )
-from orket.application.review.bundle_validation import ReviewBundleError, load_review_replay_artifacts
-from orket.application.review.models import ReviewSnapshot, SnapshotBounds
-from orket.application.review.run_service import ReviewRunService
 from orket.core.domain.orket_manifest import (
     OrketManifest,
     is_engine_compatible,
@@ -31,6 +46,10 @@ from orket.core.domain.orket_manifest import (
 )
 from orket.core.domain.outward_ledger import verify_ledger_export
 from orket.interfaces.api_generation import run_api_add_transaction
+from orket.interfaces.governed_agent_cli import (
+    add_governed_agent_subparser,
+    handle_governed_agent_command,
+)
 from orket.interfaces.refactor_transaction import run_refactor_transaction
 from orket.interfaces.scaffold_init import run_scaffold_init
 from orket.reforger.cli import add_reforge_subparser, handle_reforge
@@ -60,6 +79,7 @@ ERROR_REVIEW_ARGUMENTS = "E_REVIEW_ARGUMENTS"
 ERROR_REVIEW_RUN_FAILED = "E_REVIEW_RUN_FAILED"
 ERROR_RUN_API_FAILED = "E_RUN_API_FAILED"
 ERROR_CONNECTOR_FAILED = "E_CONNECTOR_FAILED"
+ERROR_GOVERNED_RUN_FAILED = "E_GOVERNED_RUN_FAILED"
 
 
 def _default_review_workspace() -> str:
@@ -551,18 +571,38 @@ def validate_sdk_extension(target: Path, *, strict: bool = False) -> dict[str, A
 
 
 def validate_external_extension(target: Path, *, strict: bool = False) -> dict[str, Any]:
-    return validate_sdk_extension_tool(target, strict=strict, include_import_scan=True)
+    return validate_sdk_extension_tool(
+        target,
+        strict=strict,
+        include_import_scan=True,
+        host_supported_features=SUPPORTED_GOVERNED_AGENT_HOST_FEATURES,
+    )
 
 
 _TRANSIENT_TEMPLATE_PARTS = {"node_modules", ".venv", "__pycache__", "dist", "build"}
+_EXTENSION_TEMPLATE_DIRS = {
+    "default": "external_extension",
+    "agent": "governed_agent_external",
+}
 
 
 def _is_transient_template_path(relative: Path) -> bool:
-    return any(part in _TRANSIENT_TEMPLATE_PARTS for part in relative.parts)
+    return any(
+        part in _TRANSIENT_TEMPLATE_PARTS or part.endswith(".egg-info")
+        for part in relative.parts
+    )
 
 
-def init_external_extension(target: Path, *, force: bool = False) -> dict[str, Any]:
-    template_root = (Path(__file__).resolve().parents[2] / "docs" / "templates" / "external_extension").resolve()
+def init_external_extension(
+    target: Path,
+    *,
+    force: bool = False,
+    template_kind: str = "default",
+) -> dict[str, Any]:
+    template_dir = _EXTENSION_TEMPLATE_DIRS.get(template_kind)
+    if template_dir is None:
+        raise ValueError(f"E_EXT_TEMPLATE_KIND_UNSUPPORTED: {template_kind}")
+    template_root = (Path(__file__).resolve().parents[2] / "docs" / "templates" / template_dir).resolve()
     destination = target.resolve()
     if not template_root.is_dir():
         return {
@@ -614,6 +654,7 @@ def init_external_extension(target: Path, *, force: bool = False) -> dict[str, A
         "operation": "ext.init",
         "target": str(target),
         "template": str(template_root),
+        "template_kind": template_kind,
         "copied_file_count": copied_files,
         "error_count": 0,
         "errors": [],
@@ -662,8 +703,40 @@ def _read_instruction(args: argparse.Namespace) -> str:
     return ""
 
 
+def _print_governed_result(result: dict[str, Any], *, emit_json: bool) -> int:
+    if emit_json:
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    else:
+        print(str(result.get("console_output") or _render_human(result)))
+    return 0 if bool(result.get("ok")) else 1
+
+
+def _governed_run_error(exc: BaseException) -> dict[str, Any]:
+    return {
+        "kind": "governed_run_error",
+        "ok": False,
+        "code": ERROR_GOVERNED_RUN_FAILED,
+        "message": str(exc),
+    }
+
+
+def _handle_governed_run_scenario(args: argparse.Namespace) -> int:
+    try:
+        result = asyncio.run(
+            run_governed_run_scenario(
+                Path(str(getattr(args, "scenario", DEFAULT_GOVERNED_RUN_SCENARIO))),
+                workspace_root=Path(str(getattr(args, "workspace", "") or ".")),
+            )
+        )
+    except (OSError, ValueError, TypeError, json.JSONDecodeError, yaml.YAMLError) as exc:
+        result = _governed_run_error(exc)
+    return _print_governed_result(result, emit_json=bool(getattr(args, "json", False)))
+
+
 def _handle_run_command(args: argparse.Namespace) -> int:
     command = str(getattr(args, "run_command", "") or "").strip()
+    if command == "scenario":
+        return _handle_governed_run_scenario(args)
     try:
         if command == "submit":
             policy_overrides: dict[str, Any] = {}
@@ -823,9 +896,35 @@ def _handle_connectors_command(args: argparse.Namespace) -> int:
     return 0 if 200 <= int(status_code) < 300 else 1
 
 
+def _handle_demo_command(args: argparse.Namespace) -> int:
+    command = str(getattr(args, "demo_command", "") or "").strip()
+    if command != "governed-run":
+        result = _governed_run_error(ValueError("Unsupported demo command"))
+        return _print_governed_result(result, emit_json=bool(getattr(args, "json", False)))
+    return _handle_governed_run_scenario(args)
+
+
+def _handle_replay_command(args: argparse.Namespace) -> int:
+    try:
+        result = asyncio.run(replay_governed_run_bundle(Path(str(args.target))))
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+        result = _governed_run_error(exc)
+    if bool(getattr(args, "json", False)):
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    else:
+        print(_render_human(result))
+    return 0 if bool(result.get("ok")) else 1
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="orket", description="Orket bundle tools.")
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    subparsers.add_parser(
+        "runtime",
+        add_help=False,
+        help="Run the canonical card runtime; pass --help to inspect runtime options.",
+    )
 
     validate_parser = subparsers.add_parser("validate", help="Validate an Orket manifest and bundle references.")
     validate_parser.add_argument("target", nargs="?", default=".", help="Bundle directory or manifest file path.")
@@ -856,6 +955,13 @@ def _parser() -> argparse.ArgumentParser:
     inspect_parser.add_argument("target", nargs="?", default=".", help="Bundle directory or .orket archive path.")
     inspect_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
+    demo_parser = subparsers.add_parser("demo", help="Run local deterministic Orket demos.")
+    demo_sub = demo_parser.add_subparsers(dest="demo_command", required=True)
+    demo_governed = demo_sub.add_parser("governed-run", help="Run the deterministic governed-run evidence demo.")
+    demo_governed.add_argument("--scenario", default=str(DEFAULT_GOVERNED_RUN_SCENARIO), help="Scenario YAML path.")
+    demo_governed.add_argument("--workspace", default=".", help="Workspace root for .runs output and read observations.")
+    demo_governed.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
     sdk_parser = subparsers.add_parser("sdk", help="SDK commands.")
     sdk_parser.add_argument("--version", action="store_true", help="Print the Orket SDK version.")
     sdk_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
@@ -879,6 +985,12 @@ def _parser() -> argparse.ArgumentParser:
         help="Scaffold an external extension repository from the canonical template.",
     )
     ext_init.add_argument("target", help="Destination directory for scaffolded extension files.")
+    ext_init.add_argument(
+        "--kind",
+        choices=sorted(_EXTENSION_TEMPLATE_DIRS),
+        default="default",
+        help="Template kind: default application extension or governed agent.",
+    )
     ext_init.add_argument("--force", action="store_true", help="Overwrite files in an existing target directory.")
     ext_init.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
@@ -984,8 +1096,13 @@ def _parser() -> argparse.ArgumentParser:
     review_replay.add_argument("--verbose", action="store_true")
     review_replay.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
-    run_parser = subparsers.add_parser("run", help="Outward pipeline run commands.")
+    run_parser = subparsers.add_parser("run", help="Run commands.")
     run_sub = run_parser.add_subparsers(dest="run_command", required=True)
+    run_scenario = run_sub.add_parser("scenario", help="Run a local governed-run scenario YAML file.")
+    run_scenario.add_argument("scenario", help="Scenario YAML path.")
+    run_scenario.add_argument("--workspace", default=".", help="Workspace root for .runs output and read observations.")
+    run_scenario.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
     run_submit = run_sub.add_parser("submit", help="Submit outward-facing work through the API.")
     run_submit.add_argument("--run-id", default="", help="Optional stable run id.")
     run_submit.add_argument("--namespace", default="", help="Optional namespace; defaults to issue:<run_id>.")
@@ -1017,6 +1134,10 @@ def _parser() -> argparse.ArgumentParser:
     run_watch = run_sub.add_parser("watch", help="Watch outward-facing run events through the API stream.")
     run_watch.add_argument("run_id")
     run_watch.add_argument("--types", default="")
+
+    replay_parser = subparsers.add_parser("replay", help="Replay a governed-run evidence bundle offline.")
+    replay_parser.add_argument("target", help="Path to .runs/<run_id>.")
+    replay_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
     approvals_parser = subparsers.add_parser("approvals", help="Outward pipeline approval commands.")
     approvals_sub = approvals_parser.add_subparsers(dest="approvals_command", required=True)
@@ -1058,6 +1179,7 @@ def _parser() -> argparse.ArgumentParser:
     connectors_test.add_argument("--args", required=True, help="Connector args as JSON.")
     connectors_test.add_argument("--workspace", default=".", help="Workspace root for local connector context.")
 
+    add_governed_agent_subparser(subparsers)
     add_reforge_subparser(subparsers)
     return parser
 
@@ -1072,6 +1194,16 @@ def _parse_vars(raw: str) -> dict[str, str]:
 
 
 def _render_human(result: dict[str, Any]) -> str:
+    kind = str(result.get("kind") or "")
+    if kind == "governed_run_execution":
+        return str(result.get("console_output") or "")
+    if kind == "governed_run_inspection":
+        return render_inspection(result)
+    if kind == "governed_run_replay":
+        return render_replay(result)
+    if kind == "governed_run_error":
+        return f"FAIL [{result.get('code')}]: {result.get('message')}"
+
     if "deterministic_decision" in result and "artifact_dir" in result:
         lines = [
             f"run_id: {result.get('run_id', '')}",
@@ -1169,7 +1301,12 @@ def _render_human(result: dict[str, Any]) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parser().parse_args(argv)
+    parser = _parser()
+    args, runtime_args = parser.parse_known_args(argv)
+    if args.command == "runtime":
+        parser.error("runtime must be invoked through the installed 'orket' command root")
+    if runtime_args:
+        parser.error(f"unrecognized arguments: {' '.join(runtime_args)}")
     if args.command == "validate":
         available_models = list(args.available_model or [])
         result = validate_bundle(
@@ -1182,7 +1319,16 @@ def main(argv: list[str] | None = None) -> int:
         out = Path(args.out) if str(args.out).strip() else None
         result = pack_bundle(Path(args.source), out_path=out)
     elif args.command == "inspect":
-        result = inspect_target(Path(args.target))
+        target = Path(args.target)
+        if is_governed_run_bundle(target):
+            try:
+                result = asyncio.run(inspect_governed_run_bundle(target))
+            except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+                result = _governed_run_error(exc)
+        else:
+            result = inspect_target(target)
+    elif args.command == "demo":
+        return _handle_demo_command(args)
     elif args.command == "sdk":
         if str(getattr(args, "sdk_command", "")).strip() == "validate":
             result = validate_sdk_extension(Path(args.target), strict=bool(args.strict))
@@ -1215,7 +1361,11 @@ def main(argv: list[str] | None = None) -> int:
                     file=sys.stderr,
                 )
         elif ext_command == "init":
-            result = init_external_extension(Path(args.target), force=bool(args.force))
+            result = init_external_extension(
+                Path(args.target),
+                force=bool(args.force),
+                template_kind=str(args.kind),
+            )
         else:
             result = {
                 "ok": False,
@@ -1430,12 +1580,16 @@ def main(argv: list[str] | None = None) -> int:
         return handle_reforge(args)
     elif args.command == "run":
         return _handle_run_command(args)
+    elif args.command == "replay":
+        return _handle_replay_command(args)
     elif args.command == "approvals":
         return _handle_approvals_command(args)
     elif args.command == "ledger":
         return _handle_ledger_command(args)
     elif args.command == "connectors":
         return _handle_connectors_command(args)
+    elif args.command == "agent":
+        return handle_governed_agent_command(args)
     else:
         print(json.dumps({"ok": False, "error": "unsupported_command"}, ensure_ascii=False))
         return 2

@@ -13,11 +13,14 @@ from urllib.parse import urlparse
 from orket.application.services.control_plane_workload_catalog import (
     _resolve_extension_control_plane_workload,
 )
+from orket.application.services.governed_agent_admission import validate_governed_agent_host_features
 from orket.runtime_paths import durable_root
 from orket_extension_sdk.capabilities import CapabilityRegistry
+from orket_extension_sdk.manifest import ExtensionManifest
 
 from .catalog import ExtensionCatalog
 from .contracts import ExtensionRegistry, Workload
+from .governed_agent_catalog import resolve_governed_agent_catalog_entry
 from .manifest_parser import ManifestParser
 from .models import (
     CONTRACT_STYLE_LEGACY,
@@ -36,7 +39,7 @@ from .reproducibility import ReproducibilityEnforcer
 from .workload_executor import WorkloadExecutor
 
 if TYPE_CHECKING:
-    from .models import _ExtensionManifestEntry
+    from .models import GovernedAgentWorkloadLaunch, _ExtensionManifestEntry
 
 _LoadedManifest = LoadedManifest
 
@@ -180,6 +183,9 @@ class ExtensionManager:
             and CONTRACT_STYLE_SDK_V0 in {resolved[0].contract_style, resolved[1].contract_style}
         )
 
+    def resolve_governed_agent_workload(self, workload_id: str) -> GovernedAgentWorkloadLaunch:
+        return resolve_governed_agent_catalog_entry(self, workload_id)
+
     def _resolve_manifest_entry(self, workload_id: str) -> tuple[ExtensionRecord, _ExtensionManifestEntry] | None:
         return self.catalog._resolve_manifest_entry(workload_id, entry_point_rows=self._discover_entry_point_rows())
 
@@ -218,6 +224,8 @@ class ExtensionManager:
         self._run_command(["git", "checkout", "--detach", resolved_commit_sha], cwd=destination)
 
         loaded = self._load_manifest(destination)
+        if loaded.contract_style == CONTRACT_STYLE_SDK_V0:
+            validate_governed_agent_host_features(ExtensionManifest.model_validate(loaded.payload))
         manifest_digest_sha256 = self._sha256_file(loaded.manifest_path)
         record = self._record_from_manifest(
             loaded.payload,

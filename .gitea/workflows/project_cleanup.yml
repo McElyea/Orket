@@ -38,7 +38,7 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 
       - name: Cleanup parity-verified local projects
         env:
@@ -53,4 +53,3 @@ jobs:
             ARGS+=(--source-dir "$SOURCE_DIR")
           fi
           python scripts/governance/cleanup_published_projects.py "${ARGS[@]}"
-

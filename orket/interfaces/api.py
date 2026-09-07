@@ -5,6 +5,7 @@ import logging
 import os
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
+from contextvars import ContextVar
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
@@ -89,7 +90,7 @@ from orket.runtime.cors_config import resolve_cors_config
 from orket.runtime.startup_checks import validate_required_secrets, warn_if_insecure_gitea_https
 from orket.runtime_paths import resolve_control_plane_db_path
 from orket.settings import load_user_preferences, load_user_settings, save_user_settings
-from orket.state import runtime_state
+from orket.state import create_runtime_state
 from orket.streaming import (
     CommitIntent,
     CommitOrchestrator,
@@ -101,6 +102,20 @@ from orket.time_utils import now_local
 from orket.workloads import is_builtin_workload, run_builtin_workload, validate_builtin_workload_start
 
 LOGGER = logging.getLogger(__name__)
+_ACTIVE_API_APP: ContextVar[FastAPI | None] = ContextVar("orket_active_api_app", default=None)
+
+
+class _ApiAppContextMiddleware:
+    def __init__(self, asgi_app: Any, *, owner_app: FastAPI) -> None:
+        self._asgi_app = asgi_app
+        self._owner_app = owner_app
+
+    async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
+        token = _ACTIVE_API_APP.set(self._owner_app)
+        try:
+            await self._asgi_app(scope, receive, send)
+        finally:
+            _ACTIVE_API_APP.reset(token)
 
 
 def _resolve_api_runtime_node() -> Any:
@@ -111,15 +126,27 @@ def _resolve_default_project_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def _configured_project_root() -> Path:
-    root = getattr(app.state, "project_root", None)
+def _current_api_app(target_app: FastAPI | None = None) -> FastAPI:
+    if target_app is not None:
+        return target_app
+    active_app = _ACTIVE_API_APP.get()
+    if active_app is not None:
+        return active_app
+    default_app = globals().get("app")
+    if isinstance(default_app, FastAPI):
+        return default_app
+    raise RuntimeError("API app is not initialized.")
+
+
+def _configured_project_root(target_app: FastAPI | None = None) -> Path:
+    root = getattr(_current_api_app(target_app).state, "project_root", None)
     if root is None:
         raise RuntimeError("API project root is not initialized. Call create_api_app() first.")
     return Path(root).resolve()
 
 
-def _project_root() -> Path:
-    return _runtime_context().project_root
+def _project_root(target_app: FastAPI | None = None) -> Path:
+    return _runtime_context(target_app).project_root
 
 
 def _validate_session_path(session_id: str) -> Path:
@@ -155,13 +182,27 @@ async def _schedule_async_invocation_task(
 ) -> None:
     method = _resolve_method(target, invocation, error_prefix)
     task = asyncio.create_task(method(*invocation.get("args", []), **invocation.get("kwargs", {})))
-    await runtime_state.add_task(session_id, task)
+    context = _runtime_context()
+    state = _get_runtime_state()
+    context.track_background_task(task)
+    await state.add_task(session_id, task)
     loop = asyncio.get_running_loop()
 
     # Always remove completed/canceled tasks to keep active task tracking accurate.
     def _cleanup(_done_task: asyncio.Task[Any]) -> None:
+        async def _release_task() -> None:
+            await state.remove_task(session_id, task)
+            context.release_background_task(task)
+
+        def _start_cleanup() -> None:
+            if context.closed:
+                return
+            cleanup_task = asyncio.create_task(_release_task())
+            context.track_background_task(cleanup_task)
+            cleanup_task.add_done_callback(context.release_background_task)
+
         with suppress(RuntimeError):
-            loop.call_soon_threadsafe(asyncio.create_task, runtime_state.remove_task(session_id, task))
+            loop.call_soon_threadsafe(_start_cleanup)
 
     task.add_done_callback(_cleanup)
 
@@ -514,7 +555,8 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
     request_path = str(request.url.path or "")
     provided_key_present = bool(str(api_key_header or "").strip())
 
-    if api_runtime_node.is_api_key_valid(default_key, api_key_header):
+    runtime_node = _get_api_runtime_node()
+    if runtime_node.is_api_key_valid(default_key, api_key_header):
         request.state.authenticated_actor_ref = _api_key_actor_ref(api_key_header)
         return api_key_header
 
@@ -526,16 +568,19 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
 
     raise HTTPException(
         status_code=403,
-        detail=api_runtime_node.api_key_invalid_detail(),
+        detail=runtime_node.api_key_invalid_detail(),
     )
 
 
 # --- Lifespan ---
 
 
-def _on_log_record_factory(loop: asyncio.AbstractEventLoop) -> Callable[[dict[str, Any]], None]:
+def _on_log_record_factory(
+    loop: asyncio.AbstractEventLoop,
+    state: Any,
+) -> Callable[[dict[str, Any]], None]:
     def on_log_record(record: dict[str, Any]) -> None:
-        loop.call_soon_threadsafe(runtime_state.event_queue.put_nowait, record)
+        loop.call_soon_threadsafe(state.event_queue.put_nowait, record)
 
     return on_log_record
 
@@ -548,51 +593,62 @@ def _resolve_app_project_root(_app: FastAPI) -> Path:
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     from orket.utils import ensure_log_dir
 
-    validate_required_secrets()
-    warn_if_insecure_gitea_https(logger=LOGGER)
     configured_root = await asyncio.to_thread(_resolve_app_project_root, _app)
     context = get_api_runtime_context(_app)
     if context is None or context.project_root != configured_root:
-        create_api_app(project_root=configured_root)
-    runtime_engine = _get_engine()
-    initialize = getattr(runtime_engine, "initialize", None)
-    if callable(initialize):
-        await initialize()
-
-    ensure_log_dir()
-    broadcaster_task = asyncio.create_task(event_broadcaster())
-    loop = asyncio.get_running_loop()
-    log_subscriber = _on_log_record_factory(loop)
-    subscribe_to_events(log_subscriber)
-    expected_key = _read_api_key_env("ORKET_API_KEY")
-    insecure_bypass = _enforce_insecure_no_api_key_startup_policy()
-    log_event(
-        "api_security_posture",
-        {
-            "api_key_configured": bool(expected_key),
-            "insecure_no_api_key_bypass": insecure_bypass,
-        },
-        _project_root(),
-    )
-    if insecure_bypass:
-        log_event(
-            "api_security_warning",
-            {"message": "ORKET_ALLOW_INSECURE_NO_API_KEY is enabled; /v1 auth is bypassed without ORKET_API_KEY."},
-            _project_root(),
-        )
+        raise RuntimeError("API app runtime context does not match its configured project root.")
+    if context.closed and _app is app:
+        context = _runtime_context(_app)
+    if context.closed:
+        raise RuntimeError("API app runtime context is closed.")
+    broadcaster_task: asyncio.Task[Any] | None = None
+    log_subscriber: Callable[[dict[str, Any]], None] | None = None
     try:
+        validate_required_secrets()
+        warn_if_insecure_gitea_https(logger=LOGGER)
+        runtime_engine = _get_engine(_app)
+        initialize = getattr(runtime_engine, "initialize", None)
+        if callable(initialize):
+            await initialize()
+
+        await asyncio.to_thread(ensure_log_dir)
+        broadcaster_task = asyncio.create_task(event_broadcaster(_app))
+        context.track_background_task(broadcaster_task)
+        loop = asyncio.get_running_loop()
+        log_subscriber = _on_log_record_factory(loop, context.runtime_state)
+        subscribe_to_events(log_subscriber)
+        expected_key = _read_api_key_env("ORKET_API_KEY")
+        insecure_bypass = _enforce_insecure_no_api_key_startup_policy()
+        log_event(
+            "api_security_posture",
+            {
+                "api_key_configured": bool(expected_key),
+                "insecure_no_api_key_bypass": insecure_bypass,
+            },
+            _project_root(_app),
+        )
+        if insecure_bypass:
+            log_event(
+                "api_security_warning",
+                {"message": "ORKET_ALLOW_INSECURE_NO_API_KEY bypasses /v1 auth without ORKET_API_KEY."},
+                _project_root(_app),
+            )
         yield
     finally:
-        unsubscribe_from_events(log_subscriber)
-        broadcaster_task.cancel()
-        with suppress(asyncio.CancelledError):
-            await broadcaster_task
+        if log_subscriber is not None:
+            unsubscribe_from_events(log_subscriber)
+        if broadcaster_task is not None:
+            broadcaster_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await broadcaster_task
+            context.release_background_task(broadcaster_task)
+        await context.close()
 
 
 app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
 app.state.project_root = _resolve_default_project_root()
 app.state.outbound_policy_config = {}
-set_api_runtime_context(app, ApiAppRuntimeContext(project_root=_configured_project_root()))
+app.add_middleware(_ApiAppContextMiddleware, owner_app=app)
 
 
 @app.middleware("http")
@@ -604,7 +660,7 @@ async def add_orket_version_header(request: Request, call_next: Callable[[Reques
 
 
 def _filter_operator_payload(payload: Any, *, surface: str) -> Any:
-    base_config = dict(getattr(app.state, "outbound_policy_config", {}) or {})
+    base_config = dict(getattr(_current_api_app().state, "outbound_policy_config", {}) or {})
     filtered, _report = apply_outbound_policy_gate(
         payload,
         merge_outbound_policy_config(base_config, {"surface": surface}),
@@ -690,7 +746,8 @@ def _outward_ledger_service() -> OutwardLedgerService:
 # Apply auth to all v1 endpoints if configured
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_api_key)])
 
-api_runtime_node = _resolve_api_runtime_node()
+api_runtime_node: Any | None = None
+runtime_state: Any | None = None
 cors_config = resolve_cors_config()
 
 app.add_middleware(
@@ -710,11 +767,14 @@ extension_runtime_service: ExtensionRuntimeService | None = None
 
 
 def _replace_runtime_context(context: ApiAppRuntimeContext) -> ApiAppRuntimeContext:
-    global api_runtime_host, engine, stream_bus, interaction_manager, extension_manager, extension_runtime_service
+    global api_runtime_host, api_runtime_node, engine, extension_manager
+    global extension_runtime_service, interaction_manager, runtime_state, stream_bus
 
     set_api_runtime_context(app, context)
     api_runtime_host = context.api_runtime_host
+    api_runtime_node = context.api_runtime_node
     engine = context.engine
+    runtime_state = context.runtime_state
     stream_bus = context.stream_bus
     interaction_manager = context.interaction_manager
     extension_manager = context.extension_manager
@@ -722,15 +782,21 @@ def _replace_runtime_context(context: ApiAppRuntimeContext) -> ApiAppRuntimeCont
     return context
 
 
-def _runtime_context() -> ApiAppRuntimeContext:
-    root = _configured_project_root()
-    context = get_api_runtime_context(app)
-    if context is None or context.project_root != root:
-        context = _replace_runtime_context(ApiAppRuntimeContext(project_root=root))
+def _runtime_context(target_app: FastAPI | None = None) -> ApiAppRuntimeContext:
+    selected_app = _current_api_app(target_app)
+    root = _configured_project_root(selected_app)
+    context = get_api_runtime_context(selected_app)
+    if context is None or context.project_root != root or (selected_app is app and context.closed):
+        context = _build_api_runtime_container(root)
+        set_api_runtime_context(selected_app, context)
+        if selected_app is app:
+            _replace_runtime_context(context)
     return context
 
 
 def _adopt_compatibility_alias(context: ApiAppRuntimeContext, attribute: str) -> None:
+    if get_api_runtime_context(app) is not context:
+        return
     alias = globals()[attribute]
     if alias is not None and getattr(context, attribute) is not alias:
         setattr(context, attribute, alias)
@@ -752,14 +818,44 @@ def _build_api_runtime_host(root: Path) -> ApiRuntimeHostService:
     return ApiRuntimeHostService(project_root=root)
 
 
-def _get_api_runtime_host() -> ApiRuntimeHostService:
-    global api_runtime_host
-    context = _runtime_context()
+def _build_api_runtime_container(root: Path) -> ApiAppRuntimeContext:
+    runtime_node = _resolve_api_runtime_node()
+    runtime_host = _build_api_runtime_host(root)
+    return ApiAppRuntimeContext(
+        project_root=root,
+        api_runtime_node=runtime_node,
+        runtime_state=create_runtime_state(),
+        api_runtime_host=runtime_host,
+        engine=runtime_host.create_engine(runtime_node.resolve_api_workspace(root)),
+    )
+
+
+def _sync_default_alias(context: ApiAppRuntimeContext, attribute: str) -> None:
+    if get_api_runtime_context(app) is context:
+        globals()[attribute] = getattr(context, attribute)
+
+
+def _get_api_runtime_node(target_app: FastAPI | None = None) -> Any:
+    context = _runtime_context(target_app)
+    _adopt_compatibility_alias(context, "api_runtime_node")
+    _sync_default_alias(context, "api_runtime_node")
+    return context.api_runtime_node
+
+
+def _get_runtime_state(target_app: FastAPI | None = None) -> Any:
+    context = _runtime_context(target_app)
+    _adopt_compatibility_alias(context, "runtime_state")
+    _sync_default_alias(context, "runtime_state")
+    return context.runtime_state
+
+
+def _get_api_runtime_host(target_app: FastAPI | None = None) -> ApiRuntimeHostService:
+    context = _runtime_context(target_app)
     _adopt_compatibility_alias(context, "api_runtime_host")
     if not _owner_matches_project_root(context.api_runtime_host, context.project_root):
         context.api_runtime_host = _build_api_runtime_host(context.project_root)
-    api_runtime_host = context.api_runtime_host
-    return api_runtime_host
+    _sync_default_alias(context, "api_runtime_host")
+    return context.api_runtime_host
 
 
 def _build_stream_bus_from_env() -> StreamBus:
@@ -775,33 +871,33 @@ def _build_stream_bus_from_env() -> StreamBus:
     )
 
 
-def _get_stream_bus() -> StreamBus:
-    global stream_bus
-    context = _runtime_context()
+def _get_stream_bus(target_app: FastAPI | None = None) -> StreamBus:
+    context = _runtime_context(target_app)
     _adopt_compatibility_alias(context, "stream_bus")
     if context.stream_bus is None:
         context.stream_bus = _build_stream_bus_from_env()
-    stream_bus = context.stream_bus
-    return stream_bus
+    _sync_default_alias(context, "stream_bus")
+    return context.stream_bus
 
 
-def _get_engine() -> Any:
-    global engine
-    context = _runtime_context()
+def _get_engine(target_app: FastAPI | None = None) -> Any:
+    context = _runtime_context(target_app)
     _adopt_compatibility_alias(context, "engine")
     if context.engine is None:
         root = context.project_root
-        context.engine = _get_api_runtime_host().create_engine(api_runtime_node.resolve_api_workspace(root))
-    engine = context.engine
-    return engine
+        runtime_host = _get_api_runtime_host(target_app)
+        runtime_node = _get_api_runtime_node(target_app)
+        context.engine = runtime_host.create_engine(runtime_node.resolve_api_workspace(root))
+    _sync_default_alias(context, "engine")
+    return context.engine
 
 
-def _build_interaction_manager(root: Path, bus: StreamBus) -> InteractionManager:
+def _build_interaction_manager(root: Path, bus: StreamBus, state: Any) -> InteractionManager:
     async def _register_interaction_session(session_id: str) -> None:
-        await runtime_state.register_interaction_session(session_id)
+        await state.register_interaction_session(session_id)
 
     async def _unregister_interaction_session(session_id: str) -> None:
-        await runtime_state.unregister_interaction_session(session_id)
+        await state.unregister_interaction_session(session_id)
 
     return InteractionManager(
         bus=bus,
@@ -812,34 +908,35 @@ def _build_interaction_manager(root: Path, bus: StreamBus) -> InteractionManager
     )
 
 
-def _get_interaction_manager() -> InteractionManager:
-    global interaction_manager
-    context = _runtime_context()
+def _get_interaction_manager(target_app: FastAPI | None = None) -> InteractionManager:
+    context = _runtime_context(target_app)
     _adopt_compatibility_alias(context, "interaction_manager")
     if not _owner_matches_project_root(context.interaction_manager, context.project_root):
-        context.interaction_manager = _build_interaction_manager(context.project_root, _get_stream_bus())
-    interaction_manager = context.interaction_manager
-    return interaction_manager
+        context.interaction_manager = _build_interaction_manager(
+            context.project_root,
+            _get_stream_bus(target_app),
+            context.runtime_state,
+        )
+    _sync_default_alias(context, "interaction_manager")
+    return context.interaction_manager
 
 
-def _get_extension_manager() -> ExtensionManager:
-    global extension_manager
-    context = _runtime_context()
+def _get_extension_manager(target_app: FastAPI | None = None) -> ExtensionManager:
+    context = _runtime_context(target_app)
     _adopt_compatibility_alias(context, "extension_manager")
     if not _owner_matches_project_root(context.extension_manager, context.project_root):
         context.extension_manager = ExtensionManager(project_root=context.project_root)
-    extension_manager = context.extension_manager
-    return extension_manager
+    _sync_default_alias(context, "extension_manager")
+    return context.extension_manager
 
 
-def _get_extension_runtime_service() -> ExtensionRuntimeService:
-    global extension_runtime_service
-    context = _runtime_context()
+def _get_extension_runtime_service(target_app: FastAPI | None = None) -> ExtensionRuntimeService:
+    context = _runtime_context(target_app)
     _adopt_compatibility_alias(context, "extension_runtime_service")
     if not _owner_matches_project_root(context.extension_runtime_service, context.project_root):
         context.extension_runtime_service = ExtensionRuntimeService(project_root=context.project_root)
-    extension_runtime_service = context.extension_runtime_service
-    return extension_runtime_service
+    _sync_default_alias(context, "extension_runtime_service")
+    return context.extension_runtime_service
 
 
 # Keep the engine import-available for legacy monkeypatch-driven API tests while
@@ -871,7 +968,7 @@ v1_router.include_router(
         outbound_filter=lambda payload, surface: _filter_operator_payload(payload, surface=surface),
     )
 )
-v1_router.include_router(build_cards_router(lambda: _get_engine(), lambda: api_runtime_node))
+v1_router.include_router(build_cards_router(lambda: _get_engine(), lambda: _get_api_runtime_node()))
 v1_router.include_router(build_card_authoring_router(lambda: _get_engine(), lambda: _project_root()))
 v1_router.include_router(
     build_flows_router(
@@ -992,8 +1089,8 @@ v1_router.include_router(
 v1_router.include_router(
     build_system_router(
         project_root_getter=lambda: _project_root(),
-        runtime_state=lambda: runtime_state,
-        api_runtime_node_getter=lambda: api_runtime_node,
+        runtime_state=lambda: _get_runtime_state(),
+        api_runtime_node_getter=lambda: _get_api_runtime_node(),
         runtime_host_getter=lambda: _get_api_runtime_host(),
         now_local=now_local,
         get_metrics_snapshot=get_metrics_snapshot,
@@ -1182,7 +1279,7 @@ async def list_runs(
             "filters": {"status": status},
         }
         return _filter_operator_payload(payload, surface="api.runs.list")
-    invocation = api_runtime_node.resolve_runs_invocation()
+    invocation = _get_api_runtime_node().resolve_runs_invocation()
     runtime_engine = _get_engine()
     payload = await _invoke_async_method(runtime_engine.sessions, invocation, "runs")
     return _filter_operator_payload(payload, surface="api.runs.list")
@@ -1327,7 +1424,7 @@ async def get_run_detail(session_id: str) -> dict[str, Any]:
 async def get_run_metrics(session_id: str) -> Any:
     log_event("api_run_metrics", {"session_id": session_id}, _project_root())
     _validate_session_path(session_id)
-    workspace = api_runtime_node.resolve_member_metrics_workspace(_project_root(), session_id)
+    workspace = _get_api_runtime_node().resolve_member_metrics_workspace(_project_root(), session_id)
     metrics_reader = _get_api_runtime_host().create_member_metrics_reader()
     return await asyncio.to_thread(metrics_reader, workspace)
 
@@ -1551,7 +1648,7 @@ async def list_run_replay_turns(session_id: str, role: str | None = None) -> dic
 @v1_router.get("/runs/{session_id}/backlog")
 async def get_backlog(session_id: str) -> Any:
     log_event("api_backlog", {"session_id": session_id}, _project_root())
-    invocation = api_runtime_node.resolve_backlog_invocation(session_id)
+    invocation = _get_api_runtime_node().resolve_backlog_invocation(session_id)
     runtime_engine = _get_engine()
     return await _invoke_async_method(runtime_engine.sessions, invocation, "backlog")
 
@@ -1586,31 +1683,33 @@ async def get_execution_graph(session_id: str) -> dict[str, Any]:
 @v1_router.get("/sessions/{session_id}")
 async def get_session_detail(session_id: str) -> Any:
     log_event("api_session_detail", {"session_id": session_id}, _project_root())
-    invocation = api_runtime_node.resolve_session_detail_invocation(session_id)
+    runtime_node = _get_api_runtime_node()
+    invocation = runtime_node.resolve_session_detail_invocation(session_id)
     runtime_engine = _get_engine()
     session = await _invoke_async_method(runtime_engine.sessions, invocation, "session")
     if not session:
         interaction_session = await _get_interaction_manager().get_session_detail(session_id)
         if interaction_session is not None:
             return interaction_session
-        raise HTTPException(**api_runtime_node.session_detail_not_found_error(session_id))
+        raise HTTPException(**runtime_node.session_detail_not_found_error(session_id))
     return session
 
 
 @v1_router.get("/sessions/{session_id}/status")
 async def get_session_status(session_id: str) -> dict[str, Any]:
+    runtime_node = _get_api_runtime_node()
     runtime_engine = _get_engine()
     session = await runtime_engine.sessions.get_session(session_id)
     if not session:
         interaction_status = await _get_interaction_manager().get_session_status(session_id)
         if interaction_status is not None:
             return interaction_status
-        raise HTTPException(**api_runtime_node.session_detail_not_found_error(session_id))
+        raise HTTPException(**runtime_node.session_detail_not_found_error(session_id))
 
     run_record = await runtime_engine.run_ledger.get_run(session_id)
     projected_run_record = validated_run_ledger_record_projection(run_record)
     backlog = await runtime_engine.sessions.get_session_issues(session_id)
-    tasks = await runtime_state.get_tasks(session_id)
+    tasks = await _get_runtime_state().get_tasks(session_id)
     is_active, task_state = _runtime_task_summary(tasks)
 
     backlog_counts: dict[str, int] = {}
@@ -1642,7 +1741,7 @@ async def halt_session(session_id: str, request: Request) -> dict[str, Any]:
         session_id,
         operator_actor_ref=getattr(request.state, "authenticated_actor_ref", None),
     )
-    tasks = await runtime_state.get_tasks(session_id)
+    tasks = await _get_runtime_state().get_tasks(session_id)
     is_active, _task_state = _runtime_task_summary(tasks)
     return {
         "ok": True,
@@ -1698,27 +1797,28 @@ async def replay_session_turn(
 @v1_router.get("/sessions/{session_id}/snapshot")
 async def get_session_snapshot(session_id: str) -> Any:
     log_event("api_session_snapshot", {"session_id": session_id}, _project_root())
-    invocation = api_runtime_node.resolve_session_snapshot_invocation(session_id)
+    runtime_node = _get_api_runtime_node()
+    invocation = runtime_node.resolve_session_snapshot_invocation(session_id)
     runtime_engine = _get_engine()
     snapshot = await _invoke_async_method(runtime_engine.snapshots, invocation, "snapshot")
     if not snapshot:
         interaction_snapshot = await _get_interaction_manager().get_session_snapshot(session_id)
         if interaction_snapshot is not None:
             return interaction_snapshot
-        raise HTTPException(**api_runtime_node.session_snapshot_not_found_error(session_id))
+        raise HTTPException(**runtime_node.session_snapshot_not_found_error(session_id))
     return snapshot
 
 
 @v1_router.get("/sandboxes")
 async def list_sandboxes() -> Any:
-    invocation = api_runtime_node.resolve_sandboxes_list_invocation()
+    invocation = _get_api_runtime_node().resolve_sandboxes_list_invocation()
     runtime_engine = _get_engine()
     return await _invoke_async_method(runtime_engine, invocation, "sandboxes")
 
 
 @v1_router.post("/sandboxes/{sandbox_id}/stop")
 async def stop_sandbox(sandbox_id: str, request: Request) -> dict[str, bool]:
-    invocation = api_runtime_node.resolve_sandbox_stop_invocation(sandbox_id)
+    invocation = _get_api_runtime_node().resolve_sandbox_stop_invocation(sandbox_id)
     operator_actor_ref = getattr(request.state, "authenticated_actor_ref", None)
     if operator_actor_ref is not None:
         invocation = {
@@ -1738,10 +1838,11 @@ async def stop_sandbox(sandbox_id: str, request: Request) -> dict[str, bool]:
 
 @v1_router.get("/sandboxes/{sandbox_id}/logs")
 async def get_sandbox_logs(sandbox_id: str, service: str | None = None) -> dict[str, Any]:
+    runtime_node = _get_api_runtime_node()
     pipeline = _get_api_runtime_host().create_execution_pipeline(
-        api_runtime_node.resolve_sandbox_workspace(_project_root())
+        runtime_node.resolve_sandbox_workspace(_project_root())
     )
-    invocation = api_runtime_node.resolve_sandbox_logs_invocation(sandbox_id, service)
+    invocation = runtime_node.resolve_sandbox_logs_invocation(sandbox_id, service)
     logs = await asyncio.to_thread(
         _invoke_sync_method,
         pipeline.sandbox_orchestrator,
@@ -2046,43 +2147,76 @@ async def list_logs(
 app.include_router(v1_router)
 
 
-def create_api_app(project_root: Path | None = None) -> FastAPI:
-    root = Path(project_root).resolve() if project_root is not None else _resolve_default_project_root()
-    runtime_host = _build_api_runtime_host(root)
-    app.state.outbound_policy_config = _load_outbound_policy_config_for_app(root)
-    _replace_runtime_context(
-        ApiAppRuntimeContext(
-            project_root=root,
-            api_runtime_host=runtime_host,
-            engine=runtime_host.create_engine(api_runtime_node.resolve_api_workspace(root)),
-        )
-    )
-    return app
-
-
 # --- WS ---
 
 
-async def event_broadcaster() -> None:
+async def event_broadcaster(target_app: FastAPI | None = None) -> None:
+    state = _get_runtime_state(target_app)
+    runtime_node = _get_api_runtime_node(target_app)
     while True:
-        record = await runtime_state.event_queue.get()
-        for ws in await runtime_state.get_websockets():
+        record = await state.event_queue.get()
+        for ws in await state.get_websockets():
             try:
                 await ws.send_json(record)
             except (WebSocketDisconnect, RuntimeError, ValueError) as exc:
-                if isinstance(exc, WebSocketDisconnect) or api_runtime_node.should_remove_websocket(exc):
-                    await runtime_state.remove_websocket(ws)
-        runtime_state.event_queue.task_done()
+                if isinstance(exc, WebSocketDisconnect) or runtime_node.should_remove_websocket(exc):
+                    await state.remove_websocket(ws)
+        state.event_queue.task_done()
 
 
-register_streaming_routes(
-    app,
-    api_key_name=API_KEY_NAME,
-    api_runtime_node_getter=lambda: api_runtime_node,
-    runtime_host_getter=lambda: _get_api_runtime_host(),
-    interaction_manager_getter=lambda: _get_interaction_manager(),
-    stream_bus_getter=lambda: _get_stream_bus(),
-    runtime_state=runtime_state,
-    project_root_getter=lambda: _project_root(),
-    log_event=log_event,
-)
+def _register_streaming_transport(target_app: FastAPI) -> None:
+    register_streaming_routes(
+        target_app,
+        api_key_name=API_KEY_NAME,
+        api_runtime_node_getter=lambda: _get_api_runtime_node(target_app),
+        runtime_host_getter=lambda: _get_api_runtime_host(target_app),
+        interaction_manager_getter=lambda: _get_interaction_manager(target_app),
+        stream_bus_getter=lambda: _get_stream_bus(target_app),
+        runtime_state_getter=lambda: _get_runtime_state(target_app),
+        project_root_getter=lambda: _project_root(target_app),
+        log_event=log_event,
+    )
+
+
+def _register_created_app_transport(target_app: FastAPI) -> None:
+    config = resolve_cors_config()
+    target_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=config.allow_origins,
+        allow_methods=config.allow_methods,
+        allow_headers=config.allow_headers,
+        allow_credentials=config.allow_credentials,
+    )
+    target_app.add_middleware(_ApiAppContextMiddleware, owner_app=target_app)
+    target_app.middleware("http")(add_orket_version_header)
+    target_app.add_api_route("/health", health, methods=["GET"])
+    target_app.include_router(v1_router)
+    _register_streaming_transport(target_app)
+
+
+def create_api_app(project_root: Path | None = None) -> FastAPI:
+    root = Path(project_root).resolve() if project_root is not None else _resolve_default_project_root()
+    created_app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
+    created_app.state.project_root = root
+    created_app.state.outbound_policy_config = _load_outbound_policy_config_for_app(root)
+    set_api_runtime_context(created_app, _build_api_runtime_container(root))
+    _register_created_app_transport(created_app)
+    return created_app
+
+
+def _configure_default_api_app(
+    project_root: Path | None = None,
+    *,
+    runtime_state_override: Any | None = None,
+) -> FastAPI:
+    """Configure the compatibility-only module app without affecting created apps."""
+    root = Path(project_root).resolve() if project_root is not None else _resolve_default_project_root()
+    context = _build_api_runtime_container(root)
+    if runtime_state_override is not None:
+        context.runtime_state = runtime_state_override
+    app.state.outbound_policy_config = _load_outbound_policy_config_for_app(root)
+    _replace_runtime_context(context)
+    return app
+
+
+_register_streaming_transport(app)

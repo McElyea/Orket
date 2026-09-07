@@ -160,12 +160,12 @@ def api_key_env(monkeypatch):
 
 @pytest.fixture
 def test_client(tmp_path, api_key_env):
-    """Layer: integration. Provides a fresh API TestClient per test."""
+    """Layer: integration. Provides the compatibility default app for alias-driven tests."""
     from fastapi.testclient import TestClient
 
-    from orket.interfaces.api import create_api_app
+    from orket.interfaces.api import _configure_default_api_app
 
-    client = TestClient(create_api_app(project_root=tmp_path))
+    client = TestClient(_configure_default_api_app(project_root=tmp_path))
     try:
         yield client
     finally:
@@ -231,6 +231,11 @@ def fresh_runtime_state(monkeypatch):
     monkeypatch.setattr(state_module, "runtime_state", fresh)
     api_module = sys.modules.get("orket.interfaces.api")
     if api_module is not None:
+        context = api_module.app.state.api_runtime_context
+        if context.closed:
+            api_module._configure_default_api_app(runtime_state_override=fresh)
+        else:
+            context.runtime_state = fresh
         monkeypatch.setattr(api_module, "runtime_state", fresh)
     return fresh
 

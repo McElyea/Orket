@@ -1,23 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from fastapi import FastAPI
 
+from orket.application.services.api_runtime_container import ApiRuntimeContainer
+
 _API_RUNTIME_CONTEXT_STATE_KEY = "api_runtime_context"
 
-
-@dataclass
-class ApiAppRuntimeContext:
-    project_root: Path
-    api_runtime_host: Any | None = None
-    engine: Any | None = None
-    stream_bus: Any | None = None
-    interaction_manager: Any | None = None
-    extension_manager: Any | None = None
-    extension_runtime_service: Any | None = None
+ApiAppRuntimeContext = ApiRuntimeContainer
 
 
 def get_api_runtime_context(app: FastAPI) -> ApiAppRuntimeContext | None:

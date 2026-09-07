@@ -39,7 +39,10 @@ async def test_cards_and_runs_operator_views_project_truthful_outcomes(monkeypat
         workspace_root=workspace_root,
         db_path=str(tmp_path / "runtime.db"),
     )
-    monkeypatch.setattr(api_module, "engine", real_engine)
+    created_app = api_module.create_api_app(project_root=tmp_path)
+    created_context = created_app.state.api_runtime_context
+    await created_context.engine.close()
+    created_context.engine = real_engine
 
     verified_session_id = "RUN-VERIFIED-1"
     failed_session_id = "RUN-FAILED-1"
@@ -179,7 +182,7 @@ async def test_cards_and_runs_operator_views_project_truthful_outcomes(monkeypat
         artifacts=failed_artifacts,
     )
 
-    client = _client()
+    client = TestClient(created_app)
     completed = client.get("/v1/cards/view?filter=completed", headers={"X-API-Key": "test-key"})
     terminal_failure = client.get("/v1/cards/view?filter=terminal_failure", headers={"X-API-Key": "test-key"})
     card_detail = client.get("/v1/cards/CARD-VERIFIED/view", headers={"X-API-Key": "test-key"})
@@ -212,6 +215,8 @@ async def test_cards_and_runs_operator_views_project_truthful_outcomes(monkeypat
     assert run_payload["lifecycle_category"] == "artifact_run_verified"
     assert run_payload["verification"]["status"] == "verified"
     assert "agent_output/main.py" in run_payload["key_artifacts"]
+    client.close()
+    await created_context.close()
 
 
 def test_system_operator_views_surface_provider_and_health_status(monkeypatch) -> None:

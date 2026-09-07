@@ -12,6 +12,7 @@ from orket.application.services.extension_workload_control_plane_service import 
     build_extension_workload_control_plane_service,
 )
 from orket.core.domain import AuthoritySourceClass, ResultClass
+from orket_extension_sdk.manifest import agent_discriminator_reasons
 
 from .contracts import ExtensionRegistry
 from .models import ExtensionRecord, ExtensionRunResult, _ExtensionManifestEntry
@@ -205,6 +206,18 @@ class WorkloadExecutor:
         department: str,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
+        agent_markers = agent_discriminator_reasons(
+            {
+                "workload_id": workload.workload_id,
+                "workload_kind": workload.workload_kind,
+                "required_capabilities": list(workload.required_capabilities),
+                "input_contract": workload.input_contract,
+                "output_contract": workload.output_contract,
+                "agent": workload.agent_declaration or None,
+            }
+        )
+        if agent_markers:
+            raise ValueError("E_AGENT_RUNTIME_NOT_ADMITTED: governed_agent_loop.v1")
         runtime_input_config, host_controls = split_host_capability_controls(dict(input_config))
         input_digest = hashlib.sha256(
             json.dumps(input_config, sort_keys=True, separators=(",", ":")).encode("utf-8")

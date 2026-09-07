@@ -30,6 +30,10 @@ class _ExtensionManifestEntry:
     entrypoint: str = ""
     required_capabilities: tuple[str, ...] = ()
     contract_style: str = CONTRACT_STYLE_LEGACY
+    workload_kind: str = "generic"
+    input_contract: str = ""
+    output_contract: str = ""
+    agent_declaration: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -55,6 +59,21 @@ class ExtensionRecord:
     compat_fallbacks: tuple[str, ...] = ()
     config_sections: tuple[str, ...] = ()
     allowed_stdlib_modules: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class GovernedAgentWorkloadLaunch:
+    extension_id: str
+    extension_version: str
+    extension_root: Path
+    workload_id: str
+    workload_version: str
+    entrypoint: str
+    allowed_stdlib_modules: tuple[str, ...]
+    extension_digest: str
+    manifest_digest_sha256: str
+    agent_declaration: dict[str, Any]
+    control_plane_workload_record: dict[str, Any]
 
 
 @dataclass(frozen=True)

@@ -1,5 +1,5 @@
 # Operator Control Surface Requirements
-Last updated: 2026-04-09
+Last updated: 2026-09-06
 Status: Active durable spec authority
 Owner: Orket Core
 Lane type: Control-plane foundation / operator plane
@@ -44,12 +44,23 @@ The control plane must support inspection of at minimum:
 The control plane must support operator commands at minimum for:
 1. `approve_continue`
 2. `approve_degraded_continue`
-3. `force_reconcile`
-4. `quarantine_run`
-5. `cancel_run`
-6. `release_or_revoke_lease`
-7. `approve_cleanup`
-8. `mark_terminal`
+3. `pause_run`
+4. `force_reconcile`
+5. `quarantine_run`
+6. `cancel_run`
+7. `release_or_revoke_lease`
+8. `approve_cleanup`
+9. `mark_terminal`
+
+For a governed agent loop, `pause_run` withholds authorization for the next
+iteration and moves the run to `operator_blocked`. It does not interrupt or
+rewrite an effect already published as executed, and it does not grant future
+resume authority. Resume requires `approve_continue` or
+`approve_degraded_continue` under the normal precondition rules.
+
+This command is contract-reserved but not yet implemented or admitted at the
+runtime surface. Its implementation is gated by the active governed
+continuous-agent plan.
 
 ### OP-03. Operator risk acceptance
 

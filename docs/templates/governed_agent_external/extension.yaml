@@ -1,0 +1,32 @@
+manifest_version: v0
+extension_id: governed.agent.starter
+extension_version: 0.1.0
+allowed_stdlib_modules: []
+workloads:
+  - workload_id: governed-agent-loop
+    entrypoint: governed_agent:GovernedTicketAgent
+    required_capabilities:
+      - agent.iteration.v1
+      - read_file
+      - write_file
+    workload_kind: agent
+    input_contract: agent_iteration_request.v1
+    output_contract: agent_iteration_result.v1
+    agent:
+      contract_version: governed_agent_loop.v1
+      required_host_features:
+        - agent_stdio_ipc.v1
+        - governed_agent_loop.v1
+      model_profiles:
+        - role: planner
+          profile_ref: local.planner
+        - role: actor
+          profile_ref: local.actor
+        - role: critic
+          profile_ref: local.critic
+      recovery_posture: fail_closed
+      resource_requirements:
+        max_model_calls_per_iteration: 4
+        max_progress_events_per_iteration: 3
+        max_result_bytes: 262144
+        max_inference_concurrency: 1

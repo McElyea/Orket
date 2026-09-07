@@ -231,6 +231,7 @@ class OperatorInputClass(str, Enum):
 class OperatorCommandClass(str, Enum):
     APPROVE_CONTINUE = "approve_continue"
     APPROVE_DEGRADED_CONTINUE = "approve_degraded_continue"
+    PAUSE_RUN = "pause_run"
     FORCE_RECONCILE = "force_reconcile"
     QUARANTINE_RUN = "quarantine_run"
     CANCEL_RUN = "cancel_run"

@@ -153,6 +153,21 @@ def test_operator_command_requires_command_class() -> None:
         )
 
 
+def test_pause_run_is_a_valid_operator_command_binding() -> None:
+    action = OperatorActionRecord(
+        action_id="op-pause-1",
+        actor_ref="operator-local",
+        input_class=OperatorInputClass.COMMAND,
+        target_ref="run-agent-1",
+        timestamp="2026-09-06T00:00:00+00:00",
+        precondition_basis_ref="continuation-snapshot-1",
+        result="accepted",
+        command_class=OperatorCommandClass.PAUSE_RUN,
+    )
+
+    assert action.command_class is OperatorCommandClass.PAUSE_RUN
+
+
 def test_operator_risk_acceptance_rejects_command_class() -> None:
     with pytest.raises(ValidationError, match="operator risk acceptance must not carry command_class"):
         OperatorActionRecord(

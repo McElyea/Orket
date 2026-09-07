@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 
       - name: Enforce rulesim golden determinism
         run: |
@@ -45,7 +45,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 
       - name: Enforce install surface convergence
         run: |
@@ -73,7 +73,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 
       - name: Enforce dependency direction rules
         run: |
@@ -271,7 +271,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 
       - name: Run tests with coverage
         # Floor is set 5pts above the observed 83.94% baseline. See docs/internal/COVERAGE_DEBT.md.
@@ -492,7 +492,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 
       - name: Run product suite (explicit scope when present)
         run: |
@@ -518,7 +518,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 
       - name: Ensure docker-compose command is available
         shell: bash
@@ -592,7 +592,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 
       - name: Bootstrap runtime/webhook schemas
         run: |

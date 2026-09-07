@@ -1,0 +1,2480 @@
+{
+  "schema_version": "architectural_truth.baseline.v1",
+  "generated_at": "2026-07-31T04:16:10.392881Z",
+  "collection_ok": true,
+  "release_ready": false,
+  "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
+  "proof_boundary": {
+    "commands": "live native subprocess",
+    "api_factory": "live isolated subprocess",
+    "dependency_taxonomy_noop_sizes_ruff": "structural"
+  },
+  "false_success_release_blocker": {
+    "status": "clear",
+    "blocked_commands": [],
+    "rule": "Fatal-shaped output must not return process exit 0."
+  },
+  "command_behavior": [
+    {
+      "command_id": "installed_runtime_help_fresh_workspace",
+      "proof": "live_native_subprocess",
+      "path": "primary",
+      "result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "expected_exit_matched": true,
+      "required_claim": "usage: orket runtime",
+      "required_claim_present": true,
+      "fatal_markers": [],
+      "fatal_exit_truthful": true,
+      "durable_effect_present": true
+    },
+    {
+      "command_id": "installed_runtime_handled_fatal",
+      "proof": "live_native_subprocess",
+      "path": "primary",
+      "result": "success",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "expected_exit_matched": true,
+      "required_claim": "orket runtime extensions list",
+      "required_claim_present": true,
+      "fatal_markers": [
+        "[FATAL]",
+        "Traceback (most recent call last)"
+      ],
+      "fatal_exit_truthful": true,
+      "durable_effect_present": null
+    },
+    {
+      "command_id": "bundle_cli_help",
+      "proof": "live_native_subprocess",
+      "path": "primary",
+      "result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "expected_exit_matched": true,
+      "required_claim": "governed-run",
+      "required_claim_present": true,
+      "fatal_markers": [],
+      "fatal_exit_truthful": true,
+      "durable_effect_present": null
+    },
+    {
+      "command_id": "prompts_cli_help",
+      "proof": "live_native_subprocess",
+      "path": "primary",
+      "result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "expected_exit_matched": true,
+      "required_claim": "Prompt asset tooling",
+      "required_claim_present": true,
+      "fatal_markers": [],
+      "fatal_exit_truthful": true,
+      "durable_effect_present": null
+    },
+    {
+      "command_id": "quickstart_help",
+      "proof": "live_native_subprocess",
+      "path": "primary",
+      "result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "expected_exit_matched": true,
+      "required_claim": "--decision",
+      "required_claim_present": true,
+      "fatal_markers": [],
+      "fatal_exit_truthful": true,
+      "durable_effect_present": null
+    },
+    {
+      "command_id": "quickstart_eof",
+      "proof": "live_native_subprocess",
+      "path": "primary",
+      "result": "success",
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "expected_exit_matched": true,
+      "required_claim": "E_QUICKSTART_INPUT_REQUIRED",
+      "required_claim_present": true,
+      "fatal_markers": [],
+      "fatal_exit_truthful": true,
+      "durable_effect_present": null
+    },
+    {
+      "command_id": "governed_run_packaged_default",
+      "proof": "live_native_subprocess",
+      "path": "primary",
+      "result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "expected_exit_matched": true,
+      "required_claim": "[orket] Run completed",
+      "required_claim_present": true,
+      "fatal_markers": [],
+      "fatal_exit_truthful": true,
+      "durable_effect_present": true
+    }
+  ],
+  "api_factory_behavior": {
+    "proof": "live_isolated_subprocess",
+    "path": "primary",
+    "result": "success",
+    "exit_code": 0,
+    "default_context_unchanged": true,
+    "distinct_contexts": true,
+    "distinct_engines": true,
+    "distinct_runtime_states": true,
+    "first_context_replaced": false,
+    "first_root_retained": true,
+    "same_app_object": false,
+    "second_root_retained": true
+  },
+  "dependency_graph": {
+    "module_count": 780,
+    "scan": {
+      "files_scanned": 780,
+      "roots": [
+        "orket"
+      ]
+    },
+    "policy": {
+      "path": "model\\core\\contracts\\dependency_direction_policy.json",
+      "policy_id": "dependency_direction_policy",
+      "schema_version": "1.0.0",
+      "forbidden_edges": [
+        {
+          "source_layer": "adapters",
+          "target_layer": "interfaces"
+        },
+        {
+          "source_layer": "application",
+          "target_layer": "interfaces"
+        },
+        {
+          "source_layer": "core",
+          "target_layer": "adapters"
+        },
+        {
+          "source_layer": "core",
+          "target_layer": "application"
+        },
+        {
+          "source_layer": "core",
+          "target_layer": "interfaces"
+        },
+        {
+          "source_layer": "decision_nodes",
+          "target_layer": "interfaces"
+        },
+        {
+          "source_layer": "domain",
+          "target_layer": "interfaces"
+        },
+        {
+          "source_layer": "domain",
+          "target_layer": "orchestration"
+        },
+        {
+          "source_layer": "infrastructure",
+          "target_layer": "decision_nodes"
+        },
+        {
+          "source_layer": "infrastructure",
+          "target_layer": "interfaces"
+        },
+        {
+          "source_layer": "infrastructure",
+          "target_layer": "orchestration"
+        },
+        {
+          "source_layer": "infrastructure",
+          "target_layer": "services"
+        }
+      ]
+    },
+    "layer_edges": [
+      {
+        "source_layer": "application",
+        "target_layer": "application",
+        "count": 262
+      },
+      {
+        "source_layer": "application",
+        "target_layer": "core",
+        "count": 228
+      },
+      {
+        "source_layer": "runtime",
+        "target_layer": "runtime",
+        "count": 204
+      },
+      {
+        "source_layer": "platform",
+        "target_layer": "platform",
+        "count": 90
+      },
+      {
+        "source_layer": "application",
+        "target_layer": "platform",
+        "count": 83
+      },
+      {
+        "source_layer": "adapters",
+        "target_layer": "adapters",
+        "count": 55
+      },
+      {
+        "source_layer": "application",
+        "target_layer": "adapters",
+        "count": 49
+      },
+      {
+        "source_layer": "application",
+        "target_layer": "runtime",
+        "count": 40
+      },
+      {
+        "source_layer": "runtime",
+        "target_layer": "platform",
+        "count": 39
+      },
+      {
+        "source_layer": "core",
+        "target_layer": "core",
+        "count": 37
+      },
+      {
+        "source_layer": "interfaces",
+        "target_layer": "application",
+        "count": 29
+      },
+      {
+        "source_layer": "interfaces",
+        "target_layer": "interfaces",
+        "count": 27
+      },
+      {
+        "source_layer": "adapters",
+        "target_layer": "platform",
+        "count": 26
+      },
+      {
+        "source_layer": "interfaces",
+        "target_layer": "platform",
+        "count": 26
+      },
+      {
+        "source_layer": "runtime",
+        "target_layer": "application",
+        "count": 26
+      },
+      {
+        "source_layer": "adapters",
+        "target_layer": "core",
+        "count": 23
+      },
+      {
+        "source_layer": "orchestration",
+        "target_layer": "application",
+        "count": 17
+      },
+      {
+        "source_layer": "runtime",
+        "target_layer": "adapters",
+        "count": 17
+      },
+      {
+        "source_layer": "adapters",
+        "target_layer": "runtime",
+        "count": 14
+      },
+      {
+        "source_layer": "core",
+        "target_layer": "platform",
+        "count": 13
+      },
+      {
+        "source_layer": "domain",
+        "target_layer": "core",
+        "count": 13
+      },
+      {
+        "source_layer": "runtime",
+        "target_layer": "core",
+        "count": 11
+      },
+      {
+        "source_layer": "services",
+        "target_layer": "application",
+        "count": 11
+      },
+      {
+        "source_layer": "interfaces",
+        "target_layer": "adapters",
+        "count": 10
+      },
+      {
+        "source_layer": "orchestration",
+        "target_layer": "platform",
+        "count": 10
+      },
+      {
+        "source_layer": "platform",
+        "target_layer": "adapters",
+        "count": 10
+      },
+      {
+        "source_layer": "kernel",
+        "target_layer": "kernel",
+        "count": 9
+      },
+      {
+        "source_layer": "platform",
+        "target_layer": "core",
+        "count": 9
+      },
+      {
+        "source_layer": "services",
+        "target_layer": "adapters",
+        "count": 9
+      },
+      {
+        "source_layer": "platform",
+        "target_layer": "runtime",
+        "count": 8
+      },
+      {
+        "source_layer": "services",
+        "target_layer": "core",
+        "count": 8
+      },
+      {
+        "source_layer": "agents",
+        "target_layer": "platform",
+        "count": 7
+      },
+      {
+        "source_layer": "decision_nodes",
+        "target_layer": "decision_nodes",
+        "count": 7
+      },
+      {
+        "source_layer": "interfaces",
+        "target_layer": "runtime",
+        "count": 7
+      },
+      {
+        "source_layer": "decision_nodes",
+        "target_layer": "platform",
+        "count": 6
+      },
+      {
+        "source_layer": "application",
+        "target_layer": "services",
+        "count": 5
+      },
+      {
+        "source_layer": "interfaces",
+        "target_layer": "core",
+        "count": 5
+      },
+      {
+        "source_layer": "orchestration",
+        "target_layer": "adapters",
+        "count": 5
+      },
+      {
+        "source_layer": "orchestration",
+        "target_layer": "runtime",
+        "count": 5
+      },
+      {
+        "source_layer": "runtime",
+        "target_layer": "orchestration",
+        "count": 5
+      },
+      {
+        "source_layer": "vendors",
+        "target_layer": "vendors",
+        "count": 5
+      },
+      {
+        "source_layer": "application",
+        "target_layer": "orchestration",
+        "count": 4
+      },
+      {
+        "source_layer": "orchestration",
+        "target_layer": "orchestration",
+        "count": 4
+      },
+      {
+        "source_layer": "platform",
+        "target_layer": "services",
+        "count": 4
+      },
+      {
+        "source_layer": "vendors",
+        "target_layer": "platform",
+        "count": 4
+      },
+      {
+        "source_layer": "agents",
+        "target_layer": "application",
+        "count": 3
+      },
+      {
+        "source_layer": "agents",
+        "target_layer": "core",
+        "count": 3
+      },
+      {
+        "source_layer": "interfaces",
+        "target_layer": "legacy",
+        "count": 3
+      },
+      {
+        "source_layer": "orchestration",
+        "target_layer": "core",
+        "count": 3
+      },
+      {
+        "source_layer": "platform",
+        "target_layer": "application",
+        "count": 3
+      },
+      {
+        "source_layer": "platform",
+        "target_layer": "orchestration",
+        "count": 3
+      },
+      {
+        "source_layer": "runtime",
+        "target_layer": "decision_nodes",
+        "count": 3
+      },
+      {
+        "source_layer": "services",
+        "target_layer": "platform",
+        "count": 3
+      },
+      {
+        "source_layer": "agents",
+        "target_layer": "agents",
+        "count": 2
+      },
+      {
+        "source_layer": "application",
+        "target_layer": "decision_nodes",
+        "count": 2
+      },
+      {
+        "source_layer": "application",
+        "target_layer": "kernel",
+        "count": 2
+      },
+      {
+        "source_layer": "core",
+        "target_layer": "services",
+        "count": 2
+      },
+      {
+        "source_layer": "decision_nodes",
+        "target_layer": "adapters",
+        "count": 2
+      },
+      {
+        "source_layer": "decision_nodes",
+        "target_layer": "core",
+        "count": 2
+      },
+      {
+        "source_layer": "interfaces",
+        "target_layer": "orchestration",
+        "count": 2
+      },
+      {
+        "source_layer": "runtime",
+        "target_layer": "interfaces",
+        "count": 2
+      },
+      {
+        "source_layer": "services",
+        "target_layer": "runtime",
+        "count": 2
+      },
+      {
+        "source_layer": "vendors",
+        "target_layer": "adapters",
+        "count": 2
+      },
+      {
+        "source_layer": "adapters",
+        "target_layer": "orchestration",
+        "count": 1
+      },
+      {
+        "source_layer": "adapters",
+        "target_layer": "services",
+        "count": 1
+      },
+      {
+        "source_layer": "agents",
+        "target_layer": "adapters",
+        "count": 1
+      },
+      {
+        "source_layer": "agents",
+        "target_layer": "runtime",
+        "count": 1
+      },
+      {
+        "source_layer": "domain",
+        "target_layer": "platform",
+        "count": 1
+      },
+      {
+        "source_layer": "interfaces",
+        "target_layer": "decision_nodes",
+        "count": 1
+      },
+      {
+        "source_layer": "interfaces",
+        "target_layer": "kernel",
+        "count": 1
+      },
+      {
+        "source_layer": "orchestration",
+        "target_layer": "decision_nodes",
+        "count": 1
+      },
+      {
+        "source_layer": "orchestration",
+        "target_layer": "kernel",
+        "count": 1
+      },
+      {
+        "source_layer": "platform",
+        "target_layer": "agents",
+        "count": 1
+      },
+      {
+        "source_layer": "platform",
+        "target_layer": "decision_nodes",
+        "count": 1
+      },
+      {
+        "source_layer": "platform",
+        "target_layer": "legacy",
+        "count": 1
+      },
+      {
+        "source_layer": "runtime",
+        "target_layer": "services",
+        "count": 1
+      },
+      {
+        "source_layer": "services",
+        "target_layer": "decision_nodes",
+        "count": 1
+      },
+      {
+        "source_layer": "services",
+        "target_layer": "services",
+        "count": 1
+      },
+      {
+        "source_layer": "vendors",
+        "target_layer": "runtime",
+        "count": 1
+      }
+    ],
+    "forbidden_edge_hits": [],
+    "legacy_edge_budget": {
+      "actual_edges": 4,
+      "max_edges": 10,
+      "exceeded": false
+    },
+    "top_module_edges": [
+      {
+        "source_module": "orket.runtime.config.provider_runtime_target",
+        "target_module": "orket.runtime.provider_runtime_inventory",
+        "count": 10
+      },
+      {
+        "source_module": "orket.application.services.runtime_policy",
+        "target_module": "orket.runtime.determinism_controls",
+        "count": 8
+      },
+      {
+        "source_module": "orket.runtime.config.config_loader",
+        "target_module": "orket.schema",
+        "count": 4
+      },
+      {
+        "source_module": "orket.discovery",
+        "target_module": "orket.hardware",
+        "count": 3
+      },
+      {
+        "source_module": "orket.preview",
+        "target_module": "orket.schema",
+        "count": 3
+      },
+      {
+        "source_module": "orket.runtime.evidence.run_evidence_graph_projection_support",
+        "target_module": "orket.application.services.kernel_action_control_plane_resource_lifecycle",
+        "count": 3
+      },
+      {
+        "source_module": "orket.runtime.evidence.run_evidence_graph_projection_support",
+        "target_module": "orket.application.services.turn_tool_control_plane_resource_lifecycle",
+        "count": 3
+      },
+      {
+        "source_module": "orket.core.domain.control_plane_reservations",
+        "target_module": "orket.core.contracts.control_plane_models",
+        "count": 3
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.schema",
+        "count": 2
+      },
+      {
+        "source_module": "orket.decision_nodes.api_runtime_strategy_node",
+        "target_module": "orket.board",
+        "count": 2
+      },
+      {
+        "source_module": "orket.decision_nodes.builtins",
+        "target_module": "orket.core.cards_runtime_contract",
+        "count": 2
+      },
+      {
+        "source_module": "orket.services.sandbox_orchestrator",
+        "target_module": "orket.core.domain.sandbox_lifecycle",
+        "count": 2
+      },
+      {
+        "source_module": "orket.vendors.local",
+        "target_module": "orket.schema",
+        "count": 2
+      },
+      {
+        "source_module": "orket.vendors.local",
+        "target_module": "orket.adapters.storage.async_card_repository",
+        "count": 2
+      },
+      {
+        "source_module": "orket.workloads.rulesim_v0",
+        "target_module": "orket.rulesim.workload",
+        "count": 2
+      },
+      {
+        "source_module": "orket.runtime.evidence.run_evidence_graph_projection_support",
+        "target_module": "orket.application.services.orchestrator_issue_control_plane_support",
+        "count": 2
+      },
+      {
+        "source_module": "orket.interfaces.routers.sessions",
+        "target_module": "orket.marshaller.cli",
+        "count": 2
+      },
+      {
+        "source_module": "orket.core.domain.control_plane_effect_journal",
+        "target_module": "orket.core.contracts.control_plane_effect_journal_models",
+        "count": 2
+      },
+      {
+        "source_module": "orket.core.domain.control_plane_final_truth",
+        "target_module": "orket.core.contracts.control_plane_models",
+        "count": 2
+      },
+      {
+        "source_module": "orket.core.domain.control_plane_leases",
+        "target_module": "orket.core.contracts.control_plane_models",
+        "count": 2
+      },
+      {
+        "source_module": "orket.core.domain.control_plane_recovery",
+        "target_module": "orket.core.contracts.control_plane_models",
+        "count": 2
+      },
+      {
+        "source_module": "orket.application.review.run_service",
+        "target_module": "orket.application.review.models",
+        "count": 2
+      },
+      {
+        "source_module": "orket.application.services.control_plane_target_resource_refs",
+        "target_module": "orket.application.services.orchestrator_issue_control_plane_support",
+        "count": 2
+      },
+      {
+        "source_module": "orket.application.services.sandbox_lifecycle_reconciliation_service",
+        "target_module": "orket.application.services.sandbox_control_plane_checkpoint_service",
+        "count": 2
+      },
+      {
+        "source_module": "orket.application.workflows.orchestrator_ops",
+        "target_module": "orket.exceptions",
+        "count": 2
+      },
+      {
+        "source_module": "orket.application.workflows.orchestrator_ops",
+        "target_module": "orket.settings",
+        "count": 2
+      },
+      {
+        "source_module": "orket.application.workflows.orchestrator_ops",
+        "target_module": "orket.core.domain.sandbox",
+        "count": 2
+      },
+      {
+        "source_module": "orket.application.workflows.turn_contract_rules",
+        "target_module": "orket.application.services.tool_parser",
+        "count": 2
+      },
+      {
+        "source_module": "orket.application.workflows.turn_executor_model_flow",
+        "target_module": "orket.application.workflows.turn_executor_runtime",
+        "count": 2
+      },
+      {
+        "source_module": "orket.adapters.vcs.webhook_db",
+        "target_module": "orket.core.domain.bug_fix_phase",
+        "count": 2
+      },
+      {
+        "source_module": "orket.adapters.tools.families.cards",
+        "target_module": "orket.adapters.storage.async_card_repository",
+        "count": 2
+      },
+      {
+        "source_module": "orket.adapters.tools.families.governance",
+        "target_module": "orket.logging",
+        "count": 2
+      },
+      {
+        "source_module": "orket.board",
+        "target_module": "orket.exceptions",
+        "count": 1
+      },
+      {
+        "source_module": "orket.board",
+        "target_module": "orket.runtime",
+        "count": 1
+      },
+      {
+        "source_module": "orket.board",
+        "target_module": "orket.schema",
+        "count": 1
+      },
+      {
+        "source_module": "orket.board",
+        "target_module": "orket.core.domain.reconciler",
+        "count": 1
+      },
+      {
+        "source_module": "orket.cli",
+        "target_module": "orket.logging",
+        "count": 1
+      },
+      {
+        "source_module": "orket.cli",
+        "target_module": "orket.runtime",
+        "count": 1
+      },
+      {
+        "source_module": "orket.cli",
+        "target_module": "orket.settings",
+        "count": 1
+      },
+      {
+        "source_module": "orket.cli",
+        "target_module": "orket.interfaces.orket_bundle_cli",
+        "count": 1
+      },
+      {
+        "source_module": "orket.discovery",
+        "target_module": "orket.adapters.storage.async_file_tools",
+        "count": 1
+      },
+      {
+        "source_module": "orket.discovery",
+        "target_module": "orket.logging",
+        "count": 1
+      },
+      {
+        "source_module": "orket.discovery",
+        "target_module": "orket.project_paths",
+        "count": 1
+      },
+      {
+        "source_module": "orket.discovery",
+        "target_module": "orket.runtime",
+        "count": 1
+      },
+      {
+        "source_module": "orket.discovery",
+        "target_module": "orket.schema",
+        "count": 1
+      },
+      {
+        "source_module": "orket.discovery",
+        "target_module": "orket.settings",
+        "count": 1
+      },
+      {
+        "source_module": "orket.discovery",
+        "target_module": "orket.core.domain.reconciler",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.adapters.llm.local_model_provider",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.adapters.storage.async_file_tools",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.adapters.tools.families.reforger_tools",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.driver_support_cli",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.driver_support_conversation",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.driver_support_resources",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.exceptions",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.logging",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.runtime",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.project_paths",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver",
+        "target_module": "orket.orchestration.models",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver_support_cli",
+        "target_module": "orket.driver_support_conversation",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver_support_conversation",
+        "target_module": "orket.exceptions",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver_support_conversation",
+        "target_module": "orket.logging",
+        "count": 1
+      },
+      {
+        "source_module": "orket.driver_support_resources",
+        "target_module": "orket.logging",
+        "count": 1
+      },
+      {
+        "source_module": "orket.logging",
+        "target_module": "orket.naming",
+        "count": 1
+      },
+      {
+        "source_module": "orket.logging",
+        "target_module": "orket.time_utils",
+        "count": 1
+      },
+      {
+        "source_module": "orket.organization_loop",
+        "target_module": "orket.adapters.storage.async_file_tools",
+        "count": 1
+      },
+      {
+        "source_module": "orket.organization_loop",
+        "target_module": "orket.core.domain.critical_path",
+        "count": 1
+      },
+      {
+        "source_module": "orket.organization_loop",
+        "target_module": "orket.logging",
+        "count": 1
+      },
+      {
+        "source_module": "orket.organization_loop",
+        "target_module": "orket.runtime",
+        "count": 1
+      },
+      {
+        "source_module": "orket.organization_loop",
+        "target_module": "orket.schema",
+        "count": 1
+      },
+      {
+        "source_module": "orket.preview",
+        "target_module": "orket.adapters.storage.async_file_tools",
+        "count": 1
+      },
+      {
+        "source_module": "orket.preview",
+        "target_module": "orket.agents.agent",
+        "count": 1
+      },
+      {
+        "source_module": "orket.preview",
+        "target_module": "orket.exceptions",
+        "count": 1
+      },
+      {
+        "source_module": "orket.preview",
+        "target_module": "orket.logging",
+        "count": 1
+      },
+      {
+        "source_module": "orket.preview",
+        "target_module": "orket.runtime",
+        "count": 1
+      },
+      {
+        "source_module": "orket.preview",
+        "target_module": "orket.utils",
+        "count": 1
+      },
+      {
+        "source_module": "orket.preview",
+        "target_module": "orket.orchestration.models",
+        "count": 1
+      },
+      {
+        "source_module": "orket.repositories",
+        "target_module": "orket.core.contracts.repositories",
+        "count": 1
+      },
+      {
+        "source_module": "orket.schema",
+        "target_module": "orket.core.bottlenecks",
+        "count": 1
+      },
+      {
+        "source_module": "orket.schema",
+        "target_module": "orket.core.types",
+        "count": 1
+      },
+      {
+        "source_module": "orket.settings",
+        "target_module": "orket.exceptions",
+        "count": 1
+      },
+      {
+        "source_module": "orket.settings",
+        "target_module": "orket.runtime_paths",
+        "count": 1
+      },
+      {
+        "source_module": "orket.tools",
+        "target_module": "orket.adapters.tools.families",
+        "count": 1
+      },
+      {
+        "source_module": "orket.tools",
+        "target_module": "orket.adapters.tools.runtime",
+        "count": 1
+      },
+      {
+        "source_module": "orket.tools",
+        "target_module": "orket.decision_nodes.registry",
+        "count": 1
+      },
+      {
+        "source_module": "orket.tools",
+        "target_module": "orket.runtime_paths",
+        "count": 1
+      },
+      {
+        "source_module": "orket.tools",
+        "target_module": "orket.adapters.storage.async_card_repository",
+        "count": 1
+      },
+      {
+        "source_module": "orket.tools",
+        "target_module": "orket.core.policies.tool_gate",
+        "count": 1
+      },
+      {
+        "source_module": "orket.tools",
+        "target_module": "orket.schema",
+        "count": 1
+      },
+      {
+        "source_module": "orket.utils",
+        "target_module": "orket.naming",
+        "count": 1
+      },
+      {
+        "source_module": "orket.utils",
+        "target_module": "orket.time_utils",
+        "count": 1
+      },
+      {
+        "source_module": "orket.webhook_server",
+        "target_module": "orket.adapters.vcs.gitea_webhook_handler",
+        "count": 1
+      },
+      {
+        "source_module": "orket.webhook_server",
+        "target_module": "orket.logging",
+        "count": 1
+      },
+      {
+        "source_module": "orket.webhook_server",
+        "target_module": "orket.settings",
+        "count": 1
+      },
+      {
+        "source_module": "orket.agents.agent",
+        "target_module": "orket.agents.model_family_registry",
+        "count": 1
+      },
+      {
+        "source_module": "orket.agents.agent",
+        "target_module": "orket.application.services.control_plane_authority_service",
+        "count": 1
+      },
+      {
+        "source_module": "orket.agents.agent",
+        "target_module": "orket.application.services.prompt_compiler",
+        "count": 1
+      },
+      {
+        "source_module": "orket.agents.agent",
+        "target_module": "orket.application.services.tool_parser",
+        "count": 1
+      },
+      {
+        "source_module": "orket.agents.agent",
+        "target_module": "orket.core.contracts",
+        "count": 1
+      },
+      {
+        "source_module": "orket.agents.agent",
+        "target_module": "orket.core.domain",
+        "count": 1
+      },
+      {
+        "source_module": "orket.agents.agent",
+        "target_module": "orket.core.domain.execution",
+        "count": 1
+      }
+    ]
+  },
+  "architecture_exceptions": {
+    "source": "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
+    "schema_version": "architectural_truth.exception_register.v1",
+    "valid": true,
+    "invalid_ids": [],
+    "exceptions_total": 16,
+    "exceptions": [
+      {
+        "id": "AT-EX-001",
+        "area": "dependency-policy-model",
+        "status": "active_unaccepted_ship_risk",
+        "reason": "The enforced denylist classifies more layers and permits edges that the normative five-layer architecture does not allow.",
+        "removal_condition": "One ratified manifest defines allowed layers and edges, and the checker fails every unexpected edge unless an exact governed exception exists.",
+        "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-01--the-dependency-checker-passes-because-it-checks-a-weaker-architecture",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-002",
+        "area": "api-runtime-ownership",
+        "status": "active_unaccepted_ship_risk",
+        "reason": "The same-object factory defect is repaired in B1, but the module-default compatibility owner and aliases remain, while outward service/store factories are still interface-owned rather than app-container-owned.",
+        "removal_condition": "B2 removes the module-default owner aliases and interface-owned service/store construction, and proves distinct app-owned outward services, stores, and complete resource teardown.",
+        "evidence": "docs/projects/architectural-truth/API_INSTANCE_B1_PROOF_2026-07-30.md",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-003",
+        "area": "interface-composition-authority",
+        "status": "active_unaccepted_ship_risk",
+        "reason": "Interface modules construct adapters, decision nodes, orchestration services, and mutable runtime owners.",
+        "removal_condition": "Application-owned composition roots inject facades into transport-only routers, with no runtime owners constructed in interface modules.",
+        "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sr-03--the-interface-layer-is-a-composition-and-side-effect-ownership-layer",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-004",
+        "area": "core-purity",
+        "status": "active_unaccepted_ship_risk",
+        "reason": "Core modules perform file and event effects, read clocks, and import implementation services.",
+        "removal_condition": "The core import/effect inventory is allowlist-clean and deterministic core calls consume all nondeterminism as explicit inputs.",
+        "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sr-04--core-is-not-deterministic-dependency-minimal-or-side-effect-free",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-005",
+        "area": "async-reachable-sync-io",
+        "status": "active_unaccepted_ship_risk",
+        "reason": "Request and CLI event-loop paths can reach synchronous file and subprocess operations.",
+        "removal_condition": "Reachability-aware static inventory and live responsiveness/cancellation tests pass with only explicit standalone-script exemptions.",
+        "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sr-05--async-reachable-code-still-performs-synchronous-io",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-006",
+        "area": "operator-command-root",
+        "status": "active_compatibility_window",
+        "reason": "The installed orket root now owns the runtime command tree, while python main.py remains a source-wrapper compatibility surface through 0.5.x.",
+        "removal_condition": "Installed-root proof remains green and an explicit 0.6.0 contract delta removes python main.py plus the hidden source-wrapper --rock alias.",
+        "evidence": "docs/projects/architectural-truth/COMMAND_ROOT_PROOF_2026-07-30.md",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-007",
+        "area": "decision-node-explicit-inputs",
+        "status": "active_transition",
+        "reason": "Decision-node strategy selection still reads environment, path, and provider policy outside explicit input snapshots.",
+        "removal_condition": "All decision nodes receive immutable resolved configuration and have no environment or runtime-state reach-through.",
+        "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-008",
+        "area": "runtime-clock-inputs",
+        "status": "active_transition",
+        "reason": "Some application and core transitions still read wall-clock time directly.",
+        "removal_condition": "Every deterministic transition receives clock values through explicit runtime inputs.",
+        "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-009",
+        "area": "replay-diagnostics-alias",
+        "status": "active_transition",
+        "reason": "replay_turn() remains as a compatibility wrapper around replay_turn_diagnostics().",
+        "removal_condition": "All supported callers use replay_turn_diagnostics() and the compatibility window is explicitly closed.",
+        "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-010",
+        "area": "runtime-verification-latest-alias",
+        "status": "active_transition",
+        "reason": "runtime_verification.json remains as a latest-path compatibility artifact beside canonical indexed history.",
+        "removal_condition": "All supported consumers use the canonical verification index and per-record artifacts.",
+        "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-011",
+        "area": "observability-schema-transition",
+        "status": "active_transition",
+        "reason": "The current event taxonomy remains authoritative while the target identity model is not fully versioned.",
+        "removal_condition": "The target identity schema is versioned, migrated, and named as current event authority.",
+        "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-012",
+        "area": "runtime-path-and-review-v0-transition",
+        "status": "active_transition",
+        "reason": "Durable-path defaults and ReviewRun v0 remain current-state specifics inside the target architecture document.",
+        "removal_condition": "Those specifics move to accepted durable contracts or are retired with migration proof.",
+        "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-013",
+        "area": "test-taxonomy-enforcement",
+        "status": "active_self_deception_debt",
+        "reason": "The checker vocabulary omits end_to_end, relies on nearby prose, and leaves most tests unlabeled.",
+        "removal_condition": "Pytest markers are canonical, strict taxonomy reports zero missing tests, and public-surface requirements are enforced.",
+        "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-03--test-taxonomy-is-declared-partially-imitated-and-not-enforced",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-014",
+        "area": "noop-checker-type-only-noise",
+        "status": "active_self_deception_debt",
+        "reason": "The critical-path no-op checker reports type-only ellipsis signatures as runtime no-ops.",
+        "removal_condition": "The checker excludes type-only declarations and has regression tests with zero known false positives.",
+        "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-05--quality-gates-are-red-or-noisy-while-selected-architecture-tests-remain-green",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-015",
+        "area": "ruff-backlog",
+        "status": "active_self_deception_debt",
+        "reason": "The repository lint gate is red, so selected green checks do not constitute a release-ready quality envelope.",
+        "removal_condition": "Ruff passes over the canonical governed scope without suppressing categories to clear the count.",
+        "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-05--quality-gates-are-red-or-noisy-while-selected-architecture-tests-remain-green",
+        "owner": "Orket Core"
+      },
+      {
+        "id": "AT-EX-016",
+        "area": "authority-snapshot-maintainability",
+        "status": "active_self_deception_debt",
+        "reason": "CURRENT_AUTHORITY.md mixes live authority with an append-only implementation history.",
+        "removal_condition": "A small validated manifest is canonical and generates a bounded human snapshot and historical closeout records.",
+        "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-04--current_authoritymd-is-an-append-only-change-log-presented-as-a-narrow-snapshot",
+        "owner": "Orket Core"
+      }
+    ]
+  },
+  "test_taxonomy": {
+    "schema_version": "test_taxonomy_report.v1",
+    "tests_total": 4137,
+    "missing_layer_total": 3344,
+    "by_layer": {
+      "unlabeled": 3344,
+      "integration": 199,
+      "unit": 95,
+      "contract": 488,
+      "live_truth": 11
+    },
+    "missing_layers_sample": [
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_cleanup_claim_race.py",
+        "line": 83,
+        "test_name": "test_cleanup_claim_race_allows_only_one_cleanup_execution",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_cleanup_leak_gate.py",
+        "line": 36,
+        "test_name": "test_live_cleanup_leak_gate_leaves_no_new_sandbox_resources",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_orchestrator_live_docker.py",
+        "line": 82,
+        "test_name": "test_live_create_health_and_cleanup_flow",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_orchestrator_live_docker.py",
+        "line": 222,
+        "test_name": "test_live_cleanup_rejects_host_context_mismatch",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_orphan_reconciliation_live_docker.py",
+        "line": 72,
+        "test_name": "test_live_orphan_discovery_classifies_verified_and_unverified_projects",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_orphan_reconciliation_live_docker.py",
+        "line": 128,
+        "test_name": "test_live_verified_orphan_is_cleaned_by_fallback_sweeper_without_compose_path",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_restart_reclaim_live_docker.py",
+        "line": 116,
+        "test_name": "test_live_unhealthy_policy_terminalizes_restart_loop_and_projects_diagnostics",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_restart_reclaim_live_docker.py",
+        "line": 163,
+        "test_name": "test_live_reclaimable_sandbox_can_be_reacquired_and_stale_owner_cannot_renew",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_runtime_recovery_live_docker.py",
+        "line": 94,
+        "test_name": "test_live_unknown_outcome_reconciliation_recovers_to_active",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_runtime_recovery_live_docker.py",
+        "line": 152,
+        "test_name": "test_live_cleanup_sweeper_cleans_due_terminal_sandbox",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_runtime_recovery_live_docker.py",
+        "line": 212,
+        "test_name": "test_live_reconciliation_recovers_after_crash_between_delete_and_verify",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_store_outage_fail_closed.py",
+        "line": 25,
+        "test_name": "test_create_sandbox_fails_closed_when_lifecycle_store_is_unavailable",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\acceptance\\test_sandbox_terminal_evidence_cleanup_live_docker.py",
+        "line": 28,
+        "test_name": "test_live_terminal_evidence_export_and_sweeper_cleanup",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 16,
+        "test_name": "test_repo_initialization",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 24,
+        "test_name": "test_save_and_get_issue",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 41,
+        "test_name": "test_update_status",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 53,
+        "test_name": "test_get_by_build",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 64,
+        "test_name": "test_transactions",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 76,
+        "test_name": "test_comments",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 88,
+        "test_name": "test_reset_build",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 99,
+        "test_name": "test_independent_ready_issues",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 117,
+        "test_name": "test_concurrency_stress",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 133,
+        "test_name": "test_read_operations_do_not_wait_on_write_lock",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 153,
+        "test_name": "test_card_repository_reapplies_missing_retry_migration_columns",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 173,
+        "test_name": "test_card_repository_initialization_enables_wal_mode",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 187,
+        "test_name": "test_card_repository_wal_allows_concurrent_readers_and_writer",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 206,
+        "test_name": "test_serialization_edge_cases",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 220,
+        "test_name": "test_save_and_get_issue_params_round_trip",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 241,
+        "test_name": "test_update_status_transaction_logging",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 253,
+        "test_name": "test_deserialize_corrupted_json",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 268,
+        "test_name": "test_archive_single_card",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 280,
+        "test_name": "test_archive_build",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_card_repository.py",
+        "line": 296,
+        "test_name": "test_find_related_card_ids",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_async_session_repository.py",
+        "line": 22,
+        "test_name": "test_session_repository_reinitializes_after_db_file_recreated",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_builtin_connector_registry.py",
+        "line": 14,
+        "test_name": "test_builtin_connector_registry_exposes_phase0_metadata_shape",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_builtin_connector_registry.py",
+        "line": 38,
+        "test_name": "test_builtin_connector_registry_rejects_unknown_risk_level",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_builtin_connector_registry.py",
+        "line": 54,
+        "test_name": "test_builtin_connector_registry_rejects_non_positive_timeout",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_card_ops_components.py",
+        "line": 16,
+        "test_name": "test_card_migrations_creates_issues_table",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_card_ops_components.py",
+        "line": 27,
+        "test_name": "test_card_archive_ops_archive_cards_batches_results",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_card_ops_components.py",
+        "line": 46,
+        "test_name": "test_card_misc_ops_independent_ready_filter",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_filesystem_create_directory.py",
+        "line": 10,
+        "test_name": "test_async_file_tools_create_directory_stays_inside_workspace",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_filesystem_create_directory.py",
+        "line": 21,
+        "test_name": "test_filesystem_tool_create_directory_rejects_path_escape",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_artifact_exporter.py",
+        "line": 10,
+        "test_name": "test_build_repo_url_does_not_embed_credentials",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_artifact_exporter.py",
+        "line": 20,
+        "test_name": "test_build_repo_url_preserves_base_path",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_artifact_exporter.py",
+        "line": 27,
+        "test_name": "test_git_auth_env_appends_http_header_config",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 20,
+        "test_name": "test_fetch_ready_cards_ignores_non_orket_issues",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 49,
+        "test_name": "test_append_event_posts_orket_comment",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 72,
+        "test_name": "test_gitea_state_adapter_redacts_token_repr_and_builds_headers_lazily",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 90,
+        "test_name": "test_acquire_lease_returns_none_for_nonnumeric_card_id",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 110,
+        "test_name": "test_append_event_with_idempotency_key_skips_duplicate",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 135,
+        "test_name": "test_append_event_with_idempotency_key_posts_when_missing",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 163,
+        "test_name": "test_unimplemented_mutating_operations_are_explicit",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 175,
+        "test_name": "test_transition_state_uses_canonical_state_machine_validation",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 187,
+        "test_name": "test_transition_state_persists_with_if_match",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 221,
+        "test_name": "test_transition_state_rejects_stale_from_state",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 239,
+        "test_name": "test_transition_state_is_idempotent_when_target_state_already_applied",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 260,
+        "test_name": "test_transition_state_rejects_etag_conflict",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 291,
+        "test_name": "test_acquire_lease_claims_unowned_card_with_epoch_increment",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 328,
+        "test_name": "test_acquire_lease_returns_none_when_another_owner_has_active_lease",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 353,
+        "test_name": "test_acquire_lease_reclaims_expired_lease_and_increments_epoch",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 395,
+        "test_name": "test_acquire_lease_is_idempotent_for_same_owner",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 426,
+        "test_name": "test_acquire_lease_returns_none_on_etag_conflict",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 448,
+        "test_name": "test_renew_lease_updates_expiry_for_same_owner",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 489,
+        "test_name": "test_renew_lease_returns_none_for_non_owner",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 518,
+        "test_name": "test_renew_lease_returns_none_for_nonnumeric_card_id",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 537,
+        "test_name": "test_classify_http_error_maps_status_codes",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 546,
+        "test_name": "test_extract_card_id_from_issue_paths",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 553,
+        "test_name": "test_request_response_logs_structured_failure_with_card_id",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 579,
+        "test_name": "test_request_response_with_retry_recovers_from_transient_error",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 604,
+        "test_name": "test_request_response_with_retry_exhausts_and_raises",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 627,
+        "test_name": "test_gitea_http_client_reuses_pooled_async_client_and_closes_once",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 673,
+        "test_name": "test_acquire_lease_rejects_snapshot_body_that_exceeds_limit",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 700,
+        "test_name": "test_release_or_fail_persists_terminal_state_and_clears_lease",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 752,
+        "test_name": "test_release_or_fail_is_idempotent_when_already_final_and_unleased",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter.py",
+        "line": 773,
+        "test_name": "test_release_or_fail_rejects_cas_conflict",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter_contention.py",
+        "line": 78,
+        "test_name": "test_two_runners_do_not_dual_acquire_active_lease",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_adapter_contention.py",
+        "line": 94,
+        "test_name": "test_expired_lease_can_be_taken_over_by_second_runner",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_models.py",
+        "line": 16,
+        "test_name": "test_encode_decode_snapshot_round_trip",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_models.py",
+        "line": 33,
+        "test_name": "test_decode_snapshot_rejects_missing_marker",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_models.py",
+        "line": 38,
+        "test_name": "test_event_comment_round_trip_with_idempotency_key",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_models.py",
+        "line": 53,
+        "test_name": "test_event_comment_is_compact_json_payload",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_multi_runner_simulation.py",
+        "line": 81,
+        "test_name": "test_multi_runner_lease_lifecycle_with_renew_and_takeover",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_state_multi_runner_simulation.py",
+        "line": 121,
+        "test_name": "test_worker_takeover_after_expired_foreign_lease",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_vendor.py",
+        "line": 43,
+        "test_name": "test_get_cards_rejects_non_numeric_epic_id",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_vendor.py",
+        "line": 50,
+        "test_name": "test_add_card_rejects_non_numeric_epic_id",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_vendor.py",
+        "line": 57,
+        "test_name": "test_get_cards_uses_normalized_label_param",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_vendor.py",
+        "line": 76,
+        "test_name": "test_add_card_uses_integer_label_id",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 58,
+        "test_name": "test_webhook_handler_rejects_plaintext_gitea_url_without_override",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 67,
+        "test_name": "test_webhook_handler_allows_plaintext_only_with_explicit_local_override",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 84,
+        "test_name": "test_webhook_handler_context_manager_closes_http_client",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 95,
+        "test_name": "test_webhook_handler_accepts_injected_sandbox_orchestrator",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 114,
+        "test_name": "test_webhook_handler_passes_lifecycle_db_path_to_sandbox_orchestrator",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 126,
+        "test_name": "test_webhook_handler_uses_workspace_durable_db_path",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 137,
+        "test_name": "test_pr_cycle_tracking_real_db",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 166,
+        "test_name": "test_pr_review_duplicate_event_id_is_skipped_before_side_effects",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 193,
+        "test_name": "test_auto_reject_after_4_cycles",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 225,
+        "test_name": "test_pr_review_cycles_survive_handler_restart_to_escalate",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 253,
+        "test_name": "test_pr_opened_updates_status_with_cardstatus_enum",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 305,
+        "test_name": "test_pr_review_approved_triggers_auto_merge",
+        "layer": null
+      },
+      {
+        "file": "C:\\Source\\Orket\\tests\\adapters\\test_gitea_webhook.py",
+        "line": 325,
+        "test_name": "test_pr_review_approved_reports_merge_failure",
+        "layer": null
+      }
+    ],
+    "missing_layers_omitted": 3244
+  },
+  "ruff": {
+    "proof": "structural_lint",
+    "executed": true,
+    "exit_code": 1,
+    "issues_total": 130,
+    "by_code": {
+      "B009": 2,
+      "B905": 2,
+      "F401": 17,
+      "F841": 1,
+      "I001": 34,
+      "PTH108": 1,
+      "SIM105": 1,
+      "SIM118": 1,
+      "SIM300": 2,
+      "UP015": 1,
+      "UP017": 2,
+      "UP035": 6,
+      "UP041": 7,
+      "UP042": 53
+    }
+  },
+  "size_inventory": {
+    "proof": "structural_ast",
+    "python_files_scanned": 780,
+    "files_over_400_total": 76,
+    "functions_over_70_total": 237,
+    "largest_files": [
+      {
+        "path": "orket/interfaces/api.py",
+        "lines": 2222
+      },
+      {
+        "path": "orket/application/workflows/orchestrator_ops.py",
+        "lines": 1853
+      },
+      {
+        "path": "orket/interfaces/orket_bundle_cli.py",
+        "lines": 1566
+      },
+      {
+        "path": "orket/adapters/storage/async_control_plane_record_repository.py",
+        "lines": 1027
+      },
+      {
+        "path": "orket/runtime/policy/runtime_truth_drift_checker.py",
+        "lines": 1018
+      },
+      {
+        "path": "orket/kernel/v1/validator.py",
+        "lines": 979
+      },
+      {
+        "path": "orket/adapters/storage/async_protocol_run_ledger.py",
+        "lines": 784
+      },
+      {
+        "path": "orket/runtime/summary/run_summary.py",
+        "lines": 733
+      },
+      {
+        "path": "orket/decision_nodes/builtins.py",
+        "lines": 730
+      },
+      {
+        "path": "orket/kernel/v1/state/promotion.py",
+        "lines": 699
+      },
+      {
+        "path": "orket/runtime/evidence/run_evidence_graph_rendering.py",
+        "lines": 687
+      },
+      {
+        "path": "orket/interfaces/prompts_cli.py",
+        "lines": 677
+      },
+      {
+        "path": "orket/application/services/runtime_verifier.py",
+        "lines": 659
+      },
+      {
+        "path": "orket/application/workflows/turn_tool_dispatcher.py",
+        "lines": 640
+      },
+      {
+        "path": "orket/streaming/manager.py",
+        "lines": 634
+      },
+      {
+        "path": "orket/application/services/orchestrator_issue_control_plane_service.py",
+        "lines": 633
+      },
+      {
+        "path": "orket/runtime/execution/phase_c_runtime_truth.py",
+        "lines": 629
+      },
+      {
+        "path": "orket/runtime/config/provider_runtime_target.py",
+        "lines": 624
+      },
+      {
+        "path": "orket/application/services/extension_workload_control_plane_service.py",
+        "lines": 623
+      },
+      {
+        "path": "orket/application/services/sandbox_runtime_lifecycle_service.py",
+        "lines": 615
+      },
+      {
+        "path": "orket/adapters/llm/local_model_provider.py",
+        "lines": 600
+      },
+      {
+        "path": "orket/adapters/llm/local_prompting_policy.py",
+        "lines": 584
+      },
+      {
+        "path": "orket/interfaces/cli.py",
+        "lines": 578
+      },
+      {
+        "path": "orket/application/services/gitea_state_worker.py",
+        "lines": 577
+      },
+      {
+        "path": "orket/streaming/model_provider.py",
+        "lines": 576
+      }
+    ],
+    "largest_functions": [
+      {
+        "path": "orket/runtime/policy/runtime_truth_drift_checker.py",
+        "line": 76,
+        "name": "runtime_truth_contract_drift_report",
+        "lines": 931
+      },
+      {
+        "path": "orket/application/workflows/turn_tool_dispatcher.py",
+        "line": 98,
+        "name": "execute_tools",
+        "lines": 543
+      },
+      {
+        "path": "orket/application/workflows/turn_message_builder.py",
+        "line": 27,
+        "name": "prepare_messages",
+        "lines": 529
+      },
+      {
+        "path": "orket/runtime/evidence/run_evidence_graph_projection_collect.py",
+        "line": 20,
+        "name": "collect_primary_lineage_context",
+        "lines": 366
+      },
+      {
+        "path": "orket/kernel/v1/validator.py",
+        "line": 330,
+        "name": "execute_turn_v1",
+        "lines": 355
+      },
+      {
+        "path": "orket/interfaces/cli.py",
+        "line": 233,
+        "name": "run_cli",
+        "lines": 346
+      },
+      {
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 375,
+        "name": "promote_turn",
+        "lines": 325
+      },
+      {
+        "path": "orket/application/workflows/turn_executor_ops.py",
+        "line": 39,
+        "name": "execute_turn",
+        "lines": 314
+      },
+      {
+        "path": "orket/application/workflows/orchestrator_ops.py",
+        "line": 910,
+        "name": "execute_epic",
+        "lines": 306
+      },
+      {
+        "path": "orket/interfaces/routers/settings.py",
+        "line": 30,
+        "name": "build_settings_router",
+        "lines": 300
+      },
+      {
+        "path": "orket/interfaces/orket_bundle_cli.py",
+        "line": 1268,
+        "name": "main",
+        "lines": 295
+      },
+      {
+        "path": "orket/runtime/config/provider_runtime_target.py",
+        "line": 308,
+        "name": "resolve_provider_runtime_target",
+        "lines": 294
+      },
+      {
+        "path": "orket/interfaces/routers/sessions.py",
+        "line": 37,
+        "name": "build_sessions_router",
+        "lines": 292
+      },
+      {
+        "path": "orket/application/services/orchestrator_turn_context_builder.py",
+        "line": 98,
+        "name": "build",
+        "lines": 281
+      },
+      {
+        "path": "orket/interfaces/routers/kernel.py",
+        "line": 79,
+        "name": "build_kernel_router",
+        "lines": 278
+      },
+      {
+        "path": "orket/interfaces/orket_bundle_cli.py",
+        "line": 891,
+        "name": "_parser",
+        "lines": 259
+      },
+      {
+        "path": "orket/extensions/workload_executor.py",
+        "line": 197,
+        "name": "run_sdk_workload",
+        "lines": 256
+      },
+      {
+        "path": "orket/interfaces/refactor_transaction.py",
+        "line": 205,
+        "name": "run_refactor_transaction",
+        "lines": 246
+      },
+      {
+        "path": "orket/interfaces/routers/system.py",
+        "line": 30,
+        "name": "build_system_router",
+        "lines": 238
+      },
+      {
+        "path": "orket/interfaces/routers/cards.py",
+        "line": 48,
+        "name": "build_cards_router",
+        "lines": 231
+      },
+      {
+        "path": "orket/interfaces/api_generation.py",
+        "line": 179,
+        "name": "run_api_add_transaction",
+        "lines": 222
+      },
+      {
+        "path": "orket/runtime/evidence/run_graph_reconstruction.py",
+        "line": 17,
+        "name": "reconstruct_run_graph",
+        "lines": 214
+      },
+      {
+        "path": "orket/decision_nodes/builtins.py",
+        "line": 271,
+        "name": "generate_compose_file",
+        "lines": 212
+      },
+      {
+        "path": "orket/application/services/prompt_linter.py",
+        "line": 81,
+        "name": "lint_prompt_asset",
+        "lines": 209
+      },
+      {
+        "path": "orket/application/terraform_review/service.py",
+        "line": 45,
+        "name": "run",
+        "lines": 207
+      }
+    ],
+    "parse_errors": []
+  },
+  "noop_critical_paths": {
+    "schema_version": "1.0",
+    "ok": false,
+    "roots": [
+      "C:\\Source\\Orket\\orket\\application",
+      "C:\\Source\\Orket\\orket\\runtime",
+      "C:\\Source\\Orket\\orket\\interfaces"
+    ],
+    "scanned_files": 458,
+    "findings": [
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
+        "line": 19,
+        "name": "initialize",
+        "reason": "ellipsis",
+        "async": true
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
+        "line": 21,
+        "name": "_find_parent_epic",
+        "reason": "ellipsis",
+        "async": true
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
+        "line": 23,
+        "name": "_run_epic_collection_entry",
+        "reason": "ellipsis",
+        "async": true
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
+        "line": 32,
+        "name": "_build_epic_run_orchestrator",
+        "reason": "ellipsis",
+        "async": false
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_run_summary.py",
+        "line": 36,
+        "name": "_resolve_packet2_repair_entries",
+        "reason": "ellipsis",
+        "async": true
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_run_summary.py",
+        "line": 38,
+        "name": "_resolve_artifact_provenance_artifacts",
+        "reason": "ellipsis",
+        "async": true
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_run_summary.py",
+        "line": 40,
+        "name": "_resolve_cards_runtime_artifacts",
+        "reason": "ellipsis",
+        "async": true
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_run_summary.py",
+        "line": 49,
+        "name": "_resolve_packet1_artifacts",
+        "reason": "ellipsis",
+        "async": true
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_run_summary.py",
+        "line": 57,
+        "name": "_resolve_packet2_artifacts",
+        "reason": "ellipsis",
+        "async": true
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_run_summary.py",
+        "line": 66,
+        "name": "_record_packet1_emission_failure",
+        "reason": "ellipsis",
+        "async": true
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_runtime_artifacts.py",
+        "line": 20,
+        "name": "_build_packet1_facts",
+        "reason": "ellipsis",
+        "async": false
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_runtime_artifacts.py",
+        "line": 27,
+        "name": "_select_primary_work_artifact_output",
+        "reason": "ellipsis",
+        "async": false
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_runtime_artifacts.py",
+        "line": 33,
+        "name": "_record_packet2_facts",
+        "reason": "ellipsis",
+        "async": true
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_runtime_artifacts.py",
+        "line": 40,
+        "name": "_resolve_artifact_provenance_entries",
+        "reason": "ellipsis",
+        "async": true
+      },
+      {
+        "path": "C:\\Source\\Orket\\orket\\runtime\\execution\\execution_pipeline_runtime_artifacts.py",
+        "line": 42,
+        "name": "_record_artifact_provenance_facts",
+        "reason": "ellipsis",
+        "async": true
+      }
+    ],
+    "parse_errors": []
+  },
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-07-30T05:23:20.461410Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:1107fd0b0e2568288d064354b38fe2706423dd96b57184d65e84ad62008d7b73",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 3302,
+        "paths_total_reference": 3302,
+        "churn_paths": 3302,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-07-30T05:23:30.722408Z",
+      "changed": true,
+      "before_digest": "sha256:1107fd0b0e2568288d064354b38fe2706423dd96b57184d65e84ad62008d7b73",
+      "after_digest": "sha256:362eefeaeb54e91d4207223b417e755a56853e70f88504620d3d6629746c4193",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 3302,
+        "paths_total_current": 3302,
+        "paths_total_reference": 3302,
+        "churn_paths": 1,
+        "churn_ratio": 0.000303,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-07-30T05:34:47.091304Z",
+      "changed": true,
+      "before_digest": "sha256:362eefeaeb54e91d4207223b417e755a56853e70f88504620d3d6629746c4193",
+      "after_digest": "sha256:d39a96856f017c183e14de1193f0d8a4beff59334a9aec3a1e5bc786deea9eca",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 3302,
+        "paths_total_current": 3302,
+        "paths_total_reference": 3302,
+        "churn_paths": 5,
+        "churn_ratio": 0.001514,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-07-30T05:36:30.602816Z",
+      "changed": true,
+      "before_digest": "sha256:d39a96856f017c183e14de1193f0d8a4beff59334a9aec3a1e5bc786deea9eca",
+      "after_digest": "sha256:481fb7ea5c79e0aef8b6b30a870fa9f1b1c94155cc060c7cae14482fe64aaf0f",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 7,
+        "initial_write": false,
+        "paths_total_previous": 3302,
+        "paths_total_current": 3304,
+        "paths_total_reference": 3304,
+        "churn_paths": 8,
+        "churn_ratio": 0.002421,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.live_truth",
+          "$.test_taxonomy.by_layer.contract",
+          "$.test_taxonomy.by_layer.integration",
+          "$.test_taxonomy.by_layer.unit",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-07-31T03:05:14.093247Z",
+      "changed": true,
+      "before_digest": "sha256:481fb7ea5c79e0aef8b6b30a870fa9f1b1c94155cc060c7cae14482fe64aaf0f",
+      "after_digest": "sha256:51ed3b6f9c4fc786dc87a683dcdba2134fcdd0fe683899d4f9af8e313b3f82bd",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 54,
+        "initial_write": false,
+        "paths_total_previous": 3304,
+        "paths_total_current": 3304,
+        "paths_total_reference": 3304,
+        "churn_paths": 54,
+        "churn_ratio": 0.016344,
+        "sample_paths": [
+          "$.architecture_exceptions.exceptions[5].evidence",
+          "$.architecture_exceptions.exceptions[5].reason",
+          "$.architecture_exceptions.exceptions[5].removal_condition",
+          "$.architecture_exceptions.exceptions[5].status",
+          "$.command_behavior[0].command_id",
+          "$.command_behavior[0].required_claim",
+          "$.command_behavior[1].command_id",
+          "$.command_behavior[1].required_claim",
+          "$.dependency_graph.layer_edges[13].source_layer",
+          "$.dependency_graph.layer_edges[13].target_layer",
+          "$.dependency_graph.layer_edges[14].count",
+          "$.dependency_graph.layer_edges[14].source_layer",
+          "$.dependency_graph.layer_edges[14].target_layer",
+          "$.dependency_graph.layer_edges[33].count",
+          "$.dependency_graph.layer_edges[33].source_layer",
+          "$.dependency_graph.layer_edges[33].target_layer",
+          "$.dependency_graph.layer_edges[34].source_layer",
+          "$.dependency_graph.layer_edges[34].target_layer",
+          "$.generated_at",
+          "$.size_inventory.largest_files[2].lines"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-07-31T03:12:21.485198Z",
+      "changed": true,
+      "before_digest": "sha256:51ed3b6f9c4fc786dc87a683dcdba2134fcdd0fe683899d4f9af8e313b3f82bd",
+      "after_digest": "sha256:b3d6dc2ef07ae19e7798df717694e86493341bbb7807e87070951e8bd07916e8",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 120,
+        "initial_write": false,
+        "paths_total_previous": 3304,
+        "paths_total_current": 3304,
+        "paths_total_reference": 3304,
+        "churn_paths": 120,
+        "churn_ratio": 0.03632,
+        "sample_paths": [
+          "$.dependency_graph.layer_edges[11].count",
+          "$.dependency_graph.layer_edges[11].source_layer",
+          "$.dependency_graph.layer_edges[11].target_layer",
+          "$.dependency_graph.layer_edges[12].source_layer",
+          "$.dependency_graph.layer_edges[12].target_layer",
+          "$.dependency_graph.module_count",
+          "$.dependency_graph.scan.files_scanned",
+          "$.dependency_graph.top_module_edges[36].source_module",
+          "$.dependency_graph.top_module_edges[36].target_module",
+          "$.dependency_graph.top_module_edges[37].source_module",
+          "$.dependency_graph.top_module_edges[37].target_module",
+          "$.dependency_graph.top_module_edges[38].source_module",
+          "$.dependency_graph.top_module_edges[38].target_module",
+          "$.dependency_graph.top_module_edges[39].source_module",
+          "$.dependency_graph.top_module_edges[39].target_module",
+          "$.dependency_graph.top_module_edges[40].target_module",
+          "$.dependency_graph.top_module_edges[41].target_module",
+          "$.dependency_graph.top_module_edges[42].target_module",
+          "$.dependency_graph.top_module_edges[43].source_module",
+          "$.dependency_graph.top_module_edges[43].target_module"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-07-31T04:16:10.396020Z",
+      "changed": true,
+      "before_digest": "sha256:b3d6dc2ef07ae19e7798df717694e86493341bbb7807e87070951e8bd07916e8",
+      "after_digest": "sha256:eddac8e1fa2283a773547bdd7e21f125ad550b37159f3bdd4b2677610f71e2af",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 1,
+        "changed_paths": 17,
+        "initial_write": false,
+        "paths_total_previous": 3304,
+        "paths_total_current": 3314,
+        "paths_total_reference": 3314,
+        "churn_paths": 24,
+        "churn_ratio": 0.007242,
+        "sample_paths": [
+          "$.api_factory_behavior.first_now_points_to_second_root",
+          "$.api_factory_behavior.default_context_unchanged",
+          "$.api_factory_behavior.distinct_contexts",
+          "$.api_factory_behavior.distinct_engines",
+          "$.api_factory_behavior.distinct_runtime_states",
+          "$.api_factory_behavior.first_root_retained",
+          "$.api_factory_behavior.second_root_retained",
+          "$.api_factory_behavior.first_context_replaced",
+          "$.api_factory_behavior.same_app_object",
+          "$.architecture_exceptions.exceptions[1].evidence",
+          "$.architecture_exceptions.exceptions[1].reason",
+          "$.architecture_exceptions.exceptions[1].removal_condition",
+          "$.dependency_graph.layer_edges[10].count",
+          "$.dependency_graph.module_count",
+          "$.dependency_graph.scan.files_scanned",
+          "$.generated_at",
+          "$.noop_critical_paths.scanned_files",
+          "$.size_inventory.largest_files[0].lines",
+          "$.size_inventory.python_files_scanned",
+          "$.test_taxonomy.by_layer.integration"
+        ]
+      }
+    }
+  ]
+}

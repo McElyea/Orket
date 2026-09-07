@@ -65,6 +65,22 @@ def test_validate_capabilities_errors_in_strict_mode() -> None:
     assert errors == ["E_SDK_CAPABILITY_UNKNOWN: unknown.cap"]
 
 
+def test_agent_iteration_protocol_marker_is_known_in_strict_mode() -> None:
+    """Layer: contract. The marker negotiates a protocol and does not self-admit an effect."""
+    errors, warnings = validate_capabilities(["agent.iteration.v1"], strict=True)
+
+    assert errors == []
+    assert warnings == []
+
+
+def test_governed_agent_effect_proposal_capabilities_are_known() -> None:
+    """Layer: contract. Effect names are declarable but remain host-bound proposals."""
+    errors, warnings = validate_capabilities(["read_file", "write_file"], strict=True)
+
+    assert errors == []
+    assert warnings == []
+
+
 def test_registry_typed_accessors() -> None:
     registry = CapabilityRegistry()
     registry.register("tts.speak", NullTTSProvider())

@@ -118,3 +118,43 @@ def test_validate_extension_rejects_unsupported_manifest_version(tmp_path: Path)
     assert result["ok"] is False
     assert result["error_count"] == 1
     assert result["errors"][0]["code"] == "E_SDK_MANIFEST_VERSION_UNSUPPORTED"
+
+
+def test_validate_extension_accepts_matching_agent_manifest_contract(tmp_path: Path) -> None:
+    """Layer: contract. Strict author validation recognizes the additive agent-v0 contract."""
+    (tmp_path / "demo_workload.py").write_text(
+        "async def run(ctx, payload):\n    return payload\n", encoding="utf-8"
+    )
+    (tmp_path / "extension.yaml").write_text(
+        """
+manifest_version: v0
+extension_id: demo.agent
+extension_version: 1.0.0
+workloads:
+  - workload_id: governed-agent-loop
+    entrypoint: demo_workload:run
+    required_capabilities:
+      - agent.iteration.v1
+    workload_kind: agent
+    input_contract: agent_iteration_request.v1
+    output_contract: agent_iteration_result.v1
+    agent:
+      contract_version: governed_agent_loop.v1
+      required_host_features:
+        - governed_agent_loop.v1
+        - agent_stdio_ipc.v1
+      model_profiles:
+        - role: planner
+          profile_ref: local.default
+      resource_requirements:
+        max_model_calls_per_iteration: 2
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = validate_extension(tmp_path, strict=True, include_import_scan=True)
+
+    assert result["ok"] is True
+    assert result["error_count"] == 0
+    assert result["warning_count"] == 0

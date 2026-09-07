@@ -7,6 +7,7 @@ from pathlib import Path
 
 import httpx
 
+import orket.cli as entrypoint_module
 import orket.interfaces.orket_bundle_cli as cli_module
 from orket.interfaces.orket_bundle_cli import (
     ERROR_ENGINE_INCOMPATIBLE,
@@ -200,6 +201,40 @@ def test_cli_sdk_requires_command(capsys) -> None:
     assert code == 1
     assert payload["ok"] is False
     assert payload["errors"][0]["code"] == ERROR_SDK_COMMAND_REQUIRED
+
+
+# Layer: contract
+def test_runtime_command_forwards_remaining_arguments(monkeypatch) -> None:
+    """Layer: contract. Verifies the installed root delegates runtime arguments without reparsing them."""
+    captured: list[str] = []
+
+    def _capture_runtime(argv: list[str]) -> int:
+        captured.extend(argv)
+        return 17
+
+    monkeypatch.setattr(entrypoint_module, "_run_runtime_command", _capture_runtime)
+
+    code = entrypoint_module.main(["runtime", "--card", "named-card", "--workspace", "named-workspace"])
+
+    assert code == 17
+    assert captured == ["--card", "named-card", "--workspace", "named-workspace"]
+
+
+# Layer: contract
+def test_installed_root_forwards_non_runtime_commands_to_bundle_cli(monkeypatch) -> None:
+    """Layer: contract. Verifies root convergence preserves the existing bundle command tree."""
+    captured: list[str] = []
+
+    def _capture_bundle(argv: list[str]) -> int:
+        captured.extend(argv)
+        return 23
+
+    monkeypatch.setattr(cli_module, "main", _capture_bundle)
+
+    code = entrypoint_module.main(["validate", "bundle-path", "--json"])
+
+    assert code == 23
+    assert captured == ["validate", "bundle-path", "--json"]
 
 
 def test_run_submit_cli_uses_api_and_prints_response(monkeypatch, capsys) -> None:

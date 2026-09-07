@@ -15,6 +15,7 @@ import aiosqlite
 
 from orket.core.contracts.repositories import SessionRepository, SnapshotRepository
 from orket.runtime.result_error_invariants import validate_result_error_invariant
+
 from .sqlite_connection import connect_sqlite_wal, ensure_wal_mode
 
 
@@ -450,14 +451,15 @@ class AsyncPendingGateRepository:
         reason: str,
         payload: dict[str, Any] | None = None,
         created_at: str | None = None,
+        request_id: str | None = None,
     ) -> str:
-        request_id = str(uuid.uuid4())[:8]
+        request_id = str(request_id or uuid.uuid4())[:64]
         now = str(created_at or datetime.now(UTC).isoformat())
         async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
                 """
-                    INSERT INTO pending_gate_requests
+                    INSERT OR IGNORE INTO pending_gate_requests
                     (request_id, session_id, issue_id, seat_name, gate_mode, request_type, reason,
                      payload_json, status, resolution_json, created_at, updated_at, resolved_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -487,8 +489,9 @@ class AsyncPendingGateRepository:
         request_id: str,
         status: str,
         resolution: dict[str, Any] | None = None,
+        resolved_at: str | None = None,
     ) -> None:
-        now = datetime.now(UTC).isoformat()
+        now = str(resolved_at or datetime.now(UTC).isoformat())
         async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(

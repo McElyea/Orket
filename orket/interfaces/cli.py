@@ -19,8 +19,9 @@ async def _resolve_path(value: str | Path = ".") -> Path:
     return await asyncio.to_thread(_resolve_path_sync, value)
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None, *, prog: str | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
+        prog=prog,
         description="Run an Orket Card. Use --card for the canonical named runtime surface."
     )
     parser.add_argument("command", nargs="?", help="Optional command group (e.g. extensions, run).")
@@ -87,14 +88,19 @@ def parse_args() -> argparse.Namespace:
         "--marshaller-inspect-attempt",
         type=int,
         default=None,
-        help="Attempt index to inspect for 'orket marshaller inspect <run_id>'.",
+        help="Attempt index to inspect for 'orket runtime marshaller inspect <run_id>'.",
     )
-    parser.add_argument("--marshaller-list-limit", type=int, default=20, help="Max rows for 'orket marshaller list'.")
+    parser.add_argument(
+        "--marshaller-list-limit",
+        type=int,
+        default=20,
+        help="Max rows for 'orket runtime marshaller list'.",
+    )
     parser.add_argument(
         "--protocol-run-b",
         type=str,
         default=None,
-        help="Second run id for 'orket protocol compare <run_a> --protocol-run-b <run_b>'.",
+        help="Second run id for 'orket runtime protocol compare <run_a> --protocol-run-b <run_b>'.",
     )
     parser.add_argument(
         "--protocol-events-a", type=str, default=None, help="Optional explicit events.log path for protocol run A."
@@ -112,46 +118,46 @@ def parse_args() -> argparse.Namespace:
         "--protocol-runs-root",
         type=str,
         default=None,
-        help="Optional runs root for 'orket protocol campaign'. Defaults to <workspace>/runs.",
+        help="Optional runs root for 'orket runtime protocol campaign'. Defaults to <workspace>/runs.",
     )
     parser.add_argument(
         "--protocol-campaign-run-id",
         action="append",
         default=[],
-        help="Optional run id filter for 'orket protocol campaign' (repeatable).",
+        help="Optional run id filter for 'orket runtime protocol campaign' (repeatable).",
     )
     parser.add_argument(
         "--protocol-baseline-run-id",
         type=str,
         default=None,
-        help="Optional baseline run id for 'orket protocol campaign'.",
+        help="Optional baseline run id for 'orket runtime protocol campaign'.",
     )
     parser.add_argument(
         "--protocol-parity-session-id",
         action="append",
         default=[],
-        help="Optional session id filter for 'orket protocol parity-campaign' (repeatable).",
+        help="Optional session id filter for 'orket runtime protocol parity-campaign' (repeatable).",
     )
     parser.add_argument(
         "--protocol-parity-discover-limit",
         type=int,
         default=200,
-        help="SQLite discovery limit for 'orket protocol parity-campaign'.",
+        help="SQLite discovery limit for 'orket runtime protocol parity-campaign'.",
     )
     parser.add_argument(
         "--protocol-max-parity-mismatches",
         type=int,
         default=0,
-        help="Allowed mismatches under --protocol-strict for 'orket protocol parity-campaign'.",
+        help="Allowed mismatches under --protocol-strict for 'orket runtime protocol parity-campaign'.",
     )
     parser.add_argument(
         "--protocol-sqlite-db",
         type=str,
         default=None,
-        help="Optional sqlite run ledger DB path for 'orket protocol parity <run_id>'.",
+        help="Optional sqlite run ledger DB path for 'orket runtime protocol parity <run_id>'.",
     )
     parser.add_argument("--protocol-strict", action="store_true", help="Return non-zero on protocol replay mismatch.")
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def _print_extensions_list(manager: ExtensionManager) -> None:
@@ -173,7 +179,7 @@ def _print_extensions_list(manager: ExtensionManager) -> None:
 def _install_extension(args: argparse.Namespace, manager: ExtensionManager) -> None:
     repo = str(args.target or "").strip()
     if not repo:
-        raise ValueError("extensions install requires a repo path/URL (e.g. 'orket extensions install <repo>').")
+        raise ValueError("extensions install requires a repo path/URL (e.g. 'orket runtime extensions install <repo>').")
     record = manager.install_from_repo(repo=repo, ref=args.ref)
     print(f"Installed extension: {record.extension_id} ({record.extension_version})")
     if record.manifest_entries:
@@ -185,7 +191,7 @@ def _install_extension(args: argparse.Namespace, manager: ExtensionManager) -> N
 async def _run_extension_workload(args: argparse.Namespace, manager: ExtensionManager) -> None:
     workload_id = (args.subcommand or "").strip()
     if not workload_id:
-        raise ValueError("run command requires a workload id (e.g. 'orket run mystery_v1 --seed 123').")
+        raise ValueError("run command requires a workload id (e.g. 'orket runtime run mystery_v1 --seed 123').")
     workspace = await _resolve_path(args.workspace)
     result = await manager.run_workload(
         workload_id=workload_id,
@@ -224,33 +230,33 @@ def _emit_startup_status(startup_status: dict[str, str] | None) -> None:
         print("[STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.", file=sys.stderr)
 
 
-async def run_cli() -> None:
+async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> int:
     # Force UTF-8
     if sys.platform == "win32":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
     try:
-        startup_status = perform_first_run_setup()
+        startup_status = await asyncio.to_thread(perform_first_run_setup)
         _emit_startup_status(startup_status)
-        args = parse_args()
+        args = parse_args() if argv is None and prog is None else parse_args(argv, prog=prog)
         extension_manager = ExtensionManager()
 
         if args.command == "extensions":
             if args.subcommand == "list":
                 _print_extensions_list(extension_manager)
-                return
+                return 0
             if args.subcommand == "install":
                 _install_extension(args, extension_manager)
-                return
+                return 0
             raise ValueError(
-                "Supported extensions commands: 'orket extensions list' and "
-                "'orket extensions install <repo> [--ref <ref>]'."
+                "Supported extensions commands: 'orket runtime extensions list' and "
+                "'orket runtime extensions install <repo> [--ref <ref>]'."
             )
 
         if args.command == "run":
             await _run_extension_workload(args, extension_manager)
-            return
+            return 0
 
         if args.command == "marshaller":
             from orket.marshaller.cli import (
@@ -264,12 +270,13 @@ async def run_cli() -> None:
             if args.subcommand == "list":
                 result = await list_marshaller_runs(workspace_root, limit=max(1, int(args.marshaller_list_limit)))
                 print(json.dumps(result, indent=2, ensure_ascii=False))
-                return
+                return 0
             if args.subcommand == "inspect":
                 run_id = str(args.target or "").strip()
                 if not run_id:
                     raise ValueError(
-                        "marshaller inspect requires target run_id (e.g. 'orket marshaller inspect <run_id>')."
+                        "marshaller inspect requires target run_id "
+                        "(e.g. 'orket runtime marshaller inspect <run_id>')."
                     )
                 inspect_result = await inspect_marshaller_attempt(
                     workspace_root,
@@ -277,7 +284,7 @@ async def run_cli() -> None:
                     attempt_index=args.marshaller_inspect_attempt,
                 )
                 print(json.dumps(inspect_result, indent=2, ensure_ascii=False))
-                return
+                return 0
 
             request_raw = str(args.marshaller_request or "").strip()
             if not request_raw:
@@ -297,7 +304,7 @@ async def run_cli() -> None:
                 branch=str(args.marshaller_branch or "main"),
             )
             print(json.dumps(execution_result, indent=2, ensure_ascii=False))
-            return
+            return 0
 
         if args.command == "protocol":
             from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
@@ -331,7 +338,10 @@ async def run_cli() -> None:
             if args.subcommand == "replay":
                 run_id = str(args.target or "").strip()
                 if not run_id:
-                    raise ValueError("protocol replay requires target run_id (e.g. 'orket protocol replay <run_id>').")
+                    raise ValueError(
+                        "protocol replay requires target run_id "
+                        "(e.g. 'orket runtime protocol replay <run_id>')."
+                    )
                 events_path = _resolve_events_path(run_id=run_id, override=args.protocol_events_a)
                 if not events_path.exists():
                     raise ValueError(f"events.log not found for run '{run_id}' at {events_path}")
@@ -341,7 +351,7 @@ async def run_cli() -> None:
                     artifact_root=_resolve_artifact_root(run_id=run_id, override=args.protocol_artifacts_a),
                 )
                 print(json.dumps(replay, indent=2, ensure_ascii=False))
-                return
+                return 0
 
             if args.subcommand == "compare":
                 run_a = str(args.target or "").strip()
@@ -349,7 +359,7 @@ async def run_cli() -> None:
                 if not run_a or not run_b:
                     raise ValueError(
                         "protocol compare requires run A target and --protocol-run-b <run_id> "
-                        "(e.g. 'orket protocol compare <run_a> --protocol-run-b <run_b>')."
+                        "(e.g. 'orket runtime protocol compare <run_a> --protocol-run-b <run_b>')."
                     )
                 events_a = _resolve_events_path(run_id=run_a, override=args.protocol_events_a)
                 events_b = _resolve_events_path(run_id=run_b, override=args.protocol_events_b)
@@ -367,12 +377,15 @@ async def run_cli() -> None:
                 print(json.dumps(comparison, indent=2, ensure_ascii=False))
                 if bool(args.protocol_strict) and not bool(comparison.get("deterministic_match")):
                     raise ValueError("Protocol replay mismatch detected under --protocol-strict.")
-                return
+                return 0
 
             if args.subcommand == "parity":
                 run_id = str(args.target or "").strip()
                 if not run_id:
-                    raise ValueError("protocol parity requires target run_id (e.g. 'orket protocol parity <run_id>').")
+                    raise ValueError(
+                        "protocol parity requires target run_id "
+                        "(e.g. 'orket runtime protocol parity <run_id>')."
+                    )
                 sqlite_db = (
                     await _resolve_path(str(args.protocol_sqlite_db))
                     if str(args.protocol_sqlite_db or "").strip()
@@ -388,7 +401,7 @@ async def run_cli() -> None:
                 print(json.dumps(parity, indent=2, ensure_ascii=False))
                 if bool(args.protocol_strict) and not bool(parity.get("parity_ok")):
                     raise ValueError("Run ledger parity mismatch detected under --protocol-strict.")
-                return
+                return 0
 
             if args.subcommand == "campaign":
                 runs_root = (
@@ -405,7 +418,7 @@ async def run_cli() -> None:
                 print(json.dumps(campaign, indent=2, ensure_ascii=False))
                 if bool(args.protocol_strict) and not bool(campaign.get("all_match", False)):
                     raise ValueError("Protocol replay campaign mismatch detected under --protocol-strict.")
-                return
+                return 0
 
             if args.subcommand == "parity-campaign":
                 sqlite_db = (
@@ -427,15 +440,17 @@ async def run_cli() -> None:
                     allowed = max(0, int(args.protocol_max_parity_mismatches))
                     if mismatches > allowed:
                         raise ValueError("Run ledger parity campaign mismatch detected under --protocol-strict.")
-                return
+                return 0
 
             raise ValueError(
-                "Supported protocol commands: 'orket protocol replay <run_id>', "
-                "'orket protocol compare <run_a> --protocol-run-b <run_b>', or "
-                "'orket protocol parity <run_id> [--protocol-sqlite-db <path>]', or "
-                "'orket protocol campaign [--protocol-runs-root <path>] [--protocol-campaign-run-id <run_id>] "
+                "Supported protocol commands: 'orket runtime protocol replay <run_id>', "
+                "'orket runtime protocol compare <run_a> --protocol-run-b <run_b>', or "
+                "'orket runtime protocol parity <run_id> [--protocol-sqlite-db <path>]', or "
+                "'orket runtime protocol campaign [--protocol-runs-root <path>] "
+                "[--protocol-campaign-run-id <run_id>] "
                 "[--protocol-baseline-run-id <run_id>]', or "
-                "'orket protocol parity-campaign [--protocol-sqlite-db <path>] [--protocol-parity-session-id <id>]'."
+                "'orket runtime protocol parity-campaign [--protocol-sqlite-db <path>] "
+                "[--protocol-parity-session-id <id>]'."
             )
 
         workspace = await _resolve_path(args.workspace)
@@ -443,13 +458,13 @@ async def run_cli() -> None:
 
         if args.board:
             print_board(engine.get_board())
-            return
+            return 0
 
         if args.loop:
             from orket.organization_loop import OrganizationLoop
 
             await OrganizationLoop().run_forever()
-            return
+            return 0
 
         if args.archive_card or args.archive_build or args.archive_related:
             archived_ids: list[str] = []
@@ -478,7 +493,7 @@ async def run_cli() -> None:
                 print(f"Archived IDs: {', '.join(archived_ids)}")
             if missing_ids:
                 print(f"Missing IDs: {', '.join(missing_ids)}")
-            return
+            return 0
 
         if args.replay_turn:
             parts = args.replay_turn.split(":")
@@ -493,7 +508,7 @@ async def run_cli() -> None:
                 role=role,
             )
             print(json.dumps(replay, indent=2, ensure_ascii=False))
-            return
+            return 0
 
         await asyncio.to_thread(print_orket_manifest, args.department)
 
@@ -506,7 +521,7 @@ async def run_cli() -> None:
                 model_override=args.model,
             )
             print(f"\n=== Card {args.rock} Complete (legacy compatibility alias --rock) ===")
-            return
+            return 0
 
         if args.card:
             print(f"Running Orket Card: {args.card}")
@@ -516,7 +531,7 @@ async def run_cli() -> None:
                 driver_steered=args.driver_steered,
                 model_override=args.model,
             )
-            return
+            return 0
 
         if not args.epic:
             # Interactive Driver Mode
@@ -536,7 +551,7 @@ async def run_cli() -> None:
                     print(f"\r{response}\n")
                 except EOFError:
                     break
-            return
+            return 0
 
         print(f"Running Orket Epic: {args.epic}")
         transcript = await engine.run_epic(
@@ -550,11 +565,14 @@ async def run_cli() -> None:
         for entry in transcript:
             print(f"\n--- Card {entry.get('step_index', '?')} ({entry['role']}) ---")
             print(entry["summary"])
+        return 0
 
     except KeyboardInterrupt:
         print("\n[HALT] Interrupted by user.")
+        return 130
     except (RuntimeError, ValueError, OSError, TypeError) as e:
         import traceback
 
         traceback.print_exc()
         print(f"\n[FATAL] {e}")
+        return 1

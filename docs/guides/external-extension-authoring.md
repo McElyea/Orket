@@ -1,6 +1,6 @@
 # External Extension Authoring Guide
 
-Last updated: 2026-04-01
+Last updated: 2026-09-07
 Status: Active
 Owner: Orket Core
 
@@ -25,6 +25,24 @@ This template provides:
 3. install, validate, build-release, and verify-release scripts (Windows and Unix)
 4. CI template in `.gitea/workflows/ci.yml`
 5. tag-release workflow in `.gitea/workflows/release.yml`
+
+For the bounded governed-agent contract, scaffold the public-SDK-only starter
+with `orket ext init <target> --kind agent`. Its source template is
+`docs/templates/governed_agent_external/`. The default template remains
+unchanged when `--kind` is omitted.
+
+The agent starter declares fixed planner, actor, and critic profile requests,
+but those are sequential advisory stages inside one host-governed iteration.
+The extension can make only brokered model/memory calls and return proposals;
+it cannot continue the run, execute effects, or publish completion truth. The
+host advertises both required V1 features only on the dedicated governed-agent
+path. Generic extension execution still rejects agent workloads. The bounded
+submit surface supports either `--deterministic-fixture` or exact installed
+Ollama selection with `--ollama-model` and optional fixed role overrides.
+`read_file` and `write_file` may be declared only as host-bound effect-proposal
+capabilities: child configuration cannot instantiate them, and only the host can
+observe, approve, execute, reconcile, or resume. API and continuous-supervisor
+admission remain unavailable.
 
 ## Canonical Package Surface
 

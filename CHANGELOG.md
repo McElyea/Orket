@@ -5,6 +5,30 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.10] - 2026-09-07 - "The Governed Agent Foundations Cut"
+
+### Added
+- **Governed Agent Slices 0-5**: Added SDK contracts, strict manifest admission, framed child-process IPC, durable SQLite execution records, deterministic and Ollama-backed bounded iterations, inspection, replay, cancellation, and approval-governed file effects.
+- **Governed Examples and Quickstarts**: Added the installed governed-action quickstart and package-owned governed-run demo, scenario, evidence ledger, inspection, and replay surfaces.
+- **Architectural Truth Evidence**: Added command-root, process-exit, persistence, package-data, and per-app API-runtime ownership deltas, proof records, and regression coverage.
+
+### Changed
+- **Canonical Command Root**: Moved the installed `orket` entrypoint to `orket.cli:main`, with `orket runtime` owning card execution while the source wrapper remains supported through the `0.5.x` line.
+- **API Runtime Ownership**: Isolated runtime state in an app-scoped container with per-factory ownership, tracked background tasks, and idempotent teardown.
+- **Extension SDK Development Line**: Advanced the unreleased SDK package to `0.5.0a1` and added the public governed-agent schema, models, broker protocols, validation, fixtures, and testing helpers.
+
+### Security
+- **Fail-Closed Agent Admission**: Agent workload discriminators now require the typed protocol declaration across author validation, install, catalog reload, and invocation, and child configuration cannot create host-bound broker capabilities.
+- **Governed Effects**: File mutations require host-owned observation, approval, reservation, journal, checkpoint, reconciliation, and explicit resume paths.
+
+### Compatibility
+- `compatibility_status`: `preserved_with_additive_surfaces`
+- `affected_audience`: `operators; extension_authors; API embedders`
+- `migration_requirement`: `none for existing 0.5.x callers; use orket runtime for the canonical installed CLI and the 0.5.0a1 SDK governed-agent contracts for new agent extensions`
+
+### Required Operator or Extension-Author Action
+- Existing source-wrapper and non-agent extension paths remain supported. Operators should adopt `orket runtime` as the canonical installed runtime command; governed-agent extensions must use the strict SDK protocol and host capability declarations documented in the runbook.
+
 ## [0.5.9] - 2026-05-19 - "The llama.cpp First-Slice Cut"
 
 ### Added

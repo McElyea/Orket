@@ -1,4 +1,64 @@
 from .__version__ import __version__
+from .agent_broker import AgentBrokerSession, run_agent_workload
+from .agent_ipc import (
+    AgentFrameSequenceValidator,
+    decode_agent_frame,
+    encode_agent_frame,
+    read_agent_frame,
+    write_agent_frame,
+)
+from .agent_models import (
+    AgentIterationRequest,
+    AgentIterationResult,
+    AgentMemoryEntry,
+    AgentMemoryQueryRequest,
+    AgentMemoryQueryResult,
+    AgentModelCallRequest,
+    AgentModelCallResult,
+    AgentStdioFrame,
+    GovernedAgentSubmission,
+)
+from .agent_runtime import (
+    AgentCancellationView,
+    AgentMemoryCapability,
+    AgentModelCapability,
+    AgentProgressReporter,
+    AgentWorkloadContext,
+    AsyncAgentWorkload,
+)
+from .agent_testing import (
+    ScriptedAgentMemoryCapability,
+    ScriptedAgentModelCapability,
+    assert_canonical_agent_payload_equal,
+    canonical_agent_digest,
+    host_cancellation,
+    ticket_report_fixture,
+)
+from .agent_types import (
+    AgentBudgetSnapshot,
+    AgentCancellation,
+    AgentCapabilityCounter,
+    AgentEffectProposal,
+    AgentEffectReceipt,
+    AgentHandoffProposal,
+    AgentIdentity,
+    AgentMaterializedInput,
+    AgentMemoryWriteProposal,
+    AgentModelMessage,
+    AgentModelProfileRequest,
+    AgentModelUseReceipt,
+    AgentProgress,
+    AgentRoleCounter,
+    AgentToolDescription,
+    AgentUsage,
+    FrozenJson,
+)
+from .agent_validation import (
+    MAX_AGENT_JSON_DEPTH,
+    MAX_AGENT_WIRE_BYTES,
+    validate_agent_iteration_result_against_request,
+    validate_governed_agent_payload,
+)
 from .audio import AudioClip, AudioPlayer, NullAudioPlayer, NullTTSProvider, TTSProvider, VoiceInfo
 from .capabilities import (
     CapabilityId,
@@ -18,9 +78,31 @@ from .controller import (
     canonical_digest_sha256,
     canonical_json,
 )
-from .errors import AgentConfigurationError, OrketSDKError
+from .errors import (
+    AgentBrokerDisconnected,
+    AgentConfigurationError,
+    AgentInvocationCancelled,
+    AgentProtocolError,
+    OrketSDKError,
+)
 from .llm import GenerateRequest, GenerateResponse, LLMProvider, NullLLMProvider
-from .manifest import ExtensionManifest, WorkloadManifest, load_manifest
+from .manifest import (
+    AGENT_ITERATION_CAPABILITY,
+    AGENT_ITERATION_INPUT_CONTRACT,
+    AGENT_ITERATION_OUTPUT_CONTRACT,
+    AGENT_STDIO_IPC_FEATURE,
+    GOVERNED_AGENT_CONTRACT_VERSION,
+    AgentModelProfileDeclaration,
+    AgentResourceRequirements,
+    AgentWorkloadDeclaration,
+    ExtensionManifest,
+    WorkloadManifest,
+    agent_discriminator_reasons,
+    is_agent_workload_payload,
+    load_manifest,
+    unsupported_agent_host_features,
+    validate_workload_manifest_payload,
+)
 from .memory import (
     MemoryProvider,
     MemoryQueryRequest,
@@ -31,6 +113,7 @@ from .memory import (
     NullMemoryProvider,
 )
 from .result import ArtifactRef, Issue, WorkloadResult
+from .schema import load_governed_agent_schema
 from .testing import DeterminismHarness, FakeCapabilities, GoldenArtifact
 from .tui import NullScreenRenderer, Panel, ScreenRenderer, TerminalSize
 from .voice import (
@@ -54,6 +137,45 @@ from .workloads import (
 
 __all__ = [
     "__version__",
+    "AgentBudgetSnapshot",
+    "AgentBrokerDisconnected",
+    "AgentBrokerSession",
+    "AgentCancellation",
+    "AgentCancellationView",
+    "AgentCapabilityCounter",
+    "AgentEffectProposal",
+    "AgentEffectReceipt",
+    "AgentFrameSequenceValidator",
+    "AgentHandoffProposal",
+    "AgentIdentity",
+    "AgentInvocationCancelled",
+    "AgentIterationRequest",
+    "AgentIterationResult",
+    "AgentMaterializedInput",
+    "AgentMemoryCapability",
+    "AgentMemoryEntry",
+    "AgentMemoryQueryRequest",
+    "AgentMemoryQueryResult",
+    "AgentMemoryWriteProposal",
+    "AgentModelCallRequest",
+    "AgentModelCallResult",
+    "AgentModelCapability",
+    "AgentModelMessage",
+    "AgentModelProfileRequest",
+    "AgentModelUseReceipt",
+    "AgentProgress",
+    "AgentProgressReporter",
+    "AgentProtocolError",
+    "AgentRoleCounter",
+    "AgentStdioFrame",
+    "AgentToolDescription",
+    "AgentUsage",
+    "AgentWorkloadContext",
+    "AsyncAgentWorkload",
+    "FrozenJson",
+    "GovernedAgentSubmission",
+    "ScriptedAgentMemoryCapability",
+    "ScriptedAgentModelCapability",
     "AudioClip",
     "VoiceInfo",
     "TTSProvider",
@@ -106,7 +228,33 @@ __all__ = [
     "resolve_controller_department",
     "ExtensionManifest",
     "WorkloadManifest",
+    "AgentModelProfileDeclaration",
+    "AgentResourceRequirements",
+    "AgentWorkloadDeclaration",
+    "GOVERNED_AGENT_CONTRACT_VERSION",
+    "AGENT_ITERATION_INPUT_CONTRACT",
+    "AGENT_ITERATION_OUTPUT_CONTRACT",
+    "AGENT_ITERATION_CAPABILITY",
+    "AGENT_STDIO_IPC_FEATURE",
+    "agent_discriminator_reasons",
+    "is_agent_workload_payload",
+    "unsupported_agent_host_features",
+    "validate_workload_manifest_payload",
     "load_manifest",
+    "load_governed_agent_schema",
+    "MAX_AGENT_JSON_DEPTH",
+    "MAX_AGENT_WIRE_BYTES",
+    "validate_governed_agent_payload",
+    "validate_agent_iteration_result_against_request",
+    "encode_agent_frame",
+    "decode_agent_frame",
+    "read_agent_frame",
+    "write_agent_frame",
+    "run_agent_workload",
+    "assert_canonical_agent_payload_equal",
+    "canonical_agent_digest",
+    "host_cancellation",
+    "ticket_report_fixture",
     "ArtifactRef",
     "Issue",
     "WorkloadResult",

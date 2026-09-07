@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-from pathlib import Path
 
 
 class LazyApiTestClient:
@@ -55,14 +55,14 @@ def fresh_api_client(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyP
 
     import orket.interfaces.api as api_module
     import orket.state as state_module
-    from orket.interfaces.api import app
-
     fresh_state = state_module.GlobalState()
     monkeypatch.setattr(state_module, "runtime_state", fresh_state)
-    monkeypatch.setattr(api_module, "runtime_state", fresh_state)
-    api_module.create_api_app(project_root=Path(api_module._resolve_default_project_root()).resolve())
+    configured_app = api_module._configure_default_api_app(
+        project_root=Path(api_module._resolve_default_project_root()).resolve(),
+        runtime_state_override=fresh_state,
+    )
     previous = request.module.client
-    lazy_client = LazyApiTestClient(app)
+    lazy_client = LazyApiTestClient(configured_app)
     request.module.client = lazy_client
     try:
         yield

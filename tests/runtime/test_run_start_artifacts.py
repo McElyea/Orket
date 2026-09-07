@@ -5,13 +5,14 @@ from pathlib import Path
 
 import pytest
 
-from orket.runtime import run_start_contract_artifacts
 import orket.runtime.run_start_artifacts as run_start_artifacts_module
+from orket.runtime import run_start_contract_artifacts
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 
 
 # Layer: unit
 def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: Path) -> None:
+    """Layer: contract. Verifies run-start artifact provider truth captures admitted local providers."""
     workspace = tmp_path / "workspace"
     (workspace / "a.txt").parent.mkdir(parents=True, exist_ok=True)
     (workspace / "a.txt").write_text("alpha", encoding="utf-8")
@@ -38,7 +39,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["fail_behavior_registry"]["schema_version"] == "1.0"
     assert payload["provider_truth_table"]["schema_version"] == "1.0"
     providers = [row["provider"] for row in payload["provider_truth_table"]["providers"]]
-    assert providers == ["ollama", "openai_compat", "lmstudio"]
+    assert providers == ["ollama", "openai_compat", "lmstudio", "llama_cpp"]
     assert payload["state_transition_registry"]["schema_version"] == "1.0"
     transition_domains = [row["domain"] for row in payload["state_transition_registry"]["domains"]]
     assert transition_domains == ["session", "run", "tool_invocation", "voice", "ui"]

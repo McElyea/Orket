@@ -40,7 +40,7 @@ async def _seed_pending(db_path, *, run_id: str = "run-api-approval") -> str:
         tool="write_file",
         args={"path": "out.txt", "content": "secret"},
         context_summary="operator review",
-        timeout_seconds=9999999,
+        timeout_seconds=999999999,
     )
     return proposal.proposal_id
 
