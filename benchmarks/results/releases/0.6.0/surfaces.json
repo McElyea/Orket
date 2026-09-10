@@ -1,0 +1,149 @@
+{
+  "proof_mode": "live",
+  "observed_path": "degraded",
+  "records": {
+    "default_runtime_entrypoint": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\venv\\Scripts\\orket.exe",
+        "runtime",
+        "--workspace",
+        "C:\\Source\\Orket\\.tmp\\governed-agent-release-surfaces\\execution-lg87x_g9\\workspace"
+      ],
+      "proof_mode": "live",
+      "observed_path": "degraded",
+      "observed_result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "required_claim": "ORKET DRIVER (Interactive)",
+      "output": "\n[FIRST RUN] Orket EOS Orkestrated.\n  Recommendation: Use the canonical card entrypoint for initialization to optimize your models.\n  Command: orket runtime --card initialize_orket\n\n============================================================\n ORKET EOS MANIFEST (Dept: core)\n Hardware: 24 Cores | 63.8GB RAM | 24.0GB VRAM\n============================================================\n\n[LOCAL ENGINES]\n  > Coder: deepseek-coder:33B\n  > Arch:  llama3.1:8b\n\n[EPICS (Standalone)]\n\n[COMMAND SUGGESTION]\n  orket runtime --card ... --department core\n============================================================\n\n\n============================================================\n ORKET DRIVER (Interactive)\n============================================================\nDriver> [STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.\n"
+    },
+    "handled_runtime_failure": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\venv\\Scripts\\orket.exe",
+        "runtime",
+        "extensions",
+        "unsupported"
+      ],
+      "proof_mode": "live",
+      "observed_path": "degraded",
+      "observed_result": "success",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "required_claim": "orket runtime extensions list",
+      "output": "\n[FATAL] Supported extensions commands: 'orket runtime extensions list' and 'orket runtime extensions install <repo> [--ref <ref>]'.\n[STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.\nTraceback (most recent call last):\n  File \"C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\venv\\Lib\\site-packages\\orket\\interfaces\\cli.py\", line 252, in run_cli\n    raise ValueError(\n    ...<2 lines>...\n    )\nValueError: Supported extensions commands: 'orket runtime extensions list' and 'orket runtime extensions install <repo> [--ref <ref>]'.\n"
+    },
+    "governed_run_workflow": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\venv\\Scripts\\orket.exe",
+        "demo",
+        "governed-run",
+        "--workspace",
+        "C:\\Source\\Orket\\.tmp\\governed-agent-release-surfaces\\execution-lg87x_g9"
+      ],
+      "proof_mode": "live",
+      "observed_path": "primary",
+      "observed_result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "required_claim": "[orket] Run completed",
+      "output": "[model] Wants to inspect files\n[orket] Allowed: read-only observation allowed\n\n[model] Wants to edit config.yaml\n[orket] Approval required: write operation requires human approval\n\n[model] Wants to run shell command\n[orket] Blocked: shell command is not in the allowlist\n[orket] Run completed: allowed=1 approval_required=1 blocked=1\n[orket] Evidence bundle: .runs/governed-run-demo\n[orket] Inspect: orket inspect .runs/governed-run-demo\n[orket] Replay: orket replay .runs/governed-run-demo\n",
+      "durable_evidence_present": true,
+      "durable_evidence_sha256": "3c723a011c8a172495cd88d74d8715e5788c2ddc1d606c5823b3221c2be46e14"
+    },
+    "api_runtime_entrypoint": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\venv\\Scripts\\python.exe",
+        "server.py",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "57270",
+        "--no-reload"
+      ],
+      "proof_mode": "live",
+      "observed_path": "primary",
+      "observed_result": "success",
+      "http_status": 200,
+      "body": {
+        "status": "ok"
+      },
+      "process_reaped": true,
+      "output": "INFO:     Started server process [3204]\nINFO:     Waiting for application startup.\nINFO:     Application startup complete.\nINFO:     Uvicorn running on http://127.0.0.1:57270 (Press CTRL+C to quit)\nINFO:     127.0.0.1:57271 - \"GET /health HTTP/1.1\" 200 OK\n",
+      "teardown": "Health-only server terminated and reaped; graceful task teardown is covered by agent acceptance."
+    }
+  },
+  "observed_result": "success",
+  "evidence_directory": "C:\\Source\\Orket\\.tmp\\governed-agent-release-surfaces\\execution-lg87x_g9",
+  "scope": "Installed core entrypoints; source server launcher copied alone into an isolated workspace.",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-10T16:01:26.303038Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:660e17e9c71bf96fc101273bb47340165f44755074f958dd891a6a3a42fdb19e",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 122,
+        "paths_total_reference": 122,
+        "churn_paths": 122,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-09-10T16:05:07.454872Z",
+      "changed": true,
+      "before_digest": "sha256:660e17e9c71bf96fc101273bb47340165f44755074f958dd891a6a3a42fdb19e",
+      "after_digest": "sha256:9c24b07c95e7e5180c11913f173fe3425059e673cb73f8f7ec4ca3c1f4e90386",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 8,
+        "initial_write": false,
+        "paths_total_previous": 122,
+        "paths_total_current": 122,
+        "paths_total_reference": 122,
+        "churn_paths": 8,
+        "churn_ratio": 0.065574,
+        "sample_paths": [
+          "$.evidence_directory",
+          "$.observed_path",
+          "$.records.api_runtime_entrypoint.command[5]",
+          "$.records.api_runtime_entrypoint.output",
+          "$.records.default_runtime_entrypoint.command[3]",
+          "$.records.default_runtime_entrypoint.observed_path",
+          "$.records.governed_run_workflow.command[4]",
+          "$.records.handled_runtime_failure.observed_path"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-10T16:35:41.883607Z",
+      "changed": true,
+      "before_digest": "sha256:9c24b07c95e7e5180c11913f173fe3425059e673cb73f8f7ec4ca3c1f4e90386",
+      "after_digest": "sha256:fe43ee8af5891843eb4a97f9c647f7380d63c408bcf4d09336768af1ee0de2e5",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 122,
+        "paths_total_current": 122,
+        "paths_total_reference": 122,
+        "churn_paths": 5,
+        "churn_ratio": 0.040984,
+        "sample_paths": [
+          "$.evidence_directory",
+          "$.records.api_runtime_entrypoint.command[5]",
+          "$.records.api_runtime_entrypoint.output",
+          "$.records.default_runtime_entrypoint.command[3]",
+          "$.records.governed_run_workflow.command[4]"
+        ]
+      }
+    }
+  ]
+}

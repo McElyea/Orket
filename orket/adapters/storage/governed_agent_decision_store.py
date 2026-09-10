@@ -6,6 +6,7 @@ from typing import Any, Protocol, TypeVar
 
 import aiosqlite
 
+from orket.adapters.storage.async_governed_agent_run_control_repository import agent_control_actions
 from orket.adapters.storage.governed_agent_repository_support import (
     agent_digest,
     binding_from_json,
@@ -143,6 +144,9 @@ class GovernedAgentDecisionStore:
                 )
             if str(row["state"]) != "returned" or str(row["result_digest"]) != accepted_result_digest:
                 return GovernedAgentDecisionPublication("conflict", None, None)
+            controls = await agent_control_actions(conn, binding.invocation_id)
+            if list(decision_inputs.get("operator_action_refs", [])) != [item.action_id for item in controls]:
+                return GovernedAgentDecisionPublication("control_changed", None, None)
             await conn.execute(
                 """
                 UPDATE governed_agent_invocations

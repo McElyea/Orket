@@ -1,32 +1,75 @@
 from __future__ import annotations
 
+import ast
 import asyncio
 import importlib
+import inspect
+import json
+import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 
-def test_api_import_constructs_only_the_compatibility_default_owner() -> None:
-    """Layer: contract. Import creates one default owner while optional services remain lazy."""
-    module = importlib.import_module("orket.interfaces.api")
-    project_root = module._project_root()
-    context = module.app.state.api_runtime_context
+def test_api_import_constructs_no_app_or_runtime_owner() -> None:
+    """Layer: contract. Importing the router module has no application-owner side effects."""
+    script = """
+import json
+from fastapi import FastAPI
+import orket.interfaces.api as module
+owner_names = [
+    "app", "engine", "runtime_state", "api_runtime_node", "api_runtime_host",
+    "stream_bus", "interaction_manager", "extension_manager", "extension_runtime_service",
+]
+print(json.dumps({
+    "present_owner_names": [name for name in owner_names if hasattr(module, name)],
+    "fastapi_instances": sum(isinstance(value, FastAPI) for value in vars(module).values()),
+}))
+"""
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
-    assert context.project_root == project_root
-    assert module._get_engine() is module.engine
-    assert module._get_runtime_state() is module.runtime_state
-    assert module._get_api_runtime_node() is module.api_runtime_node
-    assert context.stream_bus is None
-    assert context.interaction_manager is None
-    assert context.extension_manager is None
+    payload = json.loads(completed.stdout)
+    assert payload == {"present_owner_names": [], "fastapi_instances": 0}
+
+
+def test_api_router_constructs_no_runtime_implementation() -> None:
+    """Layer: contract. The transport module invokes composition but constructs no protected-layer class."""
+    module = importlib.import_module("orket.interfaces.api")
+    tree = ast.parse(inspect.getsource(module))
+    protected_prefixes = (
+        "orket.adapters",
+        "orket.application",
+        "orket.decision_nodes",
+        "orket.extensions",
+        "orket.kernel",
+        "orket.orchestration",
+    )
+    protected_names = {
+        alias.asname or alias.name: node.module
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith(protected_prefixes)
+        for alias in node.names
+        if (alias.asname or alias.name)[:1].isupper()
+    }
+    constructed = sorted(
+        node.func.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in protected_names
+    )
+
+    assert constructed == []
 
 
 def test_factory_owns_distinct_runtime_graphs_for_distinct_roots(tmp_path: Path) -> None:
     """Layer: integration. Factory results retain independent application-owned runtime graphs."""
     module = importlib.import_module("orket.interfaces.api")
-    default_context = module.app.state.api_runtime_context
     root_a = (tmp_path / "workspace_a").resolve()
     root_b = (tmp_path / "workspace_b").resolve()
 
@@ -35,22 +78,13 @@ def test_factory_owns_distinct_runtime_graphs_for_distinct_roots(tmp_path: Path)
     context_a = app_a.state.api_runtime_context
     context_b = app_b.state.api_runtime_context
 
-    context_a.stream_bus = module._get_stream_bus(app_a)
-    context_b.stream_bus = module._get_stream_bus(app_b)
-    context_a.interaction_manager = module._get_interaction_manager(app_a)
-    context_b.interaction_manager = module._get_interaction_manager(app_b)
-    context_a.extension_manager = module._get_extension_manager(app_a)
-    context_b.extension_manager = module._get_extension_manager(app_b)
-    context_a.extension_runtime_service = module._get_extension_runtime_service(app_a)
-    context_b.extension_runtime_service = module._get_extension_runtime_service(app_b)
-
     assert app_a is not app_b
-    assert app_a is not module.app
-    assert app_b is not module.app
     assert context_a is not context_b
     assert context_a.project_root == root_a
     assert context_b.project_root == root_b
     assert app_a.state.outbound_policy_config is not app_b.state.outbound_policy_config
+    assert context_a.runtime_state.event_queue is not context_b.runtime_state.event_queue
+    assert context_a.extension_manager.catalog is not context_b.extension_manager.catalog
     for attribute in (
         "api_runtime_node",
         "runtime_state",
@@ -60,9 +94,17 @@ def test_factory_owns_distinct_runtime_graphs_for_distinct_roots(tmp_path: Path)
         "interaction_manager",
         "extension_manager",
         "extension_runtime_service",
+        "outward_run_store",
+        "outward_run_event_store",
+        "outward_approval_store",
+        "outward_run_service",
+        "outward_approval_service",
+        "outward_run_execution_service",
+        "outward_run_inspection_service",
+        "outward_ledger_service",
+        "governed_agent_runtime",
     ):
         assert getattr(context_a, attribute) is not getattr(context_b, attribute)
-    assert module.app.state.api_runtime_context is default_context
 
     engine_b = context_b.engine
     asyncio.run(context_a.close())
@@ -147,21 +189,15 @@ def test_repeated_app_lifecycles_leave_no_tracked_tasks(tmp_path: Path, monkeypa
     assert all(context.active_background_task_count == 0 for context in contexts)
 
 
-def test_default_engine_alias_cannot_cross_into_created_app(tmp_path: Path, monkeypatch) -> None:
-    """Layer: contract. The compatibility engine alias influences only the module-default app."""
+def test_explicit_app_lookup_never_crosses_runtime_owners(tmp_path: Path) -> None:
+    """Layer: contract. Explicit lookup always resolves the selected app-owned runtime."""
     module = importlib.import_module("orket.interfaces.api")
-    default_context = module.app.state.api_runtime_context
-    previous_engine = default_context.engine
-    created_app = module.create_api_app(project_root=tmp_path)
-    created_context = created_app.state.api_runtime_context
-    replacement_engine = object()
+    app_a = module.create_api_app(project_root=tmp_path / "a")
+    app_b = module.create_api_app(project_root=tmp_path / "b")
 
-    monkeypatch.setattr(module, "engine", replacement_engine)
+    assert module._get_engine(app_a) is app_a.state.api_runtime_context.engine
+    assert module._get_engine(app_b) is app_b.state.api_runtime_context.engine
+    assert module._get_engine(app_a) is not module._get_engine(app_b)
 
-    assert module._get_engine() is replacement_engine
-    assert default_context.engine is replacement_engine
-    assert module._get_engine(created_app) is created_context.engine
-    assert created_context.engine is not replacement_engine
-
-    default_context.engine = previous_engine
-    asyncio.run(created_context.close())
+    asyncio.run(app_a.state.api_runtime_context.close())
+    asyncio.run(app_b.state.api_runtime_context.close())

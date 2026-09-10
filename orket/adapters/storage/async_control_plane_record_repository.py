@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Awaitable, Callable, TypeVar
+from typing import TypeVar
 
 import aiosqlite
 
+from orket.adapters.storage.control_plane_operator_action_support import (
+    ensure_operator_action_schema,
+)
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.core.contracts.control_plane_effect_journal_models import (
     CheckpointAcceptanceRecord,
@@ -192,22 +196,7 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             ON reconciliation_records (target_ref, publication_timestamp)
             """
         )
-        await conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS operator_action_records (
-                action_id TEXT PRIMARY KEY,
-                target_ref TEXT NOT NULL,
-                timestamp TEXT NOT NULL,
-                payload_json TEXT NOT NULL
-            )
-            """
-        )
-        await conn.execute(
-            """
-            CREATE INDEX IF NOT EXISTS idx_operator_action_target
-            ON operator_action_records (target_ref, timestamp)
-            """
-        )
+        await ensure_operator_action_schema(conn)
         await conn.execute(
             """
             CREATE TABLE IF NOT EXISTS final_truth_records (

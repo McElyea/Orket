@@ -1,13 +1,24 @@
 # Governed Agent Core Runtime Plan
 
-Last updated: 2026-09-07
+Archived on 2026-09-10 after user acceptance and the governed-agent minor-release
+closeout. Current release authority: `docs/releases/0.6.0/PROOF_REPORT.md`.
+The checkpoint/version/blocker statements below are historical as of their
+recorded dates; the accepted closeout supersedes their open release gates.
+
+Last updated: 2026-09-09
 Date: 2026-09-06
-Status: Active implementation workstream
+Status: Archived — accepted implementation closeout
 Owner: Orket Core
-Coordinating authority: `docs/projects/governed-agent-loop/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`
+Coordinating authority: `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`
 Durable contract: `docs/specs/GOVERNED_AGENT_LOOP_V1.md`
 
 ## Objective
+
+Current checkpoint: Slice 7 reconciles staged context, deterministic partial
+verification, persisted success refs, progress thresholds, run controls,
+objective memory, atomic approval ownership, and process-exit recovery.
+See `SLICE_7_ACCEPTANCE_PROOF_2026-09-09.md` for proof classifications and open
+release gates. Broader memory scopes remain explicitly unadmitted by V1.
 
 Implement the Orket host capabilities required to govern bounded agent loops and
 fixed multi-model teams supplied by external extensions.
@@ -35,12 +46,10 @@ must receive a fresh supervisor continuation decision.
 3. The initial contract delta is recorded in
    `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_V1_2026-09-06.md`;
    behavior-changing slices must update it or add narrower deltas as required.
-4. API/supervisor integration prerequisite: architectural-truth Slice B2 removes
-   module-default API ownership and moves interface-owned composition into
-   application containers. Its owner is
-   `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`,
-   Slice B items 4-5, and exception `AT-EX-002`. Independent contract/governor
-   work can proceed.
+4. API/supervisor integration prerequisite: architectural-truth Slice B2 is
+   complete. Module-default API ownership is removed, full per-app composition
+   is application-owned, and `AT-EX-002` is removed. Slice 6B composes the
+   production supervisor without reintroducing interface ownership.
 5. Ongoing gate: any async-reachable paths touched by this work satisfy the repository's async
    safety rules and have bounded teardown.
 6. Integration prerequisite: the SDK agent contract must be available from a pinned
@@ -51,9 +60,19 @@ must receive a fresh supervisor continuation decision.
    adapter, host broker, deterministic verifier, and CLI inspection surface.
    The generic extension executor continues to refuse agent workloads.
 8. Live Ollama inference, governed effects/approval/recovery, and fixed
-   multi-model roles are proven. The durable wake queue, continuous supervisor,
-   API/session composition, and generalized capacity ownership remain Slice 6
-   work blocked by architectural-truth B2.
+   multi-model roles are proven. Slice 6A adds the durable manual/API/recovery
+   wake queue, fenced claim/recovery operations, bounded supervisor, container
+   teardown seam, and wake inspection substrate. Slice 6B adds authenticated
+   API wake admission, canonical loop/broker dispatch, active claim renewal,
+   explicit provider capacity, per-app lifecycle ownership, and composed
+   inspection. Slice 6C adds public manual enqueue/list/inspect through the same
+   application ingress authority. Slice 6D adds atomic wake cancellation and
+   evidence-gated recovery receipts through authenticated API and CLI surfaces.
+   Slice 6E proves fixed-role live Ollama execution through that supervisor.
+   Slice 6F adds durable schedule evaluation and scheduled wake admission.
+   Slice 6G adds authenticated, replay-bounded, durable webhook admission.
+   Slice 6H adds wake-fenced effect preparation and authenticated,
+   request-bound effect resolution/resume dispatch.
 
 ## Accepted authority and object mapping
 
@@ -116,7 +135,8 @@ The accepted V1 mapping is:
    of interrupted publication; separate writes are not an atomicity guarantee.
 10. Record the S0-B requirement-to-schema/host-validation mapping, and the
     architecture checklist with explicit `pass`, `partial`, or `fail` evidence.
-    Interface extraction remains with B2, not a second implementation here.
+    API owner extraction was assigned to B2, not a second implementation here,
+    and is now complete.
 
 Acceptance gates:
 
@@ -257,8 +277,15 @@ Acceptance gates:
    run, attempt, and step records cannot represent queued/claimed wake identity,
    reason, deduplication, lease/fence, and missed/coalesced-trigger truth without
    overloading execution lifecycle. A wake targets an existing nonterminal run
-   or one new scheduled occurrence. This decision does not implement or admit
-   the queue before Slice 6 and its B2 prerequisite.
+   or one new scheduled occurrence. Slice 6A now implements this table for
+   manual/API/recovery source tokens. Slice 6B now provides authenticated API
+   ingress and explicit opt-in production lifecycle activation without changing
+   the bounded queue object model. Slice 6C provides public manual CLI ingress
+   and read-only wake inspection without adding execution ownership.
+   Slice 6D adds a separate bounded control repository for cancellation,
+   recovery, and specialized transition history while atomically publishing
+   canonical operator actions, without growing queue ownership or introducing
+   a second dispatch path.
 3. Add idempotent enqueue, claim, lease renewal, release, cancellation, and
    missed-trigger behavior.
 4. Enforce concurrency, fairness, namespace conflict, and capacity backpressure.
@@ -397,13 +424,16 @@ Acceptance gates:
 ## Delivery sequence
 
 Use the slice sequence and concrete report acceptance workload in
-`docs/projects/governed-agent-loop/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`.
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`.
 These workstreams describe core responsibilities; they do not override that
 sequence. Start with two deterministic iterations, minimum inspection, and a
 host broker; exercise the same workload with one local model before fixed roles
 and durable wake processing. Slice 2's minimum submit/inspect/cancel/replay uses
-the canonical CLI backed by application services. API/supervisor composition
-waits for B2 even if attempted before Slice 6.
+the canonical CLI backed by application services. Slice 6A queue/supervisor
+substrate, Slice 6B production API/supervisor composition, Slice 6C manual wake
+transport, Slice 6D durable recovery controls, Slice 6F scheduled ingress, and
+Slice 6G HMAC webhook ingress and Slice 6H wake-driven effect handling are
+implemented. Slice 6E proves the live Ollama supervisor path.
 
 ## Completion criteria
 

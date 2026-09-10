@@ -56,7 +56,7 @@ def test_interaction_session_start_registers_runtime_surface(monkeypatch, fresh_
 
     assert start.status_code == 200
     session_id = start.json()["session_id"]
-    assert asyncio.run(api_module.runtime_state.is_interaction_session(session_id)) is True
+    assert asyncio.run(api_module._get_runtime_state().is_interaction_session(session_id)) is True
 
 
 def test_interaction_model_stream_flow_emits_commit_final(monkeypatch):
@@ -198,7 +198,7 @@ def test_interaction_builtin_turn_exposes_bounded_packet1_context(monkeypatch, t
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(
-        api_module,
+        api_module._runtime_context(),
         "interaction_manager",
         InteractionManager(
             bus=StreamBus(),
@@ -280,7 +280,7 @@ def test_interaction_extension_turn_includes_manifest_required_capabilities(monk
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(
-        api_module,
+        api_module._runtime_context(),
         "interaction_manager",
         InteractionManager(
             bus=StreamBus(),
@@ -317,7 +317,7 @@ def test_interaction_extension_turn_includes_manifest_required_capabilities(monk
             captured_envelope.update(interaction_context.packet1_context_envelope())
             captured_lineage.extend(interaction_context.packet1_provider_lineage())
 
-    monkeypatch.setattr(api_module, "extension_manager", _FakeExtensionManager(), raising=False)
+    monkeypatch.setattr(api_module._runtime_context(), "extension_manager", _FakeExtensionManager(), raising=False)
 
     start = client.post(
         "/v1/interactions/sessions",
@@ -371,7 +371,7 @@ def test_interaction_session_inspection_surfaces_expose_context_lineage(monkeypa
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(
-        api_module,
+        api_module._runtime_context(),
         "interaction_manager",
         InteractionManager(
             bus=StreamBus(),
@@ -464,7 +464,7 @@ def test_interaction_session_targeted_replay_fails_closed(monkeypatch, tmp_path)
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(
-        api_module,
+        api_module._runtime_context(),
         "interaction_manager",
         InteractionManager(
             bus=StreamBus(),

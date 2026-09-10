@@ -70,7 +70,7 @@ Routine proof set `ORKET_DISABLE_SANDBOX=1`.
 | quickstart scripted approval | `0` | approved file and ledger written |
 | quickstart scripted denial | `0` | file absent and denial ledger written |
 | quickstart invalid input | `1` | file absent and invalid-input ledger written |
-| quickstart EOF | `2` | structured `E_QUICKSTART_INPUT_REQUIRED`; no traceback |
+| quickstart EOF | `2` | structured input-required refusal; no traceback |
 | governed-run default outside checkout | `0` | evidence bundle written |
 
 ### Built-wheel proof outside the checkout

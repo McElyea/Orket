@@ -60,7 +60,7 @@ For broader compatibility and migration boundaries, use [CURRENT_AUTHORITY.md](C
 - Governed-action demo entrypoint: `orket-quickstart` or `python -m orket.quickstart.governed_action_demo`
 - Governed-run deterministic demo: `orket demo governed-run` using its packaged default; custom scenario path: `orket run scenario examples/governed-run/scenario.yaml`
 - Governed-run inspection and replay: `orket inspect .runs/<run_id>` and `orket replay .runs/<run_id>`
-- Governed-agent path: `orket agent submit ... --deterministic-fixture` or `orket agent submit ... --ollama-model <exact-model>` with optional fixed role overrides; durable inspection, replay, and cancellation are under `orket agent`. Bounded live single/multi-model and application effect proof exists; durable wake/supervisor behavior is not yet admitted.
+- Governed-agent path: bounded CLI submission and durable manual wake enqueue/list/inspect/cancel/recover/actions remain under `orket agent`; authenticated API wake, schedule, and HMAC webhook admission plus controls and inspection are under `/v1/agent-wakes`, `/v1/agent-schedules`, `/v1/agent-webhooks`, `/v1/agent-runs`, and `/v1/agent-runtime/status`. API-owned continuous dispatch is disabled by default and requires explicit `ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED=1` provider configuration. Live fixed-role Ollama dispatch through that supervisor is proven; generalized wake-driven effect handling remains open.
 - Default runtime entrypoint: `orket runtime`
 - Named card runtime entrypoint: `orket runtime --card <card_id>`
 - API runtime entrypoint: `python server.py`
@@ -75,7 +75,7 @@ For broader compatibility and migration boundaries, use [CURRENT_AUTHORITY.md](C
 - Governed turn-tool execution with fail-closed namespace enforcement on the governed path.
 - Control-plane persistence for selected live lanes, including sandbox orchestration, governed turn-tool execution, governed kernel actions, cards epic execution, manual review-run execution, extension workload execution, approval-gated reservation and operator flows, coordinator reservation and lease flows, and the Gitea state worker path.
 - Deterministic and observability-oriented runtime artifacts under the normal workspace and durable `.orket/` paths.
-- Source wrapper `python main.py [runtime arguments]` remains supported through `0.5.x`.
+- Source wrapper `python main.py [runtime arguments]` remains supported through `0.6.x`.
 - Legacy runtime `--rock` remains accepted as a hidden compatibility alias to the named card runtime; new callers use `--card`.
 
 ## Bounded Proof Slice

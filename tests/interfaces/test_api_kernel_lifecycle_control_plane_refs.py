@@ -13,7 +13,6 @@ from orket.application.services.kernel_action_control_plane_resource_lifecycle i
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 from orket.application.services.kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
 from orket.core.domain import LeaseStatus, ReservationStatus
-from orket.interfaces.api import app
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
 
@@ -26,19 +25,19 @@ def _install_control_plane(monkeypatch) -> tuple[
 ]:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    monkeypatch.setattr(api_module.engine, "control_plane_execution_repository", execution_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_repository", record_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_publication", ControlPlanePublicationService(repository=record_repo))
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_execution_repository", execution_repo)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", record_repo)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", ControlPlanePublicationService(repository=record_repo))
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane",
         KernelActionControlPlaneService(
             execution_repository=execution_repo,
-            publication=api_module.engine.control_plane_publication,
+            publication=api_module._get_engine().control_plane_publication,
         ),
     )
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane_view",
         KernelActionControlPlaneViewService(
             record_repository=record_repo,
@@ -176,12 +175,12 @@ def test_kernel_api_commit_fail_closes_authority_on_execution_promotion_failure(
         raise RuntimeError("promote failed")
 
     monkeypatch.setattr(
-        api_module.engine.control_plane_publication,
+        api_module._get_engine().control_plane_publication,
         "promote_reservation_to_lease",
         _raise_promote_failure,
     )
 
-    failure_client = TestClient(app, raise_server_exceptions=False)
+    failure_client = TestClient(client.app, raise_server_exceptions=False)
     session_id = "sess-real-kernel-cp-promotion-failure"
     trace_id = "trace-real-kernel-cp-promotion-failure"
     admitted = failure_client.post(

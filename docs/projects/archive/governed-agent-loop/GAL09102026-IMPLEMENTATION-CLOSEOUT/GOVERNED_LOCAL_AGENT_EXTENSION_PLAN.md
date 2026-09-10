@@ -1,18 +1,33 @@
 # Governed Local Agent Reference Extension Plan
 
-Last updated: 2026-09-07
+Archived on 2026-09-10 after user acceptance and the governed-agent minor-release
+closeout. Current release authority: `docs/releases/0.6.0/PROOF_REPORT.md`.
+The checkpoint/version/blocker statements below are historical as of their
+recorded dates; the accepted closeout supersedes their open release gates.
+
+Last updated: 2026-09-09
 Date: 2026-09-06
-Status: Active implementation workstream
+Status: Archived — accepted implementation closeout
 Owner: Orket Core for reference contract; extension implementation remains externally packaged
-Coordinating authority: `docs/projects/governed-agent-loop/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`
+Coordinating authority: `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`
 Durable contract: `docs/specs/GOVERNED_AGENT_LOOP_V1.md`
 
 Execution status: the public-SDK template, separate local external package,
 deterministic fixture, live Ollama single/multi-model paths, structured repair,
 and effect-proposal/resume integration are implemented. Hosting, publication,
-release compatibility, and user acceptance remain Slice 7 work.
+and user acceptance remain Slice 7 work. Clean external source-distribution
+retention, three-wheel installation, and strict installed host/SDK validation
+are proven in `SLICE_7_PACKAGING_CHECKPOINT_2026-09-07.md`.
 
 ## Objective
+
+Current checkpoint: the actual external package at
+`C:/Source/Orket-Extensions/GovernedLocalAgent` now compacts prior reports,
+counts staged sources without duplication, and optionally uses host-admitted
+objective memory. Its `scripts/release.py` validates version/tag alignment and
+the extracted source distribution. Exact installed proof and release blockers
+are consolidated in `SLICE_7_ACCEPTANCE_PROOF_2026-09-09.md`; hosted repository
+selection and publication remain separate release actions.
 
 Build one external SDK-first reference extension that demonstrates a bounded
 agent using multiple local-model roles while Orket retains authority for loop

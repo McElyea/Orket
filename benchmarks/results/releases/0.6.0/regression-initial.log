@@ -1,0 +1,240 @@
+.ssssssssss.s........................................................... [  1%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  7%]
+........................................................................ [  9%]
+........................................................................ [ 10%]
+........................................................................ [ 12%]
+........................................................................ [ 14%]
+........................................................................ [ 15%]
+........................................................................ [ 17%]
+........................................................................ [ 18%]
+........................................................................ [ 20%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+........................................................................ [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 28%]
+........................................................................ [ 29%]
+........................................................................ [ 31%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+........................................................................ [ 35%]
+........................................................................ [ 37%]
+........................................................................ [ 38%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+..............................ss.ssssssssss............................. [ 43%]
+.........F.............................................................. [ 45%]
+........................................................................ [ 46%]
+........................................................................ [ 48%]
+........................................................................ [ 49%]
+........................................................................ [ 51%]
+........................................................................ [ 52%]
+........................................................................ [ 54%]
+..F.....F.F............................................................. [ 56%]
+........................................................................ [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+........................................................................ [ 62%]
+.....ssssssssss...sss.s.ssssssssssss.................................... [ 63%]
+........................................................................ [ 65%]
+........................................................................ [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 71%]
+........................................................................ [ 73%]
+........................................................................ [ 74%]
+........................................................................ [ 76%]
+........................................................................ [ 77%]
+........................................................................ [ 79%]
+........................................................................ [ 80%]
+........................................................................ [ 82%]
+........................................................................ [ 84%]
+................................................sss..................... [ 85%]
+........................................................................ [ 87%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+.......................................................ssssssss......... [ 91%]
+.................................................ssss................... [ 93%]
+........................................................................ [ 94%]
+........................................................................ [ 96%]
+........................................................................ [ 98%]
+........................................................................ [ 99%]
+.................                                                        [100%]
+================================== FAILURES ===================================
+_ test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_mismatch _
+
+tmp_path = WindowsPath('C:/Users/jonmc/AppData/Local/Temp/pytest-of-jonmc/pytest-4807/test_gitea_state_worker_publis1')
+
+    @pytest.mark.asyncio
+    async def test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_mismatch(tmp_path: Path) -> None:
+        execution_repository = AsyncControlPlaneExecutionRepository(tmp_path / "control_plane.sqlite3")
+        repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
+        publication = ControlPlanePublicationService(repository=repository)
+        control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
+        control_plane_execution = GiteaStateControlPlaneExecutionService(
+            execution_repository=execution_repository,
+            publication=publication,
+        )
+        control_plane_checkpoint = GiteaStateControlPlaneCheckpointService(publication=publication)
+        control_plane_reservation = GiteaStateControlPlaneReservationService(publication=publication)
+        adapter = _FakeAdapter()
+        adapter.acquire_result = _lease_response(
+            card_id="7",
+            worker_id="worker-a",
+            epoch=7,
+            version=4,
+            expires_at="2026-03-24T01:00:30+00:00",
+        )
+        adapter.renew_results = [
+            _lease_response(
+                card_id="7",
+                worker_id="worker-a",
+                epoch=8,
+                version=5,
+                expires_at="2026-03-24T01:01:00+00:00",
+            )
+        ]
+        worker = GiteaStateWorker(
+            adapter=adapter,
+            worker_id="worker-a",
+            lease_seconds=1,
+            renew_interval_seconds=0.05,
+            control_plane_checkpoint_service=control_plane_checkpoint,
+            control_plane_execution_service=control_plane_execution,
+            control_plane_lease_service=control_plane,
+            control_plane_reservation_service=control_plane_reservation,
+        )
+
+        async def _work(_card):
+            await asyncio.sleep(0.12)
+            return {"ok": True}
+
+        consumed = await worker.run_once(work_fn=_work)
+        history = await repository.list_lease_records(
+            lease_id=GiteaStateControlPlaneLeaseService.lease_id_for("7")
+        )
+        resource_history = await repository.list_resource_records(
+            resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("7")
+        )
+        latest_resource = await repository.get_latest_resource_record(
+            resource_id=GiteaStateControlPlaneLeaseService.resource_id_for("7")
+        )
+        run_id = GiteaStateControlPlaneExecutionService.run_id_for(card_id="7", lease_epoch=7)
+        attempt_id = GiteaStateControlPlaneExecutionService.attempt_id_for(run_id=run_id)
+        run = await execution_repository.get_run_record(run_id=run_id)
+        attempt = await execution_repository.get_attempt_record(attempt_id=attempt_id)
+        steps = await execution_repository.list_step_records(attempt_id=attempt_id)
+        effects = await repository.list_effect_journal_entries(run_id=run_id)
+        checkpoint = await repository.get_checkpoint(checkpoint_id=f"gitea-state-checkpoint:{attempt_id}")
+        checkpoint_acceptance = None if checkpoint is None else await repository.get_checkpoint_acceptance(
+            checkpoint_id=checkpoint.checkpoint_id
+        )
+        truth = await repository.get_final_truth(run_id=run_id)
+        decision = None if attempt is None or attempt.recovery_decision_id is None else await repository.get_recovery_decision(
+            decision_id=attempt.recovery_decision_id
+        )
+        reservation_history = await repository.list_reservation_records(
+            reservation_id=GiteaStateControlPlaneReservationService.reservation_id_for("7", 7)
+        )
+
+        assert consumed is True
+        assert run is not None
+        assert attempt is not None
+        assert latest_resource is not None
+        assert checkpoint is not None
+        assert checkpoint_acceptance is not None
+        assert truth is not None
+>       assert decision is not None
+E       assert None is not None
+
+tests\integration\test_gitea_state_worker_control_plane.py:295: AssertionError
+________________________ test_validate_bundle_success _________________________
+
+tmp_path = WindowsPath('C:/Users/jonmc/AppData/Local/Temp/pytest-of-jonmc/pytest-4807/test_validate_bundle_success0')
+
+    def test_validate_bundle_success(tmp_path: Path) -> None:
+        _create_valid_bundle(tmp_path)
+        result = validate_bundle(tmp_path)
+>       assert result["ok"] is True
+E       assert False is True
+
+tests\interfaces\test_orket_bundle_cli.py:54: AssertionError
+__________________ test_cli_pack_and_inspect_archive_success __________________
+
+tmp_path = WindowsPath('C:/Users/jonmc/AppData/Local/Temp/pytest-of-jonmc/pytest-4807/test_cli_pack_and_inspect_arch0')
+capsys = <_pytest.capture.CaptureFixture object at 0x0000014B31C6F4D0>
+
+    def test_cli_pack_and_inspect_archive_success(tmp_path: Path, capsys) -> None:
+        bundle_dir = tmp_path / "bundle"
+        _create_valid_bundle(bundle_dir)
+        archive_path = tmp_path / "bundle.orket"
+
+        pack_code = main(["pack", str(bundle_dir), "--out", str(archive_path), "--json"])
+        pack_payload = json.loads(capsys.readouterr().out)
+>       assert pack_code == 0
+E       assert 1 == 0
+
+tests\interfaces\test_orket_bundle_cli.py:105: AssertionError
+_______________ test_cli_pack_is_deterministic_for_same_source ________________
+
+tmp_path = WindowsPath('C:/Users/jonmc/AppData/Local/Temp/pytest-of-jonmc/pytest-4807/test_cli_pack_is_deterministic0')
+capsys = <_pytest.capture.CaptureFixture object at 0x0000014B31C6CAD0>
+
+    def test_cli_pack_is_deterministic_for_same_source(tmp_path: Path, capsys) -> None:
+        bundle_dir = tmp_path / "bundle"
+        _create_valid_bundle(bundle_dir)
+        archive_one = tmp_path / "one.orket"
+        archive_two = tmp_path / "two.orket"
+
+>       assert main(["pack", str(bundle_dir), "--out", str(archive_one), "--json"]) == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = main(['pack', 'C:\\Users\\jonmc\\AppData\\Local\\Temp\\pytest-of-jonmc\\pytest-4807\\test_cli_pack_is_deterministic0\\bundl...sers\\jonmc\\AppData\\Local\\Temp\\pytest-of-jonmc\\pytest-4807\\test_cli_pack_is_deterministic0\\one.orket', '--json'])
+
+tests\interfaces\test_orket_bundle_cli.py:140: AssertionError
+---------------------------- Captured stdout call -----------------------------
+{
+  "ok": false,
+  "target": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\pytest-of-jonmc\\pytest-4807\\test_cli_pack_is_deterministic0\\bundle",
+  "error_count": 1,
+  "errors": [
+    {
+      "code": "E_PACK_VALIDATE_FAILED",
+      "location": "bundle",
+      "message": "Bundle must pass 'orket validate' before packing."
+    }
+  ],
+  "validation": {
+    "ok": false,
+    "target": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\pytest-of-jonmc\\pytest-4807\\test_cli_pack_is_deterministic0\\bundle",
+    "manifest_path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\pytest-of-jonmc\\pytest-4807\\test_cli_pack_is_deterministic0\\bundle\\orket.json",
+    "manifest_name": "orket-summarizer",
+    "manifest_version": "0.1.0",
+    "engine_version_checked": "0.6.0",
+    "error_count": 1,
+    "errors": [
+      {
+        "code": "E_ENGINE_INCOMPATIBLE",
+        "location": "metadata.engineVersion",
+        "message": "Engine version 0.6.0 does not satisfy manifest range >=0.3.0,<0.6.0."
+      }
+    ]
+  }
+}
+============================== warnings summary ===============================
+tests/application/test_board_hierarchy_integrity.py::test_get_board_hierarchy_auto_fix_executes_reconciliation
+  C:\Users\jonmc\miniconda3\Lib\site-packages\_pytest\monkeypatch.py:79: DeprecationWarning: `orket.domain` is deprecated; import from `orket.core.domain` instead.
+    __import__(used)
+
+tests/application/test_extension_runtime_service.py::test_extension_runtime_service_list_models_and_override_generation
+  <string>:8: RuntimeWarning: GenerateRequest.max_tokens below 256 can truncate governed outputs.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/integration/test_gitea_state_worker_control_plane.py::test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_mismatch
+FAILED tests/interfaces/test_orket_bundle_cli.py::test_validate_bundle_success
+FAILED tests/interfaces/test_orket_bundle_cli.py::test_cli_pack_and_inspect_archive_success
+FAILED tests/interfaces/test_orket_bundle_cli.py::test_cli_pack_is_deterministic_for_same_source
+4 failed, 4557 passed, 64 skipped, 2 warnings in 490.73s (0:08:10)

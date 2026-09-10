@@ -79,9 +79,9 @@ governed-run demo default is package-owned and must not depend on the caller's c
 working directory.
 
 Compatibility-only source wrapper:
-`python main.py [runtime arguments]` remains supported through `0.5.x`. The hidden
+`python main.py [runtime arguments]` remains supported through `0.6.x`. The hidden
 `--rock <rock_name>` alias remains accepted by that wrapper and `orket runtime`, but
-new callers must use `--card`; removal requires an explicit `0.6.0` contract delta.
+new callers must use `--card`; removal requires an explicit `0.7.0` contract delta.
 
 ## Release and Versioning
 

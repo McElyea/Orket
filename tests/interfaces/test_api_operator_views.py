@@ -25,10 +25,6 @@ def _run_identity(*, run_id: str, workload: str = "cards-runtime") -> dict[str, 
     }
 
 
-def _client() -> TestClient:
-    return TestClient(api_module.app)
-
-
 @pytest.mark.asyncio
 async def test_cards_and_runs_operator_views_project_truthful_outcomes(monkeypatch, tmp_path: Path) -> None:
     """Layer: integration. Verifies the card viewer slice is backed by stable operator view models instead of raw summary spelunking."""
@@ -219,7 +215,7 @@ async def test_cards_and_runs_operator_views_project_truthful_outcomes(monkeypat
     await created_context.close()
 
 
-def test_system_operator_views_surface_provider_and_health_status(monkeypatch) -> None:
+def test_system_operator_views_surface_provider_and_health_status(monkeypatch, test_client) -> None:
     """Layer: integration. Verifies provider and system health operator views expose degraded-first status on the API."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
@@ -246,9 +242,9 @@ def test_system_operator_views_surface_provider_and_health_status(monkeypatch) -
     monkeypatch.setattr(api_module, "_discover_active_roles", lambda _root: ["coder"])
     monkeypatch.setattr(api_module, "load_user_preferences", lambda: {})
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
-    monkeypatch.setattr(api_module, "ModelSelector", _FakeSelector)
+    monkeypatch.setattr(api_module._runtime_context(), "model_selector_factory", _FakeSelector)
 
-    client = _client()
+    client = test_client
     provider_response = client.get("/v1/system/provider-status", headers={"X-API-Key": "test-key"})
     health_response = client.get("/v1/system/health-view", headers={"X-API-Key": "test-key"})
 

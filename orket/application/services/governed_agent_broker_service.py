@@ -8,6 +8,8 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError, ValidationError  # type: ignore[attr-defined]
 
 from orket.application.services.governed_agent_ports import (
+    GovernedAgentAuthorityGuard,
+    GovernedAgentAuthorityStaleError,
     GovernedAgentBrokerCallRepository,
     GovernedAgentCapabilityBroker,
     GovernedAgentInvocationBinding,
@@ -92,12 +94,14 @@ class GovernedAgentHostBroker(GovernedAgentCapabilityBroker):
         model_provider: GovernedAgentModelProvider,
         model_profiles: Mapping[str, GovernedAgentResolvedModelProfile],
         memory_provider: GovernedAgentMemoryProvider | None = None,
+        authority_guard: GovernedAgentAuthorityGuard | None = None,
     ) -> None:
         self._iterations = iteration_repository
         self._calls = call_repository
         self._model_provider = model_provider
         self._profiles = dict(model_profiles)
         self._memory_provider = memory_provider
+        self._authority_guard = authority_guard
 
     async def dispatch_call(
         self,
@@ -106,6 +110,7 @@ class GovernedAgentHostBroker(GovernedAgentCapabilityBroker):
         operation: Literal["model.call.v1", "memory.query.v1"],
         call_payload: Mapping[str, Any],
     ) -> Mapping[str, Any]:
+        await self._ensure_authority()
         retained = await self._iterations.get_dispatch_binding(invocation_id=binding.invocation_id)
         request_payload = await self._iterations.get_dispatch_request(invocation_id=binding.invocation_id)
         if retained != binding or request_payload is None:
@@ -131,6 +136,7 @@ class GovernedAgentHostBroker(GovernedAgentCapabilityBroker):
         _require_provider_features(call, profile)
         _validate_response_schema(call)
         request_digest = _digest(call.to_wire())
+        await self._ensure_authority()
         reservation = await self._calls.reserve_call(
             binding=binding,
             operation="model.call.v1",
@@ -141,23 +147,25 @@ class GovernedAgentHostBroker(GovernedAgentCapabilityBroker):
             reserved_output_tokens=call.max_output_tokens,
         )
         if reservation.status == "idempotent" and reservation.retained_result_payload is not None:
+            await self._ensure_authority()
             return dict(reservation.retained_result_payload)
         if reservation.status != "prepared":
             raise ValueError(f"E_AGENT_BROKER_RESERVATION_{reservation.status.upper()}")
         try:
+            await self._ensure_authority()
             observation = await self._model_provider.call(request=call, profile=profile)
             result, charged_input, charged_output = _model_result(call, profile, observation)
             payload = result.to_wire()
+            await self._ensure_authority()
             await self._calls.complete_call(
-                binding=binding,
-                call_id=call.call_id,
-                request_digest=request_digest,
-                result_payload=payload,
+                binding=binding, call_id=call.call_id,
+                request_digest=request_digest, result_payload=payload,
                 result_digest=_digest(payload),
-                charged_input_tokens=charged_input,
-                charged_output_tokens=charged_output,
+                charged_input_tokens=charged_input, charged_output_tokens=charged_output,
             )
             return cast(dict[str, Any], payload)
+        except GovernedAgentAuthorityStaleError:
+            raise
         except (ModelConnectionError, ModelTimeoutError, ModelProviderError) as exc:
             reason = _provider_failure_reason(exc)
             await self._calls.mark_call_uncertain(
@@ -182,9 +190,10 @@ class GovernedAgentHostBroker(GovernedAgentCapabilityBroker):
     ) -> Mapping[str, Any]:
         call = AgentMemoryQueryRequest.from_wire(call_payload)
         _require_identity(binding, call.identity)
-        if "memory.query.v1" not in iteration.admitted_capabilities:
+        if "memory.query" not in iteration.admitted_capabilities:
             raise ValueError("E_AGENT_MEMORY_CAPABILITY_UNADMITTED")
         request_digest = _digest(call.to_wire())
+        await self._ensure_authority()
         reservation = await self._calls.reserve_call(
             binding=binding,
             operation="memory.query.v1",
@@ -195,11 +204,13 @@ class GovernedAgentHostBroker(GovernedAgentCapabilityBroker):
             reserved_output_tokens=0,
         )
         if reservation.status == "idempotent" and reservation.retained_result_payload is not None:
+            await self._ensure_authority()
             return dict(reservation.retained_result_payload)
         if reservation.status != "prepared":
             raise ValueError(f"E_AGENT_BROKER_RESERVATION_{reservation.status.upper()}")
         result = await self._memory_result(call)
         payload = result.to_wire()
+        await self._ensure_authority()
         await self._calls.complete_call(
             binding=binding,
             call_id=call.call_id,
@@ -210,6 +221,10 @@ class GovernedAgentHostBroker(GovernedAgentCapabilityBroker):
             charged_output_tokens=0,
         )
         return cast(dict[str, Any], payload)
+
+    async def _ensure_authority(self) -> None:
+        if self._authority_guard is not None:
+            await self._authority_guard.ensure_active()
 
     async def _memory_result(self, call: AgentMemoryQueryRequest) -> AgentMemoryQueryResult:
         if self._memory_provider is None:

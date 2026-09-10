@@ -1,13 +1,24 @@
 # Governed Agent SDK Enablement Plan
 
-Last updated: 2026-09-07
+Archived on 2026-09-10 after user acceptance and the governed-agent minor-release
+closeout. Current release authority: `docs/releases/0.6.0/PROOF_REPORT.md`.
+The checkpoint/version/blocker statements below are historical as of their
+recorded dates; the accepted closeout supersedes their open release gates.
+
+Last updated: 2026-09-09
 Date: 2026-09-06
-Status: Active implementation workstream
+Status: Archived — accepted implementation closeout
 Owner: Orket Core
-Coordinating authority: `docs/projects/governed-agent-loop/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`
+Coordinating authority: `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`
 Durable contract: `docs/specs/GOVERNED_AGENT_LOOP_V1.md`
 
 ## Objective
+
+Current checkpoint: the 0.5 development prerelease supplies three public fixed
+report cases and validates memory-write admission. SDK tests, lint, exact
+tag/version checking and installed host/extension proof are consolidated in
+`SLICE_7_ACCEPTANCE_PROOF_2026-09-09.md`. No SDK tag has been published; user
+acceptance of this proof and author experience remains a completion gate.
 
 Extend `orket_extension_sdk` so an external extension can implement a bounded,
 multi-model agent strategy without importing host-private `orket.*` modules,

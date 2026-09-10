@@ -88,7 +88,7 @@ EXPECTED_GOVERNED_START_PATH_MATRIX = {
         "status": "projection-resolved",
         "paths": {"orket/extensions/manager.py"},
     },
-    "governed-agent deterministic fixture": {
+    "governed-agent CLI and API wake": {
         "status": "projection-resolved",
         "paths": {"orket/extensions/manager.py"},
     },

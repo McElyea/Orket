@@ -11,7 +11,7 @@ Define a bounded Orket capability that can supervise a looping agent without mak
 The user accepted this requirements direction and explicitly requested an
 implementation plan on 2026-09-06. Durable contract authority now lives in
 `docs/specs/GOVERNED_AGENT_LOOP_V1.md`; implementation sequencing lives in
-`docs/projects/governed-agent-loop/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`.
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`.
 
 ## Product outcome
 
@@ -156,7 +156,7 @@ Transition actions completed on 2026-09-06:
 2. contract delta recorded at
    `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_V1_2026-09-06.md`;
 3. canonical implementation plan created at
-   `docs/projects/governed-agent-loop/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`;
+   `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`;
 4. roadmap lane updated to point to the implementation plan;
 5. the smallest end-to-end vertical slice remains first in implementation order
    before multi-model or continuous-supervisor breadth.
@@ -183,11 +183,11 @@ The following three active component plans decompose the implementation while
 remaining subordinate to the canonical coordinating plan:
 
 1. SDK public-contract enablement:
-   `docs/projects/governed-agent-loop/GOVERNED_AGENT_SDK_ENABLEMENT_PLAN.md`
+   `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_AGENT_SDK_ENABLEMENT_PLAN.md`
 2. External reference extension:
-   `docs/projects/governed-agent-loop/GOVERNED_LOCAL_AGENT_EXTENSION_PLAN.md`
+   `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_LOCAL_AGENT_EXTENSION_PLAN.md`
 3. Orket host/runtime enablement:
-   `docs/projects/governed-agent-loop/GOVERNED_AGENT_CORE_RUNTIME_PLAN.md`
+   `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_AGENT_CORE_RUNTIME_PLAN.md`
 
 The plans do not create three independent execution authorities. Orket remains
 authoritative for loop progression, budgets, approvals, effects, recovery, and
@@ -198,4 +198,4 @@ replaceable agent strategy.
 
 The requirements phase closed through explicit user acceptance on 2026-09-06.
 Implementation completion and whole-lane closeout are governed by
-`docs/projects/governed-agent-loop/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`.
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`.

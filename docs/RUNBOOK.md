@@ -1,12 +1,20 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-09-07
+Last reviewed: 2026-09-08
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
 Exact HTTP route and payload catalog authority lives in `docs/API_FRONTEND_CONTRACT.md`; this runbook keeps only high-signal operator examples and ownership notes.
 
 ## Quick Start
+
+Local-provider prompting uses the core-packaged registry at
+`orket/runtime/config/local_prompt_profiles.json`; installed inference does not
+require a checkout-local `model/core/contracts/` directory. To use an
+operator-managed registry, set `ORKET_LOCAL_PROMPT_PROFILE_REGISTRY_PATH` to
+its explicit path. A missing override fails closed, without reverting to the
+packaged default.
+
 1. Install dependencies:
 ```bash
 python -m pip install --upgrade pip
@@ -58,9 +66,9 @@ python server.py
 ```
 
 Compatibility-only source wrapper:
-`python main.py [runtime arguments]` remains supported through `0.5.x`. The hidden
+`python main.py [runtime arguments]` remains supported through `0.6.x`. The hidden
 `--rock <rock_name>` alias remains accepted by that wrapper and `orket runtime`, but
-new callers must use `--card`; removal requires an explicit `0.6.0` contract delta.
+new callers must use `--card`; removal requires an explicit `0.7.0` contract delta.
 
 ## API Launcher Precedence
 1. CLI arguments (`--host`, `--port`, `--profile`, `--reload/--no-reload`)
@@ -386,6 +394,16 @@ orket runtime --archive-related <token> --archive-reason "manual archive"
 The admitted agent CLI requires a persisted extension catalog and a validated
 initial `agent_iteration_request.v1` JSON. Select exactly one provider posture.
 
+For staged ticket-report acceptance, include only batch A in that request and
+add `--continuation-inputs <json>`. The separate JSON object maps `"2"` to a
+list containing batch B's digest-bound `authoritative_context` materialization.
+For API/manual/scheduled/webhook wakes, supply that object as
+`dispatch.continuation_inputs`. It stays host-owned, binds the configuration,
+and reaches the next child only after host authorization. Exact retries retain
+the same plan. Inspection shows A on iteration 1 and B plus the accepted prior
+result on iteration 2. The effect demo uses `proposal_iteration=2` and a
+three-iteration run budget so approval can resume one final verification step.
+
 ```bash
 orket agent submit <workload_id> --db <sqlite_path> --catalog <catalog_json> --request <request_json> --creation-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --next-lease-expires-at-utc <timestamp> --deterministic-fixture --json
 ```
@@ -406,7 +424,34 @@ orket agent inspect <run_id> --db <sqlite_path> --json
 orket agent replay <run_id> --db <sqlite_path> --json
 ```
 
-Publish an operator cancellation:
+To request pause or terminal stop after the current iteration, inspect its
+invocation id and submit a stable operator action:
+
+```bash
+orket agent pause <run_id> --db <sqlite_path> --invocation-id <invocation_id> --action-id <stable_id> --actor-ref <operator_ref> --timestamp-utc <UTC> --json
+orket agent stop <run_id> --db <sqlite_path> --invocation-id <invocation_id> --action-id <stable_id> --actor-ref <operator_ref> --timestamp-utc <UTC> --json
+```
+
+The authenticated API equivalent is `POST /v1/agent-runs/{run_id}/controls`
+with `command`, `invocation_id`, `action_id`, `actor_ref`, and `timestamp_utc`.
+The acknowledgement says `requested`; inspect the persisted decision to confirm
+the boundary was reached. Late commands return conflict. A verified paused
+result resumes through `POST /v1/agent-runs/{run_id}/resume` with the same
+timing fields as effect resume. An independent cancellation CLI cannot confirm
+that another process's child was reaped; residual uncertainty stays explicit.
+
+Optional reference-extension objective memory requires both `memory.query` and
+`memory.write` in the request's admitted capabilities and
+`extension_config.objective_memory=true`. Only earlier verified results in that
+run are eligible. The returned context remains advisory, with one query per
+iteration and host provenance. Other memory scopes are refused.
+
+After an approved write loses its process before journaling, repeat the same
+resolution. Matching report bytes are observed and reconciled without another
+write. Missing/different bytes or existing uncertainty remain blocked for
+recovery; approval replay does not blindly retry a mutation.
+
+Publish an immediate cancellation request:
 
 ```bash
 orket agent cancel <run_id> --db <sqlite_path> --action-id <id> --actor-ref <ref> --timestamp-utc <timestamp> --reason <reason> --cancellation-epoch <n> --json
@@ -421,10 +466,165 @@ The currently proven agent effect path is application-owned, not a separate
 extension or generic CLI executor. It admits only exact issue-scoped `read_file`
 observation and approval-required `write_file`, and resumes only after observed
 or reconciled receipts plus an accepted checkpoint and explicit operator action.
-There is no governed-agent HTTP API, wake queue, or continuous supervisor yet.
 Cancellation invoked in a later CLI process cannot reap a child owned by an
 already-exited process; in-process operator cancellation owns child cancel/reap,
 while the CLI command durably fences and closes the recorded run.
+
+## Governed-Agent Durable Wakes
+
+The API runtime always composes the durable wake and inspection services, but
+continuous dispatch is disabled by default. Authenticated `POST
+/v1/agent-wakes` remains useful while disabled: it persists work for a later
+explicitly configured supervisor lifecycle.
+
+Set these host-owned values before `python server.py` to activate dispatch:
+
+```text
+ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED=1
+ORKET_GOVERNED_AGENT_DB_PATH=<sqlite_path>              # optional; canonical control-plane DB by default
+ORKET_GOVERNED_AGENT_PROVIDER=ollama
+ORKET_GOVERNED_AGENT_OLLAMA_MODEL=<exact-installed-model>
+ORKET_GOVERNED_AGENT_CAPACITY_LIMIT=1
+```
+
+Exact role overrides are
+`ORKET_GOVERNED_AGENT_PLANNER_MODEL`,
+`ORKET_GOVERNED_AGENT_ACTOR_MODEL`, and
+`ORKET_GOVERNED_AGENT_CRITIC_MODEL`. `deterministic_fixture` is also an explicit
+provider posture for deterministic verification; it is not live-model proof.
+Claim timing can be bounded with
+`ORKET_GOVERNED_AGENT_CLAIM_LEASE_SECONDS`,
+`ORKET_GOVERNED_AGENT_CLAIM_RENEWAL_SECONDS`, and
+`ORKET_GOVERNED_AGENT_IDLE_WAIT_SECONDS`. Renewal must be shorter than the
+lease. Ollama inventory timeout and base URL use
+`ORKET_GOVERNED_AGENT_INVENTORY_TIMEOUT_SECONDS` and
+`ORKET_GOVERNED_AGENT_OLLAMA_BASE_URL`.
+
+The JSON body uses one caller-stable occurrence id, either a `new_run` workload
+or an `existing_run` target, and a `governed_agent_wake_dispatch.v1` object. The
+dispatch object carries the same fully validated `agent_iteration_request.v1`
+and explicit timestamps used by the bounded CLI. A repeated occurrence with
+identical content is idempotent; contradictory reuse is `409`.
+
+Manual ingress uses the same dispatch envelope and database without starting a
+second runtime owner:
+
+```text
+orket agent wake enqueue --db <sqlite_path> --workload-id governed-agent-loop --occurrence-id <stable_id> --request <request.json> --creation-timestamp-utc <UTC> --decision-timestamp-utc <UTC> --next-lease-expires-at-utc <UTC> --json
+orket agent wake list --db <sqlite_path> --json
+orket agent wake inspect <wake_id> --db <sqlite_path> --json
+orket agent wake cancel <wake_id> --db <sqlite_path> --action-id <stable_action_id> --actor-ref <operator_ref> --timestamp-utc <UTC> --reason <reason> --expected-cancellation-epoch <current> --cancellation-epoch <next> --json
+orket agent wake recover <wake_id> --db <sqlite_path> --action-id <stable_action_id> --actor-ref <operator_ref> --timestamp-utc <UTC> --reason <reason> --expected-fencing-generation <current> --resolution requeue|confirm_cancelled --child-confirmed-stopped --effect-uncertainty-cleared --evidence-ref <receipt_ref> --json
+orket agent wake actions <wake_id> --db <sqlite_path> --json
+```
+
+Repeat `--decision-timestamp-utc` and `--next-lease-expires-at-utc` as required
+by the request budget. Use `--run-id <run_id>` instead of `--workload-id` for an
+existing run. The CLI persists `source=manual` and exits; an explicitly enabled
+supervisor using the same database owns all later provider and child work.
+
+Operator reads are:
+
+```text
+GET /v1/agent-runtime/status
+GET /v1/agent-wakes
+GET /v1/agent-wakes/<wake_id>
+GET /v1/agent-wakes/<wake_id>/actions
+GET /v1/agent-schedules/<schedule_id>/evaluations
+GET /v1/agent-webhooks/<issuer_ref>/deliveries
+GET /v1/agent-runs/<run_id>
+GET /v1/agent-runs/<run_id>/replay
+```
+
+Authenticated wake mutations are `POST /v1/agent-wakes/<wake_id>/cancel` and
+`POST /v1/agent-wakes/<wake_id>/recover`; their JSON bodies use the same fields
+as the CLI flags above. These control wake ownership only. Run-level
+`orket agent cancel` remains a separate operator authority.
+
+When run inspection reports `effect_approval_required`, resolve the listed
+write approval through authenticated `POST
+/v1/agent-runs/<run_id>/effects/<approval_id>/resolve`. Denial requires
+`decision=denied`, `actor_ref`, and a canonical UTC `timestamp_utc`; it closes
+the run without a write or resume wake. Approval additionally requires
+`next_lease_expires_at_utc`, enough `decision_timestamps_utc` entries for the
+remaining run budget, and `next_lease_expiries_utc` entries for any iterations
+after the resumed one. Safe approval returns `status=resume_queued`. Exact
+retry is idempotent. The run remains `operator_blocked` until the returned wake
+is claimed; the claimed worker validates the aggregate effect checkpoint,
+every safe receipt, and the exact request-bound operator action before changing
+the run to `executing`. An unobserved write returns `recovery_required`, moves
+the run to recovery pending, and queues no resume.
+
+A paused result containing only safely observed reads has no write approval.
+Continue it through authenticated `POST
+/v1/agent-runs/<run_id>/effects/resume` with the approval timing fields above,
+but without `decision`. It applies the same complete checkpoint, operator
+authorization, durable wake, and claimed-wake activation checks.
+
+Authenticated scheduled ingress is `POST
+/v1/agent-schedules/<schedule_id>/evaluations`. Each request supplies a stable
+`evaluation_id`, IANA `timezone`, UTC `observed_at_utc`, bounded
+`misfire_grace_seconds`, `missed_policy` of `skip` or `fire_once`, the fixed
+`coalescing_policy` value `latest`, and one to 100 due `occurrences`. Each
+occurrence supplies naive `scheduled_for_local`, explicit DST `fold` (`0` or
+`1`), target fields, and the normal dispatch envelope. Future occurrences,
+nonexistent local times, noncanonical folds, unknown fields, and unsupported
+policies fail closed. The selected wake and durable evaluation receipt commit
+atomically; exact request replay is idempotent and contradictory evaluation-id
+reuse returns `409`. A fully skipped evaluation still persists its receipt.
+Submit stable, non-overlapping evaluation windows.
+
+Authenticated webhook ingress is `POST
+/v1/agent-webhooks/<issuer_ref>/deliveries/<delivery_id>`. It is disabled unless
+all three host-owned values are configured:
+
+```text
+ORKET_GOVERNED_AGENT_WEBHOOK_ISSUER_REF=<exact-issuer>
+ORKET_GOVERNED_AGENT_WEBHOOK_KEY_ID=<exact-key-id>
+ORKET_GOVERNED_AGENT_WEBHOOK_SECRET=<shared-secret>
+ORKET_GOVERNED_AGENT_WEBHOOK_REPLAY_WINDOW_SECONDS=300  # optional, 1..3600
+```
+
+The request must carry `X-API-Key`, `X-Orket-Webhook-Key-Id`, a canonical UTC
+`X-Orket-Webhook-Timestamp` such as `2026-09-07T18:00:00.000000Z`, and
+`X-Orket-Webhook-Signature: sha256=<lowercase-hex>`. Compute HMAC-SHA256 over
+these newline-separated UTF-8 fields:
+
+```text
+orket-governed-agent-webhook.v1
+<issuer_ref>
+<delivery_id>
+<canonical_timestamp>
+sha256:<raw_body_sha256_lowercase_hex>
+```
+
+The JSON body is limited to 1 MiB and contains `target_kind`, the corresponding `target_run_id` or
+`workload_id`, and the normal `dispatch` envelope; delivery identity derives
+the occurrence id. Exact signed raw-content retry is idempotent. Changed
+content or signed metadata under a retained issuer/delivery id returns `409`.
+Stale/future timestamps, issuer/key mismatch, invalid signatures, and malformed
+content fail closed. The signing secret and raw signature are never retained or
+projected. Rotate by changing key id and secret together during a bounded
+caller/host cutover; this first increment configures one active issuer/key.
+
+All `/v1` routes retain the canonical API-key boundary. A queued wake does not
+itself authorize continuation, model work, effects, or reopening a terminal
+run. The dispatcher reuses the catalog-resolved bounded loop and consumes a
+durable capacity claim. It rechecks that claim before broker/result/effect
+publication and after external effect observation. A resume wake also requires
+the exact operator authorization, full safe receipt coverage, and accepted
+aggregate checkpoint. Scheduled and webhook ingress use the same queue and
+supervisor after their durable evaluation or delivery receipt commits.
+
+All supervisors sharing one governed-agent database must use the same
+`ORKET_GOVERNED_AGENT_CAPACITY_LIMIT` value. A cancelled or expired claim
+with unresolved provider-call uncertainty continues to consume one capacity
+slot until explicit recovery; do not delete or blindly requeue it to restore
+throughput. Recovery requires the current fencing generation, an explicit
+`requeue` or `confirm_cancelled` resolution, confirmation that the prior child
+stopped, confirmation that effect uncertainty is cleared, and at least one
+evidence reference. Failed preconditions retain wake state and publish a durable
+conflict receipt. Reusing an action id with different content also conflicts.
 
 ## External Extension Package, Publish, and Validation
 Authority: `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_V1.md`, `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_V1.md`, `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_VALIDATION_V1.md`

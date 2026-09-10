@@ -50,7 +50,7 @@ jobs:
 
       - name: Build SDK wheel and sdist
         run: |
-          python -m build --sdist --wheel ./orket_extension_sdk
+          python -m build --sdist --wheel --outdir dist ./orket_extension_sdk
 
       - name: Smoke install built SDK artifact
         shell: bash

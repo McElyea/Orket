@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -13,8 +13,22 @@ class _FakeTarget:
         return {"ok": True}
 
 
+@pytest.fixture
+async def active_api_app(tmp_path, fresh_runtime_state):
+    """Layer: integration. Owns one explicit API runtime for task lifecycle tests."""
+    created_app = api_module.create_api_app(project_root=tmp_path)
+    context = created_app.state.api_runtime_context
+    context.runtime_state = fresh_runtime_state
+    token = api_module._ACTIVE_API_APP.set(created_app)
+    try:
+        yield created_app
+    finally:
+        await context.close()
+        api_module._ACTIVE_API_APP.reset(token)
+
+
 @pytest.mark.asyncio
-async def test_scheduled_task_is_removed_after_completion(fresh_runtime_state):
+async def test_scheduled_task_is_removed_after_completion(fresh_runtime_state, active_api_app):
     session_id = "task-cleanup-test"
     await state_module.runtime_state.remove_task(session_id)
 
@@ -30,7 +44,7 @@ async def test_scheduled_task_is_removed_after_completion(fresh_runtime_state):
 
 
 @pytest.mark.asyncio
-async def test_runtime_state_tracks_multiple_tasks_per_session(fresh_runtime_state):
+async def test_runtime_state_tracks_multiple_tasks_per_session(fresh_runtime_state, active_api_app):
     """Layer: integration. Verifies one session can track and clean up multiple concurrent tasks independently."""
     session_id = "task-multi-test"
     await state_module.runtime_state.remove_task(session_id)
@@ -57,7 +71,7 @@ async def test_runtime_state_tracks_multiple_tasks_per_session(fresh_runtime_sta
 
 
 @pytest.mark.asyncio
-async def test_runtime_state_get_task_returns_none_when_only_completed_tasks_remain(fresh_runtime_state):
+async def test_runtime_state_get_task_returns_none_when_only_completed_tasks_remain(fresh_runtime_state, active_api_app):
     """Layer: unit. Verifies session task lookup does not surface completed tasks as if they were active."""
     session_id = "task-finished-test"
     await state_module.runtime_state.remove_task(session_id)
@@ -70,7 +84,9 @@ async def test_runtime_state_get_task_returns_none_when_only_completed_tasks_rem
 
 
 @pytest.mark.asyncio
-async def test_heartbeat_active_tasks_converges_after_run_active_completion(monkeypatch, fresh_runtime_state):
+async def test_heartbeat_active_tasks_converges_after_run_active_completion(
+    monkeypatch, fresh_runtime_state, active_api_app
+):
     """Layer: integration. Verifies run-active task tracking now mints session ids through the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     session_id = "hbtask01"
@@ -79,15 +95,15 @@ async def test_heartbeat_active_tasks_converges_after_run_active_completion(monk
         await asyncio.sleep(0.1)
         return {"ok": True}
 
-    monkeypatch.setattr(api_module.engine, "fake_run", fake_run, raising=False)
-    monkeypatch.setattr(api_module.api_runtime_host, "create_session_id", lambda: session_id)
+    monkeypatch.setattr(api_module._get_engine(), "fake_run", fake_run, raising=False)
+    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_session_id", lambda: session_id)
     monkeypatch.setattr(
-        api_module.api_runtime_node,
+        api_module._get_api_runtime_node(),
         "resolve_run_active_invocation",
         lambda asset_id, build_id, session_id, request_type: {"method_name": "fake_run", "args": []},
     )
 
-    transport = ASGITransport(app=api_module.app)
+    transport = ASGITransport(app=active_api_app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         run_response = await client.post(
             "/v1/system/run-active",
@@ -121,7 +137,7 @@ async def test_heartbeat_active_tasks_converges_after_run_active_completion(monk
 
 
 @pytest.mark.asyncio
-async def test_concurrent_run_active_task_cleanup_stress(monkeypatch, fresh_runtime_state):
+async def test_concurrent_run_active_task_cleanup_stress(monkeypatch, fresh_runtime_state, active_api_app):
     """Layer: integration. Verifies concurrent run-active cleanup stays correct when session ids come from the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     base = "hbconcur"
@@ -135,15 +151,15 @@ async def test_concurrent_run_active_task_cleanup_stress(monkeypatch, fresh_runt
         counter["n"] += 1
         return f"{base}-{counter['n']}"
 
-    monkeypatch.setattr(api_module.engine, "fake_run", fake_run, raising=False)
-    monkeypatch.setattr(api_module.api_runtime_host, "create_session_id", _new_session_id)
+    monkeypatch.setattr(api_module._get_engine(), "fake_run", fake_run, raising=False)
+    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_session_id", _new_session_id)
     monkeypatch.setattr(
-        api_module.api_runtime_node,
+        api_module._get_api_runtime_node(),
         "resolve_run_active_invocation",
         lambda asset_id, build_id, session_id, request_type: {"method_name": "fake_run", "args": []},
     )
 
-    transport = ASGITransport(app=api_module.app)
+    transport = ASGITransport(app=active_api_app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         requests = [
             client.post(

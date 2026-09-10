@@ -55,14 +55,14 @@ class UnexpectedBroker:
 SecondIterationVerifier = SecondIterationDeterministicVerifier
 
 
-def agent_request() -> dict[str, Any]:
+def agent_request(case_id: str = "mixed") -> dict[str, Any]:
     request = agent_iteration_request()
-    fixture = ticket_report_fixture()
-    request["objective_ref"] = "objective:ticket-report"
+    fixture = ticket_report_fixture(case_id)
+    request["objective_ref"] = "objective:ticket-report" + (f":{case_id}" if case_id != "mixed" else "")
     request["acceptance_ref"] = "acceptance:ticket-report-v1"
     request["authoritative_context_refs"] = list(fixture["batches"])
     request["materialized_inputs"] = [
-        _materialized_input("objective:ticket-report", "objective", fixture["objective"]),
+        _materialized_input(request["objective_ref"], "objective", fixture["objective"]),
         _materialized_input("acceptance:ticket-report-v1", "acceptance", fixture["acceptance"]),
         *[
             _materialized_input(reference, "authoritative_context", content)
@@ -109,6 +109,21 @@ def _materialized_input(reference: str, kind: str, content: Any) -> dict[str, An
         "content": content,
         "provenance_refs": [f"provenance:{reference}"],
     }
+
+
+def staged_agent_request(case_id: str = "mixed") -> dict[str, Any]:
+    """First acceptance iteration receives only batch A; later inputs remain host-owned."""
+    request = agent_request(case_id)
+    request["authoritative_context_refs"] = ["artifact:ticket-batch-a"]
+    request["materialized_inputs"] = [item for item in request["materialized_inputs"]
+                                      if item["reference"] != "artifact:ticket-batch-b"]
+    return request
+
+
+def ticket_continuation_inputs(case_id: str = "mixed") -> dict[str, Any]:
+    fixture = ticket_report_fixture(case_id)
+    return {"2": [_materialized_input("artifact:ticket-batch-b", "authoritative_context",
+                                      fixture["batches"]["artifact:ticket-batch-b"])]}
 
 
 def binding_for(request: dict[str, Any]) -> GovernedAgentInvocationBinding:

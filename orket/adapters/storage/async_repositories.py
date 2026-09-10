@@ -490,19 +490,21 @@ class AsyncPendingGateRepository:
         status: str,
         resolution: dict[str, Any] | None = None,
         resolved_at: str | None = None,
-    ) -> None:
+        expected_status: str | None = None,
+    ) -> bool:
         now = str(resolved_at or datetime.now(UTC).isoformat())
         async with self._lock, connect_sqlite_wal(self.db_path) as conn:
             await self._ensure_initialized(conn)
-            await conn.execute(
+            cursor = await conn.execute(
                 """
                     UPDATE pending_gate_requests
                     SET status = ?, resolution_json = ?, updated_at = ?, resolved_at = ?
-                    WHERE request_id = ?
+                    WHERE request_id = ? AND (? IS NULL OR status = ?)
                     """,
-                (status, json.dumps(resolution or {}), now, now, request_id),
+                (status, json.dumps(resolution or {}), now, now, request_id, expected_status, expected_status),
             )
             await conn.commit()
+            return cursor.rowcount == 1
 
     async def list_requests(
         self,

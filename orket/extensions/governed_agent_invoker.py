@@ -103,6 +103,9 @@ class GovernedAgentSubprocessInvoker:
                 await terminate_process_tree(process)
                 stopped = True
             return self._with_stopped(outcome, stopped)
+        except asyncio.CancelledError:
+            await terminate_process_tree(process)
+            raise
         except asyncio.IncompleteReadError:
             await terminate_process_tree(process)
             status: InvocationStatus = "cancelled" if active.cancelled else "protocol_failed"

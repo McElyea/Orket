@@ -74,7 +74,7 @@ async def test_real_child_uses_durable_host_broker_and_returns_acceptable_result
     invoker = GovernedAgentSubprocessInvoker(
         extension_root=TEMPLATE_ROOT,
         entrypoint="governed_agent:GovernedTicketAgent",
-        allowed_stdlib_modules=(),
+        allowed_stdlib_modules=("json",),
         broker=broker,
         handshake_timeout_seconds=2,
     )
@@ -137,7 +137,7 @@ async def test_real_child_repairs_failed_structured_output_within_issued_budget(
     invoker = GovernedAgentSubprocessInvoker(
         extension_root=TEMPLATE_ROOT,
         entrypoint="governed_agent:GovernedTicketAgent",
-        allowed_stdlib_modules=(),
+        allowed_stdlib_modules=("json",),
         broker=broker,
         handshake_timeout_seconds=2,
     )

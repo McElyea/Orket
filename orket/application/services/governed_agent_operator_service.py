@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from orket.application.services.governed_agent_loop_service import GovernedAgentFinalTruthRepository
 from orket.application.services.governed_agent_ports import (
     GovernedAgentIterationInvoker,
     GovernedAgentIterationRepository,
     GovernedAgentIterationSnapshot,
 )
+from orket.application.services.governed_agent_terminal_service import GovernedAgentFinalTruthRepository
 from orket.core.contracts import FinalTruthRecord, OperatorActionRecord, RunRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (

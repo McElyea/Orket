@@ -160,16 +160,19 @@ def api_key_env(monkeypatch):
 
 @pytest.fixture
 def test_client(tmp_path, api_key_env):
-    """Layer: integration. Provides the compatibility default app for alias-driven tests."""
+    """Layer: integration. Provides an isolated factory-created API app."""
     from fastapi.testclient import TestClient
 
-    from orket.interfaces.api import _configure_default_api_app
+    import orket.interfaces.api as api_module
 
-    client = TestClient(_configure_default_api_app(project_root=tmp_path))
+    created_app = api_module.create_api_app(project_root=tmp_path)
+    token = api_module._ACTIVE_API_APP.set(created_app)
+    client = TestClient(created_app)
     try:
         yield client
     finally:
         client.close()
+        api_module._ACTIVE_API_APP.reset(token)
 
 
 @pytest.fixture
@@ -227,15 +230,12 @@ def fresh_runtime_state(monkeypatch):
     """Layer: unit. Provides isolated GlobalState for tests that touch runtime_state."""
     import orket.state as state_module
 
-    fresh = state_module.GlobalState()
-    monkeypatch.setattr(state_module, "runtime_state", fresh)
     api_module = sys.modules.get("orket.interfaces.api")
-    if api_module is not None:
-        context = api_module.app.state.api_runtime_context
-        if context.closed:
-            api_module._configure_default_api_app(runtime_state_override=fresh)
-        else:
-            context.runtime_state = fresh
-        monkeypatch.setattr(api_module, "runtime_state", fresh)
+    if api_module is not None and api_module._ACTIVE_API_APP.get() is not None:
+        active_app = api_module._ACTIVE_API_APP.get()
+        fresh = active_app.state.api_runtime_context.runtime_state
+    else:
+        fresh = state_module.GlobalState()
+    monkeypatch.setattr(state_module, "runtime_state", fresh)
     return fresh
 

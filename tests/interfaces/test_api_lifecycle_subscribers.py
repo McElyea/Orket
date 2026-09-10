@@ -7,10 +7,11 @@ from orket.logging import event_subscriber_count, subscribe_to_events, unsubscri
 
 
 @pytest.mark.asyncio
-async def test_api_lifespan_subscriber_count_stable_across_repeated_cycles() -> None:
+async def test_api_lifespan_subscriber_count_stable_across_repeated_cycles(tmp_path) -> None:
     baseline = event_subscriber_count()
-    for _ in range(5):
-        async with api_module.lifespan(api_module.app):
+    for index in range(5):
+        created_app = api_module.create_api_app(tmp_path / str(index))
+        async with api_module.lifespan(created_app):
             assert event_subscriber_count() == baseline + 1
         assert event_subscriber_count() == baseline
 

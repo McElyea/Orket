@@ -4,7 +4,7 @@ import argparse
 import asyncio
 import json
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from orket.adapters.storage.async_control_plane_execution_repository import (
     AsyncControlPlaneExecutionRepository,
@@ -13,28 +13,46 @@ from orket.adapters.storage.async_control_plane_record_repository import (
     AsyncControlPlaneRecordRepository,
 )
 from orket.adapters.storage.async_governed_agent_repository import AsyncGovernedAgentRepository
-from orket.application.services.governed_agent_broker_service import GovernedAgentHostBroker
-from orket.application.services.governed_agent_fixture import SecondIterationDeterministicVerifier
-from orket.application.services.governed_agent_inspection_service import (
-    GovernedAgentInspectionService,
+from orket.adapters.storage.async_governed_agent_run_control_repository import AsyncGovernedAgentRunControlRepository
+from orket.adapters.storage.async_governed_agent_wake_control_repository import (
+    AsyncGovernedAgentWakeControlRepository,
 )
-from orket.application.services.governed_agent_loop_service import GovernedAgentLoopService
-from orket.application.services.governed_agent_operator_service import GovernedAgentOperatorService
-from orket.core.contracts import WorkloadRecord
-from orket.extensions.governed_agent_invoker import GovernedAgentSubprocessInvoker
-from orket.extensions.manager import ExtensionManager
-from orket.extensions.models import GovernedAgentWorkloadLaunch
-from orket.interfaces.governed_agent_provider_selection import (
+from orket.adapters.storage.async_governed_agent_wake_repository import (
+    AsyncGovernedAgentWakeRepository,
+)
+from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
+from orket.application.services.governed_agent_execution_composition import (
     GovernedAgentProviderSelection,
+    build_governed_agent_loop_service,
+    governed_agent_configuration_digest,
     model_map_for_roles,
     select_governed_agent_provider,
 )
-from orket_extension_sdk import AgentIterationRequest, canonical_digest_sha256
+from orket.application.services.governed_agent_inspection_service import (
+    GovernedAgentInspectionService,
+)
+from orket.application.services.governed_agent_operator_service import GovernedAgentOperatorService
+from orket.application.services.governed_agent_run_control_service import GovernedAgentRunControlService
+from orket.core.contracts import WorkloadRecord
+from orket.extensions.manager import ExtensionManager
+from orket.extensions.models import GovernedAgentWorkloadLaunch
+from orket.interfaces.governed_agent_wake_cli import (
+    add_governed_agent_wake_subparser,
+    run_governed_agent_wake_command,
+)
+from orket_extension_sdk import AgentIterationRequest
 
 
 def add_governed_agent_subparser(subparsers: Any) -> None:
-    parser = subparsers.add_parser("agent", help="Submit, inspect, replay, or cancel a governed agent run.")
+    parser = subparsers.add_parser("agent", help="Submit, wake, inspect, replay, or cancel a governed agent run.")
     commands = parser.add_subparsers(dest="agent_command", required=True)
+    add_governed_agent_wake_subparser(commands)
+    for command in ("pause", "stop"):
+        control = commands.add_parser(command, help="Request control at the current iteration boundary.")
+        control.add_argument("run_id")
+        for flag in ("db", "action-id", "actor-ref", "timestamp-utc", "invocation-id"):
+            control.add_argument(f"--{flag}", required=True)
+        control.add_argument("--json", action="store_true")
     for command in ("inspect", "replay"):
         child = commands.add_parser(command, help=f"{command.title()} durable governed-agent state.")
         child.add_argument("run_id")
@@ -54,6 +72,7 @@ def add_governed_agent_subparser(subparsers: Any) -> None:
     submit.add_argument("--db", required=True, help="Governed control-plane SQLite path.")
     submit.add_argument("--catalog", required=True, help="Extension catalog containing the agent workload.")
     submit.add_argument("--request", required=True, help="Validated initial iteration request JSON.")
+    submit.add_argument("--continuation-inputs", help="Host-only JSON mapping of iteration ordinals to context inputs.")
     submit.add_argument("--creation-timestamp-utc", required=True)
     submit.add_argument("--decision-timestamp-utc", action="append", required=True)
     submit.add_argument("--next-lease-expires-at-utc", action="append", default=[])
@@ -94,8 +113,18 @@ async def _run_command(
 ) -> dict[str, Any]:
     execution = AsyncControlPlaneExecutionRepository(db_path)
     iterations = AsyncGovernedAgentRepository(db_path)
+    wakes = AsyncGovernedAgentWakeRepository(db_path)
+    wake_controls = AsyncGovernedAgentWakeControlRepository(db_path)
     records = AsyncControlPlaneRecordRepository(db_path)
+    pending = AsyncPendingGateRepository(db_path)
     command = str(args.agent_command)
+    if command in {"pause", "stop"}:
+        result = await GovernedAgentRunControlService(AsyncGovernedAgentRunControlRepository(db_path)).request(
+            str(args.run_id), {"command": command, "action_id": args.action_id, "actor_ref": args.actor_ref,
+                               "timestamp_utc": args.timestamp_utc, "invocation_id": args.invocation_id})
+        return {"ok": result["status"] in {"requested", "idempotent"}, **result}
+    if command == "wake":
+        return await run_governed_agent_wake_command(args, wakes, wake_controls)
     if command == "submit":
         return await _submit(
             args=args,
@@ -106,6 +135,7 @@ async def _run_command(
             execution=execution,
             iterations=iterations,
             records=records,
+            wakes=wakes,
         )
     if command in {"inspect", "replay"}:
         inspector = GovernedAgentInspectionService(
@@ -113,6 +143,10 @@ async def _run_command(
             iteration_repository=iterations,
             call_repository=iterations,
             truth_repository=records,
+            wake_repository=wakes,
+            record_repository=records,
+            pending_gate_repository=pending,
+            wake_control_repository=wake_controls,
         )
         payload = (
             await inspector.inspect(run_id=str(args.run_id))
@@ -159,6 +193,7 @@ async def _submit(
     execution: AsyncControlPlaneExecutionRepository,
     iterations: AsyncGovernedAgentRepository,
     records: AsyncControlPlaneRecordRepository,
+    wakes: AsyncGovernedAgentWakeRepository,
 ) -> dict[str, Any]:
     if catalog_path is None or request_path is None:
         raise ValueError("E_AGENT_SUBMIT_PATHS_REQUIRED")
@@ -170,18 +205,32 @@ async def _submit(
     )
     request_payload = await asyncio.to_thread(_read_json_object, request_path)
     request = AgentIterationRequest.from_wire(request_payload)
+    continuation_inputs = (
+        await asyncio.to_thread(_read_json_object, Path(args.continuation_inputs))
+        if args.continuation_inputs else None
+    )
     selection = await _select_provider(args, request, launch)
-    service = _build_loop_service(execution, iterations, records, launch, selection)
+    service = build_governed_agent_loop_service(
+        execution=execution,
+        iterations=iterations,
+        records=records,
+        launch=launch,
+        selection=selection,
+    )
     try:
         execution_result = await service.run_bounded(
             initial_request_payload=request_payload,
             workload_record=WorkloadRecord.model_validate(launch.control_plane_workload_record),
             extension_digest=launch.extension_digest,
-            configuration_digest=_configuration_digest(launch, selection.configuration_payload()),
+            configuration_digest=governed_agent_configuration_digest(
+                launch,
+                selection.configuration_payload(),
+            ),
             admission_receipt_ref=f"agent-catalog-admission:{launch.extension_id}:{launch.workload_id}",
             creation_timestamp_utc=str(args.creation_timestamp_utc),
             decision_timestamps_utc=tuple(args.decision_timestamp_utc),
             next_lease_expiries_utc=tuple(args.next_lease_expires_at_utc),
+            continuation_inputs_payload=continuation_inputs,
         )
     finally:
         await selection.close()
@@ -190,6 +239,10 @@ async def _submit(
         iteration_repository=iterations,
         call_repository=iterations,
         truth_repository=records,
+        wake_repository=wakes,
+        record_repository=records,
+        pending_gate_repository=AsyncPendingGateRepository(db_path),
+        wake_control_repository=AsyncGovernedAgentWakeControlRepository(db_path),
     )
     inspection = await inspector.inspect(run_id=request.identity.run_id)
     return _execution_payload(execution_result, selection, inspection, db_path)
@@ -222,41 +275,14 @@ async def _select_provider(
     )
 
 
-def _build_loop_service(
-    execution: AsyncControlPlaneExecutionRepository,
-    iterations: AsyncGovernedAgentRepository,
-    records: AsyncControlPlaneRecordRepository,
-    launch: GovernedAgentWorkloadLaunch,
-    selection: GovernedAgentProviderSelection,
-) -> GovernedAgentLoopService:
-    broker = GovernedAgentHostBroker(
-        iteration_repository=iterations,
-        call_repository=iterations,
-        model_provider=selection.provider,
-        model_profiles=selection.profiles,
-    )
-    invoker = GovernedAgentSubprocessInvoker(
-        extension_root=launch.extension_root,
-        entrypoint=launch.entrypoint,
-        allowed_stdlib_modules=launch.allowed_stdlib_modules,
-        broker=broker,
-    )
-    return GovernedAgentLoopService(
-        execution_repository=execution,
-        iteration_repository=iterations,
-        truth_repository=records,
-        invoker=invoker,
-        verifier=SecondIterationDeterministicVerifier(),
-    )
-
-
 def _execution_payload(execution_result, selection, inspection, db_path: Path) -> dict[str, Any]:
     return {
-        "ok": execution_result.final_truth is not None,
+        "ok": execution_result.final_truth is not None and execution_result.final_truth.result_class.value == "success",
         "object_type": "governed_agent_execution",
         "proof_posture": selection.proof_posture,
         "observed_path": selection.observed_path,
-        "observed_result": "success" if execution_result.final_truth is not None else "failure",
+        "observed_result": "success" if execution_result.final_truth is not None
+        and execution_result.final_truth.result_class.value == "success" else "failure",
         "model_targets": selection.targets,
         "db_path": str(db_path),
         "run": execution_result.run.model_dump(mode="json"),
@@ -285,33 +311,24 @@ def _read_json_object(path: Path) -> dict[str, Any]:
     return payload
 
 
-def _configuration_digest(launch: GovernedAgentWorkloadLaunch, provider: dict[str, Any]) -> str:
-    return "sha256:" + cast(
-        str,
-        canonical_digest_sha256(
-            {
-                "extension_id": launch.extension_id,
-                "extension_version": launch.extension_version,
-                "manifest_digest_sha256": launch.manifest_digest_sha256,
-                "agent_declaration": launch.agent_declaration,
-                "provider": provider,
-            }
-        ),
-    )
-
-
 class _NoActiveProcessInvoker:
     async def invoke_once(self, **_: Any) -> Any:
         raise RuntimeError("E_AGENT_CLI_INVOKER_NOT_CONFIGURED")
 
     async def cancel_and_reap(self, **_: Any) -> bool:
-        return True
+        # A separate CLI process cannot attest teardown of a child owned by another runtime.
+        return False
 
 
 def _render_human(result: dict[str, Any]) -> str:
     object_type = str(result.get("object_type") or "")
     if object_type == "governed_agent_replay":
         return f"agent replay: run={result['run_id']} status={result['status']}"
+    wake = result.get("wake")
+    if isinstance(wake, dict):
+        return f"agent wake: id={wake.get('wake_id')} state={wake.get('state')}"
+    if object_type == "governed_agent_wake_list":
+        return f"agent wakes: count={len(result.get('items', []))}"
     run = result.get("run")
     if isinstance(run, dict):
         return f"agent {object_type}: run={run.get('run_id')} state={run.get('lifecycle_state')}"

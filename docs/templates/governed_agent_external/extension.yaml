@@ -1,7 +1,7 @@
 manifest_version: v0
 extension_id: governed.agent.starter
-extension_version: 0.1.0
-allowed_stdlib_modules: []
+extension_version: 0.2.0
+allowed_stdlib_modules: [json]
 workloads:
   - workload_id: governed-agent-loop
     entrypoint: governed_agent:GovernedTicketAgent
@@ -9,6 +9,8 @@ workloads:
       - agent.iteration.v1
       - read_file
       - write_file
+      - memory.query
+      - memory.write
     workload_kind: agent
     input_contract: agent_iteration_request.v1
     output_contract: agent_iteration_result.v1

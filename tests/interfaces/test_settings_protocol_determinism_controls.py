@@ -51,7 +51,7 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
         },
     )
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "org",
         type(
             "Org",
@@ -122,7 +122,7 @@ def test_runtime_policy_update_saves_protocol_determinism_fields(monkeypatch, te
 
 def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+    monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
     captured = {}
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {"existing": "x"})
     monkeypatch.setattr(api_module, "save_user_settings", lambda settings: captured.update({"settings": settings}))
@@ -157,7 +157,7 @@ def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch, test_cl
 
 def test_settings_patch_rejects_invalid_protocol_network_mode(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+    monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
 
     response = test_client.patch(
@@ -185,7 +185,7 @@ def test_settings_get_reports_protocol_determinism_sources(monkeypatch, test_cli
         },
     )
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "org",
         type(
             "Org",
@@ -222,7 +222,7 @@ def test_settings_get_keeps_run_ledger_mode_source_stable_under_env_override(mon
         lambda: {},
     )
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "org",
         type("Org", (), {"process_rules": {}})(),
     )

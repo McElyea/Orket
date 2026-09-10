@@ -1,10 +1,15 @@
 # Governed Continuous Agent Implementation Plan
 
-Last updated: 2026-09-07
+Archived on 2026-09-10 after user acceptance and the governed-agent minor-release
+closeout. Current release authority: `docs/releases/0.6.0/PROOF_REPORT.md`.
+The checkpoint/version/blocker statements below are historical as of their
+recorded dates; the accepted closeout supersedes their open release gates.
+
+Last updated: 2026-09-09
 Date: 2026-09-06
-Status: Active implementation plan
-Roadmap state: Priority Now, position 1
-Execution state: In progress -- bounded Slices 0-5 implemented; Slice 6 blocked by architectural-truth B2
+Status: Archived — accepted implementation closeout
+Roadmap state: Retired from active execution
+Execution state: All slices accepted; release boundary core 0.6.0 / SDK 0.6.0 / external 0.2.0
 Owner: Orket Core
 
 ## Objective
@@ -29,7 +34,8 @@ Activation state:
 5. SDK, extension, and core runtime component plans: active subordinate
    workstreams;
 6. runtime implementation: not yet present at plan activation; bounded Slices
-   0-5 were subsequently implemented as recorded below.
+   0-5 and the Slice 6A-6H durable API/manual/scheduled/webhook/effect supervisor/control and live-provider path were subsequently
+   implemented as recorded below.
 
 Implementation authorization covers the product direction. Concrete protocol,
 provider, and packaging choices below are Orket Core design decisions and remain
@@ -41,11 +47,11 @@ that the user separately approved every wire field.
 This file is the sole roadmap-facing implementation plan for the lane. Detailed
 execution requirements live in:
 
-1. SDK: `docs/projects/governed-agent-loop/GOVERNED_AGENT_SDK_ENABLEMENT_PLAN.md`;
+1. SDK: `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_AGENT_SDK_ENABLEMENT_PLAN.md`;
 2. reference extension:
-   `docs/projects/governed-agent-loop/GOVERNED_LOCAL_AGENT_EXTENSION_PLAN.md`;
+   `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_LOCAL_AGENT_EXTENSION_PLAN.md`;
 3. core runtime:
-   `docs/projects/governed-agent-loop/GOVERNED_AGENT_CORE_RUNTIME_PLAN.md`.
+   `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_AGENT_CORE_RUNTIME_PLAN.md`.
 
 Those files are component plans, not competing lane authorities. Durable
 semantics live in `docs/specs/GOVERNED_AGENT_LOOP_V1.md`, and existing
@@ -76,8 +82,18 @@ were incomplete. Requirements-phase history is preserved in
 
 ## Current execution state
 
-Active slice: Slice 6 -- durable continuous supervisor, blocked by the recorded
-architectural-truth B2 lifecycle prerequisite (`AT-EX-002`).
+Active slice: Slice 7 -- Slices 6A-6H are implemented, and clean package build,
+install, ownership, external validation, and installed-artifact live inference
+including approval/denial, restart, and non-mutating replay are current. Eleven
+installed live cases pass after the final reconciliation. Policy-governed
+release actions, the broader architecture gate, and explicit user acceptance remain.
+
+The 2026-09-09 audit closes staged context delivery, partial content verification,
+persisted success refs, progress exhaustion, run pause/stop, objective memory,
+atomic approval resolution, and observation-only recovery after process exit.
+Current evidence and remaining release gates are consolidated in
+`SLICE_7_ACCEPTANCE_PROOF_2026-09-09.md`. Earlier checkpoints remain historical;
+they do not independently establish acceptance of these corrected behaviors.
 
 Slices 0-5 are implemented on bounded CLI and application-service paths. Their
 current proof is recorded in `SLICE_0_CONFORMANCE_MATRIX.md`,
@@ -86,8 +102,9 @@ current proof is recorded in `SLICE_0_CONFORMANCE_MATRIX.md`,
 1. the packaged Draft 2020-12 schema, semantic validator, immutable public SDK
    models, framed IPC codec, child proxies, and shared fixtures bind the full V1
    object family without importing host-private models;
-2. SDK `0.5.0a1` and core `0.5.9` build as separate distributions; clean-wheel
-   inspection proves the core wheel does not co-own `orket_extension_sdk`;
+2. SDK `0.5.0a1` and core `0.5.10` build as separate distributions; clean wheel
+   and source-distribution inspection proves the core does not co-own
+   `orket_extension_sdk`;
 3. strict agent discrimination and feature negotiation fail closed across
    author validation, install, catalog reload, and generic invocation;
 4. the dedicated governed-agent path resolves the extension through the
@@ -113,22 +130,35 @@ current proof is recorded in `SLICE_0_CONFORMANCE_MATRIX.md`,
     intended content without duplicate effect dispatch.
 
 The former S0-A through S0-D blockers are closed by those artifacts and tests.
-Architectural-truth Slice B2 remains a separate prerequisite for Slice 6 or any
-earlier API/supervisor composition. The hosted repository, policy-approved
-model-substitution surface, durable wake queue, supervisor/API composition,
-release actions, and user acceptance remain open.
+The Slice 6A queue, claim, bounded supervisor, teardown, and inspection
+substrate, Slice 6B production composition, Slice 6C public manual transport,
+and Slice 6D wake controls are implemented as recorded later in this plan.
+Architectural-truth Slice B2 is
+complete and `AT-EX-002` is
+removed. Release actions and user acceptance remain open. Live Ollama
+supervisor proof is complete in Slice 6E.
 
 ### Resolved wake-queue design question
 
 Existing `RunRecord`, `AttemptRecord`, and `StepRecord` objects cannot truthfully
 represent queued or claimed wake identity, reason, deduplication, lease/fence,
 and missed/coalesced-trigger state without overloading execution lifecycle.
-Slice 6 will therefore add one bounded `AgentWakeRecord` repository/table. A
+Slice 6 therefore uses one bounded `AgentWakeRecord` repository/table. A
 wake targets either an existing nonterminal run or one new scheduled occurrence,
 uses compare-and-set claim plus lease and fencing generation, and records manual,
-API, scheduled, webhook, or recovery reason. This is a design decision only;
-the queue and supervisor are not implemented, and B2 still gates their lifecycle
-composition.
+API, scheduled, webhook, or recovery reason. Slice 6A implements and proves the
+manual/API/recovery queue plus bounded supervisor substrate. Slice 6B adds
+authenticated API wake transport and explicit opt-in production lifecycle
+composition. Slice 6C adds public manual enqueue/list/inspect through the same
+application ingress authority. Slice 6F adds durable schedule evaluation with
+IANA timezone/DST, missed-trigger, and latest-coalescing semantics. Slice 6G
+adds API-key plus HMAC authenticated webhook delivery, bounded timestamp replay
+protection, and atomic delivery-receipt/wake publication.
+Slice 6D adds durable wake-level cancellation/recovery and action inspection;
+recovery remains evidence-gated and cannot itself authorize execution.
+Slice 6H adds wake-fenced effect preparation plus authenticated approval/denial
+and request-bound resume-wake dispatch without introducing another effect or
+execution authority.
 
 ## Delivery sequence
 
@@ -153,7 +183,7 @@ Required work:
 4. define the application-owned governor interface and repository ports;
 5. record the exact B2 dependency and its owning architectural-truth task;
    require its proof before API/supervisor integration, without duplicating that
-   remediation inside this lane;
+   remediation inside this lane; this prerequisite was satisfied on 2026-09-07;
 6. update the workload/start-path matrix only when the canonical catalog path is
    implemented;
 7. add deterministic positive and negative fixtures shared by SDK contract and
@@ -181,7 +211,7 @@ Acceptance gates:
 ### Slice 1 -- Public SDK agent surface
 
 Detailed authority:
-`docs/projects/governed-agent-loop/GOVERNED_AGENT_SDK_ENABLEMENT_PLAN.md`.
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_AGENT_SDK_ENABLEMENT_PLAN.md`.
 
 Required work:
 
@@ -212,7 +242,7 @@ memory behavior cannot be advertised before their own host proof. Existing
 ### Slice 2 -- Deterministic governed vertical slice
 
 Detailed authority:
-`docs/projects/governed-agent-loop/GOVERNED_AGENT_CORE_RUNTIME_PLAN.md`.
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_AGENT_CORE_RUNTIME_PLAN.md`.
 
 Required work:
 
@@ -227,7 +257,8 @@ Required work:
 6. publish final truth only through an admitted verifier;
 7. expose minimal application-backed submit, inspect, cancel, and replay through
    the canonical CLI/catalog path. Do not add an agent API or singleton-backed
-   supervisor here to bypass the B2 gate.
+   supervisor; completed B2 supplies the application-owned lifecycle seam for
+   the later Slice 6B integration.
 
 Acceptance gates:
 
@@ -244,7 +275,7 @@ Acceptance gates:
 ### Slice 3 -- External single-model reference extension
 
 Detailed authority:
-`docs/projects/governed-agent-loop/GOVERNED_LOCAL_AGENT_EXTENSION_PLAN.md`.
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_LOCAL_AGENT_EXTENSION_PLAN.md`.
 
 Required work:
 
@@ -338,6 +369,97 @@ Acceptance gates:
 4. an operator can explain what is running, why it may continue, what it can
    affect, what it awaits, and why it stopped.
 
+Slice 6A checkpoint status: implemented on 2026-09-07. One SQLite queue now
+admits only manual, API, and recovery provenance tokens; provides idempotent
+enqueue, capacity backpressure, atomic claims, renewal, cancellation, release,
+completion, monotonic fencing, and fail-closed expired-claim recovery; and is
+consumed by a bounded event-driven application supervisor with a dispatcher
+claim guard. The existing inspector now includes wake and claim truth for an
+existing run, and `ApiRuntimeContainer` can own and close registered resources
+plus their tasks. This is queue/supervisor substrate, not production continuous
+operation: no public wake ingress, existing loop/broker/effect composition,
+provider-capacity policy, scheduled/webhook ingress, or production API
+lifecycle activation is admitted. B2 is now complete; those behaviors remain
+for later Slice 6 increments. Evidence:
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/SLICE_6A_PROOF_2026-09-07.md`.
+
+Slice 6B checkpoint status: implemented on 2026-09-07. Each API factory app now
+owns one governed-agent runtime graph and closes its supervisor, renewal task,
+active dispatch, provider, and child process through the lifespan. Authenticated
+API wakes persist even when supervision is disabled; explicit activation
+dispatches new-run and existing-run work through the same catalog-resolved
+bounded loop, broker, verifier, and final-truth authorities as the CLI. The
+durable claim count is the configured provider/local capacity reservation,
+claims renew while bounded work is active, and the wake guard is rechecked at
+broker and result publication boundaries. Inspection composes wakes, roles and
+model receipts, budgets, effects, approvals, checkpoints, operator actions,
+continuation, and final truth, with a concise operator explanation. At the 6B
+checkpoint, scheduled and webhook ingress, public manual-wake transport,
+generalized wake-driven effect/recovery dispatch, and live Ollama supervisor
+proof remained later checked increments. Evidence:
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/SLICE_6B_PROOF_2026-09-07.md`.
+
+Slice 6C checkpoint status: implemented on 2026-09-07. The nested `orket agent
+wake` CLI now enqueues new-run or existing-run manual occurrences and lists or
+inspects their durable state. Manual and API transports share one strict
+application ingress service and use source-scoped stable identities. The CLI
+does not start a supervisor, provider, child, or loop. End-to-end proof persists
+the manual wake before API app construction, then observes the explicitly
+enabled API-owned supervisor claim it and publish verifier-backed final truth.
+Evidence: `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/SLICE_6C_PROOF_2026-09-07.md`.
+
+Slice 6D checkpoint status: implemented on 2026-09-07. Authenticated API and
+nested CLI wake controls now publish canonical operator actions,
+cancellation/recovery transitions, and specialized wake-action receipts
+atomically. Claimed cancellation retains uncertainty and
+capacity; `requeue` and `confirm_cancelled` require matching fencing generation,
+confirmed child stop, cleared effect uncertainty, and evidence references.
+Exact replay is idempotent, contradictory reuse conflicts, restart preserves
+the receipts, and composed run inspection includes both operator actions and
+wake actions. Evidence:
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/SLICE_6D_PROOF_2026-09-07.md`.
+
+Slice 6E checkpoint status: proven on 2026-09-07. One authenticated API wake
+was durably claimed by the API-owned supervisor, dispatched through the real
+external child and exact installed `qwen2.5:7b` plus `qwen2.5-coder:7b` role
+targets, completed two bounded iterations, published verifier-backed terminal
+truth, and left zero tracked background tasks after lifespan shutdown. Evidence:
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/SLICE_6E_PROOF_2026-09-07.md`.
+
+Slice 6F checkpoint status: implemented on 2026-09-07. Authenticated schedule
+evaluation converts explicit local occurrence times through an IANA timezone
+and DST fold, applies bounded misfire grace plus `skip` or `fire_once`,
+coalesces eligible occurrences to the latest, and atomically retains the
+evaluation receipt with at most one selected `source=scheduled` wake. Fully
+skipped evaluations remain durable. Exact evaluation replay is idempotent,
+contradictory reuse conflicts, direct queue publication of scheduled provenance
+fails closed, restart preserves receipts and wakes, and the existing supervisor
+consumes selected work. Evidence:
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/SLICE_6F_PROOF_2026-09-07.md`.
+
+Slice 6G checkpoint status: implemented on 2026-09-07. The existing API-key
+boundary is combined with issuer/key-bound HMAC-SHA256 verification over route
+identity, canonical UTC timestamp, and raw-body digest. A bounded replay window
+rejects stale and excessively future deliveries before JSON interpretation.
+The durable delivery receipt and selected `source=webhook` wake publish
+atomically; exact retries are idempotent, contradictory reuse conflicts, direct
+queue publication fails closed, restart preserves truth, secrets/signatures are
+not projected, and the existing supervisor consumes the wake through the real
+external child path. Evidence:
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/SLICE_6G_PROOF_2026-09-07.md`.
+
+Slice 6H checkpoint status: implemented on 2026-09-07. A claimed wake now
+prepares every accepted issue-scoped read/write proposal through the canonical
+effect service while rechecking its fence before publication and after
+external observation. The authenticated operator route resolves the existing
+approval, performs no denied mutation, requires safe journals for every
+proposal, accepts one aggregate checkpoint, records one exact request-bound
+resume authorization, and enqueues an existing-run wake. The run remains
+operator-blocked until that wake is claimed and validates the authorization;
+unobserved writes move to recovery pending. Exact resolution retries and
+process restart preserve one resume wake. Evidence:
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/SLICE_6H_PROOF_2026-09-07.md`.
+
 ### Slice 7 -- Release proof and lane closeout
 
 Required proof:
@@ -352,6 +474,37 @@ Required proof:
 5. clean SDK build/install and external package build/install/validation;
 6. architecture, documentation, dependency, lint, and canonical test gates;
 7. operator inspection and non-mutating replay artifact.
+
+Packaging checkpoint, 2026-09-07: item 5 is complete against a cache-free copy
+of the current Git-visible worktree. Core `0.5.10`, SDK `0.5.0a1`, and external
+starter `0.1.0` wheels and source distributions built; all three final wheels
+installed into one fresh environment; `pip check`, installed CLI help, SDK
+strict validation, and host strict validation passed. The core artifacts contain
+zero SDK-namespace entries, and the external source distribution preserves its
+manifest and test. Evidence:
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/SLICE_7_PACKAGING_CHECKPOINT_2026-09-07.md`.
+
+Installed-runtime checkpoint, 2026-09-08: the first installed live runs exposed
+a checkout-relative, unpackaged local prompt registry. The canonical registry
+now ships inside core and resolves relative to its module without a fallback
+copy. A rebuilt core wheel with the retained SDK wheel and extracted external
+starter sdist passes five real Ollama flows: single-model CLI, multi-model CLI,
+API supervision, approved write/restart/resume, and denied write. The effect
+tests verify expected file contents, no preapproval or denied write, idempotent
+resume publication, checkpoint acceptance, app-lifespan restart, exact role
+identities, non-mutating replay, and zero tracked background tasks. Evidence:
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/SLICE_7_INSTALLED_RUNTIME_CHECKPOINT_2026-09-08.md`.
+This does not prove abrupt process-kill recovery or replace the distinct
+external `GovernedLocalAgent` package's release gates with starter proof.
+This checkpoint's shared request supplied both batches initially and therefore
+did not establish incremental context delivery. The 2026-09-09 reconciliation
+replaces that fixture path with host-owned continuation inputs: batch A first,
+batch B plus the compact prior report next. Three fixed cases share the same
+verifier and budgets across single/multi-model proof. The actual external
+`GovernedLocalAgent` distribution, including its release verifier, is built and
+installed separately. The new process-fault harness exits the API immediately
+before or after a real write and restarts a fresh process against the same DB.
+Only observed matching bytes can reconcile, with repeat writes prohibited.
 
 Routine live proof must set `ORKET_DISABLE_SANDBOX=1`. Intentional sandbox work
 must prove teardown in the same execution path.
@@ -417,24 +570,38 @@ matrix and Slices 1-2 proof report. Strict discrimination, complete bindings,
 the retained parent-run adapter, clean package ownership, broker ownership,
 cancellation, and stale-result fencing are now implemented.
 
-Ship-risk debt now starts at Slice 6: the durable fenced wake queue, continuous
-supervisor, lifecycle-owned teardown, and API/session inspection composition are
-not implemented. The B2 lifecycle prerequisite remains open for that work.
+Ship-risk debt now starts after Slice 6H: durable authenticated API and public
+manual wakes,
+production dispatcher composition, broker/result wake-fence propagation,
+provider-capacity claims, composed inspection, and continuous API lifecycle
+ownership plus evidence-gated wake controls and live Ollama supervisor proof
+exist, including schedule and HMAC webhook ingress plus wake-fenced effect
+preparation, authenticated resolution, aggregate checkpointing, and
+request-bound resume wakes. Slice 7 packaging and clean-install compatibility
+are now proven; final evidence reconciliation, release actions, and acceptance
+remain open.
 
 Self-deception debt remains explicit: live Ollama execution proves provider and
 receipt behavior, not comparative model quality. The trusted Python extension
-subprocess is not hostile-code containment, and bounded CLI/application effect
-proof is not continuous operation. The generic extension executor still refuses
-agent workloads; only the dedicated catalog-resolved agent path is admitted.
+subprocess is not hostile-code containment, and deterministic continuous API
+proof is not live local-model proof. The generic extension executor still
+refuses agent workloads; only the dedicated catalog-resolved agent path is
+admitted.
 
 Exploration-safe debt: the SDK is a development prerelease and the reference
 extension is a separate local package, not a hosted or published release.
 Policy-approved substitution is not exposed by the exact-model CLI path. Final
-release compatibility and full lane closeout remain Slice 7 work.
+release actions, evidence reconciliation, user acceptance, and full lane
+closeout remain Slice 7 work.
 
 Current verification and exact proof classifications are recorded in
+`SLICE_7_ACCEPTANCE_PROOF_2026-09-09.md` for the current candidate, and historically in
 `SLICE_1_2_PROOF_2026-09-07.md` and
-`SLICE_3_5_PROOF_2026-09-07.md`.
+`SLICE_3_5_PROOF_2026-09-07.md`, with continuous-operation checkpoints in
+`SLICE_6A_PROOF_2026-09-07.md`, `SLICE_6B_PROOF_2026-09-07.md`,
+`SLICE_6C_PROOF_2026-09-07.md`, `SLICE_6D_PROOF_2026-09-07.md`,
+`SLICE_6F_PROOF_2026-09-07.md`, `SLICE_6G_PROOF_2026-09-07.md`, and
+`SLICE_6H_PROOF_2026-09-07.md`.
 
 ## Non-goals
 

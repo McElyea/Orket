@@ -11,7 +11,7 @@ Status: Accepted planning revision; runtime implementation pending
 - Affected contracts and plans:
   `docs/specs/GOVERNED_AGENT_LOOP_V1.md`,
   `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_V1_2026-09-06.md`,
-  `docs/projects/governed-agent-loop/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`,
+  `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`,
   and its three component plans.
 - Authorization: user requested review and improvements to the recent plans.
   This revision refines the existing implementation direction.

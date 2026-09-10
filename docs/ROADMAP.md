@@ -1,13 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-09-07
+Last updated: 2026-09-10
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. governed continuous-agent implementation (SDK, external local-model extension, and core runtime) -- Plan: `docs/projects/governed-agent-loop/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`.
-2. architectural truth remediation -- Plan: `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`.
+1. architectural truth remediation -- Plan: `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`.
 
 ## Maintenance (Non-Priority)
 
@@ -37,8 +36,7 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| governed-agent-loop | active-implementation | P0 | `docs/projects/governed-agent-loop/` | Orket Core | Bounded Slices 0-5 are implemented and proven through deterministic and live Ollama child/broker paths, built external-package validation, fixed multi-model roles, and issue-scoped effect approval/recovery. Slice 6 durable wake/supervisor composition is next but remains blocked by architectural-truth B2 (`AT-EX-002`); Slice 7 release and user acceptance remain open. |
-| architectural-truth | active-implementation | P1 | `docs/projects/architectural-truth/` | Orket Core | Make runtime behavior, dependency enforcement, tests, authority documents, and operator entrypoints tell the same architectural truth. Slice A is complete. Slice B1 now provides distinct factory-created API apps with app-owned runtime graphs and teardown; B2 must remove the module-default compatibility owner and extract outward service/store composition before Workstream 2 can close and remains a prerequisite for continuous-agent supervisor ownership. |
+| architectural-truth | active-implementation | P1 | `docs/projects/architectural-truth/` | Orket Core | Make runtime behavior, dependency enforcement, tests, authority documents, and operator entrypoints tell the same architectural truth. Slice A and Slice B are complete: API imports create no runtime owner, each factory app owns its full runtime/store/service graph, and `AT-EX-002` is removed. Slice C architecture-gate cutover is next; broader interface-facade debt remains under `AT-EX-003`. |
 | northstar-aws-smoke-setup | paused-checkpoint | paused | `docs/projects/northstar-aws-smoke-setup/` | Orket Core | Paused pending Bedrock access. No-spend setup, randomized fixtures, and blocked handoff are implemented; reopen only when Bedrock access is available and the user explicitly requests live completion or reopen. This lane does not publicly admit `trusted_terraform_plan_decision_v1`. |
 | governed-proof | paused-checkpoint | paused | `docs/projects/governed-proof/` | Orket Core | Paused after the truthful 2026-04-19 provider-backed Bedrock checkpoint. `ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; reopen only when a bounded change can use an AWS account or Region with non-zero Bedrock inference quota for the admitted provider-backed governed-proof path, or for explicit retirement. |
 | northstar-governed-change-packets | paused-checkpoint | paused | `docs/projects/northstar-governed-change-packets/` | Orket Core | Paused after the truthful 2026-04-20 Terraform public-admission checkpoint. `ORKET_NORTHSTAR_SECOND_GOVERNED_CHANGE_PACKET_FAMILY_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; reopen only when a bounded change can truthfully provide the required non-secret live inputs, rerun the full Workstream 2 proof envelope, and re-evaluate the publication-readiness and publication-gate outputs in the same change, or for explicit retirement. |

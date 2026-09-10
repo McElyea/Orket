@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Protocol, cast
+from typing import Any, Literal, cast
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.governed_agent_effect_records import (
@@ -17,7 +16,16 @@ from orket.application.services.governed_agent_effect_records import (
     pre_effect_checkpoint,
     proposal_arguments,
 )
-from orket.application.services.governed_agent_effect_terminal_service import close_denied_agent_effect
+from orket.application.services.governed_agent_effect_terminal_service import (
+    close_denied_agent_effect,
+    record_uncertain_agent_effect,
+)
+from orket.application.services.governed_agent_ports import (
+    GovernedAgentAuthorityGuard,
+    GovernedAgentFileEffectExecutor,
+    GovernedAgentPendingGateRepository,
+    ensure_governed_agent_authority,
+)
 from orket.application.services.tool_approval_control_plane_operator_service import (
     ToolApprovalControlPlaneOperatorService,
 )
@@ -36,20 +44,6 @@ from orket_extension_sdk import (
     AgentIterationRequest,
     canonical_digest_sha256,
 )
-
-
-class GovernedAgentPendingGateRepository(Protocol):
-    async def create_request(self, **kwargs: Any) -> str: ...
-
-    async def resolve_request(self, **kwargs: Any) -> None: ...
-
-    async def list_requests(self, **kwargs: Any) -> list[dict[str, Any]]: ...
-
-
-class GovernedAgentFileEffectExecutor(Protocol):
-    async def observe(self, *, path: str, issue_id: str) -> Mapping[str, Any]: ...
-
-    async def write(self, *, path: str, content: str | dict[str, Any], issue_id: str) -> Mapping[str, Any]: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,18 +88,22 @@ class GovernedAgentEffectService:
         request: AgentIterationRequest,
         proposal: AgentEffectProposal,
         created_at: str,
+        authority_guard: GovernedAgentAuthorityGuard | None = None,
     ) -> GovernedAgentEffectPreparation:
+        await ensure_governed_agent_authority(authority_guard)
         run = await self._require_authority(request, proposal)
         issue_id, arguments = proposal_arguments(proposal)
         if proposal.capability == "read_file":
-            receipt = await self._observe_effect(proposal, issue_id, arguments, created_at)
+            receipt = await self._observe_effect(proposal, issue_id, arguments, created_at, authority_guard)
             return GovernedAgentEffectPreparation(receipt, None, None)
         if proposal.capability != "write_file":
             raise ValueError("E_AGENT_EFFECT_CAPABILITY_UNSUPPORTED")
         checkpoint = pre_effect_checkpoint(request, proposal, created_at)
         if await self._publication.repository.get_checkpoint(checkpoint_id=checkpoint.checkpoint_id) is None:
+            await ensure_governed_agent_authority(authority_guard)
             await self._publication.publish_checkpoint(checkpoint=checkpoint)
         approval_id_for_proposal = effect_approval_id(proposal)
+        await ensure_governed_agent_authority(authority_guard)
         await self._pending.create_request(
             request_id=approval_id_for_proposal,
             session_id=proposal.identity.run_id,
@@ -129,6 +127,7 @@ class GovernedAgentEffectService:
         )
         reservation_id = self._reservations.reservation_id(approval_id_for_proposal)
         if await self._publication.repository.get_latest_reservation_record(reservation_id=reservation_id) is None:
+            await ensure_governed_agent_authority(authority_guard)
             await self._reservations.publish_pending_tool_approval_hold(
                 approval_id=approval_id_for_proposal,
                 session_id=proposal.identity.run_id,
@@ -139,6 +138,7 @@ class GovernedAgentEffectService:
                 created_at=created_at,
                 control_plane_target_ref=run.run_id,
             )
+        await ensure_governed_agent_authority(authority_guard)
         return GovernedAgentEffectPreparation(
             effect_receipt(
                 proposal,
@@ -169,12 +169,15 @@ class GovernedAgentEffectService:
             return await self._existing_resolution(previous, normalized_decision)
         if previous_status != "pending":
             raise ValueError("E_AGENT_EFFECT_APPROVAL_ALREADY_RESOLVED")
-        await self._pending.resolve_request(
+        claimed = await self._pending.resolve_request(
             request_id=approval_id,
             status=normalized_decision,
             resolution={"decision": normalized_decision},
             resolved_at=timestamp,
+            expected_status="pending",
         )
+        if not claimed:
+            raise ValueError("E_AGENT_EFFECT_APPROVAL_ALREADY_RESOLVED")
         resolved = await self._approval(approval_id)
         if resolved is None:
             raise ValueError("E_AGENT_EFFECT_APPROVAL_RESOLUTION_MISSING")
@@ -222,14 +225,15 @@ class GovernedAgentEffectService:
             receipt = effect_receipt(proposal, "denied", action.action_id, (str(payload["checkpoint_id"]),))
             return GovernedAgentEffectResolution(receipt, action, None, None)
         entry = await self._existing_effect_entry(proposal)
-        if entry is None or entry.uncertainty_classification is not ResidualUncertaintyClassification.NONE:
+        if entry is None:
+            return await self._execute_approved(
+                proposal=proposal, arguments=cast(dict[str, Any], payload["args"]),
+                issue_id=str(approval["issue_id"]), timestamp=str(approval["resolved_at"]),
+                operator_action=action, reconciliation_only=True,
+            )
+        if entry.uncertainty_classification is not ResidualUncertaintyClassification.NONE:
             raise ValueError("E_AGENT_EFFECT_RECONCILIATION_REQUIRED")
-        receipt = effect_receipt(
-            proposal,
-            "observed",
-            action.action_id,
-            (entry.observed_result_ref, entry.journal_entry_id),
-        )
+        receipt = effect_receipt(proposal, "observed", action.action_id, (entry.observed_result_ref, entry.journal_entry_id))
         return GovernedAgentEffectResolution(receipt, action, entry.journal_entry_id, None)
 
     async def _execute_approved(
@@ -240,6 +244,7 @@ class GovernedAgentEffectService:
         issue_id: str,
         timestamp: str,
         operator_action: OperatorActionRecord,
+        reconciliation_only: bool = False,
     ) -> GovernedAgentEffectResolution:
         existing = await self._existing_effect_entry(proposal)
         if existing is not None:
@@ -255,6 +260,8 @@ class GovernedAgentEffectService:
         reconciled = bool(observed_before.get("ok")) and content_matches(
             observed_before.get("content"), intended_content
         )
+        if reconciliation_only and not reconciled:
+            raise ValueError("E_AGENT_EFFECT_RECONCILIATION_REQUIRED")
         outcome = (
             observed_before
             if reconciled
@@ -270,13 +277,8 @@ class GovernedAgentEffectService:
             proposal, timestamp, operator_action.action_id, observed_ref, ResidualUncertaintyClassification.NONE
         )
         checkpoint_ref = await self._accept_post_effect_checkpoint(proposal, journal, timestamp)
-        state = "reconciled" if reconciled else "observed"
-        receipt = effect_receipt(
-            proposal,
-            state,
-            operator_action.action_id,
-            (observed_ref, journal.journal_entry_id),
-        )
+        state: Literal["reconciled", "observed"] = "reconciled" if reconciled else "observed"
+        receipt = effect_receipt(proposal, state, operator_action.action_id, (observed_ref, journal.journal_entry_id))
         return GovernedAgentEffectResolution(receipt, operator_action, journal.journal_entry_id, checkpoint_ref)
 
     async def _observe_effect(
@@ -285,10 +287,20 @@ class GovernedAgentEffectService:
         issue_id: str,
         arguments: dict[str, Any],
         timestamp: str,
+        authority_guard: GovernedAgentAuthorityGuard | None,
     ) -> AgentEffectReceipt:
+        await ensure_governed_agent_authority(authority_guard)
         observed = await self._files.observe(path=str(arguments["path"]), issue_id=issue_id)
+        await ensure_governed_agent_authority(authority_guard)
         if not bool(observed.get("ok")):
-            return effect_receipt(proposal, "uncertain", "host-observe-policy:v1", ())
+            journal = await record_uncertain_agent_effect(
+                execution_repository=self._execution,
+                publication=self._publication,
+                proposal=proposal,
+                timestamp=timestamp,
+                authority_ref="host-observe-policy:v1",
+            )
+            return effect_receipt(proposal, "uncertain", "host-observe-policy:v1", (journal.journal_entry_id,))
         observed_ref = "sha256:" + cast(str, canonical_digest_sha256(observed.get("content")))
         journal = await self._append_journal(
             proposal, timestamp, "host-observe-policy:v1", observed_ref, ResidualUncertaintyClassification.NONE
@@ -303,12 +315,12 @@ class GovernedAgentEffectService:
     async def _uncertain_effect(
         self, proposal: AgentEffectProposal, timestamp: str, operator_action: OperatorActionRecord
     ) -> GovernedAgentEffectResolution:
-        journal = await self._append_journal(
-            proposal,
-            timestamp,
-            operator_action.action_id,
-            None,
-            ResidualUncertaintyClassification.UNRESOLVED,
+        journal = await record_uncertain_agent_effect(
+            execution_repository=self._execution,
+            publication=self._publication,
+            proposal=proposal,
+            timestamp=timestamp,
+            authority_ref=operator_action.action_id,
         )
         receipt = effect_receipt(proposal, "uncertain", operator_action.action_id, (journal.journal_entry_id,))
         return GovernedAgentEffectResolution(receipt, operator_action, journal.journal_entry_id, None)
@@ -331,7 +343,6 @@ class GovernedAgentEffectService:
     async def _existing_effect_entry(self, proposal):
         entries = await self._publication.repository.list_effect_journal_entries(run_id=proposal.identity.run_id)
         return next((entry for entry in entries if entry.effect_id == f"agent-effect:{proposal.proposal_id}"), None)
-
     async def _accept_post_effect_checkpoint(self, proposal, journal, timestamp) -> str:
         pre_checkpoint = await self._publication.repository.get_checkpoint(
             checkpoint_id=f"agent-pre-effect-checkpoint:{proposal.proposal_id}"

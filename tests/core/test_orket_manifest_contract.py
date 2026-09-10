@@ -23,10 +23,13 @@ def _load_fixture_payload(name: str) -> dict:
 
 
 def test_valid_manifest_fixture_passes() -> None:
+    """Layer: contract. The valid bundle fixture admits the released core minor."""
     manifest = load_orket_manifest(_fixture_path("valid_minimal.json"))
     assert manifest.apiVersion == "orket.io/v1"
     assert manifest.kind == "Orket"
-    assert manifest.metadata.engineVersion == ">=0.3.0,<0.6.0"
+    assert manifest.metadata.engineVersion == ">=0.3.0,<0.7.0"
+    assert is_engine_compatible(manifest, "0.6.0") is True
+    assert is_engine_compatible(manifest, "0.7.0") is False
     assert manifest.guards[0].value == "hallucination"
 
 

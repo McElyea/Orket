@@ -13,11 +13,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.decision_nodes.api_runtime_strategy_node import DefaultApiRuntimeStrategyNode
-from orket.interfaces import api as api_module
-from orket.interfaces.routers.extension_runtime import _raise_extension_runtime_http_error
-from orket.runtime.state_transition_registry import state_transition_registry_snapshot
-from orket.runtime.ui_lane_security_boundary_test_contract import (
+from orket.decision_nodes.api_runtime_strategy_node import DefaultApiRuntimeStrategyNode  # noqa: E402
+from orket.interfaces import api as api_module  # noqa: E402
+from orket.interfaces.routers.extension_runtime import _raise_extension_runtime_http_error  # noqa: E402
+from orket.runtime.state_transition_registry import state_transition_registry_snapshot  # noqa: E402
+from orket.runtime.ui_lane_security_boundary_test_contract import (  # noqa: E402
     ui_lane_security_boundary_test_contract_snapshot,
     validate_ui_lane_security_boundary_test_contract,
 )
@@ -30,7 +30,7 @@ except ModuleNotFoundError:  # pragma: no cover - script execution fallback
     helper_path = Path(__file__).resolve().parents[1] / "common" / "rerun_diff_ledger.py"
     spec = importlib.util.spec_from_file_location("rerun_diff_ledger", helper_path)
     if spec is None or spec.loader is None:  # pragma: no cover - defensive fallback
-        raise RuntimeError(f"E_DIFF_LEDGER_HELPER_LOAD_FAILED:{helper_path}")
+            raise RuntimeError(f"E_DIFF_LEDGER_HELPER_LOAD_FAILED:{helper_path}")  # noqa: B904
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     write_payload_with_diff_ledger = module.write_payload_with_diff_ledger
@@ -58,14 +58,15 @@ def _explorer_path_traversal_blocked() -> dict[str, Any]:
 
 
 def _session_workspace_escape_blocked() -> dict[str, Any]:
-    try:
-        _ = api_module._validate_session_path("../../secrets")
-    except HTTPException as exc:
-        return {
-            "check": "session_workspace_escape_blocked",
-            "ok": int(exc.status_code) == 400,
-            "status_code": int(exc.status_code),
-        }
+    with tempfile.TemporaryDirectory(prefix="ui-lane-session-boundary-") as tmp_dir:
+        try:
+            _ = api_module._validate_session_path("../../secrets", project_root=Path(tmp_dir))
+        except HTTPException as exc:
+            return {
+                "check": "session_workspace_escape_blocked",
+                "ok": int(exc.status_code) == 400,
+                "status_code": int(exc.status_code),
+            }
     return {
         "check": "session_workspace_escape_blocked",
         "ok": False,

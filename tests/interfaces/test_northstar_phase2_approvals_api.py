@@ -186,11 +186,11 @@ async def test_outward_approval_payloads_traverse_outbound_gate(tmp_path, monkey
 
 
 @pytest.mark.contract
-def test_no_approve_and_pause_surface_exists() -> None:
+def test_no_approve_and_pause_surface_exists(test_client) -> None:
     """Layer: contract. Verifies Phase 2 does not introduce approve-and-pause semantics."""
     paths = {
         str(route.path)
-        for route in api_module.app.routes
+        for route in test_client.app.routes
         if isinstance(route, APIRoute) and str(route.path).startswith("/v1/approvals")
     }
 

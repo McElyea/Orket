@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-09-07
+Last updated: 2026-09-10
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -19,24 +19,86 @@ This file does not define:
 
 It defines only the currently authoritative paths that agents and contributors must treat as canonical unless explicitly directed otherwise.
 The source wrapper `python main.py [runtime arguments]` remains supported through
-`0.5.x`, and runtime `--rock` remains a hidden compatibility alias to the named
+`0.6.x`, and runtime `--rock` remains a hidden compatibility alias to the named
 card runtime. Neither is part of the canonical runtime path list below; removal
-requires an explicit `0.6.0` contract delta.
+requires an explicit `0.7.0` contract delta.
 
 ## Current Canonical Paths
 
+SDK release automation uses `.gitea/workflows/sdk-package-release.yml` and an
+explicit repository-root `dist/` for build, smoke install, and wheelhouse copy,
+as defined in `docs/requirements/sdk/VERSIONING.md`.
+
+Governed-agent staged input authority is the application-owned
+`governed_agent_context_plan.py`: CLI `--continuation-inputs` and the optional
+wake dispatch `continuation_inputs` field bind later batches to the run
+configuration without exposing them in the initial child request. Verifier v2
+validates partial report contents before effects, records progress projections,
+and binds success to a persisted iteration result. Progress thresholds derive
+from durable decisions; policy stops publish unsuccessful final truth. Delta:
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_ACCEPTANCE_2026-09-09.md`.
+
+Run pause/stop authority is `governed_agent_run_control_service.py` with atomic
+operator-action/iteration-decision preconditions in the existing SQLite store.
+Resume reuses checkpoint and recovery authority. Objective memory is a bounded
+projection of prior verified iteration results through
+`governed_agent_memory_service.py`; other scopes and profile writes remain
+unadmitted. Approved effect retries without a journal are observation-only;
+pending-status compare-and-set prevents competing approval writes.
+Installed acceptance is produced by
+`scripts/proof/run_governed_agent_acceptance.py` at the stable local result path
+`benchmarks/results/governed_agent/acceptance.json`, with rerun diff-ledger history.
+It records artifact hashes, installed versions, source-base commit, dirty
+candidate posture, model inventory and durable per-case evidence.
+The user accepted the proof and operator experience on 2026-09-10 and
+authorized minor releases: core 0.6.0, SDK 0.6.0, external 0.2.0. The external
+release source and local distribution destination are
+`C:/Source/OrketExtensions/GoverenedAgentLoop`; the old hyphenated-root copy
+has historical development status only. Release proof and artifact authority:
+`docs/releases/0.6.0/PROOF_REPORT.md`. The completed lane history is archived
+under `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/`.
+Release surface proof is produced by `scripts/proof/run_governed_agent_release_surfaces.py`
+at `benchmarks/results/releases/0.6.0/surfaces.json`; release evidence snapshots
+and package checksums are retained in that same release directory by
+`scripts/proof/collect_governed_agent_release.py`.
+Built legacy/current compatibility and namespace-owner upgrade evidence is
+produced by `scripts/proof/run_governed_agent_compatibility.py` at
+`benchmarks/results/governed_agent/compatibility.json`. SDK release
+compatibility and wheel-upgrade order are governed by
+`docs/requirements/sdk/VERSIONING.md`; historical bundling hosts do not acquire
+standalone SDK compatibility merely by overlaying a wheel.
+
+The canonical local prompt profile registry is package-owned at
+`orket/runtime/config/local_prompt_profiles.json`. The default loader resolves
+it beside its module, independently of the caller's directory; explicit
+runtime-context and environment registry overrides retain precedence. There
+is no second registry at `model/core/contracts/local_prompt_profiles.json`.
+Migration and proof gates are recorded in
+`docs/architecture/CONTRACT_DELTA_PACKAGED_PROMPT_REGISTRY_2026-09-08.md`.
+
 Governed continuous-agent durable contract authority is
-`docs/specs/GOVERNED_AGENT_LOOP_V1.md`, with active implementation sequencing at
-`docs/projects/governed-agent-loop/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`
+`docs/specs/GOVERNED_AGENT_LOOP_V1.md`, with accepted implementation history at
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`
 and the accepted initial delta at
 `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_V1_2026-09-06.md`. The
 contract composes the existing control-plane, extension, approval, checkpoint,
 effect-journal, trust-handoff, and local-provider authorities. Bounded Slices
-0-5 are implemented on CLI/application-service paths. Contract bindings
+0-5, the Slice 6A durable wake/claim substrate, the Slice 6B API-owned
+production composition, the Slice 6C manual-wake CLI, the Slice 6D durable wake
+controls, the Slice 6E live Ollama supervisor proof, the Slice 6F durable
+scheduled-wake evaluation path, the Slice 6G HMAC webhook ingress path, and the
+Slice 6H wake-fenced effect resolution/resume path are implemented.
+Core 0.6.0 and SDK 0.6.0 are separate distributions. Core contains no SDK
+namespace entries. The reference extension 0.2.0 source distribution retains
+the manifest, public-SDK workload, tests and release verifier required for
+operator intake. Matched wheel installation, strict validation and live
+single/multi-model, API supervision, approval/denial and process-loss recovery
+are release gates recorded in the release proof report.
+Contract bindings
 are packaged at
 `orket_extension_sdk/schemas/governed_agent_loop_v1.json`, with shared semantic
 validation, immutable models, framed IPC, child proxies, and fixtures in SDK
-`0.5.0a1`. The host advertises `governed_agent_loop.v1` and
+`0.6.0`. The host advertises `governed_agent_loop.v1` and
 `agent_stdio_ipc.v1` for the dedicated governed-agent catalog path. All raw agent
 discriminators require the strict typed declaration across author validation,
 install, catalog reload, and generic invocation; the generic executor still
@@ -52,9 +114,42 @@ planner/actor/critic proofs record requested/resolved model identity, measured
 usage, latency, finish, and truncation. The issue-scoped application effect path
 composes host observation, pending approval, operator action, reservation,
 existing tool gate/filesystem adapter, effect journal, checkpoint acceptance,
-denial closure, reconciliation, and explicit resume. It does not admit an agent
-API entrypoint, wake queue, continuous supervisor, non-issue effects, or silent
-model substitution.
+denial closure, reconciliation, and explicit resume. Slice 6A adds one durable
+SQLite queue for manual/API/recovery provenance, idempotent enqueue, CAS claims,
+lease renewal, capacity backpressure, cancellation, monotonic fencing,
+fail-closed expired-claim recovery, a bounded event-driven supervisor with a
+dispatcher claim guard, application-container task/resource teardown, and wake
+state in existing-run inspection. Slice 6B adds authenticated API wake admission,
+new-run and existing-run dispatch through the same catalog-resolved bounded
+loop and broker, explicit provider-capacity claims, active claim renewal,
+per-operation wake guards around broker/result authority, full per-app lifespan
+ownership, and one composed inspection view for wake, run, attempt, iteration,
+role/model receipt, budget, effect, approval, checkpoint, operator action,
+continuation, and final truth. Slice 6C adds `orket agent wake enqueue`, `list`,
+and `inspect`; manual and API ingress reuse one application validation service,
+and the manual command persists work without owning dispatch. Slice 6D adds
+authenticated API and CLI wake cancellation/recovery with atomic canonical
+operator actions and wake-transition receipts, epoch/fence preconditions,
+evidence-gated uncertainty clearance, and action history in wake and run
+inspection. Slice 6E proves that the API-owned
+supervisor can carry a durable wake through two bounded iterations using exact
+installed planner/actor/critic Ollama targets and publish verifier-backed final
+truth before clean lifespan teardown. Slice 6F adds authenticated durable
+schedule evaluation with IANA timezone and explicit DST fold, bounded misfire
+grace, `skip` or `fire_once` missed policy, latest-only coalescing, atomic
+evaluation-receipt/wake publication, exact replay, and schedule truth in wake
+and run inspection. Slice 6G adds API-key plus issuer/key-bound HMAC-SHA256
+authentication, a canonical timestamp replay window, atomic durable
+delivery-receipt/wake publication, exact retry and contradiction handling, and
+webhook truth in wake and run inspection. Continuous
+dispatch remains disabled unless
+`ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED=1`; the host also owns provider/model,
+database, capacity, lease, renewal, and idle-wait configuration. Slice 6H
+prepares accepted issue-scoped read/write proposals beneath the claimed wake,
+resolves writes through the authenticated operator endpoint, accepts a
+full-coverage aggregate checkpoint, and queues a request-digest-bound resume;
+the run becomes executing only after that wake is claimed and revalidated.
+Non-issue effects and silent model substitution remain unadmitted.
 
 The implementation review delta is
 `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_REVIEW_2026-09-06.md`.
@@ -67,6 +162,20 @@ operator-trusted extension code; Python import guards are not OS containment.
 These constraints are implemented on the dedicated deterministic and live
 Ollama paths. The Slices 3-5 boundary is recorded in
 `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICES_3_5_2026-09-07.md`.
+The Slice 6A substrate boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6A_2026-09-07.md`.
+The Slice 6B production-composition boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6B_2026-09-07.md`.
+The Slice 6C manual-wake boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6C_2026-09-07.md`.
+The Slice 6D wake-control boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6D_2026-09-07.md`.
+The Slice 6F scheduled-wake boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6F_2026-09-07.md`.
+The Slice 6G webhook-wake boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6G_2026-09-07.md`.
+The Slice 6H wake-driven effect boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6H_2026-09-07.md`.
 
 Apophenia external extension durable contract: `docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md`; implementation remains outside Orket core at `C:\Source\Orket-Extensions\Apophenia`, and Orket stays a generic host runtime for Apophenia through generic extension runtime endpoints.
 
@@ -79,6 +188,7 @@ llama.cpp first-slice local provider implementation is closed and archived at `d
    - Governed-action quickstart demo: `python -m orket.quickstart.governed_action_demo` or `orket-quickstart`; scripted operator decisions use `--decision approve|deny`, and unavailable interactive input exits `2` with `E_QUICKSTART_INPUT_REQUIRED`
    - Governed-run deterministic demo: `orket demo governed-run` uses an installed package-owned default scenario; custom scenario command: `orket run scenario examples/governed-run/scenario.yaml`; inspection and replay: `orket inspect .runs/<run_id>` and `orket replay .runs/<run_id>`
    - Governed-agent submit: use the common arguments in `docs/RUNBOOK.md`, then exactly one of `--deterministic-fixture` or `--ollama-model <exact-model>`; fixed role overrides are `--planner-model`, `--actor-model`, and `--critic-model`; inspection/replay: `orket agent inspect|replay <run_id> --db <sqlite_path>`; cancellation: `orket agent cancel <run_id> --db <sqlite_path> --action-id <id> --actor-ref <ref> --timestamp-utc <timestamp> --reason <reason> --cancellation-epoch <n>`
+   - Governed-agent API wake and inspection: `POST /v1/agent-wakes`, `GET /v1/agent-wakes[/<wake_id>]`, `POST|GET /v1/agent-schedules/<schedule_id>/evaluations`, `POST /v1/agent-webhooks/<issuer_ref>/deliveries/<delivery_id>`, `GET /v1/agent-webhooks/<issuer_ref>/deliveries`, `POST /v1/agent-runs/<run_id>/effects/<approval_id>/resolve`, `POST /v1/agent-runs/<run_id>/effects/resume`, `GET /v1/agent-runs/<run_id>`, `GET /v1/agent-runs/<run_id>/replay`, and `GET /v1/agent-runtime/status`; continuous processing, effect-resume timing, and webhook signing configuration are documented in `docs/RUNBOOK.md`
 5. Canonical test command: `python -m pytest -q`
 6. Active docs index: `docs/README.md`
 7. Active roadmap: `docs/ROADMAP.md`
@@ -159,7 +269,7 @@ Trusted Terraform Bedrock summary-model admission: `scripts/proof/terraform_plan
 
 Trust Kernel and Portable Conformance completed lane authority is archived under `docs/projects/archive/trust-kernel-conformance/TKC04232026-LANE-CLOSEOUT/`. Workstream 1 finite-model implementation lives in `scripts/proof/finite_trust_kernel_model.py` with contract and structural tests in `tests/scripts/test_finite_trust_kernel_model.py`; Workstream 2 portable conformance implementation lives in `scripts/proof/run_trust_conformance_pack.py` with integration tests in `tests/scripts/test_trust_conformance_pack.py` and evaluator guide `docs/guides/TRUST_KERNEL_CONFORMANCE_PACK_GUIDE.md`. The finite-model signature and conformance summary are claim-supporting only and do not replace witness, validator, offline verifier, or packet verifier authority. The durable contracts are `docs/specs/FINITE_TRUST_KERNEL_MODEL_V1.md` and `docs/specs/PORTABLE_TRUST_CONFORMANCE_PACK_V1.md`; the completed lane adopted only finite trust-kernel model and portable conformance pack workstreams over existing admitted evidence, did not admit a new workflow compare scope, keeps `trusted_repo_manifest_change_v1` deferred as the preferred future non-AWS candidate, and did not upgrade replay-deterministic or text-deterministic claims.
 
-72. Canonical API runtime ownership now lives in one `orket/application/services/api_runtime_container.py::ApiRuntimeContainer` attached to each FastAPI instance as `app.state.api_runtime_context`; every `orket/interfaces/api.py::create_api_app(...)` call returns a distinct app with a distinct project root, decision node, runtime state, runtime host, engine, outbound-policy snapshot, lazy stream/interaction/extension owners, and tracked background-task set, while HTTP, websocket, and lifespan execution resolve through the active ASGI app and lifespan teardown cancels tracked tasks and closes the app-owned engine idempotently. The module-level `app` plus `api_runtime_node`, `runtime_state`, `engine`, `api_runtime_host`, `stream_bus`, `interaction_manager`, `extension_manager`, and `extension_runtime_service` remain compatibility-only aliases for that default app and cannot be adopted into factory-created apps; outward service/store extraction and removal of the default aliases remain B2 debt.
+72. Canonical API runtime ownership lives in `orket/application/services/api_runtime_container.py::ApiRuntimeContainer`, with construction centralized in `orket/application/services/api_runtime_composition.py` and one container attached to each FastAPI instance as `app.state.api_runtime_context`. Every `orket/interfaces/api.py::create_api_app(...)` call returns a distinct app with a distinct project root, decision node, runtime state/event queue, runtime host, engine, outbound-policy snapshot, stream bus, interaction manager, extension owners/catalog, outward stores/services, and tracked background-task set, plus an app-container-held model-selector factory. HTTP, websocket, and lifespan execution resolve through the active ASGI app; lifespan teardown cancels tracked tasks and closes the app-owned engine idempotently. Importing `orket.interfaces.api` constructs no FastAPI app or mutable runtime owner, and that module exports no compatibility `app` or owner aliases. Production startup uses `orket.runtime.create_api_app(...)` and retains its returned app. Architectural-truth B2 is complete and `AT-EX-002` is removed; broader interface transport/facade extraction remains tracked by `AT-EX-003`.
 73. Canonical engine control-plane composition now builds through `orket/orchestration/engine_services.py::build_engine_control_plane_services(...)`, async kernel control-plane publication and response augmentation now live in `orket/orchestration/engine_kernel_async_service.py::KernelAsyncControlPlaneService`, the default orchestrator issue-dispatch lifecycle truth remains owned by `orket/application/services/orchestrator_issue_control_plane_service.py` rather than `orket/orchestration/engine.py`, and engine-targeted replay is now explicitly diagnostics-only through `OrchestrationEngine.replay_turn_diagnostics(...)` while `replay_turn(...)` remains only as a compatibility wrapper over the same artifact-backed diagnostics surface; the touched API and CLI replay entrypoints now call `replay_turn_diagnostics(...)` explicitly
 74. Canonical runtime-verification support artifacts now use `agent_output/verification/runtime_verification.json` as the latest support-only verifier record, `agent_output/verification/runtime_verification_index.json` as the stable history index, and `agent_output/verification/runtime_verifier_records/<run_id>/<issue_id>/turn_<turn_index>_retry_<retry_count>.json` as the preserved per-record family; those artifacts must record `artifact_role=support_verification_evidence`, `artifact_authority=support_only`, `authored_output=false`, `overall_evidence_class`, and `evidence_summary` over `syntax_only`, `command_execution`, `behavioral_verification`, and `not_evaluated` together with run, issue, turn, and retry provenance, and runtime-summary or MAR paths must not promote the verifier artifact to the primary authored output by default
 75. Canonical Tool Execution Gate authority now lives in `docs/specs/TOOL_EXECUTION_GATE_V1.md`; the shipped first slice closes the supported `run_card(...) -> TurnExecutor -> ToolDispatcher` path plus normalized extension actions that re-enter `run_card(...)`, requires construction-time `tool_gate` authority on that supported path, keeps direct `ToolDispatcher.execute_tools(...)`, direct `ToolBox.execute(...)`, and direct card-family method invocation inventory-only internal seams, keeps direct `Agent.run(...)` as retained legacy compatibility that now fail-closes before any direct tool call when `tool_gate` or effect-journal authority is missing, keeps SDK capability registry invocation out of scope under `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`, and fixes the canonical audit command and stable output path at `python scripts/security/build_tool_gate_audit.py --strict` and `benchmarks/results/security/tool_gate_audit.json`
@@ -171,14 +281,14 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 81. Prompt Reforger generic service portability claims now live in `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`; `gemma-3-4b-it-qat` and other sub-7B targets are `unsupported` for product portability claims until exact corpus evidence clears, and lower corpus bars must be named as narrower tiers rather than described as clearing the frozen 5-slice portability corpus.
 82. SDK versioning and core compatibility authority now lives in `docs/requirements/sdk/VERSIONING.md` and `orket_extension_sdk/README.md`; SDK SemVer is independent from core engine versioning, and SDK `0.Y.Z` is compatible with Orket core `0.Y.*` through `0.(Y+2).*` unless a release note explicitly narrows that window.
 83. Architectural Truth Slice A command behavior is governed by `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_SLICE_A_2026-07-29.md`: the runtime boundary propagates handled fatal outcomes as nonzero process exits, synchronous first-run persistence runs outside the active event loop and precedes success narration, `orket-quickstart` exposes help plus explicit `--decision approve|deny` input and a structured exit-2 EOF refusal, and `orket demo governed-run` resolves its default scenario from installed `orket.quickstart` package data rather than the caller's working directory. The rerunnable current-state inventory is `docs/projects/architectural-truth/architectural_truth_baseline.json`, and accountable exception metadata is `docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json`.
-84. Architectural Truth command-root authority is governed by `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_COMMAND_ROOT_2026-07-30.md`: the installed `orket` console script targets `orket.cli:main` as the one canonical command root, `orket runtime` owns the default card runtime, `orket runtime --card <card_id>` owns named-card invocation, and runtime arguments are forwarded into the existing card parser without a duplicate option implementation. `python main.py [runtime arguments]` is a source-wrapper compatibility surface through `0.5.x`; it is eligible for removal only in `0.6.0` after an explicit contract delta and continued installed-root proof. Completion evidence is `docs/projects/architectural-truth/COMMAND_ROOT_PROOF_2026-07-30.md`.
+84. Architectural Truth command-root authority is governed by `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_COMMAND_ROOT_2026-07-30.md`: the installed `orket` console script targets `orket.cli:main` as the one canonical command root, `orket runtime` owns the default card runtime, `orket runtime --card <card_id>` owns named-card invocation, and runtime arguments are forwarded into the existing card parser without a duplicate option implementation. `python main.py [runtime arguments]` is a source-wrapper compatibility surface through `0.6.x`; it is eligible for removal only in `0.7.0` after an explicit contract delta and continued installed-root proof. Completion evidence is `docs/projects/architectural-truth/COMMAND_ROOT_PROOF_2026-07-30.md`.
 
 ## Machine-Readable Authority Map (v1)
 
 ```json
 {
   "version": 1,
-  "last_updated": "2026-09-07",
+  "last_updated": "2026-09-10",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -204,7 +314,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
       "cli_default": "orket runtime",
       "cli_named_card": "orket runtime --card <card_id>",
       "cli_source_wrapper_compatibility": "python main.py [runtime arguments]",
-      "cli_source_wrapper_compatibility_status": "supported_through_0.5.x_removal_requires_explicit_0.6.0_contract_delta",
+      "cli_source_wrapper_compatibility_status": "supported_through_0.6.x_removal_requires_explicit_0.7.0_contract_delta",
       "cli_legacy_named_rock_alias": "orket runtime --rock <rock_name>",
       "cli_source_wrapper_legacy_rock_alias": "python main.py --rock <rock_name>",
       "cli_legacy_named_rock_alias_status": "hidden_compatibility_alias_to_run_card",

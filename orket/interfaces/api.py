@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager, suppress
 from contextvars import ContextVar
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 from fastapi import APIRouter, Body, Depends, FastAPI, HTTPException, Query, Request, Security, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,25 +16,17 @@ from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 
 from orket import __version__
-from orket.adapters.storage.outward_approval_store import OutwardApprovalStore
-from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
-from orket.adapters.storage.outward_run_store import OutwardRunStore
-from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
+from orket.application.services.api_runtime_composition import build_api_runtime_container
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
-from orket.application.services.extension_runtime_service import ExtensionRuntimeService
-from orket.application.services.outward_approval_service import OutwardApprovalService
-from orket.application.services.outward_ledger_service import OutwardLedgerService, OutwardLedgerValidationError
+from orket.application.services.outward_ledger_service import OutwardLedgerValidationError
 from orket.application.services.outward_run_execution_service import (
-    OutwardRunExecutionService,
     OutwardRunExecutionValidationError,
 )
 from orket.application.services.outward_run_inspection_service import (
     OutwardRunInspectionError,
-    OutwardRunInspectionService,
 )
 from orket.application.services.outward_run_service import (
     OutwardRunConflictError,
-    OutwardRunService,
     OutwardRunValidationError,
 )
 from orket.application.services.run_ledger_summary_projection import (
@@ -61,8 +53,6 @@ from orket.application.services.runtime_policy import (
     resolve_state_backend_mode,
     runtime_policy_options,
 )
-from orket.decision_nodes.registry import DecisionNodeRegistry
-from orket.extensions import ExtensionManager
 from orket.hardware import get_metrics_snapshot
 from orket.interfaces.api_runtime_context import (
     ApiAppRuntimeContext,
@@ -73,6 +63,7 @@ from orket.interfaces.routers.card_authoring import build_card_authoring_router
 from orket.interfaces.routers.cards import build_cards_router
 from orket.interfaces.routers.extension_runtime import build_extension_runtime_router
 from orket.interfaces.routers.flows import build_flows_router
+from orket.interfaces.routers.governed_agents import build_governed_agents_router
 from orket.interfaces.routers.kernel import build_kernel_router
 from orket.interfaces.routers.runs import build_runs_router
 from orket.interfaces.routers.sessions import build_sessions_router
@@ -85,24 +76,16 @@ from orket.kernel.v1.outbound_policy_gate import (
     merge_outbound_policy_config,
 )
 from orket.logging import log_event, subscribe_to_events, unsubscribe_from_events
-from orket.orchestration.models import ModelSelector
 from orket.runtime.cors_config import resolve_cors_config
 from orket.runtime.startup_checks import validate_required_secrets, warn_if_insecure_gitea_https
-from orket.runtime_paths import resolve_control_plane_db_path
 from orket.settings import load_user_preferences, load_user_settings, save_user_settings
-from orket.state import create_runtime_state
-from orket.streaming import (
-    CommitIntent,
-    CommitOrchestrator,
-    InteractionManager,
-    StreamBus,
-    StreamBusConfig,
-)
+from orket.streaming import CommitIntent, InteractionManager, StreamBus
 from orket.time_utils import now_local
 from orket.workloads import is_builtin_workload, run_builtin_workload, validate_builtin_workload_start
 
 LOGGER = logging.getLogger(__name__)
 _ACTIVE_API_APP: ContextVar[FastAPI | None] = ContextVar("orket_active_api_app", default=None)
+_PayloadT = TypeVar("_PayloadT")
 
 
 class _ApiAppContextMiddleware:
@@ -118,10 +101,6 @@ class _ApiAppContextMiddleware:
             _ACTIVE_API_APP.reset(token)
 
 
-def _resolve_api_runtime_node() -> Any:
-    return DecisionNodeRegistry().resolve_api_runtime()
-
-
 def _resolve_default_project_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
@@ -132,10 +111,7 @@ def _current_api_app(target_app: FastAPI | None = None) -> FastAPI:
     active_app = _ACTIVE_API_APP.get()
     if active_app is not None:
         return active_app
-    default_app = globals().get("app")
-    if isinstance(default_app, FastAPI):
-        return default_app
-    raise RuntimeError("API app is not initialized.")
+    raise RuntimeError("No API app is active. Use create_api_app() and pass or enter that app context.")
 
 
 def _configured_project_root(target_app: FastAPI | None = None) -> Path:
@@ -146,12 +122,13 @@ def _configured_project_root(target_app: FastAPI | None = None) -> Path:
 
 
 def _project_root(target_app: FastAPI | None = None) -> Path:
-    return _runtime_context(target_app).project_root
+    return Path(_runtime_context(target_app).project_root)
 
 
-def _validate_session_path(session_id: str) -> Path:
+def _validate_session_path(session_id: str, *, project_root: Path | None = None) -> Path:
     """Validate session_id does not traverse outside the runs directory."""
-    base = (_project_root() / "workspace" / "runs").resolve()
+    root = Path(project_root).resolve() if project_root is not None else _project_root()
+    base = (root / "workspace" / "runs").resolve()
     candidate = (base / session_id).resolve()
     if not candidate.is_relative_to(base):
         raise HTTPException(status_code=400, detail="Invalid session_id")
@@ -597,8 +574,6 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     context = get_api_runtime_context(_app)
     if context is None or context.project_root != configured_root:
         raise RuntimeError("API app runtime context does not match its configured project root.")
-    if context.closed and _app is app:
-        context = _runtime_context(_app)
     if context.closed:
         raise RuntimeError("API app runtime context is closed.")
     broadcaster_task: asyncio.Task[Any] | None = None
@@ -617,6 +592,9 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         loop = asyncio.get_running_loop()
         log_subscriber = _on_log_record_factory(loop, context.runtime_state)
         subscribe_to_events(log_subscriber)
+        governed_agent_runtime = context.governed_agent_runtime
+        if governed_agent_runtime is not None:
+            governed_agent_runtime.start(context)
         expected_key = _read_api_key_env("ORKET_API_KEY")
         insecure_bypass = _enforce_insecure_no_api_key_startup_policy()
         log_event(
@@ -645,13 +623,6 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         await context.close()
 
 
-app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
-app.state.project_root = _resolve_default_project_root()
-app.state.outbound_policy_config = {}
-app.add_middleware(_ApiAppContextMiddleware, owner_app=app)
-
-
-@app.middleware("http")
 async def add_orket_version_header(request: Request, call_next: Callable[[Request], Any]) -> Any:
     response = await call_next(request)
     if str(request.url.path or "").startswith("/v1/"):
@@ -659,13 +630,13 @@ async def add_orket_version_header(request: Request, call_next: Callable[[Reques
     return response
 
 
-def _filter_operator_payload(payload: Any, *, surface: str) -> Any:
+def _filter_operator_payload(payload: _PayloadT, *, surface: str) -> _PayloadT:
     base_config = dict(getattr(_current_api_app().state, "outbound_policy_config", {}) or {})
     filtered, _report = apply_outbound_policy_gate(
         payload,
         merge_outbound_policy_config(base_config, {"surface": surface}),
     )
-    return filtered
+    return cast(_PayloadT, filtered)
 
 
 def _load_outbound_policy_config_for_app(project_root: Path) -> dict[str, Any]:
@@ -675,279 +646,85 @@ def _load_outbound_policy_config_for_app(project_root: Path) -> dict[str, Any]:
     config_path = Path(raw_path)
     if not config_path.is_absolute():
         config_path = project_root / config_path
-    return load_outbound_policy_config_file(config_path)
-
-
-def _outward_pipeline_db_path() -> Path:
-    raw_path = str(os.getenv("ORKET_OUTWARD_PIPELINE_DB_PATH") or "").strip()
-    if raw_path:
-        return Path(raw_path)
-    return resolve_control_plane_db_path()
-
-
-def _connector_http_allowlist() -> tuple[str, ...]:
-    raw = str(os.getenv("ORKET_CONNECTOR_HTTP_ALLOWLIST") or "")
-    return tuple(host.strip().lower() for host in raw.split(",") if host.strip())
-
-
-def _outward_run_service() -> OutwardRunService:
-    db_path = _outward_pipeline_db_path()
-    runtime_host = _get_api_runtime_host()
-    return OutwardRunService(
-        run_store=OutwardRunStore(db_path),
-        event_store=OutwardRunEventStore(db_path),
-        run_id_factory=runtime_host.create_session_id,
-        utc_now=runtime_host.utc_now_iso,
-    )
-
-
-def _outward_approval_service() -> OutwardApprovalService:
-    db_path = _outward_pipeline_db_path()
-    return OutwardApprovalService(
-        approval_store=OutwardApprovalStore(db_path),
-        run_store=OutwardRunStore(db_path),
-        event_store=OutwardRunEventStore(db_path),
-        connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
-        utc_now=_get_api_runtime_host().utc_now_iso,
-    )
-
-
-def _outward_run_execution_service() -> OutwardRunExecutionService:
-    db_path = _outward_pipeline_db_path()
-    runtime_host = _get_api_runtime_host()
-    return OutwardRunExecutionService(
-        run_store=OutwardRunStore(db_path),
-        event_store=OutwardRunEventStore(db_path),
-        approval_service=_outward_approval_service(),
-        connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
-        workspace_root=_project_root(),
-        utc_now=runtime_host.utc_now_iso,
-        http_allowlist=_connector_http_allowlist(),
-    )
-
-
-def _outward_run_inspection_service() -> OutwardRunInspectionService:
-    db_path = _outward_pipeline_db_path()
-    return OutwardRunInspectionService(
-        run_store=OutwardRunStore(db_path),
-        event_store=OutwardRunEventStore(db_path),
-    )
-
-
-def _outward_ledger_service() -> OutwardLedgerService:
-    db_path = _outward_pipeline_db_path()
-    return OutwardLedgerService(
-        run_store=OutwardRunStore(db_path),
-        event_store=OutwardRunEventStore(db_path),
-        utc_now=_get_api_runtime_host().utc_now_iso,
-    )
+    return cast(dict[str, Any], load_outbound_policy_config_file(config_path))
 
 
 # Apply auth to all v1 endpoints if configured
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_api_key)])
 
-api_runtime_node: Any | None = None
-runtime_state: Any | None = None
-cors_config = resolve_cors_config()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_config.allow_origins,
-    allow_methods=cors_config.allow_methods,
-    allow_headers=cors_config.allow_headers,
-    allow_credentials=cors_config.allow_credentials,
-)
-
-engine: Any | None = None
-api_runtime_host: ApiRuntimeHostService | None = None
-stream_bus: StreamBus | None = None
-interaction_manager: InteractionManager | None = None
-extension_manager: ExtensionManager | None = None
-extension_runtime_service: ExtensionRuntimeService | None = None
-
-
-def _replace_runtime_context(context: ApiAppRuntimeContext) -> ApiAppRuntimeContext:
-    global api_runtime_host, api_runtime_node, engine, extension_manager
-    global extension_runtime_service, interaction_manager, runtime_state, stream_bus
-
-    set_api_runtime_context(app, context)
-    api_runtime_host = context.api_runtime_host
-    api_runtime_node = context.api_runtime_node
-    engine = context.engine
-    runtime_state = context.runtime_state
-    stream_bus = context.stream_bus
-    interaction_manager = context.interaction_manager
-    extension_manager = context.extension_manager
-    extension_runtime_service = context.extension_runtime_service
-    return context
-
-
 def _runtime_context(target_app: FastAPI | None = None) -> ApiAppRuntimeContext:
     selected_app = _current_api_app(target_app)
     root = _configured_project_root(selected_app)
     context = get_api_runtime_context(selected_app)
-    if context is None or context.project_root != root or (selected_app is app and context.closed):
-        context = _build_api_runtime_container(root)
-        set_api_runtime_context(selected_app, context)
-        if selected_app is app:
-            _replace_runtime_context(context)
+    if context is None or context.project_root != root:
+        raise RuntimeError("API app runtime context does not match its configured project root.")
+    if context.closed:
+        raise RuntimeError("API app runtime context is closed.")
     return context
 
 
-def _adopt_compatibility_alias(context: ApiAppRuntimeContext, attribute: str) -> None:
-    if get_api_runtime_context(app) is not context:
-        return
-    alias = globals()[attribute]
-    if alias is not None and getattr(context, attribute) is not alias:
-        setattr(context, attribute, alias)
-
-
-def _owner_matches_project_root(owner: object | None, root: Path) -> bool:
-    if owner is None:
-        return False
-    owner_root = getattr(owner, "project_root", None)
-    if owner_root is None:
-        return True
-    try:
-        return Path(owner_root).resolve() == root
-    except (OSError, RuntimeError, TypeError, ValueError):
-        return False
-
-
-def _build_api_runtime_host(root: Path) -> ApiRuntimeHostService:
-    return ApiRuntimeHostService(project_root=root)
-
-
-def _build_api_runtime_container(root: Path) -> ApiAppRuntimeContext:
-    runtime_node = _resolve_api_runtime_node()
-    runtime_host = _build_api_runtime_host(root)
-    return ApiAppRuntimeContext(
-        project_root=root,
-        api_runtime_node=runtime_node,
-        runtime_state=create_runtime_state(),
-        api_runtime_host=runtime_host,
-        engine=runtime_host.create_engine(runtime_node.resolve_api_workspace(root)),
-    )
-
-
-def _sync_default_alias(context: ApiAppRuntimeContext, attribute: str) -> None:
-    if get_api_runtime_context(app) is context:
-        globals()[attribute] = getattr(context, attribute)
-
-
 def _get_api_runtime_node(target_app: FastAPI | None = None) -> Any:
-    context = _runtime_context(target_app)
-    _adopt_compatibility_alias(context, "api_runtime_node")
-    _sync_default_alias(context, "api_runtime_node")
-    return context.api_runtime_node
+    return _runtime_context(target_app).api_runtime_node
 
 
 def _get_runtime_state(target_app: FastAPI | None = None) -> Any:
-    context = _runtime_context(target_app)
-    _adopt_compatibility_alias(context, "runtime_state")
-    _sync_default_alias(context, "runtime_state")
-    return context.runtime_state
+    return _runtime_context(target_app).runtime_state
 
 
 def _get_api_runtime_host(target_app: FastAPI | None = None) -> ApiRuntimeHostService:
-    context = _runtime_context(target_app)
-    _adopt_compatibility_alias(context, "api_runtime_host")
-    if not _owner_matches_project_root(context.api_runtime_host, context.project_root):
-        context.api_runtime_host = _build_api_runtime_host(context.project_root)
-    _sync_default_alias(context, "api_runtime_host")
-    return context.api_runtime_host
-
-
-def _build_stream_bus_from_env() -> StreamBus:
-    return StreamBus(
-        StreamBusConfig(
-            best_effort_max_events_per_turn=int(os.getenv("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN", "256")),
-            best_effort_max_events_per_turn_override=int(
-                os.getenv("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN_OVERRIDE", "2048")
-            ),
-            bounded_max_events_per_turn=int(os.getenv("ORKET_STREAM_BOUNDED_MAX_EVENTS_PER_TURN", "128")),
-            max_bytes_per_turn_queue=int(os.getenv("ORKET_STREAM_MAX_BYTES_PER_TURN_QUEUE", "1000000")),
-        )
-    )
+    return _runtime_context(target_app).api_runtime_host
 
 
 def _get_stream_bus(target_app: FastAPI | None = None) -> StreamBus:
-    context = _runtime_context(target_app)
-    _adopt_compatibility_alias(context, "stream_bus")
-    if context.stream_bus is None:
-        context.stream_bus = _build_stream_bus_from_env()
-    _sync_default_alias(context, "stream_bus")
-    return context.stream_bus
+    return cast(StreamBus, _runtime_context(target_app).stream_bus)
 
 
 def _get_engine(target_app: FastAPI | None = None) -> Any:
-    context = _runtime_context(target_app)
-    _adopt_compatibility_alias(context, "engine")
-    if context.engine is None:
-        root = context.project_root
-        runtime_host = _get_api_runtime_host(target_app)
-        runtime_node = _get_api_runtime_node(target_app)
-        context.engine = runtime_host.create_engine(runtime_node.resolve_api_workspace(root))
-    _sync_default_alias(context, "engine")
-    return context.engine
-
-
-def _build_interaction_manager(root: Path, bus: StreamBus, state: Any) -> InteractionManager:
-    async def _register_interaction_session(session_id: str) -> None:
-        await state.register_interaction_session(session_id)
-
-    async def _unregister_interaction_session(session_id: str) -> None:
-        await state.unregister_interaction_session(session_id)
-
-    return InteractionManager(
-        bus=bus,
-        commit_orchestrator=CommitOrchestrator(project_root=root),
-        project_root=root,
-        on_session_started=_register_interaction_session,
-        on_session_closed=_unregister_interaction_session,
-    )
+    return _runtime_context(target_app).engine
 
 
 def _get_interaction_manager(target_app: FastAPI | None = None) -> InteractionManager:
-    context = _runtime_context(target_app)
-    _adopt_compatibility_alias(context, "interaction_manager")
-    if not _owner_matches_project_root(context.interaction_manager, context.project_root):
-        context.interaction_manager = _build_interaction_manager(
-            context.project_root,
-            _get_stream_bus(target_app),
-            context.runtime_state,
-        )
-    _sync_default_alias(context, "interaction_manager")
-    return context.interaction_manager
+    return cast(InteractionManager, _runtime_context(target_app).interaction_manager)
 
 
-def _get_extension_manager(target_app: FastAPI | None = None) -> ExtensionManager:
-    context = _runtime_context(target_app)
-    _adopt_compatibility_alias(context, "extension_manager")
-    if not _owner_matches_project_root(context.extension_manager, context.project_root):
-        context.extension_manager = ExtensionManager(project_root=context.project_root)
-    _sync_default_alias(context, "extension_manager")
-    return context.extension_manager
+def _get_extension_manager(target_app: FastAPI | None = None) -> Any:
+    return _runtime_context(target_app).extension_manager
 
 
-def _get_extension_runtime_service(target_app: FastAPI | None = None) -> ExtensionRuntimeService:
-    context = _runtime_context(target_app)
-    _adopt_compatibility_alias(context, "extension_runtime_service")
-    if not _owner_matches_project_root(context.extension_runtime_service, context.project_root):
-        context.extension_runtime_service = ExtensionRuntimeService(project_root=context.project_root)
-    _sync_default_alias(context, "extension_runtime_service")
-    return context.extension_runtime_service
+def _get_extension_runtime_service(target_app: FastAPI | None = None) -> Any:
+    return _runtime_context(target_app).extension_runtime_service
 
 
-# Keep the engine import-available for legacy monkeypatch-driven API tests while
-# leaving other mutable runtime objects lazy until explicitly needed.
-engine = _get_engine()
+def _get_outward_run_service() -> Any:
+    return _runtime_context().outward_run_service
+
+
+def _get_outward_approval_service() -> Any:
+    return _runtime_context().outward_approval_service
+
+
+def _get_outward_run_execution_service() -> Any:
+    return _runtime_context().outward_run_execution_service
+
+
+def _get_outward_run_inspection_service() -> Any:
+    return _runtime_context().outward_run_inspection_service
+
+
+def _get_outward_ledger_service() -> Any:
+    return _runtime_context().outward_ledger_service
+
+
+def _get_governed_agent_runtime() -> Any:
+    runtime = _runtime_context().governed_agent_runtime
+    if runtime is None:
+        raise RuntimeError("Governed-agent runtime is unavailable.")
+    return runtime
 
 
 # --- System Endpoints ---
 
 
-@app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
 
@@ -963,8 +740,8 @@ async def get_version() -> dict[str, str]:
 v1_router.include_router(
     build_kernel_router(
         lambda: _get_engine(),
-        outward_approval_service_getter=lambda: _outward_approval_service(),
-        outward_execution_service_getter=lambda: _outward_run_execution_service(),
+        outward_approval_service_getter=lambda: _get_outward_approval_service(),
+        outward_execution_service_getter=lambda: _get_outward_run_execution_service(),
         outbound_filter=lambda payload, surface: _filter_operator_payload(payload, surface=surface),
     )
 )
@@ -1095,7 +872,7 @@ v1_router.include_router(
         now_local=now_local,
         get_metrics_snapshot=get_metrics_snapshot,
         log_event=lambda name, payload, workspace: log_event(name, payload, workspace),
-        model_selector_factory=lambda organization, preferences, user_settings: ModelSelector(
+        model_selector_factory=lambda organization, preferences, user_settings: _runtime_context().model_selector_factory(
             organization=organization,
             preferences=preferences,
             user_settings=user_settings,
@@ -1123,6 +900,12 @@ v1_router.include_router(
     )
 )
 v1_router.include_router(build_extension_runtime_router(service_getter=lambda: _get_extension_runtime_service()))
+v1_router.include_router(
+    build_governed_agents_router(
+        runtime_getter=lambda: _get_governed_agent_runtime(),
+        outbound_filter=lambda payload, surface: _filter_operator_payload(payload, surface=surface),
+    )
+)
 
 
 def _normalize_setting_token(value: Any) -> str:
@@ -1250,8 +1033,8 @@ _RUN_SUBMISSION_BODY = Body(...)
 @v1_router.post("/runs")
 async def submit_run(payload: dict[str, Any] = _RUN_SUBMISSION_BODY) -> dict[str, Any]:
     try:
-        record = await _outward_run_service().submit(payload)
-        record = await _outward_run_execution_service().start_if_ready(record.run_id)
+        record = await _get_outward_run_service().submit(payload)
+        record = await _get_outward_run_execution_service().start_if_ready(record.run_id)
     except OutwardRunValidationError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except OutwardRunExecutionValidationError as exc:
@@ -1269,7 +1052,7 @@ async def list_runs(
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
 ) -> Any:
-    records = await _outward_run_service().list_runs(status=status, limit=limit, offset=offset)
+    records = await _get_outward_run_service().list_runs(status=status, limit=limit, offset=offset)
     if records or status is not None or limit != 20 or offset != 0:
         payload = {
             "items": [record.to_status_payload() for record in records],
@@ -1299,7 +1082,7 @@ async def get_outward_run_events(
     limit: int = Query(default=1000, ge=1, le=5000),
 ) -> dict[str, Any]:
     try:
-        payload = await _outward_run_inspection_service().events(
+        payload = await _get_outward_run_inspection_service().events(
             run_id,
             from_turn=from_turn,
             to_turn=to_turn,
@@ -1315,7 +1098,7 @@ async def get_outward_run_events(
 @v1_router.get("/runs/{run_id}/summary")
 async def get_outward_run_summary(run_id: str) -> dict[str, Any]:
     try:
-        payload = await _outward_run_inspection_service().summary(run_id)
+        payload = await _get_outward_run_inspection_service().summary(run_id)
     except OutwardRunInspectionError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return _filter_operator_payload(payload, surface="api.runs.summary")
@@ -1326,14 +1109,14 @@ async def stream_outward_run_events(
     run_id: str,
     types: str | None = Query(default=None),
 ) -> StreamingResponse:
-    if await _outward_run_service().get_status(run_id) is None:
+    if await _get_outward_run_service().get_status(run_id) is None:
         raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found")
 
     async def _stream() -> AsyncIterator[str]:
         seen: set[str] = set()
         event_types = _parse_event_types(types)
         while True:
-            payload = await _outward_run_inspection_service().events(run_id, types=event_types)
+            payload = await _get_outward_run_inspection_service().events(run_id, types=event_types)
             emitted = False
             for event in payload["events"]:
                 event_id = str(event.get("event_id") or "")
@@ -1343,7 +1126,7 @@ async def stream_outward_run_events(
                 filtered = _filter_operator_payload(event, surface="api.runs.events.stream")
                 yield f"event: run_event\ndata: {json.dumps(filtered, sort_keys=True)}\n\n"
                 emitted = True
-            run = await _outward_run_service().get_status(run_id)
+            run = await _get_outward_run_service().get_status(run_id)
             if run is None or run.status in {"completed", "failed"}:
                 break
             if not emitted:
@@ -1360,7 +1143,7 @@ async def export_outward_run_ledger(
     include_pii: bool = Query(default=False),
 ) -> dict[str, Any]:
     try:
-        payload = await _outward_ledger_service().export(
+        payload = await _get_outward_ledger_service().export(
             run_id,
             types=_parse_event_types(types),
             include_pii=include_pii,
@@ -1376,7 +1159,7 @@ async def export_outward_run_ledger(
 @v1_router.get("/runs/{run_id}/ledger/verify")
 async def verify_outward_run_ledger(run_id: str) -> dict[str, Any]:
     try:
-        payload = await _outward_ledger_service().verify_run(run_id)
+        payload = await _get_outward_ledger_service().verify_run(run_id)
     except OutwardLedgerValidationError as exc:
         status_code = 404 if "not found" in str(exc).lower() else 422
         raise HTTPException(status_code=status_code, detail=str(exc)) from exc
@@ -1385,7 +1168,7 @@ async def verify_outward_run_ledger(run_id: str) -> dict[str, Any]:
 
 @v1_router.get("/runs/{session_id}")
 async def get_run_detail(session_id: str) -> dict[str, Any]:
-    outward_record = await _outward_run_service().get_status(session_id)
+    outward_record = await _get_outward_run_service().get_status(session_id)
     if outward_record is not None:
         return _filter_operator_payload(outward_record.to_status_payload(), surface="api.runs.status")
 
@@ -1703,7 +1486,7 @@ async def get_session_status(session_id: str) -> dict[str, Any]:
     if not session:
         interaction_status = await _get_interaction_manager().get_session_status(session_id)
         if interaction_status is not None:
-            return interaction_status
+            return cast(dict[str, Any], interaction_status)
         raise HTTPException(**runtime_node.session_detail_not_found_error(session_id))
 
     run_record = await runtime_engine.run_ledger.get_run(session_id)
@@ -2144,9 +1927,6 @@ async def list_logs(
     }
 
 
-app.include_router(v1_router)
-
-
 # --- WS ---
 
 
@@ -2194,29 +1974,11 @@ def _register_created_app_transport(target_app: FastAPI) -> None:
     _register_streaming_transport(target_app)
 
 
-def create_api_app(project_root: Path | None = None) -> FastAPI:
+def create_api_app(project_root: Path | None = None, *, runtime_inputs: Any | None = None) -> FastAPI:
     root = Path(project_root).resolve() if project_root is not None else _resolve_default_project_root()
     created_app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
     created_app.state.project_root = root
     created_app.state.outbound_policy_config = _load_outbound_policy_config_for_app(root)
-    set_api_runtime_context(created_app, _build_api_runtime_container(root))
+    set_api_runtime_context(created_app, build_api_runtime_container(root, runtime_inputs=runtime_inputs))
     _register_created_app_transport(created_app)
     return created_app
-
-
-def _configure_default_api_app(
-    project_root: Path | None = None,
-    *,
-    runtime_state_override: Any | None = None,
-) -> FastAPI:
-    """Configure the compatibility-only module app without affecting created apps."""
-    root = Path(project_root).resolve() if project_root is not None else _resolve_default_project_root()
-    context = _build_api_runtime_container(root)
-    if runtime_state_override is not None:
-        context.runtime_state = runtime_state_override
-    app.state.outbound_policy_config = _load_outbound_policy_config_for_app(root)
-    _replace_runtime_context(context)
-    return app
-
-
-_register_streaming_transport(app)

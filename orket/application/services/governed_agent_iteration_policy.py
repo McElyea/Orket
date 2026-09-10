@@ -19,6 +19,7 @@ class GovernedAgentVerificationObservation:
     evidence_sufficient: bool
     evidence_ref: str
     authoritative_result_ref: str | None
+    progress_projection_digest: str | None = None
 
 
 def agent_invocation_binding(
@@ -57,7 +58,7 @@ def continuation_inputs(
         valid_recorded_result=verification.output_admissible,
         effect_approval_required=bool(result.effect_proposals),
         unresolved_effect_boundary=any(receipt.state == "uncertain" for receipt in request.effect_receipts),
-        policy_violation=False,
+        policy_violation=bool(result.effect_proposals) and not verification.output_admissible,
         quarantine_required=False,
         accepted_cancel=request.cancellation.requested,
         accepted_terminal_stop=False,

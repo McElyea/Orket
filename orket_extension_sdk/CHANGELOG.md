@@ -4,9 +4,11 @@ All notable changes to `orket-extension-sdk` will be documented in this file.
 
 The format is based on Keep a Changelog and this package follows SemVer while in the `0.x` line.
 
-## [Unreleased]
+## [0.6.0] - 2026-09-10
 
 ### Added
+- Three fixed ticket-report acceptance cases (`mixed`, `all-open`, and
+  `empty-first`) through the public fixture helper.
 - SDK-local packaging authority via `orket_extension_sdk/pyproject.toml`.
 - PEP 561 marker (`py.typed`) for downstream type-checking.
 - Packaged canonical `governed_agent_loop_v1.json` wire schema and loader.
@@ -19,12 +21,17 @@ The format is based on Keep a Changelog and this package follows SemVer while in
   cancellation, and bounded progress reporting.
 
 ### Changed
-- Development version moves to the SDK 0.5 prerelease line so its prospective
-  core compatibility window includes core 0.5 through 0.7. No released
-  compatibility claim is made until built host/SDK artifacts pass the recorded
-  matrix.
+- Release the public governed-agent contracts as SDK 0.6.0. The nominal core
+  0.6 through 0.8 compatibility window is explicitly narrowed to core 0.6.0,
+  the host verified with these artifacts. Future hosts require new proof.
+- Core 0.5.9 and earlier bundling hosts are outside this release's admitted
+  window. Upgrade core with both pinned wheels supplied, then force-reinstall
+  SDK 0.6.0 last to restore sole namespace ownership. Run `pip check` and strict
+  host validation. See `docs/releases/0.6.0/PROOF_REPORT.md` in the core repository.
 
 ### Security
+- Memory-write proposals require the admitted `memory.write` capability, unique
+  proposal ids, and admitted role ownership when a role is specified.
 - Agent discriminators now fail closed across author validation, host install,
   catalog reload, and generic invocation. Child configuration cannot
   self-materialize the host-bound agent broker capability.

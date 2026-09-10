@@ -25,9 +25,9 @@ def test_get_approval_returns_409_for_unsupported_packet1_status(monkeypatch) ->
     monkeypatch.delenv("ORKET_ENABLE_NERVOUS_SYSTEM", raising=False)
     row = _tool_approval_row()
     row["status"] = "approved_with_edits"
-    monkeypatch.setattr(api_module.engine, "pending_gates", _FakePendingGates(rows=[row]), raising=False)
+    monkeypatch.setattr(api_module._get_engine(), "pending_gates", _FakePendingGates(rows=[row]), raising=False)
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "control_plane_repository",
         InMemoryControlPlaneRecordRepository(),
         raising=False,
@@ -42,7 +42,7 @@ def test_get_approval_returns_409_for_unsupported_packet1_status(monkeypatch) ->
 def test_list_approvals_rejects_unsupported_packet1_status_filter(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.delenv("ORKET_ENABLE_NERVOUS_SYSTEM", raising=False)
-    monkeypatch.setattr(api_module.engine, "pending_gates", _FakePendingGates(rows=[_tool_approval_row()]), raising=False)
+    monkeypatch.setattr(api_module._get_engine(), "pending_gates", _FakePendingGates(rows=[_tool_approval_row()]), raising=False)
 
     response = client.get("/v1/approvals?status=EXPIRED", headers={"X-API-Key": "test-key"})
 
@@ -73,9 +73,9 @@ def test_get_approval_returns_409_for_target_projection_drift(monkeypatch) -> No
             control_plane_target_ref="turn-tool-run:sess-1:ISS-1:coder:0001",
         )
     )
-    monkeypatch.setattr(api_module.engine, "pending_gates", _FakePendingGates(rows=[row]), raising=False)
-    monkeypatch.setattr(api_module.engine, "control_plane_repository", repository, raising=False)
-    monkeypatch.setattr(api_module.engine, "control_plane_publication", publication, raising=False)
+    monkeypatch.setattr(api_module._get_engine(), "pending_gates", _FakePendingGates(rows=[row]), raising=False)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", repository, raising=False)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", publication, raising=False)
 
     response = client.get("/v1/approvals/apr-1", headers={"X-API-Key": "test-key"})
 

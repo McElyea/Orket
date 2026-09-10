@@ -68,9 +68,9 @@ def assert_canonical_agent_payload_equal(actual: Any, expected: Any) -> None:
         raise AssertionError(f"canonical agent payload mismatch:\nactual={actual_json}\nexpected={expected_json}")
 
 
-def ticket_report_fixture() -> dict[str, Any]:
+def ticket_report_fixture(case_id: str = "mixed") -> dict[str, Any]:
     """Return the shared two-iteration acceptance fixture as a fresh value."""
-    return deepcopy(
+    fixture = deepcopy(
         {
             "objective": {"task": "Produce ticket counts by status from both batches."},
             "acceptance": {
@@ -94,3 +94,14 @@ def ticket_report_fixture() -> dict[str, Any]:
             },
         }
     )
+    if case_id == "all-open":
+        for batch in fixture["batches"].values():
+            for ticket in batch:
+                ticket["status"] = "open"
+        fixture["expected_report"]["counts"] = {"open": 5}
+    elif case_id == "empty-first":
+        fixture["batches"]["artifact:ticket-batch-a"] = []
+        fixture["expected_report"]["counts"] = {"blocked": 1, "closed": 1}
+    elif case_id != "mixed":
+        raise ValueError("E_SDK_TICKET_FIXTURE_CASE_UNKNOWN")
+    return fixture

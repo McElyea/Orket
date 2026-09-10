@@ -1,6 +1,7 @@
 # Architectural Truth Remediation Plan
 
-Last updated: 2026-07-30
+Date: 2026-07-29
+Last updated: 2026-09-07
 Status: Active implementation plan
 Roadmap state: Priority Now
 Inputs:
@@ -10,6 +11,7 @@ Inputs:
 3. `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_SLICE_A_2026-07-29.md`
 4. `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_COMMAND_ROOT_2026-07-30.md`
 5. `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_API_INSTANCES_B1_2026-07-30.md`
+6. `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_API_COMPOSITION_B2_2026-09-07.md`
 
 ## Objective
 
@@ -30,23 +32,29 @@ Activation state:
 5. Workstream 0 baseline: implemented and rerunnable at
    `docs/projects/architectural-truth/architectural_truth_baseline.json`.
 
+## Source-wrapper removal tracking
+
+Core 0.6.0 retains the existing wrapper and hidden alias through 0.6.x.
+Remove them only with an explicit 0.7.0 delta and installed-root proof.
+Authority: `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_RELEASE_2026-09-10.md`.
+
 ## Current execution state
 
-Completed slice: Slice A -- Failure must fail.
-Active slice: Slice B -- Real API instances.
+Completed slices: Slice A -- Failure must fail; Slice B -- Real API instances.
+Active slice: Slice C -- Architecture gate cutover.
 
-Slice B1 is implemented: factory-created apps now have distinct identity,
-runtime graphs, request context, and teardown. Workstream 2 is not complete
-because the module-default compatibility owner and interface-owned outward
-service/store factories remain B2 debt.
+Slice B is implemented. B1 established distinct factory-created app identity,
+runtime graphs, request context, and teardown. B2 removed the module-default
+compatibility owner and aliases, moved outward store/service and model-selector
+composition into the application-owned container factory, and removed
+`AT-EX-002` after import-purity, distinct-owner, concurrency, and teardown proof.
 
 Current order:
 
-1. define the B2 contract delta for compatibility-owner removal and outward
-   service/store extraction;
-2. migrate remaining alias-driven tests to explicit app/container injection;
-3. remove eager/default runtime construction only with same-change import and
-   server-entrypoint proof.
+1. ratify the current-layer mapping for Slice C;
+2. implement allowed-edge enforcement from that one authority;
+3. convert every retained violation to an exact governed exception without
+   weakening the gate.
 
 Implemented in Slice A:
 
@@ -59,7 +67,7 @@ Implemented in Slice A:
 7. `orket runtime` is the canonical installed default runtime;
 8. `orket runtime --card <card_id>` forwards into the existing card parser;
 9. `python main.py [runtime arguments]` is explicitly bounded compatibility through
-   `0.5.x`, with removal requiring an explicit `0.6.0` contract delta;
+   `0.6.x`, with removal requiring an explicit `0.7.0` contract delta;
 10. `main.py` delegates to the installed composition root instead of duplicating
     bootstrap, exception logging, or exit-code mapping.
 
@@ -75,14 +83,27 @@ Implemented in Slice B1:
 6. concurrent-request, one-app-close, and repeated-lifecycle integration proof is
    implemented in `tests/interfaces/test_api_composition_isolation.py`.
 
-Carried after Slice B1:
+Implemented in Slice B2:
 
-1. module-default app and alias removal remains B2;
-2. outward pipeline service/store composition remains interface-owned and B2;
-3. package-only `orket/` Ruff inventory remains red at the latest measured count;
-4. repository-root Ruff inventory remains red at the latest measured count;
-5. remaining registered exceptions stay assigned to their owning workstreams;
-6. the workspace-local installed-wheel proof directory remains because execution
+1. importing `orket.interfaces.api` creates no FastAPI app, engine, state,
+   decision node, stream, interaction, extension, or other runtime owner;
+2. module-default `app` and mutable compatibility aliases are removed;
+3. `orket/application/services/api_runtime_composition.py` constructs the full
+   per-app graph, including outward stores/services and model-selection factory;
+4. interface routes retrieve already-owned dependencies from the active app
+   context and construct no protected-layer implementation class;
+5. API tests patch explicit app containers and production startup retains the
+   factory result;
+6. distinct stores, event queues, extension catalogs, concurrent roots,
+   isolated close, and repeated teardown are integration/contract proven.
+
+Carried after Slice B2:
+
+1. broader transport/facade extraction remains under `AT-EX-003`;
+2. package-only `orket/` Ruff inventory remains red at the latest measured count;
+3. repository-root Ruff inventory remains red at the latest measured count;
+4. remaining registered exceptions stay assigned to their owning workstreams;
+5. the workspace-local installed-wheel proof directory remains because execution
    policy rejected recursive cleanup after containment verification.
 
 Completed proof checkpoints:
@@ -231,10 +252,15 @@ B1 checkpoint status: complete on 2026-07-30, with live and structural evidence 
 `docs/projects/architectural-truth/API_INSTANCE_B1_PROOF_2026-07-30.md`. Gate 1
 is implemented and live-proven. App identity, per-app owner graphs, concurrent
 request resolution, one-app-close isolation, and tracked task/engine teardown are proven.
-Gates 2 and 3 remain open for B2 because `orket/interfaces/api.py` still owns the
-compatibility default app/aliases and constructs outward service/store factories.
-Gate 4 is proven for the B1-owned engine and tracked tasks only; outward clients,
-stores, queues beyond runtime state, and extension cleanup remain in B2.
+
+B2 checkpoint status: complete on 2026-09-07, with integration and structural
+evidence in `docs/projects/architectural-truth/API_COMPOSITION_B2_PROOF_2026-09-07.md`.
+All four Workstream 2 gates pass: the interface imports without owners, protected
+implementation construction lives in the application composition root, per-app
+stores/queues/catalogs are distinct, and repeated lifespan teardown leaves no
+tracked task or open app-owned engine. `AT-EX-002` is removed. `AT-EX-003`
+continues to track broader interface transport/facade extraction beyond this
+API ownership workstream.
 
 ## Workstream 3 — Make dependency enforcement match the normative architecture
 
@@ -435,9 +461,9 @@ This is the smallest shippable risk reduction.
 1. B1 complete: introduce application runtime container.
 2. B1 complete: create new FastAPI objects per call.
 3. B1 complete: prove two-app identity, owner, concurrency, and bounded teardown.
-4. B2 next: move service/store factories and extension/client teardown into the
+4. B2 complete: move service/store factories and extension/client teardown into the
    application composition root.
-5. B2 next: remove the module-default owner aliases and eager import-time engine.
+5. B2 complete: remove the module-default owner aliases and eager import-time engine.
 
 ### Slice C — Architecture gate cutover
 

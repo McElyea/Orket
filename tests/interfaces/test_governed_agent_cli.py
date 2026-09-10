@@ -9,7 +9,11 @@ from pathlib import Path
 
 import yaml
 
+from orket.adapters.storage.async_governed_agent_wake_repository import (
+    AsyncGovernedAgentWakeRepository,
+)
 from orket.application.services.governed_agent_ports import GovernedAgentInvocationOutcome
+from orket.application.services.governed_agent_wake_records import GovernedAgentWakeRequest
 from orket.core.domain.governed_agent_continuation import (
     GovernedAgentContinuationInputs,
     decide_governed_agent_continuation,
@@ -129,6 +133,114 @@ def test_agent_cancel_command_publishes_terminal_operator_truth(tmp_path: Path, 
     assert exit_code == 0
     assert payload["run"]["lifecycle_state"] == "cancelled"
     assert payload["final_truth"]["closure_basis"] == "cancelled_by_authority"
+    assert payload["child_confirmed_stopped"] is False
+    assert payload["final_truth"]["residual_uncertainty_classification"] == "unresolved_residual_uncertainty"
+
+
+def test_agent_wake_commands_enqueue_idempotent_manual_work_and_inspect_it(tmp_path: Path, capsys) -> None:
+    """Layer: integration. The public manual transport persists through the canonical wake repository."""
+    request_path = tmp_path / "manual-request.json"
+    request_path.write_text(json.dumps(agent_request()), encoding="utf-8")
+    db_path = tmp_path / "agent.sqlite3"
+    now = datetime.now(UTC)
+    enqueue_args = [
+        "agent", "wake", "enqueue",
+        "--db", str(db_path),
+        "--workload-id", "governed-agent-loop",
+        "--occurrence-id", "manual-occurrence-1",
+        "--request", str(request_path),
+        "--creation-timestamp-utc", now.isoformat(),
+        "--decision-timestamp-utc", (now + timedelta(seconds=1)).isoformat(),
+        "--decision-timestamp-utc", (now + timedelta(seconds=2)).isoformat(),
+        "--next-lease-expires-at-utc", (now + timedelta(seconds=7)).isoformat(),
+        "--json",
+    ]
+
+    first_exit = main(enqueue_args)
+    first = json.loads(capsys.readouterr().out)
+    repeated_exit = main(enqueue_args)
+    repeated = json.loads(capsys.readouterr().out)
+    list_exit = main(["agent", "wake", "list", "--db", str(db_path), "--json"])
+    listed = json.loads(capsys.readouterr().out)
+    inspect_exit = main(
+        ["agent", "wake", "inspect", first["wake"]["wake_id"], "--db", str(db_path), "--json"]
+    )
+    inspected = json.loads(capsys.readouterr().out)
+
+    assert first_exit == repeated_exit == list_exit == inspect_exit == 0
+    assert first["status"] == "enqueued"
+    assert repeated["status"] == "idempotent"
+    assert first["wake"]["source"] == "manual"
+    assert listed["items"] == [first["wake"]]
+    assert inspected["wake"] == first["wake"]
+
+
+def test_agent_wake_cli_cancels_and_resolves_uncertain_claim(tmp_path: Path, capsys) -> None:
+    """Layer: integration. CLI controls publish durable evidence-bearing transitions."""
+    db_path = tmp_path / "agent.sqlite3"
+    asyncio.run(_prepare_claimed_wake(db_path))
+
+    cancel_exit = main(
+        [
+            "agent", "wake", "cancel", "wake-cli-control", "--db", str(db_path),
+            "--action-id", "wake-action:cli-cancel", "--actor-ref", "operator:cli",
+            "--timestamp-utc", "2026-09-07T12:00:02Z", "--reason", "operator request",
+            "--expected-cancellation-epoch", "0", "--cancellation-epoch", "1", "--json",
+        ]
+    )
+    cancelled = json.loads(capsys.readouterr().out)
+    recover_exit = main(
+        [
+            "agent", "wake", "recover", "wake-cli-control", "--db", str(db_path),
+            "--action-id", "wake-action:cli-recover", "--actor-ref", "operator:cli",
+            "--timestamp-utc", "2026-09-07T12:00:03Z", "--reason", "reconciled",
+            "--expected-fencing-generation", "1", "--resolution", "confirm_cancelled",
+            "--child-confirmed-stopped", "--effect-uncertainty-cleared",
+            "--evidence-ref", "process-reap:cli", "--evidence-ref", "effect-check:cli", "--json",
+        ]
+    )
+    recovered = json.loads(capsys.readouterr().out)
+    actions_exit = main(
+        ["agent", "wake", "actions", "wake-cli-control", "--db", str(db_path), "--json"]
+    )
+    actions = json.loads(capsys.readouterr().out)
+
+    assert cancel_exit == recover_exit == actions_exit == 0
+    assert cancelled["wake"]["uncertainty"] is True
+    assert recovered["wake"]["state"] == "cancelled"
+    assert recovered["wake"]["uncertainty"] is False
+    assert [item["action_id"] for item in actions["items"]] == [
+        "wake-action:cli-cancel",
+        "wake-action:cli-recover",
+    ]
+    assert actions["items"][-1]["request"]["evidence_refs"] == [
+        "process-reap:cli",
+        "effect-check:cli",
+    ]
+
+
+async def _prepare_claimed_wake(db_path: Path) -> None:
+    repository = AsyncGovernedAgentWakeRepository(db_path)
+    await repository.enqueue(
+        GovernedAgentWakeRequest(
+            wake_id="wake-cli-control",
+            source="manual",
+            target_kind="existing_run",
+            target_run_id="run-1",
+            workload_id=None,
+            occurrence_id="cli-control",
+            deduplication_key="manual:run-1:cli-control",
+            payload={"reason": "operator_requested"},
+            created_at_utc="2026-09-07T12:00:00Z",
+        )
+    )
+    claim = await repository.claim_next(
+        owner_id="supervisor:cli",
+        now_utc="2026-09-07T12:00:01Z",
+        lease_expires_at_utc="2026-09-07T12:01:01Z",
+        max_active_claims=1,
+    )
+    assert claim.status == "claimed"
 
 
 def test_agent_submit_runs_catalog_resolved_deterministic_fixture(tmp_path: Path, capsys) -> None:

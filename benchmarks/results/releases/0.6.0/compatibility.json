@@ -1,0 +1,378 @@
+{
+  "schema_version": "governed_agent_compatibility.v1",
+  "proof_mode": "live",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "legacy_ref": "v0.5.9",
+  "old_host_bundled_sdk": {
+    "identity": {
+      "core_version": "0.5.9",
+      "sdk_version": "0.1.0",
+      "core_path": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Lib\\site-packages\\orket\\__init__.py",
+      "sdk_path": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Lib\\site-packages\\orket_extension_sdk\\__init__.py",
+      "sdk_owners": [
+        "orket"
+      ]
+    },
+    "validation": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Scripts\\python.exe",
+        "-I",
+        "-m",
+        "orket.interfaces.orket_bundle_cli",
+        "ext",
+        "validate",
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\legacy-extracted\\orket_companion_template-0.1.0",
+        "--strict",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Lib\\site-packages\\orket\\interfaces\\orket_bundle_cli.py\", line 27, in <module>\n    from orket.core.domain.orket_manifest import (\n    ...<3 lines>...\n    )\n  File \"C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Lib\\site-packages\\orket\\core\\domain\\orket_manifest.py\", line 8, in <module>\n    from packaging.specifiers import InvalidSpecifier, SpecifierSet\nModuleNotFoundError: No module named 'packaging'\n",
+      "validation": null
+    },
+    "observed_path": "blocked",
+    "observed_result": "environment blocker",
+    "diagnostic_dependency_install": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Scripts\\python.exe",
+        "-m",
+        "pip",
+        "install",
+        "packaging"
+      ],
+      "exit_code": 0,
+      "stdout": "Collecting packaging\n  Using cached packaging-26.3-py3-none-any.whl.metadata (3.5 kB)\nUsing cached packaging-26.3-py3-none-any.whl (129 kB)\nInstalling collected packages: packaging\nSuccessfully installed packaging-26.3\n",
+      "stderr": "\n[notice] A new release of pip is available: 25.3 -> 26.2.1\n[notice] To update, run: C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Scripts\\python.exe -m pip install --upgrade pip\n"
+    },
+    "diagnostic_validation": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Scripts\\python.exe",
+        "-I",
+        "-m",
+        "orket.interfaces.orket_bundle_cli",
+        "ext",
+        "validate",
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\legacy-extracted\\orket_companion_template-0.1.0",
+        "--strict",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"target\": \"C:\\\\Source\\\\Orket\\\\.tmp\\\\governed-agent-compatibility\\\\execution-ua76661u\\\\legacy-extracted\\\\orket_companion_template-0.1.0\",\n  \"manifest_path\": \"C:\\\\Source\\\\Orket\\\\.tmp\\\\governed-agent-compatibility\\\\execution-ua76661u\\\\legacy-extracted\\\\orket_companion_template-0.1.0\\\\extension.yaml\",\n  \"manifest_version\": \"v0\",\n  \"extension_id\": \"your.extension.id\",\n  \"workload_count\": 1,\n  \"error_count\": 0,\n  \"warning_count\": 0,\n  \"errors\": [],\n  \"warnings\": [],\n  \"exit_code\": 0,\n  \"import_scan\": {\n    \"scanned_file_count\": 10,\n    \"error_count\": 0\n  }\n}\n",
+      "stderr": "",
+      "validation": {
+        "ok": true,
+        "target": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\legacy-extracted\\orket_companion_template-0.1.0",
+        "manifest_path": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\legacy-extracted\\orket_companion_template-0.1.0\\extension.yaml",
+        "manifest_version": "v0",
+        "extension_id": "your.extension.id",
+        "workload_count": 1,
+        "error_count": 0,
+        "warning_count": 0,
+        "errors": [],
+        "warnings": [],
+        "exit_code": 0,
+        "import_scan": {
+          "scanned_file_count": 10,
+          "error_count": 0
+        }
+      }
+    },
+    "agent_validation": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Scripts\\python.exe",
+        "-I",
+        "-m",
+        "orket.interfaces.orket_bundle_cli",
+        "ext",
+        "validate",
+        "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\external-extracted\\orket_governed_local_agent-0.2.0",
+        "--strict",
+        "--json"
+      ],
+      "exit_code": 2,
+      "stdout": "{\n  \"ok\": false,\n  \"target\": \"C:\\\\Source\\\\Orket\\\\.tmp\\\\governed-agent-release-0.6.0\\\\external-extracted\\\\orket_governed_local_agent-0.2.0\",\n  \"manifest_path\": \"C:\\\\Source\\\\Orket\\\\.tmp\\\\governed-agent-release-0.6.0\\\\external-extracted\\\\orket_governed_local_agent-0.2.0\\\\extension.yaml\",\n  \"manifest_version\": \"v0\",\n  \"extension_id\": \"governed-local-agent\",\n  \"workload_count\": 1,\n  \"error_count\": 3,\n  \"warning_count\": 0,\n  \"errors\": [\n    {\n      \"code\": \"E_SDK_CAPABILITY_UNKNOWN\",\n      \"location\": \"workloads.governed-agent-loop.required_capabilities\",\n      \"message\": \"E_SDK_CAPABILITY_UNKNOWN: agent.iteration.v1\"\n    },\n    {\n      \"code\": \"E_SDK_CAPABILITY_UNKNOWN\",\n      \"location\": \"workloads.governed-agent-loop.required_capabilities\",\n      \"message\": \"E_SDK_CAPABILITY_UNKNOWN: read_file\"\n    },\n    {\n      \"code\": \"E_SDK_CAPABILITY_UNKNOWN\",\n      \"location\": \"workloads.governed-agent-loop.required_capabilities\",\n      \"message\": \"E_SDK_CAPABILITY_UNKNOWN: write_file\"\n    }\n  ],\n  \"warnings\": [],\n  \"exit_code\": 2,\n  \"import_scan\": {\n    \"scanned_file_count\": 4,\n    \"error_count\": 0\n  }\n}\n",
+      "stderr": "",
+      "validation": {
+        "ok": false,
+        "target": "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\external-extracted\\orket_governed_local_agent-0.2.0",
+        "manifest_path": "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\external-extracted\\orket_governed_local_agent-0.2.0\\extension.yaml",
+        "manifest_version": "v0",
+        "extension_id": "governed-local-agent",
+        "workload_count": 1,
+        "error_count": 3,
+        "warning_count": 0,
+        "errors": [
+          {
+            "code": "E_SDK_CAPABILITY_UNKNOWN",
+            "location": "workloads.governed-agent-loop.required_capabilities",
+            "message": "E_SDK_CAPABILITY_UNKNOWN: agent.iteration.v1"
+          },
+          {
+            "code": "E_SDK_CAPABILITY_UNKNOWN",
+            "location": "workloads.governed-agent-loop.required_capabilities",
+            "message": "E_SDK_CAPABILITY_UNKNOWN: read_file"
+          },
+          {
+            "code": "E_SDK_CAPABILITY_UNKNOWN",
+            "location": "workloads.governed-agent-loop.required_capabilities",
+            "message": "E_SDK_CAPABILITY_UNKNOWN: write_file"
+          }
+        ],
+        "warnings": [],
+        "exit_code": 2,
+        "import_scan": {
+          "scanned_file_count": 4,
+          "error_count": 0
+        }
+      }
+    }
+  },
+  "old_host_new_sdk": {
+    "compatibility": "unsupported_duplicate_namespace_ownership",
+    "identity": {
+      "core_version": "0.5.9",
+      "sdk_version": "0.6.0",
+      "core_path": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Lib\\site-packages\\orket\\__init__.py",
+      "sdk_path": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Lib\\site-packages\\orket_extension_sdk\\__init__.py",
+      "sdk_owners": [
+        "orket",
+        "orket-extension-sdk"
+      ]
+    },
+    "validation": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Scripts\\python.exe",
+        "-I",
+        "-m",
+        "orket.interfaces.orket_bundle_cli",
+        "ext",
+        "validate",
+        "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\external-extracted\\orket_governed_local_agent-0.2.0",
+        "--strict",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"target\": \"C:\\\\Source\\\\Orket\\\\.tmp\\\\governed-agent-release-0.6.0\\\\external-extracted\\\\orket_governed_local_agent-0.2.0\",\n  \"manifest_path\": \"C:\\\\Source\\\\Orket\\\\.tmp\\\\governed-agent-release-0.6.0\\\\external-extracted\\\\orket_governed_local_agent-0.2.0\\\\extension.yaml\",\n  \"manifest_version\": \"v0\",\n  \"extension_id\": \"governed-local-agent\",\n  \"workload_count\": 1,\n  \"error_count\": 0,\n  \"warning_count\": 0,\n  \"errors\": [],\n  \"warnings\": [],\n  \"exit_code\": 0,\n  \"import_scan\": {\n    \"scanned_file_count\": 4,\n    \"error_count\": 0\n  }\n}\n",
+      "stderr": "",
+      "validation": {
+        "ok": true,
+        "target": "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\external-extracted\\orket_governed_local_agent-0.2.0",
+        "manifest_path": "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\external-extracted\\orket_governed_local_agent-0.2.0\\extension.yaml",
+        "manifest_version": "v0",
+        "extension_id": "governed-local-agent",
+        "workload_count": 1,
+        "error_count": 0,
+        "warning_count": 0,
+        "errors": [],
+        "warnings": [],
+        "exit_code": 0,
+        "import_scan": {
+          "scanned_file_count": 4,
+          "error_count": 0
+        }
+      }
+    }
+  },
+  "upgraded_host_new_sdk": {
+    "identity": {
+      "core_version": "0.6.0",
+      "sdk_version": "0.6.0",
+      "core_path": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Lib\\site-packages\\orket\\__init__.py",
+      "sdk_path": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Lib\\site-packages\\orket_extension_sdk\\__init__.py",
+      "sdk_owners": [
+        "orket-extension-sdk"
+      ]
+    },
+    "pip_check": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Scripts\\python.exe",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "exit_code": 0,
+      "stdout": "No broken requirements found.\n",
+      "stderr": ""
+    },
+    "legacy_validation": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Scripts\\python.exe",
+        "-I",
+        "-m",
+        "orket.interfaces.orket_bundle_cli",
+        "ext",
+        "validate",
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\legacy-extracted\\orket_companion_template-0.1.0",
+        "--strict",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"target\": \"C:\\\\Source\\\\Orket\\\\.tmp\\\\governed-agent-compatibility\\\\execution-ua76661u\\\\legacy-extracted\\\\orket_companion_template-0.1.0\",\n  \"manifest_path\": \"C:\\\\Source\\\\Orket\\\\.tmp\\\\governed-agent-compatibility\\\\execution-ua76661u\\\\legacy-extracted\\\\orket_companion_template-0.1.0\\\\extension.yaml\",\n  \"manifest_version\": \"v0\",\n  \"extension_id\": \"your.extension.id\",\n  \"workload_count\": 1,\n  \"error_count\": 0,\n  \"warning_count\": 0,\n  \"errors\": [],\n  \"warnings\": [],\n  \"exit_code\": 0,\n  \"import_scan\": {\n    \"scanned_file_count\": 10,\n    \"error_count\": 0\n  }\n}\n",
+      "stderr": "",
+      "validation": {
+        "ok": true,
+        "target": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\legacy-extracted\\orket_companion_template-0.1.0",
+        "manifest_path": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\legacy-extracted\\orket_companion_template-0.1.0\\extension.yaml",
+        "manifest_version": "v0",
+        "extension_id": "your.extension.id",
+        "workload_count": 1,
+        "error_count": 0,
+        "warning_count": 0,
+        "errors": [],
+        "warnings": [],
+        "exit_code": 0,
+        "import_scan": {
+          "scanned_file_count": 10,
+          "error_count": 0
+        }
+      }
+    },
+    "agent_validation": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Scripts\\python.exe",
+        "-I",
+        "-m",
+        "orket.interfaces.orket_bundle_cli",
+        "ext",
+        "validate",
+        "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\external-extracted\\orket_governed_local_agent-0.2.0",
+        "--strict",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"target\": \"C:\\\\Source\\\\Orket\\\\.tmp\\\\governed-agent-release-0.6.0\\\\external-extracted\\\\orket_governed_local_agent-0.2.0\",\n  \"manifest_path\": \"C:\\\\Source\\\\Orket\\\\.tmp\\\\governed-agent-release-0.6.0\\\\external-extracted\\\\orket_governed_local_agent-0.2.0\\\\extension.yaml\",\n  \"manifest_version\": \"v0\",\n  \"extension_id\": \"governed-local-agent\",\n  \"workload_count\": 1,\n  \"error_count\": 0,\n  \"warning_count\": 0,\n  \"errors\": [],\n  \"warnings\": [],\n  \"exit_code\": 0,\n  \"import_scan\": {\n    \"scanned_file_count\": 4,\n    \"error_count\": 0\n  }\n}\n",
+      "stderr": "",
+      "validation": {
+        "ok": true,
+        "target": "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\external-extracted\\orket_governed_local_agent-0.2.0",
+        "manifest_path": "C:\\Source\\Orket\\.tmp\\governed-agent-release-0.6.0\\external-extracted\\orket_governed_local_agent-0.2.0\\extension.yaml",
+        "manifest_version": "v0",
+        "extension_id": "governed-local-agent",
+        "workload_count": 1,
+        "error_count": 0,
+        "warning_count": 0,
+        "errors": [],
+        "warnings": [],
+        "exit_code": 0,
+        "import_scan": {
+          "scanned_file_count": 4,
+          "error_count": 0
+        }
+      }
+    },
+    "legacy_workload": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\venv\\Scripts\\python.exe",
+        "-I",
+        "-c",
+        "from companion_extension.workload import run; r=run(None,{'message':'legacy'}); assert r.ok; print(r.model_dump_json())"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"ok\":true,\"output\":{\"echo\":{\"message\":\"legacy\"}},\"artifacts\":[],\"issues\":[],\"metrics\":{}}\n",
+      "stderr": ""
+    }
+  },
+  "artifacts": [
+    {
+      "path": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\legacy-core\\orket-0.5.9-py3-none-any.whl",
+      "sha256": "885fbcc7abbf32a4f931e7df3c91dd2facb157a2fad65cf830c654c6eb61ea0f"
+    },
+    {
+      "path": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u\\legacy-extension\\orket_companion_template-0.1.0-py3-none-any.whl",
+      "sha256": "9bad134fc5d48a4d58b39b60c6611202361547d936ceac8f9b74872fefedfb8d"
+    },
+    {
+      "path": ".tmp\\governed-agent-release-0.6.0\\core-dist\\orket-0.6.0-py3-none-any.whl",
+      "sha256": "78600c97d607bb746117da8d56b49e2dfcfe6a95b473d612966e746b91909641"
+    },
+    {
+      "path": ".tmp\\governed-agent-release-0.6.0\\sdk-dist\\orket_extension_sdk-0.6.0-py3-none-any.whl",
+      "sha256": "81108d789d90980769960e730ef24a8af8534e3ee294a72b3e3c6f2f3eda404d"
+    }
+  ],
+  "limitations": [
+    "Legacy template echo validates the public generic workload; it does not invoke a model.",
+    "Successful matrix collection does not change the legacy baseline's missing-dependency blocker.",
+    "Old host/new SDK is an unsupported combination even if author validation passes.",
+    "Matching current agent execution is proved by the separate installed live acceptance report."
+  ],
+  "evidence_directory": "C:\\Source\\Orket\\.tmp\\governed-agent-compatibility\\execution-ua76661u",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-10T16:06:10.376560Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:a0d6e2bbc2af576b64d4f854146e3b0bf24860e826062acd75d7aa1b8a9cc65c",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 448,
+        "paths_total_reference": 448,
+        "churn_paths": 448,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-09-10T16:15:34.167478Z",
+      "changed": false,
+      "before_digest": "sha256:a0d6e2bbc2af576b64d4f854146e3b0bf24860e826062acd75d7aa1b8a9cc65c",
+      "after_digest": "sha256:a0d6e2bbc2af576b64d4f854146e3b0bf24860e826062acd75d7aa1b8a9cc65c",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 448,
+        "paths_total_current": 448,
+        "paths_total_reference": 448,
+        "churn_paths": 0,
+        "churn_ratio": 0.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-09-10T16:37:15.854869Z",
+      "changed": true,
+      "before_digest": "sha256:a0d6e2bbc2af576b64d4f854146e3b0bf24860e826062acd75d7aa1b8a9cc65c",
+      "after_digest": "sha256:315ea6625b65f484e5fc7f593f2eed060729eb7842f8f837029e27f93e25d5b7",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 32,
+        "initial_write": false,
+        "paths_total_previous": 448,
+        "paths_total_current": 448,
+        "paths_total_reference": 448,
+        "churn_paths": 32,
+        "churn_ratio": 0.071429,
+        "sample_paths": [
+          "$.artifacts[0].path",
+          "$.artifacts[0].sha256",
+          "$.artifacts[1].path",
+          "$.artifacts[1].sha256",
+          "$.artifacts[2].sha256",
+          "$.evidence_directory",
+          "$.old_host_bundled_sdk.agent_validation.command[0]",
+          "$.old_host_bundled_sdk.diagnostic_dependency_install.command[0]",
+          "$.old_host_bundled_sdk.diagnostic_dependency_install.stderr",
+          "$.old_host_bundled_sdk.diagnostic_validation.command[0]",
+          "$.old_host_bundled_sdk.diagnostic_validation.command[6]",
+          "$.old_host_bundled_sdk.diagnostic_validation.stdout",
+          "$.old_host_bundled_sdk.diagnostic_validation.validation.manifest_path",
+          "$.old_host_bundled_sdk.diagnostic_validation.validation.target",
+          "$.old_host_bundled_sdk.identity.core_path",
+          "$.old_host_bundled_sdk.identity.sdk_path",
+          "$.old_host_bundled_sdk.validation.command[0]",
+          "$.old_host_bundled_sdk.validation.command[6]",
+          "$.old_host_bundled_sdk.validation.stderr",
+          "$.old_host_new_sdk.identity.core_path"
+        ]
+      }
+    }
+  ]
+}

@@ -55,6 +55,7 @@ class _FakeAdapter:
         self.acquire_result: dict[str, object] | None = None
         self.renew_results: list[dict[str, object]] = []
         self.transition_error: Exception | None = None
+        self.renewed = asyncio.Event()
 
     async def fetch_ready_cards(self, *, limit: int = 1):
         self.calls.append(("fetch_ready_cards", limit))
@@ -71,6 +72,7 @@ class _FakeAdapter:
 
     async def renew_lease(self, card_id: str, *, owner_id: str, lease_seconds: int, expected_lease_epoch=None):
         self.calls.append(("renew_lease", card_id, owner_id, lease_seconds, expected_lease_epoch))
+        self.renewed.set()
         if self.renew_results:
             return self.renew_results.pop(0)
         return {"ok": True}
@@ -254,7 +256,8 @@ async def test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_m
     )
 
     async def _work(_card):
-        await asyncio.sleep(0.12)
+        # Wait for the injected renewal, independent of SQLite or scheduler latency.
+        await asyncio.wait_for(adapter.renewed.wait(), timeout=5)
         return {"ok": True}
 
     consumed = await worker.run_once(work_fn=_work)

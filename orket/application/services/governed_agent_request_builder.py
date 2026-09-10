@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, cast
 
+from orket.application.services.governed_agent_context_plan import replace_authoritative_context
 from orket_extension_sdk import AgentIterationRequest, AgentIterationResult, canonical_digest_sha256, canonical_json
 
 
@@ -12,6 +13,7 @@ def build_next_agent_iteration_request(
     accepted_result: AgentIterationResult,
     next_lease_expires_at_utc: str,
     verification_evidence_ref: str,
+    next_context_inputs: list[dict[str, Any]] | None = None,
 ) -> AgentIterationRequest:
     payload = deepcopy(current_request.to_wire())
     result_payload = accepted_result.to_wire()
@@ -53,6 +55,8 @@ def build_next_agent_iteration_request(
         current_request.identity.run_id,
     )
     payload["lease_expires_at_utc"] = next_lease_expires_at_utc
+    if next_context_inputs is not None:
+        payload = replace_authoritative_context(payload, next_context_inputs)
     return AgentIterationRequest.from_wire(payload)
 
 

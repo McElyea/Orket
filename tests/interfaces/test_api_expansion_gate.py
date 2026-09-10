@@ -39,7 +39,7 @@ async def test_api_expansion_gate_execution_graph_contract(monkeypatch, tmp_path
         workspace_root=workspace_root,
         db_path=str(Path(tmp_path) / "runtime.db"),
     )
-    monkeypatch.setattr(api_module, "engine", real_engine)
+    monkeypatch.setattr(api_module._runtime_context(), "engine", real_engine)
 
     session_id = "GATE-GRAPH-1"
     await real_engine.sessions.start_session(
@@ -86,7 +86,7 @@ async def test_api_expansion_gate_execution_graph_contract(monkeypatch, tmp_path
 
 def test_api_expansion_gate_token_summary_contract(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module._configure_default_api_app(project_root=Path(tmp_path).resolve())
+    client.configure(project_root=Path(tmp_path).resolve())
 
     async def fake_get_run(session_id):
         return {"session_id": session_id}
@@ -94,8 +94,8 @@ def test_api_expansion_gate_token_summary_contract(monkeypatch, tmp_path):
     async def fake_get_session(session_id):
         return {"id": session_id}
 
-    monkeypatch.setattr(api_module.engine.run_ledger, "get_run", fake_get_run)
-    monkeypatch.setattr(api_module.engine.sessions, "get_session", fake_get_session)
+    monkeypatch.setattr(api_module._get_engine().run_ledger, "get_run", fake_get_run)
+    monkeypatch.setattr(api_module._get_engine().sessions, "get_session", fake_get_session)
 
     default_workspace = Path(tmp_path) / "workspace" / "default"
     default_workspace.mkdir(parents=True, exist_ok=True)
@@ -169,7 +169,7 @@ async def test_api_expansion_gate_card_guard_history_contract(monkeypatch, tmp_p
         workspace_root=workspace_root,
         db_path=str(Path(tmp_path) / "runtime.db"),
     )
-    monkeypatch.setattr(api_module, "engine", real_engine)
+    monkeypatch.setattr(api_module._runtime_context(), "engine", real_engine)
 
     await real_engine.cards.save(
         {

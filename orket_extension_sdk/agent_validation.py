@@ -90,6 +90,12 @@ def validate_agent_iteration_result_against_request(
     for capability, used in used_capabilities.items():
         if used > per_capability.get(capability, 0):
             raise ValueError(f"E_HOST_AGENT_CAPABILITY_BUDGET_EXCEEDED: {capability}")
+    for proposal in result["memory_write_proposals"]:
+        if "memory.write" not in admitted:
+            raise ValueError("E_HOST_AGENT_MEMORY_WRITE_UNDECLARED")
+        if proposal["role"] is not None and proposal["role"] not in {item["role"] for item in request["model_profiles"]}:
+            raise ValueError("E_HOST_AGENT_MEMORY_ROLE_UNADMITTED")
+    _require_unique(result["memory_write_proposals"], "proposal_id", "E_HOST_AGENT_MEMORY_PROPOSAL_DUPLICATE")
     receipts = list(result["model_receipts"])
     if len(receipts) > iteration_budget["model_calls"]:
         raise ValueError("E_HOST_AGENT_MODEL_CALL_BUDGET_EXCEEDED")

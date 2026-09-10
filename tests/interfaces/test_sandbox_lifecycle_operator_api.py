@@ -60,7 +60,7 @@ def test_sandbox_operator_list_exposes_required_lifecycle_fields(monkeypatch, te
             }
         ]
 
-    monkeypatch.setattr(api_module.engine, "get_sandboxes", fake_get_sandboxes)
+    monkeypatch.setattr(api_module._get_engine(), "get_sandboxes", fake_get_sandboxes)
 
     response = test_client.get("/v1/sandboxes", headers={"X-API-Key": "test-key"})
 
@@ -124,9 +124,9 @@ def test_sandbox_operator_stop_returns_conflict_when_reconciliation_blocked(monk
         assert operator_actor_ref == f"api_key_fingerprint:sha256:{hashlib.sha256(b'test-key').hexdigest()}"
         raise ValueError("Sandbox sb-2 is blocked by requires_reconciliation=true")
 
-    monkeypatch.setattr(api_module.engine, "stop_sandbox", fake_stop_sandbox)
+    monkeypatch.setattr(api_module._get_engine(), "stop_sandbox", fake_stop_sandbox)
     monkeypatch.setattr(
-        api_module.api_runtime_node,
+        api_module._get_api_runtime_node(),
         "resolve_sandbox_stop_invocation",
         lambda sandbox_id: {"method_name": "stop_sandbox", "args": [sandbox_id]},
     )

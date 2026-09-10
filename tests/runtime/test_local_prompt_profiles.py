@@ -86,7 +86,9 @@ def _payload(entries: list[dict[str, object]]) -> dict[str, object]:
     return {"schema_version": "local_prompt_profiles.v1", "profiles": entries}
 
 
-def test_load_registry_file_defaults_to_repo_contract() -> None:
+def test_load_registry_file_defaults_to_packaged_contract(tmp_path: Path, monkeypatch) -> None:
+    """Layer: integration. Default registry loading is independent of the caller's directory."""
+    monkeypatch.chdir(tmp_path)
     registry = load_local_prompt_profile_registry_file()
     assert registry.schema_version == "local_prompt_profiles.v1"
     assert len(registry.profiles) >= 1

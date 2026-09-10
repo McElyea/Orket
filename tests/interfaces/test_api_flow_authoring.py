@@ -170,7 +170,7 @@ def _seed_runtime_model_for_authored_projection(root: Path) -> None:
 def test_flow_authoring_validate_and_persist_round_trip(monkeypatch, tmp_path) -> None:
     """Layer: integration."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module._configure_default_api_app(project_root=Path(tmp_path).resolve())
+    client.configure(project_root=Path(tmp_path).resolve())
 
     validate_response = client.post(
         "/v1/flows/validate",
@@ -208,7 +208,7 @@ def test_flow_run_route_accepts_single_card_slice(monkeypatch, tmp_path) -> None
     """Layer: integration."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     _seed_runnable_issue_model(Path(tmp_path).resolve(), "CARD-RUN-1")
-    api_module._configure_default_api_app(project_root=Path(tmp_path).resolve())
+    client.configure(project_root=Path(tmp_path).resolve())
     engine = api_module._get_engine()
 
     asyncio.run(
@@ -260,7 +260,7 @@ def test_flow_run_route_accepts_single_card_slice(monkeypatch, tmp_path) -> None
 def test_flow_run_route_blocks_branching_topology(monkeypatch, tmp_path) -> None:
     """Layer: contract."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    api_module._configure_default_api_app(project_root=Path(tmp_path).resolve())
+    client.configure(project_root=Path(tmp_path).resolve())
 
     definition = _simple_flow_definition("CARD-1")
     nodes = list(definition["nodes"])  # type: ignore[index]
@@ -288,7 +288,7 @@ def test_flow_run_route_accepts_authored_card_projection(monkeypatch, tmp_path) 
     root = Path(tmp_path).resolve()
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     _seed_runtime_model_for_authored_projection(root)
-    api_module._configure_default_api_app(project_root=root)
+    client.configure(project_root=root)
     engine = api_module._get_engine()
 
     captured: dict[str, object] = {}

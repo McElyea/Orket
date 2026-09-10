@@ -59,7 +59,7 @@ def test_kernel_lifecycle_endpoint_routes_to_engine(monkeypatch) -> None:
         captured["start_request"] = start_request
         return {"ok": True, "workflow_id": workflow_id}
 
-    monkeypatch.setattr(api_module.engine, "kernel_run_lifecycle", fake_kernel_run_lifecycle)
+    monkeypatch.setattr(api_module._get_engine(), "kernel_run_lifecycle", fake_kernel_run_lifecycle)
 
     response = client.post(
         "/v1/kernel/lifecycle",
@@ -85,7 +85,7 @@ def test_kernel_compare_endpoint_routes_to_engine(monkeypatch) -> None:
         captured["request"] = request
         return {"outcome": "FAIL", "issues": [{"code": "E_REPLAY_EQUIVALENCE_FAILED"}]}
 
-    monkeypatch.setattr(api_module.engine, "kernel_compare_runs", fake_kernel_compare_runs)
+    monkeypatch.setattr(api_module._get_engine(), "kernel_compare_runs", fake_kernel_compare_runs)
 
     response = client.post(
         "/v1/kernel/compare",
@@ -111,7 +111,7 @@ def test_kernel_projection_pack_endpoint_routes_to_engine(monkeypatch) -> None:
         captured["request"] = request
         return {"ok": True, "projection_pack_digest": "a" * 64}
 
-    monkeypatch.setattr(api_module.engine, "kernel_projection_pack", fake_kernel_projection_pack)
+    monkeypatch.setattr(api_module._get_engine(), "kernel_projection_pack", fake_kernel_projection_pack)
 
     response = client.post(
         "/v1/kernel/projection-pack",
@@ -138,7 +138,7 @@ def test_kernel_admit_proposal_endpoint_routes_to_engine(monkeypatch) -> None:
         captured["request"] = request
         return {"proposal_digest": "b" * 64, "admission_decision": {"decision": "ACCEPT_TO_UNIFY"}}
 
-    monkeypatch.setattr(api_module.engine, "kernel_admit_proposal_async", fake_kernel_admit_proposal_async)
+    monkeypatch.setattr(api_module._get_engine(), "kernel_admit_proposal_async", fake_kernel_admit_proposal_async)
 
     response = client.post(
         "/v1/kernel/admit-proposal",
@@ -162,7 +162,7 @@ def test_kernel_commit_proposal_endpoint_routes_to_engine(monkeypatch) -> None:
         captured["request"] = request
         return {"status": "COMMITTED", "commit_event_digest": "c" * 64}
 
-    monkeypatch.setattr(api_module.engine, "kernel_commit_proposal_async", fake_kernel_commit_proposal_async)
+    monkeypatch.setattr(api_module._get_engine(), "kernel_commit_proposal_async", fake_kernel_commit_proposal_async)
 
     response = client.post(
         "/v1/kernel/commit-proposal",
@@ -198,7 +198,7 @@ def test_kernel_end_session_endpoint_routes_to_engine(monkeypatch) -> None:
         captured["request"] = request
         return {"status": "ENDED", "event_digest": "1" * 64}
 
-    monkeypatch.setattr(api_module.engine, "kernel_end_session_async", fake_kernel_end_session_async)
+    monkeypatch.setattr(api_module._get_engine(), "kernel_end_session_async", fake_kernel_end_session_async)
 
     response = client.post(
         "/v1/kernel/end-session",
@@ -286,19 +286,19 @@ def test_kernel_api_real_engine_flow_publishes_control_plane_governed_action_tru
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    monkeypatch.setattr(api_module.engine, "control_plane_execution_repository", execution_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_repository", record_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_publication", ControlPlanePublicationService(repository=record_repo))
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_execution_repository", execution_repo)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", record_repo)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", ControlPlanePublicationService(repository=record_repo))
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane",
         KernelActionControlPlaneService(
             execution_repository=execution_repo,
-            publication=api_module.engine.control_plane_publication,
+            publication=api_module._get_engine().control_plane_publication,
         ),
     )
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane_view",
         KernelActionControlPlaneViewService(
             record_repository=record_repo,
@@ -402,19 +402,19 @@ def test_kernel_api_replay_exposes_active_reservation_for_needs_approval_trace(m
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    monkeypatch.setattr(api_module.engine, "control_plane_execution_repository", execution_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_repository", record_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_publication", ControlPlanePublicationService(repository=record_repo))
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_execution_repository", execution_repo)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", record_repo)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", ControlPlanePublicationService(repository=record_repo))
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane",
         KernelActionControlPlaneService(
             execution_repository=execution_repo,
-            publication=api_module.engine.control_plane_publication,
+            publication=api_module._get_engine().control_plane_publication,
         ),
     )
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane_view",
         KernelActionControlPlaneViewService(
             record_repository=record_repo,
@@ -469,11 +469,11 @@ def test_kernel_api_end_session_publishes_operator_cancel_for_unfinished_trace(m
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
     publication = ControlPlanePublicationService(repository=record_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_execution_repository", execution_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_repository", record_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_publication", publication)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_execution_repository", execution_repo)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", record_repo)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", publication)
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane",
         KernelActionControlPlaneService(
             execution_repository=execution_repo,
@@ -481,12 +481,12 @@ def test_kernel_api_end_session_publishes_operator_cancel_for_unfinished_trace(m
         ),
     )
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane_operator",
         KernelActionControlPlaneOperatorService(publication=publication),
     )
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane_view",
         KernelActionControlPlaneViewService(
             record_repository=record_repo,
@@ -546,11 +546,11 @@ def test_kernel_api_end_session_publishes_attestation_when_requested(monkeypatch
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
     publication = ControlPlanePublicationService(repository=record_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_execution_repository", execution_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_repository", record_repo)
-    monkeypatch.setattr(api_module.engine, "control_plane_publication", publication)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_execution_repository", execution_repo)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", record_repo)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", publication)
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane",
         KernelActionControlPlaneService(
             execution_repository=execution_repo,
@@ -558,12 +558,12 @@ def test_kernel_api_end_session_publishes_attestation_when_requested(monkeypatch
         ),
     )
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane_operator",
         KernelActionControlPlaneOperatorService(publication=publication),
     )
     monkeypatch.setattr(
-        api_module.engine,
+        api_module._get_engine(),
         "kernel_action_control_plane_view",
         KernelActionControlPlaneViewService(
             record_repository=record_repo,
@@ -655,7 +655,7 @@ def test_kernel_replay_endpoint_routes_to_engine_and_propagates_failure_codes(mo
             return {"outcome": "FAIL", "issues": [{"code": "E_REPLAY_VERSION_MISMATCH"}]}
         return {"outcome": "PASS", "issues": []}
 
-    monkeypatch.setattr(api_module.engine, "kernel_replay_run", fake_kernel_replay_run)
+    monkeypatch.setattr(api_module._get_engine(), "kernel_replay_run", fake_kernel_replay_run)
 
     missing = client.post(
         "/v1/kernel/replay",

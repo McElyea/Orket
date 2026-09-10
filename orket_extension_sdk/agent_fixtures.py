@@ -282,7 +282,7 @@ def agent_iteration_request() -> dict[str, Any]:
             _materialized("artifact:batch-a", "authoritative_context", [{"status": "open"}]),
         ],
         "effect_receipts": [],
-        "admitted_capabilities": ["agent.iteration.v1", "write_file"],
+        "admitted_capabilities": ["agent.iteration.v1", "write_file", "memory.write"],
         "namespace_scope": ["workspace:issue-1"],
         "model_profiles": [agent_model_profile_request()],
         "policy_ref": "policy:agent-v1",

@@ -194,10 +194,10 @@ import asyncio
 import json
 import tempfile
 from pathlib import Path
-from orket.interfaces.api import app, create_api_app
+import orket.interfaces.api as api_module
+from orket.interfaces.api import create_api_app
 with tempfile.TemporaryDirectory(prefix="orket-api-factory-probe-") as raw:
     root = Path(raw)
-    default_context = app.state.api_runtime_context
     first = create_api_app(root / "one")
     first_context = first.state.api_runtime_context
     second = create_api_app(root / "two")
@@ -210,7 +210,7 @@ with tempfile.TemporaryDirectory(prefix="orket-api-factory-probe-") as raw:
         "distinct_contexts": first_context is not second_context,
         "distinct_engines": first_context.engine is not second_context.engine,
         "distinct_runtime_states": first_context.runtime_state is not second_context.runtime_state,
-        "default_context_unchanged": app.state.api_runtime_context is default_context,
+        "module_default_owner_absent": not hasattr(api_module, "app"),
     }, sort_keys=True))
     asyncio.run(first_context.close())
     asyncio.run(second_context.close())
@@ -232,7 +232,7 @@ with tempfile.TemporaryDirectory(prefix="orket-api-factory-probe-") as raw:
         and observation.get("distinct_contexts")
         and observation.get("distinct_engines")
         and observation.get("distinct_runtime_states")
-        and observation.get("default_context_unchanged")
+        and observation.get("module_default_owner_absent")
     )
     return {
         "proof": "live_isolated_subprocess",

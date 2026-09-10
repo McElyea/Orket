@@ -6,7 +6,7 @@
     "displayName": "Orket - Summarizer",
     "description": "Summarizes long documents locally.",
     "version": "0.1.0",
-    "engineVersion": ">=0.3.0,<0.6.0"
+    "engineVersion": ">=0.3.0,<0.7.0"
   },
   "model": {
     "preferred": "qwen2.5-coder:7b",

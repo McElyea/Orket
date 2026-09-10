@@ -15,7 +15,7 @@ def test_architectural_truth_exception_register_has_removal_authority() -> None:
     payload = load_exception_register()
 
     assert payload["valid"] is True
-    assert payload["exceptions_total"] >= 16
+    assert payload["exceptions_total"] >= 15
     assert payload["invalid_ids"] == []
     for row in payload["exceptions"]:
         assert row["owner"] == "Orket Core"
@@ -35,4 +35,4 @@ def test_architectural_truth_api_factory_probe_requires_real_isolation() -> None
     assert payload["distinct_contexts"] is True
     assert payload["distinct_engines"] is True
     assert payload["distinct_runtime_states"] is True
-    assert payload["default_context_unchanged"] is True
+    assert payload["module_default_owner_absent"] is True

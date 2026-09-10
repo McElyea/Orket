@@ -1,15 +1,39 @@
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, Protocol
 
 from orket.application.services.governed_agent_iteration_policy import agent_payload_digest
-from orket.application.services.governed_agent_loop_service import GovernedAgentFinalTruthRepository
 from orket.application.services.governed_agent_ports import (
     GovernedAgentBrokerCallRepository,
     GovernedAgentIterationRepository,
     GovernedAgentIterationSnapshot,
 )
-from orket.core.contracts.repositories import ControlPlaneExecutionRepository
+from orket.application.services.governed_agent_schedule_records import (
+    GovernedAgentScheduleEvaluationRecord,
+    GovernedAgentScheduleRepository,
+)
+from orket.application.services.governed_agent_scheduled_wake_service import (
+    governed_agent_schedule_evaluation_view,
+)
+from orket.application.services.governed_agent_terminal_service import GovernedAgentFinalTruthRepository
+from orket.application.services.governed_agent_wake_control_service import (
+    governed_agent_wake_action_view,
+)
+from orket.application.services.governed_agent_wake_records import (
+    GovernedAgentWakeActionRecord,
+    GovernedAgentWakeControlRepository,
+    GovernedAgentWakeRecord,
+    GovernedAgentWakeRepository,
+)
+from orket.application.services.governed_agent_webhook_ingress_service import (
+    governed_agent_webhook_delivery_view,
+)
+from orket.application.services.governed_agent_webhook_records import (
+    GovernedAgentWebhookDeliveryRecord,
+    GovernedAgentWebhookRepository,
+)
+from orket.core.contracts.repositories import ControlPlaneExecutionRepository, ControlPlaneRecordRepository
 from orket.core.domain.governed_agent_continuation import (
     GovernedAgentContinuationInputs,
     decide_governed_agent_continuation,
@@ -26,11 +50,23 @@ class GovernedAgentInspectionService:
         iteration_repository: GovernedAgentIterationRepository,
         call_repository: GovernedAgentBrokerCallRepository,
         truth_repository: GovernedAgentFinalTruthRepository,
+        wake_repository: GovernedAgentWakeRepository | None = None,
+        wake_control_repository: GovernedAgentWakeControlRepository | None = None,
+        schedule_repository: GovernedAgentScheduleRepository | None = None,
+        webhook_repository: GovernedAgentWebhookRepository | None = None,
+        record_repository: ControlPlaneRecordRepository | None = None,
+        pending_gate_repository: GovernedAgentPendingGateRepository | None = None,
     ) -> None:
         self._execution = execution_repository
         self._iterations = iteration_repository
         self._calls = call_repository
         self._truth = truth_repository
+        self._wakes = wake_repository
+        self._wake_controls = wake_control_repository
+        self._schedules = schedule_repository
+        self._webhooks = webhook_repository
+        self._records = record_repository
+        self._pending = pending_gate_repository
 
     async def inspect(self, *, run_id: str) -> dict[str, Any] | None:
         run = await self._execution.get_run_record(run_id=run_id)
@@ -39,14 +75,85 @@ class GovernedAgentInspectionService:
         attempts = await self._execution.list_attempt_records(run_id=run_id)
         iterations = await self._iterations.list_iteration_snapshots(run_id=run_id)
         truth = await self._truth.get_final_truth(run_id=run_id)
+        wakes = () if self._wakes is None else await self._wakes.list_wakes(target_run_id=run_id)
+        effects = [] if self._records is None else await self._records.list_effect_journal_entries(run_id=run_id)
+        checkpoints = await self._checkpoint_views(attempts)
+        approvals = [] if self._pending is None else await self._pending.list_requests(session_id=run_id, limit=1000)
+        operator_actions = await self._operator_action_views(run_id, approvals, wakes)
+        iteration_views = [await self._iteration_view(snapshot) for snapshot in iterations]
+        wake_actions = await self._wake_action_views(wakes)
+        schedule_evaluations = await self._schedule_evaluation_views(wakes)
+        webhook_deliveries = await self._webhook_delivery_views(wakes)
         return {
             "object_type": "governed_agent_inspection",
             "schema_version": "governed_agent_inspection.v1",
             "run": run.model_dump(mode="json"),
             "attempts": [attempt.model_dump(mode="json") for attempt in attempts],
-            "iterations": [await self._iteration_view(snapshot) for snapshot in iterations],
+            "objective_ref": None if not iterations else iterations[0].request_payload.get("objective_ref"),
+            "iterations": iteration_views,
+            "wakes": [_wake_view(wake) for wake in wakes],
+            "wake_actions": wake_actions,
+            "schedule_evaluations": schedule_evaluations,
+            "webhook_deliveries": webhook_deliveries,
+            "effects": [effect.model_dump(mode="json") for effect in effects],
+            "approvals": [_approval_view(approval) for approval in approvals],
+            "checkpoints": checkpoints,
+            "operator_actions": operator_actions,
             "final_truth": None if truth is None else truth.model_dump(mode="json"),
+            "operator_summary": _operator_summary(
+                run=run.model_dump(mode="json"),
+                iterations=iteration_views,
+                wakes=wakes,
+                approvals=approvals,
+                effects=[effect.model_dump(mode="json") for effect in effects],
+                final_truth=None if truth is None else truth.model_dump(mode="json"),
+            ),
         }
+
+    async def _wake_action_views(
+        self,
+        wakes: tuple[GovernedAgentWakeRecord, ...],
+    ) -> list[dict[str, Any]]:
+        if self._wake_controls is None:
+            return []
+        actions: list[GovernedAgentWakeActionRecord] = []
+        for wake in wakes:
+            actions.extend(await self._wake_controls.list_actions(wake_id=wake.wake_id))
+        return [governed_agent_wake_action_view(action) for action in actions]
+
+    async def _schedule_evaluation_views(
+        self,
+        wakes: tuple[GovernedAgentWakeRecord, ...],
+    ) -> list[dict[str, Any]]:
+        if self._schedules is None:
+            return []
+        evaluations: list[GovernedAgentScheduleEvaluationRecord] = []
+        for wake in wakes:
+            trigger = wake.payload.get("trigger")
+            evaluation_id = trigger.get("evaluation_id") if isinstance(trigger, Mapping) else None
+            if not isinstance(evaluation_id, str) or not evaluation_id.strip():
+                continue
+            evaluation = await self._schedules.get_evaluation(evaluation_id=evaluation_id)
+            if evaluation is not None and evaluation.resulting_wake_id == wake.wake_id:
+                evaluations.append(evaluation)
+        return [governed_agent_schedule_evaluation_view(item) for item in evaluations]
+
+    async def _webhook_delivery_views(
+        self,
+        wakes: tuple[GovernedAgentWakeRecord, ...],
+    ) -> list[dict[str, Any]]:
+        if self._webhooks is None:
+            return []
+        deliveries: list[GovernedAgentWebhookDeliveryRecord] = []
+        for wake in wakes:
+            trigger = wake.payload.get("trigger")
+            delivery_ref = trigger.get("delivery_ref") if isinstance(trigger, Mapping) else None
+            if not isinstance(delivery_ref, str) or not delivery_ref.strip():
+                continue
+            delivery = await self._webhooks.get_delivery(delivery_ref=delivery_ref)
+            if delivery is not None and delivery.resulting_wake_id == wake.wake_id:
+                deliveries.append(delivery)
+        return [governed_agent_webhook_delivery_view(item) for item in deliveries]
 
     async def replay(self, *, run_id: str) -> dict[str, Any] | None:
         snapshots = await self._iterations.list_iteration_snapshots(run_id=run_id)
@@ -99,6 +206,49 @@ class GovernedAgentInspectionService:
             ],
         }
 
+    async def _checkpoint_views(self, attempts: list[Any]) -> list[dict[str, Any]]:
+        if self._records is None:
+            return []
+        result: list[dict[str, Any]] = []
+        for attempt in attempts:
+            checkpoints = await self._records.list_checkpoints(parent_ref=attempt.attempt_id)
+            for checkpoint in checkpoints:
+                acceptance = await self._records.get_checkpoint_acceptance(checkpoint_id=checkpoint.checkpoint_id)
+                result.append(
+                    {
+                        "checkpoint": checkpoint.model_dump(mode="json"),
+                        "acceptance": None if acceptance is None else acceptance.model_dump(mode="json"),
+                    }
+                )
+        return result
+
+    async def _operator_action_views(
+        self,
+        run_id: str,
+        approvals: list[dict[str, Any]],
+        wakes: tuple[GovernedAgentWakeRecord, ...],
+    ) -> list[dict[str, Any]]:
+        if self._records is None:
+            return []
+        actions = list(await self._records.list_operator_actions(target_ref=run_id))
+        for approval in approvals:
+            target_ref = f"approval-request:{approval.get('request_id')}"
+            actions.extend(await self._records.list_operator_actions(target_ref=target_ref))
+        for wake in wakes:
+            actions.extend(await self._records.list_operator_actions(target_ref=wake.wake_id))
+        by_id = {action.action_id: action for action in actions}
+        return [by_id[action_id].model_dump(mode="json") for action_id in sorted(by_id)]
+
+
+class GovernedAgentPendingGateRepository(Protocol):
+    async def list_requests(
+        self,
+        *,
+        session_id: str | None = None,
+        status: str | None = None,
+        limit: int = 100,
+    ) -> list[dict[str, Any]]: ...
+
 
 def _replay_snapshot(snapshot: GovernedAgentIterationSnapshot) -> dict[str, Any]:
     if snapshot.decision_inputs is None or snapshot.decision_payload is None:
@@ -118,4 +268,86 @@ def _replay_snapshot(snapshot: GovernedAgentIterationSnapshot) -> dict[str, Any]
         "replayed_decision_digest": replayed_digest,
         "rule": replayed["rule"],
         "disposition": replayed["disposition"],
+    }
+
+
+def _wake_view(wake: GovernedAgentWakeRecord) -> dict[str, Any]:
+    return {
+        "wake_id": wake.wake_id,
+        "source": wake.source,
+        "target_kind": wake.target_kind,
+        "occurrence_id": wake.occurrence_id,
+        "state": wake.state,
+        "claim_owner_id": wake.claim_owner_id,
+        "lease_expires_at_utc": wake.lease_expires_at_utc,
+        "fencing_generation": wake.fencing_generation,
+        "cancellation_epoch": wake.cancellation_epoch,
+        "uncertainty": wake.uncertainty,
+        "result_ref": wake.result_ref,
+        "last_reason": wake.last_reason,
+        "trigger": _trigger_view(wake.payload.get("trigger")),
+    }
+
+
+def _trigger_view(value: object) -> dict[str, Any] | None:
+    return dict(value) if isinstance(value, Mapping) else None
+
+
+def _approval_view(approval: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: approval.get(key)
+        for key in (
+            "request_id",
+            "issue_id",
+            "gate_mode",
+            "request_type",
+            "reason",
+            "status",
+            "payload_json",
+            "resolution_json",
+            "created_at",
+            "resolved_at",
+        )
+    }
+
+
+def _operator_summary(
+    *,
+    run: dict[str, Any],
+    iterations: list[dict[str, Any]],
+    wakes: tuple[GovernedAgentWakeRecord, ...],
+    approvals: list[dict[str, Any]],
+    effects: list[dict[str, Any]],
+    final_truth: dict[str, Any] | None,
+) -> dict[str, Any]:
+    latest = iterations[-1] if iterations else None
+    decision = None if latest is None else latest.get("decision")
+    active_wake = next((wake for wake in reversed(wakes) if wake.state == "claimed"), None)
+    pending = [item for item in approvals if item.get("status") == "pending"]
+    capabilities = []
+    if latest is not None:
+        capabilities = [
+            item.get("capability")
+            for item in latest["remaining_iteration_budget"].get("per_capability_effects", [])
+            if int(item.get("count") or 0) > 0
+        ]
+    lifecycle = str(run.get("lifecycle_state") or "")
+    return {
+        "running": active_wake is not None and lifecycle == "executing",
+        "running_basis": None if active_wake is None else f"wake-claim:{active_wake.wake_id}",
+        "may_continue": bool(isinstance(decision, dict) and decision.get("next_iteration_authorized")),
+        "continuation_basis": None if not isinstance(decision, dict) else decision.get("rule"),
+        "can_affect": sorted({str(item) for item in capabilities if item}),
+        "awaits": [f"approval:{item.get('request_id')}" for item in pending]
+        + (
+            ["recovery"]
+            if lifecycle == "recovery_pending" or any(wake.uncertainty for wake in wakes)
+            else []
+        ),
+        "stopped_because": (
+            final_truth.get("closure_basis")
+            if final_truth is not None
+            else None if lifecycle == "executing" else (decision or {}).get("rule", lifecycle)
+        ),
+        "effect_count": len(effects),
     }

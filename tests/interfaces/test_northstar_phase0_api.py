@@ -27,11 +27,11 @@ def test_v1_response_includes_orket_version_header(test_client) -> None:
 
 
 @pytest.mark.contract
-def test_all_registered_v1_routes_require_api_key_dependency() -> None:
+def test_all_registered_v1_routes_require_api_key_dependency(test_client) -> None:
     """Layer: contract. Verifies registered /v1 routes use the shared X-API-Key dependency."""
     v1_routes = [
         route
-        for route in api_module.app.routes
+        for route in test_client.app.routes
         if isinstance(route, APIRoute) and str(route.path).startswith("/v1/")
     ]
 

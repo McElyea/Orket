@@ -2,8 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Protocol, cast
+from typing import Any, Protocol
 
+from orket.application.services.governed_agent_context_plan import (
+    bind_continuation_configuration,
+    same_run_authority,
+    validate_continuation_inputs,
+)
 from orket.application.services.governed_agent_iteration_policy import (
     GovernedAgentVerificationObservation,
     agent_invocation_binding,
@@ -11,12 +16,22 @@ from orket.application.services.governed_agent_iteration_policy import (
     continuation_inputs,
 )
 from orket.application.services.governed_agent_ports import (
+    GovernedAgentAuthorityGuard,
     GovernedAgentInvocationBinding,
     GovernedAgentIterationInvoker,
     GovernedAgentIterationRepository,
 )
+from orket.application.services.governed_agent_progress_policy import with_recorded_progress
 from orket.application.services.governed_agent_request_builder import (
     build_next_agent_iteration_request,
+)
+from orket.application.services.governed_agent_run_control_service import (
+    GovernedAgentRunControlRepository,
+    with_operator_controls,
+)
+from orket.application.services.governed_agent_terminal_service import (
+    GovernedAgentFinalTruthRepository,
+    close_agent_run,
 )
 from orket.core.contracts import (
     AttemptRecord,
@@ -28,15 +43,7 @@ from orket.core.contracts import (
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AttemptState,
-    AuthoritySourceClass,
-    ClosureBasisClassification,
-    CompletionClassification,
-    DegradationClassification,
-    EvidenceSufficiencyClassification,
-    ResidualUncertaintyClassification,
-    ResultClass,
     RunState,
-    TerminalityBasisClassification,
 )
 from orket.core.domain.governed_agent_continuation import (
     GovernedAgentContinuationDecision,
@@ -52,12 +59,6 @@ class GovernedAgentCompletionVerifier(Protocol):
         request: AgentIterationRequest,
         result: AgentIterationResult,
     ) -> GovernedAgentVerificationObservation: ...
-
-
-class GovernedAgentFinalTruthRepository(Protocol):
-    async def save_final_truth(self, *, record: FinalTruthRecord) -> FinalTruthRecord: ...
-
-    async def get_final_truth(self, *, run_id: str) -> FinalTruthRecord | None: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,12 +90,16 @@ class GovernedAgentLoopService:
         truth_repository: GovernedAgentFinalTruthRepository,
         invoker: GovernedAgentIterationInvoker,
         verifier: GovernedAgentCompletionVerifier,
+        authority_guard: GovernedAgentAuthorityGuard | None = None,
+        run_controls: GovernedAgentRunControlRepository | None = None,
     ) -> None:
         self._execution = execution_repository
         self._iterations = iteration_repository
         self._truth = truth_repository
         self._invoker = invoker
         self._verifier = verifier
+        self._authority_guard = authority_guard
+        self._run_controls = run_controls
 
     async def run_bounded(
         self,
@@ -107,27 +112,30 @@ class GovernedAgentLoopService:
         creation_timestamp_utc: str,
         decision_timestamps_utc: Sequence[str],
         next_lease_expiries_utc: Sequence[str],
+        continuation_inputs_payload: Mapping[str, Any] | None = None,
     ) -> GovernedAgentLoopExecution:
         request = AgentIterationRequest.from_wire(dict(initial_request_payload))
+        context_plan = validate_continuation_inputs(request, continuation_inputs_payload)
+        configuration_digest = bind_continuation_configuration(configuration_digest, context_plan)
+        await self._ensure_authority()
         run, attempt = await self._ensure_parent(
-            request=request,
-            workload_record=workload_record,
-            configuration_digest=configuration_digest,
-            admission_receipt_ref=admission_receipt_ref,
+            request=request, workload_record=workload_record,
+            configuration_digest=configuration_digest, admission_receipt_ref=admission_receipt_ref,
             creation_timestamp_utc=creation_timestamp_utc,
         )
         if run.final_truth_record_id is not None:
+            await self._ensure_authority()
             truth = await self._truth.get_final_truth(run_id=run.run_id)
             return GovernedAgentLoopExecution(run, attempt, (), (), truth, None)
         if run.lifecycle_state is not RunState.EXECUTING:
             return GovernedAgentLoopExecution(run, attempt, (), (), None, "run_not_executing")
-        maximum = request.remaining_run_budget.iterations
-        if maximum < 1 or len(decision_timestamps_utc) < maximum:
+        if (maximum := request.remaining_run_budget.iterations) < 1 or len(decision_timestamps_utc) < maximum:
             raise ValueError("E_AGENT_ITERATION_AUTHORIZATION_INPUT_MISSING")
         decisions: list[GovernedAgentContinuationDecision] = []
         invocation_ids: list[str] = []
         final_truth: FinalTruthRecord | None = None
         for index in range(maximum):
+            await self._ensure_authority()
             binding = agent_invocation_binding(request, extension_digest)
             await self._ensure_step(binding)
             iteration = await self._execute_iteration(
@@ -137,6 +145,7 @@ class GovernedAgentLoopService:
             )
             invocation_ids.append(binding.invocation_id)
             if iteration.result is None or iteration.decision is None or iteration.verification is None:
+                await self._ensure_authority()
                 run = await self._execution.save_run_record(
                     record=run.model_copy(update={"lifecycle_state": RunState.RECOVERY_PENDING})
                 )
@@ -145,8 +154,10 @@ class GovernedAgentLoopService:
             decision = iteration.decision
             verification = iteration.verification
             decisions.append(decision)
-            if decision.disposition == "complete":
-                run, attempt, final_truth = await self._close_verified_success(
+            if decision.disposition in {"complete", "blocked", "failed"}:
+                run, attempt, final_truth = await close_agent_run(
+                    execution=self._execution, truth_repository=self._truth, guard=self._authority_guard,
+                    decision=decision, decision_ref=f"agent-decision:{binding.invocation_id}",
                     run=run,
                     attempt=attempt,
                     verification=verification,
@@ -163,6 +174,7 @@ class GovernedAgentLoopService:
                 accepted_result=result,
                 next_lease_expires_at_utc=next_lease_expiries_utc[index],
                 verification_evidence_ref=verification.evidence_ref,
+                next_context_inputs=context_plan.get(str(request.identity.iteration_ordinal + 1)),
             )
         return GovernedAgentLoopExecution(run, attempt, tuple(decisions), tuple(invocation_ids), final_truth, None)
 
@@ -200,7 +212,7 @@ class GovernedAgentLoopService:
         )
         existing_run = await self._execution.get_run_record(run_id=run.run_id)
         existing_attempt = await self._execution.get_attempt_record(attempt_id=attempt.attempt_id)
-        if existing_run is not None and not _same_run_authority(existing_run, run):
+        if existing_run is not None and not same_run_authority(existing_run, run):
             raise ValueError("E_AGENT_RUN_ID_CONFLICT")
         if existing_attempt is not None and (
             existing_attempt.run_id != attempt.run_id
@@ -208,8 +220,10 @@ class GovernedAgentLoopService:
         ):
             raise ValueError("E_AGENT_ATTEMPT_ID_CONFLICT")
         if existing_run is None:
+            await self._ensure_authority()
             existing_run = await self._execution.save_run_record(record=run)
         if existing_attempt is None:
+            await self._ensure_authority()
             existing_attempt = await self._execution.save_attempt_record(record=attempt)
         return existing_run, existing_attempt
 
@@ -227,6 +241,7 @@ class GovernedAgentLoopService:
             if existing.input_ref != binding.request_digest or existing.attempt_id != binding.attempt_id:
                 raise ValueError("E_AGENT_STEP_ID_CONFLICT")
             return existing
+        await self._ensure_authority()
         return await self._execution.save_step_record(record=step)
 
     async def _execute_iteration(
@@ -246,13 +261,19 @@ class GovernedAgentLoopService:
             verification=verification,
             decision_timestamp_utc=decision_timestamp_utc,
         )
-        decision = decide_governed_agent_continuation(inputs)
-        publication = await self._iterations.publish_continuation_decision(
-            binding=binding,
-            accepted_result_digest=agent_payload_digest(result.to_wire()),
-            decision_inputs=inputs.to_payload(),
-            decision_payload=decision.to_payload(),
-        )
+        inputs = with_recorded_progress(inputs, request, verification,
+                                       await self._iterations.list_iteration_snapshots(run_id=binding.run_id))
+        # At most one pause and one stop can race this boundary; every retry rereads durable authority.
+        for _ in range(3):
+            inputs = await with_operator_controls(inputs, self._run_controls, binding.invocation_id)
+            decision = decide_governed_agent_continuation(inputs)
+            await self._ensure_authority()
+            publication = await self._iterations.publish_continuation_decision(
+                binding=binding, accepted_result_digest=agent_payload_digest(result.to_wire()),
+                decision_inputs=inputs.to_payload(), decision_payload=decision.to_payload(),
+            )
+            if publication.status != "control_changed":
+                break
         if publication.status not in {"accepted", "idempotent"}:
             raise ValueError(f"E_AGENT_DECISION_PUBLICATION_{publication.status.upper()}")
         await self._close_step(binding, verification, publication.durable_decision_ref)
@@ -263,10 +284,13 @@ class GovernedAgentLoopService:
         binding: GovernedAgentInvocationBinding,
         request: AgentIterationRequest,
     ) -> tuple[AgentIterationResult | None, str | None]:
+        await self._ensure_authority()
         preparation = await self._iterations.prepare_dispatch(binding=binding, request_payload=request.to_wire())
         if preparation.status != "prepared":
             return await self._recover_recorded_result(binding, preparation.status)
+        await self._ensure_authority()
         outcome = await self._invoker.invoke_once(binding=binding, request_payload=request.to_wire())
+        await self._ensure_authority()
         if outcome.status != "returned" or outcome.result_payload is None:
             await self._iterations.record_interrupted_publication(
                 binding=binding,
@@ -274,6 +298,7 @@ class GovernedAgentLoopService:
                 provider_or_effect_uncertain=outcome.status in {"timed_out", "protocol_failed"},
             )
             return None, str(outcome.normalized_reason or outcome.status)
+        await self._ensure_authority()
         acceptance = await self._iterations.accept_result(outcome=outcome)
         if acceptance.status not in {"accepted", "idempotent"}:
             return None, f"result_{acceptance.status}"
@@ -308,6 +333,7 @@ class GovernedAgentLoopService:
         receipts = [verification.evidence_ref]
         if decision_ref is not None:
             receipts.append(decision_ref)
+        await self._ensure_authority()
         await self._execution.save_step_record(
             record=step.model_copy(
                 update={
@@ -319,61 +345,15 @@ class GovernedAgentLoopService:
             )
         )
 
-    async def _close_verified_success(
-        self,
-        *,
-        run: RunRecord,
-        attempt: AttemptRecord,
-        verification: GovernedAgentVerificationObservation,
-        end_timestamp: str,
-    ) -> tuple[RunRecord, AttemptRecord, FinalTruthRecord]:
-        truth = await self._truth.save_final_truth(
-            record=FinalTruthRecord(
-                final_truth_record_id=f"agent-final-truth:{run.run_id}",
-                run_id=run.run_id,
-                result_class=ResultClass.SUCCESS,
-                completion_classification=CompletionClassification.SATISFIED,
-                evidence_sufficiency_classification=EvidenceSufficiencyClassification.SUFFICIENT,
-                residual_uncertainty_classification=ResidualUncertaintyClassification.NONE,
-                degradation_classification=DegradationClassification.NONE,
-                closure_basis=ClosureBasisClassification.NORMAL_EXECUTION,
-                terminality_basis=TerminalityBasisClassification.COMPLETED_TERMINAL,
-                authority_sources=[AuthoritySourceClass.VALIDATED_ARTIFACT],
-                authoritative_result_ref=verification.authoritative_result_ref,
-            )
-        )
-        closed_attempt = await self._execution.save_attempt_record(
-            record=attempt.model_copy(
-                update={"attempt_state": AttemptState.COMPLETED, "end_timestamp": end_timestamp}
-            )
-        )
-        closed_run = await self._execution.save_run_record(
-            record=run.model_copy(
-                update={"lifecycle_state": RunState.COMPLETED, "final_truth_record_id": truth.final_truth_record_id}
-            )
-        )
-        return closed_run, closed_attempt, truth
-
     async def _block_run(
         self,
         run: RunRecord,
         decision: GovernedAgentContinuationDecision,
     ) -> RunRecord:
         state = RunState.RECOVERY_PENDING if decision.disposition == "recover" else RunState.OPERATOR_BLOCKED
+        await self._ensure_authority()
         return await self._execution.save_run_record(record=run.model_copy(update={"lifecycle_state": state}))
 
-
-def _same_run_authority(existing: RunRecord, expected: RunRecord) -> bool:
-    return cast(
-        bool,
-        existing.run_id == expected.run_id
-        and existing.workload_id == expected.workload_id
-        and existing.workload_version == expected.workload_version
-        and existing.policy_snapshot_id == expected.policy_snapshot_id
-        and existing.policy_digest == expected.policy_digest
-        and existing.configuration_snapshot_id == expected.configuration_snapshot_id
-        and existing.configuration_digest == expected.configuration_digest
-        and existing.admission_decision_receipt_ref == expected.admission_decision_receipt_ref
-        and existing.namespace_scope == expected.namespace_scope
-        and existing.current_attempt_id == expected.current_attempt_id,
-    )
+    async def _ensure_authority(self) -> None:
+        if self._authority_guard is not None:
+            await self._authority_guard.ensure_active()

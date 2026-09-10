@@ -14,7 +14,9 @@ _QWEN_INTRO_DENYLIST = ["sure", "here is", "here's", "i will", "i'll", "thinking
 
 
 @pytest.mark.asyncio
-async def test_resolve_local_prompting_policy_selects_matching_profile_for_ollama_qwen() -> None:
+async def test_resolve_local_prompting_policy_selects_matching_profile_for_ollama_qwen(tmp_path, monkeypatch) -> None:
+    """Layer: integration. The async provider path loads its packaged registry outside a checkout."""
+    monkeypatch.chdir(tmp_path)
     result = await resolve_local_prompting_policy(
         provider_backend="ollama",
         model="qwen2.5-coder:14b",
@@ -31,6 +33,27 @@ async def test_resolve_local_prompting_policy_selects_matching_profile_for_ollam
     assert result.thinking_block_format == "none"
     assert result.lmstudio_session_mode == "none"
     assert result.lmstudio_session_id == ""
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("override_source", ["context", "environment"])
+async def test_missing_explicit_registry_does_not_fall_back_to_packaged_default(
+    tmp_path, monkeypatch, override_source
+) -> None:
+    """Layer: contract. A missing explicit registry fails closed, even with a valid packaged default."""
+    context = {"protocol_governed_enabled": True}
+    missing = str(tmp_path / "missing.json")
+    if override_source == "context":
+        context["local_prompt_profile_registry_path"] = missing
+    else:
+        monkeypatch.setenv("ORKET_LOCAL_PROMPT_PROFILE_REGISTRY_PATH", missing)
+    with pytest.raises(FileNotFoundError):
+        await resolve_local_prompting_policy(
+            provider_backend="ollama",
+            model="qwen2.5:7b",
+            messages=[{"role": "user", "content": "hello"}],
+            runtime_context=context,
+        )
 
 
 @pytest.mark.asyncio

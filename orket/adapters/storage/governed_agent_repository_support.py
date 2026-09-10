@@ -85,7 +85,10 @@ async def budget_admits(
     output_tokens: int,
 ) -> bool:
     if operation != "model.call.v1":
-        return True
+        # V1 admits one bounded objective-memory query per iteration; iterations bound the run total.
+        cursor = await conn.execute("SELECT COUNT(*) FROM governed_agent_calls WHERE invocation_id=? AND operation=?",
+                                    (invocation_id, operation))
+        return int((await cursor.fetchone())[0]) < 1
     budget = request["remaining_iteration_budget"]
     cursor = await conn.execute(
         """

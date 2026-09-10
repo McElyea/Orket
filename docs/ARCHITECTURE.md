@@ -42,9 +42,9 @@ not accepted as target-architecture conformance.
    2. `orket/interfaces/coordinator_api.py` and `orket/interfaces/orket_bundle_cli.py` import core/domain types directly.
 2. Decision-node purity exceptions:
    1. `orket/decision_nodes/api_runtime_strategy_node.py` and `orket/decision_nodes/builtins.py` still include environment/path/provider policy logic, but API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths now live in explicit services.
-3. API transport compatibility exception:
-   1. `create_api_app()` now returns a distinct FastAPI app with an application-owned `ApiRuntimeContainer`, runtime state, host, engine, decision node, outbound-policy snapshot, lazy stream/interaction/extension owners, and tracked task teardown.
-   2. `orket/interfaces/api.py` still exports one compatibility-only module-default app and owner aliases. Those aliases can affect only that default app; removing them and moving outward service/store construction out of the interface module remains B2 debt.
+3. API runtime composition:
+   1. `create_api_app()` returns a distinct FastAPI app with an application-owned `ApiRuntimeContainer`, runtime state, host, engine, decision node, outbound-policy snapshot, stream/interaction/extension owners, outward stores/services, and tracked task teardown.
+   2. `orket/interfaces/api.py` is import-pure with respect to FastAPI/runtime owners: it exports no module-default app or mutable owner aliases and constructs no application, adapter, decision-node, kernel, or orchestration implementation. Production callers use `orket.runtime.create_api_app(...)` and retain the returned app.
 4. Deterministic runtime clock/input exceptions:
    1. Some application paths still use wall-clock helpers directly (for example `time.time()` / `datetime.now(...)`) instead of injected runtime inputs.
 5. Replay diagnostics compatibility exception:

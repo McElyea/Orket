@@ -1,5 +1,10 @@
 # Governed Agent Loop Slice 0 Conformance Matrix
 
+Archived on 2026-09-10 after user acceptance and the governed-agent minor-release
+closeout. Current release authority: `docs/releases/0.6.0/PROOF_REPORT.md`.
+The checkpoint/version/blocker statements below are historical as of their
+recorded dates; the accepted closeout supersedes their open release gates.
+
 Last updated: 2026-09-07
 Status: Slice 0 closed; updated after deterministic Slice 2 admission
 Owner: Orket Core
@@ -79,9 +84,14 @@ built-package checks in clean environments outside the checkout:
 | Pre-broker Slice 0 host artifact | Agent extension built with `0.5.0a1` | Historical expected refusal: author validation passes; host validation/install refuses unavailable features. |
 | Current Slice 2 broker host artifact | Agent extension built with the pinned `0.5.0a1` development wheel | Matching handshake and deterministic two-iteration proof passed. |
 
-Every row records wheel/sdist digest, imported module path, SDK/core version and
-commit, schema digest, validation command, and observed refusal/success. Source
-imports and wheel-content listings are not clean-install proof.
+The rows above describe the intended coverage; the early matching-package
+checkpoint did not establish every historical combination. Current observed
+legacy/new combinations and upgrade evidence are recorded by
+`scripts/proof/run_governed_agent_compatibility.py` and consolidated in
+`SLICE_7_ACCEPTANCE_PROOF_2026-09-09.md`. In particular, old core with a new SDK
+overlay has duplicate namespace ownership and can return author-validation
+success without agent runtime support. That combination is unsupported.
+Source imports and wheel-content listings are not clean-install proof.
 
 ## Architecture checklist
 

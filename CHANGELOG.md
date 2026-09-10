@@ -5,6 +5,30 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-09-10 - "Governed continuous agents"
+
+### Changed
+- Complete the governed continuous-agent roadmap lane: public SDK contracts,
+  separate external reference package, durable wake supervision, schedules and
+  authenticated webhooks, staged input, host-owned progress/memory/control,
+  approval-gated effects and observation-only recovery after process loss.
+- Ship the local prompt registry in core and complete per-app API composition
+  isolation required by the governed-agent supervisor.
+- Release with standalone SDK 0.6.0 and external reference 0.2.0. Core no longer
+  owns SDK namespace files; install both pinned wheels and reinstall SDK last
+  when upgrading a historical bundling core.
+- Stability: bounded trusted-extension workflows are supported within the
+  tested local Ollama scope; no hostile-code containment, comparative model
+  quality, cloud-provider expansion, or production-soak guarantee is claimed.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Operator/author action: use core 0.6.0 with SDK 0.6.0, validate extracted
+  extension 0.2.0 strictly, and follow the release proof report's upgrade steps.
+  The legacy source wrapper and hidden `--rock` alias remain deprecated through
+  0.6.x, with removal tracked in the architectural-truth lane.
+- Proof and accepted closeout: `docs/releases/0.6.0/PROOF_REPORT.md`.
+
 ## [0.5.10] - 2026-09-07 - "The Governed Agent Foundations Cut"
 
 ### Added

@@ -1,7 +1,7 @@
 # Governed Agent Loop V1
 
-Last updated: 2026-09-07
-Status: Active durable contract; bounded CLI/runtime Slices 0-5 implemented, continuous supervisor pending
+Last updated: 2026-09-09
+Status: Active durable contract; bounded Slices 0-5 and Slice 6A-6H durable API/manual/scheduled/webhook/effect supervisor, wake controls, and live supervisor proof implemented; Slice 7 pending
 Owner: Orket Core
 Accepted requirements source: `docs/projects/archive/governed-agent-loop/GAL09062026-REQUIREMENTS/GOVERNED_AGENT_LOOP_REQUIREMENTS_DEFINITION_PLAN.md`
 
@@ -69,8 +69,24 @@ The reserved workload identity is `governed-agent-loop` with contract version
 `governed_agent_loop.v1`. It must enter through the sole workload-authority seam
 in `orket/application/services/control_plane_workload_catalog.py`.
 Bounded CLI admission is implemented and proven through deterministic and live
-local-model paths. API admission, durable wakes, and continuous supervision
-remain pending their separate proof gates.
+local-model paths. The Slice 6A durable manual/API/recovery wake repository,
+fenced claim operations, bounded supervisor, and wake inspection projection are
+implemented. Slice 6B admits authenticated API wakes, explicit opt-in API
+lifespan ownership, new-run and existing-run dispatch through the canonical
+bounded loop and broker, provider-capacity claim limits, active lease renewal,
+wake-fence checks at broker and result publication boundaries, and composed
+durable inspection. Slice 6C admits `orket agent wake enqueue`, `list`, and
+`inspect` as the public manual transport; it shares API ingress validation and
+persists work without starting an executor. Slice 6D adds durable wake-level
+`cancel`, `recover`, and action-history surfaces across authenticated API and
+CLI transports. A terminal existing run is inspected and its wake consumed
+without reopening it. Slice 6E proves live fixed-role Ollama execution through
+the API-owned supervisor. Slice 6F admits authenticated durable schedule
+evaluation with explicit timezone/DST, missed-trigger, and coalescing semantics.
+Slice 6G admits API-key plus HMAC authenticated webhook delivery with bounded
+replay protection and durable delivery receipts. Slice 6H prepares accepted
+effect proposals beneath the active wake fence, exposes authenticated operator
+resolution, and resumes only through a request-bound existing-run wake.
 
 The first-slice object mapping is:
 
@@ -292,6 +308,30 @@ artifact reference as well as their digest. The host verifies reference access,
 digest, target namespace, and approval binding. SDK schema validation alone
 cannot verify ownership or truth of referenced evidence.
 
+### Host-owned continuation inputs
+
+The CLI `--continuation-inputs <json>` and optional wake dispatch field
+`continuation_inputs` carry a mapping from canonical decimal iteration ordinals
+to nonempty lists of `authoritative_context` materializations. Ordinals are
+bounded to 2-100 and the admitted run iteration budget. Every entry receives
+the same schema, byte, digest, provenance-shape, and uniqueness validation as
+an issued request. A reference cannot change digest across that plan.
+
+The entire normalized plan binds the run configuration digest and persists in
+the originating wake. It is never put in extension configuration or sent to
+the child. Only after a host continuation decision does the selected batch
+replace the preceding authoritative context; the accepted prior result is
+delivered alongside it. Omitted ordinals retain current context. Effect resume
+retains the originating plan and its configuration binding across app restart.
+This is explicit host input, not model-controlled context retrieval.
+
+The admitted ticket-report fixture verifier v2 checks partial counts and source
+completeness before continuation or effect preparation. Incorrect proposed
+report content with effects enters recovery without preparing those effects.
+Final success references the persisted `agent-result:<invocation_id>` record,
+whose report content is verified, rather than an unmaterialized fixture result
+name. Fixed acceptance cases are `mixed`, `all-open`, and `empty-first`.
+
 ## Model-profile contract
 
 The extension first requests a host-defined model profile or capability class
@@ -406,6 +446,18 @@ incidental timestamps and trace ids. Verifier-observed changes establish
 progress; model claims do not reset counters. Pause does not reset a deadline or
 replenish a budget.
 
+`governed_agent_progress.v1` records the host verifier's projection digest,
+prior matching projection count, and consecutive no-progress count in each
+decision snapshot. A newly changed admissible verifier projection resets the
+no-progress count; missing or unchanged projections increment it. Prior
+matching projections count as repeated states. Recorded history survives
+restart; model claims, receipts, timestamps, and trace ids cannot reset these
+counters. The ticket verifier projects only validated counts and source refs.
+Policy `blocked` and `failed` decisions publish unsuccessful final truth and
+close the run as `failed_terminal`; advisory pauses remain operator-blocked,
+and unresolved boundaries remain recovery-pending. CLI success requires a
+successful final-truth result, not merely the existence of final truth.
+
 If several conditions are present in the same unpublished decision snapshot,
 the governor resolves them in this order:
 
@@ -447,6 +499,9 @@ admissible work and evidence, never from unauthorized late calls.
 8. Recovery requires an explicit `RecoveryDecision`; checkpoint acceptance and
    required re-observation remain separate prerequisites.
 9. Later iterations consume only verified effect observations.
+10. A resume operator action authorizes one exact digest-bound iteration
+    request but does not change the run to `executing`; only the claimed resume
+    wake may perform that transition under its current fence.
 
 The implemented bounded effect composition further requires:
 
@@ -458,11 +513,15 @@ The implemented bounded effect composition further requires:
    a resume-forbidden pre-effect checkpoint, and the existing pending-gate and
    reservation authorities before an approval-required write;
 4. an explicit operator resolution, post-effect observation and journal entry,
-   an accepted resume-same-attempt checkpoint, and a separate operator resume
+   one accepted aggregate resume-same-attempt checkpoint covering every
+   proposal in the paused result, and a separate request-bound operator resume
    action before another iteration;
 5. denial publishes operator-terminal-stop truth without mutation; a matching
    target found after restart is reconciled and journaled without redispatch;
    failed or contradictory observation remains uncertain and blocks resume.
+6. wake-driven preparation rechecks claim authority before each publication
+   and after external observation; stale preparation cannot publish a journal,
+   approval, reservation, checkpoint, or accepted resume transition.
 
 The first live mutation proof targets the existing issue-scoped `write_file`
 approval path. Its exact issue namespace, target run/attempt, approval payload,
@@ -476,6 +535,17 @@ write may have happened before its receipt was persisted, re-observe/reconcile
 before retrying. A queue claim or stable id does not create exactly-once effects.
 
 ## Context, memory, and handoffs
+
+The admitted V1 memory provider projects objective-scoped advisory entries from
+earlier, host-verified iteration results in the same run and extension digest.
+It does not create another memory store. `memory.query` permits one distinct
+`memory.query.v1` request per iteration; exact replay returns the retained result.
+Item and content-byte limits remain caller-bounded under the wire schema. A
+matching full invocation identity is required. `memory.write` is required for
+proposals, and only objective proposals with host decision/result provenance are
+eligible for this projection. Unverified, interrupted, paused, foreign-run and
+foreign-extension results cannot supply entries. Other typed memory scopes are
+unadmitted by this provider, and profile-memory mutation is not enabled.
 
 Each iteration context must be reconstructable from durable references and must
 apply deterministic ordering, truncation, redaction, byte/token limits, and
@@ -501,6 +571,25 @@ and never trusts a requested role label as independent authority.
 
 ## Operator and inspection contract
 
+`POST /v1/agent-runs/{run_id}/controls` and `orket agent pause|stop` accept an
+exact invocation id, stable action id, actor ref and UTC timestamp. The host
+records canonical operator actions against the undecided iteration in the same
+SQLite authority as continuation publication. A control arriving during
+publication forces reevaluation; a decided or inactive invocation refuses late
+control. Acknowledgement means requested at the iteration boundary, not that the
+currently running model call has stopped. Stop precedes success and yields
+unsuccessful terminal truth. Pause remains resumable through the existing
+checkpoint/`approve_continue` path, also exposed at
+`POST /v1/agent-runs/{run_id}/resume`; it cannot reset deadlines or budgets.
+
+Write approval resolution atomically claims `pending` before execution, so
+competing resolvers cannot both write. After abrupt process loss with approved
+intent but no effect journal, exact approval replay only observes. Matching
+intended bytes permit journal/checkpoint reconciliation; missing or different
+bytes refuse with `E_AGENT_EFFECT_RECONCILIATION_REQUIRED`, without writing.
+An already uncertain journal remains recovery-blocked. The existing pending
+gate repository owns this conditional update; no duplicate approval store exists.
+
 The operator surface must support:
 
 1. submit;
@@ -511,7 +600,9 @@ The operator surface must support:
 5. stop through `mark_terminal`;
 6. cancel through `cancel_run`;
 7. approve or deny a pending effect through the existing approval surface;
-8. non-mutating replay of a continuation decision.
+8. explicitly resume a fully observed read-only effect set without fabricating
+   a write approval;
+9. non-mutating replay of a continuation decision.
 
 Inspection must expose objective, run/attempt/iteration identity, wake and claim
 state, requested and resolved model profiles, current budgets, active leases,
@@ -543,6 +634,28 @@ Each claim:
 4. preserves uncertain effects and expired-claim truth across restart;
 5. releases or expires without leaking tasks, subprocesses, or capacity leases.
 
+An uncertain claimed or cancelled wake continues to consume one configured
+provider-capacity slot until an explicit recovery decision reconciles it. Lease
+expiry alone must not admit replacement inference when the prior provider call
+may still be running.
+
+Wake cancellation is compare-and-set on the cancellation epoch. Cancelling an
+active claim changes it to `cancelled`, fences the prior owner, and retains
+uncertainty; it does not claim the child has stopped. Wake recovery is
+compare-and-set on the fencing generation and accepts exactly two resolutions:
+
+1. `requeue` changes `recovery_required` work to `queued`;
+2. `confirm_cancelled` leaves a cancelled wake cancelled while clearing its
+   uncertainty and claim/lease ownership.
+
+Both resolutions require explicit confirmation that the prior child stopped,
+explicit confirmation that effect uncertainty was reconciled, and one or more
+evidence references. State-evaluated controls publish one canonical
+`OperatorActionRecord`, the wake transition, and a specialized durable
+wake-action receipt atomically. Exact action replay is idempotent;
+contradictory reuse, stale epochs, and missing recovery preconditions preserve
+the prior wake and publish a conflict or stale receipt.
+
 A wake event does not itself authorize model inference or continuation. The
 governor must still publish the applicable admission or continuation decision.
 
@@ -555,9 +668,53 @@ cannot authorize two next steps.
 
 Each wake declares whether it targets an existing nonterminal run or a new
 scheduled occurrence. Deduplication keys include the occurrence identity;
-terminal runs never reopen implicitly. Scheduled and webhook ingress require
-explicit timezone/missed-trigger policy, authenticated provenance, and replay
-protection. Implement them after durable manual/API wake and recovery proof.
+terminal runs never reopen implicitly. Scheduled evaluation enters through the
+authenticated `/v1/agent-schedules/{schedule_id}/evaluations` surface. It uses
+an IANA timezone, naive local occurrence time plus explicit DST fold, UTC
+observation time, misfire grace from 0 through 86400 seconds, missed policy
+`skip` or `fire_once`, and fixed coalescing policy `latest`. One evaluation
+accepts one through 100 due occurrences and selects at most the latest eligible
+occurrence; earlier eligible occurrences are coalesced, while missed `skip`
+occurrences admit no wake. Nonexistent local times, noncanonical folds, future
+occurrences, and unsupported policies fail closed.
+
+The schedule evaluation receipt and selected wake publish in one SQLite
+transaction. Fully skipped evaluations still retain a durable receipt. Stable
+evaluation ids make exact replay idempotent; contradictory reuse conflicts.
+Only this repository path may publish `source=scheduled`. The selected wake
+retains evaluation id, schedule id, timezone conversion, missed disposition,
+and coalesced/skipped occurrence ids as trigger metadata. Wake and run
+inspection project that metadata, while run inspection also resolves the
+durable evaluation receipt. Scheduler callers submit stable, non-overlapping
+evaluation windows.
+
+Webhook ingress is the authenticated
+`/v1/agent-webhooks/{issuer_ref}/deliveries/{delivery_id}` surface. It retains
+the canonical API-key boundary and additionally requires one configured issuer,
+key id, HMAC-SHA256 secret, canonical UTC timestamp, replay window, and a fixed
+1 MiB body limit. The
+signature covers the contract version, issuer, delivery id, timestamp, and raw
+body SHA-256 digest. Stale and excessively future timestamps fail closed before
+body interpretation.
+
+The webhook delivery receipt and selected `source=webhook` wake publish in one
+SQLite transaction. Stable issuer/delivery identity makes exact raw-content
+replay idempotent; changed content or signed metadata under that identity
+conflicts. Only the webhook repository may publish webhook provenance. The
+wake retains delivery reference, issuer, delivery id, key id, delivered and
+received timestamps, and content digest as trigger metadata. Secrets and raw
+signatures are not persisted or projected. Delivery and wake truth survive
+restart and compose into run inspection.
+
+Public manual ingress is the nested `orket agent wake` CLI surface. Manual and
+API submissions use the same strict envelope validator and source-scoped stable
+identity. The manual command only enqueues or reads durable state; it never owns
+provider selection, child invocation, claim authority, or loop execution.
+Wake controls are exposed as nested CLI `cancel`, `recover`, and `actions`
+commands and authenticated API cancel/recover/action-history routes. Composed
+run inspection includes both the canonical operator actions and their resulting
+wake-action receipts. These wake-targeted operator actions do not replace
+run-level controls or authorize continuation, effects, or terminal truth.
 
 ## Completion and final truth
 

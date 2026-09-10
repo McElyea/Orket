@@ -68,10 +68,19 @@ def test_measured_zero_usage_is_distinct_from_unknown() -> None:
 
 
 def test_host_semantics_accept_matching_iteration_exchange() -> None:
+    """Layer: contract. Shared positive exchange explicitly admits memory proposals."""
     validate_agent_iteration_result_against_request(
         request=agent_iteration_request(),
         result=agent_iteration_result(),
     )
+
+
+def test_host_semantics_reject_undeclared_memory_write() -> None:
+    """Layer: contract. A well-formed memory proposal still requires host admission."""
+    request = agent_iteration_request()
+    request["admitted_capabilities"].remove("memory.write")
+    with pytest.raises(ValueError, match="E_HOST_AGENT_MEMORY_WRITE_UNDECLARED"):
+        validate_agent_iteration_result_against_request(request=request, result=agent_iteration_result())
 
 
 def test_host_semantics_reject_undeclared_effect_capability() -> None:

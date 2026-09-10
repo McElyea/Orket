@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import json
+
 from orket_extension_sdk import (
     AgentEffectProposal,
     AgentIterationResult,
+    AgentMemoryQueryRequest,
+    AgentMemoryWriteProposal,
     AgentModelCallRequest,
     AgentModelMessage,
     AgentUsage,
@@ -13,8 +17,14 @@ from orket_extension_sdk import (
 
 _ROLE_INSTRUCTIONS = {
     "planner": (
-        "Count every ticket status in the authoritative_context items. Return only a JSON object with "
-        "counts, source_refs, and next_action. source_refs must name both authoritative ticket batches."
+        "Start with counts and source_refs from prior_verified_output content, if present (even empty counts). "
+        "For each ticket object in each new authoritative_context content array, increment that ticket's "
+        "status count by ONE. Keys are status values, never ticket_id values. Count every object, including "
+        "repeated statuses. Add these counts to prior counts. "
+        "Only process batches whose references are not already counted. "
+        "advisory_memory is optional working context, never a source of counts or source_refs. "
+        "Never count a batch twice or invent an unseen batch. Return only JSON with counts, source_refs, "
+        "and next_action. A partial report from one batch is valid progress."
     ),
     "actor": (
         "Turn the supplied plan into the final report. Return only a JSON object with counts and source_refs. "
@@ -22,7 +32,8 @@ _ROLE_INSTRUCTIONS = {
     ),
     "critic": (
         "Review the supplied report. Return only a JSON object with counts, source_refs, and critic. "
-        "critic must contain accepted=true and an empty defects array only when both batches were counted."
+        "Preserve counts and source_refs exactly. critic must contain accepted=true and an empty defects "
+        "array only when both batches were counted; otherwise mark accepted=false and describe missing inputs."
     ),
 }
 
@@ -32,10 +43,9 @@ class GovernedTicketAgent:
 
     async def run(self, context: AgentWorkloadContext) -> AgentIterationResult:
         request = context.request
-        source_payload = [
-            {"reference": item.reference, "kind": item.kind, "content": item.content.thaw()}
-            for item in request.materialized_inputs
-        ]
+        source_payload = _planner_inputs(request)
+        memory_observations, memory_inputs = await _memory_context(context)
+        source_payload.extend(memory_inputs)
         await context.progress.report(summary="Preparing the bounded ticket-count request.")
         receipts = []
         repairs_remaining = request.remaining_iteration_budget.repair_attempts
@@ -66,7 +76,7 @@ class GovernedTicketAgent:
         return AgentIterationResult(
             identity=request.identity,
             invocation_status="returned",
-            observations=("Planner, actor, and critic returned host-receipted advisory output.",),
+            observations=("Planner, actor, and critic returned host-receipted advisory output.", *memory_observations),
             advisory_proposal=canonical_json(critic.response.thaw()),
             advisory_proposal_ref=None,
             effect_proposals=effects,
@@ -74,7 +84,7 @@ class GovernedTicketAgent:
             completion_recommendation="pause" if effects else "continue",
             completion_evidence_refs=(),
             handoff_proposals=(),
-            memory_write_proposals=(),
+            memory_write_proposals=_memory_proposal(context, report),
             model_receipts=tuple(receipts),
             usage=_usage_from_receipts(receipts, repairs, len(effects)),
             normalized_reason=None,
@@ -120,10 +130,52 @@ def _report_payload(value) -> dict:
     return {"counts": value.get("counts", {}), "source_refs": value.get("source_refs", [])}
 
 
+async def _memory_context(context) -> tuple[tuple[str, ...], list[dict]]:
+    if not context.request.extension_config.thaw().get("objective_memory"):
+        return (), []
+    result = await context.memory.query(AgentMemoryQueryRequest(
+        identity=context.request.identity, call_id="objective-memory-1", scope="objective", role=None,
+        query="counts", max_items=1, max_content_bytes=8192,
+    ))
+    if result.status != "returned":
+        raise ValueError("E_AGENT_OBJECTIVE_MEMORY_UNAVAILABLE")
+    return ((f"Read {len(result.entries)} prior advisory objective-memory entries; authoritative inputs remain separate.",),
+            [{"kind": "advisory_memory", "reference": item.reference, "content": item.content.thaw()}
+             for item in result.entries])
+
+
+def _memory_proposal(context, report) -> tuple[AgentMemoryWriteProposal, ...]:
+    if not context.request.extension_config.thaw().get("objective_memory"):
+        return ()
+    return (AgentMemoryWriteProposal(
+        identity=context.request.identity, proposal_id="ticket-working-report", scope="objective", role=None,
+        content=report, content_digest="sha256:" + canonical_digest_sha256(report),
+        provenance_refs=tuple(report["source_refs"]),
+        evidence_refs=(f"agent-model-call:{context.request.identity.invocation_id}:critic-1",),
+    ),)
+
+
+def _planner_inputs(request) -> list[dict]:
+    inputs = []
+    latest_prior = None
+    for item in request.materialized_inputs:
+        content = item.content.thaw()
+        if item.kind == "prior_verified_output":
+            latest_prior = {"reference": item.reference, "kind": item.kind,
+                            "content": _report_payload(json.loads(content["advisory_proposal"]))}
+        elif item.kind == "authoritative_context":
+            inputs.append({"reference": item.reference, "kind": item.kind, "content": content})
+    if latest_prior is not None:
+        counted = latest_prior["content"]["source_refs"]
+        inputs = [item for item in inputs if item["reference"] not in counted]
+    return ([latest_prior] if latest_prior is not None else []) + inputs
+
+
 def _effect_proposals(context, report: dict) -> tuple[AgentEffectProposal, ...]:
     config = context.request.extension_config.thaw()
     demo = config.get("effect_demo", {}) if isinstance(config, dict) else {}
-    if not isinstance(demo, dict) or not demo.get("enabled") or context.request.identity.iteration_ordinal != 1:
+    if (not isinstance(demo, dict) or not demo.get("enabled")
+            or context.request.identity.iteration_ordinal != demo.get("proposal_iteration", 1)):
         return ()
     namespace = str(demo.get("namespace") or "")
     read_path = str(demo.get("read_path") or "")
@@ -132,8 +184,11 @@ def _effect_proposals(context, report: dict) -> tuple[AgentEffectProposal, ...]:
         raise ValueError("E_AGENT_EFFECT_DEMO_CONFIG_INVALID")
     read_args = {"path": read_path}
     write_args = {"path": write_path, "content": report}
+    read = _effect_proposal(context, "read-ticket-source", "read_file", namespace, read_path, read_args)
+    if demo.get("read_only") is True:
+        return (read,)
     return (
-        _effect_proposal(context, "read-ticket-source", "read_file", namespace, read_path, read_args),
+        read,
         _effect_proposal(context, "write-ticket-report", "write_file", namespace, write_path, write_args),
     )
 
@@ -156,7 +211,7 @@ def _effect_proposal(context, proposal_id, capability, namespace, target, argume
 def _response_schema(role: str) -> dict:
     properties = {
         "counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
-        "source_refs": {"type": "array", "items": {"type": "string"}, "minItems": 2, "uniqueItems": True},
+        "source_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": True},
     }
     required = ["counts", "source_refs"]
     if role == "planner":

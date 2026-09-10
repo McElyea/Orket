@@ -4,13 +4,15 @@ import subprocess
 import sys
 from pathlib import Path
 
+from orket_extension_sdk import __version__
+
 SCRIPT = Path("scripts/sdk/check_sdk_tag_version.py").resolve()
 
 
 def test_check_sdk_tag_version_accepts_matching_tag() -> None:
     """Layer: contract. Verifies SDK release tag gate accepts matching tag/version pairs."""
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--tag", "sdk-v0.5.0a1", "--repo-root", "."],
+        [sys.executable, str(SCRIPT), "--tag", f"sdk-v{__version__}", "--repo-root", "."],
         check=False,
         capture_output=True,
         text=True,

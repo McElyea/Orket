@@ -1,6 +1,8 @@
 ﻿import re
 from pathlib import Path
 
+from project_dump import git_list_files
+
 ROOT = Path(__file__).resolve().parents[2]
 
 # Patterns that must NOT appear anywhere in core code
@@ -24,10 +26,11 @@ IGNORE_DIRS = {
 }
 
 def test_no_old_namespaces():
+    """Layer: contract. Namespace policy covers Git-visible sources, not ignored dependencies or build copies."""
     failures = []
     assert (ROOT / "orket").exists(), f"Expected repo root at {ROOT}"
 
-    for path in ROOT.rglob("*"):
+    for path in git_list_files(ROOT):
         # Skip ignored directories
         if any(ignored in path.parts for ignored in IGNORE_DIRS):
             continue
@@ -52,6 +55,7 @@ def test_no_old_namespaces():
 
 
 def test_no_legacy_shim_imports_in_code():
+    """Layer: contract. Legacy import checks use the same Git-owned inventory as repository exports."""
     repo_root = Path(__file__).resolve().parents[2]
     legacy_import_tokens = [
         "from orket.llm import",
@@ -71,7 +75,9 @@ def test_no_legacy_shim_imports_in_code():
         "from orket.orchestration.turn_executor import",
     ]
     failures = []
-    for path in repo_root.rglob("*.py"):
+    for path in git_list_files(repo_root):
+        if path.suffix != ".py":
+            continue
         if any(ignored in path.parts for ignored in IGNORE_DIRS):
             continue
         if path.name == "test_no_old_namespaces.py":

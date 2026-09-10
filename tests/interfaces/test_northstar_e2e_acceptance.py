@@ -7,7 +7,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 import orket.interfaces.api as api_module
-from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
 from orket.core.domain.outward_ledger import verify_ledger_export
 from tests.helpers.outward_model import patch_outward_model_client
 
@@ -49,14 +48,8 @@ def _client(
     monkeypatch.delenv("ORKET_OUTBOUND_POLICY_PII_FIELD_PATHS", raising=False)
     monkeypatch.delenv("ORKET_OUTBOUND_POLICY_FORBIDDEN_PATTERNS", raising=False)
     monkeypatch.delenv("ORKET_OUTBOUND_POLICY_ALLOWED_OUTPUT_FIELDS", raising=False)
-    if clock is not None:
-        monkeypatch.setattr(
-            api_module,
-            "_build_api_runtime_host",
-            lambda root: ApiRuntimeHostService(Path(root), runtime_inputs=clock),  # type: ignore[arg-type]
-        )
     patch_outward_model_client(monkeypatch, args=model_args)
-    return TestClient(api_module.create_api_app(project_root=tmp_path))
+    return TestClient(api_module.create_api_app(project_root=tmp_path, runtime_inputs=clock))
 
 
 def _submit_write_run(

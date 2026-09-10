@@ -7,7 +7,7 @@ from typing import Any, Literal, Protocol
 DispatchPrepareStatus = Literal["prepared", "idempotent", "conflict", "cancelled", "stale"]
 InvocationStatus = Literal["returned", "blocked", "failed", "cancelled", "timed_out", "protocol_failed"]
 ResultAcceptanceStatus = Literal["accepted", "idempotent", "conflict", "cancelled", "stale"]
-DecisionPublicationStatus = Literal["accepted", "idempotent", "conflict", "stale"]
+DecisionPublicationStatus = Literal["accepted", "idempotent", "conflict", "stale", "control_changed"]
 BrokerReservationStatus = Literal[
     "prepared",
     "idempotent",
@@ -17,6 +17,65 @@ BrokerReservationStatus = Literal[
     "stale",
     "uncertain",
 ]
+
+
+class GovernedAgentAuthorityStaleError(RuntimeError):
+    """Raised when an external wake/claim fence no longer authorizes publication."""
+
+
+class GovernedAgentAuthorityGuard(Protocol):
+    async def ensure_active(self) -> None: ...
+
+
+class GovernedAgentPendingGateRepository(Protocol):
+    async def create_request(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        seat_name: str,
+        gate_mode: str,
+        request_type: str,
+        reason: str,
+        payload: dict[str, Any] | None = None,
+        created_at: str | None = None,
+        request_id: str | None = None,
+    ) -> str: ...
+
+    async def resolve_request(
+        self,
+        *,
+        request_id: str,
+        status: str,
+        resolution: dict[str, Any] | None = None,
+        resolved_at: str | None = None,
+        expected_status: str | None = None,
+    ) -> bool: ...
+
+    async def list_requests(
+        self,
+        *,
+        session_id: str | None = None,
+        status: str | None = None,
+        limit: int = 100,
+    ) -> list[dict[str, Any]]: ...
+
+
+class GovernedAgentFileEffectExecutor(Protocol):
+    async def observe(self, *, path: str, issue_id: str) -> Mapping[str, Any]: ...
+
+    async def write(
+        self,
+        *,
+        path: str,
+        content: str | dict[str, Any],
+        issue_id: str,
+    ) -> Mapping[str, Any]: ...
+
+
+async def ensure_governed_agent_authority(authority_guard: GovernedAgentAuthorityGuard | None) -> None:
+    if authority_guard is not None:
+        await authority_guard.ensure_active()
 
 
 @dataclass(frozen=True, slots=True)

@@ -12,7 +12,7 @@ import yaml
 
 from orket.interfaces.orket_bundle_cli import main
 from orket_extension_sdk.agent_fixtures import prefixed_digest
-from tests.runtime.governed_agent_test_support import agent_request
+from tests.runtime.governed_agent_test_support import staged_agent_request, ticket_continuation_inputs
 
 _LIVE_ENABLED = os.getenv("ORKET_RUN_LIVE_AGENT_OLLAMA") == "1"
 _EXTENSION_ROOT = Path(
@@ -24,11 +24,12 @@ _EXTENSION_ROOT = Path(
 
 
 @pytest.mark.end_to_end
+@pytest.mark.parametrize("case_id", ["mixed", "all-open", "empty-first"])
 @pytest.mark.skipif(not _LIVE_ENABLED, reason="set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof")
-def test_live_single_model_reaches_verified_terminal_truth(tmp_path: Path, capsys, monkeypatch) -> None:
+def test_live_single_model_reaches_verified_terminal_truth(tmp_path: Path, capsys, monkeypatch, case_id) -> None:
     """Layer: end-to-end. One exact Ollama model crosses two external child iterations."""
     model = os.getenv("ORKET_GOVERNED_AGENT_OLLAMA_MODEL", "qwen2.5:7b")
-    payload = _run_live(tmp_path, capsys, monkeypatch, models={"default": model})
+    payload = _run_live(tmp_path, capsys, monkeypatch, models={"default": model}, case_id=case_id)
 
     assert payload["proof_posture"] == "live_local_model"
     assert payload["observed_path"] == "primary"
@@ -41,8 +42,9 @@ def test_live_single_model_reaches_verified_terminal_truth(tmp_path: Path, capsy
 
 
 @pytest.mark.end_to_end
+@pytest.mark.parametrize("case_id", ["mixed", "all-open", "empty-first"])
 @pytest.mark.skipif(not _LIVE_ENABLED, reason="set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof")
-def test_live_multi_model_preserves_distinct_role_identity(tmp_path: Path, capsys, monkeypatch) -> None:
+def test_live_multi_model_preserves_distinct_role_identity(tmp_path: Path, capsys, monkeypatch, case_id) -> None:
     """Layer: end-to-end. Fixed roles use two or more exact local model identities."""
     planner = os.getenv("ORKET_GOVERNED_AGENT_PLANNER_MODEL", "qwen2.5:7b")
     actor = os.getenv("ORKET_GOVERNED_AGENT_ACTOR_MODEL", "qwen2.5-coder:7b")
@@ -52,6 +54,7 @@ def test_live_multi_model_preserves_distinct_role_identity(tmp_path: Path, capsy
         capsys,
         monkeypatch,
         models={"default": planner, "planner": planner, "actor": actor, "critic": critic},
+        case_id=case_id,
     )
 
     assert payload["observed_result"] == "success"
@@ -65,7 +68,7 @@ def test_live_multi_model_preserves_distinct_role_identity(tmp_path: Path, capsy
     _assert_measured_receipts(_receipts(payload))
 
 
-def _run_live(tmp_path: Path, capsys, monkeypatch, *, models: dict[str, str]) -> dict:
+def _run_live(tmp_path: Path, capsys, monkeypatch, *, models: dict[str, str], case_id: str) -> dict:
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     if not _EXTENSION_ROOT.is_dir():
         pytest.fail(f"Live external extension is missing: {_EXTENSION_ROOT}")
@@ -93,13 +96,16 @@ def _run_live(tmp_path: Path, capsys, monkeypatch, *, models: dict[str, str]) ->
         encoding="utf-8",
     )
     request_path = tmp_path / "request.json"
-    request_path.write_text(json.dumps(_live_request()), encoding="utf-8")
+    request_path.write_text(json.dumps(_live_request(case_id)), encoding="utf-8")
+    continuation_path = tmp_path / "continuation.json"
+    continuation_path.write_text(json.dumps(ticket_continuation_inputs(case_id)), encoding="utf-8")
     now = datetime.now(UTC)
     args = [
         "agent", "submit", "governed-agent-loop",
         "--db", str(tmp_path / "agent.sqlite3"),
         "--catalog", str(catalog_path),
         "--request", str(request_path),
+        "--continuation-inputs", str(continuation_path),
         "--creation-timestamp-utc", now.isoformat(),
         "--decision-timestamp-utc", (now + timedelta(seconds=1)).isoformat(),
         "--decision-timestamp-utc", (now + timedelta(seconds=2)).isoformat(),
@@ -117,8 +123,8 @@ def _run_live(tmp_path: Path, capsys, monkeypatch, *, models: dict[str, str]) ->
     return payload
 
 
-def _live_request() -> dict:
-    request = agent_request()
+def _live_request(case_id: str = "mixed") -> dict:
+    request = staged_agent_request(case_id)
     now = datetime.now(UTC)
     request["deadline_utc"] = (now + timedelta(minutes=10)).isoformat()
     request["lease_expires_at_utc"] = (now + timedelta(minutes=9)).isoformat()

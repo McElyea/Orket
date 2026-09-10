@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, Literal, cast
 
-from orket.core.contracts import CheckpointRecord
+from orket.core.contracts import CheckpointRecord, EffectJournalEntryRecord
 from orket.core.domain import CheckpointResumabilityClass
 from orket_extension_sdk import (
     AgentEffectProposal,
     AgentEffectReceipt,
+    AgentIterationRequest,
+    AgentIterationResult,
     canonical_digest_sha256,
 )
 
@@ -56,7 +58,7 @@ def approval_view(approval: Mapping[str, Any]) -> dict[str, Any]:
 
 def effect_receipt(
     proposal: AgentEffectProposal,
-    state: str,
+    state: Literal["proposed", "approved", "denied", "executed", "observed", "uncertain", "reconciled"],
     authority_ref: str,
     observations: tuple[str, ...],
 ) -> AgentEffectReceipt:
@@ -110,7 +112,48 @@ def post_effect_checkpoint(
     )
 
 
+def aggregate_effect_checkpoint(
+    request: AgentIterationRequest,
+    result: AgentIterationResult,
+    journal_entries: tuple[EffectJournalEntryRecord, ...],
+    timestamp: str,
+) -> CheckpointRecord:
+    proposal_ids = {proposal.proposal_id for proposal in result.effect_proposals}
+    entries = tuple(
+        sorted(
+            (entry for entry in journal_entries if entry.effect_id.removeprefix("agent-effect:") in proposal_ids),
+            key=lambda entry: entry.effect_id,
+        )
+    )
+    if len(entries) != len(proposal_ids):
+        raise ValueError("E_AGENT_EFFECT_CHECKPOINT_COVERAGE_INCOMPLETE")
+    integrity_payload = {
+        "accepted_result_digest": "sha256:" + canonical_digest_sha256(result.to_wire()),
+        "proposals": [
+            {"proposal_id": proposal.proposal_id, "arguments_digest": proposal.arguments_digest}
+            for proposal in sorted(result.effect_proposals, key=lambda item: item.proposal_id)
+        ],
+        "journals": [
+            {"journal_entry_id": entry.journal_entry_id, "entry_digest": entry.entry_digest}
+            for entry in entries
+        ],
+    }
+    integrity_ref = "sha256:" + cast(str, canonical_digest_sha256(integrity_payload))
+    return CheckpointRecord(
+        checkpoint_id=f"agent-post-effects-checkpoint:{request.identity.invocation_id}",
+        parent_ref=request.identity.attempt_id,
+        creation_timestamp=timestamp,
+        state_snapshot_ref=integrity_ref,
+        resumability_class=CheckpointResumabilityClass.RESUME_SAME_ATTEMPT,
+        invalidation_conditions=["effect_observation_drift", "policy_digest_drift"],
+        dependent_effect_refs=[entry.effect_id for entry in entries],
+        policy_digest=request.policy_digest,
+        integrity_verification_ref=integrity_ref,
+    )
+
+
 __all__ = [
+    "aggregate_effect_checkpoint",
     "approval_id",
     "approval_payload",
     "approval_view",

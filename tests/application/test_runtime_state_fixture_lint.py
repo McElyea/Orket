@@ -9,7 +9,7 @@ def test_runtime_state_test_references_require_fresh_fixture() -> None:
     patterns = (
         "from orket.state import runtime_state",
         "orket.state.runtime_state",
-        "api_module.runtime_state",
+        "api_module._get_runtime_state()",
         "state_module.runtime_state",
     )
     allowed_paths = {

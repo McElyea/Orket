@@ -64,6 +64,10 @@
 
 ## Implementation State
 
+The governed-action quickstart emits `E_QUICKSTART_INPUT_REQUIRED` and exits
+with status `2` when no scripted decision is supplied and operator input reaches
+EOF. It does not continue with an inferred approval or denial.
+
 - Implemented on 2026-07-29:
   - `run_cli()` returns an integer result and `main.py` propagates nonzero outcomes;
   - synchronous first-run checks execute in a worker thread, and onboarding narration follows settings persistence;
