@@ -25,6 +25,22 @@ requires an explicit `0.7.0` contract delta.
 
 ## Current Canonical Paths
 
+Local provider development and live-test selection policy is authoritative in
+[`docs/CONTRIBUTOR.md`](docs/CONTRIBUTOR.md#local-provider-development-and-testing):
+llama.cpp first, LM Studio second, Ollama third, with llama.cpp preferred for
+future provider-backed live testing. Governed-agent submission, API wakes,
+continuation, and effect resume share the application-owned
+`orket/application/services/governed_agent_model_provider.py` composition.
+CLI `--model` defaults to llama.cpp; `--provider` selects an explicit backend.
+The API uses `ORKET_GOVERNED_AGENT_PROVIDER`, `ORKET_GOVERNED_AGENT_MODEL`, and
+`ORKET_GOVERNED_AGENT_BASE_URL`. Existing explicit Ollama configuration remains
+supported. Exact admitted targets are pinned through inference; blocked targets
+never enter the client cache. API startup awaits wake-store initialization before
+the supervisor and ingress can compete for SQLite WAL initialization. Delta:
+`docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FEATURE_INTEGRATION_2026-09-10.md`.
+Live integration proof: `scripts/proof/run_llama_cpp_integration.py`, with stable
+output `benchmarks/results/providers/llama_cpp_integration.json`.
+
 SDK release automation uses `.gitea/workflows/sdk-package-release.yml` and an
 explicit repository-root `dist/` for build, smoke install, and wheelhouse copy,
 as defined in `docs/requirements/sdk/VERSIONING.md`.
@@ -179,7 +195,7 @@ The Slice 6H wake-driven effect boundary is recorded in
 
 Apophenia external extension durable contract: `docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md`; implementation remains outside Orket core at `C:\Source\Orket-Extensions\Apophenia`, and Orket stays a generic host runtime for Apophenia through generic extension runtime endpoints.
 
-llama.cpp first-slice local provider implementation is closed and archived at `docs/projects/archive/local-provider-compatibility/2026-05-19-LLAMA-CPP-FIRST-SLICE-CLOSEOUT/`, including the archived implementation plan, requirements, operator source-build note, source verification artifact, and closeout report; durable contract authority remains in `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`, with the contract delta record at `docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FIRST_SLICE_2026-05-18.md`. Structural support now exists for the `llama_cpp` provider token, bounded GGUF inventory, profile resolution, OpenAI-compatible chat invocation, request-shape telemetry, preflight, and conformance harness paths. Live first-slice proof passed on 2026-05-19 for the operator-managed `qwen3.6-27b-q4_k_m` GGUF path, but promoted `llama_cpp` provider support remains unadmitted because promotion readiness is false until promotion-volume and template-audit or whitelist gates pass in a later explicit roadmap lane.
+llama.cpp first-slice local provider implementation is closed and archived at `docs/projects/archive/local-provider-compatibility/2026-05-19-LLAMA-CPP-FIRST-SLICE-CLOSEOUT/`, including the archived implementation plan, requirements, operator source-build note, source verification artifact, and closeout report; durable contract authority remains in `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`, with the contract delta record at `docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FIRST_SLICE_2026-05-18.md`. Structural support now exists for the `llama_cpp` provider token, bounded GGUF inventory, profile resolution, OpenAI-compatible chat invocation, request-shape telemetry, preflight, and conformance harness paths. Live first-slice proof passed on 2026-05-19 for the operator-managed `qwen3.6-27b-q4_k_m` GGUF path, and the September feature integration above adds governed-agent, streaming, and ODR coverage for the exact Qwen3.8 profile. Formal profile promotion remains unadmitted until promotion-volume and template-audit or whitelist gates pass in a later explicit roadmap lane.
 
 1. Install/bootstrap: `python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"`
 2. Default runtime: `orket runtime`
@@ -359,6 +375,8 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
     "verification_policy": {
       "agent_policy": "AGENTS.md",
       "contributor_policy": "docs/CONTRIBUTOR.md",
+      "local_provider_development_priority": ["llama_cpp", "lmstudio", "ollama"],
+      "preferred_live_test_provider": "llama_cpp",
       "testing_policy": "docs/TESTING_POLICY.md",
       "pytest_sandbox_default_policy": "tests/conftest.py",
       "sources": [
@@ -714,6 +732,8 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
       ]
     },
     "canonical_script_output_locations": {
+      "llama_cpp_integration_operator_path": "python scripts/proof/run_llama_cpp_integration.py --model <exact-model> --extension-root <extension-root>",
+      "llama_cpp_integration_output_path": "benchmarks/results/providers/llama_cpp_integration.json",
       "staged_artifacts_index": "benchmarks/staging/index.json",
       "staged_artifacts_readme": "benchmarks/staging/README.md",
       "published_artifacts_index": "benchmarks/published/index.json",

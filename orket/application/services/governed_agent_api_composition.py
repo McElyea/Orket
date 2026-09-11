@@ -41,6 +41,7 @@ from orket.application.services.governed_agent_scheduled_wake_service import (
 )
 from orket.application.services.governed_agent_supervisor import GovernedAgentSupervisor
 from orket.application.services.governed_agent_wake_dispatcher import (
+    PROVIDER_CHOICES,
     GovernedAgentProviderConfiguration,
     GovernedAgentWakeLoopDispatcher,
     ProviderMode,
@@ -60,6 +61,7 @@ class GovernedAgentApiSettings:
     default_model: str
     role_models: dict[str, str]
     ollama_base_url: str
+    provider_base_url: str
     inventory_timeout_seconds: float
     capacity_limit: int
     lease_seconds: float
@@ -183,6 +185,7 @@ def _provider_configuration(settings: GovernedAgentApiSettings) -> GovernedAgent
         default_model=settings.default_model,
         role_models=settings.role_models,
         ollama_base_url=settings.ollama_base_url,
+        provider_base_url=settings.provider_base_url,
         inventory_timeout_seconds=settings.inventory_timeout_seconds,
         capacity_limit=settings.capacity_limit,
     )
@@ -233,10 +236,11 @@ def _settings() -> GovernedAgentApiSettings:
     settings = GovernedAgentApiSettings(
         supervisor_enabled=_env_bool("ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED", False),
         db_path=Path(raw_db).resolve() if raw_db else resolve_control_plane_db_path(),
-        provider_mode=str(os.getenv("ORKET_GOVERNED_AGENT_PROVIDER") or "ollama").strip().lower(),
-        default_model=str(os.getenv("ORKET_GOVERNED_AGENT_OLLAMA_MODEL") or "").strip(),
+        provider_mode=str(os.getenv("ORKET_GOVERNED_AGENT_PROVIDER") or ("ollama" if os.getenv("ORKET_GOVERNED_AGENT_OLLAMA_MODEL") else "llama_cpp")).strip().lower(),
+        default_model=_configured_model(),
         role_models=role_models,
         ollama_base_url=str(os.getenv("ORKET_GOVERNED_AGENT_OLLAMA_BASE_URL") or "").strip(),
+        provider_base_url=str(os.getenv("ORKET_GOVERNED_AGENT_BASE_URL") or "").strip(),
         inventory_timeout_seconds=_env_float("ORKET_GOVERNED_AGENT_INVENTORY_TIMEOUT_SECONDS", 30.0),
         capacity_limit=_env_int("ORKET_GOVERNED_AGENT_CAPACITY_LIMIT", 1),
         lease_seconds=_env_float("ORKET_GOVERNED_AGENT_CLAIM_LEASE_SECONDS", 120.0),
@@ -247,15 +251,15 @@ def _settings() -> GovernedAgentApiSettings:
         webhook_secret=_env_optional("ORKET_GOVERNED_AGENT_WEBHOOK_SECRET"),
         webhook_replay_window_seconds=_env_int("ORKET_GOVERNED_AGENT_WEBHOOK_REPLAY_WINDOW_SECONDS", 300),
     )
-    if settings.provider_mode not in {"deterministic_fixture", "ollama"}:
+    if settings.provider_mode != "deterministic_fixture" and settings.provider_mode not in PROVIDER_CHOICES:
         raise ValueError("E_AGENT_PROVIDER_MODE_INVALID")
     if (
         settings.supervisor_enabled
-        and settings.provider_mode == "ollama"
+        and settings.provider_mode != "deterministic_fixture"
         and not settings.default_model
         and set(settings.role_models) != {"planner", "actor", "critic"}
     ):
-        raise ValueError("E_AGENT_OLLAMA_MODEL_REQUIRED")
+        raise ValueError("E_AGENT_LOCAL_MODEL_REQUIRED")
     if (
         settings.capacity_limit < 1
         or settings.lease_seconds <= 0
@@ -314,3 +318,13 @@ def _env_int(name: str, default: int) -> int:
 def _env_optional(name: str) -> str | None:
     value = str(os.getenv(name) or "").strip()
     return value or None
+
+
+def _configured_model() -> str:
+    provider = str(os.getenv("ORKET_GOVERNED_AGENT_PROVIDER") or "").strip().lower()
+    selected = str(os.getenv("ORKET_GOVERNED_AGENT_MODEL") or "").strip()
+    if selected:
+        return selected
+    if provider in {"", "ollama"}:
+        return str(os.getenv("ORKET_GOVERNED_AGENT_OLLAMA_MODEL") or "").strip()
+    return ""

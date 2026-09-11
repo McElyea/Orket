@@ -313,10 +313,11 @@ class OllamaModelStreamProvider(ModelStreamProvider):
 
 
 class OpenAICompatModelStreamProvider(ModelStreamProvider):
-    def __init__(self, *, model_id: str, base_url: str, api_key: str | None = None, timeout_s: float = 60.0) -> None:
+    def __init__(self, *, model_id: str, base_url: str, api_key: str | None = None, timeout_s: float = 60.0, provider_name: str = "openai_compat") -> None:
         self._model_id = model_id
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key or ""
+        self._provider_name = provider_name
         self._timeout_s = max(1.0, float(timeout_s))
         self._canceled: dict[str, asyncio.Event] = {}
         self._lock = asyncio.Lock()
@@ -503,7 +504,7 @@ class OpenAICompatModelStreamProvider(ModelStreamProvider):
         canceled.set()
 
     async def health(self) -> dict[str, Any]:
-        return {"ok": True, "provider": "openai_compat", "model_id": self._model_id, "base_url": self._base_url}
+        return {"ok": True, "provider": self._provider_name, "model_id": self._model_id, "base_url": self._base_url}
 
     async def _is_canceled(self, provider_turn_id: str) -> asyncio.Event:
         async with self._lock:

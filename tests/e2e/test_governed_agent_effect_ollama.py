@@ -31,9 +31,13 @@ from tests.e2e.test_governed_agent_supervisor_ollama import (
 @pytest.mark.parametrize("decision", ["approved", "denied"])
 def test_live_effect_resolution_survives_restart_and_replay(tmp_path, monkeypatch, decision):
     """Layer: end-to-end. Real models, child, effects and durable API restarts; no provider mocks."""
-    planner = os.getenv("ORKET_GOVERNED_AGENT_PLANNER_MODEL", "qwen2.5:7b")
-    actor = os.getenv("ORKET_GOVERNED_AGENT_ACTOR_MODEL", "qwen2.5-coder:7b")
-    critic = os.getenv("ORKET_GOVERNED_AGENT_CRITIC_MODEL", planner)
+    _run_effect_resolution(tmp_path, monkeypatch, decision)
+
+
+def _run_effect_resolution(tmp_path, monkeypatch, decision, *, provider="ollama", model=None):
+    planner = model or os.getenv("ORKET_GOVERNED_AGENT_PLANNER_MODEL", "qwen2.5:7b")
+    actor = model or os.getenv("ORKET_GOVERNED_AGENT_ACTOR_MODEL", "qwen2.5-coder:7b")
+    critic = model or os.getenv("ORKET_GOVERNED_AGENT_CRITIC_MODEL", planner)
     _configure_api(
         monkeypatch,
         db_path=tmp_path / "agent.sqlite3",
@@ -41,6 +45,7 @@ def test_live_effect_resolution_survives_restart_and_replay(tmp_path, monkeypatc
         planner=planner,
         actor=actor,
         critic=critic,
+        provider=provider,
     )
     source = tmp_path / "inputs" / "tickets.json"
     source.parent.mkdir()
@@ -69,7 +74,8 @@ def test_live_effect_resolution_survives_restart_and_replay(tmp_path, monkeypatc
             "actor": actor,
             "critic": critic,
         }
-        assert len({r["model"] for r in receipts}) >= 2
+        assert {r["provider"] for r in receipts} == {provider}
+        assert len({r["model"] for r in receipts}) >= (1 if model else 2)
         assert all(r["usage_posture"] == "measured" and r["status"] == "returned" for r in receipts)
     assert final_app.state.api_runtime_context.active_background_task_count == 0
     _print_evidence(decision, final, receipts)

@@ -73,7 +73,6 @@ from orket.kernel.v1.odr.core import (  # noqa: E402
     ReactorState,
     run_round,
 )
-from orket.kernel.v1.odr.metrics import diff_ratio  # noqa: E402
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL  # noqa: E402
 from scripts.odr.model_runtime_control import complete_with_transient_provider  # noqa: E402
 
@@ -169,9 +168,8 @@ def _resolve_role_base_url(*, provider: str, raw: str) -> str:
     token = str(raw or "").strip()
     if token:
         return token
-    if provider in {"lmstudio", "openai_compat"}:
-        return str(os.getenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")).strip()
-    return str(os.getenv("ORKET_LLM_OLLAMA_HOST", "http://localhost:11434")).strip()
+    from orket.runtime.config.provider_runtime_target import default_base_url
+    return default_base_url(provider)
 
 
 def _json_safe(value: Any) -> Any:
@@ -831,7 +829,7 @@ async def _main_async(args: argparse.Namespace) -> int:
         )
         pairing_results.append(row)
         all_diagnostics.append(diag_list)
-        print(f"  -> pairing complete", flush=True)
+        print("  -> pairing complete", flush=True)
 
     run_ended = datetime.now(UTC).isoformat()
     duration_ms = int((time.perf_counter() - wall_start) * 1000)
@@ -917,12 +915,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--architect-provider",
         default="",
-        help="Architect provider override (ollama | lmstudio | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
+        help="Architect provider override (llama_cpp | lmstudio | ollama | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
     )
     parser.add_argument(
         "--auditor-provider",
         default="",
-        help="Auditor provider override (ollama | lmstudio | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
+        help="Auditor provider override (llama_cpp | lmstudio | ollama | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
     )
     parser.add_argument(
         "--architect-base-url",

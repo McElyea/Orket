@@ -192,7 +192,7 @@ async def test_model_stream_v1_real_path_uses_shared_runtime_target(tmp_path, mo
         )
 
     class _FakeOpenAIProvider(ModelStreamProvider):
-        def __init__(self, *, model_id: str, base_url: str, api_key=None, timeout_s: float = 60.0) -> None:
+        def __init__(self, *, model_id: str, base_url: str, api_key=None, timeout_s: float = 60.0, provider_name="openai_compat") -> None:
             self.model_id = model_id
             self.base_url = base_url
             self.timeout_s = timeout_s

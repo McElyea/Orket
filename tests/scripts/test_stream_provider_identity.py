@@ -13,7 +13,7 @@ def test_direct_provider_identity_prefers_observed_resolved_model(monkeypatch) -
 
     payload = direct_script._provider_identity(resolved_model_id="qwen3.5-4b")
 
-    assert payload["provider_name"] == "openai_compat"
+    assert payload["provider_name"] == "lmstudio"
     assert payload["provider_model_id"] == "qwen3.5-4b"
     assert payload["model_id"] == "qwen3.5-4b"
 

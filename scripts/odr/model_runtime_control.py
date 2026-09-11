@@ -122,6 +122,10 @@ def release_model_residency_sync(
             polls += 1
             time.sleep(max(0.01, float(poll_interval_s)))
 
+    if provider_token == "llama_cpp":
+        return {"status": "operator_managed", "provider": provider_token, "model_id": model_token,
+                "base_url": base_url, "unload_attempted": False,
+                "reason": "llama_server_lifecycle_owned_by_operator"}
     return {
         "status": "unsupported",
         "reason": "provider_not_supported",
@@ -188,7 +192,7 @@ async def complete_with_transient_provider(
     provider_name = str(getattr(provider, "provider_name", "") or getattr(provider, "provider_backend", "") or "")
     base_url = (
         str(getattr(provider, "openai_base_url", "") or "")
-        if provider_name in {"lmstudio", "openai_compat"}
+        if provider_name in {"lmstudio", "openai_compat", "llama_cpp"}
         else str(getattr(provider, "ollama_host", "") or "")
     )
     resolved_model = str(getattr(provider, "model", "") or model)

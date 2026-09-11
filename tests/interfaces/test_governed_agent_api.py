@@ -153,6 +153,9 @@ def test_api_owned_supervisor_dispatches_scheduled_wake(tmp_path: Path, monkeypa
     route = "/v1/agent-schedules/hourly-report/evaluations"
 
     with TestClient(app) as client:
+        # Layer: integration. WAL must exist before scheduled ingress races the supervisor.
+        from orket.adapters.storage.sqlite_connection import current_journal_mode
+        assert asyncio.run(current_journal_mode(db_path)) == "wal"
         admitted = client.post(
             route,
             headers=_headers(),

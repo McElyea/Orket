@@ -6,18 +6,20 @@ from typing import Any, cast
 
 import pytest
 
-from orket.adapters.llm.governed_agent_ollama_provider import GovernedAgentOllamaModelProvider
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.application.services.governed_agent_broker_service import (
     GovernedAgentModelObservation,
     GovernedAgentResolvedModelProfile,
     _model_result,
 )
+from orket.application.services.governed_agent_model_provider import GovernedAgentLocalModelProvider
 from orket_extension_sdk import AgentModelCallRequest
 from orket_extension_sdk.agent_fixtures import agent_model_call_request
 
 
 class _FakeLocalModelProvider:
+    provider_name = "ollama"
+
     def __init__(self, response: ModelResponse) -> None:
         self.response = response
         self.context: dict[str, Any] | None = None
@@ -56,7 +58,7 @@ async def test_adapter_records_measured_json_observation_and_host_limits() -> No
             },
         )
     )
-    provider = GovernedAgentOllamaModelProvider(
+    provider = GovernedAgentLocalModelProvider(
         {"qwen2.5:7b": cast(LocalModelProvider, fake)}
     )
     request = AgentModelCallRequest.from_wire(agent_model_call_request())
@@ -83,7 +85,7 @@ async def test_adapter_returns_host_receiptable_failure_for_invalid_json() -> No
             raw={"input_tokens": 5, "output_tokens": 2, "latency_ms": 3, "ollama": {"done_reason": "stop"}},
         )
     )
-    provider = GovernedAgentOllamaModelProvider(
+    provider = GovernedAgentLocalModelProvider(
         {"qwen2.5:7b": cast(LocalModelProvider, fake)}
     )
 

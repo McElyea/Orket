@@ -1,7 +1,7 @@
 # Governed Agent Loop V1
 
-Last updated: 2026-09-09
-Status: Active durable contract; bounded Slices 0-5 and Slice 6A-6H durable API/manual/scheduled/webhook/effect supervisor, wake controls, and live supervisor proof implemented; Slice 7 pending
+Last updated: 2026-09-10
+Status: Active durable contract; core 0.6.0 acceptance released; llama.cpp feature integration added in source
 Owner: Orket Core
 Accepted requirements source: `docs/projects/archive/governed-agent-loop/GAL09062026-REQUIREMENTS/GOVERNED_AGENT_LOOP_REQUIREMENTS_DEFINITION_PLAN.md`
 
@@ -369,6 +369,35 @@ local-prompting profile authorities. Concrete installed model choices and
 hardware limits are recorded at proof preflight; they are not implied by a role
 name. Preserve existing `model.generate` behavior while adding the versioned
 agent model surface.
+
+## Local provider integration
+
+The current host supports `llama_cpp`, `lmstudio`, `ollama`, and `openai_compat`
+through one local-model composition service. Development and live-test priority
+is governed by `docs/CONTRIBUTOR.md`: llama.cpp, LM Studio, then Ollama.
+The first-slice Ollama proofs above remain historical acceptance evidence.
+
+CLI `--model` defaults to llama.cpp; `--provider` and `--provider-base-url` select
+an explicit backend and endpoint. The API supervisor uses
+`ORKET_GOVERNED_AGENT_PROVIDER`, `ORKET_GOVERNED_AGENT_MODEL`, and
+`ORKET_GOVERNED_AGENT_BASE_URL`. Existing explicit Ollama options remain valid.
+All wake sources and effect resumes reuse this same provider composition.
+
+The host resolves every role with auto-selection and auto-load disabled, rejects
+blocked or non-exact targets, and pins the admitted target into the inference
+client. Requested provider identity survives OpenAI-compatible transport into
+profiles and receipts. Usage remains measured only when the response supplies
+counts; OpenAI-compatible finish reasons and truncation are retained. An unknown
+server version stays unknown; an installed client-library version is not a
+server-version attestation. Text-mode calls preserve text responses.
+
+The exact Qwen3.8 GGUF alias is `orcarouter_qwen3.8-27b-uncensored-q4_k_l`, with
+profile `llama_cpp.qwen3.8.chatml.v1`. Runtime lifecycle stays operator-owned;
+local-prompting inventory, profile, and formal promotion gates still apply.
+Live proof covers CLI continuation, API wake/memory/replay, approved and denied
+effects across restart, and actual llama.cpp receipt identity. A single-model
+proof does not establish distinct-model capacity or production soak.
+Delta: `docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FEATURE_INTEGRATION_2026-09-10.md`.
 
 ## Continuation authority
 

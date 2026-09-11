@@ -5,7 +5,8 @@ from typing import Any
 import httpx
 
 from orket.exceptions import ModelConnectionError
-from orket.runtime.provider_runtime_target import (
+from orket.runtime.config.provider_runtime_target import (
+    ProviderRuntimeTarget,
     ProviderRuntimeWarmupError,
     resolve_bool_env,
     resolve_float_env,
@@ -73,14 +74,14 @@ async def ensure_provider_runtime_target(provider: Any) -> str:
             "Provider runtime preparation failed "
             f"provider={provider.provider_name} requested_model={provider.requested_model or '(unset)'}: {exc}"
         ) from exc
-    provider._runtime_target = target
-    if not str(target.model_id or "").strip():
+    if target.status != "OK" or not str(target.model_id or "").strip():
         available = ", ".join(target.available_models[:12]) or "(no models discovered)"
         raise ModelConnectionError(
             "Provider runtime target resolution failed "
             f"provider={target.requested_provider} requested_model={provider.requested_model or '(unset)'} "
             f"resolution_mode={target.resolution_mode} available={available}"
         )
+    provider._runtime_target = target
     provider.model = str(target.model_id)
     if provider.provider_backend == "openai_compat":
         provider.openai_base_url = str(target.base_url)
@@ -92,3 +93,20 @@ async def ensure_provider_runtime_target(provider: Any) -> str:
 def provider_runtime_target_payload(provider: Any) -> dict[str, Any] | None:
     target = getattr(provider, "_runtime_target", None)
     return target.to_payload() if target is not None else None
+
+
+def validate_pinned_runtime_target(provider: Any, target: ProviderRuntimeTarget | None) -> None:
+    """Reject mismatched admission before constructing an inference client."""
+    if target is None:
+        return
+    base_url = provider.openai_base_url if provider.provider_backend == "openai_compat" else provider.ollama_host
+    if (
+        target.status != "OK"
+        or target.requested_provider != provider.provider_name
+        or target.canonical_provider != provider.provider_backend
+        or target.requested_model != provider.requested_model
+        or target.model_id != provider.requested_model
+        or not target.model_id
+        or target.base_url.rstrip("/") != base_url.rstrip("/")
+    ):
+        raise ValueError("E_PROVIDER_PINNED_TARGET_MISMATCH")

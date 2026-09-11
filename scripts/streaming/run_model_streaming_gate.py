@@ -11,6 +11,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from orket.runtime.config.provider_runtime_target import PROVIDER_CHOICES
+
 BASELINE_SCENARIOS = [
     "s0_unknown_workload_400.yaml",
     "s5_backpressure_drop_ranges.yaml",
@@ -84,7 +86,7 @@ def main() -> int:
     parser.add_argument(
         "--real-provider",
         default=None,
-        choices=["ollama", "openai_compat", "lmstudio"],
+        choices=PROVIDER_CHOICES,
         help="Real provider backend to use when --provider-mode real.",
     )
     parser.add_argument(

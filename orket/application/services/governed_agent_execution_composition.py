@@ -4,10 +4,6 @@ from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from typing import Any, cast
 
-from orket.adapters.llm.governed_agent_ollama_provider import (
-    GovernedAgentOllamaModelProvider,
-    prepare_governed_agent_ollama_runtime,
-)
 from orket.adapters.storage.async_control_plane_execution_repository import (
     AsyncControlPlaneExecutionRepository,
 )
@@ -27,6 +23,13 @@ from orket.application.services.governed_agent_fixture import (
 )
 from orket.application.services.governed_agent_loop_service import GovernedAgentLoopService
 from orket.application.services.governed_agent_memory_service import GovernedAgentObjectiveMemory
+from orket.application.services.governed_agent_model_provider import (
+    PROVIDER_CHOICES as PROVIDER_CHOICES,
+)
+from orket.application.services.governed_agent_model_provider import (
+    GovernedAgentLocalModelProvider,
+    prepare_governed_agent_local_runtime,
+)
 from orket.application.services.governed_agent_ports import GovernedAgentAuthorityGuard
 from orket.extensions.governed_agent_invoker import GovernedAgentSubprocessInvoker
 from orket.extensions.models import GovernedAgentWorkloadLaunch
@@ -40,7 +43,7 @@ class GovernedAgentProviderSelection:
     proof_posture: str
     observed_path: str
     targets: dict[str, dict[str, Any]]
-    _live_provider: GovernedAgentOllamaModelProvider | None = None
+    _live_provider: GovernedAgentLocalModelProvider | None = None
 
     async def close(self) -> None:
         if self._live_provider is not None:
@@ -62,6 +65,8 @@ async def select_governed_agent_provider(
     model_by_role: Mapping[str, str],
     ollama_base_url: str,
     inventory_timeout_seconds: float,
+    provider_name: str = "llama_cpp",
+    provider_base_url: str = "",
 ) -> GovernedAgentProviderSelection:
     requested = _validate_catalog_profiles(request, launch)
     if deterministic_fixture:
@@ -85,11 +90,12 @@ async def select_governed_agent_provider(
             targets={},
         )
     if not model_by_role or set(model_by_role) != set(requested):
-        raise ValueError("E_AGENT_OLLAMA_ROLE_MODEL_MAP_MISMATCH")
-    runtime = await prepare_governed_agent_ollama_runtime(
+        raise ValueError("E_AGENT_LOCAL_ROLE_MODEL_MAP_MISMATCH")
+    runtime = await prepare_governed_agent_local_runtime(
         request=request,
         model_by_role=model_by_role,
-        base_url=ollama_base_url,
+        provider=provider_name,
+        base_url=provider_base_url or (ollama_base_url if provider_name == "ollama" else ""),
         inventory_timeout_seconds=inventory_timeout_seconds,
     )
     return GovernedAgentProviderSelection(
@@ -113,7 +119,7 @@ def model_map_for_roles(
         for profile in request.model_profiles
     }
     if not all(result.values()):
-        raise ValueError("E_AGENT_OLLAMA_MODEL_REQUIRED")
+        raise ValueError("E_AGENT_LOCAL_MODEL_REQUIRED")
     return result
 
 

@@ -17,6 +17,7 @@ from orket.application.services.governed_agent_context_plan import validate_cont
 from orket.application.services.governed_agent_effect_resume_service import GovernedAgentEffectResumeService
 from orket.application.services.governed_agent_effect_service import GovernedAgentEffectService
 from orket.application.services.governed_agent_execution_composition import (
+    PROVIDER_CHOICES,
     build_governed_agent_loop_service,
     governed_agent_configuration_digest,
     model_map_for_roles,
@@ -34,7 +35,7 @@ from orket.extensions.manager import ExtensionManager
 from orket.extensions.models import GovernedAgentWorkloadLaunch
 from orket_extension_sdk import AgentIterationRequest, AgentIterationResult
 
-ProviderMode = Literal["deterministic_fixture", "ollama"]
+ProviderMode = Literal["deterministic_fixture", "llama_cpp", "lmstudio", "ollama", "openai_compat"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,9 +46,10 @@ class GovernedAgentProviderConfiguration:
     ollama_base_url: str
     inventory_timeout_seconds: float
     capacity_limit: int
+    provider_base_url: str = ""
 
     def __post_init__(self) -> None:
-        if self.mode not in {"deterministic_fixture", "ollama"}:
+        if self.mode != "deterministic_fixture" and self.mode not in PROVIDER_CHOICES:
             raise ValueError("E_AGENT_PROVIDER_MODE_INVALID")
         if self.inventory_timeout_seconds <= 0 or self.capacity_limit < 1:
             raise ValueError("E_AGENT_PROVIDER_CAPACITY_CONFIGURATION_INVALID")
@@ -185,6 +187,8 @@ class GovernedAgentWakeLoopDispatcher:
             launch=launch,
             deterministic_fixture=self._provider.mode == "deterministic_fixture",
             model_by_role=models,
+            provider_name=self._provider.mode,
+            provider_base_url=self._provider.provider_base_url,
             ollama_base_url=self._provider.ollama_base_url,
             inventory_timeout_seconds=self._provider.inventory_timeout_seconds,
         )

@@ -4,8 +4,9 @@ import asyncio
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
-from importlib.metadata import PackageNotFoundError, version
 from typing import Any
+
+import httpx
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.application.services.governed_agent_broker_service import (
@@ -14,19 +15,23 @@ from orket.application.services.governed_agent_broker_service import (
     UsagePosture,
 )
 from orket.exceptions import ModelTimeoutError
-from orket.runtime.provider_runtime_target import ProviderRuntimeTarget, resolve_provider_runtime_target
+from orket.runtime.config.provider_runtime_target import (
+    PROVIDER_CHOICES,
+    ProviderRuntimeTarget,
+    resolve_provider_runtime_target,
+)
 from orket_extension_sdk import AgentIterationRequest, AgentModelCallRequest
 
 
 @dataclass(frozen=True, slots=True)
-class GovernedAgentOllamaRuntime:
-    provider: GovernedAgentOllamaModelProvider
+class GovernedAgentLocalRuntime:
+    provider: GovernedAgentLocalModelProvider
     profiles: dict[str, GovernedAgentResolvedModelProfile]
     targets: dict[str, ProviderRuntimeTarget]
 
 
-class GovernedAgentOllamaModelProvider:
-    """Adapts host-owned Ollama clients to governed, host-receipted model calls."""
+class GovernedAgentLocalModelProvider:
+    """Coordinates host-owned local provider clients to governed, host-receipted model calls."""
 
     def __init__(self, clients: Mapping[str, LocalModelProvider]) -> None:
         self._clients = dict(clients)
@@ -37,16 +42,18 @@ class GovernedAgentOllamaModelProvider:
         request: AgentModelCallRequest,
         profile: GovernedAgentResolvedModelProfile,
     ) -> GovernedAgentModelObservation:
-        if profile.provider != "ollama":
-            raise ValueError("E_AGENT_OLLAMA_PROFILE_PROVIDER_INVALID")
+        if profile.provider not in PROVIDER_CHOICES:
+            raise ValueError("E_AGENT_LOCAL_PROFILE_PROVIDER_INVALID")
         client = self._clients.get(profile.model)
         if client is None:
-            raise ValueError("E_AGENT_OLLAMA_MODEL_CLIENT_MISSING")
+            raise ValueError("E_AGENT_LOCAL_MODEL_CLIENT_MISSING")
+        if client.provider_name != profile.provider:
+            raise ValueError("E_AGENT_LOCAL_PROFILE_PROVIDER_MISMATCH")
         messages = [message.model_dump(mode="json", exclude_none=True) for message in request.messages]
         context = {
             "protocol_governed_enabled": True,
             "local_prompting_mode": "enforce",
-            "local_prompt_task_class": "strict_json" if request.response_mode == "json" else "completion",
+            "local_prompt_task_class": "strict_json" if request.response_mode == "json" else "concise_text",
             "local_prompt_max_output_tokens": request.max_output_tokens,
             "local_prompt_temperature": request.temperature,
             "local_prompt_stop_sequences": list(request.stop_sequences),
@@ -58,37 +65,32 @@ class GovernedAgentOllamaModelProvider:
             )
         except TimeoutError as exc:
             raise ModelTimeoutError(f"Governed model call timed out for role {request.role}.") from exc
-        return _observation(model_response)
+        return _observation(model_response, response_mode=request.response_mode)
 
     async def close(self) -> None:
         for client in self._clients.values():
             await client.close()
 
 
-async def prepare_governed_agent_ollama_runtime(
+async def prepare_governed_agent_local_runtime(
     *,
     request: AgentIterationRequest,
     model_by_role: Mapping[str, str],
+    provider: str,
     base_url: str = "",
     inventory_timeout_seconds: float = 30,
-) -> GovernedAgentOllamaRuntime:
+) -> GovernedAgentLocalRuntime:
+    if provider not in PROVIDER_CHOICES:
+        raise ValueError("E_AGENT_PROVIDER_MODE_INVALID")
     requests_by_role = {item.role: item for item in request.model_profiles}
     if set(model_by_role) != set(requests_by_role):
-        raise ValueError("E_AGENT_OLLAMA_ROLE_MODEL_MAP_MISMATCH")
+        raise ValueError("E_AGENT_LOCAL_ROLE_MODEL_MAP_MISMATCH")
     targets: dict[str, ProviderRuntimeTarget] = {}
     for role, requested_model in model_by_role.items():
-        target = await resolve_provider_runtime_target(
-            provider="ollama",
-            requested_model=requested_model,
-            base_url=base_url or None,
-            timeout_s=inventory_timeout_seconds,
-            auto_select_model=False,
-            auto_load_local_model=False,
-            model_load_timeout_s=inventory_timeout_seconds,
-            model_ttl_sec=0,
+        target = await _resolve_exact_target(
+            provider=provider, model=requested_model, role=role,
+            base_url=base_url, timeout_seconds=inventory_timeout_seconds,
         )
-        if target.status != "OK" or not target.model_id:
-            raise ValueError(f"E_AGENT_OLLAMA_MODEL_UNAVAILABLE:{role}:{requested_model}")
         targets[role] = target
     maximum_timeout = max(item.timeout_ms for item in requests_by_role.values()) / 1000
     unique_targets = {target.model_id: target for target in targets.values()}
@@ -97,8 +99,9 @@ async def prepare_governed_agent_ollama_runtime(
             model_id,
             temperature=0,
             timeout=max(1, int(maximum_timeout)),
-            provider="ollama",
+            provider=provider,
             base_url=target.base_url,
+            runtime_target=target,
             connect_timeout_seconds=min(30, max(1, maximum_timeout)),
         )
         for model_id, target in unique_targets.items()
@@ -106,9 +109,9 @@ async def prepare_governed_agent_ollama_runtime(
     profiles = {
         str(requests_by_role[role].profile_ref): GovernedAgentResolvedModelProfile(
             requested_profile_ref=str(requests_by_role[role].profile_ref),
-            resolved_profile_ref=f"ollama:{target.model_id}",
-            provider="ollama",
-            provider_version=_ollama_version(),
+            resolved_profile_ref=f"{provider}:{target.model_id}",
+            provider=provider,
+            provider_version=None,
             model=target.model_id,
             model_digest=None,
             substitution_posture="requested",
@@ -118,24 +121,41 @@ async def prepare_governed_agent_ollama_runtime(
         )
         for role, target in targets.items()
     }
-    return GovernedAgentOllamaRuntime(
-        provider=GovernedAgentOllamaModelProvider(clients),
+    return GovernedAgentLocalRuntime(
+        provider=GovernedAgentLocalModelProvider(clients),
         profiles=profiles,
         targets=targets,
     )
 
 
-def _observation(model_response: ModelResponse) -> GovernedAgentModelObservation:
+async def _resolve_exact_target(*, provider: str, model: str, role: str,
+                                base_url: str, timeout_seconds: float) -> ProviderRuntimeTarget:
+    if not model:
+        raise ValueError(f"E_AGENT_LOCAL_MODEL_REQUIRED:{role}")
+    try:
+        target = await resolve_provider_runtime_target(
+            provider=provider, requested_model=model, base_url=base_url or None,
+            timeout_s=timeout_seconds, auto_select_model=False, auto_load_local_model=False,
+            model_load_timeout_s=timeout_seconds, model_ttl_sec=0,
+        )
+    except httpx.HTTPError as exc:
+        raise ValueError(f"E_AGENT_LOCAL_INVENTORY_UNAVAILABLE:{provider}:{type(exc).__name__}") from exc
+    if target.status != "OK" or target.model_id != model:
+        raise ValueError(f"E_AGENT_LOCAL_MODEL_UNAVAILABLE:{role}:{model}:{target.resolution_mode}")
+    return target
+
+
+def _observation(model_response: ModelResponse, *, response_mode: str) -> GovernedAgentModelObservation:
     raw = model_response.raw
     input_tokens = _optional_int(raw.get("input_tokens"))
     output_tokens = _optional_int(raw.get("output_tokens"))
     usage_posture: UsagePosture = (
         "measured" if input_tokens is not None and output_tokens is not None else "unknown"
     )
-    finish_reason = _ollama_field(raw.get("ollama"), "done_reason")
+    finish_reason = _finish_reason(raw)
     latency_ms = _optional_int(raw.get("latency_ms")) or 0
     try:
-        response = json.loads(model_response.content)
+        response = json.loads(model_response.content) if response_mode == "json" else model_response.content
     except json.JSONDecodeError:
         return GovernedAgentModelObservation(
             response=None,
@@ -165,14 +185,16 @@ def _optional_int(value: Any) -> int | None:
     return int(value) if isinstance(value, int) and value >= 0 else None
 
 
-def _ollama_field(payload: Any, field: str) -> str | None:
+def _response_field(payload: Any, field: str) -> str | None:
     value = payload.get(field) if isinstance(payload, Mapping) else getattr(payload, field, None)
     token = str(value or "").strip()
     return token or None
 
 
-def _ollama_version() -> str | None:
-    try:
-        return version("ollama")
-    except PackageNotFoundError:
-        return None
+def _finish_reason(raw: Mapping[str, Any]) -> str | None:
+    payload = raw.get("openai_compat")
+    if isinstance(payload, Mapping):
+        choices = payload.get("choices")
+        if isinstance(choices, list) and choices:
+            return _response_field(choices[0], "finish_reason")
+    return _response_field(raw.get("ollama"), "done_reason")

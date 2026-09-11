@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-09-08
+Last reviewed: 2026-09-10
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -389,7 +389,40 @@ orket runtime --replay-turn <session_id>:<issue_id>:<turn_index>[:role]
 orket runtime --archive-related <token> --archive-reason "manual archive"
 ```
 
+## llama.cpp provider verification
+
+From the repository root, run:
+
+```text
+python scripts/proof/run_llama_cpp_integration.py --model orcarouter_qwen3.8-27b-uncensored-q4_k_l --extension-root C:/Source/OrketExtensions/GoverenedAgentLoop
+```
+
+This executes real governed-agent CLI/API/approval flows and streaming/ODR paths,
+with sandbox creation disabled, and writes
+`benchmarks/results/providers/llama_cpp_integration.json` with rerun history.
+It proves the source-worktree integration, separately from installed-release
+acceptance. Published core 0.6.0 artifacts predate this integration.
+
+For streaming, set `ORKET_MODEL_STREAM_PROVIDER=real`,
+`ORKET_MODEL_STREAM_REAL_PROVIDER=llama_cpp`, and
+`ORKET_MODEL_STREAM_REAL_MODEL_ID` to the same exact alias. Set
+`ORKET_MODEL_STREAM_OPENAI_USE_STREAM=true` for SSE. llama.cpp endpoint overrides
+use `ORKET_LLAMA_CPP_BASE_URL` or `ORKET_LLM_LLAMA_CPP_BASE_URL`; LM Studio endpoint
+settings do not redirect llama.cpp. The streaming gate, consistency runner, model
+listing, and quant tuning wrapper accept `llama_cpp` directly. ODR role providers
+also accept `llama_cpp`; its model residency is reported as `operator_managed`,
+with no unload attempted. Full quant sweeps and multi-model residency need the
+operator to serve each selected model.
+
 ## Governed-Agent Bounded CLI
+
+Future provider development and live testing follow the
+[contributor provider policy](CONTRIBUTOR.md#local-provider-development-and-testing):
+llama.cpp, then LM Studio, then Ollama, with llama.cpp as the preferred live-test
+provider. Use `--model <exact-served-model>` for llama.cpp, or select
+`--provider llama_cpp|lmstudio|ollama|openai_compat` explicitly. Override its endpoint
+with `--provider-base-url <url>`. Existing Ollama-specific flags remain available;
+combining them with another provider is rejected.
 
 The admitted agent CLI requires a persisted extension catalog and a validated
 initial `agent_iteration_request.v1` JSON. Select exactly one provider posture.
@@ -407,6 +440,18 @@ three-iteration run budget so approval can resume one final verification step.
 ```bash
 orket agent submit <workload_id> --db <sqlite_path> --catalog <catalog_json> --request <request_json> --creation-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --next-lease-expires-at-utc <timestamp> --deterministic-fixture --json
 ```
+
+For the preferred live llama.cpp run, replace `--deterministic-fixture` with
+`--provider llama_cpp --model orcarouter_qwen3.8-27b-uncensored-q4_k_l`.
+Start an operator-owned `llama-server` first, serving that exact alias at
+`http://127.0.0.1:8080/v1`. Its alias must match the lowercase GGUF filename stem
+under `ORKET_LLAMA_CPP_GGUF_MODEL_ROOT` (default `D:/models/GGUF`) and an admitted
+prompt profile. The Qwen3.8 text profile uses an 8192-token context; launch with
+`--jinja --reasoning off --ctx-size 8192 --no-cache-prompt --cache-ram 0`.
+Prompt-cache reuse on the current local build (`dd7cad7`) caused a recurrent
+sequence-removal abort during streaming; disabling that cache is the verified
+operator setting for this model/build. All roles may use this model; role
+overrides require their exact models to be served and admitted too.
 
 For a live single-model Ollama run, replace `--deterministic-fixture` with
 `--ollama-model <exact-installed-model>`. For fixed multi-model roles, add
@@ -482,8 +527,9 @@ Set these host-owned values before `python server.py` to activate dispatch:
 ```text
 ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED=1
 ORKET_GOVERNED_AGENT_DB_PATH=<sqlite_path>              # optional; canonical control-plane DB by default
-ORKET_GOVERNED_AGENT_PROVIDER=ollama
-ORKET_GOVERNED_AGENT_OLLAMA_MODEL=<exact-installed-model>
+ORKET_GOVERNED_AGENT_PROVIDER=llama_cpp
+ORKET_GOVERNED_AGENT_MODEL=orcarouter_qwen3.8-27b-uncensored-q4_k_l
+ORKET_GOVERNED_AGENT_BASE_URL=http://127.0.0.1:8080/v1
 ORKET_GOVERNED_AGENT_CAPACITY_LIMIT=1
 ```
 
@@ -496,9 +542,13 @@ Claim timing can be bounded with
 `ORKET_GOVERNED_AGENT_CLAIM_LEASE_SECONDS`,
 `ORKET_GOVERNED_AGENT_CLAIM_RENEWAL_SECONDS`, and
 `ORKET_GOVERNED_AGENT_IDLE_WAIT_SECONDS`. Renewal must be shorter than the
-lease. Ollama inventory timeout and base URL use
-`ORKET_GOVERNED_AGENT_INVENTORY_TIMEOUT_SECONDS` and
-`ORKET_GOVERNED_AGENT_OLLAMA_BASE_URL`.
+lease. Inventory timeout uses `ORKET_GOVERNED_AGENT_INVENTORY_TIMEOUT_SECONDS`.
+The generic base URL overrides provider defaults. Existing
+`ORKET_GOVERNED_AGENT_OLLAMA_MODEL` and `ORKET_GOVERNED_AGENT_OLLAMA_BASE_URL`
+apply only to Ollama. With no provider set, an existing Ollama model setting
+selects Ollama; otherwise the default is llama.cpp. Set the provider explicitly
+when switching an existing environment. Existing runs retain their configuration
+digest; switching providers requires a new run.
 
 The JSON body uses one caller-stable occurrence id, either a `new_run` workload
 or an `existing_run` target, and a `governed_agent_wake_dispatch.v1` object. The

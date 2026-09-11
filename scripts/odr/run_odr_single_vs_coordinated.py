@@ -127,9 +127,8 @@ def _resolve_role_base_url(*, provider: str, raw: str) -> str:
     token = str(raw or "").strip()
     if token:
         return token
-    if provider in {"lmstudio", "openai_compat"}:
-        return str(os.getenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")).strip()
-    return str(os.getenv("ORKET_LLM_OLLAMA_HOST", "http://localhost:11434")).strip()
+    from orket.runtime.config.provider_runtime_target import default_base_url
+    return default_base_url(provider)
 
 
 # ---------------------------------------------------------------------------
@@ -795,7 +794,7 @@ async def _run_pair(
         print(f"    scenario={scenario_id}", flush=True)
 
         # --- Single-shot ---
-        print(f"      [single-shot] ...", flush=True)
+        print("      [single-shot] ...", flush=True)
         try:
             single_result = await _run_single_shot(
                 scenario_input=scenario_input,
@@ -827,7 +826,7 @@ async def _run_pair(
         )
 
         # --- Coordinated (ODR) ---
-        print(f"      [coordinated] ...", flush=True)
+        print("      [coordinated] ...", flush=True)
         try:
             odr_result = await _run_coordinated(
                 scenario_input=scenario_input,
@@ -1086,12 +1085,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--architect-provider",
         default="",
-        help="Architect provider override (ollama | lmstudio | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
+        help="Architect provider override (llama_cpp | lmstudio | ollama | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
     )
     parser.add_argument(
         "--auditor-provider",
         default="",
-        help="Auditor provider override (ollama | lmstudio | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
+        help="Auditor provider override (llama_cpp | lmstudio | ollama | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
     )
     parser.add_argument(
         "--architect-base-url",

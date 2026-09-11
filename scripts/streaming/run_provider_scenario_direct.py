@@ -15,11 +15,17 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
-from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus, StreamBusConfig
-from orket.streaming import StreamLawChecker, StreamLawViolation
+from orket.streaming import (
+    CommitOrchestrator,
+    InteractionManager,
+    StreamBus,
+    StreamBusConfig,
+    StreamLawChecker,
+    StreamLawViolation,
+)
 from orket.streaming.contracts import StreamEventType
 from orket.workloads import run_builtin_workload
+from scripts.streaming.provider_identity import provider_identity as _provider_identity
 
 
 def _parse_payload(path: Path) -> dict[str, Any]:
@@ -55,41 +61,6 @@ def _resolved_model_id_from_events(events: list[dict[str, Any]]) -> str:
         if token:
             return token
     return ""
-
-
-def _provider_identity(*, resolved_model_id: str = "") -> dict[str, Any]:
-    mode = str(os.getenv("ORKET_MODEL_STREAM_PROVIDER", "stub") or "stub").strip().lower()
-    provider_name = str(os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "ollama") or "ollama").strip().lower()
-    model_id = str(resolved_model_id or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", DEFAULT_LOCAL_MODEL)).strip()
-    if provider_name == "lmstudio":
-        provider_name = "openai_compat"
-    if provider_name == "ollama":
-        base_url = str(os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")).strip()
-    else:
-        base_url = str(os.getenv("ORKET_MODEL_STREAM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")).strip()
-    if base_url and "://" not in base_url:
-        base_url = f"http://{base_url}"
-    streaming = False
-    if provider_name == "ollama":
-        streaming = True
-    elif provider_name == "openai_compat":
-        streaming = str(os.getenv("ORKET_MODEL_STREAM_OPENAI_USE_STREAM", "false")).strip().lower() in {
-            "1",
-            "true",
-            "yes",
-            "on",
-        }
-    return {
-        "provider_mode": mode,
-        "provider": provider_name,
-        "provider_name": provider_name,
-        "base_url": base_url or None,
-        "provider_base_url": base_url or None,
-        "model_id": model_id or None,
-        "provider_model_id": model_id or None,
-        "streaming": streaming,
-        "openai_compat": provider_name == "openai_compat",
-    }
 
 
 def _observability_root(project_root: Path, scenario_id: str, run_id: str) -> Path:

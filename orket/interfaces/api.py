@@ -594,7 +594,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         subscribe_to_events(log_subscriber)
         governed_agent_runtime = context.governed_agent_runtime
         if governed_agent_runtime is not None:
-            governed_agent_runtime.start(context)
+            await governed_agent_runtime.start(context)
         expected_key = _read_api_key_env("ORKET_API_KEY")
         insecure_bypass = _enforce_insecure_no_api_key_startup_policy()
         log_event(

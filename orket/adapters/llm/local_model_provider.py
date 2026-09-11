@@ -15,6 +15,7 @@ import ollama
 from orket.adapters.llm.local_model_provider_runtime_target import (
     ensure_provider_runtime_target,
     provider_runtime_target_payload,
+    validate_pinned_runtime_target,
 )
 from orket.adapters.llm.local_prompting_policy import LocalPromptingPolicyResult, resolve_local_prompting_policy
 from orket.adapters.llm.openai_compat_runtime import (
@@ -58,7 +59,7 @@ def _map_provider_name(raw: str) -> str:
 
 
 class LocalModelProvider:
-    """Asynchronous local model provider for ollama and openai-compatible backends."""
+    """Side-effecting adapter: executes authorized local-provider HTTP inference."""
 
     def __init__(
         self,
@@ -71,6 +72,7 @@ class LocalModelProvider:
         base_url: str = "",
         api_key: str = "",
         connect_timeout_seconds: float = 30.0,
+        runtime_target: ProviderRuntimeTarget | None = None,
     ):
         """Initialize provider.
 
@@ -96,6 +98,7 @@ class LocalModelProvider:
         self.openai_base_url = self._resolve_openai_base_url()
         self.openai_api_key = self._resolve_openai_api_key()
         self.ollama_host = self._resolve_ollama_host()
+        validate_pinned_runtime_target(self, runtime_target)
         self.client: Any
 
         if self.provider_backend == "openai_compat":
@@ -114,7 +117,7 @@ class LocalModelProvider:
         self._closed = False
         self._openai_session_epoch = 0
         self._seen_context_epochs: set[int] = set()
-        self._runtime_target: ProviderRuntimeTarget | None = None
+        self._runtime_target: ProviderRuntimeTarget | None = runtime_target
 
     @staticmethod
     def _resolve_temperature_override(default_temperature: float) -> float:

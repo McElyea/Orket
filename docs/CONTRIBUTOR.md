@@ -109,3 +109,10 @@ new callers must use `--card`; removal requires an explicit `0.7.0` contract del
 7. Provider-backed live proof scripts/tests that are not explicit sandbox acceptance work must set `ORKET_DISABLE_SANDBOX=1`.
 8. Any flow that intentionally creates real `orket-sandbox-*` resources must prove teardown in the same execution path before temp-workspace cleanup or handoff. Do not rely on delayed TTL cleanup for routine proof runs.
 9. Tests that touch the module-level `orket.state.runtime_state` singleton must use the `fresh_runtime_state` pytest fixture from `tests/conftest.py`.
+
+### Local provider development and testing
+
+1. Develop local provider support in this priority order: **llama.cpp**, **LM Studio**, then **Ollama**. Their runtime selection tokens are `llama_cpp`, `lmstudio`, and `ollama`.
+2. Use **llama.cpp by default for future provider-backed live testing**, including governed-agent work. Explicit user selections and tests of a specific provider use that provider; deterministic tests retain their isolated fixtures.
+3. If the required llama.cpp integration or environment is unavailable, report the exact blocker and prioritize enabling that path. Any proof through another provider must identify the actual provider and cannot count as llama.cpp proof.
+4. This priority guides development and test selection. Runtime defaults, automatic fallback behavior, and provider admission gates remain governed by their existing contracts until explicitly changed and verified.

@@ -22,6 +22,7 @@ from orket.adapters.storage.async_governed_agent_wake_repository import (
 )
 from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
 from orket.application.services.governed_agent_execution_composition import (
+    PROVIDER_CHOICES,
     GovernedAgentProviderSelection,
     build_governed_agent_loop_service,
     governed_agent_configuration_digest,
@@ -78,9 +79,12 @@ def add_governed_agent_subparser(subparsers: Any) -> None:
     submit.add_argument("--next-lease-expires-at-utc", action="append", default=[])
     provider = submit.add_mutually_exclusive_group(required=True)
     provider.add_argument("--deterministic-fixture", action="store_true")
+    provider.add_argument("--model", help="Exact served model; defaults to the llama.cpp provider.")
+    submit.add_argument("--provider", choices=PROVIDER_CHOICES, default=None)
+    submit.add_argument("--provider-base-url", default="", help="Optional selected-provider endpoint override.")
     provider.add_argument("--ollama-model", help="Exact installed Ollama model for every role by default.")
     for role in ("planner", "actor", "critic"):
-        submit.add_argument(f"--{role}-model", help=f"Exact installed Ollama model override for {role}.")
+        submit.add_argument(f"--{role}-model", help=f"Exact served model override for {role}.")
     submit.add_argument("--ollama-base-url", default="", help="Optional Ollama base URL override.")
     submit.add_argument("--inventory-timeout-seconds", type=float, default=30.0)
     submit.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
@@ -253,12 +257,17 @@ async def _select_provider(
     request: AgentIterationRequest,
     launch: GovernedAgentWorkloadLaunch,
 ) -> GovernedAgentProviderSelection:
+    provider_name = str(getattr(args, "provider", None) or ("ollama" if args.ollama_model else "llama_cpp"))
+    if args.ollama_model and provider_name != "ollama":
+        raise ValueError("E_AGENT_PROVIDER_OPTIONS_CONFLICT")
+    if args.ollama_base_url and provider_name != "ollama":
+        raise ValueError("E_AGENT_PROVIDER_OPTIONS_CONFLICT")
     models = (
         {}
         if bool(args.deterministic_fixture)
         else model_map_for_roles(
             request,
-            default_model=str(getattr(args, "ollama_model", "") or ""),
+            default_model=str(getattr(args, "model", "") or getattr(args, "ollama_model", "") or ""),
             role_overrides={
                 role: str(getattr(args, f"{role}_model", "") or "")
                 for role in ("planner", "actor", "critic")
@@ -270,6 +279,8 @@ async def _select_provider(
         launch=launch,
         deterministic_fixture=bool(args.deterministic_fixture),
         model_by_role=models,
+        provider_name=provider_name,
+        provider_base_url=str(getattr(args, "provider_base_url", "") or ""),
         ollama_base_url=str(args.ollama_base_url or ""),
         inventory_timeout_seconds=float(args.inventory_timeout_seconds),
     )

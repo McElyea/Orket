@@ -89,10 +89,10 @@ _PROVIDER_TRUTH_ROWS: tuple[dict[str, Any], ...] = (
             "repair_tolerance": "supported",
         },
         "notes": [
-            "llama.cpp first slice resolves through OpenAI-compatible chat completions while preserving requested_provider=llama_cpp.",
+            "llama.cpp resolves through OpenAI-compatible chat completions while preserving requested_provider=llama_cpp.",
             "Orket does not start, stop, supervise, or download llama.cpp models in this slice.",
-            "The admitted first profile is llama_cpp.qwen.chatml.v1 with JSON-wrapper tool-call mode.",
-            "Provider support remains unpromoted until the real GGUF preflight and smoke proof gates pass.",
+            "Qwen3.6 and exact Qwen3.8 profiles use JSON-wrapper tools; governed-agent and streaming entrypoints preserve llama_cpp identity.",
+            "Formal profile promotion requires conformance volume and template-audit gates beyond feature integration proof.",
         ],
         "evidence_surfaces": [
             "orket/runtime/config/provider_runtime_target.py",

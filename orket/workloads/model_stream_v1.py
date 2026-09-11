@@ -5,13 +5,14 @@ import contextlib
 import os
 from typing import Any
 
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
-from orket.runtime.provider_runtime_target import (
+from orket.runtime.config.provider_runtime_target import (
+    PROVIDER_CHOICES,
     resolve_bool_env,
     resolve_float_env,
     resolve_int_env,
     resolve_provider_runtime_target,
 )
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.streaming.contracts import CommitIntent, StreamEventType
 from orket.streaming.manager import InteractionContext
 from orket.streaming.model_provider import (
@@ -91,6 +92,7 @@ async def _build_real_provider(*, input_config: dict[str, Any], turn_params: dic
     return OpenAICompatModelStreamProvider(
         model_id=target.model_id,
         base_url=target.base_url,
+        provider_name=target.requested_provider,
         api_key=str(os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip() or None,
         timeout_s=timeout_s,
     )
@@ -113,9 +115,9 @@ def validate_model_stream_v1_start(*, input_config: dict[str, Any], turn_params:
     if mode != "real":
         raise ValueError(f"Unsupported ORKET_MODEL_STREAM_PROVIDER='{mode}'. Expected: stub|real.")
     provider_name = _real_provider_name()
-    if provider_name not in {"ollama", "openai_compat", "lmstudio"}:
+    if provider_name not in PROVIDER_CHOICES:
         raise ValueError(
-            f"Unsupported ORKET_MODEL_STREAM_REAL_PROVIDER='{provider_name}'. Expected: ollama|openai_compat|lmstudio."
+            f"Unsupported ORKET_MODEL_STREAM_REAL_PROVIDER='{provider_name}'. Expected: llama_cpp|lmstudio|ollama|openai_compat."
         )
 
 

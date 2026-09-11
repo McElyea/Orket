@@ -101,8 +101,10 @@ class GovernedAgentRuntime:
     async def replay(self, *, run_id: str) -> dict[str, Any] | None:
         return cast(dict[str, Any] | None, await self._inspector.replay(run_id=run_id))
 
-    def start(self, task_owner: Any) -> None:
+    async def start(self, task_owner: Any) -> None:
         if self._enabled and not self._supervisor.running:
+            # Initialize WAL and wake schema before ingress can race the first claim.
+            await self._wakes.list_wakes()
             self._supervisor.start(task_owner)
 
     async def close(self) -> None:

@@ -5,6 +5,22 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2026-09-10 - "Local provider truth hardening"
+
+### Added
+- Add the llama.cpp governed-agent integration proof path, provider identity
+  helpers, and live/provider-focused regression coverage.
+- Add the behavioral-truth architecture review and its runnable evidence packet
+  for unresolved outward approval, evidence, and verification risks.
+
+### Changed
+- Align governed-agent local provider wiring, provider truth tables, streaming
+  scripts, runbook notes, and local-prompting authority around the canonical
+  local provider target behavior.
+- `compatibility_status`: `preserved_with_additive_surfaces`
+- `affected_audience`: `operators; extension_authors`
+- `migration_requirement`: `none`
+
 ## [0.6.0] - 2026-09-10 - "Governed continuous agents"
 
 ### Changed

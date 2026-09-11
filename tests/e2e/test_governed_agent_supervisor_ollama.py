@@ -20,7 +20,7 @@ _LIVE_ENABLED = os.getenv("ORKET_RUN_LIVE_AGENT_OLLAMA") == "1"
 _EXTENSION_ROOT = Path(
     os.getenv(
         "ORKET_GOVERNED_AGENT_EXTENSION_ROOT",
-        r"C:\Source\Orket-Extensions\GovernedLocalAgent",
+        r"C:\Source\OrketExtensions\GoverenedAgentLoop",
     )
 )
 
@@ -86,12 +86,13 @@ def _configure_api(
     planner: str,
     actor: str,
     critic: str,
+    provider: str = "ollama",
 ) -> None:
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_EXTENSIONS_CATALOG", str(catalog_path))
     monkeypatch.setenv("ORKET_GOVERNED_AGENT_DB_PATH", str(db_path))
-    monkeypatch.setenv("ORKET_GOVERNED_AGENT_PROVIDER", "ollama")
+    monkeypatch.setenv("ORKET_GOVERNED_AGENT_PROVIDER", provider)
     monkeypatch.setenv("ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED", "1")
     monkeypatch.setenv("ORKET_GOVERNED_AGENT_PLANNER_MODEL", planner)
     monkeypatch.setenv("ORKET_GOVERNED_AGENT_ACTOR_MODEL", actor)

@@ -16,6 +16,8 @@ if str(SCRIPTS_ROOT) not in sys.path:
 
 from providers.provider_model_resolver import choose_model, list_provider_models, normalize_provider, rank_models
 
+from orket.runtime.config.provider_runtime_target import PROVIDER_CHOICES
+
 
 def _parse_args() -> tuple[argparse.Namespace, list[str]]:
     parser = argparse.ArgumentParser(
@@ -28,8 +30,8 @@ def _parse_args() -> tuple[argparse.Namespace, list[str]]:
     parser.add_argument("--matrix-config", required=True, help="Base matrix config JSON path.")
     parser.add_argument(
         "--provider",
-        default=os.getenv("ORKET_LLM_PROVIDER") or os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER") or "lmstudio",
-        choices=["ollama", "openai_compat", "lmstudio"],
+        default=os.getenv("ORKET_LLM_PROVIDER") or os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER") or "llama_cpp",
+        choices=PROVIDER_CHOICES,
         help="Provider backend used for model discovery and runtime_env wiring.",
     )
     parser.add_argument("--base-url", default="", help="Optional provider base URL override.")
@@ -100,7 +102,9 @@ def _resolve_models(args: argparse.Namespace) -> tuple[list[str], dict[str, obje
 def _build_runtime_env(*, provider: str, canonical_provider: str, base_url: str) -> dict[str, str]:
     runtime_env: dict[str, str] = {}
     runtime_env["ORKET_LLM_PROVIDER"] = str(provider)
-    if canonical_provider == "openai_compat":
+    if provider == "llama_cpp":
+        runtime_env["ORKET_LLAMA_CPP_BASE_URL"] = str(base_url)
+    elif canonical_provider == "openai_compat":
         runtime_env["ORKET_MODEL_STREAM_OPENAI_BASE_URL"] = str(base_url)
     elif canonical_provider == "ollama":
         runtime_env["OLLAMA_HOST"] = str(base_url)

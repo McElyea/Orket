@@ -17,13 +17,16 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
     from provider_model_resolver import choose_model, list_provider_models
 
 
+from orket.runtime.config.provider_runtime_target import PROVIDER_CHOICES
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="List model IDs available from configured real provider endpoints.")
     parser.add_argument(
         "--provider",
         default=None,
-        choices=["lmstudio", "openai_compat", "ollama"],
-        help="Provider backend (defaults to ORKET_MODEL_STREAM_REAL_PROVIDER or lmstudio).",
+        choices=PROVIDER_CHOICES,
+        help="Provider backend (defaults to ORKET_MODEL_STREAM_REAL_PROVIDER or llama_cpp).",
     )
     parser.add_argument("--base-url", default=None, help="Override provider base URL.")
     parser.add_argument("--timeout", type=float, default=8.0, help="HTTP timeout in seconds.")
@@ -40,7 +43,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Emit JSON output.")
     args = parser.parse_args()
 
-    provider = str(args.provider or os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "lmstudio")).strip().lower() or "lmstudio"
+    provider = str(args.provider or os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "llama_cpp")).strip().lower() or "llama_cpp"
     preferred_model = str(args.preferred_model or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "")).strip()
     try:
         api_key = str(os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip() or None

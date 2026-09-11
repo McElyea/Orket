@@ -18,13 +18,16 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 try:
-    from scripts.streaming.live_consistency_common import extract_gate_run_id, now_utc_iso, tail_text, to_float, to_int
     from scripts.streaming.live_1000_stream_summary import collect_stream_verdict_summary
+    from scripts.streaming.live_consistency_common import extract_gate_run_id, now_utc_iso, tail_text, to_float, to_int
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
-    from live_consistency_common import extract_gate_run_id, now_utc_iso, tail_text, to_float, to_int
     from live_1000_stream_summary import collect_stream_verdict_summary
+    from live_consistency_common import extract_gate_run_id, now_utc_iso, tail_text, to_float, to_int
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+from orket.runtime.config.provider_runtime_target import PROVIDER_CHOICES
 
 
 def _parse_args() -> argparse.Namespace:
@@ -51,8 +54,8 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--stream-real-provider",
-        choices=["ollama", "openai_compat", "lmstudio"],
-        default="lmstudio",
+        choices=PROVIDER_CHOICES,
+        default="llama_cpp",
         help="Real provider backend when stream provider mode is real.",
     )
     parser.add_argument(

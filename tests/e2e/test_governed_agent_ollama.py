@@ -18,7 +18,7 @@ _LIVE_ENABLED = os.getenv("ORKET_RUN_LIVE_AGENT_OLLAMA") == "1"
 _EXTENSION_ROOT = Path(
     os.getenv(
         "ORKET_GOVERNED_AGENT_EXTENSION_ROOT",
-        r"C:\Source\Orket-Extensions\GovernedLocalAgent",
+        r"C:\Source\OrketExtensions\GoverenedAgentLoop",
     )
 )
 
@@ -68,7 +68,7 @@ def test_live_multi_model_preserves_distinct_role_identity(tmp_path: Path, capsy
     _assert_measured_receipts(_receipts(payload))
 
 
-def _run_live(tmp_path: Path, capsys, monkeypatch, *, models: dict[str, str], case_id: str) -> dict:
+def _run_live(tmp_path: Path, capsys, monkeypatch, *, models: dict[str, str], case_id: str, provider: str | None = "ollama") -> dict:
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     if not _EXTENSION_ROOT.is_dir():
         pytest.fail(f"Live external extension is missing: {_EXTENSION_ROOT}")
@@ -110,8 +110,10 @@ def _run_live(tmp_path: Path, capsys, monkeypatch, *, models: dict[str, str], ca
         "--decision-timestamp-utc", (now + timedelta(seconds=1)).isoformat(),
         "--decision-timestamp-utc", (now + timedelta(seconds=2)).isoformat(),
         "--next-lease-expires-at-utc", (now + timedelta(minutes=9)).isoformat(),
-        "--ollama-model", models["default"],
+        "--model", models["default"],
     ]
+    if provider is not None:
+        args.extend(("--provider", provider))
     for role in ("planner", "actor", "critic"):
         if role in models:
             args.extend((f"--{role}-model", models[role]))

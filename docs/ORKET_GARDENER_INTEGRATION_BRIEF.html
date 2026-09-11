@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A discussion proposal for connecting Gardener's repository maintenance workflows to Orket's governed execution and local models.">
+  <title>Orket + Gardener — Integration proposal for Daniel</title>
+  <style>
+    :root { color-scheme: light; --ink:#132a35; --muted:#526570; --paper:#fff; --canvas:#e8eef1; --line:#d5e0e5; --blue:#174aaf; --green:#087661; --pale:#edf5f8; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--canvas); color:var(--ink); font:17px/1.5 "Segoe UI",Arial,sans-serif; }
+    a { color:var(--blue); text-underline-offset:3px; }
+    a:focus-visible,button:focus-visible { outline:3px solid #dd9f19; outline-offset:4px; }
+    button { font:inherit; cursor:pointer; }
+    .toolbar { position:sticky; top:0; z-index:10; background:#102b36; color:white; padding:12px 4vw; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .brand { font-size:14px; font-weight:700; letter-spacing:.12em; margin-right:auto; }
+    .toolbar button { border:1px solid #54717d; border-radius:5px; background:transparent; color:white; padding:7px 13px; font-size:14px; }
+    .toolbar button:hover { background:#244451; }
+    .toolbar button:disabled { opacity:.35; cursor:default; }
+    .counter { font-size:14px; min-width:50px; text-align:center; }
+    .deck { max-width:1220px; margin:30px auto; padding:0 24px; }
+    .slide { position:relative; padding:42px 52px 28px; margin-bottom:28px; background:var(--paper); border:1px solid var(--line); border-top:5px solid var(--blue); border-radius:3px; box-shadow:0 8px 30px #12304409; scroll-margin-top:85px; }
+    .eyebrow { color:var(--blue); text-transform:uppercase; font-size:13px; letter-spacing:.14em; font-weight:750; margin:0 0 15px; }
+    h1 { font-size:clamp(34px,4vw,53px); line-height:1.1; letter-spacing:-.035em; max-width:850px; margin:0 0 23px; }
+    h2 { font-size:clamp(27px,3vw,37px); line-height:1.15; letter-spacing:-.025em; margin:0 0 21px; }
+    h3 { font-size:19px; line-height:1.3; margin:0 0 10px; }
+    p { margin:0 0 16px; }
+    .lead { font-size:22px; line-height:1.45; max-width:900px; }
+    .muted { color:var(--muted); }
+    .small { font-size:14px; }
+    .badge { display:inline-block; color:#075646; background:#e5f4ed; border:1px solid #b9d9ca; border-radius:30px; padding:5px 12px; font-size:13px; font-weight:650; }
+    .grid { display:grid; gap:20px; grid-template-columns:repeat(2,minmax(0,1fr)); margin:24px 0; }
+    .three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .card { border:1px solid var(--line); border-radius:6px; padding:23px; }
+    .card p:last-child { margin-bottom:0; }
+    .number { color:var(--blue); font-size:14px; font-weight:750; display:block; margin-bottom:10px; }
+    .callout { background:var(--pale); border-left:4px solid var(--blue); padding:18px 22px; margin:24px 0 12px; }
+    .callout p:last-child { margin:0; }
+    .flow { display:grid; grid-template-columns:1fr 36px 1.35fr 36px 1fr; gap:8px; align-items:stretch; margin:27px 0 18px; }
+    .node { border:1px solid var(--line); padding:23px; border-radius:7px; background:#f8fafb; }
+    .node.host { border:2px solid var(--blue); background:#f1f5ff; }
+    .node strong { display:block; font-size:23px; margin:5px 0 12px; }
+    .node .tag { font-size:12px; letter-spacing:.09em; color:var(--muted); text-transform:uppercase; }
+    .arrow { display:flex; align-items:center; justify-content:center; font-size:27px; color:var(--blue); }
+    .return { text-align:center; color:var(--green); font-size:15px; padding:9px; border-top:1px dashed #abc5bd; }
+    ul,ol { padding-left:21px; margin:10px 0 0; }
+    li { margin:7px 0; }
+    table { width:100%; border-collapse:collapse; margin:23px 0; font-size:16px; }
+    th { text-align:left; color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid var(--line); }
+    td,th { padding:13px 15px; vertical-align:top; }
+    td { border-bottom:1px solid var(--line); }
+    .recommended { background:#edf6f2; }
+    .recommended td:first-child { border-left:4px solid var(--green); }
+    .footer { display:flex; justify-content:space-between; gap:20px; border-top:1px solid var(--line); padding-top:15px; margin-top:29px; color:var(--muted); font-size:12px; }
+    .step { display:grid; grid-template-columns:38px 1fr; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); }
+    .step b { color:var(--blue); font-size:22px; }
+    .step h3 { margin-bottom:4px; }
+    .step p { margin:0; }
+    .source-list { font-size:15px; }
+    .source-list li { margin:12px 0; }
+    .source-list span { display:block; color:var(--muted); font-size:14px; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    body.presenting .slide { display:none; }
+    body.presenting .slide.active { display:block; }
+    body.presenting .deck { margin:22px auto; }
+    [hidden] { display:none!important; }
+    @media(max-width:760px) {
+      body { font-size:16px; } .deck { padding:0 12px; margin-top:16px; }
+      .slide { padding:28px 23px 22px; } .lead { font-size:20px; }
+      .grid,.three,.flow { grid-template-columns:1fr; } .arrow { transform:rotate(90deg); height:25px; }
+      .brand { width:100%; } .toolbar { gap:8px; } .toolbar button { padding:6px 10px; }
+      td,th { padding:10px 7px; font-size:14px; } .footer { font-size:11px; }
+    }
+    @page { size:A4 landscape; margin:11mm; }
+    @media print {
+      body { background:white; font-size:12px; } .toolbar { display:none; }
+      .deck,body.presenting .deck { max-width:none; padding:0; margin:0; }
+      .slide,body.presenting .slide { display:block!important; margin:0; padding:15px 20px 12px; border:0; border-top:3px solid var(--blue); border-radius:0; box-shadow:none; break-after:page; }
+      .slide:last-child { break-after:auto; } h1 { font-size:35px; } h2 { font-size:28px; } h3 { font-size:16px; }
+      .lead { font-size:18px; } .eyebrow { font-size:11px; } .small,.source-list,.source-list span { font-size:11px; }
+      .grid { gap:15px; margin:18px 0; } .card,.node { padding:16px; } .node strong { font-size:20px; }
+      .callout { margin:18px 0 10px; padding:14px 17px; } td,th { font-size:12px; padding:10px; }
+      .footer { margin-top:20px; padding-top:10px; font-size:10px; } .step { padding:10px 0; }
+      a { color:var(--ink); } .card,.node,tr,.step { break-inside:avoid; }
+      * { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+    }
+  </style>
+</head>
+<body>
+  <header class="toolbar" aria-label="Presentation controls">
+    <div class="brand">ORKET + GARDENER</div>
+    <button id="mode" type="button" aria-pressed="false" hidden>Present</button>
+    <button id="prev" type="button" aria-label="Previous slide" hidden>← Previous</button>
+    <span id="counter" class="counter" hidden></span>
+    <button id="next" type="button" aria-label="Next slide" hidden>Next →</button>
+    <button id="print" type="button" hidden>Print / PDF</button>
+  </header>
+  <main class="deck">
+    <section class="slide active" id="recommendation" aria-labelledby="title">
+      <p class="eyebrow">Discussion proposal · Prepared for Daniel · September 7, 2026</p>
+      <h1>Gardener chooses the work.<br>Orket owns the execution.</h1>
+      <p class="lead">Connect repository maintenance to local models through a bounded job contract. Keep both projects independently useful.</p>
+      <span class="badge">Proposed integration · Not yet implemented</span>
+      <div class="grid three">
+        <div class="card"><span class="number">01 / THE OPPORTUNITY</span><h3>Local maintenance agents</h3><p>Use Gardener’s conventions and maintenance workflows with models served locally through Orket.</p></div>
+        <div class="card"><span class="number">02 / THE DESIGN</span><h3>A clear division of work</h3><p>Gardener submits a maintenance job. Orket runs a small maintenance extension, governs execution, and returns evidence.</p></div>
+        <div class="card"><span class="number">03 / THE FIRST DECISION</span><h3>Prove one audit</h3><p>Validate a report-only repository audit before committing to repair workflows or unattended fleet operation.</p></div>
+      </div>
+      <div class="callout"><p><strong>Success means:</strong> useful maintenance results from a named local model, with less duplicated machinery than the two projects would need separately.</p></div>
+      <div class="footer"><span>Discussion artifact; does not authorize implementation or change the roadmap.</span><span>01 / 08</span></div>
+    </section>
+
+    <section class="slide" id="architecture" aria-labelledby="architecture-title">
+      <p class="eyebrow">The proposed architecture</p>
+      <h2 id="architecture-title">Connect at the job boundary.</h2>
+      <p class="lead">A request such as “audit this revision against these conventions” stays meaningful as models and agent implementations change.</p>
+      <div class="flow" aria-label="Gardener submits a job to Orket; Orket runs a maintenance extension and calls a local model through its host broker.">
+        <div class="node"><span class="tag">Client / proposed backend</span><strong>Gardener</strong><p>Repository selection<br>Conventions reference<br>Maintenance intent<br>Result display</p></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node host"><span class="tag">Execution owner</span><strong>Orket</strong><p>Admission, budgets, cancellation<br>Maintenance extension via SDK<br>Host model broker<br>Evidence and final status</p></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node"><span class="tag">Initial inference target</span><strong>Local model</strong><p>One exact installed Ollama model<br>Measured usage and latency<br>Explicit failure if unavailable</p></div>
+      </div>
+      <p class="return">← Orket returns status, findings, source evidence, and unresolved decisions to Gardener.</p>
+      <div class="grid">
+        <div><h3>Small extension, separate repository</h3><p>The extension interprets maintenance requests and uses public SDK capabilities. Provider access and execution authority stay with the host.</p></div>
+        <div><h3>A new Gardener execution backend</h3><p>Preserve its existing Claude Code path. Add the Orket path at the dispatch boundary, subject to agreement with Gardener’s maintainers.</p></div>
+      </div>
+      <div class="footer"><span>Proposed maintenance contract and connector; no existing drop-in API is claimed.</span><span>02 / 08</span></div>
+    </section>
+
+    <section class="slide" id="alternatives" aria-labelledby="alternatives-title">
+      <p class="eyebrow">Why this choice should last</p>
+      <h2 id="alternatives-title">Choose the boundary we can maintain.</h2>
+      <table>
+        <thead><tr><th scope="col">Approach</th><th scope="col">What it gives us</th><th scope="col">Long-term tradeoff</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Absorb Gardener wholesale</strong></td><td>A single Orket installation surface.</td><td>Transfers ownership of its CLI, fleet logic, caches, and upstream changes. Packaging alone retains the Claude dependency.</td></tr>
+          <tr><td><strong>Expose inference only</strong></td><td>A route from an external client to local model responses.</td><td>Still needs an agent loop for tools, context, retries, and permissions. Gardener currently delegates that work to Claude Code.</td></tr>
+          <tr class="recommended"><td><strong>Connect maintenance jobs</strong><br><span class="small">Recommended</span></td><td>Gardener remains a client. Orket provides governed execution through a focused extension.</td><td>Requires a small explicit request/result contract and a real pilot, while keeping both projects independently useful.</td></tr>
+        </tbody>
+      </table>
+      <div class="grid three">
+        <div><h3>Model changes</h3><p>Host selection can evolve while the maintenance request keeps the same meaning.</p></div>
+        <div><h3>Upstream changes</h3><p>Gardener’s UI and fleet features can evolve without being copied into Orket.</p></div>
+        <div><h3>An exit remains possible</h3><p>If the connector adds little value, retire it and retain an independently usable Orket audit extension.</p></div>
+      </div>
+      <div class="footer"><span>Architectural recommendation, based on the inspected integration boundaries.</span><span>03 / 08</span></div>
+    </section>
+
+    <section class="slide" id="contract" aria-labelledby="contract-title">
+      <p class="eyebrow">Responsibilities and contract</p>
+      <h2 id="contract-title">One execution owner. Explicit inputs and results.</h2>
+      <div class="grid">
+        <div class="card"><h3>Gardener submits</h3><ul><li>Repository identity and exact revision, plus a bounded snapshot reference.</li><li>Conventions reference and revision; one report-only audit intent.</li><li>A stable request ID and requested time, model, and token limits.</li><li>Caller identity through an authenticated transport.</li></ul></div>
+        <div class="card"><h3>Orket returns</h3><ul><li>Accepted job/run identity and inspectable execution status.</li><li>Findings linked to source paths and the audited revision.</li><li>Resolved model identity, usage, latency, and verification evidence.</li><li>Coverage limits, incomplete work, and decisions still required.</li></ul></div>
+      </div>
+      <p><strong>Orket enforces:</strong> allowed inputs, host policy, effective budgets, cancellation, recovery, and result acceptance. Requested limits cannot expand host permissions.</p>
+      <p><strong>The extension proposes:</strong> findings and, in later phases, changes. Host services authorize and execute admitted effects.</p>
+      <div class="callout"><p><strong>Prevent duplicate work:</strong> Gardener selects repositories and requests jobs. Orket owns execution retries and leases. Repeated submissions with the same identity resolve to the same job; conflicting payloads must be rejected. The pilot uses manual submission only.</p></div>
+      <div class="footer"><span>Conceptual fields only; the first implementation should reuse canonical Orket contracts.</span><span>04 / 08</span></div>
+    </section>
+
+    <section class="slide" id="pilot" aria-labelledby="pilot-title">
+      <p class="eyebrow">First vertical slice</p>
+      <h2 id="pilot-title">One repository. One local model. A useful audit.</h2>
+      <div class="step"><b>1</b><div><h3>Freeze the input and expected checks</h3><p>Select a small repository at an exact commit and a pinned conventions set. Include known gaps and compliant examples for review.</p></div></div>
+      <div class="step"><b>2</b><div><h3>Build the smallest Orket maintenance extension</h3><p>Provide bounded snapshot context, request host-brokered local inference, and return structured findings with source references.</p></div></div>
+      <div class="step"><b>3</b><div><h3>Connect a single Gardener audit request</h3><p>Add a narrow dispatch path that submits the job, retrieves its status, and displays the result. Reuse Orket’s run lifecycle services.</p></div></div>
+      <div class="step"><b>4</b><div><h3>Run the real path and inspect evidence</h3><p>Exercise normal completion, duplicate submission, unavailable model, and cancellation. Inspect actual repository state and recorded outcomes.</p></div></div>
+      <div class="callout"><p><strong>Pilot boundary:</strong> read-only target snapshot; report artifacts may be written. No source edits, issue posting, PR creation, merges, skill bootstrap, or unattended fleet execution. No automatic cloud fallback.</p></div>
+      <p class="small muted">An audit report is model-assisted advice. File references and execution receipts substantiate its inputs and path; human review determines whether each finding is correct.</p>
+      <div class="footer"><span>All pilot actions and checks are proposed; none has been run for this integration.</span><span>05 / 08</span></div>
+    </section>
+
+    <section class="slide" id="proof" aria-labelledby="proof-title">
+      <p class="eyebrow">Evidence before expansion</p>
+      <h2 id="proof-title">Agree on the pass criteria before building.</h2>
+      <table>
+        <thead><tr><th scope="col">Question</th><th scope="col">Pilot evidence</th><th scope="col">Decision rule</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Is the audit useful?</strong></td><td>Review findings against the known gaps and compliant examples. Record misses and false positives.</td><td>Agree an acceptable quality threshold before the run; do not tune acceptance around the result.</td></tr>
+          <tr><td><strong>Did it use the intended model?</strong></td><td>Retain exact model identity, usage, latency, and provider result.</td><td>Unavailable or failed inference is explicit; no silent substitution or claimed success.</td></tr>
+          <tr><td><strong>Was execution bounded?</strong></td><td>Compare target snapshot contents; inspect budget and cancellation behavior.</td><td>No target mutation, no new model/tool dispatch after effective cancellation, truthful in-flight outcome.</td></tr>
+          <tr><td><strong>Can the connector recover?</strong></td><td>Retry the same request and reconnect to inspect a running or finished job.</td><td>No duplicate execution; failed and partial outcomes remain visible.</td></tr>
+          <tr><td><strong>Is the integration worth keeping?</strong></td><td>Review maintenance burden and operational value with both project owners.</td><td>Expand only if the connector earns its complexity and ownership is agreed.</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">This pilot establishes a bounded case. It does not establish general coding quality, production readiness, or unattended fleet safety.</p>
+      <div class="footer"><span>Separate verified execution from the correctness of model-generated findings.</span><span>06 / 08</span></div>
+    </section>
+
+    <section class="slide" id="rollout" aria-labelledby="next-title">
+      <p class="eyebrow">Proposed sequence and discussion</p>
+      <h2 id="next-title">Make the next commitment small.</h2>
+      <div class="grid three">
+        <div class="card"><span class="number">PHASE 1 / PROVE</span><h3>Report-only audit</h3><p>Deliver the bounded job path, a focused extension, and live evidence. Decide whether local-model quality and the integration justify further work.</p></div>
+        <div class="card"><span class="number">PHASE 2 / EXTEND</span><h3>One repair and test</h3><p>After accepting Phase 1, admit one scoped edit and test workflow. Add required capabilities, approval behavior, recovery, and independent result verification.</p></div>
+        <div class="card"><span class="number">PHASE 3 / OPERATE</span><h3>Fleet maintenance</h3><p>After proving repair behavior, establish scheduling ownership, repository exclusion, capacity limits, and interrupted-work recovery across repositories.</p></div>
+      </div>
+      <h3>Decisions to make with Daniel</h3>
+      <ol><li>Agree that Gardener owns maintenance requests and Orket owns execution.</li><li>Select the pilot repository, conventions, local model/hardware, and quality threshold.</li><li>Name owners for the Gardener backend, Orket extension/service, and joint acceptance review.</li><li>Decide whether the backend is an upstream contribution or an explicitly maintained external integration.</li></ol>
+      <div class="callout"><p><strong>Requested agreement:</strong> accept the direction and scope a report-only pilot. Estimate effort after checking the missing capabilities. Implementation requires a separately accepted scope and Orket’s normal roadmap workflow.</p></div>
+      <div class="footer"><span>Later phases are contingent options, not active roadmap commitments.</span><span>07 / 08</span></div>
+    </section>
+
+    <section class="slide" id="evidence" aria-labelledby="evidence-title">
+      <p class="eyebrow">Evidence and limits · reference slide</p>
+      <h2 id="evidence-title">What exists, and what remains to be proven.</h2>
+      <div class="grid">
+        <div><h3>Existing foundations</h3><p>Gardener dispatches Claude Code for audits and development loops. Orket’s inspected workspace has a governed agent SDK/broker, local Ollama execution, and durable run controls.</p><p class="small muted">Orket’s current authority records prior bounded local-model proof. That proof was not rerun for this proposal.</p></div>
+        <div><h3>Proposed work and constraints</h3><p>The maintenance-job contract, Gardener backend, and maintenance extension are new work. Broader repository repair/test/Git capabilities need admission and proof.</p><p class="small muted">Gardener’s current Unix dependencies favor Linux/WSL for a pilot. Repository branch, CI, and release rules must be reconciled before write workflows.</p></div>
+      </div>
+      <ol class="source-list">
+        <li><a href="https://github.com/Stephenson-Software/gardener">Gardener repository and overview</a><span>Existing maintenance modes and external CLI dependencies.</span></li>
+        <li><a href="https://github.com/Stephenson-Software/gardener/blob/main/gardener/dispatch.py">Gardener dispatch implementation</a> · <a href="https://github.com/Stephenson-Software/gardener/blob/main/docs/SAFETY.md">Safety model</a> · <a href="https://github.com/Stephenson-Software/gardener/blob/main/docs/ARCHITECTURE.md">Architecture</a><span>Claude Code integration, permission mechanisms, and platform dependencies. Upstream links follow main and may change.</span></li>
+        <li><a href="../CURRENT_AUTHORITY.md">Orket current authority</a> · <a href="specs/GOVERNED_AGENT_LOOP_V1.md">Governed agent contract</a><span>Current runtime boundaries. Links require the Orket checkout; the brief itself is self-contained.</span></li>
+        <li><a href="ARCHITECTURE.md">Orket architecture</a> · <a href="CONTRIBUTOR.md">Contributor workflow</a><span>Execution authority, SDK separation, verification, and planning discipline.</span></li>
+      </ol>
+      <div class="footer"><span>Basis: source/document inspection on September 7, 2026. Combined live integration proof: absent.</span><span>08 / 08</span></div>
+    </section>
+  </main>
+  <div class="sr-only" id="announcement" aria-live="polite"></div>
+  <script>
+    (() => {
+      const slides = [...document.querySelectorAll('.slide')];
+      const mode = document.getElementById('mode');
+      const previous = document.getElementById('prev');
+      const nextButton = document.querySelector('button#next');
+      const counter = document.getElementById('counter');
+      const printButton = document.getElementById('print');
+      let current = 0;
+      let presenting = false;
+      function render() {
+        slides.forEach((slide, index) => slide.classList.toggle('active', index === current));
+        document.body.classList.toggle('presenting', presenting);
+        mode.textContent = presenting ? 'Read all' : 'Present';
+        mode.setAttribute('aria-pressed', String(presenting));
+        previous.hidden = nextButton.hidden = counter.hidden = !presenting;
+        previous.disabled = current === 0;
+        nextButton.disabled = current === slides.length - 1;
+        counter.textContent = `${current + 1} / ${slides.length}`;
+        if (presenting) document.getElementById('announcement').textContent = `Slide ${current + 1} of ${slides.length}: ${slides[current].querySelector('h1,h2').textContent}`;
+      }
+      function advance(delta) {
+        current = Math.max(0, Math.min(slides.length - 1, current + delta));
+        render(); window.scrollTo(0, 0);
+      }
+      mode.hidden = printButton.hidden = false;
+      mode.addEventListener('click', () => { presenting = !presenting; render(); window.scrollTo(0, 0); });
+      previous.addEventListener('click', () => advance(-1));
+      nextButton.addEventListener('click', () => advance(1));
+      printButton.addEventListener('click', () => window.print());
+      document.addEventListener('keydown', event => {
+        if (!presenting || event.altKey || event.ctrlKey || event.metaKey) return;
+        if (event.key === 'ArrowRight' || event.key === 'PageDown') { event.preventDefault(); advance(1); }
+        if (event.key === 'ArrowLeft' || event.key === 'PageUp') { event.preventDefault(); advance(-1); }
+        if (event.key === 'Escape') { presenting = false; render(); mode.focus(); }
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>
