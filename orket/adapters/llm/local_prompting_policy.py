@@ -13,6 +13,7 @@ from typing import Any
 from orket.adapters.llm.local_prompting_lmstudio_session import (
     resolve_lmstudio_session_settings,
 )
+from orket.adapters.llm.prompt_canonicalization import canonicalize_prompt_text
 from orket.runtime.compact_turn_packet import (
     compact_turn_messages,
     is_compact_turn_packet,
@@ -68,17 +69,11 @@ def _parse_bool(value: Any) -> bool:
     return False
 
 
-def _canonicalize_text(value: str) -> str:
-    normalized = value.replace("\r\n", "\n").replace("\r", "\n")
-    # LP-02 requires trailing whitespace normalization before hashing.
-    return "\n".join(line.rstrip(" \t") for line in normalized.split("\n"))
-
-
 def _canonicalize_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:
     normalized: list[dict[str, str]] = []
     for message in messages:
         role = str((message or {}).get("role") or "").strip().lower()
-        content = _canonicalize_text(str((message or {}).get("content") or ""))
+        content = canonicalize_prompt_text(str((message or {}).get("content") or ""))
         normalized.append({"role": role, "content": content})
     return normalized
 
@@ -355,6 +350,7 @@ class LocalPromptingPolicyResult:
     resolution_path: str
     profile_registry_snapshot_hash: str
     warnings: list[str]
+    context_budget_tokens: int = 0
 
     def openai_payload_overrides(self) -> dict[str, Any]:
         if not self.sampling_bundle:
@@ -606,4 +602,5 @@ async def resolve_local_prompting_policy(
         resolution_path=resolved.resolution_path,
         profile_registry_snapshot_hash=registry_hash,
         warnings=warnings,
+        context_budget_tokens=effective_context_budget_tokens,
     )

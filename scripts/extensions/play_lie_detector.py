@@ -6,6 +6,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL  # noqa: E402 - repository path bootstrap
+
 
 def _resolve_textmystery_root(args_root: str | None) -> Path:
     if args_root:
@@ -22,7 +28,7 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--floors", type=int, default=None)
     parser.add_argument("--plain", action="store_true", help="No ANSI rendering.")
-    parser.add_argument("--llm-model", default="llama3.1:8b")
+    parser.add_argument("--llm-model", default=DEFAULT_LOCAL_MODEL)
     parser.add_argument("--no-llm", action="store_true", help="Template-only mode.")
     args = parser.parse_args()
 

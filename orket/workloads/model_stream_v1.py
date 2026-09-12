@@ -5,6 +5,7 @@ import contextlib
 import os
 from typing import Any
 
+from orket.runtime.config.defaults import configured_provider
 from orket.runtime.config.provider_runtime_target import (
     PROVIDER_CHOICES,
     resolve_bool_env,
@@ -39,7 +40,7 @@ def _real_model_id(input_config: dict[str, Any], turn_params: dict[str, Any]) ->
 
 
 def _real_provider_name() -> str:
-    return str(os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "ollama") or "ollama").strip().lower()
+    return configured_provider("ORKET_MODEL_STREAM_REAL_PROVIDER", "ORKET_LLM_PROVIDER", "ORKET_MODEL_PROVIDER")
 
 
 def _openai_base_url() -> str:

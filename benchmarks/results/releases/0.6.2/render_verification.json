@@ -1,0 +1,79 @@
+{
+  "schema_version": "local_prompting_render_verification.v1",
+  "provider": "llama_cpp",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "profile_id": "llama_cpp.qwen3.8.chatml.v1",
+  "method": "provider_native_preview_byte_exact",
+  "render_observability_classification": "rendered_prompt_audited",
+  "template_hash_alg": "sha256",
+  "strict_json_hash_samples": [
+    "0006f7dec43b585bb808426a7e386fc6d8b4ace2a563ae42677c8bcdf1dfa391",
+    "0025f514e4a898d23355ade71b877423a5d87b1e41ca128832fda92b08c9c2be",
+    "00294bad55d6007ac9c2e9071374e2d869455174be1110e9f009ed74a780bb2f",
+    "00d0b7f56980595dd70ba7d549947c9c3a567a7b56732d6e6bd362236494d7d8",
+    "00df654e082e0978920254b7eaf51f28dda3bc2dd6d4b0fd9ed3dad0c2e81f26",
+    "012555a1f4fc0906486d3a9efaa150c50603ec38811da55c43d07d212f678d26",
+    "0169f4368840503641acba8b6015da6138ebc4731123becdfd1271d2fda0805e",
+    "019c3e1db77a3de55d86724da18cd7372be87aae22128688c299b976e9972d55",
+    "01a877de9a3246d2a96722811e089a43c597397f8beb5460c4fa8cd1b9ae44dc",
+    "01e6715fecb06c137eba87f8407ffb07fdfd1c0a24eadd84e68cf8f58335cede",
+    "022dd77e62ccd90d477c4d374850a69fee1ba97fd88d71cd8e429a8367ec8481",
+    "025168354cf028574763b42ef7f6b1e8f61cc2a4c6d07a520f6e7217c12c037f",
+    "02694bccc955505649d9fa78e83a41a5039becc8cf70603ae10246a16282d1cc",
+    "027815b789ec57aba208324d0a7588a4a0c5dc37ede0b17f8ebf201aaa286914",
+    "029dffe1696d606087ff8b29053cd509fcc6f72f43f110562ca710ea60baf0a4",
+    "02b55d7e9cae80a4648ab1c987ce7632a58320639635e8284d1758cc7c78f32c",
+    "02edc001ba399d572ddfbf7161cf9c5bed1850c386cd087881ef23308d0304e8",
+    "030b0ce90d68b5ff303d3e8ad41dc183be2554dc866483125e2deb2e2f214209",
+    "03137215d4efe157d004aef8a2ba2baf53dfc7296d441fd984e89d5666c06d7b",
+    "0353ff084440e66bb1a467de628cf7571911294e3d8cc2b782422fc1d98a969d"
+  ],
+  "tool_call_hash_samples": [
+    "002fbd37167fd60a206ccbdde52202c1e0fae99db2cb1d74d630ccd028bfcc1f",
+    "005e1307e1a5301b703171f6d07695e3231efa10e97abc6f3d016f6b82a0dae2",
+    "02b9b44431ced91ecb9acdcfc37a5b53a59fba94b249d08a6093c75a9f53a565",
+    "0317aa98d55a605fe3fe66cd401c318724cfbc02431325717690ee9e4c3e586e",
+    "033e1ff1111b0014fc02b9779f1dbceddd2954c0cfe7c1ea792510ec261501a6",
+    "034ea5815f76cada2a4b31ab2375e24fe3c41098a8daa4a9b18fc1fef99b53f3",
+    "03501ce2f9b234b6ae52118b12e7840d6c477c25c7ececa0aa5cdfa942d0957a",
+    "04c130512c456e43e5d2f501ee9870012e1fefcee5e75044b86f3fc7ca628299",
+    "04caeeaed0ac883c1f492c805da20c97525c02de2e6fcbbfadf0c7b518e43e73",
+    "04cf6992098b0dbcc5eaf1185d0f618f9984f557a9089aa05e921f66ec99f05c",
+    "05cd7b5893962452fb1e5ff33b7b44c2e3acd8ba2862b2b473ade31d80529280",
+    "063a96eaeee363e30f5dc8a8d8b844cd794f1395098a9ee72ee0bee0b10598b1",
+    "0659b757fb7329b16ff6ae57839cb09e595701201d65acc5ccead36475dbfca6",
+    "06b8be09bd02440f6580e90416fa169a5e07e72fa638676f753d1142b4298a1b",
+    "06e79633b3eee5aff49de4b0db35cf2ae0a3827f4e26b21c959e76aab0570bac",
+    "073d8df68b75b40624728ca788c31f46cee3215aeec118753d1169c5b62c8d22",
+    "074adbff2d728a1062802d69d1c3d8593fe2b56d20ad90fc666d85d633a7c83a",
+    "076dd24a03e25550839d8ce353576f9f85410036d7ed596851ad3c4650716c7f",
+    "07c2521c7eb543d8b4d214ce8feffb92d60cb570c2a4df39b81110d275cc6fc6",
+    "07d25090e82944677710396c9f7a03880ca141e035bd59ab5fb6b22693b3a72c"
+  ],
+  "verified": true,
+  "verified_cases": 1500,
+  "template_source_sha256": "8fc57a9f65eaaaee48e80771aea4775f7d3a8adb466a6193d8de551fa124d578",
+  "server_builds": [
+    "b10809-5266f24da"
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-12T05:06:47.387866Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:6ca75a790a31eb7ab3afc8e7b0ae7f95ee81372e7c1e5afd9bcf40e64a9f0e6e",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 204,
+        "paths_total_reference": 204,
+        "churn_paths": 204,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

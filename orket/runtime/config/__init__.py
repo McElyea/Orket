@@ -9,6 +9,7 @@ __all__ = [
     'local_prompt_profiles',
     'model_profile_bios',
     'offline_mode',
+    'provider_discovery',
     'provider_runtime_inventory',
     'provider_runtime_target',
     'provider_truth_table',

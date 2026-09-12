@@ -61,14 +61,15 @@ guarantee.
 Development prereleases follow the same minor-window calculation but do not
 claim released host compatibility until the built-artifact matrix passes. The
 standalone SDK distribution is the sole SDK namespace owner in the current
-core `0.6.0` release. Tagged core `0.5.9` still bundles SDK
+core `0.6.2` release. Tagged core `0.5.9` still bundles SDK
 `0.1.0`; overlaying the standalone SDK on that host creates duplicate ownership
 and is unsupported. Upgrade core first, then force-reinstall the exact standalone
 SDK wheel: removing an old core can remove SDK files that it owned. Run
 `python -m pip check` and strict host validation after the upgrade.
 
-The SDK `0.6.0` compatibility window is explicitly narrowed to core `0.6.0`.
-Exact matched artifacts are recorded in `docs/releases/0.6.0/PROOF_REPORT.md`
+The SDK `0.6.0` compatibility window is explicitly narrowed to verified core
+`0.6.0` and `0.6.2`. Exact matched artifacts are recorded in
+`docs/releases/0.6.0/PROOF_REPORT.md` and `docs/releases/0.6.2/PROOF_REPORT.md`
 in the core repository. It does not certify older
 bundling hosts or untested future core versions. Tagged core `0.5.9` also has
 an independent undeclared `packaging` dependency; diagnostic validation with

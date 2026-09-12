@@ -22,6 +22,10 @@ from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
 from orket.application.services.outward_approval_service import OutwardApprovalService
 from orket.application.services.outward_run_execution_service import OutwardRunExecutionService
 from orket.application.services.outward_run_service import OutwardRunService
+from orket.runtime.config.defaults import (  # noqa: E402 - repository path bootstrap
+    DEFAULT_LOCAL_MODEL,
+    DEFAULT_LOCAL_PROVIDER,
+)
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from scripts.proof.outward_run_witness_builder import build_outward_run_witness_package
 from scripts.proof.run_outward_run_corruption_suite import run_corruption_suite
@@ -167,8 +171,8 @@ def _blocked(reason: str, *, run: dict[str, Any]) -> dict[str, Any]:
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the outward write_file approved proof chain.")
-    parser.add_argument("--provider", default="ollama", help="Local provider backend.")
-    parser.add_argument("--model", default="qwen2.5-coder:7b", help="Configured local model id.")
+    parser.add_argument("--provider", default=DEFAULT_LOCAL_PROVIDER, help="Local provider backend.")
+    parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL, help="Configured local model id.")
     parser.add_argument("--output", default=str(PROOF_ROOT / "outward_write_file_approved_proof_run.json"))
     parser.add_argument("--json", action="store_true", help="Print persisted proof-run report.")
     return parser.parse_args(argv)

@@ -25,6 +25,8 @@ def validate_case(task_class: str, content: str, case_id: str) -> tuple[bool, st
         args = payload.get("args")
         if not tool or not isinstance(args, dict):
             return False, "TOOL_SHAPE_INVALID"
+        if payload != {"tool": "read_file", "args": {"path": "README.md", "case_id": case_id}}:
+            return False, "SCHEMA_MISMATCH"
         return True, ""
     ok = payload.get("ok")
     parsed_case_id = str(payload.get("case_id") or "").strip()

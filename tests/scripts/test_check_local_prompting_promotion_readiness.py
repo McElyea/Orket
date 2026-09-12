@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 from scripts.protocol.check_local_prompting_promotion_readiness import main
@@ -169,6 +171,32 @@ def test_check_local_prompting_promotion_readiness_passes_on_green_artifacts(tmp
     payload = json.loads(out.read_text(encoding="utf-8"))
     assert payload["ready"] is True
     assert payload["profiles"][0]["ready"] is True
+
+
+def test_in_progress_rerun_cannot_reuse_previous_green_artifacts(tmp_path: Path) -> None:
+    """Layer: contract. A new incomplete attempt blocks retained green reports."""
+    root = _build_profile_root(tmp_path, provider="openai_compat", profile_id="profile", template_family="openai_messages")
+    _write_json(root / "failure_summary.json", {"execution_status": "in_progress", "total_failures": 0})
+    drift = tmp_path / "drift.json"
+    _write_json(drift, {"changed": False})
+    output = tmp_path / "readiness.json"
+    assert main(["--profile-root", str(root), "--drift-report", str(drift), "--out", str(output), "--strict"]) == 1
+    payload = json.loads(output.read_text())
+    gate = next(row for row in payload["profiles"][0]["gates"] if row["id"] == "G7_failure_summary_clear")
+    assert gate["passed"] is False
+
+
+def test_readiness_script_runs_directly_outside_repository(tmp_path: Path) -> None:
+    """Layer: integration. Exercise the documented CLI and its real import/bootstrap path."""
+    root = _build_profile_root(tmp_path, provider="openai_compat", profile_id="profile", template_family="openai_messages")
+    drift, output = tmp_path / "drift.json", tmp_path / "readiness.json"
+    _write_json(drift, {"changed": False})
+    script = Path(__file__).resolve().parents[2] / "scripts/protocol/check_local_prompting_promotion_readiness.py"
+    result = subprocess.run([sys.executable, str(script), "--profile-root", str(root),
+                             "--drift-report", str(drift), "--out", str(output), "--strict"],
+                            cwd=tmp_path, capture_output=True, text=True, check=False)
+    assert result.returncode == 0, result.stderr
+    assert json.loads(output.read_text())["ready"] is True
 
 
 def test_check_local_prompting_promotion_readiness_fails_when_strict_json_below_threshold(tmp_path: Path) -> None:

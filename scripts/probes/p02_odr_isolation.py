@@ -14,6 +14,7 @@ if str(REPO_ROOT) not in sys.path:
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.kernel.v1.canonical import odr_raw_signature
 from orket.kernel.v1.odr.live_runner import run_live_refinement
+from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER  # noqa: E402 - repository path bootstrap
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from scripts.probes.probe_support import applied_probe_env, is_environment_blocker, now_utc_iso, write_report
 
@@ -23,7 +24,7 @@ DEFAULT_OUTPUT = "benchmarks/results/probes/p02_odr_isolation.json"
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Phase 1 probe P-02: ODR isolation against a real local model.")
     parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL)
-    parser.add_argument("--provider", default="ollama")
+    parser.add_argument("--provider", default=DEFAULT_LOCAL_PROVIDER)
     parser.add_argument("--ollama-host", default="")
     parser.add_argument("--task", default="Define requirements for a Python CLI tool that renames files based on metadata")
     parser.add_argument("--runs", type=int, default=5)

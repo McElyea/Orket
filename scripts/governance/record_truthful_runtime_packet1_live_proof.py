@@ -16,6 +16,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.orchestration.engine import OrchestrationEngine
+from orket.runtime.config.defaults import configured_provider  # noqa: E402 - repository path bootstrap
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
 from scripts.common.run_summary_support import load_validated_run_summary
@@ -43,7 +44,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         description="Record a live packet-1 proof artifact under the corrected primary-boundary contract.",
     )
     parser.add_argument("--model", default=os.getenv("ORKET_LIVE_MODEL", DEFAULT_LOCAL_MODEL))
-    parser.add_argument("--provider", default=os.getenv("ORKET_LLM_PROVIDER", "ollama"))
+    parser.add_argument("--provider", default=configured_provider())
     parser.add_argument(
         "--output",
         default="benchmarks/results/governance/truthful_runtime_packet1_live_proof.json",
@@ -281,7 +282,7 @@ def record_truthful_runtime_packet1_live_proof(
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     model = str(args.model or "").strip() or DEFAULT_LOCAL_MODEL
-    provider = str(args.provider or "").strip() or "ollama"
+    provider = str(args.provider or "").strip() or configured_provider()
     epic_id = str(args.epic_id or "").strip() or "truthful_runtime_packet1_live"
     output_path = Path(str(args.output)).resolve()
 

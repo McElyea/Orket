@@ -14,10 +14,11 @@ SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
 
+from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER  # noqa: E402 - repository path bootstrap
+from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from scripts.companion.companion_matrix_case_selection import expand_case_pairs
 from scripts.companion.companion_matrix_execution import coverage_blockers, evaluate_case
 from scripts.companion.companion_matrix_scoring import RIG_CLASSES, USAGE_PROFILES, build_recommendation_matrix
-from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 
 def _now_utc_iso() -> str:
@@ -112,7 +113,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--base-url", default=os.getenv("COMPANION_HOST_BASE_URL", "http://127.0.0.1:8000"))
     parser.add_argument("--api-key", default=os.getenv("ORKET_API_KEY", ""))
-    parser.add_argument("--providers", default="ollama,lmstudio")
+    parser.add_argument("--providers", default=DEFAULT_LOCAL_PROVIDER)
     parser.add_argument("--models", default="")
     parser.add_argument(
         "--provider-model-map",

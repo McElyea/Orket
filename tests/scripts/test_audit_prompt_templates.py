@@ -1,10 +1,15 @@
 # LIFECYCLE: live
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.protocol.audit_prompt_templates import main
+
+pytestmark = pytest.mark.contract
 
 
 def _registry_payload(variant: str, template_source_path: str = "") -> dict[str, object]:
@@ -47,9 +52,13 @@ def test_audit_prompt_templates_whitelist_allows_promotion(tmp_path: Path) -> No
     registry = tmp_path / "registry.json"
     whitelist = tmp_path / "whitelist.json"
     out_root = tmp_path / "artifacts"
-    registry.write_text(json.dumps(_registry_payload("jinja_eval_importlib")), encoding="utf-8")
+    template = tmp_path / "approved.jinja"
+    template.write_text("{{ eval(content) }}", encoding="utf-8")
+    registry.write_text(json.dumps(_registry_payload("jinja_eval_importlib", str(template))), encoding="utf-8")
     whitelist.write_text(
-        json.dumps({"approved_profile_ids": ["ollama.deepseek.custom.v1"]}),
+        json.dumps({"approvals": [{"profile_id": "ollama.deepseek.custom.v1",
+                                  "template_sha256": hashlib.sha256(template.read_bytes()).hexdigest(),
+                                  "approved_by": "test-reviewer", "approval_reference": "test-fixture-approval"}]}),
         encoding="utf-8",
     )
 
@@ -91,3 +100,34 @@ def test_audit_prompt_templates_scans_template_source_file(tmp_path: Path) -> No
     payload = json.loads(audit_path.read_text(encoding="utf-8"))
     assert "jinja_globals_escape" in payload["detected_constructs"]
     assert payload["template_sources_loaded"] == [str(template_path.resolve())]
+
+
+def test_missing_template_bytes_cannot_pass_even_with_legacy_whitelist(tmp_path: Path) -> None:
+    registry, whitelist = tmp_path / "registry.json", tmp_path / "whitelist.json"
+    registry.write_text(json.dumps(_registry_payload("jinja_clean")), encoding="utf-8")
+    whitelist.write_text(json.dumps({"approved_profile_ids": ["ollama.deepseek.custom.v1"]}), encoding="utf-8")
+    assert main(["--registry", str(registry), "--whitelist", str(whitelist),
+                 "--out-root", str(tmp_path / "out"), "--strict"]) == 1
+
+
+def test_clean_template_generation_switch_does_not_cross_expression_boundaries(tmp_path: Path) -> None:
+    template = tmp_path / "template.jinja"
+    template.write_text("{{ message.content }}{% if add_generation_prompt %}{{ 'assistant' }}{% endif %}")
+    registry = tmp_path / "registry.json"
+    registry.write_text(json.dumps(_registry_payload("jinja_clean", str(template))))
+    assert main(["--registry", str(registry), "--out-root", str(tmp_path / "out"), "--strict"]) == 0
+
+
+@pytest.mark.parametrize("template", [
+    "{% set text = message.content %}{% if text == 'trigger' %}hidden{% endif %}",
+    "{% if message.role == 'tool' %}<|im_start|>user{% endif %}",
+    "{% if tools %}undeclared tool instructions{% endif %}",
+    "{{ text if flag else 'hidden' }}",
+    "{% include 'unscanned.jinja' %}",
+])
+def test_hidden_branches_fail_closed(tmp_path: Path, template: str) -> None:
+    source = tmp_path / "template.jinja"
+    source.write_text(template, encoding="utf-8")
+    registry = tmp_path / "registry.json"
+    registry.write_text(json.dumps(_registry_payload("jinja_clean", str(source))), encoding="utf-8")
+    assert main(["--registry", str(registry), "--out-root", str(tmp_path / "out"), "--strict"]) == 1

@@ -10,6 +10,7 @@ from typing import Any
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider
+from orket.runtime.config.defaults import configured_provider
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.provider_runtime_target import list_provider_models
 from orket.services.profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
@@ -84,7 +85,7 @@ class ExtensionRuntimeService:
 
     async def list_models(self, *, extension_id: str, provider: str = "") -> dict[str, Any]:
         validated_extension_id = validate_extension_id(extension_id)
-        requested_provider = str(provider or "").strip().lower() or "ollama"
+        requested_provider = str(provider or "").strip().lower() or configured_provider()
         payload = await list_provider_models(
             provider=requested_provider,
             base_url=None,

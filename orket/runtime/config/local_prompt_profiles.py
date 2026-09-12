@@ -7,6 +7,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
+from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER
+
 E_LOCAL_PROMPT_PROFILE_SCHEMA = "E_LOCAL_PROMPT_PROFILE_SCHEMA"
 E_LOCAL_PROMPT_PROFILE_LOAD = "E_LOCAL_PROMPT_PROFILE_LOAD"
 E_LOCAL_PROMPT_PROFILE_NOT_FOUND = "E_LOCAL_PROMPT_PROFILE_NOT_FOUND"
@@ -18,12 +20,14 @@ _TASK_CLASSES = ("strict_json", "tool_call", "concise_text", "reasoning")
 
 
 def normalize_provider_for_local_prompt_profile(value: Any) -> str:
-    token = str(value or "").strip().lower()
+    token = str(value or "").strip().lower() or DEFAULT_LOCAL_PROVIDER
     if token in {"openai_compat", "lmstudio"}:
         return "openai_compat"
     if token == "llama_cpp":
         return "llama_cpp"
-    return "ollama"
+    if token == "ollama":
+        return token
+    raise ValueError(f"E_UNKNOWN_PROVIDER_INPUT:{token}")
 
 
 def _normalize_token(value: Any) -> str:

@@ -216,12 +216,13 @@
           "orcarouter_qwen3.8-27b-uncensored-q4_k_l"
         ]
       },
+      "template_source_path": "qwen38_text_chatml.jinja",
       "profile": {
         "profile_id": "llama_cpp.qwen3.8.chatml.v1",
         "template_family": "chatml",
-        "template_variant": "tokenizer_chat_template_qwen",
-        "template_source": "runtime_metadata",
-        "template_version": "qwen3.8_chatml_2026_09",
+        "template_variant": "orket_text_chatml_jinja",
+        "template_source": "profile_override",
+        "template_version": "orket_qwen38_text_chatml_2026_09",
         "allowed_roles": [
           "system",
           "user",

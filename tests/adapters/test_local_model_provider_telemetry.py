@@ -62,7 +62,6 @@ def test_local_model_provider_ns_to_ms_is_type_strict() -> None:
         ("openai_compat", "openai_compat", "openai_compat"),
         ("lmstudio", "openai_compat", "lmstudio"),
         ("llama_cpp", "openai_compat", "llama_cpp"),
-        ("unknown-provider", "ollama", "ollama"),
     ],
 )
 def test_local_model_provider_maps_provider_env_consistently(

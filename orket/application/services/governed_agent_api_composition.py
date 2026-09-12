@@ -50,6 +50,7 @@ from orket.application.services.governed_agent_webhook_ingress_service import (
     GovernedAgentWebhookIngressService,
 )
 from orket.extensions import ExtensionManager
+from orket.runtime.config.defaults import configured_provider
 from orket.runtime_paths import resolve_control_plane_db_path
 
 
@@ -236,7 +237,7 @@ def _settings() -> GovernedAgentApiSettings:
     settings = GovernedAgentApiSettings(
         supervisor_enabled=_env_bool("ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED", False),
         db_path=Path(raw_db).resolve() if raw_db else resolve_control_plane_db_path(),
-        provider_mode=str(os.getenv("ORKET_GOVERNED_AGENT_PROVIDER") or ("ollama" if os.getenv("ORKET_GOVERNED_AGENT_OLLAMA_MODEL") else "llama_cpp")).strip().lower(),
+        provider_mode=configured_provider("ORKET_GOVERNED_AGENT_PROVIDER"),
         default_model=_configured_model(),
         role_models=role_models,
         ollama_base_url=str(os.getenv("ORKET_GOVERNED_AGENT_OLLAMA_BASE_URL") or "").strip(),
@@ -325,6 +326,6 @@ def _configured_model() -> str:
     selected = str(os.getenv("ORKET_GOVERNED_AGENT_MODEL") or "").strip()
     if selected:
         return selected
-    if provider in {"", "ollama"}:
+    if provider == "ollama":
         return str(os.getenv("ORKET_GOVERNED_AGENT_OLLAMA_MODEL") or "").strip()
     return ""

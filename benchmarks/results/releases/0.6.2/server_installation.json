@@ -1,0 +1,484 @@
+{
+  "schema_version": "llama_cpp_operator_installation.v1",
+  "upstream_release": "https://github.com/ggml-org/llama.cpp/releases/tag/b10809",
+  "build": "b10809-5266f24da",
+  "directory": "D:\\llama.cpp-releases\\b10809",
+  "files": [
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\cublas64_12.dll",
+      "bytes": 100033536,
+      "sha256": "e40202fe4223c1cd2d2dce7beec59e1ed61c7801bd827309183be9b50e358f4c",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\cublasLt64_12.dll",
+      "bytes": 473551360,
+      "sha256": "2a896460bef60ed57ef32b0875812f355a6984e671d638bb632f5e8c1d7a831f",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\cudart-llama-bin-win-cuda-12.4-x64.zip",
+      "bytes": 391443627,
+      "sha256": "8c79a9b226de4b3cacfd1f83d24f962d0773be79f1e7b75c6af4ded7e32ae1d6",
+      "upstream_digest": "sha256:8c79a9b226de4b3cacfd1f83d24f962d0773be79f1e7b75c6af4ded7e32ae1d6",
+      "source_url": "https://github.com/ggml-org/llama.cpp/releases/download/b10809/cudart-llama-bin-win-cuda-12.4-x64.zip",
+      "upstream_digest_matched": true
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\cudart64_12.dll",
+      "bytes": 553984,
+      "sha256": "d28e42265da7462162a54da6b7a99ea4fa2caf8139d862bb500db875d0b32dfc",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-base.dll",
+      "bytes": 796160,
+      "sha256": "8d8fbcafd82ab958b5b7a08a6f13139fd35b16311f2c5ab923dd5e3592d1e059",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-alderlake.dll",
+      "bytes": 1230336,
+      "sha256": "f77157f5f200bec092976b8d8a912b9e8dc13ea370ec22657d64a9a14ef85ebf",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-cannonlake.dll",
+      "bytes": 1448448,
+      "sha256": "b36fae3c9fa1b119936e3694dad7e29b755586127235213c5c9c853b8a5f9395",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-cascadelake.dll",
+      "bytes": 1434112,
+      "sha256": "1b71dae5a8a4ae08bc77ee2c3e054c582d294961edf2e6c3e55c4e6177883ef7",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-cooperlake.dll",
+      "bytes": 1434624,
+      "sha256": "3bb0cf057086c9df26fc0741498366ff7c6f644d428f1ff1d9349e3eacdc56a1",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-haswell.dll",
+      "bytes": 1235968,
+      "sha256": "e97641c736fa7fc731129fc6f2f24c5d14e518a7b0b0f9d6d80874a4bb3d0f6c",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-icelake.dll",
+      "bytes": 1440768,
+      "sha256": "4239d0247baf2768ad2a5c2f36582e910cbba918f86391d3b931cf4839869bd8",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-ivybridge.dll",
+      "bytes": 1127424,
+      "sha256": "41d138f02731ccac2162e4fd67bb224450d7ab01c588d1d02f3831a713d6da93",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-piledriver.dll",
+      "bytes": 1131520,
+      "sha256": "4fc66e16f27ab2c9afa42e709a139595644304cc3ceeadbe577d4f8955ea2547",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-sandybridge.dll",
+      "bytes": 1107968,
+      "sha256": "26bd11b54351d70668ab4c715828747e6a0ad5d6754474295eeefa875fe82a81",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-sapphirerapids.dll",
+      "bytes": 1711616,
+      "sha256": "7ef308e8283e7686c8f066eef4f392d798a31da570385b4c3bb1d2d49f57fad6",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-skylakex.dll",
+      "bytes": 1441792,
+      "sha256": "0a5e540f48f434852fff4c1b0f7d91a3a2774324469ce9ae3ba601039cd42333",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-sse42.dll",
+      "bytes": 932352,
+      "sha256": "fe49b34e5dd389e1d47accab30f2219429e0f667d0c91568843033f25b7622a2",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-x64.dll",
+      "bytes": 924160,
+      "sha256": "9fc98b44a93c576e932e6e6bbab1f708bf030cfedc5299e6807e574b99c51c72",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cpu-zen4.dll",
+      "bytes": 1441280,
+      "sha256": "cfd099f90665aa745244a164211a9705febee1cc5266c7110d6f4d6ad41649ed",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-cuda.dll",
+      "bytes": 545567232,
+      "sha256": "4979b35b2ecab3dded848369eba5ef26d95d2814f1b4606fa6537ba60f34ae3b",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-rpc-server.exe",
+      "bytes": 101376,
+      "sha256": "4d142c405913529dfe934c5c6f7a14abb2a117d531bad92c81218beefd146253",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml-rpc.dll",
+      "bytes": 168448,
+      "sha256": "612a66d67e7579af9c17b46dc86c1678e0afbd566daad9e137b71a6ae1592749",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\ggml.dll",
+      "bytes": 79872,
+      "sha256": "ace83896f205f4bf2ecd3a31f9681867084d808ad847cd61da83efcbc6485cf8",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\libomp.dll",
+      "bytes": 768000,
+      "sha256": "a12116ba72d1d6820407cf30be23da04ce79d6bb8a71a5ee71759c5a1faa6f1c",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\LICENSE-LLVM-OpenMP",
+      "bytes": 19741,
+      "sha256": "fdad1758a9e1f9d5a81e18879b3406772115edc92c24bfa36b70c654f325e8e4",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-b10809-bin-win-cuda-12.4-x64.zip",
+      "bytes": 253938543,
+      "sha256": "c77bfcd9ed8d91e8721a2d6a290b907fddd4fa5412a47b21c6fa1709116b85f9",
+      "upstream_digest": "sha256:c77bfcd9ed8d91e8721a2d6a290b907fddd4fa5412a47b21c6fa1709116b85f9",
+      "source_url": "https://github.com/ggml-org/llama.cpp/releases/download/b10809/llama-b10809-bin-win-cuda-12.4-x64.zip",
+      "upstream_digest_matched": true
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-batched-bench-impl.dll",
+      "bytes": 61440,
+      "sha256": "2071eaf4cd34803c434f17ed1be2d65699302f939f5f08c0565d14861769c6b3",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-batched-bench.exe",
+      "bytes": 9216,
+      "sha256": "d4d15aab2a9fef224cb622ab22f66f216349386ff86927941190d6ccf05a9a14",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-bench-impl.dll",
+      "bytes": 399872,
+      "sha256": "051be4c650f9ddc3636f9d1f70176532d5734b6e371aa065a458c16f78af746c",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-bench.exe",
+      "bytes": 9216,
+      "sha256": "7cc2af4883491c340c34027829c0134ba169b872b97cdc6349685265b8db29b8",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-cli-impl.dll",
+      "bytes": 3296256,
+      "sha256": "d88ac4afca9e8047a8fcc84028b81261d6cf5da913ea110da689080ae1d1a0fd",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-cli.exe",
+      "bytes": 9216,
+      "sha256": "f45019d5d2b6af395198da54ddf0615136d40a65a3fb83398375cbd7ef4d2d6b",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-common.dll",
+      "bytes": 7798272,
+      "sha256": "e181c980342287ef5f1f4c99d888d14257e099c03fdb7fb97092350944ec9f09",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-completion-impl.dll",
+      "bytes": 133632,
+      "sha256": "30bd5e5736ef65fdb41863fdc989d0853969dd3094adf7169d0847f910314788",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-completion.exe",
+      "bytes": 9216,
+      "sha256": "63ba8391bfb721c0dc826d8e3a7c2691c912648e43666268a40c57847edae6d9",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-fit-params-impl.dll",
+      "bytes": 41472,
+      "sha256": "bc0ce60c313882afd08bb70b9b30737e7c76442106ed0859ec63e2dcece3e879",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-fit-params.exe",
+      "bytes": 9216,
+      "sha256": "9432121f6fcd0ded19e3a234926209efa62173aa70d73ce8e9c69c0cf089ebf3",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-gemma3-cli.exe",
+      "bytes": 27136,
+      "sha256": "6d3a2e3f72f24f749e375df6354e9dd40c8aa461661cb0111ffc0d4ec9635ad5",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-gguf-split.exe",
+      "bytes": 60416,
+      "sha256": "81b7fdc1bdeb3aa3d733803f3caa12c981c791be5b2dbb85e6572ba61572ef52",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-imatrix.exe",
+      "bytes": 255488,
+      "sha256": "714ba30663a10691ebe37290bb2aebd1687c03c4a16b9d58067b4e757c29a3f8",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-llava-cli.exe",
+      "bytes": 27136,
+      "sha256": "6d3a2e3f72f24f749e375df6354e9dd40c8aa461661cb0111ffc0d4ec9635ad5",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-minicpmv-cli.exe",
+      "bytes": 27136,
+      "sha256": "6d3a2e3f72f24f749e375df6354e9dd40c8aa461661cb0111ffc0d4ec9635ad5",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-mtmd-cli.exe",
+      "bytes": 90112,
+      "sha256": "e259c466da7246c5dfbe9fc3aff9a408420d8caefd41c0cdd533fba8c8c92d84",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-mtmd-debug.exe",
+      "bytes": 55296,
+      "sha256": "f6cacc5a68c97f2e7efee50ca9e042722bd886db8dcd52f4d17ea6277aa24b75",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-perplexity-impl.dll",
+      "bytes": 194048,
+      "sha256": "47c4287c974b5fd2a9fed71b7776f9a1ec391e0c04df3825f55bee5c0c293a0f",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-perplexity.exe",
+      "bytes": 9216,
+      "sha256": "47bb2846d0a6ae3390c734334751593d022373015bc20d5b95db4e62d1e5e088",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-quantize-impl.dll",
+      "bytes": 137216,
+      "sha256": "b3256055c98c74047c9e02607789a6001b7032b15db0e5941eb203435088f08d",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-quantize.exe",
+      "bytes": 9216,
+      "sha256": "d8996ae5afb8e6f48bb22313351ffd3610f86f2968be65afd788b5883d880796",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-qwen2vl-cli.exe",
+      "bytes": 27136,
+      "sha256": "6d3a2e3f72f24f749e375df6354e9dd40c8aa461661cb0111ffc0d4ec9635ad5",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-results.exe",
+      "bytes": 46080,
+      "sha256": "2fa8246ab4e8ac9f32c8aeff3f54c9e8cf671d49c0c5b0237fb092e0b7f0d14c",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-server-impl.dll",
+      "bytes": 8896000,
+      "sha256": "5db481a019e574d3bc99d8e32ed5005bbd56771ebec69883b37733fff6c48f3d",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-server.exe",
+      "bytes": 9216,
+      "sha256": "cb29f66008d4d73cce17cab2c2569ab318eb244b0b2ca2a15024b44d90dfcd3f",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-tokenize.exe",
+      "bytes": 58368,
+      "sha256": "b782f67c4d099c98f29719a958a2ad77be89fc7efd4c40024dd95a34238f5227",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama-tts.exe",
+      "bytes": 41472,
+      "sha256": "2ad7e95ca8fc217ba6a5922772a7fa746ed35d8f46d6fd916a9885a79ab8dcbd",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama.dll",
+      "bytes": 3125248,
+      "sha256": "50e60280f97845b049b3d228f89b4eb233808c9b59926e5e9c6cdc686aabfc43",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\llama.exe",
+      "bytes": 103936,
+      "sha256": "9cffc56cc060d5498cb1317528129a0dc6bc360e341533568fe9adb908c19f3b",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    },
+    {
+      "path": "D:\\llama.cpp-releases\\b10809\\mtmd.dll",
+      "bytes": 1771008,
+      "sha256": "f0634bc4cff447e34ebb53578de5ee606178134d9c520a24a31c849658ef8844",
+      "upstream_digest": null,
+      "source_url": null,
+      "upstream_digest_matched": false
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-12T05:06:47.348023Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:128120f422cc6f8c2e12ff5b52bec8d6ed02d613689ccb1fd71f41ff3451e210",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 780,
+        "paths_total_reference": 780,
+        "churn_paths": 780,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

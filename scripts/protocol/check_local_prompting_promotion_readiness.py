@@ -9,9 +9,11 @@ from typing import Any
 
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+    from scripts.protocol.local_prompting_template_gate import profile_template_family, template_gate
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
+    from protocol.local_prompting_template_gate import profile_template_family, template_gate
 
 DEFAULT_OUT = "benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json"
 DEFAULT_DRIFT = "benchmarks/results/protocol/local_prompting/live_verification/drift/profile_delta_report.json"
@@ -138,22 +140,6 @@ def _discover_output_root(profile_root: Path) -> Path | None:
     return None
 
 
-def _profile_template_family(snapshot_payload: dict[str, Any], profile_id: str) -> str:
-    rows = snapshot_payload.get("profiles")
-    if not isinstance(rows, list):
-        return "unknown"
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        profile = row.get("profile")
-        if not isinstance(profile, dict):
-            continue
-        if str(profile.get("profile_id") or "") != profile_id:
-            continue
-        return str(profile.get("template_family") or "unknown")
-    return "unknown"
-
-
 def _load_profile_artifacts(profile_root: Path) -> tuple[dict[str, dict[str, Any]], list[str], dict[str, str]]:
     payloads: dict[str, dict[str, Any]] = {}
     missing: list[str] = []
@@ -236,7 +222,7 @@ def _evaluate_profile(
     else:
         snapshot_path = output_root / "profiles" / "profile_registry_snapshot.json"
         snapshot_payload = _load_json(snapshot_path)
-        template_family = _profile_template_family(snapshot_payload, profile_id)
+        template_family = profile_template_family(snapshot_payload, profile_id)
         artifact_paths["profile_registry_snapshot"] = _normalize_path(snapshot_path)
         error_registry_path = output_root / "profiles" / "error_code_registry_snapshot.json"
         enabled_pack_path = output_root / "profiles" / "enabled_pack.json"
@@ -301,24 +287,27 @@ def _evaluate_profile(
 
     failure_summary_path = profile_root / "failure_summary.json"
     failure_total = 0
+    execution_complete = True
     if failure_summary_path.exists():
         failure_summary = _load_json(failure_summary_path)
+        execution_complete = failure_summary.get("execution_status", "completed") == "completed"
         artifact_paths["failure_summary"] = _normalize_path(failure_summary_path)
         failure_total = _as_int(failure_summary.get("total_failures"))
     else:
         failure_total = sum(int(value or 0) for value in dict(strict_json.get("failure_families") or {}).values())
         failure_total += sum(int(value or 0) for value in dict(tool_call.get("failure_families") or {}).values())
-    gates.append(_gate("G7_failure_summary_clear", failure_total == 0, f"total_failures={failure_total}"))
+    gates.append(_gate("G7_failure_summary_clear", execution_complete and failure_total == 0, f"completed={execution_complete} total_failures={failure_total}"))
 
     template_gate_pass = True
     template_detail = "not_required"
     if template_family != "openai_messages":
         audit_payload, whitelist_payload, template_paths = _load_template_artifacts(template_audit_root, profile_id)
         artifact_paths.update({k: v for k, v in template_paths.items() if v})
-        audit_pass = bool(audit_payload and str(audit_payload.get("decision") or "").strip().lower() == "pass")
-        whitelist_pass = bool(whitelist_payload and bool(whitelist_payload.get("promotion_allowed", False)))
-        template_gate_pass = audit_pass or whitelist_pass
-        template_detail = f"template_family={template_family} audit_pass={audit_pass} whitelist_pass={whitelist_pass}"
+        profile_row = next((row for row in snapshot_payload.get("profiles", [])
+                            if row.get("profile", {}).get("profile_id") == profile_id), {})
+        template_gate_pass, template_detail = template_gate(
+            audit_payload, whitelist_payload, payloads["render_verification"], profile_row,
+        )
     gates.append(_gate("G8_template_audit_whitelist", template_gate_pass, template_detail))
 
     if errors:

@@ -7,16 +7,21 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.runtime.provider_runtime_target import (
+from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER  # noqa: E402 - repository path bootstrap
+from orket.runtime.provider_runtime_target import (  # noqa: E402 - repository path bootstrap
     PROVIDER_CHOICES,
-    _list_ollama_models_sync as _runtime_list_ollama_models,
-    _list_openai_compat_models_sync as _runtime_list_openai_compat_models,
     choose_model,
     default_base_url,
     effective_provider,
     normalize_base_url,
     normalize_provider,
     rank_models,
+)
+from orket.runtime.provider_runtime_target import (  # noqa: E402 - repository path bootstrap
+    _list_ollama_models_sync as _runtime_list_ollama_models,
+)
+from orket.runtime.provider_runtime_target import (  # noqa: E402 - repository path bootstrap
+    _list_openai_compat_models_sync as _runtime_list_openai_compat_models,
 )
 
 
@@ -35,7 +40,7 @@ def list_provider_models(
     timeout_s: float,
     api_key: str | None = None,
 ) -> dict[str, object]:
-    requested = effective_provider(provider, default="ollama")
+    requested = effective_provider(provider, default=DEFAULT_LOCAL_PROVIDER)
     canonical = normalize_provider(requested)
     resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested))
     if canonical == "openai_compat":

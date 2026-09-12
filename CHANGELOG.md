@@ -5,6 +5,29 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2026-09-11 - "llama.cpp defaults and Qwen3.8 promotion"
+
+### Changed
+- Make llama.cpp the shared default across provider-neutral runtime and proof
+  paths, followed by explicitly selected LM Studio and Ollama. Never switch
+  providers when the configured llama.cpp endpoint is unavailable.
+- Promote the exact Qwen3.8 Q4_K_L profile with the packaged text ChatML
+  template, native render/token verification, and pinned llama.cpp b10809 with
+  prompt caching enabled. Remove the older no-cache workaround from current setup.
+- Harden template audits and promotion gates against missing bytes, incomplete
+  reruns and incorrect tool arguments. Include validator details in corrective
+  prompts; report empty continuation replay as `no_decisions`.
+- Preserve the updated architectural-truth remediation plan as remaining work.
+- Stability: verified bounded trusted-extension workflows and this exact local
+  model/profile; no arbitrary coding-objective, production-soak or containment claim.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `required`
+- Operator action: follow `docs/RUNBOOK.md` for the pinned server/template setup;
+  select LM Studio or Ollama explicitly when intended. Keep SDK 0.6.0 and
+  reference extension 0.2.0. Existing stored run configuration is unchanged.
+- Release verification: `docs/releases/0.6.2/PROOF_REPORT.md`.
+
 ## [0.6.1] - 2026-09-10 - "Local provider truth hardening"
 
 ### Added

@@ -45,66 +45,87 @@ async def run_cases(
     render_hashes: list[str] = []
     telemetry_samples: list[dict[str, Any]] = []
     anti_meta_counts = {"markdown_fence": 0, "protocol_chatter": 0}
-    for case_id in case_ids:
-        if mock:
-            content = mock_content(task_class, case_id)
-            raw: dict[str, Any] = {
-                "profile_id": profile_id,
-                "task_class": task_class,
-                "template_hash": hashlib.sha256(content.encode("utf-8")).hexdigest(),
-                "template_hash_alg": "sha256",
-                "lmstudio_session_mode": lmstudio_session_mode,
-                "lmstudio_session_id_present": bool(lmstudio_session_id),
-            }
-        else:
-            assert provider_client is not None
-            runtime_context: dict[str, Any] = {
-                "protocol_governed_enabled": task_class in {"strict_json", "tool_call"},
-                "local_prompt_task_class": task_class,
-                "local_prompting_mode": "enforce",
-                "lmstudio_session_mode": lmstudio_session_mode,
-            }
-            if lmstudio_session_mode in {"context", "fixed"}:
-                runtime_context["session_id"] = lmstudio_session_id or f"lmstudio-conformance-{profile_id}"
-                if lmstudio_session_mode == "fixed":
-                    runtime_context["lmstudio_session_id"] = runtime_context["session_id"]
-            response = await provider_client.complete(
-                [{"role": "user", "content": prompt_for_case(task_class, case_id)}],
-                runtime_context=runtime_context,
+    try:
+        for case_id in case_ids:
+            if mock:
+                content = mock_content(task_class, case_id)
+                raw: dict[str, Any] = {
+                    "profile_id": profile_id,
+                    "task_class": task_class,
+                    "template_hash": hashlib.sha256(content.encode("utf-8")).hexdigest(),
+                    "template_hash_alg": "sha256",
+                    "lmstudio_session_mode": lmstudio_session_mode,
+                    "lmstudio_session_id_present": bool(lmstudio_session_id),
+                }
+            else:
+                assert provider_client is not None
+                runtime_context: dict[str, Any] = {
+                    "protocol_governed_enabled": task_class in {"strict_json", "tool_call"},
+                    "local_prompt_task_class": task_class,
+                    "local_prompting_mode": "enforce",
+                    "lmstudio_session_mode": lmstudio_session_mode,
+                }
+                if lmstudio_session_mode in {"context", "fixed"}:
+                    runtime_context["session_id"] = lmstudio_session_id or f"lmstudio-conformance-{profile_id}"
+                    if lmstudio_session_mode == "fixed":
+                        runtime_context["lmstudio_session_id"] = runtime_context["session_id"]
+                response = await provider_client.complete(
+                    [{"role": "user", "content": prompt_for_case(task_class, case_id)}],
+                    runtime_context=runtime_context,
+                )
+                content = str(response.content or "")
+                raw = dict(response.raw or {})
+            passed, failure = validate_case(task_class, content, case_id)
+            if not passed:
+                failures[failure] = failures.get(failure, 0) + 1
+            anti_meta = anti_meta_flags(content)
+            if anti_meta["markdown_fence"]:
+                anti_meta_counts["markdown_fence"] += 1
+            if anti_meta["protocol_chatter"]:
+                anti_meta_counts["protocol_chatter"] += 1
+            rows.append(
+                {
+                    "case_id": case_id,
+                    "passed": passed,
+                    "failure_family": failure or None,
+                    "response_chars": len(content),
+                    "response": content,
+                    "provider_name": raw.get("provider_name"),
+                    "model": raw.get("model"),
+                    "usage": raw.get("usage"),
+                    "latency_ms": raw.get("latency_ms"),
+                    "template_hash": raw.get("template_hash"),
+                    "render_verified": bool(raw.get("render_verified", False)),
+                    "template_source_sha256": raw.get("template_source_sha256"),
+                    "server_build": raw.get("server_build"),
+                    "token_counter_source": raw.get("token_counter_source"),
+                    "rendered_input_tokens": raw.get("rendered_input_tokens"),
+                    "anti_meta": anti_meta,
+                }
             )
-            content = str(response.content or "")
-            raw = dict(response.raw or {})
-        passed, failure = validate_case(task_class, content, case_id)
-        if not passed:
-            failures[failure] = failures.get(failure, 0) + 1
-        anti_meta = anti_meta_flags(content)
-        if anti_meta["markdown_fence"]:
-            anti_meta_counts["markdown_fence"] += 1
-        if anti_meta["protocol_chatter"]:
-            anti_meta_counts["protocol_chatter"] += 1
-        rows.append(
-            {
-                "case_id": case_id,
-                "passed": passed,
-                "failure_family": failure or None,
-                "response_chars": len(content),
-                "anti_meta": anti_meta,
-            }
-        )
-        render_hash = str(raw.get("template_hash") or raw.get("prompt_fingerprint") or "")
-        if render_hash:
-            render_hashes.append(render_hash)
-        telemetry_samples.append(
-            {
-                "profile_id": str(raw.get("profile_id") or ""),
-                "task_class": str(raw.get("task_class") or ""),
-                "template_hash_alg": str(raw.get("template_hash_alg") or ""),
-                "effective_stop_sequences": list(raw.get("effective_stop_sequences") or []),
-                "sampling_bundle": dict(raw.get("sampling_bundle") or {}),
-                "lmstudio_session_mode": str(raw.get("lmstudio_session_mode") or ""),
-                "lmstudio_session_id_present": bool(raw.get("lmstudio_session_id_present", False)),
-            }
-        )
+            render_hash = str(raw.get("template_hash") or raw.get("prompt_fingerprint") or "")
+            if render_hash:
+                render_hashes.append(render_hash)
+            telemetry_samples.append(
+                {
+                    "profile_id": str(raw.get("profile_id") or ""),
+                    "task_class": str(raw.get("task_class") or ""),
+                    "template_hash_alg": str(raw.get("template_hash_alg") or ""),
+                    "effective_stop_sequences": list(raw.get("effective_stop_sequences") or []),
+                    "sampling_bundle": dict(raw.get("sampling_bundle") or {}),
+                    "lmstudio_session_mode": str(raw.get("lmstudio_session_mode") or ""),
+                    "lmstudio_session_id_present": bool(raw.get("lmstudio_session_id_present", False)),
+                    "render_verified": bool(raw.get("render_verified", False)),
+                    "render_verification_method": raw.get("render_verification_method"),
+                    "template_source_sha256": raw.get("template_source_sha256"),
+                    "server_build": raw.get("server_build"),
+                }
+            )
+            if len(rows) % 25 == 0 or len(rows) == len(case_ids):
+                print(f"{task_class}: {len(rows)}/{len(case_ids)} completed; failures={sum(failures.values())}", flush=True)
+    finally:
+        if provider_client is not None:
+            await provider_client.close()
     pass_count = sum(1 for row in rows if row["passed"])
     total = len(rows)
     pass_rate = float(pass_count) / float(max(1, total))

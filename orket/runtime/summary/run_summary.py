@@ -555,11 +555,11 @@ def _build_packet1_extension(
         "run_id": run_id,
         "terminal_status": status,
         "primary_output_kind": primary_kind,
-        "intended_provider": _resolve_packet1_token(facts.get("intended_provider"), "ollama"),
+        "intended_provider": _resolve_packet1_token(facts.get("intended_provider")),
         "intended_model": _resolve_packet1_token(facts.get("intended_model")),
         "intended_profile": _resolve_packet1_token(facts.get("intended_profile")),
         "actual_provider": _resolve_packet1_token(
-            facts.get("actual_provider"), facts.get("intended_provider"), "ollama"
+            facts.get("actual_provider")
         ),
         "actual_model": _resolve_packet1_token(facts.get("actual_model"), facts.get("intended_model")),
         "actual_profile": _resolve_packet1_token(facts.get("actual_profile"), facts.get("intended_profile")),
@@ -610,10 +610,8 @@ def _build_packet1_extension(
 
 def _collect_packet1_facts(artifacts: dict[str, Any]) -> dict[str, Any]:
     packet1_facts = _normalize_packet1_facts(artifacts.get("packet1_facts"))
-    if "intended_provider" not in packet1_facts:
-        packet1_facts["intended_provider"] = "ollama"
-    if "actual_provider" not in packet1_facts:
-        packet1_facts["actual_provider"] = packet1_facts.get("intended_provider")
+    packet1_facts.setdefault("intended_provider", PACKET1_MISSING_TOKEN)
+    packet1_facts.setdefault("actual_provider", PACKET1_MISSING_TOKEN)
     return packet1_facts
 
 

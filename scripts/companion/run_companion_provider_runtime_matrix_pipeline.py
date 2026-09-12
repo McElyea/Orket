@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 
+from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER
 from scripts.companion.companion_matrix_case_selection import expand_case_pairs
 from scripts.companion.render_companion_provider_runtime_report import render_markdown_report
 from scripts.companion.run_companion_provider_runtime_matrix import run_companion_provider_runtime_matrix
@@ -18,7 +19,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--base-url", default="http://127.0.0.1:8000")
     parser.add_argument("--api-key", default="")
-    parser.add_argument("--providers", default="ollama,lmstudio")
+    parser.add_argument("--providers", default=DEFAULT_LOCAL_PROVIDER)
     parser.add_argument("--models", default="")
     parser.add_argument("--provider-model-map", default="")
     parser.add_argument("--rig-classes", default="A,B,C,D")

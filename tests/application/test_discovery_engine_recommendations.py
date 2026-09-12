@@ -8,6 +8,7 @@ from orket.discovery import discover_project_assets, get_engine_recommendations,
 
 
 def _patch_engine_registry(monkeypatch, payload: dict) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
     class _FakeFS:
         def __init__(self, _root):
             return None

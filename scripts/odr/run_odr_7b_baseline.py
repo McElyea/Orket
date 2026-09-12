@@ -40,7 +40,7 @@ Usage
 
 Environment variables
 ---------------------
-    ORKET_LLM_PROVIDER        ollama (default) | openai_compat | lmstudio
+    ORKET_LLM_PROVIDER        llama_cpp (default) | lmstudio | ollama | openai_compat
     ORKET_LLM_OLLAMA_HOST     Ollama base URL (default: http://localhost:11434)
     ORKET_LLM_OPENAI_BASE_URL OpenAI-compatible base URL (default: http://127.0.0.1:1234/v1)
     ORKET_LLM_TEMPERATURE     Override temperature for all calls
@@ -73,6 +73,7 @@ from orket.kernel.v1.odr.core import (  # noqa: E402
     ReactorState,
     run_round,
 )
+from orket.runtime.config.defaults import configured_provider  # noqa: E402 - repository path bootstrap
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL  # noqa: E402
 from scripts.odr.model_runtime_control import complete_with_transient_provider  # noqa: E402
 
@@ -80,15 +81,9 @@ from scripts.odr.model_runtime_control import complete_with_transient_provider  
 # Defaults tuned for 7B models
 # ---------------------------------------------------------------------------
 
-DEFAULT_7B_ARCHITECTS = [
-    DEFAULT_LOCAL_MODEL,
-    "qwen2.5:7b",
-]
-
-DEFAULT_7B_AUDITORS = [
-    "qwen2.5:7b",
-    "llama3.2:3b",
-]
+# Explicit model lists select a 7B cohort; the default follows the local runtime.
+DEFAULT_7B_ARCHITECTS = [DEFAULT_LOCAL_MODEL]
+DEFAULT_7B_AUDITORS = [DEFAULT_LOCAL_MODEL]
 
 SCENARIO_ROOT = REPO_ROOT / "tests" / "kernel" / "v1" / "vectors" / "odr" / "refinement"
 
@@ -160,8 +155,8 @@ def _parse_list(raw: str) -> list[str]:
 
 
 def _resolve_role_provider(raw: str) -> str:
-    provider = str(raw or "").strip().lower() or str(os.getenv("ORKET_LLM_PROVIDER", "ollama")).strip().lower()
-    return provider or "ollama"
+    provider = str(raw or "").strip().lower() or configured_provider()
+    return provider
 
 
 def _resolve_role_base_url(*, provider: str, raw: str) -> str:
@@ -317,7 +312,7 @@ def _collect_host_environment(
         "python_version": platform.python_version(),
         "ollama_version": _collect_ollama_version(),
         "llm_provider": architect_provider if architect_provider == auditor_provider else "mixed",
-        "llm_provider_env": str(os.getenv("ORKET_LLM_PROVIDER", "ollama")),
+        "llm_provider_env": configured_provider(),
         "ollama_host": str(os.getenv("ORKET_LLM_OLLAMA_HOST", "http://localhost:11434")),
         "openai_base_url": str(os.getenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")),
         "architect_provider": architect_provider,
@@ -915,12 +910,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--architect-provider",
         default="",
-        help="Architect provider override (llama_cpp | lmstudio | ollama | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
+        help="Architect provider override (llama_cpp | lmstudio | ollama | openai_compat). Empty = configured provider or llama_cpp.",
     )
     parser.add_argument(
         "--auditor-provider",
         default="",
-        help="Auditor provider override (llama_cpp | lmstudio | ollama | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
+        help="Auditor provider override (llama_cpp | lmstudio | ollama | openai_compat). Empty = configured provider or llama_cpp.",
     )
     parser.add_argument(
         "--architect-base-url",

@@ -10,8 +10,9 @@ from typing import Any, Iterator, Sequence
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.core.critical_path import CriticalPathEngine
-from scripts.common.run_summary_support import is_degraded_run_summary, load_validated_run_summary_or_empty
+from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+from scripts.common.run_summary_support import is_degraded_run_summary, load_validated_run_summary_or_empty
 
 DEFAULT_ROLE_NAME = "coder"
 DEFAULT_REVIEWER_ROLE_NAME = "code_reviewer"
@@ -68,7 +69,7 @@ async def seed_runtime_settings_context() -> None:
 @contextmanager
 def applied_probe_env(
     *,
-    provider: str = "ollama",
+    provider: str = DEFAULT_LOCAL_PROVIDER,
     ollama_host: str | None = None,
     disable_sandbox: bool = True,
     extra_env: dict[str, str] | None = None,

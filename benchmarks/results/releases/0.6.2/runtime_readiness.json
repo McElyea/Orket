@@ -1,0 +1,4270 @@
+{
+  "schema_version": "qwen38_runtime_readiness.v1",
+  "proof_mode": "live",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "server_build": "b10809-5266f24da",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "model_path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\orcarouter_Qwen3.8-27B-Uncensored-Q4_K_L.gguf",
+  "model_sha256": "431c4818df8a3ce941e2fe35bc37688ea9c30052339eae8f41a4c25cdd9a6fa7",
+  "template_sha256": "8fc57a9f65eaaaee48e80771aea4775f7d3a8adb466a6193d8de551fa124d578",
+  "stop_and_sampling": [
+    {
+      "task_class": "strict_json",
+      "passed": true,
+      "sampling_evidence": "server_effective_settings",
+      "result": {
+        "index": 0,
+        "content": "ALPHA",
+        "tokens": [],
+        "id_slot": 0,
+        "stop": true,
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "tokens_predicted": 8,
+        "tokens_evaluated": 24,
+        "generation_settings": {
+          "seed": 101,
+          "temperature": 0.0,
+          "dynatemp_range": 0.0,
+          "dynatemp_exponent": 1.0,
+          "top_k": 1,
+          "top_p": 1.0,
+          "min_p": 0.05000000074505806,
+          "top_n_sigma": -1.0,
+          "xtc_probability": 0.0,
+          "xtc_threshold": 0.10000000149011612,
+          "typical_p": 1.0,
+          "repeat_last_n": 64,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0,
+          "frequency_penalty": 0.0,
+          "dry_multiplier": 0.0,
+          "dry_base": 1.75,
+          "dry_allowed_length": 2,
+          "dry_penalty_last_n": 64,
+          "dry_sequence_breakers": [
+            "\n",
+            ":",
+            "\"",
+            "*"
+          ],
+          "mirostat": 0,
+          "mirostat_tau": 5.0,
+          "mirostat_eta": 0.10000000149011612,
+          "adaptive_target": -1.0,
+          "adaptive_decay": 0.8999999761581421,
+          "stop": [
+            "<|json_end|>",
+            "<|im_end|>"
+          ],
+          "max_tokens": 64,
+          "n_predict": 64,
+          "n_keep": 0,
+          "n_discard": 0,
+          "ignore_eos": false,
+          "stream": false,
+          "logit_bias": [],
+          "n_probs": 0,
+          "min_keep": 0,
+          "grammar": "",
+          "grammar_lazy": false,
+          "grammar_triggers": [],
+          "preserved_tokens": [],
+          "chat_format": "Content-only",
+          "reasoning_format": "deepseek",
+          "reasoning_in_content": false,
+          "generation_prompt": "",
+          "samplers": [
+            "penalties",
+            "dry",
+            "top_n_sigma",
+            "top_k",
+            "typ_p",
+            "top_p",
+            "min_p",
+            "xtc",
+            "temperature"
+          ],
+          "speculative.types": "none",
+          "timings_per_token": false,
+          "post_sampling_probs": false,
+          "backend_sampling": false,
+          "lora": []
+        },
+        "has_new_line": false,
+        "truncated": false,
+        "stop_type": "word",
+        "stopping_word": "<|json_end|>",
+        "tokens_cached": 31,
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 24,
+          "prompt_ms": 105.629,
+          "prompt_per_token_ms": 4.401208333333334,
+          "prompt_per_second": 227.21033049635986,
+          "predicted_n": 8,
+          "predicted_ms": 194.661,
+          "predicted_per_token_ms": 27.808714285714284,
+          "predicted_per_second": 35.95995088898135
+        }
+      },
+      "without_sentinel_stop": {
+        "index": 0,
+        "content": "ALPHA<|json_end|>OMEGA",
+        "tokens": [],
+        "id_slot": 0,
+        "stop": true,
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "tokens_predicted": 11,
+        "tokens_evaluated": 24,
+        "generation_settings": {
+          "seed": 101,
+          "temperature": 0.0,
+          "dynatemp_range": 0.0,
+          "dynatemp_exponent": 1.0,
+          "top_k": 1,
+          "top_p": 1.0,
+          "min_p": 0.05000000074505806,
+          "top_n_sigma": -1.0,
+          "xtc_probability": 0.0,
+          "xtc_threshold": 0.10000000149011612,
+          "typical_p": 1.0,
+          "repeat_last_n": 64,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0,
+          "frequency_penalty": 0.0,
+          "dry_multiplier": 0.0,
+          "dry_base": 1.75,
+          "dry_allowed_length": 2,
+          "dry_penalty_last_n": 64,
+          "dry_sequence_breakers": [
+            "\n",
+            ":",
+            "\"",
+            "*"
+          ],
+          "mirostat": 0,
+          "mirostat_tau": 5.0,
+          "mirostat_eta": 0.10000000149011612,
+          "adaptive_target": -1.0,
+          "adaptive_decay": 0.8999999761581421,
+          "stop": [],
+          "max_tokens": 64,
+          "n_predict": 64,
+          "n_keep": 0,
+          "n_discard": 0,
+          "ignore_eos": false,
+          "stream": false,
+          "logit_bias": [],
+          "n_probs": 0,
+          "min_keep": 0,
+          "grammar": "",
+          "grammar_lazy": false,
+          "grammar_triggers": [],
+          "preserved_tokens": [],
+          "chat_format": "Content-only",
+          "reasoning_format": "deepseek",
+          "reasoning_in_content": false,
+          "generation_prompt": "",
+          "samplers": [
+            "penalties",
+            "dry",
+            "top_n_sigma",
+            "top_k",
+            "typ_p",
+            "top_p",
+            "min_p",
+            "xtc",
+            "temperature"
+          ],
+          "speculative.types": "none",
+          "timings_per_token": false,
+          "post_sampling_probs": false,
+          "backend_sampling": false,
+          "lora": []
+        },
+        "has_new_line": false,
+        "truncated": false,
+        "stop_type": "eos",
+        "stopping_word": "",
+        "tokens_cached": 34,
+        "timings": {
+          "cache_n": 20,
+          "prompt_n": 4,
+          "prompt_ms": 91.116,
+          "prompt_per_token_ms": 22.779,
+          "prompt_per_second": 43.90008341015848,
+          "predicted_n": 11,
+          "predicted_ms": 270.373,
+          "predicted_per_token_ms": 27.0373,
+          "predicted_per_second": 36.98594164358128
+        }
+      }
+    },
+    {
+      "task_class": "tool_call",
+      "passed": true,
+      "sampling_evidence": "server_effective_settings",
+      "result": {
+        "index": 0,
+        "content": "ALPHA",
+        "tokens": [],
+        "id_slot": 0,
+        "stop": true,
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "tokens_predicted": 8,
+        "tokens_evaluated": 24,
+        "generation_settings": {
+          "seed": 103,
+          "temperature": 0.0,
+          "dynatemp_range": 0.0,
+          "dynatemp_exponent": 1.0,
+          "top_k": 1,
+          "top_p": 1.0,
+          "min_p": 0.05000000074505806,
+          "top_n_sigma": -1.0,
+          "xtc_probability": 0.0,
+          "xtc_threshold": 0.10000000149011612,
+          "typical_p": 1.0,
+          "repeat_last_n": 64,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0,
+          "frequency_penalty": 0.0,
+          "dry_multiplier": 0.0,
+          "dry_base": 1.75,
+          "dry_allowed_length": 2,
+          "dry_penalty_last_n": 64,
+          "dry_sequence_breakers": [
+            "\n",
+            ":",
+            "\"",
+            "*"
+          ],
+          "mirostat": 0,
+          "mirostat_tau": 5.0,
+          "mirostat_eta": 0.10000000149011612,
+          "adaptive_target": -1.0,
+          "adaptive_decay": 0.8999999761581421,
+          "stop": [
+            "<|tool_end|>",
+            "<|im_end|>"
+          ],
+          "max_tokens": 64,
+          "n_predict": 64,
+          "n_keep": 0,
+          "n_discard": 0,
+          "ignore_eos": false,
+          "stream": false,
+          "logit_bias": [],
+          "n_probs": 0,
+          "min_keep": 0,
+          "grammar": "",
+          "grammar_lazy": false,
+          "grammar_triggers": [],
+          "preserved_tokens": [],
+          "chat_format": "Content-only",
+          "reasoning_format": "deepseek",
+          "reasoning_in_content": false,
+          "generation_prompt": "",
+          "samplers": [
+            "penalties",
+            "dry",
+            "top_n_sigma",
+            "top_k",
+            "typ_p",
+            "top_p",
+            "min_p",
+            "xtc",
+            "temperature"
+          ],
+          "speculative.types": "none",
+          "timings_per_token": false,
+          "post_sampling_probs": false,
+          "backend_sampling": false,
+          "lora": []
+        },
+        "has_new_line": false,
+        "truncated": false,
+        "stop_type": "word",
+        "stopping_word": "<|tool_end|>",
+        "tokens_cached": 31,
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 24,
+          "prompt_ms": 104.921,
+          "prompt_per_token_ms": 4.371708333333333,
+          "prompt_per_second": 228.7435308470182,
+          "predicted_n": 8,
+          "predicted_ms": 187.099,
+          "predicted_per_token_ms": 26.72842857142857,
+          "predicted_per_second": 37.41334801361846
+        }
+      },
+      "without_sentinel_stop": {
+        "index": 0,
+        "content": "ALPHA<|tool_end|>OMEGA",
+        "tokens": [],
+        "id_slot": 0,
+        "stop": true,
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "tokens_predicted": 11,
+        "tokens_evaluated": 24,
+        "generation_settings": {
+          "seed": 103,
+          "temperature": 0.0,
+          "dynatemp_range": 0.0,
+          "dynatemp_exponent": 1.0,
+          "top_k": 1,
+          "top_p": 1.0,
+          "min_p": 0.05000000074505806,
+          "top_n_sigma": -1.0,
+          "xtc_probability": 0.0,
+          "xtc_threshold": 0.10000000149011612,
+          "typical_p": 1.0,
+          "repeat_last_n": 64,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0,
+          "frequency_penalty": 0.0,
+          "dry_multiplier": 0.0,
+          "dry_base": 1.75,
+          "dry_allowed_length": 2,
+          "dry_penalty_last_n": 64,
+          "dry_sequence_breakers": [
+            "\n",
+            ":",
+            "\"",
+            "*"
+          ],
+          "mirostat": 0,
+          "mirostat_tau": 5.0,
+          "mirostat_eta": 0.10000000149011612,
+          "adaptive_target": -1.0,
+          "adaptive_decay": 0.8999999761581421,
+          "stop": [],
+          "max_tokens": 64,
+          "n_predict": 64,
+          "n_keep": 0,
+          "n_discard": 0,
+          "ignore_eos": false,
+          "stream": false,
+          "logit_bias": [],
+          "n_probs": 0,
+          "min_keep": 0,
+          "grammar": "",
+          "grammar_lazy": false,
+          "grammar_triggers": [],
+          "preserved_tokens": [],
+          "chat_format": "Content-only",
+          "reasoning_format": "deepseek",
+          "reasoning_in_content": false,
+          "generation_prompt": "",
+          "samplers": [
+            "penalties",
+            "dry",
+            "top_n_sigma",
+            "top_k",
+            "typ_p",
+            "top_p",
+            "min_p",
+            "xtc",
+            "temperature"
+          ],
+          "speculative.types": "none",
+          "timings_per_token": false,
+          "post_sampling_probs": false,
+          "backend_sampling": false,
+          "lora": []
+        },
+        "has_new_line": false,
+        "truncated": false,
+        "stop_type": "eos",
+        "stopping_word": "",
+        "tokens_cached": 34,
+        "timings": {
+          "cache_n": 20,
+          "prompt_n": 4,
+          "prompt_ms": 91.033,
+          "prompt_per_token_ms": 22.75825,
+          "prompt_per_second": 43.94010963057353,
+          "predicted_n": 11,
+          "predicted_ms": 285.41,
+          "predicted_per_token_ms": 28.541000000000004,
+          "predicted_per_second": 35.037314740198305
+        }
+      }
+    },
+    {
+      "task_class": "concise_text",
+      "passed": true,
+      "sampling_evidence": "server_effective_settings",
+      "result": {
+        "index": 0,
+        "content": "ALPHA",
+        "tokens": [],
+        "id_slot": 0,
+        "stop": true,
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "tokens_predicted": 3,
+        "tokens_evaluated": 15,
+        "generation_settings": {
+          "seed": 101,
+          "temperature": 0.20000000298023224,
+          "dynatemp_range": 0.0,
+          "dynatemp_exponent": 1.0,
+          "top_k": 40,
+          "top_p": 0.8999999761581421,
+          "min_p": 0.05000000074505806,
+          "top_n_sigma": -1.0,
+          "xtc_probability": 0.0,
+          "xtc_threshold": 0.10000000149011612,
+          "typical_p": 1.0,
+          "repeat_last_n": 64,
+          "repeat_penalty": 1.0499999523162842,
+          "presence_penalty": 0.0,
+          "frequency_penalty": 0.0,
+          "dry_multiplier": 0.0,
+          "dry_base": 1.75,
+          "dry_allowed_length": 2,
+          "dry_penalty_last_n": 64,
+          "dry_sequence_breakers": [
+            "\n",
+            ":",
+            "\"",
+            "*"
+          ],
+          "mirostat": 0,
+          "mirostat_tau": 5.0,
+          "mirostat_eta": 0.10000000149011612,
+          "adaptive_target": -1.0,
+          "adaptive_decay": 0.8999999761581421,
+          "stop": [
+            "<|im_end|>"
+          ],
+          "max_tokens": 64,
+          "n_predict": 64,
+          "n_keep": 0,
+          "n_discard": 0,
+          "ignore_eos": false,
+          "stream": false,
+          "logit_bias": [],
+          "n_probs": 0,
+          "min_keep": 0,
+          "grammar": "",
+          "grammar_lazy": false,
+          "grammar_triggers": [],
+          "preserved_tokens": [],
+          "chat_format": "Content-only",
+          "reasoning_format": "deepseek",
+          "reasoning_in_content": false,
+          "generation_prompt": "",
+          "samplers": [
+            "penalties",
+            "dry",
+            "top_n_sigma",
+            "top_k",
+            "typ_p",
+            "top_p",
+            "min_p",
+            "xtc",
+            "temperature"
+          ],
+          "speculative.types": "none",
+          "timings_per_token": false,
+          "post_sampling_probs": false,
+          "backend_sampling": false,
+          "lora": []
+        },
+        "has_new_line": false,
+        "truncated": false,
+        "stop_type": "eos",
+        "stopping_word": "",
+        "tokens_cached": 17,
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 15,
+          "prompt_ms": 106.381,
+          "prompt_per_token_ms": 7.092066666666667,
+          "prompt_per_second": 141.00262264878128,
+          "predicted_n": 3,
+          "predicted_ms": 58.487,
+          "predicted_per_token_ms": 29.2435,
+          "predicted_per_second": 34.195633217638104
+        }
+      },
+      "without_sentinel_stop": null
+    },
+    {
+      "task_class": "reasoning",
+      "passed": true,
+      "sampling_evidence": "server_effective_settings",
+      "result": {
+        "index": 0,
+        "content": "ALPHA",
+        "tokens": [],
+        "id_slot": 0,
+        "stop": true,
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "tokens_predicted": 3,
+        "tokens_evaluated": 15,
+        "generation_settings": {
+          "seed": 101,
+          "temperature": 0.6000000238418579,
+          "dynatemp_range": 0.0,
+          "dynatemp_exponent": 1.0,
+          "top_k": 60,
+          "top_p": 0.949999988079071,
+          "min_p": 0.05000000074505806,
+          "top_n_sigma": -1.0,
+          "xtc_probability": 0.0,
+          "xtc_threshold": 0.10000000149011612,
+          "typical_p": 1.0,
+          "repeat_last_n": 64,
+          "repeat_penalty": 1.0499999523162842,
+          "presence_penalty": 0.0,
+          "frequency_penalty": 0.0,
+          "dry_multiplier": 0.0,
+          "dry_base": 1.75,
+          "dry_allowed_length": 2,
+          "dry_penalty_last_n": 64,
+          "dry_sequence_breakers": [
+            "\n",
+            ":",
+            "\"",
+            "*"
+          ],
+          "mirostat": 0,
+          "mirostat_tau": 5.0,
+          "mirostat_eta": 0.10000000149011612,
+          "adaptive_target": -1.0,
+          "adaptive_decay": 0.8999999761581421,
+          "stop": [
+            "<|im_end|>"
+          ],
+          "max_tokens": 64,
+          "n_predict": 64,
+          "n_keep": 0,
+          "n_discard": 0,
+          "ignore_eos": false,
+          "stream": false,
+          "logit_bias": [],
+          "n_probs": 0,
+          "min_keep": 0,
+          "grammar": "",
+          "grammar_lazy": false,
+          "grammar_triggers": [],
+          "preserved_tokens": [],
+          "chat_format": "Content-only",
+          "reasoning_format": "deepseek",
+          "reasoning_in_content": false,
+          "generation_prompt": "",
+          "samplers": [
+            "penalties",
+            "dry",
+            "top_n_sigma",
+            "top_k",
+            "typ_p",
+            "top_p",
+            "min_p",
+            "xtc",
+            "temperature"
+          ],
+          "speculative.types": "none",
+          "timings_per_token": false,
+          "post_sampling_probs": false,
+          "backend_sampling": false,
+          "lora": []
+        },
+        "has_new_line": false,
+        "truncated": false,
+        "stop_type": "eos",
+        "stopping_word": "",
+        "tokens_cached": 17,
+        "timings": {
+          "cache_n": 11,
+          "prompt_n": 4,
+          "prompt_ms": 90.688,
+          "prompt_per_token_ms": 22.672,
+          "prompt_per_second": 44.10726887791108,
+          "predicted_n": 3,
+          "predicted_ms": 58.572,
+          "predicted_per_token_ms": 29.286,
+          "predicted_per_second": 34.14600833162603
+        }
+      },
+      "without_sentinel_stop": null
+    }
+  ],
+  "must_stop": [
+    {
+      "sentinel": "<|json_end|>",
+      "stopped": {
+        "index": 0,
+        "content": "ALPHA",
+        "tokens": [],
+        "id_slot": 0,
+        "stop": true,
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "tokens_predicted": 8,
+        "tokens_evaluated": 36,
+        "generation_settings": {
+          "seed": 4294967295,
+          "temperature": 0.0,
+          "dynatemp_range": 0.0,
+          "dynatemp_exponent": 1.0,
+          "top_k": 20,
+          "top_p": 0.949999988079071,
+          "min_p": 0.05000000074505806,
+          "top_n_sigma": -1.0,
+          "xtc_probability": 0.0,
+          "xtc_threshold": 0.10000000149011612,
+          "typical_p": 1.0,
+          "repeat_last_n": 64,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0,
+          "frequency_penalty": 0.0,
+          "dry_multiplier": 0.0,
+          "dry_base": 1.75,
+          "dry_allowed_length": 2,
+          "dry_penalty_last_n": 64,
+          "dry_sequence_breakers": [
+            "\n",
+            ":",
+            "\"",
+            "*"
+          ],
+          "mirostat": 0,
+          "mirostat_tau": 5.0,
+          "mirostat_eta": 0.10000000149011612,
+          "adaptive_target": -1.0,
+          "adaptive_decay": 0.8999999761581421,
+          "stop": [
+            "<|json_end|>"
+          ],
+          "max_tokens": 64,
+          "n_predict": 64,
+          "n_keep": 0,
+          "n_discard": 0,
+          "ignore_eos": false,
+          "stream": false,
+          "logit_bias": [],
+          "n_probs": 0,
+          "min_keep": 0,
+          "grammar": "",
+          "grammar_lazy": false,
+          "grammar_triggers": [],
+          "preserved_tokens": [],
+          "chat_format": "Content-only",
+          "reasoning_format": "deepseek",
+          "reasoning_in_content": false,
+          "generation_prompt": "",
+          "samplers": [
+            "penalties",
+            "dry",
+            "top_n_sigma",
+            "top_k",
+            "typ_p",
+            "top_p",
+            "min_p",
+            "xtc",
+            "temperature"
+          ],
+          "speculative.types": "none",
+          "timings_per_token": false,
+          "post_sampling_probs": false,
+          "backend_sampling": false,
+          "lora": []
+        },
+        "has_new_line": false,
+        "truncated": false,
+        "stop_type": "word",
+        "stopping_word": "<|json_end|>",
+        "tokens_cached": 43,
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 36,
+          "prompt_ms": 106.851,
+          "prompt_per_token_ms": 2.9680833333333334,
+          "prompt_per_second": 336.91776398910633,
+          "predicted_n": 8,
+          "predicted_ms": 189.33,
+          "predicted_per_token_ms": 27.04714285714286,
+          "predicted_per_second": 36.97248190989278
+        }
+      },
+      "bounded_counterfactual": {
+        "index": 0,
+        "content": "ALPHA<|json_end|>OMEGAALPHA<|json_end|>OMEGAALPHA<|json_end|>OMEGAALPHA<|json_end|>OMEGAALPHA<|json_end|>OMEGAALPHA<|json_end|>OMEGAALPHA<|",
+        "tokens": [],
+        "id_slot": 0,
+        "stop": true,
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "tokens_predicted": 64,
+        "tokens_evaluated": 36,
+        "generation_settings": {
+          "seed": 4294967295,
+          "temperature": 0.0,
+          "dynatemp_range": 0.0,
+          "dynatemp_exponent": 1.0,
+          "top_k": 20,
+          "top_p": 0.949999988079071,
+          "min_p": 0.05000000074505806,
+          "top_n_sigma": -1.0,
+          "xtc_probability": 0.0,
+          "xtc_threshold": 0.10000000149011612,
+          "typical_p": 1.0,
+          "repeat_last_n": 64,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0,
+          "frequency_penalty": 0.0,
+          "dry_multiplier": 0.0,
+          "dry_base": 1.75,
+          "dry_allowed_length": 2,
+          "dry_penalty_last_n": 64,
+          "dry_sequence_breakers": [
+            "\n",
+            ":",
+            "\"",
+            "*"
+          ],
+          "mirostat": 0,
+          "mirostat_tau": 5.0,
+          "mirostat_eta": 0.10000000149011612,
+          "adaptive_target": -1.0,
+          "adaptive_decay": 0.8999999761581421,
+          "stop": [],
+          "max_tokens": 64,
+          "n_predict": 64,
+          "n_keep": 0,
+          "n_discard": 0,
+          "ignore_eos": false,
+          "stream": false,
+          "logit_bias": [],
+          "n_probs": 0,
+          "min_keep": 0,
+          "grammar": "",
+          "grammar_lazy": false,
+          "grammar_triggers": [],
+          "preserved_tokens": [],
+          "chat_format": "Content-only",
+          "reasoning_format": "deepseek",
+          "reasoning_in_content": false,
+          "generation_prompt": "",
+          "samplers": [
+            "penalties",
+            "dry",
+            "top_n_sigma",
+            "top_k",
+            "typ_p",
+            "top_p",
+            "min_p",
+            "xtc",
+            "temperature"
+          ],
+          "speculative.types": "none",
+          "timings_per_token": false,
+          "post_sampling_probs": false,
+          "backend_sampling": false,
+          "lora": []
+        },
+        "has_new_line": false,
+        "truncated": false,
+        "stop_type": "limit",
+        "stopping_word": "",
+        "tokens_cached": 99,
+        "timings": {
+          "cache_n": 32,
+          "prompt_n": 4,
+          "prompt_ms": 91.685,
+          "prompt_per_token_ms": 22.92125,
+          "prompt_per_second": 43.627638108741884,
+          "predicted_n": 64,
+          "predicted_ms": 1646.514,
+          "predicted_per_token_ms": 26.135142857142856,
+          "predicted_per_second": 38.26265674024029
+        }
+      },
+      "passed": true
+    },
+    {
+      "sentinel": "<|tool_end|>",
+      "stopped": {
+        "index": 0,
+        "content": "ALPHA",
+        "tokens": [],
+        "id_slot": 0,
+        "stop": true,
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "tokens_predicted": 8,
+        "tokens_evaluated": 36,
+        "generation_settings": {
+          "seed": 4294967295,
+          "temperature": 0.0,
+          "dynatemp_range": 0.0,
+          "dynatemp_exponent": 1.0,
+          "top_k": 20,
+          "top_p": 0.949999988079071,
+          "min_p": 0.05000000074505806,
+          "top_n_sigma": -1.0,
+          "xtc_probability": 0.0,
+          "xtc_threshold": 0.10000000149011612,
+          "typical_p": 1.0,
+          "repeat_last_n": 64,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0,
+          "frequency_penalty": 0.0,
+          "dry_multiplier": 0.0,
+          "dry_base": 1.75,
+          "dry_allowed_length": 2,
+          "dry_penalty_last_n": 64,
+          "dry_sequence_breakers": [
+            "\n",
+            ":",
+            "\"",
+            "*"
+          ],
+          "mirostat": 0,
+          "mirostat_tau": 5.0,
+          "mirostat_eta": 0.10000000149011612,
+          "adaptive_target": -1.0,
+          "adaptive_decay": 0.8999999761581421,
+          "stop": [
+            "<|tool_end|>"
+          ],
+          "max_tokens": 64,
+          "n_predict": 64,
+          "n_keep": 0,
+          "n_discard": 0,
+          "ignore_eos": false,
+          "stream": false,
+          "logit_bias": [],
+          "n_probs": 0,
+          "min_keep": 0,
+          "grammar": "",
+          "grammar_lazy": false,
+          "grammar_triggers": [],
+          "preserved_tokens": [],
+          "chat_format": "Content-only",
+          "reasoning_format": "deepseek",
+          "reasoning_in_content": false,
+          "generation_prompt": "",
+          "samplers": [
+            "penalties",
+            "dry",
+            "top_n_sigma",
+            "top_k",
+            "typ_p",
+            "top_p",
+            "min_p",
+            "xtc",
+            "temperature"
+          ],
+          "speculative.types": "none",
+          "timings_per_token": false,
+          "post_sampling_probs": false,
+          "backend_sampling": false,
+          "lora": []
+        },
+        "has_new_line": false,
+        "truncated": false,
+        "stop_type": "word",
+        "stopping_word": "<|tool_end|>",
+        "tokens_cached": 43,
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 36,
+          "prompt_ms": 106.527,
+          "prompt_per_token_ms": 2.9590833333333335,
+          "prompt_per_second": 337.9424934523642,
+          "predicted_n": 8,
+          "predicted_ms": 188.62,
+          "predicted_per_token_ms": 26.945714285714285,
+          "predicted_per_second": 37.111653059060544
+        }
+      },
+      "bounded_counterfactual": {
+        "index": 0,
+        "content": "ALPHA<|tool_end|>OMEGAALPHA<|tool_end|>OMEGAALPHA<|tool_end|>OMEGAALPHA<|tool_end|>OMEGAALPHA<|tool_end|>OMEGAALPHA<|tool_end|>OMEGAALPHA<|",
+        "tokens": [],
+        "id_slot": 0,
+        "stop": true,
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "tokens_predicted": 64,
+        "tokens_evaluated": 36,
+        "generation_settings": {
+          "seed": 4294967295,
+          "temperature": 0.0,
+          "dynatemp_range": 0.0,
+          "dynatemp_exponent": 1.0,
+          "top_k": 20,
+          "top_p": 0.949999988079071,
+          "min_p": 0.05000000074505806,
+          "top_n_sigma": -1.0,
+          "xtc_probability": 0.0,
+          "xtc_threshold": 0.10000000149011612,
+          "typical_p": 1.0,
+          "repeat_last_n": 64,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0,
+          "frequency_penalty": 0.0,
+          "dry_multiplier": 0.0,
+          "dry_base": 1.75,
+          "dry_allowed_length": 2,
+          "dry_penalty_last_n": 64,
+          "dry_sequence_breakers": [
+            "\n",
+            ":",
+            "\"",
+            "*"
+          ],
+          "mirostat": 0,
+          "mirostat_tau": 5.0,
+          "mirostat_eta": 0.10000000149011612,
+          "adaptive_target": -1.0,
+          "adaptive_decay": 0.8999999761581421,
+          "stop": [],
+          "max_tokens": 64,
+          "n_predict": 64,
+          "n_keep": 0,
+          "n_discard": 0,
+          "ignore_eos": false,
+          "stream": false,
+          "logit_bias": [],
+          "n_probs": 0,
+          "min_keep": 0,
+          "grammar": "",
+          "grammar_lazy": false,
+          "grammar_triggers": [],
+          "preserved_tokens": [],
+          "chat_format": "Content-only",
+          "reasoning_format": "deepseek",
+          "reasoning_in_content": false,
+          "generation_prompt": "",
+          "samplers": [
+            "penalties",
+            "dry",
+            "top_n_sigma",
+            "top_k",
+            "typ_p",
+            "top_p",
+            "min_p",
+            "xtc",
+            "temperature"
+          ],
+          "speculative.types": "none",
+          "timings_per_token": false,
+          "post_sampling_probs": false,
+          "backend_sampling": false,
+          "lora": []
+        },
+        "has_new_line": false,
+        "truncated": false,
+        "stop_type": "limit",
+        "stopping_word": "",
+        "tokens_cached": 99,
+        "timings": {
+          "cache_n": 32,
+          "prompt_n": 4,
+          "prompt_ms": 89.853,
+          "prompt_per_token_ms": 22.46325,
+          "prompt_per_second": 44.51715579891601,
+          "predicted_n": 64,
+          "predicted_ms": 1642.957,
+          "predicted_per_token_ms": 26.078682539682543,
+          "predicted_per_second": 38.34549534771756
+        }
+      },
+      "passed": true
+    }
+  ],
+  "cache_and_cancellation": {
+    "cases": [
+      {
+        "index": 0,
+        "passed": true,
+        "result": {
+          "index": 0,
+          "content": "VALUE0",
+          "tokens": [],
+          "id_slot": 0,
+          "stop": true,
+          "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "tokens_predicted": 3,
+          "tokens_evaluated": 537,
+          "generation_settings": {
+            "seed": 4294967295,
+            "temperature": 0.0,
+            "dynatemp_range": 0.0,
+            "dynatemp_exponent": 1.0,
+            "top_k": 20,
+            "top_p": 0.949999988079071,
+            "min_p": 0.05000000074505806,
+            "top_n_sigma": -1.0,
+            "xtc_probability": 0.0,
+            "xtc_threshold": 0.10000000149011612,
+            "typical_p": 1.0,
+            "repeat_last_n": 64,
+            "repeat_penalty": 1.0,
+            "presence_penalty": 0.0,
+            "frequency_penalty": 0.0,
+            "dry_multiplier": 0.0,
+            "dry_base": 1.75,
+            "dry_allowed_length": 2,
+            "dry_penalty_last_n": 64,
+            "dry_sequence_breakers": [
+              "\n",
+              ":",
+              "\"",
+              "*"
+            ],
+            "mirostat": 0,
+            "mirostat_tau": 5.0,
+            "mirostat_eta": 0.10000000149011612,
+            "adaptive_target": -1.0,
+            "adaptive_decay": 0.8999999761581421,
+            "stop": [],
+            "max_tokens": 64,
+            "n_predict": 64,
+            "n_keep": 0,
+            "n_discard": 0,
+            "ignore_eos": false,
+            "stream": false,
+            "logit_bias": [],
+            "n_probs": 0,
+            "min_keep": 0,
+            "grammar": "",
+            "grammar_lazy": false,
+            "grammar_triggers": [],
+            "preserved_tokens": [],
+            "chat_format": "Content-only",
+            "reasoning_format": "deepseek",
+            "reasoning_in_content": false,
+            "generation_prompt": "",
+            "samplers": [
+              "penalties",
+              "dry",
+              "top_n_sigma",
+              "top_k",
+              "typ_p",
+              "top_p",
+              "min_p",
+              "xtc",
+              "temperature"
+            ],
+            "speculative.types": "none",
+            "timings_per_token": false,
+            "post_sampling_probs": false,
+            "backend_sampling": false,
+            "lora": []
+          },
+          "has_new_line": false,
+          "truncated": false,
+          "stop_type": "eos",
+          "stopping_word": "",
+          "tokens_cached": 539,
+          "timings": {
+            "cache_n": 0,
+            "prompt_n": 537,
+            "prompt_ms": 312.088,
+            "prompt_per_token_ms": 0.581169459962756,
+            "prompt_per_second": 1720.6685293891464,
+            "predicted_n": 3,
+            "predicted_ms": 69.317,
+            "predicted_per_token_ms": 34.6585,
+            "predicted_per_second": 28.852950935556937
+          }
+        }
+      },
+      {
+        "index": 0,
+        "passed": true,
+        "result": {
+          "index": 0,
+          "content": "VALUE0",
+          "tokens": [],
+          "id_slot": 0,
+          "stop": true,
+          "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "tokens_predicted": 3,
+          "tokens_evaluated": 537,
+          "generation_settings": {
+            "seed": 4294967295,
+            "temperature": 0.0,
+            "dynatemp_range": 0.0,
+            "dynatemp_exponent": 1.0,
+            "top_k": 20,
+            "top_p": 0.949999988079071,
+            "min_p": 0.05000000074505806,
+            "top_n_sigma": -1.0,
+            "xtc_probability": 0.0,
+            "xtc_threshold": 0.10000000149011612,
+            "typical_p": 1.0,
+            "repeat_last_n": 64,
+            "repeat_penalty": 1.0,
+            "presence_penalty": 0.0,
+            "frequency_penalty": 0.0,
+            "dry_multiplier": 0.0,
+            "dry_base": 1.75,
+            "dry_allowed_length": 2,
+            "dry_penalty_last_n": 64,
+            "dry_sequence_breakers": [
+              "\n",
+              ":",
+              "\"",
+              "*"
+            ],
+            "mirostat": 0,
+            "mirostat_tau": 5.0,
+            "mirostat_eta": 0.10000000149011612,
+            "adaptive_target": -1.0,
+            "adaptive_decay": 0.8999999761581421,
+            "stop": [],
+            "max_tokens": 64,
+            "n_predict": 64,
+            "n_keep": 0,
+            "n_discard": 0,
+            "ignore_eos": false,
+            "stream": false,
+            "logit_bias": [],
+            "n_probs": 0,
+            "min_keep": 0,
+            "grammar": "",
+            "grammar_lazy": false,
+            "grammar_triggers": [],
+            "preserved_tokens": [],
+            "chat_format": "Content-only",
+            "reasoning_format": "deepseek",
+            "reasoning_in_content": false,
+            "generation_prompt": "",
+            "samplers": [
+              "penalties",
+              "dry",
+              "top_n_sigma",
+              "top_k",
+              "typ_p",
+              "top_p",
+              "min_p",
+              "xtc",
+              "temperature"
+            ],
+            "speculative.types": "none",
+            "timings_per_token": false,
+            "post_sampling_probs": false,
+            "backend_sampling": false,
+            "lora": []
+          },
+          "has_new_line": false,
+          "truncated": false,
+          "stop_type": "eos",
+          "stopping_word": "",
+          "tokens_cached": 539,
+          "timings": {
+            "cache_n": 533,
+            "prompt_n": 4,
+            "prompt_ms": 96.232,
+            "prompt_per_token_ms": 24.058,
+            "prompt_per_second": 41.566214980463876,
+            "predicted_n": 3,
+            "predicted_ms": 60.284,
+            "predicted_per_token_ms": 30.142,
+            "predicted_per_second": 33.17629885210006
+          }
+        }
+      },
+      {
+        "index": 1,
+        "passed": true,
+        "result": {
+          "index": 0,
+          "content": "VALUE1",
+          "tokens": [],
+          "id_slot": 0,
+          "stop": true,
+          "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "tokens_predicted": 3,
+          "tokens_evaluated": 537,
+          "generation_settings": {
+            "seed": 4294967295,
+            "temperature": 0.0,
+            "dynatemp_range": 0.0,
+            "dynatemp_exponent": 1.0,
+            "top_k": 20,
+            "top_p": 0.949999988079071,
+            "min_p": 0.05000000074505806,
+            "top_n_sigma": -1.0,
+            "xtc_probability": 0.0,
+            "xtc_threshold": 0.10000000149011612,
+            "typical_p": 1.0,
+            "repeat_last_n": 64,
+            "repeat_penalty": 1.0,
+            "presence_penalty": 0.0,
+            "frequency_penalty": 0.0,
+            "dry_multiplier": 0.0,
+            "dry_base": 1.75,
+            "dry_allowed_length": 2,
+            "dry_penalty_last_n": 64,
+            "dry_sequence_breakers": [
+              "\n",
+              ":",
+              "\"",
+              "*"
+            ],
+            "mirostat": 0,
+            "mirostat_tau": 5.0,
+            "mirostat_eta": 0.10000000149011612,
+            "adaptive_target": -1.0,
+            "adaptive_decay": 0.8999999761581421,
+            "stop": [],
+            "max_tokens": 64,
+            "n_predict": 64,
+            "n_keep": 0,
+            "n_discard": 0,
+            "ignore_eos": false,
+            "stream": false,
+            "logit_bias": [],
+            "n_probs": 0,
+            "min_keep": 0,
+            "grammar": "",
+            "grammar_lazy": false,
+            "grammar_triggers": [],
+            "preserved_tokens": [],
+            "chat_format": "Content-only",
+            "reasoning_format": "deepseek",
+            "reasoning_in_content": false,
+            "generation_prompt": "",
+            "samplers": [
+              "penalties",
+              "dry",
+              "top_n_sigma",
+              "top_k",
+              "typ_p",
+              "top_p",
+              "min_p",
+              "xtc",
+              "temperature"
+            ],
+            "speculative.types": "none",
+            "timings_per_token": false,
+            "post_sampling_probs": false,
+            "backend_sampling": false,
+            "lora": []
+          },
+          "has_new_line": false,
+          "truncated": false,
+          "stop_type": "eos",
+          "stopping_word": "",
+          "tokens_cached": 539,
+          "timings": {
+            "cache_n": 21,
+            "prompt_n": 516,
+            "prompt_ms": 304.996,
+            "prompt_per_token_ms": 0.5910775193798449,
+            "prompt_per_second": 1691.8254665634959,
+            "predicted_n": 3,
+            "predicted_ms": 61.593,
+            "predicted_per_token_ms": 30.7965,
+            "predicted_per_second": 32.47122237916646
+          }
+        }
+      },
+      {
+        "index": 0,
+        "passed": true,
+        "result": {
+          "index": 0,
+          "content": "VALUE0",
+          "tokens": [],
+          "id_slot": 0,
+          "stop": true,
+          "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "tokens_predicted": 3,
+          "tokens_evaluated": 537,
+          "generation_settings": {
+            "seed": 4294967295,
+            "temperature": 0.0,
+            "dynatemp_range": 0.0,
+            "dynatemp_exponent": 1.0,
+            "top_k": 20,
+            "top_p": 0.949999988079071,
+            "min_p": 0.05000000074505806,
+            "top_n_sigma": -1.0,
+            "xtc_probability": 0.0,
+            "xtc_threshold": 0.10000000149011612,
+            "typical_p": 1.0,
+            "repeat_last_n": 64,
+            "repeat_penalty": 1.0,
+            "presence_penalty": 0.0,
+            "frequency_penalty": 0.0,
+            "dry_multiplier": 0.0,
+            "dry_base": 1.75,
+            "dry_allowed_length": 2,
+            "dry_penalty_last_n": 64,
+            "dry_sequence_breakers": [
+              "\n",
+              ":",
+              "\"",
+              "*"
+            ],
+            "mirostat": 0,
+            "mirostat_tau": 5.0,
+            "mirostat_eta": 0.10000000149011612,
+            "adaptive_target": -1.0,
+            "adaptive_decay": 0.8999999761581421,
+            "stop": [],
+            "max_tokens": 64,
+            "n_predict": 64,
+            "n_keep": 0,
+            "n_discard": 0,
+            "ignore_eos": false,
+            "stream": false,
+            "logit_bias": [],
+            "n_probs": 0,
+            "min_keep": 0,
+            "grammar": "",
+            "grammar_lazy": false,
+            "grammar_triggers": [],
+            "preserved_tokens": [],
+            "chat_format": "Content-only",
+            "reasoning_format": "deepseek",
+            "reasoning_in_content": false,
+            "generation_prompt": "",
+            "samplers": [
+              "penalties",
+              "dry",
+              "top_n_sigma",
+              "top_k",
+              "typ_p",
+              "top_p",
+              "min_p",
+              "xtc",
+              "temperature"
+            ],
+            "speculative.types": "none",
+            "timings_per_token": false,
+            "post_sampling_probs": false,
+            "backend_sampling": false,
+            "lora": []
+          },
+          "has_new_line": false,
+          "truncated": false,
+          "stop_type": "eos",
+          "stopping_word": "",
+          "tokens_cached": 539,
+          "timings": {
+            "cache_n": 21,
+            "prompt_n": 516,
+            "prompt_ms": 307.016,
+            "prompt_per_token_ms": 0.5949922480620156,
+            "prompt_per_second": 1680.6941657763764,
+            "predicted_n": 3,
+            "predicted_ms": 61.51,
+            "predicted_per_token_ms": 30.755,
+            "predicted_per_second": 32.515038205169894
+          }
+        }
+      },
+      {
+        "index": 2,
+        "passed": true,
+        "result": {
+          "index": 0,
+          "content": "VALUE2",
+          "tokens": [],
+          "id_slot": 0,
+          "stop": true,
+          "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "tokens_predicted": 3,
+          "tokens_evaluated": 537,
+          "generation_settings": {
+            "seed": 4294967295,
+            "temperature": 0.0,
+            "dynatemp_range": 0.0,
+            "dynatemp_exponent": 1.0,
+            "top_k": 20,
+            "top_p": 0.949999988079071,
+            "min_p": 0.05000000074505806,
+            "top_n_sigma": -1.0,
+            "xtc_probability": 0.0,
+            "xtc_threshold": 0.10000000149011612,
+            "typical_p": 1.0,
+            "repeat_last_n": 64,
+            "repeat_penalty": 1.0,
+            "presence_penalty": 0.0,
+            "frequency_penalty": 0.0,
+            "dry_multiplier": 0.0,
+            "dry_base": 1.75,
+            "dry_allowed_length": 2,
+            "dry_penalty_last_n": 64,
+            "dry_sequence_breakers": [
+              "\n",
+              ":",
+              "\"",
+              "*"
+            ],
+            "mirostat": 0,
+            "mirostat_tau": 5.0,
+            "mirostat_eta": 0.10000000149011612,
+            "adaptive_target": -1.0,
+            "adaptive_decay": 0.8999999761581421,
+            "stop": [],
+            "max_tokens": 64,
+            "n_predict": 64,
+            "n_keep": 0,
+            "n_discard": 0,
+            "ignore_eos": false,
+            "stream": false,
+            "logit_bias": [],
+            "n_probs": 0,
+            "min_keep": 0,
+            "grammar": "",
+            "grammar_lazy": false,
+            "grammar_triggers": [],
+            "preserved_tokens": [],
+            "chat_format": "Content-only",
+            "reasoning_format": "deepseek",
+            "reasoning_in_content": false,
+            "generation_prompt": "",
+            "samplers": [
+              "penalties",
+              "dry",
+              "top_n_sigma",
+              "top_k",
+              "typ_p",
+              "top_p",
+              "min_p",
+              "xtc",
+              "temperature"
+            ],
+            "speculative.types": "none",
+            "timings_per_token": false,
+            "post_sampling_probs": false,
+            "backend_sampling": false,
+            "lora": []
+          },
+          "has_new_line": false,
+          "truncated": false,
+          "stop_type": "eos",
+          "stopping_word": "",
+          "tokens_cached": 539,
+          "timings": {
+            "cache_n": 21,
+            "prompt_n": 516,
+            "prompt_ms": 308.846,
+            "prompt_per_token_ms": 0.5985387596899225,
+            "prompt_per_second": 1670.73557695421,
+            "predicted_n": 3,
+            "predicted_ms": 59.83,
+            "predicted_per_token_ms": 29.915,
+            "predicted_per_second": 33.42804613070366
+          }
+        }
+      },
+      {
+        "index": 2,
+        "passed": true,
+        "result": {
+          "index": 0,
+          "content": "VALUE2",
+          "tokens": [],
+          "id_slot": 0,
+          "stop": true,
+          "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "tokens_predicted": 3,
+          "tokens_evaluated": 537,
+          "generation_settings": {
+            "seed": 4294967295,
+            "temperature": 0.0,
+            "dynatemp_range": 0.0,
+            "dynatemp_exponent": 1.0,
+            "top_k": 20,
+            "top_p": 0.949999988079071,
+            "min_p": 0.05000000074505806,
+            "top_n_sigma": -1.0,
+            "xtc_probability": 0.0,
+            "xtc_threshold": 0.10000000149011612,
+            "typical_p": 1.0,
+            "repeat_last_n": 64,
+            "repeat_penalty": 1.0,
+            "presence_penalty": 0.0,
+            "frequency_penalty": 0.0,
+            "dry_multiplier": 0.0,
+            "dry_base": 1.75,
+            "dry_allowed_length": 2,
+            "dry_penalty_last_n": 64,
+            "dry_sequence_breakers": [
+              "\n",
+              ":",
+              "\"",
+              "*"
+            ],
+            "mirostat": 0,
+            "mirostat_tau": 5.0,
+            "mirostat_eta": 0.10000000149011612,
+            "adaptive_target": -1.0,
+            "adaptive_decay": 0.8999999761581421,
+            "stop": [],
+            "max_tokens": 64,
+            "n_predict": 64,
+            "n_keep": 0,
+            "n_discard": 0,
+            "ignore_eos": false,
+            "stream": false,
+            "logit_bias": [],
+            "n_probs": 0,
+            "min_keep": 0,
+            "grammar": "",
+            "grammar_lazy": false,
+            "grammar_triggers": [],
+            "preserved_tokens": [],
+            "chat_format": "Content-only",
+            "reasoning_format": "deepseek",
+            "reasoning_in_content": false,
+            "generation_prompt": "",
+            "samplers": [
+              "penalties",
+              "dry",
+              "top_n_sigma",
+              "top_k",
+              "typ_p",
+              "top_p",
+              "min_p",
+              "xtc",
+              "temperature"
+            ],
+            "speculative.types": "none",
+            "timings_per_token": false,
+            "post_sampling_probs": false,
+            "backend_sampling": false,
+            "lora": []
+          },
+          "has_new_line": false,
+          "truncated": false,
+          "stop_type": "eos",
+          "stopping_word": "",
+          "tokens_cached": 539,
+          "timings": {
+            "cache_n": 533,
+            "prompt_n": 4,
+            "prompt_ms": 98.219,
+            "prompt_per_token_ms": 24.55475,
+            "prompt_per_second": 40.725317912012954,
+            "predicted_n": 3,
+            "predicted_ms": 60.973,
+            "predicted_per_token_ms": 30.4865,
+            "predicted_per_second": 32.801403900086925
+          }
+        }
+      }
+    ],
+    "cache_reuse_observed": true,
+    "cancelled_after_content": true,
+    "recovery": {
+      "index": 0,
+      "content": "RECOVERED",
+      "tokens": [],
+      "id_slot": 0,
+      "stop": true,
+      "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+      "tokens_predicted": 4,
+      "tokens_evaluated": 17,
+      "generation_settings": {
+        "seed": 4294967295,
+        "temperature": 0.0,
+        "dynatemp_range": 0.0,
+        "dynatemp_exponent": 1.0,
+        "top_k": 20,
+        "top_p": 0.949999988079071,
+        "min_p": 0.05000000074505806,
+        "top_n_sigma": -1.0,
+        "xtc_probability": 0.0,
+        "xtc_threshold": 0.10000000149011612,
+        "typical_p": 1.0,
+        "repeat_last_n": 64,
+        "repeat_penalty": 1.0,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "dry_multiplier": 0.0,
+        "dry_base": 1.75,
+        "dry_allowed_length": 2,
+        "dry_penalty_last_n": 64,
+        "dry_sequence_breakers": [
+          "\n",
+          ":",
+          "\"",
+          "*"
+        ],
+        "mirostat": 0,
+        "mirostat_tau": 5.0,
+        "mirostat_eta": 0.10000000149011612,
+        "adaptive_target": -1.0,
+        "adaptive_decay": 0.8999999761581421,
+        "stop": [],
+        "max_tokens": 64,
+        "n_predict": 64,
+        "n_keep": 0,
+        "n_discard": 0,
+        "ignore_eos": false,
+        "stream": false,
+        "logit_bias": [],
+        "n_probs": 0,
+        "min_keep": 0,
+        "grammar": "",
+        "grammar_lazy": false,
+        "grammar_triggers": [],
+        "preserved_tokens": [],
+        "chat_format": "Content-only",
+        "reasoning_format": "deepseek",
+        "reasoning_in_content": false,
+        "generation_prompt": "",
+        "samplers": [
+          "penalties",
+          "dry",
+          "top_n_sigma",
+          "top_k",
+          "typ_p",
+          "top_p",
+          "min_p",
+          "xtc",
+          "temperature"
+        ],
+        "speculative.types": "none",
+        "timings_per_token": false,
+        "post_sampling_probs": false,
+        "backend_sampling": false,
+        "lora": []
+      },
+      "has_new_line": false,
+      "truncated": false,
+      "stop_type": "eos",
+      "stopping_word": "",
+      "tokens_cached": 20,
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 17,
+        "prompt_ms": 104.505,
+        "prompt_per_token_ms": 6.147352941176471,
+        "prompt_per_second": 162.67164250514332,
+        "predicted_n": 4,
+        "predicted_ms": 85.223,
+        "predicted_per_token_ms": 28.407666666666668,
+        "predicted_per_second": 35.201764781807725
+      }
+    },
+    "health_status": 200,
+    "passed": true
+  },
+  "adapter_cases": [
+    {
+      "task_class": "strict_json",
+      "response": "{\"ok\":true}",
+      "metadata": {
+        "openai_compat": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "{\"ok\":true}"
+              }
+            }
+          ],
+          "created": 1789182862,
+          "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "system_fingerprint": "b10809-5266f24da",
+          "object": "chat.completion",
+          "usage": {
+            "completion_tokens": 6,
+            "prompt_tokens": 19,
+            "total_tokens": 25,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "id": "chatcmpl-DX4tQYKjUJieVXRme7K2uebodW9Toism",
+          "timings": {
+            "cache_n": 0,
+            "prompt_n": 19,
+            "prompt_ms": 107.394,
+            "prompt_per_token_ms": 5.652315789473684,
+            "prompt_per_second": 176.9186360504311,
+            "predicted_n": 6,
+            "predicted_ms": 138.824,
+            "predicted_per_token_ms": 27.7648,
+            "predicted_per_second": 36.01682706160317
+          }
+        },
+        "tool_calls": [],
+        "input_tokens": 19,
+        "output_tokens": 6,
+        "total_tokens": 25,
+        "usage": {
+          "prompt_tokens": 19,
+          "completion_tokens": 6,
+          "total_tokens": 25
+        },
+        "timings": {
+          "prompt_ms": 107.394,
+          "predicted_ms": 138.824,
+          "total_ms": 1008.0
+        },
+        "provider": "openai-compat",
+        "provider_backend": "openai_compat",
+        "provider_name": "llama_cpp",
+        "base_url": "http://127.0.0.1:8080/v1",
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "provider_session_epoch": 0,
+        "context_reset_status": "fresh_context",
+        "retries": 0,
+        "latency_ms": 1008,
+        "response_chars": 11,
+        "orket_session_id": "derived-2b11a9b2fbf0d951-fbff4d17bb44",
+        "orket_session_epoch": 0,
+        "orket_request_id": "orket-1789182861662503800",
+        "prompt_fingerprint": "431a26be4165a1f30ad726f5d70a0bff8546d1828200f96147ecedca245e1588",
+        "request_payload_byte_count": 266,
+        "model_alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "orket_trace": {
+          "provider_backend": "openai_compat",
+          "provider_name": "llama_cpp"
+        },
+        "http": {
+          "status_code": 200,
+          "response_headers": {
+            "server": "llama.cpp",
+            "content-type": "application/json; charset=utf-8"
+          }
+        },
+        "runtime_target": {
+          "requested_provider": "llama_cpp",
+          "canonical_provider": "openai_compat",
+          "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "base_url": "http://127.0.0.1:8080/v1",
+          "resolution_mode": "requested",
+          "inventory_source": "http_models+gguf_inventory",
+          "available_models": [
+            "orcarouter_qwen3.8-27b-uncensored-q4_k_l"
+          ],
+          "loaded_models_before": [],
+          "loaded_models_after": [],
+          "auto_load_attempted": false,
+          "auto_load_performed": false,
+          "status": "OK",
+          "gguf_model_root": "D:\\Models\\GGUF",
+          "gguf_inventory_status": "OK",
+          "gguf_models": [
+            {
+              "alias": "dark-osmosis-24b-v1.0-q6_k",
+              "path": "D:\\Models\\GGUF\\ReadyArt\\Dark-Osmosis-24B-v1.0-GGUF\\Dark-Osmosis-24B-v1.0-Q6_K.gguf",
+              "size_bytes": 19345939584,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "deepseek-r1-distill-qwen-14b-q6_k",
+              "path": "D:\\Models\\GGUF\\bartowski\\DeepSeek-R1-Distill-Qwen-14B-GGUF\\DeepSeek-R1-Distill-Qwen-14B-Q6_K.gguf",
+              "size_bytes": 12124683680,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "forgotten-safeword-12b-v4.0.q4_k_s",
+              "path": "D:\\Models\\GGUF\\mradermacher\\Forgotten-Safeword-12B-v4.0-GGUF\\Forgotten-Safeword-12B-v4.0.Q4_K_S.gguf",
+              "size_bytes": 7120201056,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "functiongemma-270m-it-q8_0",
+              "path": "D:\\Models\\GGUF\\unsloth\\functiongemma-270m-it-GGUF\\functiongemma-270m-it-Q8_0.gguf",
+              "size_bytes": 291558624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "functiongemma-270m-it.q8_0",
+              "path": "D:\\Models\\GGUF\\mingxilei\\functiongemma-270m-it-unsloth-bnb-4bit-ft-QAT-GGUF\\functiongemma-270m-it.Q8_0.gguf",
+              "size_bytes": 291557856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-12b-it-qat-q4_k_s",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\gemma-3-12b-it-qat-Q4_K_S.gguf",
+              "size_bytes": 6935333248,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-4b-it-q4_k_m",
+              "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\gemma-3-4b-it-Q4_K_M.gguf",
+              "size_bytes": 2489757856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-4b-it-qat-q4_k_s",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\gemma-3-4b-it-qat-Q4_K_S.gguf",
+              "size_bytes": 2377929856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-4-26b-a4b-it-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\gemma-4-26B-A4B-it-Q4_K_M.gguf",
+              "size_bytes": 16796010624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "google_gemma-4-26b-a4b-it-q5_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\google_gemma-4-26B-A4B-it-Q5_K_M.gguf",
+              "size_bytes": 19319198848,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "huihui-qwen3-30b-a3b-instruct-2507-abliterated.q4_k_s",
+              "path": "D:\\Models\\GGUF\\mradermacher\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated-GGUF\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated.Q4_K_S.gguf",
+              "size_bytes": 17456009888,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "magistral-small-2509-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\Magistral-Small-2509-Q4_K_M.gguf",
+              "size_bytes": 14333911104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mistralai_magistral-small-2509-q5_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Magistral-Small-2509-GGUF\\mistralai_Magistral-Small-2509-Q5_K_M.gguf",
+              "size_bytes": 16763986912,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mistralai_mistral-small-3.1-24b-instruct-2503-q4_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-Q4_K_M.gguf",
+              "size_bytes": 14333910496,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 402381664,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 1676341376,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 1673392256,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-gemma-4-26b-a4b-it-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\mmproj-gemma-4-26B-A4B-it-BF16.gguf",
+              "size_bytes": 1194827744,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-google_gemma-4-26b-a4b-it-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\mmproj-google_gemma-4-26B-A4B-it-f16.gguf",
+              "size_bytes": 1193058528,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-magistral-small-2509-f16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\mmproj-Magistral-Small-2509-F16.gguf",
+              "size_bytes": 878053344,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-mistralai_mistral-small-3.1-24b-instruct-2503-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mmproj-mistralai_Mistral-Small-3.1-24B-Instruct-2503-f16.gguf",
+              "size_bytes": 878054144,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-model-f16",
+              "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\mmproj-model-f16.gguf",
+              "size_bytes": 851251104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-orcarouter_qwen3.8-27b-uncensored-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\mmproj-orcarouter_Qwen3.8-27B-Uncensored-f16.gguf",
+              "size_bytes": 927607584,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.5-35b-a3b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\mmproj-Qwen3.5-35B-A3B-BF16.gguf",
+              "size_bytes": 902822016,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.5-9b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\mmproj-Qwen3.5-9B-BF16.gguf",
+              "size_bytes": 921704480,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.8-27b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\mmproj-Qwen3.8-27B-BF16.gguf",
+              "size_bytes": 931145856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen_qwen3.5-27b-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\mmproj-Qwen_Qwen3.5-27B-f16.gguf",
+              "size_bytes": 927607104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "nomic-embed-text-v1.5.q4_k_m",
+              "path": "D:\\Models\\GGUF\\nomic-ai\\nomic-embed-text-v1.5-GGUF\\nomic-embed-text-v1.5.Q4_K_M.gguf",
+              "size_bytes": 84106624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+              "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\orcarouter_Qwen3.8-27B-Uncensored-Q4_K_L.gguf",
+              "size_bytes": 18716154112,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-0.8b-q8_0",
+              "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+              "size_bytes": 811843840,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-35b-a3b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\Qwen3.5-35B-A3B-Q4_K_M.gguf",
+              "size_bytes": 21169116992,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-9b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\Qwen3.5-9B-Q4_K_M.gguf",
+              "size_bytes": 5627044256,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.6-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+              "size_bytes": 16817244384,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.6-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\local\\Qwen3.6-27B-GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+              "size_bytes": 16817244384,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.8-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\Qwen3.8-27B-Q4_K_M.gguf",
+              "size_bytes": 16810714336,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen_qwen3-14b-q6_k",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3-14B-GGUF\\Qwen_Qwen3-14B-Q6_K.gguf",
+              "size_bytes": 12121937952,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen_qwen3.5-27b-q4_k_s",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\Qwen_Qwen3.5-27B-Q4_K_S.gguf",
+              "size_bytes": 16090121760,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "satyr-v0.1-4b-f16",
+              "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-F16.gguf",
+              "size_bytes": 8051284768,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "satyr-v0.1-4b-q8_0",
+              "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-Q8_0.gguf",
+              "size_bytes": 4280404768,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            }
+          ]
+        },
+        "openai_request_message_count": 1,
+        "openai_request_role_sequence": [
+          "user"
+        ],
+        "openai_request_role_counts": {
+          "user": 1
+        },
+        "openai_request_payload_shape": {
+          "endpoint": "/chat/completions",
+          "message_count": 1,
+          "role_sequence": [
+            "user"
+          ],
+          "has_tools": false,
+          "has_tool_choice": false,
+          "stream": false,
+          "stop_count": 3
+        },
+        "openai_native_tool_names": [],
+        "openai_tool_choice": null,
+        "openai_native_payload_overrides": {},
+        "local_prompt_provider": "llama_cpp",
+        "local_prompting_mode": "enforce",
+        "task_class": "strict_json",
+        "profile_id": "llama_cpp.qwen3.8.chatml.v1",
+        "template_family": "chatml",
+        "template_version": "orket_qwen38_text_chatml_2026_09",
+        "template_hash": "9b51b23fdd15b6adefc0cb9632813fcf69906c552fcd38070d81d23b80bc861a",
+        "template_hash_alg": "sha256",
+        "rendered_prompt_byte_count": 92,
+        "render_observability_classification": "rendered_prompt_audited",
+        "sampling_bundle": {
+          "temperature": 0.0,
+          "top_p": 1.0,
+          "top_k": 1,
+          "repeat_penalty": 1.0,
+          "max_output_tokens": 64,
+          "seed_policy": "fixed",
+          "seed_value": 101
+        },
+        "stop_sequences_by_task_class": {
+          "strict_json": [
+            "<|json_end|>",
+            "<|im_end|>"
+          ],
+          "tool_call": [
+            "<|tool_end|>",
+            "<|im_end|>"
+          ],
+          "concise_text": [
+            "<|im_end|>"
+          ],
+          "reasoning": [
+            "<|im_end|>"
+          ]
+        },
+        "effective_stop_sequences": [
+          "<|json_end|>",
+          "<|im_end|>",
+          "</s>"
+        ],
+        "tool_call_mode": "json_wrapper",
+        "history_policy": "bounded_head_tail_v1",
+        "allows_thinking_blocks": false,
+        "thinking_block_format": "none",
+        "intro_phrase_denylist": [
+          "sure",
+          "here is",
+          "here's",
+          "i will",
+          "i'll",
+          "thinking process:",
+          "let me"
+        ],
+        "local_prompt_allows_thinking_blocks": false,
+        "local_prompt_thinking_block_format": "none",
+        "local_prompt_intro_denylist": [
+          "sure",
+          "here is",
+          "here's",
+          "i will",
+          "i'll",
+          "thinking process:",
+          "let me"
+        ],
+        "lmstudio_session_mode": "none",
+        "lmstudio_session_id_present": false,
+        "profile_resolution_path": "matched",
+        "profile_registry_snapshot_hash": "f057b683d3b4589679ef1963fea003167ffe11f4504501361d8a83d0d39f94d2",
+        "local_prompting_warnings": [],
+        "render_verification_method": "provider_native_preview_byte_exact",
+        "template_source_sha256": "8fc57a9f65eaaaee48e80771aea4775f7d3a8adb466a6193d8de551fa124d578",
+        "server_build": "b10809-5266f24da",
+        "render_verified": true,
+        "token_counter_source": "llama_cpp_native_tokenize",
+        "rendered_input_tokens": 19,
+        "effective_context_budget_tokens": 8192
+      },
+      "passed": true
+    },
+    {
+      "task_class": "tool_call",
+      "response": "{\"ok\":true}",
+      "metadata": {
+        "openai_compat": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "{\"ok\":true}"
+              }
+            }
+          ],
+          "created": 1789182863,
+          "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "system_fingerprint": "b10809-5266f24da",
+          "object": "chat.completion",
+          "usage": {
+            "completion_tokens": 6,
+            "prompt_tokens": 19,
+            "total_tokens": 25,
+            "prompt_tokens_details": {
+              "cached_tokens": 15
+            }
+          },
+          "id": "chatcmpl-oDs1UaOlruTKH4Viqik6N8t4KMQjYQxa",
+          "timings": {
+            "cache_n": 15,
+            "prompt_n": 4,
+            "prompt_ms": 99.539,
+            "prompt_per_token_ms": 24.88475,
+            "prompt_per_second": 40.18525402103698,
+            "predicted_n": 6,
+            "predicted_ms": 142.294,
+            "predicted_per_token_ms": 28.458800000000004,
+            "predicted_per_second": 35.13851603019101
+          }
+        },
+        "tool_calls": [],
+        "input_tokens": 19,
+        "output_tokens": 6,
+        "total_tokens": 25,
+        "usage": {
+          "prompt_tokens": 19,
+          "completion_tokens": 6,
+          "total_tokens": 25
+        },
+        "timings": {
+          "prompt_ms": 99.539,
+          "predicted_ms": 142.294,
+          "total_ms": 1080.0
+        },
+        "provider": "openai-compat",
+        "provider_backend": "openai_compat",
+        "provider_name": "llama_cpp",
+        "base_url": "http://127.0.0.1:8080/v1",
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "provider_session_epoch": 0,
+        "context_reset_status": "context_unknown",
+        "retries": 0,
+        "latency_ms": 1080,
+        "response_chars": 11,
+        "orket_session_id": "derived-2b11a9b2fbf0d951-8e5df6cdbd12",
+        "orket_session_epoch": 0,
+        "orket_request_id": "orket-1789182862672040900",
+        "prompt_fingerprint": "2c9fd53134431db29d72168e94b8dffbbed50c8a05d912bf6ecee4a3dd77b42c",
+        "request_payload_byte_count": 266,
+        "model_alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "orket_trace": {
+          "provider_backend": "openai_compat",
+          "provider_name": "llama_cpp"
+        },
+        "http": {
+          "status_code": 200,
+          "response_headers": {
+            "server": "llama.cpp",
+            "content-type": "application/json; charset=utf-8"
+          }
+        },
+        "runtime_target": {
+          "requested_provider": "llama_cpp",
+          "canonical_provider": "openai_compat",
+          "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "base_url": "http://127.0.0.1:8080/v1",
+          "resolution_mode": "requested",
+          "inventory_source": "http_models+gguf_inventory",
+          "available_models": [
+            "orcarouter_qwen3.8-27b-uncensored-q4_k_l"
+          ],
+          "loaded_models_before": [],
+          "loaded_models_after": [],
+          "auto_load_attempted": false,
+          "auto_load_performed": false,
+          "status": "OK",
+          "gguf_model_root": "D:\\Models\\GGUF",
+          "gguf_inventory_status": "OK",
+          "gguf_models": [
+            {
+              "alias": "dark-osmosis-24b-v1.0-q6_k",
+              "path": "D:\\Models\\GGUF\\ReadyArt\\Dark-Osmosis-24B-v1.0-GGUF\\Dark-Osmosis-24B-v1.0-Q6_K.gguf",
+              "size_bytes": 19345939584,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "deepseek-r1-distill-qwen-14b-q6_k",
+              "path": "D:\\Models\\GGUF\\bartowski\\DeepSeek-R1-Distill-Qwen-14B-GGUF\\DeepSeek-R1-Distill-Qwen-14B-Q6_K.gguf",
+              "size_bytes": 12124683680,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "forgotten-safeword-12b-v4.0.q4_k_s",
+              "path": "D:\\Models\\GGUF\\mradermacher\\Forgotten-Safeword-12B-v4.0-GGUF\\Forgotten-Safeword-12B-v4.0.Q4_K_S.gguf",
+              "size_bytes": 7120201056,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "functiongemma-270m-it-q8_0",
+              "path": "D:\\Models\\GGUF\\unsloth\\functiongemma-270m-it-GGUF\\functiongemma-270m-it-Q8_0.gguf",
+              "size_bytes": 291558624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "functiongemma-270m-it.q8_0",
+              "path": "D:\\Models\\GGUF\\mingxilei\\functiongemma-270m-it-unsloth-bnb-4bit-ft-QAT-GGUF\\functiongemma-270m-it.Q8_0.gguf",
+              "size_bytes": 291557856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-12b-it-qat-q4_k_s",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\gemma-3-12b-it-qat-Q4_K_S.gguf",
+              "size_bytes": 6935333248,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-4b-it-q4_k_m",
+              "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\gemma-3-4b-it-Q4_K_M.gguf",
+              "size_bytes": 2489757856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-4b-it-qat-q4_k_s",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\gemma-3-4b-it-qat-Q4_K_S.gguf",
+              "size_bytes": 2377929856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-4-26b-a4b-it-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\gemma-4-26B-A4B-it-Q4_K_M.gguf",
+              "size_bytes": 16796010624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "google_gemma-4-26b-a4b-it-q5_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\google_gemma-4-26B-A4B-it-Q5_K_M.gguf",
+              "size_bytes": 19319198848,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "huihui-qwen3-30b-a3b-instruct-2507-abliterated.q4_k_s",
+              "path": "D:\\Models\\GGUF\\mradermacher\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated-GGUF\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated.Q4_K_S.gguf",
+              "size_bytes": 17456009888,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "magistral-small-2509-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\Magistral-Small-2509-Q4_K_M.gguf",
+              "size_bytes": 14333911104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mistralai_magistral-small-2509-q5_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Magistral-Small-2509-GGUF\\mistralai_Magistral-Small-2509-Q5_K_M.gguf",
+              "size_bytes": 16763986912,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mistralai_mistral-small-3.1-24b-instruct-2503-q4_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-Q4_K_M.gguf",
+              "size_bytes": 14333910496,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 402381664,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 1676341376,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 1673392256,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-gemma-4-26b-a4b-it-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\mmproj-gemma-4-26B-A4B-it-BF16.gguf",
+              "size_bytes": 1194827744,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-google_gemma-4-26b-a4b-it-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\mmproj-google_gemma-4-26B-A4B-it-f16.gguf",
+              "size_bytes": 1193058528,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-magistral-small-2509-f16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\mmproj-Magistral-Small-2509-F16.gguf",
+              "size_bytes": 878053344,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-mistralai_mistral-small-3.1-24b-instruct-2503-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mmproj-mistralai_Mistral-Small-3.1-24B-Instruct-2503-f16.gguf",
+              "size_bytes": 878054144,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-model-f16",
+              "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\mmproj-model-f16.gguf",
+              "size_bytes": 851251104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-orcarouter_qwen3.8-27b-uncensored-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\mmproj-orcarouter_Qwen3.8-27B-Uncensored-f16.gguf",
+              "size_bytes": 927607584,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.5-35b-a3b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\mmproj-Qwen3.5-35B-A3B-BF16.gguf",
+              "size_bytes": 902822016,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.5-9b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\mmproj-Qwen3.5-9B-BF16.gguf",
+              "size_bytes": 921704480,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.8-27b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\mmproj-Qwen3.8-27B-BF16.gguf",
+              "size_bytes": 931145856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen_qwen3.5-27b-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\mmproj-Qwen_Qwen3.5-27B-f16.gguf",
+              "size_bytes": 927607104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "nomic-embed-text-v1.5.q4_k_m",
+              "path": "D:\\Models\\GGUF\\nomic-ai\\nomic-embed-text-v1.5-GGUF\\nomic-embed-text-v1.5.Q4_K_M.gguf",
+              "size_bytes": 84106624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+              "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\orcarouter_Qwen3.8-27B-Uncensored-Q4_K_L.gguf",
+              "size_bytes": 18716154112,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-0.8b-q8_0",
+              "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+              "size_bytes": 811843840,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-35b-a3b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\Qwen3.5-35B-A3B-Q4_K_M.gguf",
+              "size_bytes": 21169116992,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-9b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\Qwen3.5-9B-Q4_K_M.gguf",
+              "size_bytes": 5627044256,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.6-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+              "size_bytes": 16817244384,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.6-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\local\\Qwen3.6-27B-GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+              "size_bytes": 16817244384,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.8-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\Qwen3.8-27B-Q4_K_M.gguf",
+              "size_bytes": 16810714336,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen_qwen3-14b-q6_k",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3-14B-GGUF\\Qwen_Qwen3-14B-Q6_K.gguf",
+              "size_bytes": 12121937952,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen_qwen3.5-27b-q4_k_s",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\Qwen_Qwen3.5-27B-Q4_K_S.gguf",
+              "size_bytes": 16090121760,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "satyr-v0.1-4b-f16",
+              "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-F16.gguf",
+              "size_bytes": 8051284768,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "satyr-v0.1-4b-q8_0",
+              "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-Q8_0.gguf",
+              "size_bytes": 4280404768,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            }
+          ]
+        },
+        "openai_request_message_count": 1,
+        "openai_request_role_sequence": [
+          "user"
+        ],
+        "openai_request_role_counts": {
+          "user": 1
+        },
+        "openai_request_payload_shape": {
+          "endpoint": "/chat/completions",
+          "message_count": 1,
+          "role_sequence": [
+            "user"
+          ],
+          "has_tools": false,
+          "has_tool_choice": false,
+          "stream": false,
+          "stop_count": 3
+        },
+        "openai_native_tool_names": [],
+        "openai_tool_choice": null,
+        "openai_native_payload_overrides": {},
+        "local_prompt_provider": "llama_cpp",
+        "local_prompting_mode": "enforce",
+        "task_class": "tool_call",
+        "profile_id": "llama_cpp.qwen3.8.chatml.v1",
+        "template_family": "chatml",
+        "template_version": "orket_qwen38_text_chatml_2026_09",
+        "template_hash": "9b51b23fdd15b6adefc0cb9632813fcf69906c552fcd38070d81d23b80bc861a",
+        "template_hash_alg": "sha256",
+        "rendered_prompt_byte_count": 92,
+        "render_observability_classification": "rendered_prompt_audited",
+        "sampling_bundle": {
+          "temperature": 0.0,
+          "top_p": 1.0,
+          "top_k": 1,
+          "repeat_penalty": 1.0,
+          "max_output_tokens": 64,
+          "seed_policy": "fixed",
+          "seed_value": 103
+        },
+        "stop_sequences_by_task_class": {
+          "strict_json": [
+            "<|json_end|>",
+            "<|im_end|>"
+          ],
+          "tool_call": [
+            "<|tool_end|>",
+            "<|im_end|>"
+          ],
+          "concise_text": [
+            "<|im_end|>"
+          ],
+          "reasoning": [
+            "<|im_end|>"
+          ]
+        },
+        "effective_stop_sequences": [
+          "<|tool_end|>",
+          "<|im_end|>",
+          "</s>"
+        ],
+        "tool_call_mode": "json_wrapper",
+        "history_policy": "bounded_head_tail_v1",
+        "allows_thinking_blocks": false,
+        "thinking_block_format": "none",
+        "intro_phrase_denylist": [
+          "sure",
+          "here is",
+          "here's",
+          "i will",
+          "i'll",
+          "thinking process:",
+          "let me"
+        ],
+        "local_prompt_allows_thinking_blocks": false,
+        "local_prompt_thinking_block_format": "none",
+        "local_prompt_intro_denylist": [
+          "sure",
+          "here is",
+          "here's",
+          "i will",
+          "i'll",
+          "thinking process:",
+          "let me"
+        ],
+        "lmstudio_session_mode": "none",
+        "lmstudio_session_id_present": false,
+        "profile_resolution_path": "matched",
+        "profile_registry_snapshot_hash": "f057b683d3b4589679ef1963fea003167ffe11f4504501361d8a83d0d39f94d2",
+        "local_prompting_warnings": [],
+        "render_verification_method": "provider_native_preview_byte_exact",
+        "template_source_sha256": "8fc57a9f65eaaaee48e80771aea4775f7d3a8adb466a6193d8de551fa124d578",
+        "server_build": "b10809-5266f24da",
+        "render_verified": true,
+        "token_counter_source": "llama_cpp_native_tokenize",
+        "rendered_input_tokens": 19,
+        "effective_context_budget_tokens": 8192
+      },
+      "passed": true
+    },
+    {
+      "task_class": "concise_text",
+      "response": "{\"ok\":true}",
+      "metadata": {
+        "openai_compat": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "{\"ok\":true}"
+              }
+            }
+          ],
+          "created": 1789182864,
+          "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "system_fingerprint": "b10809-5266f24da",
+          "object": "chat.completion",
+          "usage": {
+            "completion_tokens": 6,
+            "prompt_tokens": 19,
+            "total_tokens": 25,
+            "prompt_tokens_details": {
+              "cached_tokens": 15
+            }
+          },
+          "id": "chatcmpl-no7muPWEEUbMY1i3L77T2PNx7xROw5sS",
+          "timings": {
+            "cache_n": 15,
+            "prompt_n": 4,
+            "prompt_ms": 92.673,
+            "prompt_per_token_ms": 23.16825,
+            "prompt_per_second": 43.16251766965567,
+            "predicted_n": 6,
+            "predicted_ms": 136.199,
+            "predicted_per_token_ms": 27.239800000000002,
+            "predicted_per_second": 36.71098906746745
+          }
+        },
+        "tool_calls": [],
+        "input_tokens": 19,
+        "output_tokens": 6,
+        "total_tokens": 25,
+        "usage": {
+          "prompt_tokens": 19,
+          "completion_tokens": 6,
+          "total_tokens": 25
+        },
+        "timings": {
+          "prompt_ms": 92.673,
+          "predicted_ms": 136.199,
+          "total_ms": 1086.0
+        },
+        "provider": "openai-compat",
+        "provider_backend": "openai_compat",
+        "provider_name": "llama_cpp",
+        "base_url": "http://127.0.0.1:8080/v1",
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "provider_session_epoch": 0,
+        "context_reset_status": "context_unknown",
+        "retries": 0,
+        "latency_ms": 1086,
+        "response_chars": 11,
+        "orket_session_id": "derived-2b11a9b2fbf0d951-91ef2376fd4b",
+        "orket_session_epoch": 0,
+        "orket_request_id": "orket-1789182863753196600",
+        "prompt_fingerprint": "0ef0e7088aeb5dbedc93ac4878ba38b8feed7ec94aa9867605d41baec4f6c7aa",
+        "request_payload_byte_count": 242,
+        "model_alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "orket_trace": {
+          "provider_backend": "openai_compat",
+          "provider_name": "llama_cpp"
+        },
+        "http": {
+          "status_code": 200,
+          "response_headers": {
+            "server": "llama.cpp",
+            "content-type": "application/json; charset=utf-8"
+          }
+        },
+        "runtime_target": {
+          "requested_provider": "llama_cpp",
+          "canonical_provider": "openai_compat",
+          "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "base_url": "http://127.0.0.1:8080/v1",
+          "resolution_mode": "requested",
+          "inventory_source": "http_models+gguf_inventory",
+          "available_models": [
+            "orcarouter_qwen3.8-27b-uncensored-q4_k_l"
+          ],
+          "loaded_models_before": [],
+          "loaded_models_after": [],
+          "auto_load_attempted": false,
+          "auto_load_performed": false,
+          "status": "OK",
+          "gguf_model_root": "D:\\Models\\GGUF",
+          "gguf_inventory_status": "OK",
+          "gguf_models": [
+            {
+              "alias": "dark-osmosis-24b-v1.0-q6_k",
+              "path": "D:\\Models\\GGUF\\ReadyArt\\Dark-Osmosis-24B-v1.0-GGUF\\Dark-Osmosis-24B-v1.0-Q6_K.gguf",
+              "size_bytes": 19345939584,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "deepseek-r1-distill-qwen-14b-q6_k",
+              "path": "D:\\Models\\GGUF\\bartowski\\DeepSeek-R1-Distill-Qwen-14B-GGUF\\DeepSeek-R1-Distill-Qwen-14B-Q6_K.gguf",
+              "size_bytes": 12124683680,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "forgotten-safeword-12b-v4.0.q4_k_s",
+              "path": "D:\\Models\\GGUF\\mradermacher\\Forgotten-Safeword-12B-v4.0-GGUF\\Forgotten-Safeword-12B-v4.0.Q4_K_S.gguf",
+              "size_bytes": 7120201056,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "functiongemma-270m-it-q8_0",
+              "path": "D:\\Models\\GGUF\\unsloth\\functiongemma-270m-it-GGUF\\functiongemma-270m-it-Q8_0.gguf",
+              "size_bytes": 291558624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "functiongemma-270m-it.q8_0",
+              "path": "D:\\Models\\GGUF\\mingxilei\\functiongemma-270m-it-unsloth-bnb-4bit-ft-QAT-GGUF\\functiongemma-270m-it.Q8_0.gguf",
+              "size_bytes": 291557856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-12b-it-qat-q4_k_s",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\gemma-3-12b-it-qat-Q4_K_S.gguf",
+              "size_bytes": 6935333248,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-4b-it-q4_k_m",
+              "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\gemma-3-4b-it-Q4_K_M.gguf",
+              "size_bytes": 2489757856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-4b-it-qat-q4_k_s",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\gemma-3-4b-it-qat-Q4_K_S.gguf",
+              "size_bytes": 2377929856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-4-26b-a4b-it-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\gemma-4-26B-A4B-it-Q4_K_M.gguf",
+              "size_bytes": 16796010624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "google_gemma-4-26b-a4b-it-q5_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\google_gemma-4-26B-A4B-it-Q5_K_M.gguf",
+              "size_bytes": 19319198848,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "huihui-qwen3-30b-a3b-instruct-2507-abliterated.q4_k_s",
+              "path": "D:\\Models\\GGUF\\mradermacher\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated-GGUF\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated.Q4_K_S.gguf",
+              "size_bytes": 17456009888,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "magistral-small-2509-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\Magistral-Small-2509-Q4_K_M.gguf",
+              "size_bytes": 14333911104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mistralai_magistral-small-2509-q5_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Magistral-Small-2509-GGUF\\mistralai_Magistral-Small-2509-Q5_K_M.gguf",
+              "size_bytes": 16763986912,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mistralai_mistral-small-3.1-24b-instruct-2503-q4_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-Q4_K_M.gguf",
+              "size_bytes": 14333910496,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 402381664,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 1676341376,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 1673392256,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-gemma-4-26b-a4b-it-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\mmproj-gemma-4-26B-A4B-it-BF16.gguf",
+              "size_bytes": 1194827744,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-google_gemma-4-26b-a4b-it-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\mmproj-google_gemma-4-26B-A4B-it-f16.gguf",
+              "size_bytes": 1193058528,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-magistral-small-2509-f16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\mmproj-Magistral-Small-2509-F16.gguf",
+              "size_bytes": 878053344,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-mistralai_mistral-small-3.1-24b-instruct-2503-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mmproj-mistralai_Mistral-Small-3.1-24B-Instruct-2503-f16.gguf",
+              "size_bytes": 878054144,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-model-f16",
+              "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\mmproj-model-f16.gguf",
+              "size_bytes": 851251104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-orcarouter_qwen3.8-27b-uncensored-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\mmproj-orcarouter_Qwen3.8-27B-Uncensored-f16.gguf",
+              "size_bytes": 927607584,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.5-35b-a3b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\mmproj-Qwen3.5-35B-A3B-BF16.gguf",
+              "size_bytes": 902822016,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.5-9b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\mmproj-Qwen3.5-9B-BF16.gguf",
+              "size_bytes": 921704480,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.8-27b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\mmproj-Qwen3.8-27B-BF16.gguf",
+              "size_bytes": 931145856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen_qwen3.5-27b-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\mmproj-Qwen_Qwen3.5-27B-f16.gguf",
+              "size_bytes": 927607104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "nomic-embed-text-v1.5.q4_k_m",
+              "path": "D:\\Models\\GGUF\\nomic-ai\\nomic-embed-text-v1.5-GGUF\\nomic-embed-text-v1.5.Q4_K_M.gguf",
+              "size_bytes": 84106624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+              "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\orcarouter_Qwen3.8-27B-Uncensored-Q4_K_L.gguf",
+              "size_bytes": 18716154112,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-0.8b-q8_0",
+              "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+              "size_bytes": 811843840,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-35b-a3b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\Qwen3.5-35B-A3B-Q4_K_M.gguf",
+              "size_bytes": 21169116992,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-9b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\Qwen3.5-9B-Q4_K_M.gguf",
+              "size_bytes": 5627044256,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.6-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+              "size_bytes": 16817244384,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.6-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\local\\Qwen3.6-27B-GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+              "size_bytes": 16817244384,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.8-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\Qwen3.8-27B-Q4_K_M.gguf",
+              "size_bytes": 16810714336,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen_qwen3-14b-q6_k",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3-14B-GGUF\\Qwen_Qwen3-14B-Q6_K.gguf",
+              "size_bytes": 12121937952,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen_qwen3.5-27b-q4_k_s",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\Qwen_Qwen3.5-27B-Q4_K_S.gguf",
+              "size_bytes": 16090121760,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "satyr-v0.1-4b-f16",
+              "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-F16.gguf",
+              "size_bytes": 8051284768,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "satyr-v0.1-4b-q8_0",
+              "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-Q8_0.gguf",
+              "size_bytes": 4280404768,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            }
+          ]
+        },
+        "openai_request_message_count": 1,
+        "openai_request_role_sequence": [
+          "user"
+        ],
+        "openai_request_role_counts": {
+          "user": 1
+        },
+        "openai_request_payload_shape": {
+          "endpoint": "/chat/completions",
+          "message_count": 1,
+          "role_sequence": [
+            "user"
+          ],
+          "has_tools": false,
+          "has_tool_choice": false,
+          "stream": false,
+          "stop_count": 2
+        },
+        "openai_native_tool_names": [],
+        "openai_tool_choice": null,
+        "openai_native_payload_overrides": {},
+        "local_prompt_provider": "llama_cpp",
+        "local_prompting_mode": "enforce",
+        "task_class": "concise_text",
+        "profile_id": "llama_cpp.qwen3.8.chatml.v1",
+        "template_family": "chatml",
+        "template_version": "orket_qwen38_text_chatml_2026_09",
+        "template_hash": "9b51b23fdd15b6adefc0cb9632813fcf69906c552fcd38070d81d23b80bc861a",
+        "template_hash_alg": "sha256",
+        "rendered_prompt_byte_count": 92,
+        "render_observability_classification": "rendered_prompt_audited",
+        "sampling_bundle": {
+          "temperature": 0.2,
+          "top_p": 0.9,
+          "top_k": 40,
+          "repeat_penalty": 1.05,
+          "max_output_tokens": 64,
+          "seed_policy": "provider_default",
+          "seed_value": null
+        },
+        "stop_sequences_by_task_class": {
+          "strict_json": [
+            "<|json_end|>",
+            "<|im_end|>"
+          ],
+          "tool_call": [
+            "<|tool_end|>",
+            "<|im_end|>"
+          ],
+          "concise_text": [
+            "<|im_end|>"
+          ],
+          "reasoning": [
+            "<|im_end|>"
+          ]
+        },
+        "effective_stop_sequences": [
+          "<|im_end|>",
+          "</s>"
+        ],
+        "tool_call_mode": "json_wrapper",
+        "history_policy": "bounded_head_tail_v1",
+        "allows_thinking_blocks": false,
+        "thinking_block_format": "none",
+        "intro_phrase_denylist": [
+          "sure",
+          "here is",
+          "here's",
+          "i will",
+          "i'll",
+          "thinking process:",
+          "let me"
+        ],
+        "local_prompt_allows_thinking_blocks": false,
+        "local_prompt_thinking_block_format": "none",
+        "local_prompt_intro_denylist": [
+          "sure",
+          "here is",
+          "here's",
+          "i will",
+          "i'll",
+          "thinking process:",
+          "let me"
+        ],
+        "lmstudio_session_mode": "none",
+        "lmstudio_session_id_present": false,
+        "profile_resolution_path": "matched",
+        "profile_registry_snapshot_hash": "f057b683d3b4589679ef1963fea003167ffe11f4504501361d8a83d0d39f94d2",
+        "local_prompting_warnings": [],
+        "render_verification_method": "provider_native_preview_byte_exact",
+        "template_source_sha256": "8fc57a9f65eaaaee48e80771aea4775f7d3a8adb466a6193d8de551fa124d578",
+        "server_build": "b10809-5266f24da",
+        "render_verified": true,
+        "token_counter_source": "llama_cpp_native_tokenize",
+        "rendered_input_tokens": 19,
+        "effective_context_budget_tokens": 8192
+      },
+      "passed": true
+    },
+    {
+      "task_class": "reasoning",
+      "response": "{\"ok\":true}",
+      "metadata": {
+        "openai_compat": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "{\"ok\":true}"
+              }
+            }
+          ],
+          "created": 1789182865,
+          "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "system_fingerprint": "b10809-5266f24da",
+          "object": "chat.completion",
+          "usage": {
+            "completion_tokens": 6,
+            "prompt_tokens": 19,
+            "total_tokens": 25,
+            "prompt_tokens_details": {
+              "cached_tokens": 15
+            }
+          },
+          "id": "chatcmpl-Vl20PSv4Cspelk6tfOQTEAR2ZfctWb5s",
+          "timings": {
+            "cache_n": 15,
+            "prompt_n": 4,
+            "prompt_ms": 95.045,
+            "prompt_per_token_ms": 23.76125,
+            "prompt_per_second": 42.08532800252512,
+            "predicted_n": 6,
+            "predicted_ms": 137.918,
+            "predicted_per_token_ms": 27.5836,
+            "predicted_per_second": 36.25342594875215
+          }
+        },
+        "tool_calls": [],
+        "input_tokens": 19,
+        "output_tokens": 6,
+        "total_tokens": 25,
+        "usage": {
+          "prompt_tokens": 19,
+          "completion_tokens": 6,
+          "total_tokens": 25
+        },
+        "timings": {
+          "prompt_ms": 95.045,
+          "predicted_ms": 137.918,
+          "total_ms": 1061.0
+        },
+        "provider": "openai-compat",
+        "provider_backend": "openai_compat",
+        "provider_name": "llama_cpp",
+        "base_url": "http://127.0.0.1:8080/v1",
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "provider_session_epoch": 0,
+        "context_reset_status": "context_unknown",
+        "retries": 0,
+        "latency_ms": 1061,
+        "response_chars": 11,
+        "orket_session_id": "derived-2b11a9b2fbf0d951-bc721ad13abf",
+        "orket_session_epoch": 0,
+        "orket_request_id": "orket-1789182864840637600",
+        "prompt_fingerprint": "78225b93df0ff4601dd7fd10bc4dee90bef0bf8d0fea1e5b878f867ec7fd722b",
+        "request_payload_byte_count": 243,
+        "model_alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "orket_trace": {
+          "provider_backend": "openai_compat",
+          "provider_name": "llama_cpp"
+        },
+        "http": {
+          "status_code": 200,
+          "response_headers": {
+            "server": "llama.cpp",
+            "content-type": "application/json; charset=utf-8"
+          }
+        },
+        "runtime_target": {
+          "requested_provider": "llama_cpp",
+          "canonical_provider": "openai_compat",
+          "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "base_url": "http://127.0.0.1:8080/v1",
+          "resolution_mode": "requested",
+          "inventory_source": "http_models+gguf_inventory",
+          "available_models": [
+            "orcarouter_qwen3.8-27b-uncensored-q4_k_l"
+          ],
+          "loaded_models_before": [],
+          "loaded_models_after": [],
+          "auto_load_attempted": false,
+          "auto_load_performed": false,
+          "status": "OK",
+          "gguf_model_root": "D:\\Models\\GGUF",
+          "gguf_inventory_status": "OK",
+          "gguf_models": [
+            {
+              "alias": "dark-osmosis-24b-v1.0-q6_k",
+              "path": "D:\\Models\\GGUF\\ReadyArt\\Dark-Osmosis-24B-v1.0-GGUF\\Dark-Osmosis-24B-v1.0-Q6_K.gguf",
+              "size_bytes": 19345939584,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "deepseek-r1-distill-qwen-14b-q6_k",
+              "path": "D:\\Models\\GGUF\\bartowski\\DeepSeek-R1-Distill-Qwen-14B-GGUF\\DeepSeek-R1-Distill-Qwen-14B-Q6_K.gguf",
+              "size_bytes": 12124683680,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "forgotten-safeword-12b-v4.0.q4_k_s",
+              "path": "D:\\Models\\GGUF\\mradermacher\\Forgotten-Safeword-12B-v4.0-GGUF\\Forgotten-Safeword-12B-v4.0.Q4_K_S.gguf",
+              "size_bytes": 7120201056,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "functiongemma-270m-it-q8_0",
+              "path": "D:\\Models\\GGUF\\unsloth\\functiongemma-270m-it-GGUF\\functiongemma-270m-it-Q8_0.gguf",
+              "size_bytes": 291558624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "functiongemma-270m-it.q8_0",
+              "path": "D:\\Models\\GGUF\\mingxilei\\functiongemma-270m-it-unsloth-bnb-4bit-ft-QAT-GGUF\\functiongemma-270m-it.Q8_0.gguf",
+              "size_bytes": 291557856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-12b-it-qat-q4_k_s",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\gemma-3-12b-it-qat-Q4_K_S.gguf",
+              "size_bytes": 6935333248,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-4b-it-q4_k_m",
+              "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\gemma-3-4b-it-Q4_K_M.gguf",
+              "size_bytes": 2489757856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-4b-it-qat-q4_k_s",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\gemma-3-4b-it-qat-Q4_K_S.gguf",
+              "size_bytes": 2377929856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-4-26b-a4b-it-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\gemma-4-26B-A4B-it-Q4_K_M.gguf",
+              "size_bytes": 16796010624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "google_gemma-4-26b-a4b-it-q5_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\google_gemma-4-26B-A4B-it-Q5_K_M.gguf",
+              "size_bytes": 19319198848,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "huihui-qwen3-30b-a3b-instruct-2507-abliterated.q4_k_s",
+              "path": "D:\\Models\\GGUF\\mradermacher\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated-GGUF\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated.Q4_K_S.gguf",
+              "size_bytes": 17456009888,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "magistral-small-2509-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\Magistral-Small-2509-Q4_K_M.gguf",
+              "size_bytes": 14333911104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mistralai_magistral-small-2509-q5_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Magistral-Small-2509-GGUF\\mistralai_Magistral-Small-2509-Q5_K_M.gguf",
+              "size_bytes": 16763986912,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mistralai_mistral-small-3.1-24b-instruct-2503-q4_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-Q4_K_M.gguf",
+              "size_bytes": 14333910496,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 402381664,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 1676341376,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 1673392256,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-gemma-4-26b-a4b-it-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\mmproj-gemma-4-26B-A4B-it-BF16.gguf",
+              "size_bytes": 1194827744,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-google_gemma-4-26b-a4b-it-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\mmproj-google_gemma-4-26B-A4B-it-f16.gguf",
+              "size_bytes": 1193058528,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-magistral-small-2509-f16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\mmproj-Magistral-Small-2509-F16.gguf",
+              "size_bytes": 878053344,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-mistralai_mistral-small-3.1-24b-instruct-2503-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mmproj-mistralai_Mistral-Small-3.1-24B-Instruct-2503-f16.gguf",
+              "size_bytes": 878054144,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-model-f16",
+              "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\mmproj-model-f16.gguf",
+              "size_bytes": 851251104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-orcarouter_qwen3.8-27b-uncensored-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\mmproj-orcarouter_Qwen3.8-27B-Uncensored-f16.gguf",
+              "size_bytes": 927607584,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.5-35b-a3b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\mmproj-Qwen3.5-35B-A3B-BF16.gguf",
+              "size_bytes": 902822016,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.5-9b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\mmproj-Qwen3.5-9B-BF16.gguf",
+              "size_bytes": 921704480,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.8-27b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\mmproj-Qwen3.8-27B-BF16.gguf",
+              "size_bytes": 931145856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen_qwen3.5-27b-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\mmproj-Qwen_Qwen3.5-27B-f16.gguf",
+              "size_bytes": 927607104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "nomic-embed-text-v1.5.q4_k_m",
+              "path": "D:\\Models\\GGUF\\nomic-ai\\nomic-embed-text-v1.5-GGUF\\nomic-embed-text-v1.5.Q4_K_M.gguf",
+              "size_bytes": 84106624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+              "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\orcarouter_Qwen3.8-27B-Uncensored-Q4_K_L.gguf",
+              "size_bytes": 18716154112,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-0.8b-q8_0",
+              "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+              "size_bytes": 811843840,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-35b-a3b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\Qwen3.5-35B-A3B-Q4_K_M.gguf",
+              "size_bytes": 21169116992,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-9b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\Qwen3.5-9B-Q4_K_M.gguf",
+              "size_bytes": 5627044256,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.6-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+              "size_bytes": 16817244384,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.6-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\local\\Qwen3.6-27B-GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+              "size_bytes": 16817244384,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.8-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\Qwen3.8-27B-Q4_K_M.gguf",
+              "size_bytes": 16810714336,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen_qwen3-14b-q6_k",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3-14B-GGUF\\Qwen_Qwen3-14B-Q6_K.gguf",
+              "size_bytes": 12121937952,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen_qwen3.5-27b-q4_k_s",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\Qwen_Qwen3.5-27B-Q4_K_S.gguf",
+              "size_bytes": 16090121760,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "satyr-v0.1-4b-f16",
+              "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-F16.gguf",
+              "size_bytes": 8051284768,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "satyr-v0.1-4b-q8_0",
+              "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-Q8_0.gguf",
+              "size_bytes": 4280404768,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            }
+          ]
+        },
+        "openai_request_message_count": 1,
+        "openai_request_role_sequence": [
+          "user"
+        ],
+        "openai_request_role_counts": {
+          "user": 1
+        },
+        "openai_request_payload_shape": {
+          "endpoint": "/chat/completions",
+          "message_count": 1,
+          "role_sequence": [
+            "user"
+          ],
+          "has_tools": false,
+          "has_tool_choice": false,
+          "stream": false,
+          "stop_count": 2
+        },
+        "openai_native_tool_names": [],
+        "openai_tool_choice": null,
+        "openai_native_payload_overrides": {},
+        "local_prompt_provider": "llama_cpp",
+        "local_prompting_mode": "enforce",
+        "task_class": "reasoning",
+        "profile_id": "llama_cpp.qwen3.8.chatml.v1",
+        "template_family": "chatml",
+        "template_version": "orket_qwen38_text_chatml_2026_09",
+        "template_hash": "9b51b23fdd15b6adefc0cb9632813fcf69906c552fcd38070d81d23b80bc861a",
+        "template_hash_alg": "sha256",
+        "rendered_prompt_byte_count": 92,
+        "render_observability_classification": "rendered_prompt_audited",
+        "sampling_bundle": {
+          "temperature": 0.6,
+          "top_p": 0.95,
+          "top_k": 60,
+          "repeat_penalty": 1.05,
+          "max_output_tokens": 64,
+          "seed_policy": "provider_default",
+          "seed_value": null
+        },
+        "stop_sequences_by_task_class": {
+          "strict_json": [
+            "<|json_end|>",
+            "<|im_end|>"
+          ],
+          "tool_call": [
+            "<|tool_end|>",
+            "<|im_end|>"
+          ],
+          "concise_text": [
+            "<|im_end|>"
+          ],
+          "reasoning": [
+            "<|im_end|>"
+          ]
+        },
+        "effective_stop_sequences": [
+          "<|im_end|>",
+          "</s>"
+        ],
+        "tool_call_mode": "json_wrapper",
+        "history_policy": "bounded_head_tail_v1",
+        "allows_thinking_blocks": false,
+        "thinking_block_format": "none",
+        "intro_phrase_denylist": [
+          "sure",
+          "here is",
+          "here's",
+          "i will",
+          "i'll",
+          "thinking process:",
+          "let me"
+        ],
+        "local_prompt_allows_thinking_blocks": false,
+        "local_prompt_thinking_block_format": "none",
+        "local_prompt_intro_denylist": [
+          "sure",
+          "here is",
+          "here's",
+          "i will",
+          "i'll",
+          "thinking process:",
+          "let me"
+        ],
+        "lmstudio_session_mode": "none",
+        "lmstudio_session_id_present": false,
+        "profile_resolution_path": "matched",
+        "profile_registry_snapshot_hash": "f057b683d3b4589679ef1963fea003167ffe11f4504501361d8a83d0d39f94d2",
+        "local_prompting_warnings": [],
+        "render_verification_method": "provider_native_preview_byte_exact",
+        "template_source_sha256": "8fc57a9f65eaaaee48e80771aea4775f7d3a8adb466a6193d8de551fa124d578",
+        "server_build": "b10809-5266f24da",
+        "render_verified": true,
+        "token_counter_source": "llama_cpp_native_tokenize",
+        "rendered_input_tokens": 19,
+        "effective_context_budget_tokens": 8192
+      },
+      "passed": true
+    },
+    {
+      "task_class": "tool_role_history",
+      "response": "{\"ok\":true}",
+      "metadata": {
+        "openai_compat": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "{\"ok\":true}"
+              }
+            }
+          ],
+          "created": 1789182867,
+          "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "system_fingerprint": "b10809-5266f24da",
+          "object": "chat.completion",
+          "usage": {
+            "completion_tokens": 6,
+            "prompt_tokens": 67,
+            "total_tokens": 73,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "id": "chatcmpl-Ud0IwotXnqF51ruVVNYIzMQvrCyMwjpo",
+          "timings": {
+            "cache_n": 0,
+            "prompt_n": 67,
+            "prompt_ms": 234.89,
+            "prompt_per_token_ms": 3.5058208955223877,
+            "prompt_per_second": 285.2398995274384,
+            "predicted_n": 6,
+            "predicted_ms": 134.486,
+            "predicted_per_token_ms": 26.897199999999998,
+            "predicted_per_second": 37.178591080112426
+          }
+        },
+        "tool_calls": [],
+        "input_tokens": 67,
+        "output_tokens": 6,
+        "total_tokens": 73,
+        "usage": {
+          "prompt_tokens": 67,
+          "completion_tokens": 6,
+          "total_tokens": 73
+        },
+        "timings": {
+          "prompt_ms": 234.89,
+          "predicted_ms": 134.486,
+          "total_ms": 1169.0
+        },
+        "provider": "openai-compat",
+        "provider_backend": "openai_compat",
+        "provider_name": "llama_cpp",
+        "base_url": "http://127.0.0.1:8080/v1",
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "provider_session_epoch": 0,
+        "context_reset_status": "context_unknown",
+        "retries": 0,
+        "latency_ms": 1169,
+        "response_chars": 11,
+        "orket_session_id": "derived-062a01892eb7f828-d422785127c1",
+        "orket_session_epoch": 0,
+        "orket_request_id": "orket-1789182865903261000",
+        "prompt_fingerprint": "1a4fee4b1a23ad95fe557411dcced787f4797f0313ce0af98e72300b4ea3a93d",
+        "request_payload_byte_count": 503,
+        "model_alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "orket_trace": {
+          "provider_backend": "openai_compat",
+          "provider_name": "llama_cpp"
+        },
+        "http": {
+          "status_code": 200,
+          "response_headers": {
+            "server": "llama.cpp",
+            "content-type": "application/json; charset=utf-8"
+          }
+        },
+        "runtime_target": {
+          "requested_provider": "llama_cpp",
+          "canonical_provider": "openai_compat",
+          "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+          "base_url": "http://127.0.0.1:8080/v1",
+          "resolution_mode": "requested",
+          "inventory_source": "http_models+gguf_inventory",
+          "available_models": [
+            "orcarouter_qwen3.8-27b-uncensored-q4_k_l"
+          ],
+          "loaded_models_before": [],
+          "loaded_models_after": [],
+          "auto_load_attempted": false,
+          "auto_load_performed": false,
+          "status": "OK",
+          "gguf_model_root": "D:\\Models\\GGUF",
+          "gguf_inventory_status": "OK",
+          "gguf_models": [
+            {
+              "alias": "dark-osmosis-24b-v1.0-q6_k",
+              "path": "D:\\Models\\GGUF\\ReadyArt\\Dark-Osmosis-24B-v1.0-GGUF\\Dark-Osmosis-24B-v1.0-Q6_K.gguf",
+              "size_bytes": 19345939584,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "deepseek-r1-distill-qwen-14b-q6_k",
+              "path": "D:\\Models\\GGUF\\bartowski\\DeepSeek-R1-Distill-Qwen-14B-GGUF\\DeepSeek-R1-Distill-Qwen-14B-Q6_K.gguf",
+              "size_bytes": 12124683680,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "forgotten-safeword-12b-v4.0.q4_k_s",
+              "path": "D:\\Models\\GGUF\\mradermacher\\Forgotten-Safeword-12B-v4.0-GGUF\\Forgotten-Safeword-12B-v4.0.Q4_K_S.gguf",
+              "size_bytes": 7120201056,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "functiongemma-270m-it-q8_0",
+              "path": "D:\\Models\\GGUF\\unsloth\\functiongemma-270m-it-GGUF\\functiongemma-270m-it-Q8_0.gguf",
+              "size_bytes": 291558624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "functiongemma-270m-it.q8_0",
+              "path": "D:\\Models\\GGUF\\mingxilei\\functiongemma-270m-it-unsloth-bnb-4bit-ft-QAT-GGUF\\functiongemma-270m-it.Q8_0.gguf",
+              "size_bytes": 291557856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-12b-it-qat-q4_k_s",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\gemma-3-12b-it-qat-Q4_K_S.gguf",
+              "size_bytes": 6935333248,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-4b-it-q4_k_m",
+              "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\gemma-3-4b-it-Q4_K_M.gguf",
+              "size_bytes": 2489757856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-3-4b-it-qat-q4_k_s",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\gemma-3-4b-it-qat-Q4_K_S.gguf",
+              "size_bytes": 2377929856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "gemma-4-26b-a4b-it-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\gemma-4-26B-A4B-it-Q4_K_M.gguf",
+              "size_bytes": 16796010624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "google_gemma-4-26b-a4b-it-q5_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\google_gemma-4-26B-A4B-it-Q5_K_M.gguf",
+              "size_bytes": 19319198848,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "huihui-qwen3-30b-a3b-instruct-2507-abliterated.q4_k_s",
+              "path": "D:\\Models\\GGUF\\mradermacher\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated-GGUF\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated.Q4_K_S.gguf",
+              "size_bytes": 17456009888,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "magistral-small-2509-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\Magistral-Small-2509-Q4_K_M.gguf",
+              "size_bytes": 14333911104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mistralai_magistral-small-2509-q5_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Magistral-Small-2509-GGUF\\mistralai_Magistral-Small-2509-Q5_K_M.gguf",
+              "size_bytes": 16763986912,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mistralai_mistral-small-3.1-24b-instruct-2503-q4_k_m",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-Q4_K_M.gguf",
+              "size_bytes": 14333910496,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 402381664,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 1676341376,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-f32",
+              "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\mmproj-F32.gguf",
+              "size_bytes": 1673392256,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-gemma-4-26b-a4b-it-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\mmproj-gemma-4-26B-A4B-it-BF16.gguf",
+              "size_bytes": 1194827744,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-google_gemma-4-26b-a4b-it-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\mmproj-google_gemma-4-26B-A4B-it-f16.gguf",
+              "size_bytes": 1193058528,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-magistral-small-2509-f16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\mmproj-Magistral-Small-2509-F16.gguf",
+              "size_bytes": 878053344,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-mistralai_mistral-small-3.1-24b-instruct-2503-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mmproj-mistralai_Mistral-Small-3.1-24B-Instruct-2503-f16.gguf",
+              "size_bytes": 878054144,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-model-f16",
+              "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\mmproj-model-f16.gguf",
+              "size_bytes": 851251104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-orcarouter_qwen3.8-27b-uncensored-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\mmproj-orcarouter_Qwen3.8-27B-Uncensored-f16.gguf",
+              "size_bytes": 927607584,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.5-35b-a3b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\mmproj-Qwen3.5-35B-A3B-BF16.gguf",
+              "size_bytes": 902822016,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.5-9b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\mmproj-Qwen3.5-9B-BF16.gguf",
+              "size_bytes": 921704480,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen3.8-27b-bf16",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\mmproj-Qwen3.8-27B-BF16.gguf",
+              "size_bytes": 931145856,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "mmproj-qwen_qwen3.5-27b-f16",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\mmproj-Qwen_Qwen3.5-27B-f16.gguf",
+              "size_bytes": 927607104,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "nomic-embed-text-v1.5.q4_k_m",
+              "path": "D:\\Models\\GGUF\\nomic-ai\\nomic-embed-text-v1.5-GGUF\\nomic-embed-text-v1.5.Q4_K_M.gguf",
+              "size_bytes": 84106624,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+              "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\orcarouter_Qwen3.8-27B-Uncensored-Q4_K_L.gguf",
+              "size_bytes": 18716154112,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-0.8b-q8_0",
+              "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+              "size_bytes": 811843840,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-35b-a3b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\Qwen3.5-35B-A3B-Q4_K_M.gguf",
+              "size_bytes": 21169116992,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.5-9b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\Qwen3.5-9B-Q4_K_M.gguf",
+              "size_bytes": 5627044256,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.6-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+              "size_bytes": 16817244384,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.6-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\local\\Qwen3.6-27B-GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+              "size_bytes": 16817244384,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen3.8-27b-q4_k_m",
+              "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\Qwen3.8-27B-Q4_K_M.gguf",
+              "size_bytes": 16810714336,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen_qwen3-14b-q6_k",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3-14B-GGUF\\Qwen_Qwen3-14B-Q6_K.gguf",
+              "size_bytes": 12121937952,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "qwen_qwen3.5-27b-q4_k_s",
+              "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\Qwen_Qwen3.5-27B-Q4_K_S.gguf",
+              "size_bytes": 16090121760,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "satyr-v0.1-4b-f16",
+              "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-F16.gguf",
+              "size_bytes": 8051284768,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            },
+            {
+              "alias": "satyr-v0.1-4b-q8_0",
+              "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-Q8_0.gguf",
+              "size_bytes": 4280404768,
+              "digest_status": "pending",
+              "sha256": "",
+              "error": ""
+            }
+          ]
+        },
+        "openai_request_message_count": 5,
+        "openai_request_role_sequence": [
+          "system",
+          "user",
+          "assistant",
+          "tool",
+          "user"
+        ],
+        "openai_request_role_counts": {
+          "assistant": 1,
+          "system": 1,
+          "tool": 1,
+          "user": 2
+        },
+        "openai_request_payload_shape": {
+          "endpoint": "/chat/completions",
+          "message_count": 5,
+          "role_sequence": [
+            "system",
+            "user",
+            "assistant",
+            "tool",
+            "user"
+          ],
+          "has_tools": false,
+          "has_tool_choice": false,
+          "stream": false,
+          "stop_count": 3
+        },
+        "openai_native_tool_names": [],
+        "openai_tool_choice": null,
+        "openai_native_payload_overrides": {},
+        "local_prompt_provider": "llama_cpp",
+        "local_prompting_mode": "enforce",
+        "task_class": "tool_call",
+        "profile_id": "llama_cpp.qwen3.8.chatml.v1",
+        "template_family": "chatml",
+        "template_version": "orket_qwen38_text_chatml_2026_09",
+        "template_hash": "00bb49b4a769cd94955a53eeb8c5d1146008f192a93fd3f7e333775fb9c2e8cc",
+        "template_hash_alg": "sha256",
+        "rendered_prompt_byte_count": 319,
+        "render_observability_classification": "rendered_prompt_audited",
+        "sampling_bundle": {
+          "temperature": 0.0,
+          "top_p": 1.0,
+          "top_k": 1,
+          "repeat_penalty": 1.0,
+          "max_output_tokens": 64,
+          "seed_policy": "fixed",
+          "seed_value": 103
+        },
+        "stop_sequences_by_task_class": {
+          "strict_json": [
+            "<|json_end|>",
+            "<|im_end|>"
+          ],
+          "tool_call": [
+            "<|tool_end|>",
+            "<|im_end|>"
+          ],
+          "concise_text": [
+            "<|im_end|>"
+          ],
+          "reasoning": [
+            "<|im_end|>"
+          ]
+        },
+        "effective_stop_sequences": [
+          "<|tool_end|>",
+          "<|im_end|>",
+          "</s>"
+        ],
+        "tool_call_mode": "json_wrapper",
+        "history_policy": "bounded_head_tail_v1",
+        "allows_thinking_blocks": false,
+        "thinking_block_format": "none",
+        "intro_phrase_denylist": [
+          "sure",
+          "here is",
+          "here's",
+          "i will",
+          "i'll",
+          "thinking process:",
+          "let me"
+        ],
+        "local_prompt_allows_thinking_blocks": false,
+        "local_prompt_thinking_block_format": "none",
+        "local_prompt_intro_denylist": [
+          "sure",
+          "here is",
+          "here's",
+          "i will",
+          "i'll",
+          "thinking process:",
+          "let me"
+        ],
+        "lmstudio_session_mode": "none",
+        "lmstudio_session_id_present": false,
+        "profile_resolution_path": "matched",
+        "profile_registry_snapshot_hash": "f057b683d3b4589679ef1963fea003167ffe11f4504501361d8a83d0d39f94d2",
+        "local_prompting_warnings": [],
+        "render_verification_method": "provider_native_preview_byte_exact",
+        "template_source_sha256": "8fc57a9f65eaaaee48e80771aea4775f7d3a8adb466a6193d8de551fa124d578",
+        "server_build": "b10809-5266f24da",
+        "render_verified": true,
+        "token_counter_source": "llama_cpp_native_tokenize",
+        "rendered_input_tokens": 67,
+        "effective_context_budget_tokens": 8192
+      },
+      "passed": true
+    },
+    {
+      "task_class": "native_token_budget_refusal",
+      "error": "E_LLAMA_CPP_CONTEXT_BUDGET: native token count exceeds input/output budget",
+      "passed": true
+    }
+  ],
+  "limits": [
+    "Bounded single-slot text workload; no unbounded soak, native tools or arbitrary-objective claim.",
+    "Effective sampler settings are server-reported; output distributions are not benchmarked."
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-12T05:06:47.336133Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:cf000e3f96c42a256aff96bf9f6a89dd422ef12f00e45e4a9b20a431e9e2d762",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 7242,
+        "paths_total_reference": 7242,
+        "churn_paths": 7242,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

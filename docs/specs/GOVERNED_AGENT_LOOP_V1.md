@@ -381,6 +381,8 @@ CLI `--model` defaults to llama.cpp; `--provider` and `--provider-base-url` sele
 an explicit backend and endpoint. The API supervisor uses
 `ORKET_GOVERNED_AGENT_PROVIDER`, `ORKET_GOVERNED_AGENT_MODEL`, and
 `ORKET_GOVERNED_AGENT_BASE_URL`. Existing explicit Ollama options remain valid.
+An omitted API provider always selects llama.cpp. Legacy Ollama model variables
+are read only with explicit `ORKET_GOVERNED_AGENT_PROVIDER=ollama`.
 All wake sources and effect resumes reuse this same provider composition.
 
 The host resolves every role with auto-selection and auto-load disabled, rejects
@@ -394,12 +396,19 @@ server-version attestation. Text-mode calls preserve text responses.
 The exact Qwen3.8 GGUF alias is `orcarouter_qwen3.8-27b-uncensored-q4_k_l`, with
 profile `llama_cpp.qwen3.8.chatml.v1`. Runtime lifecycle stays operator-owned;
 local-prompting inventory, profile, and formal promotion gates still apply.
+The current text-template and cache configuration is specified in
+`docs/RUNBOOK.md` and `docs/architecture/CONTRACT_DELTA_QWEN38_PROMOTION_2026-09-11.md`.
 Live proof covers CLI continuation, API wake/memory/replay, approved and denied
 effects across restart, and actual llama.cpp receipt identity. A single-model
 proof does not establish distinct-model capacity or production soak.
 Delta: `docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FEATURE_INTEGRATION_2026-09-10.md`.
 
 ## Continuation authority
+
+Inspection replays recorded continuation decisions only. An existing run with
+zero iteration snapshots reports `status=no_decisions`, never a successful
+match; an unknown run is absent. Populated runs report `matched` or `mismatch`
+after comparing their recorded decision inputs and digests.
 
 After each iteration boundary, an application-owned deterministic governor
 evaluates only durable recorded inputs.

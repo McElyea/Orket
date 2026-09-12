@@ -13,19 +13,24 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER  # noqa: E402 - repository path bootstrap
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from scripts.probes.probe_support import applied_probe_env, is_environment_blocker, json_safe, now_utc_iso, write_report
-from scripts.workloads.code_review_probe_reporting import build_model_assisted_payload, quality_summary, score_review_bundle
+from scripts.workloads.code_review_probe_reporting import (
+    build_model_assisted_payload,
+    quality_summary,
+    score_review_bundle,
+)
 from scripts.workloads.code_review_probe_support import (
     DEFAULT_PROMPT_PROFILE,
     DEFAULT_REVIEW_METHOD,
     artifact_inventory,
-    build_run_manifest_payload,
-    build_governed_claim_payload,
     build_deterministic_payload,
+    build_governed_claim_payload,
     build_guard_messages,
     build_review_messages,
+    build_run_manifest_payload,
     build_snapshot_payload,
     display_path,
     load_json_object,
@@ -50,7 +55,7 @@ _usage_responses = usage_responses
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Phase 3 workload S-04: standalone live code review probe.")
     parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL)
-    parser.add_argument("--provider", default="ollama")
+    parser.add_argument("--provider", default=DEFAULT_LOCAL_PROVIDER)
     parser.add_argument("--ollama-host", default="")
     parser.add_argument("--fixture", default=DEFAULT_FIXTURE)
     parser.add_argument("--answer-key", default=DEFAULT_ANSWER_KEY)

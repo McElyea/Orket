@@ -246,6 +246,12 @@ For populated runs, [_replay_snapshot](../../../orket/application/services/gover
 
 **Correction:** report `not_evaluated` or `insufficient_evidence` for an empty replay and include compared decision count/scope. Keep decision consistency, source-evidence integrity, effect truth, and full execution replay distinct.
 
+Update 2026-09-11: the empty-replay defect is repaired. Existing runs without
+iteration snapshots report `no_decisions`; populated continuation comparison
+remains unchanged. Real SQLite proof is in
+`tests/integration/test_governed_agent_empty_replay.py`. Broader review findings
+remain open under the architectural-truth plan.
+
 ### SD-03 — The tests pass the intended stories while missing the authority boundaries
 
 **High. Full test execution plus adversarial local probes.**

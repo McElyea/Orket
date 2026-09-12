@@ -1,0 +1,96 @@
+{
+  "core_version": "0.6.2",
+  "sdk_version": "0.6.0",
+  "reference_extension_version": "0.2.0",
+  "proof_mode": "structural",
+  "observed_result": "success",
+  "artifacts": [
+    {
+      "path": ".tmp\\release-0.6.2\\dist\\orket-0.6.2-py3-none-any.whl",
+      "sha256": "f1c03cc9173028de3fa3af31a7e3106a535704ec83e402f7d219d06207d7e769",
+      "bytes": 1436442
+    },
+    {
+      "path": ".tmp\\release-0.6.2\\dist\\orket-0.6.2.tar.gz",
+      "sha256": "01009402fc51dc001c0b3303a951ce182cecc930607be68ffa7f76ac36cde4f7",
+      "bytes": 1060843
+    }
+  ],
+  "package_files_compared": 840,
+  "mismatches": [],
+  "bundled_sdk_entries": [],
+  "source_base_commit": "4ae960fc39e84fef14320be25c56061e076a4c05",
+  "binding": "Built from the release worktree; matching annotated v0.6.2 binds the source commit.",
+  "supporting_evidence_sources": [
+    {
+      "snapshot": "acceptance.json",
+      "source": "benchmarks\\results\\governed_agent\\acceptance.json",
+      "source_sha256": "dcb1ee350adab26b20d0e22fc813c2eed09c88691202c1f1443cdc19f7c9c270"
+    },
+    {
+      "snapshot": "source_integration.json",
+      "source": "benchmarks\\results\\providers\\llama_cpp_integration.json",
+      "source_sha256": "26c3f28373336cf692ed007ea21e4d2e3ea5b9e5f6ceb7153e657d0dffceab03"
+    },
+    {
+      "snapshot": "promotion_readiness.json",
+      "source": "benchmarks\\results\\protocol\\local_prompting\\qwen38_promotion\\promotion_readiness.json",
+      "source_sha256": "12fe2eaf1342543e8a6ce2a6f083a76d2733359a58dbaf221a76937af7d27d9b"
+    },
+    {
+      "snapshot": "runtime_readiness.json",
+      "source": "benchmarks\\results\\protocol\\local_prompting\\qwen38_promotion\\runtime_readiness.json",
+      "source_sha256": "b347358bc1cc069ac7ff2982bcbe9688b146951f8420b26ed8191f0a5c354975"
+    },
+    {
+      "snapshot": "repair_readiness.json",
+      "source": "benchmarks\\results\\protocol\\local_prompting\\qwen38_promotion\\repair_readiness.json",
+      "source_sha256": "47d80615d347a3f5cff6898c944292011f899f4d6a92cb904ba8dd088f109b16"
+    },
+    {
+      "snapshot": "server_installation.json",
+      "source": "benchmarks\\results\\protocol\\local_prompting\\qwen38_promotion\\server_installation.json",
+      "source_sha256": "71535c067c1ca358b3c5e29f5124daa52edd2f5f75b792cebb6411d5abe19cb2"
+    },
+    {
+      "snapshot": "strict_json_report.json",
+      "source": "benchmarks\\results\\protocol\\local_prompting\\qwen38_promotion\\conformance\\llama_cpp\\llama_cpp.qwen3.8.chatml.v1\\strict_json_report.json",
+      "source_sha256": "fdb9465ee3c63168ab7358e1910de91d2ebe63b31ff7d436b0504c8ac83d1880"
+    },
+    {
+      "snapshot": "tool_call_report.json",
+      "source": "benchmarks\\results\\protocol\\local_prompting\\qwen38_promotion\\conformance\\llama_cpp\\llama_cpp.qwen3.8.chatml.v1\\tool_call_report.json",
+      "source_sha256": "c4c59f76daf214ea42255cb03ecb54203e4820cf2cb0ce5cf945a1f983620014"
+    },
+    {
+      "snapshot": "render_verification.json",
+      "source": "benchmarks\\results\\protocol\\local_prompting\\qwen38_promotion\\conformance\\llama_cpp\\llama_cpp.qwen3.8.chatml.v1\\render_verification.json",
+      "source_sha256": "f5c11a15f8eb4824452c10dd1a2fefb6f174111729f4df7635bbb34b5f2e872e"
+    },
+    {
+      "snapshot": "failure_summary.json",
+      "source": "benchmarks\\results\\protocol\\local_prompting\\qwen38_promotion\\conformance\\llama_cpp\\llama_cpp.qwen3.8.chatml.v1\\failure_summary.json",
+      "source_sha256": "8cf96a080ab691abdae8bdba6564101f5706feae2a970dadcd31dcfc2fb41b5e"
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-12T05:06:47.512398Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:8df6ddce79ccae19ca9273fca7ecd22f039c0fcc2bf4e02296ab2c4a1b69f92f",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 104,
+        "paths_total_reference": 104,
+        "churn_paths": 104,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

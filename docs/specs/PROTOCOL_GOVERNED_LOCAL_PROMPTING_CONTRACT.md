@@ -304,7 +304,8 @@ Requirements:
 
 ### LP-12: Runtime Compatibility Matrix Coverage (MUST)
 
-Active providers (`ollama`, `lm_studio`) MUST have conformance tests for each active model profile.
+Active providers (`llama_cpp`, `lmstudio`, `ollama`, in development priority order)
+MUST have conformance tests for each active model profile.
 
 Coverage must prove:
 1. template render-path correctness,
@@ -364,12 +365,12 @@ This matrix defines baseline expectations using explicit `template_family` seman
 | Ollama | `template_family=inst`; `template_variant=llama3_header` (profile-scoped); `template_source=provider_builtin`; `allowed_roles=[system,user,assistant]`; `system_prompt_mode=native`; stops include model EOT + strict sentinel. | `template_family=chatml`; `template_variant=qwen_chatml`; `template_source=provider_builtin`; preserve delimiter/newline behavior; stops include `<|im_end|>` + strict sentinel. | `template_family=inst`; `template_variant=mistral_inst`; `template_source=provider_builtin`; role/wrapper markers match model metadata; strict sentinel required in structured modes. | `template_family=custom`; `template_variant=deepseek_reasoning`; `template_source=profile_override`; support `system_prompt_mode=user_injection` for R1-style profiles. |
 | LM Studio | `template_family=openai_messages`; `template_variant=lmstudio_openai_chat`; `template_source=provider_builtin`; profile override allowed via explicit profile exception. | `template_family=openai_messages`; `template_variant=lmstudio_chatml_metadata`; `template_source=runtime_metadata`; override only by explicit profile exception. | `template_family=openai_messages`; `template_variant=lmstudio_mistral_chat`; `template_source=provider_builtin`; legacy markers handled via profile override. | `template_family=custom`; `template_variant=deepseek_think_override`; `template_source=profile_override`; thought blocks excluded from strict parsing. |
 | vLLM (future lane) | `template_family=openai_messages`; `template_variant=vllm_llama_chat`; `template_source=runtime_metadata`; explicit parser/template alignment required. | `template_family=chatml`; `template_variant=vllm_qwen_chatml`; `template_source=runtime_metadata`; strict delimiter handling required. | `template_family=inst`; `template_variant=vllm_mistral_inst`; `template_source=profile_override`; parser/tool alignment required. | `template_family=custom`; `template_variant=vllm_deepseek_custom`; `template_source=profile_override`; custom encoding path may be required. |
-| llama.cpp (integrated; profiles unpromoted) | Deferred until after Qwen promotion proof. | `template_family=chatml`; `template_variant=tokenizer_chat_template_qwen`; `template_source=runtime_metadata`; missing or ambiguous template metadata fails closed for strict task classes unless an explicit profile override is accepted. | Deferred until after Qwen promotion proof. | Deferred until after Qwen promotion proof. |
+| llama.cpp (exact Qwen3.8 text profile promoted) | Not admitted; separate model-specific proof required. | `llama_cpp.qwen3.8.chatml.v1` uses `template_family=chatml`, `template_variant=orket_text_chatml_jinja`, `template_source=profile_override`; native render and token checks fail closed. The older Qwen3.6 profile remains unpromoted. | Not admitted; separate model-specific proof required. | Not admitted; separate model-specific proof required. |
 
 Notes:
 1. Development and live-test priority is llama.cpp, LM Studio, then Ollama, as defined by `docs/CONTRIBUTOR.md`; formal profile promotion still requires Section 9 evidence.
 2. `vLLM` remains a future compatibility lane until promoted.
-3. `llama.cpp` has a closed original first-slice implementation for one Qwen-family GGUF profile, archived at `docs/projects/archive/local-provider-compatibility/2026-05-19-LLAMA-CPP-FIRST-SLICE-CLOSEOUT/`, but it remains unpromoted until promotion-volume and template-audit or whitelist gates in this contract pass in a later explicit roadmap lane.
+3. `llama.cpp` has a closed original first-slice implementation for one Qwen-family GGUF profile, archived at `docs/projects/archive/local-provider-compatibility/2026-05-19-LLAMA-CPP-FIRST-SLICE-CLOSEOUT/`, and that original Qwen3.6 profile remains unpromoted. The separate exact Qwen3.8 profile is promoted under the September evidence below.
 4. The accepted first target model for the lane is `unsloth/Qwen3.6-27B-GGUF` file `Qwen3.6-27B-Q4_K_M.gguf` at source revision `82d411acf4a06cfb8d9b073a5211bf410bfc29bf` with model alias `qwen3.6-27b-q4_k_m`, profile id `llama_cpp.qwen.chatml.v1`, model root `D:\models\GGUF`, source license `apache-2.0`, remote expected SHA256 `5ed60d0af4650a854b1755bd392f9aef4872643dc25a254bc68043fa638392a0`, remote size `16817244384` bytes, Xet hash `85a68868db9ae3eac97b20a123249c5837d43692de58cd3dafd1fbe4d5725b34`, local digest algorithm `sha256`, and initial local digest status `pending`.
 5. The first llama.cpp slice is operator-managed server only; Orket does not manage `llama-server` process lifecycle in that slice.
 6. The first llama.cpp slice uses JSON-wrapper tool-call mode. Native llama.cpp tool calling and Hugging Face download helpers are out of scope for first-slice acceptance.
@@ -377,6 +378,25 @@ Notes:
 8. Streaming smoke is required only for Orket runtime paths that use streaming; the closed first-slice llama.cpp non-streaming proof records streaming as `not_applicable`.
 9. The 2026-09-10 feature integration adds `llama_cpp.qwen3.8.chatml.v1` for the exact alias `orcarouter_qwen3.8-27b-uncensored-q4_k_l`, using operator-managed text inference, an 8192-token context, JSON-wrapper tools, and message-payload-audited telemetry. Server template metadata is captured by the integration proof; this does not claim LP-16 audit completion or Section 9 promotion volume. Governed-agent and streaming paths, ODR role endpoint resolution, and provider/quant tooling admit `llama_cpp` explicitly. Delta: `docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FEATURE_INTEGRATION_2026-09-10.md`.
 10. For Ollama profiles shipped with custom Modelfiles, `template_source` is `profile_override` rather than `provider_builtin`.
+
+### Exact Qwen3.8 Promotion Boundary (2026-09-11)
+
+The exact alias `orcarouter_qwen3.8-27b-uncensored-q4_k_l`, profile
+`llama_cpp.qwen3.8.chatml.v1`, template version
+`orket_qwen38_text_chatml_2026_09`, and upstream server `b10809-5266f24da` are
+promoted for text and JSON-wrapper inference. Final live proof passed 1000/1000
+JSON cases and 500/500 tool cases, with no protocol chatter, byte-exact native
+render verification, native token accounting, clean active-template audit and
+no post-candidate profile drift. The original tokenizer template was audited
+and rejected as inactive; no whitelist was used. These current render semantics
+supersede the September 10 message-payload-only baseline for this profile.
+
+The model/template digests, LP-01 through LP-16 evidence map, bounded cache/repair
+proof, source and installed agent acceptance, limits, and exact file inventory
+are in `docs/architecture/LLAMA_CPP_QWEN38_PROMOTION_VERIFICATION_2026-09-11.md`.
+The canonical operator launch is in `docs/RUNBOOK.md`. New models, templates or
+runtime upgrades require their own drift/conformance evidence. This promotion
+does not publish a new core release or admit arbitrary-objective verification.
 
 ## 6. Prompt Assembly Policy
 

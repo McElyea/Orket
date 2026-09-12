@@ -1,6 +1,6 @@
 # SDK Versioning
 
-Last reviewed: 2026-09-10
+Last reviewed: 2026-09-11
 
 ## Canonical Source of Truth
 1. SDK version is defined only in `orket_extension_sdk/__version__.py`.
@@ -17,8 +17,9 @@ Last reviewed: 2026-09-10
 
 ## CLI Contract
 
-SDK `0.6.0` admission is explicitly narrowed to core `0.6.0`, using the matched
-artifacts recorded in `docs/releases/0.6.0/PROOF_REPORT.md`.
+SDK `0.6.0` admission is explicitly narrowed to verified core `0.6.0` and
+`0.6.2`, using the matched artifacts recorded in
+`docs/releases/0.6.0/PROOF_REPORT.md` and `docs/releases/0.6.2/PROOF_REPORT.md`.
 Tagged core `0.5.9` bundles SDK `0.1.0`; a standalone SDK overlay is not an
 admitted configuration. Its historical missing `packaging` dependency is
 recorded separately from the namespace conflict. No future core version is

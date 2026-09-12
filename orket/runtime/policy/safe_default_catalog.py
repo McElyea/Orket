@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.runtime.config import defaults
 from orket.runtime.determinism_controls import (
     DEFAULT_CLOCK_MODE,
     DEFAULT_LOCALE,
@@ -50,7 +51,7 @@ def safe_default_catalog_snapshot() -> dict[str, Any]:
         },
         {
             "default_key": "provider_runtime_target.default_provider",
-            "default_value": effective_provider(None, default="ollama"),
+            "default_value": effective_provider(None, default=defaults.DEFAULT_LOCAL_PROVIDER),
             "owner": "orket/runtime/provider_runtime_target.py",
         },
         {

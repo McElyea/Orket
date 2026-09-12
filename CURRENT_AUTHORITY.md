@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-09-10
+Last updated: 2026-09-11
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -31,7 +31,22 @@ llama.cpp first, LM Studio second, Ollama third, with llama.cpp preferred for
 future provider-backed live testing. Governed-agent submission, API wakes,
 continuation, and effect resume share the application-owned
 `orket/application/services/governed_agent_model_provider.py` composition.
+All provider-neutral entrypoints default to llama.cpp through
+`orket/runtime/config/defaults.py`, including the base adapter, model discovery,
+extension catalog/generation, streaming, ODR, and proof tooling. The shared model
+is `orcarouter_qwen3.8-27b-uncensored-q4_k_l`. Explicit provider/model settings
+override defaults; unavailable llama.cpp never triggers an Ollama fallback.
 CLI `--model` defaults to llama.cpp; `--provider` selects an explicit backend.
+Legacy API Ollama model variables require an explicit Ollama provider setting.
+The exact Qwen3.8 source profile now requires the packaged text ChatML override,
+native render verification and native token-budget checks. The verified local
+adapter authority is `orket/adapters/llm/llama_cpp_render_verification.py`, with
+shared LP-02 normalization in `orket/adapters/llm/prompt_canonicalization.py`. The
+server is `b10809-5266f24da`, running with caching enabled; operator setup and
+rollback limits are in `docs/RUNBOOK.md`. Template/repair/replay authority delta:
+`docs/architecture/CONTRACT_DELTA_QWEN38_PROMOTION_2026-09-11.md`.
+Current default-selection delta:
+`docs/architecture/CONTRACT_DELTA_LLAMA_CPP_DEFAULTS_2026-09-11.md`.
 The API uses `ORKET_GOVERNED_AGENT_PROVIDER`, `ORKET_GOVERNED_AGENT_MODEL`, and
 `ORKET_GOVERNED_AGENT_BASE_URL`. Existing explicit Ollama configuration remains
 supported. Exact admitted targets are pinned through inference; blocked targets
@@ -83,6 +98,11 @@ produced by `scripts/proof/run_governed_agent_compatibility.py` at
 compatibility and wheel-upgrade order are governed by
 `docs/requirements/sdk/VERSIONING.md`; historical bundling hosts do not acquire
 standalone SDK compatibility merely by overlaying a wheel.
+
+Core 0.6.2 releases the llama.cpp defaults and exact Qwen3.8 promotion with
+SDK 0.6.0 and reference extension 0.2.0. Release verification and operator
+migration are recorded in `docs/releases/0.6.2/PROOF_REPORT.md`. The dated
+September 11 candidate reports preserve pre-release artifact identities.
 
 The canonical local prompt profile registry is package-owned at
 `orket/runtime/config/local_prompt_profiles.json`. The default loader resolves
@@ -195,7 +215,7 @@ The Slice 6H wake-driven effect boundary is recorded in
 
 Apophenia external extension durable contract: `docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md`; implementation remains outside Orket core at `C:\Source\Orket-Extensions\Apophenia`, and Orket stays a generic host runtime for Apophenia through generic extension runtime endpoints.
 
-llama.cpp first-slice local provider implementation is closed and archived at `docs/projects/archive/local-provider-compatibility/2026-05-19-LLAMA-CPP-FIRST-SLICE-CLOSEOUT/`, including the archived implementation plan, requirements, operator source-build note, source verification artifact, and closeout report; durable contract authority remains in `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`, with the contract delta record at `docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FIRST_SLICE_2026-05-18.md`. Structural support now exists for the `llama_cpp` provider token, bounded GGUF inventory, profile resolution, OpenAI-compatible chat invocation, request-shape telemetry, preflight, and conformance harness paths. Live first-slice proof passed on 2026-05-19 for the operator-managed `qwen3.6-27b-q4_k_m` GGUF path, and the September feature integration above adds governed-agent, streaming, and ODR coverage for the exact Qwen3.8 profile. Formal profile promotion remains unadmitted until promotion-volume and template-audit or whitelist gates pass in a later explicit roadmap lane.
+llama.cpp first-slice local provider implementation is closed and archived at `docs/projects/archive/local-provider-compatibility/2026-05-19-LLAMA-CPP-FIRST-SLICE-CLOSEOUT/`, including the archived implementation plan, requirements, operator source-build note, source verification artifact, and closeout report; durable contract authority remains in `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`, with the contract delta record at `docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FIRST_SLICE_2026-05-18.md`. Structural support now exists for the `llama_cpp` provider token, bounded GGUF inventory, profile resolution, OpenAI-compatible chat invocation, request-shape telemetry, preflight, and conformance harness paths. Live first-slice proof passed on 2026-05-19 for the operator-managed `qwen3.6-27b-q4_k_m` GGUF path, and the September feature integration above adds governed-agent, streaming, and ODR coverage for the exact Qwen3.8 profile. The exact Qwen3.8 text/JSON-wrapper profile is now promoted on b10809-5266f24da with the packaged override and full final conformance evidence in `docs/architecture/LLAMA_CPP_QWEN38_PROMOTION_VERIFICATION_2026-09-11.md`; the original Qwen3.6 and other profiles remain unpromoted.
 
 1. Install/bootstrap: `python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"`
 2. Default runtime: `orket runtime`
@@ -304,7 +324,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 ```json
 {
   "version": 1,
-  "last_updated": "2026-09-10",
+  "last_updated": "2026-09-11",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -377,6 +397,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
       "contributor_policy": "docs/CONTRIBUTOR.md",
       "local_provider_development_priority": ["llama_cpp", "lmstudio", "ollama"],
       "preferred_live_test_provider": "llama_cpp",
+      "default_local_provider": "llama_cpp",
       "testing_policy": "docs/TESTING_POLICY.md",
       "pytest_sandbox_default_policy": "tests/conftest.py",
       "sources": [
@@ -732,6 +753,10 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
       ]
     },
     "canonical_script_output_locations": {
+      "qwen38_runtime_readiness_operator_path": "python scripts/proof/run_qwen38_runtime_readiness.py",
+      "qwen38_runtime_readiness_output_path": "benchmarks/results/protocol/local_prompting/qwen38_promotion/runtime_readiness.json",
+      "qwen38_repair_readiness_operator_path": "python scripts/proof/run_qwen38_repair_readiness.py",
+      "qwen38_repair_readiness_output_path": "benchmarks/results/protocol/local_prompting/qwen38_promotion/repair_readiness.json",
       "llama_cpp_integration_operator_path": "python scripts/proof/run_llama_cpp_integration.py --model <exact-model> --extension-root <extension-root>",
       "llama_cpp_integration_output_path": "benchmarks/results/providers/llama_cpp_integration.json",
       "staged_artifacts_index": "benchmarks/staging/index.json",

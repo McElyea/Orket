@@ -2,7 +2,22 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.application.workflows.turn_corrective_prompt import CorrectivePromptBuilder
+
+
+@pytest.mark.contract
+def test_corrective_prompt_binds_stable_failure_context(tmp_path: Path) -> None:
+    builder = CorrectivePromptBuilder(tmp_path)
+    diagnostic = {"error_code": "ERR_JSON_MD_FENCE", "error_family": "EXTRANEOUS_TEXT",
+                  "short_error_detail": "markdown fence detected", "prior_output_excerpt_hash": "a" * 64}
+    failures = [{"reason": "local_prompt_contract_not_met", "violations": [diagnostic]}]
+    prompt = builder.build_corrective_instruction(failures, {})
+    assert prompt == builder.build_corrective_instruction(failures, {})
+    assert all(value in prompt for value in diagnostic.values())
+    diagnostic["prior_output_excerpt_hash"] = "b" * 64
+    assert builder.build_corrective_instruction(failures, {}) != prompt
 
 
 def test_corrective_prompt_builder_includes_required_path_contracts(tmp_path: Path) -> None:

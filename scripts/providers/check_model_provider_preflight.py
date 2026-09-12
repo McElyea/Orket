@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import sys
+from pathlib import Path
 
 import httpx
 
@@ -11,21 +12,27 @@ SCRIPTS_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if SCRIPTS_ROOT not in sys.path:
     sys.path.insert(0, SCRIPTS_ROOT)
 
+REPO_ROOT = str(Path(SCRIPTS_ROOT).parent)
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+from orket.runtime.config.defaults import configured_provider  # noqa: E402 - repository path bootstrap
+
 try:
-    from scripts.providers.provider_model_resolver import choose_model, list_provider_models
     from scripts.providers.lmstudio_model_cache import (
         LmStudioCacheClearError,
         clear_loaded_models,
         default_lmstudio_base_url,
     )
+    from scripts.providers.provider_model_resolver import choose_model, list_provider_models
     from scripts.providers.provider_runtime_warmup import ProviderRuntimeWarmupError, warmup_provider_model
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
-    from provider_model_resolver import choose_model, list_provider_models
     from lmstudio_model_cache import (
         LmStudioCacheClearError,
         clear_loaded_models,
         default_lmstudio_base_url,
     )
+    from provider_model_resolver import choose_model, list_provider_models
     from provider_runtime_warmup import ProviderRuntimeWarmupError, warmup_provider_model
 
 
@@ -234,7 +241,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--provider",
         default=None,
         choices=["ollama", "openai_compat", "lmstudio", "llama_cpp"],
-        help="Real provider to preflight (defaults to ORKET_MODEL_STREAM_REAL_PROVIDER or ollama).",
+        help="Real provider to preflight (defaults to configured provider or llama_cpp).",
     )
     parser.add_argument("--base-url", default=None, help="Optional provider base URL override.")
     parser.add_argument("--model-id", default=None, help="Model id to validate (defaults to env).")
@@ -311,7 +318,7 @@ def _run_cache_sanitation(*, stage: str, base_url: str, timeout_sec: int) -> tup
 
 def main() -> int:
     args = _build_parser().parse_args()
-    requested_provider = str(args.provider or os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "ollama")).strip().lower() or "ollama"
+    requested_provider = str(args.provider or "").strip().lower() or configured_provider("ORKET_MODEL_STREAM_REAL_PROVIDER", "ORKET_LLM_PROVIDER", "ORKET_MODEL_PROVIDER")
     requested_model = str(args.model_id or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "")).strip()
     api_key = (
         str(os.getenv("ORKET_LLAMA_CPP_API_KEY") or os.getenv("ORKET_LLM_LLAMA_CPP_API_KEY") or "").strip()

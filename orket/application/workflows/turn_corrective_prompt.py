@@ -134,6 +134,13 @@ class CorrectivePromptBuilder:
             lines.append("- Consistency guard failed: output tool-call JSON only with no extra prose.")
             lines.append("- Keep response format deterministic and schema-compliant.")
 
+        failure_context = [
+            {key: item[key] for key in ("error_code", "error_family", "short_error_detail", "prior_output_excerpt_hash") if key in item}
+            for group in violations for item in (group.get("violations") or [group])
+            if isinstance(item, dict) and item.get("prior_output_excerpt_hash")
+        ]
+        if failure_context:
+            lines.append("Validation failure context: " + json.dumps(failure_context, sort_keys=True, separators=(",", ":")))
         rule_hints = self.rule_specific_fix_hints(violations)
         if rule_hints:
             lines.append("- Rule-specific fixes:")

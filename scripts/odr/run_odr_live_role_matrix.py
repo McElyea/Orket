@@ -6,7 +6,7 @@ import itertools
 import json
 import sys
 from dataclasses import dataclass
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -16,18 +16,10 @@ if str(REPO_ROOT) not in sys.path:
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider  # noqa: E402
 from orket.kernel.v1.odr.core import DEFAULT_CODE_LEAK_PATTERNS, ReactorConfig, ReactorState, run_round  # noqa: E402
+from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL  # noqa: E402 - repository path bootstrap
 
-
-DEFAULT_ARCHITECTS = [
-    "Command-R:35B",
-    "qwen2.5:14b",
-    "llama3.1:8b",
-]
-
-DEFAULT_AUDITORS = [
-    "deepseek-r1:32b",
-    "gemma3:27b",
-]
+DEFAULT_ARCHITECTS = [DEFAULT_LOCAL_MODEL]
+DEFAULT_AUDITORS = [DEFAULT_LOCAL_MODEL]
 
 SCENARIO_ROOT = Path("tests/kernel/v1/vectors/odr/refinement")
 

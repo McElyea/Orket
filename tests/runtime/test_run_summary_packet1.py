@@ -162,6 +162,8 @@ def test_packet1_missing_token_replaces_placeholder_provenance_values() -> None:
     assert packet1["provenance"]["intended_profile"] == PACKET1_MISSING_TOKEN
     assert packet1["provenance"]["actual_model"] == PACKET1_MISSING_TOKEN
     assert packet1["provenance"]["actual_profile"] == PACKET1_MISSING_TOKEN
+    assert packet1["provenance"]["intended_provider"] == PACKET1_MISSING_TOKEN
+    assert packet1["provenance"]["actual_provider"] == PACKET1_MISSING_TOKEN
 
 
 # Layer: contract

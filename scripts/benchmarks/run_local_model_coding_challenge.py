@@ -17,6 +17,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.runtime.config.defaults import (  # noqa: E402 - repository path bootstrap
+    DEFAULT_LOCAL_MODEL,
+    configured_provider,
+)
+
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
     from scripts.common.run_summary_support import is_degraded_run_summary, load_validated_run_summary_or_empty
@@ -43,8 +48,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--repo-root", default=str(REPO_ROOT))
     parser.add_argument("--out", default=str(DEFAULT_OUTPUT))
     parser.add_argument("--epic", default="challenge_workflow_runtime")
-    parser.add_argument("--provider", default=os.getenv("ORKET_LLM_PROVIDER", "lmstudio"))
-    parser.add_argument("--model", default="google/gemma-4-26b-a4b")
+    parser.add_argument("--provider", default=configured_provider())
+    parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL)
     parser.add_argument("--runs", type=int, default=3)
     parser.add_argument("--workspace-root", default=str(DEFAULT_WORKSPACE_ROOT))
     parser.add_argument("--build-id-prefix", default="local_model_coding_challenge")

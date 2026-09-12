@@ -12,6 +12,7 @@ from typing import Any
 import httpx
 import ollama
 
+from orket.adapters.llm.llama_cpp_render_verification import verify_llama_cpp_render
 from orket.adapters.llm.local_model_provider_runtime_target import (
     ensure_provider_runtime_target,
     provider_runtime_target_payload,
@@ -29,7 +30,8 @@ from orket.adapters.llm.openai_native_tools import build_openai_native_tooling
 from orket.adapters.llm.provider_extractors import extractor_for_provider
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.logging import log_event
-from orket.runtime.provider_runtime_target import ProviderRuntimeTarget
+from orket.runtime.config.defaults import configured_provider
+from orket.runtime.provider_runtime_target import ProviderRuntimeTarget, normalize_provider
 
 
 @dataclass
@@ -39,23 +41,16 @@ class ModelResponse:
 
 
 def _read_provider_env() -> str:
-    return str(os.getenv("ORKET_LLM_PROVIDER") or os.getenv("ORKET_MODEL_PROVIDER") or "ollama").strip().lower()
+    return configured_provider()
 
 
 def _map_provider_backend(raw: str) -> str:
-    if raw in {"openai_compat", "lmstudio", "llama_cpp"}:
-        return "openai_compat"
-    return "ollama"
+    return normalize_provider(raw)
 
 
 def _map_provider_name(raw: str) -> str:
-    if raw == "lmstudio":
-        return "lmstudio"
-    if raw == "llama_cpp":
-        return "llama_cpp"
-    if raw == "openai_compat":
-        return "openai_compat"
-    return "ollama"
+    normalize_provider(raw)  # Reject unknown providers before constructing a client.
+    return raw
 
 
 class LocalModelProvider:
@@ -445,6 +440,11 @@ class LocalModelProvider:
         for attempt in range(max_retries):
             try:
                 started_at = time.perf_counter()
+                render_evidence = await verify_llama_cpp_render(
+                    client=self.client, headers=headers, payload=payload,
+                    template_version=local_prompting_policy.template_version,
+                    context_budget_tokens=local_prompting_policy.context_budget_tokens,
+                ) if self.provider_name == "llama_cpp" else {}
                 response = await asyncio.wait_for(
                     self.client.post("/chat/completions", headers=headers, json=payload),
                     timeout=self.timeout,
@@ -535,6 +535,7 @@ class LocalModelProvider:
                     "openai_native_payload_overrides": dict(native_payload_overrides),
                 }
                 raw.update(local_prompting_policy.telemetry())
+                raw.update(render_evidence)
                 self._seen_context_epochs.add(orket_session_epoch)
                 return ModelResponse(content=content, raw=raw)
 

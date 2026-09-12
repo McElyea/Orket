@@ -1,4 +1,4 @@
-# Layer: end-to-end; real Ollama, API process exit, durable effects and restarted API
+# Layer: end-to-end; real local provider, API process exit, durable effects and restarted API
 from __future__ import annotations
 
 import json
@@ -9,17 +9,22 @@ from pathlib import Path
 
 import pytest
 
+from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL
 from orket_extension_sdk.agent_testing import ticket_report_fixture
 from tests.e2e.test_governed_agent_supervisor_ollama import _configure_api, _write_catalog
 
 
 @pytest.mark.end_to_end
-@pytest.mark.skipif(os.getenv("ORKET_RUN_LIVE_AGENT_OLLAMA") != "1", reason="requires live Ollama")
+@pytest.mark.skipif(not any(os.getenv(key) == "1" for key in
+    ("ORKET_RUN_LIVE_AGENT_LLAMA_CPP", "ORKET_RUN_LIVE_AGENT_OLLAMA")), reason="requires live local provider")
 @pytest.mark.parametrize("point", ["before_write", "after_write"])
 def test_abrupt_api_exit_recovers_without_repeating_write(tmp_path, monkeypatch, point):
     """Layer: end-to-end. Two real API processes exercise pre/post-write crash windows."""
+    llama = os.getenv("ORKET_RUN_LIVE_AGENT_LLAMA_CPP") == "1"
+    model = os.getenv("ORKET_GOVERNED_AGENT_MODEL", DEFAULT_LOCAL_MODEL)
     _configure_api(monkeypatch, db_path=tmp_path / "agent.sqlite3", catalog_path=_write_catalog(tmp_path),
-                   planner="qwen2.5:7b", actor="qwen2.5-coder:7b", critic="qwen2.5:7b")
+                   planner=model if llama else "qwen2.5:7b", actor=model if llama else "qwen2.5-coder:7b",
+                   critic=model if llama else "qwen2.5:7b", provider="llama_cpp" if llama else "ollama")
     source = tmp_path / "inputs/tickets.json"
     source.parent.mkdir()
     source.write_text(json.dumps(ticket_report_fixture()["batches"]), encoding="utf-8")

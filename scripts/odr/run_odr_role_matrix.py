@@ -6,22 +6,20 @@ import json
 import os
 import re
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-DEFAULT_ARCHITECTS = [
-    "Command-R:35B",
-    "qwen2.5:14b",
-    "llama3.1:8b",
-]
+from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL  # noqa: E402 - repository path bootstrap
 
-DEFAULT_AUDITORS = [
-    "deepseek-r1:32b",
-    "gemma3:27b",
-]
+DEFAULT_ARCHITECTS = [DEFAULT_LOCAL_MODEL]
+DEFAULT_AUDITORS = [DEFAULT_LOCAL_MODEL]
 
 DEFAULT_TESTS = [
     "tests/kernel/v1/test_odr_determinism_gate.py",

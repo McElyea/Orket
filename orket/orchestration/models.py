@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 from typing import Any
 
+from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL
+from orket.runtime.config.provider_discovery import installed_models
 from orket.schema import OrganizationConfig
 from orket.settings import load_user_preferences, load_user_settings
 
@@ -102,13 +104,7 @@ class ModelSelector:
         return dict(self._last_selection_decision)
 
     def _fallback_model_for_role(self, role: str) -> str:
-        fallbacks = {
-            "architect": "deepseek-r1:32b",
-            "coder": "qwen2.5-coder:14b",
-            "reviewer": "Mistral-Nemo:12B",
-            "operations_lead": "qwen2.5-coder:14b",
-        }
-        return fallbacks.get(role, "qwen2.5-coder:14b")
+        return DEFAULT_LOCAL_MODEL
 
     def _resolve_env_override(self, role: str) -> str | None:
         normalized_role = str(role or "").strip().upper().replace("-", "_")
@@ -279,11 +275,4 @@ class ModelRegistry:
 
     @staticmethod
     def get_installed_models() -> list[str]:
-        import subprocess
-
-        try:
-            result = subprocess.run(["ollama", "list"], capture_output=True, text=True, check=True)
-            lines = result.stdout.strip().splitlines()
-            return [line.split()[0] for line in lines if line and not line.startswith("NAME")]
-        except (subprocess.SubprocessError, FileNotFoundError, OSError):
-            return []
+        return installed_models()

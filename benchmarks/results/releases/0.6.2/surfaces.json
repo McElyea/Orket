@@ -1,0 +1,98 @@
+{
+  "proof_mode": "live",
+  "observed_path": "degraded",
+  "records": {
+    "default_runtime_entrypoint": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\llama-default-proof\\venv\\Scripts\\orket.exe",
+        "runtime",
+        "--workspace",
+        "C:\\Source\\Orket\\.tmp\\governed-agent-release-surfaces\\execution-84j0_8en\\workspace"
+      ],
+      "proof_mode": "live",
+      "observed_path": "degraded",
+      "observed_result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "required_claim": "ORKET DRIVER (Interactive)",
+      "output": "\n[FIRST RUN] Orket EOS Orkestrated.\n  Recommendation: Use the canonical card entrypoint for initialization to optimize your models.\n  Command: orket runtime --card initialize_orket\n\n============================================================\n ORKET EOS MANIFEST (Dept: core)\n Hardware: 24 Cores | 63.8GB RAM | 24.0GB VRAM\n============================================================\n\n[LOCAL ENGINES]\n  > Coder: None found\n  > Arch:  None found\n\n[EPICS (Standalone)]\n\n[COMMAND SUGGESTION]\n  orket runtime --card ... --department core\n============================================================\n\n\n============================================================\n ORKET DRIVER (Interactive)\n============================================================\nDriver> [STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.\n"
+    },
+    "handled_runtime_failure": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\llama-default-proof\\venv\\Scripts\\orket.exe",
+        "runtime",
+        "extensions",
+        "unsupported"
+      ],
+      "proof_mode": "live",
+      "observed_path": "degraded",
+      "observed_result": "success",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "required_claim": "orket runtime extensions list",
+      "output": "\n[FATAL] Supported extensions commands: 'orket runtime extensions list' and 'orket runtime extensions install <repo> [--ref <ref>]'.\n[STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.\nTraceback (most recent call last):\n  File \"C:\\Source\\Orket\\.tmp\\llama-default-proof\\venv\\Lib\\site-packages\\orket\\interfaces\\cli.py\", line 252, in run_cli\n    raise ValueError(\n    ...<2 lines>...\n    )\nValueError: Supported extensions commands: 'orket runtime extensions list' and 'orket runtime extensions install <repo> [--ref <ref>]'.\n"
+    },
+    "governed_run_workflow": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\llama-default-proof\\venv\\Scripts\\orket.exe",
+        "demo",
+        "governed-run",
+        "--workspace",
+        "C:\\Source\\Orket\\.tmp\\governed-agent-release-surfaces\\execution-84j0_8en"
+      ],
+      "proof_mode": "live",
+      "observed_path": "primary",
+      "observed_result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "required_claim": "[orket] Run completed",
+      "output": "[model] Wants to inspect files\n[orket] Allowed: read-only observation allowed\n\n[model] Wants to edit config.yaml\n[orket] Approval required: write operation requires human approval\n\n[model] Wants to run shell command\n[orket] Blocked: shell command is not in the allowlist\n[orket] Run completed: allowed=1 approval_required=1 blocked=1\n[orket] Evidence bundle: .runs/governed-run-demo\n[orket] Inspect: orket inspect .runs/governed-run-demo\n[orket] Replay: orket replay .runs/governed-run-demo\n",
+      "durable_evidence_present": true,
+      "durable_evidence_sha256": "4d94ba493969539256367fae3aaf47e8d3e140c7e7dc8cb10bc24a313849d784"
+    },
+    "api_runtime_entrypoint": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\llama-default-proof\\venv\\Scripts\\python.exe",
+        "server.py",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "54569",
+        "--no-reload"
+      ],
+      "proof_mode": "live",
+      "observed_path": "primary",
+      "observed_result": "success",
+      "http_status": 200,
+      "body": {
+        "status": "ok"
+      },
+      "process_reaped": true,
+      "output": "INFO:     Started server process [15292]\nINFO:     Waiting for application startup.\nINFO:     Application startup complete.\nINFO:     Uvicorn running on http://127.0.0.1:54569 (Press CTRL+C to quit)\nINFO:     127.0.0.1:54570 - \"GET /health HTTP/1.1\" 200 OK\n",
+      "teardown": "Health-only server terminated and reaped; graceful task teardown is covered by agent acceptance."
+    }
+  },
+  "observed_result": "success",
+  "evidence_directory": "C:\\Source\\Orket\\.tmp\\governed-agent-release-surfaces\\execution-84j0_8en",
+  "scope": "Installed core entrypoints; source server launcher copied alone into an isolated workspace.",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-12T05:03:34.529875Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:27b1938d26eedaeecd1f98580af883d0b1dde26d2d3708ef62c6edfc22ce42bb",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 122,
+        "paths_total_reference": 122,
+        "churn_paths": 122,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

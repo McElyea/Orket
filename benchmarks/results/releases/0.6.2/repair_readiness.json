@@ -1,0 +1,52 @@
+{
+  "schema_version": "qwen38_repair_readiness.v1",
+  "proof_mode": "live",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "passed": true,
+  "initial": "```json\n{\"content\":\"\",\"tool_calls\":[]}\n```",
+  "initial_violations": [
+    {
+      "rule_id": "LOCAL_PROMPT.MARKDOWN_FENCE",
+      "detail": "markdown fence detected",
+      "error_family": "EXTRANEOUS_TEXT",
+      "short_error_detail": "markdown fence detected",
+      "prior_output_excerpt_hash": "55f994c45a5e694b35d20a02b4a8402ce91eaac8664a15b91ce9d98845d4d949",
+      "error_code": "ERR_JSON_MD_FENCE"
+    }
+  ],
+  "corrective_prompt_sha256": "a5b53f9007d2d46a1f1e4af17991ad9a30aa373c3d9a42f0615994b4b547a83c",
+  "failure_context_included": true,
+  "deterministic_reprompt": true,
+  "max_repairs": 2,
+  "repairs": [
+    {
+      "attempt": 1,
+      "response": "{\"content\":\"\",\"tool_calls\":[]}",
+      "violations": [],
+      "passed": true
+    }
+  ],
+  "scope": "live model + shared host validator/builder; deliberately induced invalid output; no tools executed",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-12T05:06:47.342081Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:5d648cf82f0e3478d467f68c904d6aed8f6be6292531a38717e2c2290fa2e067",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 106,
+        "paths_total_reference": 106,
+        "churn_paths": 106,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

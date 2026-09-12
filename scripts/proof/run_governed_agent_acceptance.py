@@ -18,6 +18,8 @@ import httpx
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
+from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL, DEFAULT_LOCAL_PROVIDER  # noqa: E402
+from orket.runtime.config.provider_runtime_target import default_base_url  # noqa: E402
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger  # noqa: E402
 
 OUTPUT = ROOT / "benchmarks/results/governed_agent/acceptance.json"
@@ -28,6 +30,7 @@ MODULES = (
     "tests/e2e/test_governed_agent_process_recovery.py",
     "tests/e2e/governed_agent_process_worker.py",
     "tests/runtime/governed_agent_test_support.py",
+    "tests/e2e/test_governed_agent_llama_cpp.py",
 )
 
 
@@ -91,25 +94,28 @@ def main() -> int:
     parser.add_argument("--python", required=True, type=Path, help="Clean artifact environment interpreter.")
     parser.add_argument("--extension-root", required=True, type=Path, help="Extracted external reference sdist.")
     parser.add_argument("--artifact", action="append", type=Path, required=True, help="Each exact built wheel/sdist.")
+    parser.add_argument("--provider", choices=("llama_cpp", "ollama"), default=DEFAULT_LOCAL_PROVIDER)
+    parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL, help="Exact served model for llama.cpp acceptance.")
+    parser.add_argument("--base-url", default="", help="Selected provider endpoint override.")
     args = parser.parse_args()
     parent = ROOT / ".tmp/governed-agent-acceptance"
     parent.mkdir(parents=True, exist_ok=True)
     directory = Path(tempfile.mkdtemp(prefix="execution-", dir=parent))
     _harness(directory)
-    env = {**os.environ, "ORKET_DISABLE_SANDBOX": "1", "ORKET_RUN_LIVE_AGENT_OLLAMA": "1",
-           "ORKET_GOVERNED_AGENT_EXTENSION_ROOT": str(args.extension_root.resolve())}
+    env = _acceptance_environment(args)
+    modules = ([MODULES[-1], MODULES[3]] if args.provider == "llama_cpp" else list(MODULES[:4]))
     junit = directory / "junit.xml"
     command = [str(args.python.resolve()), "-I", "-m", "pytest", "-q", "-s", "--confcutdir=.",
                "--import-mode=importlib", "--tb=short", f"--junitxml={junit}",
-               f"--basetemp={directory / 'runs'}", *MODULES[:4]]
+               f"--basetemp={directory / 'runs'}", *modules]
     start = time.monotonic()
     result = subprocess.run(command, cwd=directory, env=env, text=True, capture_output=True, check=False)
     elapsed = time.monotonic() - start
     (directory / "pytest.log").write_text(result.stdout + result.stderr, encoding="utf-8")
-    inventory = _inventory()
+    inventory = _inventory(args.provider, args.base_url or default_base_url(args.provider))
     tests = _tests(junit)
     accepted = result.returncode == 0 and bool(tests) and all(item["result"] == "success" for item in tests)
-    accepted = accepted and "provider_version" in inventory
+    accepted = accepted and inventory.get("observed_result") == "success"
     payload = {
         "schema_version": "governed_agent_acceptance.v1", "observed_path": "primary",
         "observed_result": "success" if accepted else "failure", "proof_mode": "live",
@@ -145,6 +151,20 @@ def _build_evidence(args) -> dict:
                           for path in args.artifact]}
 
 
+def _acceptance_environment(args) -> dict[str, str]:
+    env = {**os.environ, "ORKET_DISABLE_SANDBOX": "1",
+           "ORKET_RUN_LIVE_AGENT_OLLAMA": "1" if args.provider == "ollama" else "0",
+           "ORKET_RUN_LIVE_AGENT_LLAMA_CPP": "1" if args.provider == "llama_cpp" else "0",
+           "ORKET_GOVERNED_AGENT_PROVIDER": args.provider,
+           "ORKET_GOVERNED_AGENT_EXTENSION_ROOT": str(args.extension_root.resolve())}
+    base_url = args.base_url or default_base_url(args.provider)
+    env["ORKET_GOVERNED_AGENT_BASE_URL"] = base_url
+    if args.provider == "llama_cpp":
+        env["ORKET_GOVERNED_AGENT_MODEL"] = args.model
+        env["ORKET_LLM_LLAMA_CPP_BASE_URL"] = base_url
+    return env
+
+
 def _tests(path: Path) -> list[dict]:
     if not path.exists():
         return []
@@ -154,14 +174,21 @@ def _tests(path: Path) -> list[dict]:
             for item in ET.parse(path).iter("testcase")]
 
 
-def _inventory() -> dict:
+def _inventory(provider: str, base_url: str) -> dict:
     try:
-        with httpx.Client(base_url="http://127.0.0.1:11434", timeout=15) as client:
+        if provider == "llama_cpp":
+            response = httpx.get(base_url.rstrip("/") + "/models", timeout=15)
+            response.raise_for_status()
+            props = httpx.get(base_url.removesuffix("/v1").rstrip("/") + "/props", timeout=15)
+            props.raise_for_status()
+            return {"provider": provider, "observed_result": "success",
+                    "provider_version": props.json().get("build_info"), "models": response.json()["data"]}
+        with httpx.Client(base_url=base_url, timeout=15) as client:
             tags = client.get("/api/tags")
             version = client.get("/api/version")
             tags.raise_for_status()
             version.raise_for_status()
-        return {"provider_version": version.json()["version"],
+        return {"provider": provider, "observed_result": "success", "provider_version": version.json()["version"],
                 "models": [{"name": item["name"], "digest": item["digest"]}
                            for item in tags.json()["models"]]}
     except (httpx.HTTPError, KeyError, ValueError) as exc:

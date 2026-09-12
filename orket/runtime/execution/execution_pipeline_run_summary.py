@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from orket.logging import log_event
+from orket.runtime.config import defaults
 from orket.runtime.run_start_artifacts import validate_run_identity_projection
 from orket.runtime.run_summary import (
     PACKET1_MISSING_TOKEN,
@@ -86,11 +87,7 @@ class ExecutionPipelineRunSummaryMixin:
         intended_model: str | None,
         runtime_telemetry: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        provider = (
-            str(os.environ.get("ORKET_LLM_PROVIDER") or os.environ.get("ORKET_MODEL_PROVIDER") or "ollama")
-            .strip()
-            .lower()
-        )
+        provider = defaults.configured_provider()
         configured_profile = self._normalize_packet1_token(os.environ.get("ORKET_LOCAL_PROMPTING_PROFILE_ID"))
         fallback_profile = self._normalize_packet1_token(os.environ.get("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID"))
         telemetry = dict(runtime_telemetry or {})

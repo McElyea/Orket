@@ -1,7 +1,7 @@
 {
   "name": "standard",
   "description": "Standard local development venue.",
-  "model": "qwen3-coder:latest",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
   "temperature": 0.2,
   "seed": 42,
   "params": {}

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.6.1"
+version = "0.6.2"
 description = "Local-first workflow runtime for card-based execution"
 authors = [
     { name = "Jonathan McElyea" }
@@ -101,7 +101,7 @@ include = ["orket", "orket.*"]
 
 [tool.setuptools.package-data]
 "orket.quickstart" = ["*.yaml"]
-"orket.runtime.config" = ["local_prompt_profiles.json"]
+"orket.runtime.config" = ["local_prompt_profiles.json", "*.jinja"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

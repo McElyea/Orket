@@ -164,7 +164,7 @@ class GovernedAgentInspectionService:
             "object_type": "governed_agent_replay",
             "schema_version": "governed_agent_replay.v1",
             "run_id": run_id,
-            "status": "matched" if all(item["matched"] for item in replays) else "mismatch",
+            "status": ("matched" if all(item["matched"] for item in replays) else "mismatch") if replays else "no_decisions",
             "decisions": replays,
         }
 

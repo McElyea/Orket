@@ -27,13 +27,20 @@ def test_clean_core_artifacts_own_the_default_prompt_registry(tmp_path: Path, mo
 
     registry = "orket/runtime/config/local_prompt_profiles.json"
     expected = (root / registry).read_bytes()
+    template = "orket/runtime/config/qwen38_text_chatml.jinja"
+    expected_template = (root / template).read_bytes()
     with zipfile.ZipFile(dist / wheel_name) as wheel:
         assert wheel.read(registry) == expected
+        assert wheel.read(template) == expected_template
         assert not any("orket_extension_sdk/" in name for name in wheel.namelist())
     with tarfile.open(dist / sdist_name, mode="r:gz") as sdist:
         matches = [name for name in sdist.getnames() if name.endswith("/" + registry)]
         assert len(matches) == 1
         member = sdist.extractfile(matches[0])
         assert member is not None and member.read() == expected
+        template_names = [name for name in sdist.getnames() if name.endswith("/" + template)]
+        assert len(template_names) == 1
+        template_member = sdist.extractfile(template_names[0])
+        assert template_member is not None and template_member.read() == expected_template
         assert not any("orket_extension_sdk/" in name for name in sdist.getnames())
     assert not (root / "model/core/contracts/local_prompt_profiles.json").exists()

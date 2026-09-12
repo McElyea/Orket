@@ -33,7 +33,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--models",
         nargs="+",
-        default=[DEFAULT_LOCAL_MODEL, "qwen2.5-coder:14b"],
+        default=[DEFAULT_LOCAL_MODEL],
         help="Models passed to run_live_acceptance_loop.",
     )
     parser.add_argument("--iterations", type=int, default=1)

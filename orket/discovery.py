@@ -1,4 +1,3 @@
-import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -6,6 +5,8 @@ from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.logging import log_event
 from orket.project_paths import default_model_root, default_project_root, default_workspace_root
 from orket.runtime import ConfigLoader
+from orket.runtime.config.defaults import configured_provider
+from orket.runtime.config.provider_discovery import installed_models
 from orket.schema import EngineRegistry, EpicConfig, RockConfig, TeamConfig
 from orket.settings import load_user_settings, save_user_settings
 
@@ -34,13 +35,7 @@ def _model_tier_rank(tier: str) -> int:
 
 
 def get_installed_models() -> list[str]:
-    try:
-        result = subprocess.run(["ollama", "list"], capture_output=True, text=True, check=True)
-        lines = result.stdout.strip().splitlines()
-        # Filter out 'NAME' header and empty lines
-        return [line.split()[0] for line in lines if line and not line.startswith("NAME")]
-    except (subprocess.SubprocessError, FileNotFoundError, OSError):
-        return []
+    return installed_models()
 
 
 def refresh_engine_mappings() -> dict[str, str]:
@@ -71,7 +66,9 @@ def refresh_engine_mappings() -> dict[str, str]:
                 # Simple heuristic: pick the one with 'latest' or the first one found
                 best_match = m
 
-        recommendations[cat] = best_match or mapping.fallback
+        selected = best_match or (mapping.fallback if mapping.fallback in models else None)
+        if selected:
+            recommendations[cat] = selected
 
     return recommendations
 
@@ -92,6 +89,9 @@ def get_engine_recommendations() -> list[dict[str, str]]:
 
     fs = AsyncFileTools(_default_project_root())
     registry = EngineRegistry.model_validate_json(fs.read_file_sync(str(registry_path)))
+    # This legacy recommendation catalog contains Ollama model identifiers.
+    if configured_provider() != "ollama":
+        return []
     suggestions: list[dict[str, str]] = []
     installed_lower = [str(item).strip().lower() for item in installed]
 

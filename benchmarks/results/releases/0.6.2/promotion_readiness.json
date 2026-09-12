@@ -1,0 +1,140 @@
+{
+  "schema_version": "local_prompting_promotion_readiness.v1",
+  "generated_at_utc": "2026-09-12T03:30:37.683280Z",
+  "parameters": {
+    "strict_json_threshold": 0.98,
+    "tool_call_threshold": 0.99,
+    "max_protocol_chatter_rate": 0.02,
+    "max_markdown_fence_rate": 0.02,
+    "min_strict_json_cases": 1000,
+    "min_tool_call_cases": 500,
+    "require_live": true,
+    "profile_roots": [
+      "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/conformance/llama_cpp/llama_cpp.qwen3.8.chatml.v1"
+    ],
+    "drift_report": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/drift/profile_delta_report.json",
+    "template_audit_root": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/template_audit"
+  },
+  "profiles": [
+    {
+      "profile_id": "llama_cpp.qwen3.8.chatml.v1",
+      "provider": "llama_cpp",
+      "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+      "template_family": "chatml",
+      "profile_root": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/conformance/llama_cpp/llama_cpp.qwen3.8.chatml.v1",
+      "ready": true,
+      "gates": [
+        {
+          "id": "G1_artifact_set",
+          "passed": true,
+          "detail": "error_code_registry_snapshot=True enabled_pack=True"
+        },
+        {
+          "id": "G2_promotion_suite_volume",
+          "passed": true,
+          "detail": "suite=promotion strict_total=1000 tool_total=500"
+        },
+        {
+          "id": "G3_strict_json_threshold",
+          "passed": true,
+          "detail": "pass_rate=1.000000 threshold=0.980000"
+        },
+        {
+          "id": "G4_tool_call_threshold",
+          "passed": true,
+          "detail": "pass_rate=1.000000 threshold=0.990000"
+        },
+        {
+          "id": "G5_anti_meta_threshold",
+          "passed": true,
+          "detail": "protocol_chatter_rate=0.000000 max=0.020000 markdown_fence_rate=0.000000 max=0.020000"
+        },
+        {
+          "id": "G6_live_primary_path",
+          "passed": true,
+          "detail": "mode=live method=message_payload_audited"
+        },
+        {
+          "id": "G7_failure_summary_clear",
+          "passed": true,
+          "detail": "completed=True total_failures=0"
+        },
+        {
+          "id": "G8_template_audit_whitelist",
+          "passed": true,
+          "detail": "template_render_bound=True clean=True approved=False"
+        },
+        {
+          "id": "G0_consistency",
+          "passed": true,
+          "detail": "provider/model/profile consistent"
+        }
+      ],
+      "errors": [],
+      "artifact_paths": {
+        "strict_json_report": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/conformance/llama_cpp/llama_cpp.qwen3.8.chatml.v1/strict_json_report.json",
+        "tool_call_report": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/conformance/llama_cpp/llama_cpp.qwen3.8.chatml.v1/tool_call_report.json",
+        "anti_meta_report": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/conformance/llama_cpp/llama_cpp.qwen3.8.chatml.v1/anti_meta_report.json",
+        "sampling_capabilities": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/conformance/llama_cpp/llama_cpp.qwen3.8.chatml.v1/sampling_capabilities.json",
+        "render_verification": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/conformance/llama_cpp/llama_cpp.qwen3.8.chatml.v1/render_verification.json",
+        "capability_probe_method": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/conformance/llama_cpp/llama_cpp.qwen3.8.chatml.v1/capability_probe_method.json",
+        "suite_manifest": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/conformance/llama_cpp/llama_cpp.qwen3.8.chatml.v1/suite_manifest.json",
+        "tokenizer_identity": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/conformance/llama_cpp/llama_cpp.qwen3.8.chatml.v1/tokenizer_identity.json",
+        "profile_registry_snapshot": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/profiles/profile_registry_snapshot.json",
+        "error_code_registry_snapshot": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/profiles/error_code_registry_snapshot.json",
+        "enabled_pack": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/profiles/enabled_pack.json",
+        "failure_summary": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/conformance/llama_cpp/llama_cpp.qwen3.8.chatml.v1/failure_summary.json",
+        "audit_report": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/template_audit/llama_cpp.qwen3.8.chatml.v1/audit_report.json",
+        "whitelist_decision": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/template_audit/llama_cpp.qwen3.8.chatml.v1/whitelist_decision.json"
+      },
+      "metrics": {
+        "strict_json_total_cases": 1000,
+        "strict_json_pass_rate": 1.0,
+        "tool_call_total_cases": 500,
+        "tool_call_pass_rate": 1.0,
+        "protocol_chatter_rate": 0.0,
+        "markdown_fence_rate": 0.0,
+        "failure_total": 0
+      }
+    }
+  ],
+  "drift": {
+    "path": "C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/drift/profile_delta_report.json",
+    "exists": true,
+    "changed": false
+  },
+  "gates": [
+    {
+      "id": "G9_drift_gate",
+      "passed": true,
+      "detail": "path=C:/Source/Orket/benchmarks/results/protocol/local_prompting/qwen38_promotion/drift/profile_delta_report.json exists=True changed=False"
+    },
+    {
+      "id": "G10_all_profiles_ready",
+      "passed": true,
+      "detail": "ready_profiles=1/1"
+    }
+  ],
+  "ready": true,
+  "errors": [],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-12T05:06:47.329074Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:3cdf33c48d9fe9a0bfdee706f8f3923a895b9b74b96646baeab2994f0d51807a",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 249,
+        "paths_total_reference": 249,
+        "churn_paths": 249,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

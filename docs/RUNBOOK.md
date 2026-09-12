@@ -141,8 +141,8 @@ Use this workflow when you need public proof that the outward pipeline invoked a
 ```powershell
 $env:ORKET_DISABLE_SANDBOX="1"
 $env:ORKET_OUTWARD_PIPELINE_DB_PATH=".tmp/live_governed_run_bundle_v1.sqlite3"
-$env:ORKET_LLM_PROVIDER="ollama"
-$env:ORKET_MODEL_STREAM_REAL_PROVIDER="ollama"
+$env:ORKET_LLM_PROVIDER="llama_cpp"
+$env:ORKET_MODEL_STREAM_REAL_PROVIDER="llama_cpp"
 $env:ORKET_MODEL_STREAM_REAL_MODEL_ID="<model_id>"
 python server.py --host 127.0.0.1 --port 8082
 ```
@@ -391,6 +391,13 @@ orket runtime --archive-related <token> --archive-reason "manual archive"
 
 ## llama.cpp provider verification
 
+All provider-neutral runtime and tool entrypoints default to llama.cpp, with
+`orcarouter_qwen3.8-27b-uncensored-q4_k_l` as the shared local model. Explicit
+settings override these defaults. Keep the operator-managed server running;
+an unavailable llama.cpp endpoint never selects another provider. Local Ollama
+installation is not required. Development/testing order is llama.cpp, LM Studio,
+then Ollama, with compatibility providers selected explicitly.
+
 From the repository root, run:
 
 ```text
@@ -446,12 +453,40 @@ For the preferred live llama.cpp run, replace `--deterministic-fixture` with
 Start an operator-owned `llama-server` first, serving that exact alias at
 `http://127.0.0.1:8080/v1`. Its alias must match the lowercase GGUF filename stem
 under `ORKET_LLAMA_CPP_GGUF_MODEL_ROOT` (default `D:/models/GGUF`) and an admitted
-prompt profile. The Qwen3.8 text profile uses an 8192-token context; launch with
-`--jinja --reasoning off --ctx-size 8192 --no-cache-prompt --cache-ram 0`.
-Prompt-cache reuse on the current local build (`dd7cad7`) caused a recurrent
-sequence-removal abort during streaming; disabling that cache is the verified
-operator setting for this model/build. All roles may use this model; role
-overrides require their exact models to be served and admitted too.
+prompt profile. The Qwen3.8 text profile uses an 8192-token context and the
+packaged `qwen38_text_chatml.jinja` template. The verified server is upstream
+`b10809` (`5266f24da`), with prompt caching enabled. On this workstation:
+
+```powershell
+$qwenTemplate = python -c "from importlib.resources import files; print(files('orket.runtime.config').joinpath('qwen38_text_chatml.jinja'))"
+& D:/llama.cpp-releases/b10809/llama-server.exe `
+  --model D:/Models/GGUF/bartowski/orcarouter_Qwen3.8-27B-Uncensored-GGUF/orcarouter_Qwen3.8-27B-Uncensored-Q4_K_L.gguf `
+  --alias orcarouter_qwen3.8-27b-uncensored-q4_k_l `
+  --host 127.0.0.1 --port 8080 --n-gpu-layers 99 --flash-attn on `
+  --ctx-size 8192 --parallel 1 --jinja --reasoning off `
+  --cache-prompt --cache-ram 8192 --chat-template-file $qwenTemplate
+```
+
+The operator owns this process. The profiled adapter verifies actual template
+bytes, native rendered prompts and token budgets before generation. A template
+mismatch fails closed. The old `dd7cad7` no-cache workaround is superseded by
+this pinned setup; retain its evidence only for rollback investigation. All
+roles may use this model; additional models require their own served aliases
+and admission proof.
+
+Rerun bounded cache/cancellation, stop/sampling and repair checks with:
+
+```text
+python scripts/proof/run_qwen38_runtime_readiness.py
+python scripts/proof/run_qwen38_repair_readiness.py
+```
+
+Canonical evidence is under
+`benchmarks/results/protocol/local_prompting/qwen38_promotion/`. The larger
+promotion corpus uses `scripts/protocol/run_local_prompting_conformance.py`
+with `--provider llama_cpp --model orcarouter_qwen3.8-27b-uncensored-q4_k_l
+--suite promotion --strict --out-root benchmarks/results/protocol/local_prompting/qwen38_promotion`.
+Template audit and readiness gates remain mandatory; volume alone is not promotion.
 
 For a live single-model Ollama run, replace `--deterministic-fixture` with
 `--ollama-model <exact-installed-model>`. For fixed multi-model roles, add
@@ -545,9 +580,9 @@ Claim timing can be bounded with
 lease. Inventory timeout uses `ORKET_GOVERNED_AGENT_INVENTORY_TIMEOUT_SECONDS`.
 The generic base URL overrides provider defaults. Existing
 `ORKET_GOVERNED_AGENT_OLLAMA_MODEL` and `ORKET_GOVERNED_AGENT_OLLAMA_BASE_URL`
-apply only to Ollama. With no provider set, an existing Ollama model setting
-selects Ollama; otherwise the default is llama.cpp. Set the provider explicitly
-when switching an existing environment. Existing runs retain their configuration
+apply only with explicit `ORKET_GOVERNED_AGENT_PROVIDER=ollama`. With no
+provider set, llama.cpp is selected even if legacy Ollama model variables remain.
+Set the provider explicitly when switching an existing environment. Existing runs retain their configuration
 digest; switching providers requires a new run.
 
 The JSON body uses one caller-stable occurrence id, either a `new_run` workload

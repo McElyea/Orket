@@ -11,6 +11,7 @@ try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
     from scripts.protocol.local_prompting_conformance_helpers import resolve_case_counts, sha256_bytes
     from scripts.protocol.local_prompting_conformance_runner import run_cases
+    from scripts.protocol.local_prompting_render_evidence import render_evidence
     from scripts.providers.lmstudio_model_cache import (
         LmStudioCacheClearError,
         clear_loaded_models,
@@ -21,6 +22,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
     from protocol.local_prompting_conformance_helpers import resolve_case_counts, sha256_bytes
     from protocol.local_prompting_conformance_runner import run_cases
+    from protocol.local_prompting_render_evidence import render_evidence
     from providers.lmstudio_model_cache import (
         LmStudioCacheClearError,
         clear_loaded_models,
@@ -140,6 +142,7 @@ def main(argv: list[str] | None = None) -> int:
     profile_root.mkdir(parents=True, exist_ok=True)
     profiles_root.mkdir(parents=True, exist_ok=True)
     random_seed = 1337
+    _write_json(profile_root / "failure_summary.json", {"execution_status": "in_progress", "total_failures": 0})
     randomizer = random.Random(random_seed)
     strict_json_case_count, tool_call_case_count = resolve_case_counts(
         suite=str(args.suite),
@@ -168,6 +171,7 @@ def main(argv: list[str] | None = None) -> int:
             mock=bool(args.mock),
         )
     )
+    _write_json(profile_root / "strict_json_report.json", strict_json)
     tool_call = asyncio.run(
         run_cases(
             provider=provider,
@@ -217,12 +221,12 @@ def main(argv: list[str] | None = None) -> int:
             "tool_call": tool_call["telemetry_samples"][0]["sampling_bundle"] if tool_call["telemetry_samples"] else {},
         },
         "field_capabilities": {
-            "temperature": "honored",
-            "top_p": "honored",
+            "temperature": "requested_unmeasured",
+            "top_p": "requested_unmeasured",
             "top_k": "provider_specific",
             "repeat_penalty": "provider_specific",
-            "max_output_tokens": "honored",
-            "seed": "honored",
+            "max_output_tokens": "requested_unmeasured",
+            "seed": "requested_unmeasured",
         },
     }
     render_verification = {
@@ -238,6 +242,8 @@ def main(argv: list[str] | None = None) -> int:
         "strict_json_hash_samples": strict_json["render_hash_samples"],
         "tool_call_hash_samples": tool_call["render_hash_samples"],
     }
+    if provider == "llama_cpp":
+        render_verification.update(render_evidence(strict_json, tool_call))
     capability_probe_method = {
         "schema_version": "local_prompting_capability_probe_method.v1",
         "provider": provider,
@@ -281,7 +287,10 @@ def main(argv: list[str] | None = None) -> int:
         "provider": provider,
         "model": model,
         "profile_id": profile_id,
-        "tokenizer_source": "profile_declared_equivalent",
+        "tokenizer_source": (
+            "llama_cpp_native_tokenize" if all(row.get("token_counter_source") == "llama_cpp_native_tokenize"
+            for row in strict_json["case_results"] + tool_call["case_results"]) else "unmeasured"
+        ),
         "history_policy": resolved.profile.history_policy,
     }
     _write_json(profile_root / "strict_json_report.json", strict_json)
@@ -320,6 +329,8 @@ def main(argv: list[str] | None = None) -> int:
             sanitation_events.append(exc.result)
         post_sanitation_error = str(exc)
     _write_json(profile_root / "suite_manifest.json", suite_manifest)
+    _write_json(profile_root / "failure_summary.json", {"execution_status": "completed", "total_failures":
+        sum(strict_json["failure_families"].values()) + sum(tool_call["failure_families"].values())})
     strict_ok = bool(strict_json["strict_ok"]) and bool(tool_call["strict_ok"]) and bool(anti_meta["strict_ok"]) and not post_sanitation_error
     if post_sanitation_error:
         print(post_sanitation_error)

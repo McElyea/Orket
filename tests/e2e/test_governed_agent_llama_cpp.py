@@ -48,6 +48,8 @@ def test_live_llama_cpp_api_wake_memory_and_replay(tmp_path: Path, monkeypatch) 
     """Layer: end-to-end. The API-owned supervisor retains llama.cpp identity across iterations."""
     _configure_api(monkeypatch, db_path=tmp_path / "agent.sqlite3", catalog_path=_write_catalog(tmp_path),
                    planner=_model(), actor=_model(), critic=_model(), provider="llama_cpp")
+    monkeypatch.delenv("ORKET_GOVERNED_AGENT_PROVIDER", raising=False)
+    monkeypatch.setenv("ORKET_GOVERNED_AGENT_OLLAMA_MODEL", "unused-legacy-model")
     app = create_api_app(project_root=tmp_path)
     payload = _wake_payload()
     payload["dispatch"]["request"]["admitted_capabilities"].append("memory.query")

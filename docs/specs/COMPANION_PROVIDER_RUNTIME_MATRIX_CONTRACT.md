@@ -45,7 +45,7 @@ Pipeline command (generate + validate + render):
 
 Key options:
 
-1. `--providers` comma list (default `ollama,lmstudio`)
+1. `--providers` comma list (default `llama_cpp`; explicitly select `lmstudio` or `ollama` for compatibility campaigns)
 2. `--models` comma list
 3. `--provider-model-map` explicit map format:
    1. `provider=model1|model2;provider2=model3`

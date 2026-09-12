@@ -7,8 +7,11 @@ from dataclasses import asdict, dataclass
 from typing import Any, cast
 from urllib.parse import urlparse
 
+from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER
 from orket.runtime.config.gguf_model_inventory import (
     GGUFModelInventoryResult,
+)
+from orket.runtime.config.gguf_model_inventory import (
     inventory_gguf_models as _inventory_gguf_models_sync,
 )
 from orket.runtime.provider_quarantine_policy import (
@@ -53,7 +56,7 @@ _list_ollama_models_sync = _inventory_list_ollama_models_sync
 _list_openai_compat_models_sync = _inventory_list_openai_compat_models_sync
 
 
-PROVIDER_CHOICES = ("ollama", "openai_compat", "lmstudio", "llama_cpp")
+PROVIDER_CHOICES = (DEFAULT_LOCAL_PROVIDER, "lmstudio", "ollama", "openai_compat")
 
 _BILLION_PATTERN = re.compile(r"(\d+(?:\.\d+)?)b", re.IGNORECASE)
 
@@ -82,17 +85,19 @@ class ProviderRuntimeTarget:
 
 
 def normalize_provider(provider: str) -> str:
-    raw = str(provider or "").strip().lower()
-    return "openai_compat" if raw in {"lmstudio", "openai_compat", "llama_cpp"} else "ollama"
+    raw = effective_provider(provider)
+    if raw not in PROVIDER_CHOICES:
+        raise ValueError(f"E_UNKNOWN_PROVIDER_INPUT:{raw}")
+    return "ollama" if raw == "ollama" else "openai_compat"
 
 
-def effective_provider(provider: str | None, *, default: str) -> str:
-    requested = str(provider or "").strip().lower() or str(default or "").strip().lower() or "ollama"
+def effective_provider(provider: str | None, *, default: str = DEFAULT_LOCAL_PROVIDER) -> str:
+    requested = str(provider or "").strip().lower() or str(default or "").strip().lower() or DEFAULT_LOCAL_PROVIDER
     return requested if requested in PROVIDER_CHOICES else requested
 
 
 def default_base_url(provider: str) -> str:
-    requested = effective_provider(provider, default="ollama")
+    requested = effective_provider(provider, default=DEFAULT_LOCAL_PROVIDER)
     if requested == "llama_cpp":
         for key in ("ORKET_LLM_LLAMA_CPP_BASE_URL", "ORKET_LLAMA_CPP_BASE_URL"):
             raw = str(os.getenv(key, "")).strip()
@@ -206,7 +211,7 @@ def choose_model(models: list[str], *, preferred_model: str = "") -> str:
 
 
 def _supports_lmstudio_cli_warmup(*, provider: str, base_url: str) -> bool:
-    requested = effective_provider(provider, default="ollama")
+    requested = effective_provider(provider, default=DEFAULT_LOCAL_PROVIDER)
     if requested == "llama_cpp":
         return False
     if requested == "lmstudio":
@@ -234,7 +239,7 @@ async def list_provider_models(
     timeout_s: float,
     api_key: str | None = None,
 ) -> dict[str, object]:
-    requested = effective_provider(provider, default="ollama")
+    requested = effective_provider(provider, default=DEFAULT_LOCAL_PROVIDER)
     canonical = normalize_provider(requested)
     resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested))
     if requested == "lmstudio":
@@ -317,7 +322,7 @@ async def resolve_provider_runtime_target(
     model_ttl_sec: int,
     api_key: str | None = None,
 ) -> ProviderRuntimeTarget:
-    requested_provider = effective_provider(provider, default="ollama")
+    requested_provider = effective_provider(provider, default=DEFAULT_LOCAL_PROVIDER)
     try:
         requested_provider = validate_allowed_token(
             token=requested_provider,
@@ -330,7 +335,7 @@ async def resolve_provider_runtime_target(
             canonical_provider="unknown",
             requested_model=str(requested_model or "").strip(),
             model_id="",
-            base_url=normalize_base_url(base_url, default=default_base_url("ollama")),
+            base_url=normalize_base_url(base_url, default=default_base_url(DEFAULT_LOCAL_PROVIDER)),
             resolution_mode="unknown_provider_input",
             inventory_source="unknown_input_policy",
             available_models=[],

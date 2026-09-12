@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from orket.logging import log_event
+from orket.runtime.config.defaults import configured_provider
 
 
 class ExtensionRuntimeGenerateRequest(BaseModel):
@@ -69,14 +70,14 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             _raise_extension_runtime_http_error(exc)
 
     @router.get("/extensions/{extension_id}/runtime/models")
-    async def extension_runtime_models(extension_id: str, provider: str = "ollama") -> Any:
+    async def extension_runtime_models(extension_id: str, provider: str = "") -> Any:
         service = service_getter()
         try:
             return await service.list_models(extension_id=extension_id, provider=provider)
         except ValueError as exc:
             _raise_extension_runtime_http_error(exc)
         except Exception as exc:
-            requested = str(provider or "").strip().lower() or "ollama"
+            requested = str(provider or "").strip().lower() or configured_provider()
             log_event(
                 "extension_runtime_model_catalog_unavailable",
                 {"extension_id": extension_id, "provider": requested, "error": str(exc)},

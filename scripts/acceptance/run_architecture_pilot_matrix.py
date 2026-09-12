@@ -3,9 +3,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import tempfile
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
@@ -21,14 +21,14 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 try:
-    from scripts.acceptance.run_monolith_variant_matrix import summarize_report
     from scripts.acceptance.check_monolith_readiness_gate import aggregate_invalid_payload_signals
+    from scripts.acceptance.run_monolith_variant_matrix import summarize_report
 except ModuleNotFoundError:
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from acceptance.run_monolith_variant_matrix import summarize_report
     from acceptance.check_monolith_readiness_gate import aggregate_invalid_payload_signals
+    from acceptance.run_monolith_variant_matrix import summarize_report
 
 
 @dataclass(frozen=True)
@@ -45,7 +45,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--models",
         nargs="+",
-        default=[DEFAULT_LOCAL_MODEL, "qwen2.5-coder:14b"],
+        default=[DEFAULT_LOCAL_MODEL],
         help="Models passed to run_live_acceptance_loop.",
     )
     parser.add_argument("--iterations", type=int, default=1)

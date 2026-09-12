@@ -16,6 +16,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.core.cards_runtime_contract import ARTIFACT_EXECUTION_PROFILE
+from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER  # noqa: E402 - repository path bootstrap
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from scripts.probes.probe_support import (
@@ -64,7 +65,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--workspace", default=DEFAULT_WORKSPACE)
     parser.add_argument("--fixture", default=DEFAULT_FIXTURE)
     parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL)
-    parser.add_argument("--provider", default="ollama")
+    parser.add_argument("--provider", default=DEFAULT_LOCAL_PROVIDER)
     parser.add_argument("--ollama-host", default="")
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=0)

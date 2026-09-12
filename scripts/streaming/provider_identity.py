@@ -4,13 +4,14 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from orket.runtime.config.defaults import configured_provider
 from orket.runtime.config.provider_runtime_target import default_base_url, normalize_base_url, normalize_provider
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 
 
 def provider_identity(*, resolved_model_id: str = "") -> dict[str, Any]:
     mode = str(os.getenv("ORKET_MODEL_STREAM_PROVIDER", "stub") or "stub").strip().lower()
-    provider = str(os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "ollama") or "ollama").strip().lower()
+    provider = configured_provider("ORKET_MODEL_STREAM_REAL_PROVIDER", "ORKET_LLM_PROVIDER", "ORKET_MODEL_PROVIDER")
     model = str(resolved_model_id or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", DEFAULT_LOCAL_MODEL)).strip()
     canonical = normalize_provider(provider)
     base_url = default_base_url(provider)
