@@ -87,6 +87,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL  # noqa: E402 - direct script bootstrap
 from orket.kernel.v1.odr.core import (  # noqa: E402
     DEFAULT_CODE_LEAK_PATTERNS,
     ReactorConfig,
@@ -95,7 +96,6 @@ from orket.kernel.v1.odr.core import (  # noqa: E402
 )
 from orket.kernel.v1.odr.metrics import diff_ratio, jaccard_sim  # noqa: E402
 from orket.runtime.config.defaults import configured_provider  # noqa: E402 - repository path bootstrap
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL  # noqa: E402
 from scripts.odr.model_runtime_control import complete_with_transient_provider  # noqa: E402
 
 # ---------------------------------------------------------------------------

@@ -14,9 +14,14 @@ SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
 
-from providers.provider_model_resolver import choose_model, list_provider_models, normalize_provider, rank_models
+from providers.provider_model_resolver import (  # noqa: E402
+    choose_model,
+    list_provider_models,
+    normalize_provider,
+    rank_models,
+)
 
-from orket.runtime.config.provider_runtime_target import PROVIDER_CHOICES
+from orket.core.contracts.provider_runtime import PROVIDER_CHOICES  # noqa: E402 - direct script bootstrap
 
 
 def _parse_args() -> tuple[argparse.Namespace, list[str]]:
@@ -119,12 +124,12 @@ def main() -> int:
 
     try:
         models, listing = _resolve_models(args)
-    except httpx.ConnectError:
-        raise SystemExit(f"Failed to connect to provider '{args.provider}'.")
+    except httpx.ConnectError as exc:
+        raise SystemExit(f"Failed to connect to provider '{args.provider}'.") from exc
     except httpx.HTTPStatusError as exc:
-        raise SystemExit(f"Provider endpoint error status={exc.response.status_code} url={exc.request.url}")
+        raise SystemExit(f"Provider endpoint error status={exc.response.status_code} url={exc.request.url}") from exc
     except (httpx.HTTPError, ValueError, json.JSONDecodeError) as exc:
-        raise SystemExit(f"Provider resolution failed: {exc}")
+        raise SystemExit(f"Provider resolution failed: {exc}") from exc
 
     requested_provider = str(listing.get("requested_provider") or args.provider)
     canonical_provider = str(listing.get("canonical_provider") or normalize_provider(requested_provider))

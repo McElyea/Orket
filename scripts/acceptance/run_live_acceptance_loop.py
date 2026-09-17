@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.runtime_paths import resolve_live_acceptance_db_path
 
 DEFAULT_TEST = (

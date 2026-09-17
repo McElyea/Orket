@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.core.contracts.provider_runtime import PROVIDER_CHOICES
 from orket.core.contracts.result_error_invariants import validate_result_error_invariant_contract
 from orket.runtime.artifact_provenance_block_policy import validate_artifact_provenance_block_policy
 from orket.runtime.canonical_examples_library import validate_canonical_examples_library
@@ -33,7 +34,6 @@ from orket.runtime.operator_override_logging_policy import validate_operator_ove
 from orket.runtime.persistence_corruption_test_contract import validate_persistence_corruption_test_contract
 from orket.runtime.promotion_rollback_criteria import validate_promotion_rollback_criteria
 from orket.runtime.provider_quarantine_policy_contract import validate_provider_quarantine_policy_contract
-from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.release_confidence_scorecard import validate_release_confidence_scorecard
 from orket.runtime.resource_pressure_simulation_lane import validate_resource_pressure_simulation_lane

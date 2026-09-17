@@ -16,9 +16,9 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider  # noqa: E402
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL  # noqa: E402 - direct script bootstrap
 from orket.kernel.v1.odr.core import DEFAULT_CODE_LEAK_PATTERNS, ReactorConfig, ReactorState, run_round  # noqa: E402
 from orket.kernel.v1.odr.prompt_contract import build_architect_messages, build_auditor_messages  # noqa: E402
-from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL  # noqa: E402 - repository path bootstrap
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger  # noqa: E402 - repository CLI bootstrap
 from scripts.odr.provider_admission import ProviderSelection, resolve_selection  # noqa: E402 - repository CLI bootstrap
 

@@ -11990,6 +11990,108 @@ and explicit whole-lane acceptance remain open.
 Existing host-clock and recurrent Linux approval/resume deadline investigations
 remain open. This local checkpoint is not full installed acceptance or release readiness.
 
+### Captured provider preparation candidate (2026-09-17)
+
+The preceding local 0.6.7 commit is
+`a8a1c4dc7a8d43ef251d4c4ab4daeb70d846fab5`. Its snapshot SHA-256 is
+`52f03c3c9247705d985d42d55569272a1e57e9ab4a97a389783581636ecd6542`;
+all 64 bound evidence files and the working snapshot matched before edits.
+
+Three retained counterexamples in `.tmp/c-provider-inputs/before.json` expose
+GGUF environment drift during real HTTP discovery, detached inventory work after
+cancellation and mutable nested target evidence. Two further native CLI fixture
+counterexamples in `load-before.json` expose load acknowledgement promoted into
+success and a load attempt claimed when loading was disabled. The controlled CLI
+fixture is not a live LM Studio server or model-load proof.
+
+Core now owns pure provider identity/defaults and captured target values. Runtime
+preparation captures supplied environment values before awaiting, and the inference
+client captures its provider settings at construction. Admitted inventory/load
+workers are retained through repeated cancellation and elapsed caller timeouts;
+worker errors remain failures. A model is ready only when the post-load inventory
+observes it. Missing observation returns `BLOCKED` / `model_load_unverified`.
+Migration, settings-adoption behavior and remaining composition limits are in
+`docs/architecture/CONTRACT_DELTA_PROVIDER_INPUTS_CD_2026-09-17.md`.
+
+The targeted 92-case run passes, including real loopback HTTP/files, controlled
+native CLI observations, separate concurrent settings and a declared 0.5-second
+event-loop bound. An older test's expectation of an attempted disabled load was
+corrected after the native counterexample; the failed intermediate run is retained.
+The generated graph observes 1,000 modules and 3,183 import sites, with 54 forbidden
+pairs, one authority cycle, ten analysis errors and zero unknown modules. Two
+forbidden pairs were removed without a new exception or classification change.
+Broader source, installed and fresh provider proof for core 0.6.8 are recorded below.
+
+The corrected source run and four fresh installed environments execute the same
+**1,310 selected cases** across 159 modules. The initial source run retained
+1,309 passes and one failure: an older SimpleNamespace fixture lacked constructor-captured
+settings. The fixture now uses and closes the actual provider client; no runtime
+fallback was introduced. Its original report, inputs, JUnit, log and lint report remain
+retained. The core wheel is unchanged by this test-only repair.
+The full passing run then identified an unused `httpx` import in that fixture. After
+its exact removal, all 15 module cases and scoped lint pass; `source-supplement.json`
+binds the only source difference and non-import AST parity. The table's source time
+belongs to the complete run before that import-only cleanup.
+
+| Environment | Pass / fail / error / skip | Seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 1310 / 0 / 0 / 0 | 316.779 |
+| Installed win-py311 | 1310 / 0 / 0 / 0 | 344.763 |
+| Installed win-py312 | 1310 / 0 / 0 / 0 | 370.072 |
+| Installed linux-py311 | 1310 / 0 / 0 / 0 | 357.007 |
+| Installed linux-py312 | 1310 / 0 / 0 / 0 | 356.381 |
+
+The current installed regression gate passes. Each cell verifies actual installed
+core origins, wheel identities, support and case parity, public CLI normal and malformed
+board behavior, controlled ToolGate denial, retained artifact hashes and owned child
+teardown. These regressions use real local HTTP, filesystem, SQLite and processes with
+controlled provider/clock fixtures; they are separate from live model inference.
+The audit is `.tmp/c-provider-inputs/audit.json`, SHA-256
+`697409794145bc02f72c9fa28577b922d49899a718c7ad90f5ecc11d8acdc767`. Earlier Linux resume deadline and host-clock failures remain
+retained and unexplained; current passing runs do not establish their cause or repair.
+
+The wheel was built from its sdist and matches 1,000
+core Python files and 1,013 packaged files. Wheel SHA-256:
+`e61fe9d61f9acc9e7b5e05fd935a388863d87c240cba04745466ae940567c404`; sdist SHA-256:
+`eca21a0f98fc7df020159b9838e156e08b1d3bbfef82eb20604841f37acf9de5`. The harness contains 1,753 support files
+without core/SDK source shadows. SDK 0.7.0a1, reference 0.3.0a1 and starter 0.3.0a1
+retain their previous package identities.
+
+Separate serial installed Windows 3.11 proof passes eight actual llama.cpp cases in
+138.315 seconds: CLI continuation, API memory/replay, effect restart and abrupt
+API-process recovery. A second seven-case envelope passes in 62.042 seconds:
+four actual provider feature cases, two controlled pipeline/webhook cases, and one live
+pipeline truth-reporting case. The last case permits a truthfully reported failed
+workload; its passing assertion is not proof of successful workload completion.
+This execution's actual pipeline status is **terminal_failure**, recorded separately
+in `pipeline-observation.json` with its bound run summary and stop/failure reason.
+The reason is `card_completion_unverified:COD-1,REV-1`; this is retained failed
+workload evidence for broader capability work, not completed output acceptance.
+`extra-live.json` binds its exact scope, observed process identities, support, artifacts
+and candidate wheel. All observed proof children are terminal; the operator provider
+remains healthy. LM Studio load-observation proof uses a controlled native CLI fixture,
+not an actual LM Studio model load.
+
+The scoped lint comparison retains 282 previous findings and
+226 current findings. No new finding is introduced; changed behavior
+and new Python files are clean, while 45 import-only
+files retain exact non-import AST parity. **Full changed-file Ruff remains false.**
+Staged whitespace, docs hygiene and release metadata are checked separately. Structural
+compliance and remaining oversized files are recorded in `review.json`.
+This is a local checkpoint with partial overall success, not whole C/D/E, capability,
+full-suite, hosted CI, release or whole-lane acceptance.
+
+
+
+Canonical default-import migration touches standalone tooling with pre-existing
+Ruff debt. Its retained HEAD baseline and non-import AST comparison are in
+`.tmp/c-provider-inputs/lint-before-inputs.json` and `lint-disposition.json`.
+Changed behavior/new files require clean Ruff; import-only files must retain exact
+non-import AST parity and introduce no additional finding. This scoped check does
+not make the full changed-file or repository Ruff gate pass. Broader E1 cleanup,
+provider composition, prompting settings and the Linux resume/host-clock failures
+remain open alongside C/D and the full-plan gates.
+
 ## E1/E2 — Reliable quality gates and maintainable authority
 
 Retains Workstreams 6, 7 and 8 and previous Slice E obligations.
@@ -12215,7 +12317,7 @@ requested a versioned GitHub checkpoint and continued commits on the existing
 branch; its proof and publication disposition are recorded in the C/D checkpoint.
 The later user instruction restricts 10 AM-6 PM America/Denver work hours to
 local commits only. Retain commits and matching annotated tags locally during
-that window; do not push to GitHub. The 0.6.4 through 0.6.7 local checkpoints follow this
+that window; do not push to GitHub. The 0.6.4 through 0.6.8 local checkpoints follow this
 restriction; remote publication remains deferred.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
@@ -12259,7 +12361,7 @@ the dual-ledger candidate before accepting its installed gate; then continue C/D
 from their numbered requirements and retained dependency counterexamples. Scoped BT-5 acceptance is recorded in the five-requirement
 disposition above; preserve its exact artifacts, original failures and family
 ceilings. C now has one allowed-edge policy, complete classification and exact
-exception enforcement; its current repository verdict is red. Repair its 56
+exception enforcement; its current repository verdict is red. Repair its 54
 forbidden pairs, cross-layer cycle and 10 unresolved import/reflection sites,
 retaining adversarial positive and negative proof. D owns remaining clock/core/async work. Thirty later numbered obligations,
 full-suite/hosted quality proof and whole-lane user acceptance remain active.

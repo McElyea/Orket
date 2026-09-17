@@ -5,11 +5,12 @@ import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.application.services.governed_agent_api_composition import _configured_model
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL, normalize_provider
 from orket.exceptions import ModelConnectionError
 from orket.orchestration.models import ModelSelector
-from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL, configured_provider
+from orket.runtime.config.defaults import configured_provider
 from orket.runtime.config.local_prompt_profiles import normalize_provider_for_local_prompt_profile
-from orket.runtime.config.provider_runtime_target import default_base_url, normalize_provider
+from orket.runtime.config.provider_runtime_target import default_base_url
 from orket.workloads.model_stream_v1 import _real_provider_name
 from scripts.streaming.provider_identity import provider_identity
 

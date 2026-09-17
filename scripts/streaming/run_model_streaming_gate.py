@@ -11,7 +11,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from orket.runtime.config.provider_runtime_target import PROVIDER_CHOICES
+from orket.core.contracts.provider_runtime import PROVIDER_CHOICES  # noqa: E402 - direct script bootstrap
 
 BASELINE_SCENARIOS = [
     "s0_unknown_workload_400.yaml",

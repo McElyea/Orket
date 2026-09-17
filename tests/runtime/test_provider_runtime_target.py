@@ -3,8 +3,8 @@ from __future__ import annotations
 # Layer: contract
 import pytest
 
-from orket.runtime.config.gguf_model_inventory import GGUFModelInventoryRecord, GGUFModelInventoryResult
 from orket.runtime import provider_runtime_target as runtime_target
+from orket.runtime.config.gguf_model_inventory import GGUFModelInventoryRecord, GGUFModelInventoryResult
 
 
 @pytest.mark.asyncio
@@ -97,7 +97,7 @@ async def test_resolve_provider_runtime_target_blocks_when_lmstudio_auto_load_di
 
     assert result.status == "BLOCKED"
     assert result.model_id == "qwen3.5-4b"
-    assert result.auto_load_attempted is True
+    assert result.auto_load_attempted is False
     assert result.auto_load_performed is False
 
 
@@ -249,7 +249,7 @@ async def test_resolve_provider_runtime_target_preserves_llama_cpp_lineage(
     assert result.base_url == "http://127.0.0.1:8080/v1"
     assert result.inventory_source == "http_models+gguf_inventory"
     assert result.gguf_inventory_status == "OK"
-    assert result.gguf_models[0]["digest_status"] == "pending"
+    assert result.to_payload()["gguf_models"][0]["digest_status"] == "pending"
 
 
 @pytest.mark.asyncio

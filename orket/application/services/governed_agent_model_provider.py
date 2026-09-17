@@ -14,12 +14,9 @@ from orket.application.services.governed_agent_broker_service import (
     GovernedAgentResolvedModelProfile,
     UsagePosture,
 )
+from orket.core.contracts.provider_runtime import PROVIDER_CHOICES, ProviderRuntimeTarget
 from orket.exceptions import ModelTimeoutError
-from orket.runtime.config.provider_runtime_target import (
-    PROVIDER_CHOICES,
-    ProviderRuntimeTarget,
-    resolve_provider_runtime_target,
-)
+from orket.runtime.config.provider_runtime_target import resolve_provider_runtime_target
 from orket_extension_sdk import AgentIterationRequest, AgentModelCallRequest
 from orket_extension_sdk.llm import nonnegative_int_or_none
 

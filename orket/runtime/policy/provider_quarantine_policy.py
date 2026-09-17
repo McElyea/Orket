@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from typing import Any
 
 
@@ -31,9 +32,9 @@ def parse_quarantined_provider_models(value: Any) -> set[tuple[str, str]]:
 
 def resolve_provider_quarantine_policy(
     *,
-    environment: dict[str, str] | None = None,
+    environment: Mapping[str, str] | None = None,
 ) -> dict[str, object]:
-    env = environment if isinstance(environment, dict) else dict(os.environ)
+    env = environment if environment is not None else dict(os.environ)
     providers = parse_quarantined_providers(env.get("ORKET_PROVIDER_QUARANTINE"))
     provider_models = parse_quarantined_provider_models(env.get("ORKET_PROVIDER_MODEL_QUARANTINE"))
     return {

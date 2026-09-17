@@ -4,9 +4,9 @@ from typing import Any
 
 import httpx
 
+from orket.core.contracts.provider_runtime import ProviderRuntimeTarget
 from orket.exceptions import ModelConnectionError
 from orket.runtime.config.provider_runtime_target import (
-    ProviderRuntimeTarget,
     ProviderRuntimeWarmupError,
     resolve_bool_env,
     resolve_float_env,
@@ -50,6 +50,7 @@ async def ensure_provider_runtime_target(provider: Any) -> str:
     ):
         return str(provider.model)
     try:
+        environment = provider._provider_environment
         target = await resolve_provider_runtime_target(
             provider=str(provider.provider_name),
             requested_model=str(provider.requested_model),
@@ -59,15 +60,19 @@ async def ensure_provider_runtime_target(provider: Any) -> str:
                 "ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL",
                 "ORKET_LLM_AUTO_SELECT_MODEL",
                 default=True,
+                environment=environment,
             ),
             auto_load_local_model=resolve_bool_env(
                 "ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL",
                 "ORKET_LLM_AUTO_LOAD_LOCAL_MODEL",
                 default=True,
+                environment=environment,
             ),
-            model_load_timeout_s=resolve_float_env("ORKET_PROVIDER_RUNTIME_MODEL_LOAD_TIMEOUT_SEC", default=180.0),
-            model_ttl_sec=resolve_int_env("ORKET_PROVIDER_RUNTIME_MODEL_TTL_SEC", default=600),
+            model_load_timeout_s=resolve_float_env("ORKET_PROVIDER_RUNTIME_MODEL_LOAD_TIMEOUT_SEC", default=180.0,
+                                                 environment=environment),
+            model_ttl_sec=resolve_int_env("ORKET_PROVIDER_RUNTIME_MODEL_TTL_SEC", default=600, environment=environment),
             api_key=getattr(provider, "openai_api_key", "") or None,
+            environment=environment,
         )
     except (ProviderRuntimeWarmupError, httpx.HTTPError) as exc:
         raise ModelConnectionError(

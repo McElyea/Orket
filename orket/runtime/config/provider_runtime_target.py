@@ -1,13 +1,21 @@
 from __future__ import annotations
 
-import asyncio
 import os
 import re
-from dataclasses import asdict, dataclass
+from collections.abc import Mapping
+from functools import partial
+from types import MappingProxyType
 from typing import Any, cast
 from urllib.parse import urlparse
 
-from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.core.contracts.provider_runtime import (
+    DEFAULT_LOCAL_PROVIDER,
+    PROVIDER_CHOICES,
+    ProviderRuntimeTarget,
+    effective_provider,
+    normalize_provider,
+)
 from orket.runtime.config.gguf_model_inventory import (
     GGUFModelInventoryResult,
 )
@@ -56,62 +64,26 @@ _list_ollama_models_sync = _inventory_list_ollama_models_sync
 _list_openai_compat_models_sync = _inventory_list_openai_compat_models_sync
 
 
-PROVIDER_CHOICES = (DEFAULT_LOCAL_PROVIDER, "lmstudio", "ollama", "openai_compat")
-
 _BILLION_PATTERN = re.compile(r"(\d+(?:\.\d+)?)b", re.IGNORECASE)
 
 
-@dataclass(frozen=True)
-class ProviderRuntimeTarget:
-    requested_provider: str
-    canonical_provider: str
-    requested_model: str
-    model_id: str
-    base_url: str
-    resolution_mode: str
-    inventory_source: str
-    available_models: tuple[str, ...]
-    loaded_models_before: tuple[str, ...]
-    loaded_models_after: tuple[str, ...]
-    auto_load_attempted: bool
-    auto_load_performed: bool
-    status: str
-    gguf_model_root: str = ""
-    gguf_inventory_status: str = "not_applicable"
-    gguf_models: tuple[dict[str, Any], ...] = ()
-
-    def to_payload(self) -> dict[str, Any]:
-        return asdict(self)
-
-
-def normalize_provider(provider: str) -> str:
-    raw = effective_provider(provider)
-    if raw not in PROVIDER_CHOICES:
-        raise ValueError(f"E_UNKNOWN_PROVIDER_INPUT:{raw}")
-    return "ollama" if raw == "ollama" else "openai_compat"
-
-
-def effective_provider(provider: str | None, *, default: str = DEFAULT_LOCAL_PROVIDER) -> str:
-    requested = str(provider or "").strip().lower() or str(default or "").strip().lower() or DEFAULT_LOCAL_PROVIDER
-    return requested if requested in PROVIDER_CHOICES else requested
-
-
-def default_base_url(provider: str) -> str:
+def default_base_url(provider: str, *, environment: Mapping[str, str] | None = None) -> str:
+    environment = os.environ if environment is None else environment
     requested = effective_provider(provider, default=DEFAULT_LOCAL_PROVIDER)
     if requested == "llama_cpp":
         for key in ("ORKET_LLM_LLAMA_CPP_BASE_URL", "ORKET_LLAMA_CPP_BASE_URL"):
-            raw = str(os.getenv(key, "")).strip()
+            raw = str(environment.get(key, "")).strip()
             if raw:
                 return raw
         return "http://127.0.0.1:8080/v1"
     if normalize_provider(requested) == "openai_compat":
         for key in ("ORKET_LLM_OPENAI_BASE_URL", "ORKET_MODEL_STREAM_OPENAI_BASE_URL"):
-            raw = str(os.getenv(key, "")).strip()
+            raw = str(environment.get(key, "")).strip()
             if raw:
                 return raw
         return "http://127.0.0.1:1234/v1"
     for key in ("ORKET_LLM_OLLAMA_HOST", "OLLAMA_HOST"):
-        raw = str(os.getenv(key, "")).strip()
+        raw = str(environment.get(key, "")).strip()
         if raw:
             return raw
     return "http://127.0.0.1:11434"
@@ -129,9 +101,10 @@ def normalize_base_url(raw: str | None, *, default: str) -> str:
     return f"{base}{path}" if path else base
 
 
-def resolve_bool_env(*keys: str, default: bool) -> bool:
+def resolve_bool_env(*keys: str, default: bool, environment: Mapping[str, str] | None = None) -> bool:
+    environment = os.environ if environment is None else environment
     for key in keys:
-        raw = str(os.getenv(key, "")).strip().lower()
+        raw = str(environment.get(key, "")).strip().lower()
         if raw in {"1", "true", "yes", "on"}:
             return True
         if raw in {"0", "false", "no", "off"}:
@@ -139,9 +112,10 @@ def resolve_bool_env(*keys: str, default: bool) -> bool:
     return default
 
 
-def resolve_float_env(*keys: str, default: float) -> float:
+def resolve_float_env(*keys: str, default: float, environment: Mapping[str, str] | None = None) -> float:
+    environment = os.environ if environment is None else environment
     for key in keys:
-        raw = str(os.getenv(key, "")).strip()
+        raw = str(environment.get(key, "")).strip()
         if not raw:
             continue
         try:
@@ -151,9 +125,10 @@ def resolve_float_env(*keys: str, default: float) -> float:
     return float(default)
 
 
-def resolve_int_env(*keys: str, default: int) -> int:
+def resolve_int_env(*keys: str, default: int, environment: Mapping[str, str] | None = None) -> int:
+    environment = os.environ if environment is None else environment
     for key in keys:
-        raw = str(os.getenv(key, "")).strip()
+        raw = str(environment.get(key, "")).strip()
         if not raw:
             continue
         try:
@@ -232,18 +207,24 @@ def _object_list(value: object) -> list[object]:
     return []
 
 
+async def _owned_inventory(operation, **options):
+    return await run_owned_thread(partial(operation, **options), label="provider-runtime-inventory")
+
+
 async def list_provider_models(
     *,
     provider: str,
     base_url: str | None,
     timeout_s: float,
     api_key: str | None = None,
+    environment: Mapping[str, str] | None = None,
 ) -> dict[str, object]:
+    environment = MappingProxyType(dict(os.environ if environment is None else environment))
     requested = effective_provider(provider, default=DEFAULT_LOCAL_PROVIDER)
     canonical = normalize_provider(requested)
-    resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested))
+    resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested, environment=environment))
     if requested == "lmstudio":
-        models = await asyncio.to_thread(_list_installed_lmstudio_models_sync, timeout_s=timeout_s)
+        models = await _owned_inventory(_list_installed_lmstudio_models_sync, timeout_s=timeout_s)
         return {
             "requested_provider": requested,
             "canonical_provider": canonical,
@@ -262,7 +243,7 @@ async def list_provider_models(
         "models": models,
     }
     if requested == "llama_cpp":
-        inventory = await asyncio.to_thread(_inventory_gguf_models_sync)
+        inventory = await _owned_inventory(_inventory_gguf_models_sync, environment=environment)
         payload["gguf_model_root"] = inventory.model_root
         payload["gguf_inventory_status"] = inventory.status
         payload["gguf_models"] = [record.to_payload() for record in inventory.records]
@@ -321,7 +302,9 @@ async def resolve_provider_runtime_target(
     model_load_timeout_s: float,
     model_ttl_sec: int,
     api_key: str | None = None,
+    environment: Mapping[str, str] | None = None,
 ) -> ProviderRuntimeTarget:
+    environment = MappingProxyType(dict(os.environ if environment is None else environment))
     requested_provider = effective_provider(provider, default=DEFAULT_LOCAL_PROVIDER)
     try:
         requested_provider = validate_allowed_token(
@@ -335,16 +318,16 @@ async def resolve_provider_runtime_target(
             canonical_provider="unknown",
             requested_model=str(requested_model or "").strip(),
             model_id="",
-            base_url=normalize_base_url(base_url, default=default_base_url(DEFAULT_LOCAL_PROVIDER)),
+            base_url=normalize_base_url(base_url, default=default_base_url(DEFAULT_LOCAL_PROVIDER, environment=environment)),
             resolution_mode="unknown_provider_input",
             inventory_source="unknown_input_policy",
             available_models=[],
             status="BLOCKED",
         )
     canonical_provider = normalize_provider(requested_provider)
-    resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested_provider))
+    resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested_provider, environment=environment))
     requested_model_token = str(requested_model or "").strip()
-    quarantine_policy = resolve_provider_quarantine_policy()
+    quarantine_policy = resolve_provider_quarantine_policy(environment=environment)
     quarantined_providers = {
         str(token).strip().lower() for token in _object_list(quarantine_policy.get("providers"))
     }
@@ -370,7 +353,7 @@ async def resolve_provider_runtime_target(
             status="BLOCKED",
         )
     if canonical_provider == "ollama":
-        available_models = await asyncio.to_thread(_list_installed_ollama_models_sync, timeout_s=timeout_s)
+        available_models = await _owned_inventory(_list_installed_ollama_models_sync, timeout_s=timeout_s)
         resolved_model = requested_model_token if requested_model_token in available_models else ""
         resolution_mode = "requested" if resolved_model else "unresolved"
         if not resolved_model and (auto_select_model or not requested_model_token):
@@ -410,10 +393,11 @@ async def resolve_provider_runtime_target(
             base_url=resolved_base_url,
             timeout_s=timeout_s,
             api_key=api_key,
+            environment=environment,
         )
         available_models = [str(model) for model in _object_list(listing.get("models"))]
         gguf_inventory = (
-            await asyncio.to_thread(_inventory_gguf_models_sync)
+            await _owned_inventory(_inventory_gguf_models_sync, environment=environment)
             if requested_provider == "llama_cpp"
             else None
         )
@@ -485,8 +469,8 @@ async def resolve_provider_runtime_target(
             status="OK" if resolved_model else "BLOCKED",
         )
 
-    available_models = await asyncio.to_thread(_list_installed_lmstudio_models_sync, timeout_s=timeout_s)
-    loaded_models_before = await asyncio.to_thread(_list_loaded_lmstudio_model_ids_sync, timeout_s=timeout_s)
+    available_models = await _owned_inventory(_list_installed_lmstudio_models_sync, timeout_s=timeout_s)
+    loaded_models_before = await _owned_inventory(_list_loaded_lmstudio_model_ids_sync, timeout_s=timeout_s)
     if (
         requested_model_token
         and requested_model_token in loaded_models_before
@@ -580,29 +564,31 @@ async def resolve_provider_runtime_target(
             available_models=available_models,
             loaded_models_before=loaded_models_before,
             loaded_models_after=loaded_models_before,
-            auto_load_attempted=candidate not in loaded_models_before,
+            auto_load_attempted=False,
             status="OK" if candidate in loaded_models_before else "BLOCKED",
         )
-    await asyncio.to_thread(
+    await _owned_inventory(
         _load_lmstudio_model_sync,
         model_key=candidate,
         timeout_s=model_load_timeout_s,
         ttl_sec=model_ttl_sec,
     )
-    loaded_models_after = await asyncio.to_thread(_list_loaded_lmstudio_model_ids_sync, timeout_s=timeout_s)
+    loaded_models_after = await _owned_inventory(_list_loaded_lmstudio_model_ids_sync, timeout_s=timeout_s)
+    observed_loaded = candidate in loaded_models_after
     return _target_payload(
         requested_provider=requested_provider,
         canonical_provider=canonical_provider,
         requested_model=requested_model_token,
         model_id=candidate,
         base_url=resolved_base_url,
-        resolution_mode=resolution_mode,
+        resolution_mode=resolution_mode if observed_loaded else "model_load_unverified",
         inventory_source="lms_cli",
         available_models=available_models,
         loaded_models_before=loaded_models_before,
         loaded_models_after=loaded_models_after,
         auto_load_attempted=True,
-        auto_load_performed=True,
+        auto_load_performed=observed_loaded,
+        status="OK" if observed_loaded else "BLOCKED",
     )
 
 

@@ -18,8 +18,8 @@ sys.path.insert(0, str(ROOT))
 
 from orket.adapters.llm.llama_cpp_render_verification import expected_text_render
 from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.exceptions import ModelProviderError
-from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.config.local_prompt_profiles import (
     DEFAULT_LOCAL_PROMPT_PROFILE_REGISTRY_PATH,
     load_local_prompt_profile_registry_file,

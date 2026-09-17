@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import json
@@ -14,7 +14,7 @@ SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
 
-from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER  # noqa: E402 - repository path bootstrap
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_PROVIDER  # noqa: E402 - direct script bootstrap
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from scripts.companion.companion_matrix_case_selection import expand_case_pairs
 from scripts.companion.companion_matrix_execution import coverage_blockers, evaluate_case

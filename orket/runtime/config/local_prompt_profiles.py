@@ -8,7 +8,7 @@ from typing import Any
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from orket.core.contracts.model_generation_options import exact_stop_sequences
-from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_PROVIDER
 
 E_LOCAL_PROMPT_PROFILE_SCHEMA = "E_LOCAL_PROMPT_PROFILE_SCHEMA"
 E_LOCAL_PROMPT_PROFILE_LOAD = "E_LOCAL_PROMPT_PROFILE_LOAD"

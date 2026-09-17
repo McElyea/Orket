@@ -8,8 +8,8 @@ import httpx
 import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
+from orket.core.contracts.provider_runtime import ProviderRuntimeTarget
 from orket.exceptions import ModelProviderError
-from orket.runtime.provider_runtime_target import ProviderRuntimeTarget
 
 
 class _FakeClient:

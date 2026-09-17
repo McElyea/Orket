@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 
-from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_PROVIDER
 from scripts.companion.companion_matrix_case_selection import expand_case_pairs
 from scripts.companion.render_companion_provider_runtime_report import render_markdown_report
 from scripts.companion.run_companion_provider_runtime_matrix import run_companion_provider_runtime_matrix

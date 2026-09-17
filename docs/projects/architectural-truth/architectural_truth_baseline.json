@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-17T19:09:20.873985Z",
+  "generated_at": "2026-09-17T20:08:29.062564Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -306,7 +306,7 @@
           "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 999,
+      "files_scanned": 1000,
       "scan_roots": [
         "orket"
       ],
@@ -320,12 +320,12 @@
         {
           "source": "adapters",
           "target": "application",
-          "count": 21
+          "count": 19
         },
         {
           "source": "adapters",
           "target": "core",
-          "count": 138
+          "count": 140
         },
         {
           "source": "adapters",
@@ -335,17 +335,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 302
+          "count": 303
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1512
+          "count": 1501
         },
         {
           "source": "application",
           "target": "core",
-          "count": 665
+          "count": 676
         },
         {
           "source": "application",
@@ -360,7 +360,7 @@
         {
           "source": "core",
           "target": "core",
-          "count": 138
+          "count": 139
         },
         {
           "source": "decision_nodes",
@@ -409,34 +409,12 @@
       "unknown_modules": [],
       "violations": [
         {
-          "source": "orket.adapters.llm.local_model_provider",
-          "target": "orket.runtime.config.defaults",
-          "sites": [
-            {
-              "path": "orket/adapters/llm/local_model_provider.py",
-              "line": 35,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.llm.local_model_provider",
-          "target": "orket.runtime.provider_runtime_target",
-          "sites": [
-            {
-              "path": "orket/adapters/llm/local_model_provider.py",
-              "line": 36,
-              "kind": "from"
-            }
-          ]
-        },
-        {
           "source": "orket.adapters.llm.local_model_provider_runtime_target",
           "target": "orket.runtime.config.provider_runtime_target",
           "sites": [
             {
               "path": "orket/adapters/llm/local_model_provider_runtime_target.py",
-              "line": 8,
+              "line": 9,
               "kind": "from"
             }
           ]
@@ -1128,7 +1106,6 @@
             "orket.runtime.contract_schema",
             "orket.runtime.cors_config",
             "orket.runtime.decision_record_operating_principles_contract",
-            "orket.runtime.defaults",
             "orket.runtime.degradation_first_ui_standard",
             "orket.runtime.demo_production_labeling_policy",
             "orket.runtime.determinism_controls",
@@ -1471,10 +1448,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 4912,
-    "missing_layer_total": 3328,
+    "tests_total": 4922,
+    "missing_layer_total": 3338,
     "by_layer": {
-      "unlabeled": 3328,
+      "unlabeled": 3338,
       "integration": 735,
       "unit": 167,
       "contract": 671,
@@ -2082,13 +2059,13 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3228
+    "missing_layers_omitted": 3238
   },
   "ruff": {
     "proof": "structural_lint",
     "executed": true,
     "exit_code": 1,
-    "issues_total": 93,
+    "issues_total": 92,
     "by_code": {
       "B009": 2,
       "B905": 2,
@@ -2101,13 +2078,13 @@
       "SIM300": 2,
       "UP017": 1,
       "UP035": 4,
-      "UP041": 7,
+      "UP041": 6,
       "UP042": 52
     }
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 999,
+    "python_files_scanned": 1000,
     "files_over_400_total": 68,
     "functions_over_70_total": 223,
     "largest_files": [
@@ -2172,10 +2149,6 @@
         "lines": 632
       },
       {
-        "path": "orket/runtime/config/provider_runtime_target.py",
-        "lines": 629
-      },
-      {
         "path": "orket/runtime/execution/phase_c_runtime_truth.py",
         "lines": 629
       },
@@ -2184,8 +2157,12 @@
         "lines": 615
       },
       {
+        "path": "orket/runtime/config/provider_runtime_target.py",
+        "lines": 615
+      },
+      {
         "path": "orket/adapters/llm/local_model_provider.py",
-        "lines": 599
+        "lines": 596
       },
       {
         "path": "orket/streaming/model_provider.py",
@@ -2275,9 +2252,9 @@
       },
       {
         "path": "orket/runtime/config/provider_runtime_target.py",
-        "line": 313,
+        "line": 294,
         "name": "resolve_provider_runtime_target",
-        "lines": 294
+        "lines": 299
       },
       {
         "path": "orket/interfaces/routers/sessions.py",
@@ -2485,30 +2462,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-14T16:00:30.618853Z",
-      "changed": true,
-      "before_digest": "sha256:c98fb4fc62c841cb796de56085220b945132fd1940c970ec69238486b7f9dec1",
-      "after_digest": "sha256:30d94cc1f013c94abd196b8c9473fd3eb4326fb015656bf62017472d5324dfcc",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 5,
-        "churn_ratio": 0.001516,
-        "sample_paths": [
-          "$.dependency_graph.layer_edges[0].count",
-          "$.dependency_graph.layer_edges[1].count",
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.integration",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-14T17:07:02.875080Z",
       "changed": true,
@@ -3338,6 +3291,45 @@
           "$.dependency_graph.verdict.authority_cycles[0].modules[13]",
           "$.dependency_graph.verdict.authority_cycles[0].modules[14]",
           "$.dependency_graph.verdict.authority_cycles[0].modules[15]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T20:08:29.066071Z",
+      "changed": true,
+      "before_digest": "sha256:e02812673780acea29bcea82955d1f295c22f081cb1a035e0928c8b0055e62b4",
+      "after_digest": "sha256:34efe5fdf1f893eca18addf790023d634790e931354b441b8aad40c251ea278a",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 4,
+        "changed_paths": 341,
+        "initial_write": false,
+        "paths_total_previous": 3628,
+        "paths_total_current": 3600,
+        "paths_total_reference": 3628,
+        "churn_paths": 346,
+        "churn_ratio": 0.095369,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[1].count",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[6].count",
+          "$.dependency_graph.observed.layer_edges[9].count",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[95]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[96]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[97]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[98]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[99]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[100]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[101]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[102]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[103]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[104]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[105]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[106]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[107]"
         ]
       }
     }

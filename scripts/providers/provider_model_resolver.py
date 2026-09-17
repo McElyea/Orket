@@ -7,21 +7,27 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER  # noqa: E402 - repository path bootstrap
-from orket.runtime.provider_runtime_target import (  # noqa: E402 - repository path bootstrap
-    PROVIDER_CHOICES,
-    choose_model,
-    default_base_url,
+from orket.core.contracts.provider_runtime import (  # noqa: E402
+    DEFAULT_LOCAL_PROVIDER,  # noqa: E402 - direct script bootstrap
     effective_provider,
-    normalize_base_url,
     normalize_provider,
-    rank_models,
 )
+from orket.core.contracts.provider_runtime import PROVIDER_CHOICES as PROVIDER_CHOICES  # noqa: E402
 from orket.runtime.provider_runtime_target import (  # noqa: E402 - repository path bootstrap
     _list_ollama_models_sync as _runtime_list_ollama_models,
 )
 from orket.runtime.provider_runtime_target import (  # noqa: E402 - repository path bootstrap
     _list_openai_compat_models_sync as _runtime_list_openai_compat_models,
+)
+from orket.runtime.provider_runtime_target import (  # noqa: E402
+    choose_model as choose_model,
+)
+from orket.runtime.provider_runtime_target import (  # noqa: E402 - direct script bootstrap
+    default_base_url,
+    normalize_base_url,
+)
+from orket.runtime.provider_runtime_target import (  # noqa: E402 - direct script bootstrap
+    rank_models as rank_models,
 )
 
 

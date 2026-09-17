@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from typing import List
 
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 
 
 def _parse_args() -> argparse.Namespace:

@@ -7,7 +7,7 @@ import os
 import pytest
 
 from orket.application.services.extension_runtime_service import ExtensionRuntimeService
-from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.runtime.config.provider_discovery import installed_models
 from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus
 from orket.streaming.contracts import StreamEventType

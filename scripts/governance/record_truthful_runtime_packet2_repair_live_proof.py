@@ -16,9 +16,9 @@ if str(REPO_ROOT) not in sys.path:
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.config.defaults import configured_provider  # noqa: E402 - repository path bootstrap
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
 from orket.runtime.run_summary import PACKET1_MISSING_TOKEN
 from scripts.common.run_summary_support import load_validated_run_summary

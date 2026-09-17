@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket_extension_sdk.agent_testing import ticket_report_fixture
 from tests.e2e.test_governed_agent_supervisor_ollama import _configure_api, _write_catalog
 

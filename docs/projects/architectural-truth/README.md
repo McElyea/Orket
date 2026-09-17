@@ -68,7 +68,18 @@ errors. Exact evidence and remaining gates are in the canonical plan;
 migration and claim limits live in
 `docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`.
 
-The 0.6.7 candidate separates pure protocol graph values from owned storage effects.
+The 0.6.8 local checkpoint captures provider preparation settings and target metadata,
+retains admitted inventory/load workers, and requires observed loaded inventory
+before claiming model-load success. Pure provider identity/defaults and target
+values are core contracts. Five counterexamples and migration details are in the
+canonical plan. Source passes 1,310 selected cases; the current four-cell installed gate
+passes. Eight actual installed llama.cpp cases and seven separate mixed feature/
+pipeline cases pass. Full changed-file Ruff, historical clock/resume investigations
+and full-plan gates remain open. The actual live pipeline workload fails with
+`card_completion_unverified:COD-1,REV-1`; its truthful-reporting assertion passes.
+Commits and annotated tags stay local during work hours.
+
+The 0.6.7 checkpoint separates pure protocol graph values from owned storage effects.
 It publishes graphs only after terminal ledger append and repairs missing/corrupt
 projections on repeated finalization. Retained counterexamples and parity results
 are in the canonical plan. Source and both installed Windows cells pass 1,213
@@ -94,7 +105,7 @@ installed proof covers 1,193 cases through retained full runs and an eight-case
 opt-in supplement. Linux retains one unexplained approval/resume deadline failure
 per cell; the local candidate checkpoint retains that open installed gate. The
 canonical plan retains the failed envelopes and separate child-shutdown repair.
-The graph retains 57 forbidden pairs, one cycle and ten analysis
+The graph retains 54 forbidden pairs, one cycle and ten analysis
 errors. Migration and claim limits:
 `docs/architecture/CONTRACT_DELTA_DUAL_LEDGER_CD_2026-09-17.md`.
 During 10 AM-6 PM America/Denver work hours, commits and tags remain local and

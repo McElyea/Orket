@@ -10,7 +10,7 @@ from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvide
 from orket.capabilities.sdk_static_provider import StaticLLMCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.services.scoped_memory_store import MemoryControls
 from orket_extension_sdk.audio import NullAudioPlayer
 from orket_extension_sdk.capabilities import CapabilityRegistry

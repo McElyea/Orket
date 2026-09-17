@@ -12,8 +12,8 @@ from orket.application.services.command_process_supervisor import CommandProcess
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.runtime.config.defaults import configured_provider
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.provider_runtime_target import list_provider_models
 from orket.services.extension_memory_namespace import validate_extension_id
 from orket.services.profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError

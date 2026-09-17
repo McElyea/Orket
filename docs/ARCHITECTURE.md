@@ -179,6 +179,12 @@ observed terminal append; a matching terminal retry repairs its projection.
 Migration and limits:
 `docs/architecture/CONTRACT_DELTA_PROTOCOL_GRAPH_CD_2026-09-17.md`.
 
+Provider identity/defaults and captured target values are core contracts. Application
+preparation captures settings before awaiting and owns inventory/load worker lifetime;
+load readiness requires a post-load observation. Client settings capture and remaining
+composition limits are in
+`docs/architecture/CONTRACT_DELTA_PROVIDER_INPUTS_CD_2026-09-17.md`.
+
 Core must not depend on:
 1. application
 2. adapters

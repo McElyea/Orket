@@ -22,7 +22,7 @@ from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
 from orket.application.services.outward_approval_service import OutwardApprovalService
 from orket.application.services.outward_run_execution_service import OutwardRunExecutionService
 from orket.application.services.outward_run_service import OutwardRunService
-from orket.runtime.config.defaults import (  # noqa: E402 - repository path bootstrap
+from orket.core.contracts.provider_runtime import (  # noqa: E402 - direct script bootstrap
     DEFAULT_LOCAL_MODEL,
     DEFAULT_LOCAL_PROVIDER,
 )

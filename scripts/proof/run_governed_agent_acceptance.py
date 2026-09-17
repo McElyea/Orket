@@ -18,7 +18,10 @@ import httpx
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL, DEFAULT_LOCAL_PROVIDER  # noqa: E402
+from orket.core.contracts.provider_runtime import (  # noqa: E402 - direct script bootstrap
+    DEFAULT_LOCAL_MODEL,
+    DEFAULT_LOCAL_PROVIDER,
+)
 from orket.runtime.config.provider_runtime_target import default_base_url  # noqa: E402
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger  # noqa: E402
 

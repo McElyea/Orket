@@ -6,7 +6,7 @@ from typing import Any
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.tts_piper import PiperTTSProvider
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.services.extension_memory_namespace import (
     profile_key,
     query_extension_profile_records,

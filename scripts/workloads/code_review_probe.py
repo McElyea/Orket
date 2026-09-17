@@ -14,8 +14,10 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
-from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER  # noqa: E402 - repository path bootstrap
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+from orket.core.contracts.provider_runtime import (
+    DEFAULT_LOCAL_MODEL,
+    DEFAULT_LOCAL_PROVIDER,  # noqa: E402 - direct script bootstrap
+)
 from scripts.probes.probe_support import applied_probe_env, is_environment_blocker, json_safe, now_utc_iso, write_report
 from scripts.workloads.code_review_probe_reporting import (
     build_model_assisted_payload,

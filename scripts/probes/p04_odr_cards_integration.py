@@ -14,8 +14,10 @@ if str(REPO_ROOT) not in sys.path:
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.core.cards_runtime_contract import ARTIFACT_EXECUTION_PROFILE, ODR_EXECUTION_PROFILE
-from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER  # noqa: E402 - repository path bootstrap
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+from orket.core.contracts.provider_runtime import (
+    DEFAULT_LOCAL_MODEL,
+    DEFAULT_LOCAL_PROVIDER,  # noqa: E402 - direct script bootstrap
+)
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from scripts.probes.probe_support import (
     applied_probe_env,

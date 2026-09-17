@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.runtime.config.provider_discovery import installed_models
 from orket.schema import OrganizationConfig
 from orket.settings import load_user_preferences, load_user_settings

@@ -5,7 +5,7 @@ import asyncio
 
 import pytest
 
-from orket.runtime.provider_runtime_target import ProviderRuntimeTarget
+from orket.core.contracts.provider_runtime import ProviderRuntimeTarget
 from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus, StreamBusConfig
 from orket.streaming.contracts import StreamEventType
 from orket.streaming.model_provider import ModelStreamProvider, ProviderEvent, ProviderEventType, ProviderTurnRequest

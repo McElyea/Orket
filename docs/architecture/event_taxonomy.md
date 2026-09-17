@@ -387,3 +387,14 @@ mismatch; its vocabulary authority is the core protocol error catalog. Graphs re
 projections and do not replace terminal ledger authority. The schema/version and
 node/edge meanings are unchanged. Contract:
 `docs/architecture/CONTRACT_DELTA_PROTOCOL_GRAPH_CD_2026-09-17.md`.
+
+## Provider preparation observations
+
+Provider target payload fields remain unchanged. `auto_load_attempted` records an
+actual load command; disabled or unnecessary loading leaves it false. A load
+acknowledgement without the candidate in post-load inventory returns
+`status: BLOCKED`, `resolution_mode: model_load_unverified` and
+`auto_load_performed: false`. Captured settings and immutable target metadata
+retain their invocation/client scope; later environment edits are not evidence
+that an existing target was re-admitted. Authority and limits:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_INPUTS_CD_2026-09-17.md`.

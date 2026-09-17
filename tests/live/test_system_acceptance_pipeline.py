@@ -8,9 +8,9 @@ import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.exceptions import ExecutionFailed
 from orket.orchestration.engine import OrchestrationEngine
-from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.execution.live_acceptance_assets import write_core_acceptance_assets
 from orket.schema import CardStatus
 from tests.helpers.runtime_result import published_result

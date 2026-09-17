@@ -5,15 +5,14 @@ import contextlib
 import os
 from typing import Any
 
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL, PROVIDER_CHOICES
 from orket.runtime.config.defaults import configured_provider
 from orket.runtime.config.provider_runtime_target import (
-    PROVIDER_CHOICES,
     resolve_bool_env,
     resolve_float_env,
     resolve_int_env,
     resolve_provider_runtime_target,
 )
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.streaming.contracts import CommitIntent, StreamEventType
 from orket.streaming.manager import InteractionContext
 from orket.streaming.model_provider import (
@@ -185,7 +184,7 @@ async def run_model_stream_v1(
     try:
         try:
             await asyncio.wait_for(_consume_provider(), timeout=turn_timeout_s)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             provider_error = f"provider_turn_timeout:{turn_timeout_s}s"
     finally:
         cancel_task.cancel()

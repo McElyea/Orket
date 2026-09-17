@@ -527,7 +527,21 @@ compatibility and wheel-upgrade order are governed by
 `docs/requirements/sdk/VERSIONING.md`; historical bundling hosts do not acquire
 standalone SDK compatibility merely by overlaying a wheel.
 
-Core 0.6.7 is the latest local protocol graph publication checkpoint. Source and
+Core 0.6.8 is the latest local captured-provider preparation checkpoint. Its
+current source regression passes 1,310 selected cases; the four-cell installed gate passes.
+Eight actual installed llama.cpp cases and a separate seven-case mixed feature/
+pipeline envelope pass. The latter's actual live workload ends in `terminal_failure`
+(`card_completion_unverified:COD-1,REV-1`); only its truthful-reporting assertion passes.
+Full changed-file Ruff remains red (226 findings);
+historical clock/resume investigations and full-plan acceptance remain open.
+No GitHub push is performed during work hours.
+Pure identity/target values are canonical in `orket/core/contracts/provider_runtime.py`.
+Application preparation captures supplied settings, retains admitted inventory/load
+workers and requires an observed loaded model before reporting load success.
+Client construction captures its provider settings; nested target evidence is immutable.
+Migration and limits: `docs/architecture/CONTRACT_DELTA_PROVIDER_INPUTS_CD_2026-09-17.md`.
+
+The preceding core 0.6.7 local protocol graph publication checkpoint is retained. Source and
 both Windows installed environments pass 1,213 selected cases; Linux 3.11 has
 1,211 passes/two resume failures and Linux 3.12 has 1,212 passes/one resume failure.
 All 18 graph cases pass in each cell, and eight separate actual installed llama.cpp

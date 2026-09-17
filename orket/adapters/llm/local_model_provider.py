@@ -7,6 +7,7 @@ import os
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any
 
 import httpx
@@ -30,10 +31,9 @@ from orket.adapters.llm.openai_compat_runtime import (
 from orket.adapters.llm.openai_native_tools import build_openai_native_tooling
 from orket.adapters.llm.provider_extractors import extractor_for_provider
 from orket.core.contracts.model_timing import MODEL_TIMING_SCHEMA_VERSION, nanoseconds_to_ms
+from orket.core.contracts.provider_runtime import ProviderRuntimeTarget, normalize_provider, provider_from_environment
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.logging import log_event
-from orket.runtime.config.defaults import configured_provider
-from orket.runtime.provider_runtime_target import ProviderRuntimeTarget, normalize_provider
 
 
 @dataclass
@@ -42,8 +42,8 @@ class ModelResponse:
     raw: dict[str, Any]
 
 
-def _read_provider_env() -> str:
-    return configured_provider()
+def _read_provider_env(environment: Mapping[str, str]) -> str:
+    return provider_from_environment(environment)
 
 
 def _map_provider_backend(raw: str) -> str:
@@ -70,12 +70,14 @@ class LocalModelProvider:
         api_key: str = "",
         connect_timeout_seconds: float = 30.0,
         runtime_target: ProviderRuntimeTarget | None = None,
+        environment: Mapping[str, str] | None = None,
     ):
         """Initialize provider.
 
         `timeout` is the total response generation timeout in seconds.
         `connect_timeout_seconds` is the TCP connection establishment timeout in seconds.
         """
+        self._provider_environment = MappingProxyType(dict(os.environ if environment is None else environment))
         self.requested_model = str(model or "").strip()
         self.model = self.requested_model
         self.temperature = self._resolve_temperature_override(temperature)
@@ -89,7 +91,7 @@ class LocalModelProvider:
         self._provider_override = str(provider or "").strip().lower()
         self._base_url_override = str(base_url or "").strip()
         self._api_key_override = str(api_key or "").strip()
-        provider_env = self._provider_override or _read_provider_env()
+        provider_env = self._provider_override or _read_provider_env(self._provider_environment)
         self.provider_backend = _map_provider_backend(provider_env)
         self.provider_name = _map_provider_name(provider_env)
         self.openai_base_url = self._resolve_openai_base_url()
@@ -116,10 +118,9 @@ class LocalModelProvider:
         self._seen_context_epochs: set[int] = set()
         self._runtime_target: ProviderRuntimeTarget | None = runtime_target
 
-    @staticmethod
-    def _resolve_temperature_override(default_temperature: float) -> float:
+    def _resolve_temperature_override(self, default_temperature: float) -> float:
         for key in ("ORKET_BENCH_TEMPERATURE", "ORKET_LLM_TEMPERATURE", "ORKET_MODEL_TEMPERATURE"):
-            raw = str(os.getenv(key, "")).strip()
+            raw = str(self._provider_environment.get(key, "")).strip()
             if not raw:
                 continue
             try:
@@ -128,12 +129,11 @@ class LocalModelProvider:
                 continue
         return float(default_temperature)
 
-    @staticmethod
-    def _resolve_seed_override(default_seed: int | None) -> int | None:
+    def _resolve_seed_override(self, default_seed: int | None) -> int | None:
         if isinstance(default_seed, int):
             return default_seed
         for key in ("ORKET_BENCH_SEED", "ORKET_LLM_SEED", "ORKET_MODEL_SEED"):
-            raw = str(os.getenv(key, "")).strip()
+            raw = str(self._provider_environment.get(key, "")).strip()
             if not raw:
                 continue
             try:
@@ -177,26 +177,20 @@ class LocalModelProvider:
             return "context_unknown"
         return "fresh_context"
 
-    def _resolve_provider_backend(self) -> str:
-        return _map_provider_backend(self._provider_override or _read_provider_env())
-
-    def _resolve_provider_name(self) -> str:
-        return _map_provider_name(self._provider_override or _read_provider_env())
-
     def _resolve_openai_base_url(self) -> str:
         if self._base_url_override:
             default = "http://127.0.0.1:8080/v1" if self.provider_name == "llama_cpp" else "http://127.0.0.1:1234/v1"
             return normalize_openai_base_url(self._base_url_override, default=default)
         if self.provider_name == "llama_cpp":
             raw = str(
-                os.getenv("ORKET_LLM_LLAMA_CPP_BASE_URL")
-                or os.getenv("ORKET_LLAMA_CPP_BASE_URL")
+                self._provider_environment.get("ORKET_LLM_LLAMA_CPP_BASE_URL")
+                or self._provider_environment.get("ORKET_LLAMA_CPP_BASE_URL")
                 or "http://127.0.0.1:8080/v1"
             ).strip()
             return normalize_openai_base_url(raw, default="http://127.0.0.1:8080/v1")
         raw = str(
-            os.getenv("ORKET_LLM_OPENAI_BASE_URL")
-            or os.getenv("ORKET_MODEL_STREAM_OPENAI_BASE_URL")
+            self._provider_environment.get("ORKET_LLM_OPENAI_BASE_URL")
+            or self._provider_environment.get("ORKET_MODEL_STREAM_OPENAI_BASE_URL")
             or "http://127.0.0.1:1234/v1"
         ).strip()
         return normalize_openai_base_url(raw, default="http://127.0.0.1:1234/v1")
@@ -205,15 +199,18 @@ class LocalModelProvider:
         if self._api_key_override:
             return self._api_key_override
         if self.provider_name == "llama_cpp":
-            return str(os.getenv("ORKET_LLM_LLAMA_CPP_API_KEY") or os.getenv("ORKET_LLAMA_CPP_API_KEY") or "").strip()
+            return str(self._provider_environment.get("ORKET_LLM_LLAMA_CPP_API_KEY")
+                       or self._provider_environment.get("ORKET_LLAMA_CPP_API_KEY") or "").strip()
         return str(
-            os.getenv("ORKET_LLM_OPENAI_API_KEY") or os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY") or ""
+            self._provider_environment.get("ORKET_LLM_OPENAI_API_KEY")
+            or self._provider_environment.get("ORKET_MODEL_STREAM_OPENAI_API_KEY") or ""
         ).strip()
 
     def _resolve_ollama_host(self) -> str:
         if self._base_url_override:
             return self._base_url_override
-        return str(os.getenv("ORKET_LLM_OLLAMA_HOST") or os.getenv("OLLAMA_HOST") or "").strip()
+        return str(self._provider_environment.get("ORKET_LLM_OLLAMA_HOST")
+                   or self._provider_environment.get("OLLAMA_HOST") or "").strip()
 
     async def complete(
         self,
@@ -401,7 +398,7 @@ class LocalModelProvider:
         payload.update(local_prompting_policy.openai_payload_overrides())
         if self.seed is not None:
             payload["seed"] = self.seed
-        response_format = str(os.getenv("ORKET_LLM_OPENAI_RESPONSE_FORMAT", "")).strip().lower()
+        response_format = str(self._provider_environment.get("ORKET_LLM_OPENAI_RESPONSE_FORMAT", "")).strip().lower()
         payload.update(response_format_payload(response_format, provider_name=self.provider_name))
         if native_tools:
             payload["tools"] = native_tools

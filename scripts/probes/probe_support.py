@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Any, Iterator, Sequence
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_PROVIDER
 from orket.core.critical_path import CriticalPathEngine
-from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from scripts.common.run_summary_support import is_degraded_run_summary, load_validated_run_summary_or_empty
 

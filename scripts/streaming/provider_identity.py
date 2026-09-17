@@ -4,9 +4,9 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL, normalize_provider
 from orket.runtime.config.defaults import configured_provider
-from orket.runtime.config.provider_runtime_target import default_base_url, normalize_base_url, normalize_provider
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+from orket.runtime.config.provider_runtime_target import default_base_url, normalize_base_url
 
 
 def provider_identity(*, resolved_model_id: str = "") -> dict[str, Any]:

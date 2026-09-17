@@ -10,7 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL  # noqa: E402 - repository path bootstrap
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL  # noqa: E402 - direct script bootstrap
 
 
 def _resolve_textmystery_root(args_root: str | None) -> Path:

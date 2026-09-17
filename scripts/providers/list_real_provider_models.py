@@ -4,12 +4,13 @@ import argparse
 import json
 import os
 import sys
-
-SCRIPTS_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if SCRIPTS_ROOT not in sys.path:
-    sys.path.insert(0, SCRIPTS_ROOT)
+from pathlib import Path
 
 import httpx
+
+SCRIPTS_ROOT = str(Path(__file__).resolve().parents[1])
+if SCRIPTS_ROOT not in sys.path:
+    sys.path.insert(0, SCRIPTS_ROOT)
 
 try:
     from scripts.providers.provider_model_resolver import choose_model, list_provider_models
@@ -17,7 +18,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
     from provider_model_resolver import choose_model, list_provider_models
 
 
-from orket.runtime.config.provider_runtime_target import PROVIDER_CHOICES
+from orket.core.contracts.provider_runtime import PROVIDER_CHOICES  # noqa: E402 - direct script bootstrap
 
 
 def main() -> int:

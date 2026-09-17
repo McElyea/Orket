@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from types import SimpleNamespace
 
-import httpx
 import pytest
 
 from orket.adapters.llm import local_model_provider_runtime_target as targeting
@@ -12,8 +10,8 @@ from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelRes
 from orket.application.services.governed_agent_api_composition import _settings
 from orket.application.services.governed_agent_broker_service import GovernedAgentResolvedModelProfile
 from orket.application.services.governed_agent_model_provider import GovernedAgentLocalModelProvider
+from orket.core.contracts.provider_runtime import ProviderRuntimeTarget
 from orket.exceptions import ModelConnectionError
-from orket.runtime.config.provider_runtime_target import ProviderRuntimeTarget
 from orket_extension_sdk import AgentModelCallRequest
 from orket_extension_sdk.agent_fixtures import agent_model_call_request
 
@@ -49,10 +47,8 @@ async def test_openai_transport_preserves_governed_usage_and_truncation(provider
 @pytest.mark.asyncio
 async def test_blocked_target_is_not_cached_or_admitted(monkeypatch) -> None:
     """Layer: contract. A nonempty but quarantined target cannot proceed on a retry."""
-    client = httpx.AsyncClient()
-    provider = SimpleNamespace(provider_name="llama_cpp", provider_backend="openai_compat", client=client,
-                               requested_model="qwen", model="qwen", openai_base_url=_target().base_url,
-                               timeout=30, _runtime_target=None)
+    provider = LocalModelProvider("qwen", provider="llama_cpp", base_url=_target().base_url,
+                                  timeout=30, environment={})
     async def resolve(**kwargs):
         return _target(status="BLOCKED")
     monkeypatch.setattr(targeting, "resolve_provider_runtime_target", resolve)
@@ -62,7 +58,7 @@ async def test_blocked_target_is_not_cached_or_admitted(monkeypatch) -> None:
                 await targeting.ensure_provider_runtime_target(provider)
             assert provider._runtime_target is None
     finally:
-        await client.aclose()
+        await provider.close()
 
 
 @pytest.mark.asyncio

@@ -17,8 +17,8 @@ from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.application.workflows.turn_contract_validator import ContractValidator
 from orket.application.workflows.turn_corrective_prompt import CorrectivePromptBuilder
 from orket.application.workflows.turn_response_parser import ResponseParser
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.core.domain.execution import ExecutionTurn
-from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 OUTPUT = ROOT / "benchmarks/results/protocol/local_prompting/qwen38_promotion/repair_readiness.json"

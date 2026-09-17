@@ -12,10 +12,12 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.core.contracts.provider_runtime import (
+    DEFAULT_LOCAL_MODEL,
+    DEFAULT_LOCAL_PROVIDER,  # noqa: E402 - direct script bootstrap
+)
 from orket.kernel.v1.canonical import odr_raw_signature
 from orket.kernel.v1.odr.live_runner import run_live_refinement
-from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER  # noqa: E402 - repository path bootstrap
-from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from scripts.probes.probe_support import applied_probe_env, is_environment_blocker, now_utc_iso, write_report
 
 DEFAULT_OUTPUT = "benchmarks/results/probes/p02_odr_isolation.json"

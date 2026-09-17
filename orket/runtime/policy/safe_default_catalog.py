@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.runtime.config import defaults
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_PROVIDER, effective_provider
 from orket.runtime.determinism_controls import (
     DEFAULT_CLOCK_MODE,
     DEFAULT_LOCALE,
@@ -10,7 +10,6 @@ from orket.runtime.determinism_controls import (
     DEFAULT_TIMEZONE,
 )
 from orket.runtime.deterministic_mode_contract import resolve_deterministic_mode_flag
-from orket.runtime.provider_runtime_target import effective_provider
 from orket.runtime.unknown_input_policy import unknown_input_policy_snapshot
 
 
@@ -51,8 +50,8 @@ def safe_default_catalog_snapshot() -> dict[str, Any]:
         },
         {
             "default_key": "provider_runtime_target.default_provider",
-            "default_value": effective_provider(None, default=defaults.DEFAULT_LOCAL_PROVIDER),
-            "owner": "orket/runtime/provider_runtime_target.py",
+            "default_value": effective_provider(None, default=DEFAULT_LOCAL_PROVIDER),
+            "owner": "orket/core/contracts/provider_runtime.py",
         },
         {
             "default_key": "unknown_provider_input.on_unknown",

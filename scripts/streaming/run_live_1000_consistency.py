@@ -27,7 +27,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
-from orket.runtime.config.provider_runtime_target import PROVIDER_CHOICES
+from orket.core.contracts.provider_runtime import PROVIDER_CHOICES  # noqa: E402 - direct script bootstrap
 
 
 def _parse_args() -> argparse.Namespace:

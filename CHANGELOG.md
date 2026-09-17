@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.8] - 2026-09-17 - "Captured provider preparation candidate"
+
+### Changed
+- Capture provider preparation settings and nested target metadata; move provider
+  identity and target values to core contracts.
+- Retain admitted inventory/load workers through cancellation and timeout; preserve
+  their failures and require a loaded-model observation before reporting load success.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Follow `docs/architecture/CONTRACT_DELTA_PROVIDER_INPUTS_CD_2026-09-17.md` for core
+  imports, captured settings, immutable inventory records and load-result semantics.
+  SDK remains `0.7.0a1`; serialized target fields remain unchanged.
+- Stability: local checkpoint; source passes 1,310 selected cases and the current
+  four-cell installed gate passes. Eight actual llama.cpp cases and seven
+  separate mixed feature/pipeline cases pass. Full changed-file Ruff, historical
+  clock/resume investigations and full-plan gates remain open.
+  The live pipeline workload retains `terminal_failure` for unverified COD-1/REV-1
+  completion; its passing truth-reporting test does not establish workload success.
+
 ## [0.6.7] - 2026-09-17 - "Protocol graph publication candidate"
 
 ### Changed
