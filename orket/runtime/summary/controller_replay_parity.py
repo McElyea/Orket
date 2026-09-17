@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.runtime.registry import protocol_hashing
+from orket.core.contracts import protocol_hashing
 
 _PARITY_KIND = "controller_replay_parity_v1"
 

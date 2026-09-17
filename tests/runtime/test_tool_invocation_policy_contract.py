@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from orket.runtime.protocol_error_codes import E_NAMESPACE_POLICY_VIOLATION_PREFIX
+from orket.core.contracts.protocol_error_codes import E_NAMESPACE_POLICY_VIOLATION_PREFIX
 from orket.runtime.tool_invocation_policy_contract import (
     tool_invocation_policy_contract_snapshot,
     validate_tool_invocation_policy_contract,

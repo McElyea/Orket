@@ -17,7 +17,7 @@ Last reviewed: 2026-09-16
 
 ## CLI Contract
 
-The architectural-truth core `0.6.3` branch checkpoint uses SDK `0.7.0a1`, with a new
+The architectural-truth core `0.6.4` branch checkpoint uses SDK `0.7.0a1`, with a new
 required `agent_model_use_receipt.v2` host feature. Its compatibility scope is
 the matched remediation host checkpoint only, with scoped installed-artifact
 proof recorded in the canonical plan; it does not extend to other core versions

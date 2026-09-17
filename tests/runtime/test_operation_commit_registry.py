@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orket.runtime.operation_commit_registry import OperationCommitRegistry
+from orket.adapters.storage.operation_commit_registry import OperationCommitRegistry
 
 
 def test_operation_commit_registry_accepts_first_commit(tmp_path: Path) -> None:

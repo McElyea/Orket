@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiofiles
 
-from orket.runtime.registry import protocol_hashing
+from orket.core.contracts import protocol_hashing
 from orket.utils import sanitize_name
 
 

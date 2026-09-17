@@ -2,7 +2,7 @@ from __future__ import annotations
 
 # Temporary bridge while Packet 2 drains remaining application-local imports
 # onto the lower-layer runtime registry contract helpers.
-from orket.runtime.registry.protocol_hashing import (
+from orket.core.contracts.protocol_hashing import (
     PROTOCOL_VERSION,
     VALIDATOR_VERSION,
     ProtocolCanonicalizationError,

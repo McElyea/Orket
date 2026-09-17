@@ -17,6 +17,7 @@ from orket.application.services.kernel_action_control_plane_resource_lifecycle i
     resource_id_for_run,
 )
 from orket.core.contracts import AttemptRecord, CheckpointRecord, RunRecord, StepRecord
+from orket.core.contracts.tool_invocation_contracts import build_tool_invocation_manifest
 from orket.core.domain import (
     AttemptState,
     AuthoritySourceClass,
@@ -42,7 +43,6 @@ from orket.core.domain import (
     RunState,
     SideEffectBoundaryClass,
 )
-from orket.runtime.registry.tool_invocation_contracts import build_tool_invocation_manifest
 from orket.runtime.run_summary import build_run_summary_payload, write_run_summary_artifact
 from tests.application.test_control_plane_publication_service import (
     InMemoryControlPlaneRecordRepository,

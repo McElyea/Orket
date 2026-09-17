@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from orket.runtime.result_error_invariants import (
+from orket.core.contracts.result_error_invariants import (
     result_error_invariant_contract_snapshot,
     validate_result_error_invariant,
     validate_result_error_invariant_contract,

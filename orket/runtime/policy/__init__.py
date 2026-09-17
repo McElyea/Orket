@@ -32,7 +32,6 @@ __all__ = [
     'provider_quarantine_policy',
     'provider_quarantine_policy_contract',
     'resource_pressure_simulation_lane',
-    'result_error_invariants',
     'retention_policy',
     'retry_classification_policy',
     'run_phase_contract',

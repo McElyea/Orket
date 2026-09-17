@@ -12,10 +12,11 @@ from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
+from orket.core.contracts.protocol_hashing import hash_canonical_json
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.runtime.evidence.protocol_receipt_materializer import materialize_protocol_receipts
-from orket.runtime.registry.protocol_hashing import hash_canonical_json
 from orket.tools import ToolBox
+from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -107,7 +108,9 @@ async def test_replay_preserves_receipt_bytes_and_original_file_result(tmp_path,
     assert replayed == original_result
     assert "original file" in str(replayed)
     assert await asyncio.to_thread(receipt_path.read_bytes) == before
-    ledger = AsyncProtocolRunLedgerRepository(tmp_path / "projected")
+    ledger = AsyncProtocolRunLedgerRepository(
+        tmp_path / "projected", timestamp_factory=ProtocolLedgerClock().utc_now_iso,
+    )
     materialized = await materialize_protocol_receipts(workspace=tmp_path, session_id="timing", run_ledger=ledger)
     assert materialized["materialized_receipts"] == 1
     projected = (await ledger.list_receipts("timing"))[0]

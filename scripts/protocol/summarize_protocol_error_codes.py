@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import Any
 
 try:
@@ -15,9 +15,6 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
-
-from orket.runtime.protocol_error_codes import error_family, is_registered_protocol_error_code
-
 
 ERROR_KEYS = {"error_code", "code"}
 
@@ -74,6 +71,8 @@ def _sorted_counts(counter: dict[str, int]) -> dict[str, int]:
 
 
 def summarize_protocol_error_codes(paths: list[Path]) -> dict[str, Any]:
+    from orket.core.contracts.protocol_error_codes import error_family, is_registered_protocol_error_code
+
     codes: list[str] = []
     for path in paths:
         _walk_codes(_load_json_or_jsonl(path), codes)

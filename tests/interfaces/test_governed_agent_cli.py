@@ -20,6 +20,7 @@ from orket.core.domain.governed_agent_continuation import (
 )
 from orket.interfaces.orket_bundle_cli import main
 from orket_extension_sdk.agent_fixtures import agent_iteration_result, prefixed_digest
+from tests.helpers.governed_agent_clock import elapsed_agent_clock as elapsed_agent_clock
 from tests.runtime.governed_agent_test_support import agent_request, binding_for, prepare_authority
 
 
@@ -243,7 +244,7 @@ async def _prepare_claimed_wake(db_path: Path) -> None:
     assert claim.status == "claimed"
 
 
-def test_agent_submit_runs_catalog_resolved_deterministic_fixture(tmp_path: Path, capsys) -> None:
+def test_agent_submit_runs_catalog_resolved_deterministic_fixture(tmp_path: Path, capsys, elapsed_agent_clock) -> None:
     template_root = Path("docs/templates/governed_agent_external").resolve()
     manifest_path = template_root / "extension.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))

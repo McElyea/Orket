@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.4] - 2026-09-17 - "Protocol ledger ownership checkpoint"
+
+### Changed
+- Move pure protocol hashing, invocation contracts and error/result vocabulary
+  into core; move operation-commit persistence into storage adapters.
+- Reload first-winner state under native local ownership, refuse malformed
+  history and invalid event sequences, and verify persistence before publication.
+- Retain protocol file workers and repository ownership through cancellation or
+  timeout; capture caller-owned nested ledger inputs before the first await.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Update internal imports and follow the storage refusal/retry instructions in
+  `docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`. Valid existing
+  registry JSON and protocol hashes retain their formats; SDK remains `0.7.0a1`.
+- Stability: scoped branch checkpoint. Full C/D, quality, capability,
+  full-suite/hosted CI, release readiness and whole-lane acceptance remain open.
+
 ## [0.6.3] - 2026-09-16 - "Architectural truth remediation checkpoint"
 
 ### Changed

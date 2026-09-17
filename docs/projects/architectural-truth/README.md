@@ -1,7 +1,7 @@
 # Architectural Truth
 
 Date: 2026-07-29
-Last updated: 2026-09-16
+Last updated: 2026-09-17
 Status: Active project registry
 Owner: Orket Core
 
@@ -54,6 +54,19 @@ are recorded in the canonical plan.
 Core 0.6.3 is the user-requested accumulated GitHub branch checkpoint, with
 subsequent verified checkpoints committed to `codex/architectural-truth-bt0`.
 This preserves the full goal and its remaining acceptance gates.
+
+The 0.6.4 candidate moves pure protocol contracts into core and first-operation
+commit persistence into storage. Protocol workers retain ownership through
+interruption and capture nested caller inputs before awaiting. Independent local
+registry writers preserve the first winner or explicitly refuse contention.
+The source and four installed proof unions cover 1,156 identical cases
+with no unresolved selected failure; retained full runs and current
+19-case clock-fixture follow-ups use the identical wheel. Eight separate
+installed llama.cpp cases also pass. Dependency
+conformance remains red with 58 forbidden pairs, one cycle and ten analysis
+errors. Exact evidence and remaining gates are in the canonical plan;
+migration and claim limits live in
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`.
 
 BT-5's five-requirement disposition is in the canonical plan. The sealed audit at
 `.tmp/bt5-family-composed-clock/gate/audit.json` binds 2,321 identical cases across

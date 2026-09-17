@@ -1,7 +1,7 @@
 # Architectural Truth Remediation Plan
 
 Date: 2026-07-29
-Last updated: 2026-09-16
+Last updated: 2026-09-17
 Status: Active implementation plan; scoped BT-1 through BT-5 accepted; C/D is the next ordered gate
 Roadmap state: Priority Now
 Owner: Orket Core
@@ -11524,6 +11524,149 @@ imports only application contracts. AC-02/03/04/05/07/08/09/10 preserve the name
 boundary with the scoped proof above; AC-06 remains partial for the wider adapter
 classification work and adds no new adapter or decision-node caller.
 
+### Protocol contracts and ledger ownership checkpoint (2026-09-17)
+
+Core 0.6.3 is published on `codex/architectural-truth-bt0` at
+`08a5ae05e7a33f560386acfa1f48baa8e5b6d078` with annotated tag `v0.6.3`.
+Its immutable publication checkpoint is `.tmp/c-agent-cli/published-checkpoint.json`
+(SHA-256 `9a5ffc4d190ae552bb7923eb8dc5dfe7e836dda81d59c71ee738f7327bd626e7`).
+The current 0.6.4 candidate preserves that evidence and continues the full goal.
+
+Protocol hash/invocation/error/result contracts move to core, and operation-commit
+persistence moves to storage. All affected callers use canonical definitions.
+Registry reads and writes reload under native local ownership; failed persistence
+cannot publish an in-memory winner, corrupt rows refuse mutation, and positive
+integer sequences are required. Protocol workers retain ownership through
+cancellation/timeout, and nested receipt/event/start/finalize input values are
+captured before awaiting. Receipt file I/O has a dedicated storage owner.
+Migration and scope limits:
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`.
+
+The retained initial eight counterexamples fail before repairs (worker lifetime,
+receipt capture, stale writer, persistence failure and malformed history). Three
+additional event/summary input counterexamples fail before capture is repaired.
+Four invalid-sequence counterexamples fail before strict integer validation.
+The final focused regression is 76 passed, without failures/errors/skips, in
+6.65 seconds. These include actual local files and independent Python processes;
+held-worker/failure controls do not claim live model or hostile-host containment.
+Observed path: **primary**; result: **success within this checkpoint**.
+The user requires local commits only during 10 AM-6 PM America/Denver work hours.
+This checkpoint's commit and annotated tag are retained locally; GitHub push is
+deferred under that instruction. Core 0.6.3 remains the last published checkpoint.
+
+The source and four installed proof unions cover the same 1,156 unique cases
+from 136 modules, with no unresolved failure, error or
+unexecuted selected case. Each installed union combines a retained full selected
+run with a fresh 19-case follow-up after two clock-fixture corrections, using the
+identical runtime wheel. These are scoped regression unions, not new single
+full-suite executions:
+
+| Envelope | Passing cases | JUnit seconds |
+|---|---:|---:|
+| Source Windows 3.11 union | 1156 | 353.711 + 0.217 + 40.077 + 3.565 |
+| Installed win-py311 union | 1156 | 320.611 + 3.761 |
+| Installed win-py312 union | 1156 | 339.503 + 3.704 |
+| Installed linux-py311 union | 1156 | 394.440 + 5.759 |
+| Installed linux-py312 union | 1156 | 391.177 + 5.609 |
+
+The initial source execution passed 1,148 cases and skipped eight script
+cases because their existing one-shot opt-in was disabled. Its original report
+and JUnit remain retained. A focused follow-up executes exactly those eight with
+`ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1`, preserving all frozen source bytes.
+A 75-case source run covers all three modified fixture modules and the
+existing deadline/expiry controls. Only these three test modules and one new
+fixture helper differ from the initial source observation; all other inputs
+remain bound to it at that intermediate observation. A final 19-case source run
+covers both subsequently corrected protocol clock-fixture modules. The source
+row combines these observations with explicit rerun overlap. All installed full
+selected runs use the one-shot opt-in from the start. Three pass all 1,156;
+Linux 3.11 passes 1,154 and retains two timestamp failures described below.
+The 19-case follow-up passes on all four fresh installed environments. Its
+manifest differs from the full selected run in exactly the two test files;
+runtime, package artifacts and every other harness input are unchanged.
+These script fixtures are controlled contract evidence, not operator sign-off.
+
+Each full installed cell checks 901 core origins (647 in each focused
+follow-up), identical case identities,
+wheel/dependency identities, unchanged copied inputs, actual valid/malformed-board
+CLI flows, ToolGate denial and absence of surviving child processes. Independent
+native registry processes exercise contention, owner release and same/different
+operation retries on both hosts. Package parity covers
+993 Python and 1006
+packaged files with no missing/stale sources. The three unchanged pure contracts
+also have AST parity after canonical import mapping; the additive registry error
+family is exercised by the negative paths.
+
+The original candidate's actual installed Windows 3.11 llama.cpp proof passes all eight cases in
+159.165 seconds, covering CLI continuation, API memory/replay, effect
+restart and abrupt API recovery. Its 48 observed
+process identities have no survivors. This does not establish additional provider
+promotion, all-host model proof, containment or machine-wide process teardown. The corrected harness reuses this unmodified
+wheel/provider proof; it is not a second model execution.
+
+Initial installed observations remain retained: Windows 3.11/3.12 and Linux 3.11
+each failed three governance cases; Linux 3.12 also failed two native subprocess
+cases. Actual gate diagnostics identify missing repository boundary files and
+two documents in the harness. Those tests now consume isolated copies of actual
+installed boundary files and explicit repository documents/root wrappers; copied
+core files are never added to the import path. Negative checks remain enabled.
+The two subprocess cases retained eight-second UTC deadlines while the host
+journal records +12.099067-second and +10.719453-second offset changes in their
+failure interval. They now select the existing elapsed-clock fixture for parent
+and child, retaining native waits and unchanged budgets. Independent expiry and
+clock-jump refusal cases remain in the union. The clock-adjusting process and
+stock-clock success are not established. Exact evidence: `native-diagnosis.json`.
+
+The corrected full Linux 3.11 run then retained two
+`E_LEDGER_TIMESTAMP_NON_MONOTONIC` failures: pipeline terminal-failure finalization
+and projected receipt materialization. The pipeline fixtures now share one
+explicit `ProtocolLedgerClock` between pipeline runtime inputs and the ledger;
+the projected ledger also receives an explicit clock. The final 19-case runs
+exercise both affected modules without changing runtime refusal semantics or
+the wheel. The failed run remains sealed in `corrected/`; its remaining 1,154
+passing cases are bound by identity, input hashes and artifact hashes. Derived
+summary/graph publication before a refused final ledger event remains a known
+multi-file atomicity limit; this checkpoint does not claim to repair it.
+
+Evidence under `.tmp/c-protocol-ledger/` (full corrected matrix under `corrected/`,
+focused follow-up and union audit under `final/`)
+includes source reports/JUnit, opt-in
+supplement, package manifest, native audits and live-provider proof. Core wheel
+SHA-256: `f332b235e06c227ec983ff7b3b956599c4716c71514df5f7a0f1845f569b895e`;
+sdist: `ab820750568450238f8ef0cc43487dd50e9103e38febc41bc81a63f7ce8b44c0`.
+Union audit SHA-256: `96352cbd4b345be5dad1e7e7182ab8de211a325884588becc5e47ab5e1289b09`;
+19-case audit: `89d5f26e71f401cfa0edfdf67b4a7e4d6fccc3fe319a431f456ac729705bb72c`;
+manifest: `a6e4436b340b2c782d3cb2596a8750f4dad7652b137db87c4475bf0edc64031e`;
+live-provider report: `994f7250cb9a69f9f444eef4c33d269b95cc3622974dcd17950c0b2a3b8860a5`.
+`final/union-audit.json` binds the retained full runs, current follow-ups and
+unchanged sealed evidence to this scope. The reused generic auditor's earlier
+relocation prose is not a broader scope claim. The eight-case provider execution
+belongs to the original candidate and is explicitly reused on the identical wheel.
+
+After execution, one missing `Layer: integration` comment was added to the
+pipeline receipt-materialization test. `final/annotation.json` binds its exact
+before/after hashes to the frozen harness and verifies identical Python ASTs.
+This final annotation has structural proof only; executable test statements and
+assertions are unchanged. The runtime and installed artifacts remain identical.
+
+Architecture checklist: AC-01 remains **partial** because repository dependency
+conformance is red (58 forbidden pairs, one cross-layer cycle and ten unresolved
+import/reflection errors across 993 modules and 3,155 import sites; no unknown
+modules). This removes eight forbidden pairs without adding an exception.
+AC-02/03/04 pass for the unchanged pure contract computations and captured inputs,
+while broader decision-node/clock purity remains D work. AC-05/06 pass for the
+new declared storage owners and retained worker calls. AC-07/08/09 pass for the
+scoped first-winner, preserved schema/hash and replay regressions; multi-file
+atomicity and hostile-writer guarantees are not claimed. AC-10 passes with the
+same-change contract/authority pointers and both Quality commands updated.
+
+Changed-file Ruff passes. The broader baseline still reports 94 findings in its
+canonical lint scope, 70 oversized Python files, 225 oversized functions and
+3,296 missing layer labels under the existing noisy taxonomy checker. These are
+remaining E1/E2 work, not green quality evidence. The protocol repository shrinks
+to 705 lines but remains oversized. Full C/D, E1/E2, CAP-1/2/3, fresh full-suite,
+hosted CI, release readiness and explicit whole-lane acceptance remain open.
+
 ## E1/E2 — Reliable quality gates and maintainable authority
 
 Retains Workstreams 6, 7 and 8 and previous Slice E obligations.
@@ -11747,6 +11890,10 @@ for later slices. Extract durable contracts before archiving project history.
 Follow contributor version/changelog/tag policy when committing. The user has
 requested a versioned GitHub checkpoint and continued commits on the existing
 branch; its proof and publication disposition are recorded in the C/D checkpoint.
+The later user instruction restricts 10 AM-6 PM America/Denver work hours to
+local commits only. Retain commits and matching annotated tags locally during
+that window; do not push to GitHub. The 0.6.4 protocol checkpoint follows this
+restriction; remote publication remains deferred.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
@@ -11788,7 +11935,7 @@ Next action: execute C/D from their numbered requirements and retained dependenc
 counterexamples. Scoped BT-5 acceptance is recorded in the five-requirement
 disposition above; preserve its exact artifacts, original failures and family
 ceilings. C now has one allowed-edge policy, complete classification and exact
-exception enforcement; its current repository verdict is red. Repair its 66
+exception enforcement; its current repository verdict is red. Repair its 58
 forbidden pairs, cross-layer cycle and 10 unresolved import/reflection sites,
 retaining adversarial positive and negative proof. D owns remaining clock/core/async work. Thirty later numbered obligations,
 full-suite/hosted quality proof and whole-lane user acceptance remain active.

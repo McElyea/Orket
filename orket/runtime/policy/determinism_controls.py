@@ -3,8 +3,8 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from orket.runtime.registry import protocol_hashing
-from orket.runtime.protocol_error_codes import E_NETWORK_MODE_INVALID_PREFIX
+from orket.core.contracts import protocol_hashing
+from orket.core.contracts.protocol_error_codes import E_NETWORK_MODE_INVALID_PREFIX
 
 DEFAULT_TIMEZONE = "UTC"
 DEFAULT_LOCALE = "C.UTF-8"

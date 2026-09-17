@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-09-16
+Last updated: 2026-09-17
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -527,12 +527,18 @@ compatibility and wheel-upgrade order are governed by
 `docs/requirements/sdk/VERSIONING.md`; historical bundling hosts do not acquire
 standalone SDK compatibility merely by overlaying a wheel.
 
-Core 0.6.3 is the architectural-truth branch checkpoint paired with SDK 0.7.0a1.
+Core 0.6.4 is the architectural-truth branch checkpoint paired with SDK 0.7.0a1.
 The canonical remediation plan records scoped acceptance and remaining gates;
 this version/tag does not establish whole-lane completion or release readiness.
 Governed-agent CLI coordination now belongs to application command services;
 submission owns preparation and provider cleanup through interruption. Contract:
 `docs/architecture/CONTRACT_DELTA_AGENT_COMMANDS_C_2026-09-16.md`.
+Protocol hashing, invocation contracts and error/result vocabulary now live in
+core. Storage owns first-operation commits, native local contention/refusal and
+verified persistence. Protocol workers remain owned through interruption and
+capture nested inputs before awaiting. Migration, ownership-file retention and
+multi-file/hostile-writer limits are recorded in
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`.
 
 Historical core 0.6.2 released the llama.cpp defaults and exact Qwen3.8 promotion with
 SDK 0.6.0 and reference extension 0.2.0. Release verification and operator

@@ -8,7 +8,7 @@ from typing import Any, Protocol
 import aiofiles
 
 from orket.application.services.turn_tool_control_plane_support import effect_id_for
-from orket.runtime.registry import tool_invocation_contracts
+from orket.core.contracts import tool_invocation_contracts
 from orket.naming import sanitize_name
 
 

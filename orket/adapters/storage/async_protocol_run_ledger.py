@@ -1,33 +1,27 @@
 from __future__ import annotations
 
 import asyncio
-import json
-import os
 from collections.abc import Callable
+from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from orket.runtime.registry.protocol_hashing import hash_canonical_json
-from orket.runtime.registry.tool_invocation_contracts import (
-    PROTOCOL_RECEIPT_SCHEMA_VERSION,
+from orket.adapters.storage.operation_commit_registry import OperationCommitRegistry
+from orket.core.contracts.protocol_hashing import hash_canonical_json
+from orket.core.contracts.result_error_invariants import validate_result_error_invariant
+from orket.core.contracts.tool_invocation_contracts import (
     compute_tool_call_hash,
     normalize_tool_invocation_manifest,
 )
-from orket.runtime.operation_commit_registry import OperationCommitRegistry
-from orket.runtime.protocol_error_codes import (
-    E_RECEIPT_LOG_PARSE_PREFIX,
-    E_RECEIPT_LOG_SCHEMA_PREFIX,
-    E_RECEIPT_SEQ_INVALID_PREFIX,
-    E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX,
-)
-from orket.runtime.result_error_invariants import validate_result_error_invariant
 from orket.runtime.run_graph_reconstruction import (
     reconstruct_run_graph,
     write_run_graph_artifact,
 )
 
 from .protocol_append_only_ledger import AppendOnlyRunLedger
+from .protocol_ledger_io import owned_protocol_io
+from .protocol_receipt_store import ProtocolReceiptStore
 
 _TOOL_INVOCATION_KINDS = {"tool_call", "operation_result", "tool_result"}
 _TOOL_RESULT_KINDS = {"operation_result", "tool_result"}
@@ -106,7 +100,7 @@ class AsyncProtocolRunLedgerRepository:
             artifacts=dict(artifacts or {}),
         )
         async with self._lock:
-            existing_events = await asyncio.to_thread(self._ledger(session_id).replay_events)
+            existing_events = await owned_protocol_io(self._ledger(session_id).replay_events)
             existing_started = self._first_event_by_kind(existing_events, "run_started")
             if existing_started is not None:
                 return existing_started
@@ -140,7 +134,7 @@ class AsyncProtocolRunLedgerRepository:
             **({"timestamp": str(finalized_at).strip()} if str(finalized_at or "").strip() else {}),
         )
         async with self._lock:
-            existing_events = await asyncio.to_thread(self._ledger(session_id).replay_events)
+            existing_events = await owned_protocol_io(self._ledger(session_id).replay_events)
             existing_finalized = self._matching_run_finalized_event(
                 existing_events,
                 status=str(resolved_status),
@@ -166,12 +160,12 @@ class AsyncProtocolRunLedgerRepository:
             pending_finalized_event["event_seq"] = int(next_seq)
             pending_finalized_event["sequence_number"] = int(next_seq)
             pending_events.append(pending_finalized_event)
-            run_graph_payload = await asyncio.to_thread(
+            run_graph_payload = await owned_protocol_io(
                 reconstruct_run_graph,
                 pending_events,
                 session_id=str(session_id),
             )
-            await asyncio.to_thread(
+            await owned_protocol_io(
                 write_run_graph_artifact,
                 root=self.root,
                 session_id=str(session_id),
@@ -191,7 +185,7 @@ class AsyncProtocolRunLedgerRepository:
         payload: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         normalized_kind = str(kind)
-        normalized_payload = dict(payload or {})
+        normalized_payload = deepcopy(dict(payload or {}))
         event: dict[str, Any] = self._build_event(
             session_id=session_id,
             kind=normalized_kind,
@@ -246,7 +240,7 @@ class AsyncProtocolRunLedgerRepository:
                 if tool_call_hash:
                     event["tool_call_hash"] = tool_call_hash
         async with self._lock:
-            existing_events = await asyncio.to_thread(self._ledger(session_id).replay_events)
+            existing_events = await owned_protocol_io(self._ledger(session_id).replay_events)
             if normalized_kind in _TOOL_INVOCATION_KINDS:
                 invocation_count = self._tool_invocation_count(existing_events)
                 if invocation_count >= self.max_tool_invocations_per_run:
@@ -281,7 +275,7 @@ class AsyncProtocolRunLedgerRepository:
             if normalized_kind == "tool_call":
                 operation_id = str(normalized_payload.get("operation_id") or "").strip()
                 if operation_id:
-                    winner = await asyncio.to_thread(self._operation_registry(str(session_id)).winner, operation_id)
+                    winner = await owned_protocol_io(self._operation_registry(str(session_id)).winner, operation_id)
                     if winner is not None:
                         return {
                             "kind": "operation_rejected",
@@ -337,7 +331,7 @@ class AsyncProtocolRunLedgerRepository:
             "run_id": resolved_session_id,
             "timestamp": timestamp,
             "tool_name": "",
-            **dict(extra),
+            **deepcopy(extra),
         }
 
     def _resolve_tool_invocation_manifest(
@@ -552,17 +546,17 @@ class AsyncProtocolRunLedgerRepository:
     ) -> dict[str, Any]:
         existing = existing_events
         if existing is None:
-            existing = await asyncio.to_thread(self._ledger(session_id).replay_events)
+            existing = await owned_protocol_io(self._ledger(session_id).replay_events)
         if existing:
             previous_ts = _parse_event_timestamp(existing[-1].get("timestamp"))
             current_ts = _parse_event_timestamp(event.get("timestamp"))
             if previous_ts is not None and current_ts is not None and current_ts < previous_ts:
                 raise ValueError("E_LEDGER_TIMESTAMP_NON_MONOTONIC")
-        next_seq = await asyncio.to_thread(self._ledger(session_id).next_event_seq)
+        next_seq = await owned_protocol_io(self._ledger(session_id).next_event_seq)
         payload = dict(event)
         if int(payload.get("sequence_number") or 0) <= 0:
             payload["sequence_number"] = int(next_seq)
-        appended = await asyncio.to_thread(self._ledger(session_id).append_event, payload)
+        appended = await owned_protocol_io(self._ledger(session_id).append_event, payload)
         appended["sequence_number"] = int(appended.get("event_seq") or appended.get("sequence_number") or next_seq)
         return appended
 
@@ -576,9 +570,9 @@ class AsyncProtocolRunLedgerRepository:
         receipt: dict[str, Any],
     ) -> dict[str, Any]:
         normalized_session_id = str(session_id or "").strip()
-        normalized_receipt = dict(receipt or {})
+        normalized_receipt = deepcopy(dict(receipt or {}))
         async with self._lock:
-            return await asyncio.to_thread(
+            return await owned_protocol_io(
                 self._append_receipt_sync,
                 normalized_session_id,
                 normalized_receipt,
@@ -587,11 +581,11 @@ class AsyncProtocolRunLedgerRepository:
     async def list_receipts(self, session_id: str) -> list[dict[str, Any]]:
         normalized_session_id = str(session_id or "").strip()
         async with self._lock:
-            return await asyncio.to_thread(self._load_receipts_sync, normalized_session_id)
+            return await owned_protocol_io(self._load_receipts_sync, normalized_session_id)
 
     async def list_events(self, session_id: str) -> list[dict[str, Any]]:
         async with self._lock:
-            return await asyncio.to_thread(self._ledger(session_id).replay_events)
+            return await owned_protocol_io(self._ledger(session_id).replay_events)
 
     async def get_run(self, session_id: str) -> dict[str, Any] | None:
         events = await self.list_events(session_id)
@@ -660,7 +654,7 @@ class AsyncProtocolRunLedgerRepository:
         kind: str,
         payload: dict[str, Any],
     ) -> dict[str, Any]:
-        event_seq = await asyncio.to_thread(self._ledger(session_id).next_event_seq)
+        event_seq = await owned_protocol_io(self._ledger(session_id).next_event_seq)
         registry = self._operation_registry(session_id)
         entry_digest = hash_canonical_json(
             {
@@ -668,7 +662,7 @@ class AsyncProtocolRunLedgerRepository:
                 "payload": dict(payload or {}),
             }
         )
-        return await asyncio.to_thread(
+        return await owned_protocol_io(
             registry.commit,
             operation_id=operation_id,
             event_seq=int(event_seq),
@@ -684,7 +678,7 @@ class AsyncProtocolRunLedgerRepository:
         payload: dict[str, Any],
     ) -> dict[str, Any] | None:
         registry = self._operation_registry(session_id)
-        winner = await asyncio.to_thread(registry.winner, operation_id)
+        winner = await owned_protocol_io(registry.winner, operation_id)
         if winner is None:
             return None
         entry_digest = hash_canonical_json(
@@ -704,81 +698,8 @@ class AsyncProtocolRunLedgerRepository:
             "idempotent_reuse": bool(entry_digest == winner_entry_digest),
         }
 
-    def _append_receipt_sync(
-        self,
-        session_id: str,
-        receipt: dict[str, Any],
-    ) -> dict[str, Any]:
-        receipts_path = self._receipts_path(session_id)
-        existing_rows = self._load_receipts_sync(session_id)
-        existing_by_digest = {
-            str(row.get("receipt_digest") or ""): dict(row)
-            for row in existing_rows
-            if str(row.get("receipt_digest") or "").strip()
-        }
-
-        last_seq = 0
-        for row in existing_rows:
-            try:
-                seq = int(row.get("receipt_seq") or 0)
-            except (TypeError, ValueError):
-                seq = 0
-            if seq > last_seq:
-                last_seq = seq
-
-        normalized = dict(receipt or {})
-        normalized["schema_version"] = str(normalized.get("schema_version") or PROTOCOL_RECEIPT_SCHEMA_VERSION)
-        receipt_digest = str(normalized.get("receipt_digest") or "").strip()
-        if not receipt_digest:
-            digest_payload = dict(normalized)
-            digest_payload.pop("receipt_digest", None)
-            receipt_digest = hash_canonical_json(digest_payload)
-            normalized["receipt_digest"] = receipt_digest
-
-        if receipt_digest in existing_by_digest:
-            return existing_by_digest[receipt_digest]
-
-        raw_seq = normalized.get("receipt_seq")
-        if raw_seq is None:
-            normalized["receipt_seq"] = last_seq + 1
-        else:
-            try:
-                normalized["receipt_seq"] = int(raw_seq)
-            except (TypeError, ValueError) as exc:
-                raise ValueError(f"{E_RECEIPT_SEQ_INVALID_PREFIX}:{raw_seq}") from exc
-            if int(normalized["receipt_seq"]) <= last_seq:
-                raise ValueError(f"{E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX}:{normalized['receipt_seq']}<=last:{last_seq}")
-
-        line = json.dumps(normalized, ensure_ascii=False, separators=(",", ":"))
-        receipts_path.parent.mkdir(parents=True, exist_ok=True)
-        with receipts_path.open("a", encoding="utf-8") as handle:
-            handle.write(line)
-            handle.write("\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        return normalized
+    def _append_receipt_sync(self, session_id: str, receipt: dict[str, Any]) -> dict[str, Any]:
+        return ProtocolReceiptStore(self._receipts_path(session_id)).append(receipt)
 
     def _load_receipts_sync(self, session_id: str) -> list[dict[str, Any]]:
-        receipts_path = self._receipts_path(session_id)
-        if not receipts_path.exists():
-            return []
-        rows: list[dict[str, Any]] = []
-        with receipts_path.open("r", encoding="utf-8") as handle:
-            for line_index, line in enumerate(handle, start=1):
-                stripped = line.strip()
-                if not stripped:
-                    continue
-                try:
-                    parsed = json.loads(stripped)
-                except json.JSONDecodeError as exc:
-                    raise ValueError(f"{E_RECEIPT_LOG_PARSE_PREFIX}:line={line_index}") from exc
-                if not isinstance(parsed, dict):
-                    raise ValueError(f"{E_RECEIPT_LOG_SCHEMA_PREFIX}:line={line_index}")
-                rows.append(dict(parsed))
-        rows.sort(
-            key=lambda row: (
-                int(row.get("receipt_seq") or 0),
-                str(row.get("receipt_digest") or ""),
-            )
-        )
-        return rows
+        return ProtocolReceiptStore(self._receipts_path(session_id)).list()

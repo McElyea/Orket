@@ -17,12 +17,12 @@ from orket.application.services.turn_tool_control_plane_support import (
 )
 from orket.core.contracts import CheckpointRecord
 from orket.core.contracts.card_completion_commit import is_card_completion_call
+from orket.core.contracts.protocol_hashing import hash_canonical_json
 from orket.core.domain import (
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
 )
 from orket.core.domain.execution import ExecutionTurn
-from orket.runtime.registry.protocol_hashing import hash_canonical_json
 
 from .turn_executor_runtime import state_delta_from_tool_calls
 

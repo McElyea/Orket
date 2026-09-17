@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from orket.runtime.registry import protocol_hashing
+from orket.core.contracts import protocol_hashing
 
 
 def capture_workspace_state_snapshot(

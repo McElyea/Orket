@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
-from orket.runtime.registry import protocol_hashing
+from orket.core.contracts import protocol_hashing
 
 RUN_GRAPH_SCHEMA_VERSION = "1.0"
 _TOOL_RESULT_KINDS = {"operation_result", "tool_result"}

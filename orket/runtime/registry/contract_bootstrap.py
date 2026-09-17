@@ -7,8 +7,8 @@ from typing import Any
 
 import yaml
 
+from orket.core.contracts.protocol_hashing import hash_canonical_json
 from orket.runtime.config import contract_assets
-from orket.runtime.registry.protocol_hashing import hash_canonical_json
 
 TOOL_DETERMINISM_CLASSES = {"pure", "workspace", "external"}
 TOOL_RING_CLASSES = {"core", "compatibility", "experimental"}

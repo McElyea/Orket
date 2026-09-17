@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-17T05:16:59.550265Z",
+  "generated_at": "2026-09-17T16:29:10.026025Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -306,7 +306,7 @@
           "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 991,
+      "files_scanned": 993,
       "scan_roots": [
         "orket"
       ],
@@ -315,17 +315,17 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 229
+          "count": 234
         },
         {
           "source": "adapters",
           "target": "application",
-          "count": 31
+          "count": 23
         },
         {
           "source": "adapters",
           "target": "core",
-          "count": 119
+          "count": 131
         },
         {
           "source": "adapters",
@@ -335,17 +335,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 295
+          "count": 296
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1554
+          "count": 1510
         },
         {
           "source": "application",
           "target": "core",
-          "count": 622
+          "count": 663
         },
         {
           "source": "application",
@@ -360,7 +360,7 @@
         {
           "source": "core",
           "target": "core",
-          "count": 133
+          "count": 134
         },
         {
           "source": "decision_nodes",
@@ -476,99 +476,11 @@
         },
         {
           "source": "orket.adapters.storage.async_protocol_run_ledger",
-          "target": "orket.runtime.operation_commit_registry",
-          "sites": [
-            {
-              "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-              "line": 17,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.storage.async_protocol_run_ledger",
-          "target": "orket.runtime.protocol_error_codes",
-          "sites": [
-            {
-              "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-              "line": 18,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.storage.async_protocol_run_ledger",
-          "target": "orket.runtime.registry.protocol_hashing",
-          "sites": [
-            {
-              "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-              "line": 11,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.storage.async_protocol_run_ledger",
-          "target": "orket.runtime.registry.tool_invocation_contracts",
-          "sites": [
-            {
-              "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-              "line": 12,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.storage.async_protocol_run_ledger",
-          "target": "orket.runtime.result_error_invariants",
-          "sites": [
-            {
-              "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-              "line": 24,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.storage.async_protocol_run_ledger",
           "target": "orket.runtime.run_graph_reconstruction",
           "sites": [
             {
               "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-              "line": 25,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.storage.async_repositories",
-          "target": "orket.runtime.result_error_invariants",
-          "sites": [
-            {
-              "path": "orket/adapters/storage/async_repositories.py",
-              "line": 14,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.storage.protocol_append_only_ledger",
-          "target": "orket.runtime.protocol_error_codes",
-          "sites": [
-            {
-              "path": "orket/adapters/storage/protocol_append_only_ledger.py",
-              "line": 12,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.storage.protocol_append_only_ledger",
-          "target": "orket.runtime.registry.protocol_hashing",
-          "sites": [
-            {
-              "path": "orket/adapters/storage/protocol_append_only_ledger.py",
-              "line": 11,
+              "line": 17,
               "kind": "from"
             }
           ]
@@ -1149,8 +1061,6 @@
             "orket.adapters.llm.local_prompting_policy",
             "orket.adapters.storage.async_dual_write_run_ledger",
             "orket.adapters.storage.async_protocol_run_ledger",
-            "orket.adapters.storage.async_repositories",
-            "orket.adapters.storage.protocol_append_only_ledger",
             "orket.adapters.vcs.gitea_webhook_handler",
             "orket.adapters.vcs.gitea_webhook_handlers",
             "orket.agents.agent",
@@ -1195,11 +1105,6 @@
             "orket.application.workflows.turn_executor_resume_replay",
             "orket.application.workflows.turn_failure_traces",
             "orket.application.workflows.turn_message_builder",
-            "orket.application.workflows.turn_response_parser",
-            "orket.application.workflows.turn_tool_dispatcher",
-            "orket.application.workflows.turn_tool_dispatcher_compatibility",
-            "orket.application.workflows.turn_tool_dispatcher_protocol",
-            "orket.application.workflows.turn_tool_dispatcher_support",
             "orket.board",
             "orket.capabilities.sdk_llm_provider",
             "orket.capabilities.sdk_memory_provider",
@@ -1259,7 +1164,6 @@
             "orket.runtime.evidence.protocol_ledger_parity_campaign",
             "orket.runtime.evidence.protocol_replay",
             "orket.runtime.evidence.replay_compatibility",
-            "orket.runtime.evidence.run_graph_reconstruction",
             "orket.runtime.evidence.run_ledger_factory",
             "orket.runtime.evidence.run_ledger_parity",
             "orket.runtime.evidence.run_start_artifacts",
@@ -1303,14 +1207,12 @@
             "orket.runtime.narration_effect_audit_policy",
             "orket.runtime.non_fatal_error_budget",
             "orket.runtime.observability_redaction_test_contract",
-            "orket.runtime.operation_commit_registry",
             "orket.runtime.operator_override_logging_policy",
             "orket.runtime.persistence_corruption_test_contract",
             "orket.runtime.phase_c_runtime_truth",
             "orket.runtime.policy.capability_fallback_hierarchy",
             "orket.runtime.policy.clock_time_authority_policy",
             "orket.runtime.policy.composition",
-            "orket.runtime.policy.determinism_controls",
             "orket.runtime.policy.protocol_determinism_campaign",
             "orket.runtime.policy.runtime_truth_drift_checker",
             "orket.runtime.policy.safe_default_catalog",
@@ -1320,7 +1222,6 @@
             "orket.runtime.promotion_rollback_criteria",
             "orket.runtime.prompt_budget_policy",
             "orket.runtime.protocol_determinism_campaign",
-            "orket.runtime.protocol_error_codes",
             "orket.runtime.protocol_ledger_parity_campaign",
             "orket.runtime.protocol_receipt_materializer",
             "orket.runtime.protocol_replay",
@@ -1333,7 +1234,6 @@
             "orket.runtime.replay_compatibility",
             "orket.runtime.replay_drift_classifier",
             "orket.runtime.resource_pressure_simulation_lane",
-            "orket.runtime.result_error_invariants",
             "orket.runtime.retry_classification_policy",
             "orket.runtime.route_decision_artifact",
             "orket.runtime.run_graph_reconstruction",
@@ -1594,11 +1494,11 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 4871,
-    "missing_layer_total": 3297,
+    "tests_total": 4880,
+    "missing_layer_total": 3296,
     "by_layer": {
-      "unlabeled": 3297,
-      "integration": 725,
+      "unlabeled": 3296,
+      "integration": 735,
       "unit": 167,
       "contract": 671,
       "live_truth": 11
@@ -2205,19 +2105,19 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3197
+    "missing_layers_omitted": 3196
   },
   "ruff": {
     "proof": "structural_lint",
     "executed": true,
     "exit_code": 1,
-    "issues_total": 102,
+    "issues_total": 94,
     "by_code": {
       "B009": 2,
       "B905": 2,
       "F401": 7,
       "F841": 1,
-      "I001": 20,
+      "I001": 12,
       "PTH108": 1,
       "SIM105": 1,
       "SIM118": 1,
@@ -2231,7 +2131,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 991,
+    "python_files_scanned": 993,
     "files_over_400_total": 70,
     "functions_over_70_total": 225,
     "largest_files": [
@@ -2260,16 +2160,16 @@
         "lines": 910
       },
       {
-        "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-        "lines": 784
-      },
-      {
         "path": "orket/runtime/summary/run_summary.py",
         "lines": 731
       },
       {
         "path": "orket/decision_nodes/builtins.py",
         "lines": 729
+      },
+      {
+        "path": "orket/adapters/storage/async_protocol_run_ledger.py",
+        "lines": 705
       },
       {
         "path": "orket/kernel/v1/state/promotion.py",
@@ -2498,7 +2398,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 573,
+    "scanned_files": 568,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -2609,86 +2509,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-14T10:05:06.537900Z",
-      "changed": true,
-      "before_digest": "sha256:5105eba8e88325632c6966289936d7ba8df1c249973dc4e98b6cd83d86f5ea54",
-      "after_digest": "sha256:13758413a8a9d0a12d901924b9af25622014edd61910a8a2d7dc2f9931c68609",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 10,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 10,
-        "churn_ratio": 0.003031,
-        "sample_paths": [
-          "$.dependency_graph.layer_edges[0].count",
-          "$.dependency_graph.layer_edges[1].count",
-          "$.dependency_graph.layer_edges[5].count",
-          "$.generated_at",
-          "$.size_inventory.functions_over_70_total",
-          "$.test_taxonomy.by_layer.integration",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-14T10:32:02.160994Z",
-      "changed": true,
-      "before_digest": "sha256:13758413a8a9d0a12d901924b9af25622014edd61910a8a2d7dc2f9931c68609",
-      "after_digest": "sha256:d6b9e1dee3837086f70404ca464fd82a91c43fee20aac3009c4c3d61e770e9ab",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 4,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 4,
-        "churn_ratio": 0.001212,
-        "sample_paths": [
-          "$.generated_at",
-          "$.size_inventory.functions_over_70_total",
-          "$.test_taxonomy.by_layer.integration",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-14T11:25:25.965657Z",
-      "changed": true,
-      "before_digest": "sha256:d6b9e1dee3837086f70404ca464fd82a91c43fee20aac3009c4c3d61e770e9ab",
-      "after_digest": "sha256:8e5581da34e208c49645b1ef949f908886c859207552f504fb88db55512829b6",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 9,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 9,
-        "churn_ratio": 0.002728,
-        "sample_paths": [
-          "$.dependency_graph.layer_edges[1].count",
-          "$.dependency_graph.layer_edges[7].count",
-          "$.dependency_graph.layer_edges[8].count",
-          "$.dependency_graph.module_count",
-          "$.dependency_graph.scan.files_scanned",
-          "$.generated_at",
-          "$.size_inventory.python_files_scanned",
-          "$.test_taxonomy.by_layer.integration",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-14T11:53:02.354227Z",
       "changed": true,
@@ -3468,6 +3288,89 @@
           "$.dependency_graph.verdict.violations[43].source",
           "$.dependency_graph.verdict.violations[43].target",
           "$.dependency_graph.verdict.violations[44].sites[0].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T06:09:50.991257Z",
+      "changed": true,
+      "before_digest": "sha256:cc97c6d0c8156e6f838377eeebe331ea3a4d8113f5d0537da36c7fc3cb6e9ac3",
+      "after_digest": "sha256:03d68856c4f67bed9396a5a4e9c401264100a138f6a05e50b6ca5db64150c9dc",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 21,
+        "changed_paths": 444,
+        "initial_write": false,
+        "paths_total_previous": 3786,
+        "paths_total_current": 3658,
+        "paths_total_reference": 3786,
+        "churn_paths": 466,
+        "churn_ratio": 0.123085,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[1].count",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[6].count",
+          "$.dependency_graph.observed.layer_edges[9].count",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[6]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[7]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[8]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[9]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[10]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[11]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[12]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[13]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[14]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[15]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[16]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[17]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T16:26:48.938031Z",
+      "changed": true,
+      "before_digest": "sha256:03d68856c4f67bed9396a5a4e9c401264100a138f6a05e50b6ca5db64150c9dc",
+      "after_digest": "sha256:c0aea57b565163c22a4a40d0fd2e1f9a401b66b853340fa6598a272da530288c",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 3658,
+        "paths_total_current": 3658,
+        "paths_total_reference": 3658,
+        "churn_paths": 1,
+        "churn_ratio": 0.000273,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T16:29:10.029114Z",
+      "changed": true,
+      "before_digest": "sha256:c0aea57b565163c22a4a40d0fd2e1f9a401b66b853340fa6598a272da530288c",
+      "after_digest": "sha256:92f33ac3a0160f852eba84e4f2f1dcf19d41f58cea77660e93440cac210005d5",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 3658,
+        "paths_total_current": 3658,
+        "paths_total_reference": 3658,
+        "churn_paths": 5,
+        "churn_ratio": 0.001367,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.integration",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted"
         ]
       }
     }

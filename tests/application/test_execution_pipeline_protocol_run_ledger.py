@@ -8,14 +8,25 @@ from pathlib import Path
 import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
-from orket.exceptions import ExecutionFailed
-from orket.runtime.execution_pipeline import ExecutionPipeline
-from orket.runtime.registry.tool_invocation_contracts import (
+from orket.core.contracts.tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
+from orket.exceptions import ExecutionFailed
+from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.schema import CardStatus
 from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
+
+
+def _protocol_runtime(test_root, workspace, db_path):
+    """Supply ordered time to both the composed pipeline and protocol ledger."""
+    clock = ProtocolLedgerClock()
+    repository = AsyncProtocolRunLedgerRepository(workspace, timestamp_factory=clock.utc_now_iso)
+    pipeline = ExecutionPipeline(
+        workspace=workspace, department="core", db_path=db_path, config_root=test_root,
+        run_ledger_repo=repository, runtime_inputs=clock,
+    )
+    return repository, pipeline
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -108,16 +119,7 @@ def _write_protocol_turn_receipts(workspace: Path, *, session_id: str) -> None:
 async def test_execution_pipeline_supports_protocol_run_ledger_incomplete_path(test_root, workspace, db_path, monkeypatch):
     """Layer: integration. Ordered clock inputs admit the expected incomplete publication."""
     await asyncio.to_thread(_write_epic_assets, test_root, "protocol_ledger_epic_incomplete")
-    clock = ProtocolLedgerClock()
-    protocol_repo = AsyncProtocolRunLedgerRepository(workspace, timestamp_factory=clock.utc_now_iso)
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=protocol_repo,
-        runtime_inputs=clock,
-    )
+    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -169,14 +171,7 @@ async def test_execution_pipeline_supports_protocol_run_ledger_failure_path(
     monkeypatch,
 ):
     _write_epic_assets(test_root, "protocol_ledger_epic_failed")
-    protocol_repo = AsyncProtocolRunLedgerRepository(workspace)
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=protocol_repo,
-    )
+    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
 
     async def _raise_execute_epic(**_kwargs):
         raise ExecutionFailed("forced protocol failure")
@@ -221,14 +216,7 @@ async def test_execution_pipeline_type_error_crashes_without_failed_run_record(
     monkeypatch,
 ):
     _write_epic_assets(test_root, "protocol_ledger_epic_type_error")
-    protocol_repo = AsyncProtocolRunLedgerRepository(workspace)
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=protocol_repo,
-    )
+    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
 
     async def _raise_type_error(**_kwargs):
         raise TypeError("forced programming error")
@@ -256,14 +244,7 @@ async def test_execution_pipeline_protocol_run_ledger_terminal_failure_path(
     monkeypatch,
 ):
     _write_epic_assets(test_root, "protocol_ledger_epic_terminal_failure")
-    protocol_repo = AsyncProtocolRunLedgerRepository(workspace)
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=protocol_repo,
-    )
+    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
 
     async def _blocked_execute_epic(**_kwargs):
         await pipeline.async_cards.update_status("ISSUE-1", CardStatus.BLOCKED)
@@ -297,6 +278,7 @@ async def test_execution_pipeline_protocol_run_ledger_terminal_failure_path(
     assert run["summary_json"]["duration_ms"] >= 0
     assert _read_json(Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
 
+# Layer: integration
 @pytest.mark.asyncio
 async def test_execution_pipeline_materializes_protocol_receipts_into_run_ledger(
     test_root,
@@ -306,14 +288,7 @@ async def test_execution_pipeline_materializes_protocol_receipts_into_run_ledger
 ):
     _write_epic_assets(test_root, "protocol_ledger_epic_receipts")
     _write_protocol_turn_receipts(workspace, session_id="sess-protocol-receipts")
-    protocol_repo = AsyncProtocolRunLedgerRepository(workspace)
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=protocol_repo,
-    )
+    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -349,14 +324,7 @@ async def test_execution_pipeline_protocol_run_ledger_carries_runtime_contract_b
     monkeypatch,
 ):
     _write_epic_assets(test_root, "protocol_ledger_epic_contract_bootstrap")
-    protocol_repo = AsyncProtocolRunLedgerRepository(workspace)
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=protocol_repo,
-    )
+    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None

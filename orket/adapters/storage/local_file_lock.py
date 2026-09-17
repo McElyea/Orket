@@ -6,7 +6,7 @@ import errno
 import hashlib
 import os
 import stat
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 
 from orket.core.contracts.local_file_lock import LocalFileLockError, LocalFileLockRef
@@ -18,6 +18,15 @@ class NativeFileLocks:
     def __init__(self, root_path: Path, *, suffix: str, error_prefix: str, empty_key_error: str):
         self.root_path, self.suffix = root_path, suffix
         self.error_prefix, self.empty_key_error = error_prefix, empty_key_error
+
+    @contextmanager
+    def hold_sync(self, key: str):
+        """Hold a native lock inside an owned worker or standalone sync caller."""
+        descriptor, reference = _acquire(self.root_path, self.suffix, key, self.error_prefix, self.empty_key_error)
+        try:
+            yield reference
+        finally:
+            _release(descriptor)
 
     @asynccontextmanager
     async def hold(self, key: str):

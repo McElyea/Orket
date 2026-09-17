@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.runtime.protocol_error_codes import (
+from orket.core.contracts.protocol_error_codes import (
     E_SCOREBOARD_INCOMPLETE_LEDGER_PREFIX,
     format_protocol_error,
 )

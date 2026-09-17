@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from orket.runtime.registry.protocol_hashing import hash_canonical_json
+from orket.core.contracts.protocol_hashing import hash_canonical_json
 
 _RUNTIME_ONLY_METADATA_KEYS = {"trace_id", "debug_flags", "retry_count"}
 _VALID_RINGS = {"core", "compatibility", "experimental"}

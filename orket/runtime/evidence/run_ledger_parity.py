@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
-from orket.runtime.registry import protocol_hashing
+from orket.core.contracts import protocol_hashing
 from orket.runtime.run_ledger_projection import project_run_ledger_record
 
 

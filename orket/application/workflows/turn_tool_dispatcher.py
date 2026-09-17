@@ -11,9 +11,7 @@ from orket.application.services.card_completion_turn_service import verify_turn_
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
 from orket.core.contracts.card_completion_commit import CardCompletionRejected, is_card_completion_call
-from orket.core.domain.execution import ExecutionTurn, ToolCallErrorClass
-from orket.logging import log_event
-from orket.runtime.registry.protocol_hashing import (
+from orket.core.contracts.protocol_hashing import (
     VALIDATOR_VERSION,
     build_step_id,
     default_protocol_hash,
@@ -22,6 +20,8 @@ from orket.runtime.registry.protocol_hashing import (
     derive_step_seed,
     hash_canonical_json,
 )
+from orket.core.domain.execution import ExecutionTurn, ToolCallErrorClass
+from orket.logging import log_event
 from orket.schema import IssueConfig
 
 from ..services.governed_turn_tool_approval_continuation_service import (

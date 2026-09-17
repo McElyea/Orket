@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
-from orket.runtime.registry.tool_invocation_contracts import (
+from orket.core.contracts.tool_invocation_contracts import (
     PROTOCOL_RECEIPT_SCHEMA_VERSION,
     build_tool_invocation_manifest,
     compute_tool_call_hash,

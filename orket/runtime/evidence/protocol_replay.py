@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
-from orket.runtime.registry import protocol_hashing
+from orket.core.contracts import protocol_hashing
 from orket.runtime.contract_bootstrap import load_runtime_contract_snapshots
 from orket.runtime.replay_compatibility import (
     evaluate_replay_compatibility,

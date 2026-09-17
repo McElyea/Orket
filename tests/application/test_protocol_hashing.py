@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from orket.runtime.registry.protocol_hashing import (
+from orket.core.contracts.protocol_hashing import (
     ProtocolCanonicalizationError,
     build_step_id,
     canonical_json,

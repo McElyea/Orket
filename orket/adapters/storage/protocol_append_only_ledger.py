@@ -8,13 +8,13 @@ from typing import Any
 
 import google_crc32c
 
-from orket.runtime.registry.protocol_hashing import canonical_json
-from orket.runtime.protocol_error_codes import (
+from orket.core.contracts.protocol_error_codes import (
     E_LEDGER_CORRUPT,
     E_LEDGER_PARSE,
     E_LEDGER_RECORD_TOO_LARGE,
     E_LEDGER_SEQ,
 )
+from orket.core.contracts.protocol_hashing import canonical_json
 
 MAX_LEDGER_PAYLOAD_BYTES = 4 * 1024 * 1024
 

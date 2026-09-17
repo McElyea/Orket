@@ -26,6 +26,7 @@ from orket.core.domain.governed_agent_continuation import (
     decide_governed_agent_continuation,
 )
 from orket.extensions.governed_agent_invoker import GovernedAgentSubprocessInvoker
+from tests.helpers.governed_agent_clock import elapsed_agent_clock as elapsed_agent_clock
 from tests.runtime.governed_agent_test_support import (
     TEMPLATE_ROOT,
     DeterministicModelProvider,
@@ -233,6 +234,7 @@ async def test_restart_after_dispatch_blocks_without_redispatch(tmp_path: Path) 
 async def test_real_child_crash_becomes_recovery_pending_uncertainty(
     tmp_path: Path,
     monkeypatch,
+    elapsed_agent_clock,
 ) -> None:
     """Layer: integration. A child disconnect is normalized and durably blocks redispatch."""
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")

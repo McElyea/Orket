@@ -12,21 +12,14 @@ from scripts.governance.run_runtime_truth_acceptance_gate import (
     evaluate_runtime_truth_acceptance_gate,
     main,
 )
+from tests.helpers.runtime_truth_gate import (
+    runtime_truth_repository_inputs as runtime_truth_repository_inputs,
+)
+from tests.helpers.runtime_truth_gate import (
+    write_contract_set as _write_contract_set,
+)
 
-
-def _write_contract_set(workspace: Path, run_id: str) -> Path:
-    contracts_dir = workspace / "observability" / run_id / "runtime_contracts"
-    contracts_dir.mkdir(parents=True, exist_ok=True)
-    for filename in REQUIRED_RUNTIME_CONTRACT_FILES:
-        payload = {"schema_version": "1.0"}
-        if filename == "retry_classification_policy.json":
-            payload = retry_classification_policy_snapshot()
-        (contracts_dir / filename).write_text(
-            json.dumps(payload, ensure_ascii=True) + "\n",
-            encoding="utf-8",
-        )
-    return contracts_dir
-
+pytestmark = pytest.mark.usefixtures("runtime_truth_repository_inputs")
 
 # Layer: integration
 def test_runtime_truth_acceptance_gate_passes_with_drift_and_contract_files(tmp_path: Path) -> None:

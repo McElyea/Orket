@@ -7,11 +7,11 @@ from typing import Any
 import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
-from orket.runtime.config.contract_assets import RUN_SUMMARY_SCHEMA_PATH
-from orket.runtime.registry.tool_invocation_contracts import (
+from orket.core.contracts.tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
+from orket.runtime.config.contract_assets import RUN_SUMMARY_SCHEMA_PATH
 from orket.runtime.run_summary import (
     build_degraded_run_summary_payload,
     build_run_summary_payload,

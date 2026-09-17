@@ -10,25 +10,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.runtime.result_error_invariants import (
-    result_error_invariant_contract_snapshot,
-    validate_result_error_invariant,
-    validate_result_error_invariant_contract,
-)
-
-try:
-    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
-except ModuleNotFoundError:  # pragma: no cover - script execution fallback
-    import importlib.util
-
-    helper_path = Path(__file__).resolve().parents[1] / "common" / "rerun_diff_ledger.py"
-    spec = importlib.util.spec_from_file_location("rerun_diff_ledger", helper_path)
-    if spec is None or spec.loader is None:  # pragma: no cover - defensive fallback
-        raise RuntimeError(f"E_DIFF_LEDGER_HELPER_LOAD_FAILED:{helper_path}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    write_payload_with_diff_ledger = module.write_payload_with_diff_ledger
-
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Check result-to-error invariant contract and behavior.")
@@ -41,6 +22,12 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def evaluate_result_error_invariants() -> dict[str, Any]:
+    from orket.core.contracts.result_error_invariants import (
+        result_error_invariant_contract_snapshot,
+        validate_result_error_invariant,
+        validate_result_error_invariant_contract,
+    )
+
     contract = result_error_invariant_contract_snapshot()
     try:
         forbidden_statuses = list(validate_result_error_invariant_contract(contract))
@@ -124,6 +111,8 @@ def evaluate_result_error_invariants() -> dict[str, Any]:
 
 
 def check_result_error_invariants(*, out_path: Path | None = None) -> tuple[int, dict[str, Any]]:
+    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+
     payload = evaluate_result_error_invariants()
     if out_path is not None:
         write_payload_with_diff_ledger(out_path, payload)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.runtime.protocol_error_codes import (
+from orket.core.contracts.protocol_error_codes import (
     E_CAPABILITY_VIOLATION_PREFIX,
     E_DETERMINISM_POLICY_VIOLATION_PREFIX,
     E_NAMESPACE_POLICY_VIOLATION_PREFIX,

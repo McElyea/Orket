@@ -5,7 +5,7 @@ from collections import Counter
 from typing import Any
 
 from orket.application.services.turn_tool_control_plane_support import run_namespace_scope
-from orket.runtime.protocol_error_codes import (
+from orket.core.contracts.protocol_error_codes import (
     E_CAPABILITY_VIOLATION_PREFIX,
     E_DETERMINISM_POLICY_VIOLATION_PREFIX,
     E_DETERMINISM_VIOLATION_PREFIX,
@@ -17,7 +17,7 @@ from orket.runtime.protocol_error_codes import (
     E_TOOL_SEQUENCE,
     format_protocol_error,
 )
-from orket.runtime.registry.protocol_hashing import (
+from orket.core.contracts.protocol_hashing import (
     hash_clock_artifact_ref,
     hash_env_allowlist,
     hash_network_allowlist,

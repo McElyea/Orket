@@ -8,8 +8,8 @@ import pytest
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
+from orket.core.contracts.protocol_hashing import build_step_id, derive_operation_id
 from orket.core.domain.execution import ExecutionTurn, ToolCall
-from orket.runtime.registry.protocol_hashing import build_step_id, derive_operation_id
 
 
 def _make_dispatcher(

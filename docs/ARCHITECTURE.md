@@ -1,6 +1,6 @@
 # Orket Architecture (Target State)
 
-Last updated: 2026-09-16
+Last updated: 2026-09-17
 Status: Active target architecture (transitioning)
 
 Canonical architecture specification for the Orket runtime.
@@ -155,6 +155,13 @@ This is not whole-core purity or C/D acceptance.
 Bug-fix phase core values likewise consume explicit time. Application owns their
 manager, cache, verified persistence and event workers. Migration and limits:
 `docs/architecture/CONTRACT_DELTA_BUG_FIX_PHASE_D_2026-09-16.md`.
+
+Protocol hashing, invocation records and result/error vocabulary live in core.
+Storage adapters own operation-commit persistence and receipt files. Protocol
+repository file workers retain lifetime ownership through interruption; callers'
+nested receipt/event/summary inputs are captured before the first await.
+Migration and scoped limits:
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`.
 
 Core must not depend on:
 1. application

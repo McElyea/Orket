@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.runtime.protocol_error_codes import (
+from orket.core.contracts.protocol_error_codes import (
     E_COMPAT_MAPPING_MISSING_PREFIX,
     E_COMPAT_MAPPING_POLICY_VIOLATION_PREFIX,
     format_protocol_error,
 )
-
-from orket.runtime.registry.protocol_hashing import hash_canonical_json
-from orket.runtime.registry.tool_invocation_contracts import normalize_tool_args
+from orket.core.contracts.protocol_hashing import hash_canonical_json
+from orket.core.contracts.tool_invocation_contracts import normalize_tool_args
 
 _VALID_DETERMINISM_CLASSES = {"pure", "workspace", "external"}
 _DETERMINISM_RANK = {"pure": 0, "workspace": 1, "external": 2}
