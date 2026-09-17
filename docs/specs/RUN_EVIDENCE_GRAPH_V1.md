@@ -1,6 +1,6 @@
 # Run Evidence Graph V1 Contract
 
-Last updated: 2026-09-12
+Last updated: 2026-09-17
 Status: Active
 Owner: Orket Core
 Phase authority: `docs/projects/archive/Graph/GR03302026-LANE-CLOSEOUT/CLOSEOUT.md`
@@ -24,7 +24,10 @@ This document is bounded by:
 4. the existing canonical `run_graph.json` contract surfaces:
    1. `orket/runtime/config/assets/artifacts/run_graph_schema.json`
    2. `orket/runtime/config/assets/artifacts/schema_registry.yaml`
-   3. `orket/runtime/run_graph_reconstruction.py`
+   3. `orket/core/contracts/run_graph.py`
+   4. `orket/adapters/storage/run_graph_artifact.py`; storage migration and
+      publication limits are in
+      `docs/architecture/CONTRACT_DELTA_PROTOCOL_GRAPH_CD_2026-09-17.md`.
 5. the current control-plane and runtime-truth authority surfaces already named in `CURRENT_AUTHORITY.md`
 6. the active ControlPlane packet and paused convergence checkpoint, only where same-change authority-story sync is required
 

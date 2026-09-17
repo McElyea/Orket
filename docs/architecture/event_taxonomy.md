@@ -375,3 +375,15 @@ Foreign event-loop control refuses with
 Cancellation payloads are captured before awaiting; child frames, SDK schemas and
 request/lease deadline meanings are unchanged. Contract and limits:
 `docs/architecture/CONTRACT_DELTA_AGENT_INVOCATION_LIFETIME_D_2026-09-17.md`.
+
+## Protocol run graph publication
+
+A protocol graph projects observed ledger events. Finalization appends its terminal
+event before publishing the derived graph; a refused append cannot publish a future
+terminal projection. A graph-write failure is reported even when the terminal event
+is already durable. Matching finalization retry repairs and verifies the projection
+without duplicating that event. `E_FILE_WRITE_UNVERIFIED` names a read-back content
+mismatch; its vocabulary authority is the core protocol error catalog. Graphs remain
+projections and do not replace terminal ledger authority. The schema/version and
+node/edge meanings are unchanged. Contract:
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_GRAPH_CD_2026-09-17.md`.

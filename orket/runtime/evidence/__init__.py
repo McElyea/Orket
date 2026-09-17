@@ -16,7 +16,6 @@ __all__ = [
     'run_evidence_graph_projection_supplemental',
     'run_evidence_graph_projection_support',
     'run_evidence_graph_rendering',
-    'run_graph_reconstruction',
     'run_ledger_factory',
     'run_ledger_parity',
     'run_ledger_projection',

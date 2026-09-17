@@ -34,6 +34,7 @@ E_LEDGER_RECORD_TOO_LARGE: Final[str] = "E_LEDGER_RECORD_TOO_LARGE"
 E_LEDGER_CORRUPT: Final[str] = "E_LEDGER_CORRUPT"
 E_LEDGER_SEQ: Final[str] = "E_LEDGER_SEQ"
 E_LEDGER_PARSE: Final[str] = "E_LEDGER_PARSE"
+E_FILE_WRITE_UNVERIFIED: Final[str] = "E_FILE_WRITE_UNVERIFIED"
 
 E_RECEIPT_SEQ_INVALID_PREFIX: Final[str] = "E_RECEIPT_SEQ_INVALID"
 E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX: Final[str] = "E_RECEIPT_SEQ_NON_MONOTONIC"
@@ -65,6 +66,7 @@ _EXACT_CODES: Final[dict[str, str]] = {
     E_LEDGER_CORRUPT: "Ledger checksum mismatch on a complete record.",
     E_LEDGER_SEQ: "Ledger event sequence is missing, duplicate, or non-monotonic.",
     E_LEDGER_PARSE: "Ledger payload bytes were not a valid JSON object.",
+    E_FILE_WRITE_UNVERIFIED: "Published file bytes did not match the requested content on readback.",
     E_LEASE_EXPIRED: "Worker lease expired or failed CAS renewal.",
     E_DUPLICATE_OPERATION: "Later operation commit lost first-commit-wins race.",
     E_REPLAY_OPERATION_MISSING: "Replay mode could not find a recorded operation result.",

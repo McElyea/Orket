@@ -173,6 +173,12 @@ Cancellation retains the admitted process transition; pending/duplicate owners
 cannot report unobserved teardown. Candidate limits and migration:
 `docs/architecture/CONTRACT_DELTA_AGENT_INVOCATION_LIFETIME_D_2026-09-17.md`.
 
+Protocol run-graph reconstruction likewise lives in core over captured JSON
+inputs. Storage performs owned ledger replay and verified graph publication after
+observed terminal append; a matching terminal retry repairs its projection.
+Migration and limits:
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_GRAPH_CD_2026-09-17.md`.
+
 Core must not depend on:
 1. application
 2. adapters

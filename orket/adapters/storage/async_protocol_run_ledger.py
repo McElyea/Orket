@@ -8,15 +8,13 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.storage.operation_commit_registry import OperationCommitRegistry
+from orket.adapters.storage.run_graph_artifact import write_run_graph_artifact
 from orket.core.contracts.protocol_hashing import hash_canonical_json
 from orket.core.contracts.result_error_invariants import validate_result_error_invariant
+from orket.core.contracts.run_graph import reconstruct_run_graph
 from orket.core.contracts.tool_invocation_contracts import (
     compute_tool_call_hash,
     normalize_tool_invocation_manifest,
-)
-from orket.runtime.run_graph_reconstruction import (
-    reconstruct_run_graph,
-    write_run_graph_artifact,
 )
 
 from .protocol_append_only_ledger import AppendOnlyRunLedger
@@ -142,6 +140,7 @@ class AsyncProtocolRunLedgerRepository:
                 failure_reason=failure_reason,
             )
             if existing_finalized is not None:
+                await self._publish_run_graph(session_id, existing_events)
                 return existing_finalized
             rejection = self._validate_ordering_contract(
                 session_id=session_id,
@@ -152,30 +151,19 @@ class AsyncProtocolRunLedgerRepository:
             )
             if rejection is not None:
                 raise ValueError(str(rejection.get("error_code") or "E_LEDGER_CALL_RESULT_ORDER"))
-            next_seq = 1
-            if existing_events:
-                next_seq = max(self._event_sequence(row) for row in existing_events) + 1
-            pending_events = [dict(row) for row in existing_events]
-            pending_finalized_event = dict(event)
-            pending_finalized_event["event_seq"] = int(next_seq)
-            pending_finalized_event["sequence_number"] = int(next_seq)
-            pending_events.append(pending_finalized_event)
-            run_graph_payload = await owned_protocol_io(
-                reconstruct_run_graph,
-                pending_events,
-                session_id=str(session_id),
-            )
-            await owned_protocol_io(
-                write_run_graph_artifact,
-                root=self.root,
-                session_id=str(session_id),
-                payload=run_graph_payload,
-            )
-            return await self._append_event_locked(
+            finalized = await self._append_event_locked(
                 session_id=session_id,
                 event=event,
                 existing_events=existing_events,
             )
+            # A projection may lag a committed event after interruption; it must
+            # never attest to a terminal event the ledger refused to append.
+            await self._publish_run_graph(session_id, [*existing_events, finalized])
+            return finalized
+
+    async def _publish_run_graph(self, session_id, events):
+        payload = await owned_protocol_io(reconstruct_run_graph, events, session_id=str(session_id))
+        await owned_protocol_io(write_run_graph_artifact, root=self.root, session_id=str(session_id), payload=payload)
 
     async def append_event(
         self,

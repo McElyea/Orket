@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-17T18:18:02.769380+00:00",
+  "generated_at": "2026-09-17T19:08:56.403082+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -273,7 +273,7 @@
       },
       "orket.adapters.storage.async_protocol_run_ledger": {
         "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-        "sha256": "c0eb94cc66d52217733e5bb7a8c1b468ae24d8ccf32c32719a4998e2f95b4066"
+        "sha256": "4916a82e750ab19f65c3e12c2a1c023707f679d342a2a7aca5bcc6566d4bd4cd"
       },
       "orket.adapters.storage.async_repositories": {
         "path": "orket/adapters/storage/async_repositories.py",
@@ -491,6 +491,10 @@
         "path": "orket/adapters/storage/protocol_receipt_store.py",
         "sha256": "1137017f8d9e79ebbbdc3b3a90f57877da62c79088a61fe93adfb4ab56edcb98"
       },
+      "orket.adapters.storage.run_graph_artifact": {
+        "path": "orket/adapters/storage/run_graph_artifact.py",
+        "sha256": "48b27e9cab78260b053a0cbad134aa6c13e061e290bbc6845a9afc2f0b5c03e2"
+      },
       "orket.adapters.storage.runtime_store_binding_repository": {
         "path": "orket/adapters/storage/runtime_store_binding_repository.py",
         "sha256": "dad8b2c9f6a3513182b5413c95d10f6104a352284397e7fc4586e4b52adc3bb0"
@@ -521,7 +525,7 @@
       },
       "orket.adapters.storage.verified_file": {
         "path": "orket/adapters/storage/verified_file.py",
-        "sha256": "fe4d60d08bd35d3682a1c20386ed5701da25abc99ac8d98dea25e069d2547b6e"
+        "sha256": "1bdf0b4954dfbd586031e361890b6d89d98407113f5c5c371a4f296891c8bde1"
       },
       "orket.adapters.tools.__init__": {
         "path": "orket/adapters/tools/__init__.py",
@@ -1929,7 +1933,7 @@
       },
       "orket.core.contracts.protocol_error_codes": {
         "path": "orket/core/contracts/protocol_error_codes.py",
-        "sha256": "90b88d0cd549d37d693aff3d4f7d6ac0abf384662a4ea1571541207271cf33ff"
+        "sha256": "fab1420ea02ac8977b457472ae9a205c565470c1d3c64d19d31e4f41138f3454"
       },
       "orket.core.contracts.protocol_hashing": {
         "path": "orket/core/contracts/protocol_hashing.py",
@@ -1946,6 +1950,14 @@
       "orket.core.contracts.result_error_invariants": {
         "path": "orket/core/contracts/result_error_invariants.py",
         "sha256": "ae685d1393f3dcce77fc1ad6f8985dd911ba81540d2108b705c4e2862468c911"
+      },
+      "orket.core.contracts.run_graph": {
+        "path": "orket/core/contracts/run_graph.py",
+        "sha256": "032b9352cc73c66ce4e2ef8255460275f5d2787af1bc2f8a4a29f5f052b290b4"
+      },
+      "orket.core.contracts.run_graph_contract": {
+        "path": "orket/core/contracts/run_graph_contract.py",
+        "sha256": "11e90ea7376ffa551d62bc7c7a0f3289eda78760a0797c2074dc12b33474a9d8"
       },
       "orket.core.contracts.runtime_execution_result": {
         "path": "orket/core/contracts/runtime_execution_result.py",
@@ -3149,7 +3161,7 @@
       },
       "orket.runtime.evidence.__init__": {
         "path": "orket/runtime/evidence/__init__.py",
-        "sha256": "f5435387192ebad1edcc8accc426c113773749dc09a24db7144ebf7ffbddb3bd"
+        "sha256": "3d65f960cb7dd4477e69789bc0d5680f291df6834e8393ff18f3b94ad8c5ac32"
       },
       "orket.runtime.evidence.artifact_provenance_block_policy": {
         "path": "orket/runtime/evidence/artifact_provenance_block_policy.py",
@@ -3210,10 +3222,6 @@
       "orket.runtime.evidence.run_evidence_graph_rendering": {
         "path": "orket/runtime/evidence/run_evidence_graph_rendering.py",
         "sha256": "1a98b5ca2cee9ce9b483727b8fd50ca24164bc56dc53b0ce3caab29a82c6b684"
-      },
-      "orket.runtime.evidence.run_graph_reconstruction": {
-        "path": "orket/runtime/evidence/run_graph_reconstruction.py",
-        "sha256": "26f3e1439a847c7e2793b79647d23d286a00fac6df5cc34a927a3a8a59f050c1"
       },
       "orket.runtime.evidence.run_ledger_factory": {
         "path": "orket/runtime/evidence/run_ledger_factory.py",
@@ -3790,10 +3798,6 @@
       "orket.runtime.run_evidence_graph_rendering": {
         "path": "orket/runtime/run_evidence_graph_rendering.py",
         "sha256": "97ee9837d2af0b890a19c1e34442f9faed67c6ec25895993bdc47ee50d276719"
-      },
-      "orket.runtime.run_graph_reconstruction": {
-        "path": "orket/runtime/run_graph_reconstruction.py",
-        "sha256": "ab2ec769d913f88f0f6b60156e17287821f631f92ff0abcba62d083940b2b7a4"
       },
       "orket.runtime.run_ledger_factory": {
         "path": "orket/runtime/run_ledger_factory.py",
@@ -4707,51 +4711,58 @@
       },
       {
         "source": "orket.adapters.storage.async_protocol_run_ledger",
-        "target": "orket.core.contracts.protocol_hashing",
+        "target": "orket.adapters.storage.run_graph_artifact",
         "path": "orket/adapters/storage/async_protocol_run_ledger.py",
         "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.async_protocol_run_ledger",
-        "target": "orket.core.contracts.result_error_invariants",
+        "target": "orket.core.contracts.protocol_hashing",
         "path": "orket/adapters/storage/async_protocol_run_ledger.py",
         "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.async_protocol_run_ledger",
-        "target": "orket.core.contracts.tool_invocation_contracts",
+        "target": "orket.core.contracts.result_error_invariants",
         "path": "orket/adapters/storage/async_protocol_run_ledger.py",
         "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.async_protocol_run_ledger",
-        "target": "orket.runtime.run_graph_reconstruction",
+        "target": "orket.core.contracts.run_graph",
         "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-        "line": 17,
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.async_protocol_run_ledger",
+        "target": "orket.core.contracts.tool_invocation_contracts",
+        "path": "orket/adapters/storage/async_protocol_run_ledger.py",
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.async_protocol_run_ledger",
         "target": "orket.adapters.storage.protocol_append_only_ledger",
         "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-        "line": 22,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.async_protocol_run_ledger",
         "target": "orket.adapters.storage.protocol_ledger_io",
         "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-        "line": 23,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.async_protocol_run_ledger",
         "target": "orket.adapters.storage.protocol_receipt_store",
         "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-        "line": 24,
+        "line": 22,
         "kind": "from"
       },
       {
@@ -5868,6 +5879,41 @@
         "kind": "from"
       },
       {
+        "source": "orket.adapters.storage.run_graph_artifact",
+        "target": "orket.adapters.storage.protocol_append_only_ledger",
+        "path": "orket/adapters/storage/run_graph_artifact.py",
+        "line": 5,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.run_graph_artifact",
+        "target": "orket.adapters.storage.protocol_ledger_io",
+        "path": "orket/adapters/storage/run_graph_artifact.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.run_graph_artifact",
+        "target": "orket.adapters.storage.verified_file",
+        "path": "orket/adapters/storage/run_graph_artifact.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.run_graph_artifact",
+        "target": "orket.core.contracts.run_graph",
+        "path": "orket/adapters/storage/run_graph_artifact.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.run_graph_artifact",
+        "target": "orket.core.contracts.run_graph_contract",
+        "path": "orket/adapters/storage/run_graph_artifact.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
         "source": "orket.adapters.storage.runtime_store_binding_repository",
         "target": "orket.adapters.storage.epic_approval_pause_store",
         "path": "orket/adapters/storage/runtime_store_binding_repository.py",
@@ -5935,6 +5981,13 @@
         "target": "orket.core.domain.reconciler",
         "path": "orket/adapters/storage/structural_board_store.py",
         "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.verified_file",
+        "target": "orket.core.contracts.protocol_error_codes",
+        "path": "orket/adapters/storage/verified_file.py",
+        "line": 6,
         "kind": "from"
       },
       {
@@ -17222,6 +17275,20 @@
         "kind": "from"
       },
       {
+        "source": "orket.core.contracts.run_graph",
+        "target": "orket.core.contracts.protocol_hashing",
+        "path": "orket/core/contracts/run_graph.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.core.contracts.run_graph",
+        "target": "orket.core.contracts.run_graph_contract",
+        "path": "orket/core/contracts/run_graph.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
         "source": "orket.core.contracts.runtime_execution_result",
         "target": "orket.core.contracts.control_plane_models",
         "path": "orket/core/contracts/runtime_execution_result.py",
@@ -22255,27 +22322,6 @@
         "kind": "from"
       },
       {
-        "source": "orket.runtime.evidence.run_graph_reconstruction",
-        "target": "orket.adapters.storage.protocol_append_only_ledger",
-        "path": "orket/runtime/evidence/run_graph_reconstruction.py",
-        "line": 8,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.evidence.run_graph_reconstruction",
-        "target": "orket.core.contracts.__init__",
-        "path": "orket/runtime/evidence/run_graph_reconstruction.py",
-        "line": 9,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.evidence.run_graph_reconstruction",
-        "target": "orket.core.contracts.protocol_hashing",
-        "path": "orket/runtime/evidence/run_graph_reconstruction.py",
-        "line": 9,
-        "kind": "from"
-      },
-      {
         "source": "orket.runtime.evidence.run_ledger_factory",
         "target": "orket.adapters.storage.async_protocol_run_ledger",
         "path": "orket/runtime/evidence/run_ledger_factory.py",
@@ -25069,20 +25115,6 @@
         "kind": "dynamic"
       },
       {
-        "source": "orket.runtime.run_graph_reconstruction",
-        "target": "orket.runtime.evidence.run_graph_reconstruction",
-        "path": "orket/runtime/run_graph_reconstruction.py",
-        "line": 6,
-        "kind": "dynamic"
-      },
-      {
-        "source": "orket.runtime.run_graph_reconstruction",
-        "target": "orket.runtime.__init__",
-        "path": "orket/runtime/run_graph_reconstruction.py",
-        "line": 8,
-        "kind": "dynamic"
-      },
-      {
         "source": "orket.runtime.run_ledger_factory",
         "target": "orket.runtime.evidence.run_ledger_factory",
         "path": "orket/runtime/run_ledger_factory.py",
@@ -26409,7 +26441,7 @@
         "code": "unresolved_reflection"
       }
     ],
-    "files_scanned": 998,
+    "files_scanned": 999,
     "scan_roots": [
       "orket"
     ],
@@ -26507,6 +26539,7 @@
       "orket.adapters.storage.protocol_append_only_ledger": "adapters",
       "orket.adapters.storage.protocol_ledger_io": "adapters",
       "orket.adapters.storage.protocol_receipt_store": "adapters",
+      "orket.adapters.storage.run_graph_artifact": "adapters",
       "orket.adapters.storage.runtime_store_binding_repository": "adapters",
       "orket.adapters.storage.runtime_store_migration_io": "adapters",
       "orket.adapters.storage.sandbox_lifecycle_row_serialization": "adapters",
@@ -26871,6 +26904,8 @@
       "orket.core.contracts.protocol_receipt_timing": "core",
       "orket.core.contracts.repositories": "core",
       "orket.core.contracts.result_error_invariants": "core",
+      "orket.core.contracts.run_graph": "core",
+      "orket.core.contracts.run_graph_contract": "core",
       "orket.core.contracts.runtime_execution_result": "core",
       "orket.core.contracts.runtime_store_binding": "core",
       "orket.core.contracts.skills_models": "core",
@@ -27189,7 +27224,6 @@
       "orket.runtime.evidence.run_evidence_graph_projection_supplemental": "application",
       "orket.runtime.evidence.run_evidence_graph_projection_support": "application",
       "orket.runtime.evidence.run_evidence_graph_rendering": "application",
-      "orket.runtime.evidence.run_graph_reconstruction": "application",
       "orket.runtime.evidence.run_ledger_factory": "application",
       "orket.runtime.evidence.run_ledger_parity": "application",
       "orket.runtime.evidence.run_ledger_projection": "application",
@@ -27334,7 +27368,6 @@
       "orket.runtime.run_evidence_graph_projection_supplemental": "application",
       "orket.runtime.run_evidence_graph_projection_support": "application",
       "orket.runtime.run_evidence_graph_rendering": "application",
-      "orket.runtime.run_graph_reconstruction": "application",
       "orket.runtime.run_ledger_factory": "application",
       "orket.runtime.run_ledger_parity": "application",
       "orket.runtime.run_ledger_projection": "application",
@@ -27420,17 +27453,17 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 237
+        "count": 241
       },
       {
         "source": "adapters",
         "target": "application",
-        "count": 22
+        "count": 21
       },
       {
         "source": "adapters",
         "target": "core",
-        "count": 134
+        "count": 138
       },
       {
         "source": "adapters",
@@ -27440,17 +27473,17 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 303
+        "count": 302
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1514
+        "count": 1512
       },
       {
         "source": "application",
         "target": "core",
-        "count": 667
+        "count": 665
       },
       {
         "source": "application",
@@ -27465,7 +27498,7 @@
       {
         "source": "core",
         "target": "core",
-        "count": 136
+        "count": 138
       },
       {
         "source": "decision_nodes",
@@ -27564,17 +27597,6 @@
           {
             "path": "orket/adapters/llm/local_prompting_policy.py",
             "line": 27,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.adapters.storage.async_protocol_run_ledger",
-        "target": "orket.runtime.run_graph_reconstruction",
-        "sites": [
-          {
-            "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-            "line": 17,
             "kind": "from"
           }
         ]
@@ -28153,7 +28175,6 @@
           "orket.adapters.llm.local_model_provider",
           "orket.adapters.llm.local_model_provider_runtime_target",
           "orket.adapters.llm.local_prompting_policy",
-          "orket.adapters.storage.async_protocol_run_ledger",
           "orket.adapters.vcs.gitea_webhook_handler",
           "orket.adapters.vcs.gitea_webhook_handlers",
           "orket.agents.agent",
@@ -28331,7 +28352,6 @@
           "orket.runtime.resource_pressure_simulation_lane",
           "orket.runtime.retry_classification_policy",
           "orket.runtime.route_decision_artifact",
-          "orket.runtime.run_graph_reconstruction",
           "orket.runtime.run_ledger_factory",
           "orket.runtime.run_ledger_parity",
           "orket.runtime.run_ledger_projection",
@@ -28912,6 +28932,45 @@
           "$.observed.edges[836].target",
           "$.observed.edges[837].line",
           "$.observed.edges[837].path"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T19:09:03.252145Z",
+      "changed": true,
+      "before_digest": "sha256:cb98e12330c10dc1ccd056813c8196b5de9eddd10d1329432c233dd5d01f05a7",
+      "after_digest": "sha256:1fe5132f348c9cd0ecc9015651adf22e601767b64d50218889760ccf392a11ec",
+      "diff": {
+        "added_paths": 11,
+        "removed_paths": 8,
+        "changed_paths": 10884,
+        "initial_write": false,
+        "paths_total_previous": 43629,
+        "paths_total_current": 43663,
+        "paths_total_reference": 43663,
+        "churn_paths": 10903,
+        "churn_ratio": 0.249708,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[84].target",
+          "$.observed.edges[85].target",
+          "$.observed.edges[86].target",
+          "$.observed.edges[87].line",
+          "$.observed.edges[87].target",
+          "$.observed.edges[88].line",
+          "$.observed.edges[88].target",
+          "$.observed.edges[89].line",
+          "$.observed.edges[89].target",
+          "$.observed.edges[90].line",
+          "$.observed.edges[90].target",
+          "$.observed.edges[91].line",
+          "$.observed.edges[91].path",
+          "$.observed.edges[91].source",
+          "$.observed.edges[91].target",
+          "$.observed.edges[92].line",
+          "$.observed.edges[92].target",
+          "$.observed.edges[93].line",
+          "$.observed.edges[93].target"
         ]
       }
     }

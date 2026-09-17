@@ -68,6 +68,15 @@ errors. Exact evidence and remaining gates are in the canonical plan;
 migration and claim limits live in
 `docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`.
 
+The 0.6.7 candidate separates pure protocol graph values from owned storage effects.
+It publishes graphs only after terminal ledger append and repairs missing/corrupt
+projections on repeated finalization. Retained counterexamples and parity results
+are in the canonical plan. Source and both installed Windows cells pass 1,213
+selected cases; Linux 3.11 has two resume failures and Linux 3.12 has one. All 18
+graph cases pass in each cell; eight actual installed llama.cpp cases pass with
+verified teardown. No work-hours push is performed; installed acceptance remains
+false and the clock/deadline investigations stay open.
+
 The 0.6.6 candidate retains governed native invocation ownership through pending
 launch and repeated cancellation, rejects false duplicate teardown claims, and
 captures cancellation inputs. Source and four installed Windows/Linux Python

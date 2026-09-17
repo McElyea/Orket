@@ -7,14 +7,13 @@ from typing import Any
 import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+from orket.adapters.storage.run_graph_artifact import reconstruct_run_graph_from_events_log
+from orket.core.contracts.run_graph import reconstruct_run_graph
 from orket.core.contracts.tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
-from orket.runtime.run_graph_reconstruction import (
-    reconstruct_run_graph,
-    reconstruct_run_graph_from_events_log,
-)
+from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
 
 def _sample_events() -> list[dict[str, Any]]:
@@ -189,6 +188,8 @@ def test_run_graph_reconstruction_builds_compatibility_expansion_edges() -> None
         if edge.get("type") == "artifact_produced" and edge.get("source") == compat_node_id
     )
     assert str(compat_artifact_edge["target"]).startswith("artifact:compat_translation:")
+    artifact = next(node for node in graph["nodes"] if node["id"] == compat_artifact_edge["target"])
+    assert artifact["event_seq"] == 3
 
 
 # Layer: contract
@@ -215,7 +216,8 @@ async def _record_protocol_run(
     session_id: str,
     replayed: bool,
 ) -> dict[str, Any]:
-    repo = AsyncProtocolRunLedgerRepository(root)
+    clock = ProtocolLedgerClock()
+    repo = AsyncProtocolRunLedgerRepository(root, timestamp_factory=clock.utc_now_iso)
     await repo.start_run(
         session_id=session_id,
         run_type="epic",
@@ -275,7 +277,7 @@ async def test_protocol_run_graph_reconstruction_writes_golden_artifact(tmp_path
     assert any(node.get("type") == "artifact" for node in graph["nodes"])
     assert any(edge.get("type") == "call_result" for edge in graph["edges"])
 
-    rebuilt = reconstruct_run_graph_from_events_log(
+    rebuilt = await reconstruct_run_graph_from_events_log(
         events_log_path=tmp_path / "runs" / session_id / "events.log",
         session_id=session_id,
     )

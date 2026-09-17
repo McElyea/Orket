@@ -11892,6 +11892,104 @@ close their acceptance gate. Constructor path resolution, ambient runtime clocks
 environment capture, dynamic extension loading, stronger containment, complete
 D3/D4 coverage, C conformance and later full-plan gates remain active obligations.
 
+### Protocol graph values and publication candidate (2026-09-17)
+
+The prior 0.6.6 local checkpoint and its evidence matched before this work:
+commit `7d38e0c18927621d6a361aec0a2deeae482e9070`, local snapshot SHA-256
+`16756d8a86020c55f5ece8bf33a9db9c3beb261f5ef9cf66b5043f9ffd7e5fc4`.
+The branch stays local during work hours.
+
+Five real-filesystem counterexamples in `.tmp/c-run-graph/before.json` exposed
+publication before a refused terminal append, uncorrected missing/corrupt graphs
+on retry, a graph ahead of its ledger after cancellation, and no read-back check.
+The candidate moves pure captured-JSON graph construction/validation into core,
+owned file replay/publication into storage, and removes both runtime graph modules.
+Terminal ledger append now precedes derived graph publication; matching terminal
+retry reconstructs and verifies the projection without adding another terminal
+event. Failed publication leaves the observed durable terminal event available for
+inspection and repair. There is no ledger-plus-artifact atomic transaction claim.
+Migration and limits:
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_GRAPH_CD_2026-09-17.md`.
+
+The initial extraction dropped compatibility artifact `event_seq`; retained
+nine-case pre-refactor parity caught it. The field and a specific regression
+assertion were restored; all nine explicit JSON examples preserve graph values
+and digests. The mismatch remains in `.tmp/c-run-graph/parity-mismatch.json`.
+Targeted source tests cover these publication failures, nested input independence,
+24 event permutations, unsupported value refusal and retained reader/writer
+responsiveness within a predeclared 0.5-second loop bound. The current graph observes 999 modules and 3,181 import sites, with 56 forbidden
+pairs (one removed), one authority cycle, ten analysis errors and zero unknown
+modules. Graph/baseline collection succeeds while dependency conformance and
+release readiness remain false. Broader source, package, installed and fresh
+provider proof for core 0.6.7 are recorded below.
+
+Fresh source and four installed Windows/Linux Python 3.11/3.12 environments
+execute the same **1,213 selected cases**. Source and both Windows cells pass;
+Linux 3.11 has two failures and Linux 3.12 has one. There are no errors or skips.
+The broader installed acceptance gate is **false**, and the audit result is
+**partial success**. Each native command enables the one-shot script tests.
+
+| Environment | Pass / fail / error / skip | Seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 1213 / 0 / 0 / 0 | 307.311 |
+| Installed win-py311 | 1213 / 0 / 0 / 0 | 334.656 |
+| Installed win-py312 | 1213 / 0 / 0 / 0 | 354.069 |
+| Installed linux-py311 | 1211 / 2 / 0 / 0 | 483.299 |
+| Installed linux-py312 | 1212 / 1 / 0 / 0 | 481.425 |
+
+The audit is `.tmp/c-run-graph/audit.json`, SHA-256
+`d16812b24bf6cfaf00ff0d6e0df03d81d6ab244a965296fa717b5e997bf5a53f`. Each native cell verifies actual installed core origins,
+package identities, identical support/case inventories, actual public CLI success
+and malformed-board behavior, controlled ToolGate denial flows, unchanged retained
+artifact bytes and no remaining children. Source includes real filesystem, SQLite
+and native-process behavior with controlled clock/provider fixtures; that portion
+is not live provider proof.
+
+All 18 graph contract/integration/regression cases pass in source and each native
+cell. The Linux failures are in
+`test_effect_approval_pauses_then_resumes_with_verified_receipts`: `normal` on
+both Python versions (9.812 / 8.886 seconds) and `delayed-startup` on 3.11
+(8.383 seconds). Normal runs retain a decided first invocation, three completed
+model calls, and a second interrupted invocation with
+`E_SDK_AGENT_FRAME_READ_TIMEOUT`. The delayed-startup failure retains the reason
+`Connection lost`. The databases, failed JUnit/log bytes and report bindings are
+retained under `.tmp/c-run-graph/native-linux-py311.json` and
+`native-linux-py312.json`; they have not been replaced by passing repeats.
+
+One separate instrumented six-case resume-module execution on each failed installed
+environment passes. It records parent/child monotonic and raw monotonic samples,
+frame timing, unchanged eight-second request deadlines and child diagnostics in
+`.tmp/c-run-graph/probe-linux-py311.json` and `probe-linux-py312.json`. Those
+diagnostic passes do not reproduce or explain the full-run failures and do not
+close acceptance. No timeout or deadline was relaxed. The controlled elapsed UTC
+fixture means earlier ordinary UTC reversals alone cannot explain these failures.
+
+The wheel was built from its sdist and matches all 999 core Python files and
+1,012 wheel package files. Wheel SHA-256:
+`a82c5a83a38ca636cab66a3cf38ddf038bdd61dd3cc5341f68b46aa7074919c9`; sdist SHA-256:
+`d17e62ca3d7985892af1f078052c2b9908e2ed168155a9dc825d2a042bf2a055`. The harness contains 1,749
+support files without core/SDK sources. SDK 0.7.0a1, reference 0.3.0a1 and starter
+0.3.0a1 remain the previously bound artifacts.
+
+A separate serial run passes eight actual llama.cpp cases on the installed
+candidate in 140.923 seconds: CLI continuation, API memory/replay, effect
+restart and abrupt API-process recovery. The report binds the served model,
+candidate wheel, installed origins, support and artifacts. All observed proof
+parents/children are terminal and reaped; the existing operator provider remains
+running. This is one Windows 3.11 provider envelope, not broader host/provider
+promotion or OS-containment proof.
+
+Changed-file Ruff, staged whitespace, documentation hygiene and release metadata
+checks pass at the local checkpoint. `.tmp/c-run-graph/review.json` records the
+structural compliance review. Core graph code has no file/clock/environment effects;
+the existing protocol repository shrinks to 693 lines but remains oversized. The
+candidate adds no forbidden pair and removes its storage-to-runtime graph edge.
+Full C/D, quality/capability gates, fresh whole-suite/hosted CI, release readiness
+and explicit whole-lane acceptance remain open.
+
+Existing host-clock and recurrent Linux approval/resume deadline investigations
+remain open. This local checkpoint is not full installed acceptance or release readiness.
+
 ## E1/E2 — Reliable quality gates and maintainable authority
 
 Retains Workstreams 6, 7 and 8 and previous Slice E obligations.
@@ -12117,7 +12215,7 @@ requested a versioned GitHub checkpoint and continued commits on the existing
 branch; its proof and publication disposition are recorded in the C/D checkpoint.
 The later user instruction restricts 10 AM-6 PM America/Denver work hours to
 local commits only. Retain commits and matching annotated tags locally during
-that window; do not push to GitHub. The 0.6.4, 0.6.5 and 0.6.6 local checkpoints follow this
+that window; do not push to GitHub. The 0.6.4 through 0.6.7 local checkpoints follow this
 restriction; remote publication remains deferred.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
@@ -12161,7 +12259,7 @@ the dual-ledger candidate before accepting its installed gate; then continue C/D
 from their numbered requirements and retained dependency counterexamples. Scoped BT-5 acceptance is recorded in the five-requirement
 disposition above; preserve its exact artifacts, original failures and family
 ceilings. C now has one allowed-edge policy, complete classification and exact
-exception enforcement; its current repository verdict is red. Repair its 57
+exception enforcement; its current repository verdict is red. Repair its 56
 forbidden pairs, cross-layer cycle and 10 unresolved import/reflection sites,
 retaining adversarial positive and negative proof. D owns remaining clock/core/async work. Thirty later numbered obligations,
 full-suite/hosted quality proof and whole-lane user acceptance remain active.

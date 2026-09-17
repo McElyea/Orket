@@ -527,7 +527,18 @@ compatibility and wheel-upgrade order are governed by
 `docs/requirements/sdk/VERSIONING.md`; historical bundling hosts do not acquire
 standalone SDK compatibility merely by overlaying a wheel.
 
-Core 0.6.6 is the current architectural-truth local checkpoint paired with
+Core 0.6.7 is the latest local protocol graph publication checkpoint. Source and
+both Windows installed environments pass 1,213 selected cases; Linux 3.11 has
+1,211 passes/two resume failures and Linux 3.12 has 1,212 passes/one resume failure.
+All 18 graph cases pass in each cell, and eight separate actual installed llama.cpp
+cases pass with observed teardown. Broader installed acceptance remains false.
+No GitHub push is performed during work hours.
+Pure graph values now live in `orket/core/contracts/run_graph.py`; storage owns
+file replay and verified publication after terminal ledger append. Migration and
+post-append failure observations are specified in
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_GRAPH_CD_2026-09-17.md`.
+
+The preceding core 0.6.6 architectural-truth local checkpoint is paired with
 SDK 0.7.0a1. Source and four installed proof unions cover 1,201 selected cases
 through retained full runs plus 28-case explicit-clock fixture follow-ups on the
 unchanged wheel. Eight actual installed llama.cpp cases pass with verified teardown.

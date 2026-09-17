@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-17T18:18:27.124686Z",
+  "generated_at": "2026-09-17T19:09:20.873985Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -306,7 +306,7 @@
           "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 998,
+      "files_scanned": 999,
       "scan_roots": [
         "orket"
       ],
@@ -315,17 +315,17 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 237
+          "count": 241
         },
         {
           "source": "adapters",
           "target": "application",
-          "count": 22
+          "count": 21
         },
         {
           "source": "adapters",
           "target": "core",
-          "count": 134
+          "count": 138
         },
         {
           "source": "adapters",
@@ -335,17 +335,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 303
+          "count": 302
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1514
+          "count": 1512
         },
         {
           "source": "application",
           "target": "core",
-          "count": 667
+          "count": 665
         },
         {
           "source": "application",
@@ -360,7 +360,7 @@
         {
           "source": "core",
           "target": "core",
-          "count": 136
+          "count": 138
         },
         {
           "source": "decision_nodes",
@@ -459,17 +459,6 @@
             {
               "path": "orket/adapters/llm/local_prompting_policy.py",
               "line": 27,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.storage.async_protocol_run_ledger",
-          "target": "orket.runtime.run_graph_reconstruction",
-          "sites": [
-            {
-              "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-              "line": 17,
               "kind": "from"
             }
           ]
@@ -1048,7 +1037,6 @@
             "orket.adapters.llm.local_model_provider",
             "orket.adapters.llm.local_model_provider_runtime_target",
             "orket.adapters.llm.local_prompting_policy",
-            "orket.adapters.storage.async_protocol_run_ledger",
             "orket.adapters.vcs.gitea_webhook_handler",
             "orket.adapters.vcs.gitea_webhook_handlers",
             "orket.agents.agent",
@@ -1226,7 +1214,6 @@
             "orket.runtime.resource_pressure_simulation_lane",
             "orket.runtime.retry_classification_policy",
             "orket.runtime.route_decision_artifact",
-            "orket.runtime.run_graph_reconstruction",
             "orket.runtime.run_ledger_factory",
             "orket.runtime.run_ledger_parity",
             "orket.runtime.run_ledger_projection",
@@ -1484,10 +1471,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 4903,
-    "missing_layer_total": 3319,
+    "tests_total": 4912,
+    "missing_layer_total": 3328,
     "by_layer": {
-      "unlabeled": 3319,
+      "unlabeled": 3328,
       "integration": 735,
       "unit": 167,
       "contract": 671,
@@ -2095,7 +2082,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3219
+    "missing_layers_omitted": 3228
   },
   "ruff": {
     "proof": "structural_lint",
@@ -2120,9 +2107,9 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 998,
-    "files_over_400_total": 69,
-    "functions_over_70_total": 224,
+    "python_files_scanned": 999,
+    "files_over_400_total": 68,
+    "functions_over_70_total": 223,
     "largest_files": [
       {
         "path": "orket/interfaces/api.py",
@@ -2157,12 +2144,12 @@
         "lines": 729
       },
       {
-        "path": "orket/adapters/storage/async_protocol_run_ledger.py",
-        "lines": 705
-      },
-      {
         "path": "orket/kernel/v1/state/promotion.py",
         "lines": 699
+      },
+      {
+        "path": "orket/adapters/storage/async_protocol_run_ledger.py",
+        "lines": 693
       },
       {
         "path": "orket/runtime/evidence/run_evidence_graph_rendering.py",
@@ -2347,12 +2334,6 @@
         "lines": 218
       },
       {
-        "path": "orket/runtime/evidence/run_graph_reconstruction.py",
-        "line": 17,
-        "name": "reconstruct_run_graph",
-        "lines": 214
-      },
-      {
         "path": "orket/application/workflows/orchestrator_ops.py",
         "line": 894,
         "name": "execute_epic",
@@ -2375,6 +2356,12 @@
         "line": 45,
         "name": "run",
         "lines": 207
+      },
+      {
+        "path": "orket/board.py",
+        "line": 38,
+        "name": "get_board_hierarchy",
+        "lines": 205
       }
     ],
     "parse_errors": []
@@ -2387,7 +2374,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 571,
+    "scanned_files": 569,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -2498,26 +2485,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-14T15:37:15.445595Z",
-      "changed": true,
-      "before_digest": "sha256:76c67c47ce37adb74ebc4d2f9a4e8c0eee9a3cc1e4acd684a2eafa1570050d42",
-      "after_digest": "sha256:c98fb4fc62c841cb796de56085220b945132fd1940c970ec69238486b7f9dec1",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 1,
-        "churn_ratio": 0.000303,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-14T16:00:30.618853Z",
       "changed": true,
@@ -3332,6 +3299,45 @@
           "$.test_taxonomy.missing_layer_total",
           "$.test_taxonomy.missing_layers_omitted",
           "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T19:09:20.877014Z",
+      "changed": true,
+      "before_digest": "sha256:865098c19fe8a91ad70535453b86cbf7a1a225b97e8148af858ae5164dd9d2b0",
+      "after_digest": "sha256:e02812673780acea29bcea82955d1f295c22f081cb1a035e0928c8b0055e62b4",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 4,
+        "changed_paths": 413,
+        "initial_write": false,
+        "paths_total_previous": 3645,
+        "paths_total_current": 3628,
+        "paths_total_reference": 3645,
+        "churn_paths": 418,
+        "churn_ratio": 0.114678,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[1].count",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[6].count",
+          "$.dependency_graph.observed.layer_edges[9].count",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[4]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[5]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[6]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[7]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[8]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[9]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[10]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[11]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[12]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[13]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[14]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[15]"
         ]
       }
     }

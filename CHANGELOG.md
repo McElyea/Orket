@@ -5,6 +5,23 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.7] - 2026-09-17 - "Protocol graph publication candidate"
+
+### Changed
+- Move deterministic protocol graph values to core and owned file effects to storage.
+- Publish graphs from committed terminal ledger events, verify file replacement,
+  and repair missing or corrupted projections on repeated finalization.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Follow `docs/architecture/CONTRACT_DELTA_PROTOCOL_GRAPH_CD_2026-09-17.md` for removed
+  runtime imports, async replay and post-append projection failure handling.
+  SDK remains `0.7.0a1`; graph schema and node/edge meaning are unchanged.
+- Stability: local checkpoint with partial installed proof. Source and Windows
+  pass 1,213 selected cases; Linux 3.11 has two resume failures and Linux 3.12 has
+  one. All 18 graph cases pass in every cell, and eight actual installed llama.cpp
+  cases pass. Broader installed acceptance and full-plan gates remain open.
+
 ## [0.6.6] - 2026-09-17 - "Governed invocation lifetime candidate"
 
 ### Changed
