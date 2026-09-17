@@ -32,6 +32,17 @@ coverage follow `docs/specs/MODEL_PROVIDER_TIMING.md`.
 
 ## Operator Driver
 
+API security events retain their existing fields and are authored from the
+application's captured security settings:
+
+- `api_security_posture`: `api_key_configured`, `insecure_no_api_key_bypass`.
+- `api_security_warning`: `message`; reports a configured local bypass.
+- `security_compat_fallback_used`: `event_name`, `component`, `fallback_code`,
+  `mode`, `reason`, `input_ref`, `timestamp_utc`. API query-key use has component
+  `api.websocket_auth` and fallback code `API_QUERY_AUTH_COMPAT`. It records use
+  of the compatibility lookup, before authentication; it does not claim successful
+  authentication. Key values must not be recorded.
+
 Failure and structural publication events:
 
 - `policy_violation_report_saved`: `session_id`, `card_id`, `path`; emitted by the

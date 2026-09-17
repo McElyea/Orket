@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.9] - 2026-09-17 - "Captured API authority and packaged scaffolds"
+
+### Changed
+- Move authentication, explorer containment and board observations from replaceable
+  strategy methods into application services and owned filesystem adapters.
+- Capture each app's security/CORS settings, EOS baseline and timezone; use its
+  explicit runtime clock. Board reads use the selected project root.
+- Retain filesystem observations through cancellation, timeout and shutdown.
+- Package both extension scaffold templates and verify materialized output;
+  `orket ext init` no longer requires documentation beside the installed module.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Follow `docs/architecture/CONTRACT_DELTA_API_AUTHORITY_INPUTS_CD_2026-09-17.md`
+  for retired internal strategy methods and application settings capture.
+- Stability: local checkpoint. The full selected source suite and all four fresh
+  installed cells pass 1,751 cases each; eight actual llama.cpp cases and changed-file
+  Ruff pass. Whole-plan acceptance, historical clock/resume failures and live pipeline
+  completion remain open. Exact evidence and limits are in the canonical plan.
+
 ## [0.6.8] - 2026-09-17 - "Captured provider preparation candidate"
 
 ### Changed

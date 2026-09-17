@@ -12300,6 +12300,166 @@ New scripts writing rerunnable JSON use existing rerun diff-ledger helpers and
 one declared stable output. Extend the baseline rather than create competing
 success authority. Keep September evidence immutable as review history.
 
+### API authority and packaged extension scaffolding checkpoint: 2026-09-17
+
+Observed path: primary. Result: partial success for the full goal. The corrected
+core 0.6.9 source, four installed gates and fresh llama.cpp regression pass.
+
+The retained `.tmp/c-api-inputs/before.json` has three real ASGI failures: ambient
+key drift across two apps, a replaceable strategy accepting a wrong key, and a
+strategy bypassing explorer containment. `board-before.xml/.log` separately
+records two valid rooted boards returning empty inventories. None was regenerated
+after the repair. The preceding 0.6.8 checkpoint and all 86 bound evidence files
+were verified unchanged before continuation.
+
+Application services now own authentication and observed system queries. Each app
+captures security/CORS settings, EOS baseline and timezone; its runtime clock
+supplies system time. Board readers and the engine use their selected project
+root. Filesystem workers retain cancellation/timeout/shutdown ownership and failures.
+The decision node loses authentication, observed-path, board, ambient-calendar and
+obsolete CORS methods without a compatibility shim. Migration and limits are in
+`docs/architecture/CONTRACT_DELTA_API_AUTHORITY_INPUTS_CD_2026-09-17.md`.
+
+The API-only source proof covers 1,743 unique cases through its full attempt plus
+fourteen cases in three repaired test modules. The initial full source run has
+1,739 passes and four failures; credentials were configured too late in three
+cases, and one structural test could not inspect FastAPI's route wrappers.
+Repairs capture keys before construction and exercise every documented v1 operation
+without authentication. The fourteen-case followup passes with an exact test-only
+delta and unchanged runtime bytes. `source-supplement.json` binds that union; it
+is not a full source rerun.
+
+All four first installed cells execute 1,743 cases: 1,740 pass and three fail,
+with no skips/errors. The failures are actual extension-scaffolding failures:
+`orket ext init` looks for `docs/templates` beside the installed module and returns
+`E_EXT_TEMPLATE_MISSING`. This is an existing installed-runtime defect exposed by
+the expanded interface suite, not an omitted harness fixture. The retained
+`.tmp/c-api-inputs/initial-native.json` records all four reports and bindings.
+The API-only source archive/wheel and first manifests remain unchanged.
+
+The corrective implementation packages generated archives from the existing two
+canonical template source trees. Application owns scaffold result authority; a
+storage adapter drains and verifies materialization. Both Quality jobs check the
+generated archives. Source repair checks pass thirteen cases, including real files,
+cancellation/failure ordering and unsafe serialized ZIP names. An initial Windows
+backslash fixture was normalized by ZipInfo; its failure and corrected raw-header
+proof are retained. Migration, generated-data authority and limits are in
+`docs/architecture/CONTRACT_DELTA_EXTENSION_SCAFFOLD_PACKAGING_D_2026-09-17.md`.
+The corrected full source run passes all 1,751 cases with no failures, errors or
+skips in 447.232 seconds, with Git-visible inputs unchanged throughout execution.
+This is a full run of the expanded selection, independent of the earlier 1,743-case
+source union. Changed-file Ruff passes. The preceding provider checkpoint's retained
+full-Ruff debt remains a separate E1 item.
+
+Four fresh installed environments execute the same 1,751 unique cases:
+
+| Envelope | Pass / fail / error / skip | Seconds | Core origins |
+|---|---:|---:|---:|
+| win-py311 | 1,751 / 0 / 0 / 0 | 540.239 | 922 |
+| win-py312 | 1,751 / 0 / 0 / 0 | 628.957 | 922 |
+| linux-py311 | 1,751 / 0 / 0 / 0 | 433.999 | 922 |
+| linux-py312 | 1,751 / 0 / 0 / 0 | 435.440 | 922 |
+
+The corrected source archive and wheel bind 1007
+core Python files and 1022 wheel files to the
+current source. The 1845-file harness contains support inputs
+without a core/SDK source shadow. Both generated template archives are package data;
+their 91 canonical authoring inputs and the compiler are bound separately. Source
+and every installed cell execute the real console from an unrelated working directory:
+both template kinds initialize, pass strict validation and refuse an existing target.
+The two-case preliminary installed console run is retained separately.
+Actual compiler commands also pass in isolated Windows/Linux Git fixtures: CRLF
+inputs preserve archive identity, a deliberately stale archive is rejected, and
+`--write` restores the original bytes. `template-parity-*.json` binds those controls;
+these are local workflow executions, not hosted CI.
+
+Each installed cell verifies input and import origins, actual normal/malformed CLI
+flows, ToolGate checks and observed owned-child teardown. Core wheel SHA-256:
+`8e4ba5c0cbf9ce35300606c5c79cae7ad2b125e7e5fb443ecac2ec4f99208698`. Source archive SHA-256:
+`08062b684e64671c981ba98afa868aed986c2ba3d1ae84c13eaebf97c07687be`. All four initial three-failure installed reports, their
+artifacts and bindings remain retained under `.tmp/c-api-inputs/`.
+
+Eight separate actual installed llama.cpp cases pass, retaining owned-child teardown
+with the operator model process still alive. The corrected audit is
+`.tmp/c-api-inputs/complete/audit.json`, SHA-256 `0d8757554c709e4ce3884944749d43579e83293396f351e72472daaca5857849`.
+API HTTP/WebSocket tests exercise ASGI; lifetime HTTP also traverses TCP. WebSocket
+proof is not TCP. No provider capability or OS containment guarantee is expanded.
+The preceding live pipeline's `card_completion_unverified:COD-1,REV-1` workload
+failure remains unresolved; its successful truth-reporting assertion is not workload
+success for this checkpoint.
+
+`review.json` records scoped AC-01 through AC-10 review separately from execution.
+Existing startup warning drift remains: the insecure-bypass flag can log that
+authentication is disabled even when a configured key is enforced. This checkpoint
+does not accept that wording as accurate; it remains C/D work with the other
+composition, immutable-context and replay limitations in the contract delta.
+
+Dependency observation: 1,007 modules, 3,194 sites, 51 forbidden pairs, one authority
+cycle, ten analysis errors and zero unknown modules. Three forbidden pairs were
+removed with none added and no policy exception/reclassification. Baseline collection
+succeeds and release-ready remains false. Historical clock/resume failures, full
+quality/capability gates, hosted CI and whole-lane acceptance remain open. Commits
+and annotated tags remain local during 10 AM-6 PM America/Denver; no push is performed.
+
+Exact files in this checkpoint:
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/CONTRIBUTOR.md`
+- `docs/architecture/CONTRACT_DELTA_API_AUTHORITY_INPUTS_CD_2026-09-17.md`
+- `docs/architecture/CONTRACT_DELTA_EXTENSION_SCAFFOLD_PACKAGING_D_2026-09-17.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/architecture/event_taxonomy.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json`
+- `docs/projects/architectural-truth/README.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/requirements/sdk/VERSIONING.md`
+- `docs/specs/API_RUNTIME_LIFECYCLE.md`
+- `docs/specs/RUNTIME_PROJECT_ROOTS.md`
+- `orket/adapters/storage/api_workspace_reader.py`
+- `orket/adapters/storage/extension_template_store.py`
+- `orket/application/services/api_authentication_service.py`
+- `orket/application/services/api_runtime_composition.py`
+- `orket/application/services/api_runtime_container.py`
+- `orket/application/services/api_system_query_service.py`
+- `orket/application/services/extension_scaffold_service.py`
+- `orket/board.py`
+- `orket/core/contracts/eos_calendar.py`
+- `orket/core/contracts/extension_templates.py`
+- `orket/decision_nodes/api_runtime_strategy_node.py`
+- `orket/decision_nodes/contracts.py`
+- `orket/interfaces/api.py`
+- `orket/interfaces/orket_bundle_cli.py`
+- `orket/interfaces/routers/streaming.py`
+- `orket/interfaces/routers/system.py`
+- `orket/orchestration/engine.py`
+- `orket/runtime/config/assets/extension_templates/external_extension.zip`
+- `orket/runtime/config/assets/extension_templates/governed_agent_external.zip`
+- `orket/runtime/policy/ui_lane_security_boundary_test_contract.py`
+- `orket/time_utils.py`
+- `orket/utils.py`
+- `pyproject.toml`
+- `scripts/governance/check_ui_lane_security_boundary_tests.py`
+- `scripts/governance/sync_extension_templates.py`
+- `tests/application/test_board_hierarchy_integrity.py`
+- `tests/application/test_decision_nodes_planner.py`
+- `tests/contracts/test_eos_calendar_values.py`
+- `tests/e2e/test_packaged_extension_scaffold.py`
+- `tests/integration/test_api_authority_inputs.py`
+- `tests/integration/test_api_captured_websocket_inputs.py`
+- `tests/integration/test_api_workspace_lifetime.py`
+- `tests/integration/test_extension_scaffold_ownership.py`
+- `tests/interfaces/conftest.py`
+- `tests/interfaces/test_api.py`
+- `tests/interfaces/test_api_kernel_lifecycle_control_plane_refs.py`
+- `tests/interfaces/test_api_task_lifecycle.py`
+- `tests/interfaces/test_northstar_phase0_api.py`
+- `tests/runtime/test_startup_security_config.py`
+
 ## Completion, blockers and next action
 
 The remediation milestone requires decisive proof for all SR and SD findings,
@@ -12317,7 +12477,7 @@ requested a versioned GitHub checkpoint and continued commits on the existing
 branch; its proof and publication disposition are recorded in the C/D checkpoint.
 The later user instruction restricts 10 AM-6 PM America/Denver work hours to
 local commits only. Retain commits and matching annotated tags locally during
-that window; do not push to GitHub. The 0.6.4 through 0.6.8 local checkpoints follow this
+that window; do not push to GitHub. The 0.6.4 through 0.6.9 local checkpoints follow this
 restriction; remote publication remains deferred.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
@@ -12361,7 +12521,7 @@ the dual-ledger candidate before accepting its installed gate; then continue C/D
 from their numbered requirements and retained dependency counterexamples. Scoped BT-5 acceptance is recorded in the five-requirement
 disposition above; preserve its exact artifacts, original failures and family
 ceilings. C now has one allowed-edge policy, complete classification and exact
-exception enforcement; its current repository verdict is red. Repair its 54
+exception enforcement; its current repository verdict is red. Repair its 51
 forbidden pairs, cross-layer cycle and 10 unresolved import/reflection sites,
 retaining adversarial positive and negative proof. D owns remaining clock/core/async work. Thirty later numbered obligations,
 full-suite/hosted quality proof and whole-lane user acceptance remain active.

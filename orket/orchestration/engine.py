@@ -264,7 +264,7 @@ class OrchestrationEngine:
     def get_board(self) -> dict[str, Any]:
         from orket.board import get_board_hierarchy
 
-        return get_board_hierarchy(self.department)
+        return get_board_hierarchy(self.department, project_root=self.config_root)
 
     async def get_sandboxes(self) -> list[dict[str, Any]]:
         """Returns list of active sandboxes."""

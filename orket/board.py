@@ -28,33 +28,42 @@ def _append_load_failure(
     )
 
 
-def _run_startup_reconcile() -> None:
+def _run_startup_reconcile(project_root: Path | None = None) -> None:
     from orket.application.services.structural_reconciliation_service import StructuralReconciler
 
-    reconciler: Any = StructuralReconciler()
+    reconciler: Any = StructuralReconciler() if project_root is None else StructuralReconciler(
+        root_path=project_root / "model" if project_root is not None else None,
+        workspace=project_root / "workspace" / "default" if project_root is not None else None,
+    )
     reconciler.reconcile_all()
 
 
-def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> dict[str, Any]:
+def get_board_hierarchy(
+    department: str = "core", auto_fix: bool = False, *, project_root: Path | None = None,
+) -> dict[str, Any]:
     """
     CLI/test helper that builds a tree: Rock -> Epic -> Issue.
     Blocks the calling thread while loading config assets.
     """
     auto_fix_error: Exception | None = None
+    root = Path(project_root).resolve() if project_root is not None else Path.cwd()
     if auto_fix:
         try:
-            _run_startup_reconcile()
+            if project_root is None:
+                _run_startup_reconcile()
+            else:
+                _run_startup_reconcile(root)
         except (RuntimeError, ValueError, OSError, ImportError) as exc:
             auto_fix_error = exc
 
-    loader = ConfigLoader(Path("model"), department)
+    loader = ConfigLoader(root, department)
 
     rocks_names = loader.list_assets("rocks")
     epics_names = loader.list_assets("epics")
     issues_names = loader.list_assets("issues")
 
     artifacts: list[str] = []
-    artifacts_dir = Path("model") / department / "artifacts"
+    artifacts_dir = root / "model" / department / "artifacts"
     if artifacts_dir.exists():
         try:
             artifacts = [f.name for f in artifacts_dir.iterdir() if f.is_file()]
@@ -117,7 +126,7 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> dic
                 epics_in_rocks.add(ename)
 
                 try:
-                    dept_loader = ConfigLoader(Path("model"), edept)
+                    dept_loader = ConfigLoader(root, edept)
                     epic = dept_loader.load_asset("epics", ename, EpicConfig)
 
                     # Track issue identity with stable IDs first, plus names for compatibility.
@@ -245,5 +254,9 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> dic
 async def get_board_hierarchy_async(
     department: str = "core",
     auto_fix: bool = False,
+    *,
+    project_root: Path | None = None,
 ) -> dict[str, Any]:
-    return await run_owned_thread(partial(get_board_hierarchy, department, auto_fix), label="board-hierarchy")
+    return await run_owned_thread(
+        partial(get_board_hierarchy, department, auto_fix, project_root=project_root), label="board-hierarchy",
+    )

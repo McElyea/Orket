@@ -3,7 +3,7 @@ import hashlib
 import json
 import logging
 import os
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager, suppress
 from contextvars import ContextVar
 from datetime import UTC, datetime
@@ -83,10 +83,8 @@ from orket.kernel.v1.outbound_policy_gate import (
 )
 from orket.logging import log_event, subscribe_to_events, unsubscribe_from_events
 from orket.runtime.cors_config import resolve_cors_config
-from orket.runtime.startup_checks import validate_required_secrets, warn_if_insecure_gitea_https
 from orket.settings import load_user_preferences, load_user_settings, save_user_settings
 from orket.streaming import CommitIntent, InteractionManager, StreamBus
-from orket.time_utils import now_local
 from orket.workloads import is_builtin_workload, run_builtin_workload, validate_builtin_workload_start
 
 LOGGER = logging.getLogger(__name__)
@@ -465,35 +463,6 @@ API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 
-def _read_api_key_env(name: str) -> str | None:
-    value = os.getenv(name)
-    if value is None:
-        return None
-    stripped = str(value).strip()
-    return stripped or None
-
-
-def _env_flag_enabled(name: str) -> bool:
-    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _enforce_insecure_no_api_key_startup_policy() -> bool:
-    insecure_bypass = _env_flag_enabled("ORKET_ALLOW_INSECURE_NO_API_KEY")
-    if not insecure_bypass:
-        return False
-
-    LOGGER.critical(
-        "orket_insecure_no_api_key_enabled",
-        extra={"warning": "API authentication is disabled. Never set this in non-local environments."},
-    )
-    environment = str(os.getenv("ORKET_ENV") or "").strip().lower()
-    if environment in {"production", "staging"}:
-        raise RuntimeError(
-            "ORKET_ALLOW_INSECURE_NO_API_KEY is forbidden when ORKET_ENV is production or staging."
-        )
-    return True
-
-
 def _log_api_auth_rejection(
     *,
     request_path: str,
@@ -521,12 +490,10 @@ def _api_key_actor_ref(api_key_value: str | None) -> str | None:
 
 
 async def get_api_key(request: Request, api_key_header: str | None = Security(api_key_header)) -> str | None:
-    default_key = _read_api_key_env("ORKET_API_KEY")
     request_path = str(request.url.path or "")
     provided_key_present = bool(str(api_key_header or "").strip())
 
-    runtime_node = _get_api_runtime_node()
-    if runtime_node.is_api_key_valid(default_key, api_key_header):
+    if _runtime_context().authentication.authenticate(api_key_header):
         request.state.authenticated_actor_ref = _api_key_actor_ref(api_key_header)
         return api_key_header
 
@@ -538,7 +505,7 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
 
     raise HTTPException(
         status_code=403,
-        detail=runtime_node.api_key_invalid_detail(),
+        detail="Could not validate credentials",
     )
 
 
@@ -572,8 +539,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     broadcaster_task: asyncio.Task[Any] | None = None
     log_subscriber: Callable[[dict[str, Any]], None] | None = None
     try:
-        validate_required_secrets()
-        warn_if_insecure_gitea_https(logger=LOGGER)
+        context.authentication.validate_startup(LOGGER)
         runtime_engine = _get_engine(_app)
         initialize = getattr(runtime_engine, "initialize", None)
         if callable(initialize):
@@ -588,12 +554,11 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         governed_agent_runtime = context.governed_agent_runtime
         if governed_agent_runtime is not None:
             await governed_agent_runtime.start(context)
-        expected_key = _read_api_key_env("ORKET_API_KEY")
-        insecure_bypass = _enforce_insecure_no_api_key_startup_policy()
+        insecure_bypass = context.authentication.insecure_bypass
         log_event(
             "api_security_posture",
             {
-                "api_key_configured": bool(expected_key),
+                "api_key_configured": context.authentication.key_configured,
                 "insecure_no_api_key_bypass": insecure_bypass,
             },
             _project_root(_app),
@@ -853,8 +818,9 @@ v1_router.include_router(
         project_root_getter=lambda: _project_root(),
         runtime_state=lambda: _get_runtime_state(),
         api_runtime_node_getter=lambda: _get_api_runtime_node(),
+        system_queries_getter=lambda: _runtime_context().system_queries,
         runtime_host_getter=lambda: _get_api_runtime_host(),
-        now_local=now_local,
+        now_local=lambda: _runtime_context().system_queries.local_now(),
         get_metrics_snapshot=get_metrics_snapshot,
         log_event=lambda name, payload, workspace: log_event(name, payload, workspace),
         model_selector_factory=lambda organization, preferences, user_settings: _runtime_context().model_selector_factory(
@@ -1161,10 +1127,11 @@ async def get_run_detail(session_id: str) -> dict[str, Any]:
 @v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str) -> Any:
     log_event("api_run_metrics", {"session_id": session_id}, _project_root())
-    _validate_session_path(session_id)
-    workspace = _get_api_runtime_node().resolve_member_metrics_workspace(_project_root(), session_id)
     metrics_reader = _get_api_runtime_host().create_member_metrics_reader()
-    return await asyncio.to_thread(metrics_reader, workspace)
+    try:
+        return await _runtime_context().system_queries.member_metrics(session_id, metrics_reader)
+    except PermissionError as exc:
+        raise HTTPException(status_code=400, detail="Invalid session_id") from exc
 
 
 @v1_router.get("/runs/{session_id}/token-summary")
@@ -1768,7 +1735,7 @@ def _register_streaming_transport(target_app: FastAPI) -> None:
     register_streaming_routes(
         target_app,
         api_key_name=API_KEY_NAME,
-        api_runtime_node_getter=lambda: _get_api_runtime_node(target_app),
+        authentication_getter=lambda: _runtime_context(target_app).authentication,
         runtime_host_getter=lambda: _get_api_runtime_host(target_app),
         interaction_manager_getter=lambda: _get_interaction_manager(target_app),
         stream_bus_getter=lambda: _get_stream_bus(target_app),
@@ -1779,7 +1746,7 @@ def _register_streaming_transport(target_app: FastAPI) -> None:
 
 
 def _register_created_app_transport(target_app: FastAPI) -> None:
-    config = resolve_cors_config()
+    config = resolve_cors_config(_runtime_context(target_app).authentication.environment)
     target_app.add_middleware(
         CORSMiddleware,
         allow_origins=config.allow_origins,
@@ -1793,11 +1760,15 @@ def _register_created_app_transport(target_app: FastAPI) -> None:
     _register_streaming_transport(target_app)
 
 
-def create_api_app(project_root: Path | None = None, *, runtime_inputs: Any | None = None) -> FastAPI:
+def create_api_app(
+    project_root: Path | None = None, *, runtime_inputs: Any | None = None,
+    environment: Mapping[str, str] | None = None,
+) -> FastAPI:
     root = Path(project_root).resolve() if project_root is not None else _resolve_default_project_root()
     created_app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
     created_app.state.project_root = root
     created_app.state.outbound_policy_config = _load_outbound_policy_config_for_app(root)
-    set_api_runtime_context(created_app, build_api_runtime_container(root, runtime_inputs=runtime_inputs))
+    set_api_runtime_context(created_app, build_api_runtime_container(root, runtime_inputs=runtime_inputs,
+                                                                   environment=environment))
     _register_created_app_transport(created_app)
     return created_app

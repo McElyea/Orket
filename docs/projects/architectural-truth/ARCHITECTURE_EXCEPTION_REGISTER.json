@@ -1,7 +1,7 @@
 {
   "schema_version": "architectural_truth.exception_register.v1",
   "owner": "Orket Core",
-  "last_reviewed": "2026-09-14",
+  "last_reviewed": "2026-09-17",
   "exceptions": [
     {
       "id": "AT-EX-001",
@@ -47,7 +47,7 @@
       "id": "AT-EX-007",
       "area": "decision-node-explicit-inputs",
       "status": "active_transition",
-      "reason": "Decision-node strategy selection still reads environment, path, and provider policy outside explicit input snapshots.",
+      "reason": "API authentication, observed paths, board loading and calendar settings now use application authority and captured inputs. Other decision-node strategy selection still reads environment, provider policy or mutable registry/runtime settings outside immutable snapshots.",
       "removal_condition": "All decision nodes receive immutable resolved configuration and have no environment or runtime-state reach-through.",
       "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
     },

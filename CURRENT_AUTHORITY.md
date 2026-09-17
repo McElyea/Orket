@@ -25,6 +25,23 @@ requires an explicit `0.7.0` contract delta.
 
 ## Current Canonical Paths
 
+API authentication and security configuration are application-owned in
+`ApiAuthenticationService`; each app captures its key, profile/mode, bypass,
+startup checks and CORS settings at construction. HTTP and both WebSocket routes
+share that authority. `ApiSystemQueryService` owns explorer containment, rooted
+board/metrics observations and the captured EOS calendar/timezone over the app's
+runtime clock. Pure calendar calculation lives in `orket/core/contracts/eos_calendar.py`.
+Migration and scoped lifetime limits:
+`docs/architecture/CONTRACT_DELTA_API_AUTHORITY_INPUTS_CD_2026-09-17.md`.
+The corrected full selected source suite, four installed gates and fresh llama.cpp
+regressions pass. Whole-plan acceptance and historical failures remain open; see the canonical plan.
+
+Extension scaffolding consumes generated, package-owned archives through
+`orket/application/services/extension_scaffold_service.py`; it does not search for
+repository templates beside site-packages. Canonical authoring sources, generated
+archive parity, ownership and installed proof limits are in
+`docs/architecture/CONTRACT_DELTA_EXTENSION_SCAFFOLD_PACKAGING_D_2026-09-17.md`.
+
 Governed-agent invocation/broker ports and wake/schedule/webhook records are
 canonical in `orket/core/contracts/`. Concrete guard invocation and manual wake
 command ownership remain application services. Internal import migration and

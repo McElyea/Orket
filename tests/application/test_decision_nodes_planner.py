@@ -440,22 +440,10 @@ def test_registry_tool_strategy_env_override_wins(monkeypatch):
     assert node is custom
 
 
-def test_default_api_runtime_strategy_parity(monkeypatch):
+def test_default_api_runtime_strategy_parity():
     """Layer: contract. Verifies the API runtime strategy contract now stays on pure request-shaping and path-selection behavior."""
     node = DefaultApiRuntimeStrategyNode()
 
-    assert node.default_allowed_origins_value() == "http://localhost:5173,http://127.0.0.1:5173"
-    assert node.parse_allowed_origins("http://a, http://b") == ["http://a", "http://b"]
-    monkeypatch.delenv("ORKET_ALLOW_INSECURE_NO_API_KEY", raising=False)
-    assert node.is_api_key_valid(None, None) is False
-    monkeypatch.setenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "true")
-    monkeypatch.setenv("ORKET_API_SECURITY_PROFILE", "production")
-    assert node.is_api_key_valid(None, None) is False
-    monkeypatch.setenv("ORKET_API_SECURITY_PROFILE", "dev")
-    assert node.is_api_key_valid(None, None) is True
-    assert node.is_api_key_valid("k", "k") is True
-    assert node.is_api_key_valid("k", "x") is False
-    assert node.api_key_invalid_detail() == "Could not validate credentials"
     assert node.resolve_asset_id(path="model/core/issues/demo.json", issue_id=None) == "demo"
     assert node.resolve_asset_id(path=None, issue_id="ISSUE-1") == "ISSUE-1"
     assert node.resolve_asset_id(path=None, issue_id=None) is None
@@ -515,10 +503,6 @@ def test_default_api_runtime_strategy_parity(monkeypatch):
         "sprint_start": "2026-02-09",
         "sprint_end": "2026-02-13",
     }
-    assert node.resolve_current_sprint(datetime(2026, 2, 11, tzinfo=UTC)) == "Q1 S7"
-    assert node.resolve_explorer_path(Path("/tmp/root"), "../../evil") is None
-    assert node.resolve_explorer_forbidden_error("../../evil") == {"status_code": 403}
-    assert node.resolve_explorer_missing_response("missing") == {"items": [], "path": "missing"}
     assert node.include_explorer_entry(".git") is False
     assert node.include_explorer_entry("node_modules") is False
     assert node.include_explorer_entry("app.py") is True
@@ -554,7 +538,6 @@ def test_default_api_runtime_strategy_parity(monkeypatch):
         "method_name": "process_request",
         "args": ["hello"],
     }
-    assert node.resolve_member_metrics_workspace(Path("/tmp/root"), "missing") == Path("/tmp/root/workspace/default")
     assert node.resolve_sandbox_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
     assert node.resolve_sandbox_logs_invocation("sb-1", "api") == {
         "method_name": "get_logs",

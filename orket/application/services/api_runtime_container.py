@@ -36,6 +36,8 @@ class ApiRuntimeContainer:
     runtime_state: Any
     api_runtime_host: Any
     engine: Any
+    authentication: Any | None = None
+    system_queries: Any | None = None
     stream_bus: Any | None = None
     interaction_manager: Any | None = None
     extension_manager: Any | None = None

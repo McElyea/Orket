@@ -172,7 +172,7 @@ async def test_get_board_hierarchy_async_uses_thread_wrapper(monkeypatch):
     """Layer: integration. Verifies the async board helper delegates to the sync hierarchy builder for API callers."""
     seen: dict[str, object] = {}
 
-    def _fake_get_board_hierarchy(department: str = "core", auto_fix: bool = False):
+    def _fake_get_board_hierarchy(department: str = "core", auto_fix: bool = False, *, project_root=None):
         seen["department"] = department
         seen["auto_fix"] = auto_fix
         return {"department": department, "auto_fix": auto_fix}

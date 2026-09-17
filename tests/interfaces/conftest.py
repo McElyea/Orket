@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -38,6 +39,11 @@ class LazyApiTestClient:
 
     def _live_client(self) -> TestClient:
         if self._client is None:
+            from orket.application.services.api_authentication_service import ApiAuthenticationService
+
+            # This test-owned lazy client adopts test setup inputs once at startup.
+            # Production factory capture is exercised directly by the API isolation tests.
+            self._app.state.api_runtime_context.authentication = ApiAuthenticationService(os.environ)
             self._client = TestClient(self._app)
             self._client.__enter__()
         return self._client

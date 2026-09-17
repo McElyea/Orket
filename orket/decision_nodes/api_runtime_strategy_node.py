@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hmac
-import os
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -10,63 +8,8 @@ from typing import Any
 class DefaultApiRuntimeStrategyNode:
     """
     Built-in API runtime strategy node.
-    Preserves existing API request/runtime decision behavior.
+    Recommends presentation and request shapes over explicit inputs; owns no authentication or filesystem effects.
     """
-
-    def security_mode(self) -> str:
-        return str(os.getenv("ORKET_API_SECURITY_MODE", "compat")).strip().lower() or "compat"
-
-    def security_profile(self) -> str:
-        return str(os.getenv("ORKET_API_SECURITY_PROFILE", "production")).strip().lower() or "production"
-
-    def allow_query_api_key_auth(self) -> bool:
-        return self.security_mode() != "enforce"
-
-    def resolve_websocket_api_key(self, header_key: str | None, query_key: str | None) -> str | None:
-        if header_key:
-            return header_key
-        if query_key and self.allow_query_api_key_auth():
-            return query_key
-        return None
-
-    def websocket_query_compat_warning_event(
-        self,
-        query_key_used: bool,
-        *,
-        input_ref: str,
-        timestamp_utc: str,
-    ) -> dict[str, Any] | None:
-        if not query_key_used:
-            return None
-        if self.security_mode() != "compat":
-            return None
-        return {
-            "event_name": "security_compat_fallback_used",
-            "component": "api.websocket_auth",
-            "fallback_code": "API_QUERY_AUTH_COMPAT",
-            "mode": self.security_mode(),
-            "reason": "query_auth_used",
-            "input_ref": input_ref,
-            "timestamp_utc": timestamp_utc,
-        }
-
-    def default_allowed_origins_value(self) -> str:
-        return "http://localhost:5173,http://127.0.0.1:5173"
-
-    def parse_allowed_origins(self, origins_value: str) -> list[str]:
-        return [origin.strip() for origin in origins_value.split(",") if origin.strip()]
-
-    def is_api_key_valid(self, expected_key: str | None, provided_key: str | None) -> bool:
-        if expected_key:
-            candidate = str(provided_key or "")
-            return hmac.compare_digest(candidate, expected_key)
-        if self.security_profile() == "production":
-            return False
-        insecure_bypass = os.getenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "").strip().lower()
-        return insecure_bypass in {"1", "true", "yes", "on"}
-
-    def api_key_invalid_detail(self) -> str:
-        return "Could not validate credentials"
 
     def resolve_asset_id(self, path: str | None, issue_id: str | None) -> str | None:
         if issue_id:
@@ -150,27 +93,6 @@ class DefaultApiRuntimeStrategyNode:
             "sprint_end": (now + timedelta(days=4 - now.weekday())).strftime("%Y-%m-%d"),
         }
 
-    def resolve_current_sprint(self, now: Any) -> str:
-        from orket.utils import get_eos_sprint
-
-        return get_eos_sprint(now)
-
-    def resolve_explorer_path(self, project_root: Any, path: str) -> Any | None:
-        candidate_path = path or "."
-        if any(part == ".." for part in Path(candidate_path).parts):
-            return None
-        rel_path = candidate_path.strip("./") if candidate_path != "." else ""
-        target = (project_root / rel_path).resolve()
-        if not target.is_relative_to(project_root):
-            return None
-        return target
-
-    def resolve_explorer_forbidden_error(self, path: str) -> dict[str, Any]:
-        return {"status_code": 403}
-
-    def resolve_explorer_missing_response(self, path: str) -> dict[str, Any]:
-        return {"items": [], "path": path}
-
     def include_explorer_entry(self, entry_name: str) -> bool:
         if entry_name.startswith("."):
             return False
@@ -228,12 +150,6 @@ class DefaultApiRuntimeStrategyNode:
     def resolve_chat_driver_invocation(self, message: str) -> dict[str, Any]:
         return {"method_name": "process_request", "args": [message]}
 
-    def resolve_member_metrics_workspace(self, project_root: Any, session_id: str) -> Any:
-        workspace = project_root / "workspace" / "runs" / session_id
-        if workspace.exists():
-            return workspace
-        return project_root / "workspace" / "default"
-
     def resolve_sandbox_workspace(self, project_root: Any) -> Any:
         return project_root / "workspace" / "default"
 
@@ -242,16 +158,6 @@ class DefaultApiRuntimeStrategyNode:
 
     def resolve_api_workspace(self, project_root: Any) -> Any:
         return project_root / "workspace" / "default"
-
-    def resolve_system_board(self, department: str) -> Any:
-        from orket.board import get_board_hierarchy
-
-        return get_board_hierarchy(department)
-
-    async def resolve_system_board_async(self, department: str) -> Any:
-        from orket.board import get_board_hierarchy_async
-
-        return await get_board_hierarchy_async(department)
 
     def should_remove_websocket(self, exception: Exception) -> bool:
         return isinstance(exception, (RuntimeError, ValueError))

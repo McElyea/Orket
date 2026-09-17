@@ -171,9 +171,11 @@ def test_kernel_api_pre_effect_policy_reject_returns_abandoned_attempt_and_recov
 
 
 def test_kernel_api_commit_fail_closes_authority_on_execution_promotion_failure(monkeypatch) -> None:
+    """Layer: contract. A promotion failure releases authority after authenticated admission."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
+    client.configure(project_root=client.app.state.api_runtime_context.project_root)
     _execution_repo, record_repo = _install_control_plane(monkeypatch)
 
     async def _raise_promote_failure(**_kwargs):

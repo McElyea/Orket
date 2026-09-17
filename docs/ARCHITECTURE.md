@@ -45,7 +45,7 @@ not accepted as target-architecture conformance.
    1. `orket/interfaces/api.py` imports decision-node registry directly.
    2. `orket/interfaces/coordinator_api.py` and `orket/interfaces/orket_bundle_cli.py` import core/domain types directly.
 2. Decision-node purity exceptions:
-   1. `orket/decision_nodes/api_runtime_strategy_node.py` and `orket/decision_nodes/builtins.py` still include environment/path/provider policy logic, but API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths now live in explicit services.
+   1. `orket/decision_nodes/builtins.py` still includes environment/provider policy logic. API authentication, observed paths, board loading and calendar inputs now belong to application services; API strategy retains request/presentation recommendations. API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths also live in explicit services.
 3. API runtime composition:
    1. `create_api_app()` returns a distinct FastAPI app with an application-owned `ApiRuntimeContainer`, runtime state, host, engine, decision node, outbound-policy snapshot, stream/interaction/extension owners, outward stores/services, and tracked task teardown. Pure ASGI middleware admits each HTTP/WebSocket invocation through the container, retaining ownership through streaming and awaited connectors. Shutdown waits for active invocation cleanup before resources and engine; availability and remaining lifetime limits live in `docs/specs/API_RUNTIME_LIFECYCLE.md`.
    2. `orket/interfaces/api.py` is import-pure with respect to FastAPI/runtime owners: it exports no module-default app or mutable owner aliases and constructs no application, adapter, decision-node, kernel, or orchestration implementation. Production callers use `orket.runtime.create_api_app(...)` and retain the returned app.
@@ -203,6 +203,18 @@ Responsibilities:
 6. observability sequencing
 
 Application services own runtime truth.
+
+Extension scaffolding follows that ownership: application selects the command,
+storage drains materialization and verifies files, and both source and installed
+callers consume package-owned archives. Canonical authoring sources and the
+mechanical archive check are documented in
+`docs/architecture/CONTRACT_DELTA_EXTENSION_SCAFFOLD_PACKAGING_D_2026-09-17.md`.
+
+API authentication uses an application-owned settings snapshot shared by HTTP,
+WebSocket and startup security checks. Explorer/metrics workers and rooted board
+reads are application-owned; pure EOS calculation consumes captured baseline and
+explicit time. Migration and remaining composition/lifetime work:
+`docs/architecture/CONTRACT_DELTA_API_AUTHORITY_INPUTS_CD_2026-09-17.md`.
 
 Governed-agent CLI submission, inspection/replay and operator controls delegate
 to application command services. Submission captures immutable options and owns

@@ -594,3 +594,12 @@ initial failures, proof paths, the 17-file inventory and the user's requested
 goal reassessment. That handoff was followed by the current combined BT-4
 acceptance named above. The whole plan and 35 later numbered obligations remain
 open; no reliable whole-project ETA is established.
+
+The 0.6.9 local checkpoint moves API authentication and observed system queries
+into application authority, captures settings/calendar inputs, and owns filesystem
+workers through interruption. It also repairs installed extension scaffolding using
+verified package-owned templates. The full selected source suite and all four fresh
+installed cells pass 1,751 cases each; eight actual installed llama.cpp cases and
+changed-file Ruff pass. The canonical plan retains original failures, exact file and
+evidence bindings, migration and limits. Whole-plan acceptance, historical clock/resume
+failures and live pipeline completion remain open.

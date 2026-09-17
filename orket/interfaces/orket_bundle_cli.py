@@ -4,7 +4,6 @@ import argparse
 import asyncio
 import json
 import os
-import shutil
 import sys
 import tomllib
 import zipfile
@@ -20,6 +19,7 @@ from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
 from orket.application.review.bundle_validation import ReviewBundleError, load_review_replay_artifacts
 from orket.application.review.models import ReviewSnapshot, SnapshotBounds
 from orket.application.review.run_service import ReviewRunService
+from orket.application.services.extension_scaffold_service import extension_template_kinds, init_external_extension
 from orket.application.services.governed_agent_admission import (
     SUPPORTED_GOVERNED_AGENT_HOST_FEATURES,
 )
@@ -73,8 +73,6 @@ ERROR_SDK_COMMAND_REQUIRED = "E_SDK_COMMAND_REQUIRED"
 ERROR_SDK_MANIFEST_NOT_FOUND = "E_SDK_MANIFEST_NOT_FOUND"
 ERROR_SDK_ENTRYPOINT_INVALID = "E_SDK_ENTRYPOINT_INVALID"
 ERROR_SDK_ENTRYPOINT_MISSING = "E_SDK_ENTRYPOINT_MISSING"
-ERROR_EXT_TEMPLATE_MISSING = "E_EXT_TEMPLATE_MISSING"
-ERROR_EXT_TARGET_EXISTS = "E_EXT_TARGET_EXISTS"
 ERROR_REVIEW_ARGUMENTS = "E_REVIEW_ARGUMENTS"
 ERROR_REVIEW_RUN_FAILED = "E_REVIEW_RUN_FAILED"
 ERROR_RUN_API_FAILED = "E_RUN_API_FAILED"
@@ -579,88 +577,6 @@ def validate_external_extension(target: Path, *, strict: bool = False) -> dict[s
     )
 
 
-_TRANSIENT_TEMPLATE_PARTS = {"node_modules", ".venv", "__pycache__", "dist", "build"}
-_EXTENSION_TEMPLATE_DIRS = {
-    "default": "external_extension",
-    "agent": "governed_agent_external",
-}
-
-
-def _is_transient_template_path(relative: Path) -> bool:
-    return any(
-        part in _TRANSIENT_TEMPLATE_PARTS or part.endswith(".egg-info")
-        for part in relative.parts
-    )
-
-
-def init_external_extension(
-    target: Path,
-    *,
-    force: bool = False,
-    template_kind: str = "default",
-) -> dict[str, Any]:
-    template_dir = _EXTENSION_TEMPLATE_DIRS.get(template_kind)
-    if template_dir is None:
-        raise ValueError(f"E_EXT_TEMPLATE_KIND_UNSUPPORTED: {template_kind}")
-    template_root = (Path(__file__).resolve().parents[2] / "docs" / "templates" / template_dir).resolve()
-    destination = target.resolve()
-    if not template_root.is_dir():
-        return {
-            "ok": False,
-            "operation": "ext.init",
-            "target": str(target),
-            "error_count": 1,
-            "errors": [
-                {
-                    "code": ERROR_EXT_TEMPLATE_MISSING,
-                    "location": "template",
-                    "message": f"Template not found: {template_root}",
-                }
-            ],
-            "exit_code": 2,
-        }
-    if destination.exists() and not force:
-        return {
-            "ok": False,
-            "operation": "ext.init",
-            "target": str(target),
-            "error_count": 1,
-            "errors": [
-                {
-                    "code": ERROR_EXT_TARGET_EXISTS,
-                    "location": "target",
-                    "message": f"Target already exists: {destination}",
-                }
-            ],
-            "exit_code": 2,
-        }
-
-    destination.mkdir(parents=True, exist_ok=True)
-    copied_files = 0
-    for source_path in sorted(template_root.rglob("*"), key=lambda item: item.as_posix()):
-        relative = source_path.relative_to(template_root)
-        if _is_transient_template_path(relative):
-            continue
-        destination_path = destination / relative
-        if source_path.is_dir():
-            destination_path.mkdir(parents=True, exist_ok=True)
-            continue
-        destination_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source_path, destination_path)
-        copied_files += 1
-
-    return {
-        "ok": True,
-        "operation": "ext.init",
-        "target": str(target),
-        "template": str(template_root),
-        "template_kind": template_kind,
-        "copied_file_count": copied_files,
-        "error_count": 0,
-        "errors": [],
-        "exit_code": 0,
-    }
-
 
 def _run_api_base_url() -> str:
     return str(os.getenv("ORKET_API_URL") or "http://127.0.0.1:8082").rstrip("/")
@@ -987,7 +903,7 @@ def _parser() -> argparse.ArgumentParser:
     ext_init.add_argument("target", help="Destination directory for scaffolded extension files.")
     ext_init.add_argument(
         "--kind",
-        choices=sorted(_EXTENSION_TEMPLATE_DIRS),
+        choices=extension_template_kinds(),
         default="default",
         help="Template kind: default application extension or governed agent.",
     )

@@ -9,8 +9,8 @@ def configured_timezone_name() -> str:
     return (os.getenv("ORKET_TIMEZONE") or "UTC").strip()
 
 
-def configured_timezone() -> tzinfo:
-    name = configured_timezone_name()
+def configured_timezone(name: str | None = None) -> tzinfo:
+    name = configured_timezone_name() if name is None else name.strip()
     upper = name.upper()
 
     # Explicit MST handling for teams that want fixed Mountain Standard Time all year.

@@ -66,6 +66,14 @@
 
 ## Canonical Commands
 
+Extension scaffold authoring sources live in `docs/templates/external_extension/`
+and `docs/templates/governed_agent_external/`. After changing them, run
+`python scripts/governance/sync_extension_templates.py --write` followed by
+`python scripts/governance/sync_extension_templates.py --check`; commit the source
+changes and generated archives together. Runtime reads those packaged archives
+only. The compiler normalizes UTF-8 text to LF, preserves binary assets and uses
+fixed ZIP metadata. Both Quality jobs enforce source/archive agreement.
+
 - Install: `python -m pip install --upgrade pip && python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"`
 - Default runtime: `orket runtime`
 - Named card runtime: `orket runtime --card <card_id>`

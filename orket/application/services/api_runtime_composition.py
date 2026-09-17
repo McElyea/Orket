@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from pathlib import Path
 
 from orket.adapters.storage.outward_approval_store import OutwardApprovalStore
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
 from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
+from orket.application.services.api_authentication_service import ApiAuthenticationService
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
+from orket.application.services.api_system_query_service import ApiSystemQueryService
 from orket.application.services.extension_runtime_service import ExtensionRuntimeService
 from orket.application.services.governed_agent_api_composition import (
     build_api_governed_agent_runtime,
@@ -31,10 +34,12 @@ def build_api_runtime_container(
     project_root: Path,
     *,
     runtime_inputs: RuntimeInputService | None = None,
+    environment: Mapping[str, str] | None = None,
 ) -> ApiRuntimeContainer:
     """Build the complete application-owned runtime graph for one API app."""
     root = Path(project_root).resolve()
     runtime_node = DecisionNodeRegistry().resolve_api_runtime()
+    authentication = ApiAuthenticationService(os.environ if environment is None else environment)
     runtime_state = create_runtime_state()
     runtime_host = ApiRuntimeHostService(project_root=root, runtime_inputs=runtime_inputs)
     stream_bus = _build_stream_bus()
@@ -55,6 +60,9 @@ def build_api_runtime_container(
         runtime_state=runtime_state,
         api_runtime_host=runtime_host,
         engine=runtime_host.create_engine(runtime_node.resolve_api_workspace(root)),
+        authentication=authentication,
+        system_queries=ApiSystemQueryService(root, environment=authentication.environment,
+                                            runtime_inputs=runtime_host.runtime_inputs),
         stream_bus=stream_bus,
         interaction_manager=_build_interaction_manager(root, stream_bus, runtime_state),
         extension_manager=extension_manager,

@@ -5,8 +5,8 @@ import logging
 import pytest
 from fastapi.testclient import TestClient
 
-from orket.decision_nodes import api_runtime_strategy_node
-from orket.decision_nodes.api_runtime_strategy_node import DefaultApiRuntimeStrategyNode
+from orket.application.services import api_authentication_service
+from orket.application.services.api_authentication_service import ApiAuthenticationService
 from orket.interfaces.api import create_api_app
 from orket.runtime.cors_config import resolve_cors_config
 from orket.runtime.startup_checks import (
@@ -62,9 +62,8 @@ def test_api_lifespan_rejects_placeholder_secret_in_nonlocal_env(
         monkeypatch.setenv(key, value)
     monkeypatch.setenv("ORKET_API_KEY", "change-me-api-key")
 
-    with pytest.raises(StartupConfigurationError, match="ORKET_API_KEY"):
-        with TestClient(create_api_app(project_root=tmp_path)):
-            pass
+    with pytest.raises(StartupConfigurationError, match="ORKET_API_KEY"), TestClient(create_api_app(project_root=tmp_path)):
+        pass
 
 
 @pytest.mark.unit
@@ -76,9 +75,9 @@ def test_api_key_validation_uses_timing_safe_compare(monkeypatch: pytest.MonkeyP
         calls.append((left, right))
         return left == right
 
-    monkeypatch.setattr(api_runtime_strategy_node.hmac, "compare_digest", _fake_compare)
+    monkeypatch.setattr(api_authentication_service.hmac, "compare_digest", _fake_compare)
 
-    assert DefaultApiRuntimeStrategyNode().is_api_key_valid("expected", "expected") is True
+    assert ApiAuthenticationService({"ORKET_API_KEY": "expected"}).authenticate("expected") is True
     assert calls == [("expected", "expected")]
 
 

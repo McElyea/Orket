@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import sys
 import tempfile
@@ -13,6 +14,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.application.services.api_system_query_service import ApiSystemQueryService  # noqa: E402
+from orket.application.services.runtime_input_service import RuntimeInputService  # noqa: E402
 from orket.decision_nodes.api_runtime_strategy_node import DefaultApiRuntimeStrategyNode  # noqa: E402
 from orket.interfaces import api as api_module  # noqa: E402
 from orket.interfaces.routers.extension_runtime import _raise_extension_runtime_http_error  # noqa: E402
@@ -50,10 +53,16 @@ def _explorer_path_traversal_blocked() -> dict[str, Any]:
     strategy = DefaultApiRuntimeStrategyNode()
     with tempfile.TemporaryDirectory(prefix="ui-lane-boundary-") as tmp_dir:
         project_root = Path(tmp_dir).resolve()
-        resolved = strategy.resolve_explorer_path(project_root, "../../secrets.txt")
+        service = ApiSystemQueryService(project_root, environment={}, runtime_inputs=RuntimeInputService())
+        try:
+            asyncio.run(service.explorer("../../secrets.txt", strategy))
+        except PermissionError:
+            blocked = True
+        else:
+            blocked = False
     return {
         "check": "explorer_path_traversal_blocked",
-        "ok": resolved is None,
+        "ok": blocked,
     }
 
 

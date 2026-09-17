@@ -19,9 +19,9 @@ def ui_lane_security_boundary_test_contract_snapshot() -> dict[str, Any]:
             {
                 "check_id": "explorer_path_traversal_blocked",
                 "surface": (
-                    "orket.decision_nodes.api_runtime_strategy_node.DefaultApiRuntimeStrategyNode.resolve_explorer_path"
+                    "orket.application.services.api_system_query_service.ApiSystemQueryService.explorer"
                 ),
-                "expected_behavior": "path traversal requests are rejected with None target",
+                "expected_behavior": "path traversal raises PermissionError, mapped to HTTP 403 by the API",
             },
             {
                 "check_id": "session_workspace_escape_blocked",

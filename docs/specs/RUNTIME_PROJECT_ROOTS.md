@@ -1,7 +1,7 @@
 # Runtime project roots
 
 Status: Active contract; scoped BT-5 project-root proof accepted
-Last updated: 2026-09-13
+Last updated: 2026-09-17
 Owner: Orket Core
 
 ## Project selection
@@ -36,6 +36,14 @@ Package-owned contracts, schemas, registries and the governed-run demo retain
 their existing packaged-asset authority. They do not become caller-owned defaults
 through this change. Model weights, provider selection and provider fallback
 policy are unchanged.
+
+`orket ext init` likewise reads packaged extension-template archives, independently
+of the caller's directory or a neighboring source checkout. Application scaffold
+authority validates the selected kind and target intent; the storage worker reads,
+contains and verifies materialized files before reporting success. Existing targets
+require `--force`. This is per-file verified publication, not an atomic directory
+transaction or OS fencing against concurrent external editors. Source/archive
+maintenance follows `docs/CONTRIBUTOR.md`.
 
 ## Migration and failure
 

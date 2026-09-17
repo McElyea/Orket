@@ -1,6 +1,6 @@
 # API Runtime Lifecycle
 
-Last updated: 2026-09-14
+Last updated: 2026-09-17
 Status: Active
 
 `orket.application.services.api_runtime_container.ApiRuntimeContainer` owns the
@@ -8,6 +8,18 @@ HTTP/WebSocket ASGI invocation tasks, registered background tasks and resources
 of one API application, followed by its engine. The public factory is
 `orket.runtime.create_api_app(CompositionConfig)`;
 `orket.interfaces.api.lifespan` delegates teardown to that container.
+
+## Captured authority and system observations
+
+Authentication, startup security and CORS share the application's captured settings.
+HTTP and both WebSocket routes delegate to application authentication, not a
+replaceable strategy. Rotation requires constructing a new application. Calendar
+baseline/timezone are captured per app and system timestamps use its runtime clock.
+Board/metrics observations select the app root. Explorer, board and metrics workers
+retain ownership through cancellation and elapsed caller timeout; shutdown waits
+for admitted observations, and worker errors remain failures. This adds no OS
+containment, forced worker termination or shutdown deadline. Migration:
+`docs/architecture/CONTRACT_DELTA_API_AUTHORITY_INPUTS_CD_2026-09-17.md`.
 
 ## Admission and completion
 

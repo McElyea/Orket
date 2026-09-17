@@ -16,7 +16,7 @@ class _FakeTarget:
 @pytest.fixture
 async def active_api_app(tmp_path, fresh_runtime_state):
     """Layer: integration. Owns one explicit API runtime for task lifecycle tests."""
-    created_app = api_module.create_api_app(project_root=tmp_path)
+    created_app = api_module.create_api_app(project_root=tmp_path, environment={"ORKET_API_KEY": "test-key"})
     context = created_app.state.api_runtime_context
     context.runtime_state = fresh_runtime_state
     token = api_module._ACTIVE_API_APP.set(created_app)
@@ -178,4 +178,3 @@ async def test_concurrent_run_active_task_cleanup_stress(monkeypatch, fresh_runt
         hb = await client.get("/v1/system/heartbeat", headers={"X-API-Key": "test-key"})
         assert hb.status_code == 200
         assert hb.json()["active_tasks"] == 0
-

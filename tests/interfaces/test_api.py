@@ -9,6 +9,7 @@ import pytest
 from starlette.websockets import WebSocketDisconnect
 
 import orket.interfaces.api as api_module
+from orket.application.services.api_authentication_service import ApiAuthenticationService
 from orket.schema import CardStatus
 from tests.helpers.card_completion import complete_existing_card
 
@@ -46,7 +47,7 @@ def test_insecure_no_api_key_startup_policy_logs_critical(monkeypatch, caplog):
     monkeypatch.setenv("ORKET_ENV", "local")
 
     with caplog.at_level("CRITICAL", logger=api_module.LOGGER.name):
-        assert api_module._enforce_insecure_no_api_key_startup_policy() is True
+        assert ApiAuthenticationService(os.environ).enforce_insecure_bypass_policy(api_module.LOGGER) is True
 
     assert "orket_insecure_no_api_key_enabled" in caplog.text
 
@@ -57,7 +58,7 @@ def test_insecure_no_api_key_startup_policy_rejects_production(monkeypatch):
     monkeypatch.setenv("ORKET_ENV", "production")
 
     with pytest.raises(RuntimeError, match="forbidden when ORKET_ENV is production or staging"):
-        api_module._enforce_insecure_no_api_key_startup_policy()
+        ApiAuthenticationService(os.environ).enforce_insecure_bypass_policy(api_module.LOGGER)
 
 def test_version_authenticated(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
@@ -66,12 +67,14 @@ def test_version_authenticated(monkeypatch):
     assert "version" in response.json()
 
 
-def test_auth_uses_runtime_invalid_detail(monkeypatch):
+def test_auth_failure_detail_is_application_owned(monkeypatch):
+    """Layer: integration. A strategy cannot replace the application authentication response."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module._get_api_runtime_node(), "api_key_invalid_detail", lambda: "Auth denied by policy")
+    monkeypatch.setattr(api_module._get_api_runtime_node(), "api_key_invalid_detail",
+                        lambda: "Auth denied by policy", raising=False)
     response = client.get("/v1/version", headers={"X-API-Key": "wrong-key"})
     assert response.status_code == 403
-    assert response.json()["detail"] == "Auth denied by policy"
+    assert response.json()["detail"] == "Could not validate credentials"
 
 def test_heartbeat():
     response = client.get("/v1/system/heartbeat")
@@ -162,36 +165,42 @@ def test_explorer_security(monkeypatch):
     assert response.status_code == 403
 
 
-def test_explorer_uses_runtime_forbidden_error_policy(monkeypatch):
+def test_explorer_forbidden_response_is_application_owned(monkeypatch):
+    """Layer: integration. Strategy response recommendations cannot override containment refusal."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module._get_api_runtime_node(), "resolve_explorer_path", lambda project_root, path: None)
+    monkeypatch.setattr(api_module._get_api_runtime_node(), "resolve_explorer_path",
+                        lambda project_root, path: None, raising=False)
     monkeypatch.setattr(
         api_module._get_api_runtime_node(),
         "resolve_explorer_forbidden_error",
         lambda path: {"status_code": 451, "detail": f"Blocked path: {path}"},
+        raising=False,
     )
 
     response = client.get("/v1/system/explorer?path=../../", headers={"X-API-Key": "test-key"})
-    assert response.status_code == 451
-    assert response.json()["detail"] == "Blocked path: ../../"
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Forbidden"
 
 
-def test_explorer_uses_runtime_missing_response_policy(monkeypatch):
+def test_explorer_missing_response_is_based_on_observed_files(monkeypatch):
+    """Layer: integration. Missing filesystem observations retain the canonical response."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(
         api_module._get_api_runtime_node(),
         "resolve_explorer_path",
         lambda project_root, path: project_root / "does-not-exist",
+        raising=False,
     )
     monkeypatch.setattr(
         api_module._get_api_runtime_node(),
         "resolve_explorer_missing_response",
         lambda path: {"items": [], "path": path, "source": "runtime-policy"},
+        raising=False,
     )
 
     response = client.get("/v1/system/explorer?path=does-not-exist", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
-    assert response.json() == {"items": [], "path": "does-not-exist", "source": "runtime-policy"}
+    assert response.json() == {"items": [], "path": "does-not-exist"}
 
 def test_read_security(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
@@ -366,9 +375,10 @@ def test_calendar():
         assert "sprint_start" in data
 
 
-def test_calendar_uses_runtime_current_sprint_policy(monkeypatch):
+def test_calendar_uses_application_calendar(monkeypatch):
+    """Layer: contract. Sprint calculation delegates to the captured application calendar."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module._get_api_runtime_node(), "resolve_current_sprint", lambda now: "QX SY")
+    monkeypatch.setattr(client.app.state.api_runtime_context.system_queries, "current_sprint", lambda now: "QX SY")
     response = client.get("/v1/system/calendar", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
     assert response.json()["current_sprint"] == "QX SY"
@@ -919,18 +929,20 @@ def test_metrics():
 
 
 def test_system_board_uses_dept_query(monkeypatch):
+    """Layer: contract. HTTP department selection reaches the application query service."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     async def fake_board(department):
         return {"department": department}
 
-    monkeypatch.setattr(api_module._get_api_runtime_node(), "resolve_system_board_async", fake_board)
+    monkeypatch.setattr(client.app.state.api_runtime_context.system_queries, "system_board", fake_board)
 
     response = client.get("/v1/system/board?dept=product", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
     assert response.json() == {"department": "product"}
 
 def test_system_board_defaults_to_core(monkeypatch):
+    """Layer: contract. Omitted department selects core in the application query."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
@@ -938,7 +950,7 @@ def test_system_board_defaults_to_core(monkeypatch):
         captured["department"] = department
         return {"department": department}
 
-    monkeypatch.setattr(api_module._get_api_runtime_node(), "resolve_system_board_async", fake_board)
+    monkeypatch.setattr(client.app.state.api_runtime_context.system_queries, "system_board", fake_board)
 
     response = client.get("/v1/system/board", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
@@ -1195,7 +1207,8 @@ def test_run_metrics_uses_runtime_workspace(monkeypatch):
 
     captured = {}
 
-    def fake_workspace(project_root, session_id):
+    async def fake_workspace(session_id):
+        project_root = client.app.state.api_runtime_context.project_root
         captured["workspace_args"] = (project_root, session_id)
         return project_root / "workspace" / "runs" / session_id
 
@@ -1203,7 +1216,7 @@ def test_run_metrics_uses_runtime_workspace(monkeypatch):
         captured["metrics_workspace"] = workspace
         return {"ok": True, "workspace": str(workspace)}
 
-    monkeypatch.setattr(api_module._get_api_runtime_node(), "resolve_member_metrics_workspace", fake_workspace)
+    monkeypatch.setattr(client.app.state.api_runtime_context.system_queries, "member_metrics_workspace", fake_workspace)
     monkeypatch.setattr(api_module._get_api_runtime_host(), "create_member_metrics_reader", lambda: fake_member_metrics)
 
     response = client.get("/v1/runs/SESS42/metrics", headers={"X-API-Key": "test-key"})

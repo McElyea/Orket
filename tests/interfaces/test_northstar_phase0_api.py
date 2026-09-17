@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import pytest
-from fastapi.routing import APIRoute
 
 import orket.interfaces.api as api_module
 
@@ -26,19 +26,21 @@ def test_v1_response_includes_orket_version_header(test_client) -> None:
     assert response.headers["X-Orket-Version"] == api_module.__version__
 
 
-@pytest.mark.contract
+@pytest.mark.integration
 def test_all_registered_v1_routes_require_api_key_dependency(test_client) -> None:
-    """Layer: contract. Verifies registered /v1 routes use the shared X-API-Key dependency."""
-    v1_routes = [
-        route
-        for route in test_client.app.routes
-        if isinstance(route, APIRoute) and str(route.path).startswith("/v1/")
+    """Layer: integration. Every documented v1 operation rejects unauthenticated requests."""
+    operations = [
+        (method, path)
+        for path, item in test_client.app.openapi()["paths"].items()
+        if path.startswith("/v1/")
+        for method in item
+        if method in {"get", "post", "put", "patch", "delete", "head", "options"}
     ]
-
-    assert v1_routes
-    for route in v1_routes:
-        dependency_calls = {dependency.call for dependency in route.dependant.dependencies}
-        assert api_module.get_api_key in dependency_calls, route.path
+    assert operations
+    for method, path in operations:
+        target = re.sub(r"\{[^}]+\}", "unauthenticated", path)
+        response = test_client.request(method, target)
+        assert response.status_code == 403, (method, path, response.status_code, response.text)
 
 
 @pytest.mark.integration

@@ -32,6 +32,7 @@ def build_system_router(
     project_root_getter: Callable[[], Path],
     runtime_state: Any,
     api_runtime_node_getter: Callable[[], Any],
+    system_queries_getter: Callable[[], Any],
     runtime_host_getter: Callable[[], Any],
     now_local: Callable[[], Any],
     get_metrics_snapshot: Callable[[], dict[str, Any]],
@@ -86,20 +87,10 @@ def build_system_router(
     @router.get("/system/explorer")
     async def list_system_files(path: str = ".") -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
-        project_root = project_root_getter()
-        target = api_runtime_node.resolve_explorer_path(project_root, path)
-        if target is None:
-            raise HTTPException(**api_runtime_node.resolve_explorer_forbidden_error(path))
-        if not target.exists():
-            return cast(dict[str, Any], api_runtime_node.resolve_explorer_missing_response(path))
-
-        items: list[dict[str, Any]] = []
-        for entry in target.iterdir():
-            if not api_runtime_node.include_explorer_entry(entry.name):
-                continue
-            is_dir = entry.is_dir()
-            items.append({"name": entry.name, "is_dir": is_dir, "ext": entry.suffix})
-        return {"items": api_runtime_node.sort_explorer_items(items), "path": path}
+        try:
+            return await system_queries_getter().explorer(path, api_runtime_node)
+        except PermissionError as exc:
+            raise HTTPException(status_code=403, detail="Forbidden") from exc
 
     @router.get("/system/read")
     async def read_system_file(path: str) -> dict[str, Any]:
@@ -139,7 +130,7 @@ def build_system_router(
         now = now_local()
         calendar_window = api_runtime_node.calendar_window(now)
         return {
-            "current_sprint": api_runtime_node.resolve_current_sprint(now),
+            "current_sprint": system_queries_getter().current_sprint(now),
             "sprint_start": calendar_window["sprint_start"],
             "sprint_end": calendar_window["sprint_end"],
         }
@@ -243,8 +234,7 @@ def build_system_router(
 
     @router.get("/system/board")
     async def get_system_board(dept: str = "core") -> Any:
-        api_runtime_node = api_runtime_node_getter()
-        return await api_runtime_node.resolve_system_board_async(dept)
+        return await system_queries_getter().system_board(dept)
 
     @router.get("/system/preview-asset")
     async def preview_asset(path: str, issue_id: str | None = None) -> Any:
