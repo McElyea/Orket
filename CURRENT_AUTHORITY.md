@@ -527,7 +527,9 @@ compatibility and wheel-upgrade order are governed by
 `docs/requirements/sdk/VERSIONING.md`; historical bundling hosts do not acquire
 standalone SDK compatibility merely by overlaying a wheel.
 
-Core 0.6.4 is the architectural-truth branch checkpoint paired with SDK 0.7.0a1.
+Core 0.6.5 is the current local architectural-truth candidate checkpoint paired
+with SDK 0.7.0a1. Source/provider proof passes; the installed Linux deadline gate
+remains open. This checkpoint is retained locally without GitHub publication.
 The canonical remediation plan records scoped acceptance and remaining gates;
 this version/tag does not establish whole-lane completion or release readiness.
 Governed-agent CLI coordination now belongs to application command services;
@@ -539,6 +541,13 @@ verified persistence. Protocol workers remain owned through interruption and
 capture nested inputs before awaiting. Migration, ownership-file retention and
 multi-file/hostile-writer limits are recorded in
 `docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`.
+Dual-ledger lifecycle coordination now lives in application services. Bound
+schema-2 journals, verified backend observations and retained admission ownership
+replace parent-directory journals and acknowledgement-only recovery. The governed
+child's dedicated stdin thread reads its raw descriptor so workload failure does
+not hold Python's buffered-input lock during interpreter shutdown. Migration
+and the candidate proof ceiling are recorded in
+`docs/architecture/CONTRACT_DELTA_DUAL_LEDGER_CD_2026-09-17.md`.
 
 Historical core 0.6.2 released the llama.cpp defaults and exact Qwen3.8 promotion with
 SDK 0.6.0 and reference extension 0.2.0. Release verification and operator
@@ -1935,7 +1944,14 @@ Streaming turn state is purged after authoritative commit publication while pres
 
 LPJ-C32 append-only run-ledger framing remains `uint32_be payload_len | payload_bytes | uint32_be crc32c(payload_bytes)` with Castagnoli CRC-32C as specified in `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`; runtime checksum calculation uses the declared `google-crc32c` dependency instead of a local hand-rolled table, and IEEE `binascii.crc32` is intentionally not compatible with existing ledger frames.
 
-Dual-write run-ledger recovery now exposes a one-time `AsyncDualModeLedgerRepository.initialize()` seam guarded by `_recovery_run_once`; primary runtime startup/entry surfaces call that initializer before using the repository, and recovery no longer reruns its pending-intent replay loop on every repository operation.
+Dual-write run-ledger recovery exposes `AsyncDualModeLedgerRepository.initialize()`
+through the application coordinator. Initialization and subsequent invocations
+recheck the bound durable journal under native admission ownership. The former
+`_recovery_run_once` cache is removed: another cooperating owner can publish
+pending work after an instance initializes. Recovery verifies actual backend
+content before clearing intent, and repeated checks do not replay verified effects.
+Migration and remaining proof gates are recorded in
+`docs/architecture/CONTRACT_DELTA_DUAL_LEDGER_CD_2026-09-17.md`.
 
 `ExecutionPipeline` now keeps construction, state-mode helpers, the epic-orchestrator builder, and module entrypoints in `orket/runtime/execution/execution_pipeline.py`; public card dispatch, compatibility wrappers, Gitea loop entry wrapping, resume/collection helpers, run-summary materialization, runtime artifact collection, artifact provenance, and ledger/protocol event helpers live in `orket/runtime/execution/execution_pipeline_card_dispatch.py`, `orket/runtime/execution/execution_pipeline_resume.py`, `orket/runtime/execution/execution_pipeline_run_summary.py`, `orket/runtime/execution/execution_pipeline_runtime_artifacts.py`, `orket/runtime/execution/execution_pipeline_artifact_provenance.py`, and `orket/runtime/execution/execution_pipeline_ledger_events.py`, with flat `orket/runtime/*.py` paths preserved only as compatibility aliases.
 

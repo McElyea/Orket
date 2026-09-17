@@ -1,3 +1,4 @@
+# Layer: integration
 from __future__ import annotations
 
 from pathlib import Path
@@ -5,9 +6,9 @@ from typing import Any
 
 import pytest
 
-from orket.adapters.storage.async_dual_write_run_ledger import AsyncDualModeLedgerRepository
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
+from orket.application.services.dual_write_run_ledger import AsyncDualModeLedgerRepository
 
 
 @pytest.mark.asyncio
@@ -123,6 +124,7 @@ async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_
     dual_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=_FailingProtocolRepository(),
+        protocol_root=tmp_path / "workspace",
         telemetry_sink=lambda payload: telemetry.append(dict(payload)),
     )
 
@@ -133,16 +135,14 @@ async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_
         department="core",
         build_id="build-1",
     )
-    await dual_repo.finalize_run(
-        session_id="sess-error",
-        status="failed",
-        failure_class="ExecutionFailed",
-        failure_reason="forced",
-    )
+    with pytest.raises(RuntimeError, match="E_DUAL_WRITE:PENDING"):
+        await dual_repo.finalize_run(
+            session_id="sess-error", status="failed", failure_class="ExecutionFailed", failure_reason="forced",
+        )
 
     run = await dual_repo.get_run("sess-error")
     assert run is not None
-    assert run["status"] == "failed"
+    assert run["status"] == "running"
     errors = [row for row in telemetry if row.get("kind") == "run_ledger_dual_write_error"]
     assert len(errors) >= 2
     parity_events = [row for row in telemetry if row.get("kind") == "run_ledger_dual_write_parity"]
@@ -193,7 +193,7 @@ async def test_async_dual_write_run_ledger_logs_sink_failures_without_interrupti
     def _broken_sink(_payload: dict[str, Any]) -> None:
         raise RuntimeError("forced telemetry sink failure")
 
-    monkeypatch.setattr("orket.adapters.storage.async_dual_write_run_ledger.log_event", _capture_log)
+    monkeypatch.setattr("orket.application.services.dual_write_telemetry.log_event", _capture_log)
     dual_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
@@ -245,6 +245,7 @@ async def test_async_dual_write_run_ledger_propagates_structural_protocol_miscon
     dual_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=_BrokenProtocolRepository(),
+        protocol_root=tmp_path / "workspace",
     )
 
     with pytest.raises(AttributeError, match="missing method on protocol repo"):
@@ -270,7 +271,7 @@ async def test_async_dual_write_run_ledger_distinguishes_parity_check_crash_from
     async def _boom(**_: Any) -> dict[str, Any]:
         raise RuntimeError("forced parity crash")
 
-    monkeypatch.setattr("orket.adapters.storage.async_dual_write_run_ledger.compare_run_ledger_rows", _boom)
+    monkeypatch.setattr("orket.application.services.dual_write_telemetry.compare_run_ledger_rows", _boom)
     dual_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
@@ -323,6 +324,7 @@ async def test_async_dual_write_run_ledger_recovers_pending_start_intent_before_
     broken_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=_FailingProtocolRepository(),
+        protocol_root=tmp_path / "workspace",
     )
 
     await broken_repo.start_run(
@@ -407,14 +409,14 @@ async def test_async_dual_write_run_ledger_recovers_pending_finalize_intent_befo
 
 
 @pytest.mark.asyncio
-async def test_async_dual_write_run_ledger_initialize_recovers_once_per_repository_instance(
-    monkeypatch: pytest.MonkeyPatch,
+async def test_async_dual_write_run_ledger_rechecks_recovery_without_duplicate_events(
     tmp_path: Path,
 ) -> None:
-    """Layer: integration. Verifies startup recovery is exposed as a one-time initialize step instead of rerunning on every operation."""
+    """Layer: integration. Rechecking durable intent does not replay an acknowledged start."""
     broken_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
         protocol_repo=_FailingProtocolRepository(),
+        protocol_root=tmp_path / "workspace",
     )
     await broken_repo.start_run(
         session_id="sess-init-once",
@@ -428,19 +430,10 @@ async def test_async_dual_write_run_ledger_initialize_recovers_once_per_reposito
         sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
         protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace"),
     )
-    load_count = {"calls": 0}
-    original_load = recovered_repo._load_intents
-
-    async def _counted_load() -> list[dict[str, Any]]:
-        load_count["calls"] += 1
-        return await original_load()
-
-    monkeypatch.setattr(recovered_repo, "_load_intents", _counted_load)
-
     await recovered_repo.initialize()
     await recovered_repo.get_run("sess-init-once")
-
-    assert load_count["calls"] == 1
+    assert [row["kind"] for row in await recovered_repo.list_events("sess-init-once")] == ["run_started"]
+    assert await recovered_repo._load_intents() == []
     recovered_protocol_run = await recovered_repo.protocol_repo.get_run("sess-init-once")
     assert recovered_protocol_run is not None
     assert recovered_protocol_run["session_id"] == "sess-init-once"

@@ -23,6 +23,7 @@ from orket.runtime.run_summary import PACKET1_MISSING_TOKEN
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
 from orket.schema import CardStatus
 from tests.helpers.card_completion import complete_existing_card
+from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -401,15 +402,15 @@ async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monk
 # Layer: integration
 async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_terminal_failure")
-
+    clock = ProtocolLedgerClock()
     pipeline = ExecutionPipeline(
         workspace=workspace,
         department="core",
         db_path=db_path,
         config_root=test_root,
-        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace, timestamp_factory=clock.utc_now_iso),
+        runtime_inputs=clock,
     )
-
     async def _blocked_execute_epic(**_kwargs):
         await pipeline.async_cards.update_status("ISSUE-1", CardStatus.BLOCKED)
         return None
@@ -427,7 +428,6 @@ async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_
 
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _blocked_execute_epic)
     monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
-
     await pipeline.run_epic(
         "ledger_epic_terminal_failure",
         build_id="build-ledger-epic-terminal-failure",

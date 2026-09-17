@@ -163,6 +163,11 @@ nested receipt/event/summary inputs are captured before the first await.
 Migration and scoped limits:
 `docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`.
 
+Dual-ledger lifecycle and recovery authority belong to application services.
+Storage owns bound, verified intent files and native admission; core validates
+intent and observed backend content. Migration and current proof limits:
+`docs/architecture/CONTRACT_DELTA_DUAL_LEDGER_CD_2026-09-17.md`.
+
 Core must not depend on:
 1. application
 2. adapters

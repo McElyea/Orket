@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from orket.adapters.storage.async_dual_write_run_ledger import AsyncDualModeLedgerRepository
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
+from orket.application.services.dual_write_run_ledger import AsyncDualModeLedgerRepository
 from orket.runtime.execution_pipeline import ExecutionPipeline
 
 

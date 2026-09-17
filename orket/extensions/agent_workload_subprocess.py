@@ -5,10 +5,10 @@ import builtins
 import importlib
 import inspect
 import json
+import os
 import queue
 import sys
 import threading
-from io import BufferedReader
 from pathlib import Path
 from typing import cast
 
@@ -36,8 +36,8 @@ class _DaemonStdinReader:
 
     def _pump(self) -> None:
         try:
-            stdin = cast(BufferedReader, sys.stdin.buffer)
-            while chunk := stdin.read1(8192):
+            # A pending daemon read must not hold BufferedReader's shutdown lock.
+            while chunk := os.read(sys.stdin.fileno(), 8192):
                 self._loop.call_soon_threadsafe(self._reader.feed_data, chunk)
         except OSError as exc:
             self._loop.call_soon_threadsafe(_finish_input, self._reader, self._finished, exc)

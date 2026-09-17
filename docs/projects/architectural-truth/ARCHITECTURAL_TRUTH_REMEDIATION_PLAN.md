@@ -11667,6 +11667,129 @@ remaining E1/E2 work, not green quality evidence. The protocol repository shrink
 to 705 lines but remains oversized. Full C/D, E1/E2, CAP-1/2/3, fresh full-suite,
 hosted CI, release readiness and explicit whole-lane acceptance remain open.
 
+### Dual-ledger application authority and recovery candidate (2026-09-17)
+
+The preceding protocol checkpoint is retained locally at commit
+`d338d48c4505431feca1824792ec347668e3f70f`, annotated tag `v0.6.4`.
+Its current reentry snapshot is `.tmp/c-protocol-ledger/final/local-checkpoint.json`
+(SHA-256 `16fe68cc2bb2fee5322110463a628a9ec235297045675a0134cce6796351d06e`).
+The snapshot and retained evidence were verified before this candidate changed
+source. Nothing from that sealed proof is rewritten or relabeled as this candidate.
+
+Read-only review of the remaining adapter-to-runtime parity dependency exposed
+dual-ledger recovery defects. Ten real-filesystem/SQLite/protocol counterexamples
+fail against the committed implementation: empty or invalid journals disappear,
+databases share a parent journal, acknowledgement bits and row existence hide
+content drift, conflicting starts overwrite SQLite, nested caller inputs change
+after admission, and cancellation abandons the lifecycle. Original tests, runtime
+source, JUnit and log are retained in `.tmp/c-dual-ledger/before.json` and its
+hashed evidence. No mocked successful write is used as proof of durable effects.
+
+The candidate moves lifecycle/recovery authority into application services and
+separates pure intent validation from a bound storage journal. Every invocation
+rechecks durable pending state under cooperating native ownership of both the
+database journal and protocol root. Backend content must match before recovery
+clears intent; conflicting content and success-shaped returns without effect
+refuse. Nested inputs and admitted task lifetime remain owned through interruption.
+Migration, explicit degraded behavior, legacy refusal and claim limits are in
+`docs/architecture/CONTRACT_DELTA_DUAL_LEDGER_CD_2026-09-17.md`.
+
+Observed path: **primary**; result: **partial success; installed gate open**.
+The corrected source Windows 3.11 gate passes 1,193 selected cases from 141 modules
+in 306.88 seconds. Its fresh private environment installs the corrected candidate
+so sanitized subprocesses use that same wheel while their parent runs source.
+Changed-file Ruff and unchanged-input binding pass. All 997 core Python files and
+1,010 package files match the wheel built from its sdist. The corrected wheel is
+`3cadea5b6917374fed14387cfbaf3852066ca62c9810f9d7766d4017611e4eba`;
+sdist `bc33db9a0759a37c06674cc86f19dfd77e90ca410aeb7216462c1fd315715859`.
+Eight fresh actual installed llama.cpp cases pass on this corrected wheel with
+observed teardown; the operator's llama.cpp service remains running.
+
+Four corrected native envelopes check installed origins, unchanged support,
+real valid/malformed public CLI paths, strict ToolGate audit and process cleanup:
+
+| Envelope | Pass / fail / error / skip | Seconds |
+|---|---:|---:|
+| Installed Windows 3.11 | 1,185 / 0 / 0 / 8 | 335.512 |
+| Installed Windows 3.12 | 1,185 / 0 / 0 / 8 | 354.090 |
+| Installed Linux 3.11 | 1,184 / 1 / 0 / 8 | 486.167 |
+| Installed Linux 3.12 | 1,184 / 1 / 1 / 8 | 473.403 |
+
+The eight skipped script cases were an invocation error: the native commands
+omitted `ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1`. A fresh eight-case supplement now
+passes on every OS/Python cell with that flag, identical package/support bytes,
+real CLI checks and retained native teardown. Source proof for those eight cases
+is explicitly reused from the successful 1,193-case run; provider proof is reused
+from the identical corrected wheel. This is not a new complete native rerun.
+The resulting Windows unions cover all 1,193 unique cases. Linux retains one
+unresolved normal approval/resume case per cell; Python 3.12 also records its
+teardown assertion because only the first of two expected children was reached.
+All observed children nevertheless stopped, as checked by the independent driver.
+
+Retained SQLite state records `E_SDK_AGENT_FRAME_READ_TIMEOUT`: Linux 3.11's
+second invocation and Linux 3.12's first invocation became recovery pending.
+Their exact JUnit case times are 9.711 and 8.260 seconds. A separate installed
+Linux 3.11 normal-case probe passes, and an instrumented six-case Linux 3.12
+module rerun passes normal resume, delayed startup, handshake expiry and explicit
+UTC-jump controls. Six further instrumented normal-case repetitions pass on each
+Linux Python version. Those passing reruns do not establish the original cause or
+close this failure. The retained host journal contains clock-change events, but
+these fixtures already use elapsed monotonic inputs; correlation does not prove
+causation. Do not widen the eight-second request budget or relabel this as an
+explained environment failure. Investigate the retained deadline/stdio paths
+before accepting the installed candidate.
+
+Current disposition: `.tmp/c-dual-ledger/current-disposition.json`, SHA-256
+`1466b431a21b450886add67fc4c894c1c4cf8dbef870aad82c9a34a2ed5be176`.
+Full native/source/provider evidence is under `corrected/`; the eight-case
+supplement is under `scripts/`. Actual native report files retain physical
+fixtures, logs, JUnit, imported origins and hashes. Every proof process returned
+and its execution session was reaped. Proof includes real filesystem, SQLite,
+subprocess, CLI and provider behavior plus structural contracts, not full-suite,
+hosted CI or whole-lane acceptance.
+
+Initial candidate evidence remains sealed at `initial-candidate.json` in that
+proof root (SHA-256 `fc2a3e8903f959ba578d5e23b8275e2afdc88424ab39b4284c121c08efc54207`).
+Its four installed cells failed the new worker tests because foreign-cwd workers
+could not import copied test support. They now load that support explicitly and
+check that child and parent select the same core origin. Its Linux 3.11 summary
+retained `run_summary_duration_negative`; that positive fixture now supplies one
+explicit clock to ledger and pipeline, preserving negative-clock refusals.
+An initial Windows crashing-child timeout prompted eight diagnostic probes;
+all separately exposed fatal buffered-stdin shutdown lock aborts. A new regression
+fails on the original installed wheel. The corrected child reads its raw input
+descriptor on the existing dedicated thread, and the regression requires exit 1,
+retained workload diagnostics and no fatal interpreter abort. This crash/teardown
+case passes in source and all four corrected installed cells. The original Windows
+timeout lacked retained child stderr, so its exact attribution remains unproven.
+The first source crash follow-up still launched an older installed child through
+its sanitized environment and failed; those logs remain, and the corrected source
+gate explicitly binds a fresh child environment instead.
+
+The ten original recovery counterexamples were also independently reproduced on
+installed 0.6.4, retaining physical files/SQLite under `before-retained-fixtures/`.
+`before-retained-validation.json` verifies original runtime/test bytes and case
+identities. This is a separate reproduction, not a claim that the first run's
+default temporary directories were preserved. Earlier 55/31/4-case source reports
+bind intermediate implementations only. No failed envelope is overwritten.
+
+The regenerated graph now has 997 modules, 57 forbidden pairs, one cross-layer
+cycle and ten unresolved analysis errors; collection succeeds, conformance fails.
+Removing the dual-ledger adapter-to-application edge does not close C or prove
+whole-core purity. D's remaining inputs/async inventory, strict legacy migration,
+quality/capability gates, fresh full-suite, hosted CI and whole-lane acceptance
+remain open. Core `0.6.5` is retained as a local candidate checkpoint; its installed
+gate is not accepted. Work-hours
+commits/tags remain local; no GitHub push is authorized during 10 AM-6 PM Denver.
+
+Remaining authority drift found during this review: the `dual_write` settings
+label in `orket/application/services/runtime_policy.py` claims protocol primary,
+while `orket/runtime/config/runtime_context.py` defaults to SQLite primary and
+no caller overrides that default. The constructor's existing default is retained
+in this candidate. `.tmp/c-dual-ledger/observed-authority-drift.json` binds the
+observation to source hashes. This display/authority disagreement remains C/D
+work; it is not accepted as accurate operator guidance.
+
 ## E1/E2 — Reliable quality gates and maintainable authority
 
 Retains Workstreams 6, 7 and 8 and previous Slice E obligations.
@@ -11892,7 +12015,7 @@ requested a versioned GitHub checkpoint and continued commits on the existing
 branch; its proof and publication disposition are recorded in the C/D checkpoint.
 The later user instruction restricts 10 AM-6 PM America/Denver work hours to
 local commits only. Retain commits and matching annotated tags locally during
-that window; do not push to GitHub. The 0.6.4 protocol checkpoint follows this
+that window; do not push to GitHub. The 0.6.4 and 0.6.5 local checkpoints follow this
 restriction; remote publication remains deferred.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
@@ -11931,11 +12054,12 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: execute C/D from their numbered requirements and retained dependency
-counterexamples. Scoped BT-5 acceptance is recorded in the five-requirement
+Next action: investigate the retained Linux approval/resume deadline failures in
+the dual-ledger candidate before accepting its installed gate; then continue C/D
+from their numbered requirements and retained dependency counterexamples. Scoped BT-5 acceptance is recorded in the five-requirement
 disposition above; preserve its exact artifacts, original failures and family
 ceilings. C now has one allowed-edge policy, complete classification and exact
-exception enforcement; its current repository verdict is red. Repair its 58
+exception enforcement; its current repository verdict is red. Repair its 57
 forbidden pairs, cross-layer cycle and 10 unresolved import/reflection sites,
 retaining adversarial positive and negative proof. D owns remaining clock/core/async work. Thirty later numbered obligations,
 full-suite/hosted quality proof and whole-lane user acceptance remain active.

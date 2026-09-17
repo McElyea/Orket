@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-17T06:09:26.663161+00:00",
+  "generated_at": "2026-09-17T17:28:13.530674+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -231,10 +231,6 @@
         "path": "orket/adapters/storage/async_control_plane_record_repository.py",
         "sha256": "52b5b21923944f5c51b326f06dd621d44e0a4bbdf3759090b02232c8a1e367e8"
       },
-      "orket.adapters.storage.async_dual_write_run_ledger": {
-        "path": "orket/adapters/storage/async_dual_write_run_ledger.py",
-        "sha256": "5f3d6848aae52df3610211d3fa353c8a4b9000169eab295b7c29b3cc7ee9a3bb"
-      },
       "orket.adapters.storage.async_executor_service": {
         "path": "orket/adapters/storage/async_executor_service.py",
         "sha256": "3e6c42efcfd4f5ed5616d413a63720f8fe8809a7bac87a38ed94914625846549"
@@ -355,6 +351,10 @@
         "path": "orket/adapters/storage/control_plane_transaction.py",
         "sha256": "2288e2b11c5c66439296884bcd6b06865db749f03d59ccd5524e17638add1a7f"
       },
+      "orket.adapters.storage.dual_write_intent_store": {
+        "path": "orket/adapters/storage/dual_write_intent_store.py",
+        "sha256": "8c86bf6947224190363efde8c85a4a39ee792b64753a99798d41948533f5a3f7"
+      },
       "orket.adapters.storage.epic_approval_pause_store": {
         "path": "orket/adapters/storage/epic_approval_pause_store.py",
         "sha256": "599cb0948fbcc61ef5aecec26a61c5036928283e5d8ba7041e19d7f2dc589b70"
@@ -421,7 +421,7 @@
       },
       "orket.adapters.storage.operation_commit_registry": {
         "path": "orket/adapters/storage/operation_commit_registry.py",
-        "sha256": "f585a7d48213c80f58da633bd00e6bcd5cd1600edfccd07b15f37cc036909b39"
+        "sha256": "b5f96056523a430847b314e5d5b010605d955a55ad2b098c107850c513517f53"
       },
       "orket.adapters.storage.outward_approval_migrations": {
         "path": "orket/adapters/storage/outward_approval_migrations.py",
@@ -518,6 +518,10 @@
       "orket.adapters.storage.structural_board_store": {
         "path": "orket/adapters/storage/structural_board_store.py",
         "sha256": "cd8732c2b1d0882243d095729bf4ef10dbb76ed4dc25ffadabdccae179477c81"
+      },
+      "orket.adapters.storage.verified_file": {
+        "path": "orket/adapters/storage/verified_file.py",
+        "sha256": "fe4d60d08bd35d3682a1c20386ed5701da25abc99ac8d98dea25e069d2547b6e"
       },
       "orket.adapters.tools.__init__": {
         "path": "orket/adapters/tools/__init__.py",
@@ -822,6 +826,14 @@
       "orket.application.services.deployment_planner": {
         "path": "orket/application/services/deployment_planner.py",
         "sha256": "0fb63dcaa3b0c8bad37186a7d82eca66f749b5171ed381776383a966d71b9af4"
+      },
+      "orket.application.services.dual_write_run_ledger": {
+        "path": "orket/application/services/dual_write_run_ledger.py",
+        "sha256": "315000249109d932a361a5a971e0bdb04d756df4976c7a9382d2a9dfcc84c1cf"
+      },
+      "orket.application.services.dual_write_telemetry": {
+        "path": "orket/application/services/dual_write_telemetry.py",
+        "sha256": "9924d2608ca6f65200e5e47a205e61b880d7979e8ec637e4baba0f43ecc98e0e"
       },
       "orket.application.services.epic_admission_service": {
         "path": "orket/application/services/epic_admission_service.py",
@@ -1835,6 +1847,10 @@
         "path": "orket/core/contracts/control_plane_transaction.py",
         "sha256": "7fc1b0be98e7ac21508ad7df3a37f788075e3675e31811aad6d8b4d4aa37a781"
       },
+      "orket.core.contracts.dual_write_intent": {
+        "path": "orket/core/contracts/dual_write_intent.py",
+        "sha256": "ccb59f02395292de01e31af580f4a36766d8bb866ff61d6faedfa638457c7c61"
+      },
       "orket.core.contracts.epic_approval_pause": {
         "path": "orket/core/contracts/epic_approval_pause.py",
         "sha256": "01cfd25b6428f9715cbb760ba5a96f7b7a85fd66f6daf6d0b612ef154b13c6bc"
@@ -1909,7 +1925,7 @@
       },
       "orket.core.contracts.protocol_error_codes": {
         "path": "orket/core/contracts/protocol_error_codes.py",
-        "sha256": "944e51c5e46fdd2e2b3ba1a43d844ce2f3ff21984f18640ad14404523bbb272b"
+        "sha256": "5b61edb0eb1babc3b3377145c7d322c2c940aea9cec7ae676dead34b66bc5318"
       },
       "orket.core.contracts.protocol_hashing": {
         "path": "orket/core/contracts/protocol_hashing.py",
@@ -2225,7 +2241,7 @@
       },
       "orket.extensions.agent_workload_subprocess": {
         "path": "orket/extensions/agent_workload_subprocess.py",
-        "sha256": "4b29f46e8f809653d08943e2c35e70220f9438a086223ec6e7c961ae0ab6be30"
+        "sha256": "e704ef9d0df2816a3ad16fb41736da23914cd76b13aee824850e9c179b553c97"
       },
       "orket.extensions.artifact_provenance": {
         "path": "orket/extensions/artifact_provenance.py",
@@ -3197,7 +3213,7 @@
       },
       "orket.runtime.evidence.run_ledger_factory": {
         "path": "orket/runtime/evidence/run_ledger_factory.py",
-        "sha256": "376347edda0be0ef43a99d193b847dca7cc61db8071622a4928769e16f204644"
+        "sha256": "3b3109f7db7e84142830669c22afe4e9c623ab90fa082349899486b7eecbf3a6"
       },
       "orket.runtime.evidence.run_ledger_parity": {
         "path": "orket/runtime/evidence/run_ledger_parity.py",
@@ -4511,20 +4527,6 @@
         "kind": "from"
       },
       {
-        "source": "orket.adapters.storage.async_dual_write_run_ledger",
-        "target": "orket.logging",
-        "path": "orket/adapters/storage/async_dual_write_run_ledger.py",
-        "line": 13,
-        "kind": "from"
-      },
-      {
-        "source": "orket.adapters.storage.async_dual_write_run_ledger",
-        "target": "orket.runtime.run_ledger_parity",
-        "path": "orket/adapters/storage/async_dual_write_run_ledger.py",
-        "line": 14,
-        "kind": "from"
-      },
-      {
         "source": "orket.adapters.storage.async_file_tools",
         "target": "orket.adapters.storage.async_executor_service",
         "path": "orket/adapters/storage/async_file_tools.py",
@@ -4987,6 +4989,48 @@
         "kind": "from"
       },
       {
+        "source": "orket.adapters.storage.dual_write_intent_store",
+        "target": "orket.adapters.storage.local_file_lock",
+        "path": "orket/adapters/storage/dual_write_intent_store.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.dual_write_intent_store",
+        "target": "orket.adapters.storage.protocol_ledger_io",
+        "path": "orket/adapters/storage/dual_write_intent_store.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.dual_write_intent_store",
+        "target": "orket.adapters.storage.verified_file",
+        "path": "orket/adapters/storage/dual_write_intent_store.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.dual_write_intent_store",
+        "target": "orket.core.contracts.dual_write_intent",
+        "path": "orket/adapters/storage/dual_write_intent_store.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.dual_write_intent_store",
+        "target": "orket.core.contracts.local_file_lock",
+        "path": "orket/adapters/storage/dual_write_intent_store.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.dual_write_intent_store",
+        "target": "orket.core.contracts.protocol_error_codes",
+        "path": "orket/adapters/storage/dual_write_intent_store.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
         "source": "orket.adapters.storage.epic_approval_pause_store",
         "target": "orket.core.contracts.epic_approval_pause",
         "path": "orket/adapters/storage/epic_approval_pause_store.py",
@@ -5270,28 +5314,35 @@
         "source": "orket.adapters.storage.operation_commit_registry",
         "target": "orket.adapters.storage.local_file_lock",
         "path": "orket/adapters/storage/operation_commit_registry.py",
-        "line": 12,
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.operation_commit_registry",
+        "target": "orket.adapters.storage.verified_file",
+        "path": "orket/adapters/storage/operation_commit_registry.py",
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.operation_commit_registry",
         "target": "orket.core.contracts.local_file_lock",
         "path": "orket/adapters/storage/operation_commit_registry.py",
-        "line": 13,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.operation_commit_registry",
         "target": "orket.core.contracts.protocol_error_codes",
         "path": "orket/adapters/storage/operation_commit_registry.py",
-        "line": 14,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.operation_commit_registry",
         "target": "orket.core.contracts.protocol_hashing",
         "path": "orket/adapters/storage/operation_commit_registry.py",
-        "line": 15,
+        "line": 14,
         "kind": "from"
       },
       {
@@ -7825,6 +7876,69 @@
         "source": "orket.application.services.coordinator_store",
         "target": "orket.core.domain.coordinator_card",
         "path": "orket/application/services/coordinator_store.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.dual_write_run_ledger",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/dual_write_run_ledger.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.dual_write_run_ledger",
+        "target": "orket.adapters.storage.dual_write_intent_store",
+        "path": "orket/application/services/dual_write_run_ledger.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.dual_write_run_ledger",
+        "target": "orket.adapters.storage.protocol_ledger_io",
+        "path": "orket/application/services/dual_write_run_ledger.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.dual_write_run_ledger",
+        "target": "orket.application.services.dual_write_telemetry",
+        "path": "orket/application/services/dual_write_run_ledger.py",
+        "line": 13,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.dual_write_run_ledger",
+        "target": "orket.core.contracts.dual_write_intent",
+        "path": "orket/application/services/dual_write_run_ledger.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.dual_write_run_ledger",
+        "target": "orket.core.contracts.result_error_invariants",
+        "path": "orket/application/services/dual_write_run_ledger.py",
+        "line": 20,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.dual_write_telemetry",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/dual_write_telemetry.py",
+        "line": 5,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.dual_write_telemetry",
+        "target": "orket.logging",
+        "path": "orket/application/services/dual_write_telemetry.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.dual_write_telemetry",
+        "target": "orket.runtime.run_ledger_parity",
+        "path": "orket/application/services/dual_write_telemetry.py",
         "line": 7,
         "kind": "from"
       },
@@ -16887,6 +17001,20 @@
         "kind": "from"
       },
       {
+        "source": "orket.core.contracts.dual_write_intent",
+        "target": "orket.core.contracts.protocol_error_codes",
+        "path": "orket/core/contracts/dual_write_intent.py",
+        "line": 4,
+        "kind": "from"
+      },
+      {
+        "source": "orket.core.contracts.dual_write_intent",
+        "target": "orket.core.contracts.result_error_invariants",
+        "path": "orket/core/contracts/dual_write_intent.py",
+        "line": 5,
+        "kind": "from"
+      },
+      {
         "source": "orket.core.contracts.epic_approval_pause",
         "target": "orket.core.contracts.epic_publication",
         "path": "orket/core/contracts/epic_approval_pause.py",
@@ -22103,23 +22231,23 @@
       },
       {
         "source": "orket.runtime.evidence.run_ledger_factory",
-        "target": "orket.adapters.storage.async_dual_write_run_ledger",
+        "target": "orket.adapters.storage.async_protocol_run_ledger",
         "path": "orket/runtime/evidence/run_ledger_factory.py",
         "line": 6,
         "kind": "from"
       },
       {
         "source": "orket.runtime.evidence.run_ledger_factory",
-        "target": "orket.adapters.storage.async_protocol_run_ledger",
+        "target": "orket.adapters.storage.async_repositories",
         "path": "orket/runtime/evidence/run_ledger_factory.py",
-        "line": 10,
+        "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.runtime.evidence.run_ledger_factory",
-        "target": "orket.adapters.storage.async_repositories",
+        "target": "orket.application.services.dual_write_run_ledger",
         "path": "orket/runtime/evidence/run_ledger_factory.py",
-        "line": 11,
+        "line": 8,
         "kind": "from"
       },
       {
@@ -26235,7 +26363,7 @@
         "code": "unresolved_reflection"
       }
     ],
-    "files_scanned": 993,
+    "files_scanned": 997,
     "scan_roots": [
       "orket"
     ],
@@ -26268,7 +26396,6 @@
       "orket.adapters.storage.async_card_repository": "adapters",
       "orket.adapters.storage.async_control_plane_execution_repository": "adapters",
       "orket.adapters.storage.async_control_plane_record_repository": "adapters",
-      "orket.adapters.storage.async_dual_write_run_ledger": "adapters",
       "orket.adapters.storage.async_executor_service": "adapters",
       "orket.adapters.storage.async_file_tools": "adapters",
       "orket.adapters.storage.async_flow_repository": "adapters",
@@ -26299,6 +26426,7 @@
       "orket.adapters.storage.control_plane_operator_action_support": "adapters",
       "orket.adapters.storage.control_plane_recovery_store": "adapters",
       "orket.adapters.storage.control_plane_transaction": "adapters",
+      "orket.adapters.storage.dual_write_intent_store": "adapters",
       "orket.adapters.storage.epic_approval_pause_store": "adapters",
       "orket.adapters.storage.epic_continuation_lock": "adapters",
       "orket.adapters.storage.epic_export_dispatch_store": "adapters",
@@ -26340,6 +26468,7 @@
       "orket.adapters.storage.sqlite_connection": "adapters",
       "orket.adapters.storage.sqlite_migrations": "adapters",
       "orket.adapters.storage.structural_board_store": "adapters",
+      "orket.adapters.storage.verified_file": "adapters",
       "orket.adapters.tools.__init__": "adapters",
       "orket.adapters.tools.builtin_connectors": "adapters",
       "orket.adapters.tools.default_strategy": "adapters",
@@ -26416,6 +26545,8 @@
       "orket.application.services.coordinator_store": "application",
       "orket.application.services.dependency_manager": "application",
       "orket.application.services.deployment_planner": "application",
+      "orket.application.services.dual_write_run_ledger": "application",
+      "orket.application.services.dual_write_telemetry": "application",
       "orket.application.services.epic_admission_service": "application",
       "orket.application.services.epic_approval_pause_service": "application",
       "orket.application.services.epic_approval_recovery_service": "application",
@@ -26669,6 +26800,7 @@
       "orket.core.contracts.control_plane_effect_journal_models": "core",
       "orket.core.contracts.control_plane_models": "core",
       "orket.core.contracts.control_plane_transaction": "core",
+      "orket.core.contracts.dual_write_intent": "core",
       "orket.core.contracts.epic_approval_pause": "core",
       "orket.core.contracts.epic_approval_recovery": "core",
       "orket.core.contracts.epic_export_recovery": "core",
@@ -27241,17 +27373,17 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 234
+        "count": 237
       },
       {
         "source": "adapters",
         "target": "application",
-        "count": 23
+        "count": 22
       },
       {
         "source": "adapters",
         "target": "core",
-        "count": 131
+        "count": 134
       },
       {
         "source": "adapters",
@@ -27261,17 +27393,17 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 296
+        "count": 300
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1510
+        "count": 1513
       },
       {
         "source": "application",
         "target": "core",
-        "count": 663
+        "count": 665
       },
       {
         "source": "application",
@@ -27286,7 +27418,7 @@
       {
         "source": "core",
         "target": "core",
-        "count": 134
+        "count": 136
       },
       {
         "source": "decision_nodes",
@@ -27385,17 +27517,6 @@
           {
             "path": "orket/adapters/llm/local_prompting_policy.py",
             "line": 27,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.adapters.storage.async_dual_write_run_ledger",
-        "target": "orket.runtime.run_ledger_parity",
-        "sites": [
-          {
-            "path": "orket/adapters/storage/async_dual_write_run_ledger.py",
-            "line": 14,
             "kind": "from"
           }
         ]
@@ -27985,13 +28106,14 @@
           "orket.adapters.llm.local_model_provider",
           "orket.adapters.llm.local_model_provider_runtime_target",
           "orket.adapters.llm.local_prompting_policy",
-          "orket.adapters.storage.async_dual_write_run_ledger",
           "orket.adapters.storage.async_protocol_run_ledger",
           "orket.adapters.vcs.gitea_webhook_handler",
           "orket.adapters.vcs.gitea_webhook_handlers",
           "orket.agents.agent",
           "orket.application.services.api_runtime_composition",
           "orket.application.services.api_runtime_host_service",
+          "orket.application.services.dual_write_run_ledger",
+          "orket.application.services.dual_write_telemetry",
           "orket.application.services.epic_approval_pause_service",
           "orket.application.services.extension_runtime_service",
           "orket.application.services.extension_runtime_support",
@@ -28584,6 +28706,126 @@
           "$.observed.edges[173].target",
           "$.observed.edges[174].line",
           "$.observed.edges[174].path"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T16:52:44.707398Z",
+      "changed": true,
+      "before_digest": "sha256:d3d327ff6adcc552db553de921c9dfcd2c435620c8168adc5de029b38ba8f766",
+      "after_digest": "sha256:5607dc861315ca9776ae98dc45983ee346a191f8c0c697276abfaf880009661d",
+      "diff": {
+        "added_paths": 27,
+        "removed_paths": 4,
+        "changed_paths": 12015,
+        "initial_write": false,
+        "paths_total_previous": 43363,
+        "paths_total_current": 43545,
+        "paths_total_reference": 43545,
+        "churn_paths": 12046,
+        "churn_ratio": 0.276633,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[59].line",
+          "$.observed.edges[59].path",
+          "$.observed.edges[59].source",
+          "$.observed.edges[59].target",
+          "$.observed.edges[60].line",
+          "$.observed.edges[60].path",
+          "$.observed.edges[60].source",
+          "$.observed.edges[60].target",
+          "$.observed.edges[61].line",
+          "$.observed.edges[61].path",
+          "$.observed.edges[61].source",
+          "$.observed.edges[61].target",
+          "$.observed.edges[62].line",
+          "$.observed.edges[62].path",
+          "$.observed.edges[62].source",
+          "$.observed.edges[62].target",
+          "$.observed.edges[63].line",
+          "$.observed.edges[63].target",
+          "$.observed.edges[64].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T16:56:49.353810Z",
+      "changed": true,
+      "before_digest": "sha256:5607dc861315ca9776ae98dc45983ee346a191f8c0c697276abfaf880009661d",
+      "after_digest": "sha256:f77aa85d343d0570e8ce848b7d32538665cc971d92527ccf3ec5078bf4d0317e",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 43545,
+        "paths_total_current": 43545,
+        "paths_total_reference": 43545,
+        "churn_paths": 2,
+        "churn_ratio": 4.6e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.modules.orket.application.services.dual_write_telemetry.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T16:58:44.970018Z",
+      "changed": true,
+      "before_digest": "sha256:f77aa85d343d0570e8ce848b7d32538665cc971d92527ccf3ec5078bf4d0317e",
+      "after_digest": "sha256:350534f1403129f1a93d9ebe5d7e5257bbb90165179690a4b4b29ca742b0375f",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 6355,
+        "initial_write": false,
+        "paths_total_previous": 43545,
+        "paths_total_current": 43556,
+        "paths_total_reference": 43556,
+        "churn_paths": 6356,
+        "churn_ratio": 0.145927,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[538].line",
+          "$.observed.edges[539].line",
+          "$.observed.edges[540].line",
+          "$.observed.edges[540].target",
+          "$.observed.edges[541].line",
+          "$.observed.edges[541].target",
+          "$.observed.edges[542].line",
+          "$.observed.edges[542].target",
+          "$.observed.edges[543].line",
+          "$.observed.edges[543].path",
+          "$.observed.edges[543].source",
+          "$.observed.edges[543].target",
+          "$.observed.edges[544].line",
+          "$.observed.edges[544].target",
+          "$.observed.edges[545].line",
+          "$.observed.edges[545].target",
+          "$.observed.edges[546].line",
+          "$.observed.edges[546].path",
+          "$.observed.edges[546].source"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T17:28:20.355050Z",
+      "changed": true,
+      "before_digest": "sha256:350534f1403129f1a93d9ebe5d7e5257bbb90165179690a4b4b29ca742b0375f",
+      "after_digest": "sha256:e1288527279631527a3d12db43aa0c7f2bae4113c3a0d5a5e44a41b274d4b795",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 43556,
+        "paths_total_current": 43556,
+        "paths_total_reference": 43556,
+        "churn_paths": 2,
+        "churn_ratio": 4.6e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.modules.orket.extensions.agent_workload_subprocess.sha256"
         ]
       }
     }

@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import json
-import os
-import tempfile
 import threading
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
 from orket.adapters.storage.local_file_lock import NativeFileLocks
+from orket.adapters.storage.verified_file import write_verified_bytes
 from orket.core.contracts.local_file_lock import LocalFileLockError
 from orket.core.contracts.protocol_error_codes import E_OPERATION_REGISTRY_PREFIX, format_protocol_error
 from orket.core.contracts.protocol_hashing import canonical_json
@@ -106,16 +105,5 @@ class OperationCommitRegistry:
         if self.path is None:
             return
         rendered = (canonical_json({"entries": self._ordered(entries)}) + "\n").encode("utf-8")
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        descriptor, name = tempfile.mkstemp(prefix=f".{self.path.name}.", suffix=".tmp", dir=self.path.parent)
-        temporary = Path(name)
-        try:
-            with os.fdopen(descriptor, "wb") as handle:
-                handle.write(rendered)
-                handle.flush()
-                os.fsync(handle.fileno())
-            temporary.replace(self.path)
-            if self.path.read_bytes() != rendered:
-                raise OSError(format_protocol_error(E_OPERATION_REGISTRY_PREFIX, "write_unverified"))
-        finally:
-            temporary.unlink(missing_ok=True)
+        write_verified_bytes(self.path, rendered,
+                             error_code=format_protocol_error(E_OPERATION_REGISTRY_PREFIX, "write_unverified"))

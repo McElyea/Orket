@@ -55,7 +55,7 @@ Core 0.6.3 is the user-requested accumulated GitHub branch checkpoint, with
 subsequent verified checkpoints committed to `codex/architectural-truth-bt0`.
 This preserves the full goal and its remaining acceptance gates.
 
-The 0.6.4 candidate moves pure protocol contracts into core and first-operation
+The locally committed 0.6.4 checkpoint moves pure protocol contracts into core and first-operation
 commit persistence into storage. Protocol workers retain ownership through
 interruption and capture nested caller inputs before awaiting. Independent local
 registry writers preserve the first winner or explicitly refuse contention.
@@ -67,6 +67,20 @@ conformance remains red with 58 forbidden pairs, one cycle and ten analysis
 errors. Exact evidence and remaining gates are in the canonical plan;
 migration and claim limits live in
 `docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`.
+
+The 0.6.5 candidate moves dual-ledger lifecycle and recovery into application,
+with bound journals, verified backend content and native admission ownership.
+Ten retained counterexamples motivate the repair. Corrected source passes 1,193
+selected cases, and eight fresh actual installed llama.cpp cases pass. Windows
+installed proof covers 1,193 cases through retained full runs and an eight-case
+opt-in supplement. Linux retains one unexplained approval/resume deadline failure
+per cell; the local candidate checkpoint retains that open installed gate. The
+canonical plan retains the failed envelopes and separate child-shutdown repair.
+The graph retains 57 forbidden pairs, one cycle and ten analysis
+errors. Migration and claim limits:
+`docs/architecture/CONTRACT_DELTA_DUAL_LEDGER_CD_2026-09-17.md`.
+During 10 AM-6 PM America/Denver work hours, commits and tags remain local and
+GitHub push is deferred under the user's instruction.
 
 BT-5's five-requirement disposition is in the canonical plan. The sealed audit at
 `.tmp/bt5-family-composed-clock/gate/audit.json` binds 2,321 identical cases across

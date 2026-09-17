@@ -280,9 +280,10 @@ async def test_real_child_crash_becomes_recovery_pending_uncertainty(
     )
 
     assert execution.run.lifecycle_state is RunState.RECOVERY_PENDING
-    assert execution.normalized_reason == "E_AGENT_CHILD_DISCONNECTED"
+    assert execution.normalized_reason == "E_AGENT_CHILD_DISCONNECTED", invoker.last_diagnostic_tail
     snapshot = await repository.get_iteration_snapshot(invocation_id="invocation-1")
     assert snapshot is not None
     assert snapshot.state == "interrupted"
     assert snapshot.uncertainty is True
     assert "fixture child crash" in invoker.last_diagnostic_tail
+    assert "Fatal Python error" not in invoker.last_diagnostic_tail

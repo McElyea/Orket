@@ -5,6 +5,23 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.5] - 2026-09-17 - "Dual-ledger recovery candidate"
+
+### Changed
+- Move dual-ledger lifecycle authority to application services with bound journals,
+  native admission, verified backend effects and retained cancellation ownership.
+- Refuse unbound legacy recovery, conflicting starts/terminal content and later
+  lifecycle transitions while a session's mirror remains unresolved.
+- Read child stdin without Python's buffered-input shutdown lock so a crashing
+  governed workload exits with its diagnostic instead of an interpreter abort.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Follow `docs/architecture/CONTRACT_DELTA_DUAL_LEDGER_CD_2026-09-17.md` for imports,
+  journal migration and telemetry callback execution. SDK remains `0.7.0a1`.
+- Stability: implementation candidate; installed, full-suite/hosted CI and broader
+  architectural-truth acceptance remain open.
+
 ## [0.6.4] - 2026-09-17 - "Protocol ledger ownership checkpoint"
 
 ### Changed

@@ -40,6 +40,7 @@ E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX: Final[str] = "E_RECEIPT_SEQ_NON_MONOTONIC"
 E_RECEIPT_LOG_PARSE_PREFIX: Final[str] = "E_RECEIPT_LOG_PARSE"
 E_RECEIPT_LOG_SCHEMA_PREFIX: Final[str] = "E_RECEIPT_LOG_SCHEMA"
 E_OPERATION_REGISTRY_PREFIX: Final[str] = "E_OPERATION_REGISTRY"
+E_DUAL_WRITE_PREFIX: Final[str] = "E_DUAL_WRITE"
 
 E_NETWORK_MODE_INVALID_PREFIX: Final[str] = "E_NETWORK_MODE_INVALID"
 E_LEASE_EXPIRED: Final[str] = "E_LEASE_EXPIRED"
@@ -92,6 +93,7 @@ _PREFIX_CODES: Final[dict[str, str]] = {
     E_RECEIPT_LOG_PARSE_PREFIX: "Receipt log line failed JSON parsing.",
     E_RECEIPT_LOG_SCHEMA_PREFIX: "Receipt log line is not a JSON object.",
     E_OPERATION_REGISTRY_PREFIX: "Operation commit storage refused invalid, unavailable or unverified authority.",
+    E_DUAL_WRITE_PREFIX: "Dual-ledger admission or recovery refused unavailable, conflicting or unverified state.",
     E_NETWORK_MODE_INVALID_PREFIX: "Unsupported protocol network mode.",
     E_REPLAY_COMPATIBILITY_MISMATCH_PREFIX: "Replay compatibility contract mismatch.",
     E_REPLAY_ARTIFACTS_MISSING_PREFIX: "Replay required artifact metadata is missing.",

@@ -1,8 +1,8 @@
 import pytest
 
-from orket.adapters.storage.async_dual_write_run_ledger import AsyncDualModeLedgerRepository
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
+from orket.application.services.dual_write_run_ledger import AsyncDualModeLedgerRepository
 from orket.application.services.runtime_policy import (
     resolve_gitea_state_pilot_enabled,
     resolve_gitea_worker_max_duration_seconds,

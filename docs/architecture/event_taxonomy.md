@@ -56,6 +56,23 @@ proof of persisted effects; historical logs are not rewritten.
      structural asset writes and logs to the driver's configured operator workspace.
      It does not emit a successful structural mutation event.
 
+## Dual-ledger Lifecycle
+
+Dual-ledger observations:
+
+- `run_ledger_dual_write_error`: `phase`, `session_id`, `backend`, `error_type`,
+  `error`; records an operational backend failure with retained pending intent.
+- `run_ledger_dual_write_parity`: `phase`, `session_id`, `parity_ok`,
+  `difference_count`, `differences`, `sqlite_digest`, `protocol_digest`,
+  `protocol_error`, `parity_error`, `parity_check_error`; `parity_skip_reason` is
+  present when a protocol write failed. Parity is a comparison of observed rows,
+  not an atomic cross-backend commit guarantee.
+- `telemetry_sink_error`: `component=run_ledger_dual_write`, `error_type`, `error`;
+  records a failed sink after its owned invocation settles.
+
+These observations follow durable effect checks or explicit failed attempts.
+Application logging supplies the common fields when no custom sink is configured.
+
 ## Parser Lifecycle
 1. `tool_parser_diagnostic`
    - `issue_id`, `session_id`, `turn_index`, `stage`, `details`
