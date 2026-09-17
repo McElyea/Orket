@@ -527,9 +527,13 @@ compatibility and wheel-upgrade order are governed by
 `docs/requirements/sdk/VERSIONING.md`; historical bundling hosts do not acquire
 standalone SDK compatibility merely by overlaying a wheel.
 
-Core 0.6.5 is the current local architectural-truth candidate checkpoint paired
-with SDK 0.7.0a1. Source/provider proof passes; the installed Linux deadline gate
-remains open. This checkpoint is retained locally without GitHub publication.
+Core 0.6.6 is the current architectural-truth local checkpoint paired with
+SDK 0.7.0a1. Source and four installed proof unions cover 1,201 selected cases
+through retained full runs plus 28-case explicit-clock fixture follow-ups on the
+unchanged wheel. Eight actual installed llama.cpp cases pass with verified teardown.
+The failed Linux 3.11 full-run timestamp observation is retained; host-clock
+stability and prior 0.6.5 Linux deadline failures remain open. This ownership repair
+does not explain those prior failures. Checkpoints remain local without GitHub publication.
 The canonical remediation plan records scoped acceptance and remaining gates;
 this version/tag does not establish whole-lane completion or release readiness.
 Governed-agent CLI coordination now belongs to application command services;
@@ -548,6 +552,10 @@ child's dedicated stdin thread reads its raw descriptor so workload failure does
 not hold Python's buffered-input lock during interpreter shutdown. Migration
 and the candidate proof ceiling are recorded in
 `docs/architecture/CONTRACT_DELTA_DUAL_LEDGER_CD_2026-09-17.md`.
+Governed child admission, launch and cleanup now retain one application owner
+through cancellation. Pending and duplicate invocations cannot invent stopped-child
+confirmation; invokers refuse foreign event-loop use. Candidate contract and limits:
+`docs/architecture/CONTRACT_DELTA_AGENT_INVOCATION_LIFETIME_D_2026-09-17.md`.
 
 Historical core 0.6.2 released the llama.cpp defaults and exact Qwen3.8 promotion with
 SDK 0.6.0 and reference extension 0.2.0. Release verification and operator

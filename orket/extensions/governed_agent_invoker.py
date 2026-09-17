@@ -6,22 +6,21 @@ import os
 import subprocess
 import sys
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from orket.adapters.execution.process_lifecycle import (
-    await_process_stopped,
-    drain_diagnostic_tail,
-    terminate_process_tree,
-)
+from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
+from orket.adapters.execution.process_lifecycle import await_process_stopped
+from orket.application.services.governed_agent_process_owner import AgentInvocationOwner
 from orket.core.contracts.governed_agent_ports import (
     GovernedAgentCapabilityBroker,
     GovernedAgentInvocationBinding,
     GovernedAgentInvocationOutcome,
     InvocationStatus,
 )
+from orket.core.contracts.protocol_error_codes import E_AGENT_INVOCATION_OWNER_PREFIX, format_protocol_error
 from orket.extensions.governed_agent_process import sanitized_agent_environment
 from orket_extension_sdk import (
     AgentFrameSequenceValidator,
@@ -37,17 +36,6 @@ from orket_extension_sdk.manifest import AGENT_MODEL_RECEIPT_FEATURE
 
 _PROTOCOL_VERSION = "agent_stdio_ipc.v1"
 _CONTRACT_VERSION = "governed_agent_loop.v1"
-
-
-@dataclass(slots=True)
-class _ActiveInvocation:
-    binding: GovernedAgentInvocationBinding
-    process: asyncio.subprocess.Process
-    parent_sequence: int = 2
-    cancelled: bool = False
-    cancel_sent: bool = False
-    write_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
-    parent_frames: AgentFrameSequenceValidator | None = None
 
 
 class GovernedAgentSubprocessInvoker:
@@ -69,88 +57,93 @@ class GovernedAgentSubprocessInvoker:
         self._allowed_stdlib_modules = tuple(sorted(set(allowed_stdlib_modules)))
         self._broker = broker
         self._handshake_timeout_seconds = handshake_timeout_seconds
-        self._active: dict[str, _ActiveInvocation] = {}
-        self._active_lock = asyncio.Lock()
+        self._active: dict[str, AgentInvocationOwner] = {}
+        self._owner_loop: asyncio.AbstractEventLoop | None = None
         self.last_diagnostic_tail = ""
 
     async def invoke_once(
-        self,
-        *,
-        binding: GovernedAgentInvocationBinding,
-        request_payload: Mapping[str, Any],
+        self, *, binding: GovernedAgentInvocationBinding, request_payload: Mapping[str, Any],
     ) -> GovernedAgentInvocationOutcome:
+        self._require_owner_loop()
         request = AgentIterationRequest.from_wire(dict(request_payload))
         self._validate_binding(binding, request)
-        process = await self._start_child()
-        active = _ActiveInvocation(binding=binding, process=process)
+        return await run_owned_io(lambda: self._invoke_owned(binding, request),
+                                  label="governed-agent-invocation", preserve_failure=True, cancel_on_interrupt=True)
+
+    def _require_owner_loop(self):
+        loop = asyncio.get_running_loop()
+        if self._owner_loop is None:
+            self._owner_loop = loop
+        elif loop is not self._owner_loop:
+            raise ValueError(format_protocol_error(E_AGENT_INVOCATION_OWNER_PREFIX, "event_loop_mismatch"))
+
+    async def _invoke_owned(self, binding, request):
+        # Async callers share one loop: admission has no await between lookup and
+        # insertion. The owner is visible to cancellation before native launch.
+        if binding.invocation_id in self._active:
+            return self._failure("protocol_failed", binding, "E_AGENT_INVOCATION_ALREADY_ACTIVE", False)
+        active = AgentInvocationOwner(binding=binding)
         active.parent_frames = AgentFrameSequenceValidator(
-            invocation_id=binding.invocation_id,
-            direction="parent_to_child",
-        )
-        async with self._active_lock:
-            if binding.invocation_id in self._active:
-                await terminate_process_tree(process)
-                return self._failure("protocol_failed", binding, "E_AGENT_INVOCATION_ALREADY_ACTIVE", True)
-            self._active[binding.invocation_id] = active
-        stderr_task = asyncio.create_task(drain_diagnostic_tail(process.stderr), name="orket-agent-stderr")
+            invocation_id=binding.invocation_id, direction="parent_to_child")
+        self._active[binding.invocation_id] = active
+        try:
+            await active.launch(self._start_child)
+            outcome = await self._invoke_active(active, request)
+        finally:
+            await run_owned_io(lambda: self._finish_active(active),
+                               label="governed-agent-teardown", preserve_failure=True)
+        return self._with_stopped(outcome, active.finished.is_set())
+
+    async def _invoke_active(self, active, request):
+        if active.cancelled:
+            return self._failure("cancelled", active.binding, "E_AGENT_BROKER_CANCELLED", False)
         try:
             await self._send_bootstrap(active, request)
             outcome = await self._exchange(active, request)
-            if process.stdin is not None:
-                process.stdin.close()
-                await process.stdin.wait_closed()
-            stopped = await await_process_stopped(process, timeout_seconds=5)
-            if not stopped:
-                await terminate_process_tree(process)
-                stopped = True
-            return self._with_stopped(outcome, stopped)
-        except asyncio.CancelledError:
-            await terminate_process_tree(process)
-            raise
+            active.process.stdin.close()
+            await active.process.stdin.wait_closed()
+            await await_process_stopped(active.process, timeout_seconds=5)
+            return outcome
         except asyncio.IncompleteReadError:
-            await terminate_process_tree(process)
             status: InvocationStatus = "cancelled" if active.cancelled else "protocol_failed"
-            return self._failure(status, binding, "E_AGENT_CHILD_DISCONNECTED", True)
+            return self._failure(status, active.binding, "E_AGENT_CHILD_DISCONNECTED", False)
         except (ValueError, OSError) as exc:
-            await terminate_process_tree(process)
             status = "cancelled" if active.cancelled else self._failure_status(exc)
             reason = "E_AGENT_CHILD_DISCONNECTED" if str(exc) == "E_SDK_AGENT_FRAME_INCOMPLETE" else str(exc)
-            return self._failure(status, binding, reason, True)
-        finally:
-            async with self._active_lock:
-                self._active.pop(binding.invocation_id, None)
-            diagnostic_tail, diagnostic_truncated = await stderr_task
-            self.last_diagnostic_tail = diagnostic_tail.decode("utf-8", errors="replace")
-            if diagnostic_truncated:
-                self.last_diagnostic_tail = "<truncated>" + self.last_diagnostic_tail
+            return self._failure(status, active.binding, reason, False)
+
+    async def _finish_active(self, active):
+        await active.close()
+        self.last_diagnostic_tail = active.diagnostic_tail
+        if self._active.get(active.binding.invocation_id) is active:
+            self._active.pop(active.binding.invocation_id)
 
     async def cancel_and_reap(
-        self,
-        *,
-        binding: GovernedAgentInvocationBinding,
-        cancellation_payload: Mapping[str, Any],
+        self, *, binding: GovernedAgentInvocationBinding, cancellation_payload: Mapping[str, Any],
         grace_period_seconds: float,
     ) -> bool:
         if grace_period_seconds < 0 or grace_period_seconds > 30:
             raise ValueError("E_AGENT_CANCELLATION_GRACE_INVALID")
-        async with self._active_lock:
-            active = self._active.get(binding.invocation_id)
+        self._require_owner_loop()
+        cancellation = deepcopy(dict(cancellation_payload))
+        active = self._active.get(binding.invocation_id)
         if active is None:
             return True
         if active.binding != binding:
             raise ValueError("E_AGENT_CANCELLATION_BINDING_MISMATCH")
         active.cancelled = True
-        if not active.cancel_sent and active.process.returncode is None:
-            await self._send_parent_frame(active, "cancel", dict(cancellation_payload))
-            active.cancel_sent = True
-        if await await_process_stopped(active.process, timeout_seconds=grace_period_seconds):
-            return True
-        await terminate_process_tree(active.process)
-        return active.process.returncode is not None
+
+        async def stop():
+            if (active.process is not None and active.bootstrap_sent
+                    and not active.cancel_sent and active.process.returncode is None):
+                active.cancel_sent = True
+                await self._send_parent_frame(active, "cancel", cancellation)
+            return await active.stop(grace_period_seconds)
+        return await run_owned_io(stop, label="governed-agent-operator-stop", preserve_failure=True)
 
     async def _exchange(
         self,
-        active: _ActiveInvocation,
+        active: AgentInvocationOwner,
         request: AgentIterationRequest,
     ) -> GovernedAgentInvocationOutcome:
         child_frames = AgentFrameSequenceValidator(
@@ -198,7 +191,7 @@ class GovernedAgentSubprocessInvoker:
 
     async def _handle_call(
         self,
-        active: _ActiveInvocation,
+        active: AgentInvocationOwner,
         request: AgentIterationRequest,
         frame: AgentStdioFrame,
         call_ids: set[str],
@@ -226,7 +219,7 @@ class GovernedAgentSubprocessInvoker:
             operation=frame.operation,
         )
 
-    async def _send_bootstrap(self, active: _ActiveInvocation, request: AgentIterationRequest) -> None:
+    async def _send_bootstrap(self, active: AgentInvocationOwner, request: AgentIterationRequest) -> None:
         frame = AgentStdioFrame(
             invocation_id=active.binding.invocation_id,
             sequence=1,
@@ -242,10 +235,11 @@ class GovernedAgentSubprocessInvoker:
         if active.process.stdin is None:
             raise OSError("E_AGENT_CHILD_STDIN_UNAVAILABLE")
         await write_agent_frame(active.process.stdin, frame)
+        active.bootstrap_sent = True
 
     async def _send_parent_frame(
         self,
-        active: _ActiveInvocation,
+        active: AgentInvocationOwner,
         message_type: str,
         payload: dict[str, Any],
         *,
@@ -273,7 +267,7 @@ class GovernedAgentSubprocessInvoker:
             active.parent_sequence += 1
 
     async def _start_child(self) -> asyncio.subprocess.Process:
-        if not self._extension_root.is_dir():
+        if not await run_owned_thread(self._extension_root.is_dir, label="governed-agent-root-check"):
             raise FileNotFoundError(f"E_AGENT_EXTENSION_ROOT_MISSING: {self._extension_root}")
         process = await asyncio.create_subprocess_exec(
             sys.executable,
@@ -290,9 +284,6 @@ class GovernedAgentSubprocessInvoker:
             start_new_session=os.name != "nt",
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
         )
-        if process.stdin is None or process.stdout is None or process.stderr is None:
-            await terminate_process_tree(process)
-            raise OSError("E_AGENT_CHILD_PIPES_UNAVAILABLE")
         return process
 
     @staticmethod

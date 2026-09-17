@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 async def run_owned_io(
     operation: Callable[[], Awaitable[IOResult]], *, label: str, preserve_failure: bool = False,
+    cancel_on_interrupt: bool = False,
 ) -> IOResult:
     task = asyncio.create_task(operation())
     joined = asyncio.gather(task, return_exceptions=True)
@@ -22,9 +23,13 @@ async def run_owned_io(
             break
         except asyncio.CancelledError:
             # Cancelling an executor await cannot stop its already running thread.
+            # Async resource owners can opt into one cancellation, then retain
+            # their cleanup through subsequent caller cancellation requests.
+            if cancel_on_interrupt and not cancelled:
+                task.cancel()
             cancelled = True
     if cancelled:
-        if isinstance(result, BaseException):
+        if isinstance(result, BaseException) and not (cancel_on_interrupt and isinstance(result, asyncio.CancelledError)):
             logger.warning("Owned I/O failed while draining cancellation (%s)", label,
                            exc_info=(type(result), result, result.__traceback__))
             if preserve_failure:

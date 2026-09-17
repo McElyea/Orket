@@ -68,6 +68,15 @@ errors. Exact evidence and remaining gates are in the canonical plan;
 migration and claim limits live in
 `docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`.
 
+The 0.6.6 candidate retains governed native invocation ownership through pending
+launch and repeated cancellation, rejects false duplicate teardown claims, and
+captures cancellation inputs. Source and four installed Windows/Linux Python
+3.11/3.12 proof unions cover 1,201 identical cases through retained full runs and
+28-case clock-fixture follow-ups on the unchanged wheel. The Linux 3.11 full-run
+clock failure is retained; eight actual installed llama.cpp cases pass with
+verified cleanup. Prior Linux deadline failures remain unexplained and open. See the
+canonical plan for current disposition; work-hours checkpoints stay local.
+
 The 0.6.5 candidate moves dual-ledger lifecycle and recovery into application,
 with bound journals, verified backend content and native admission ownership.
 Ten retained counterexamples motivate the repair. Corrected source passes 1,193

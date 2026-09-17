@@ -26,6 +26,15 @@ from tests.helpers.card_completion import complete_existing_card
 from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
 
+def _pipeline(test_root, workspace, db_path, *, protocol=False):
+    # Provenance/lifecycle fixtures use explicit UTC inputs; host-clock behavior
+    # remains covered by separate refusal tests and retained native failures.
+    clock = ProtocolLedgerClock()
+    repository = AsyncProtocolRunLedgerRepository(workspace, timestamp_factory=clock.utc_now_iso) if protocol else None
+    return ExecutionPipeline(workspace=workspace, department="core", db_path=db_path,
+                             config_root=test_root, run_ledger_repo=repository, runtime_inputs=clock)
+
+
 def _write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload), encoding="utf-8")
@@ -275,13 +284,7 @@ def _log_successful_write_file(
 async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_incomplete")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-    )
+    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -345,13 +348,7 @@ async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, 
 async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_failed")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-    )
+    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _raise_execute_epic(**_kwargs):
         raise ExecutionFailed("forced failure for ledger")
@@ -402,15 +399,7 @@ async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monk
 # Layer: integration
 async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_terminal_failure")
-    clock = ProtocolLedgerClock()
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace, timestamp_factory=clock.utc_now_iso),
-        runtime_inputs=clock,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
     async def _blocked_execute_epic(**_kwargs):
         await pipeline.async_cards.update_status("ISSUE-1", CardStatus.BLOCKED)
         return None
@@ -457,12 +446,7 @@ async def test_run_ledger_harvests_local_prompt_fallback_telemetry(
 ):
     _write_epic_assets(test_root, "ledger_epic_prompt_fallback")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _execute_with_fallback_telemetry(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -514,12 +498,7 @@ async def test_run_ledger_marks_corrective_reprompt_runs_as_repaired(
 ):
     _write_epic_assets(test_root, "ledger_epic_repaired")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _execute_with_repair_event(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -577,15 +556,7 @@ async def test_run_ledger_marks_corrective_reprompt_runs_as_repaired(
 @pytest.mark.asyncio
 async def test_run_ledger_records_artifact_provenance_for_generated_files(test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_artifact_provenance")
-
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-    )
-
+    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
     async def _execute_with_artifacts(**kwargs):
         run_id = str(kwargs["run_id"])
         _write_protocol_write_receipts(
@@ -652,13 +623,7 @@ async def test_run_ledger_records_control_plane_refs_in_artifact_provenance_when
 ):
     _write_epic_assets(test_root, "ledger_epic_artifact_provenance_governed")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-    )
+    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _execute_with_governed_artifacts(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -706,13 +671,7 @@ async def test_run_ledger_falls_back_to_tool_event_provenance_when_receipts_are_
 ):
     _write_epic_assets(test_root, "ledger_epic_artifact_provenance_log_fallback")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-    )
+    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _execute_with_logged_artifacts(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -771,13 +730,7 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_for_required_source_a
         truthful_runtime={"source_attribution_mode": "required"},
     )
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-    )
+    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _execute_phase_c_verified(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -958,13 +911,7 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_from_legacy_turn_arti
         truthful_runtime={"source_attribution_mode": "required"},
     )
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-    )
+    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _execute_phase_c_legacy_verified(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -1071,13 +1018,7 @@ async def test_run_ledger_narration_effect_audit_detects_missing_written_source_
         truthful_runtime={"source_attribution_mode": "optional"},
     )
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-    )
+    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _execute_phase_c_missing_effect(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -1146,12 +1087,7 @@ async def test_run_ledger_emits_degraded_run_summary_when_canonical_generation_f
 ):
     _write_epic_assets(test_root, "ledger_epic_summary_fallback")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1206,12 +1142,7 @@ async def test_run_ledger_degrades_when_finalize_run_identity_validation_fails(
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_run_identity_finalize")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1266,12 +1197,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_projection_attemp
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_finalize")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1330,12 +1256,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_attempt_lineage_d
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_attempt_lineage")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1398,12 +1319,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_step_lineage_drif
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_step_lineage")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1466,12 +1382,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_run_projection_dr
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_run_projection")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1538,12 +1449,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_attempt_or_step_p
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_metadata")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1606,12 +1512,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_identity_hierarch
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_identity_hierarchy")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1665,12 +1566,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_current_attempt_o
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_identity_hierarchy")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1740,12 +1636,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_orphaned_projecti
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_identity_hierarchy")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1808,12 +1699,7 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     """Layer: contract. Verifies run-ledger bootstrap artifacts preserve current runtime contracts."""
     _write_epic_assets(test_root, "ledger_epic_contract_bootstrap")
 
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1932,12 +1818,7 @@ async def test_run_ledger_keeps_run_identity_immutable_across_same_session_reent
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_identity_immutable")
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-    )
+    pipeline = _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None

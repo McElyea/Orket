@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-17T17:28:53.637060Z",
+  "generated_at": "2026-09-17T18:18:27.124686Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -306,7 +306,7 @@
           "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 997,
+      "files_scanned": 998,
       "scan_roots": [
         "orket"
       ],
@@ -335,17 +335,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 300
+          "count": 303
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1513
+          "count": 1514
         },
         {
           "source": "application",
           "target": "core",
-          "count": 665
+          "count": 667
         },
         {
           "source": "application",
@@ -1484,10 +1484,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 4896,
-    "missing_layer_total": 3312,
+    "tests_total": 4903,
+    "missing_layer_total": 3319,
     "by_layer": {
-      "unlabeled": 3312,
+      "unlabeled": 3319,
       "integration": 735,
       "unit": 167,
       "contract": 671,
@@ -2095,7 +2095,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3212
+    "missing_layers_omitted": 3219
   },
   "ruff": {
     "proof": "structural_lint",
@@ -2120,7 +2120,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 997,
+    "python_files_scanned": 998,
     "files_over_400_total": 69,
     "functions_over_70_total": 224,
     "largest_files": [
@@ -2387,7 +2387,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 570,
+    "scanned_files": 571,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -2498,40 +2498,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-14T15:18:30.423720Z",
-      "changed": true,
-      "before_digest": "sha256:8748290e5ec3698f9a7d116f3dc31c275924b3696f5059f58132b2dd6adad7e5",
-      "after_digest": "sha256:76c67c47ce37adb74ebc4d2f9a4e8c0eee9a3cc1e4acd684a2eafa1570050d42",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 15,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 15,
-        "churn_ratio": 0.004547,
-        "sample_paths": [
-          "$.dependency_graph.layer_edges[0].count",
-          "$.dependency_graph.layer_edges[1].count",
-          "$.dependency_graph.layer_edges[40].count",
-          "$.dependency_graph.layer_edges[40].source_layer",
-          "$.dependency_graph.layer_edges[40].target_layer",
-          "$.dependency_graph.layer_edges[41].source_layer",
-          "$.dependency_graph.layer_edges[41].target_layer",
-          "$.generated_at",
-          "$.size_inventory.functions_over_70_total",
-          "$.test_taxonomy.by_layer.integration",
-          "$.test_taxonomy.by_layer.unit",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-14T15:37:15.445595Z",
       "changed": true,
@@ -3332,6 +3298,36 @@
         "churn_ratio": 0.001372,
         "sample_paths": [
           "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T18:18:27.127491Z",
+      "changed": true,
+      "before_digest": "sha256:0c4844d0f916302e25af65cf9ccfa8f850652731f053c444a6ffc941329741e6",
+      "after_digest": "sha256:865098c19fe8a91ad70535453b86cbf7a1a225b97e8148af858ae5164dd9d2b0",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 11,
+        "initial_write": false,
+        "paths_total_previous": 3645,
+        "paths_total_current": 3645,
+        "paths_total_reference": 3645,
+        "churn_paths": 11,
+        "churn_ratio": 0.003018,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[6].count",
+          "$.generated_at",
+          "$.noop_critical_paths.scanned_files",
+          "$.size_inventory.python_files_scanned",
           "$.test_taxonomy.by_layer.unlabeled",
           "$.test_taxonomy.missing_layer_total",
           "$.test_taxonomy.missing_layers_omitted",

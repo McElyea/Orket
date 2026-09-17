@@ -5,6 +5,23 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.6] - 2026-09-17 - "Governed invocation lifetime candidate"
+
+### Changed
+- Retain governed child ownership from admission through native launch and cleanup,
+  including repeated caller cancellation and pending-launch operator cancellation.
+- Refuse duplicate stop claims and cross-loop invoker reuse; capture cancellation
+  payloads before awaiting and preserve failed cleanup as an explicit failure.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Follow `docs/architecture/CONTRACT_DELTA_AGENT_INVOCATION_LIFETIME_D_2026-09-17.md`.
+  SDK remains `0.7.0a1`; request deadlines and child framing are unchanged.
+- Stability: local checkpoint. Source and four installed proof unions cover 1,201
+  selected cases through retained full runs and 28-case explicit-clock follow-ups
+  on the unchanged wheel; eight actual installed llama.cpp cases pass. Host-clock
+  stability, prior Linux deadlines, full-suite/hosted CI and whole-lane acceptance remain open.
+
 ## [0.6.5] - 2026-09-17 - "Dual-ledger recovery candidate"
 
 ### Changed

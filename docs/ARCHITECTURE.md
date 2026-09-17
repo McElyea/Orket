@@ -168,6 +168,11 @@ Storage owns bound, verified intent files and native admission; core validates
 intent and observed backend content. Migration and current proof limits:
 `docs/architecture/CONTRACT_DELTA_DUAL_LEDGER_CD_2026-09-17.md`.
 
+Application also owns governed native invocation admission, launch and cleanup.
+Cancellation retains the admitted process transition; pending/duplicate owners
+cannot report unobserved teardown. Candidate limits and migration:
+`docs/architecture/CONTRACT_DELTA_AGENT_INVOCATION_LIFETIME_D_2026-09-17.md`.
+
 Core must not depend on:
 1. application
 2. adapters

@@ -11790,6 +11790,108 @@ in this candidate. `.tmp/c-dual-ledger/observed-authority-drift.json` binds the
 observation to source hashes. This display/authority disagreement remains C/D
 work; it is not accepted as accurate operator guidance.
 
+### Governed native invocation lifetime candidate (2026-09-17)
+
+The prior local 0.6.5 checkpoint remains preserved: commit
+`c399d7523c59faff610188029b5098359cb2a96d` and local snapshot SHA-256
+`23ee3a44cb67707f206115aaf13268771f9703d313d6b866ab0d2718e12a3ed9`.
+The initial working inventory and retained evidence matched that snapshot before
+this candidate changed anything. Work-hours commits and tags stay local.
+
+Three real-child counterexamples retained in `.tmp/d-agent-lifetime/before.json`
+showed abandoned native ownership during registration, interrupted launch and
+repeated teardown cancellation. A separate operator test observed a false stopped
+acknowledgement while launch was pending. Intermediate admission checks additionally
+observed a duplicate reporting the existing child as stopped and a child receiving
+a caller-mutated cancellation reason. Those failed observations remain retained;
+the extra operator observation lacks a full contemporaneous test-file byte copy.
+
+Application now registers a process owner before native launch, retains launch
+until its handle is captured, and drains teardown through repeated cancellation.
+Duplicate and pending-launch observations do not assert unverified teardown;
+operator payloads are captured before awaiting; failed cleanup retains the owner
+and propagates its error. An invoker binds to its first event loop and refuses
+foreign-loop control. Migration and limits live in
+`docs/architecture/CONTRACT_DELTA_AGENT_INVOCATION_LIFETIME_D_2026-09-17.md`.
+
+Current candidate: core 0.6.6 with unchanged SDK 0.7.0a1. The latest targeted run
+passed eight native lifetime cases and six protocol-vocabulary cases. An earlier
+intermediate repair passed 20 related subprocess, loop, failure and approval/resume
+cases. Fresh source, wheel, installed and provider proof are recorded below.
+The generated graph observes 998 modules, 3,177 import sites, 57 forbidden pairs,
+one authority cycle, ten analysis errors and zero unknown modules. Collection
+succeeds; the dependency verdict and release readiness remain false.
+
+Current candidate verification covers the same **1,201 selected cases** in
+source and all four installed Windows/Linux Python 3.11/3.12 environments through
+retained full runs plus a 28-case clock-fixture follow-up. This is an explicit
+proof union, not a new single all-green full execution. The one-shot script flag
+is enabled in every native command; no skipped case is counted as passing.
+
+| Environment | Retained full pass / fail / error / skip | Full seconds | Follow-up pass / fail / error / skip | Follow-up seconds |
+| --- | --- | --- | --- | --- |
+| Source Windows 3.11 | 1201 / 0 / 0 / 0 | 308.748 | 28 / 0 / 0 / 0 | 17.462 |
+| Installed win-py311 | 1201 / 0 / 0 / 0 | 340.025 | 28 / 0 / 0 / 0 | 19.679 |
+| Installed win-py312 | 1201 / 0 / 0 / 0 | 359.342 | 28 / 0 / 0 / 0 | 18.339 |
+| Installed linux-py311 | 1200 / 1 / 0 / 0 | 340.877 | 28 / 0 / 0 / 0 | 28.05 |
+| Installed linux-py312 | 1201 / 0 / 0 / 0 | 339.151 | 28 / 0 / 0 / 0 | 27.248 |
+
+The current union audit is `.tmp/d-agent-lifetime/clock-final/union-audit.json`,
+SHA-256 `870273da1c3b04f40a830e5710277fd6e05dab91020169f7cee3756c10eb737b`. It proves only the provenance fixture
+module changed, the packages and input inventory are identical, all previous
+failures fall within the rerun module, and every retained native artifact matches.
+Fresh installed environments verify actual package
+origins, identical support/case inventories, public CLI success and malformed-board
+semantics, strict controlled ToolGate behavior, retained artifact hashes and no
+remaining child processes. Source includes real filesystem, SQLite and native child
+execution with controlled provider/clock fixtures; it is not provider proof.
+
+The retained Linux 3.11 full run failed
+`test_run_ledger_records_artifact_provenance_for_generated_files`: the ledger
+refused receipt materialization with `E_LEDGER_TIMESTAMP_NON_MONOTONIC` after a
+10.220880-second backward timestamp observation. It retained only three ledger
+events and no finalized summary. `.tmp/d-agent-lifetime/clock-diagnosis.json`
+binds the actual log, failed report and pre-change test bytes; the native report
+binds the framed ledger bytes. Correcting only that one test subsequently exposed
+the same refusal in Linux 3.12's missing-source-receipt narration test: session-start
+log time `2026-09-17T18:44:10.683156+00:00` preceded failure log time
+`2026-09-17T18:43:59.997010+00:00`. That intermediate 28-case run and its retained
+native artifacts stay bound by `clock-fixture/retained.json` and the final
+`clock-final/intermediate-retention.json`.
+
+The module's 23 pipeline constructions now use one explicit test builder sharing
+`ProtocolLedgerClock` with each pipeline and its selected protocol repository.
+SQLite selections remain SQLite. Existing assertion ASTs are unchanged; runtime
+code and the timestamp invariant are unchanged. The existing oversized test file
+shrinks from 1,967 to 1,848 lines. Host-clock stability
+remains unproven. This fixture repair does not explain the older elapsed-clock
+Linux approval/resume deadline failures.
+
+The wheel is built from the sdist with parity for all 998 core Python files and
+1,011 wheel package files. Wheel SHA-256:
+`ff5d81ca3a7dfe725826afe65a0d8227c2bdcfdb00a6374d8dce129d35fb60e7`; sdist SHA-256:
+`b6b49f115bb0cee58bb18b980a97844b78d87b50cea9547632e4c0b6a0e44496`. The harness has 1,747 support files without core/SDK
+sources. SDK 0.7.0a1, reference 0.3.0a1 and starter 0.3.0a1 artifacts are unchanged.
+
+A separate serial run on the installed candidate passes eight actual llama.cpp
+cases in 141.125 seconds: CLI continuation, API memory/replay, effect
+restart and abrupt API-process recovery. The live report binds served model,
+candidate wheel, actual installed origins, support and artifact bytes. All observed
+proof parents/children are terminal and reaped; the operator provider stays running.
+This is one Windows 3.11 provider envelope, not provider/host promotion.
+
+Changed-file Ruff, staged whitespace, documentation hygiene and release metadata
+checks pass at the local checkpoint. Structural compliance review is retained in
+`.tmp/d-agent-lifetime/review.json`; existing D2 clock/environment and wider adapter
+classification/recovery obligations stay partial. This candidate adds no forbidden
+dependency pair. Full-suite, hosted CI, release and whole-lane acceptance remain open.
+
+The preceding 0.6.5 Linux approval/resume deadline failures remain unexplained.
+These independently reproduced ownership repairs do not establish their cause or
+close their acceptance gate. Constructor path resolution, ambient runtime clocks,
+environment capture, dynamic extension loading, stronger containment, complete
+D3/D4 coverage, C conformance and later full-plan gates remain active obligations.
+
 ## E1/E2 — Reliable quality gates and maintainable authority
 
 Retains Workstreams 6, 7 and 8 and previous Slice E obligations.
@@ -12015,7 +12117,7 @@ requested a versioned GitHub checkpoint and continued commits on the existing
 branch; its proof and publication disposition are recorded in the C/D checkpoint.
 The later user instruction restricts 10 AM-6 PM America/Denver work hours to
 local commits only. Retain commits and matching annotated tags locally during
-that window; do not push to GitHub. The 0.6.4 and 0.6.5 local checkpoints follow this
+that window; do not push to GitHub. The 0.6.4, 0.6.5 and 0.6.6 local checkpoints follow this
 restriction; remote publication remains deferred.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:

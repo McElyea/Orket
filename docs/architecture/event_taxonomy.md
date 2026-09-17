@@ -363,3 +363,15 @@ are not a transaction or restart journal spanning the database and event files.
      non-success observation (`runtime_execution_result.v1` or
      `runtime_collection_result.v1`). A successfully scheduled review is not
      evidence that its runtime work completed successfully.
+
+## Governed native invocation lifetime
+
+`child_confirmed_stopped` requires observed teardown of the admitted invocation.
+A duplicate refusal reports false for the existing owner; pending native launch
+cannot produce a true operator stop acknowledgement merely because its handle is
+not captured yet. Cleanup failures propagate and retain the owner for inspection.
+Foreign event-loop control refuses with
+`E_AGENT_INVOCATION_OWNER:event_loop_mismatch` before changing ownership.
+Cancellation payloads are captured before awaiting; child frames, SDK schemas and
+request/lease deadline meanings are unchanged. Contract and limits:
+`docs/architecture/CONTRACT_DELTA_AGENT_INVOCATION_LIFETIME_D_2026-09-17.md`.
