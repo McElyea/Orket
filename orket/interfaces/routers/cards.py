@@ -6,7 +6,11 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from orket.application.services.run_ledger_summary_projection import validated_run_ledger_record_projection
+from orket.application.services.operator_completion_service import (
+    load_operator_run_projection,
+    read_operator_card,
+    read_operator_card_page,
+)
 from orket.interfaces.operator_view_models import (
     build_card_detail_view,
     build_card_list_item_view,
@@ -52,24 +56,10 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node_getter
         normalized_session_id = str(session_id or "").strip()
         if not normalized_session_id:
             return None
-        run_record = await engine.run_ledger.get_run(normalized_session_id)
-        session = await engine.sessions.get_session(normalized_session_id)
-        if run_record is None and session is None:
+        projection = await load_operator_run_projection(engine=engine, session_id=normalized_session_id)
+        if projection is None:
             return None
-        backlog = await engine.sessions.get_session_issues(normalized_session_id)
-        projected_run_record = validated_run_ledger_record_projection(run_record)
-        summary = dict(projected_run_record.get("summary_json") or {}) if isinstance(projected_run_record, dict) else {}
-        artifacts = dict(projected_run_record.get("artifact_json") or {}) if isinstance(projected_run_record, dict) else {}
-        status = projected_run_record.get("status") if isinstance(projected_run_record, dict) else None
-        if status is None and isinstance(session, dict):
-            status = session.get("status")
-        return build_run_detail_view(
-            session_id=normalized_session_id,
-            status=status,
-            summary=summary,
-            artifacts=artifacts,
-            issue_count=len(backlog),
-        )
+        return build_run_detail_view(**projection)
 
     @router.get("/cards")
     async def list_cards(
@@ -109,7 +99,8 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node_getter
         offset: int = Query(default=0, ge=0),
     ) -> dict[str, Any]:
         engine = engine_getter()
-        cards = await engine.cards.list_cards(
+        cards = await read_operator_card_page(
+            cards=engine.cards,
             build_id=build_id,
             session_id=session_id,
             status=status,
@@ -118,15 +109,14 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node_getter
         )
         session_views: dict[str, dict[str, Any] | None] = {}
         items: list[dict[str, Any]] = []
-        for card in cards:
-            card_payload = card.model_dump() if hasattr(card, "model_dump") else dict(card)
+        for card_payload, completion in cards:
             card_session_id = str(card_payload.get("session_id") or "").strip()
             if card_session_id not in session_views:
                 session_views[card_session_id] = await _load_run_view_for_session(engine=engine, session_id=card_session_id)
-            view = build_card_list_item_view(card=card_payload, run_view=session_views[card_session_id])
+            view = build_card_list_item_view(card=card_payload, run_view=session_views[card_session_id], completion=completion)
             if card_view_matches_filter(view, filter):
                 items.append(view)
-        page = items[offset : offset + limit]
+        page = items[offset : offset + limit] if filter else items
         return {
             "items": page,
             "limit": limit,
@@ -144,18 +134,19 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node_getter
     @router.get("/cards/{card_id}/view")
     async def get_card_view(card_id: str) -> dict[str, Any]:
         engine = engine_getter()
-        card = await engine.cards.get_by_id(card_id)
-        if card is None:
+        inspected = await read_operator_card(cards=engine.cards, card_id=card_id)
+        if inspected is None:
             raise HTTPException(status_code=404, detail=f"Card '{card_id}' not found")
+        card_payload, completion = inspected
         history = await engine.cards.get_card_history(card_id)
         comments = await engine.cards.get_comments(card_id)
-        card_payload = card.model_dump() if hasattr(card, "model_dump") else dict(card)
         run_view = await _load_run_view_for_session(engine=engine, session_id=str(card_payload.get("session_id") or ""))
         return build_card_detail_view(
             card=card_payload,
             history=history,
             comments=comments,
             run_view=run_view,
+            completion=completion,
         )
 
     @router.get("/cards/{card_id}")

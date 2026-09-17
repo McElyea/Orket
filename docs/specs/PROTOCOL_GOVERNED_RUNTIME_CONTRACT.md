@@ -443,6 +443,30 @@ Receipts record:
 - `retry_count`
 - `validator_duration_ms`
 
+New receipts from `ToolDispatcher` use `schema_version: protocol_receipt.v2`.
+Their timing fields are defined by
+`orket/core/contracts/protocol_receipt_timing.py`:
+
+- `validator_duration_ms` is a finite nonnegative number or `null`. Fractional
+  milliseconds and an explicitly supplied zero are preserved.
+- `validator_timing.status` is `reported` when a valid numeric value was supplied
+  in runtime context, with `source: runtime_context` and `reason: null`. This is
+  a reported input, not proof of instrumented validator execution or its clock.
+- Missing/null input yields `status: unavailable`, `source: null`, `reason: missing`.
+  Invalid input (including booleans, strings, negative or nonfinite numbers, or
+  values outside finite floating-point range) yields `reason: invalid`. It never
+  becomes zero and does not change the tool's execution result.
+
+There is currently no runtime producer of measured validator duration. Consumers
+must retain unavailable timing and must not aggregate reported values as measured
+capacity. These fields are included in the receipt digest. The outer v2 marker
+versions the timing contract; it does not change the proposal or tool-call hash.
+Generic artifact/ledger writers retain their v1 default for older callers;
+dispatcher receipts supply v2 explicitly. Historical v1 values have no measurement
+provenance and are not upgraded on read or replay. Artifact replay does not append
+or rewrite the source receipt. Existing receipt materialization creates its
+separate event-linked projection and digest, preserving the source timing fields.
+
 Reserved governance fields:
 
 - `proposal_set_id`

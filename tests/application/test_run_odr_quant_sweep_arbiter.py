@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+from scripts.odr.provider_admission import resolve_selection
+
 
 def _load_script_module(module_name: str, script_path: str) -> ModuleType:
     path = Path(script_path)
@@ -35,6 +37,8 @@ def _args(tmp_path: Path, *, base_spec: Path, provenance_out: str = "") -> argpa
         require_clean_git=False,
         python_bin="python",
         leak_gate_mode="",
+        provider="",
+        base_url="",
     )
 
 
@@ -54,7 +58,8 @@ def _valid_run_payload(*, architect: str, auditor: str) -> dict:
     return {
         "run_v": "1.0.0",
         "generated_at": "2026-01-01T00:00:00+00:00",
-        "config": {"architect_models": [architect], "auditor_models": [auditor], "rounds": 1},
+        "config": {"architect_models": [architect], "auditor_models": [auditor], "rounds": 1,
+                   "provider_selection": resolve_selection().to_payload()},
         "results": [
             {
                 "architect_model": architect,
@@ -65,6 +70,8 @@ def _valid_run_payload(*, architect: str, auditor: str) -> dict:
                         "rounds": [
                             {
                                 "round": 1,
+                                "architect_provider_raw": {"provider_name": resolve_selection().provider, "model": architect},
+                                "auditor_provider_raw": {"provider_name": resolve_selection().provider, "model": auditor},
                                 "odr_trace_record": trace,
                                 "state_stop_reason_after_round": None,
                             }
@@ -83,6 +90,7 @@ def _valid_run_payload(*, architect: str, auditor: str) -> dict:
     }
 
 
+# Layer: contract
 def test_run_odr_quant_sweep_preflight_fail_closed_blocks_execution(monkeypatch, tmp_path: Path) -> None:
     module = _load_script_module("run_odr_quant_sweep_preflight", "scripts/odr/run_odr_quant_sweep.py")
     run_arbiter = sys.modules["run_arbiter"]
@@ -117,6 +125,7 @@ def test_run_odr_quant_sweep_preflight_fail_closed_blocks_execution(monkeypatch,
     assert "model:auditor:model" in error["failures"]
 
 
+# Layer: contract
 def test_run_odr_quant_sweep_arbiter_passes_and_checks_postflight(monkeypatch, tmp_path: Path) -> None:
     module = _load_script_module("run_odr_quant_sweep_pass", "scripts/odr/run_odr_quant_sweep.py")
     run_arbiter = sys.modules["run_arbiter"]
@@ -162,7 +171,7 @@ def test_run_odr_quant_sweep_arbiter_passes_and_checks_postflight(monkeypatch, t
     assert Path(args.index_out).exists()
     assert Path(args.provenance_out).exists()
     plan = json.loads(Path(args.arbiter_plan_out).read_text(encoding="utf-8"))
-    assert plan["schema_version"] == "odr.run_arbiter.plan.v1"
+    assert plan["schema_version"] == "odr.run_arbiter.plan.v2"
     assert str(Path(args.index_out).as_posix()) in plan["expected_artifacts"]
     assert str(Path(args.provenance_out).as_posix()) in plan["expected_artifacts"]
     assert plan["workload_contract"]["workload_contract_version"] == "workload.contract.v1"
@@ -172,6 +181,7 @@ def test_run_odr_quant_sweep_arbiter_passes_and_checks_postflight(monkeypatch, t
     assert not Path(args.arbiter_error_out).exists()
 
 
+# Layer: contract
 def test_run_odr_quant_sweep_arbiter_leak_validator_emits_error(monkeypatch, tmp_path: Path) -> None:
     module = _load_script_module("run_odr_quant_sweep_leak", "scripts/odr/run_odr_quant_sweep.py")
     run_arbiter = sys.modules["run_arbiter"]
@@ -215,6 +225,7 @@ def test_run_odr_quant_sweep_arbiter_leak_validator_emits_error(monkeypatch, tmp
     assert error["code"] == "E_ARB_VALIDATOR_LEAK"
 
 
+# Layer: contract
 def test_run_odr_quant_sweep_require_clean_git_fails_when_dirty(monkeypatch, tmp_path: Path) -> None:
     module = _load_script_module("run_odr_quant_sweep_git_gate", "scripts/odr/run_odr_quant_sweep.py")
     run_arbiter = sys.modules["run_arbiter"]

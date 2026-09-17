@@ -7,14 +7,15 @@ from types import SimpleNamespace
 import pytest
 
 from orket.application.middleware import MiddlewareOutcome, TurnLifecycleInterceptors
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
 
 @pytest.mark.asyncio
 async def test_turn_executor_emits_memory_trace_artifacts_when_visibility_mode_present(tmp_path):
+    """Layer: integration. Controlled turn execution writes traces at the normalized artifact path."""
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -79,7 +80,7 @@ async def test_turn_executor_emits_memory_trace_artifacts_when_visibility_mode_p
     )
     assert result.success is True
 
-    out_dir = Path(tmp_path) / "observability" / "sess-memory" / "ISSUE-1" / "000_developer"
+    out_dir = Path(tmp_path) / "observability" / "sess-memory" / "issue-1" / "000_developer"
     trace = json.loads((out_dir / "memory_trace.json").read_text(encoding="utf-8"))
     retrieval = json.loads((out_dir / "memory_retrieval_trace.json").read_text(encoding="utf-8"))
 
@@ -98,6 +99,7 @@ async def test_turn_executor_emits_memory_trace_artifacts_when_visibility_mode_p
 
 @pytest.mark.asyncio
 async def test_turn_executor_emits_memory_trace_artifacts_for_before_prompt_short_circuit(tmp_path):
+    """Layer: integration. A controlled prompt refusal retains real failure traces."""
     class _ShortCircuitHooks:
         def before_prompt(self, _messages, **_kwargs):
             return MiddlewareOutcome(short_circuit=True, reason="blocked by test")
@@ -148,7 +150,7 @@ async def test_turn_executor_emits_memory_trace_artifacts_for_before_prompt_shor
     )
     assert result.success is False
 
-    out_dir = Path(tmp_path) / "observability" / "sess-memory-fail" / "ISSUE-1" / "000_developer"
+    out_dir = Path(tmp_path) / "observability" / "sess-memory-fail" / "issue-1" / "000_developer"
     trace = json.loads((out_dir / "memory_trace.json").read_text(encoding="utf-8"))
     retrieval = json.loads((out_dir / "memory_retrieval_trace.json").read_text(encoding="utf-8"))
 
@@ -160,6 +162,7 @@ async def test_turn_executor_emits_memory_trace_artifacts_for_before_prompt_shor
 
 @pytest.mark.asyncio
 async def test_turn_executor_emits_memory_trace_artifacts_for_runtime_exception(tmp_path):
+    """Layer: integration. A controlled model exception retains real failure traces."""
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -205,7 +208,7 @@ async def test_turn_executor_emits_memory_trace_artifacts_for_runtime_exception(
     )
     assert result.success is False
 
-    out_dir = Path(tmp_path) / "observability" / "sess-memory-exception" / "ISSUE-1" / "000_developer"
+    out_dir = Path(tmp_path) / "observability" / "sess-memory-exception" / "issue-1" / "000_developer"
     trace = json.loads((out_dir / "memory_trace.json").read_text(encoding="utf-8"))
 
     assert trace["output"]["output_type"] == "error"

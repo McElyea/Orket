@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
+# Layer: integration
 def test_run_context_sweep_generates_per_context_summaries_and_ceiling(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -68,7 +70,7 @@ def test_run_context_sweep_generates_per_context_summaries_and_ceiling(tmp_path:
     out_dir = tmp_path / "context_sweep"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/context/run_context_sweep.py",
             "--contexts",
             "4096,8192,16384",
@@ -113,7 +115,7 @@ def test_run_context_sweep_generates_per_context_summaries_and_ceiling(tmp_path:
     assert ceiling["vram_profile"] == "safe"
     assert ceiling["provenance"]["ref"] == "run:test"
 
-
+# Layer: integration
 def test_run_context_sweep_can_resolve_context_profile(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -175,7 +177,7 @@ def test_run_context_sweep_can_resolve_context_profile(tmp_path: Path) -> None:
     out_dir = tmp_path / "context_sweep"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/context/run_context_sweep.py",
             "--context-profile",
             "safe",
@@ -208,7 +210,7 @@ def test_run_context_sweep_can_resolve_context_profile(tmp_path: Path) -> None:
     ceiling = json.loads((out_dir / "context_ceiling.json").read_text(encoding="utf-8"))
     assert ceiling["safe_context_ceiling"] == 2048
 
-
+# Layer: integration
 def test_run_context_sweep_can_resolve_matrix_config_defaults(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -264,7 +266,7 @@ def test_run_context_sweep_can_resolve_matrix_config_defaults(tmp_path: Path) ->
     out_dir = tmp_path / "context_sweep"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/context/run_context_sweep.py",
             "--contexts",
             "1024",

@@ -7,12 +7,8 @@ from typing import Any
 
 import yaml
 
+from orket.runtime.config import contract_assets
 from orket.runtime.registry.protocol_hashing import hash_canonical_json
-
-DEFAULT_ARTIFACT_SCHEMA_REGISTRY_PATH = Path("core/artifacts/schema_registry.yaml")
-DEFAULT_COMPATIBILITY_MAP_PATH = Path("core/tools/compatibility_map.yaml")
-DEFAULT_COMPATIBILITY_MAP_SCHEMA_PATH = Path("core/tools/compatibility_map_schema.yaml")
-DEFAULT_TOOL_REGISTRY_PATH = Path("core/tools/tool_registry.yaml")
 
 TOOL_DETERMINISM_CLASSES = {"pure", "workspace", "external"}
 TOOL_RING_CLASSES = {"core", "compatibility", "experimental"}
@@ -49,10 +45,10 @@ def parse_contract_version(value: Any, *, field_name: str) -> str:
 
 def load_runtime_contract_snapshots(
     *,
-    artifact_schema_registry_path: Path | str = DEFAULT_ARTIFACT_SCHEMA_REGISTRY_PATH,
-    compatibility_map_path: Path | str = DEFAULT_COMPATIBILITY_MAP_PATH,
-    compatibility_map_schema_path: Path | str = DEFAULT_COMPATIBILITY_MAP_SCHEMA_PATH,
-    tool_registry_path: Path | str = DEFAULT_TOOL_REGISTRY_PATH,
+    artifact_schema_registry_path: Path | str = contract_assets.DEFAULT_ARTIFACT_SCHEMA_REGISTRY_PATH,
+    compatibility_map_path: Path | str = contract_assets.DEFAULT_COMPATIBILITY_MAP_PATH,
+    compatibility_map_schema_path: Path | str = contract_assets.DEFAULT_COMPATIBILITY_MAP_SCHEMA_PATH,
+    tool_registry_path: Path | str = contract_assets.DEFAULT_TOOL_REGISTRY_PATH,
 ) -> RuntimeContractSnapshots:
     artifact_registry = _load_yaml_dict(Path(artifact_schema_registry_path))
     tool_registry = _load_yaml_dict(Path(tool_registry_path))

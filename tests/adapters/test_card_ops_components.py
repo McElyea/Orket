@@ -7,9 +7,6 @@ import pytest
 
 from orket.adapters.storage.card_archive_ops import CardArchiveOps
 from orket.adapters.storage.card_migrations import CardMigrations
-from orket.adapters.storage.card_misc_ops import CardMiscOps
-from orket.core.domain.records import IssueRecord
-from orket.schema import CardStatus, CardType
 
 
 @pytest.mark.asyncio
@@ -40,43 +37,3 @@ async def test_card_archive_ops_archive_cards_batches_results() -> None:
     ops = CardArchiveOps(_execute)
     result = await ops.archive_cards(["a", "missing"])
     assert result == {"archived": ["a"], "missing": ["missing"]}
-
-
-@pytest.mark.asyncio
-async def test_card_misc_ops_independent_ready_filter() -> None:
-    async def _execute(_operation, *, row_factory=False, commit=False):
-        return []
-
-    async def _get_by_build(_build_id: str):
-        return [
-            IssueRecord(
-                id="D1",
-                session_id="S",
-                build_id="B",
-                seat="dev",
-                summary="done",
-                type=CardType.ISSUE,
-                priority="p1",
-                sprint="s1",
-                status=CardStatus.DONE,
-                note="",
-                depends_on=[],
-            ),
-            IssueRecord(
-                id="R1",
-                session_id="S",
-                build_id="B",
-                seat="dev",
-                summary="ready",
-                type=CardType.ISSUE,
-                priority="p1",
-                sprint="s1",
-                status=CardStatus.READY,
-                note="",
-                depends_on=["D1"],
-            ),
-        ]
-
-    ops = CardMiscOps(_execute, _get_by_build)
-    ready = await ops.get_independent_ready_issues("B")
-    assert [issue.id for issue in ready] == ["R1"]

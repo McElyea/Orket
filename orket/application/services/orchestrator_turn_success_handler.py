@@ -5,6 +5,9 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+from orket.application.services.card_completion_turn_service import verify_card_completion_claims
+from orket.core.contracts.card_completion_commit import SUCCESSFUL_CARD_STATUSES, CardCompletionRejected
+from orket.core.domain.execution import ExecutionTurn
 from orket.logging import log_event
 
 
@@ -26,7 +29,7 @@ class OrchestratorTurnSuccessHandler:
         save_checkpoint: Callable[..., Awaitable[None]],
         create_pending_gate_request: Callable[..., Awaitable[str]],
         validate_guard_rejection_payload: Callable[[Any], dict[str, Any]],
-        extract_guard_review_payload: Callable[[str], Any],
+        extract_guard_review_payload: Callable[[ExecutionTurn], Any],
         resolve_guard_event: Callable[[Any], str | None],
         handle_failure: Callable[..., Awaitable[None]],
     ) -> None:
@@ -50,7 +53,7 @@ class OrchestratorTurnSuccessHandler:
         self,
         *,
         issue: Any,
-        turn_content: str,
+        turn: ExecutionTurn,
         updated_issue: Any,
         run_id: str,
         seat_name: str,
@@ -58,7 +61,7 @@ class OrchestratorTurnSuccessHandler:
         turn_index: int,
         roles_to_load: list[str],
     ) -> bool:
-        guard_payload = self.extract_guard_review_payload(turn_content or "")
+        guard_payload = self.extract_guard_review_payload(turn)
         guard_event = self.resolve_guard_event(updated_issue.status)
         if guard_event == "guard_rejected":
             guard_validation = self.validate_guard_rejection_payload(guard_payload)
@@ -149,13 +152,20 @@ class OrchestratorTurnSuccessHandler:
         team: Any,
         env: Any,
         active_build: str,
+        context: dict[str, Any],
     ) -> None:
         self.transcript.append(result.turn)
         updated_issue = await self.async_cards.get_by_id(issue.id)
+        await verify_card_completion_claims(cards=self.async_cards, turn=result.turn, context=context)
+        receipt = None
+        if updated_issue.status.value in SUCCESSFUL_CARD_STATUSES:
+            receipt = await self.async_cards.read_completion_receipt(issue.id)
+            if receipt is None:
+                raise CardCompletionRejected("E_CARD_COMPLETION_RESULT_UNVERIFIED")
         if is_guard_turn:
             should_continue = await self._handle_guard_turn(
                 issue=issue,
-                turn_content=result.turn.content or "",
+                turn=result.turn,
                 updated_issue=updated_issue,
                 run_id=run_id,
                 seat_name=seat_name,
@@ -202,6 +212,7 @@ class OrchestratorTurnSuccessHandler:
                     reason="post_success_evaluator",
                     metadata={"run_id": run_id, "seat": seat_name, "turn_index": turn_index},
                     roles=roles_to_load,
+                    **({"completion_request": receipt.request} if receipt is not None else {}),
                 )
 
         await provider.clear_context()

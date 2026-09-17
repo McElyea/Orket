@@ -99,6 +99,7 @@ async def run_proof(*, proof_root: Path = PROOF_ROOT, package_output: Path = PAC
         event_store=event_store,
         connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
         utc_now=clock,
+        workspace_root=workspace_root,
     )
     execution_service = OutwardRunExecutionService(
         run_store=run_store,

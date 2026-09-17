@@ -7,15 +7,18 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.application.services.command_process_supervisor import CommandProcessSupervisor
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider
 from orket.runtime.config.defaults import configured_provider
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.provider_runtime_target import list_provider_models
+from orket.services.extension_memory_namespace import validate_extension_id
 from orket.services.profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
 from orket.services.scoped_memory_store import ScopedMemoryRecord, ScopedMemoryStore
-from orket_extension_sdk.audio import TTSProvider, VoiceInfo
+from orket_extension_sdk.audio import NullTTSProvider, TTSProvider, VoiceInfo
 from orket_extension_sdk.llm import GenerateRequest
 from orket_extension_sdk.voice import (
     TranscribeRequest,
@@ -30,8 +33,8 @@ from .extension_runtime_support import (
     scoped_session_id,
     serialize_record,
     serialize_voice_info,
+    synthesize_audio,
     validate_clear_scope,
-    validate_extension_id,
     validate_memory_scope,
 )
 
@@ -53,19 +56,23 @@ class ExtensionRuntimeService:
         tts_provider: TTSProvider | None = None,
     ) -> None:
         self._project_root = project_root.resolve()
+        self._owns_model_provider = model_provider is None
         self._model_provider = model_provider or LocalModelCapabilityProvider(
-            model=DEFAULT_LOCAL_MODEL,
-            temperature=0.2,
-            seed=None,
+            model=DEFAULT_LOCAL_MODEL, temperature=0.2, seed=None,
         )
         self._memory_store = memory_store or ScopedMemoryStore(
             default_memory_db_path(self._project_root),
             profile_write_policy=ProfileWritePolicy(),
         )
         self._stt_provider = stt_provider or HostSTTCapabilityProvider()
-        self._tts_provider = tts_provider or build_tts_provider(input_config={})
+        self._tts_provider = tts_provider or build_tts_provider(input_config={}, workspace=self._project_root,
+            command_runner=CommandProcessSupervisor(self._project_root, cancellation_event="piper_process_cancelled"))
         self._state_lock = asyncio.Lock()
         self._states: dict[str, _ExtensionRuntimeState] = {}
+
+    async def close(self) -> None:
+        if self._owns_model_provider:
+            await run_owned_thread(self._model_provider.close, label="extension default model client cleanup")
 
     async def status(self, *, extension_id: str) -> dict[str, Any]:
         validated_extension_id = validate_extension_id(extension_id)
@@ -74,7 +81,8 @@ class ExtensionRuntimeService:
         return {
             "ok": True,
             "extension_id": validated_extension_id,
-            "model_available": bool(await asyncio.to_thread(self._model_provider.is_available)),
+            "model_available": bool(await run_owned_thread(self._model_provider.is_available,
+                                                           label="extension model availability")),
             "stt_available": stt_available,
             "tts_available": await self._tts_available(),
             "text_only_degraded": not stt_available,
@@ -125,7 +133,7 @@ class ExtensionRuntimeService:
             user_message=str(user_message or "").strip(),
             max_tokens=max(1, int(max_tokens)),
             temperature=float(temperature),
-            stop_sequences=[str(token) for token in list(stop_sequences or []) if str(token).strip()],
+            stop_sequences=list(stop_sequences),
         )
         if not request.user_message:
             raise ValueError("E_EXTENSION_RUNTIME_MESSAGE_REQUIRED")
@@ -140,7 +148,9 @@ class ExtensionRuntimeService:
             "extension_id": validated_extension_id,
             "text": str(result.text or ""),
             "model": str(result.model or ""),
-            "latency_ms": int(result.latency_ms),
+            "schema_version": result.schema_version,
+            "latency_ms": result.latency_ms,
+            "latency_posture": result.latency_posture,
             "input_tokens": result.input_tokens,
             "output_tokens": result.output_tokens,
         }
@@ -285,7 +295,7 @@ class ExtensionRuntimeService:
             command=str(command).strip() or "stop",  # type: ignore[arg-type]
             silence_delay_seconds=silence_delay_seconds,
         )
-        result = await asyncio.to_thread(state.voice_controller.control, request)
+        result = await run_owned_thread(lambda: state.voice_controller.control(request), label="extension voice control")
         return {
             "ok": result.ok,
             "extension_id": validated_extension_id,
@@ -308,7 +318,7 @@ class ExtensionRuntimeService:
         except (binascii.Error, ValueError) as exc:
             raise ValueError("E_EXTENSION_RUNTIME_AUDIO_B64_INVALID") from exc
         request = TranscribeRequest(audio_bytes=audio_bytes, mime_type=mime_type, language_hint=language_hint)
-        result = await asyncio.to_thread(self._stt_provider.transcribe, request)
+        result = await run_owned_thread(lambda: self._stt_provider.transcribe(request), label="extension transcription")
         return {
             "ok": result.ok,
             "extension_id": validated_extension_id,
@@ -344,14 +354,10 @@ class ExtensionRuntimeService:
             raise ValueError("E_EXTENSION_RUNTIME_TTS_TEXT_REQUIRED")
         voices = await self._tts_voices()
         resolved_voice_id = str(voice_id or "").strip() or str((voices[0].voice_id if voices else "null") or "null")
-        clip = await asyncio.to_thread(
-            self._tts_provider.synthesize,
-            normalized_text,
-            resolved_voice_id,
-            str(emotion_hint or "neutral"),
-            float(speed),
-        )
+        clip, lifetime, resolved_voice_id, voice_metadata = await synthesize_audio(
+            self._tts_provider, normalized_text, resolved_voice_id, str(emotion_hint or "neutral"), float(speed))
         samples = bytes(clip.samples or b"")
+        null_tts = type(self._tts_provider) is NullTTSProvider
         return {
             "ok": bool(samples),
             "extension_id": validated_extension_id,
@@ -360,8 +366,10 @@ class ExtensionRuntimeService:
             "channels": int(clip.channels),
             "format": str(clip.format or "pcm_s16le"),
             "audio_b64": base64.b64encode(samples).decode("utf-8"),
-            "error_code": None if samples else "tts_unavailable",
-            "error_message": "" if samples else "No TTS backend configured.",
+            "process_lifetime": lifetime,
+            "voice_metadata": voice_metadata,
+            "error_code": None if samples else ("tts_unavailable" if null_tts else "tts_empty_audio"),
+            "error_message": "" if samples else ("No TTS backend configured." if null_tts else "TTS backend returned no audio."),
         }
 
     async def _extension_state(self, extension_id: str) -> _ExtensionRuntimeState:
@@ -378,11 +386,14 @@ class ExtensionRuntimeService:
         state.active_sessions.add(resolved_session_id)
 
     async def _stt_available(self) -> bool:
-        probe = await asyncio.to_thread(self._stt_provider.transcribe, TranscribeRequest(audio_bytes=b""))
+        probe = await run_owned_thread(lambda: self._stt_provider.transcribe(TranscribeRequest(audio_bytes=b"")),
+                                       label="extension transcription availability")
         return bool(probe.ok or str(probe.error_code or "") != "stt_unavailable")
 
     async def _tts_available(self) -> bool:
         return bool(await self._tts_voices())
 
     async def _tts_voices(self) -> list[VoiceInfo]:
-        return await asyncio.to_thread(self._tts_provider.list_voices)
+        if type(self._tts_provider) is NullTTSProvider:
+            return []
+        return await run_owned_thread(self._tts_provider.list_voices, label="extension voice discovery")

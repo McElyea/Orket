@@ -91,7 +91,10 @@ async def test_ledger_export_hashes_full_export_and_detects_payload_tampering(tm
     assert exported["summary"]["event_count"] == len(exported["events"])
     assert exported["events"][0]["previous_chain_hash"] == "GENESIS"
     assert stored_events[0].event_hash
-    assert stored_events[0].chain_hash
+    assert stored_events[0].chain_hash is None  # v1 chains are read-only export projections.
+    assert exported["events"][0]["chain_hash"]
+    assert exported["retained"]["anchor"]["event_count"] == len(stored_events)
+    assert exported["retained"]["integrity"] == "valid"
     assert verified["result"] == "valid"
     assert verify_ledger_export(tampered)["result"] == "invalid"
 

@@ -15,6 +15,7 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
     return module
 
 
+# Layer: contract
 def test_trend_report_includes_required_fields(tmp_path: Path) -> None:
     mod = _load_script_module("report_benchmark_trends_test", "scripts/benchmarks/report_benchmark_trends.py")
     input_path = tmp_path / "scored.json"
@@ -41,19 +42,21 @@ def test_trend_report_includes_required_fields(tmp_path: Path) -> None:
     assert row["delta_overall_avg_score"] is None
 
 
+# Layer: contract
 def test_trend_report_computes_rolling_deltas(tmp_path: Path) -> None:
     mod = _load_script_module("report_benchmark_trends_delta_test", "scripts/benchmarks/report_benchmark_trends.py")
     first = tmp_path / "a.json"
     second = tmp_path / "b.json"
     first.write_text(
         """{
-  "schema_version": "v1",
+  "schema_version": "v2",
   "policy_version": "v1",
   "venue": "standard",
   "flow": "default",
   "overall_avg_score": 4.5,
   "determinism_rate": 0.9,
   "avg_latency_ms": 40.0,
+  "latency_summary": {"schema_version": "benchmark_latency.v1", "status": "reported", "source": "input_run.duration_ms", "samples_reported": 2, "runs_total": 2},
   "avg_cost_usd": 0.2
 }
 """,
@@ -61,13 +64,14 @@ def test_trend_report_computes_rolling_deltas(tmp_path: Path) -> None:
     )
     second.write_text(
         """{
-  "schema_version": "v1",
+  "schema_version": "v2",
   "policy_version": "v1",
   "venue": "standard",
   "flow": "default",
   "overall_avg_score": 4.8,
   "determinism_rate": 1.0,
   "avg_latency_ms": 38.0,
+  "latency_summary": {"schema_version": "benchmark_latency.v1", "status": "reported", "source": "input_run.duration_ms", "samples_reported": 2, "runs_total": 2},
   "avg_cost_usd": 0.1
 }
 """,
@@ -82,6 +86,7 @@ def test_trend_report_computes_rolling_deltas(tmp_path: Path) -> None:
     assert second_row["delta_avg_cost_usd"] == -0.1
 
 
+# Layer: contract
 def test_leaderboard_groups_by_schema_and_policy(tmp_path: Path) -> None:
     mod = _load_script_module("build_benchmark_leaderboard_test", "scripts/benchmarks/build_benchmark_leaderboard.py")
     a = tmp_path / "a.json"

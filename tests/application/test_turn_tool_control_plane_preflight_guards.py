@@ -1,5 +1,4 @@
-# Layer: unit
-
+# Layer: integration
 from __future__ import annotations
 
 import pytest
@@ -10,7 +9,7 @@ from orket.application.services.turn_tool_control_plane_resource_lifecycle impor
     namespace_resource_id_for_run,
     reservation_id_for_run,
 )
-from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
+from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.core.domain import (
     AttemptState,
     CleanupAuthorityClass,
@@ -25,20 +24,18 @@ from orket.core.domain import (
     SideEffectBoundaryClass,
     TruthFailureClass,
 )
-from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
-from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
+from tests.integration.test_governed_agent_terminal_history import logical_state
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("deterministic_turn_clock")]
 
 
 @pytest.mark.asyncio
-async def test_turn_tool_preflight_terminal_closeout_abandons_non_terminal_attempt() -> None:
-    execution_repo = InMemoryControlPlaneExecutionRepository()
-    record_repo = InMemoryControlPlaneRecordRepository()
-    service = TurnToolControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+# Layer: integration
+async def test_turn_tool_preflight_terminal_closeout_abandons_non_terminal_attempt(tmp_path) -> None:
+    service = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    execution_repo = service.execution_repository
+    record_repo = service.publication.repository
 
     run = await service._ensure_admission_pending_run(
         session_id="sess-turn-tool-preflight-guard",
@@ -60,10 +57,8 @@ async def test_turn_tool_preflight_terminal_closeout_abandons_non_terminal_attem
         violation_reasons=["schema_guard_failed"],
     )
     closed_attempt = await execution_repo.get_attempt_record(attempt_id=str(run.current_attempt_id))
-    decision = (
-        None
-        if closed_attempt is None or closed_attempt.recovery_decision_id is None
-        else await record_repo.get_recovery_decision(decision_id=closed_attempt.recovery_decision_id)
+    decision = await record_repo.get_recovery_decision(
+        decision_id=f"turn-tool-recovery:{closed_run.run_id}:preflight:0001"
     )
     policy_snapshot = await record_repo.get_resolved_policy_snapshot(snapshot_id=closed_run.policy_snapshot_id)
     configuration_snapshot = await record_repo.get_resolved_configuration_snapshot(
@@ -74,10 +69,10 @@ async def test_turn_tool_preflight_terminal_closeout_abandons_non_terminal_attem
     assert closed_attempt is not None
     assert closed_attempt.attempt_state is AttemptState.ABANDONED
     assert closed_attempt.end_timestamp is not None
-    assert closed_attempt.side_effect_boundary_class is SideEffectBoundaryClass.PRE_EFFECT_FAILURE
-    assert closed_attempt.failure_class == "tool_execution_blocked"
-    assert closed_attempt.failure_plane is FailurePlane.TRUTH
-    assert closed_attempt.failure_classification is TruthFailureClass.CLAIM_EXCEEDS_AUTHORITY
+    assert closed_attempt.side_effect_boundary_class is None and closed_attempt.recovery_decision_id is None
+    assert closed_attempt.failure_class is None
+    assert decision.failure_plane is FailurePlane.TRUTH
+    assert decision.failure_classification is TruthFailureClass.CLAIM_EXCEEDS_AUTHORITY
     assert decision is not None
     assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
     assert decision.side_effect_boundary_class is SideEffectBoundaryClass.PRE_EFFECT_FAILURE
@@ -90,13 +85,11 @@ async def test_turn_tool_preflight_terminal_closeout_abandons_non_terminal_attem
 
 
 @pytest.mark.asyncio
-async def test_turn_tool_preflight_terminal_closeout_releases_execution_authority_after_promotion() -> None:
-    execution_repo = InMemoryControlPlaneExecutionRepository()
-    record_repo = InMemoryControlPlaneRecordRepository()
-    service = TurnToolControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+# Layer: integration
+async def test_turn_tool_preflight_terminal_closeout_releases_execution_authority_after_promotion(tmp_path) -> None:
+    service = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    execution_repo = service.execution_repository
+    record_repo = service.publication.repository
 
     run, attempt = await service.begin_execution(
         session_id="sess-turn-tool-preflight-promoted",
@@ -118,10 +111,8 @@ async def test_turn_tool_preflight_terminal_closeout_releases_execution_authorit
         violation_reasons=["schema_guard_failed"],
     )
     closed_attempt = await execution_repo.get_attempt_record(attempt_id=attempt.attempt_id)
-    decision = (
-        None
-        if closed_attempt is None or closed_attempt.recovery_decision_id is None
-        else await record_repo.get_recovery_decision(decision_id=closed_attempt.recovery_decision_id)
+    decision = await record_repo.get_recovery_decision(
+        decision_id=f"turn-tool-recovery:{closed_run.run_id}:preflight:0001"
     )
     policy_snapshot = await record_repo.get_resolved_policy_snapshot(snapshot_id=closed_run.policy_snapshot_id)
     configuration_snapshot = await record_repo.get_resolved_configuration_snapshot(
@@ -136,10 +127,10 @@ async def test_turn_tool_preflight_terminal_closeout_releases_execution_authorit
     assert closed_attempt is not None
     assert closed_attempt.attempt_state is AttemptState.ABANDONED
     assert closed_attempt.end_timestamp is not None
-    assert closed_attempt.side_effect_boundary_class is SideEffectBoundaryClass.PRE_EFFECT_FAILURE
-    assert closed_attempt.failure_class == "tool_execution_blocked"
-    assert closed_attempt.failure_plane is FailurePlane.TRUTH
-    assert closed_attempt.failure_classification is TruthFailureClass.CLAIM_EXCEEDS_AUTHORITY
+    assert closed_attempt.side_effect_boundary_class is None and closed_attempt.recovery_decision_id is None
+    assert closed_attempt.failure_class is None
+    assert decision.failure_plane is FailurePlane.TRUTH
+    assert decision.failure_classification is TruthFailureClass.CLAIM_EXCEEDS_AUTHORITY
     assert decision is not None
     assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
     assert decision.side_effect_boundary_class is SideEffectBoundaryClass.PRE_EFFECT_FAILURE
@@ -161,13 +152,10 @@ async def test_turn_tool_preflight_terminal_closeout_releases_execution_authorit
 
 
 @pytest.mark.asyncio
-async def test_turn_tool_begin_execution_publishes_durable_snapshots() -> None:
-    execution_repo = InMemoryControlPlaneExecutionRepository()
-    record_repo = InMemoryControlPlaneRecordRepository()
-    service = TurnToolControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+# Layer: integration
+async def test_turn_tool_begin_execution_publishes_durable_snapshots(tmp_path) -> None:
+    service = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    record_repo = service.publication.repository
 
     run, attempt = await service.begin_execution(
         session_id="sess-turn-tool-snapshot-proof",
@@ -194,13 +182,11 @@ async def test_turn_tool_begin_execution_publishes_durable_snapshots() -> None:
 
 
 @pytest.mark.asyncio
-async def test_turn_tool_begin_execution_fail_closes_reservation_and_lease_on_promotion_error() -> None:
-    execution_repo = InMemoryControlPlaneExecutionRepository()
-    record_repo = InMemoryControlPlaneRecordRepository()
-    service = TurnToolControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+# Layer: integration
+async def test_turn_tool_begin_execution_restores_existing_admission_on_promotion_error(tmp_path, monkeypatch) -> None:
+    service = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    execution_repo = service.execution_repository
+    record_repo = service.publication.repository
 
     run = await service._ensure_admission_pending_run(
         session_id="sess-turn-tool-activation-fail-1",
@@ -210,10 +196,16 @@ async def test_turn_tool_begin_execution_fail_closes_reservation_and_lease_on_pr
         proposal_hash="activation-fail-proposal-hash",
     )
 
-    async def _raise_promote_failure(**_kwargs) -> None:
+    before = await logical_state(execution_repo.db_path)
+    promote = ControlPlanePublicationService.promote_reservation_to_lease
+    promoted = []
+
+    async def _raise_promote_failure(publication, **kwargs) -> None:
+        record = await promote(publication, **kwargs)
+        promoted.append(record)
         raise RuntimeError("promote failed")
 
-    service.publication.promote_reservation_to_lease = _raise_promote_failure  # type: ignore[method-assign]
+    monkeypatch.setattr(ControlPlanePublicationService, "promote_reservation_to_lease", _raise_promote_failure)
 
     with pytest.raises(RuntimeError, match="promote failed"):
         await service.begin_execution(
@@ -232,26 +224,21 @@ async def test_turn_tool_begin_execution_fail_closes_reservation_and_lease_on_pr
     lease = await record_repo.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run.run_id))
     resource_history = await record_repo.list_resource_records(resource_id=namespace_resource_id_for_run(run=run))
 
-    assert updated_run is not None
-    assert updated_run.lifecycle_state is RunState.ADMITTED
+    assert len(promoted) == 1 and promoted[0].status is ReservationStatus.PROMOTED_TO_LEASE
+    assert await logical_state(execution_repo.db_path) == before
+    assert updated_run == run
+    assert updated_run.lifecycle_state is RunState.ADMISSION_PENDING
     assert reservation is not None
-    assert reservation.status is ReservationStatus.INVALIDATED
-    assert lease is not None
-    assert lease.status is LeaseStatus.RELEASED
-    assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
-        "lease_status:lease_active",
-        "lease_status:lease_released",
-    ]
+    assert reservation.status is ReservationStatus.ACTIVE
+    assert lease is None
+    assert resource_history == []
 
 
 @pytest.mark.asyncio
-async def test_turn_tool_begin_execution_fail_closed_on_existing_executing_resource_drift() -> None:
-    execution_repo = InMemoryControlPlaneExecutionRepository()
-    record_repo = InMemoryControlPlaneRecordRepository()
-    service = TurnToolControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+# Layer: integration
+async def test_turn_tool_begin_execution_fail_closed_on_existing_executing_resource_drift(tmp_path) -> None:
+    service = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    record_repo = service.publication.repository
 
     run, _attempt = await service.begin_execution(
         session_id="sess-turn-tool-resource-drift-active",
@@ -288,13 +275,9 @@ async def test_turn_tool_begin_execution_fail_closed_on_existing_executing_resou
 
 
 @pytest.mark.asyncio
-async def test_turn_tool_begin_execution_fail_closed_on_completed_reuse_resource_drift() -> None:
-    execution_repo = InMemoryControlPlaneExecutionRepository()
-    record_repo = InMemoryControlPlaneRecordRepository()
-    service = TurnToolControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+# Layer: integration
+async def test_turn_tool_begin_execution_fail_closed_on_completed_reuse_resource_drift(tmp_path) -> None:
+    service = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
 
     run, attempt = await service.begin_execution(
         session_id="sess-turn-tool-resource-drift-complete",

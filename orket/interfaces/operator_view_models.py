@@ -2,22 +2,16 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.application.services.operator_completion_service import card_filter_bucket, operator_verification
 from orket.core.cards_runtime_contract import ODR_EXECUTION_PROFILE, resolve_cards_runtime
 from orket.interfaces.operator_view_support import (
     CARD_VIEW_FILTERS_V1,
-    LIFECYCLE_CATEGORY_V1,
-    _BLOCKED_CARD_STATUSES,
-    _COMPLETED_CARD_STATUSES,
-    _REVIEW_CARD_STATUSES,
-    _RUNNING_CARD_STATUSES,
-    _TERMINAL_FAILURE_CATEGORIES,
     _dict,
     _optional_int,
     _reason_codes,
     _status_token,
     _text,
     _text_list,
-    card_filter_bucket,
     card_next_action,
     card_summary_text,
     last_run_summary,
@@ -30,12 +24,13 @@ def build_run_history_item_view(
     status: str | None,
     summary: Any,
     artifacts: Any,
+    completion: dict[str, Any],
     issue_count: int = 0,
 ) -> dict[str, Any]:
     normalized_summary = _dict(summary)
-    normalized_artifacts = _dict(artifacts)
-    classification = _classify_run_outcome(summary=normalized_summary, artifacts=normalized_artifacts, status=status)
+    classification = _classify_run_outcome(summary=normalized_summary, status=status, completion=completion)
     return {
+        **completion,
         "session_id": str(session_id or "").strip(),
         "raw_status": classification["raw_status"],
         "primary_status": classification["primary_status"],
@@ -58,16 +53,18 @@ def build_run_detail_view(
     status: str | None,
     summary: Any,
     artifacts: Any,
+    completion: dict[str, Any],
     issue_count: int = 0,
 ) -> dict[str, Any]:
     normalized_summary = _dict(summary)
     normalized_artifacts = _dict(artifacts)
-    classification = _classify_run_outcome(summary=normalized_summary, artifacts=normalized_artifacts, status=status)
+    classification = _classify_run_outcome(summary=normalized_summary, status=status, completion=completion)
     packet1 = _dict(normalized_summary.get("truthful_runtime_packet1"))
     packet1_provenance = _dict(packet1.get("provenance"))
     cards_runtime = _cards_runtime(normalized_summary)
     control_plane = _dict(normalized_summary.get("control_plane"))
     return {
+        **completion,
         "session_id": str(session_id or "").strip(),
         "raw_status": classification["raw_status"],
         "primary_status": classification["primary_status"],
@@ -81,6 +78,7 @@ def build_run_detail_view(
         "failure_reason": classification["failure_reason"],
         "issue_count": max(0, int(issue_count or 0)),
         "verification": classification["verification"],
+        "source_attribution": _dict(_dict(normalized_summary.get("truthful_runtime_packet2")).get("source_attribution")),
         "provenance": {
             "truth_classification": _text(packet1_provenance.get("truth_classification")),
             "primary_output_kind": _text(packet1_provenance.get("primary_output_kind")) or "none",
@@ -96,18 +94,20 @@ def build_run_detail_view(
     }
 
 
-def build_card_list_item_view(*, card: Any, run_view: dict[str, Any] | None) -> dict[str, Any]:
+def build_card_list_item_view(*, card: Any, run_view: dict[str, Any] | None, completion: dict[str, Any]) -> dict[str, Any]:
     payload = _card_payload(card)
     filter_bucket = card_filter_bucket(
         raw_status=_status_token(payload.get("status")),
         lifecycle_category=_text((run_view or {}).get("lifecycle_category")),
+        completion_accepted=completion["completion_accepted"],
     )
     primary_status = "failed" if filter_bucket == "terminal_failure" else filter_bucket
-    summary = card_summary_text(run_summary=_text((run_view or {}).get("summary")), filter_bucket=filter_bucket)
+    summary = card_summary_text(filter_bucket=filter_bucket)
     reason_codes = [f"card.status.{_status_token(payload.get('status')) or 'unknown'}"]
     if run_view is not None:
         reason_codes.extend(_reason_codes(run_view.get("reason_codes")))
     return {
+        **completion,
         "card_id": _text(payload.get("id")),
         "session_id": _text(payload.get("session_id")),
         "build_id": _text(payload.get("build_id")),
@@ -134,10 +134,11 @@ def build_card_detail_view(
     history: Any,
     comments: Any,
     run_view: dict[str, Any] | None,
+    completion: dict[str, Any],
 ) -> dict[str, Any]:
     payload = _card_payload(card)
     runtime = resolve_cards_runtime(issue=_IssueViewShim(payload))
-    list_item = build_card_list_item_view(card=payload, run_view=run_view)
+    list_item = build_card_list_item_view(card=payload, run_view=run_view, completion=completion)
     return {
         **list_item,
         "description": _text(payload.get("description")),
@@ -167,7 +168,7 @@ def card_view_matches_filter(view: dict[str, Any], filter_name: str | None) -> b
     return normalized in CARD_VIEW_FILTERS_V1 and normalized == _text(view.get("filter_bucket")).lower()
 
 
-def _classify_run_outcome(*, summary: dict[str, Any], artifacts: dict[str, Any], status: str | None) -> dict[str, Any]:
+def _classify_run_outcome(*, summary: dict[str, Any], status: str | None, completion: dict[str, Any]) -> dict[str, Any]:
     raw_status = _text(status) or _text(summary.get("status"))
     status_token = raw_status.lower()
     packet1 = _dict(summary.get("truthful_runtime_packet1"))
@@ -179,9 +180,9 @@ def _classify_run_outcome(*, summary: dict[str, Any], artifacts: dict[str, Any],
     primary_output_kind = _text(packet1_provenance.get("primary_output_kind")) or "none"
     truth_classification = _text(packet1_provenance.get("truth_classification"))
     cards_resolution_state = _text(summary.get("cards_runtime_resolution_state")) or _text(cards_runtime.get("resolution_state"))
-    verification = _verification_view(summary=summary, artifacts=artifacts)
+    verification = operator_verification(completion)
     degraded = bool(summary.get("is_degraded")) or truth_classification == "degraded"
-    reason_codes: list[str] = []
+    reason_codes = _reason_codes(verification["reason_codes"])
     if cards_resolution_state and cards_resolution_state != "resolved":
         degraded = True
         reason_codes.append(f"cards_runtime.{cards_resolution_state}")
@@ -234,41 +235,6 @@ def _classify_run_outcome(*, summary: dict[str, Any], artifacts: dict[str, Any],
         "stop_reason": stop_reason or None,
         "failure_reason": failure_reason or None,
         "verification": verification,
-    }
-
-
-def _verification_view(*, summary: dict[str, Any], artifacts: dict[str, Any]) -> dict[str, Any]:
-    packet2 = _dict(summary.get("truthful_runtime_packet2"))
-    source_attribution = _dict(packet2.get("source_attribution"))
-    synthesis_status = _text(source_attribution.get("synthesis_status")).lower()
-    if synthesis_status == "verified":
-        return {
-            "status": "verified",
-            "summary": "Verification evidence is present and verified.",
-            "reason_codes": ["verification.source_attribution_verified"],
-        }
-    if synthesis_status == "optional_unverified":
-        return {
-            "status": "unverified",
-            "summary": "Run completed without verified source attribution.",
-            "reason_codes": ["verification.source_attribution_optional_unverified"],
-        }
-    if synthesis_status == "blocked":
-        return {
-            "status": "blocked",
-            "summary": "Verification is blocked by missing attribution requirements.",
-            "reason_codes": ["verification.source_attribution_blocked"],
-        }
-    if _text(artifacts.get("runtime_verification_path")):
-        return {
-            "status": "support_only",
-            "summary": "Support verification artifacts exist, but no verified attribution summary was recorded.",
-            "reason_codes": ["verification.support_only"],
-        }
-    return {
-        "status": "not_available",
-        "summary": "No verification summary is available.",
-        "reason_codes": ["verification.not_available"],
     }
 
 
@@ -335,9 +301,9 @@ def _run_summary_text(
     if lifecycle_category == "artifact_run_failed":
         return "Artifact-producing run failed before completion."
     if lifecycle_category == "artifact_run_completed_unverified":
-        return "Completed with output, but verification is still unverified."
+        return "Lifecycle is completed; declared acceptance is unverified."
     if lifecycle_category == "artifact_run_verified":
-        return "Completed with verified evidence."
+        return "Completed with retained evidence for the declared acceptance criteria."
     if lifecycle_category == "degraded_completed":
         return "Completed, but degraded evidence limits how much trust to place in the result."
     if primary_status == "running":
@@ -375,7 +341,7 @@ def _card_payload(card: Any) -> dict[str, Any]:
     if isinstance(card, dict):
         return dict(card)
     if hasattr(card, "model_dump"):
-        dumped = card.model_dump()
+        dumped = card.model_dump(mode="json")
         return dumped if isinstance(dumped, dict) else {}
     return dict(getattr(card, "__dict__", {}) or {})
 

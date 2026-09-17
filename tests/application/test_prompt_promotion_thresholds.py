@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+
+import pytest
+
+from scripts.prompt_lab.compare_candidates import DEFAULT_THRESHOLDS_PATH
 
 
+@pytest.mark.contract
+# Layer: contract
 def test_prompt_promotion_thresholds_file_has_required_guard_keys() -> None:
-    path = Path("benchmarks/results/prompt_lab/prompt_promotion_thresholds.json")
+    """Layer: contract. The repository default enables every required guard criterion."""
+    path = DEFAULT_THRESHOLDS_PATH
     assert path.exists(), "Missing canonical prompt promotion thresholds file."
     payload = json.loads(path.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)

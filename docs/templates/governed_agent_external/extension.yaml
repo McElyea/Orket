@@ -1,6 +1,6 @@
 manifest_version: v0
 extension_id: governed.agent.starter
-extension_version: 0.2.0
+extension_version: 0.3.0a1
 allowed_stdlib_modules: [json]
 workloads:
   - workload_id: governed-agent-loop
@@ -19,6 +19,7 @@ workloads:
       required_host_features:
         - agent_stdio_ipc.v1
         - governed_agent_loop.v1
+        - agent_model_use_receipt.v2
       model_profiles:
         - role: planner
           profile_ref: local.planner

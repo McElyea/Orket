@@ -1,11 +1,8 @@
 """
-Verification Engine (The 'FIT' Executor)
+Legacy fixture migration surface and existing sandbox HTTP verification facade.
 
-Runs physical code fixtures to verify Issue completion.
-
-SECURITY: Fixtures are loaded from a READ-ONLY verification directory.
-Agents can only write to their workspace, NOT to the verification directory.
-This prevents the write-then-execute RCE vulnerability.
+Fixture execution belongs to the async application FixtureVerificationService.
+Path containment alone does not provide read-only storage or hostile-code isolation.
 """
 
 from __future__ import annotations

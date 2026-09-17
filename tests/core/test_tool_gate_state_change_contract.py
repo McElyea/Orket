@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.core.policies.tool_gate import ToolGate
+from orket.application.services.tool_gate_service import ToolGate
 from orket.schema import OrganizationConfig
 
 pytestmark = pytest.mark.asyncio

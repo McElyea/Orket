@@ -11,18 +11,18 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from orket.application.services.governed_agent_ports import (
+from orket.adapters.execution.process_lifecycle import (
+    await_process_stopped,
+    drain_diagnostic_tail,
+    terminate_process_tree,
+)
+from orket.core.contracts.governed_agent_ports import (
     GovernedAgentCapabilityBroker,
     GovernedAgentInvocationBinding,
     GovernedAgentInvocationOutcome,
     InvocationStatus,
 )
-from orket.extensions.governed_agent_process import (
-    await_process_stopped,
-    drain_diagnostic_tail,
-    sanitized_agent_environment,
-    terminate_process_tree,
-)
+from orket.extensions.governed_agent_process import sanitized_agent_environment
 from orket_extension_sdk import (
     AgentFrameSequenceValidator,
     AgentIterationRequest,
@@ -33,6 +33,7 @@ from orket_extension_sdk import (
     validate_agent_iteration_result_against_request,
     write_agent_frame,
 )
+from orket_extension_sdk.manifest import AGENT_MODEL_RECEIPT_FEATURE
 
 _PROTOCOL_VERSION = "agent_stdio_ipc.v1"
 _CONTRACT_VERSION = "governed_agent_loop.v1"
@@ -323,6 +324,7 @@ class GovernedAgentSubprocessInvoker:
         if payload != {
             "supported_contract_versions": [_CONTRACT_VERSION],
             "supported_protocol_versions": [_PROTOCOL_VERSION],
+            "supported_model_receipt_versions": [AGENT_MODEL_RECEIPT_FEATURE],
         }:
             raise ValueError("E_AGENT_READY_FEATURE_MISMATCH")
 

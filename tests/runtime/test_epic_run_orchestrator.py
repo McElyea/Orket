@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
@@ -7,8 +8,15 @@ from typing import Any
 
 import pytest
 
+from orket.adapters.storage.async_card_repository import AsyncCardRepository
+from orket.adapters.storage.epic_publication_repository import SQLiteEpicPublicationRepository
+from orket.application.services.epic_preparation_service import EpicPreparationService
+from orket.application.services.epic_publication_service import EpicPublicationService
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.runtime.epic_run_orchestrator import EpicRunOrchestrator
 from orket.runtime.epic_run_types import EpicRunCallbacks
+
+pytestmark = pytest.mark.unit  # Layer: unit. These orchestration fixtures use stand-in owners.
 
 
 @dataclass
@@ -33,27 +41,6 @@ class _IssueRecord:
         }
 
 
-class _CardsRepo:
-    def __init__(self) -> None:
-        self._rows: list[_IssueRecord] = []
-
-    async def get_by_build(self, build_id: str) -> list[_IssueRecord]:
-        return [row for row in self._rows if row.build_id == build_id]
-
-    async def reset_build(self, build_id: str) -> None:
-        self._rows = [row for row in self._rows if row.build_id != build_id]
-
-    async def save(self, payload: dict[str, Any]) -> None:
-        self._rows.append(
-            _IssueRecord(
-                id=str(payload["id"]),
-                status=str(payload["status"]),
-                build_id=str(payload["build_id"]),
-                params=dict(payload.get("params") or {}),
-            )
-        )
-
-
 class _SessionsRepo:
     def __init__(self) -> None:
         self.sessions: dict[str, dict[str, Any]] = {}
@@ -63,10 +50,11 @@ class _SessionsRepo:
         return self.sessions.get(session_id)
 
     async def start_session(self, session_id: str, payload: dict[str, Any]) -> None:
-        self.sessions[session_id] = dict(payload)
+        self.sessions[session_id] = {**payload, "status": "Started"}
 
     async def complete_session(self, session_id: str, status: str, transcript: list[dict[str, Any]]) -> None:
         self.completed[session_id] = {"status": status, "transcript": list(transcript)}
+        self.sessions[session_id].update(status=status, transcript=json.dumps(transcript))
 
 
 class _SnapshotsRepo:
@@ -76,6 +64,11 @@ class _SnapshotsRepo:
     async def record(self, session_id: str, payload: dict[str, Any], transcript: list[dict[str, Any]]) -> None:
         self.calls.append({"session_id": session_id, "payload": dict(payload), "transcript": list(transcript)})
 
+    async def get(self, session_id: str) -> dict[str, Any] | None:
+        matches = [row for row in self.calls if row["session_id"] == session_id]
+        return {"config_json": json.dumps(matches[-1]["payload"]),
+                "log_history": json.dumps(matches[-1]["transcript"])} if matches else None
+
 
 class _SuccessRepo:
     def __init__(self) -> None:
@@ -83,6 +76,9 @@ class _SuccessRepo:
 
     async def record_success(self, **kwargs: Any) -> None:
         self.calls.append(dict(kwargs))
+
+    async def get(self, session_id: str) -> dict[str, Any] | None:
+        return next((row for row in self.calls if row["session_id"] == session_id), None)
 
 
 class _RunLedger:
@@ -95,6 +91,13 @@ class _RunLedger:
 
     async def finalize_run(self, **kwargs: Any) -> None:
         self.finalized = dict(kwargs)
+
+    async def get_run(self, session_id: str) -> dict[str, Any] | None:
+        if self.started is None or self.started["session_id"] != session_id:
+            return None
+        row = {**self.started, **(self.finalized or {})}
+        return {**row, "status": row.get("status", "running"),
+                "summary_json": row.get("summary", {}), "artifact_json": row.get("artifacts", {})}
 
 
 class _Loader:
@@ -119,7 +122,7 @@ class _ControlPlaneRecord:
 
     def model_dump(self, mode: str = "json") -> dict[str, str]:
         del mode
-        return {"id": self.value}
+        return {"id": self.value, "run_id": self.value}
 
 
 class _ControlPlaneService:
@@ -177,13 +180,14 @@ async def _no_export(**_kwargs: Any) -> None:
     return None
 
 
-@pytest.mark.integration
+@pytest.mark.contract
 @pytest.mark.asyncio
-async def test_epic_run_orchestrator_runs_with_isolated_collaborators(tmp_path: Path) -> None:
-    """Layer: integration. Verifies epic orchestration now consumes explicit runtime inputs outside the decision-node layer."""
+# Layer: contract
+async def test_epic_run_orchestrator_rejects_unvalidated_collaborator_truth(tmp_path: Path) -> None:
+    """Layer: contract. Placeholder control-plane records cannot establish a published result."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
-    cards_repo = _CardsRepo()
+    cards_repo = AsyncCardRepository(tmp_path / "cards.db")
     sessions_repo = _SessionsRepo()
     snapshots_repo = _SnapshotsRepo()
     success_repo = _SuccessRepo()
@@ -200,7 +204,7 @@ async def test_epic_run_orchestrator_runs_with_isolated_collaborators(tmp_path: 
         architecture_governance=SimpleNamespace(idesign=False),
         issues=[issue],
         params={},
-        model_dump=lambda: {"name": "epic-orchestrator"},
+        model_dump=lambda: {"name": "epic-orchestrator", "issues": [issue.model_dump()]},
     )
     team = SimpleNamespace(name="standard", model_dump=lambda: {"name": "standard"})
     env = SimpleNamespace(
@@ -215,11 +219,24 @@ async def test_epic_run_orchestrator_runs_with_isolated_collaborators(tmp_path: 
         ),
     )
 
+    publication = EpicPublicationService(
+        repository=SQLiteEpicPublicationRepository(tmp_path / "cards.db"), cards=cards_repo,
+        sessions=sessions_repo, snapshots=snapshots_repo, success=success_repo, ledger=run_ledger,
+        control_plane=_ControlPlaneService(), scope={"workspace": str(workspace)},
+    )
     epic_runner = EpicRunOrchestrator(
+        publication=publication,
+        preparation=EpicPreparationService(
+            prepare_export=_no_export, reconcile_export=_no_export,
+            publication=publication, materialize_receipts=_no_receipts, materialize_summary=_materialize_summary,
+            export_artifacts=_no_export, export_binding={"enabled": False}, now=RuntimeInputService().utc_now_iso,
+            owner_id=RuntimeInputService().create_effect_owner_id),
         workspace=workspace,
         department="core",
         organization=SimpleNamespace(architecture=SimpleNamespace(idesign_threshold=10)),
-        runtime_input_service=SimpleNamespace(create_session_id=lambda: "sess-epic-runner"),
+        runtime_input_service=SimpleNamespace(
+            create_session_id=lambda: "sess-epic-runner", create_effect_owner_id=lambda: "fixture-owner",
+            utc_now_iso=lambda: "2026-09-12T12:00:00+00:00"),
         execution_runtime_node=SimpleNamespace(
             select_run_id=lambda session_id: str(session_id),
             select_epic_build_id=lambda build_id, epic_name, sanitize_fn: str(
@@ -249,9 +266,10 @@ async def test_epic_run_orchestrator_runs_with_isolated_collaborators(tmp_path: 
         ),
     )
 
-    transcript = await epic_runner.run("epic-orchestrator", session_id="sess-epic-runner")
+    result = await epic_runner.run("epic-orchestrator", session_id="sess-epic-runner")
 
-    assert transcript == []
+    assert result.observation == "unresolved" and not result.succeeded
+    assert "ValidationError" in result.reason and result.final_truth is None
     assert sessions_repo.completed["sess-epic-runner"]["status"] == "incomplete"
     assert run_ledger.started is not None
     assert run_ledger.finalized is not None

@@ -20,16 +20,17 @@ from orket.adapters.storage.async_governed_agent_wake_control_repository import 
 from orket.adapters.storage.async_governed_agent_wake_repository import (
     AsyncGovernedAgentWakeRepository,
 )
+from orket.adapters.storage.governed_agent_replay_store import GovernedAgentReplayStore
 from orket.application.services.governed_agent_inspection_service import (
     GovernedAgentInspectionService,
 )
-from orket.application.services.governed_agent_wake_records import (
+from orket.core.contracts import RunRecord
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeCancellationRequest,
     GovernedAgentWakeRecoveryRequest,
     GovernedAgentWakeRequest,
     WakeRecoveryResolution,
 )
-from orket.core.contracts import RunRecord
 from orket.core.domain import RunState
 
 pytestmark = pytest.mark.integration
@@ -188,6 +189,7 @@ async def test_evidenced_recovery_requeues_expired_claim(tmp_path: Path) -> None
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_run_inspection_composes_durable_wake_control_receipts(tmp_path: Path) -> None:
     """Layer: integration. Run inspection exposes wake state and the durable action that produced it."""
     db_path = tmp_path / "agent.sqlite3"
@@ -200,10 +202,9 @@ async def test_run_inspection_composes_durable_wake_control_receipts(tmp_path: P
     await wakes.enqueue(_wake("wake-1", "occurrence-1"))
     await controls.apply_cancellation(_cancellation())
     inspector = GovernedAgentInspectionService(
-        execution_repository=execution,
+        replay_repository=GovernedAgentReplayStore(db_path),
         iteration_repository=iterations,
         call_repository=iterations,
-        truth_repository=records,
         wake_repository=wakes,
         wake_control_repository=controls,
         record_repository=records,

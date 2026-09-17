@@ -18,6 +18,7 @@ from orket.application.services.gitea_state_control_plane_checkpoint_service imp
 )
 from orket.application.services.gitea_state_control_plane_execution_service import (
     GiteaStateControlPlaneExecutionService,
+    build_gitea_state_control_plane_execution_service,
 )
 from orket.application.services.gitea_state_control_plane_lease_service import (
     GiteaStateControlPlaneLeaseService,
@@ -44,8 +45,14 @@ from orket.core.domain import (
     ResultClass,
     RunState,
 )
+from tests.helpers.gitea_control_plane_clock import ordered_utc_clock
 
 pytestmark = pytest.mark.integration
+
+
+@pytest.fixture
+def utc_clock():
+    return ordered_utc_clock()
 
 
 class _FakeAdapter:
@@ -96,15 +103,13 @@ def _lease_response(*, card_id: str, worker_id: str, epoch: int, version: int, e
 
 
 @pytest.mark.asyncio
-async def test_gitea_state_worker_publishes_non_sandbox_lease_history_on_success(tmp_path: Path) -> None:
+# Layer: integration
+async def test_gitea_state_worker_publishes_non_sandbox_lease_history_on_success(tmp_path: Path, utc_clock) -> None:
     execution_repository = AsyncControlPlaneExecutionRepository(tmp_path / "control_plane.sqlite3")
     repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     publication = ControlPlanePublicationService(repository=repository)
-    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
-    control_plane_execution = GiteaStateControlPlaneExecutionService(
-        execution_repository=execution_repository,
-        publication=publication,
-    )
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication, now_utc=utc_clock)
+    control_plane_execution = build_gitea_state_control_plane_execution_service(tmp_path / "control_plane.sqlite3", now_utc=utc_clock)
     control_plane_checkpoint = GiteaStateControlPlaneCheckpointService(publication=publication)
     control_plane_reservation = GiteaStateControlPlaneReservationService(publication=publication)
     adapter = _FakeAdapter()
@@ -216,15 +221,13 @@ async def test_gitea_state_worker_publishes_non_sandbox_lease_history_on_success
 
 
 @pytest.mark.asyncio
-async def test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_mismatch(tmp_path: Path) -> None:
+# Layer: integration
+async def test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_mismatch(tmp_path: Path, utc_clock) -> None:
     execution_repository = AsyncControlPlaneExecutionRepository(tmp_path / "control_plane.sqlite3")
     repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     publication = ControlPlanePublicationService(repository=repository)
-    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
-    control_plane_execution = GiteaStateControlPlaneExecutionService(
-        execution_repository=execution_repository,
-        publication=publication,
-    )
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication, now_utc=utc_clock)
+    control_plane_execution = build_gitea_state_control_plane_execution_service(tmp_path / "control_plane.sqlite3", now_utc=utc_clock)
     control_plane_checkpoint = GiteaStateControlPlaneCheckpointService(publication=publication)
     control_plane_reservation = GiteaStateControlPlaneReservationService(publication=publication)
     adapter = _FakeAdapter()
@@ -327,15 +330,13 @@ async def test_gitea_state_worker_publishes_expired_non_sandbox_lease_on_epoch_m
 
 
 @pytest.mark.asyncio
-async def test_gitea_state_worker_publishes_terminal_recovery_decision_on_runtime_failure(tmp_path: Path) -> None:
+# Layer: integration
+async def test_gitea_state_worker_publishes_terminal_recovery_decision_on_runtime_failure(tmp_path: Path, utc_clock) -> None:
     execution_repository = AsyncControlPlaneExecutionRepository(tmp_path / "control_plane.sqlite3")
     repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     publication = ControlPlanePublicationService(repository=repository)
-    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
-    control_plane_execution = GiteaStateControlPlaneExecutionService(
-        execution_repository=execution_repository,
-        publication=publication,
-    )
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication, now_utc=utc_clock)
+    control_plane_execution = build_gitea_state_control_plane_execution_service(tmp_path / "control_plane.sqlite3", now_utc=utc_clock)
     control_plane_checkpoint = GiteaStateControlPlaneCheckpointService(publication=publication)
     control_plane_reservation = GiteaStateControlPlaneReservationService(publication=publication)
     adapter = _FakeAdapter()
@@ -410,15 +411,13 @@ async def test_gitea_state_worker_publishes_terminal_recovery_decision_on_runtim
 
 
 @pytest.mark.asyncio
-async def test_gitea_state_worker_closes_pre_effect_claim_failure_without_fake_release(tmp_path: Path) -> None:
+# Layer: integration
+async def test_gitea_state_worker_closes_pre_effect_claim_failure_without_fake_release(tmp_path: Path, utc_clock) -> None:
     execution_repository = AsyncControlPlaneExecutionRepository(tmp_path / "control_plane.sqlite3")
     repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     publication = ControlPlanePublicationService(repository=repository)
-    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
-    control_plane_execution = GiteaStateControlPlaneExecutionService(
-        execution_repository=execution_repository,
-        publication=publication,
-    )
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication, now_utc=utc_clock)
+    control_plane_execution = build_gitea_state_control_plane_execution_service(tmp_path / "control_plane.sqlite3", now_utc=utc_clock)
     control_plane_checkpoint = GiteaStateControlPlaneCheckpointService(publication=publication)
     control_plane_reservation = GiteaStateControlPlaneReservationService(publication=publication)
     adapter = _FakeAdapter()
@@ -519,15 +518,13 @@ async def test_gitea_state_worker_closes_pre_effect_claim_failure_without_fake_r
 
 
 @pytest.mark.asyncio
-async def test_gitea_state_worker_closes_claim_stage_runtime_error_then_reraises(tmp_path: Path) -> None:
+# Layer: integration
+async def test_gitea_state_worker_closes_claim_stage_runtime_error_then_reraises(tmp_path: Path, utc_clock) -> None:
     execution_repository = AsyncControlPlaneExecutionRepository(tmp_path / "control_plane.sqlite3")
     repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     publication = ControlPlanePublicationService(repository=repository)
-    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
-    control_plane_execution = GiteaStateControlPlaneExecutionService(
-        execution_repository=execution_repository,
-        publication=publication,
-    )
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication, now_utc=utc_clock)
+    control_plane_execution = build_gitea_state_control_plane_execution_service(tmp_path / "control_plane.sqlite3", now_utc=utc_clock)
     control_plane_checkpoint = GiteaStateControlPlaneCheckpointService(publication=publication)
     control_plane_reservation = GiteaStateControlPlaneReservationService(publication=publication)
     adapter = _FakeAdapter()
@@ -614,15 +611,12 @@ async def test_gitea_state_worker_closes_claim_stage_runtime_error_then_reraises
 
 
 @pytest.mark.asyncio
-async def test_gitea_state_worker_fail_closes_authority_on_claim_promotion_failure(tmp_path: Path) -> None:
-    execution_repository = AsyncControlPlaneExecutionRepository(tmp_path / "control_plane.sqlite3")
+# Layer: integration
+async def test_gitea_state_worker_fail_closes_authority_on_claim_promotion_failure(tmp_path: Path, utc_clock) -> None:
     repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     publication = ControlPlanePublicationService(repository=repository)
-    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
-    control_plane_execution = GiteaStateControlPlaneExecutionService(
-        execution_repository=execution_repository,
-        publication=publication,
-    )
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication, now_utc=utc_clock)
+    control_plane_execution = build_gitea_state_control_plane_execution_service(tmp_path / "control_plane.sqlite3", now_utc=utc_clock)
     control_plane_checkpoint = GiteaStateControlPlaneCheckpointService(publication=publication)
     control_plane_reservation = GiteaStateControlPlaneReservationService(publication=publication)
     adapter = _FakeAdapter()
@@ -692,10 +686,11 @@ async def test_gitea_state_worker_fail_closes_authority_on_claim_promotion_failu
 
 
 @pytest.mark.asyncio
-async def test_gitea_state_worker_republishes_released_lease_when_resource_truth_drifted(tmp_path: Path) -> None:
+# Layer: integration
+async def test_gitea_state_worker_republishes_released_lease_when_resource_truth_drifted(tmp_path: Path, utc_clock) -> None:
     repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     publication = ControlPlanePublicationService(repository=repository)
-    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication, now_utc=utc_clock)
     worker = GiteaStateWorker(
         adapter=_FakeAdapter(),
         worker_id="worker-heal-release",
@@ -766,10 +761,11 @@ async def test_gitea_state_worker_republishes_released_lease_when_resource_truth
 
 
 @pytest.mark.asyncio
-async def test_gitea_state_worker_republishes_expired_lease_when_resource_truth_drifted(tmp_path: Path) -> None:
+# Layer: integration
+async def test_gitea_state_worker_republishes_expired_lease_when_resource_truth_drifted(tmp_path: Path, utc_clock) -> None:
     repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     publication = ControlPlanePublicationService(repository=repository)
-    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication, now_utc=utc_clock)
     worker = GiteaStateWorker(
         adapter=_FakeAdapter(),
         worker_id="worker-heal-expiry",
@@ -840,15 +836,13 @@ async def test_gitea_state_worker_republishes_expired_lease_when_resource_truth_
 
 
 @pytest.mark.asyncio
-async def test_gitea_state_worker_blocks_before_backend_renew_on_active_resource_drift(tmp_path: Path) -> None:
+# Layer: integration
+async def test_gitea_state_worker_blocks_before_backend_renew_on_active_resource_drift(tmp_path: Path, utc_clock) -> None:
     execution_repository = AsyncControlPlaneExecutionRepository(tmp_path / "control_plane.sqlite3")
     repository = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     publication = ControlPlanePublicationService(repository=repository)
-    control_plane = GiteaStateControlPlaneLeaseService(publication=publication)
-    control_plane_execution = GiteaStateControlPlaneExecutionService(
-        execution_repository=execution_repository,
-        publication=publication,
-    )
+    control_plane = GiteaStateControlPlaneLeaseService(publication=publication, now_utc=utc_clock)
+    control_plane_execution = build_gitea_state_control_plane_execution_service(tmp_path / "control_plane.sqlite3", now_utc=utc_clock)
     control_plane_checkpoint = GiteaStateControlPlaneCheckpointService(publication=publication)
     control_plane_reservation = GiteaStateControlPlaneReservationService(publication=publication)
     adapter = _FakeAdapter()

@@ -9,10 +9,10 @@ import pytest
 
 from orket.adapters.llm import local_model_provider as local_model_provider_module
 from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_executor_runtime import invoke_model_complete
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
 

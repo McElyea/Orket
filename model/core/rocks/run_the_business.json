@@ -68,6 +68,18 @@
     {
       "epic": "benchmark_live_072_c79a59b2",
       "department": "core"
+    },
+    {
+      "epic": "benchmark_live_008_7b53edf8",
+      "department": "core"
+    },
+    {
+      "epic": "challenge_workflow_runtime",
+      "department": "core"
+    },
+    {
+      "epic": "role_matrix_soak",
+      "department": "core"
     }
   ]
 }

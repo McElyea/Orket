@@ -15,6 +15,7 @@ def _load_last_log_record(path: Path) -> dict:
     return json.loads(lines[-1])
 
 
+# Layer: integration
 def test_log_event_adds_runtime_event_envelope_and_artifact(tmp_path: Path) -> None:
     log_event(
         "turn_complete",
@@ -38,7 +39,7 @@ def test_log_event_adds_runtime_event_envelope_and_artifact(tmp_path: Path) -> N
 
     record = _load_last_log_record(tmp_path / "orket.log")
     runtime_event = record["data"]["runtime_event"]
-    assert runtime_event["schema_version"] == "v1"
+    assert runtime_event["schema_version"] == "v2"
     assert runtime_event["event"] == "turn_complete"
     assert runtime_event["session_id"] == "run-1"
     assert runtime_event["issue_id"] == "ISS-1"
@@ -49,7 +50,7 @@ def test_log_event_adds_runtime_event_envelope_and_artifact(tmp_path: Path) -> N
     lines = runtime_events_path.read_text(encoding="utf-8").strip().splitlines()
     assert lines
     artifact_event = json.loads(lines[-1])
-    assert artifact_event["schema_version"] == "v1"
+    assert artifact_event["schema_version"] == "v2"
     assert artifact_event["session_id"] == "run-1"
 
 

@@ -28,6 +28,7 @@ from orket.application.review.snapshot_loader import (
     load_from_files,
     load_from_pr,
 )
+from orket.application.services.review_run_closeout import record_review_failure
 from orket.application.services.review_run_control_plane_service import (
     ReviewRunControlPlaneService,
     build_review_run_control_plane_service,
@@ -504,13 +505,7 @@ class ReviewRunService:
                 exit_code=exit_code,
             )
         except Exception as exc:
-            failure_class = f"review_run_{type(exc).__name__}"[:200]
-            finalized = run_coro_sync(
-                self.review_control_plane_service.finalize_failed_if_started(
-                    run_id=run_id,
-                    failure_class=failure_class,
-                )
-            )
-            if control_plane_attempt_id and finalized is None:
-                logger.error("Review run control-plane closeout was skipped after begin_execution: run_id=%s", run_id)
+            run_coro_sync(record_review_failure(
+                self.review_control_plane_service, run_id=run_id, original=exc, started=bool(control_plane_attempt_id),
+            ))
             raise

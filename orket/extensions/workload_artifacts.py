@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.command_process_supervisor import CommandProcessSupervisor
 from orket.capabilities.audio_player import build_audio_player
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
@@ -68,7 +69,8 @@ class WorkloadArtifacts:
             )
             and not registry.has("tts.speak")
         ):
-            registry.register("tts.speak", build_tts_provider(input_config=input_config))
+            registry.register("tts.speak", build_tts_provider(input_config=input_config, workspace=workspace,
+                command_runner=CommandProcessSupervisor(workspace, cancellation_event="piper_process_cancelled")))
         if (
             WorkloadArtifacts._capability_enabled(
                 capability_id="audio.play",

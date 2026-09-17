@@ -1,23 +1,24 @@
 from __future__ import annotations
 
-import asyncio
-import os
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
+from orket.capabilities.tts_piper import PiperTTSProvider
 from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.services.extension_memory_namespace import (
     profile_key,
-    profile_prefix,
     query_extension_profile_records,
-    scoped_session_id as _scoped_session_id,
     unscoped_profile_key,
-    validate_extension_id,
+)
+from orket.services.extension_memory_namespace import (
+    scoped_session_id as _scoped_session_id,
 )
 from orket.services.scoped_memory_store import ScopedMemoryRecord, ScopedMemoryStore
-from orket_extension_sdk.audio import VoiceInfo
+from orket_extension_sdk.audio import AudioClip, TTSProvider, VoiceInfo
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
+
 
 def validate_memory_scope(scope: str) -> str:
     normalized = str(scope or "").strip()
@@ -93,37 +94,41 @@ async def generate_response(
     provider_override: str,
     model_override: str,
 ) -> GenerateResponse:
+    return await run_owned_thread(
+        lambda: _generate_response_sync(request, model_provider, provider_override, model_override),
+        label="extension model generation and client cleanup",
+    )
+
+
+async def synthesize_audio(
+    provider: TTSProvider, text: str, voice_id: str, emotion_hint: str, speed: float,
+) -> tuple[AudioClip, dict[str, Any] | None, str, dict[str, Any] | None]:
+    # Embedding subclasses retain their authoritative synchronous SDK implementation.
+    if type(provider) is PiperTTSProvider:
+        result = await provider.synthesize_async(text, voice_id, emotion_hint, speed)
+        lifetime = result.command.lifetime() if result.command is not None else None
+        return result.clip, lifetime, result.voice.voice_id, result.voice.metadata()
+    clip = await run_owned_thread(lambda: provider.synthesize(text, voice_id, emotion_hint, speed),
+                                  label="extension speech synthesis")
+    return clip, None, voice_id, None
+
+
+def _generate_response_sync(request, model_provider, provider_override, model_override) -> GenerateResponse:
     provider = str(provider_override or "").strip()
     model = str(model_override or "").strip()
     if not provider and not model:
-        return await asyncio.to_thread(model_provider.generate, request)
+        return model_provider.generate(request)
     if not isinstance(model_provider, LocalModelCapabilityProvider):
         # Dependency-injected providers remain authoritative in tests and embeddings;
         # only the built-in local provider supports reconstructing override-specific clients here.
-        return await asyncio.to_thread(model_provider.generate, request)
-
-    previous_llm_provider = os.environ.get("ORKET_LLM_PROVIDER")
-    previous_model_provider = os.environ.get("ORKET_MODEL_PROVIDER")
+        return model_provider.generate(request)
+    provider_client = LocalModelCapabilityProvider(
+        model=model or DEFAULT_LOCAL_MODEL, temperature=float(request.temperature), seed=None, provider=provider,
+    )
     try:
-        if provider:
-            os.environ["ORKET_LLM_PROVIDER"] = provider
-            os.environ["ORKET_MODEL_PROVIDER"] = provider
-        provider_client = LocalModelCapabilityProvider(
-            model=model or DEFAULT_LOCAL_MODEL,
-            temperature=float(request.temperature),
-            seed=None,
-        )
-        return await asyncio.to_thread(provider_client.generate, request)
+        return provider_client.generate(request)
     finally:
-        _restore_env("ORKET_LLM_PROVIDER", previous_llm_provider)
-        _restore_env("ORKET_MODEL_PROVIDER", previous_model_provider)
-
-
-def _restore_env(name: str, value: str | None) -> None:
-    if value is None:
-        os.environ.pop(name, None)
-    else:
-        os.environ[name] = value
+        provider_client.close()
 
 
 def default_memory_db_path(project_root: Path) -> Path:

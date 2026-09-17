@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 from collections import Counter
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from typing import Any
 
+from orket.adapters.storage.outward_ledger_snapshot_store import OutwardLedgerSnapshotStore
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
 from orket.core.domain.outward_ledger import (
@@ -15,9 +17,11 @@ from orket.core.domain.outward_ledger import (
     chain_hash_for,
     event_group,
     event_hash_for,
+    event_order_key,
     normalize_event_groups,
     verify_ledger_export,
 )
+from orket.core.domain.outward_ledger_integrity import OutwardLedgerIntegrityError, RetainedLedgerSnapshot
 from orket.core.domain.outward_run_events import LedgerEvent
 from orket.core.domain.outward_runs import OutwardRunRecord
 
@@ -44,6 +48,7 @@ class OutwardLedgerService:
         self.run_store = run_store
         self.event_store = event_store
         self.utc_now = utc_now
+        self.snapshot_store = OutwardLedgerSnapshotStore(event_store.db_path)
 
     async def export(
         self,
@@ -54,61 +59,62 @@ class OutwardLedgerService:
         operator_ref: str = "operator:api",
         record_request: bool = False,
     ) -> dict[str, Any]:
-        run = await self._require_run(run_id)
         try:
             groups = normalize_event_groups(types)
         except LedgerExportValidationError as exc:
             raise OutwardLedgerValidationError(str(exc)) from exc
-        export_scope = "all" if groups == ("all",) else "partial_view"
-        if include_pii and record_request:
-            await self._record_export_requested(
-                run=run,
-                groups=groups,
-                export_scope=export_scope,
-                include_pii=include_pii,
-                operator_ref=operator_ref,
-            )
-        events = await self._ensure_hashes(run.run_id)
-        disclosed = _disclosed_events(events, groups)
-        return {
-            "schema_version": SCHEMA_VERSION,
-            "export_scope": export_scope,
-            "run_id": run.run_id,
-            "types": list(groups),
-            "include_pii": bool(include_pii),
-            "contains_pii": bool(include_pii),
-            "summary": _summary_payload(run, events, disclosed),
-            "policy_snapshot": {
-                "ledger_payload_model": "policy_safe_by_construction",
-                "payload_bytes": "unchanged",
-                "outbound_policy_gate": "applied_before_serialization",
-            },
-            "canonical": {
-                "ordering": ["run_id", "turn", "at", "event_id"],
-                "genesis": GENESIS_CHAIN_HASH,
-                "event_count": len(events),
-                "ledger_hash": _ledger_hash(events),
-            },
-            "events": [_export_event(item) for item in disclosed],
-            "omitted_spans": _omitted_spans(events, {item.position for item in disclosed}),
-            "verification": {
-                "result": "valid" if export_scope == "all" else "partial_valid",
-                "meaning": "full canonical ledger" if export_scope == "all" else "partial verified view",
-            },
-        }
+        try:
+            snapshot = await self._snapshot(run_id)
+            if include_pii and record_request:
+                await self._record_export_requested(
+                    run=snapshot.run, groups=groups,
+                    export_scope="all" if groups == ("all",) else "partial_view",
+                    include_pii=include_pii, operator_ref=operator_ref,
+                )
+                snapshot = await self._snapshot(run_id)
+        except OutwardLedgerIntegrityError as exc:
+            raise OutwardLedgerValidationError(str(exc)) from exc
+        return _build_export(snapshot, groups, include_pii)
 
-    async def verify_run(self, run_id: str) -> dict[str, Any]:
-        payload = await self.export(run_id, types=("all",), include_pii=False, record_request=False)
-        return verify_ledger_export(payload)
+    async def verify_run(
+        self, run_id: str, *, external_anchor: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        try:
+            snapshot = await self._snapshot(run_id)
+        except OutwardLedgerIntegrityError as exc:
+            if exc.category == "not_found":
+                raise OutwardLedgerValidationError(str(exc)) from exc
+            return {
+                "schema_version": SCHEMA_VERSION, "result": "invalid", "run_id": run_id,
+                "export_scope": "all", "ledger_hash": None, "event_count": None,
+                "checked_event_count": 0, "errors": [str(exc)],
+                "retained_integrity": "invalid" if exc.category == "integrity" else "not_verified",
+                "snapshot_completeness": "not_verified", "authenticity": "not_established",
+                "external_anchor": "not_checked",
+            }
+        report = verify_ledger_export(_build_export(snapshot, ("all",), False))
+        report.update({
+            "retained_integrity": "valid", "snapshot_completeness": "valid",
+            "retained_anchor": snapshot.anchor.to_dict(), "authenticity": "not_established",
+            "external_anchor": "not_supplied",
+        })
+        if external_anchor is not None:
+            try:
+                snapshot.compare_anchor(external_anchor)
+                report["external_anchor"] = "matched_prefix"
+            except OutwardLedgerIntegrityError as exc:
+                report["result"], report["external_anchor"] = "invalid", "invalid"
+                report["errors"].append(str(exc))
+        return report
 
-    async def _require_run(self, run_id: str) -> OutwardRunRecord:
+    async def _snapshot(self, run_id: str) -> RetainedLedgerSnapshot:
         clean_run_id = str(run_id or "").strip()
         if not clean_run_id:
             raise OutwardLedgerValidationError("run_id is required")
-        run = await self.run_store.get(clean_run_id)
-        if run is None:
-            raise OutwardLedgerValidationError(f"Run '{clean_run_id}' not found")
-        return run
+        paths = await asyncio.to_thread(lambda: (self.run_store.db_path.resolve(), self.event_store.db_path.resolve()))
+        if paths[0] != paths[1]:
+            raise OutwardLedgerValidationError("E_OUTWARD_TRANSACTION_DATABASE_MISMATCH")
+        return await self.snapshot_store.read(clean_run_id)
 
     async def _record_export_requested(
         self,
@@ -120,11 +126,9 @@ class OutwardLedgerService:
         operator_ref: str,
     ) -> None:
         requested_at = self.utc_now()
-        existing_events = await self.event_store.list_for_run(run.run_id, limit=5000)
-        event_id = f"run:{run.run_id}:ledger_export_requested:{len(existing_events) + 1:04d}"
-        await self.event_store.append(
-            LedgerEvent(
-                event_id=event_id,
+        async with self.event_store.writer(run.run_id) as writer:
+            await writer.append(LedgerEvent(
+                event_id=f"run:{run.run_id}:ledger_export_requested:{writer.next_sequence:04d}",
                 event_type=LEDGER_EXPORT_REQUESTED,
                 run_id=run.run_id,
                 turn=run.current_turn,
@@ -138,28 +142,48 @@ class OutwardLedgerService:
                     "types": list(groups),
                     "requested_at": requested_at,
                 },
-            )
-        )
+            ))
 
-    async def _ensure_hashes(self, run_id: str) -> list[_HashedEvent]:
-        events = await self.event_store.list_for_run(run_id, limit=5000)
-        previous_chain_hash = GENESIS_CHAIN_HASH
-        hashed_events: list[_HashedEvent] = []
-        for position, event in enumerate(events, start=1):
-            event_hash = event_hash_for(event)
-            chain_hash = chain_hash_for(previous_chain_hash, event_hash)
-            if event.event_hash != event_hash or event.chain_hash != chain_hash:
-                await self.event_store.update_hashes(
-                    event_id=event.event_id,
-                    event_hash=event_hash,
-                    chain_hash=chain_hash,
-                )
-            hashed_event = replace(event, event_hash=event_hash, chain_hash=chain_hash)
-            hashed_events.append(
-                _HashedEvent(event=hashed_event, position=position, previous_chain_hash=previous_chain_hash)
-            )
-            previous_chain_hash = chain_hash
-        return hashed_events
+
+def _project_v1(events: tuple[LedgerEvent, ...]) -> list[_HashedEvent]:
+    ordered = sorted(events, key=event_order_key)
+    previous = GENESIS_CHAIN_HASH
+    projected = []
+    for position, event in enumerate(ordered, start=1):
+        digest = event_hash_for(event)
+        chain = chain_hash_for(previous, digest)
+        projected.append(_HashedEvent(replace(event, event_hash=digest, chain_hash=chain), position, previous))
+        previous = chain
+    return projected
+
+
+def _build_export(snapshot: RetainedLedgerSnapshot, groups: tuple[str, ...], include_pii: bool) -> dict[str, Any]:
+    run, events = snapshot.run, _project_v1(snapshot.events)
+    disclosed = _disclosed_events(events, groups)
+    scope = "all" if groups == ("all",) else "partial_view"
+    return {
+        "schema_version": SCHEMA_VERSION, "export_scope": scope, "run_id": run.run_id,
+        "types": list(groups), "include_pii": bool(include_pii), "contains_pii": bool(include_pii),
+        "summary": _summary_payload(run, events, disclosed),
+        "policy_snapshot": {
+            "ledger_payload_model": "policy_safe_by_construction", "payload_bytes": "unchanged",
+            "outbound_policy_gate": "applied_before_serialization",
+        },
+        "canonical": {
+            "ordering": ["run_id", "turn", "at", "event_id"], "genesis": GENESIS_CHAIN_HASH,
+            "event_count": snapshot.independent_count, "ledger_hash": _ledger_hash(events),
+        },
+        "retained": {
+            "anchor": snapshot.anchor.to_dict(), "integrity": "valid", "snapshot_completeness": "valid",
+            "authenticity": "not_established", "authority": "runtime_assertion",
+        },
+        "events": [_export_event(item) for item in disclosed],
+        "omitted_spans": _omitted_spans(events, {item.position for item in disclosed}),
+        "verification": {
+            "result": "valid" if scope == "all" else "partial_valid",
+            "meaning": "full canonical ledger" if scope == "all" else "partial verified view",
+        },
+    }
 
 
 def _disclosed_events(events: list[_HashedEvent], groups: tuple[str, ...]) -> list[_HashedEvent]:

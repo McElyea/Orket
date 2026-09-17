@@ -4,14 +4,16 @@ from pathlib import Path
 from typing import Any, cast
 
 from orket.adapters.tools.families.filesystem import FileSystemTools
-from orket.core.policies.tool_gate import ToolGate
+from orket.core.policies.tool_gate import ToolGateValidator
 
 
 class GovernedAgentFileEffectExecutor:
     """Issue-scoped adapter over the existing tool gate and filesystem tool."""
 
-    def __init__(self, workspace_root: Path) -> None:
-        self._gate = ToolGate(None, workspace_root)
+    def __init__(self, workspace_root: Path, *, tool_gate: ToolGateValidator) -> None:
+        if tool_gate is None:
+            raise ValueError("Governed file effects require application tool-gate authority")
+        self._gate = tool_gate
         self._files = FileSystemTools(workspace_root, [])
 
     async def observe(self, *, path: str, issue_id: str) -> dict[str, Any]:

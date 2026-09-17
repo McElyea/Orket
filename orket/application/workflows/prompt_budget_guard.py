@@ -3,11 +3,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from orket.runtime.prompt_budget_policy import (
-    DEFAULT_PROMPT_BUDGET_PATH,
-    load_prompt_budget_policy,
-    resolve_prompt_stage,
-)
+from orket.runtime.config import contract_assets
+from orket.runtime.prompt_budget_policy import load_prompt_budget_policy, resolve_prompt_stage
 from orket.runtime.protocol_error_codes import (
     E_PROMPT_BUDGET_EXCEEDED_PREFIX,
     E_TOKENIZER_ACCOUNTING_PREFIX,
@@ -63,7 +60,7 @@ async def evaluate_prompt_budget(
     context: dict[str, Any],
     model_client: Any,
 ) -> dict[str, Any]:
-    policy_path = str(context.get("prompt_budget_policy_path") or str(DEFAULT_PROMPT_BUDGET_PATH)).strip()
+    policy_path = str(context.get("prompt_budget_policy_path") or str(contract_assets.DEFAULT_PROMPT_BUDGET_PATH)).strip()
     policy = await asyncio.to_thread(load_prompt_budget_policy, policy_path)
     stage = resolve_prompt_stage(context)
     stage_limits = dict(policy["stages"][stage])

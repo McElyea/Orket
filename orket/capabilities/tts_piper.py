@@ -1,14 +1,26 @@
 from __future__ import annotations
 
+import importlib.util
+import math
 import os
 import shlex
 import shutil
-import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_command_limits import MAX_OUTPUT_LIMIT
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.capabilities.piper_voice_assets import (
+    PiperVoiceAsset,
+    piper_config_snapshot,
+    resolve_voice,
+    sample_rate_expectation,
+    voice_models,
+)
+from orket.capabilities.sync_bridge import run_coro_sync
+from orket.core.contracts.owned_command import CommandExecutionUncertain, CommandRunner, OwnedCommandResult
 from orket_extension_sdk.audio import AudioClip, NullTTSProvider, TTSProvider, VoiceInfo
 
 
@@ -17,14 +29,36 @@ class PiperConfig:
     model_path: Path
     voices_dir: Path | None = None
     executable: str = "piper"
-    sample_rate: int = 22050
+    sample_rate: int | None = None
+    timeout_seconds: float = 120.0
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "sample_rate", sample_rate_expectation(self.sample_rate))
+        if not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0:
+            raise ValueError("E_PIPER_TIMEOUT_INVALID")
+
+
+class PiperSynthesisError(RuntimeError):
+    def __init__(self, result: OwnedCommandResult):
+        super().__init__(f"E_PIPER_SYNTHESIS_FAILED: {result.reason}; exit={result.returncode}")
+        self.lifetime = result
+
+
+@dataclass(frozen=True)
+class PiperSynthesisResult:
+    clip: AudioClip
+    voice: PiperVoiceAsset
+    command: OwnedCommandResult | None
 
 
 class PiperTTSProvider:
     """Piper-backed TTS provider using local CLI invocation."""
 
-    def __init__(self, config: PiperConfig) -> None:
-        self._config = config
+    def __init__(self, config: PiperConfig, *, command_runner: CommandRunner, workspace: Path) -> None:
+        self._workspace = workspace.absolute()
+        self._config = replace(config, model_path=self._workspace / config.model_path.expanduser(),
+            voices_dir=self._workspace / config.voices_dir.expanduser() if config.voices_dir is not None else None)
+        self._command_runner = command_runner
         self._emotion_speed = {
             "neutral": 1.0,
             "defensive": 1.15,
@@ -37,44 +71,12 @@ class PiperTTSProvider:
         return self._config
 
     def list_voices(self) -> list[VoiceInfo]:
+        if not self._resolve_executable(self._config.executable):
+            return []
         voices: list[VoiceInfo] = []
-        for voice_id in sorted(self._voice_models().keys()):
+        for voice_id in voice_models(self._config.model_path, self._config.voices_dir):
             voices.append(VoiceInfo(voice_id=voice_id, display_name=voice_id, language="und", tags=["piper"]))
         return voices
-
-    def _voice_models(self) -> dict[str, Path]:
-        models: dict[str, Path] = {}
-        default_model = Path(self._config.model_path).expanduser()
-        if default_model.exists() and default_model.is_file() and default_model.suffix.lower() == ".onnx":
-            models[default_model.stem] = default_model
-        scan_dirs: list[Path] = []
-        if self._config.voices_dir is not None:
-            scan_dirs.append(Path(self._config.voices_dir).expanduser())
-        if default_model.parent not in scan_dirs:
-            scan_dirs.append(default_model.parent)
-        for directory in scan_dirs:
-            if not directory.exists() or not directory.is_dir():
-                continue
-            for candidate in sorted(directory.glob("*.onnx")):
-                voice_id = str(candidate.stem or "").strip()
-                if not voice_id:
-                    continue
-                models.setdefault(voice_id, candidate)
-        return models
-
-    def _resolve_model_for_voice(self, voice_id: str) -> Path:
-        requested = str(voice_id or "").strip().lower()
-        models = self._voice_models()
-        if requested:
-            for candidate_id, candidate_path in models.items():
-                if candidate_id.lower() == requested:
-                    return candidate_path
-        default_model = Path(self._config.model_path).expanduser()
-        if default_model.exists():
-            return default_model
-        if models:
-            return next(iter(models.values()))
-        raise RuntimeError(f"Piper model file not found: {self._config.model_path}")
 
     def synthesize(
         self,
@@ -83,10 +85,18 @@ class PiperTTSProvider:
         emotion_hint: str = "neutral",
         speed: float = 1.0,
     ) -> AudioClip:
+        return run_coro_sync(self.synthesize_async(text, voice_id, emotion_hint, speed)).clip
+
+    async def synthesize_async(
+        self, text: str, voice_id: str, emotion_hint: str = "neutral", speed: float = 1.0,
+    ) -> PiperSynthesisResult:
+        voice, exe_cmd = await run_owned_thread(
+            lambda: (resolve_voice(self._config.model_path, self._config.voices_dir, voice_id, self._config.sample_rate),
+                     self._resolve_executable(self._config.executable)),
+            label="Piper model and executable discovery",
+        )
         if not str(text or "").strip():
-            return AudioClip(sample_rate=self._config.sample_rate, channels=1, samples=b"", format="pcm_s16le")
-        model_path = self._resolve_model_for_voice(voice_id)
-        exe_cmd = self._resolve_executable(self._config.executable)
+            return PiperSynthesisResult(AudioClip(sample_rate=voice.sample_rate, channels=1, samples=b""), voice, None)
         if not exe_cmd:
             raise RuntimeError(f"Piper executable not found: {self._config.executable}")
 
@@ -98,25 +108,24 @@ class PiperTTSProvider:
         cmd = [
             *exe_cmd,
             "--model",
-            str(model_path),
+            str(voice.model_path),
             "--output-raw",
             "--length_scale",
             f"{length_scale:.4f}",
         ]
-        try:
-            proc = subprocess.run(
-                cmd,
-                input=str(text).encode("utf-8"),
-                capture_output=True,
-                check=False,
+        async with piper_config_snapshot(self._workspace, voice.metadata_bytes) as config:
+            proc = await self._command_runner.run(
+                [*cmd, "--config", str(config)], cwd=self._workspace, timeout_seconds=self._config.timeout_seconds,
+                input_data=str(text).encode("utf-8"),
+                # PCM needs more than the verifier's 4 MiB text-stream default; retain a finite audio bound.
+                output_limit_bytes=MAX_OUTPUT_LIMIT,
             )
-        except OSError as exc:
-            raise RuntimeError(f"Piper execution failed: {exc}") from exc
-        if proc.returncode != 0:
-            stderr = proc.stderr.decode("utf-8", errors="replace")
-            raise RuntimeError(f"Piper synthesis failed (voice_id={voice_id}): {stderr.strip()}")
-        return AudioClip(
-            sample_rate=self._config.sample_rate, channels=1, samples=bytes(proc.stdout), format="pcm_s16le"
+        if not proc.cleanup_confirmed:
+            raise CommandExecutionUncertain(proc)
+        if proc.reason != "completed" or proc.returncode != 0 or not proc.capture_complete:
+            raise PiperSynthesisError(proc)
+        return PiperSynthesisResult(
+            AudioClip(sample_rate=voice.sample_rate, channels=1, samples=bytes(proc.stdout), format="pcm_s16le"), voice, proc,
         )
 
     @staticmethod
@@ -124,7 +133,8 @@ class PiperTTSProvider:
         raw = str(value or "").strip()
         if not raw:
             return []
-        tokens = shlex.split(raw, posix=False)
+        tokens = [token[1:-1] if token.startswith('"') and token.endswith('"') else token
+                  for token in shlex.split(raw, posix=False)]
         if not tokens:
             return []
 
@@ -134,45 +144,41 @@ class PiperTTSProvider:
             return [resolved, *tokens[1:]]
 
         first_path = Path(first_token).expanduser()
-        if first_path.exists():
+        if first_path.is_file():
             return [str(first_path), *tokens[1:]]
 
         # Windows environments can have piper-tts installed without a `piper` shim on PATH.
-        if first_token.lower() == "piper" and len(tokens) == 1:
-            try:
-                probe = subprocess.run(
-                    [sys.executable, "-m", "piper", "--help"],
-                    capture_output=True,
-                    check=False,
-                )
-            except OSError:
-                probe = None
-            if probe and probe.returncode == 0:
-                return [sys.executable, "-m", "piper"]
+        if first_token.lower() == "piper" and len(tokens) == 1 and importlib.util.find_spec("piper") is not None:
+            return [sys.executable, "-m", "piper"]
         return []
 
 
-def build_tts_provider(*, input_config: dict[str, Any]) -> TTSProvider:
+def build_tts_provider(
+    *, input_config: dict[str, Any], command_runner: CommandRunner | None = None, workspace: Path | None = None,
+) -> TTSProvider:
     backend = str(input_config.get("tts_backend") or os.getenv("ORKET_TTS_BACKEND", "null")).strip().lower()
-    if backend != "piper":
+    if backend == "null":
         return NullTTSProvider()
+    if backend != "piper":
+        raise ValueError("E_TTS_BACKEND_UNSUPPORTED")
     model_path_raw = str(input_config.get("tts_model_path") or os.getenv("ORKET_TTS_PIPER_MODEL_PATH", "")).strip()
     voices_dir_raw = str(input_config.get("tts_voices_dir") or os.getenv("ORKET_TTS_PIPER_VOICES_DIR", "")).strip()
     executable = str(input_config.get("tts_executable") or os.getenv("ORKET_TTS_PIPER_BIN", "piper")).strip() or "piper"
-    sample_rate = int(input_config.get("tts_sample_rate") or os.getenv("ORKET_TTS_SAMPLE_RATE", "22050") or 22050)
+    sample_rate = sample_rate_expectation(input_config.get("tts_sample_rate", os.getenv("ORKET_TTS_SAMPLE_RATE")))
     if not model_path_raw:
-        return NullTTSProvider()
+        raise ValueError("E_PIPER_MODEL_REQUIRED")
+    if command_runner is None or workspace is None:
+        raise ValueError("E_PIPER_COMMAND_OWNER_REQUIRED")
     model_path = Path(model_path_raw).expanduser()
     voices_dir = Path(voices_dir_raw).expanduser() if voices_dir_raw else model_path.parent
-    if not model_path.exists():
-        return NullTTSProvider()
-    if not PiperTTSProvider._resolve_executable(executable):
-        return NullTTSProvider()
     return PiperTTSProvider(
         PiperConfig(
             model_path=model_path,
             voices_dir=voices_dir,
             executable=executable,
             sample_rate=sample_rate,
-        )
+            timeout_seconds=float(input_config.get("tts_timeout_seconds", os.getenv("ORKET_TTS_TIMEOUT_SECONDS", "120"))),
+        ),
+        command_runner=command_runner,
+        workspace=workspace,
     )

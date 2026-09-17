@@ -1,6 +1,6 @@
 import pytest
 
-from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
+from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGateRepository
 
 
 @pytest.mark.asyncio

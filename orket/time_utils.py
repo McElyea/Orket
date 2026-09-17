@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta, timezone, tzinfo
+from datetime import UTC, datetime, timedelta, timezone, tzinfo
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
@@ -20,8 +20,13 @@ def configured_timezone() -> tzinfo:
     try:
         return ZoneInfo(name)
     except ZoneInfoNotFoundError:
-        return timezone.utc
+        return UTC
 
 
 def now_local() -> datetime:
     return datetime.now(configured_timezone())
+
+
+def utc_now_iso() -> str:
+    """Adapter clock for callers that supply an explicit UTC report timestamp."""
+    return datetime.now(UTC).isoformat()

@@ -1,15 +1,15 @@
 {
   "schema_version": "architectural_truth.exception_register.v1",
   "owner": "Orket Core",
-  "last_reviewed": "2026-09-07",
+  "last_reviewed": "2026-09-14",
   "exceptions": [
     {
       "id": "AT-EX-001",
       "area": "dependency-policy-model",
       "status": "active_unaccepted_ship_risk",
-      "reason": "The enforced denylist classifies more layers and permits edges that the normative five-layer architecture does not allow.",
+      "reason": "The v2 allowed-edge checker now exposes existing forbidden edges, unresolved import/reflection routes and authority cycles. Its implementation and repository conformance are not yet accepted; no broad transition label grants an exemption.",
       "removal_condition": "One ratified manifest defines allowed layers and edges, and the checker fails every unexpected edge unless an exact governed exception exists.",
-      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-01--the-dependency-checker-passes-because-it-checks-a-weaker-architecture"
+      "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#c-one-enforceable-dependency-model"
     },
     {
       "id": "AT-EX-003",
@@ -23,9 +23,9 @@
       "id": "AT-EX-004",
       "area": "core-purity",
       "status": "active_unaccepted_ship_risk",
-      "reason": "Core modules perform file and event effects, read clocks, and import implementation services.",
+      "reason": "D1 separates failure values, reconciliation plans and ToolGate facts from application effects. Remaining core clock/effect/import and explicit-input debt keeps the area unaccepted.",
       "removal_condition": "The core import/effect inventory is allowlist-clean and deterministic core calls consume all nondeterminism as explicit inputs.",
-      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sr-04--core-is-not-deterministic-dependency-minimal-or-side-effect-free"
+      "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#d1-coreeffect-separation-and-current-proof-2026-09-14"
     },
     {
       "id": "AT-EX-005",

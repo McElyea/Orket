@@ -1,16 +1,27 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
-import json
+import logging
+from collections.abc import Callable
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import ValidationError as JsonSchemaValidationError
 
+from orket.adapters.storage.bound_filesystem import BOUND_FILESYSTEM_TOOLS
 from orket.adapters.tools.builtin_connectors import BuiltInConnectorExecutor
 from orket.adapters.tools.registry import BuiltInConnectorMetadata, BuiltInConnectorRegistry
+from orket.application.services.command_process_supervisor import CommandProcessCancelled, CommandProcessSupervisor
+from orket.application.services.connector_invocation_timing import ConnectorInvocationTimer
+from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.core.contracts.owned_command import CommandExecutionUncertain
+from orket.core.domain.outward_authorization import OutwardAuthorization, args_hash
+from orket.logging import log_event
+
+logger = logging.getLogger(__name__)
 
 
 class OutwardConnectorError(RuntimeError):
@@ -43,10 +54,15 @@ class OutwardConnectorService:
         workspace_root: Path,
         http_allowlist: tuple[str, ...] = (),
         executor: BuiltInConnectorExecutor | None = None,
+        monotonic_ns: Callable[[], int] | None = None,
     ) -> None:
         self.connector_registry = connector_registry
+        self.workspace_root = workspace_root
+        self._monotonic_ns = monotonic_ns if monotonic_ns is not None else RuntimeInputService().monotonic_ns
+        self._clock_ref = "injected_monotonic_ns" if monotonic_ns is not None else "python.time.perf_counter_ns"
         self.executor = executor or BuiltInConnectorExecutor(
             workspace_root=workspace_root,
+            command_runner=CommandProcessSupervisor(workspace_root, cancellation_event="outward_command_cancelled"),
             http_allowlist=http_allowlist,
         )
 
@@ -81,38 +97,105 @@ class OutwardConnectorService:
         except (PermissionError, OSError, ValueError, TypeError) as exc:
             raise OutwardConnectorPolicyError(metadata.name, str(exc)) from exc
 
+    async def authorization_context(self, connector_name: str, args: dict[str, Any]) -> dict[str, Any]:
+        metadata = self._require_metadata(connector_name)
+        await asyncio.to_thread(self.validate_policy, connector_name, args)
+        root = str(await asyncio.to_thread(self.executor.workspace_root.resolve))
+        if connector_name in {"read_file", "write_file", "create_directory", "delete_file"}:
+            target = str(await asyncio.to_thread(
+                self.executor.file_tools.async_fs._resolve_safe_path,
+                str(args["path"]), write=connector_name != "read_file",
+            ))
+        elif connector_name in {"http_get", "http_post"}:
+            url = urlparse(str(args["url"]))
+            target = f"http-target:{url.hostname}:{args_hash({'url': args['url']})}"
+        else:
+            target = f"workspace:{root}"
+        return {
+            "policy_version": "outward_connector_policy.v1", "workspace_root": root,
+            "target_ref": target, "connector": asdict(metadata),
+            "http_allowlist": sorted(self.executor.http_allowlist),
+        }
+
     async def invoke(self, connector_name: str, args: dict[str, Any]) -> dict[str, Any]:
         event_payload, _result = await self.invoke_with_result(connector_name, args)
         return event_payload
 
-    async def invoke_with_result(self, connector_name: str, args: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    async def invoke_with_result(
+        self, connector_name: str, args: dict[str, Any], *, authorization: OutwardAuthorization | None = None,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
         metadata = self._require_metadata(connector_name)
         validated_args = self.validate_args(metadata.name, args)
+        bound = {"authorization": authorization} if authorization is not None and metadata.name in BOUND_FILESYSTEM_TOOLS else {}
+        timer = ConnectorInvocationTimer(self._monotonic_ns, clock_ref=self._clock_ref)
+        finished, interruption = False, "unresolved"
+        process_lifetime = None
         try:
-            result = await asyncio.wait_for(
-                self.executor.invoke(
-                    metadata.name,
-                    validated_args,
-                    timeout_seconds=float(metadata.timeout_seconds),
-                ),
-                timeout=float(metadata.timeout_seconds),
-            )
-            outcome = "success" if bool(result.get("ok")) else "failed"
-        except TimeoutError:
-            result = {
-                "ok": False,
-                "error": "timeout",
-                "timeout_seconds": float(metadata.timeout_seconds),
-            }
-            outcome = "timeout"
+            result, outcome = await self._invoke_with_deadline(metadata, validated_args, bound)
+            finished = True
+        except CommandProcessCancelled as exc:
+            process_lifetime, interruption = exc.lifetime.lifetime(), "cancelled"
+            raise
+        except CommandExecutionUncertain as exc:
+            process_lifetime = exc.lifetime.lifetime()
+            raise
+        except asyncio.CancelledError:
+            interruption = "cancelled"
+            raise
+        finally:
+            timing = timer.finish().model_dump(mode="json")
+            if not finished:
+                if process_lifetime is not None:
+                    timing["process_lifetime"] = process_lifetime
+                self._record_interruption(metadata.name, validated_args, interruption, timing)
         event_payload = {
             "connector_name": metadata.name,
-            "args_hash": _args_hash(validated_args),
+            "args_hash": args_hash(validated_args),
             "result_summary": _result_summary(result),
-            "duration_ms": 0,
+            **timing,
             "outcome": outcome,
         }
         return event_payload, dict(result)
+
+    async def _invoke_with_deadline(self, metadata, args, bound):
+        # Keep execution in the owning task: bound filesystem workers and the
+        # shared command supervisor must finish cleanup through repeated cancellation.
+        cancellation = None
+        try:
+            async with asyncio.timeout(float(metadata.timeout_seconds)):
+                try:
+                    result = await self.executor.invoke(
+                        metadata.name, args, timeout_seconds=float(metadata.timeout_seconds), **bound,
+                    )
+                except CommandProcessCancelled as exc:
+                    # Python 3.11/3.12 Timeout matches the exact CancelledError
+                    # type. Preserve the typed observation outside its boundary.
+                    cancellation = exc
+                    raise asyncio.CancelledError from exc
+        except asyncio.CancelledError:
+            if cancellation is not None:
+                raise cancellation from cancellation.__cause__
+            raise
+        except TimeoutError as exc:
+            result = {"ok": False, "error": "timeout", "timeout_seconds": float(metadata.timeout_seconds)}
+            if cancellation is not None:
+                lifetime = cancellation.lifetime
+                if not lifetime.cleanup_confirmed:
+                    raise CommandExecutionUncertain(lifetime) from exc
+                result["process_lifetime"] = lifetime.lifetime()
+            return result, "timeout"
+        if metadata.name == "run_command" and result.get("error") == "timeout":
+            return result, "timeout"
+        return result, "success" if bool(result.get("ok")) else "failed"
+
+    def _record_interruption(self, name, args, observation, timing) -> None:
+        try:
+            # Supporting telemetry only: the effect owner retains unresolved
+            # dispatch intent, with no fabricated receipt or terminal effect.
+            log_event("outward_connector_interrupted", {"connector_name": name, "args_hash": args_hash(args),
+                      "observation": observation, **timing}, self.workspace_root)
+        except (OSError, RuntimeError, ValueError, TypeError):
+            logger.exception("Unable to record interrupted connector timing for %s", name)
 
     def _require_metadata(self, connector_name: str) -> BuiltInConnectorMetadata:
         metadata = self.connector_registry.get(connector_name)
@@ -152,14 +235,9 @@ def _error_sort_key(error: JsonSchemaValidationError) -> tuple[str, str]:
     return (".".join(str(part) for part in error.absolute_path), error.message)
 
 
-def _args_hash(args: dict[str, Any]) -> str:
-    payload = json.dumps(args, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
-
-
 def _result_summary(result: dict[str, Any]) -> dict[str, Any]:
     summary: dict[str, Any] = {"ok": bool(result.get("ok"))}
-    for key in ("path", "status_code", "returncode", "stdout_bytes", "stderr_bytes", "body_bytes", "timeout_seconds"):
+    for key in ("path", "status_code", "returncode", "stdout_bytes", "stderr_bytes", "body_bytes", "timeout_seconds", "process_lifetime"):
         if key in result:
             summary[key] = result[key]
     if "content" in result:

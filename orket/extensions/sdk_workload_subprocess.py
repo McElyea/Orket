@@ -7,6 +7,7 @@ import importlib.abc
 import inspect
 import json
 import sys
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +36,7 @@ class DeclaredStdlibImportHook(importlib.abc.MetaPathFinder):
         self._allowed_stdlib_modules = set(allowed_stdlib_modules) | _BASE_ALLOWED_STDLIB_MODULES
         self._host_import_guard = ExtensionImportGuard()
         self._hook_path = Path(__file__).resolve()
+        self._origin_inspection = threading.local()
 
     def find_spec(
         self,
@@ -61,6 +63,18 @@ class DeclaredStdlibImportHook(importlib.abc.MetaPathFinder):
             raise ImportError(f"E_EXT_STDLIB_IMPORT_UNDECLARED: {top_level}")
 
     def _direct_request_originates_from_extension(self) -> bool:
+        # Python 3.12 on POSIX imports ntpath even when constructing a Path.
+        # Only imports made by this hook's own origin inspection are internal;
+        # reset before extension loading, and never bypass another thread's checks.
+        if getattr(self._origin_inspection, "active", False):
+            return False
+        self._origin_inspection.active = True
+        try:
+            return self._inspect_request_origin()
+        finally:
+            self._origin_inspection.active = False
+
+    def _inspect_request_origin(self) -> bool:
         frame = sys._getframe()
         while frame is not None:
             filename = frame.f_code.co_filename

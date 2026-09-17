@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.application.services.turn_tool_control_plane_recovery import (
-    fail_closed_on_orphan_operation_artifacts_for_resume_mode,
-    load_checkpoint_resume_lineage,
-    recover_pre_effect_attempt_for_resume_mode,
-)
-from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneError
+from orket.application.services.turn_tool_control_plane_recovery import load_checkpoint_resume_lineage
 from orket.application.services.turn_tool_control_plane_support import attempt_id_for, run_id_for
-from orket.core.domain import AttemptState, CheckpointResumabilityClass, RunState
+from orket.application.services.turn_tool_recovery_transaction import (
+    reconcile_orphan_operation_artifacts_atomic,
+    recover_pre_effect_attempt_atomic,
+)
+from orket.core.domain import AttemptState, RunState
 from orket.core.domain.execution import ExecutionTurn
 
+from .turn_checkpoint_snapshot import validate_resume_snapshot_semantics
 from .turn_executor_completed_replay import control_plane_service_for_executor
 from .turn_executor_control_plane_evidence import (
     list_operation_artifact_refs,
@@ -47,8 +47,8 @@ async def load_pre_effect_resume_turn_if_needed(
     )
     if attempt is None or run.lifecycle_state is not RunState.EXECUTING or attempt.attempt_state is not AttemptState.EXECUTING:
         return None
-    run, attempt = await recover_pre_effect_attempt_for_resume_mode(
-        execution_repository=control_plane_service.execution_repository,
+    run, attempt = await recover_pre_effect_attempt_atomic(
+        transactions=control_plane_service.transactions,
         publication=control_plane_service.publication,
         run=run,
         current_attempt=attempt,
@@ -66,7 +66,7 @@ async def load_pre_effect_resume_turn_if_needed(
         context=context,
         state_snapshot_ref=checkpoint.state_snapshot_ref,
     )
-    _validate_resume_snapshot_semantics(
+    validate_resume_snapshot_semantics(
         snapshot_payload=snapshot_payload,
         attempt_id=attempt.attempt_id,
         resumability_class=checkpoint_acceptance.resumability_class,
@@ -85,8 +85,8 @@ async def load_pre_effect_resume_turn_if_needed(
         context=context,
     )
     if operation_refs:
-        await fail_closed_on_orphan_operation_artifacts_for_resume_mode(
-            execution_repository=control_plane_service.execution_repository,
+        await reconcile_orphan_operation_artifacts_atomic(
+            transactions=control_plane_service.transactions,
             publication=control_plane_service.publication,
             run=run,
             current_attempt=attempt,
@@ -124,32 +124,6 @@ async def load_pre_effect_resume_turn_if_needed(
     )
 
 
-def _validate_resume_snapshot_semantics(
-    *,
-    snapshot_payload: dict[str, Any],
-    attempt_id: str,
-    resumability_class: CheckpointResumabilityClass,
-) -> None:
-    control_plane = snapshot_payload.get("control_plane")
-    if not isinstance(control_plane, dict):
-        raise TurnToolControlPlaneError(
-            f"resumed governed attempt {attempt_id} has malformed checkpoint snapshot control-plane metadata"
-        )
-    resumability = str(control_plane.get("resumability_class") or "").strip()
-    recovery_mode = str(control_plane.get("recovery_mode") or "").strip()
-    expected_recovery_mode = (
-        "pre_effect_same_attempt_only"
-        if resumability_class is CheckpointResumabilityClass.RESUME_SAME_ATTEMPT
-        else "pre_effect_new_attempt_only"
-    )
-    if resumability != resumability_class.value:
-        raise TurnToolControlPlaneError(
-            f"resumed governed attempt {attempt_id} requires {resumability_class.value} snapshot semantics"
-        )
-    if recovery_mode != expected_recovery_mode:
-        raise TurnToolControlPlaneError(
-            f"resumed governed attempt {attempt_id} requires {expected_recovery_mode} checkpoint recovery semantics"
-        )
 
 
 __all__ = ["load_pre_effect_resume_turn_if_needed"]

@@ -19,6 +19,10 @@ class ExecutionFailed(OrketError):
     pass
 
 
+class ApprovalPending(ExecutionFailed):
+    """Execution is unfinished at an admitted approval boundary."""
+
+
 class StateConflict(OrketError):
     """Raised when a status transition is invalid."""
 
@@ -32,7 +36,7 @@ class InfrastructureError(OrketError):
 
 
 class OrketInfrastructureError(RuntimeError, OrketError):
-    """Infrastructure failure that should surface as a recorded run failure."""
+    """Infrastructure failure requiring an explicit, potentially unresolved runtime observation."""
 
     pass
 

@@ -22,7 +22,7 @@ from orket.adapters.storage.governed_agent_wake_repository_support import (
     wake_row,
 )
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
-from orket.application.services.governed_agent_wake_records import (
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeAuthority,
     GovernedAgentWakeClaimResult,
     GovernedAgentWakeEnqueueResult,
@@ -72,12 +72,18 @@ class AsyncGovernedAgentWakeRepository:
 
     async def validate_claim(self, *, authority: GovernedAgentWakeAuthority, now_utc: str) -> bool:
         now = utc_timestamp(now_utc)
-
-        async def _op(conn: aiosqlite.Connection) -> bool:
+        path = await asyncio.to_thread(Path(self.db_path).resolve)
+        if not await asyncio.to_thread(path.exists):
+            return False
+        # A terminal writer can await this fence while renewal waits for that
+        # writer. Read committed WAL state without the renewal's Python lock.
+        async with aiosqlite.connect(path.as_uri() + '?mode=ro', uri=True) as conn:
+            conn.row_factory = aiosqlite.Row
+            async with conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='governed_agent_wakes'") as cursor:
+                if await cursor.fetchone() is None:
+                    return False
             row = await wake_row(conn, authority.wake_id)
             return row is not None and claim_matches(row, authority, now)
-
-        return await self._execute(_op)
 
     async def renew_claim(
         self,

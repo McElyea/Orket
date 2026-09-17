@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import asyncio
 import json
@@ -10,8 +10,10 @@ from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelRes
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 from orket.exceptions import ExecutionFailed
 from orket.orchestration.engine import OrchestrationEngine
-from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
+from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL
+from orket.runtime.execution.live_acceptance_assets import write_core_acceptance_assets
 from orket.schema import CardStatus
+from tests.helpers.runtime_result import published_result
 from tests.live.run_summary_support import read_validated_run_summary
 from tests.turn_prompt_utils import extract_turn_prompt_context
 
@@ -98,16 +100,6 @@ class MultiRoleAcceptanceProvider:
                     "args": {
                         "path": target_path,
                         "content": "Program shall sum two integers from CLI args and print result.",
-                    },
-                },
-                {
-                    "tool": "write_file",
-                    "args": {
-                        "path": "agent_output/main.py",
-                        "content": (
-                            "if __name__ == '__main__':\n"
-                            "    print(0)\n"
-                        ),
                     },
                 },
                 {"tool": "update_issue_status", "args": {"status": _status_or("code_review")}},
@@ -213,57 +205,61 @@ def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch):
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     root = tmp_path
     workspace = root / "workspace"
     workspace.mkdir()
     (workspace / "agent_output").mkdir()
-    (workspace / "verification").mkdir()
     db_path = str(root / "acceptance_pipeline.db")
 
     _write_core_assets(root, epic_id="acceptance_pipeline")
     _patch_dummy_model(monkeypatch, MultiRoleAcceptanceProvider())
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("acceptance_pipeline")
+    try:
+        await engine.run_card("acceptance_pipeline")
 
-    for issue_id in ("REQ-1", "ARC-1", "COD-1", "REV-1"):
-        issue = await engine.cards.get_by_id(issue_id)
-        assert issue.status == CardStatus.DONE, f"{issue_id} did not reach DONE"
+        for issue_id in ("REQ-1", "ARC-1", "COD-1", "REV-1"):
+            issue = await engine.cards.get_by_id(issue_id)
+            assert issue.status == CardStatus.DONE, f"{issue_id} did not reach DONE"
+            assert await engine.cards.read_completion_receipt(issue_id) is not None
 
-    assert (workspace / "agent_output" / "requirements.txt").exists()
-    assert (workspace / "agent_output" / "design.txt").exists()
-    assert (workspace / "agent_output" / "main.py").exists()
-    runtime_report = workspace / "agent_output" / "verification" / "runtime_verification.json"
-    assert runtime_report.exists(), "runtime verification artifact missing in canonical acceptance run."
-    runtime_payload = json.loads(runtime_report.read_text(encoding="utf-8"))
-    run_roots = _run_roots(workspace)
-    assert len(run_roots) == 1, "Expected exactly one fresh run directory for acceptance proof."
-    _assert_runtime_verification_support_artifact(
-        workspace,
-        runtime_payload,
-        run_id=run_roots[0].name,
-        expected_issue_id="REV-1",
-    )
-    checkpoint_paths = list((workspace / "observability").rglob("checkpoint.json"))
-    assert checkpoint_paths, "Expected turn checkpoint artifacts for acceptance run."
-    for checkpoint_path in checkpoint_paths:
-        payload = json.loads(checkpoint_path.read_text(encoding="utf-8"))
-        metadata = payload.get("prompt_metadata", {})
-        assert isinstance(metadata, dict)
-        assert metadata.get("resolver_policy")
-        assert metadata.get("selection_policy")
+        assert (workspace / "agent_output" / "requirements.txt").exists()
+        assert (workspace / "agent_output" / "design.txt").exists()
+        assert (workspace / "agent_output" / "main.py").exists()
+        runtime_report = workspace / "agent_output" / "verification" / "runtime_verification.json"
+        assert runtime_report.exists(), "runtime verification artifact missing in canonical acceptance run."
+        runtime_payload = json.loads(runtime_report.read_text(encoding="utf-8"))
+        run_roots = _run_roots(workspace)
+        assert len(run_roots) == 1, "Expected exactly one fresh run directory for acceptance proof."
+        _assert_runtime_verification_support_artifact(
+            workspace,
+            runtime_payload,
+            run_id=run_roots[0].name,
+            expected_issue_id="REV-1",
+        )
+        checkpoint_paths = list((workspace / "observability").rglob("checkpoint.json"))
+        assert checkpoint_paths, "Expected turn checkpoint artifacts for acceptance run."
+        for checkpoint_path in checkpoint_paths:
+            payload = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+            metadata = payload.get("prompt_metadata", {})
+            assert isinstance(metadata, dict)
+            assert metadata.get("resolver_policy")
+            assert metadata.get("selection_policy")
+    finally:
+        await engine.close()
 
 
 @pytest.mark.asyncio
 async def test_system_acceptance_role_pipeline_with_guard_live_reports_truthfully(tmp_path, monkeypatch):
     """Layer: end-to-end. Verifies the live provider path records a truthful success or failure outcome without fake providers."""
     if os.getenv("ORKET_LIVE_ACCEPTANCE", "").lower() not in {"1", "true", "yes"}:
-        pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live acceptance with Ollama.")
+        pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live acceptance with the selected provider.")
 
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
-    model_name = os.getenv("ORKET_LIVE_MODEL", "llama3.2:3b")
+    model_name = os.getenv("ORKET_LIVE_MODEL") or DEFAULT_LOCAL_MODEL
 
     root = tmp_path
     workspace = root / "workspace"
@@ -351,6 +347,7 @@ async def test_system_acceptance_role_pipeline_with_guard_live_reports_truthfull
 
 
 @pytest.mark.asyncio
+# Layer: contract
 async def test_webhook_opened_event_triggers_issue_code_review(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
@@ -369,7 +366,10 @@ async def test_webhook_opened_event_triggers_issue_code_review(monkeypatch, tmp_
 
         async def run_card(self, issue_id):
             captured["run_card_id"] = issue_id
-            return {"ok": True}
+            return published_result()
+
+        async def close(self):
+            captured["closed"] = True
 
     def _fake_create_task(coro):
         task = original_create_task(coro)
@@ -394,3 +394,5 @@ async def test_webhook_opened_event_triggers_issue_code_review(monkeypatch, tmp_
     assert captured["updated_to"] == ("ISSUE-ABC1", "code_review")
     assert captured["run_card_id"] == "ISSUE-ABC1"
 
+
+    assert captured["closed"]

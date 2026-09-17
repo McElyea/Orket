@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast
 
-from orket.application.services.governed_agent_ports import GovernedAgentInvocationBinding
+from orket.core.contracts.governed_agent_ports import GovernedAgentInvocationBinding
 from orket.core.domain.governed_agent_continuation import GovernedAgentContinuationInputs
 from orket_extension_sdk import AgentIterationRequest, AgentIterationResult, canonical_digest_sha256
 

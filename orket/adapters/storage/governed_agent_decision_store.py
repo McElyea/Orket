@@ -15,7 +15,7 @@ from orket.adapters.storage.governed_agent_repository_support import (
     iteration_snapshot,
     parent_matches,
 )
-from orket.application.services.governed_agent_ports import (
+from orket.core.contracts.governed_agent_ports import (
     GovernedAgentCancellationPublication,
     GovernedAgentDecisionPublication,
     GovernedAgentInvocationBinding,
@@ -126,6 +126,7 @@ class GovernedAgentDecisionStore:
         inputs_json = json.dumps(dict(decision_inputs), sort_keys=True, separators=(",", ":"))
         decision_json = json.dumps(dict(decision_payload), sort_keys=True, separators=(",", ":"))
         decision_digest = agent_digest(json.loads(decision_json))
+        inputs_digest = agent_digest(json.loads(inputs_json))
 
         async def _op(conn: aiosqlite.Connection) -> GovernedAgentDecisionPublication:
             await conn.execute("BEGIN IMMEDIATE")
@@ -150,10 +151,11 @@ class GovernedAgentDecisionStore:
             await conn.execute(
                 """
                 UPDATE governed_agent_invocations
-                SET state = 'decided', decision_inputs_json = ?, decision_json = ?, decision_digest = ?
+                SET state = 'decided', decision_inputs_json = ?, decision_json = ?, decision_digest = ?,
+                    decision_inputs_digest = ?
                 WHERE invocation_id = ?
                 """,
-                (inputs_json, decision_json, decision_digest, binding.invocation_id),
+                (inputs_json, decision_json, decision_digest, inputs_digest, binding.invocation_id),
             )
             return GovernedAgentDecisionPublication(
                 "accepted",

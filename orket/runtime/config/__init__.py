@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = [
     'compact_turn_packet',
     'config_loader',
+    'contract_assets',
     'cors_config',
     'defaults',
     'gguf_model_inventory',
@@ -16,5 +17,6 @@ __all__ = [
     'runtime_bootstrap',
     'runtime_context',
     'settings',
-    'startup_checks'
+    'startup_checks',
+    'turn_prompt_contracts'
 ]

@@ -7,8 +7,8 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
-from orket.application.services.governed_agent_ports import GovernedAgentAuthorityStaleError
-from orket.application.services.governed_agent_wake_records import (
+from orket.core.contracts.governed_agent_ports import GovernedAgentAuthorityStaleError
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeAuthority,
     GovernedAgentWakeRecord,
     GovernedAgentWakeRepository,

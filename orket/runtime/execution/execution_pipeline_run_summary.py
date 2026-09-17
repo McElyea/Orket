@@ -207,6 +207,9 @@ class ExecutionPipelineRunSummaryMixin:
         summary: dict[str, Any],
         failure_class: str | None = None,
         failure_reason: str | None = None,
+        export_day: str | None = None,
+        export_time: str | None = None,
+        export_intent: Any = None,
     ) -> dict[str, Any] | None:
         try:
             exported = await self.artifact_exporter.export_run(
@@ -218,22 +221,9 @@ class ExecutionPipelineRunSummaryMixin:
                 summary=summary,
                 failure_class=failure_class,
                 failure_reason=failure_reason,
+                export_day=export_day, export_time=export_time, export_intent=export_intent,
             )
-            if isinstance(exported, dict) and exported:
-                log_event(
-                    "run_artifacts_exported",
-                    {
-                        "run_id": run_id,
-                        "provider": exported.get("provider"),
-                        "repo": f"{exported.get('owner')}/{exported.get('repo')}",
-                        "branch": exported.get("branch"),
-                        "path": exported.get("path"),
-                        "commit": exported.get("commit"),
-                    },
-                    workspace=self.workspace,
-                )
-                return dict(exported)
-            return None
+            return self._record_artifact_export(run_id, exported)
         except (RuntimeError, ValueError, TypeError, OSError) as exc:
             log_event(
                 "run_artifact_export_failed",
@@ -244,7 +234,20 @@ class ExecutionPipelineRunSummaryMixin:
                 },
                 workspace=self.workspace,
             )
+            raise
+
+    async def _reconcile_run_artifacts(self, *, export_intent: Any) -> dict[str, Any] | None:
+        exported = await self.artifact_exporter.reconcile_export(export_intent)
+        return self._record_artifact_export(export_intent.run_id, exported)
+
+    def _record_artifact_export(self, run_id: str, exported: Any) -> dict[str, Any] | None:
+        if not isinstance(exported, dict) or not exported:
             return None
+        log_event("run_artifacts_exported",
+                  {"run_id": run_id, "provider": exported.get("provider"),
+                   "repo": f"{exported.get('owner')}/{exported.get('repo')}", "branch": exported.get("branch"),
+                   "path": exported.get("path"), "commit": exported.get("commit")}, workspace=self.workspace)
+        return dict(exported)
 
     async def _materialize_run_summary(
         self,
@@ -361,5 +364,6 @@ class ExecutionPipelineRunSummaryMixin:
                 {"run_id": run_id, "error_type": type(exc).__name__, "error": str(exc)},
                 workspace=self.workspace,
             )
+            raise
         resolved_artifacts["run_summary"] = dict(run_summary)
         return run_summary, resolved_artifacts

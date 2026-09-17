@@ -9,8 +9,10 @@ from pathlib import Path
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots, snapshot_digest
+from orket.application.services.extension_workload_closeout import finalize_extension_workload
 from orket.core.contracts import (
     AttemptRecord,
     CheckpointAcceptanceRecord,
@@ -21,6 +23,7 @@ from orket.core.contracts import (
     StepRecord,
     WorkloadRecord,
 )
+from orket.core.contracts.control_plane_transaction import ControlPlaneTransactionFactory
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AttemptState,
@@ -28,16 +31,9 @@ from orket.core.domain import (
     CapabilityClass,
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
-    ClosureBasisClassification,
-    CompletionClassification,
-    DegradationClassification,
-    EvidenceSufficiencyClassification,
     ResidualUncertaintyClassification,
     ResultClass,
     RunState,
-    SideEffectBoundaryClass,
-    validate_attempt_state_transition,
-    validate_run_state_transition,
 )
 from orket.naming import sanitize_name
 
@@ -73,9 +69,11 @@ class ExtensionWorkloadControlPlaneService:
         *,
         execution_repository: ControlPlaneExecutionRepository,
         publication: ControlPlanePublicationService,
+        transactions: ControlPlaneTransactionFactory,
     ) -> None:
         self.execution_repository = execution_repository
         self.publication = publication
+        self.transactions = transactions
 
     async def begin_execution(
         self,
@@ -123,8 +121,8 @@ class ExtensionWorkloadControlPlaneService:
             starting_state_snapshot_ref=run.configuration_snapshot_id,
             start_timestamp=creation_timestamp,
         )
-        await self.execution_repository.save_run_record(record=run)
-        await self.execution_repository.save_attempt_record(record=attempt)
+        run = await self.execution_repository.save_run_record(record=run)
+        attempt = await self.execution_repository.save_attempt_record(record=attempt)
         start_step = await self.execution_repository.save_step_record(
             record=StepRecord(
                 step_id=self.start_step_id_for(run_id=run_id),
@@ -256,99 +254,20 @@ class ExtensionWorkloadControlPlaneService:
         failure_class: str = "",
         side_effect_observed: bool = False,
     ) -> ExtensionWorkloadControlPlaneCloseout:
-        run = await self._require_run(run_id=run_id)
-        attempt = await self._require_attempt(attempt_id=run.current_attempt_id)
-        existing_truth = await self.publication.repository.get_final_truth(run_id=run_id)
-        if existing_truth is not None:
-            step = await self._require_step(step_id=self.closeout_step_id_for(run_id=run_id))
-            effect = await self._require_effect(run_id=run_id, stage="closeout")
-            return ExtensionWorkloadControlPlaneCloseout(
-                run=run,
-                attempt=attempt,
-                closeout_step=step,
-                closeout_effect=effect,
-                final_truth=existing_truth,
+        authority_sources = list(authority_sources)
+        async with self.transactions() as transaction:
+            owner = ExtensionWorkloadControlPlaneService(
+                execution_repository=transaction.execution,
+                publication=ControlPlanePublicationService(
+                    repository=transaction.records, authority=self.publication.authority),
+                transactions=self.transactions,
             )
-
-        closeout_step = await self.execution_repository.save_step_record(
-            record=StepRecord(
-                step_id=self.closeout_step_id_for(run_id=run_id),
-                attempt_id=attempt.attempt_id,
-                step_kind="extension_workload_closeout",
-                namespace_scope=run.namespace_scope,
-                input_ref=str(prior_step_ref or self.start_result_ref_for(run_id=run_id)),
-                output_ref=authoritative_result_ref,
-                capability_used=CapabilityClass.DETERMINISTIC_COMPUTE,
-                resources_touched=[],
-                observed_result_classification=self._closeout_observed_result(outcome),
-                receipt_refs=[authoritative_result_ref],
-                closure_classification="step_completed",
+            values = await finalize_extension_workload(
+                owner, run_id=run_id, outcome=outcome, authoritative_result_ref=authoritative_result_ref,
+                authority_sources=authority_sources, prior_step_ref=prior_step_ref,
+                failure_class=failure_class, side_effect_observed=side_effect_observed,
             )
-        )
-        closeout_effect = await self._append_effect(
-            run=run,
-            attempt=attempt,
-            step=closeout_step,
-            effect_id=self.effect_id_for(run_id=run_id, stage="closeout"),
-            journal_entry_id=self.journal_entry_id_for(run_id=run_id, stage="closeout"),
-            intended_target_ref=f"extension-workload:{run_id}:closeout",
-        )
-
-        if outcome is ResultClass.SUCCESS:
-            next_attempt_state = AttemptState.COMPLETED
-            next_run_state = RunState.COMPLETED
-            attempt_update: dict[str, object] = {"attempt_state": next_attempt_state, "end_timestamp": self._utc_now()}
-            completion = CompletionClassification.SATISFIED
-            closure_basis = ClosureBasisClassification.NORMAL_EXECUTION
-        else:
-            next_attempt_state = AttemptState.INTERRUPTED if outcome is ResultClass.BLOCKED else AttemptState.FAILED
-            next_run_state = RunState.FAILED_TERMINAL
-            attempt_update = {
-                "attempt_state": next_attempt_state,
-                "end_timestamp": self._utc_now(),
-                "failure_class": str(failure_class or outcome.value),
-                "side_effect_boundary_class": (
-                    SideEffectBoundaryClass.POST_EFFECT_OBSERVED
-                    if side_effect_observed
-                    else SideEffectBoundaryClass.PRE_EFFECT_FAILURE
-                ),
-            }
-            completion = CompletionClassification.UNSATISFIED
-            closure_basis = (
-                ClosureBasisClassification.POLICY_TERMINAL_STOP
-                if outcome is ResultClass.BLOCKED
-                else ClosureBasisClassification.NORMAL_EXECUTION
-            )
-        validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=next_attempt_state)
-        validate_run_state_transition(current_state=run.lifecycle_state, next_state=next_run_state)
-        attempt = await self.execution_repository.save_attempt_record(record=attempt.model_copy(update=attempt_update))
-        final_truth = await self.publication.publish_final_truth(
-            final_truth_record_id=self.final_truth_id_for(run_id=run_id),
-            run_id=run_id,
-            result_class=outcome,
-            completion_classification=completion,
-            evidence_sufficiency_classification=EvidenceSufficiencyClassification.SUFFICIENT,
-            residual_uncertainty_classification=ResidualUncertaintyClassification.NONE,
-            degradation_classification=DegradationClassification.NONE,
-            closure_basis=closure_basis,
-            authority_sources=authority_sources,
-            authoritative_result_ref=authoritative_result_ref,
-        )
-        run = await self.execution_repository.save_run_record(
-            record=run.model_copy(
-                update={
-                    "lifecycle_state": next_run_state,
-                    "final_truth_record_id": final_truth.final_truth_record_id,
-                }
-            )
-        )
-        return ExtensionWorkloadControlPlaneCloseout(
-            run=run,
-            attempt=attempt,
-            closeout_step=closeout_step,
-            closeout_effect=closeout_effect,
-            final_truth=final_truth,
-        )
+            return ExtensionWorkloadControlPlaneCloseout(*values)
 
     @staticmethod
     def namespace_scope_for(*, extension_id: str) -> str:
@@ -611,6 +530,7 @@ def build_extension_workload_control_plane_service(
     return ExtensionWorkloadControlPlaneService(
         execution_repository=AsyncControlPlaneExecutionRepository(resolved_db_path),
         publication=ControlPlanePublicationService(repository=AsyncControlPlaneRecordRepository(resolved_db_path)),
+        transactions=SQLiteControlPlaneTransactions(resolved_db_path),
     )
 
 

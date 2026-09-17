@@ -1,119 +1,114 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "2.0.0",
   "policy_id": "dependency_direction_policy",
   "scan_roots": [
     "orket"
   ],
-  "top_level_to_layer": {
-    "__init__": "legacy",
-    "adapters": "adapters",
-    "agents": "agents",
-    "application": "application",
-    "board": "platform",
-    "capabilities": "platform",
-    "cli": "interfaces",
-    "core": "core",
-    "decision_nodes": "decision_nodes",
-    "discovery": "platform",
-    "domain": "domain",
-    "driver": "platform",
-    "driver_support_cli": "platform",
-    "driver_support_conversation": "platform",
-    "driver_support_resources": "platform",
-    "events": "platform",
-    "extensions": "platform",
-    "exceptions": "platform",
-    "hardware": "platform",
-    "infrastructure": "infrastructure",
-    "interfaces": "interfaces",
-    "kernel": "kernel",
-    "logging": "platform",
-    "marshaller": "legacy",
-    "naming": "platform",
-    "orchestration": "orchestration",
-    "organization_loop": "platform",
-    "orket": "legacy",
-    "platform": "platform",
-    "policy": "platform",
-    "preview": "platform",
-    "project_paths": "platform",
-    "quickstart": "interfaces",
-    "reforger": "platform",
-    "repositories": "platform",
-    "runtime": "runtime",
-    "runtime_paths": "platform",
-    "rulesim": "platform",
-    "schema": "platform",
-    "services": "services",
-    "session": "platform",
-    "settings": "platform",
-    "state": "platform",
-    "streaming": "platform",
-    "time_utils": "platform",
-    "tool_families": "adapters",
-    "tool_runtime": "adapters",
-    "tool_strategy": "adapters",
-    "tools": "platform",
-    "utils": "platform",
-    "vendors": "vendors",
-    "webhook_server": "interfaces"
-    ,
-    "workloads": "platform"
+  "classifications": {
+    "orket.__init__": "application",
+    "orket.adapters": "adapters",
+    "orket.agents": "application",
+    "orket.application": "application",
+    "orket.board": "application",
+    "orket.capabilities": "adapters",
+    "orket.cli": "interfaces",
+    "orket.core": "core",
+    "orket.decision_nodes": "decision_nodes",
+    "orket.discovery": "application",
+    "orket.domain": "core",
+    "orket.driver": "application",
+    "orket.driver_support_cli": "interfaces",
+    "orket.driver_support_conversation": "application",
+    "orket.driver_support_resources": "application",
+    "orket.events": "application",
+    "orket.exceptions": "core",
+    "orket.extensions": "application",
+    "orket.hardware": "adapters",
+    "orket.infrastructure": "adapters",
+    "orket.interfaces": "interfaces",
+    "orket.kernel": "application",
+    "orket.logging": "adapters",
+    "orket.marshaller": "application",
+    "orket.naming": "core",
+    "orket.orchestration": "application",
+    "orket.organization_loop": "application",
+    "orket.platform": "application",
+    "orket.policy": "application",
+    "orket.preview": "adapters",
+    "orket.project_paths": "adapters",
+    "orket.quickstart": "interfaces",
+    "orket.reforger": "application",
+    "orket.repositories": "adapters",
+    "orket.rulesim": "application",
+    "orket.runtime": "application",
+    "orket.runtime_paths": "adapters",
+    "orket.schema": "core",
+    "orket.services": "application",
+    "orket.session": "application",
+    "orket.settings": "application",
+    "orket.state": "application",
+    "orket.streaming": "adapters",
+    "orket.time_utils": "adapters",
+    "orket.tool_families": "adapters",
+    "orket.tool_runtime": "adapters",
+    "orket.tool_strategy": "adapters",
+    "orket.tools": "adapters",
+    "orket.utils": "adapters",
+    "orket.vendors": "adapters",
+    "orket.webhook_server": "interfaces",
+    "orket.workloads": "application"
   },
-  "forbidden_edges": [
-    {
-      "source_layer": "core",
-      "target_layer": "application"
-    },
-    {
-      "source_layer": "core",
-      "target_layer": "adapters"
-    },
-    {
-      "source_layer": "core",
-      "target_layer": "interfaces"
-    },
-    {
-      "source_layer": "application",
-      "target_layer": "interfaces"
-    },
-    {
-      "source_layer": "adapters",
-      "target_layer": "interfaces"
-    },
-    {
-      "source_layer": "domain",
-      "target_layer": "orchestration"
-    },
-    {
-      "source_layer": "domain",
-      "target_layer": "interfaces"
-    },
-    {
-      "source_layer": "decision_nodes",
-      "target_layer": "interfaces"
-    },
-    {
-      "source_layer": "infrastructure",
-      "target_layer": "services"
-    },
-    {
-      "source_layer": "infrastructure",
-      "target_layer": "orchestration"
-    },
-    {
-      "source_layer": "infrastructure",
-      "target_layer": "interfaces"
-    },
-    {
-      "source_layer": "infrastructure",
-      "target_layer": "decision_nodes"
-    }
+  "allowed_edges": [
+    [
+      "adapters",
+      "adapters"
+    ],
+    [
+      "application",
+      "application"
+    ],
+    [
+      "core",
+      "core"
+    ],
+    [
+      "decision_nodes",
+      "decision_nodes"
+    ],
+    [
+      "interfaces",
+      "interfaces"
+    ],
+    [
+      "interfaces",
+      "application"
+    ],
+    [
+      "application",
+      "core"
+    ],
+    [
+      "application",
+      "adapters"
+    ],
+    [
+      "application",
+      "decision_nodes"
+    ],
+    [
+      "adapters",
+      "core"
+    ],
+    [
+      "decision_nodes",
+      "core"
+    ]
   ],
-  "legacy_edge_budget": {
-    "max_edges": 10
-  },
-  "policy_decisions": {
-    "application_to_adapters": "allowed_with_port_migration_followup"
-  }
+  "decision_core_contracts": [
+    "orket.core.cards_runtime_contract",
+    "orket.exceptions",
+    "orket.schema"
+  ],
+  "side_effect_free_adapters": [],
+  "exceptions": []
 }

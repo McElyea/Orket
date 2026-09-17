@@ -29,7 +29,7 @@ from orket.adapters.storage.governed_agent_repository_support import (
     result_ref,
 )
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
-from orket.application.services.governed_agent_ports import (
+from orket.core.contracts.governed_agent_ports import (
     GovernedAgentBrokerCallRecord,
     GovernedAgentBrokerReservation,
     GovernedAgentCancellationPublication,

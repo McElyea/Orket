@@ -731,6 +731,7 @@ def test_registry_execution_runtime_env_override_wins(monkeypatch):
     assert registry.resolve_execution_runtime(org) is custom
 
 
+# Layer: unit
 def test_registry_resolves_default_orchestration_loop_policy():
     registry = DecisionNodeRegistry()
     from orket.decision_nodes.builtins import DefaultOrchestrationLoopPolicyNode
@@ -817,15 +818,15 @@ def test_registry_resolves_default_orchestration_loop_policy():
     assert node.missing_seat_status() == CardStatus.CANCELED
     assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.DONE)]) == {
         "is_done": True,
-        "event_name": "orchestrator_epic_complete",
+        "event_name": "orchestrator_epic_stopped",
     }
     assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.ARCHIVED)]) == {
         "is_done": True,
-        "event_name": "orchestrator_epic_complete",
+        "event_name": "orchestrator_epic_stopped",
     }
     assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.BLOCKED)]) == {
         "is_done": True,
-        "event_name": "orchestrator_epic_complete",
+        "event_name": "orchestrator_epic_stopped",
     }
     assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.READY)]) == {
         "is_done": False,

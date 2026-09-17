@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from orket.core.contracts.runtime_execution_result import RuntimeCollectionResult, RuntimeExecutionResult
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
 from orket.runtime.gitea_state_loop import run_gitea_state_loop
@@ -27,7 +28,7 @@ class ExecutionPipelineCardDispatchMixin:
             session_id: str | None = None,
             driver_steered: bool = False,
             model_override: str | None = None,
-        ) -> dict[str, Any]: ...
+        ) -> RuntimeCollectionResult: ...
 
         def _build_epic_run_orchestrator(self) -> Any: ...
 
@@ -40,10 +41,18 @@ class ExecutionPipelineCardDispatchMixin:
         driver_steered: bool = False,
         target_issue_id: str | None = None,
         model_override: str | None = None,
-    ) -> Any:
+        admission_recovery: dict[str, Any] | None = None,
+        export_recovery: dict[str, Any] | None = None, approval_recovery: dict[str, Any] | None = None,
+    ) -> RuntimeExecutionResult | RuntimeCollectionResult:
         """Canonical public runtime dispatcher over normalized card facts."""
         await self.initialize()
         target_kind, parent_epic_name = await self._resolve_run_card_target(card_id)
+        if admission_recovery is not None and target_kind != "epic":
+            raise ValueError("E_EPIC_ADMISSION_RECOVERY_EPIC_REQUIRED")
+        if export_recovery is not None and target_kind != "epic":
+            raise ValueError("E_EPIC_EXPORT_RECOVERY_EPIC_REQUIRED")
+        if approval_recovery is not None and target_kind != "epic":
+            raise ValueError("E_EPIC_APPROVAL_RECOVERY_EPIC_REQUIRED")
         if target_kind == "epic":
             return await self._run_epic_entry(
                 card_id,
@@ -52,6 +61,7 @@ class ExecutionPipelineCardDispatchMixin:
                 driver_steered=driver_steered,
                 target_issue_id=target_issue_id,
                 model_override=model_override,
+                admission_recovery=admission_recovery, export_recovery=export_recovery, approval_recovery=approval_recovery,
             )
         if target_kind == "epic_collection":
             return await self._run_epic_collection_entry(
@@ -94,7 +104,7 @@ class ExecutionPipelineCardDispatchMixin:
         session_id: str | None = None,
         driver_steered: bool = False,
         model_override: str | None = None,
-    ) -> Any:
+    ) -> RuntimeExecutionResult | RuntimeCollectionResult:
         """Compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
             issue_id,
@@ -111,7 +121,7 @@ class ExecutionPipelineCardDispatchMixin:
         session_id: str | None = None,
         driver_steered: bool = False,
         model_override: str | None = None,
-    ) -> Any:
+    ) -> RuntimeExecutionResult | RuntimeCollectionResult:
         """Legacy compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
             rock_name,
@@ -130,7 +140,7 @@ class ExecutionPipelineCardDispatchMixin:
         parent_epic_name: str | None = None,
         target_issue_id: str | None = None,
         model_override: str | None = None,
-    ) -> Any:
+    ) -> RuntimeExecutionResult | RuntimeCollectionResult:
         parent_ename = parent_epic_name
         if parent_ename is None:
             parent_epic, parent_ename, _ = await self._find_parent_epic(issue_id)
@@ -207,9 +217,9 @@ class ExecutionPipelineCardDispatchMixin:
         driver_steered: bool = False,
         target_issue_id: str | None = None,
         model_override: str | None = None,
-    ) -> list[dict[str, Any]]:
+    ) -> RuntimeExecutionResult | RuntimeCollectionResult:
         """Compatibility wrapper over the canonical run_card surface."""
-        result: list[dict[str, Any]] = await self.run_card(
+        result = await self.run_card(
             epic_name,
             build_id=build_id,
             session_id=session_id,
@@ -227,13 +237,16 @@ class ExecutionPipelineCardDispatchMixin:
         driver_steered: bool = False,
         target_issue_id: str | None = None,
         model_override: str | None = None,
-    ) -> list[dict[str, Any]]:
-        result: list[dict[str, Any]] = await self._build_epic_run_orchestrator().run(
+        admission_recovery: dict[str, Any] | None = None,
+        export_recovery: dict[str, Any] | None = None, approval_recovery: dict[str, Any] | None = None,
+    ) -> RuntimeExecutionResult | RuntimeCollectionResult:
+        result = await self._build_epic_run_orchestrator().run(
             epic_name,
             build_id=build_id,
             session_id=session_id,
             driver_steered=driver_steered,
             target_issue_id=target_issue_id,
             model_override=str(model_override or "").strip(),
+            admission_recovery=admission_recovery, export_recovery=export_recovery, approval_recovery=approval_recovery,
         )
         return result

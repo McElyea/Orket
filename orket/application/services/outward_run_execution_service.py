@@ -10,36 +10,28 @@ from orket.adapters.storage.outward_run_store import OutwardRunStore
 from orket.adapters.tools.registry import BuiltInConnectorRegistry
 from orket.application.services.outward_approval_service import (
     OutwardApprovalService,
-    redacted_args_preview,
 )
 from orket.application.services.outward_connector_service import (
-    OutwardConnectorArgumentError,
-    OutwardConnectorNotFoundError,
-    OutwardConnectorPolicyError,
     OutwardConnectorService,
 )
+from orket.application.services.outward_control_plane_service import begin_outward_execution, require_outward_authority
+from orket.application.services.outward_effect_service import OutwardEffectService
+from orket.application.services.outward_model_admission_inputs import admit_model_turn
+from orket.application.services.outward_model_admission_service import OutwardModelAdmissionService
+from orket.application.services.outward_model_publication import append_new_event
 from orket.application.services.outward_model_tool_call_service import (
-    OutwardModelToolCallError,
     OutwardModelToolCallService,
 )
 from orket.application.services.outward_run_execution_plan import (
     OutwardRunExecutionPlanError,
     acceptance_tool_steps,
-    args_hash,
-    current_step,
-    failed_tool_event_payload,
-    failure_reason,
-    invalid_args_event_payload,
-    is_last_step,
-    model_proposal_ref,
-    model_tool_call,
-    proposal_suffix,
-    step_event_id,
-    task_with_model_tool_call,
-    task_with_policy_rejection,
-    task_with_tool_result,
 )
+from orket.application.services.outward_run_lifecycle import (
+    turn_started_event,
+)
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.trust_handoff_admission import TrustHandoffAdmissionService
+from orket.core.domain.outward_effects import OutwardEffectRecoveryRequest
 from orket.core.domain.outward_run_events import LedgerEvent
 from orket.core.domain.outward_runs import OutwardRunRecord
 
@@ -65,6 +57,7 @@ class OutwardRunExecutionService:
         connector_service: OutwardConnectorService | None = None,
         model_tool_call_service: OutwardModelToolCallService | None = None,
         http_allowlist: tuple[str, ...] = (),
+        effect_owner_id_factory: Callable[[], str] | None = None,
     ) -> None:
         self.run_store = run_store
         self.event_store = event_store
@@ -83,371 +76,76 @@ class OutwardRunExecutionService:
             run_store=run_store,
             event_store=event_store,
             utc_now=utc_now,
+            unit_of_work=approval_service.unit_of_work,
         )
         self.utc_now = utc_now
+        self.effects = OutwardEffectService(
+            unit_of_work=approval_service.unit_of_work, connectors=self.connector_service, utc_now=utc_now,
+            owner_id_factory=effect_owner_id_factory or RuntimeInputService().create_effect_owner_id,
+        )
+
+        self.models = OutwardModelAdmissionService(
+            approvals=approval_service, connectors=self.connector_service, model=self.model_tool_call_service,
+            utc_now=utc_now, owner_id_factory=effect_owner_id_factory or RuntimeInputService().create_effect_owner_id,
+        )
 
     async def start_if_ready(self, run_id: str) -> OutwardRunRecord:
         run = await self._require_run(run_id)
-        if run.status != "queued":
-            return run
-        run, admitted = await self.trust_handoff_admission.admit_if_required(run)
-        if not admitted:
-            return run
-        steps = _acceptance_steps(run)
-        if not steps:
-            return run
-
-        started = replace(run, status="running", started_at=run.started_at or self.utc_now(), current_turn=1)
-        await self.run_store.update(started)
-        await self._append_once(
-            event_id=f"run:{run.run_id}:0100:started",
-            event_type="run_started",
-            run=started,
-            turn=0,
-            payload={"run_id": run.run_id, "status": "running", "started_at": started.started_at},
-        )
-        await self._start_turn(started, 1)
-        return await self._handle_model_tool_call(started, steps[0])
+        run.require_execution_admission()
+        if run.status == "queued":
+            if _acceptance_steps(run) or run.task.get("acceptance_contract", {}).get("handoff_required"):
+                async with self.approval_service.unit_of_work.transaction() as transaction:
+                    await begin_outward_execution(transaction, run)
+            run, admitted = await self.trust_handoff_admission.admit_if_required(run)
+            if not admitted or not _acceptance_steps(run):
+                return run
+            async with self.approval_service.unit_of_work.transaction() as transaction:
+                current = await transaction.get_run(run.run_id)
+                if current != run:
+                    if current is None or current.status == "queued":
+                        raise OutwardRunExecutionError("E_OUTWARD_RUN_START_CONFLICT")
+                else:
+                    at = self.utc_now()
+                    started = replace(run, status="running", started_at=run.started_at or at, current_turn=1)
+                    await transaction.update_run(started)
+                    await append_new_event(transaction, LedgerEvent(
+                        event_id=f"run:{run.run_id}:0100:started", event_type="run_started", run_id=run.run_id,
+                        turn=0, agent_id="outward-agent", at=at,
+                        payload={"run_id": run.run_id, "status": "running", "started_at": started.started_at},
+                    ))
+                    await append_new_event(transaction, turn_started_event(started, at=at))
+                    await admit_model_turn(transaction, started, at=at)
+        return await self.models.execute(run.run_id)
 
     async def continue_after_approval(self, proposal_id: str) -> OutwardRunRecord:
-        proposal = await self.approval_service.get(proposal_id)
-        if proposal is None:
-            raise OutwardRunExecutionError(f"Approval proposal '{proposal_id}' not found")
-        run = await self._require_run(proposal.run_id)
-        if run.status in {"completed", "failed"}:
+        return await self._continue_effect_result(*await self.effects.execute(proposal_id))
+
+    async def recover_effect(
+        self, proposal_id: str, *, request_id: str, expected_owner_id: str,
+        expected_fencing_generation: int, operator_ref: str,
+    ) -> OutwardRunRecord:
+        request = OutwardEffectRecoveryRequest(proposal_id, request_id, expected_owner_id, expected_fencing_generation, operator_ref)
+        return await self._continue_effect_result(*await self.effects.recover(request))
+
+    async def _continue_effect_result(self, run: OutwardRunRecord, advance: bool) -> OutwardRunRecord:
+        if not advance:
             return run
-        if proposal.status != "approved":
-            return run
-
-        tool_call = model_tool_call(run)
-        if tool_call is None:
-            return await self._fail_run(run, "approved proposal has no recorded model governed tool call")
-        if tool_call["tool"] != proposal.tool:
-            return await self._fail_run(run, f"approved proposal tool drifted from model tool: {proposal.tool}")
-
-        try:
-            tool_event_payload, tool_result = await self.connector_service.invoke_with_result(proposal.tool, tool_call["args"])
-        except OutwardConnectorArgumentError as exc:
-            tool_result = {"ok": False, "error": "invalid_args", "errors": exc.errors}
-            tool_event_payload = invalid_args_event_payload(proposal.tool, tool_call["args"], exc.errors)
-        except OutwardConnectorNotFoundError as exc:
-            tool_result = {"ok": False, "error": str(exc)}
-            tool_event_payload = failed_tool_event_payload(proposal.tool, tool_call["args"], str(exc))
-        outcome = str(tool_event_payload.get("outcome") or "failed")
-        await self._append_once(
-            event_id=step_event_id(run.run_id, run.current_turn, 400, f"tool:{proposal.tool}:{proposal_suffix(proposal_id)}"),
-            event_type="tool_invoked",
-            run=run,
-            turn=run.current_turn,
-            payload=tool_event_payload,
-        )
-        if outcome != "success":
-            return await self._fail_run(run, failure_reason(tool_event_payload))
-
-        steps = _acceptance_steps(run)
-        run_with_result = replace(
-            run,
-            task=task_with_tool_result(run, proposal_id=proposal_id, tool=proposal.tool, result=tool_result),
-        )
-        await self.run_store.update(run_with_result)
-        if is_last_step(run, steps):
-            return await self._complete_run(run_with_result, proposal.tool, proposal_id)
-        return await self._advance_to_next_turn(run_with_result, proposal.tool, proposal_id, steps)
+        return await self.models.execute(run.run_id)
 
     async def continue_after_denial(self, proposal_id: str) -> OutwardRunRecord:
         proposal = await self.approval_service.get(proposal_id)
         if proposal is None:
             raise OutwardRunExecutionError(f"Approval proposal '{proposal_id}' not found")
-        run = await self._require_run(proposal.run_id)
-        if proposal.status != "denied":
-            return run
-        if run.status == "completed":
-            return run
-        await self._complete_turn(run, proposal.tool, proposal_id, outcome="denied", record_commitment=False)
-        return await self._complete_terminal(
-            run,
-            status="completed",
-            stop_reason=proposal.reason,
-            outcome="denied",
-            completed_at=proposal.decided_at or self.utc_now(),
-        )
-
-    async def _handle_model_tool_call(self, run: OutwardRunRecord, acceptance_tool_call: dict[str, Any]) -> OutwardRunRecord:
-        acceptance_tool = acceptance_tool_call["tool"]
-        connector = self.connector_registry.get(acceptance_tool)
-        if connector is None:
-            return await self._fail_run(run, f"acceptance_contract tool is not registered: {acceptance_tool}")
-        required_tools = {str(tool).strip() for tool in (run.policy_overrides.get("approval_required_tools") or [])}
-        if acceptance_tool not in required_tools:
-            return await self._fail_run(run, f"acceptance_contract tool is not approval-required: {acceptance_tool}")
-        try:
-            model_result = await self.model_tool_call_service.produce_governed_tool_call(
-                run=run,
-                expected_tool=acceptance_tool,
-                governed_tools={acceptance_tool},
-            )
-        except OutwardModelToolCallError as exc:
-            return await self._fail_run(run, str(exc))
-
-        tool_call = model_result.tool_call
-        tool = tool_call["tool"]
-        connector = self.connector_registry.get(tool)
-        if connector is None:
-            return await self._fail_run(run, f"model tool is not registered: {tool}")
-        if tool != acceptance_tool:
-            return await self._fail_run(run, f"model tool does not match acceptance_contract tool: {tool}")
-        try:
-            self.connector_service.validate_args(tool, tool_call["args"])
-        except OutwardConnectorArgumentError as exc:
-            return await self._fail_run(run, f"invalid model connector args for {tool}: {exc.errors}")
-
-        run_with_model_call = await self._record_model_proposal_event(run, tool, tool_call, model_result, connector.pii_fields)
-        try:
-            self.connector_service.validate_policy(tool, tool_call["args"])
-        except OutwardConnectorPolicyError as exc:
-            return await self._policy_reject(run_with_model_call, tool, tool_call, model_result, connector.pii_fields, exc.reason)
-
-        timeout = int(run_with_model_call.policy_overrides.get("approval_timeout_seconds") or connector.timeout_seconds)
-        proposal = await self.approval_service.request_tool_approval(
-            run_id=run.run_id,
-            tool=tool,
-            args=tool_call["args"],
-            context_summary="model-produced governed tool call from live provider response",
-            timeout_seconds=timeout,
-        )
-        await self.model_tool_call_service.record_proposal_extraction(
-            run=run_with_model_call,
-            model_result=model_result,
-            proposal_id=proposal.proposal_id,
-            pii_fields=connector.pii_fields,
-            acceptance_result="accepted_for_proposal",
-        )
-        return replace(run_with_model_call, status="approval_required", pending_proposals=(proposal.to_queue_payload(),))
-
-    async def _record_model_proposal_event(
-        self,
-        run: OutwardRunRecord,
-        tool: str,
-        tool_call: dict[str, Any],
-        model_result: Any,
-        pii_fields: tuple[str, ...],
-    ) -> OutwardRunRecord:
-        evidence = model_result.model_invocation
-        model_invocation_ref = str(evidence.get("model_invocation_ref") or "").strip()
-        tool_args_hash = str(evidence.get("tool_args_hash") or args_hash(tool_call["args"]))
-        proposal_ref = model_proposal_ref(
-            run_id=run.run_id,
-            turn=run.current_turn,
-            tool=tool,
-            tool_args_hash=tool_args_hash,
-        )
-        run_with_model_call = replace(
-            run,
-            task=task_with_model_tool_call(
-                run,
-                tool_call=tool_call,
-                model_invocation_ref=model_invocation_ref,
-                proposal_ref=proposal_ref,
-            ),
-        )
-        await self.run_store.update(run_with_model_call)
-        await self._append_once(
-            event_id=step_event_id(run.run_id, run.current_turn, 300, f"proposal:{tool}:{len(run.pending_proposals) + 1:04d}"),
-            event_type="proposal_made",
-            run=run_with_model_call,
-            turn=run.current_turn,
-            payload={
-                "run_id": run.run_id,
-                "namespace": run.namespace,
-                "tool": tool,
-                "args_preview": redacted_args_preview(tool_call["args"], pii_fields),
-                "context_summary": "model-produced governed tool call from live provider response",
-                "model_invocation_ref": model_invocation_ref,
-                "model_invocation_sha256": str(evidence.get("model_invocation_sha256") or ""),
-                "model_prompt_redacted_sha256": str(evidence.get("model_prompt_redacted_sha256") or ""),
-                "model_response_content_sha256": str(evidence.get("model_response_content_sha256") or ""),
-                "model_response_redacted_sha256": str(evidence.get("model_response_redacted_sha256") or ""),
-                "proposal_extraction_ref": str(evidence.get("proposal_extraction_ref") or ""),
-                "proposal_extraction_sha256": str(evidence.get("proposal_extraction_sha256") or ""),
-                "provider_name": evidence.get("provider_name"),
-                "model_name": evidence.get("model_name"),
-                "tool_name": tool,
-                "tool_args_hash": tool_args_hash,
-                "proposal_ref": proposal_ref,
-            },
-        )
-        return run_with_model_call
-
-    async def _policy_reject(
-        self,
-        run: OutwardRunRecord,
-        tool: str,
-        tool_call: dict[str, Any],
-        model_result: Any,
-        pii_fields: tuple[str, ...],
-        reason: str,
-    ) -> OutwardRunRecord:
-        tool_args_hash = args_hash(tool_call["args"])
-        proposal_ref = model_proposal_ref(
-            run_id=run.run_id,
-            turn=run.current_turn,
-            tool=tool,
-            tool_args_hash=tool_args_hash,
-        )
-        run_with_rejection = replace(
-            run,
-            task=task_with_policy_rejection(
-                run,
-                tool=tool,
-                tool_args_hash=tool_args_hash,
-                proposal_ref=proposal_ref,
-                reason=reason,
-            ),
-        )
-        await self.run_store.update(run_with_rejection)
-        await self.model_tool_call_service.record_proposal_extraction(
-            run=run_with_rejection,
-            model_result=model_result,
-            proposal_id=None,
-            pii_fields=pii_fields,
-            acceptance_result="rejected_by_policy",
-        )
-        await self._append_once(
-            event_id=step_event_id(run.run_id, run.current_turn, 350, f"proposal_policy_rejected:{tool}"),
-            event_type="proposal_policy_rejected",
-            run=run_with_rejection,
-            turn=run.current_turn,
-            payload={
-                "run_id": run.run_id,
-                "turn": run.current_turn,
-                "tool": tool,
-                "tool_name": tool,
-                "args_preview": redacted_args_preview(tool_call["args"], pii_fields),
-                "policy_result": "rejected",
-                "reason": reason,
-                "tool_args_hash": tool_args_hash,
-                "proposal_ref": proposal_ref,
-            },
-        )
-        await self._complete_turn(run_with_rejection, tool, "policy", outcome="policy_rejected", record_commitment=False)
-        return await self._complete_terminal(
-            run_with_rejection,
-            status="completed",
-            stop_reason=reason,
-            outcome="policy_rejected",
-        )
-
-    async def _advance_to_next_turn(
-        self,
-        run: OutwardRunRecord,
-        tool: str,
-        proposal_id: str,
-        steps: list[dict[str, Any]],
-    ) -> OutwardRunRecord:
-        await self._complete_turn(run, tool, proposal_id, outcome="success")
-        next_turn = run.current_turn + 1
-        if next_turn > run.max_turns:
-            return await self._fail_run(run, "max_turns exceeded before next governed step")
-        advanced = replace(run, status="running", current_turn=next_turn, pending_proposals=())
-        await self.run_store.update(advanced)
-        await self._start_turn(advanced, next_turn)
-        next_step = current_step(advanced, steps)
-        if next_step is None:
-            return await self._complete_terminal(advanced, status="completed", stop_reason=None, outcome="success")
-        return await self._handle_model_tool_call(advanced, next_step)
-
-    async def _complete_run(self, run: OutwardRunRecord, tool: str, proposal_id: str) -> OutwardRunRecord:
-        await self._complete_turn(run, tool, proposal_id, outcome="success")
-        return await self._complete_terminal(run, status="completed", stop_reason=None, outcome="success")
-
-    async def _complete_turn(
-        self,
-        run: OutwardRunRecord,
-        tool: str,
-        proposal_id: str,
-        *,
-        outcome: str,
-        record_commitment: bool = True,
-    ) -> None:
-        if record_commitment:
-            await self._append_once(
-                event_id=step_event_id(run.run_id, run.current_turn, 500, f"commitment:{tool}:{proposal_suffix(proposal_id)}"),
-                event_type="commitment_recorded",
-                run=run,
-                turn=run.current_turn,
-                payload={"run_id": run.run_id, "tool": tool, "outcome": outcome},
-            )
-        await self._append_once(
-            event_id=step_event_id(run.run_id, run.current_turn, 600, "turn:completed"),
-            event_type="turn_completed",
-            run=run,
-            turn=run.current_turn,
-            payload={"run_id": run.run_id, "turn": run.current_turn, "outcome": outcome},
-        )
-
-    async def _complete_terminal(
-        self,
-        run: OutwardRunRecord,
-        *,
-        status: str,
-        stop_reason: str | None,
-        outcome: str,
-        completed_at: str | None = None,
-    ) -> OutwardRunRecord:
-        now = completed_at or self.utc_now()
-        completed = replace(run, status=status, pending_proposals=(), completed_at=now, stop_reason=stop_reason)
-        await self.run_store.update(completed)
-        await self._append_once(
-            event_id=f"run:{run.run_id}:0700:completed",
-            event_type="run_completed",
-            run=completed,
-            turn=run.current_turn,
-            payload={"run_id": run.run_id, "status": status, "outcome": outcome, "completed_at": now},
-        )
-        return completed
-
-    async def _fail_run(self, run: OutwardRunRecord, reason: str) -> OutwardRunRecord:
-        now = self.utc_now()
-        failed = replace(run, status="failed", pending_proposals=(), completed_at=now, stop_reason=reason)
-        await self.run_store.update(failed)
-        await self._append_once(
-            event_id=f"run:{run.run_id}:0900:failed",
-            event_type="run_failed",
-            run=failed,
-            turn=run.current_turn,
-            payload={"run_id": run.run_id, "status": "failed", "reason": reason, "completed_at": now},
-        )
-        return failed
-
-    async def _start_turn(self, run: OutwardRunRecord, turn: int) -> None:
-        await self._append_once(
-            event_id=step_event_id(run.run_id, turn, 200, "turn:started"),
-            event_type="turn_started",
-            run=run,
-            turn=turn,
-            payload={"run_id": run.run_id, "turn": turn, "agent_id": "outward-agent"},
-        )
+        # Denial and terminal publication now commit in the approval transaction.
+        return await self._require_run(proposal.run_id)
 
     async def _require_run(self, run_id: str) -> OutwardRunRecord:
-        run = await self.run_store.get(str(run_id or "").strip())
-        if run is None:
-            raise OutwardRunExecutionError(f"Run '{run_id}' not found")
-        return run
-
-    async def _append_once(
-        self,
-        *,
-        event_id: str,
-        event_type: str,
-        run: OutwardRunRecord,
-        turn: int,
-        payload: dict[str, Any],
-    ) -> None:
-        if await self.event_store.get(event_id) is not None:
-            return
-        await self.event_store.append(
-            LedgerEvent(event_id=event_id, event_type=event_type, run_id=run.run_id, turn=turn, agent_id="outward-agent", at=self.utc_now(), payload=payload)
-        )
+        async with self.approval_service.unit_of_work.transaction() as transaction:
+            run = await transaction.get_run(str(run_id or "").strip())
+            if run is None:
+                raise OutwardRunExecutionError(f"Run '{run_id}' not found")
+            await require_outward_authority(transaction, run)
+            return run
 
 
 def _acceptance_steps(run: OutwardRunRecord) -> list[dict[str, Any]]:

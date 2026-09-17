@@ -7,7 +7,7 @@ from typing import Any
 
 import aiosqlite
 
-from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
+from orket.adapters.storage.sqlite_connection import connect_sqlite_wal, sqlite_connection_scope
 from orket.adapters.storage.sqlite_migrations import SQLiteMigration, SQLiteMigrationRunner
 from orket.core.domain.outward_runs import OutwardRunRecord
 
@@ -38,11 +38,18 @@ _MIGRATIONS = [
             "CREATE INDEX IF NOT EXISTS idx_outward_runs_namespace ON outward_runs (namespace)",
             "CREATE INDEX IF NOT EXISTS idx_outward_runs_submitted_at ON outward_runs (submitted_at)",
         ),
-    )
+    ),
+    SQLiteMigration(
+        version=2,
+        name="outward_execution_generation",
+        statements=("ALTER TABLE outward_runs ADD COLUMN execution_generation INTEGER NOT NULL DEFAULT 0",),
+    ),
 ]
 
 
 class OutwardRunStore:
+    side_effecting = True
+
     def __init__(self, db_path: str | Path) -> None:
         self.db_path = Path(db_path)
         self._init_lock = asyncio.Lock()
@@ -52,31 +59,41 @@ class OutwardRunStore:
         async with self._init_lock:
             if self._initialized:
                 return
-            self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            await asyncio.to_thread(self.db_path.parent.mkdir, parents=True, exist_ok=True)
             async with connect_sqlite_wal(self.db_path) as conn:
+                await conn.execute("BEGIN IMMEDIATE")
                 await SQLiteMigrationRunner(namespace="outward_runs").apply(conn, _MIGRATIONS)
                 await conn.commit()
             self._initialized = True
 
-    async def create(self, record: OutwardRunRecord) -> OutwardRunRecord:
+    async def create(
+        self,
+        record: OutwardRunRecord,
+        *,
+        connection: aiosqlite.Connection | None = None,
+    ) -> OutwardRunRecord:
         await self.ensure_initialized()
-        async with connect_sqlite_wal(self.db_path) as conn:
+        async with sqlite_connection_scope(self.db_path, connection) as conn:
             await conn.execute(
                 """
                 INSERT INTO outward_runs (
                     run_id, status, namespace, submitted_at, started_at, completed_at, stop_reason,
-                    current_turn, max_turns, task_json, policy_overrides_json, pending_proposals_json
+                    current_turn, max_turns, task_json, policy_overrides_json, pending_proposals_json, execution_generation
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 _record_params(record),
             )
-            await conn.commit()
         return record
 
-    async def update(self, record: OutwardRunRecord) -> OutwardRunRecord:
+    async def update(
+        self,
+        record: OutwardRunRecord,
+        *,
+        connection: aiosqlite.Connection | None = None,
+    ) -> OutwardRunRecord:
         await self.ensure_initialized()
-        async with connect_sqlite_wal(self.db_path) as conn:
+        async with sqlite_connection_scope(self.db_path, connection) as conn:
             await conn.execute(
                 """
                 UPDATE outward_runs
@@ -90,7 +107,8 @@ class OutwardRunStore:
                     max_turns = ?,
                     task_json = ?,
                     policy_overrides_json = ?,
-                    pending_proposals_json = ?
+                    pending_proposals_json = ?,
+                    execution_generation = ?
                 WHERE run_id = ?
                 """,
                 (
@@ -105,23 +123,33 @@ class OutwardRunStore:
                     _json(record.task),
                     _json(record.policy_overrides),
                     _json(list(record.pending_proposals)),
+                    record.execution_generation,
                     record.run_id,
                 ),
             )
-            await conn.commit()
         return record
 
-    async def get(self, run_id: str) -> OutwardRunRecord | None:
+    async def get(
+        self,
+        run_id: str,
+        *,
+        connection: aiosqlite.Connection | None = None,
+    ) -> OutwardRunRecord | None:
         await self.ensure_initialized()
-        async with connect_sqlite_wal(self.db_path) as conn:
+        async with sqlite_connection_scope(self.db_path, connection) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute("SELECT * FROM outward_runs WHERE run_id = ?", (run_id,))
             row = await cursor.fetchone()
-        return _row_to_record(row) if row is not None else None
+        return run_record_from_row(row) if row is not None else None
 
-    async def get_active_by_namespace(self, namespace: str) -> OutwardRunRecord | None:
+    async def get_active_by_namespace(
+        self,
+        namespace: str,
+        *,
+        connection: aiosqlite.Connection | None = None,
+    ) -> OutwardRunRecord | None:
         await self.ensure_initialized()
-        async with connect_sqlite_wal(self.db_path) as conn:
+        async with sqlite_connection_scope(self.db_path, connection) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute(
                 """
@@ -133,7 +161,7 @@ class OutwardRunStore:
                 (namespace, *_ACTIVE_STATUSES),
             )
             row = await cursor.fetchone()
-        return _row_to_record(row) if row is not None else None
+        return run_record_from_row(row) if row is not None else None
 
     async def list(self, *, status: str | None = None, limit: int = 20, offset: int = 0) -> list[OutwardRunRecord]:
         await self.ensure_initialized()
@@ -161,7 +189,7 @@ class OutwardRunStore:
                     (limit, offset),
                 )
             rows = await cursor.fetchall()
-        return [_row_to_record(row) for row in rows]
+        return [run_record_from_row(row) for row in rows]
 
 
 def _record_params(record: OutwardRunRecord) -> tuple[Any, ...]:
@@ -178,6 +206,7 @@ def _record_params(record: OutwardRunRecord) -> tuple[Any, ...]:
         _json(record.task),
         _json(record.policy_overrides),
         _json(list(record.pending_proposals)),
+        record.execution_generation,
     )
 
 
@@ -185,7 +214,7 @@ def _json(payload: Any) -> str:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
 
-def _row_to_record(row: aiosqlite.Row) -> OutwardRunRecord:
+def run_record_from_row(row: aiosqlite.Row) -> OutwardRunRecord:
     return OutwardRunRecord(
         run_id=str(row["run_id"]),
         status=str(row["status"]),
@@ -199,6 +228,7 @@ def _row_to_record(row: aiosqlite.Row) -> OutwardRunRecord:
         task=dict(json.loads(str(row["task_json"]))),
         policy_overrides=dict(json.loads(str(row["policy_overrides_json"]))),
         pending_proposals=tuple(dict(item) for item in json.loads(str(row["pending_proposals_json"]))),
+        execution_generation=int(row["execution_generation"]),
     )
 
 

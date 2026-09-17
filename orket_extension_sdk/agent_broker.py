@@ -25,6 +25,7 @@ from .agent_runtime import (
 )
 from .agent_types import AgentCancellation, AgentProgress, AgentWireModel, FrozenJson
 from .errors import AgentBrokerDisconnected, AgentInvocationCancelled, AgentProtocolError
+from .manifest import AGENT_MODEL_RECEIPT_FEATURE
 
 _PROTOCOL_VERSION = "agent_stdio_ipc.v1"
 _CONTRACT_VERSION = "governed_agent_loop.v1"
@@ -168,6 +169,7 @@ class AgentBrokerSession:
             {
                 "supported_protocol_versions": [_PROTOCOL_VERSION],
                 "supported_contract_versions": [_CONTRACT_VERSION],
+                "supported_model_receipt_versions": [AGENT_MODEL_RECEIPT_FEATURE],
             },
         )
 

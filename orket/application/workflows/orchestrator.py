@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
-from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
+from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGateRepository
+from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
+from orket.application.services.card_completion_service import CardCompletionService
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.orchestrator_issue_control_plane_service import (
     OrchestratorIssueControlPlaneService,
@@ -22,8 +25,9 @@ from orket.application.services.tool_approval_control_plane_reservation_service 
 from orket.core.contracts.repositories import CardRepository, SnapshotRepository
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.orchestration.notes import NoteStore
-from orket.runtime_paths import resolve_control_plane_db_path
+from orket.runtime_paths import control_plane_db_for_runtime
 from orket.schema import CardStatus, EnvironmentConfig, EpicConfig, IssueConfig, TeamConfig
+from orket.time_utils import utc_now_iso
 
 from . import orchestrator_ops
 
@@ -66,19 +70,24 @@ class Orchestrator:
         db_path: str,
         loader: Any,
         sandbox_orchestrator: Any,
+        card_completion: CardCompletionService | None = None,
+        failure_report_clock: Callable[[], str] = utc_now_iso,
+        control_plane_clock: Callable[[], str] | None = None,
     ) -> None:
-        self.workspace = workspace
+        self.workspace = workspace.resolve()
         self.async_cards = async_cards
+        self.card_completion = card_completion
+        self.failure_report_clock = failure_report_clock
         self.snapshots = snapshots
         self.org = org
         self.config_root = config_root
-        self.db_path = db_path
+        self.db_path = str(Path(db_path).resolve())
         self.loader = loader
         self.sandbox_orchestrator = sandbox_orchestrator
 
         from orket.services.memory_store import MemoryStore
 
-        memory_db = Path(db_path).parent / "project_memory.db"
+        memory_db = Path(self.db_path).parent / "project_memory.db"
         self.memory = MemoryStore(memory_db)
 
         self.notes = NoteStore()
@@ -87,16 +96,15 @@ class Orchestrator:
         self._sandbox_failed_rocks: set[str] = set()
         self._team_replan_counts: defaultdict[str, int] = defaultdict(int)
         self.pending_gates = AsyncPendingGateRepository(self.db_path)
-        runtime_db_path = Path(self.db_path)
-        if not runtime_db_path.is_absolute():
-            runtime_db_path = Path(self.workspace) / runtime_db_path
-        control_plane_db_path = resolve_control_plane_db_path(runtime_db_path.with_name("control_plane_records.sqlite3"))
+        control_plane_db_path = control_plane_db_for_runtime(runtime_db=self.db_path)
         self.control_plane_repository = AsyncControlPlaneRecordRepository(control_plane_db_path)
         self.control_plane_execution_repository = AsyncControlPlaneExecutionRepository(control_plane_db_path)
         self.control_plane_publication = ControlPlanePublicationService(repository=self.control_plane_repository)
         self.issue_control_plane = OrchestratorIssueControlPlaneService(
             execution_repository=self.control_plane_execution_repository,
             publication=self.control_plane_publication,
+            transactions=SQLiteControlPlaneTransactions(control_plane_db_path),
+            now_utc=control_plane_clock if control_plane_clock is not None else utc_now_iso,
         )
         self.scheduler_control_plane = OrchestratorSchedulerControlPlaneService(
             execution_repository=self.control_plane_execution_repository,
@@ -272,6 +280,7 @@ class Orchestrator:
         target_issue_id: str | None = None,
         resume_mode: bool = False,
         model_override: str | None = None,
+        approval_resume_turns: dict[str, int] | None = None,
     ) -> list[IssueConfig]:
         return cast(list[IssueConfig], await orchestrator_ops.execute_epic(
             self,
@@ -283,6 +292,7 @@ class Orchestrator:
             target_issue_id=cast(Any, target_issue_id),
             resume_mode=resume_mode,
             model_override=model_override,
+            approval_resume_turns=approval_resume_turns,
         ))
 
     async def _save_checkpoint(

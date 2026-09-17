@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
@@ -34,9 +36,20 @@ from orket.core.domain import (
 )
 from orket.schema import CardStatus
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
-from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_unit_transaction import unit_control_plane_transactions
+from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
 pytestmark = pytest.mark.unit
+
+
+def _service(execution, publication):
+    clock = ProtocolLedgerClock()
+    clock.current = clock.current.replace(year=2041)
+    owner = SimpleNamespace(control_plane_execution_repository=execution,
+                            control_plane_repository=publication.repository, pending_gates=None)
+    return OrchestratorIssueControlPlaneService(execution_repository=execution, publication=publication,
+                                              transactions=unit_control_plane_transactions(owner), now_utc=clock.utc_now_iso)
 
 
 async def _seed_dispatch_resource_authority(
@@ -115,13 +128,11 @@ async def _seed_dispatch_resource_authority(
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_dispatch_publishes_durable_snapshots() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+    service = _service(execution_repo, ControlPlanePublicationService(repository=record_repo))
 
     published = await service.publish_issue_transition(
         session_id="sess-issue-1",
@@ -163,14 +174,12 @@ async def test_orchestrator_issue_dispatch_publishes_durable_snapshots() -> None
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_dispatch_fail_closed_on_promotion_error() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
     publication = ControlPlanePublicationService(repository=record_repo)
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=publication,
-    )
+    service = _service(execution_repo, publication)
 
     async def _raise_promote_failure(**_kwargs) -> None:
         raise RuntimeError("promote failed")
@@ -217,13 +226,11 @@ async def test_orchestrator_issue_dispatch_fail_closed_on_promotion_error() -> N
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_dispatch_blocked_closeout_publishes_terminal_recovery_decision() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+    service = _service(execution_repo, ControlPlanePublicationService(repository=record_repo))
 
     started = await service.publish_issue_transition(
         session_id="sess-issue-recovery-1",
@@ -275,13 +282,11 @@ async def test_orchestrator_issue_dispatch_blocked_closeout_publishes_terminal_r
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_observed_closeout_publishes_effect_journal_entry() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+    service = _service(execution_repo, ControlPlanePublicationService(repository=record_repo))
 
     started = await service.publish_issue_transition(
         session_id="sess-issue-observe-effect-1",
@@ -317,13 +322,11 @@ async def test_orchestrator_issue_observed_closeout_publishes_effect_journal_ent
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_dispatch_fail_closed_when_active_run_exists() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+    service = _service(execution_repo, ControlPlanePublicationService(repository=record_repo))
     run_id = run_id_for_dispatch(
         session_id="sess-issue-active",
         issue_id="ISSUE-ACTIVE",
@@ -372,13 +375,11 @@ async def test_orchestrator_issue_dispatch_fail_closed_when_active_run_exists() 
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_dispatch_fail_closed_when_closed_run_attempt_is_non_terminal() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+    service = _service(execution_repo, ControlPlanePublicationService(repository=record_repo))
     run_id = run_id_for_dispatch(
         session_id="sess-issue-drift",
         issue_id="ISSUE-DRIFT",
@@ -435,13 +436,11 @@ async def test_orchestrator_issue_dispatch_fail_closed_when_closed_run_attempt_i
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_dispatch_fail_closed_when_closed_run_namespace_scope_drifts() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+    service = _service(execution_repo, ControlPlanePublicationService(repository=record_repo))
     run_id = run_id_for_dispatch(
         session_id="sess-issue-scope-drift",
         issue_id="ISSUE-SCOPE-DRIFT",
@@ -496,13 +495,11 @@ async def test_orchestrator_issue_dispatch_fail_closed_when_closed_run_namespace
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_dispatch_fail_closed_when_closed_run_has_active_lease_drift() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+    service = _service(execution_repo, ControlPlanePublicationService(repository=record_repo))
     run_id = run_id_for_dispatch(
         session_id="sess-issue-lease-drift",
         issue_id="ISSUE-LEASE-DRIFT",
@@ -564,13 +561,11 @@ async def test_orchestrator_issue_dispatch_fail_closed_when_closed_run_has_activ
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_closeout_fail_closed_on_terminal_attempt_drift() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+    service = _service(execution_repo, ControlPlanePublicationService(repository=record_repo))
     await service.publish_issue_transition(
         session_id="sess-issue-closeout-drift",
         issue_id="ISSUE-CLOSEOUT-DRIFT",
@@ -591,7 +586,8 @@ async def test_orchestrator_issue_closeout_fail_closed_on_terminal_attempt_drift
     assert run is not None
     attempt = await execution_repo.get_attempt_record(attempt_id=str(run.current_attempt_id or ""))
     assert attempt is not None
-    await execution_repo.save_attempt_record(record=attempt.model_copy(update={"attempt_state": AttemptState.COMPLETED}))
+    await execution_repo.save_attempt_record(record=attempt.model_copy(
+        update={"attempt_state": AttemptState.COMPLETED, "end_timestamp": attempt.start_timestamp}))
 
     with pytest.raises(OrchestratorIssueControlPlaneError, match="terminal attempt drift"):
         await service.publish_issue_transition(
@@ -607,13 +603,11 @@ async def test_orchestrator_issue_closeout_fail_closed_on_terminal_attempt_drift
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_closeout_fail_closed_on_non_active_lease_drift() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+    service = _service(execution_repo, ControlPlanePublicationService(repository=record_repo))
     await service.publish_issue_transition(
         session_id="sess-issue-closeout-lease-drift",
         issue_id="ISSUE-CLOSEOUT-LEASE-DRIFT",
@@ -658,13 +652,11 @@ async def test_orchestrator_issue_closeout_fail_closed_on_non_active_lease_drift
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_closeout_fail_closed_on_resource_state_drift() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+    service = _service(execution_repo, ControlPlanePublicationService(repository=record_repo))
     await service.publish_issue_transition(
         session_id="sess-issue-closeout-resource-drift",
         issue_id="ISSUE-CLOSEOUT-RESOURCE-DRIFT",
@@ -710,13 +702,11 @@ async def test_orchestrator_issue_closeout_fail_closed_on_resource_state_drift()
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_orchestrator_issue_closeout_fail_closed_on_namespace_scope_drift() -> None:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    service = OrchestratorIssueControlPlaneService(
-        execution_repository=execution_repo,
-        publication=ControlPlanePublicationService(repository=record_repo),
-    )
+    service = _service(execution_repo, ControlPlanePublicationService(repository=record_repo))
     await service.publish_issue_transition(
         session_id="sess-issue-closeout-scope-drift",
         issue_id="ISSUE-CLOSEOUT-SCOPE-DRIFT",
@@ -735,7 +725,7 @@ async def test_orchestrator_issue_closeout_fail_closed_on_namespace_scope_drift(
     )
     run = await execution_repo.get_run_record(run_id=run_id)
     assert run is not None
-    await execution_repo.save_run_record(record=run.model_copy(update={"namespace_scope": "issue:DIFFERENT-ISSUE"}))
+    execution_repo.run_by_id[run.run_id] = run.model_copy(update={"namespace_scope": "issue:DIFFERENT-ISSUE"})
 
     with pytest.raises(OrchestratorIssueControlPlaneError, match="namespace scope drift"):
         await service.publish_issue_transition(

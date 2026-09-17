@@ -276,7 +276,9 @@ async def _execute_live_proof(
     epic_id: str,
     repair_injection_applied: dict[str, bool],
 ) -> dict[str, Any]:
-    await engine.run_card(epic_id)
+    from orket.application.services.runtime_result_projection import require_runtime_success
+
+    require_runtime_success(await engine.run_card(epic_id))
     return _build_success_payload(
         model=model,
         provider=provider,

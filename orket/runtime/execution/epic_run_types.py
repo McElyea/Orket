@@ -5,15 +5,8 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 from orket.core.contracts import WorkloadContractV1
+from orket.core.contracts.epic_publication import EpicRunAdmission
 from orket.runtime.workload_shell import SharedWorkloadShell
-
-
-class CardsRepository(Protocol):
-    async def get_by_build(self, build_id: str) -> list[Any]: ...
-
-    async def reset_build(self, build_id: str) -> None: ...
-
-    async def save(self, payload: dict[str, Any]) -> None: ...
 
 
 class SessionsRepository(Protocol):
@@ -25,10 +18,14 @@ class SessionsRepository(Protocol):
 
 
 class SnapshotsRepository(Protocol):
+    async def get(self, session_id: str) -> dict[str, Any] | None: ...
+
     async def record(self, session_id: str, payload: dict[str, Any], transcript: list[dict[str, Any]]) -> None: ...
 
 
 class SuccessRepository(Protocol):
+    async def get(self, session_id: str) -> dict[str, Any] | None: ...
+
     async def record_success(
         self,
         *,
@@ -40,6 +37,8 @@ class SuccessRepository(Protocol):
 
 
 class RunLedger(Protocol):
+    async def get_run(self, session_id: str) -> dict[str, Any] | None: ...
+
     async def start_run(
         self,
         *,
@@ -99,6 +98,9 @@ class EpicRunSetup:
     phase_c_truth_policy: dict[str, Any]
     cards_workload_contract: dict[str, Any]
     control_plane_workload_record: Any
+    publication_request: dict[str, Any]
+    admission: EpicRunAdmission | None = None
+    epic_asset: str = ""
 
 
 @dataclass(frozen=True)
@@ -112,6 +114,7 @@ class EpicRunContext:
     control_plane_checkpoint: Any
     control_plane_checkpoint_acceptance: Any
     run_contract_artifacts: dict[str, Any]
+    approval_resume_turns: dict[str, int] | None = None
 
 
 EpicWorkloadShell = SharedWorkloadShell | WorkloadShell

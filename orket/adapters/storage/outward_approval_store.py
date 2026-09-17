@@ -7,39 +7,10 @@ from typing import Any
 
 import aiosqlite
 
-from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
-from orket.adapters.storage.sqlite_migrations import SQLiteMigration, SQLiteMigrationRunner
+from orket.adapters.storage.outward_approval_migrations import OUTWARD_APPROVAL_MIGRATIONS
+from orket.adapters.storage.sqlite_connection import connect_sqlite_wal, sqlite_connection_scope
+from orket.adapters.storage.sqlite_migrations import SQLiteMigrationRunner
 from orket.core.domain.outward_approvals import OutwardApprovalProposal
-
-_MIGRATIONS = [
-    SQLiteMigration(
-        version=1,
-        name="create_outward_approvals",
-        statements=(
-            """
-            CREATE TABLE IF NOT EXISTS outward_approval_proposals (
-                proposal_id TEXT PRIMARY KEY,
-                run_id TEXT NOT NULL,
-                namespace TEXT NOT NULL,
-                tool TEXT NOT NULL,
-                args_preview_json TEXT NOT NULL,
-                context_summary TEXT NOT NULL,
-                risk_level TEXT NOT NULL,
-                submitted_at TEXT NOT NULL,
-                expires_at TEXT NOT NULL,
-                status TEXT NOT NULL,
-                operator_ref TEXT,
-                decision TEXT,
-                reason TEXT,
-                note TEXT,
-                decided_at TEXT
-            )
-            """,
-            "CREATE INDEX IF NOT EXISTS idx_outward_approvals_status_expires ON outward_approval_proposals (status, expires_at)",
-            "CREATE INDEX IF NOT EXISTS idx_outward_approvals_run ON outward_approval_proposals (run_id)",
-        ),
-    )
-]
 
 
 class OutwardApprovalStore:
@@ -52,39 +23,65 @@ class OutwardApprovalStore:
         async with self._init_lock:
             if self._initialized:
                 return
-            self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            await asyncio.to_thread(self.db_path.parent.mkdir, parents=True, exist_ok=True)
             async with connect_sqlite_wal(self.db_path) as conn:
-                await SQLiteMigrationRunner(namespace="outward_approvals").apply(conn, _MIGRATIONS)
+                await conn.execute("BEGIN IMMEDIATE")
+                cursor = await conn.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'outward_approval_proposals'")
+                if await cursor.fetchone() is not None:
+                    cursor = await conn.execute("SELECT COUNT(*) FROM outward_approval_proposals")
+                    if int((await cursor.fetchone())[0]):
+                        raise RuntimeError("E_OUTWARD_OFFLINE_APPROVAL_MIGRATION_REQUIRED")
+                await SQLiteMigrationRunner(namespace="outward_approvals").apply(conn, OUTWARD_APPROVAL_MIGRATIONS)
                 await conn.commit()
             self._initialized = True
 
-    async def save(self, proposal: OutwardApprovalProposal) -> OutwardApprovalProposal:
+    async def save(
+        self, proposal: OutwardApprovalProposal, *, connection: aiosqlite.Connection | None = None,
+    ) -> OutwardApprovalProposal:
+        _ = proposal.authorization
         await self.ensure_initialized()
-        async with connect_sqlite_wal(self.db_path) as conn:
+        async with sqlite_connection_scope(self.db_path, connection) as conn:
             await conn.execute(
                 """
-                INSERT OR REPLACE INTO outward_approval_proposals (
+                INSERT INTO outward_approval_proposals_v2 (
                     proposal_id, run_id, namespace, tool, args_preview_json, context_summary,
                     risk_level, submitted_at, expires_at, status, operator_ref, decision,
-                    reason, note, decided_at
+                    reason, note, decided_at, authorization_json, authorization_digest
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 _proposal_params(proposal),
             )
-            await conn.commit()
         return proposal
 
-    async def get(self, proposal_id: str) -> OutwardApprovalProposal | None:
+    async def get(
+        self, proposal_id: str, *, connection: aiosqlite.Connection | None = None,
+    ) -> OutwardApprovalProposal | None:
         await self.ensure_initialized()
-        async with connect_sqlite_wal(self.db_path) as conn:
+        async with sqlite_connection_scope(self.db_path, connection) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute(
-                "SELECT * FROM outward_approval_proposals WHERE proposal_id = ?",
+                "SELECT * FROM outward_approval_proposals_v2 WHERE proposal_id = ?",
                 (proposal_id,),
             )
             row = await cursor.fetchone()
         return _row_to_proposal(row) if row is not None else None
+
+    async def count_for_run(self, run_id: str, *, connection: aiosqlite.Connection) -> int:
+        cursor = await connection.execute(
+            "SELECT COUNT(*) FROM outward_approval_proposals_v2 WHERE run_id = ?", (run_id,),
+        )
+        return int((await cursor.fetchone())[0])
+
+    async def update_decision(self, proposal: OutwardApprovalProposal, *, connection: aiosqlite.Connection) -> bool:
+        cursor = await connection.execute(
+            """UPDATE outward_approval_proposals_v2
+               SET status = ?, operator_ref = ?, decision = ?, reason = ?, note = ?, decided_at = ?
+               WHERE proposal_id = ? AND status = 'pending'""",
+            (proposal.status, proposal.operator_ref, proposal.decision, proposal.reason,
+             proposal.note, proposal.decided_at, proposal.proposal_id),
+        )
+        return cursor.rowcount == 1
 
     async def list(
         self,
@@ -92,6 +89,7 @@ class OutwardApprovalStore:
         status: str | None = None,
         run_id: str | None = None,
         limit: int = 100,
+        bound_only: bool = False,
     ) -> list[OutwardApprovalProposal]:
         await self.ensure_initialized()
         limit = max(1, min(int(limit), 500))
@@ -103,9 +101,11 @@ class OutwardApprovalStore:
         if run_id:
             conditions.append("run_id = ?")
             params.append(run_id)
+        if bound_only:
+            conditions.append("(authorization_json IS NOT NULL OR authorization_digest IS NOT NULL)")
         where = "WHERE " + " AND ".join(conditions) if conditions else ""
         sql = f"""
-            SELECT * FROM outward_approval_proposals
+            SELECT * FROM outward_approval_proposals_v2
             {where}
             ORDER BY expires_at ASC, submitted_at ASC, proposal_id ASC
             LIMIT ?
@@ -135,6 +135,8 @@ def _proposal_params(proposal: OutwardApprovalProposal) -> tuple[Any, ...]:
         proposal.reason,
         proposal.note,
         proposal.decided_at,
+        proposal.authorization_json,
+        proposal.authorization_digest,
     )
 
 
@@ -159,6 +161,8 @@ def _row_to_proposal(row: aiosqlite.Row) -> OutwardApprovalProposal:
         reason=row["reason"],
         note=row["note"],
         decided_at=row["decided_at"],
+        authorization_json=row["authorization_json"],
+        authorization_digest=row["authorization_digest"],
     )
 
 

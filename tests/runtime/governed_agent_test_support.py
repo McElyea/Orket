@@ -19,8 +19,8 @@ from orket.application.services.governed_agent_fixture import (
     DeterministicAgentModelProvider,
     SecondIterationDeterministicVerifier,
 )
-from orket.application.services.governed_agent_ports import GovernedAgentInvocationBinding
 from orket.core.contracts import AttemptRecord, RunRecord, StepRecord, WorkloadRecord
+from orket.core.contracts.governed_agent_ports import GovernedAgentInvocationBinding
 from orket.core.domain import AttemptState, RunState
 from orket_extension_sdk import AgentModelCallRequest, canonical_digest_sha256, canonical_json
 from orket_extension_sdk.agent_fixtures import (
@@ -150,8 +150,12 @@ async def prepare_authority(
 ) -> AsyncGovernedAgentRepository:
     control_plane = AsyncControlPlaneExecutionRepository(db_path)
     workload = agent_workload_record()
+    current_run = await control_plane.get_run_record(run_id=binding.run_id)
+    current_attempt = await control_plane.get_attempt_record(attempt_id=binding.attempt_id)
+    current_step = await control_plane.get_step_record(step_id=binding.step_id)
     await control_plane.save_run_record(
         record=RunRecord(
+            state_revision=current_run.state_revision if current_run else None,
             run_id=binding.run_id,
             workload_id=workload.workload_id,
             workload_version=workload.workload_version,
@@ -168,6 +172,7 @@ async def prepare_authority(
     )
     await control_plane.save_attempt_record(
         record=AttemptRecord(
+            state_revision=current_attempt.state_revision if current_attempt else None,
             attempt_id=binding.attempt_id,
             run_id=binding.run_id,
             attempt_ordinal=1,
@@ -178,6 +183,7 @@ async def prepare_authority(
     )
     await control_plane.save_step_record(
         record=StepRecord(
+            state_revision=current_step.state_revision if current_step else None,
             step_id=binding.step_id,
             attempt_id=binding.attempt_id,
             step_kind="governed_agent_iteration",

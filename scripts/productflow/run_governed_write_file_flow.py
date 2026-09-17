@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.exceptions import ExecutionFailed
+from orket.application.services.runtime_result_projection import runtime_result_payload
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from scripts.productflow.productflow_support import (
     DEFAULT_OPERATOR_ACTOR_REF,
@@ -40,13 +40,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 async def _run(*, paths: Any, engine: Any) -> dict[str, Any]:
-    first_error: str | None = None
-
-    try:
-        await engine.run_card(PRODUCTFLOW_EPIC_ID)
-        first_error = "approval_pending_not_observed"
-    except ExecutionFailed as exc:
-        first_error = str(exc)
+    initial = await engine.run_card(PRODUCTFLOW_EPIC_ID)
+    first_error = initial.reason
 
     approvals = await engine.list_approvals(status="PENDING", limit=100)
     matches = [
@@ -68,6 +63,7 @@ async def _run(*, paths: Any, engine: Any) -> dict[str, Any]:
             "error": "productflow_pending_approval_not_found",
             "pending_approvals_found": len(matches),
             "first_error": first_error,
+            "runtime_result": runtime_result_payload(initial),
         }
 
     approval = matches[0]
@@ -95,7 +91,8 @@ async def _run(*, paths: Any, engine: Any) -> dict[str, Any]:
     issue_status = getattr(issue, "status", None)
     normalized_issue_status = issue_status.value if hasattr(issue_status, "value") else str(issue_status or "")
     success = (
-        str(first_error or "").startswith("Approval required for tool 'write_file'")
+        initial.observation == "approval_pending" and not initial.succeeded
+        and resolved.get("runtime_result", {}).get("succeeded") is True
         and pending_run is not None
         and pending_truth is None
         and pending_resource is not None

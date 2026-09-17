@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from orket_extension_sdk.manifest import ExtensionManifest, unsupported_agent_host_features
+from orket_extension_sdk.manifest import AGENT_MODEL_RECEIPT_FEATURE, ExtensionManifest, unsupported_agent_host_features
 
 # These features are admitted only through the dedicated governed-agent path.
 # The generic extension executor still refuses all agent discriminator markers.
 SUPPORTED_GOVERNED_AGENT_HOST_FEATURES: frozenset[str] = frozenset(
-    {"agent_stdio_ipc.v1", "governed_agent_loop.v1"}
+    {"agent_stdio_ipc.v1", "governed_agent_loop.v1", AGENT_MODEL_RECEIPT_FEATURE}
 )
 
 

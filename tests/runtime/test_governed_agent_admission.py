@@ -27,7 +27,7 @@ def _agent_manifest() -> dict[str, object]:
                 "output_contract": "agent_iteration_result.v1",
                 "agent": {
                     "contract_version": "governed_agent_loop.v1",
-                    "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1"],
+                    "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1", "agent_model_use_receipt.v2"],
                     "model_profiles": [{"role": "planner", "profile_ref": "local.default"}],
                     "resource_requirements": {"max_model_calls_per_iteration": 2},
                 },

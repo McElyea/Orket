@@ -1,6 +1,6 @@
 # Supervisor Runtime Approval Checkpoint V1
 
-Last updated: 2026-04-25
+Last updated: 2026-09-13
 Status: Active
 Owner: Orket Core
 Source requirements: `docs/projects/archive/SupervisorRuntime/SRF03312026-LANE-CLOSEOUT/SUPERVISOR_RUNTIME_FOUNDATIONS_REQUIREMENTS.md`
@@ -16,6 +16,16 @@ This document is the active durable contract authority for the completed Supervi
 
 It selects four bounded governed approval lifecycles that have now shipped.
 It does not create a broad approval platform and it does not imply approve-to-continue support on other approval-producing paths.
+
+The 2026-09-13 architectural-truth candidate repairs the BT-3 epic reentry
+regression with a retained unfinished epic pause and one atomic continuation claim.
+The original request, admission and governed child identity survive restart;
+approval resumes that child and denial stops it before parent failure publication.
+Composed source, installed Windows/Linux Python 3.11/3.12 and live llama.cpp
+write-file proof are recorded in the canonical plan. Existing terminal failures
+remain immutable, consumed-but-unfinished pauses require explicit recovery, and
+post-effect checkpoints retain their existing refusal. The scoped repair does not
+establish the complete BT-3 acceptance gate or migrate old custom/global stores.
 
 ## Purpose
 

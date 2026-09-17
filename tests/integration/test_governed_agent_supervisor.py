@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +18,7 @@ from orket.application.services.governed_agent_supervisor import (
     GovernedAgentWakeClaimGuard,
     GovernedAgentWakeDispatchResult,
 )
-from orket.application.services.governed_agent_wake_records import (
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeRecord,
     GovernedAgentWakeRequest,
 )
@@ -220,9 +219,11 @@ async def test_dispatch_failure_is_durable_recovery_truth(tmp_path: Path) -> Non
 
 @pytest.mark.asyncio
 async def test_long_dispatch_renews_claim_until_bounded_result_publication(tmp_path: Path) -> None:
-    """Layer: integration. The supervisor renews ownership while one bounded dispatch is active."""
+    """Layer: integration. Real SQLite renewal survives the original logical lease expiry."""
     repository = AsyncGovernedAgentWakeRepository(tmp_path / "agent.sqlite3")
-    await repository.enqueue(replace(_wake(), created_at_utc=datetime.now(UTC).isoformat()))
+    await repository.enqueue(_wake())
+    clock = _Clock()
+    entered, release = asyncio.Event(), asyncio.Event()
 
     class SlowDispatcher:
         async def dispatch(
@@ -232,7 +233,9 @@ async def test_long_dispatch_renews_claim_until_bounded_result_publication(tmp_p
             guard: GovernedAgentWakeClaimGuard,
         ) -> GovernedAgentWakeDispatchResult:
             await guard.ensure_active()
-            await asyncio.sleep(0.14)
+            clock.value = "2026-09-07T12:00:31Z"
+            entered.set()
+            await release.wait()
             await guard.ensure_active()
             return GovernedAgentWakeDispatchResult(
                 status="completed",
@@ -240,26 +243,42 @@ async def test_long_dispatch_renews_claim_until_bounded_result_publication(tmp_p
                 child_confirmed_stopped=True,
             )
 
-    def now() -> str:
-        return datetime.now(UTC).isoformat()
-
-    def expiry(_: str) -> str:
-        return (datetime.now(UTC) + timedelta(seconds=0.08)).isoformat()
+    def expiry(now: str) -> str:
+        return (datetime.fromisoformat(now) + timedelta(seconds=60)).isoformat()
 
     supervisor = GovernedAgentSupervisor(
         repository=repository,
         dispatcher=SlowDispatcher(),
         owner_id="renewing-supervisor",
         max_active_claims=1,
-        now_utc=now,
+        now_utc=clock.now,
         lease_expires_at_utc=expiry,
         idle_wait_seconds=0.01,
         renewal_interval_seconds=0.02,
     )
 
-    result = await supervisor.run_once()
+    running = asyncio.create_task(supervisor.run_once())
+    try:
+        async with asyncio.timeout(5):
+            await entered.wait()
+            # Observe the actual committed renewal before advancing beyond the
+            # original expiry. No 80 ms filesystem/scheduler SLA is assumed.
+            renewed_expiry = datetime.fromisoformat("2026-09-07T12:01:31Z")
+            while True:
+                retained = await repository.get_wake(wake_id="wake-1")
+                if (retained and retained.lease_expires_at_utc
+                        and datetime.fromisoformat(retained.lease_expires_at_utc) == renewed_expiry):
+                    break
+                await asyncio.sleep(0.01)
+            clock.value = "2026-09-07T12:01:02Z"
+            release.set()
+            result = await running
+    finally:
+        release.set()
+        if not running.done():
+            running.cancel()
+        await asyncio.gather(running, return_exceptions=True)
     retained = await repository.get_wake(wake_id="wake-1")
-
     assert result.status == "completed"
     assert retained is not None and retained.state == "completed"
 

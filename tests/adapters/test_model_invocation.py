@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +12,7 @@ import pytest
 from orket.adapters.llm import local_model_provider as local_model_provider_module
 from orket.orchestration.engine import OrchestrationEngine
 from orket.schema import CardStatus
+from tests.helpers.card_completion import SOURCE, completion_definition
 from tests.turn_prompt_utils import extract_turn_prompt_context
 
 
@@ -110,7 +113,8 @@ def _write_runtime_assets(root: Path) -> None:
                 "environment": "standard",
                 "description": "Validates runtime provider and tool execution seams.",
                 "architecture_governance": {"idesign": False, "pattern": "Tactical"},
-                "issues": [{"id": "ISSUE-1", "summary": "Task 1", "seat": "lead_architect"}],
+                "issues": [{"id": "ISSUE-1", "summary": "Task 1", "seat": "lead_architect",
+                            "params": {"completion_acceptance": completion_definition().model_dump(mode="json")}}],
             }
         ),
         encoding="utf-8",
@@ -122,9 +126,10 @@ def _seat_from_messages(messages: list[dict[str, Any]]) -> str:
 
 
 class _FakeOpenAIClient:
-    def __init__(self) -> None:
+    def __init__(self, source: str = SOURCE) -> None:
         self.requests: list[dict[str, Any]] = []
         self.closed = False
+        self.source = source
 
     async def post(self, path: str, headers: dict[str, str], **kwargs: Any) -> httpx.Response:
         payload = dict(kwargs.get("json") or {})
@@ -142,6 +147,7 @@ class _FakeOpenAIClient:
                 "content": "",
                 "tool_calls": [
                     {"tool": "write_file", "args": {"path": "agent_output/runtime_truth.txt", "content": "runtime-ok"}},
+                    {"tool": "write_file", "args": {"path": "agent_output/main.py", "content": self.source}},
                     {"tool": "read_file", "args": {"path": "agent_output/runtime_truth.txt"}},
                     {"tool": "update_issue_status", "args": {"status": "code_review"}},
                 ],
@@ -164,6 +170,7 @@ class _FakeOpenAIClient:
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_model_invocation_uses_runtime_provider_and_executes_real_tools(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -189,6 +196,9 @@ async def test_model_invocation_uses_runtime_provider_and_executes_real_tools(
 
     issue = await engine.cards.get_by_id("ISSUE-1")
     assert issue.status == CardStatus.DONE
+    receipt = await engine.cards.read_completion_receipt("ISSUE-1")
+    assert receipt is not None and receipt.digest == issue.completion_ref
+    assert receipt.context.run_id.startswith("orchestrator-issue-run:runtime-session-1:")
 
     output_path = workspace / "agent_output" / "runtime_truth.txt"
     assert output_path.read_text(encoding="utf-8") == "runtime-ok"
@@ -216,3 +226,34 @@ async def test_model_invocation_uses_runtime_provider_and_executes_real_tools(
     assert any(payload.get("provider") == "openai-compat" for payload in raw_payloads)
     assert any(payload.get("profile_id") and payload.get("profile_id") != "unresolved" for payload in raw_payloads)
     assert any(payload.get("task_class") == "strict_json" for payload in raw_payloads)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", ["no_plan", "wrong_behavior"])
+# Layer: integration
+async def test_standard_runtime_rejects_completion_despite_disabled_legacy_verifier(monkeypatch, tmp_path, failure):
+    await asyncio.to_thread(_write_runtime_assets, tmp_path)
+    workspace = tmp_path / "workspace"
+    await asyncio.to_thread((workspace / "agent_output").mkdir, parents=True)
+    if failure == "no_plan":
+        epic_path = tmp_path / "model" / "core" / "epics" / "runtime_truth_epic.json"
+        epic = json.loads(await asyncio.to_thread(epic_path.read_text, encoding="utf-8"))
+        epic["issues"][0]["params"].pop("completion_acceptance")
+        await asyncio.to_thread(epic_path.write_text, json.dumps(epic), encoding="utf-8")
+    fake_client = _FakeOpenAIClient(SOURCE if failure == "no_plan" else "print('{}')\n")
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
+    monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
+    monkeypatch.setattr(local_model_provider_module.httpx, "AsyncClient", lambda *args, **kwargs: fake_client)
+    engine = OrchestrationEngine(workspace, department="core", db_path=str(tmp_path / "cards.db"), config_root=tmp_path)
+    try:
+        observed = await engine.run_card('runtime_truth_epic', session_id='rejected-session')
+        assert observed.observation == "published" and not observed.succeeded
+        assert re.search('E_CARD_COMPLETION_(EVIDENCE|ACCEPTANCE)_REQUIRED', observed.reason or "")
+        issue = await engine.cards.get_by_id("ISSUE-1")
+        assert issue.status == CardStatus.BLOCKED and issue.completion_ref is None
+        assert await engine.cards.read_completion_receipt("ISSUE-1") is None
+        assert len(fake_client.requests) >= 2 and fake_client.closed
+    finally:
+        await engine.close()

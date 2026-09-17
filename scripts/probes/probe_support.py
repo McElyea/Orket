@@ -40,6 +40,14 @@ def now_utc_iso() -> str:
 
 
 def json_safe(value: Any) -> Any:
+    from orket.application.services.runtime_result_projection import (
+        RuntimeCollectionResult,
+        RuntimeExecutionResult,
+        runtime_result_payload,
+    )
+
+    if isinstance(value, (RuntimeExecutionResult, RuntimeCollectionResult)):
+        return runtime_result_payload(value)
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     if isinstance(value, dict):

@@ -7,14 +7,20 @@ Hardened for parallel execution with safe locking patterns.
 from __future__ import annotations
 
 import asyncio
-import json
-from collections.abc import Awaitable, Callable
-from datetime import UTC, datetime
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, TypeVar
 
 import aiosqlite
 
+from orket.core.contracts.card_completion_commit import (
+    CardCompletionAuthority,
+    CardCompletionContext,
+    CardCompletionReceipt,
+    CardCompletionRejected,
+    CardCompletionRequest,
+)
 from orket.core.contracts.repositories import CardRepository
 from orket.core.domain.records import IssueRecord
 from orket.schema import CardStatus
@@ -22,6 +28,8 @@ from orket.schema import CardStatus
 from .card_archive_ops import CardArchiveOps
 from .card_migrations import CardMigrations
 from .card_misc_ops import CardMiscOps
+from .card_record_codec import deserialize_card_row
+from .card_write_ops import begin_completion_attempt, read_completion_receipt, save_card, update_card_status
 from .sqlite_connection import connect_sqlite_wal
 
 ResultT = TypeVar("ResultT")
@@ -30,15 +38,23 @@ ResultT = TypeVar("ResultT")
 class AsyncCardRepository(CardRepository):
     """Async implementation of CardRepository using aiosqlite."""
 
-    def __init__(self, db_path: str | Path) -> None:
+    side_effecting = True
+
+    def __init__(self, db_path: str | Path, *, completion_authority: CardCompletionAuthority | None = None) -> None:
         self.db_path = str(db_path)
+        self._completion_authority = completion_authority
         self._write_lock = asyncio.Lock()
+        self._initialization_lock = asyncio.Lock()
+        self._initialized = False
         self._migrations = CardMigrations()
         self._archive_ops = CardArchiveOps(self._execute)
-        self._misc_ops = CardMiscOps(self._execute, self.get_by_build)
+        self._misc_ops = CardMiscOps(self._execute)
 
     async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
-        await self._migrations.ensure_initialized(conn)
+        async with self._initialization_lock:
+            if not self._initialized:
+                await self._migrations.ensure_initialized(conn)
+                self._initialized = True
 
     async def archive_card(self, card_id: str, archived_by: str = "system", reason: str | None = None) -> bool:
         return await self._archive_ops.archive_card(card_id, archived_by=archived_by, reason=reason)
@@ -80,9 +96,6 @@ class AsyncCardRepository(CardRepository):
     async def add_credits(self, issue_id: str, amount: float) -> None:
         await self._misc_ops.add_credits(issue_id, amount)
 
-    async def get_independent_ready_issues(self, build_id: str) -> list[IssueRecord]:
-        return await self._misc_ops.get_independent_ready_issues(build_id)
-
     async def _execute(
         self,
         operation: Callable[[aiosqlite.Connection], Awaitable[ResultT]],
@@ -92,13 +105,8 @@ class AsyncCardRepository(CardRepository):
         write: bool = False,
     ) -> ResultT:
         async def _run_operation() -> ResultT:
-            async with connect_sqlite_wal(self.db_path) as conn:
-                if row_factory:
-                    conn.row_factory = aiosqlite.Row
-                await self._ensure_initialized(conn)
+            async with self._connection(row_factory=row_factory, commit=commit, write=write) as conn:
                 result = await operation(conn)
-                if commit:
-                    await conn.commit()
                 return result
 
         if commit or write:
@@ -106,21 +114,49 @@ class AsyncCardRepository(CardRepository):
                 return await _run_operation()
         return await _run_operation()
 
+    @asynccontextmanager
+    async def _connection(self, *, row_factory: bool, commit: bool, write: bool) -> AsyncIterator[aiosqlite.Connection]:
+        async with connect_sqlite_wal(self.db_path) as conn:
+            if row_factory:
+                conn.row_factory = aiosqlite.Row
+            await self._ensure_initialized(conn)
+            if commit or write:
+                await conn.execute("BEGIN IMMEDIATE")
+            yield conn
+            if commit:
+                await conn.commit()
+
+    @asynccontextmanager
+    async def completion_write_guard(self) -> AsyncIterator[None]:
+        async with self._write_lock, self._connection(row_factory=False, commit=True, write=True):
+            yield
+
     async def get_by_id(self, card_id: str) -> IssueRecord | None:
         async def _op(conn: aiosqlite.Connection) -> IssueRecord | None:
             cursor = await conn.execute("SELECT * FROM issues WHERE id = ?", (card_id,))
             row = await cursor.fetchone()
             if not row:
                 return None
-            return IssueRecord.model_validate(self._deserialize_row(dict(row)))
+            return IssueRecord.model_validate(deserialize_card_row(dict(row)))
 
         return await self._execute(_op, row_factory=True)
 
     async def get_by_build(self, build_id: str) -> list[IssueRecord]:
+        return await self._get_scoped_cards("build_id", build_id)
+
+    async def get_by_session(self, session_id: str) -> list[IssueRecord]:
+        return await self._get_scoped_cards("session_id", session_id)
+
+    async def _get_scoped_cards(self, column: str, value: str) -> list[IssueRecord]:
+        queries = {
+            "build_id": "SELECT * FROM issues WHERE build_id = ? ORDER BY created_at ASC",
+            "session_id": "SELECT * FROM issues WHERE session_id = ? ORDER BY created_at ASC",
+        }
+
         async def _op(conn: aiosqlite.Connection) -> list[IssueRecord]:
-            cursor = await conn.execute("SELECT * FROM issues WHERE build_id = ? ORDER BY created_at ASC", (build_id,))
+            cursor = await conn.execute(queries[column], (value,))
             rows = await cursor.fetchall()
-            return [IssueRecord.model_validate(self._deserialize_row(dict(row))) for row in rows]
+            return [IssueRecord.model_validate(deserialize_card_row(dict(row))) for row in rows]
 
         return await self._execute(_op, row_factory=True)
 
@@ -153,54 +189,44 @@ class AsyncCardRepository(CardRepository):
         async def _op(conn: aiosqlite.Connection) -> list[dict[str, Any]]:
             cursor = await conn.execute(query, tuple(params))
             rows = await cursor.fetchall()
-            return [self._deserialize_row(dict(row)) for row in rows]
+            return [deserialize_card_row(dict(row)) for row in rows]
 
         return await self._execute(_op, row_factory=True)
 
     async def save(self, record: IssueRecord | dict[str, Any]) -> None:
-        if isinstance(record, dict):
-            record = IssueRecord.model_validate(record)
-
-        summary = record.summary or "Unnamed Unit"
-        v_json = json.dumps(record.verification)
-        m_json = json.dumps(record.metrics)
-        p_json = json.dumps(record.params)
-        d_json = json.dumps(record.depends_on)
+        record = IssueRecord.model_validate(record).model_copy(deep=True)
 
         async def _op(conn: aiosqlite.Connection) -> None:
-            await conn.execute(
-                """
-                INSERT OR REPLACE INTO issues
-                (
-                    id, session_id, build_id, seat, summary, type, priority, sprint,
-                    status, assignee, note, retry_count, max_retries, verification_json,
-                    metrics_json, params_json, depends_on_json, created_at
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    record.id,
-                    record.session_id,
-                    record.build_id,
-                    record.seat,
-                    summary,
-                    record.type.value if hasattr(record.type, "value") else str(record.type),
-                    record.priority,
-                    record.sprint,
-                    record.status.value if hasattr(record.status, "value") else str(record.status),
-                    record.assignee,
-                    record.note,
-                    record.retry_count,
-                    record.max_retries,
-                    v_json,
-                    m_json,
-                    p_json,
-                    d_json,
-                    record.created_at or datetime.now(UTC).isoformat(),
-                ),
-            )
+            await save_card(conn, record)
 
-        await self._execute(_op, commit=True)
+        await self._execute(_op, row_factory=True, commit=True)
+
+    async def begin_completion_attempt(self, context: CardCompletionContext) -> None:
+        async def _op(conn: aiosqlite.Connection) -> None:
+            await begin_completion_attempt(conn, context)
+
+        await self._execute(_op, row_factory=True, commit=True)
+
+    async def read_completion_receipt(self, card_id: str) -> CardCompletionReceipt | None:
+        path = await asyncio.to_thread(Path(self.db_path).resolve)
+        try:
+            async with aiosqlite.connect(path.as_uri() + "?mode=ro", uri=True) as conn:
+                conn.row_factory = aiosqlite.Row
+                await conn.execute("PRAGMA query_only=ON")
+                snapshot = await read_completion_receipt(conn, card_id)
+            if snapshot is None:
+                return None
+            record, receipt = snapshot
+            if self._completion_authority is None:
+                raise CardCompletionRejected("E_CARD_COMPLETION_AUTHORITY_MISSING")
+            decision = await self._completion_authority.inspect_completion_receipt(record=record, receipt=receipt)
+            if not decision.sufficient:
+                raise CardCompletionRejected("E_CARD_COMPLETION_RECEIPT_EVIDENCE_UNVERIFIABLE", decision)
+            return receipt
+        except CardCompletionRejected:
+            raise
+        except (aiosqlite.Error, ValueError, TypeError) as exc:
+            raise CardCompletionRejected(f"E_CARD_COMPLETION_RECEIPT_UNVERIFIABLE:{exc}") from exc
 
     async def update_status(
         self,
@@ -209,42 +235,13 @@ class AsyncCardRepository(CardRepository):
         assignee: str | None = None,
         reason: str | None = None,
         metadata: dict[str, Any] | None = None,
-    ) -> None:
-        async def _op(conn: aiosqlite.Connection) -> None:
-            prev_cursor = await conn.execute("SELECT status FROM issues WHERE id = ?", (card_id,))
-            prev_row = await prev_cursor.fetchone()
-            prev_status = prev_row["status"] if prev_row else None
-
-            if assignee:
-                await conn.execute(
-                    "UPDATE issues SET status = ?, assignee = ? WHERE id = ?", (status.value, assignee, card_id)
-                )
-            else:
-                await conn.execute("UPDATE issues SET status = ? WHERE id = ?", (status.value, card_id))
-
-            action = f"Set Status to '{status.value}'"
-            if prev_status is not None:
-                action += f" (from '{prev_status}')"
-            if reason:
-                action += f" reason='{reason}'"
-            if metadata:
-                action += f" meta={json.dumps(metadata, ensure_ascii=False, sort_keys=True)}"
-
-            await conn.execute(
-                "INSERT INTO card_transactions (card_id, role, action) VALUES (?, ?, ?)",
-                (card_id, assignee or "system", action),
+        *,
+        completion_request: CardCompletionRequest | None = None,
+    ) -> CardCompletionReceipt | None:
+        async def _op(conn: aiosqlite.Connection) -> CardCompletionReceipt | None:
+            return await update_card_status(
+                conn, card_id=card_id, status=status, assignee=assignee, reason=reason, metadata=metadata,
+                request=completion_request, authority=self._completion_authority,
             )
 
-        await self._execute(_op, row_factory=True, commit=True)
-
-    def _deserialize_row(self, row: dict[str, Any]) -> dict[str, Any]:
-        for field in ["verification_json", "metrics_json", "params_json", "depends_on_json"]:
-            target = field.replace("_json", "")
-            if row.get(field):
-                try:
-                    row[target] = json.loads(row[field])
-                except json.JSONDecodeError:
-                    row[target] = [] if target == "depends_on" else {}
-            else:
-                row[target] = [] if target == "depends_on" else {}
-        return row
+        return await self._execute(_op, row_factory=True, commit=True)

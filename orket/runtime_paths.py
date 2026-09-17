@@ -7,7 +7,7 @@ from pathlib import Path
 
 def durable_root() -> Path:
     raw = os.getenv("ORKET_DURABLE_ROOT", "").strip()
-    return Path(raw) if raw else (Path.cwd() / ".orket" / "durable")
+    return Path(raw).resolve() if raw else (Path.cwd() / ".orket" / "durable")
 
 
 def _migrate_legacy_file(*, legacy: Path, target: Path) -> None:
@@ -26,11 +26,11 @@ def _migrate_legacy_dir(*, legacy: Path, target: Path) -> None:
 
 def resolve_runtime_db_path(db_path: str | None = None) -> str:
     if db_path:
-        return db_path
+        return str(Path(db_path).resolve())
     target = durable_root() / "db" / "orket_persistence.db"
     _migrate_legacy_file(legacy=Path.cwd() / "orket_persistence.db", target=target)
     target.parent.mkdir(parents=True, exist_ok=True)
-    return str(target)
+    return str(target.resolve())
 
 
 def resolve_sandbox_lifecycle_db_path(db_path: str | None = None) -> str:
@@ -55,6 +55,14 @@ def resolve_sandbox_terminal_evidence_root(path: str | Path | None = None) -> Pa
     target = Path(path) if path is not None else (durable_root() / "sandbox_terminal_evidence")
     target.mkdir(parents=True, exist_ok=True)
     return target
+
+
+def control_plane_db_for_runtime(*, runtime_db: str | Path) -> Path:
+    """One explicit runtime binding for engine, epic and governed-turn composition."""
+    runtime_path = Path(runtime_db)
+    if not runtime_path.is_absolute():
+        raise ValueError("E_RUNTIME_STORE_BINDING_ABSOLUTE_PATH_REQUIRED")
+    return resolve_control_plane_db_path(runtime_path.with_name("control_plane_records.sqlite3"))
 
 
 def resolve_webhook_db_path(db_path: str | Path | None = None) -> Path:

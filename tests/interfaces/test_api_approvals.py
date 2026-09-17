@@ -37,13 +37,12 @@ from tests.application.test_engine_approvals import (
     _seed_target_step_and_effect_journal,
     _tool_approval_row,
 )
-from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_unit_transaction import unit_control_plane_transactions
 
 pytestmark = pytest.mark.integration
 
-
 client = None
-
 
 def test_list_approvals_routes_to_engine(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
@@ -72,7 +71,6 @@ def test_list_approvals_routes_to_engine(monkeypatch) -> None:
         "request_id": "req-1",
         "limit": 20,
     }
-
 
 def test_get_approval_returns_404_when_missing(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
@@ -258,7 +256,8 @@ def test_approvals_endpoints_real_nervous_system_flow(monkeypatch) -> None:
     )
 
 
-def test_tool_approval_api_exposes_target_ref_and_target_operator_action(monkeypatch) -> None:
+# Layer: integration
+def test_tool_approval_api_retains_decision_projection_when_terminal_continuation_is_refused(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.delenv("ORKET_ENABLE_NERVOUS_SYSTEM", raising=False)
     repository = InMemoryControlPlaneRecordRepository()
@@ -267,6 +266,7 @@ def test_tool_approval_api_exposes_target_ref_and_target_operator_action(monkeyp
     monkeypatch.setattr(api_module._get_engine(), "pending_gates", _FakePendingGates(rows=[_tool_approval_row()]), raising=False)
     monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", repository, raising=False)
     monkeypatch.setattr(api_module._get_engine(), "control_plane_execution_repository", execution_repository, raising=False)
+    monkeypatch.setattr(api_module._get_engine(), "control_plane_transactions", unit_control_plane_transactions(api_module._get_engine()))
     monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", publication, raising=False)
     monkeypatch.setattr(
         api_module._get_engine(),
@@ -376,8 +376,8 @@ def test_tool_approval_api_exposes_target_ref_and_target_operator_action(monkeyp
         json={"decision": "approve"},
     )
 
-    assert decided.status_code == 200
-    approval = decided.json()["approval"]
+    assert decided.status_code == 422 and "E_CONTROL_PLANE_TERMINAL_AUTHORITY_CONFLICT" in decided.text
+    approval = client.get("/v1/approvals/apr-1", headers={"X-API-Key": "test-key"}).json()
     assert approval["control_plane_target_ref"] == "turn-tool-run:sess-1:ISS-1:coder:0001"
     assert approval["control_plane_target_run"]["run_state"] == "executing"
     assert approval["control_plane_target_run"]["current_attempt_state"] == "attempt_executing"

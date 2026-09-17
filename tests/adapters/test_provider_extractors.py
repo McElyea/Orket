@@ -10,7 +10,7 @@ def test_provider_extractor_registry_routes_lmstudio_to_openai_shape() -> None:
     assert isinstance(extractor_for_provider("lmstudio"), OpenAIExtractor)
     assert isinstance(extractor_for_provider("openai_compat"), OpenAIExtractor)
 
-
+# Layer: contract
 def test_ollama_extractor_normalizes_object_tool_calls() -> None:
     """Layer: unit. Verifies Ollama object-style tool calls normalize to OpenAI-compatible shape."""
     extractor = OllamaExtractor()
@@ -33,7 +33,7 @@ def test_ollama_extractor_normalizes_object_tool_calls() -> None:
         {"type": "function", "function": {"name": "read_file", "arguments": {"path": "agent_output/a.txt"}}}
     ]
     assert extractor.extract_usage(payload) == (2, 3, 5)
-    assert extractor.extract_timings(payload, latency_ms=25) == (0.0, 10.0, 10.0)
+    assert extractor.extract_timings(payload, latency_ms=25) == (None, None, 10.0)
 
 
 def test_ollama_extractor_accepts_chat_response_objects() -> None:

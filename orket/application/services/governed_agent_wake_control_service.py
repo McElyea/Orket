@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any, cast
 
-from orket.application.services.governed_agent_wake_records import (
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeActionRecord,
     GovernedAgentWakeCancellationRequest,
     GovernedAgentWakeControlRepository,

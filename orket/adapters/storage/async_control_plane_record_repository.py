@@ -7,10 +7,23 @@ from typing import TypeVar
 
 import aiosqlite
 
+from orket.adapters.storage.control_plane_effect_journal_store import (
+    ensure_effect_journal_schema,
+    insert_effect_journal_entry,
+    list_effect_journal_entries,
+)
+from orket.adapters.storage.control_plane_final_truth_store import read_final_truth, save_final_truth
 from orket.adapters.storage.control_plane_operator_action_support import (
     ensure_operator_action_schema,
+    get_operator_action,
+    insert_operator_action,
 )
-from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
+from orket.adapters.storage.control_plane_recovery_store import (
+    ensure_recovery_decision_schema,
+    get_recovery_decision,
+    insert_recovery_decision,
+)
+from orket.adapters.storage.sqlite_connection import sqlite_connection_scope
 from orket.core.contracts.control_plane_effect_journal_models import (
     CheckpointAcceptanceRecord,
     EffectJournalEntryRecord,
@@ -39,8 +52,11 @@ class ControlPlaneRecordConflictError(ValueError):
 class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
     """Durable SQLite repository for append-only ControlPlane records."""
 
-    def __init__(self, db_path: str | Path) -> None:
+    side_effecting = True
+
+    def __init__(self, db_path: str | Path, *, connection: aiosqlite.Connection | None = None) -> None:
         self.db_path = str(db_path)
+        self._connection = connection
         self._lock = asyncio.Lock()
         self._initialized = False
 
@@ -97,23 +113,7 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             ON resource_records (resource_id, last_observed_timestamp DESC, current_observed_state DESC)
             """
         )
-        await conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS effect_journal_entries (
-                journal_entry_id TEXT PRIMARY KEY,
-                run_id TEXT NOT NULL,
-                publication_sequence INTEGER NOT NULL,
-                entry_digest TEXT NOT NULL,
-                payload_json TEXT NOT NULL
-            )
-            """
-        )
-        await conn.execute(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_effect_journal_run_sequence
-            ON effect_journal_entries (run_id, publication_sequence)
-            """
-        )
+        await ensure_effect_journal_schema(conn)
         await conn.execute(
             """
             CREATE TABLE IF NOT EXISTS checkpoint_records (
@@ -146,15 +146,7 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             ON checkpoint_acceptance_records (checkpoint_id, decision_timestamp)
             """
         )
-        await conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS recovery_decision_records (
-                decision_id TEXT PRIMARY KEY,
-                run_id TEXT NOT NULL,
-                payload_json TEXT NOT NULL
-            )
-            """
-        )
+        await ensure_recovery_decision_schema(conn)
         await conn.execute(
             """
             CREATE TABLE IF NOT EXISTS lease_records (
@@ -220,15 +212,13 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
         row_factory: bool = False,
         commit: bool = False,
     ) -> ResultT:
-        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
+        async with self._lock, sqlite_connection_scope(self.db_path, self._connection, commit=commit) as conn:
             if row_factory:
                 conn.row_factory = aiosqlite.Row
             if not self._initialized:
                 await self._ensure_initialized(conn)
                 self._initialized = True
             result = await operation(conn)
-            if commit:
-                await conn.commit()
             return result
 
     async def _insert_or_return_existing(
@@ -536,21 +526,7 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
         payload_json = entry.model_dump_json()
 
         async def _insert(conn: aiosqlite.Connection) -> EffectJournalEntryRecord:
-            await conn.execute(
-                """
-                INSERT INTO effect_journal_entries (
-                    journal_entry_id, run_id, publication_sequence, entry_digest, payload_json
-                ) VALUES (?, ?, ?, ?, ?)
-                """,
-                (
-                    entry.journal_entry_id,
-                    run_id,
-                    entry.publication_sequence,
-                    entry.entry_digest,
-                    payload_json,
-                ),
-            )
-            return entry
+            return await insert_effect_journal_entry(conn, run_id=run_id, entry=entry)
 
         return await self._insert_or_return_existing(
             table="effect_journal_entries",
@@ -563,17 +539,7 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
 
     async def list_effect_journal_entries(self, *, run_id: str) -> list[EffectJournalEntryRecord]:
         async def _op(conn: aiosqlite.Connection) -> list[EffectJournalEntryRecord]:
-            cursor = await conn.execute(
-                """
-                SELECT payload_json
-                FROM effect_journal_entries
-                WHERE run_id = ?
-                ORDER BY publication_sequence ASC
-                """,
-                (run_id,),
-            )
-            rows = await cursor.fetchall()
-            return [EffectJournalEntryRecord.model_validate_json(str(row["payload_json"])) for row in rows]
+            return await list_effect_journal_entries(conn, run_id=run_id)
 
         return await self._execute(_op, row_factory=True)
 
@@ -705,19 +671,7 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
         payload_json = decision.model_dump_json()
 
         async def _insert(conn: aiosqlite.Connection) -> RecoveryDecisionRecord:
-            await conn.execute(
-                """
-                INSERT INTO recovery_decision_records (
-                    decision_id, run_id, payload_json
-                ) VALUES (?, ?, ?)
-                """,
-                (
-                    decision.decision_id,
-                    decision.run_id,
-                    payload_json,
-                ),
-            )
-            return decision
+            return await insert_recovery_decision(conn, decision=decision)
 
         return await self._insert_or_return_existing(
             table="recovery_decision_records",
@@ -730,14 +684,7 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
 
     async def get_recovery_decision(self, *, decision_id: str) -> RecoveryDecisionRecord | None:
         async def _op(conn: aiosqlite.Connection) -> RecoveryDecisionRecord | None:
-            cursor = await conn.execute(
-                "SELECT payload_json FROM recovery_decision_records WHERE decision_id = ?",
-                (decision_id,),
-            )
-            row = await cursor.fetchone()
-            if row is None:
-                return None
-            return RecoveryDecisionRecord.model_validate_json(str(row["payload_json"]))
+            return await get_recovery_decision(conn, decision_id=decision_id)
 
         return await self._execute(_op, row_factory=True)
 
@@ -910,19 +857,7 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
         payload_json = record.model_dump_json()
 
         async def _insert(conn: aiosqlite.Connection) -> OperatorActionRecord:
-            await conn.execute(
-                """
-                INSERT INTO operator_action_records (
-                    action_id, target_ref, timestamp, payload_json
-                ) VALUES (?, ?, ?, ?)
-                """,
-                (
-                    record.action_id,
-                    record.target_ref,
-                    record.timestamp,
-                    payload_json,
-                ),
-            )
+            await insert_operator_action(conn, record=record)
             return record
 
         return await self._insert_or_return_existing(
@@ -936,14 +871,7 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
 
     async def get_operator_action(self, *, action_id: str) -> OperatorActionRecord | None:
         async def _op(conn: aiosqlite.Connection) -> OperatorActionRecord | None:
-            cursor = await conn.execute(
-                "SELECT payload_json FROM operator_action_records WHERE action_id = ?",
-                (action_id,),
-            )
-            row = await cursor.fetchone()
-            if row is None:
-                return None
-            return OperatorActionRecord.model_validate_json(str(row["payload_json"]))
+            return await get_operator_action(conn, action_id=action_id)
 
         return await self._execute(_op, row_factory=True)
 
@@ -964,48 +892,14 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
         return await self._execute(_op, row_factory=True)
 
     async def save_final_truth(self, *, record: FinalTruthRecord) -> FinalTruthRecord:
-        payload_json = record.model_dump_json()
+        async def _op(conn: aiosqlite.Connection) -> FinalTruthRecord:
+            return await save_final_truth(conn, record=record)
 
-        async def _insert(conn: aiosqlite.Connection) -> FinalTruthRecord:
-            await conn.execute(
-                """
-                INSERT INTO final_truth_records (
-                    final_truth_record_id, run_id, payload_json
-                ) VALUES (?, ?, ?)
-                """,
-                (
-                    record.final_truth_record_id,
-                    record.run_id,
-                    payload_json,
-                ),
-            )
-            return record
-
-        return await self._insert_or_return_existing(
-            table="final_truth_records",
-            id_field="final_truth_record_id",
-            id_value=record.final_truth_record_id,
-            payload_json=payload_json,
-            insert_op=_insert,
-            parse_existing=FinalTruthRecord.model_validate_json,
-        )
+        return await self._execute(_op, row_factory=True, commit=True)
 
     async def get_final_truth(self, *, run_id: str) -> FinalTruthRecord | None:
         async def _op(conn: aiosqlite.Connection) -> FinalTruthRecord | None:
-            cursor = await conn.execute(
-                """
-                SELECT payload_json
-                FROM final_truth_records
-                WHERE run_id = ?
-                ORDER BY final_truth_record_id DESC
-                LIMIT 1
-                """,
-                (run_id,),
-            )
-            row = await cursor.fetchone()
-            if row is None:
-                return None
-            return FinalTruthRecord.model_validate_json(str(row["payload_json"]))
+            return await read_final_truth(conn, run_id=run_id)
 
         return await self._execute(_op, row_factory=True)
 

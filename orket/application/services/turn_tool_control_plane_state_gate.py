@@ -9,9 +9,23 @@ from orket.application.services.turn_tool_control_plane_resource_lifecycle impor
     namespace_resource_id_for_run,
     reservation_id_for_run,
 )
+from orket.application.services.turn_tool_control_plane_support import digest
 from orket.core.contracts import EffectJournalEntryRecord, FinalTruthRecord, RunRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
-from orket.core.domain import LeaseStatus, ReservationStatus, ResultClass, RunState
+from orket.core.contracts.turn_tool_dispatch import TURN_TOOL_DISPATCH_CONTRACT, is_unresolved_tool_dispatch
+from orket.core.domain import LeaseStatus, ReservationStatus, ResultClass, RunState, is_terminal_run_state
+from orket.core.domain.control_plane_final_truth import validate_terminal_record_consistency
+
+
+async def require_turn_dispatch_contract(repository, run, error_type):
+    """Absence of intent records is meaningful only under the bound admission contract."""
+    snapshot = await repository.get_resolved_configuration_snapshot(snapshot_id=run.configuration_snapshot_id)
+    if (snapshot is None or snapshot.snapshot_id != run.configuration_snapshot_id
+            or snapshot.snapshot_digest != run.configuration_digest
+            or digest(snapshot.configuration_payload) != run.configuration_digest
+            or snapshot.configuration_payload.get("dispatch_contract") != TURN_TOOL_DISPATCH_CONTRACT):
+        raise error_type(f"governed turn run {run.run_id}: dispatch contract missing, unsupported or unbound; "
+                         "unfinished history requires explicit reconciliation; reentry and closure refused")
 
 
 async def ensure_existing_run_allows_execution(
@@ -21,7 +35,10 @@ async def ensure_existing_run_allows_execution(
     run: RunRecord,
     error_type: type[Exception],
 ) -> FinalTruthRecord | None:
-    await _require_turn_tool_resource_authority(
+    if not is_terminal_run_state(run.lifecycle_state):
+        await require_turn_dispatch_contract(publication.repository, run, error_type)
+    await require_resolved_tool_dispatches(execution_repository, run, error_type)
+    await require_turn_tool_resource_authority(
         publication=publication,
         run=run,
         error_type=error_type,
@@ -32,9 +49,9 @@ async def ensure_existing_run_allows_execution(
             raise error_type(
                 f"governed turn run {run.run_id} carries final_truth_record_id without durable final truth"
             )
-        if run.final_truth_record_id != truth.final_truth_record_id:
-            run = run.model_copy(update={"final_truth_record_id": truth.final_truth_record_id})
-            await execution_repository.save_run_record(record=run)
+        attempt = (await execution_repository.get_attempt_record(attempt_id=run.current_attempt_id)
+                   if run.current_attempt_id is not None else None)
+        validate_terminal_record_consistency(run, attempt, truth)
         if truth.result_class is ResultClass.SUCCESS and run.lifecycle_state is RunState.COMPLETED:
             return truth
         raise error_type(
@@ -58,7 +75,15 @@ async def ensure_existing_run_allows_execution(
     return None
 
 
-async def _require_turn_tool_resource_authority(
+async def require_resolved_tool_dispatches(execution_repository, run, error_type):
+    if run.current_attempt_id is None:
+        return
+    steps = await execution_repository.list_step_records(attempt_id=run.current_attempt_id)
+    if any(is_unresolved_tool_dispatch(step) for step in steps):
+        raise error_type(f"governed turn run {run.run_id}: tool dispatch outcome unknown; explicit observation required before recovery")
+
+
+async def require_turn_tool_resource_authority(
     *,
     publication: ControlPlanePublicationService,
     run: RunRecord,
@@ -95,7 +120,7 @@ async def _require_turn_tool_resource_authority(
         )
         return
 
-    if run.final_truth_record_id is None or run.lifecycle_state is not RunState.COMPLETED:
+    if run.final_truth_record_id is None:
         return
 
     if reservation is None:
@@ -139,4 +164,5 @@ async def existing_effect_for_operation(
 __all__ = [
     "ensure_existing_run_allows_execution",
     "existing_effect_for_operation",
+    "require_turn_tool_resource_authority",
 ]

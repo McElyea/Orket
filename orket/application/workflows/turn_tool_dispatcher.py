@@ -2,19 +2,17 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from functools import partial
 from pathlib import Path
 from typing import Any
 
 from orket.application.middleware import TurnLifecycleInterceptors
+from orket.application.services.card_completion_turn_service import verify_turn_completion_claims
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
+from orket.core.contracts.card_completion_commit import CardCompletionRejected, is_card_completion_call
 from orket.core.domain.execution import ExecutionTurn, ToolCallErrorClass
-from orket.core.policies.tool_gate import ToolGate
 from orket.logging import log_event
-from orket.schema import IssueConfig
-
-from ..services.governed_turn_tool_approval_continuation_service import (
-    supports_governed_turn_tool_approval_continuation,
-)
 from orket.runtime.registry.protocol_hashing import (
     VALIDATOR_VERSION,
     build_step_id,
@@ -24,11 +22,17 @@ from orket.runtime.registry.protocol_hashing import (
     derive_step_seed,
     hash_canonical_json,
 )
+from orket.schema import IssueConfig
+
+from ..services.governed_turn_tool_approval_continuation_service import (
+    supports_governed_turn_tool_approval_continuation,
+)
 from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
 from .turn_tool_dispatcher_control_plane import (
     begin_control_plane_execution_if_needed,
     finalize_execution_if_needed,
     persist_non_protocol_tool_result_if_needed,
+    prepare_dispatch_if_needed,
     publish_preflight_failure_if_needed,
 )
 from .turn_tool_dispatcher_protocol import (
@@ -137,9 +141,9 @@ class ToolDispatcher:
         control_plane_enabled = not protocol_replay_mode and self.control_plane_service is not None
         if control_plane_enabled and turn.tool_calls:
             tool_names = [str(call.tool or "").strip() for call in turn.tool_calls if str(call.tool or "").strip()]
-            # Status-only turns do not produce side-effecting tool evidence, so skip
-            # governed turn-tool publication to keep that hot path lightweight.
-            if tool_names and all(name == "update_issue_status" for name in tool_names):
+            # Successful status writes carry completion evidence and require final publication.
+            if (tool_names and all(name == "update_issue_status" for name in tool_names)
+                    and not any(is_card_completion_call(call.tool, call.args) for call in turn.tool_calls)):
                 control_plane_enabled = False
         execution_capsule = build_execution_capsule(context)
         approval_required_tools = {
@@ -419,24 +423,17 @@ class ToolDispatcher:
                     )
 
                 result, replayed = await load_or_execute_tool(
-                    protocol_enabled=protocol_enabled,
-                    session_id=session_id,
-                    turn=turn,
-                    tool_name=tool_name,
-                    tool_args=dict(tool_call.args or {}),
-                    turn_index=turn_index,
-                    operation_id=operation_id,
-                    binding=binding,
-                    toolbox=toolbox,
-                    context=context,
-                    step_id=step_id,
-                    step_seed=step_seed,
-                    validator_version=validator_version,
-                    protocol_hash=protocol_hash,
-                    tool_schema_hash=tool_schema_hash,
+                    protocol_enabled=protocol_enabled, session_id=session_id, turn=turn,
+                    tool_name=tool_name, tool_args=dict(tool_call.args or {}), turn_index=turn_index,
+                    operation_id=operation_id, binding=binding, toolbox=toolbox, context=context,
+                    step_id=step_id, step_seed=step_seed, validator_version=validator_version,
+                    protocol_hash=protocol_hash, tool_schema_hash=tool_schema_hash,
                     compatibility_translation=compatibility_translation,
                     load_operation_result=self.load_operation_result,
                     load_replay_tool_result=self.load_replay_tool_result,
+                    prepare_dispatch=partial(prepare_dispatch_if_needed,
+                        control_plane_enabled=control_plane_enabled, control_plane_service=self.control_plane_service,
+                        control_plane_run_id=control_plane_run_id, control_plane_attempt_id=control_plane_attempt_id),
                 )
 
                 result = self.middleware.apply_after_tool(
@@ -555,7 +552,6 @@ class ToolDispatcher:
                             control_plane_run_id=control_plane_run_id,
                             control_plane_attempt_id=control_plane_attempt_id,
                             retry_count=int(context.get("retry_count", 0) or 0),
-                            validator_duration_ms=int(context.get("validator_duration_ms", 0) or 0),
                         )
                 elif not protocol_replay_mode:
                     result_ref = await persist_non_protocol_tool_result_if_needed(
@@ -618,23 +614,19 @@ class ToolDispatcher:
                     )
                 violations.append(f"Tool {tool_name} error: {exc}")
 
-        if violations:
-            await finalize_execution_if_needed(
-                control_plane_enabled=control_plane_enabled,
-                control_plane_service=self.control_plane_service,
-                control_plane_run_id=control_plane_run_id,
-                control_plane_attempt_id=control_plane_attempt_id,
-                authoritative_result_ref=last_result_ref or f"turn-tool-violations:{control_plane_run_id}",
-                violation_reasons=violations,
-                executed_step_count=executed_step_count,
-            )
-            raise self.tool_validation_error_factory(violations)
+        if not violations:
+            try:
+                await verify_turn_completion_claims(toolbox=toolbox, turn=turn, context=context)
+            except (CardCompletionRejected, AttributeError) as exc:
+                violations.append(f"Card completion claim rejected: {exc}")
         await finalize_execution_if_needed(
             control_plane_enabled=control_plane_enabled,
             control_plane_service=self.control_plane_service,
             control_plane_run_id=control_plane_run_id,
             control_plane_attempt_id=control_plane_attempt_id,
-            authoritative_result_ref=last_result_ref or f"turn-tool-complete:{control_plane_run_id}",
-            violation_reasons=[],
+            authoritative_result_ref=last_result_ref or f"turn-tool-{'violations' if violations else 'complete'}:{control_plane_run_id}",
+            violation_reasons=violations,
             executed_step_count=executed_step_count,
         )
+        if violations:
+            raise self.tool_validation_error_factory(violations)

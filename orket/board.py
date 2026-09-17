@@ -1,7 +1,8 @@
-import asyncio
+from functools import partial
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.exceptions import CardNotFound
 from orket.runtime import ConfigLoader
 from orket.schema import EpicConfig, IssueConfig, RockConfig
@@ -28,7 +29,7 @@ def _append_load_failure(
 
 
 def _run_startup_reconcile() -> None:
-    from orket.core.domain.reconciler import StructuralReconciler
+    from orket.application.services.structural_reconciliation_service import StructuralReconciler
 
     reconciler: Any = StructuralReconciler()
     reconciler.reconcile_all()
@@ -245,4 +246,4 @@ async def get_board_hierarchy_async(
     department: str = "core",
     auto_fix: bool = False,
 ) -> dict[str, Any]:
-    return await asyncio.to_thread(get_board_hierarchy, department, auto_fix)
+    return await run_owned_thread(partial(get_board_hierarchy, department, auto_fix), label="board-hierarchy")

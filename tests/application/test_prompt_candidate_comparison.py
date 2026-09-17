@@ -248,5 +248,7 @@ def test_compare_candidate_exposes_machine_readable_blockers() -> None:
     assert any(item["type"] == "criteria" for item in report["blockers"])
 
 
+# Layer: contract
 def test_compare_candidates_default_thresholds_file_exists() -> None:
+    """Layer: contract. The default thresholds are owned by the comparison script."""
     assert Path(DEFAULT_THRESHOLDS_PATH).exists()

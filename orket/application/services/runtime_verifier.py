@@ -10,10 +10,11 @@ from typing import Any
 
 import aiofiles
 
-from orket.core.domain.guard_contract import GuardContract, GuardViolation
+from orket.application.services.command_process_supervisor import CommandProcessSupervisor
+from orket.application.services.runtime_verifier_capture import captured_runtime_streams, stdout_capture_error
 from orket.application.services.runtime_verifier_evidence import annotate_runtime_verifier_evidence
+from orket.core.domain.guard_contract import GuardContract, GuardViolation
 
-_COMMAND_OUTPUT_LIMIT = 2000
 _COMMAND_FAILURE_SUMMARY_LIMIT = 240
 _KNOWN_JSON_ASSERTION_OPS = {"eq", "ne", "contains", "len_gte", "gt", "gte", "lt", "lte"}
 
@@ -46,6 +47,7 @@ class RuntimeVerifier:
         architecture_pattern: str | None = None,
         artifact_contract: dict[str, Any] | None = None,
         issue_params: dict[str, Any] | None = None,
+        command_environment: dict[str, str] | None = None,
     ):
         self.workspace_root = workspace_root
         self.organization = organization
@@ -53,6 +55,8 @@ class RuntimeVerifier:
         self.architecture_pattern = str(architecture_pattern or "").strip().lower()
         self.artifact_contract = dict(artifact_contract or {}) if isinstance(artifact_contract, dict) else {}
         self.issue_params = dict(issue_params or {}) if isinstance(issue_params, dict) else {}
+        self.command_environment = None if command_environment is None else dict(command_environment)
+        self.process_supervisor = CommandProcessSupervisor(workspace_root, cancellation_event="verification_process_cancelled")
 
     async def verify(self) -> RuntimeVerificationResult:
         targets = await self._python_targets()
@@ -84,6 +88,7 @@ class RuntimeVerifier:
                     f"runtime command failed [{failure_class}] cwd={result.get('working_directory')}: "
                     f"{self._summarize_command_failure(result)}"
                 )
+                break
 
         await self._validate_stdout_contract(
             command_results=command_results,
@@ -324,43 +329,24 @@ class RuntimeVerifier:
         resolved_cwd = parsed["resolved_cwd"]
 
         try:
-            process = await asyncio.create_subprocess_exec(
-                *cmd,
-                cwd=str(resolved_cwd),
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            try:
-                stdout_bytes, stderr_bytes = await asyncio.wait_for(process.communicate(), timeout=timeout_sec)
-            except TimeoutError:
-                process.kill()
-                await process.communicate()
-                return {
-                    "command_text": display,
-                    "command_display": display,
-                    "working_directory": working_directory,
-                    "returncode": 124,
-                    "exit_code": 124,
-                    "outcome": "fail",
-                    "stdout": "",
-                    "stderr": f"timeout after {timeout_sec}s",
-                    "failure_class": "timeout",
-                    "policy_source": policy_source,
-                }
-            stdout = stdout_bytes.decode("utf-8", errors="replace")
-            stderr = stderr_bytes.decode("utf-8", errors="replace")
-            rc = process.returncode
-            returncode = int(rc) if rc is not None else -1
+            execution = await self.process_supervisor.run(
+                cmd, cwd=resolved_cwd, timeout_seconds=timeout_sec, environment=self.command_environment)
+            returncode = execution.returncode if execution.returncode is not None else -1
+            failure_class = self._failure_class_from_returncode(returncode)
+            if execution.reason != "completed":
+                returncode = {"timeout": 124, "launch_failed": 127}.get(execution.reason, 125)
+                failure_class = {"launch_failed": "missing_runtime"}.get(execution.reason, execution.reason)
             return {
                 "command_text": display,
                 "command_display": display,
                 "working_directory": working_directory,
                 "returncode": returncode,
+                "argv": cmd,
                 "exit_code": returncode,
                 "outcome": "pass" if returncode == 0 else "fail",
-                "stdout": self._clip_runtime_stream(stdout),
-                "stderr": self._clip_runtime_stream(stderr, preserve_tail=True),
-                "failure_class": self._failure_class_from_returncode(returncode),
+                **captured_runtime_streams(execution.stdout, execution.stderr),
+                "process_lifetime": execution.lifetime(),
+                "failure_class": failure_class,
                 "policy_source": policy_source,
             }
         except OSError as exc:
@@ -390,13 +376,13 @@ class RuntimeVerifier:
                 "working_directory": declared_cwd,
                 "error": "runtime verifier commands must be argv lists or {argv, cwd} objects; shell strings are not allowed",
             }
-        argv = [str(part).strip() for part in raw_argv if str(part).strip()]
-        if not argv:
+        argv = list(raw_argv)
+        if not argv or any(not isinstance(part, str) or "\x00" in part for part in argv) or not argv[0].strip():
             return {
                 "invalid": True,
                 "command_text": "",
                 "working_directory": declared_cwd,
-                "error": "runtime verifier command argv cannot be empty",
+                "error": "runtime verifier argv requires string arguments without NUL and a nonempty executable",
             }
 
         command_text = self._display_command(argv)
@@ -436,23 +422,6 @@ class RuntimeVerifier:
         if display and Path(display[0]).name.lower().startswith("python"):
             display[0] = "python"
         return " ".join(display)
-
-    @staticmethod
-    def _clip_runtime_stream(text: str, *, preserve_tail: bool = False) -> str:
-        normalized = str(text or "")
-        if len(normalized) <= _COMMAND_OUTPUT_LIMIT:
-            return normalized
-        if not preserve_tail:
-            return normalized[:_COMMAND_OUTPUT_LIMIT]
-
-        head_limit = 400
-        tail_limit = _COMMAND_OUTPUT_LIMIT - head_limit - 32
-        truncated = len(normalized) - head_limit - tail_limit
-        return (
-            normalized[:head_limit]
-            + f"\n...[truncated {truncated} chars]...\n"
-            + normalized[-tail_limit:]
-        )
 
     @staticmethod
     def _summarize_command_failure(result: dict[str, Any]) -> str:
@@ -521,6 +490,14 @@ class RuntimeVerifier:
 
         last_result = command_results[-1]
         if int(last_result.get("returncode", 1)) != 0:
+            return
+
+        capture_error = stdout_capture_error(last_result)
+        if capture_error is not None:
+            code, message = capture_error
+            failure_breakdown[code] = failure_breakdown.get(code, 0) + 1
+            errors.append(message)
+            last_result.update(outcome="fail", failure_class=code, stdout_contract_ok=False, stdout_contract_error=code)
             return
 
         stdout = str(last_result.get("stdout") or "").strip()

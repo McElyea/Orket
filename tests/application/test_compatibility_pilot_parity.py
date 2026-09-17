@@ -6,9 +6,9 @@ from typing import Any
 import pytest
 
 from orket.application.middleware import TurnLifecycleInterceptors
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall
-from orket.core.policies.tool_gate import ToolGate
 
 
 def _dispatcher(

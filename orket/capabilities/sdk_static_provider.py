@@ -12,7 +12,7 @@ class StaticLLMCapabilityProvider:
 
     def generate(self, request: GenerateRequest) -> GenerateResponse:
         del request
-        return GenerateResponse(text=self._text, model=self._model, latency_ms=0, input_tokens=0, output_tokens=0)
+        return GenerateResponse(text=self._text, model=self._model, latency_ms=None, input_tokens=0, output_tokens=0)
 
     def is_available(self) -> bool:
         return True

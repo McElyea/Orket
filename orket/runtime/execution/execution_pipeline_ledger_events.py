@@ -108,4 +108,4 @@ class ExecutionPipelineLedgerEventsMixin:
                 },
                 workspace=self.workspace,
             )
-            return None
+            raise

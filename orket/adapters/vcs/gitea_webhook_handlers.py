@@ -247,8 +247,19 @@ class PRLifecycleHandler:
 
         engine = OrchestrationEngine(self.handler.workspace)
         await engine.cards.update_status(issue_id, CardStatus.CODE_REVIEW)
-        task = asyncio.create_task(engine.run_card(issue_id))
+        async def run_review():
+            try:
+                result = await engine.run_card(issue_id)
+                if not result.succeeded:
+                    log_event("webhook_run_card_error", {"issue_id": issue_id,
+                              "outcome": result.model_dump(mode="json")}, self.handler.workspace)
+            finally:
+                await engine.close()
+
+        task = asyncio.create_task(run_review())
         def _log_task_error(completed: asyncio.Task[Any]) -> None:
+            if completed.cancelled():
+                return
             exc = completed.exception()
             if exc is not None:
                 log_event(

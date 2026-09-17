@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from orket.core.domain.control_plane_enums import (
+    AttemptState,
     AuthoritySourceClass,
     ClosureBasisClassification,
     CompletionClassification,
@@ -12,11 +13,18 @@ from orket.core.domain.control_plane_enums import (
     OperatorInputClass,
     ResidualUncertaintyClassification,
     ResultClass,
+    RunState,
     TerminalityBasisClassification,
 )
+from orket.core.domain.control_plane_lifecycle import is_terminal_attempt_state, is_terminal_run_state
 
 if TYPE_CHECKING:
-    from orket.core.contracts.control_plane_models import FinalTruthRecord, OperatorActionRecord
+    from orket.core.contracts.control_plane_models import (
+        AttemptRecord,
+        FinalTruthRecord,
+        OperatorActionRecord,
+        RunRecord,
+    )
 
 
 class ControlPlaneFinalTruthError(ValueError):
@@ -59,6 +67,25 @@ def validate_final_truth_publication(
     return True
 
 
+def validate_terminal_record_consistency(
+    run: RunRecord, attempt: AttemptRecord | None, truth: FinalTruthRecord | None,
+) -> bool:
+    """Validate the common terminal join; active recovery may retain a closed attempt."""
+    terminal = is_terminal_run_state(run.lifecycle_state)
+    if not terminal and run.final_truth_record_id is None and truth is None:
+        return False
+    if (not terminal or truth is None or truth.run_id != run.run_id
+            or truth.final_truth_record_id != run.final_truth_record_id):
+        raise ControlPlaneFinalTruthError("E_CONTROL_PLANE_TERMINAL_AUTHORITY_CONFLICT:run_truth")
+    if (attempt is None or attempt.attempt_id != run.current_attempt_id or attempt.run_id != run.run_id
+            or not is_terminal_attempt_state(attempt.attempt_state) or attempt.end_timestamp is None):
+        raise ControlPlaneFinalTruthError("E_CONTROL_PLANE_TERMINAL_AUTHORITY_CONFLICT:attempt")
+    complete = run.lifecycle_state is RunState.COMPLETED
+    if complete != (truth.result_class is ResultClass.SUCCESS) or complete != (attempt.attempt_state is AttemptState.COMPLETED):
+        raise ControlPlaneFinalTruthError("E_CONTROL_PLANE_TERMINAL_AUTHORITY_CONFLICT:result")
+    return True
+
+
 def build_final_truth_record(
     *,
     final_truth_record_id: str,
@@ -97,4 +124,5 @@ __all__ = [
     "build_final_truth_record",
     "terminality_basis_for_closure",
     "validate_final_truth_publication",
+    "validate_terminal_record_consistency",
 ]

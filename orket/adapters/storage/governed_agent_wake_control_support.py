@@ -18,7 +18,8 @@ from orket.adapters.storage.governed_agent_wake_repository_support import (
     utc_timestamp,
     wake_row,
 )
-from orket.application.services.governed_agent_wake_records import (
+from orket.core.contracts import OperatorActionRecord
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeActionRecord,
     GovernedAgentWakeCancellationRequest,
     GovernedAgentWakeControlResult,
@@ -27,7 +28,6 @@ from orket.application.services.governed_agent_wake_records import (
     WakeState,
     WakeTransitionStatus,
 )
-from orket.core.contracts import OperatorActionRecord
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
 
 

@@ -77,7 +77,7 @@ workloads:
     with pytest.raises(ValueError, match="E_SDK_MANIFEST_VERSION_UNSUPPORTED"):
         load_manifest(manifest_path)
 
-
+# Layer: contract
 def test_agent_manifest_requires_explicit_contracts_capability_and_features() -> None:
     """Layer: contract. Matching agent declarations are additive within manifest v0."""
     workload = WorkloadManifest.model_validate(
@@ -90,7 +90,7 @@ def test_agent_manifest_requires_explicit_contracts_capability_and_features() ->
             "output_contract": "agent_iteration_result.v1",
             "agent": {
                 "contract_version": "governed_agent_loop.v1",
-                "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1"],
+                "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1", "agent_model_use_receipt.v2"],
                 "model_profiles": [{"role": "planner", "profile_ref": "local.default"}],
                 "resource_requirements": {"max_model_calls_per_iteration": 2},
             },
@@ -100,7 +100,6 @@ def test_agent_manifest_requires_explicit_contracts_capability_and_features() ->
     assert workload.workload_kind == "agent"
     assert workload.agent is not None
     assert workload.agent.contract_version == "governed_agent_loop.v1"
-
 
 @pytest.mark.parametrize(
     ("mutation", "error_code"),
@@ -114,6 +113,7 @@ def test_agent_manifest_requires_explicit_contracts_capability_and_features() ->
         ({"agent": {"misspelled_recovery_policy": "continue"}}, "extra_forbidden"),
     ],
 )
+# Layer: contract
 def test_agent_manifest_fails_closed_on_incomplete_or_unknown_contract(
     mutation: dict[str, object], error_code: str
 ) -> None:
@@ -127,7 +127,7 @@ def test_agent_manifest_fails_closed_on_incomplete_or_unknown_contract(
         "output_contract": "agent_iteration_result.v1",
         "agent": {
             "contract_version": "governed_agent_loop.v1",
-            "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1"],
+            "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1", "agent_model_use_receipt.v2"],
             "model_profiles": [{"role": "planner", "profile_ref": "local.default"}],
             "resource_requirements": {"max_model_calls_per_iteration": 2},
         },
@@ -178,7 +178,7 @@ def test_generic_manifest_rejects_every_agent_discriminator(marker: dict[str, ob
     with pytest.raises(ValidationError, match="E_SDK_AGENT_"):
         WorkloadManifest.model_validate(payload)
 
-
+# Layer: contract
 def test_agent_manifest_rejects_duplicate_roles() -> None:
     payload = {
         "workload_id": "governed-agent-loop",
@@ -189,7 +189,7 @@ def test_agent_manifest_rejects_duplicate_roles() -> None:
         "output_contract": "agent_iteration_result.v1",
         "agent": {
             "contract_version": "governed_agent_loop.v1",
-            "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1"],
+            "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1", "agent_model_use_receipt.v2"],
             "model_profiles": [
                 {"role": "planner", "profile_ref": "local.a"},
                 {"role": "planner", "profile_ref": "local.b"},

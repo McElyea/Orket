@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.6.2"
+version = "0.6.3"
 description = "Local-first workflow runtime for card-based execution"
 authors = [
     { name = "Jonathan McElyea" }
@@ -15,7 +15,7 @@ license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
     # Core
-    "orket-extension-sdk==0.6.0",
+    "orket-extension-sdk==0.7.0a1",
     "jsonschema>=4.20.0,<5.0.0",
     "ollama>=0.4.0,<1.0.0",
     "pydantic>=2.5.0,<3.0.0",
@@ -24,6 +24,8 @@ dependencies = [
     "PyYAML>=6.0.0,<7.0.0",
     "rfc8785>=0.1.4,<1.0.0",
     "google-crc32c>=1.5.0,<2.0.0",
+    # Scheduled wakes require IANA zones even on hosts without a system database.
+    "tzdata>=2024.1",
 
     # Web framework
     "fastapi>=0.109.0,<1.0.0",
@@ -51,6 +53,7 @@ orket-quickstart = "orket.quickstart.governed_action_demo:main"
 
 [project.optional-dependencies]
 dev = [
+    "setuptools>=77.0.0",
     "pytest>=8.0.0,<10.0.0",
     "pytest-cov>=5.0.0,<7.0.0",
     "pytest-asyncio>=0.23.0,<2.0.0",
@@ -101,7 +104,7 @@ include = ["orket", "orket.*"]
 
 [tool.setuptools.package-data]
 "orket.quickstart" = ["*.yaml"]
-"orket.runtime.config" = ["local_prompt_profiles.json", "*.jinja"]
+"orket.runtime.config" = ["local_prompt_profiles.json", "*.jinja", "assets/artifacts/*", "assets/policies/*", "assets/tools/*", "assets/contracts/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

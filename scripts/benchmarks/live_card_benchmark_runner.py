@@ -9,15 +9,23 @@ import platform
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
-from decimal import Decimal, ROUND_HALF_UP
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import psutil
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from scripts.benchmarks.live_card_timing_metrics import (  # noqa: E402
+    _extract_token_metrics_from_log,
+    _round3,
+)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -156,10 +164,6 @@ def _iso_z(dt: datetime) -> str:
     return dt.isoformat().replace("+00:00", "Z")
 
 
-def _round3(value: float) -> float:
-    return float(Decimal(str(value)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP))
-
-
 def _normalized_token(value: str) -> str:
     token = str(value or "").strip().lower().replace(" ", "_")
     return token or "unknown"
@@ -216,30 +220,6 @@ def _default_vibe_metrics() -> dict[str, Any]:
         "vibe_delta": None,
         "vibe_delta_status": "NO_BASELINE",
         "baseline_ref": "",
-    }
-
-
-def _default_token_metrics(total_turn_seconds: float) -> dict[str, Any]:
-    return {
-        "status": "TOKEN_AND_TIMING_UNAVAILABLE",
-        "counts": {
-            "prompt_tokens": None,
-            "output_tokens": None,
-            "total_tokens": None,
-        },
-        "latencies": {
-            "prefill_seconds": None,
-            "decode_seconds": None,
-            "total_turn_seconds": _round3(float(total_turn_seconds)),
-        },
-        "throughput": {
-            "prompt_tokens_per_second": None,
-            "generation_tokens_per_second": None,
-        },
-        "audit": {
-            "raw_usage": {},
-            "raw_timings": {},
-        },
     }
 
 
@@ -319,130 +299,6 @@ def _run_quality(
     if isinstance(overhead_ratio, (int, float)) and float(overhead_ratio) > 0.25:
         reasons.append("HIGH_ORCHESTRATION_OVERHEAD")
     return ("CLEAN" if not reasons else "POLLUTED"), reasons
-
-
-def _record_session_id(record: dict[str, Any]) -> str:
-    data = record.get("data")
-    data = data if isinstance(data, dict) else {}
-    runtime_event = data.get("runtime_event")
-    runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
-    return str(runtime_event.get("session_id") or data.get("session_id") or "").strip()
-
-
-def _extract_token_metrics_from_log(
-    *,
-    log_path: Path,
-    session_id: str,
-    total_turn_seconds: float,
-) -> dict[str, Any]:
-    metrics = _default_token_metrics(total_turn_seconds)
-    if not log_path.exists() or not session_id:
-        return metrics
-
-    prompt_tokens_total = 0
-    output_tokens_total = 0
-    total_tokens_total = 0
-    prompt_ms_total = 0.0
-    predicted_ms_total = 0.0
-    has_prompt_output_tokens = False
-    has_total_tokens = False
-    has_prompt_ms = False
-    has_predicted_ms = False
-
-    for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            record = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if str(record.get("event") or "").strip() != "turn_complete":
-            continue
-        if _record_session_id(record) != session_id:
-            continue
-
-        data = record.get("data")
-        data = data if isinstance(data, dict) else {}
-        runtime_event = data.get("runtime_event")
-        runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
-        tokens_payload = runtime_event.get("tokens", data.get("tokens"))
-        if isinstance(tokens_payload, int):
-            tokens_payload = {"total_tokens": tokens_payload}
-        if not isinstance(tokens_payload, dict):
-            continue
-
-        prompt_tokens = tokens_payload.get("prompt_tokens")
-        output_tokens = tokens_payload.get("output_tokens")
-        total_tokens = tokens_payload.get("total_tokens")
-        prompt_ms = tokens_payload.get("prompt_ms")
-        predicted_ms = tokens_payload.get("predicted_ms")
-
-        if isinstance(prompt_tokens, int) and isinstance(output_tokens, int):
-            has_prompt_output_tokens = True
-            prompt_tokens_total += prompt_tokens
-            output_tokens_total += output_tokens
-        if isinstance(total_tokens, int):
-            has_total_tokens = True
-            total_tokens_total += total_tokens
-        if isinstance(prompt_ms, (int, float)):
-            has_prompt_ms = True
-            prompt_ms_total += float(prompt_ms)
-        if isinstance(predicted_ms, (int, float)):
-            has_predicted_ms = True
-            predicted_ms_total += float(predicted_ms)
-
-    has_tokens = has_prompt_output_tokens
-    has_timings = has_prompt_ms and has_predicted_ms
-
-    status = "OK"
-    if not has_tokens and not has_timings:
-        status = "TOKEN_AND_TIMING_UNAVAILABLE"
-    elif not has_tokens:
-        status = "TOKEN_COUNT_UNAVAILABLE"
-    elif not has_timings:
-        status = "TIMING_UNAVAILABLE"
-
-    total_tokens_value = total_tokens_total if has_total_tokens else None
-    if total_tokens_value is None and has_tokens:
-        total_tokens_value = prompt_tokens_total + output_tokens_total
-
-    prefill_seconds = _round3(prompt_ms_total / 1000.0) if has_timings else None
-    decode_seconds = _round3(predicted_ms_total / 1000.0) if has_timings else None
-    prompt_tps = None
-    gen_tps = None
-    if has_tokens and has_timings and isinstance(prefill_seconds, float) and prefill_seconds > 0:
-        prompt_tps = round(prompt_tokens_total / prefill_seconds, 2)
-    if has_tokens and has_timings and isinstance(decode_seconds, float) and decode_seconds > 0:
-        gen_tps = round(output_tokens_total / decode_seconds, 2)
-
-    metrics["status"] = status
-    metrics["counts"] = {
-        "prompt_tokens": prompt_tokens_total if has_tokens else None,
-        "output_tokens": output_tokens_total if has_tokens else None,
-        "total_tokens": total_tokens_value,
-    }
-    metrics["latencies"] = {
-        "prefill_seconds": prefill_seconds,
-        "decode_seconds": decode_seconds,
-        "total_turn_seconds": _round3(float(total_turn_seconds)),
-    }
-    metrics["throughput"] = {
-        "prompt_tokens_per_second": prompt_tps,
-        "generation_tokens_per_second": gen_tps,
-    }
-    metrics["audit"] = {
-        "raw_usage": {
-            "prompt_tokens": prompt_tokens_total if has_tokens else None,
-            "completion_tokens": output_tokens_total if has_tokens else None,
-            "total_tokens": total_tokens_value,
-        },
-        "raw_timings": {
-            "prompt_ms": _round3(prompt_ms_total) if has_timings else None,
-            "predicted_ms": _round3(predicted_ms_total) if has_timings else None,
-        },
-    }
-    return metrics
 
 
 def _load_baseline_history(path: Path) -> list[dict[str, Any]]:
@@ -1261,7 +1117,7 @@ def _evaluate_quality(task: dict[str, Any], main_text: str, run_dir: Path | None
                     {
                         "name": "cli_example_cases_pass",
                         "passed": not bool(mismatch),
-                        "detail": "all cli examples passed" if not mismatch else mismatch,
+                        "detail": mismatch if mismatch else "all cli examples passed",
                     }
                 )
                 checks.append(
@@ -1319,7 +1175,7 @@ def _materialize_required_artifacts(
             f"- Generated at UTC: {_iso_z(ended_at)}",
             "",
             "## Implementation",
-            f"- Main path: agent_output/main.py",
+            "- Main path: agent_output/main.py",
             f"- Quality checks passed: {quality_checks['passed']}",
             f"- Quality reason: {quality_checks['reason']}",
             "",
@@ -1483,8 +1339,8 @@ def main() -> int:
     finally:
         try:
             epic_path.unlink(missing_ok=True)
-        except OSError:
-            pass
+        except OSError as exc:
+            print(f"Failed to remove temporary benchmark epic {epic_path}: {exc}", file=sys.stderr)
     total_latency_s = _round3(time.perf_counter() - generation_started_perf)
     system_load_end = _system_load_snapshot()
 
@@ -1512,13 +1368,10 @@ def main() -> int:
     if final_main_text.strip():
         constraint_validation = ConstraintValidator(task).validate(final_main_text)
         adherence_score = constraint_validation.get("adherence_score")
-        if isinstance(adherence_score, (int, float)):
-            adherence_score = _round3(float(adherence_score))
-        else:
-            adherence_score = None
+        adherence_score = _round3(float(adherence_score)) if isinstance(adherence_score, (int, float)) else None
     task_revision = _task_revision(task)
     hardware_fingerprint = _hardware_fingerprint()
-    baseline_ref = str((task.get("baseline_ref") or (task.get("acceptance_contract") or {}).get("baseline_ref") or "")).strip()
+    baseline_ref = str(task.get("baseline_ref") or (task.get("acceptance_contract") or {}).get("baseline_ref") or "").strip()
     vibe_metrics = _default_vibe_metrics()
     vibe_metrics["code_density"] = _extract_code_density(coder_final_message, final_main_text)
     baseline_record, baseline_status = _select_baseline_record(

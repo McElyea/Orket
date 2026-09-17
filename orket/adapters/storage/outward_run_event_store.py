@@ -2,12 +2,19 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
 import aiosqlite
 
-from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
+from orket.adapters.storage.outward_ledger_append_store import (
+    LEDGER_APPEND_MIGRATION,
+    OutwardEventAppend,
+    read_append_head,
+)
+from orket.adapters.storage.sqlite_connection import connect_sqlite_wal, sqlite_connection_scope
 from orket.adapters.storage.sqlite_migrations import SQLiteMigration, SQLiteMigrationRunner
 from orket.core.domain.outward_run_events import LedgerEvent
 
@@ -32,11 +39,14 @@ _MIGRATIONS = [
             "CREATE INDEX IF NOT EXISTS idx_run_events_run_order ON run_events (run_id, turn, at, event_id)",
             "CREATE INDEX IF NOT EXISTS idx_run_events_type ON run_events (event_type)",
         ),
-    )
+    ),
+    LEDGER_APPEND_MIGRATION,
 ]
 
 
 class OutwardRunEventStore:
+    side_effecting = True
+
     def __init__(self, db_path: str | Path) -> None:
         self.db_path = Path(db_path)
         self._init_lock = asyncio.Lock()
@@ -47,56 +57,42 @@ class OutwardRunEventStore:
             if self._initialized:
                 return
             async with connect_sqlite_wal(self.db_path) as conn:
+                await conn.execute("BEGIN IMMEDIATE")
                 await SQLiteMigrationRunner(namespace="outward_run_events").apply(conn, _MIGRATIONS)
                 await conn.commit()
             self._initialized = True
 
-    async def append(self, event: LedgerEvent) -> LedgerEvent:
-        self._validate_event(event)
+    async def append(
+        self, event: LedgerEvent, *, connection: aiosqlite.Connection | None = None,
+    ) -> LedgerEvent:
         await self.ensure_initialized()
-        async with connect_sqlite_wal(self.db_path) as conn:
-            await conn.execute(
-                """
-                INSERT INTO run_events (
-                    event_id, event_type, run_id, turn, agent_id, at, payload_json, event_hash, chain_hash
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    event.event_id,
-                    event.event_type,
-                    event.run_id,
-                    event.turn,
-                    event.agent_id,
-                    event.at,
-                    _payload_json(event.payload),
-                    event.event_hash,
-                    event.chain_hash,
-                ),
-            )
-            await conn.commit()
-        return event
+        async with sqlite_connection_scope(self.db_path, connection) as conn:
+            if not conn.in_transaction:
+                await conn.execute("BEGIN IMMEDIATE")
+            writer = OutwardEventAppend(conn, await read_append_head(conn, event.run_id))
+            return await writer.append(event)
 
-    async def get(self, event_id: str) -> LedgerEvent | None:
+    @asynccontextmanager
+    async def writer(self, run_id: str) -> AsyncIterator[OutwardEventAppend]:
         await self.ensure_initialized()
         async with connect_sqlite_wal(self.db_path) as conn:
+            await conn.execute("BEGIN IMMEDIATE")
+            try:
+                yield OutwardEventAppend(conn, await read_append_head(conn, run_id))
+                await conn.commit()
+            finally:
+                if conn.in_transaction:
+                    await conn.rollback()
+
+    async def get(
+        self, event_id: str, *, connection: aiosqlite.Connection | None = None,
+    ) -> LedgerEvent | None:
+        await self.ensure_initialized()
+        async with sqlite_connection_scope(self.db_path, connection) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute("SELECT * FROM run_events WHERE event_id = ?", (event_id,))
             row = await cursor.fetchone()
-        return _row_to_event(row) if row is not None else None
-
-    async def update_hashes(self, *, event_id: str, event_hash: str, chain_hash: str) -> None:
-        await self.ensure_initialized()
-        async with connect_sqlite_wal(self.db_path) as conn:
-            await conn.execute(
-                """
-                UPDATE run_events
-                SET event_hash = ?, chain_hash = ?
-                WHERE event_id = ?
-                """,
-                (event_hash, chain_hash, event_id),
-            )
-            await conn.commit()
+        return event_from_row(row) if row is not None else None
 
     async def list_for_run(
         self,
@@ -138,32 +134,17 @@ class OutwardRunEventStore:
                 tuple(params),
             )
             rows = await cursor.fetchall()
-        return [_row_to_event(row) for row in rows]
-
-    @staticmethod
-    def _validate_event(event: LedgerEvent) -> None:
-        if not event.event_id.strip():
-            raise ValueError("event_id is required")
-        if not event.event_type.strip():
-            raise ValueError("event_type is required")
-        if not event.run_id.strip():
-            raise ValueError("run_id is required")
-        if not event.at.strip():
-            raise ValueError("at is required")
+        return [event_from_row(row) for row in rows]
 
 
-def _payload_json(payload: dict[str, Any]) -> str:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
-
-
-def _row_to_event(row: aiosqlite.Row) -> LedgerEvent:
+def event_from_row(row: aiosqlite.Row) -> LedgerEvent:
     return LedgerEvent(
-        event_id=str(row["event_id"]),
-        event_type=str(row["event_type"]),
-        run_id=str(row["run_id"]),
+        event_id=row["event_id"],
+        event_type=row["event_type"],
+        run_id=row["run_id"],
         turn=row["turn"],
         agent_id=row["agent_id"],
-        at=str(row["at"]),
+        at=row["at"],
         payload=json.loads(str(row["payload_json"])),
         event_hash=row["event_hash"],
         chain_hash=row["chain_hash"],

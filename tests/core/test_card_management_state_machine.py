@@ -2,6 +2,7 @@
 
 from orket.schema import CardStatus, CardType
 from orket.tools import CardManagementTools
+from tests.helpers.card_completion import prepare_existing_card
 
 
 class SpyToolGate:
@@ -173,8 +174,9 @@ async def test_update_issue_status_blocks_when_tool_gate_rejects(tmp_path):
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_update_issue_status_uses_stored_card_type_for_transition_rules(tmp_path):
-    """Layer: contract. Verifies card tools validate transitions against the stored card type, not an issue-only default."""
+    """Stored epic transitions still require actual declared acceptance."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     db_path = tmp_path / "state_machine_epic.db"
@@ -193,11 +195,11 @@ async def test_update_issue_status_uses_stored_card_type_for_transition_rules(tm
         }
     )
 
+    cards.cards, _, _, evaluation = await prepare_existing_card(cards.cards, "EPIC-STATE-1", workspace)
     result = await cards.update_issue_status(
         {"issue_id": "EPIC-STATE-1", "status": "done"},
-        context={"role": "developer"},
+        context={"role": "developer", "card_completion_request": evaluation.request},
     )
 
     assert result["ok"] is True
     assert result["status"] == "done"
-

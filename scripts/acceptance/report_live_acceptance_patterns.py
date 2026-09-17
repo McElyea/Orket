@@ -275,6 +275,7 @@ def _model_compliance_summary(runs: List[Dict[str, Any]]) -> Dict[str, Dict[str,
 def _build_report(batch_id: str, runs: List[Dict[str, Any]]) -> Dict[str, Any]:
     runtime_event_envelope_count = _sum_metric(runs, "runtime_event_envelope_count")
     runtime_event_schema_v1_count = _sum_metric(runs, "runtime_event_schema_v1_count")
+    runtime_event_schema_v2_count = _sum_metric(runs, "runtime_event_schema_v2_count")
     runtime_event_schema_v1_coverage = (
         (float(runtime_event_schema_v1_count) / float(runtime_event_envelope_count))
         if runtime_event_envelope_count > 0
@@ -321,11 +322,15 @@ def _build_report(batch_id: str, runs: List[Dict[str, Any]]) -> Dict[str, Any]:
             "prompt_selection_policy_exact": _sum_metric(runs, "prompt_selection_policy_exact"),
             "runtime_event_envelope_count": runtime_event_envelope_count,
             "runtime_event_schema_v1_count": runtime_event_schema_v1_count,
+            "runtime_event_schema_v2_count": runtime_event_schema_v2_count,
             "done_chain_mismatch": _chain_mismatch_count(runs),
         },
         "guard_rule_violation_counts": _sum_dict_metric(runs, "turn_non_progress_rule_counts"),
         "schema_health": {
             "runtime_event_schema_v1_coverage": runtime_event_schema_v1_coverage,
+            "runtime_event_schema_v2_coverage": (
+                runtime_event_schema_v2_count / runtime_event_envelope_count if runtime_event_envelope_count else 0.0
+            ),
         },
         "invalid_payload_signals": {
             "metrics_json": sum(1 for run in runs if not bool(run.get("metrics_json_valid", True))),

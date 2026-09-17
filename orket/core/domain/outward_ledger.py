@@ -10,6 +10,8 @@ from orket.core.domain.outward_run_events import LedgerEvent
 SCHEMA_VERSION = "ledger_export.v1"
 GENESIS_CHAIN_HASH = "GENESIS"
 LEDGER_EXPORT_REQUESTED = "ledger_export_requested"
+MAX_LEDGER_EXPORT_EVENTS = 100_000
+MAX_LEDGER_PAYLOAD_BYTES = 64 * 1024 * 1024
 
 EVENT_GROUPS: dict[str, frozenset[str] | None] = {
     "proposals": frozenset({"proposal_made", "proposal_pending_approval"}),
@@ -65,10 +67,20 @@ def canonical_event(event: LedgerEvent) -> dict[str, Any]:
     }
 
 
+def event_order_key(event: LedgerEvent) -> tuple:
+    """The v1 SQL order, including NULL turns before integer turns."""
+    return event.run_id, event.turn is not None, event.turn or 0, event.at, event.event_id
+
+
 def verify_ledger_export(payload: Mapping[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
+    if not isinstance(payload, Mapping):
+        errors.append("ledger export must be an object")
+        payload = {}
     if payload.get("schema_version") != SCHEMA_VERSION:
         errors.append("schema_version must be ledger_export.v1")
+    if not isinstance(payload.get("run_id"), str) or not payload["run_id"].strip():
+        errors.append("run_id must be a nonempty string")
     export_scope = str(payload.get("export_scope") or "")
     if export_scope not in {"all", "partial_view"}:
         errors.append("export_scope must be all or partial_view")
@@ -80,7 +92,7 @@ def verify_ledger_export(payload: Mapping[str, Any]) -> dict[str, Any]:
     ledger_hash = str(canonical.get("ledger_hash") or "")
     if not ledger_hash:
         errors.append("canonical.ledger_hash is required")
-    if canonical.get("genesis") not in {None, GENESIS_CHAIN_HASH}:
+    if canonical.get("genesis") not in (None, GENESIS_CHAIN_HASH):
         errors.append("canonical.genesis must be GENESIS")
 
     raw_events = payload.get("events")
@@ -88,22 +100,61 @@ def verify_ledger_export(payload: Mapping[str, Any]) -> dict[str, Any]:
         raw_events = []
         errors.append("events must be an array")
 
+    if canonical.get("ordering", ["run_id", "turn", "at", "event_id"]) != ["run_id", "turn", "at", "event_id"]:
+        errors.append("canonical.ordering must preserve v1 event order")
+    if not 0 <= canonical_count <= MAX_LEDGER_EXPORT_EVENTS or len(raw_events) > MAX_LEDGER_EXPORT_EVENTS:
+        errors.append("ledger event count exceeds supported bounds")
+    else:
+        positions, disclosed_chains, last_chain = _verify_disclosed_events(raw_events, export_scope, payload.get("run_id"), errors)
+        if not errors:
+            if export_scope == "all":
+                _verify_full_export(raw_events, canonical_count, ledger_hash, last_chain, errors)
+            else:
+                _verify_partial_export(payload, canonical_count, ledger_hash, positions, disclosed_chains, errors)
+
+    result = "invalid" if errors else ("valid" if export_scope == "all" else "partial_valid")
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "result": result,
+        "export_scope": export_scope or None,
+        "run_id": payload.get("run_id"),
+        "ledger_hash": ledger_hash or None,
+        "event_count": canonical_count,
+        "checked_event_count": len(raw_events),
+        "errors": errors,
+        "verification_scope": "export_self_consistency",
+        "retained_integrity": "not_verified",
+        "snapshot_completeness": "not_verified",
+        "authenticity": "not_established",
+    }
+
+
+def _verify_disclosed_events(raw_events, export_scope, run_id, errors) -> tuple[set[int], dict[int, str], str]:
     positions: set[int] = set()
     disclosed_chains: dict[int, str] = {}
-    previous_position = 0
+    identities: set[str] = set()
+    previous_position, previous_order = 0, None
     previous_disclosed_chain = GENESIS_CHAIN_HASH
     for raw_event in raw_events:
         if not isinstance(raw_event, Mapping):
             errors.append("event entry must be an object")
             continue
         position = _int_field(raw_event, "position", errors)
-        if position <= previous_position:
-            errors.append("events must be ordered by ascending position")
-        if position in positions:
-            errors.append(f"duplicate event position: {position}")
+        if position <= previous_position or position in positions:
+            errors.append("event positions must be positive, unique and ascending")
         positions.add(position)
+        try:
+            event = _event_from_export(raw_event)
+        except (TypeError, ValueError) as exc:
+            errors.append(f"invalid event at position {position}: {exc}")
+            continue
+        order = event_order_key(event)
+        if event.run_id != run_id or event.event_id in identities:
+            errors.append(f"event identity mismatch at position {position}")
+        if previous_order is not None and order <= previous_order:
+            errors.append(f"canonical event order mismatch at position {position}")
+        identities.add(event.event_id)
         previous_chain_hash = str(raw_event.get("previous_chain_hash") or "")
-        event = _event_from_export(raw_event)
         expected_event_hash = event_hash_for(event)
         expected_chain_hash = chain_hash_for(previous_chain_hash, expected_event_hash)
         if raw_event.get("event_hash") != expected_event_hash:
@@ -119,24 +170,8 @@ def verify_ledger_export(payload: Mapping[str, Any]) -> dict[str, Any]:
             errors.append(f"disclosed chain link mismatch at position {position}")
         disclosed_chains[position] = expected_chain_hash
         previous_disclosed_chain = expected_chain_hash
-        previous_position = position
-
-    if export_scope == "all":
-        _verify_full_export(raw_events, canonical_count, ledger_hash, previous_disclosed_chain, errors)
-    else:
-        _verify_partial_export(payload, canonical_count, ledger_hash, positions, disclosed_chains, errors)
-
-    result = "invalid" if errors else ("valid" if export_scope == "all" else "partial_valid")
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "result": result,
-        "export_scope": export_scope or None,
-        "run_id": payload.get("run_id"),
-        "ledger_hash": ledger_hash or None,
-        "event_count": canonical_count,
-        "checked_event_count": len(raw_events),
-        "errors": errors,
-    }
+        previous_position, previous_order = position, order
+    return positions, disclosed_chains, previous_disclosed_chain
 
 
 def _canonical_json(payload: Any) -> str:
@@ -145,6 +180,13 @@ def _canonical_json(payload: Any) -> str:
 
 def _event_from_export(payload: Mapping[str, Any]) -> LedgerEvent:
     raw_payload = payload.get("payload")
+    for field in ("event_id", "event_type", "run_id", "at"):
+        if not isinstance(payload.get(field), str) or not payload[field].strip():
+            raise ValueError(f"{field} must be a nonempty string")
+    if payload.get("turn") is not None and type(payload["turn"]) is not int:
+        raise ValueError("turn must be an integer or null")
+    if not isinstance(raw_payload, Mapping):
+        raise ValueError("payload must be an object")
     return LedgerEvent(
         event_id=str(payload.get("event_id") or ""),
         event_type=str(payload.get("event_type") or ""),
@@ -195,10 +237,14 @@ def _verify_partial_export(
         end = _int_field(raw_span, "to_position", errors)
         if start > end:
             errors.append(f"omitted span {start}-{end} is inverted")
+            continue
         if start < 1 or end > canonical_count:
             errors.append(f"omitted span {start}-{end} is outside canonical event_count")
+            continue
         if any(position in positions for position in range(start, end + 1)):
             errors.append(f"omitted span {start}-{end} overlaps disclosed events")
+        if any(position in anchored_positions for position in range(start, end + 1)):
+            errors.append(f"omitted span {start}-{end} overlaps another span")
         anchored_positions.update(range(start, end + 1))
         previous_anchor = GENESIS_CHAIN_HASH if start == 1 else disclosed_chains.get(start - 1)
         if previous_anchor is not None and raw_span.get("previous_chain_hash") != previous_anchor:
@@ -216,14 +262,10 @@ def _verify_partial_export(
 
 def _int_field(payload: Mapping[str, Any], field: str, errors: list[str]) -> int:
     value = payload.get(field)
-    if isinstance(value, bool):
+    if type(value) is not int:
         errors.append(f"{field} must be an integer")
         return 0
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        errors.append(f"{field} must be an integer")
-        return 0
+    return value
 
 
 __all__ = [

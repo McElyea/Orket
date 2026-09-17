@@ -7,9 +7,14 @@ from typing import Any
 
 import aiofiles
 
+from orket.application.services.card_completion_prompt import (
+    card_completion_prompt_payload,
+    guard_review_contract_lines,
+)
 from orket.core.domain.verification_scope import parse_verification_scope
 from orket.logging import log_event
 from orket.runtime.compact_turn_packet import compact_turn_messages
+from orket.runtime.config.turn_prompt_contracts import runtime_verifier_prompt_enabled
 from orket.schema import IssueConfig, RoleConfig
 
 from .turn_artifact_semantic_prompt_hints import artifact_semantic_exact_shape_hints
@@ -92,6 +97,8 @@ class MessageBuilder:
             "required_comment_contains": context.get("required_comment_contains", []),
             "stage_gate_mode": context.get("stage_gate_mode"),
             "runtime_verifier_ok": context.get("runtime_verifier_ok"),
+            "runtime_verifier_enabled": context.get("runtime_verifier_enabled", True),
+            "card_completion": card_completion_prompt_payload(context),
             "architecture_mode": context.get("architecture_mode"),
             "frontend_framework_mode": context.get("frontend_framework_mode"),
             "architecture_decision_required": bool(context.get("architecture_decision_required")),
@@ -108,8 +115,6 @@ class MessageBuilder:
         profile_traits = context.get("profile_traits")
         profile_traits = dict(profile_traits) if isinstance(profile_traits, dict) else {}
         artifact_contract_allowed = bool(profile_traits.get("artifact_contract_required", True))
-        runtime_verifier_allowed = bool(profile_traits.get("runtime_verifier_allowed", True))
-        profile_intent = str(profile_traits.get("intent") or "").strip().lower()
 
         if (
             artifact_contract_allowed
@@ -211,15 +216,7 @@ class MessageBuilder:
             runtime_verifier_contract = dict(runtime_verifier_contract)
         else:
             runtime_verifier_contract = {}
-        runtime_verifier_prompt_enabled = runtime_verifier_allowed or (
-            bool(runtime_verifier_contract) and profile_intent in {"write_artifact", "build_app"}
-        )
-        if (
-            runtime_verifier_prompt_enabled
-            and isinstance(artifact_contract, dict)
-            and artifact_contract
-            and str(artifact_contract.get("kind") or "").strip().lower() != "none"
-        ):
+        if runtime_verifier_prompt_enabled(context):
             entrypoint_path = str(artifact_contract.get("entrypoint_path") or "").strip()
             artifact_kind = str(artifact_contract.get("kind") or "").strip().lower()
             verifier_lines: list[str] = []
@@ -238,7 +235,7 @@ class MessageBuilder:
                     if not rendered:
                         continue
                     verifier_lines.append(f"  - cwd={cwd}: {rendered}")
-            if artifact_kind == "app" and entrypoint_path:
+            elif artifact_kind == "app" and entrypoint_path:
                 verifier_lines.append(f"- The runtime verifier will execute exactly: python {entrypoint_path}")
                 verifier_lines.append("- The entrypoint must succeed with no positional arguments or interactive input.")
                 verifier_lines.append("- The entrypoint runs as a script, so do not use package-relative imports in that file.")
@@ -478,38 +475,10 @@ class MessageBuilder:
             )
 
         if str(context.get("stage_gate_mode", "")).strip().lower() == "review_required":
-            runtime_ok = context.get("runtime_verifier_ok")
-            runtime_line = "- Runtime verifier result unavailable."
-            if runtime_ok is True:
-                runtime_line = "- Runtime verifier passed for this issue."
-            elif runtime_ok is False:
-                runtime_line = "- Runtime verifier failed for this issue."
-            blocked_allowed = "blocked" in required_statuses
-            if blocked_allowed:
-                guard_contract_lines = [
-                    "Guard Rejection Contract:",
-                    (
-                        "- If you set update_issue_status.status to blocked, "
-                        "include a second JSON object in the same response."
-                    ),
-                    '- Required payload schema: {"rationale":"...", "violations":[...], "remediation_actions":[...]}.',
-                    "- rationale must be non-empty.",
-                    "- violations must contain at least one concrete defect.",
-                    "- remediation_actions must contain at least one concrete action.",
-                    runtime_line,
-                    ("- If runtime verifier passed and no concrete defect is present, choose status=done."),
-                ]
-            else:
-                guard_contract_lines = [
-                    "Guard Decision Contract:",
-                    runtime_line,
-                    "- This turn only allows update_issue_status.status=done.",
-                    "- Do not emit blocked for this turn.",
-                ]
             messages.append(
                 {
                     "role": "user",
-                    "content": "\n".join(guard_contract_lines),
+                    "content": "\n".join(guard_review_contract_lines(context, required_statuses)),
                 }
             )
 
@@ -533,7 +502,7 @@ class MessageBuilder:
                 )
 
         if bool(context.get("compact_turn_packet_enabled", True)):
-            compaction = compact_turn_messages(messages, runtime_context=context)
+            compaction = compact_turn_messages(messages, runtime_context={**context, "available_tools": role.tools})
             messages = compaction.messages
             if compaction.applied:
                 prompt_metadata = context.get("prompt_metadata")

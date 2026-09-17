@@ -6,9 +6,11 @@ import pytest
 from fastapi.testclient import TestClient
 
 import orket.interfaces.api as api_module
+from orket.application.services.card_completion_outcome_service import inspect_build_completion
 from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.run_summary import build_run_summary_payload
 from orket.schema import CardStatus
+from tests.helpers.card_completion import complete_existing_card
 
 _STARTED_AT = "2036-03-05T12:00:00+00:00"
 _FINALIZED_AT = "2036-03-05T12:00:05+00:00"
@@ -26,8 +28,8 @@ def _run_identity(*, run_id: str, workload: str = "cards-runtime") -> dict[str, 
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_cards_and_runs_operator_views_project_truthful_outcomes(monkeypatch, tmp_path: Path) -> None:
-    """Layer: integration. Verifies the card viewer slice is backed by stable operator view models instead of raw summary spelunking."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir(parents=True, exist_ok=True)
@@ -85,10 +87,14 @@ async def test_cards_and_runs_operator_views_project_truthful_outcomes(monkeypat
             },
         }
     )
-    await real_engine.cards.update_status("CARD-VERIFIED", CardStatus.DONE)
+    await complete_existing_card(real_engine.cards, "CARD-VERIFIED", workspace_root, service=real_engine.runtime_context.card_completion)
     await real_engine.cards.update_status("CARD-FAILED", CardStatus.BLOCKED)
 
+    verified_completion = await inspect_build_completion(
+        cards=real_engine.cards, build_id="BUILD-1", expected_card_ids=("CARD-VERIFIED",),
+    )
     verified_artifacts = {
+        "card_completion_outcome": verified_completion.to_artifact(),
         "run_identity": _run_identity(run_id=verified_session_id),
         "packet1_facts": {
             "primary_work_artifact_output": {"id": "agent_output/main.py", "kind": "artifact"},

@@ -147,7 +147,7 @@ class KernelActionControlPlaneService:
                 configuration_payload=configuration_payload,
                 configuration_source_refs=[run.admission_decision_receipt_ref],
             )
-            await self.execution_repository.save_run_record(record=run)
+            run = await self.execution_repository.save_run_record(record=run)
         else:
             attempt = await self._require_consistent_existing_run_attempt(
                 run=run,
@@ -155,14 +155,11 @@ class KernelActionControlPlaneService:
                 expected_attempt_id=attempt_id,
             )
             existing_scope = str(run.namespace_scope or "").strip()
-            if existing_scope and existing_scope != namespace_scope:
+            if existing_scope != namespace_scope:
                 raise KernelActionControlPlaneError(
                     "kernel-action run namespace scope mismatch for existing run: "
                     f"run_scope={existing_scope!r} request_scope={namespace_scope!r}"
                 )
-            if not existing_scope:
-                run = run.model_copy(update={"namespace_scope": namespace_scope})
-                await self.execution_repository.save_run_record(record=run)
         if run is not None:
             await ensure_admission_reservation(publication=self.publication, run=run)
         if attempt is None:
@@ -178,7 +175,7 @@ class KernelActionControlPlaneService:
                 ),
                 start_timestamp=created_at,
             )
-            await self.execution_repository.save_attempt_record(record=attempt)
+            attempt = await self.execution_repository.save_attempt_record(record=attempt)
         return run, attempt
 
     async def _require_consistent_existing_run_attempt(
@@ -276,7 +273,7 @@ class KernelActionControlPlaneService:
         if run.lifecycle_state is not RunState.EXECUTING:
             validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.EXECUTING)
             run = run.model_copy(update={"lifecycle_state": RunState.EXECUTING})
-            await self.execution_repository.save_run_record(record=run)
+            run = await self.execution_repository.save_run_record(record=run)
         if status == "COMMITTED" or observed_execution:
             await ensure_active_execution_lease(
                 publication=self.publication,
@@ -346,7 +343,6 @@ class KernelActionControlPlaneService:
             )
         elif status != "COMMITTED" and terminal_attempt.attempt_state is AttemptState.ABANDONED:
             terminal_attempt = await publish_pre_effect_terminal_commit_recovery_decision(
-                execution_repository=self.execution_repository,
                 publication=self.publication,
                 run=run,
                 attempt=terminal_attempt,
@@ -366,7 +362,7 @@ class KernelActionControlPlaneService:
         terminal_run = run.model_copy(
             update={"lifecycle_state": next_state, "final_truth_record_id": final_truth.final_truth_record_id}
         )
-        await self.execution_repository.save_run_record(record=terminal_run)
+        terminal_run = await self.execution_repository.save_run_record(record=terminal_run)
         await release_execution_authority_if_present(
             publication=self.publication,
             run=terminal_run,
@@ -397,7 +393,7 @@ class KernelActionControlPlaneService:
         if attempt is not None and not is_terminal_attempt_state(attempt.attempt_state):
             validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.ABANDONED)
             updated_attempt = attempt.model_copy(update={"attempt_state": AttemptState.ABANDONED, "end_timestamp": ended_at})
-            await self.execution_repository.save_attempt_record(record=updated_attempt)
+            updated_attempt = await self.execution_repository.save_attempt_record(record=updated_attempt)
         final_truth = await self.publication.publish_final_truth(
             final_truth_record_id=f"kernel-action-final-truth:{run.run_id}",
             run_id=run.run_id,
@@ -417,7 +413,7 @@ class KernelActionControlPlaneService:
                 "final_truth_record_id": final_truth.final_truth_record_id,
             }
         )
-        await self.execution_repository.save_run_record(record=updated_run)
+        updated_run = await self.execution_repository.save_run_record(record=updated_run)
         await release_execution_authority_if_present(
             publication=self.publication,
             run=updated_run,

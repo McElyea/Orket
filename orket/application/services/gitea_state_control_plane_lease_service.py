@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-from datetime import UTC, datetime
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
@@ -9,6 +8,7 @@ from orket.application.services.control_plane_publication_service import Control
 from orket.application.services.control_plane_resource_authority_checks import (
     require_resource_snapshot_matches_lease,
 )
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts import LeaseRecord
 from orket.core.domain import (
     CleanupAuthorityClass,
@@ -28,8 +28,9 @@ class GiteaStateControlPlaneLeaseService:
 
     CLEANUP_ELIGIBILITY_RULE = "gitea_state_worker_release_or_fail"
 
-    def __init__(self, *, publication: ControlPlanePublicationService) -> None:
+    def __init__(self, *, publication: ControlPlanePublicationService, now_utc: Callable[[], str] | None = None) -> None:
         self.publication = publication
+        self.now_utc = now_utc or RuntimeInputService().utc_now_iso
 
     @staticmethod
     def lease_id_for(card_id: str) -> str:
@@ -52,7 +53,7 @@ class GiteaStateControlPlaneLeaseService:
         lease_seconds: int,
         source_reservation_id: str | None = None,
     ) -> LeaseRecord:
-        publication_timestamp = self._utc_now()
+        publication_timestamp = self.now_utc()
         lease_payload = self._lease_payload(lease_observation)
         lease = await self.publication.publish_lease(
             lease_id=self.lease_id_for(card_id),
@@ -86,7 +87,7 @@ class GiteaStateControlPlaneLeaseService:
             card_id=card_id,
             error_context="gitea worker renew publication",
         )
-        publication_timestamp = self._utc_now()
+        publication_timestamp = self.now_utc()
         lease_payload = self._lease_payload(lease_observation)
         lease = await self.publication.publish_lease(
             lease_id=self.lease_id_for(card_id),
@@ -120,10 +121,10 @@ class GiteaStateControlPlaneLeaseService:
             resource_id=self.resource_id_for(card_id),
             holder_ref=self.holder_ref_for(worker_id),
             lease_epoch=self._lease_epoch(lease_observation),
-            publication_timestamp=self._utc_now(),
+            publication_timestamp=self.now_utc(),
             expiry_basis=f"gitea_state_worker_detected_expiry:{str(reason or 'E_LEASE_EXPIRED').strip()}",
             status=LeaseStatus.EXPIRED,
-            granted_timestamp=str(self._lease_payload(lease_observation).get("acquired_at") or self._utc_now()),
+            granted_timestamp=str(self._lease_payload(lease_observation).get("acquired_at") or self.now_utc()),
             last_confirmed_observation=self._observation_ref(card_id=card_id, lease_observation=lease_observation),
             cleanup_eligibility_rule=self.CLEANUP_ELIGIBILITY_RULE,
         )
@@ -143,10 +144,10 @@ class GiteaStateControlPlaneLeaseService:
             resource_id=self.resource_id_for(card_id),
             holder_ref=self.holder_ref_for(worker_id),
             lease_epoch=self._lease_epoch(lease_observation),
-            publication_timestamp=self._utc_now(),
+            publication_timestamp=self.now_utc(),
             expiry_basis=f"gitea_state_worker_claim_failure:{str(reason or 'unknown').strip()}",
             status=LeaseStatus.UNCERTAIN,
-            granted_timestamp=str(self._lease_payload(lease_observation).get("acquired_at") or self._utc_now()),
+            granted_timestamp=str(self._lease_payload(lease_observation).get("acquired_at") or self.now_utc()),
             last_confirmed_observation=self._observation_ref(card_id=card_id, lease_observation=lease_observation),
             cleanup_eligibility_rule=self.CLEANUP_ELIGIBILITY_RULE,
         )
@@ -166,10 +167,10 @@ class GiteaStateControlPlaneLeaseService:
             resource_id=self.resource_id_for(card_id),
             holder_ref=self.holder_ref_for(worker_id),
             lease_epoch=self._lease_epoch(lease_observation),
-            publication_timestamp=self._utc_now(),
+            publication_timestamp=self.now_utc(),
             expiry_basis=f"gitea_state_worker_release_or_fail:{str(final_state or 'unknown').strip()}",
             status=LeaseStatus.RELEASED,
-            granted_timestamp=str(self._lease_payload(lease_observation).get("acquired_at") or self._utc_now()),
+            granted_timestamp=str(self._lease_payload(lease_observation).get("acquired_at") or self.now_utc()),
             last_confirmed_observation=self._observation_ref(card_id=card_id, lease_observation=lease_observation),
             cleanup_eligibility_rule=self.CLEANUP_ELIGIBILITY_RULE,
         )
@@ -271,17 +272,13 @@ class GiteaStateControlPlaneLeaseService:
     def namespace_scope_for(card_id: str) -> str:
         return f"issue:{str(card_id).strip()}"
 
-    @staticmethod
-    def _utc_now() -> str:
-        return datetime.now(UTC).isoformat()
-
-
 def build_gitea_state_control_plane_lease_service(
     db_path: str | Path | None = None,
+    *, now_utc: Callable[[], str] | None = None,
 ) -> GiteaStateControlPlaneLeaseService:
     resolved_db_path = resolve_control_plane_db_path(db_path)
     publication = ControlPlanePublicationService(repository=AsyncControlPlaneRecordRepository(resolved_db_path))
-    return GiteaStateControlPlaneLeaseService(publication=publication)
+    return GiteaStateControlPlaneLeaseService(publication=publication, now_utc=now_utc)
 
 
 __all__ = [

@@ -6,16 +6,16 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from orket.application.services.governed_agent_schedule_records import (
+from orket.application.services.governed_agent_wake_ingress_service import (
+    GovernedAgentWakeSubmission,
+)
+from orket.core.contracts.governed_agent_schedule_records import (
     GovernedAgentScheduleEvaluationRecord,
     GovernedAgentScheduleEvaluationRequest,
     GovernedAgentScheduleEvaluationResult,
     GovernedAgentScheduleRepository,
     ScheduleCoalescingPolicy,
     ScheduleMissedPolicy,
-)
-from orket.application.services.governed_agent_wake_ingress_service import (
-    GovernedAgentWakeSubmission,
 )
 from orket_extension_sdk import canonical_digest_sha256
 

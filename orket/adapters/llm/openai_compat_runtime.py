@@ -8,6 +8,8 @@ from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlparse
 
+from orket.core.contracts.model_timing import nanoseconds_to_ms, nonnegative_duration
+
 _RECOVERY_STOP_MARKER = re.compile(
     r"(?im)^\s*(?:(?:[*-]|(?:\d+\.))\s+)?(?:\*+)?"
     r"(?:wait(?:[,.:]|\s+i\b)|let's\s+finalize\b|self-correction\b(?:[^:\n]*)?:|"
@@ -31,6 +33,16 @@ _AUDITOR_LABELS = [
 
 def _dict_payload(value: Any) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
+
+
+def response_format_payload(response_format: str, *, provider_name: str) -> dict[str, Any]:
+    if response_format not in {"text", "json_object", "json_schema"}:
+        return {}
+    selected: dict[str, Any] = {"type": response_format}
+    if response_format == "json_object" and provider_name == "llama_cpp":
+        # The verified llama.cpp host enforces an explicit object schema; its bare mode can emit fences.
+        selected["schema"] = {"type": "object"}
+    return {"response_format": selected}
 
 
 def _normalize_recovery_label(value: str) -> str:
@@ -221,20 +233,14 @@ def _to_int(value: Any) -> int | None:
 
 def _to_float(value: Any) -> float | None:
     if isinstance(value, (int, float)):
-        return float(value)
+        return nonnegative_duration(value)
     if isinstance(value, str):
         token = value.strip()
         try:
-            return float(token)
+            return nonnegative_duration(float(token))
         except ValueError:
             return None
     return None
-
-
-def _ns_to_ms(value: Any) -> float | None:
-    if not isinstance(value, (int, float)):
-        return None
-    return float(value) / 1_000_000.0
 
 
 def extract_openai_usage(payload: dict[str, Any]) -> tuple[int | None, int | None, int | None]:
@@ -247,7 +253,8 @@ def extract_openai_usage(payload: dict[str, Any]) -> tuple[int | None, int | Non
     return prompt_tokens, completion_tokens, total_tokens
 
 
-def extract_openai_timings(payload: dict[str, Any], latency_ms: int) -> tuple[float, float, float]:
+def extract_openai_timings(payload: dict[str, Any], latency_ms: int) -> tuple[float | None, float | None, float | None]:
+    del latency_ms  # Client elapsed time cannot establish a backend phase duration.
     timings = _dict_payload(payload.get("timings"))
 
     prompt_ms = _to_float(timings.get("prompt_ms"))
@@ -255,34 +262,19 @@ def extract_openai_timings(payload: dict[str, Any], latency_ms: int) -> tuple[fl
     total_ms = _to_float(timings.get("total_ms"))
 
     if prompt_ms is None:
-        prompt_ms = _ns_to_ms(timings.get("prompt_eval_duration"))
+        prompt_ms = nanoseconds_to_ms(timings.get("prompt_eval_duration"))
     if predicted_ms is None:
-        predicted_ms = _ns_to_ms(timings.get("eval_duration"))
+        predicted_ms = nanoseconds_to_ms(timings.get("eval_duration"))
     if total_ms is None:
-        total_ms = _ns_to_ms(timings.get("total_duration"))
+        total_ms = nanoseconds_to_ms(timings.get("total_duration"))
 
     if prompt_ms is None:
-        prompt_ms = _ns_to_ms(payload.get("prompt_eval_duration"))
+        prompt_ms = nanoseconds_to_ms(payload.get("prompt_eval_duration"))
     if predicted_ms is None:
-        predicted_ms = _ns_to_ms(payload.get("eval_duration"))
+        predicted_ms = nanoseconds_to_ms(payload.get("eval_duration"))
     if total_ms is None:
-        total_ms = _ns_to_ms(payload.get("total_duration"))
-
-    if total_ms is None:
-        total_ms = float(latency_ms)
-
-    if prompt_ms is None and predicted_ms is None:
-        prompt_ms = 0.0
-        predicted_ms = float(total_ms)
-    elif prompt_ms is None:
-        prompt_ms = max(0.0, float(total_ms) - float(predicted_ms or 0.0))
-    elif predicted_ms is None:
-        predicted_ms = max(0.0, float(total_ms) - float(prompt_ms or 0.0))
-
-    resolved_prompt_ms = float(prompt_ms if prompt_ms is not None else 0.0)
-    resolved_predicted_ms = float(predicted_ms if predicted_ms is not None else 0.0)
-    resolved_total_ms = float(total_ms if total_ms is not None else latency_ms)
-    return resolved_prompt_ms, resolved_predicted_ms, resolved_total_ms
+        total_ms = nanoseconds_to_ms(payload.get("total_duration"))
+    return prompt_ms, predicted_ms, total_ms
 
 
 def build_orket_session_id(

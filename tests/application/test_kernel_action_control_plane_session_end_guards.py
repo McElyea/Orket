@@ -8,7 +8,7 @@ from orket.application.services.control_plane_publication_service import Control
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 from orket.core.domain import AttemptState, ResultClass, RunState
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
-from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
 
 pytestmark = pytest.mark.unit
 

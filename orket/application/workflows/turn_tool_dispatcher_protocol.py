@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
+from copy import deepcopy
 from typing import Any
 
+from orket.application.services.tool_gate_service import ToolGate
+from orket.core.contracts.card_completion_commit import is_card_completion_call
+from orket.core.contracts.protocol_receipt_timing import protocol_receipt_timing
 from orket.core.domain.execution import ExecutionTurn
-from orket.core.policies.tool_gate import ToolGate
 from orket.runtime.protocol_error_codes import (
     E_COMPAT_PARITY_VIOLATION_PREFIX,
     E_MAX_TOOL_CALLS_PREFIX,
@@ -13,6 +16,7 @@ from orket.runtime.protocol_error_codes import (
     E_WORKSPACE_CONSTRAINT_PREFIX,
     format_protocol_error,
 )
+from orket.runtime.registry.tool_invocation_contracts import build_tool_invocation_manifest, compute_tool_call_hash
 
 from ..services.governed_turn_tool_approval_continuation_service import (
     supports_governed_turn_tool_approval_continuation,
@@ -23,7 +27,6 @@ from ..services.turn_tool_control_plane_resource_lifecycle import (
     reservation_id_for_run,
 )
 from ..services.turn_tool_control_plane_service import TurnToolControlPlaneService
-from orket.runtime.registry.tool_invocation_contracts import build_tool_invocation_manifest, compute_tool_call_hash
 from .turn_path_resolver import PathResolver
 from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
 from .turn_tool_dispatcher_control_plane import publish_step_if_needed
@@ -164,7 +167,9 @@ async def load_or_execute_tool(
     compatibility_translation: dict[str, Any] | None = None,
     load_operation_result: Callable[..., dict[str, Any] | None],
     load_replay_tool_result: Callable[..., dict[str, Any] | None],
+    prepare_dispatch: Callable[..., Awaitable[None]],
 ) -> tuple[dict[str, Any], bool]:
+    tool_args, binding = deepcopy((tool_args, binding))
     if bool(context.get("protocol_replay_mode")):
         operation_record = await asyncio.to_thread(
             load_operation_result,
@@ -179,8 +184,8 @@ async def load_or_execute_tool(
             if isinstance(replay_result, dict):
                 return replay_result, True
         raise ValueError("E_REPLAY_OPERATION_MISSING")
-
-    if protocol_enabled:
+    completion_call = is_card_completion_call(tool_name, tool_args)
+    if protocol_enabled and not completion_call:
         operation_record = await asyncio.to_thread(
             load_operation_result,
             session_id=session_id,
@@ -193,8 +198,7 @@ async def load_or_execute_tool(
             replay_result = operation_record.get("result")
             if isinstance(replay_result, dict):
                 return replay_result, True
-
-    replay_result = await asyncio.to_thread(
+    replay_result = None if completion_call else await asyncio.to_thread(
         load_replay_tool_result,
         session_id=session_id,
         issue_id=turn.issue_id,
@@ -214,15 +218,9 @@ async def load_or_execute_tool(
         execution_context["skill_runtime_version"] = str(binding.get("runtime_version") or "")
         execution_context["tool_runtime_limits"] = dict(binding.get("runtime_limits") or {})
     execution_context["tool_declared_namespace_scopes"] = resolved_declared_namespace_scopes(
-        binding=binding,
-        context=context,
-        issue_id=turn.issue_id,
-    )
+        binding=binding, context=context, issue_id=turn.issue_id)
     execution_context["tool_namespace_scope"] = resolved_tool_namespace_scope(
-        binding=binding,
-        context=context,
-        issue_id=turn.issue_id,
-    )
+        binding=binding, context=context, issue_id=turn.issue_id)
     execution_context["run_namespace_scope"] = resolved_tool_namespace_scope(
         binding=None,
         context=context,
@@ -234,6 +232,7 @@ async def load_or_execute_tool(
     execution_context["validator_version"] = validator_version
     execution_context["protocol_hash"] = protocol_hash
     execution_context["tool_schema_hash"] = tool_schema_hash
+    await prepare_dispatch(tool_name=tool_name, tool_args=tool_args, binding=binding, operation_id=operation_id)
     if isinstance(compatibility_translation, dict):
         result = await _execute_compatibility_translation(
             toolbox=toolbox,
@@ -273,7 +272,6 @@ async def persist_protocol_operation(
     control_plane_run_id: str | None,
     control_plane_attempt_id: str | None,
     retry_count: int,
-    validator_duration_ms: int,
 ) -> str | None:
     namespace_scope = resolved_tool_namespace_scope(binding=binding, context=context, issue_id=issue_id)
     invocation_manifest = build_tool_invocation_manifest(
@@ -350,7 +348,7 @@ async def persist_protocol_operation(
             "tool_call_hash": tool_call_hash,
             "artifact_digests": [],
             "retry_count": max(0, int(retry_count)),
-            "validator_duration_ms": max(0, int(validator_duration_ms)),
+            **protocol_receipt_timing(context.get("validator_duration_ms")).model_dump(mode="json"),
             "execution_capsule": execution_capsule,
             "replayed": bool(replayed),
             **(

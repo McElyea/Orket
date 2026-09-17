@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 import hashlib
 import json
 import os
@@ -14,64 +13,17 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any
 
+try:
+    from scripts.benchmarks.determinism_cli import parse_invocation
+    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from scripts.benchmarks.determinism_cli import parse_invocation
+    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+
 MINIMUM_RUNS_FOR_DETERMINISM_CLAIM = 2
-
-
-def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run benchmark tasks repeatedly and report output drift.")
-    parser.add_argument("--task-bank", default="benchmarks/task_bank/v1/tasks.json")
-    parser.add_argument("--runs", type=int, default=5)
-    parser.add_argument("--runtime-target", "--venue", dest="runtime_target", default="standard")
-    parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="default")
-    parser.add_argument("--output", default="benchmarks/results/benchmarks/determinism_report.json")
-    parser.add_argument(
-        "--runner-template",
-        default="orket run --task {task_file} --runtime-target {runtime_target} --execution-mode {execution_mode}",
-        help=(
-            "Command template placeholders: {task_file}, {runtime_target}, {execution_mode}, "
-            "{venue}, {flow}, {run_dir}, {repo_root}, {workdir}."
-        ),
-    )
-    parser.add_argument(
-        "--artifact-glob",
-        action="append",
-        default=[],
-        help="Optional relative glob(s) under run workdir to include in hash input.",
-    )
-    parser.add_argument(
-        "--task-limit",
-        type=int,
-        default=0,
-        help="Optional max number of tasks to run (0 means all).",
-    )
-    parser.add_argument(
-        "--task-id-min",
-        type=int,
-        default=0,
-        help="Optional inclusive lower bound for numeric task ID filtering.",
-    )
-    parser.add_argument(
-        "--task-id-max",
-        type=int,
-        default=0,
-        help="Optional inclusive upper bound for numeric task ID filtering.",
-    )
-    parser.add_argument("--seed", type=int, default=0, help="Benchmark seed metadata (0 means unset).")
-    parser.add_argument("--threads", type=int, default=0, help="Thread-count metadata (0 means unset).")
-    parser.add_argument(
-        "--affinity-policy",
-        default="",
-        help="CPU affinity policy/mask metadata (empty means unset).",
-    )
-    parser.add_argument("--warmup-steps", type=int, default=0, help="Warmup steps metadata (0 means unset).")
-    return parser.parse_args()
-
-
-def _load_tasks(path: Path) -> list[dict[str, Any]]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, list):
-        raise ValueError("Task bank must be a JSON array.")
-    return payload
 
 
 def _normalize_text(raw: str, run_dir: Path, repo_root: Path) -> str:
@@ -390,15 +342,8 @@ def _run_once(
 
 
 def main() -> int:
-    args = _parse_args()
+    args, tasks = parse_invocation()
     task_bank_path = Path(args.task_bank)
-    tasks = _load_tasks(task_bank_path)
-    if args.task_id_min > 0:
-        tasks = [task for task in tasks if int(task.get("id", 0)) >= int(args.task_id_min)]
-    if args.task_id_max > 0:
-        tasks = [task for task in tasks if int(task.get("id", 0)) <= int(args.task_id_max)]
-    if args.task_limit > 0:
-        tasks = tasks[: args.task_limit]
 
     details: dict[str, Any] = {}
     deterministic_count = 0
@@ -423,7 +368,7 @@ def main() -> int:
             for index in range(int(args.runs))
         ]
         hashes = [entry["hash"] for entry in runs]
-        run_latencies = [float(entry.get("duration_ms", 0.0) or 0.0) for entry in runs]
+        run_latencies = [float(entry["duration_ms"]) for entry in runs]
         run_costs = [float(entry.get("cost_usd", 0.0) or 0.0) for entry in runs]
         latency_samples.extend(run_latencies)
         cost_samples.extend(run_costs)
@@ -443,69 +388,17 @@ def main() -> int:
             "unique_hashes": len(unique_hashes),
             "deterministic": deterministic_claim,
             "determinism_note": determinism_note,
-            "avg_latency_ms": round(sum(run_latencies) / len(run_latencies), 3) if run_latencies else 0.0,
+            "avg_latency_ms": round(sum(run_latencies) / len(run_latencies), 3),
             "avg_cost_usd": round(sum(run_costs) / len(run_costs), 6) if run_costs else 0.0,
             "hashes": hashes,
             "runs": runs,
         }
         for run in runs:
-            if not isinstance(run, dict):
-                continue
             test_runs.append(
                 {
                     "test_id": task_id,
                     "outcome": str(run.get("outcome", "error")),
-                    "telemetry": run.get("telemetry")
-                    if isinstance(run.get("telemetry"), dict)
-                    else {
-                        "execution_lane": ("lab" if str(args.runtime_target).strip().lower() in {"lab", "gpu", "selfhosted"} else "ci"),
-                        "vram_profile": (str(os.environ.get("ORKET_VRAM_PROFILE", "")).strip() or "safe"),
-                        "init_latency": None,
-                        "total_latency": _round3(float(run.get("duration_ms", 0.0) or 0.0) / 1000.0),
-                        "peak_memory_rss": 0.0,
-                        "adherence_score": None,
-                        "internal_model_seconds": None,
-                        "orchestration_overhead_ratio": None,
-                        "run_quality_status": "POLLUTED",
-                        "run_quality_reasons": ["MISSING_EXPERIMENTAL_CONTROLS", "MISSING_TOKEN_TIMINGS"],
-                        "system_load_start": {},
-                        "system_load_end": {},
-                        "experimental_controls": {
-                            "seed": int(args.seed) if int(args.seed) > 0 else None,
-                            "threads": int(args.threads) if int(args.threads) > 0 else None,
-                            "affinity_policy": str(args.affinity_policy),
-                            "warmup_steps": int(args.warmup_steps) if int(args.warmup_steps) > 0 else None,
-                        },
-                        "token_metrics_status": "TOKEN_AND_TIMING_UNAVAILABLE",
-                        "token_metrics": {
-                            "status": "TOKEN_AND_TIMING_UNAVAILABLE",
-                            "counts": {
-                                "prompt_tokens": None,
-                                "output_tokens": None,
-                                "total_tokens": None,
-                            },
-                            "latencies": {
-                                "prefill_seconds": None,
-                                "decode_seconds": None,
-                                "total_turn_seconds": _round3(float(run.get("duration_ms", 0.0) or 0.0) / 1000.0),
-                            },
-                            "throughput": {
-                                "prompt_tokens_per_second": None,
-                                "generation_tokens_per_second": None,
-                            },
-                            "audit": {
-                                "raw_usage": {},
-                                "raw_timings": {},
-                            },
-                        },
-                        "vibe_metrics": {
-                            "latency_variance": None,
-                            "code_density": 0.0,
-                            "gen_retries": 0,
-                            "vibe_delta": None,
-                            "vibe_delta_status": "NO_BASELINE",
-                        },
-                    },
+                    "telemetry": run["telemetry"],
                 }
             )
 
@@ -541,15 +434,14 @@ def main() -> int:
         "determinism_rate_valid": determinism_rate_valid,
         "determinism_rate_validity": "valid only when runs_per_task >= 2",
         "warnings": determinism_warnings,
-        "avg_latency_ms": round(sum(latency_samples) / len(latency_samples), 3) if latency_samples else 0.0,
+        "avg_latency_ms": round(sum(latency_samples) / len(latency_samples), 3),
         "avg_cost_usd": round(sum(cost_samples) / len(cost_samples), 6) if cost_samples else 0.0,
         "details": details,
     }
 
     out_path = Path(args.output)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    print(json.dumps(report, indent=2))
+    persisted = write_payload_with_diff_ledger(out_path, report)
+    print(json.dumps(persisted, indent=2))
     return 0
 
 

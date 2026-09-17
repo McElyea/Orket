@@ -1,6 +1,6 @@
 # Outward Run Witness v1
 
-Last updated: 2026-05-04
+Last updated: 2026-09-12
 Status: Active durable contract for approved, denied, and policy-rejected single-turn outward proof kernels
 Owner: Orket Core
 
@@ -43,6 +43,11 @@ outward_run_witness_package.v1/
 For `outward_run_write_file_denied_v1` and `outward_run_write_file_policy_rejected_v1`, the package omits `artifacts/committed_output`, `artifact_paths.committed_output`, and committed-output `artifact_refs`. Denial and policy-rejection absence claims are authority-backed by full package-local `ledger_export.v1` bytes with `export_scope=all`, not by fabricated committed artifact bytes.
 
 The verifier consumes package files only. Bundle-only verification may validate schema and internal commitments, but it cannot prove full ledger integrity, event absence, or committed artifact bytes. A bundle-only mode must not return `accepted` for proof claims.
+
+Sealed package files retain their exact manifest-committed bytes, including line
+endings. Repository fixtures under `tests/proof_fixtures/outward_run/` are exempt
+from Git text conversion. Restoring those original committed bytes does not
+change a manifest, digest or claim; resealing modified evidence is not repair.
 
 `manifest.json` must include:
 1. `schema_version`

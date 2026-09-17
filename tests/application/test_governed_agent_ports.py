@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from orket.application.services.governed_agent_ports import (
+from orket.core.contracts.governed_agent_ports import (
     GovernedAgentInvocationBinding,
     GovernedAgentInvocationOutcome,
 )

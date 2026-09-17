@@ -4,7 +4,6 @@ import inspect
 import os
 import re
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any
 
 from orket.adapters.tools.default_strategy import compose_default_tool_map
@@ -690,7 +689,7 @@ class DefaultOrchestrationLoopPolicyNode:
         is_done = self.is_backlog_done(backlog)
         return {
             "is_done": is_done,
-            "event_name": "orchestrator_epic_complete" if is_done else None,
+            "event_name": "orchestrator_epic_stopped" if is_done else None,
         }
 
     def should_raise_exhaustion(

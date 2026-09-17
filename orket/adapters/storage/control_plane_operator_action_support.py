@@ -4,6 +4,8 @@ import aiosqlite
 
 from orket.core.contracts import OperatorActionRecord
 
+side_effecting = True
+
 
 async def ensure_operator_action_schema(conn: aiosqlite.Connection) -> None:
     await conn.execute(
@@ -50,3 +52,9 @@ async def insert_operator_action(
             record.model_dump_json(),
         ),
     )
+
+
+async def get_operator_action(conn: aiosqlite.Connection, *, action_id: str) -> OperatorActionRecord | None:
+    cursor = await conn.execute("SELECT payload_json FROM operator_action_records WHERE action_id = ?", (action_id,))
+    row = await cursor.fetchone()
+    return OperatorActionRecord.model_validate_json(str(row[0])) if row else None

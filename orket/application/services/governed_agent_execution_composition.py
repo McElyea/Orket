@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any, cast
 
 from orket.adapters.storage.async_control_plane_execution_repository import (
@@ -12,6 +13,8 @@ from orket.adapters.storage.async_control_plane_record_repository import (
 )
 from orket.adapters.storage.async_governed_agent_repository import AsyncGovernedAgentRepository
 from orket.adapters.storage.async_governed_agent_run_control_repository import AsyncGovernedAgentRunControlRepository
+from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
+from orket.adapters.storage.governed_agent_replay_store import GovernedAgentReplayStore
 from orket.application.services.governed_agent_broker_service import (
     GovernedAgentHostBroker,
     GovernedAgentModelProvider,
@@ -30,10 +33,16 @@ from orket.application.services.governed_agent_model_provider import (
     GovernedAgentLocalModelProvider,
     prepare_governed_agent_local_runtime,
 )
-from orket.application.services.governed_agent_ports import GovernedAgentAuthorityGuard
+from orket.application.services.governed_agent_operator_service import GovernedAgentOperatorService
+from orket.core.contracts.governed_agent_ports import GovernedAgentAuthorityGuard, GovernedAgentIterationInvoker
+from orket.core.contracts.governed_agent_replay import GovernedAgentReplayRepository
 from orket.extensions.governed_agent_invoker import GovernedAgentSubprocessInvoker
 from orket.extensions.models import GovernedAgentWorkloadLaunch
 from orket_extension_sdk import AgentIterationRequest, canonical_digest_sha256
+
+
+def build_governed_agent_replay_repository(db_path: str | Path) -> GovernedAgentReplayRepository:
+    return GovernedAgentReplayStore(db_path)
 
 
 @dataclass(slots=True)
@@ -132,6 +141,8 @@ def build_governed_agent_loop_service(
     selection: GovernedAgentProviderSelection,
     authority_guard: GovernedAgentAuthorityGuard | None = None,
 ) -> GovernedAgentLoopService:
+    if len({str(execution.db_path), str(iterations.db_path), str(records.db_path)}) != 1:
+        raise ValueError("E_AGENT_CONTROL_PLANE_STORE_CONFLICT")
     broker = GovernedAgentHostBroker(
         iteration_repository=iterations,
         call_repository=iterations,
@@ -149,7 +160,7 @@ def build_governed_agent_loop_service(
     return GovernedAgentLoopService(
         execution_repository=execution,
         iteration_repository=iterations,
-        truth_repository=records,
+        transactions=SQLiteControlPlaneTransactions(records.db_path),
         invoker=invoker,
         verifier=SecondIterationDeterministicVerifier(),
         run_controls=AsyncGovernedAgentRunControlRepository(iterations.db_path),
@@ -188,3 +199,9 @@ def _validate_catalog_profiles(
     if requested != declared:
         raise ValueError("E_AGENT_CATALOG_MODEL_PROFILE_MISMATCH")
     return requested
+def build_governed_agent_operator_service(*, db_path, iterations, invoker: GovernedAgentIterationInvoker):
+    if str(iterations.db_path) != str(db_path):
+        raise ValueError("E_AGENT_CONTROL_PLANE_STORE_CONFLICT")
+    return GovernedAgentOperatorService(
+        transactions=SQLiteControlPlaneTransactions(db_path), iteration_repository=iterations, invoker=invoker,
+    )

@@ -2,8 +2,25 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Any
+
+try:
+    from scripts.benchmarks.benchmark_latency import read_latency_summary
+except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from scripts.benchmarks.benchmark_latency import read_latency_summary
+
+
+def _latency_cells(row: dict[str, Any]) -> tuple[float | str, float | str]:
+    value = read_latency_summary(row)["avg_latency_ms"]
+    delta = row.get("delta_avg_latency_ms")
+    valid_delta = type(delta) in (int, float) and math.isfinite(delta)
+    return (value if value is not None else "unavailable",
+            delta if value is not None and valid_delta else "unavailable")
 
 
 def _parse_args() -> argparse.Namespace:
@@ -35,6 +52,7 @@ def build_dashboard_markdown(trends: dict[str, Any], leaderboard: dict[str, Any]
         for row in rows:
             if not isinstance(row, dict):
                 continue
+            latency, latency_delta = _latency_cells(row)
             lines.append(
                 "| {source} | {venue} | {flow} | {score} | {dscore} | {det} | {ddet} | {lat} | {dlat} | {cost} | {dcost} |".format(
                     source=row.get("source", ""),
@@ -44,8 +62,8 @@ def build_dashboard_markdown(trends: dict[str, Any], leaderboard: dict[str, Any]
                     dscore=row.get("delta_overall_avg_score", ""),
                     det=row.get("determinism_rate", 0.0),
                     ddet=row.get("delta_determinism_rate", ""),
-                    lat=row.get("avg_latency_ms", 0.0),
-                    dlat=row.get("delta_avg_latency_ms", ""),
+                    lat=latency,
+                    dlat=latency_delta,
                     cost=row.get("avg_cost_usd", 0.0),
                     dcost=row.get("delta_avg_cost_usd", ""),
                 )

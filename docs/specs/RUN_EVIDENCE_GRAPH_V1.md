@@ -1,6 +1,6 @@
 # Run Evidence Graph V1 Contract
 
-Last updated: 2026-03-30
+Last updated: 2026-09-12
 Status: Active
 Owner: Orket Core
 Phase authority: `docs/projects/archive/Graph/GR03302026-LANE-CLOSEOUT/CLOSEOUT.md`
@@ -22,8 +22,8 @@ This document is bounded by:
 2. `docs/ARCHITECTURE.md`
 3. `CURRENT_AUTHORITY.md`
 4. the existing canonical `run_graph.json` contract surfaces:
-   1. `core/artifacts/run_graph_schema.json`
-   2. `core/artifacts/schema_registry.yaml`
+   1. `orket/runtime/config/assets/artifacts/run_graph_schema.json`
+   2. `orket/runtime/config/assets/artifacts/schema_registry.yaml`
    3. `orket/runtime/run_graph_reconstruction.py`
 5. the current control-plane and runtime-truth authority surfaces already named in `CURRENT_AUTHORITY.md`
 6. the active ControlPlane packet and paused convergence checkpoint, only where same-change authority-story sync is required
@@ -130,10 +130,10 @@ The canonical V1 artifact family is:
 V1 must not invent a second run root.
 
 The canonical schema file for this artifact family is:
-1. `core/artifacts/run_evidence_graph_schema.json`
+1. `orket/runtime/config/assets/artifacts/run_evidence_graph_schema.json`
 
 The schema registry change for V1 is:
-1. add `run_evidence_graph.json: "1.0"` to `core/artifacts/schema_registry.yaml`
+1. add `run_evidence_graph.json: "1.0"` to `orket/runtime/config/assets/artifacts/schema_registry.yaml`
 
 V1 pins the required top-level contract fields for `run_evidence_graph.json`:
 1. `run_evidence_graph_schema_version`
@@ -451,8 +451,8 @@ This is an additive artifact contract, not a new runtime authority surface.
 
 If this contract changes materially, the same change must update:
 1. `docs/specs/RUN_EVIDENCE_GRAPH_V1.md`
-2. `core/artifacts/run_evidence_graph_schema.json`
-3. `core/artifacts/schema_registry.yaml` when the registered contract version or artifact registration changes
+2. `orket/runtime/config/assets/artifacts/run_evidence_graph_schema.json`
+3. `orket/runtime/config/assets/artifacts/schema_registry.yaml` when the registered contract version or artifact registration changes
 4. `CURRENT_AUTHORITY.md` when the canonical operator path, artifact family, or authority posture changes
 5. `docs/ROADMAP.md` only when roadmap posture or reopen state changes
 

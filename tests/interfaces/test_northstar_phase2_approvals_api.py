@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -35,6 +36,7 @@ async def _seed_pending(db_path, *, run_id: str = "run-api-approval") -> str:
         event_store=OutwardRunEventStore(db_path),
         connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
         utc_now=lambda: "2026-04-25T12:01:00+00:00",
+        workspace_root=Path(db_path).parent,
     ).request_tool_approval(
         run_id=run_id,
         tool="write_file",

@@ -7,9 +7,11 @@ import pytest
 
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_executor import TurnResult
+from orket.core.domain.execution import ExecutionTurn
 from orket.schema import CardStatus, IssueConfig
+from tests.helpers.card_dispatch import install_dispatch_snapshot_stub
 
-pytestmark = pytest.mark.integration
+pytestmark = pytest.mark.unit
 
 
 class AsyncSpy:
@@ -25,8 +27,8 @@ class AsyncSpy:
 class FakeCards:
     def __init__(self):
         self.get_by_build = AsyncSpy(return_value=[])
-        self.get_independent_ready_issues = AsyncSpy(return_value=[])
-        self.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
+        self.independent_ready = AsyncSpy(return_value=[])
+        self.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.CODE_REVIEW))
         self.update_status = AsyncSpy(return_value=None)
         self.save = AsyncSpy(return_value=None)
 
@@ -63,7 +65,8 @@ class FakeSandbox:
 
 
 @pytest.fixture
-def orchestrator(tmp_path: Path):
+def orchestrator(tmp_path: Path, monkeypatch):
+    install_dispatch_snapshot_stub(monkeypatch)
     cards = FakeCards()
     snapshots = FakeSnapshots()
     loader = FakeLoader(tmp_path)
@@ -82,6 +85,7 @@ def orchestrator(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
     orchestrator,
     monkeypatch: pytest.MonkeyPatch,
@@ -153,7 +157,7 @@ async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
             captured["context"] = context
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -184,7 +188,6 @@ async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
     orch._request_issue_transition = AsyncSpy(return_value=None)
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -209,6 +212,7 @@ async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_uses_configured_odr_auditor_model(
     orchestrator,
     monkeypatch: pytest.MonkeyPatch,
@@ -298,7 +302,7 @@ async def test_execute_issue_turn_uses_configured_odr_auditor_model(
         async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -331,7 +335,6 @@ async def test_execute_issue_turn_uses_configured_odr_auditor_model(
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
     orch._request_issue_transition = AsyncSpy(return_value=None)
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,

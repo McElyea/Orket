@@ -64,6 +64,7 @@ def _epic() -> EpicConfig:
     )
 
 
+# Layer: contract
 def test_governed_control_plane_workload_catalog_exposes_stable_workload_records() -> None:
     workloads = governed_control_plane_workloads()
 
@@ -76,7 +77,8 @@ def test_governed_control_plane_workload_catalog_exposes_stable_workload_records
         GITEA_STATE_WORKER_EXECUTION_WORKLOAD,
     )
     assert workloads[6] == REVIEW_RUN_WORKLOAD
-    assert len(workloads) == 12
+    assert len(workloads) == 13
+    assert control_plane_workload_for_key("outward-governed-tools") in workloads
     assert all(record.output_contract_ref == CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF for record in workloads)
     assert all(record.workload_digest.startswith("sha256:") for record in workloads)
     assert sandbox_runtime_workload_for_tech_stack("fastapi-react-postgres") in workloads

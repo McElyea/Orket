@@ -7,13 +7,14 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
-from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_governed_agent_repository import AsyncGovernedAgentRepository
+from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.application.services.governed_agent_broker_service import GovernedAgentHostBroker
 from orket.application.services.governed_agent_loop_service import GovernedAgentLoopService
 from orket.core.domain import RunState
 from orket.extensions.governed_agent_invoker import GovernedAgentSubprocessInvoker
 from orket_extension_sdk.agent_fixtures import prefixed_digest
+from tests.helpers.governed_agent_clock import elapsed_agent_clock as elapsed_agent_clock
 from tests.runtime.governed_agent_test_support import (
     TEMPLATE_ROOT,
     DeterministicModelProvider,
@@ -23,7 +24,7 @@ from tests.runtime.governed_agent_test_support import (
     staged_agent_request,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
+pytestmark = [pytest.mark.integration, pytest.mark.asyncio, pytest.mark.usefixtures("elapsed_agent_clock")]
 
 
 @pytest.mark.parametrize("case", ["wrong-totals", "false-completion", "repeated-state"])
@@ -85,7 +86,7 @@ async def _run(tmp_path, source, request):
                                     model_provider=DeterministicModelProvider(), model_profiles=resolved_profiles())
     service = GovernedAgentLoopService(
         execution_repository=AsyncControlPlaneExecutionRepository(db), iteration_repository=repository,
-        truth_repository=AsyncControlPlaneRecordRepository(db), verifier=SecondIterationVerifier(),
+        transactions=SQLiteControlPlaneTransactions(db), verifier=SecondIterationVerifier(),
         invoker=GovernedAgentSubprocessInvoker(extension_root=extension, entrypoint="governed_agent:GovernedTicketAgent",
                                               allowed_stdlib_modules=("json",), broker=broker),
     )

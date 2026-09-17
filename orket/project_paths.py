@@ -4,7 +4,8 @@ from pathlib import Path
 
 
 def default_project_root() -> Path:
-    return Path(__file__).resolve().parent.parent
+    """Select caller-owned project state independently of package installation."""
+    return Path.cwd()
 
 
 def default_model_root(project_root: Path | None = None) -> Path:

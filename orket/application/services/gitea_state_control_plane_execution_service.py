@@ -1,33 +1,27 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-from datetime import UTC, datetime
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots, snapshot_digest
 from orket.application.services.control_plane_workload_catalog import (
     GITEA_STATE_WORKER_EXECUTION_WORKLOAD,
 )
+from orket.application.services.gitea_state_control_plane_closeout import publish_gitea_closeout
+from orket.application.services.gitea_state_control_plane_lease_service import GiteaStateControlPlaneLeaseService
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts import AttemptRecord, EffectJournalEntryRecord, FinalTruthRecord, RunRecord, StepRecord
+from orket.core.contracts.control_plane_transaction import ControlPlaneTransactionFactory
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AttemptState,
-    AuthoritySourceClass,
     CapabilityClass,
-    ClosureBasisClassification,
-    CompletionClassification,
-    DegradationClassification,
-    EvidenceSufficiencyClassification,
-    RecoveryActionClass,
     ResidualUncertaintyClassification,
-    ResultClass,
     RunState,
-    SideEffectBoundaryClass,
-    validate_attempt_state_transition,
-    validate_run_state_transition,
 )
 from orket.runtime_paths import resolve_control_plane_db_path
 
@@ -46,9 +40,13 @@ class GiteaStateControlPlaneExecutionService:
         *,
         execution_repository: ControlPlaneExecutionRepository,
         publication: ControlPlanePublicationService,
+        transactions: ControlPlaneTransactionFactory,
+        now_utc: Callable[[], str] | None = None,
     ) -> None:
         self.execution_repository = execution_repository
         self.publication = publication
+        self.transactions = transactions
+        self.now_utc = now_utc or RuntimeInputService().utc_now_iso
 
     async def begin_claimed_execution(
         self,
@@ -71,7 +69,7 @@ class GiteaStateControlPlaneExecutionService:
                 raise GiteaStateControlPlaneExecutionError(f"gitea run missing attempt: {run_id}")
             return existing_run, attempt
 
-        creation_timestamp = str(self._lease_payload(lease_observation).get("acquired_at") or self._utc_now())
+        creation_timestamp = str(self._lease_payload(lease_observation).get("acquired_at") or self.now_utc())
         policy_payload = {
             "success_state": str(success_state),
             "failure_state": str(failure_state),
@@ -115,8 +113,8 @@ class GiteaStateControlPlaneExecutionService:
             starting_state_snapshot_ref=self.snapshot_ref(card_id=card_id, from_state=from_state, lease_observation=lease_observation),
             start_timestamp=creation_timestamp,
         )
-        await self.execution_repository.save_run_record(record=run)
-        await self.execution_repository.save_attempt_record(record=attempt)
+        run = await self.execution_repository.save_run_record(record=run)
+        attempt = await self.execution_repository.save_attempt_record(record=attempt)
         return run, attempt
 
     async def publish_claim_transition(
@@ -171,138 +169,25 @@ class GiteaStateControlPlaneExecutionService:
         return existing_step, effect
 
     async def publish_release_transition_and_finalize(
-        self,
-        *,
-        run_id: str,
-        attempt_id: str,
-        card_id: str,
-        final_state: str,
-        error: str | None,
-        success_state: str,
+        self, *, run_id: str, attempt_id: str, card_id: str, final_state: str,
+        error: str | None, success_state: str, worker_id: str,
+        lease_observation: Mapping[str, object], lease_expired: bool,
+        lease_service: GiteaStateControlPlaneLeaseService,
     ) -> tuple[RunRecord, AttemptRecord, StepRecord, EffectJournalEntryRecord, FinalTruthRecord]:
-        run = await self._require_run(run_id=run_id)
-        attempt = await self._require_attempt(attempt_id=attempt_id)
-        existing_truth = await self.publication.repository.get_final_truth(run_id=run_id)
-        existing_step = await self.execution_repository.get_step_record(step_id=self.step_id_for(run_id=run_id, stage="finalize"))
-        if existing_truth is not None and existing_step is not None:
-            return run, attempt, existing_step, await self._require_effect(run_id=run_id, stage="finalize"), existing_truth
-
-        step = existing_step
-        if step is None:
-            claim_step = await self.execution_repository.get_step_record(step_id=self.step_id_for(run_id=run_id, stage="claim"))
-            step = await self.execution_repository.save_step_record(
-                record=StepRecord(
-                    step_id=self.step_id_for(run_id=run_id, stage="finalize"),
-                    attempt_id=attempt.attempt_id,
-                    step_kind="gitea_state_transition",
-                    namespace_scope=run.namespace_scope,
-                    input_ref=claim_step.output_ref if claim_step is not None and claim_step.output_ref else run.admission_decision_receipt_ref,
-                    output_ref=self.transition_result_ref(
-                        card_id=card_id,
-                        lease_epoch=self.lease_epoch_for_run(run_id=run_id),
-                        from_state="in_progress",
-                        to_state=final_state,
-                    ),
-                    capability_used=CapabilityClass.EXTERNAL_MUTATION,
-                    resources_touched=self._resources_touched(card_id=card_id),
-                    observed_result_classification="state_transition_succeeded",
-                    receipt_refs=[
-                        self.transition_result_ref(
-                            card_id=card_id,
-                            lease_epoch=self.lease_epoch_for_run(run_id=run_id),
-                            from_state="in_progress",
-                            to_state=final_state,
-                        )
-                    ],
-                    closure_classification="step_completed",
-                )
+        async with self.transactions() as transaction:
+            publication = ControlPlanePublicationService(
+                repository=transaction.records, authority=self.publication.authority,
             )
-        effect = await self._ensure_effect(
-            run=run,
-            attempt=attempt,
-            step=step,
-            stage="finalize",
-            card_id=card_id,
-        )
-
-        normalized_error = str(error or "").strip().upper()
-        lease_expired = normalized_error == "E_LEASE_EXPIRED"
-        control_plane_resource_drift = normalized_error == "E_CONTROL_PLANE_RESOURCE_DRIFT"
-        if existing_truth is None:
-            if not error and final_state == str(success_state).strip():
-                validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.COMPLETED)
-                validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.COMPLETED)
-                attempt = attempt.model_copy(
-                    update={"attempt_state": AttemptState.COMPLETED, "end_timestamp": self._utc_now()}
-                )
-                run = run.model_copy(update={"lifecycle_state": RunState.COMPLETED})
-                truth = await self.publication.publish_final_truth(
-                    final_truth_record_id=f"gitea-state-final-truth:{run.run_id}",
-                    run_id=run.run_id,
-                    result_class=ResultClass.SUCCESS,
-                    completion_classification=CompletionClassification.SATISFIED,
-                    evidence_sufficiency_classification=EvidenceSufficiencyClassification.SUFFICIENT,
-                    residual_uncertainty_classification=ResidualUncertaintyClassification.NONE,
-                    degradation_classification=DegradationClassification.NONE,
-                    closure_basis=ClosureBasisClassification.NORMAL_EXECUTION,
-                    authority_sources=[AuthoritySourceClass.RECEIPT_EVIDENCE],
-                    authoritative_result_ref=step.output_ref,
-                )
-            else:
-                resource_blocked = lease_expired or control_plane_resource_drift
-                target_attempt_state = AttemptState.INTERRUPTED if resource_blocked else AttemptState.FAILED
-                if lease_expired:
-                    failure_class = "lease_expired"
-                elif control_plane_resource_drift:
-                    failure_class = "control_plane_resource_drift"
-                else:
-                    failure_class = "gitea_state_worker_failure"
-                closure_basis = (
-                    ClosureBasisClassification.POLICY_TERMINAL_STOP
-                    if resource_blocked
-                    else ClosureBasisClassification.NORMAL_EXECUTION
-                )
-                result_class = ResultClass.BLOCKED if resource_blocked else ResultClass.FAILED
-                validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=target_attempt_state)
-                validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.FAILED_TERMINAL)
-                attempt = attempt.model_copy(
-                    update={
-                        "attempt_state": target_attempt_state,
-                        "end_timestamp": self._utc_now(),
-                        "side_effect_boundary_class": SideEffectBoundaryClass.POST_EFFECT_OBSERVED,
-                        "failure_class": failure_class,
-                    }
-                )
-                decision = await self.publication.publish_recovery_decision(
-                    decision_id=f"gitea-state-recovery:{run.run_id}:{failure_class}",
-                    run_id=run.run_id,
-                    failed_attempt_id=attempt.attempt_id,
-                    failure_classification_basis=failure_class,
-                    side_effect_boundary_class=SideEffectBoundaryClass.POST_EFFECT_OBSERVED,
-                    recovery_policy_ref="gitea_state_worker_terminal_policy.v1",
-                    authorized_next_action=RecoveryActionClass.TERMINATE_RUN,
-                    rationale_ref=effect.journal_entry_id,
-                )
-                attempt = attempt.model_copy(update={"recovery_decision_id": decision.decision_id, "failure_plane": decision.failure_plane, "failure_classification": decision.failure_classification})
-                run = run.model_copy(update={"lifecycle_state": RunState.FAILED_TERMINAL})
-                truth = await self.publication.publish_final_truth(
-                    final_truth_record_id=f"gitea-state-final-truth:{run.run_id}",
-                    run_id=run.run_id,
-                    result_class=result_class,
-                    completion_classification=CompletionClassification.UNSATISFIED,
-                    evidence_sufficiency_classification=EvidenceSufficiencyClassification.SUFFICIENT,
-                    residual_uncertainty_classification=ResidualUncertaintyClassification.NONE,
-                    degradation_classification=DegradationClassification.NONE,
-                    closure_basis=closure_basis,
-                    authority_sources=[AuthoritySourceClass.RECEIPT_EVIDENCE],
-                    authoritative_result_ref=step.output_ref,
-                )
-            run = run.model_copy(update={"final_truth_record_id": truth.final_truth_record_id})
-            await self.execution_repository.save_attempt_record(record=attempt)
-            await self.execution_repository.save_run_record(record=run)
-            return run, attempt, step, effect, truth
-
-        return run, attempt, step, effect, existing_truth
+            scoped = GiteaStateControlPlaneExecutionService(
+                execution_repository=transaction.execution, publication=publication,
+                transactions=self.transactions, now_utc=self.now_utc,
+            )
+            leases = GiteaStateControlPlaneLeaseService(publication=publication, now_utc=lease_service.now_utc)
+            return await publish_gitea_closeout(
+                scoped, leases, run_id=run_id, attempt_id=attempt_id, card_id=card_id,
+                final_state=final_state, error=error, success_state=success_state,
+                worker_id=worker_id, lease_observation=lease_observation, lease_expired=lease_expired,
+            )
 
     @staticmethod
     def run_id_for(*, card_id: str, lease_epoch: int) -> str:
@@ -370,7 +255,7 @@ class GiteaStateControlPlaneExecutionService:
             attempt_id=attempt.attempt_id,
             step_id=step.step_id,
             authorization_basis_ref=run.admission_decision_receipt_ref,
-            publication_timestamp=self._utc_now(),
+            publication_timestamp=self.now_utc(),
             intended_target_ref=f"gitea-card:{str(card_id).strip()}",
             observed_result_ref=step.output_ref,
             uncertainty_classification=ResidualUncertaintyClassification.NONE,
@@ -431,16 +316,15 @@ class GiteaStateControlPlaneExecutionService:
             raise TypeError("expected integer-like value")
         return int(value)
 
-    @staticmethod
-    def _utc_now() -> str:
-        return datetime.now(UTC).isoformat()
-
-def build_gitea_state_control_plane_execution_service(db_path: str | Path | None = None) -> GiteaStateControlPlaneExecutionService:
+def build_gitea_state_control_plane_execution_service(
+    db_path: str | Path | None = None, *, now_utc: Callable[[], str] | None = None,
+) -> GiteaStateControlPlaneExecutionService:
     resolved_db_path = resolve_control_plane_db_path(db_path)
     publication = ControlPlanePublicationService(repository=AsyncControlPlaneRecordRepository(resolved_db_path))
     return GiteaStateControlPlaneExecutionService(
         execution_repository=AsyncControlPlaneExecutionRepository(resolved_db_path),
         publication=publication,
+        transactions=SQLiteControlPlaneTransactions(resolved_db_path), now_utc=now_utc,
     )
 
 __all__ = [

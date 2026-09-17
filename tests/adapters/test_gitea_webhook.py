@@ -7,6 +7,7 @@ import pytest
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 from orket.adapters.vcs.webhook_db import WebhookDatabase
 from orket.core.domain.sandbox import SandboxRegistry
+from tests.helpers.runtime_result import published_result
 
 
 class _FakeResponse:
@@ -250,8 +251,9 @@ async def test_pr_review_cycles_survive_handler_restart_to_escalate(monkeypatch,
 
 
 @pytest.mark.asyncio
+# Layer: contract
 async def test_pr_opened_updates_status_with_cardstatus_enum(monkeypatch, tmp_path):
-    """Layer: integration. Verifies PR-opened issue routing updates status and resumes through the canonical card surface."""
+    """Layer: contract. Verifies PR-opened issue routing updates status and resumes through the canonical card surface."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
     import orket.orchestration.engine as engine_module
@@ -271,7 +273,10 @@ async def test_pr_opened_updates_status_with_cardstatus_enum(monkeypatch, tmp_pa
             self.cards = _FakeCards()
 
         async def run_card(self, _issue_id):
-            return None
+            return published_result()
+
+        async def close(self):
+            captured["closed"] = True
 
     def _fake_create_task(coro):
         task = real_create_task(coro)
@@ -299,6 +304,8 @@ async def test_pr_opened_updates_status_with_cardstatus_enum(monkeypatch, tmp_pa
     assert result["status"] == "success"
     assert captured["issue_id"] == "ISSUE-ABC123"
     assert captured["status"] == CardStatus.CODE_REVIEW
+
+    assert captured["closed"]
 
 
 @pytest.mark.asyncio

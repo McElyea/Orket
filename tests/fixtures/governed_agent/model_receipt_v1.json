@@ -1,0 +1,32 @@
+{
+  "object_type": "agent_model_use_receipt",
+  "schema_version": "agent_model_use_receipt.v1",
+  "identity": {
+    "run_id": "run-1",
+    "attempt_id": "attempt-1",
+    "iteration_ordinal": 1,
+    "step_id": "step-1",
+    "trace_id": "trace-1",
+    "invocation_id": "invocation-1",
+    "fencing_generation": 1
+  },
+  "call_id": "call-1",
+  "role": "planner",
+  "requested_profile_ref": "local.planner",
+  "resolved_profile_ref": "local.planner.ollama",
+  "provider": "ollama",
+  "provider_version": "0.11.0",
+  "model": "qwen-local",
+  "model_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "returned",
+  "usage_posture": "measured",
+  "input_tokens": 128,
+  "output_tokens": 64,
+  "estimate_source": null,
+  "charged_input_tokens": 128,
+  "charged_output_tokens": 64,
+  "latency_ms": 42,
+  "finish_reason": "stop",
+  "truncated": false,
+  "substitution_posture": "requested"
+}

@@ -11,10 +11,10 @@ from orket.adapters.storage.protocol_append_only_ledger import (
     decode_lpj_c32_stream,
     encode_lpj_c32_record,
 )
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_response_parser import ResponseParser
 from orket.application.workflows.turn_tool_dispatcher_protocol import collect_protocol_preflight_violations
 from orket.core.domain.execution import ExecutionTurn, ToolCall
-from orket.core.policies.tool_gate import ToolGate
 from orket.runtime import protocol_error_codes as codes
 from orket.runtime.determinism_controls import resolve_network_mode
 

@@ -84,6 +84,15 @@ REVIEW_RUN_WORKLOAD = _build_control_plane_workload_record(
     declared_capabilities=[CapabilityClass.DETERMINISTIC_COMPUTE],
 )
 
+OUTWARD_GOVERNED_TOOLS_WORKLOAD = _build_control_plane_workload_record(
+    workload_id="outward-governed-tools",
+    workload_version="outward.governed_tools.v1",
+    input_contract_ref="docs/specs/OUTWARD_RUN_AUTHORITY.md",
+    output_contract_ref=CONTROL_PLANE_RUN_OUTPUT_CONTRACT_REF,
+    declared_capabilities=[CapabilityClass.OPERATOR_AUTHORIZED_ACTION],
+    recovery_policy_refs=["docs/specs/OUTWARD_APPROVAL_EFFECT_LIFECYCLE_V1.md"],
+)
+
 _SANDBOX_RUNTIME_WORKLOADS = {
     tech_stack: _build_control_plane_workload_record(
         workload_id=f"sandbox-workload:{tech_stack}",
@@ -143,6 +152,7 @@ _FIXED_CATALOG_WORKLOADS = {
     GITEA_STATE_WORKER_EXECUTION_WORKLOAD.workload_id: GITEA_STATE_WORKER_EXECUTION_WORKLOAD,
     "review_run": REVIEW_RUN_WORKLOAD,
     REVIEW_RUN_WORKLOAD.workload_id: REVIEW_RUN_WORKLOAD,
+    OUTWARD_GOVERNED_TOOLS_WORKLOAD.workload_id: OUTWARD_GOVERNED_TOOLS_WORKLOAD,
 }
 
 
@@ -341,6 +351,7 @@ def governed_control_plane_workloads() -> tuple[WorkloadRecord, ...]:
         TURN_TOOL_WORKLOAD,
         GITEA_STATE_WORKER_EXECUTION_WORKLOAD,
         REVIEW_RUN_WORKLOAD,
+        OUTWARD_GOVERNED_TOOLS_WORKLOAD,
         *_SANDBOX_RUNTIME_WORKLOADS.values(),
     )
 

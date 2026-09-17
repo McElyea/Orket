@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass, field
-from typing import Protocol, runtime_checkable
+from typing import Literal, Protocol, runtime_checkable
+
+
+def nonnegative_int_or_none(value: object) -> int | None:
+    """Retain integer observations without coercing malformed metadata."""
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
 
 
 @dataclass(frozen=True)
@@ -34,9 +39,16 @@ class GenerateResponse:
 
     text: str
     model: str
-    latency_ms: int
+    latency_ms: int | None
     input_tokens: int | None = None
     output_tokens: int | None = None
+    schema_version: Literal["model_generate_response.v1"] = field(default="model_generate_response.v1", init=False)
+    latency_posture: Literal["reported", "unavailable"] = field(init=False)
+
+    def __post_init__(self) -> None:
+        if self.latency_ms is not None and nonnegative_int_or_none(self.latency_ms) is None:
+            raise ValueError("E_SDK_GENERATE_LATENCY_INVALID")
+        object.__setattr__(self, "latency_posture", "reported" if self.latency_ms is not None else "unavailable")
 
 
 @runtime_checkable
@@ -53,7 +65,7 @@ class NullLLMProvider:
 
     def generate(self, request: GenerateRequest) -> GenerateResponse:
         del request
-        return GenerateResponse(text="", model="null", latency_ms=0)
+        return GenerateResponse(text="", model="null", latency_ms=None)
 
     def is_available(self) -> bool:
         return False

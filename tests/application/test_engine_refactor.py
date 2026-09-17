@@ -28,8 +28,12 @@ class _FakePipeline:
         driver_steered=False,
         target_issue_id=None,
         model_override=None,
+        admission_recovery=None,
+        export_recovery=None,
+        approval_recovery=None,
     ):
-        self.calls.append(("run_card", card_id, build_id, session_id, driver_steered, target_issue_id, model_override))
+        self.calls.append(("run_card", card_id, build_id, session_id, driver_steered, target_issue_id,
+                           model_override, admission_recovery, export_recovery, approval_recovery))
         return []
 
 
@@ -90,9 +94,9 @@ async def test_engine_explicit_calls(monkeypatch):
     await engine.run_issue("my-issue")
     await engine.run_rock("my-rock")
 
-    assert ("run_card", "my-epic", None, None, False, "ISSUE-1", None) in fake_pipeline.calls
-    assert ("run_card", "my-issue", None, None, False, None, None) in fake_pipeline.calls
-    assert ("run_card", "my-rock", None, None, False, None, None) in fake_pipeline.calls
+    assert ("run_card", "my-epic", None, None, False, "ISSUE-1", None, None, None, None) in fake_pipeline.calls
+    assert ("run_card", "my-issue", None, None, False, None, None, None, None, None) in fake_pipeline.calls
+    assert ("run_card", "my-rock", None, None, False, None, None, None, None, None) in fake_pipeline.calls
     assert not any(call[0] == "run_epic" for call in fake_pipeline.calls)
     assert not any(call[0] == "run_issue" for call in fake_pipeline.calls)
     assert not any(call[0] == "run_rock" for call in fake_pipeline.calls)
@@ -110,9 +114,14 @@ async def test_engine_run_card_is_canonical_public_surface(monkeypatch):
 
     engine = OrchestrationEngine(workspace)
 
-    await engine.run_card("some-card", target_issue_id="I1")
+    recovery = {"request_id": "unit-forwarding-only"}
+    await engine.run_card("some-card", target_issue_id="I1", export_recovery=recovery)
 
-    assert ("run_card", "some-card", None, None, False, "I1", None) in fake_pipeline.calls
+    assert ("run_card", "some-card", None, None, False, "I1", None, None, recovery, None) in fake_pipeline.calls
+    assert fake_pipeline.calls[-1][-2] is recovery
+    await engine.run_card("some-card", target_issue_id="I1", approval_recovery=recovery)
+    assert ("run_card", "some-card", None, None, False, "I1", None, None, None, recovery) in fake_pipeline.calls
+    assert fake_pipeline.calls[-1][-1] is recovery
 
 
 @pytest.mark.asyncio
@@ -129,7 +138,7 @@ async def test_engine_run_card_forwards_model_override(monkeypatch):
 
     await engine.run_card("some-card", model_override="google/gemma-4-26b-a4b")
 
-    assert ("run_card", "some-card", None, None, False, None, "google/gemma-4-26b-a4b") in fake_pipeline.calls
+    assert ("run_card", "some-card", None, None, False, None, "google/gemma-4-26b-a4b", None, None, None) in fake_pipeline.calls
 
 
 def test_engine_replay_turn_reads_artifacts(monkeypatch, tmp_path):
@@ -168,7 +177,7 @@ def test_engine_replay_turn_reads_artifacts(monkeypatch, tmp_path):
     assert replay["parsed_tool_calls"][0]["tool"] == "write_file"
     assert compatibility_replay["diagnostics_class"] == "artifact_observability_only"
 
-
+# Layer: unit
 def test_engine_uses_explicit_control_plane_service_composition(monkeypatch, tmp_path):
     """Layer: unit. Verifies engine control-plane dependencies are composed through the extracted service builder."""
     fake_pipeline = _FakePipeline()
@@ -185,6 +194,7 @@ def test_engine_uses_explicit_control_plane_service_composition(monkeypatch, tmp
             "control_plane_repository": object(),
             "control_plane_execution_repository": object(),
             "control_plane_publication": object(),
+            "control_plane_transactions": object(),
             "tool_approval_control_plane_operator": object(),
             "kernel_action_control_plane": object(),
             "kernel_action_control_plane_operator": object(),
@@ -203,6 +213,7 @@ def test_engine_uses_explicit_control_plane_service_composition(monkeypatch, tmp
     assert engine.control_plane_repository is fake_services.control_plane_repository
     assert engine.control_plane_execution_repository is fake_services.control_plane_execution_repository
     assert engine.control_plane_publication is fake_services.control_plane_publication
+    assert engine.control_plane_transactions is fake_services.control_plane_transactions
     assert engine.tool_approval_control_plane_operator is fake_services.tool_approval_control_plane_operator
     assert engine.kernel_action_control_plane is fake_services.kernel_action_control_plane
     assert engine.kernel_action_control_plane_operator is fake_services.kernel_action_control_plane_operator

@@ -14,6 +14,12 @@ from orket.adapters.llm.local_prompting_lmstudio_session import (
     resolve_lmstudio_session_settings,
 )
 from orket.adapters.llm.prompt_canonicalization import canonicalize_prompt_text
+from orket.core.contracts.model_generation_options import (
+    cap_sampling_bundle,
+    request_sampling_options,
+    request_stop_sequences,
+    sampling_payload,
+)
 from orket.runtime.compact_turn_packet import (
     compact_turn_messages,
     is_compact_turn_packet,
@@ -23,7 +29,6 @@ from orket.runtime.local_prompt_profiles import (
     LocalPromptProfile,
     load_local_prompt_profile_registry_file,
 )
-from orket.utils import dedupe_ordered
 
 E_LOCAL_PROMPT_MODE_INVALID = "E_LOCAL_PROMPT_MODE_INVALID"
 E_LOCAL_PROMPT_TASK_CLASS_INVALID = "E_LOCAL_PROMPT_TASK_CLASS_INVALID"
@@ -212,10 +217,6 @@ def _apply_reasoning_suppression_hint(
     return resolved, None
 
 
-def _dedupe_in_order(values: list[str]) -> list[str]:
-    return dedupe_ordered(values)
-
-
 def _estimate_tokens(text: str) -> int:
     if not text:
         return 0
@@ -294,7 +295,7 @@ def _provider_default_stops(provider_backend: str) -> list[str]:
 def _effective_stops(provider_backend: str, profile: LocalPromptProfile, task_class: str) -> list[str]:
     sentinel = list(profile.stop_sequences_by_task_class.get(task_class) or [])
     provider_defaults = _provider_default_stops(provider_backend)
-    return _dedupe_in_order(sentinel + provider_defaults)
+    return list(dict.fromkeys(sentinel + provider_defaults))
 
 
 def _sampling_bundle(profile: LocalPromptProfile, task_class: str) -> dict[str, Any]:
@@ -302,26 +303,6 @@ def _sampling_bundle(profile: LocalPromptProfile, task_class: str) -> dict[str, 
     if task_class == "strict_json" and float(bundle.get("repeat_penalty", 1.0)) > 1.05:
         raise ValueError(f"{E_LOCAL_PROMPT_REPEAT_PENALTY}:{bundle['repeat_penalty']}")
     return bundle
-
-
-def _apply_runtime_generation_limits(
-    bundle: dict[str, Any],
-    runtime_context: dict[str, Any],
-) -> dict[str, Any]:
-    limited = dict(bundle)
-    raw_max_output = runtime_context.get("local_prompt_max_output_tokens")
-    if raw_max_output is not None:
-        max_output = int(raw_max_output)
-        if max_output < 1:
-            raise ValueError("local_prompt_max_output_tokens must be positive")
-        limited["max_output_tokens"] = min(int(limited.get("max_output_tokens", max_output)), max_output)
-    raw_temperature = runtime_context.get("local_prompt_temperature")
-    if raw_temperature is not None:
-        temperature = float(raw_temperature)
-        if temperature < 0 or temperature > 2:
-            raise ValueError("local_prompt_temperature must be between 0 and 2")
-        limited["temperature"] = temperature
-    return limited
 
 
 @dataclass
@@ -353,44 +334,17 @@ class LocalPromptingPolicyResult:
     context_budget_tokens: int = 0
 
     def openai_payload_overrides(self) -> dict[str, Any]:
-        if not self.sampling_bundle:
-            if self.effective_stop_sequences:
-                return {"stop": list(self.effective_stop_sequences)}
-            return {}
-        overrides: dict[str, Any] = {
-            "temperature": float(self.sampling_bundle.get("temperature", 0.2)),
-            "top_p": float(self.sampling_bundle.get("top_p", 1.0)),
-            "max_tokens": int(self.sampling_bundle.get("max_output_tokens", 256)),
-        }
+        overrides = sampling_payload(self.sampling_bundle, ollama=False, extended=self.profile_id.startswith("llama_cpp."))
         if self.effective_stop_sequences:
             overrides["stop"] = list(self.effective_stop_sequences)
-        if self.profile_id.startswith("llama_cpp."):
-            overrides["top_k"] = int(self.sampling_bundle.get("top_k", 40))
-            overrides["repeat_penalty"] = float(self.sampling_bundle.get("repeat_penalty", 1.0))
-        seed_policy = str(self.sampling_bundle.get("seed_policy") or "")
-        if seed_policy == "fixed" and self.sampling_bundle.get("seed_value") is not None:
-            overrides["seed"] = int(self.sampling_bundle["seed_value"])
         if self.lmstudio_session_mode != "none" and self.lmstudio_session_id:
             overrides["session_id"] = self.lmstudio_session_id
         return overrides
 
     def ollama_options_overrides(self) -> dict[str, Any]:
-        if not self.sampling_bundle:
-            if self.effective_stop_sequences:
-                return {"stop": list(self.effective_stop_sequences)}
-            return {}
-        overrides: dict[str, Any] = {
-            "temperature": float(self.sampling_bundle.get("temperature", 0.2)),
-            "top_p": float(self.sampling_bundle.get("top_p", 1.0)),
-            "top_k": int(self.sampling_bundle.get("top_k", 40)),
-            "repeat_penalty": float(self.sampling_bundle.get("repeat_penalty", 1.0)),
-            "num_predict": int(self.sampling_bundle.get("max_output_tokens", 256)),
-        }
+        overrides = sampling_payload(self.sampling_bundle, ollama=True, extended=True)
         if self.effective_stop_sequences:
             overrides["stop"] = list(self.effective_stop_sequences)
-        seed_policy = str(self.sampling_bundle.get("seed_policy") or "")
-        if seed_policy == "fixed" and self.sampling_bundle.get("seed_value") is not None:
-            overrides["seed"] = int(self.sampling_bundle["seed_value"])
         return overrides
 
     def telemetry(self) -> dict[str, Any]:
@@ -434,6 +388,8 @@ async def resolve_local_prompting_policy(
 ) -> LocalPromptingPolicyResult:
     warnings: list[str] = []
     context = dict(runtime_context or {})
+    requested_sampling = request_sampling_options(context)
+    requested_stops = request_stop_sequences(context)
     mode = _normalize_mode(context.get("local_prompting_mode") or os.getenv("ORKET_LOCAL_PROMPTING_MODE") or "shadow")
     task_class = _resolve_task_class(context)
     strict_task = task_class in {"strict_json", "tool_call"}
@@ -484,8 +440,8 @@ async def resolve_local_prompting_policy(
             rendered_prompt_byte_count=byte_count,
             render_observability_classification="rendered_prompt_audited",
             stop_sequences_by_task_class={},
-            effective_stop_sequences=[],
-            sampling_bundle={},
+            effective_stop_sequences=requested_stops,
+            sampling_bundle=requested_sampling,
             tool_call_mode="unknown",
             history_policy="unknown",
             allows_thinking_blocks=False,
@@ -562,12 +518,8 @@ async def resolve_local_prompting_policy(
         if collapsed_user_messages > 0:
             warnings.append(f"message_shape:user_blocks_collapsed:{collapsed_user_messages}")
     effective_stops = _effective_stops(provider_backend, resolved.profile, task_class)
-    requested_stops = context.get("local_prompt_stop_sequences")
-    if requested_stops is not None:
-        if not isinstance(requested_stops, list) or not all(isinstance(item, str) for item in requested_stops):
-            raise ValueError("local_prompt_stop_sequences must be a list of strings")
-        effective_stops = _dedupe_in_order(list(requested_stops) + effective_stops)
-    sampling_bundle = _apply_runtime_generation_limits(_sampling_bundle(resolved.profile, task_class), context)
+    effective_stops = list(dict.fromkeys(requested_stops + effective_stops))
+    sampling_bundle = cap_sampling_bundle(_sampling_bundle(resolved.profile, task_class), requested_sampling)
     render_classification = _render_observability_classification(
         provider=provider_for_profile,
         profile=resolved.profile,

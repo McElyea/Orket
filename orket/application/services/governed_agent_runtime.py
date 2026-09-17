@@ -16,15 +16,15 @@ from orket.application.services.governed_agent_wake_control_service import (
 from orket.application.services.governed_agent_wake_ingress_service import (
     GovernedAgentWakeIngressService,
 )
-from orket.application.services.governed_agent_wake_records import (
+from orket.application.services.governed_agent_webhook_ingress_service import (
+    GovernedAgentWebhookIngressService,
+)
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeControlRepository,
     GovernedAgentWakeControlResult,
     GovernedAgentWakeEnqueueResult,
     GovernedAgentWakeRecord,
     GovernedAgentWakeRepository,
-)
-from orket.application.services.governed_agent_webhook_ingress_service import (
-    GovernedAgentWebhookIngressService,
 )
 
 

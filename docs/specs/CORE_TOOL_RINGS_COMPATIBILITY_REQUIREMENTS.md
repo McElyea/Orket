@@ -1,6 +1,6 @@
 # Core Tool Rings + Compatibility Contract Requirements
 
-Last updated: 2026-03-13  
+Last updated: 2026-09-12
 Status: Active (requirements draft)  
 Owner: Orket Core
 
@@ -90,7 +90,7 @@ Interfaces:
    3. error behavior
    4. artifact structure
 6. Parity does not require identical internal execution steps.
-7. Compatibility surface map must be machine-readable at `core/tools/compatibility_map.yaml`.
+7. Compatibility surface map must be machine-readable at `orket/runtime/config/assets/tools/compatibility_map.yaml`.
 
 Compatibility surface map example:
 ```yaml

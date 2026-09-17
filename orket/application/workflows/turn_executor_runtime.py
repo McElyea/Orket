@@ -3,6 +3,10 @@ from __future__ import annotations
 import inspect
 from typing import Any
 
+from orket.core.contracts.card_completion import CardCompletionDecision
+from orket.core.contracts.card_completion_commit import SUCCESSFUL_CARD_STATUSES
+from orket.core.contracts.model_timing import nonnegative_duration, phase_timing_posture
+
 
 def _dict_payload(value: Any) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
@@ -40,11 +44,11 @@ def runtime_tokens_payload(turn: Any) -> Any:
     output_tokens = usage.get("completion_tokens", raw_data.get("output_tokens"))
     total_tokens = usage.get("total_tokens", raw_data.get("total_tokens", turn.tokens_used))
 
-    prompt_ms = timings.get("prompt_ms")
-    predicted_ms = timings.get("predicted_ms")
+    prompt_ms = nonnegative_duration(timings.get("prompt_ms"))
+    predicted_ms = nonnegative_duration(timings.get("predicted_ms"))
 
     has_tokens = isinstance(prompt_tokens, int) and isinstance(output_tokens, int)
-    has_timings = isinstance(prompt_ms, (int, float)) and isinstance(predicted_ms, (int, float))
+    has_timings = prompt_ms is not None and predicted_ms is not None
 
     status = "OK"
     if not has_tokens and not has_timings:
@@ -62,8 +66,10 @@ def runtime_tokens_payload(turn: Any) -> Any:
         "prompt_tokens": prompt_tokens if isinstance(prompt_tokens, int) else None,
         "output_tokens": output_tokens if isinstance(output_tokens, int) else None,
         "total_tokens": total_tokens,
-        "prompt_ms": float(prompt_ms) if isinstance(prompt_ms, (int, float)) else None,
-        "predicted_ms": float(predicted_ms) if isinstance(predicted_ms, (int, float)) else None,
+        "prompt_ms": prompt_ms,
+        "predicted_ms": predicted_ms,
+        "timing_schema_version": raw_data.get("timing_schema_version"),
+        "timing_posture": phase_timing_posture(raw_data.get("timing_schema_version"), prompt_ms, predicted_ms),
     }
 
 
@@ -93,15 +99,19 @@ def synthesize_required_status_tool_call(turn: Any, context: dict[str, Any]) -> 
         str(status).strip().lower() for status in (context.get("required_statuses") or []) if str(status).strip()
     ]
     required_status: str | None = None
+    decision = context.get("card_completion_decision")
+    accepted = isinstance(decision, CardCompletionDecision) and decision.sufficient
     if len(required_statuses) == 1:
         required_status = required_statuses[0]
     elif (
         "integrity_guard" in role_names
         and {"done", "blocked"}.issubset(set(required_statuses))
-        and bool(context.get("runtime_verifier_ok")) is True
+        and accepted
     ):
         required_status = "done"
     if not required_status or required_status == "blocked":
+        return
+    if required_status in SUCCESSFUL_CARD_STATUSES and not accepted:
         return
 
     turn.tool_calls.append(

@@ -1,14 +1,15 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
+import re
 
 import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.core.domain import ReservationStatus
-from orket.exceptions import ExecutionFailed
 from orket.orchestration.engine import OrchestrationEngine
 from orket.schema import CardStatus
+from tests.helpers.card_completion import text_acceptance
 from tests.turn_prompt_utils import extract_turn_prompt_context
 
 # Fixture acceptance coverage is intentionally secondary to canonical-asset acceptance flow.
@@ -107,7 +108,7 @@ class RawJsonProvider:
         )
 
 
-def _build_assets(root, *, with_guard: bool, epic_id: str):
+def _build_assets(root, *, with_guard: bool, epic_id: str, expected_file="acceptance.txt", expected_text="ok"):
     (root / "config").mkdir()
     for d in ["epics", "roles", "dialects", "teams", "environments"]:
         (root / "model" / "core" / d).mkdir(parents=True, exist_ok=True)
@@ -193,7 +194,9 @@ def _build_assets(root, *, with_guard: bool, epic_id: str):
                 "environment": "standard",
                 "description": "Acceptance-level flow test",
                 "architecture_governance": {"idesign": False, "pattern": "Tactical"},
-                "issues": [{"id": "ISSUE-A", "summary": "Run acceptance flow", "seat": "lead_architect", "priority": "High"}],
+                "issues": [{"id": "ISSUE-A", "summary": f"Write {expected_file} with exact content {expected_text!r}", "seat": "lead_architect",
+                            "priority": "High", "params": {"completion_acceptance": text_acceptance(
+                                f"agent_output/{expected_file}", expected_text, workload_id=epic_id).model_dump(mode="json")}}],
             }
         ),
         encoding="utf-8",
@@ -210,6 +213,7 @@ def _patch_provider(monkeypatch, provider):
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_system_acceptance_guard_approves_actions(tmp_path, monkeypatch):
     root = tmp_path
     workspace = root / "workspace"
@@ -223,17 +227,21 @@ async def test_system_acceptance_guard_approves_actions(tmp_path, monkeypatch):
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("acceptance_approve")
+    try:
+        await engine.run_card("acceptance_approve")
 
-    issue = await engine.cards.get_by_id("ISSUE-A")
-    assert issue.status == CardStatus.DONE
-    assert (workspace / "agent_output" / "acceptance.txt").exists()
-    log_blob = (workspace / "orket.log").read_text(encoding="utf-8")
-    assert '"event": "guard_approved"' in log_blob
-    assert '"event": "guard_review_payload"' in log_blob
+        issue = await engine.cards.get_by_id("ISSUE-A")
+        assert issue.status == CardStatus.DONE
+        assert (workspace / "agent_output" / "acceptance.txt").exists()
+        log_blob = (workspace / "orket.log").read_text(encoding="utf-8")
+        assert '"event": "guard_approved"' in log_blob
+        assert '"event": "guard_review_payload"' in log_blob
+    finally:
+        await engine.close()
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_system_acceptance_guard_rejects_actions(tmp_path, monkeypatch):
     root = tmp_path
     workspace = root / "workspace"
@@ -247,16 +255,20 @@ async def test_system_acceptance_guard_rejects_actions(tmp_path, monkeypatch):
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("acceptance_reject")
+    try:
+        await engine.run_card("acceptance_reject")
 
-    issue = await engine.cards.get_by_id("ISSUE-A")
-    assert issue.status == CardStatus.BLOCKED
-    log_blob = (workspace / "orket.log").read_text(encoding="utf-8")
-    assert '"event": "guard_rejected"' in log_blob
-    assert '"event": "guard_payload_invalid"' not in log_blob
+        issue = await engine.cards.get_by_id("ISSUE-A")
+        assert issue.status == CardStatus.BLOCKED
+        log_blob = (workspace / "orket.log").read_text(encoding="utf-8")
+        assert '"event": "guard_rejected"' in log_blob
+        assert '"event": "guard_payload_invalid"' not in log_blob
+    finally:
+        await engine.close()
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_system_acceptance_guard_blocks_illegal_transition(tmp_path, monkeypatch):
     root = tmp_path
     workspace = root / "workspace"
@@ -270,17 +282,20 @@ async def test_system_acceptance_guard_blocks_illegal_transition(tmp_path, monke
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    with pytest.raises(ExecutionFailed):
-        await engine.run_card("acceptance_block")
+    try:
+        observed = await engine.run_card('acceptance_block')
+        assert observed.observation == "published" and not observed.succeeded
 
-    issue = await engine.cards.get_by_id("ISSUE-A")
-    assert issue.status == CardStatus.BLOCKED
-    assert (workspace / "agent_output" / "policy_violation_ISSUE-A.json").exists()
+        issue = await engine.cards.get_by_id("ISSUE-A")
+        assert issue.status == CardStatus.BLOCKED
+        assert (workspace / "agent_output" / "policy_violation_ISSUE-A.json").exists()
+    finally:
+        await engine.close()
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_system_acceptance_tool_approval_continues_same_governed_run(tmp_path, monkeypatch):
-    """Layer: integration."""
     root = tmp_path
     workspace = root / "workspace"
     workspace.mkdir()
@@ -289,67 +304,71 @@ async def test_system_acceptance_tool_approval_continues_same_governed_run(tmp_p
     durable_root = root / ".orket" / "durable"
     db_path = str(durable_root / "db" / "orket_persistence.db")
 
-    _build_assets(root, with_guard=False, epic_id="approval_required")
+    _build_assets(root, with_guard=False, epic_id="approval_required", expected_file="approved.txt", expected_text="approved")
     _patch_provider(monkeypatch, ToolApprovalContinuationProvider())
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     monkeypatch.setenv("ORKET_DURABLE_ROOT", str(durable_root))
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    loop_policy = engine._pipeline.orchestrator.loop_policy_node
+    try:
+        loop_policy = engine._pipeline.orchestrator.loop_policy_node
 
-    def _approval_required_tools_for_seat(seat_name, issue=None, turn_status=None):
-        if str(seat_name or "").strip().lower() == "lead_architect":
-            return ["write_file"]
-        return []
+        def _approval_required_tools_for_seat(seat_name, issue=None, turn_status=None):
+            if str(seat_name or "").strip().lower() == "lead_architect":
+                return ["write_file"]
+            return []
 
-    monkeypatch.setattr(loop_policy, "approval_required_tools_for_seat", _approval_required_tools_for_seat)
+        monkeypatch.setattr(loop_policy, "approval_required_tools_for_seat", _approval_required_tools_for_seat)
 
-    with pytest.raises(ExecutionFailed, match="Approval required for tool 'write_file'"):
-        await engine.run_card("approval_required")
+        observed = await engine.run_card('approval_required')
+        assert observed.observation == "approval_pending" and not observed.succeeded
+        assert re.search("Approval required for tool 'write_file'", observed.reason or "")
 
-    issue = await engine.cards.get_by_id("ISSUE-A")
-    assert issue.status == CardStatus.IN_PROGRESS
+        issue = await engine.cards.get_by_id("ISSUE-A")
+        assert issue.status == CardStatus.IN_PROGRESS
 
-    approvals = await engine.list_approvals(status="PENDING", limit=10)
-    assert len(approvals) == 1
-    approval = approvals[0]
-    run_id = str(approval["control_plane_target_ref"])
+        approvals = await engine.list_approvals(status="PENDING", limit=10)
+        assert len(approvals) == 1
+        approval = approvals[0]
+        run_id = str(approval["control_plane_target_ref"])
 
-    pending_run = await engine.control_plane_execution_repository.get_run_record(run_id=run_id)
-    pending_truth = await engine.control_plane_repository.get_final_truth(run_id=run_id)
-    resource = await engine.control_plane_repository.get_latest_resource_record(resource_id="namespace:issue:ISSUE-A")
+        pending_run = await engine.control_plane_execution_repository.get_run_record(run_id=run_id)
+        pending_truth = await engine.control_plane_repository.get_final_truth(run_id=run_id)
+        resource = await engine.control_plane_repository.get_latest_resource_record(resource_id="namespace:issue:ISSUE-A")
 
-    assert pending_run is not None
-    assert pending_run.lifecycle_state.value == "executing"
-    assert pending_truth is None
-    assert resource is not None
-    assert resource.resource_kind == "turn_tool_namespace"
+        assert pending_run is not None
+        assert pending_run.lifecycle_state.value == "executing"
+        assert pending_truth is None
+        assert resource is not None
+        assert resource.resource_kind == "turn_tool_namespace"
 
-    resolved = await engine.decide_approval(approval_id=str(approval["approval_id"]), decision="approve")
+        resolved = await engine.decide_approval(approval_id=str(approval["approval_id"]), decision="approve")
 
-    completed_run = await engine.control_plane_execution_repository.get_run_record(run_id=run_id)
-    final_truth = await engine.control_plane_repository.get_final_truth(run_id=run_id)
-    reservation = await engine.control_plane_repository.get_latest_reservation_record(
-        reservation_id=f"approval-reservation:{approval['approval_id']}"
-    )
-    issue = await engine.cards.get_by_id("ISSUE-A")
+        completed_run = await engine.control_plane_execution_repository.get_run_record(run_id=run_id)
+        final_truth = await engine.control_plane_repository.get_final_truth(run_id=run_id)
+        reservation = await engine.control_plane_repository.get_latest_reservation_record(
+            reservation_id=f"approval-reservation:{approval['approval_id']}"
+        )
+        issue = await engine.cards.get_by_id("ISSUE-A")
 
-    assert resolved["status"] == "resolved"
-    assert resolved["approval"]["status"] == "APPROVED"
-    assert completed_run is not None
-    assert completed_run.lifecycle_state.value == "completed"
-    assert final_truth is not None
-    assert final_truth.result_class.value == "success"
-    assert reservation is not None
-    assert reservation.status is ReservationStatus.RELEASED
-    assert issue.status == CardStatus.DONE
-    assert (workspace / "agent_output" / "approved.txt").read_text(encoding="utf-8") == "approved"
+        assert resolved["status"] == "resolved"
+        assert resolved["approval"]["status"] == "APPROVED"
+        assert completed_run is not None
+        assert completed_run.lifecycle_state.value == "completed"
+        assert final_truth is not None
+        assert final_truth.result_class.value == "success"
+        assert reservation is not None
+        assert reservation.status is ReservationStatus.RELEASED
+        assert issue.status == CardStatus.DONE
+        assert (workspace / "agent_output" / "approved.txt").read_text(encoding="utf-8") == "approved"
+    finally:
+        await engine.close()
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_system_acceptance_raw_json_tool_calls_complete_flow(tmp_path, monkeypatch):
-    """Layer: integration."""
     root = tmp_path
     workspace = root / "workspace"
     workspace.mkdir()
@@ -357,15 +376,17 @@ async def test_system_acceptance_raw_json_tool_calls_complete_flow(tmp_path, mon
     (workspace / "verification").mkdir()
     db_path = str(root / "acceptance_raw_json.db")
 
-    _build_assets(root, with_guard=False, epic_id="acceptance_raw_json")
+    _build_assets(root, with_guard=False, epic_id="acceptance_raw_json", expected_file="raw.txt")
     _patch_provider(monkeypatch, RawJsonProvider())
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("acceptance_raw_json")
+    try:
+        await engine.run_card("acceptance_raw_json")
 
-    issue = await engine.cards.get_by_id("ISSUE-A")
-    assert issue.status == CardStatus.DONE
-    assert (workspace / "agent_output" / "raw.txt").read_text(encoding="utf-8") == "ok"
-
+        issue = await engine.cards.get_by_id("ISSUE-A")
+        assert issue.status == CardStatus.DONE
+        assert (workspace / "agent_output" / "raw.txt").read_text(encoding="utf-8") == "ok"
+    finally:
+        await engine.close()

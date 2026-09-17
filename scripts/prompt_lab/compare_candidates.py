@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-DEFAULT_THRESHOLDS_PATH = Path("benchmarks/results/prompt_lab/prompt_promotion_thresholds.json")
+DEFAULT_THRESHOLDS_PATH = Path(__file__).with_name("prompt_promotion_thresholds.json")
 
 
 def _load_json(path: Path) -> Dict[str, Any]:
@@ -247,17 +247,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--thresholds",
         default=str(DEFAULT_THRESHOLDS_PATH),
-        help="Optional JSON file with promotion gate thresholds.",
+        help="JSON promotion thresholds; defaults to the tracked configuration beside this script.",
     )
     parser.add_argument("--out", default="", help="Optional output report path")
     args = parser.parse_args(argv)
 
-    thresholds = {}
-    threshold_path = str(args.thresholds or "").strip()
-    if threshold_path:
-        candidate = Path(threshold_path)
-        if candidate.exists():
-            thresholds = _load_json(candidate)
+    try:
+        thresholds = _load_json(Path(args.thresholds))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        parser.error(f"Cannot load promotion thresholds: {exc}")
+    if not isinstance(thresholds, dict):
+        parser.error("Promotion thresholds must be a JSON object.")
 
     report = compare_candidate_against_stable(
         stable_eval=_load_json(Path(args.stable_eval)),

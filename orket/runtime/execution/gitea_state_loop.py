@@ -29,6 +29,7 @@ from orket.application.services.runtime_policy import (
     resolve_gitea_worker_max_idle_streak,
     resolve_gitea_worker_max_iterations,
 )
+from orket.application.services.runtime_result_projection import require_runtime_success
 from orket.orchestration.orchestration_config import Organization, process_rule_value
 from orket.runtime.settings import resolve_str
 from orket.runtime_paths import resolve_control_plane_db_path
@@ -169,7 +170,7 @@ class GiteaStateLoopRunner:
         target = str(card.get("card_id") or "").strip()
         if not target:
             raise ValueError("missing card_id in gitea snapshot payload")
-        await self.run_card(target)
+        require_runtime_success(await self.run_card(target))
         return {"card_id": target, "result": "ok"}
 
 

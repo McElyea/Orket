@@ -132,7 +132,7 @@ def test_get_board_hierarchy_auto_fix_executes_reconciliation(monkeypatch):
             raise AssertionError("load_asset should not be called for empty inventory")
 
     monkeypatch.setattr("orket.board.ConfigLoader", _FakeLoader)
-    monkeypatch.setattr("orket.domain.reconciler.StructuralReconciler", _FakeReconciler)
+    monkeypatch.setattr("orket.application.services.structural_reconciliation_service.StructuralReconciler", _FakeReconciler)
 
     hierarchy = get_board_hierarchy("core", auto_fix=True)
 
@@ -159,7 +159,7 @@ def test_get_board_hierarchy_auto_fix_failure_is_explicit_partial_success(monkey
             raise AssertionError("load_asset should not be called for empty inventory")
 
     monkeypatch.setattr("orket.board.ConfigLoader", _FakeLoader)
-    monkeypatch.setattr("orket.domain.reconciler.StructuralReconciler", _FailingReconciler)
+    monkeypatch.setattr("orket.application.services.structural_reconciliation_service.StructuralReconciler", _FailingReconciler)
 
     hierarchy = get_board_hierarchy("core", auto_fix=True)
 

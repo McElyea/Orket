@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from dataclasses import replace
 
 from orket.application.services.governed_agent_iteration_policy import GovernedAgentVerificationObservation
-from orket.application.services.governed_agent_ports import GovernedAgentIterationSnapshot
+from orket.core.contracts.governed_agent_ports import GovernedAgentIterationSnapshot
 from orket.core.domain.governed_agent_continuation import GovernedAgentContinuationInputs
 from orket_extension_sdk import AgentIterationRequest
 

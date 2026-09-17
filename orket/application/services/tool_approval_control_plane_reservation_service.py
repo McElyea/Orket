@@ -112,6 +112,14 @@ class ToolApprovalControlPlaneReservationService:
         if existing is None:
             return None
         status_token = self._status_token(resolved_approval)
+        expected = {"approved": ReservationStatus.RELEASED, "denied": ReservationStatus.INVALIDATED}.get(status_token)
+        if existing.status == expected:
+            basis = (self._release_basis(request_type=request_type, status_token=status_token) if status_token == "approved"
+                     else self._invalidation_basis(request_type=request_type))
+            if (existing.supervisor_authority_ref != f"{request_type}-gate:{approval_id}:resolve"
+                    or existing.expiry_or_invalidation_basis != basis):
+                raise ValueError("approval hold resolution evidence conflicts")
+            return existing
         if status_token == "approved":
             return await self.publication.release_reservation(
                 reservation_id=existing.reservation_id,

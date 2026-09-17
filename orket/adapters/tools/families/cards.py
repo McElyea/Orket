@@ -4,14 +4,18 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from orket.adapters.tools.families.base import BaseTools
+from orket.core.contracts.card_completion_commit import SUCCESSFUL_CARD_STATUSES, CardCompletionRejected
+from orket.core.policies.card_acceptance_admission import ModelAcceptanceDefinitionRejected, validate_model_card_payload
 from orket.runtime_paths import resolve_runtime_db_path
 
 if TYPE_CHECKING:
     from orket.adapters.storage.async_card_repository import AsyncCardRepository
-    from orket.core.policies.tool_gate import ToolGate
+    from orket.core.policies.tool_gate import ToolGateValidator as ToolGate
 
 
 class CardManagementTools(BaseTools):
+    side_effecting = True
+
     def __init__(
         self,
         workspace_root: Path,
@@ -28,6 +32,10 @@ class CardManagementTools(BaseTools):
         self.tool_gate = tool_gate
 
     async def create_issue(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
+        try:
+            validate_model_card_payload(args)
+        except ModelAcceptanceDefinitionRejected as exc:
+            return {"ok": False, "error": str(exc), "error_code": exc.code}
         context = context or {}
         session_id, seat, summary = context.get("session_id"), args.get("seat"), args.get("summary")
         if not all([session_id, seat, summary]):
@@ -114,8 +122,23 @@ class CardManagementTools(BaseTools):
                 response["metadata"] = transition.metadata
             return response
 
-        await self.cards.update_status(issue_id, new_status)
-        return {"ok": True, "issue_id": issue_id, "status": new_status.value}
+        try:
+            receipt = None
+            if new_status.value in SUCCESSFUL_CARD_STATUSES:
+                receipt = await self.cards.update_status(
+                    issue_id, new_status, completion_request=context.get("card_completion_request"),
+                )
+            else:
+                await self.cards.update_status(issue_id, new_status)
+        except CardCompletionRejected as exc:
+            response = {"ok": False, "error": str(exc), "error_code": "card_completion_rejected"}
+            if exc.decision is not None:
+                response["completion_decision"] = exc.decision.model_dump(mode="json")
+            return response
+        response = {"ok": True, "issue_id": issue_id, "status": new_status.value}
+        if receipt is not None:
+            response["completion_ref"] = receipt.digest
+        return response
 
     async def add_issue_comment(
         self, args: dict[str, Any], context: dict[str, Any] | None = None

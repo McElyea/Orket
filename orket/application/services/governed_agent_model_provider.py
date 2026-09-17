@@ -21,6 +21,7 @@ from orket.runtime.config.provider_runtime_target import (
     resolve_provider_runtime_target,
 )
 from orket_extension_sdk import AgentIterationRequest, AgentModelCallRequest
+from orket_extension_sdk.llm import nonnegative_int_or_none
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,13 +148,15 @@ async def _resolve_exact_target(*, provider: str, model: str, role: str,
 
 def _observation(model_response: ModelResponse, *, response_mode: str) -> GovernedAgentModelObservation:
     raw = model_response.raw
-    input_tokens = _optional_int(raw.get("input_tokens"))
-    output_tokens = _optional_int(raw.get("output_tokens"))
+    input_tokens = nonnegative_int_or_none(raw.get("input_tokens"))
+    output_tokens = nonnegative_int_or_none(raw.get("output_tokens"))
     usage_posture: UsagePosture = (
         "measured" if input_tokens is not None and output_tokens is not None else "unknown"
     )
+    if usage_posture == "unknown":
+        input_tokens = output_tokens = None
     finish_reason = _finish_reason(raw)
-    latency_ms = _optional_int(raw.get("latency_ms")) or 0
+    latency_ms = nonnegative_int_or_none(raw.get("latency_ms"))
     try:
         response = json.loads(model_response.content) if response_mode == "json" else model_response.content
     except json.JSONDecodeError:
@@ -179,10 +182,6 @@ def _observation(model_response: ModelResponse, *, response_mode: str) -> Govern
         finish_reason=finish_reason,
         truncated=finish_reason in {"length", "max_tokens"},
     )
-
-
-def _optional_int(value: Any) -> int | None:
-    return int(value) if isinstance(value, int) and value >= 0 else None
 
 
 def _response_field(payload: Any, field: str) -> str | None:

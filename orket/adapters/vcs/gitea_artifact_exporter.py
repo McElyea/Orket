@@ -2,19 +2,22 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import json
 import os
 import re
 import shutil
-import subprocess
-from dataclasses import dataclass
-from datetime import UTC, datetime
-from pathlib import Path
+import stat
+from datetime import date
+from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib import parse
 
 import httpx
 
+from orket.adapters.vcs.gitea_export_git import GiteaExportGit
+from orket.core.contracts.gitea_export import GiteaExportIntent
+from orket.core.domain.outward_authorization import canonical_json
 from orket.runtime_paths import resolve_gitea_artifact_cache_root
 
 
@@ -24,143 +27,153 @@ def _env_enabled(name: str, default: str = "0") -> bool:
 
 def _safe_slug(value: str, fallback: str = "value") -> str:
     normalized = re.sub(r"[^a-zA-Z0-9._-]+", "-", value.strip()).strip("-").lower()
-    return normalized or fallback
-
-
-@dataclass
-class _GiteaClient:
-    base_url: str
-    username: str
-    password: str
-    timeout_sec: int = 30
-
-    def _request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> tuple[int, str]:
-        url = f"{self.base_url.rstrip('/')}{path}"
-        try:
-            with httpx.Client(
-                timeout=self.timeout_sec,
-                auth=(self.username, self.password),
-                headers={"Content-Type": "application/json"},
-            ) as client:
-                resp = client.request(method=method, url=url, json=payload)
-                return int(resp.status_code), resp.text
-        except httpx.HTTPError as exc:
-            return 0, str(exc)
-
-    def repo_exists(self, owner: str, repo: str) -> bool:
-        status, _ = self._request("GET", f"/api/v1/repos/{owner}/{repo}")
-        return status == 200
-
-    def create_repo(self, owner: str, repo: str, private: bool = True) -> bool:
-        status, _ = self._request("POST", f"/api/v1/orgs/{owner}/repos", {"name": repo, "private": private})
-        if status in {201, 409}:
-            return True
-        status, _ = self._request("POST", "/api/v1/user/repos", {"name": repo, "private": private})
-        return status in {201, 409}
+    return normalized if normalized and normalized not in {".", ".."} else fallback
 
 
 class GiteaArtifactExporter:
-    """
-    Best-effort exporter for raw run artifacts to a local Gitea repository.
-    """
+    """Prepare exact commits, execute admitted pushes and reconcile through reads."""
 
-    _lock = asyncio.Lock()
+    side_effecting = True
 
     def __init__(self, workspace: Path):
-        self.workspace = Path(workspace)
-
-    async def export_run(
-        self,
-        *,
-        run_id: str,
-        run_type: str,
-        run_name: str,
-        build_id: str,
-        session_status: str,
-        summary: dict[str, Any],
-        failure_class: str | None = None,
-        failure_reason: str | None = None,
-    ) -> dict[str, Any] | None:
-        if not _env_enabled("ORKET_GITEA_ARTIFACT_EXPORT", "0"):
-            return None
-
-        gitea_url = os.getenv("GITEA_URL", "").strip()
-        username = os.getenv("GITEA_ADMIN_USER", "").strip()
-        password = os.getenv("GITEA_ADMIN_PASSWORD", "").strip()
-        owner = (
-            os.getenv("ORKET_GITEA_ARTIFACT_OWNER", "").strip()
-            or os.getenv("GITEA_PRODUCT_OWNER", "").strip()
-            or username
-        )
-        repo_name = os.getenv("ORKET_GITEA_ARTIFACT_REPO", "orket-run-artifacts").strip()
-        branch = os.getenv("ORKET_GITEA_ARTIFACT_BRANCH", "main").strip()
-        prefix = os.getenv("ORKET_GITEA_ARTIFACT_PATH_PREFIX", "runs").strip().strip("/")
-        private_repo = _env_enabled("ORKET_GITEA_ARTIFACT_PRIVATE", "1")
-
-        required = {
-            "GITEA_URL": gitea_url,
-            "GITEA_ADMIN_USER": username,
-            "GITEA_ADMIN_PASSWORD": password,
-            "OWNER": owner,
+        self.workspace = Path(workspace).resolve()
+        self._username = os.getenv("GITEA_ADMIN_USER", "").strip()
+        self._password = os.getenv("GITEA_ADMIN_PASSWORD", "").strip()
+        self._binding = {
+            "enabled": _env_enabled("ORKET_GITEA_ARTIFACT_EXPORT", "0"),
+            "workspace": str(self.workspace),
+            "gitea_url": os.getenv("GITEA_URL", "").strip(),
+            "owner": (os.getenv("ORKET_GITEA_ARTIFACT_OWNER", "").strip()
+                      or os.getenv("GITEA_PRODUCT_OWNER", "").strip() or self._username),
+            "repo_name": os.getenv("ORKET_GITEA_ARTIFACT_REPO", "orket-run-artifacts").strip(),
+            "branch": os.getenv("ORKET_GITEA_ARTIFACT_BRANCH", "main").strip(),
+            "prefix": os.getenv("ORKET_GITEA_ARTIFACT_PATH_PREFIX", "runs").strip().strip("/"),
+            "private_repo": _env_enabled("ORKET_GITEA_ARTIFACT_PRIVATE", "1"),
+            "cache_root": str(resolve_gitea_artifact_cache_root(os.getenv("ORKET_GITEA_ARTIFACT_CACHE_ROOT", "").strip())),
+            "author_name": os.getenv("ORKET_GITEA_ARTIFACT_AUTHOR_NAME", "Orket Artifact Bot"),
+            "author_email": os.getenv("ORKET_GITEA_ARTIFACT_AUTHOR_EMAIL", "orket@local"),
         }
-        missing = [key for key, value in required.items() if not value]
-        if missing:
-            raise RuntimeError(f"Missing Gitea artifact export settings: {', '.join(missing)}")
+        target = parse.urlsplit(self._binding["gitea_url"])
+        if target.username is not None or target.password is not None:
+            raise ValueError("E_GITEA_EXPORT_CREDENTIAL_URL")
 
-        client = _GiteaClient(base_url=gitea_url, username=username, password=password)
-        if not client.repo_exists(owner, repo_name):
-            created = client.create_repo(owner, repo_name, private=private_repo)
-            if not created:
-                raise RuntimeError(f"Failed to create artifacts repo {owner}/{repo_name}")
+    def binding(self) -> dict[str, Any]:
+        return dict(self._binding)
 
-        run_day = datetime.now(UTC).strftime("%Y-%m-%d")
-        run_slug = _safe_slug(run_id, fallback="run")
-        run_path = f"{prefix}/{run_day}/{run_slug}"
-
-        cache_root_env = os.getenv("ORKET_GITEA_ARTIFACT_CACHE_ROOT", "").strip()
-        export_root = resolve_gitea_artifact_cache_root(cache_root_env)
-        payload_dir = export_root / "payload" / run_slug
-        repo_dir = export_root / "repo_cache" / f"{_safe_slug(owner)}_{_safe_slug(repo_name)}"
-
+    async def prepare_export(self, **run: Any) -> GiteaExportIntent:
+        self._validate_settings()
+        run_id = str(run["run_id"])
+        run_day = date.fromisoformat(run["export_day"]).isoformat()
+        suffix = hashlib.sha256(run_id.encode("utf-8")).hexdigest()
+        run_path = self._binding["prefix"] + "/" + run_day + "/" + _safe_slug(run_id, "run") + "-" + suffix[:12]
+        payload_dir = Path(self._binding["cache_root"]) / "payload" / suffix
         await asyncio.to_thread(
-            self._build_payload,
-            payload_dir,
-            run_path,
-            run_id,
-            run_type,
-            run_name,
-            build_id,
-            session_status,
-            summary,
-            failure_class,
-            failure_reason,
-        )
-        async with self._lock:
-            commit = await asyncio.to_thread(
-                self._commit_payload,
-                repo_dir,
-                payload_dir,
-                gitea_url,
-                owner,
-                repo_name,
-                username,
-                password,
-                branch,
-                run_path,
-                run_id,
-                session_status,
-            )
+            self._build_payload, payload_dir, run_path, run_id, run["run_type"], run["run_name"], run["build_id"],
+            run["session_status"], run["summary"], run.get("failure_class"), run.get("failure_reason"), run["export_time"])
+        git = self._transport(run_id, run["export_time"])
+        await git.initialize()
+        base = await git.fetch_head(self._binding["branch"]) if await self._repo_exists() else None
+        commit, tree = await git.prepare(payload_dir, run_path, base)
+        return GiteaExportIntent(binding=self.binding(), run_id=run_id, commit=commit, tree=tree,
+                                 base_commit=base, run_path=run_path)
 
-        web_url = f"{gitea_url.rstrip('/')}/{owner}/{repo_name}/src/branch/{branch}/{run_path}"
-        return {
-            "provider": "gitea",
-            "owner": owner,
-            "repo": repo_name,
-            "branch": branch,
-            "path": run_path,
-            "url": web_url,
-            "commit": commit,
-        }
+    async def export_run(self, *, export_intent: GiteaExportIntent | None = None, **run: Any) -> dict[str, Any] | None:
+        if not self._binding["enabled"]:
+            return None
+        intent = self._validate_intent(export_intent)
+        if intent.run_id != run["run_id"]:
+            raise ValueError("E_GITEA_EXPORT_RUN_CONFLICT")
+        await self._ensure_repo()
+        git = self._transport(intent.run_id)
+        await git.push(intent.commit, intent.tree, intent.run_path, self._binding["branch"])
+        receipt = await self.reconcile_export(intent)
+        if receipt is None:
+            raise ValueError("E_GITEA_EXPORT_PUSH_UNCONFIRMED")
+        return receipt
+
+    async def reconcile_export(self, export_intent: GiteaExportIntent) -> dict[str, Any] | None:
+        intent = self._validate_intent(export_intent)
+        if not await self._repo_exists():
+            return None
+        git = self._transport(intent.run_id)
+        await git.initialize()
+        if not await git.confirms(intent.commit, intent.tree, intent.run_path, self._binding["branch"]):
+            return None
+        manifest = json.loads((await git.command("show", intent.commit + ":" + intent.run_path + "/manifest.json"))[1])
+        if manifest.get("run_id") != intent.run_id or manifest.get("export_path") != intent.run_path:
+            raise ValueError("E_GITEA_EXPORT_MANIFEST_CONFLICT")
+        binding = self._binding
+        return {"provider": "gitea", "owner": binding["owner"], "repo": binding["repo_name"],
+                "branch": binding["branch"], "path": intent.run_path, "commit": intent.commit, "tree": intent.tree,
+                "url": binding["gitea_url"].rstrip("/") + "/" + binding["owner"] + "/" + binding["repo_name"]
+                       + "/src/commit/" + intent.commit + "/" + intent.run_path}
+
+    def _validate_settings(self) -> None:
+        if not self._binding["enabled"]:
+            raise ValueError("E_GITEA_EXPORT_DISABLED")
+        target = parse.urlsplit(self._binding["gitea_url"])
+        if target.scheme not in {"http", "https"} or not target.netloc or target.query or target.fragment:
+            raise ValueError("E_GITEA_EXPORT_TARGET")
+        if not self._username or not self._password:
+            raise ValueError("E_GITEA_EXPORT_CREDENTIALS_MISSING")
+        for field in ("owner", "repo_name", "branch"):
+            token = self._binding[field]
+            pattern = r"[A-Za-z0-9][A-Za-z0-9._/-]*" if field == "branch" else r"[A-Za-z0-9][A-Za-z0-9._-]*"
+            if not re.fullmatch(pattern, token) or ".." in token or token.endswith(("/", ".", ".lock")):
+                raise ValueError("E_GITEA_EXPORT_COMPONENT:" + field)
+        prefix = self._binding["prefix"]
+        if not prefix or "\\" in prefix or ":" in prefix or any(part in {".", ".."} for part in prefix.split("/")):
+            raise ValueError("E_GITEA_EXPORT_PREFIX")
+        for field in ("author_name", "author_email"):
+            if not self._binding[field] or re.search(r"[\r\n<>]", self._binding[field]):
+                raise ValueError("E_GITEA_EXPORT_AUTHOR")
+
+    def _validate_intent(self, intent: GiteaExportIntent | None) -> GiteaExportIntent:
+        self._validate_settings()
+        if intent is None or intent.binding != self.binding():
+            raise ValueError("E_GITEA_EXPORT_INTENT_REQUIRED")
+        path = PurePosixPath(intent.run_path)
+        if path.is_absolute() or ".." in path.parts or "\\" in intent.run_path or ":" in intent.run_path:
+            raise ValueError("E_GITEA_EXPORT_PATH_ESCAPE")
+        return intent
+
+    def _transport(self, run_id: str, captured_at: str | None = None) -> GiteaExportGit:
+        binding = self._binding
+        key = hashlib.sha256(canonical_json({"binding": binding, "run_id": run_id}).encode("utf-8")).hexdigest()
+        repo_dir = Path(binding["cache_root"]) / "repo_cache" / key
+        allowed = ("SYSTEMROOT", "WINDIR", "COMSPEC", "PATH", "PATHEXT", "TEMP", "TMP")
+        environment = {key: os.environ[key] for key in allowed if key in os.environ}
+        environment.update({"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull,
+                            "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never",
+                            "GIT_AUTHOR_NAME": binding["author_name"], "GIT_COMMITTER_NAME": binding["author_name"],
+                            "GIT_AUTHOR_EMAIL": binding["author_email"], "GIT_COMMITTER_EMAIL": binding["author_email"]})
+        if captured_at:
+            environment.update(GIT_AUTHOR_DATE=captured_at, GIT_COMMITTER_DATE=captured_at)
+        return GiteaExportGit(repo_dir, self._build_repo_url(binding["gitea_url"], binding["owner"], binding["repo_name"]),
+                              self._git_auth_env(self._username, self._password, environment))
+
+    async def _request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> int:
+        async with httpx.AsyncClient(timeout=30, auth=(self._username, self._password)) as client:
+            try:
+                response = await client.request(method, self._binding["gitea_url"].rstrip("/") + path, json=payload)
+            except httpx.HTTPError as exc:
+                raise RuntimeError("E_GITEA_EXPORT_HTTP_UNAVAILABLE") from exc
+        if response.status_code not in {200, 201, 404, 409}:
+            raise RuntimeError("E_GITEA_EXPORT_HTTP_STATUS:" + str(response.status_code))
+        return response.status_code
+
+    async def _repo_exists(self) -> bool:
+        binding = self._binding
+        return await self._request("GET", "/api/v1/repos/" + binding["owner"] + "/" + binding["repo_name"]) == 200
+
+    async def _ensure_repo(self) -> None:
+        if await self._repo_exists():
+            return
+        binding = self._binding
+        path = "/api/v1/user/repos" if binding["owner"] == self._username else "/api/v1/orgs/" + binding["owner"] + "/repos"
+        await self._request("POST", path, {"name": binding["repo_name"], "private": binding["private_repo"], "auto_init": False})
+        if not await self._repo_exists():
+            raise RuntimeError("E_GITEA_EXPORT_REPOSITORY_UNCONFIRMED")
 
     def _build_payload(
         self,
@@ -174,14 +187,27 @@ class GiteaArtifactExporter:
         summary: dict[str, Any],
         failure_class: str | None,
         failure_reason: str | None,
+        captured_at: str,
     ) -> None:
+        cache_root = Path(self._binding["cache_root"]).resolve()
+        if not payload_dir.resolve().is_relative_to(cache_root) or payload_dir.resolve() == cache_root:
+            raise ValueError("E_GITEA_EXPORT_PATH_ESCAPE")
         if payload_dir.exists():
             shutil.rmtree(payload_dir)
         payload_dir.mkdir(parents=True, exist_ok=True)
 
-        observability_dir = self.workspace / "observability" / _safe_slug(run_id, fallback=run_id)
+        observability_dir = self.workspace / "observability" / _safe_slug(run_id, fallback="run")
         agent_output_dir = self.workspace / "agent_output"
         run_log = self.workspace / "orket.log"
+
+        for source in (observability_dir, agent_output_dir, run_log):
+            reparse_point = source.exists() and (
+                getattr(source.lstat(), "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT)
+            if not source.resolve().is_relative_to(self.workspace) or source.is_symlink() or reparse_point:
+                raise ValueError("E_GITEA_EXPORT_SOURCE_ESCAPE")
+            if source.is_dir() and any(path.is_symlink() or getattr(path.lstat(), "st_file_attributes", 0)
+                                       & stat.FILE_ATTRIBUTE_REPARSE_POINT for path in source.rglob("*")):
+                raise ValueError("E_GITEA_EXPORT_SOURCE_SYMLINK")
 
         if observability_dir.exists():
             shutil.copytree(observability_dir, payload_dir / "observability", dirs_exist_ok=True)
@@ -196,7 +222,7 @@ class GiteaArtifactExporter:
             "run_name": run_name,
             "build_id": build_id,
             "session_status": session_status,
-            "captured_at": datetime.now(UTC).isoformat(),
+            "captured_at": captured_at,
             "source_workspace": str(self.workspace),
             "export_path": run_path,
             "failure_class": failure_class,
@@ -204,70 +230,6 @@ class GiteaArtifactExporter:
             "summary": summary,
         }
         (payload_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-
-    def _commit_payload(
-        self,
-        repo_dir: Path,
-        payload_dir: Path,
-        gitea_url: str,
-        owner: str,
-        repo_name: str,
-        username: str,
-        password: str,
-        branch: str,
-        run_path: str,
-        run_id: str,
-        session_status: str,
-    ) -> str:
-        self._run_cmd(["git", "--version"], cwd=self.workspace)
-        auth_env = self._git_auth_env(username, password)
-
-        if not repo_dir.exists():
-            repo_dir.mkdir(parents=True, exist_ok=True)
-            self._run_cmd(["git", "init"], cwd=repo_dir)
-            self._run_cmd(
-                ["git", "config", "user.email", os.getenv("ORKET_GITEA_ARTIFACT_AUTHOR_EMAIL", "orket@local")],
-                cwd=repo_dir,
-            )
-            self._run_cmd(
-                ["git", "config", "user.name", os.getenv("ORKET_GITEA_ARTIFACT_AUTHOR_NAME", "Orket Artifact Bot")],
-                cwd=repo_dir,
-            )
-        self._run_cmd(["git", "config", "core.longpaths", "true"], cwd=repo_dir, allow_fail=True)
-
-        repo_url = self._build_repo_url(gitea_url, owner, repo_name)
-        remotes = self._run_cmd(["git", "remote"], cwd=repo_dir, allow_fail=True)
-        if "origin" in remotes.split():
-            self._run_cmd(["git", "remote", "set-url", "origin", repo_url], cwd=repo_dir)
-        else:
-            self._run_cmd(["git", "remote", "add", "origin", repo_url], cwd=repo_dir)
-
-        self._run_cmd(["git", "fetch", "origin", branch], cwd=repo_dir, allow_fail=True, env=auth_env)
-        remote_head = self._run_cmd(
-            ["git", "ls-remote", "--heads", "origin", branch],
-            cwd=repo_dir,
-            allow_fail=True,
-            env=auth_env,
-        )
-        if remote_head.strip():
-            self._run_cmd(["git", "checkout", "-B", branch, f"origin/{branch}"], cwd=repo_dir)
-        else:
-            self._run_cmd(["git", "checkout", "-B", branch], cwd=repo_dir)
-
-        target_dir = repo_dir / run_path
-        if target_dir.exists():
-            shutil.rmtree(target_dir)
-        target_dir.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(payload_dir, target_dir, dirs_exist_ok=True)
-
-        self._run_cmd(["git", "add", run_path], cwd=repo_dir)
-        commit_msg = f"artifact run {run_id} status {session_status}"
-        commit_out = self._run_cmd(["git", "commit", "-m", commit_msg], cwd=repo_dir, allow_fail=True)
-        if "nothing to commit" in commit_out.lower():
-            return self._run_cmd(["git", "rev-parse", "HEAD"], cwd=repo_dir).strip()
-
-        self._run_cmd(["git", "push", "origin", branch], cwd=repo_dir, env=auth_env)
-        return self._run_cmd(["git", "rev-parse", "HEAD"], cwd=repo_dir).strip()
 
     def _build_repo_url(self, base_url: str, owner: str, repo: str) -> str:
         parsed = parse.urlparse(base_url)
@@ -283,9 +245,9 @@ class GiteaArtifactExporter:
             normalized_path = f"/{normalized_path}"
         return f"{scheme}://{host}{normalized_path}/{owner}/{repo}.git"
 
-    def _git_auth_env(self, username: str, password: str) -> dict[str, str]:
+    def _git_auth_env(self, username: str, password: str, environment: dict[str, str] | None = None) -> dict[str, str]:
         auth_value = base64.b64encode(f"{username}:{password}".encode()).decode("ascii")
-        env = dict(os.environ)
+        env = dict(os.environ if environment is None else environment)
         try:
             config_count = max(0, int(str(env.get("GIT_CONFIG_COUNT", "0"))))
         except ValueError:
@@ -294,26 +256,3 @@ class GiteaArtifactExporter:
         env[f"GIT_CONFIG_VALUE_{config_count}"] = f"Authorization: Basic {auth_value}"
         env["GIT_CONFIG_COUNT"] = str(config_count + 1)
         return env
-
-    def _run_cmd(
-        self,
-        cmd: list[str],
-        cwd: Path,
-        allow_fail: bool = False,
-        env: dict[str, str] | None = None,
-    ) -> str:
-        proc = subprocess.run(
-            cmd,
-            cwd=str(cwd),
-            capture_output=True,
-            text=True,
-            check=False,
-            env=env,
-        )
-        stdout = (proc.stdout or "").strip()
-        stderr = (proc.stderr or "").strip()
-        if proc.returncode != 0 and not allow_fail:
-            raise RuntimeError(
-                f"Command failed ({proc.returncode}): {' '.join(cmd)}\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}"
-            )
-        return "\n".join(part for part in (stdout, stderr) if part).strip()

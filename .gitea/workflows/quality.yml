@@ -75,9 +75,16 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 
+      - name: Enforce core value and effect boundaries
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/contracts/test_core_effect_values.py tests/integration/test_core_effect_boundaries.py tests/integration/test_issue_dispatch_clock_inputs.py tests/integration/test_issue_dispatch_terminal_transaction.py tests/contracts/test_bug_fix_phase_values.py tests/integration/test_bug_fix_phase_effects.py tests/integration/test_bug_fix_phase_pipeline.py tests/core/test_domain_deprecation_shim.py tests/application/test_governed_agent_ports.py tests/e2e/test_governed_agent_wake_commands.py tests/integration/test_governed_agent_wake_command_clock.py tests/e2e/test_governed_agent_run_commands.py tests/integration/test_governed_agent_submission_ownership.py tests/application/test_governed_agent_submission_options.py
+
       - name: Enforce dependency direction rules
         run: |
-          python scripts/governance/check_dependency_direction.py --legacy-edge-enforcement fail
+          python -m pytest -q tests/platform/test_dependency_policy_contract.py tests/platform/test_dependency_imports.py
+          python scripts/governance/check_dependency_direction.py
 
       - name: Audit OS registry/spec sync
         run: |
@@ -290,9 +297,16 @@ jobs:
             exit 1
           fi
 
+      - name: Enforce core value and effect boundaries
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/contracts/test_core_effect_values.py tests/integration/test_core_effect_boundaries.py tests/integration/test_issue_dispatch_clock_inputs.py tests/integration/test_issue_dispatch_terminal_transaction.py tests/contracts/test_bug_fix_phase_values.py tests/integration/test_bug_fix_phase_effects.py tests/integration/test_bug_fix_phase_pipeline.py tests/core/test_domain_deprecation_shim.py tests/application/test_governed_agent_ports.py tests/e2e/test_governed_agent_wake_commands.py tests/integration/test_governed_agent_wake_command_clock.py tests/e2e/test_governed_agent_run_commands.py tests/integration/test_governed_agent_submission_ownership.py tests/application/test_governed_agent_submission_options.py
+
       - name: Enforce dependency direction rules
         run: |
-          python scripts/governance/check_dependency_direction.py --legacy-edge-enforcement fail
+          python -m pytest -q tests/platform/test_dependency_policy_contract.py tests/platform/test_dependency_imports.py
+          python scripts/governance/check_dependency_direction.py
 
       - name: Enforce volatility boundary script
         run: |

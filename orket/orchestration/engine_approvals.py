@@ -9,6 +9,7 @@ from orket.application.services.governed_turn_tool_approval_continuation_service
 from orket.application.services.pending_gate_control_plane_operator_service import (
     PendingGateControlPlaneOperatorService,
 )
+from orket.application.services.runtime_result_projection import runtime_result_payload
 from orket.application.services.tool_approval_control_plane_operator_service import (
     ToolApprovalControlPlaneOperatorService,
 )
@@ -149,23 +150,23 @@ def _pending_gate_operator_publisher(engine: Any) -> PendingGateControlPlaneOper
     return publisher
 
 
-def _governed_turn_tool_approval_continuation_service(
-    engine: Any,
-) -> GovernedTurnToolApprovalContinuationService | None:
+def _governed_turn_tool_approval_continuation_service(engine: Any) -> GovernedTurnToolApprovalContinuationService | None:
     publication = getattr(engine, "control_plane_publication", None)
     execution_repository = getattr(engine, "control_plane_execution_repository", None)
+    transactions = getattr(engine, "control_plane_transactions", None)
     service = getattr(engine, "governed_turn_tool_approval_continuation", None)
     if (
         isinstance(service, GovernedTurnToolApprovalContinuationService)
         and getattr(service, "publication", None) is publication
         and getattr(service, "execution_repository", None) is execution_repository
+        and service.transactions is transactions
     ):
         return service
     if publication is None or execution_repository is None:
         return None
     service = GovernedTurnToolApprovalContinuationService(
         execution_repository=execution_repository,
-        publication=publication,
+        publication=publication, transactions=transactions,
     )
     engine.governed_turn_tool_approval_continuation = service
     return service
@@ -254,11 +255,7 @@ async def decide_approval(
         raise ValueError("approval not found")
 
     decision_token = str(decision or "").strip().lower()
-    decision_map = {
-        "approve": "APPROVED",
-        "deny": "DENIED",
-    }
-    target_status = decision_map.get(decision_token)
+    target_status = {"approve": "APPROVED", "deny": "DENIED"}.get(decision_token)
     if not target_status:
         raise ValueError("decision must be one of: approve, deny")
 
@@ -272,22 +269,23 @@ async def decide_approval(
     current_status = existing["status"]
     current_resolution = dict(existing.get("resolution") or {})
     if current_status != "PENDING":
-        if current_status == target_status and current_resolution == resolution:
-            return {"status": "idempotent", "approval": existing}
-        raise RuntimeError("approval already resolved with a conflicting decision")
-
-    await engine.pending_gates.resolve_request(
-        request_id=approval_id,
-        status=_repo_approval_status(target_status),
-        resolution=resolution,
-    )
-    updated = await get_approval(engine, approval_id)
-    if not updated:
-        raise RuntimeError("approval resolution persisted but lookup failed")
-    result = {"status": "resolved", "approval": updated}
+        if current_status != target_status or current_resolution != resolution:
+            raise RuntimeError("approval already resolved with a conflicting decision")
+        won, updated = False, existing
+    else:
+        won = await engine.pending_gates.resolve_request(
+            request_id=approval_id, status=_repo_approval_status(target_status),
+            resolution=resolution, expected_status="pending",
+        )
+        updated = await get_approval(engine, approval_id)
+        if not updated:
+            raise RuntimeError("approval resolution persisted but lookup failed")
+        if not won and (updated["status"] != target_status or updated["resolution"] != resolution):
+            raise RuntimeError("approval already resolved with a conflicting decision")
+    result = {"status": "resolved" if won else "idempotent", "approval": updated}
     await _publish_resolution_control_plane_side_effects(
         engine=engine,
-        previous=existing,
+        previous={**existing, "status": "PENDING"},
         result=result,
         operator_actor_ref=operator_actor_ref,
     )
@@ -302,7 +300,7 @@ async def _publish_resolution_control_plane_side_effects(
     result: dict[str, Any],
     operator_actor_ref: str | None,
 ) -> None:
-    if str(result.get("status") or "").strip().lower() != "resolved":
+    if str(result.get("status") or "").strip().lower() not in {"resolved", "idempotent"}:
         return
     approval = result.get("approval")
     if not isinstance(approval, dict):
@@ -332,10 +330,12 @@ async def _publish_resolution_control_plane_side_effects(
     continuation_service = _governed_turn_tool_approval_continuation_service(engine)
     if continuation_service is None or not continuation_service.supports_resolution(approval):
         return
-    await continuation_service.continue_or_stop(
+    execution = await continuation_service.continue_or_stop(
         engine=engine,
         resolved_approval=approval,
     )
+    if execution is not None:
+        result["runtime_result"] = runtime_result_payload(execution)
 
 
 async def _enrich_approval_row(engine: Any, approval: dict[str, Any]) -> dict[str, Any]:

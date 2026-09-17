@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -12,8 +13,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-import generate_odr_role_matrix_index as odr_index
-from run_arbiter import ArbiterFailure, RunArbiter
+import generate_odr_role_matrix_index as odr_index  # noqa: E402 - repository CLI bootstrap
+from run_arbiter import ArbiterFailure, RunArbiter  # noqa: E402 - repository CLI bootstrap
+
+from scripts.odr.provider_admission import ProviderSelection, resolve_selection  # noqa: E402 - repository CLI bootstrap
 
 
 def _parse_list(raw: str) -> list[str]:
@@ -43,6 +46,7 @@ def _build_command(
     out_path: Path,
     config: dict[str, Any],
     leak_gate_mode: str,
+    provider_selection: ProviderSelection,
 ) -> list[str]:
     cmd = [
         python_bin,
@@ -55,6 +59,8 @@ def _build_command(
         str(out_path),
         "--leak-gate-mode",
         str(leak_gate_mode or "balanced_v1"),
+        "--provider", provider_selection.provider,
+        "--base-url", provider_selection.base_url,
     ]
 
     rounds = config.get("rounds")
@@ -94,11 +100,23 @@ def _build_command(
     return cmd
 
 
-def run_sweep(args: argparse.Namespace) -> int:
+def _generate_provenance(args: argparse.Namespace, out_dir: Path, provenance_out: Path) -> None:
+    command = [args.python_bin, "scripts/odr/generate_odr_provenance.py",
+               "--input-dir", str(out_dir), "--out", str(provenance_out)]
+    if args.no_provenance_probes:
+        command.append("--no-probes")
+    result = subprocess.run(command, check=False)
+    if result.returncode != 0:
+        raise ArbiterFailure(phase="execution", code="E_ARB_EXECUTION_FAILED",
+            message="ODR provenance generation failed.", failures=[f"subprocess_exit:{result.returncode}"],
+            context={"artifact": provenance_out.as_posix()})
+
+
+def _sweep_inputs(args: argparse.Namespace) -> tuple[dict[str, Any], list[str], list[str], str]:
     base_config = _load_base_config(Path(args.base_spec))
     architects = _parse_list(args.architect_models)
     if not architects:
-        raise SystemExit("E_ARCHITECTS_REQUIRED provide --architect-models")
+        raise ValueError("E_ARCHITECTS_REQUIRED provide --architect-models")
 
     auditors = _parse_list(args.auditor_models)
     if not auditors:
@@ -106,10 +124,18 @@ def run_sweep(args: argparse.Namespace) -> int:
         if isinstance(cfg_auditors, list):
             auditors = [str(item) for item in cfg_auditors if str(item).strip()]
     if not auditors:
-        raise SystemExit("E_AUDITORS_REQUIRED provide --auditor-models or base spec config.auditor_models")
+        raise ValueError("E_AUDITORS_REQUIRED provide --auditor-models or base spec config.auditor_models")
+
+    configured_leak_mode = str(base_config.get("leak_gate_mode") or "").strip()
+    leak_gate_mode = str(args.leak_gate_mode or configured_leak_mode or "balanced_v1").strip()
+    if leak_gate_mode not in {"strict", "balanced_v1"}:
+        raise ValueError("E_LEAK_GATE_MODE_INVALID unsupported leak gate mode")
+    return base_config, architects, auditors, leak_gate_mode
+
+
+def run_sweep(args: argparse.Namespace) -> int:
 
     out_dir = Path(args.out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
     index_out = Path(args.index_out)
     provenance_requested = bool(args.provenance_out.strip())
     provenance_out = Path(args.provenance_out) if provenance_requested else None
@@ -117,27 +143,20 @@ def run_sweep(args: argparse.Namespace) -> int:
     arbiter_error_out = (
         Path(args.arbiter_error_out.strip()) if args.arbiter_error_out.strip() else out_dir / "arbiter_error.json"
     )
-    configured_leak_mode = str(base_config.get("leak_gate_mode") or "").strip()
-    leak_gate_mode = str(args.leak_gate_mode or configured_leak_mode or "balanced_v1").strip()
-    if leak_gate_mode not in {"strict", "balanced_v1"}:
-        raise SystemExit(f"E_LEAK_GATE_MODE_INVALID unsupported leak gate mode: {leak_gate_mode}")
-
     arbiter = RunArbiter(plan_out=arbiter_plan_out, error_out=arbiter_error_out)
-    plan = arbiter.compile_plan(
-        python_bin=args.python_bin,
-        base_spec=Path(args.base_spec),
-        out_dir=out_dir,
-        index_out=index_out,
-        provenance_out=provenance_out,
-        require_provenance=provenance_requested,
-        require_clean_git=bool(args.require_clean_git),
-        architects=architects,
-        auditors=auditors,
-    )
-    arbiter.write_plan(plan)
-
+    phase = "preflight"
     try:
+        base_config, architects, auditors, leak_gate_mode = _sweep_inputs(args)
+        selection = resolve_selection(args.provider, args.base_url)
+        plan = arbiter.compile_plan(
+            python_bin=args.python_bin, base_spec=Path(args.base_spec), out_dir=out_dir,
+            index_out=index_out, provenance_out=provenance_out, require_provenance=provenance_requested,
+            require_clean_git=bool(args.require_clean_git), architects=architects, auditors=auditors,
+            provider_selection=selection,
+        )
+        arbiter.write_plan(plan)
         arbiter.preflight(plan)
+        phase = "execution"
 
         total = len(architects) * len(auditors)
         run_index = 0
@@ -153,9 +172,11 @@ def run_sweep(args: argparse.Namespace) -> int:
                     out_path=out_path,
                     config=base_config,
                     leak_gate_mode=leak_gate_mode,
+                    provider_selection=selection,
                 )
                 print(f"[{run_index}/{total}] {architect} x {auditor}")
-                result = subprocess.run(cmd, check=False)
+                result = subprocess.run(cmd, check=False, env=dict(os.environ,
+                    ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL="false", ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL="false"))
                 if result.returncode != 0:
                     raise ArbiterFailure(
                         phase="execution",
@@ -168,37 +189,27 @@ def run_sweep(args: argparse.Namespace) -> int:
                             "artifact": out_path.as_posix(),
                         },
                     )
-                arbiter.validate_run_output(path=out_path, architect_model=architect, auditor_model=auditor)
+                arbiter.validate_run_output(path=out_path, architect_model=architect, auditor_model=auditor,
+                                           provider_selection=selection)
 
         payload = odr_index.generate_index(input_dir=out_dir, output_path=index_out)
         print(f"Wrote {index_out} (runs={payload['run_count']})")
 
         if provenance_requested and provenance_out is not None:
-            prov_cmd = [
-                args.python_bin,
-                "scripts/odr/generate_odr_provenance.py",
-                "--input-dir",
-                str(out_dir),
-                "--out",
-                str(provenance_out),
-            ]
-            if args.no_provenance_probes:
-                prov_cmd.append("--no-probes")
-            result = subprocess.run(prov_cmd, check=False)
-            if result.returncode != 0:
-                raise ArbiterFailure(
-                    phase="execution",
-                    code="E_ARB_EXECUTION_FAILED",
-                    message="ODR provenance generation failed.",
-                    failures=[f"subprocess_exit:{result.returncode}"],
-                    context={"artifact": provenance_out.as_posix()},
-                )
+            _generate_provenance(args, out_dir, provenance_out)
 
         arbiter.postflight(plan)
         return 0
     except ArbiterFailure as failure:
         arbiter.emit_error_artifact(failure)
         print(f"{failure.code} {failure.message}")
+        return 2
+    except (OSError, ValueError) as exc:
+        failure = ArbiterFailure(phase=phase,
+            code="E_ARB_EXECUTION_FAILED" if phase == "execution" else "E_ARB_PREFLIGHT_MISSING_MATERIAL",
+            message="ODR invocation could not complete.", failures=[type(exc).__name__])
+        arbiter.emit_error_artifact(failure)
+        print(f"{failure.code} {failure.message} ({type(exc).__name__})")
         return 2
 
 
@@ -237,6 +248,8 @@ def main() -> int:
         help="Optional path for deterministic arbiter error artifact (defaults to <out-dir>/arbiter_error.json).",
     )
     parser.add_argument("--python-bin", default=sys.executable)
+    parser.add_argument("--provider", default="", help="Explicit provider; otherwise use shared configured provider.")
+    parser.add_argument("--base-url", default="", help="Explicit provider endpoint; otherwise use its configured endpoint.")
     parser.add_argument(
         "--leak-gate-mode",
         default="",

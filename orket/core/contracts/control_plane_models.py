@@ -44,12 +44,9 @@ from orket.core.domain.control_plane_lifecycle import is_terminal_attempt_state
 CONTROL_PLANE_CONTRACT_VERSION_V1 = "control_plane.contract.v1"
 CONTROL_PLANE_SNAPSHOT_VERSION_V1 = "control_plane.snapshot.v1"
 NonEmptyStr = Annotated[str, Field(min_length=1)]
+StateRevision = Annotated[int, Field(ge=0, strict=True)]
 FailureClassification = (
-    ExecutionFailureClass
-    | ProtocolFailureClass
-    | TruthFailureClass
-    | ResourceFailureClass
-    | ControlPlaneFailureClass
+    ExecutionFailureClass | ProtocolFailureClass | TruthFailureClass | ResourceFailureClass | ControlPlaneFailureClass
 )
 
 
@@ -121,6 +118,7 @@ class WorkloadRecord(_ControlPlaneBaseModel):
 
 class RunRecord(_ControlPlaneBaseModel):
     contract_version: str = CONTROL_PLANE_CONTRACT_VERSION_V1
+    state_revision: StateRevision | None = None
     run_id: NonEmptyStr
     workload_id: NonEmptyStr
     workload_version: NonEmptyStr
@@ -138,6 +136,7 @@ class RunRecord(_ControlPlaneBaseModel):
 
 class AttemptRecord(_ControlPlaneBaseModel):
     contract_version: str = CONTROL_PLANE_CONTRACT_VERSION_V1
+    state_revision: StateRevision | None = None
     attempt_id: NonEmptyStr
     run_id: NonEmptyStr
     attempt_ordinal: int = Field(ge=1)
@@ -180,6 +179,7 @@ class AttemptRecord(_ControlPlaneBaseModel):
 
 class StepRecord(_ControlPlaneBaseModel):
     contract_version: str = CONTROL_PLANE_CONTRACT_VERSION_V1
+    state_revision: StateRevision | None = None
     step_id: NonEmptyStr
     attempt_id: NonEmptyStr
     step_kind: NonEmptyStr

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -53,6 +54,7 @@ def _init_sdk_benchmark_extension_repo(repo_root: Path) -> None:
     )
 
 
+# Layer: integration
 def test_run_extension_workload_baseline_emits_latency_report(tmp_path: Path) -> None:
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
@@ -64,7 +66,7 @@ def test_run_extension_workload_baseline_emits_latency_report(tmp_path: Path) ->
     output = tmp_path / "baseline_report.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/extensions/run_extension_workload_baseline.py",
             "--repo",
             str(repo),

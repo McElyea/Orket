@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket-governed-agent-starter"
-version = "0.2.0"
+version = "0.3.0a1"
 description = "Bounded external governed-agent starter for Orket"
 requires-python = ">=3.11"
-dependencies = ["orket-extension-sdk==0.6.0"]
+dependencies = ["orket-extension-sdk==0.7.0a1"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0,<10.0"]

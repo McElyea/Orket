@@ -5,6 +5,7 @@ import pytest
 
 import orket.interfaces.api as api_module
 from orket.schema import CardStatus
+from tests.helpers.card_completion import complete_existing_card
 
 client = None
 
@@ -159,6 +160,7 @@ def test_api_expansion_gate_system_teams_contract(monkeypatch):
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_api_expansion_gate_card_guard_history_contract(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     from orket.orchestration.engine import OrchestrationEngine
@@ -184,7 +186,7 @@ async def test_api_expansion_gate_card_guard_history_contract(monkeypatch, tmp_p
     await real_engine.cards.update_status("CARD-GUARD-1", CardStatus.AWAITING_GUARD_REVIEW, assignee="guard")
     await real_engine.cards.update_status("CARD-GUARD-1", CardStatus.GUARD_REQUESTED_CHANGES, assignee="guard")
     await real_engine.cards.update_status("CARD-GUARD-1", CardStatus.AWAITING_GUARD_REVIEW, assignee="guard")
-    await real_engine.cards.update_status("CARD-GUARD-1", CardStatus.GUARD_APPROVED, assignee="guard")
+    await complete_existing_card(real_engine.cards, "CARD-GUARD-1", workspace_root, service=real_engine.runtime_context.card_completion, target_status=CardStatus.GUARD_APPROVED)
 
     response = client.get("/v1/cards/CARD-GUARD-1/guard-history", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200

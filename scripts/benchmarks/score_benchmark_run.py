@@ -7,12 +7,14 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from scripts.benchmarks.benchmark_latency import summarize_latency
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     import sys
 
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from common.rerun_diff_ledger import write_payload_with_diff_ledger
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from scripts.benchmarks.benchmark_latency import summarize_latency
+    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 
 def _parse_args() -> argparse.Namespace:
@@ -102,20 +104,22 @@ def score_report(
     tier_scores: dict[int, list[float]] = defaultdict(list)
     tier_bands: dict[int, list[int]] = defaultdict(list)
     failing_tasks: list[str] = []
-    latency_samples: list[float] = []
+    latency_samples: list[Any] = []
     cost_samples: list[float] = []
 
     for task_id, task_detail in details.items():
         if not isinstance(task_detail, dict):
-            continue
+            raise ValueError("Report task details must contain only JSON objects.")
         runs = task_detail.get("runs", [])
         if not isinstance(runs, list):
-            runs = []
+            raise ValueError("Benchmark runs must be a JSON array.")
+        if any(not isinstance(run, dict) for run in runs):
+            raise ValueError("Benchmark runs must contain only JSON objects.")
 
         run_count = len(runs)
-        success_count = sum(1 for run in runs if int(run.get("exit_code", 1)) == 0 and isinstance(run, dict))
+        success_count = sum(1 for run in runs if int(run.get("exit_code", 1)) == 0)
         success_rate = (success_count / run_count) if run_count else 0.0
-        run_latencies = [float(run.get("duration_ms", 0.0) or 0.0) for run in runs if isinstance(run, dict)]
+        run_latencies = [run.get("duration_ms") for run in runs]
         run_costs = [float(run.get("cost_usd", 0.0) or 0.0) for run in runs if isinstance(run, dict)]
         latency_samples.extend(run_latencies)
         cost_samples.extend(run_costs)
@@ -143,7 +147,7 @@ def score_report(
             "unique_hashes": unique_hashes,
             "deterministic": deterministic,
             "determinism_note": determinism_note,
-            "avg_latency_ms": round(sum(run_latencies) / len(run_latencies), 3) if run_latencies else 0.0,
+            **summarize_latency(run_latencies),
             "avg_cost_usd": round(sum(run_costs) / len(run_costs), 6) if run_costs else 0.0,
             "score": numeric_score,
             "band": band,
@@ -173,7 +177,7 @@ def score_report(
     execution_mode = report_payload.get("execution_mode", report_payload.get("flow"))
 
     return {
-        "schema_version": "v1",
+        "schema_version": "v2",
         "policy_version": str(policy.get("policy_version", "v1")),
         "input_report": report_payload.get("task_bank"),
         "runtime_target": runtime_target,
@@ -187,7 +191,7 @@ def score_report(
             report_payload.get("determinism_rate_validity") or "valid only when runs_per_task >= 2"
         ),
         "warnings": list(report_payload.get("warnings") or []) if isinstance(report_payload.get("warnings"), list) else [],
-        "avg_latency_ms": round(sum(latency_samples) / len(latency_samples), 3) if latency_samples else 0.0,
+        **summarize_latency(latency_samples),
         "avg_cost_usd": round(sum(cost_samples) / len(cost_samples), 6) if cost_samples else 0.0,
         "overall_avg_score": overall_avg_score,
         "per_task_scores": per_task_scores,

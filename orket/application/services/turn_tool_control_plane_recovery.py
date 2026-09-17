@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.turn_tool_checkpoint_authority import (
+    TurnToolCheckpointRecoveryError,
+    TurnToolReconciliationClosed,
+    resolve_checkpoint_recovery_authority,
+    validate_checkpoint_recovery_inputs,
+)
 from orket.application.services.turn_tool_control_plane_closeout import close_reconciliation_required_resume_mode
 from orket.application.services.turn_tool_control_plane_reconciliation import publish_resume_reconciliation
 from orket.application.services.turn_tool_control_plane_support import attempt_id_for, utc_now
@@ -9,7 +15,6 @@ from orket.core.contracts import (
     CheckpointAcceptanceRecord,
     CheckpointRecord,
     EffectJournalEntryRecord,
-    ReconciliationRecord,
     RecoveryDecisionRecord,
     RunRecord,
     StepRecord,
@@ -25,10 +30,6 @@ from orket.core.domain import (
     validate_attempt_state_transition,
     validate_run_state_transition,
 )
-
-
-class TurnToolCheckpointRecoveryError(ValueError):
-    """Raised when governed turn checkpoint recovery would exceed authority."""
 
 
 def _same_attempt_resume_decision_id(*, run_id: str, attempt_ordinal: int) -> str:
@@ -65,11 +66,11 @@ async def recover_pre_effect_attempt_for_resume_mode(
                 operation_refs=[],
             )
         return run, current_attempt
-    checkpoint, checkpoint_acceptance = await _resolve_checkpoint_recovery_authority(
+    checkpoint, checkpoint_acceptance = await resolve_checkpoint_recovery_authority(
         publication=publication,
         attempt_id=current_attempt.attempt_id,
     )
-    resumability_class, accepted_checkpoint = _validate_checkpoint_recovery_inputs(
+    resumability_class, accepted_checkpoint = validate_checkpoint_recovery_inputs(
         run=run,
         current_attempt=current_attempt,
         checkpoint=checkpoint,
@@ -123,8 +124,8 @@ async def recover_pre_effect_attempt_for_resume_mode(
     )
     validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.RECOVERY_PENDING)
     recovery_pending_run = run.model_copy(update={"lifecycle_state": RunState.RECOVERY_PENDING})
-    await execution_repository.save_attempt_record(record=interrupted_attempt)
-    await execution_repository.save_run_record(record=recovery_pending_run)
+    interrupted_attempt = await execution_repository.save_attempt_record(record=interrupted_attempt)
+    recovery_pending_run = await execution_repository.save_run_record(record=recovery_pending_run)
 
     next_attempt_ordinal = max(current_attempt.attempt_ordinal, 1) + 1
     next_attempt_id = attempt_id_for(run_id=run.run_id, ordinal=next_attempt_ordinal)
@@ -147,11 +148,11 @@ async def recover_pre_effect_attempt_for_resume_mode(
         checkpoint_acceptance=accepted_checkpoint,
     )
     interrupted_attempt = interrupted_attempt.model_copy(update={"recovery_decision_id": decision.decision_id, "failure_plane": decision.failure_plane, "failure_classification": decision.failure_classification})
-    await execution_repository.save_attempt_record(record=interrupted_attempt)
+    interrupted_attempt = await execution_repository.save_attempt_record(record=interrupted_attempt)
 
     validate_run_state_transition(current_state=recovery_pending_run.lifecycle_state, next_state=RunState.RECOVERING)
     recovering_run = recovery_pending_run.model_copy(update={"lifecycle_state": RunState.RECOVERING})
-    await execution_repository.save_run_record(record=recovering_run)
+    recovering_run = await execution_repository.save_run_record(record=recovering_run)
 
     resumed_attempt = AttemptRecord(
         attempt_id=next_attempt_id,
@@ -161,7 +162,7 @@ async def recover_pre_effect_attempt_for_resume_mode(
         starting_state_snapshot_ref=checkpoint.state_snapshot_ref,
         start_timestamp=interrupted_at,
     )
-    await execution_repository.save_attempt_record(record=resumed_attempt)
+    resumed_attempt = await execution_repository.save_attempt_record(record=resumed_attempt)
 
     validate_run_state_transition(current_state=recovering_run.lifecycle_state, next_state=RunState.EXECUTING)
     resumed_run = recovering_run.model_copy(
@@ -170,7 +171,7 @@ async def recover_pre_effect_attempt_for_resume_mode(
             "current_attempt_id": resumed_attempt.attempt_id,
         }
     )
-    await execution_repository.save_run_record(record=resumed_run)
+    resumed_run = await execution_repository.save_run_record(record=resumed_run)
     return resumed_run, resumed_attempt
 
 
@@ -186,7 +187,7 @@ async def fail_closed_on_orphan_operation_artifacts_for_resume_mode(
 ) -> None:
     if not operation_refs:
         return
-    _validate_checkpoint_recovery_inputs(
+    validate_checkpoint_recovery_inputs(
         run=run,
         current_attempt=current_attempt,
         checkpoint=checkpoint,
@@ -205,19 +206,6 @@ async def fail_closed_on_orphan_operation_artifacts_for_resume_mode(
     )
 
 
-async def _resolve_checkpoint_recovery_authority(
-    *,
-    publication: ControlPlanePublicationService,
-    attempt_id: str,
-) -> tuple[CheckpointRecord, CheckpointAcceptanceRecord | None]:
-    checkpoints = await publication.repository.list_checkpoints(parent_ref=attempt_id)
-    if not checkpoints:
-        raise TurnToolCheckpointRecoveryError(
-            f"resume_mode requires an accepted governed turn checkpoint for attempt {attempt_id}"
-        )
-    checkpoint = checkpoints[-1]
-    acceptance = await publication.repository.get_checkpoint_acceptance(checkpoint_id=checkpoint.checkpoint_id)
-    return checkpoint, acceptance
 
 
 async def load_checkpoint_resume_lineage(
@@ -232,7 +220,7 @@ async def load_checkpoint_resume_lineage(
             f"resume_mode did not create or resolve a governed attempt for {run_id}"
         )
     if resumed_attempt.attempt_ordinal == 1:
-        checkpoint, checkpoint_acceptance = await _resolve_checkpoint_recovery_authority(
+        checkpoint, checkpoint_acceptance = await resolve_checkpoint_recovery_authority(
             publication=publication,
             attempt_id=resumed_attempt.attempt_id,
         )
@@ -366,8 +354,8 @@ async def _escalate_reconciliation_required_resume_mode(
     )
     validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.RECOVERY_PENDING)
     recovery_pending_run = run.model_copy(update={"lifecycle_state": RunState.RECOVERY_PENDING})
-    await execution_repository.save_attempt_record(record=interrupted_attempt)
-    await execution_repository.save_run_record(record=recovery_pending_run)
+    interrupted_attempt = await execution_repository.save_attempt_record(record=interrupted_attempt)
+    recovery_pending_run = await execution_repository.save_run_record(record=recovery_pending_run)
     reconciliation, required_scope_refs = await publish_resume_reconciliation(
         publication=publication,
         run=recovery_pending_run,
@@ -379,7 +367,7 @@ async def _escalate_reconciliation_required_resume_mode(
     )
     validate_run_state_transition(current_state=recovery_pending_run.lifecycle_state, next_state=RunState.RECONCILING)
     reconciling_run = recovery_pending_run.model_copy(update={"lifecycle_state": RunState.RECONCILING})
-    await execution_repository.save_run_record(record=reconciling_run)
+    reconciling_run = await execution_repository.save_run_record(record=reconciling_run)
     decision = await publication.publish_recovery_decision(
         decision_id=f"turn-tool-recovery:{run.run_id}:reconcile:{current_attempt.attempt_ordinal:04d}",
         run_id=run.run_id,
@@ -396,7 +384,7 @@ async def _escalate_reconciliation_required_resume_mode(
         reconciliation_record=reconciliation,
     )
     interrupted_attempt = interrupted_attempt.model_copy(update={"recovery_decision_id": decision.decision_id, "failure_plane": decision.failure_plane, "failure_classification": decision.failure_classification})
-    await execution_repository.save_attempt_record(record=interrupted_attempt)
+    interrupted_attempt = await execution_repository.save_attempt_record(record=interrupted_attempt)
     terminal_failure_basis = (
         "reconciliation_closed_unexpected_effect_observed"
         if effect_entries
@@ -416,57 +404,20 @@ async def _escalate_reconciliation_required_resume_mode(
         ],
     )
     if effect_entries:
-        raise TurnToolCheckpointRecoveryError(
+        raise TurnToolReconciliationClosed(
             "resume_mode encountered governed turn effect truth beyond the pre-effect checkpoint; "
             "continuation remains unavailable and the run was closed from reconciliation evidence"
         )
     if operation_refs:
-        raise TurnToolCheckpointRecoveryError(
+        raise TurnToolReconciliationClosed(
             "resume_mode encountered durable operation artifacts without matching control-plane step/effect truth; "
             "continuation remains unavailable and the run was closed from reconciliation evidence"
         )
-    raise TurnToolCheckpointRecoveryError(
+    raise TurnToolReconciliationClosed(
         "resume_mode encountered governed turn step truth without matching effect authority; "
         "continuation remains unavailable and the run was closed from reconciliation evidence"
     )
-
-
-def _validate_checkpoint_recovery_inputs(
-    *,
-    run: RunRecord,
-    current_attempt: AttemptRecord,
-    checkpoint: CheckpointRecord,
-    acceptance: CheckpointAcceptanceRecord | None,
-) -> tuple[CheckpointResumabilityClass, CheckpointAcceptanceRecord]:
-    if run.lifecycle_state is not RunState.EXECUTING:
-        raise TurnToolCheckpointRecoveryError(
-            f"resume_mode requires an unfinished executing run; found {run.lifecycle_state.value}"
-        )
-    if current_attempt.attempt_state is not AttemptState.EXECUTING:
-        raise TurnToolCheckpointRecoveryError(
-            f"resume_mode requires an unfinished executing attempt; found {current_attempt.attempt_state.value}"
-        )
-    if acceptance is None or acceptance.outcome is not CheckpointAcceptanceOutcome.ACCEPTED:
-        raise TurnToolCheckpointRecoveryError(
-            f"resume_mode requires accepted checkpoint authority for {checkpoint.checkpoint_id}"
-        )
-    if checkpoint.resumability_class not in {
-        CheckpointResumabilityClass.RESUME_SAME_ATTEMPT,
-        CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT,
-    }:
-        raise TurnToolCheckpointRecoveryError(
-            "resume_mode requires a resumable governed turn checkpoint"
-        )
-    if acceptance.resumability_class is not checkpoint.resumability_class:
-        raise TurnToolCheckpointRecoveryError(
-            "resume_mode requires checkpoint acceptance that matches checkpoint resumability"
-        )
-    return checkpoint.resumability_class, acceptance
-
-
 __all__ = [
     "TurnToolCheckpointRecoveryError",
-    "fail_closed_on_orphan_operation_artifacts_for_resume_mode",
     "load_checkpoint_resume_lineage",
-    "recover_pre_effect_attempt_for_resume_mode",
 ]

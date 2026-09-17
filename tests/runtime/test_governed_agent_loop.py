@@ -11,10 +11,9 @@ import pytest
 from orket.adapters.storage.async_control_plane_execution_repository import (
     AsyncControlPlaneExecutionRepository,
 )
-from orket.adapters.storage.async_control_plane_record_repository import (
-    AsyncControlPlaneRecordRepository,
-)
 from orket.adapters.storage.async_governed_agent_repository import AsyncGovernedAgentRepository
+from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
+from orket.adapters.storage.governed_agent_replay_store import GovernedAgentReplayStore
 from orket.application.services.governed_agent_broker_service import GovernedAgentHostBroker
 from orket.application.services.governed_agent_inspection_service import (
     GovernedAgentInspectionService,
@@ -47,6 +46,7 @@ pytestmark = pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.end_to_end
 @pytest.mark.parametrize("staged,memory", [(False, False), (True, False), (True, True)])
+# Layer: integration
 async def test_two_iteration_governor_replays_decisions_and_publishes_verified_truth(
     tmp_path: Path,
     monkeypatch,
@@ -80,7 +80,7 @@ async def test_two_iteration_governor_replays_decisions_and_publishes_verified_t
     service = GovernedAgentLoopService(
         execution_repository=AsyncControlPlaneExecutionRepository(db_path),
         iteration_repository=repository,
-        truth_repository=AsyncControlPlaneRecordRepository(db_path),
+        transactions=SQLiteControlPlaneTransactions(db_path),
         invoker=invoker,
         verifier=SecondIterationVerifier(),
     )
@@ -168,10 +168,9 @@ async def _assert_completed_two_iteration_run(
     assert duplicate.invocation_ids == ()
     assert provider.roles == ["planner", "actor", "critic"] * 2
     inspector = GovernedAgentInspectionService(
-        execution_repository=control_plane,
+        replay_repository=GovernedAgentReplayStore(db_path),
         iteration_repository=repository,
         call_repository=repository,
-        truth_repository=AsyncControlPlaneRecordRepository(db_path),
     )
     inspection = await inspector.inspect(run_id="run-1")
     replay = await inspector.replay(run_id="run-1")
@@ -194,17 +193,17 @@ async def _assert_completed_two_iteration_run(
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_restart_after_dispatch_blocks_without_redispatch(tmp_path: Path) -> None:
     """Layer: integration. A prepared dispatch without a result becomes explicit recovery state."""
     db_path = tmp_path / "restart.sqlite3"
     request = agent_request()
     binding = binding_for(request)
     repository = await prepare_authority(db_path, request, binding)
-    records = AsyncControlPlaneRecordRepository(db_path)
     service = GovernedAgentLoopService(
         execution_repository=AsyncControlPlaneExecutionRepository(db_path),
         iteration_repository=repository,
-        truth_repository=records,
+        transactions=SQLiteControlPlaneTransactions(db_path),
         invoker=UnexpectedBroker(),  # type: ignore[arg-type]
         verifier=SecondIterationVerifier(),
     )
@@ -230,6 +229,7 @@ async def test_restart_after_dispatch_blocks_without_redispatch(tmp_path: Path) 
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_real_child_crash_becomes_recovery_pending_uncertainty(
     tmp_path: Path,
     monkeypatch,
@@ -257,7 +257,7 @@ async def test_real_child_crash_becomes_recovery_pending_uncertainty(
     service = GovernedAgentLoopService(
         execution_repository=AsyncControlPlaneExecutionRepository(db_path),
         iteration_repository=repository,
-        truth_repository=AsyncControlPlaneRecordRepository(db_path),
+        transactions=SQLiteControlPlaneTransactions(db_path),
         invoker=invoker,
         verifier=SecondIterationVerifier(),
     )

@@ -2,3 +2,6 @@
 
 *.bat text eol=crlf
 *.cmd text eol=crlf
+
+# Sealed witness fixtures retain manifest-committed bytes, including original CRLF.
+tests/proof_fixtures/outward_run/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

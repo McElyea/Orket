@@ -76,6 +76,7 @@ async def run_proof(*, model: str, provider: str, proof_root: Path = PROOF_ROOT)
         event_store=event_store,
         connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
         utc_now=clock,
+        workspace_root=workspace_root,
     )
     execution_service = OutwardRunExecutionService(
         run_store=run_store,

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_io
 from orket.application.services.control_plane_resource_authority_checks import (
     require_resource_snapshot_matches_lease,
 )
@@ -47,6 +47,8 @@ class GiteaStateWorker:
         control_plane_lease_service: GiteaStateControlPlaneLeaseService | None = None,
         control_plane_reservation_service: GiteaStateControlPlaneReservationService | None = None,
     ) -> None:
+        if control_plane_execution_service is not None and control_plane_lease_service is None:
+            raise ValueError("Gitea execution authority requires lease publication")
         self.adapter = adapter
         self.worker_id = str(worker_id)
         self.lease_seconds = max(1, int(lease_seconds))
@@ -165,113 +167,43 @@ class GiteaStateWorker:
             lease_epoch=lease_epoch,
             reservation_id=control_plane_reservation_id,
         )
+        lease_state, error = await self._work_with_renewal(
+            card_id=card_id, card=card, work_fn=work_fn,
+            lease_epoch=lease_epoch, lease_observation=lease_observation,
+        )
+        final_state = self.success_state if error is None else self.failure_state
+        await self.adapter.release_or_fail(card_id, final_state=final_state, error=error)
+        await self._publish_closeout_if_enabled(
+            card_id=card_id, final_state=final_state, error=error, lease_state=lease_state,
+            control_plane_run_id=control_plane_run_id, control_plane_attempt_id=control_plane_attempt_id,
+        )
+
+    async def _work_with_renewal(self, *, card_id, card, work_fn, lease_epoch, lease_observation):
         stop_event = asyncio.Event()
-        lease_state: dict[str, Any] = {
-            "expired": False,
-            "authority_drift": False,
-            "reason": "",
-            "lease_observation": lease_observation,
-        }
-        renew_task = asyncio.create_task(self._renew_loop(card_id=card_id, stop_event=stop_event, lease_epoch=lease_epoch, lease_state=lease_state))
+        lease_state = {"expired": False, "authority_drift": False, "reason": "",
+                       "lease_observation": lease_observation}
+        renew_task = asyncio.create_task(self._renew_loop(
+            card_id=card_id, stop_event=stop_event, lease_epoch=lease_epoch, lease_state=lease_state,
+        ))
+
+        async def settle_renewal():
+            await renew_task
+
+        error = None
         try:
             await work_fn(card)
-            if lease_state["expired"]:
-                await self._publish_expired_lease_if_enabled(
-                    card_id=card_id,
-                    lease_observation=lease_state["lease_observation"],
-                    reason=lease_state["reason"] or "E_LEASE_EXPIRED",
-                )
-                raise LeaseExpiredError(lease_state["reason"] or "E_LEASE_EXPIRED")
-            if lease_state["authority_drift"]:
-                drift_reason = lease_state["reason"] or self.CONTROL_PLANE_RESOURCE_DRIFT_REASON
-                await self.adapter.release_or_fail(
-                    card_id,
-                    final_state=self.failure_state,
-                    error=drift_reason,
-                )
-                await self._publish_release_transition_if_enabled(
-                    card_id=card_id,
-                    final_state=self.failure_state,
-                    error=drift_reason,
-                    control_plane_run_id=control_plane_run_id,
-                    control_plane_attempt_id=control_plane_attempt_id,
-                )
-                await self._publish_released_lease_if_enabled(
-                    card_id=card_id,
-                    lease_observation=lease_state["lease_observation"],
-                    final_state=self.failure_state,
-                )
-                return
-            await self.adapter.release_or_fail(
-                card_id,
-                final_state=self.success_state,
-                error=None,
-            )
-            await self._publish_release_transition_if_enabled(
-                card_id=card_id,
-                final_state=self.success_state,
-                error=None,
-                control_plane_run_id=control_plane_run_id,
-                control_plane_attempt_id=control_plane_attempt_id,
-            )
-            await self._publish_released_lease_if_enabled(
-                card_id=card_id,
-                lease_observation=lease_state["lease_observation"],
-                final_state=self.success_state,
-            )
         except LeaseExpiredError as exc:
-            if lease_state["expired"]:
-                await self._publish_expired_lease_if_enabled(
-                    card_id=card_id,
-                    lease_observation=lease_state["lease_observation"],
-                    reason=lease_state["reason"] or str(exc) or "E_LEASE_EXPIRED",
-                )
-            await self.adapter.release_or_fail(
-                card_id,
-                final_state=self.failure_state,
-                error=str(exc) or "E_LEASE_EXPIRED",
-            )
-            await self._publish_release_transition_if_enabled(
-                card_id=card_id,
-                final_state=self.failure_state,
-                error=str(exc) or "E_LEASE_EXPIRED",
-                control_plane_run_id=control_plane_run_id,
-                control_plane_attempt_id=control_plane_attempt_id,
-            )
+            error = str(exc) or "E_LEASE_EXPIRED"
         except (RuntimeError, ValueError, TypeError, OSError, TimeoutError) as exc:
-            effective_error = (
-                lease_state["reason"]
-                if lease_state.get("authority_drift")
-                else str(exc)
-            )
-            await self.adapter.release_or_fail(
-                card_id,
-                final_state=self.failure_state,
-                error=effective_error,
-            )
-            await self._publish_release_transition_if_enabled(
-                card_id=card_id,
-                final_state=self.failure_state,
-                error=effective_error,
-                control_plane_run_id=control_plane_run_id,
-                control_plane_attempt_id=control_plane_attempt_id,
-            )
-            if lease_state["expired"]:
-                await self._publish_expired_lease_if_enabled(
-                    card_id=card_id,
-                    lease_observation=lease_state["lease_observation"],
-                    reason=lease_state["reason"] or effective_error or "E_LEASE_EXPIRED",
-                )
-            else:
-                await self._publish_released_lease_if_enabled(
-                    card_id=card_id,
-                    lease_observation=lease_state["lease_observation"],
-                    final_state=self.failure_state,
-                )
+            error = str(exc) or type(exc).__name__
         finally:
             stop_event.set()
-            with contextlib.suppress(asyncio.CancelledError):
-                await renew_task
+            await run_owned_io(settle_renewal, label=f"gitea renewal:{card_id}", preserve_failure=True)
+        if lease_state["expired"]:
+            error = lease_state["reason"] or "E_LEASE_EXPIRED"
+        elif lease_state["authority_drift"]:
+            error = lease_state["reason"] or self.CONTROL_PLANE_RESOURCE_DRIFT_REASON
+        return lease_state, error
 
     async def _renew_loop(
         self,
@@ -528,29 +460,28 @@ class GiteaStateWorker:
             to_state="in_progress",
         )
 
-    async def _publish_release_transition_if_enabled(
-        self,
-        *,
-        card_id: str,
-        final_state: str,
-        error: str | None,
-        control_plane_run_id: str | None,
-        control_plane_attempt_id: str | None,
+    async def _publish_closeout_if_enabled(
+        self, *, card_id: str, final_state: str, error: str | None, lease_state: dict[str, Any],
+        control_plane_run_id: str | None, control_plane_attempt_id: str | None,
     ) -> None:
-        if (
-            self.control_plane_execution_service is None
-            or control_plane_run_id is None
-            or control_plane_attempt_id is None
-        ):
-            return
-        await self.control_plane_execution_service.publish_release_transition_and_finalize(
-            run_id=control_plane_run_id,
-            attempt_id=control_plane_attempt_id,
-            card_id=card_id,
-            final_state=final_state,
-            error=error,
-            success_state=self.success_state,
-        )
+        if self.control_plane_execution_service is not None:
+            if (control_plane_run_id is None or control_plane_attempt_id is None
+                    or not isinstance(lease_state["lease_observation"], dict)):
+                raise ValueError("Gitea closeout requires retained execution and lease identities")
+            await self.control_plane_execution_service.publish_release_transition_and_finalize(
+                run_id=control_plane_run_id, attempt_id=control_plane_attempt_id, card_id=card_id,
+                final_state=final_state, error=error, success_state=self.success_state,
+                worker_id=self.worker_id, lease_observation=lease_state["lease_observation"],
+                lease_expired=lease_state["expired"], lease_service=self.control_plane_lease_service,
+            )
+        elif lease_state["expired"]:
+            await self._publish_expired_lease_if_enabled(
+                card_id=card_id, lease_observation=lease_state["lease_observation"], reason=error or "E_LEASE_EXPIRED",
+            )
+        else:
+            await self._publish_released_lease_if_enabled(
+                card_id=card_id, lease_observation=lease_state["lease_observation"], final_state=final_state,
+            )
 
     async def _publish_pre_effect_checkpoint_if_enabled(
         self,

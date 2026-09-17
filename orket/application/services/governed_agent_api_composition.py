@@ -26,7 +26,9 @@ from orket.adapters.storage.async_governed_agent_wake_repository import (
 from orket.adapters.storage.async_governed_agent_webhook_repository import (
     AsyncGovernedAgentWebhookRepository,
 )
-from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
+from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGateRepository
+from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
+from orket.adapters.storage.governed_agent_replay_store import GovernedAgentReplayStore
 from orket.adapters.tools.governed_agent_file_effect_executor import GovernedAgentFileEffectExecutor
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
@@ -49,6 +51,7 @@ from orket.application.services.governed_agent_wake_dispatcher import (
 from orket.application.services.governed_agent_webhook_ingress_service import (
     GovernedAgentWebhookIngressService,
 )
+from orket.application.services.tool_gate_service import ToolGate
 from orket.extensions import ExtensionManager
 from orket.runtime.config.defaults import configured_provider
 from orket.runtime_paths import resolve_control_plane_db_path
@@ -120,10 +123,9 @@ def build_api_governed_agent_runtime(
         notify_ready=supervisor.notify,
     )
     inspector = GovernedAgentInspectionService(
-        execution_repository=execution,
+        replay_repository=GovernedAgentReplayStore(settings.db_path),
         iteration_repository=iterations,
         call_repository=iterations,
-        truth_repository=records,
         wake_repository=wakes,
         record_repository=records,
         pending_gate_repository=pending,
@@ -157,10 +159,12 @@ def _effect_services(
     pending: AsyncPendingGateRepository,
 ) -> tuple[GovernedAgentEffectService, GovernedAgentEffectResumeService]:
     effects = GovernedAgentEffectService(
+        transactions=SQLiteControlPlaneTransactions(settings.db_path),
         execution_repository=execution,
         publication=publication,
         pending_gates=pending,
-        file_executor=GovernedAgentFileEffectExecutor(extension_manager.project_root),
+        file_executor=GovernedAgentFileEffectExecutor(
+            extension_manager.project_root, tool_gate=ToolGate(None, extension_manager.project_root)),
     )
     resumes = GovernedAgentEffectResumeService(
         execution_repository=execution,

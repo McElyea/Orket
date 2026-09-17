@@ -4,14 +4,14 @@ import re
 from pathlib import Path
 from typing import Any
 
-DEFAULT_RUNTIME_INVARIANTS_DOC_PATH = Path("docs/specs/RUNTIME_INVARIANTS.md")
+from orket.runtime.config import contract_assets
 
 _INVARIANT_PATTERN = re.compile(r"^\s*\d+\.\s+`(?P<id>INV-\d+)`:\s*(?P<statement>.+?)\s*$")
 
 
 def runtime_invariant_registry_snapshot(
     *,
-    doc_path: Path | str = DEFAULT_RUNTIME_INVARIANTS_DOC_PATH,
+    doc_path: Path | str = contract_assets.DEFAULT_RUNTIME_INVARIANTS_DOC_PATH,
 ) -> dict[str, Any]:
     path = Path(doc_path)
     try:

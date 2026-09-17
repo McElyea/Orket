@@ -13,7 +13,7 @@ from orket.application.services.tool_approval_control_plane_operator_service imp
 )
 from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
-from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
 
 pytestmark = pytest.mark.integration
 

@@ -1,6 +1,6 @@
 # Orket Architecture (Target State)
 
-Last updated: 2026-07-30
+Last updated: 2026-09-16
 Status: Active target architecture (transitioning)
 
 Canonical architecture specification for the Orket runtime.
@@ -26,6 +26,10 @@ Current-state operational authority that remains active during migration:
 1. `CURRENT_AUTHORITY.md`
 2. `docs/architecture/event_taxonomy.md`
 3. `docs/specs/REVIEW_RUN_V0.md`
+4. `docs/specs/RUNTIME_PROJECT_ROOTS.md`: operator project state comes from the
+   selected invocation/application root, while immutable runtime assets remain
+   package-owned. `docs/specs/RUNTIME_STORE_BINDING.md` owns runtime-store binding
+   and explicit offline migration of historical relative epic scopes.
 
 ## Known Current Exceptions
 
@@ -43,7 +47,7 @@ not accepted as target-architecture conformance.
 2. Decision-node purity exceptions:
    1. `orket/decision_nodes/api_runtime_strategy_node.py` and `orket/decision_nodes/builtins.py` still include environment/path/provider policy logic, but API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths now live in explicit services.
 3. API runtime composition:
-   1. `create_api_app()` returns a distinct FastAPI app with an application-owned `ApiRuntimeContainer`, runtime state, host, engine, decision node, outbound-policy snapshot, stream/interaction/extension owners, outward stores/services, and tracked task teardown.
+   1. `create_api_app()` returns a distinct FastAPI app with an application-owned `ApiRuntimeContainer`, runtime state, host, engine, decision node, outbound-policy snapshot, stream/interaction/extension owners, outward stores/services, and tracked task teardown. Pure ASGI middleware admits each HTTP/WebSocket invocation through the container, retaining ownership through streaming and awaited connectors. Shutdown waits for active invocation cleanup before resources and engine; availability and remaining lifetime limits live in `docs/specs/API_RUNTIME_LIFECYCLE.md`.
    2. `orket/interfaces/api.py` is import-pure with respect to FastAPI/runtime owners: it exports no module-default app or mutable owner aliases and constructs no application, adapter, decision-node, kernel, or orchestration implementation. Production callers use `orket.runtime.create_api_app(...)` and retain the returned app.
 4. Deterministic runtime clock/input exceptions:
    1. Some application paths still use wall-clock helpers directly (for example `time.time()` / `datetime.now(...)`) instead of injected runtime inputs.
@@ -134,6 +138,24 @@ Defines stable domain primitives:
 
 Core must remain deterministic and dependency-minimal.
 
+Governed-agent shared invocation/broker ports and wake/schedule/webhook records
+reside in `orket/core/contracts/`. Concrete authority-guard invocation remains in
+application; storage adapters implement the shared core ports. Migration and
+manual wake command ownership are documented in
+`docs/architecture/CONTRACT_DELTA_AGENT_CONTRACTS_C_2026-09-16.md`.
+
+Current D1 boundaries implement this separation for failure report construction,
+structural reconciliation plans and ToolGate policy over explicit file facts.
+Application services own publication, traversal, storage and AST/iDesign workers;
+adapters receive validation authority through a core protocol. Migration and
+current proof limits are in
+`docs/architecture/CONTRACT_DELTA_CORE_EFFECT_BOUNDARIES_D_2026-09-14.md`.
+This is not whole-core purity or C/D acceptance.
+
+Bug-fix phase core values likewise consume explicit time. Application owns their
+manager, cache, verified persistence and event workers. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_BUG_FIX_PHASE_D_2026-09-16.md`.
+
 Core must not depend on:
 1. application
 2. adapters
@@ -152,6 +174,12 @@ Responsibilities:
 6. observability sequencing
 
 Application services own runtime truth.
+
+Governed-agent CLI submission, inspection/replay and operator controls delegate
+to application command services. Submission captures immutable options and owns
+catalog/request preparation and provider cleanup through interruption. Public
+arguments and result schemas are unchanged; migration and limits are in
+`docs/architecture/CONTRACT_DELTA_AGENT_COMMANDS_C_2026-09-16.md`.
 
 ### `adapters`
 
@@ -218,6 +246,29 @@ Disallowed:
 6. `decision_nodes -> persistence`
 
 Dependencies must not be bypassed via dynamic imports or runtime reflection.
+
+The executable authority is `model/core/contracts/dependency_direction_policy.json`
+(v2). Runtime, orchestration, kernel, services, extension admission and other
+coordination packages map to application; CLI/API edges map to interfaces. Domain
+vocabulary, schemas and exceptions map to core. Filesystem, clock, logging and
+other external implementations map to adapters. Exact prefix classifications and
+conditional decision-node targets are generated into
+`docs/architecture/dependency_graph_snapshot.md` from that policy. Classification
+does not itself establish pure core behavior or adapter side-effect safety.
+
+`python scripts/governance/check_dependency_direction.py` rejects unknown
+classifications, unpermitted edges, unresolved import/reflection routes and
+cross-layer strongly connected components. Git-visible inventory, source bytes
+and Python encodings define the observation; read/parse/discovery errors cannot
+produce a passing verdict. The graph exporter reports observation separately from
+the verdict. These are static dependency checks, not a runtime call graph.
+
+Only exact source/target exceptions with owner, reason, introduction and removal
+metadata can waive an edge; expiry and unused exceptions fail closed. They cannot
+waive analysis errors or authority cycles. The architectural exception register
+is an area-level debt inventory and does not grant dependency exemptions. Existing
+repository failures remain C/D work; the v2 cutover is not repository conformance
+acceptance. ADR-0001's platform tier and legacy budget are superseded.
 
 ## 8. Decision Node Rules
 
@@ -422,7 +473,38 @@ Current durable defaults (still authoritative while transitioning):
 2. webhook DB: `.orket/durable/db/webhook.db`
 3. live-loop DB: `.orket/durable/observability/live_acceptance_loop.db`
 4. user settings: `.orket/durable/config/user_settings.json`
-5. gitea export cache/staging: `.orket/durable/gitea_artifacts/`
+5. gitea export cache/staging: `.orket/durable/gitea_artifacts/`; retains local
+   payload/Git objects for the intent contract in `docs/specs/GITEA_ARTIFACT_EXPORT_CONTRACT.md`.
+6. epic publication journal: `<runtime_db>.epic-publications.sqlite3`, beside the
+   selected runtime DB; retains run/resource admissions with initialization markers
+   and owner-recovery history, unfinished approval pauses, workload outcomes,
+   approval recovery history, preparation inputs, export-attempt state with bound local owners/recovery history, and
+   verified publication progress across standard runtime restart. Preserve it with
+   the other retained runtime, control-plane and acceptance evidence stores.
+   `<publication-journal>.continuations/<sha256-session-id>.lock` files retain
+   native continuation ownership identities beside that journal. Preserve these
+   files with claimed pauses; deleting/replacing them cannot authorize recovery.
+   Ownership covers approval continuation through durable outcome/next-pause
+   retention; the continuing caller releases it before export and publication.
+   Other callers can independently finalize a retained outcome.
+7. card acceptance evidence: `.orket/durable/db/orket_persistence.db.card_acceptance.sqlite3`;
+   standard runtime composition places it beside a custom card database using
+   `<runtime-db-filename>.card_acceptance.sqlite3`.
+8. control-plane evidence: `control_plane_records.sqlite3` beside the selected
+   runtime DB. Runtime composition resolves the runtime path once against the
+   invocation directory, including a relative `ORKET_DURABLE_ROOT`; engine, epic
+   and governed turn composition share `control_plane_db_for_runtime`. Workspace
+   changes cannot select another control-plane store. Historical relative epic
+   scopes require the explicit offline binding in `docs/specs/RUNTIME_STORE_BINDING.md`.
+   Governed turn execution uses native ownership files at
+   `<control-plane-db>.turn-owners/<sha256-run-id>.lock`. Preserve these beside the
+   store; replacing a live file cannot establish ownership. Retained dispatch
+   markers and their uncertainty contract live in
+   `docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`.
+   It preserves runtime/journal/artifact/native-lock paths and copies one checked
+   old control-plane store without merging unrelated histories. Family authority and
+   scoped conformance are recorded in `CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md`;
+   storage migration does not expand those guarantees.
 
 Durable state represents retained operational truth.
 Workspace artifacts may be sanitized/discarded per contract.
@@ -483,4 +565,3 @@ Current `ReviewRun` properties:
 5. replay is offline and artifact-driven (`snapshot.json` + `policy_resolved.json`)
 
 `ReviewRun` is deliberately not a webhook or auto-trigger pipeline in v0.
-

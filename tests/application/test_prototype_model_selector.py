@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
+# Layer: integration
 def test_prototype_model_selector_picks_best_valid_candidate(tmp_path: Path) -> None:
     summary = tmp_path / "summary.json"
     summary.write_text(
@@ -27,7 +29,7 @@ def test_prototype_model_selector_picks_best_valid_candidate(tmp_path: Path) -> 
     out = tmp_path / "selector.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/benchmarks/prototype_model_selector.py",
             "--summary",
             str(summary),
@@ -44,11 +46,12 @@ def test_prototype_model_selector_picks_best_valid_candidate(tmp_path: Path) -> 
     )
     assert result.returncode == 0, result.stdout + "\n" + result.stderr
     payload = json.loads(out.read_text(encoding="utf-8"))
-    assert payload["schema_version"] == "selector.prototype.v1"
+    assert payload["schema_version"] == "selector.prototype.v2"
     assert payload["candidate_count"] == 2
     assert payload["selected"]["quant_tag"] == "Q6_K"
 
 
+# Layer: integration
 def test_prototype_model_selector_returns_none_when_no_candidate_qualifies(tmp_path: Path) -> None:
     summary = tmp_path / "summary.json"
     summary.write_text(
@@ -69,7 +72,7 @@ def test_prototype_model_selector_returns_none_when_no_candidate_qualifies(tmp_p
     out = tmp_path / "selector.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/benchmarks/prototype_model_selector.py",
             "--summary",
             str(summary),
@@ -84,4 +87,3 @@ def test_prototype_model_selector_returns_none_when_no_candidate_qualifies(tmp_p
     payload = json.loads(out.read_text(encoding="utf-8"))
     assert payload["candidate_count"] == 0
     assert payload["selected"] is None
-

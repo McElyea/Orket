@@ -5,6 +5,9 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.failure_report_service import FailureReportService
+from orket.core.domain.failure_reporter import FailureReporter
+from orket.exceptions import ApprovalPending
 from orket.logging import log_event
 from orket.schema import IssueConfig
 
@@ -16,7 +19,7 @@ class OrchestratorFailureHandler:
         self,
         *,
         workspace_root: Path,
-        transcript: list[Any],
+        report_timestamp: str,
         async_cards: Any,
         evaluator_node: Any,
         request_issue_transition: Callable[..., Awaitable[None]],
@@ -24,7 +27,7 @@ class OrchestratorFailureHandler:
         normalize_governance_violation_message: Callable[[str | None], str],
     ) -> None:
         self.workspace_root = workspace_root
-        self.transcript = transcript
+        self.report_timestamp = report_timestamp
         self.async_cards = async_cards
         self.evaluator_node = evaluator_node
         self.request_issue_transition = request_issue_transition
@@ -60,16 +63,14 @@ class OrchestratorFailureHandler:
         roles: list[str],
         turn_index: int | None = None,
     ) -> None:
-        from orket.core.domain.failure_reporter import FailureReporter
-
-        await FailureReporter.generate_report(
-            workspace=self.workspace_root,
+        report = FailureReporter.build_report(
+            timestamp=self.report_timestamp,
             session_id=run_id,
             card_id=issue.id,
             violation=result.error or "Unknown failure",
-            transcript=self.transcript,
-            roles=roles,
+            roles=tuple(roles),
         )
+        await FailureReportService(self.workspace_root).publish(report)
 
         eval_decision = self.evaluator_node.evaluate_failure(issue, result)
         issue.retry_count = eval_decision.get("next_retry_count", issue.retry_count)
@@ -99,7 +100,7 @@ class OrchestratorFailureHandler:
                     self.workspace_root,
                 )
             await self.async_cards.save(issue.model_dump())
-            raise failure_exception_class(str(result.error or "Approval required before execution."))
+            raise ApprovalPending(str(result.error or "Approval required before execution."))
 
         if action == "catastrophic":
             event_name = self.evaluator_node.failure_event_name(action)

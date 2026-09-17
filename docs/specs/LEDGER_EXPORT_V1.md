@@ -1,8 +1,16 @@
 # Ledger Export v1
 
-Last updated: 2026-05-04
+Last updated: 2026-09-12
 
 Status: Active contract for the NorthstarRefocus outward-facing pipeline Phase 4.
+
+Current retained-storage authority is `docs/specs/OUTWARD_LEDGER_STORAGE_V2.md`.
+Native events commit their hashes, append sequence and retained head atomically;
+runtime verification/export uses a complete read-only snapshot and derives the
+v1 format below in memory. V1 order/hash recipes are unchanged. Added retained
+metadata is a separate runtime assertion; offline v1 verification proves only
+export self-consistency. Populated unsealed legacy histories require explicit
+disposition; copied legacy migration and full BT-2 acceptance remain open.
 
 ## Purpose
 

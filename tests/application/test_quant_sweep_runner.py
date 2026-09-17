@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
+# Layer: integration
 def test_run_quant_sweep_builds_summary_and_frontier(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -75,7 +77,7 @@ def test_run_quant_sweep_builds_summary_and_frontier(tmp_path: Path) -> None:
     summary_out = tmp_path / "sweep_summary.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
@@ -89,10 +91,8 @@ def test_run_quant_sweep_builds_summary_and_frontier(tmp_path: Path) -> None:
             f"python {fake_runner} --task {{task_file}} --venue {{venue}} --flow {{flow}}",
             "--out-dir",
             str(out_dir),
-            "--summary-out",
-            str(summary_out),
-            "--task-limit",
-            "1",
+            "--summary-out", str(summary_out),
+            "--task-limit", "1",
         ],
         capture_output=True,
         text=True,
@@ -152,7 +152,7 @@ def test_run_quant_sweep_builds_summary_and_frontier(tmp_path: Path) -> None:
     assert per_quant["Q6_K"]["vibe_delta_status"] == "OK"
     assert per_quant["Q4_K_M"]["vibe_delta"] == 0.183
 
-
+# Layer: integration
 def test_run_quant_sweep_recommends_mismatch_when_no_quant_meets_threshold(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -219,7 +219,7 @@ def test_run_quant_sweep_recommends_mismatch_when_no_quant_meets_threshold(tmp_p
     summary_out = tmp_path / "sweep_summary.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
@@ -251,7 +251,7 @@ def test_run_quant_sweep_recommends_mismatch_when_no_quant_meets_threshold(tmp_p
     assert session["recommendation"] == "No quantization met the vibe threshold; hardware/model mismatch."
     assert summary["stability_kpis"]["frontier_success_rate"] == 0.0
 
-
+# Layer: integration
 def test_run_quant_sweep_canary_gate_blocks_on_missing_telemetry(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -303,7 +303,7 @@ def test_run_quant_sweep_canary_gate_blocks_on_missing_telemetry(tmp_path: Path)
     summary_out = tmp_path / "sweep_summary.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
@@ -329,7 +329,7 @@ def test_run_quant_sweep_canary_gate_blocks_on_missing_telemetry(tmp_path: Path)
     assert result.returncode != 0
     assert "Canary gate failed; aborting quant sweep." in (result.stdout + "\n" + result.stderr)
 
-
+# Layer: integration
 def test_run_quant_sweep_dry_run_uses_matrix_config(tmp_path: Path) -> None:
     matrix_cfg = tmp_path / "matrix.json"
     matrix_cfg.write_text(
@@ -355,7 +355,7 @@ def test_run_quant_sweep_dry_run_uses_matrix_config(tmp_path: Path) -> None:
     )
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "placeholder-model",
@@ -391,7 +391,7 @@ def test_run_quant_sweep_dry_run_uses_matrix_config(tmp_path: Path) -> None:
     assert plan["model_cache_sanitation"]["requested"] is True
     assert plan["model_cache_sanitation"]["enabled"] is False
 
-
+# Layer: integration
 def test_run_quant_sweep_excludes_polluted_rows_unless_overridden(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -451,7 +451,7 @@ def test_run_quant_sweep_excludes_polluted_rows_unless_overridden(tmp_path: Path
     summary_default = tmp_path / "sweep_default.json"
     default_result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
@@ -483,7 +483,7 @@ def test_run_quant_sweep_excludes_polluted_rows_unless_overridden(tmp_path: Path
     summary_override = tmp_path / "sweep_override.json"
     override_result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
@@ -512,7 +512,7 @@ def test_run_quant_sweep_excludes_polluted_rows_unless_overridden(tmp_path: Path
     assert override_payload["stability_kpis"]["polluted_run_rate"] == 1.0
     assert override_payload["stability_kpis"]["frontier_success_rate"] == 0.0
 
-
+# Layer: integration
 def test_run_quant_sweep_records_hardware_sidecar_output(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -580,7 +580,7 @@ def test_run_quant_sweep_records_hardware_sidecar_output(tmp_path: Path) -> None
     summary_out = tmp_path / "sweep_summary.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
@@ -614,7 +614,7 @@ def test_run_quant_sweep_records_hardware_sidecar_output(tmp_path: Path) -> None
     assert row["hardware_sidecar"]["sidecar_parse_status"] == "OK"
     assert row["hardware_sidecar"]["sidecar_parse_errors"] == []
 
-
+# Layer: integration
 def test_run_quant_sweep_sidecar_required_field_missing_sets_status(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -667,7 +667,7 @@ def test_run_quant_sweep_sidecar_required_field_missing_sets_status(tmp_path: Pa
     summary_out = tmp_path / "sweep_summary.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
@@ -698,7 +698,7 @@ def test_run_quant_sweep_sidecar_required_field_missing_sets_status(tmp_path: Pa
     assert summary["sessions"][0]["per_quant"][0]["valid"] is False
     assert summary["sessions"][0]["efficiency_frontier"]["minimum_viable_quant_tag"] is None
 
-
+# Layer: integration
 def test_run_quant_sweep_sidecar_optional_field_missing_sets_status(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -761,7 +761,7 @@ def test_run_quant_sweep_sidecar_optional_field_missing_sets_status(tmp_path: Pa
     summary_out = tmp_path / "sweep_summary.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
@@ -790,7 +790,7 @@ def test_run_quant_sweep_sidecar_optional_field_missing_sets_status(tmp_path: Pa
     assert sidecar_block["sidecar_parse_status"] == "OPTIONAL_FIELD_MISSING"
     assert "missing:pcie_throughput_gbps" in sidecar_block["sidecar_parse_errors"]
 
-
+# Layer: integration
 def test_run_quant_sweep_include_invalid_allows_sidecar_parse_failures_in_frontier(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -843,7 +843,7 @@ def test_run_quant_sweep_include_invalid_allows_sidecar_parse_failures_in_fronti
     summary_out = tmp_path / "sweep_summary.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
@@ -872,7 +872,7 @@ def test_run_quant_sweep_include_invalid_allows_sidecar_parse_failures_in_fronti
     assert summary["sessions"][0]["per_quant"][0]["valid"] is False
     assert summary["sessions"][0]["efficiency_frontier"]["minimum_viable_quant_tag"] == "Q8_0"
 
-
+# Layer: integration
 def test_run_quant_sweep_dry_run_resolves_sidecar_profile(tmp_path: Path) -> None:
     matrix_cfg = tmp_path / "matrix.json"
     sidecar_cfg = tmp_path / "sidecar_profiles.json"
@@ -902,7 +902,7 @@ def test_run_quant_sweep_dry_run_resolves_sidecar_profile(tmp_path: Path) -> Non
     )
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "placeholder-model",

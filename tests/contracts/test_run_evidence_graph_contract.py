@@ -9,6 +9,7 @@ import pytest
 import yaml
 from jsonschema import Draft202012Validator
 
+from orket.runtime.config.contract_assets import DEFAULT_ARTIFACT_SCHEMA_REGISTRY_PATH, RUN_EVIDENCE_GRAPH_SCHEMA_PATH
 from orket.runtime.run_evidence_graph import (
     build_run_evidence_graph_payload,
     validate_run_evidence_graph_payload,
@@ -71,12 +72,13 @@ def _complete_payload() -> dict[str, object]:
     )
 
 
+# Layer: contract
 def test_run_evidence_graph_schema_and_registry_pin_a_separate_artifact_family() -> None:
     payload = _complete_payload()
     validate_run_evidence_graph_payload(payload)
 
-    schema = _read_json(Path("core/artifacts/run_evidence_graph_schema.json"))
-    registry = yaml.safe_load(Path("core/artifacts/schema_registry.yaml").read_bytes().decode("utf-8"))
+    schema = _read_json(RUN_EVIDENCE_GRAPH_SCHEMA_PATH)
+    registry = yaml.safe_load(DEFAULT_ARTIFACT_SCHEMA_REGISTRY_PATH.read_bytes().decode("utf-8"))
 
     Draft202012Validator(schema).validate(payload)
 

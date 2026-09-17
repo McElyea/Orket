@@ -1,9 +1,8 @@
-﻿import json
+import json
 
 import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
-from orket.exceptions import ExecutionFailed, GovernanceViolation
 from orket.orchestration.engine import OrchestrationEngine
 from orket.schema import CardStatus
 
@@ -85,6 +84,7 @@ def setup_env(tmp_path):
     return root, workspace
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_illegal_state_transition_blocked(setup_env, monkeypatch):
     root, workspace = setup_env
     db_path = str(root / "test_boundary.db")
@@ -99,8 +99,8 @@ async def test_illegal_state_transition_blocked(setup_env, monkeypatch):
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
 
     # We expect the engine to raise an exception, and the card should end up BLOCKED
-    with pytest.raises(ExecutionFailed):
-        await engine.run_card("boundary_epic")
+    observed = await engine.run_card('boundary_epic')
+    assert observed.observation == "published" and not observed.succeeded
 
     issue = await engine.cards.get_by_id("ISSUE-B")
     assert issue.status == CardStatus.BLOCKED
@@ -113,6 +113,7 @@ async def test_illegal_state_transition_blocked(setup_env, monkeypatch):
     assert report["violation_type"] == "state_transition"
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_path_traversal_blocked(setup_env, monkeypatch):
     root, workspace = setup_env
     db_path = str(root / "test_traversal.db")
@@ -126,8 +127,8 @@ async def test_path_traversal_blocked(setup_env, monkeypatch):
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
 
-    with pytest.raises(GovernanceViolation):
-        await engine.run_card("boundary_epic")
+    observed = await engine.run_card('boundary_epic')
+    assert observed.observation == "published" and not observed.succeeded
 
     issue = await engine.cards.get_by_id("ISSUE-B")
     assert issue.status == CardStatus.BLOCKED

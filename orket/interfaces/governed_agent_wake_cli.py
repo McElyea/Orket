@@ -3,22 +3,10 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from orket.adapters.storage.async_governed_agent_wake_repository import (
-    AsyncGovernedAgentWakeRepository,
-)
-from orket.application.services.governed_agent_runtime import governed_agent_wake_view
-from orket.application.services.governed_agent_wake_control_service import (
-    GovernedAgentWakeControlService,
-    governed_agent_wake_action_view,
-)
-from orket.application.services.governed_agent_wake_ingress_service import (
-    GovernedAgentWakeIngressService,
-)
-from orket.application.services.governed_agent_wake_records import GovernedAgentWakeControlRepository
+from orket.application.services.governed_agent_wake_commands import GovernedAgentWakeCommands
 
 
 def add_governed_agent_wake_subparser(commands: Any) -> None:
@@ -67,75 +55,20 @@ def add_governed_agent_wake_subparser(commands: Any) -> None:
 
 
 async def run_governed_agent_wake_command(
-    args: argparse.Namespace,
-    repository: AsyncGovernedAgentWakeRepository,
-    control_repository: GovernedAgentWakeControlRepository,
+    args: argparse.Namespace, commands: GovernedAgentWakeCommands,
 ) -> dict[str, Any]:
     command = str(args.agent_wake_command)
     if command == "enqueue":
-        return await _enqueue_manual_wake(args, repository)
+        return await _enqueue_manual_wake(args, commands)
     if command == "list":
-        return await _list_wakes(args, repository)
-    if command in {"cancel", "recover", "actions"}:
-        return await _run_control_command(args, repository, control_repository)
-    wake = await repository.get_wake(wake_id=str(args.wake_id))
-    if wake is None:
-        raise ValueError("E_AGENT_WAKE_NOT_FOUND")
-    return {
-        "ok": True,
-        "object_type": "governed_agent_wake_inspection",
-        "schema_version": "governed_agent_wake_inspection.v1",
-        "wake": governed_agent_wake_view(wake),
-    }
-
-
-async def _list_wakes(
-    args: argparse.Namespace,
-    repository: AsyncGovernedAgentWakeRepository,
-) -> dict[str, Any]:
-    wakes = await repository.list_wakes(target_run_id=_optional_text(args.run_id))
-    return {
-        "ok": True,
-        "object_type": "governed_agent_wake_list",
-        "schema_version": "governed_agent_wake_list.v1",
-        "items": [governed_agent_wake_view(wake) for wake in wakes],
-    }
-
-
-async def _run_control_command(
-    args: argparse.Namespace,
-    repository: AsyncGovernedAgentWakeRepository,
-    control_repository: GovernedAgentWakeControlRepository,
-) -> dict[str, Any]:
-    controls = GovernedAgentWakeControlService(control_repository)
-    command = str(args.agent_wake_command)
-    wake_id = str(args.wake_id)
+        return await commands.list_wakes(target_run_id=_optional_text(args.run_id))
     if command == "actions":
-        wake = await repository.get_wake(wake_id=wake_id)
-        if wake is None:
-            raise ValueError("E_AGENT_WAKE_NOT_FOUND")
-        actions = await controls.list_actions(wake_id=wake_id)
-        return {
-            "ok": True,
-            "object_type": "governed_agent_wake_action_list",
-            "schema_version": "governed_agent_wake_action_list.v1",
-            "items": [governed_agent_wake_action_view(action) for action in actions],
-        }
-    result = (
-        await controls.cancel(wake_id=wake_id, payload=_cancellation_payload(args))
-        if command == "cancel"
-        else await controls.recover(wake_id=wake_id, payload=_recovery_payload(args))
-    )
-    successful = result.status in {"applied", "idempotent"}
-    return {
-        "ok": successful,
-        "error": None if successful else "E_AGENT_WAKE_CONTROL_CONFLICT",
-        "object_type": "governed_agent_wake_control_result",
-        "schema_version": "governed_agent_wake_control_result.v1",
-        "status": result.status,
-        "wake": None if result.wake is None else governed_agent_wake_view(result.wake),
-        "action": governed_agent_wake_action_view(result.action),
-    }
+        return await commands.list_actions(wake_id=str(args.wake_id))
+    if command in {"cancel", "recover"}:
+        payload = _cancellation_payload(args) if command == "cancel" else _recovery_payload(args)
+        return await commands.control(command, wake_id=str(args.wake_id), payload=payload)
+    return await commands.inspect(wake_id=str(args.wake_id))
+
 
 
 def _cancellation_payload(args: argparse.Namespace) -> dict[str, Any]:
@@ -168,7 +101,7 @@ def _control_identity_payload(args: argparse.Namespace) -> dict[str, Any]:
 
 async def _enqueue_manual_wake(
     args: argparse.Namespace,
-    repository: AsyncGovernedAgentWakeRepository,
+    commands: GovernedAgentWakeCommands,
 ) -> dict[str, Any]:
     request = await asyncio.to_thread(_read_json_object, str(args.request))
     run_id = _optional_text(args.run_id)
@@ -186,20 +119,7 @@ async def _enqueue_manual_wake(
             "next_lease_expiries_utc": list(args.next_lease_expires_at_utc),
         },
     }
-    ingress = GovernedAgentWakeIngressService(
-        wake_repository=repository,
-        now_utc=_utc_now,
-    )
-    result = await ingress.enqueue(payload, source="manual")
-    if result.status == "conflict" or result.wake is None:
-        return {"ok": False, "error": "E_AGENT_WAKE_CONFLICT"}
-    return {
-        "ok": True,
-        "object_type": "governed_agent_wake_admission",
-        "schema_version": "governed_agent_wake_admission.v1",
-        "status": result.status,
-        "wake": governed_agent_wake_view(result.wake),
-    }
+    return await commands.enqueue(payload)
 
 
 def _add_common_arguments(parser: argparse.ArgumentParser) -> None:
@@ -225,7 +145,3 @@ def _read_json_object(raw_path: str) -> dict[str, Any]:
 def _optional_text(value: object) -> str | None:
     normalized = str(value or "").strip()
     return normalized or None
-
-
-def _utc_now() -> str:
-    return datetime.now(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")

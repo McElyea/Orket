@@ -14,7 +14,7 @@ from orket.application.services.kernel_action_control_plane_service import Kerne
 from orket.application.services.kernel_action_control_plane_view_service import KernelActionControlPlaneViewService
 from orket.core.domain import LeaseStatus, ReservationStatus
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
-from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
 
 client = None
 
@@ -104,6 +104,7 @@ def test_kernel_api_observed_policy_reject_returns_post_effect_recovery_and_leas
     assert control_plane["latest_resource"]["resource_kind"] == "kernel_action_scope"
 
 
+# Layer: unit
 def test_kernel_api_pre_effect_policy_reject_returns_abandoned_attempt_and_recovery_refs(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
@@ -154,10 +155,14 @@ def test_kernel_api_pre_effect_policy_reject_returns_abandoned_attempt_and_recov
     control_plane = replay.json()["control_plane"]
     assert control_plane["run_state"] == "failed_terminal"
     assert control_plane["current_attempt_state"] == "attempt_abandoned"
-    assert control_plane["current_attempt_side_effect_boundary_class"] == "pre_effect_failure"
-    assert control_plane["current_attempt_failure_class"] == "kernel_action_policy_rejected"
-    assert control_plane["current_attempt_failure_plane"] == "truth_failure"
-    assert control_plane["current_attempt_failure_classification"] == "claim_exceeds_authority"
+    assert control_plane["current_attempt_side_effect_boundary_class"] is None
+    assert control_plane["current_attempt_failure_class"] is None
+    assert control_plane["current_attempt_failure_plane"] is None
+    assert control_plane["current_attempt_failure_classification"] is None
+    assert control_plane["current_recovery_side_effect_boundary_class"] == "pre_effect_failure"
+    assert control_plane["current_recovery_failure_class"] == "kernel_action_policy_rejected"
+    assert control_plane["current_recovery_failure_plane"] == "truth_failure"
+    assert control_plane["current_recovery_failure_classification"] == "claim_exceeds_authority"
     assert control_plane["current_recovery_decision_id"].startswith("kernel-action-recovery:")
     assert control_plane["current_recovery_action"] == "terminate_run"
     assert control_plane["latest_lease"] is None

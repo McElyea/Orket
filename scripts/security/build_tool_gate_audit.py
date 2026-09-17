@@ -8,29 +8,23 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-try:
-    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
-except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from common.rerun_diff_ledger import write_payload_with_diff_ledger
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from orket.agents import agent as agent_module
 from orket.agents.agent import Agent
 from orket.application.middleware import TurnLifecycleInterceptors
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall, ToolCallErrorClass
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
 from orket.extensions.contracts import RunAction
 from orket.extensions.runtime import ExtensionEngineAdapter, RunContext
 from orket.runtime.execution.execution_pipeline_card_dispatch import ExecutionPipelineCardDispatchMixin
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_PATH = REPO_ROOT / "benchmarks" / "results" / "security" / "tool_gate_audit.json"
 PROOF_REF = "python scripts/security/build_tool_gate_audit.py --strict"
 
@@ -302,28 +296,33 @@ async def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
     )
 
     import orket.extensions.runtime as extension_runtime_module
+    from orket.application.services.runtime_result_projection import RuntimeExecutionResult, RuntimeOutcomeError
 
     class _EngineProxy:
         def __init__(self, *_args: Any, **_kwargs: Any) -> None:
             return None
 
-        async def run_card(self, card_id: str, **kwargs: Any) -> dict[str, Any]:
-            _ = kwargs
-            return await extension_harness.run_card(card_id)
+        async def run_card(self, card_id: str, **kwargs: Any) -> RuntimeExecutionResult:
+            payload = await extension_harness.run_card(card_id)
+            if payload["success"]:
+                raise RuntimeError("Audit unexpectedly allowed a denied tool")
+            return RuntimeExecutionResult(session_id="sess-1", observation="unresolved", reason="audit gate denied")
 
     original_engine = extension_runtime_module.OrchestrationEngine
     extension_runtime_module.OrchestrationEngine = _EngineProxy
     try:
         extension_harness = _RunCardHarness(workspace_root=workspace_root, tool_gate=deny_gate, tool_args=tool_args)
         adapter = ExtensionEngineAdapter(RunContext(workspace=workspace_root, department="core"))
-        extension_payload = await adapter.execute_action(
-            RunAction(op="run_issue", target="ISSUE-9", params={"session_id": "sess-1"})
-        )
+        try:
+            await adapter.execute_action(RunAction(op="run_issue", target="ISSUE-9", params={"session_id": "sess-1"}))
+            extension_blocked = False
+        except RuntimeOutcomeError as exc:
+            extension_blocked = not exc.result.succeeded
     finally:
         extension_runtime_module.OrchestrationEngine = original_engine
     extension_result = (
         "blocked"
-        if (not extension_payload["transcript"]["success"] and extension_harness.toolbox.calls == 0)
+        if (extension_blocked and extension_harness.toolbox.calls == 0)
         else "allowed"
     )
 
@@ -485,9 +484,10 @@ def main(argv: list[str] | None = None) -> int:
         if required_rows - observed_rows:
             return 1
         for row in rows:
-            if row["dispatch_path"] in required_rows:
-                if row["observed_result"] != "blocked" or bool(row["side_effect_observed"]):
-                    return 1
+            if row["dispatch_path"] in required_rows and (
+                row["observed_result"] != "blocked" or bool(row["side_effect_observed"])
+            ):
+                return 1
     print(json.dumps(persisted, indent=2))
     return 0
 

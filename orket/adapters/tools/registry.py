@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-
 ConnectorRiskLevel = Literal["read", "write", "destructive", "network", "command"]
 CONNECTOR_RISK_LEVELS: frozenset[str] = frozenset({"read", "write", "destructive", "network", "command"})
 
@@ -25,6 +24,7 @@ class BuiltInConnectorMetadata:
     risk_level: ConnectorRiskLevel
     pii_fields: tuple[str, ...] = ()
     timeout_seconds: float = 30.0
+    contract_version: str = "builtin_connectors.v1"
 
 
 class BuiltInConnectorRegistry:

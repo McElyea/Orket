@@ -18,6 +18,11 @@ class OutwardRunRecord:
     started_at: str | None = None
     completed_at: str | None = None
     stop_reason: str | None = None
+    execution_generation: int = 0
+
+    def require_execution_admission(self) -> None:
+        if self.execution_generation < 1:
+            raise RuntimeError("E_OUTWARD_LEGACY_RUN_QUARANTINED")
 
     def to_status_payload(self) -> dict[str, Any]:
         return {

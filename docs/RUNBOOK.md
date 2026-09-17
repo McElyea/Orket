@@ -1,12 +1,32 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-09-10
+Last reviewed: 2026-09-13
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
 Exact HTTP route and payload catalog authority lives in `docs/API_FRONTEND_CONTRACT.md`; this runbook keeps only high-signal operator examples and ownership notes.
 
 ## Quick Start
+
+Run the CLI from the intended project directory. Discovery and the driver select
+that directory's `model/` and `config/` assets; `--workspace` selects execution
+output and does not select another project. Existing explicit application/driver
+project roots retain precedence. Missing board assets still report reconciliation
+failure. Root selection never moves existing project files or databases. See
+`docs/specs/RUNTIME_PROJECT_ROOTS.md` for the installed-runtime contract.
+Core installation includes `tzdata` for scheduled wake admission on hosts without
+a system IANA timezone database; API admission still requires explicit schedule
+evaluations or authenticated webhook deliveries, not an automatic scheduler.
+
+API shutdown waits for active HTTP/WebSocket invocations, their awaited connector
+work, registered background tasks, resources and engine. Admission stops with HTTP
+503 (including health) or WebSocket close. A response already streaming may be
+truncated; a received 200 header alone is not proof of a completed response.
+Repeated caller cancellation waits for the same teardown; failure is reported
+and retained. An app with failed teardown rejects new work and does not report
+`closed=True`. Inspect the owner failure and durable run/effect state before
+restarting; close does not authorize replay of uncertain effects. Scope and
+remaining untracked-work/deadline limits: `docs/specs/API_RUNTIME_LIFECYCLE.md`.
 
 Local-provider prompting uses the core-packaged registry at
 `orket/runtime/config/local_prompt_profiles.json`; installed inference does not
@@ -70,6 +90,174 @@ Compatibility-only source wrapper:
 `--rock <rock_name>` alias remains accepted by that wrapper and `orket runtime`, but
 new callers must use `--card`; removal requires an explicit `0.7.0` contract delta.
 
+## Epic Publication Recovery
+
+Runtime composition freezes relative database paths against the invocation
+directory and uses the runtime database's sibling `control_plane_records.sqlite3`.
+The execution workspace cannot choose another approval store. If startup reports
+`E_RUNTIME_STORE_MIGRATION_REQUIRED`, stop old runtime owners and make SQLite-aware
+backups of the runtime DB, epic journal and original control-plane DB. Preserve
+artifacts and native continuation-lock files at their original paths. Then run:
+
+```text
+python -m orket.interfaces.runtime_store_cli --runtime-db <absolute-runtime-db> --legacy-control-plane-db <original-control-plane-db> --legacy-invocation-root <original-project> --actor-ref <operator-reference> --owners-stopped
+```
+
+The command copies one checked control-plane history, retains a binding in both
+stores and preserves original request scopes. It refuses active owners, unrelated
+source sessions, conflicting targets or damaged history. An interrupted binding
+blocks runtime admission; rerun the same command to finish its checked cutover.
+Do not remove a conflict to obtain success or restart an old writer afterward.
+See `docs/specs/RUNTIME_STORE_BINDING.md` for supported migration and restart scope.
+
+The standard Python runtime entrypoints `run_epic(..., session_id=...)` and
+`run_card(..., session_id=...)` resume retained publication for a matching session
+and request before resetting cards or dispatching work. Use a new session ID for
+a fresh execution after any conflicting reservation has released. Recovery confirms the retained acceptance and the published
+ledger, session, snapshot and success rows; a failed workload still raises after
+its failure publication finishes.
+
+Preserve `<runtime_db>.epic-publications.sqlite3` alongside the runtime DB,
+control-plane DB and acceptance evidence. Use SQLite-aware backups that include
+committed WAL content. The journal stores run/resource admissions, workload outcomes, preparation inputs, export-attempt state
+and publication progress; it is not a disposable cache. Changed configuration/storage scope, damaged or
+missing history, or lost completed effects are rejected. Do not clear the journal
+to force reentry or reconstruct a plan from current output.
+
+New standard entries reserve their workspace, build and card IDs in that journal
+before session/card initialization. `E_EPIC_ADMISSION_RESOURCE_BUSY` identifies a
+conflicting retained session; `E_EPIC_ADMISSION_OUTCOME_UNCERTAIN` means a previous
+claim cannot authorize another initialization. The owner may still be running, or
+may have stopped before any ledger exists. Claims have no expiry. Changing the
+session ID does not bypass shared reservations. Explicit recovery before
+initialization is described below; elapsed time or process death is not permission.
+Verified complete publication releases resources and retains admission history.
+Missing/damaged admission evidence refuses further preparation/publication.
+Separately configured journals and arbitrary external writers are not fenced by
+this standard-entry gate.
+
+For an active admission v2 with `initialization_started=false`, a trusted local
+operator can replace its owner through the canonical Python epic `run_card` call.
+Inspect the existing journal using its validated repository read shown below.
+Retain the observation and copy `owner_id`, `fencing_generation` and
+`claim_ref()["digest"]` into a request; the stored row digest includes progress
+and is not the claim reference. Supply a stable request ID, operator reference
+and reason/evidence reference:
+
+```python
+from orket.adapters.storage.epic_publication_repository import SQLiteEpicPublicationRepository
+
+journal = SQLiteEpicPublicationRepository(runtime_db)
+async with journal.transaction(session_id) as transaction:
+    retained = await transaction.get_admission()
+if retained is None:
+    raise ValueError("No retained admission to recover")
+recovery = {
+    "schema_version": "epic_admission_recovery_request.v1",
+    "session_id": session_id,
+    "request_id": "operator-recovery-1",
+    "expected_owner_id": retained.owner_id,
+    "expected_fencing_generation": retained.fencing_generation,
+    "expected_claim_digest": retained.claim_ref()["digest"],
+    "operator_ref": "operator:<identity>",
+    "reason_ref": "evidence:<retained-observation>",
+}
+await engine.run_card(epic_id, **original_args, admission_recovery=recovery)
+```
+
+Use the original arguments, including the explicit matching `session_id`, and
+the same workspace, databases, configuration and export settings. The application
+checks the retained precondition atomically, records the replacement and common
+`OperatorActionRecord` in admission history, then consumes initialization once.
+A paused original owner fails its fence before session/card/control-plane writes.
+Repeating the identical request observes that replacement; it may resume later
+retained publication, but cannot start a second workload. Changed or superseded
+requests reject. `E_EPIC_ADMISSION_RECOVERY_REQUIRES_PRE_INITIALIZATION` means this
+operation cannot transfer ownership, even if the ledger is absent. Preserve the
+initialization marker and all evidence. Admission v1 cannot prove this precondition
+and is rejected without migration or digest backfill. This operation is available
+on the Python epic `run_card` surface; no CLI or remote recovery endpoint exists.
+
+Recovery begins at a retained workload outcome, before completion inspection and
+initial preparation persistence. It preserves the original transcript, effective
+configuration and failure identity; current acceptance still gates success.
+Pending local stages can repeat without redispatching accepted cards.
+`E_EPIC_WORKLOAD_OUTCOME_UNCERTAIN` means a started invocation has no retained
+termination result. Reentry refuses card reset and dispatch, even when cards have
+acceptance receipts. Preserve the existing invocation and effects for owner
+recovery; choosing a new session does not resolve the old uncertain work.
+Enabled exports retain a Git commit intent before repository creation or push.
+Automatic lost-result recovery reads the selected remote branch and confirms the commit,
+subtree and manifest before completing publication. It does not push again.
+`E_EPIC_EXPORT_OUTCOME_UNCERTAIN` means that confirmation is missing; automatic
+retry and success publication remain refused. Preserve the attempt, local Git
+objects and external evidence. Transport/integrity failures
+also leave the attempt retained. Preparation v1 and insufficient old bindings
+are rejected rather than backfilled. Export details and changed path convention:
+`docs/specs/GITEA_ARTIFACT_EXPORT_CONTRACT.md`.
+For a new marked v2 preparation, the trusted local Python operator may explicitly
+invoke `engine.run_card(original_epic, session_id=original_session,
+export_recovery=request)` using the original build/configuration arguments. The
+`epic_export_recovery_request.v1` object requires `session_id`, a stable
+`request_id`, current `expected_owner_id`, `expected_fencing_generation`,
+`expected_claim_digest`, `expected_intent_digest`, `operator_ref`, `reason_ref`,
+and `resolution="retry_exact_commit"`. Read these owner values from the retained
+`epic_export_dispatch.v1` record; the claim digest is its `claim_ref()["digest"]`.
+Do not derive them from current workspace files or change stored evidence.
+The operation records the replacement and confirms remote state before allowing
+that caller one exact-commit push. It does not reset cards or execute workload.
+Reusing the same request observes its disposition without another dispatch grant;
+another uncertain attempt needs a new explicit request using the current owner.
+Stale/superseded evidence and conflicting request reuse reject. A changed remote
+branch may refuse the normal push; do not force-push or regenerate the intent to
+clear the error. Unmarked older preparations cannot gain this retry permission.
+This input is mutually exclusive with `admission_recovery` and `approval_recovery` and is not exposed by
+a CLI command or authenticated remote recovery endpoint.
+Changed build or full epic/team/environment definitions also
+reject same-session reentry; old insufficient bindings are not backfilled.
+
+For a newly marked consumed approval pause, the trusted local Python operator
+may invoke `engine.run_card(original_epic, **original_args,
+approval_recovery=request)`. Preserve the original explicit session, build,
+configuration, workspace and database paths. Read the original claimed pause and
+its recovery history from the publication journal; use this request shape:
+
+```python
+request = {
+    "session_id": pause.session_id,
+    "sequence": pause.sequence,
+    "request_id": "operator-approval-recovery-1",
+    "expected_pause_digest": pause.digest(),
+    "expected_recovery_digest": latest_recovery.digest() if latest_recovery else None,
+    "operator_ref": "operator:<identity>",
+    "reason_ref": "evidence:<retained-interruption>",
+    "resolution": "continue_resolved_pause",
+}
+await engine.run_card(original_epic, **original_args, approval_recovery=request)
+```
+
+Use a new stable request ID for each explicit grant. Repeating an identical
+request observes its disposition and cannot dispatch the continuation again.
+An interrupted grant needs a new request with the current recovery digest.
+Recovery acquires the retained native lock before validating the original
+decisions, admission, parent and pre-effect checkpoint. `owner_busy` preserves
+the active holder. Missing/replaced lock files, unmarked old claims, completed
+approved children, recorded steps/effects and orphan operations refuse this
+operation. Preserve `<publication-journal>.continuations/` with the journal;
+never delete a lock file, clear history, or reset a claimed pause to bypass a
+refusal. A denial continues only the existing stop/failure path. Durable outcome
+or next-pause retention precedes lock release; the continuing caller releases
+before export, and other callers may finalize a retained outcome independently.
+Export has its separate owner.
+This input is mutually exclusive with `admission_recovery` and `export_recovery`
+and has no CLI or remote endpoint. It does not resolve an arbitrary interrupted
+workload, remote effects, or ownership in another journal.
+
+Unknown post-initialization workload owner recovery, arbitrary custom writers and relocation to a
+different installation remain required remediation work.
+Durable behavior is specified in
+`docs/specs/CARD_COMPLETION_ACCEPTANCE_CONTRACT.md`.
+
 ## API Launcher Precedence
 1. CLI arguments (`--host`, `--port`, `--profile`, `--reload/--no-reload`)
 2. Config values from `--config <json-path>`
@@ -112,6 +300,62 @@ curl http://localhost:8080/health
 ```
 
 ## Outward Pipeline Ledger
+
+The current BT-5 candidate exposes `authority_state` and shared `final_truth` on
+outward status and summary. Generation-one history from earlier builds reports
+`migration_required` until explicitly adopted. Stop old owners, retain a backup
+of the database and its evidence, and inspect each run before adoption:
+
+```powershell
+python -m orket.interfaces.outward_authority_cli --db <outward.sqlite3> --run-id <run_id> --inspect
+python -m orket.interfaces.outward_authority_cli --db <outward.sqlite3> --run-id <run_id> --expected-run-digest <digest-from-inspection> --actor-ref <operator-reference> --owners-stopped
+```
+
+Adoption accepts the reviewed current inputs; it cannot authenticate an old
+instruction's original submission. It preserves existing workspace/target paths,
+bindings, model/effect records and recovery fences, and does not dispatch work.
+Claimed or uncertain work still requires its existing recovery disposition.
+Generation-zero history stays quarantined. Source copied-history and composed
+continuation/recovery and native migration interruption proof pass; installed
+cutover acceptance remains open in
+`docs/specs/OUTWARD_RUN_AUTHORITY.md`.
+
+Native retained ledgers now use `docs/specs/OUTWARD_LEDGER_STORAGE_V2.md`.
+`orket ledger summary <run_id>` performs live read-only integrity/completeness
+inspection. `orket ledger verify <file>` checks only the exported file; its
+`valid` result does not authenticate retained storage. Export preserves the v1
+format and adds a separate `retained.anchor`. Keep a prior anchor independently
+if later history must be compared against it. Authenticated
+`POST /v1/runs/<run_id>/ledger/verify` takes
+`{"external_anchor": <that complete anchor object>}` and reports `matched_prefix`
+or an explicit mismatch; it does not authenticate the anchor's source or suffix.
+
+Verification and ordinary export never seal hashes, migrate a database or create
+a missing database. PII export commits its required audit before opening the
+response snapshot. Native snapshots reject more than 100,000 events or 64 MiB of
+aggregate payload JSON bytes instead of returning a prefix marked complete.
+Unsealed legacy histories require explicit disposition. Stop incompatible workers
+and already-authorized calls, retain the original database and v1 exports, then
+rehearse the copied BT-2 migration from the repository root with new paths:
+
+```bash
+python -m scripts.governance.migrate_outward_ledger --source retained.sqlite3 --backup retained-backup.sqlite3 --destination candidate.sqlite3 --writers-stopped --out benchmarks/staging/outward_ledger_migration.json
+```
+
+Add `--allow-unsealed` only to explicitly import missing original hash cells.
+Every available hash is still checked; mismatches are refused and never repaired.
+The retained SQLite backup includes committed WAL pages, and its digest anchors
+imported history. Existing v1 cells and execution generations remain unchanged;
+generation-0 runs stay quarantined. The candidate remains inactive. This command
+does not automatically fence processes or establish historical authenticity.
+
+Review the report and preserve the backup independently. `started` or `failed`
+does not admit a candidate. After refusal or interruption, retain every copy and
+retry with new backup/destination paths after resolving the cause. Do not restore
+old hash-repair behavior or delete evidence to obtain a green result. The BT-1
+approval-copy command below does not perform ledger migration; the ledger command
+does not promote unbound proposals or grant execution permission. Staging report
+maintenance follows `docs/CONTRIBUTOR.md`.
 The Phase 4 outward ledger path uses API-backed export and offline verification:
 
 ```bash
@@ -179,6 +423,14 @@ Public claim boundaries to preserve in the report:
 For denial-path proof, use the public approval denial endpoint and verify `proposal_denied`, no `tool_invoked` event for the denied proposal, terminal run status `completed`, and absence of the target effect. For out-of-scope path proof, verify `proposal_policy_rejected` appears in the ledger before any human approval proposal and that the attempted path is visible in policy-safe proposal artifacts.
 
 ## Outward Pipeline Connectors
+Connector results now report measured monotonic `duration_ms` with `timing`
+provenance, or null with an unavailable reason. The scope is the awaited connector
+invocation, including cleanup actually awaited. It excludes approval/publication
+and does not establish remote-effect or descendant lifetime. Old provenance-free
+zeros are unmeasured history; do not use them for capacity claims. Runtime log
+envelopes use v2 and preserve null/fractional durations. See
+`docs/specs/CONNECTOR_INVOCATION_TIMING.md` for receipt recovery and migration.
+
 The Phase 5 built-in connector harness is local and uses the same registry-backed invocation rules as outward execution:
 
 ```bash
@@ -280,10 +532,10 @@ curl -H "X-API-Key: <api_key>" http://127.0.0.1:8082/v1/approvals/<approval_id>
 ```bash
 curl -X POST http://127.0.0.1:8082/v1/approvals/<approval_id>/decision -H "Content-Type: application/json" -H "X-API-Key: <api_key>" -d "{\"decision\":\"approve\",\"notes\":\"operator-reviewed\"}"
 ```
-15. The outward-facing approval surface admits `approve` and `deny` only for stored outward proposals. It does not expose approve-and-pause; the outward execution slice continues explicit registered governed connector calls after approval.
+15. The outward-facing approval surface admits `approve` and `deny` only for stored outward proposals. Inspect the returned approval status: a repeated or contradictory request returns the original decision, and a request reaching the serialized decision boundary at or after expiry returns `expired`. Proposal, run projection and event writes are atomic when their SQLite paths match; configuration with different paths fails closed. New approvals bind complete calls and persist one effect claim before dispatch. Stale approvals cannot select another turn; HTTP 409 with `E_OUTWARD_EFFECT_IN_FLIGHT_OR_UNCERTAIN` means the owner may still execute or an effect lacks a conclusive receipt. Do not retry the command manually to clear that state. A saved receipt can finish publication on retry without execution. Use the explicit pre-intent recovery operation below for a claim without intent. Legacy runs remain quarantined; reconciliation/replacement is unsupported; ready or observed model admission can resume through run reentry below, and claimed model work has the explicit recovery path described there. Do not treat this checkpoint as acceptance of concurrent or multi-turn outward autonomy. The active lifecycle contract is `docs/specs/OUTWARD_APPROVAL_EFFECT_LIFECYCLE_V1.md`.
 16. The active approval-checkpoint family admits four bounded shipped slices only: governed kernel `NEEDS_APPROVAL` on the default `session:<session_id>` namespace scope, plus governed turn-tool `write_file`, `create_directory`, and `create_issue` approval-required continuation on the default `issue:<issue_id>` namespace scope.
 17. Packet 1 admits `approve` and `deny` only on this surface. `notes` and `edited_proposal` remain bounded operator metadata and do not create an alternate resume path.
-18. On the bounded turn-tool `write_file`, `create_directory`, and `create_issue` slices, `approve` continues the same governed run on the already-selected `control_plane_target_ref`, while `deny` terminal-stops that same governed turn-tool run.
+18. The bounded turn-tool `write_file`, `create_directory`, and `create_issue` contract requires `approve` to continue the same governed run on the already-selected `control_plane_target_ref`, while `deny` terminal-stops it. The 2026-09-13 BT-3 candidate retains a pending epic as unfinished execution with its admission, original request and child identity. The existing decision route resumes that request after all pause decisions resolve; repeated identical decisions are idempotent and a concurrent continuation cannot consume the pause again. Preserve the runtime DB, sibling control-plane store, epic journal, continuation lock files and artifacts together. Relative paths freeze at composition; historical relative scopes require the explicit offline migration described above. Previously published failures are not reopened and old split custom/global stores are not merged. Automatic redispatch of a consumed pause remains refused; new marked pre-effect pauses support the explicit local `approval_recovery` operation described above after the retained native lock becomes available. Unmarked or post-effect continuation remains outside that recovery grant. Scoped restart and live write-file proof pass; the full BT-3 gate stays open.
 19. Canonical live proof for the shipped approval slice:
 ```bash
 ORKET_DISABLE_SANDBOX=1 python scripts/nervous_system/run_nervous_system_live_evidence.py
@@ -388,6 +640,74 @@ orket runtime --replay-turn <session_id>:<issue_id>:<turn_index>[:role]
 ```bash
 orket runtime --archive-related <token> --archive-reason "manual archive"
 ```
+
+## Native verification cleanup
+
+Native `RuntimeVerifier` commands carry `process_lifetime` observations under
+`docs/specs/VERIFICATION_PROCESS_LIFETIME_CONTRACT.md`. A completed command requires
+confirmed descendant cleanup and complete capture before it can pass. Timeout is
+exit 124; failed supervision or excess output is exit 125. An exit code alone does
+not establish that every process stopped. Later commands are not admitted after a
+command failure.
+
+On cancellation, inspect `verification_process_cancelled` and the
+`CommandProcessCancelled.lifetime` observation. `cleanup_confirmed=false`
+means termination remains unconfirmed. Preserve the reason, backend, supervisor
+and command IDs, and diagnostics for investigation. These historical PIDs are not
+safe authority to kill a later process with a reused PID. Do not clear retained
+run ownership or replay commands merely because cancellation returned.
+
+The native implementation covers Windows jobs and Linux subreapers. Abrupt host
+death recovery and hostile-code containment remain unproved. Propagating uncertain lifetime into
+every epic terminal/admission consumer remains BT-4 work. Raw stream retention is
+bounded at 4 MiB each; excess output fails and cannot satisfy acceptance.
+
+The outward `run_command` connector uses the same native supervisor. Its results
+and `result_summary` carry `process_lifetime`; raw stdout/stderr counts describe
+captured bytes before replacement decoding, with 256-character previews and the
+same 4 MiB per-stream limit. Connector return codes are actual nullable codes,
+not verifier exit projections. Inspect `outward_command_cancelled` and
+`outward_connector_interrupted` for cancellation observations. Missing cleanup
+acknowledgement raises `E_COMMAND_EXECUTION_UNCERTAIN` (HTTP 409 on the governed
+API); the retained dispatch remains fenced with
+`E_OUTWARD_EFFECT_IN_FLIGHT_OR_UNCERTAIN` on later approval. Preserve that intent
+and evidence. Terminated processes may already have caused external effects;
+neither cleanup nor timeout authorizes replay. Historical receipts without
+lifetime evidence remain historical. Supporting logs are not recovery authority.
+
+Fixture callers use `await FixtureVerificationService(workspace).verify(verification)`
+or public `Orchestrator.verify_issue`. The old synchronous fixture entrypoints
+raise a migration error before execution. Production native fixtures still require
+the explicit unsafe override; path containment is not a hostile-code sandbox.
+Docker fixtures retain `owned_container.v1` in `VerificationResult.process_lifetime`.
+The owner removes only its inspected immutable ID and requires successful daemon
+absence observation. A lost create response may remain uncertain even when an
+immediate listing is empty. Inspect `fixture_verification_cancelled` or
+`fixture_verification_uncertain`; keep the name, owner ID, immutable ID and command
+observations for recovery. Cancellation/uncertainty does not replace `last_run`.
+
+Explicit live container acceptance:
+`ORKET_DISABLE_SANDBOX=1 python scripts/acceptance/verify_fixture_container_lifetime.py`.
+It requires Docker and the selected verification image, creates disposable
+`orket-verification-*` containers, and confirms teardown in the same execution.
+The stable result is `benchmarks/results/acceptance/fixture_container_lifetime.json`.
+This command is separate from general pytest and retains rerun differences.
+
+Named runtime execution now projects a typed result, including session/run IDs,
+retained evidence references, observed lifecycle, classification and a diagnostic
+reason. `--card`, `--epic` and legacy `--rock` share the same exit policy: 0 only
+for verified success after cleanup, 1 for other returned outcomes, 130 for caller
+interruption. Typed cancellation reports the retained run observation and evidence
+references after cleanup; it does not mark the durable run cancelled. A
+required-source-attribution failure remains `terminal_failure`
+and exits 1. Approval waits and unresolved recovery remain open authority; retry
+with the original request and retained identity rather than starting replacement
+work that bypasses admission. Collection members use distinct session/build IDs
+with `-member-<1-based index>` suffixes; the group result preserves all declared
+members and the outcomes observed before any stop. Python callers consume the
+explicit `transcript` field for history and `succeeded` for continuation gates.
+See `docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md` and the architectural-truth
+plan for compatibility changes and current proof limits.
 
 ## llama.cpp provider verification
 
@@ -497,12 +817,21 @@ use the exact default model. Model auto-selection and auto-load are disabled.
 orket agent submit <workload_id> --db <sqlite_path> --catalog <catalog_json> --request <request_json> --creation-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --next-lease-expires-at-utc <timestamp> --ollama-model qwen2.5:7b --actor-model qwen2.5-coder:7b --json
 ```
 
-Read durable state without mutation:
+Inspect durable state and compare recorded continuation decisions:
 
 ```bash
 orket agent inspect <run_id> --db <sqlite_path> --json
 orket agent replay <run_id> --db <sqlite_path> --json
 ```
+
+Replay uses one read-only database snapshot and does not create or initialize a
+store. Its V2 response reports expected, retained, compared and matched counts.
+Only `status=matched` exits successfully; `no_decisions` means no evaluation,
+`insufficient_evidence` identifies missing history/inputs, and `mismatch` identifies
+invalid or differing evidence. Historical decisions without an input digest stay
+insufficient through schema initialization. Preserve their original records.
+A match covers recorded continuation decisions against the retained step
+inventory; it does not verify objective satisfaction or external effects.
 
 To request pause or terminal stop after the current iteration, inspect its
 invocation id and submit a stable operator action:
@@ -1037,3 +1366,157 @@ python scripts/replay/report_failure_modes.py --log workspace/default/orket.log 
 7. `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
 8. `docs/projects/techdebt/README.md`
 9. `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`
+
+## Outward approval store upgrade (BT-1)
+
+Approved filesystem operations use the retained resolved target through an opened
+handle. Replacing a symlink after approval cannot redirect the bound call. The
+binding commits a pathname, not a prior file-content or historical file-ID
+precondition. Windows currently requires local drive paths; POSIX requires
+descriptor-relative no-follow primitives. Missing primitives fail closed. A target
+conflict after intent remains unresolved; restarting or repeating the command
+cannot establish that no earlier effect occurred. Cancellation waits for the
+owning filesystem operation to finish before releasing its handles, including
+repeated cancellation. A connector timeout also waits for that worker to finish;
+the deadline is not a hard interrupt of filesystem I/O. Its timeout receipt does
+not imply that the file was unchanged and cannot authorize another invocation.
+
+The outward planner selects tool transport from the resolved prompt profile.
+The admitted llama.cpp profile uses the JSON wrapper; native profiles retain
+native schemas and tool choice. Explicit unsupported native requests still fail.
+For bounded live approval/write proof, with an already running admitted server:
+
+```powershell
+$env:ORKET_DISABLE_SANDBOX = '1'
+python scripts/proof/run_outward_write_file_approved_proof.py --provider llama_cpp --model orcarouter_qwen3.8-27b-uncensored-q4_k_l --json
+```
+
+The stable report is
+`benchmarks/results/proof/outward_write_file_approved_proof_run.json`; inspect its
+observed result and verifiers. This proof does not certify broad BT-1 migration,
+multi-turn acceptance or an authenticated deployed API listener.
+
+Populated legacy approval stores fail startup with
+`E_OUTWARD_OFFLINE_APPROVAL_MIGRATION_REQUIRED`. Stop every old API/worker and
+any already authorized command before migration; a schema gate cannot stop a
+worker that already read its approval. Keep the original store and evidence.
+
+Rehearse on new, nonexisting backup/destination paths:
+
+```text
+python -m scripts.governance.migrate_outward_approvals --source <old.sqlite3> --backup <backup.sqlite3> --destination <candidate.sqlite3> --writers-stopped
+```
+
+The command backs up through SQLite, upgrades a second copy, preserves decisions
+and events, and records a rerunnable inventory in
+`benchmarks/staging/outward_approval_migration.json` (`--out` overrides the report
+path). It never switches the active database. Keep this inventory with the copy.
+The new schema retires the old approval table name so old readers and writers
+fail closed. New code preserves unbound legacy statuses for history, but denies
+new approval/dispatch authority with `E_OUTWARD_AUTHORIZATION_REQUIRED`.
+
+Do not reconstruct bindings or erase pending legacy history. Generation-0 run
+reentry, direct start and denial continuation return
+`E_OUTWARD_LEGACY_RUN_QUARANTINED`; status inspection remains available. Unbound
+pending rows keep their original status even after the old deadline. Queue reads
+and expiry sweeps leave them untouched; new decision attempts return
+`E_OUTWARD_AUTHORIZATION_REQUIRED`. Retained unbound rows do not consume the
+expiry sweep limit for bound proposals. Fresh independently submitted work still
+requires its own approval; a new namespace does not establish target isolation.
+Quarantine is the selected legacy disposition; old-run reconciliation and
+replacement remain unsupported. This candidate is not a production upgrade acceptance. Rollback must keep dispatch
+disabled and retain possible effects, claims, receipts and journals.
+
+## Recover an outward claim before intent
+
+Inspect `GET /v1/approvals/<proposal_id>/effect` with the normal API authentication.
+For `state=claimed`, an operator may request replacement using the returned owner
+and fencing generation:
+
+```text
+POST /v1/approvals/<proposal_id>/effect/recover
+{"request_id":"operator-recovery-1","expected_owner_id":"<observed-owner>","expected_fencing_generation":1}
+```
+
+Use a distinct request ID for a new recovery operation and the identical body when
+retrying that operation. The server derives operator identity from authentication;
+a client cannot supply a different actor. Recovery can execute the original bound
+effect. It persists the replacement owner and shared recovery/operator records
+before intent, so a still-running previous owner fails its mandatory fence check.
+If the replacement is interrupted while still claimed, the same recovery request
+can resume that claim; ordinary approval retries do not replace it.
+
+`dispatching` without a conclusive receipt remains uncertain and returns conflict.
+Process death or time elapsed cannot authorize another command. `observed` receipts
+can finish publication without another invocation. A changed actor/body for an old
+request key, a superseded recovery, or missing/contradictory recovery evidence
+returns conflict. The operation does not recover a legacy unbound run. An old
+approval retry also does not start another model turn; use the run reentry path
+below for durable ready or observed model admission.
+
+
+## Resume retained outward model admission
+
+Initial submission commits the run, admission event and ledger head together.
+Concurrent applications admit one active run per namespace; a competing new run
+receives HTTP 409. A retry with the same run ID returns the retained submission,
+without replacing its task or policy. If initial publication fails or its process
+dies before commit, retry may submit again. `E_OUTWARD_ADMISSION_EVENT_MISSING`
+means an older run lacks its initial event: retain it for inspection and do not
+backfill history to resume it. Contract: `docs/specs/OUTWARD_RUN_ADMISSION.md`.
+
+Resubmit the same run ID through authenticated `POST /v1/runs` with its valid
+original submission envelope. Run start and successful effect advancement commit
+ready model admission with the turn projection. Reentry may claim ready work or
+publish a previously retained model result without calling the provider again.
+The next file or command still requires its own bound approval.
+
+`E_OUTWARD_MODEL_ADMISSION_UNRESOLVED` means an owner claimed the model call but
+no publishable result is retained. The process may still be running, or its
+response may have been lost. Ordinary retry cannot replace it. Keep its evidence
+and provider-cost uncertainty; use explicit recovery below when another model
+computation is intended.
+Missing legacy admission (`E_OUTWARD_MODEL_ADMISSION_MISSING`), changed input, or
+missing/corrupt model artifacts also block reentry. Do not reconstruct admission
+from mutable model output, rewrite artifacts, or clear claims to obtain a retry.
+
+Extraction artifacts remain the original extraction observation. The admission,
+approval row and ledger publication establish proposal acceptance; an immutable
+`extracted_pending_proposal` artifact is not the current approval queue status.
+
+
+Inspect `GET /v1/runs/<run_id>/model-admission`. To supersede the latest claimed
+attempt, copy its scope, owner and fence into an authenticated recovery request:
+
+```text
+POST /v1/runs/<run_id>/model-admission/recover
+{"request_id":"model-recovery-1","execution_generation":1,"turn":1,"step_index":0,"expected_owner_id":"<observed-owner>","expected_fencing_generation":1}
+```
+
+This admits a ready replacement and retains the previous claimed attempt. It does
+not invoke a provider. Resubmit the original run envelope to claim ready work.
+The new output still needs its own approval before any governed connector runs.
+Two remote provider calls may finish or be billed; recovery does not cancel a
+remote request or assert it never ran. Only the current attempt can publish.
+
+Retry the identical recovery request after a lost response. It returns the same
+attempt, even if that attempt has since become claimed or published, and never
+increments its fence again. If the replacement also loses its response, another
+replacement requires a new request ID with its current owner/fence. An old request
+cannot supersede a newer recovery or start a later turn. Observed results must be
+published, not discarded through owner replacement. Missing/contradictory recovery
+records block inspection and continuation without repairing history.
+
+New artifacts live under the run evidence directory's
+`model_attempts/<scope-digest>/`, with no shared latest aliases. Follow the
+persisted model/proposal references. Model-admission schema v2 migrates legacy
+rows without modifying their artifact refs/digests and retires the old table
+name against incompatible writers. Rehearse on a database copy with writers
+stopped; preserve the original and all evidence. Rollback must disable admission,
+not erase attempts or revive superseded owners.
+
+Sealed outward proof fixtures preserve exact manifest-committed bytes under
+`.gitattributes`; do not normalize their line endings or reseal a changed package.
+For the frozen September source fixtures, the original CRLF ledger/bundle bytes
+match the retained digests. Verify those commitments before restoring bytes;
+an unexplained mismatch remains corruption, not permission to change its anchor.

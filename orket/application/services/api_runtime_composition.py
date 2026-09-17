@@ -39,8 +39,10 @@ def build_api_runtime_container(
     runtime_host = ApiRuntimeHostService(project_root=root, runtime_inputs=runtime_inputs)
     stream_bus = _build_stream_bus()
     run_store, event_store, approval_store = _build_outward_stores()
+    raw_allowlist = str(os.getenv("ORKET_CONNECTOR_HTTP_ALLOWLIST") or "")
+    http_allowlist = tuple(host.strip().lower() for host in raw_allowlist.split(",") if host.strip())
     approval_service = OutwardApprovalService(
-        approval_store=approval_store,
+        approval_store=approval_store, workspace_root=root, http_allowlist=http_allowlist,
         run_store=run_store,
         event_store=event_store,
         connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
@@ -65,12 +67,14 @@ def build_api_runtime_container(
             event_store=event_store,
             run_id_factory=runtime_host.create_session_id,
             utc_now=runtime_host.utc_now_iso,
+            unit_of_work=approval_service.unit_of_work,
         ),
         outward_approval_service=approval_service,
         outward_run_execution_service=_build_outward_execution_service(
             root, runtime_host, run_store, event_store, approval_service
         ),
-        outward_run_inspection_service=OutwardRunInspectionService(run_store=run_store, event_store=event_store),
+        outward_run_inspection_service=OutwardRunInspectionService(run_store=run_store, event_store=event_store,
+                                                                 unit_of_work=approval_service.unit_of_work),
         outward_ledger_service=OutwardLedgerService(
             run_store=run_store,
             event_store=event_store,
@@ -84,6 +88,7 @@ def build_api_runtime_container(
     )
     container.governed_agent_runtime = governed_agent_runtime
     container.register_owned_resource(governed_agent_runtime)
+    container.register_owned_resource(container.extension_runtime_service)
     return container
 
 
@@ -129,8 +134,6 @@ def _build_outward_execution_service(
     event_store: OutwardRunEventStore,
     approval_service: OutwardApprovalService,
 ) -> OutwardRunExecutionService:
-    raw_allowlist = str(os.getenv("ORKET_CONNECTOR_HTTP_ALLOWLIST") or "")
-    http_allowlist = tuple(host.strip().lower() for host in raw_allowlist.split(",") if host.strip())
     return OutwardRunExecutionService(
         run_store=run_store,
         event_store=event_store,
@@ -138,5 +141,6 @@ def _build_outward_execution_service(
         connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
         workspace_root=root,
         utc_now=runtime_host.utc_now_iso,
-        http_allowlist=http_allowlist,
+        connector_service=approval_service.connectors,
+        effect_owner_id_factory=runtime_host.runtime_inputs.create_effect_owner_id,
     )

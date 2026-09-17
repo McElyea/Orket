@@ -4,6 +4,7 @@ from typing import Any
 
 from pydantic import AliasChoices, BaseModel, Field, field_validator
 
+from orket.core.contracts.card_completion_commit import CardCompletionContext
 from orket.schema import CardStatus, CardType
 
 
@@ -31,6 +32,9 @@ class IssueRecord(BaseModel):
     verification: dict[str, Any] = Field(default_factory=dict)
     metrics: dict[str, Any] = Field(default_factory=dict)
     created_at: str | None = None
+    completion_generation: int = Field(default=0, strict=True, ge=0)
+    completion_context: CardCompletionContext | None = None
+    completion_ref: str | None = None
 
     @field_validator("priority", mode="before")
     @classmethod

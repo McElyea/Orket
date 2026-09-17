@@ -5,7 +5,8 @@ from typing import Any
 
 import yaml
 
-DEFAULT_PROMPT_BUDGET_PATH = Path("core/policies/prompt_budget.yaml")
+from orket.runtime.config import contract_assets
+
 _VALID_STAGES = {"planner", "executor", "reviewer"}
 _STAGE_KEYS = {"max_tokens", "protocol_tokens", "tool_schema_tokens", "task_tokens"}
 _ROLE_STAGE_MAP = {
@@ -19,7 +20,7 @@ _ROLE_STAGE_MAP = {
 }
 
 
-def load_prompt_budget_policy(path: Path | str = DEFAULT_PROMPT_BUDGET_PATH) -> dict[str, Any]:
+def load_prompt_budget_policy(path: Path | str = contract_assets.DEFAULT_PROMPT_BUDGET_PATH) -> dict[str, Any]:
     raw = _load_yaml_dict(Path(path))
     schema_version = str(raw.get("schema_version") or "").strip()
     budget_policy_version = str(raw.get("budget_policy_version") or "").strip()

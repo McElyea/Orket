@@ -14,8 +14,8 @@ from orket.driver_support_conversation import DriverConversationMixin
 from orket.driver_support_resources import DriverResourceMixin
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
-from orket.runtime import ConfigLoader
 from orket.project_paths import default_model_root, default_project_root, default_workspace_root
+from orket.runtime import ConfigLoader
 from orket.schema import DialectConfig, SkillConfig
 
 
@@ -108,7 +108,7 @@ class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
         self.config_dependency_classification.clear()
         self.config_load_failures.clear()
         self.config_degraded = False
-        loader = ConfigLoader(self._operator_model_root(), "core")
+        loader = ConfigLoader(self.project_root, "core")
         skill_dependency = "skill.operations_lead"
         self.config_dependency_classification[skill_dependency] = "degradable"
 
@@ -329,7 +329,7 @@ class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
                 return model_reply
             return "I can chat normally and help with Orket operations when you ask explicitly."
 
-        loader = ConfigLoader(self._operator_model_root(), "core")
+        loader = ConfigLoader(self.project_root, "core")
         inventory = await self._get_inventory()
         context = {
             "inventory": inventory,

@@ -7,10 +7,9 @@ import os
 import shutil
 import subprocess
 import sys
-from contextlib import ExitStack
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 # This script is intended to live under repo_root/scripts/
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -356,7 +355,7 @@ async def _run_chain(
             }
             for issue in issue_rows
         ],
-        "pipeline_result": str(pipeline_result),
+        "pipeline_result": pipeline_result.model_dump(mode="json") if pipeline_result is not None else None,
         "observability_inventory": inventory,
         "error_type": type(run_error).__name__ if run_error else "",
         "error": str(run_error) if run_error else "",

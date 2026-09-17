@@ -6,6 +6,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
+from orket.interfaces.routers.outward_effects import build_outward_effects_router
+
 
 class ApprovalDecisionRequest(BaseModel):
     decision: str
@@ -37,15 +39,15 @@ def build_approvals_router(
 ) -> APIRouter:
     router = APIRouter()
 
-    async def _continue_outward_run_after_approval(proposal_id: str) -> None:
-        if outward_execution_service_getter is None:
+    async def _continue_outward_run_after_approval(proposal: Any) -> None:
+        if outward_execution_service_getter is None or proposal.status != "approved":
             return
-        await outward_execution_service_getter().continue_after_approval(proposal_id)
+        await outward_execution_service_getter().continue_after_approval(proposal.proposal_id)
 
-    async def _continue_outward_run_after_denial(proposal_id: str) -> None:
-        if outward_execution_service_getter is None:
+    async def _continue_outward_run_after_denial(proposal: Any) -> None:
+        if outward_execution_service_getter is None or proposal.status != "denied":
             return
-        await outward_execution_service_getter().continue_after_denial(proposal_id)
+        await outward_execution_service_getter().continue_after_denial(proposal.proposal_id)
 
     @router.get("/approvals")
     async def list_approvals(
@@ -127,7 +129,7 @@ def build_approvals_router(
                 operator_ref=getattr(request.state, "authenticated_actor_ref", None) or "operator:unknown",
                 note=req.note,
             )
-            await _continue_outward_run_after_approval(resolved.proposal_id)
+            await _continue_outward_run_after_approval(resolved)
         except ValueError as exc:
             detail = str(exc)
             status_code = 404 if "not found" in detail.lower() else 422
@@ -152,11 +154,13 @@ def build_approvals_router(
                 reason=req.reason,
                 note=req.note,
             )
-            await _continue_outward_run_after_denial(resolved.proposal_id)
+            await _continue_outward_run_after_denial(resolved)
         except ValueError as exc:
             detail = str(exc)
             status_code = 404 if "not found" in detail.lower() else 422
             raise HTTPException(status_code=status_code, detail=detail) from exc
+        except RuntimeError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
         payload = {"status": "resolved", "approval": resolved.to_decision_payload()}
         return _filter_payload(outbound_filter, payload, "api.approvals.deny")
 
@@ -172,14 +176,14 @@ def build_approvals_router(
                             operator_ref=getattr(request.state, "authenticated_actor_ref", None) or "operator:unknown",
                             note=req.notes,
                         )
-                        await _continue_outward_run_after_approval(resolved.proposal_id)
+                        await _continue_outward_run_after_approval(resolved)
                     elif req.decision == "deny":
                         resolved = await outward_approval_service_getter().deny(
                             approval_id,
                             operator_ref=getattr(request.state, "authenticated_actor_ref", None) or "operator:unknown",
                             reason=req.notes or "operator_denied",
                         )
-                        await _continue_outward_run_after_denial(resolved.proposal_id)
+                        await _continue_outward_run_after_denial(resolved)
                     else:
                         raise HTTPException(status_code=422, detail="decision must be one of: approve, deny")
                 except ValueError as exc:
@@ -207,6 +211,10 @@ def build_approvals_router(
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         return _filter_payload(outbound_filter, result, "api.approvals.decision")
 
+    if outward_execution_service_getter is not None:
+        router.include_router(build_outward_effects_router(
+            execution_service_getter=outward_execution_service_getter, outbound_filter=outbound_filter,
+        ))
     return router
 
 

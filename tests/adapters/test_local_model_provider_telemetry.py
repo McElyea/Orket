@@ -128,7 +128,7 @@ def test_local_model_provider_separates_connect_and_read_timeouts(monkeypatch: p
     assert timeout.write == 30.0
     assert timeout.pool == 10.0
 
-
+# Layer: contract
 @pytest.mark.asyncio
 async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
@@ -197,8 +197,8 @@ async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: 
         "completion_tokens": 3,
         "total_tokens": 10,
     }
-    assert isinstance(response.raw["timings"]["prompt_ms"], float)
-    assert isinstance(response.raw["timings"]["predicted_ms"], float)
+    assert response.raw["timings"] == {"prompt_ms": None, "predicted_ms": None, "total_ms": None}
+    assert response.raw["timing_schema_version"] == "model_provider_timing.v1"
 
 
 @pytest.mark.asyncio
@@ -352,30 +352,26 @@ async def test_local_model_provider_collapses_adjacent_user_blocks_for_gemma_req
 
 
 @pytest.mark.asyncio
-async def test_local_model_provider_honors_bench_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+@pytest.mark.parametrize("response_format", ["text", "json_object", "json_schema"])
+@pytest.mark.parametrize("provider_name", ["lmstudio", "llama_cpp"])
+# Layer: contract
+async def test_local_model_provider_honors_bench_overrides(monkeypatch, response_format: str, provider_name: str) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", provider_name)
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
     monkeypatch.setenv("ORKET_BENCH_TEMPERATURE", "0")
     monkeypatch.setenv("ORKET_BENCH_SEED", "1337")
-    monkeypatch.setenv("ORKET_LLM_OPENAI_RESPONSE_FORMAT", "text")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_RESPONSE_FORMAT", response_format)
     provider = LocalModelProvider(model="dummy", temperature=0.7, seed=None)
-
-    async def _fake_resolve(**kwargs: Any) -> ProviderRuntimeTarget:
-        _ = kwargs
+    async def _fake_resolve(**_kwargs: Any) -> ProviderRuntimeTarget:
         return ProviderRuntimeTarget(
-            requested_provider="lmstudio",
+            requested_provider=provider_name,
             canonical_provider="openai_compat",
-            requested_model="dummy",
-            model_id="dummy",
+            requested_model="dummy", model_id="dummy",
             base_url="http://127.0.0.1:1234/v1",
             resolution_mode="requested",
             inventory_source="test",
-            available_models=("dummy",),
-            loaded_models_before=("dummy",),
-            loaded_models_after=("dummy",),
-            auto_load_attempted=False,
-            auto_load_performed=False,
-            status="OK",
+            available_models=("dummy",), loaded_models_before=("dummy",), loaded_models_after=("dummy",),
+            auto_load_attempted=False, auto_load_performed=False, status="OK",
         )
 
     monkeypatch.setattr(
@@ -387,7 +383,10 @@ async def test_local_model_provider_honors_bench_overrides(monkeypatch: pytest.M
         payload = json.loads(request.content.decode("utf-8"))
         assert payload["temperature"] == 0.0
         assert payload["seed"] == 1337
-        assert payload["response_format"] == {"type": "text"}
+        expected = {"type": response_format}
+        if provider_name == "llama_cpp" and response_format == "json_object":
+            expected["schema"] = {"type": "object"}
+        assert payload["response_format"] == expected
         return httpx.Response(
             200,
             json={
@@ -397,10 +396,8 @@ async def test_local_model_provider_honors_bench_overrides(monkeypatch: pytest.M
             },
         )
 
-    provider.client = httpx.AsyncClient(
-        base_url="http://127.0.0.1:1234/v1",
-        transport=httpx.MockTransport(_handler),
-    )
+    await provider.client.aclose()
+    provider.client = httpx.AsyncClient(base_url="http://127.0.0.1:1234/v1", transport=httpx.MockTransport(_handler))
     response = await provider.complete([{"role": "user", "content": "hello"}])
     await provider.close()
     assert isinstance(response, ModelResponse)

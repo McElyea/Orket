@@ -1,6 +1,6 @@
 # Governed Agent Loop V1
 
-Last updated: 2026-09-10
+Last updated: 2026-09-14
 Status: Active durable contract; core 0.6.0 acceptance released; llama.cpp feature integration added in source
 Owner: Orket Core
 Accepted requirements source: `docs/projects/archive/governed-agent-loop/GAL09062026-REQUIREMENTS/GOVERNED_AGENT_LOOP_REQUIREMENTS_DEFINITION_PLAN.md`
@@ -207,7 +207,7 @@ The first broker operations are:
 
 | Operation | Child request | Parent result | Authority |
 | --- | --- | --- | --- |
-| `model.call.v1` | `agent_model_call_request.v1` | `agent_model_call_result.v1` with `agent_model_use_receipt.v1` | Host reserves budget, resolves the target, invokes the provider, and persists the receipt. |
+| `model.call.v1` | `agent_model_call_request.v1` | `agent_model_call_result.v1` with `agent_model_use_receipt.v2` | Host reserves budget, resolves the target, invokes the provider, and persists the receipt. Historical v1 receipts remain readable. |
 | `memory.query.v1` | `agent_memory_query_request.v1` | `agent_memory_query_result.v1` | Host authorizes scope and returns bounded advisory memory with provenance. |
 
 Memory writes are not broker calls in V1. They remain result proposals committed
@@ -246,7 +246,7 @@ following V1 object/version pairs:
 2. `agent_iteration_request` / `agent_iteration_request.v1`;
 3. `agent_iteration_result` / `agent_iteration_result.v1`;
 4. `agent_model_profile_request` / `agent_model_profile_request.v1`;
-5. `agent_model_use_receipt` / `agent_model_use_receipt.v1`;
+5. `agent_model_use_receipt` / `agent_model_use_receipt.v2` (historical v1 reads retained);
 6. `agent_model_call_request` / `agent_model_call_request.v1`;
 7. `agent_model_call_result` / `agent_model_call_result.v1`;
 8. `agent_memory_query_request` / `agent_memory_query_request.v1`;
@@ -334,6 +334,36 @@ name. Fixed acceptance cases are `mixed`, `all-open`, and `empty-first`.
 
 ## Model-profile contract
 
+New host model-use receipts use `agent_model_use_receipt.v2`. `latency_ms` is a
+nonnegative integer or null; `latency_posture` is `reported` for a supplied valid
+host model-provider observation or `unavailable` when it is absent/invalid.
+This posture does not certify a clock, timing scope or independent measurement.
+It is independent of token `usage_posture`, budget charges and response status.
+The local-provider adapter rejects boolean, negative and non-integer latency
+metadata as unavailable. The deterministic runtime fixture reports unavailable
+latency. Valid reported zero remains zero; absence never becomes zero.
+Incomplete or invalid token counts use the existing `unknown` usage contract:
+both counts are null and the host charges the issued input/output budget maxima.
+This prevents inconsistent partial metadata from masquerading as measured usage.
+
+The existing call/iteration/IPC envelopes retain their versions and carry the
+independently versioned receipt. New agent declarations must include
+`agent_model_use_receipt.v2` alongside the base governed-agent and stdio features;
+admission refuses declarations that have not migrated. SDK `0.7.0a1` is a
+development prerelease requiring the paired architectural-truth host candidate,
+not a compatibility claim for the published core/SDK artifacts. Canonical v1
+receipts retain their integer, original fields and wire payloads on historical
+reads; they cannot be retroactively certified as measured. No retained run or
+manifest is automatically rewritten to authorize new execution.
+
+The live child `ready` frame must also advertise
+`supported_model_receipt_versions: [agent_model_use_receipt.v2]`. The host checks
+this before capability dispatch, reservation or inference; an older peer is
+refused with `E_AGENT_READY_FEATURE_MISMATCH`. Historical ready-frame decoding
+permits the absent field, while new SDK sessions always emit it. SDK source and
+the interpreter's installed SDK must match for child execution; a source-only
+parent import cannot upgrade the independently started child.
+
 The extension first requests a host-defined model profile or capability class
 for a named role. Each actual inference is a distinct bounded
 `agent_model_call_request.v1`; the content and host receipt return through
@@ -407,8 +437,53 @@ Delta: `docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FEATURE_INTEGRATION_2026-09-1
 
 Inspection replays recorded continuation decisions only. An existing run with
 zero iteration snapshots reports `status=no_decisions`, never a successful
-match; an unknown run is absent. Populated runs report `matched` or `mismatch`
-after comparing their recorded decision inputs and digests.
+match, only when its independent step inventory is also empty and intact. An
+unknown run is absent; missing or unreadable storage is never created by replay.
+
+The `governed_agent_replay.v2` API/CLI response has
+`scope=recorded_continuation_decisions`. Its `expected_count` comes from canonical
+`governed_agent_iteration` step records in the same read transaction as run,
+attempt, iteration, and referenced final-truth records. It also reports
+`snapshot_count`, `compared_count`, `matched_count`, and diagnostics. An unreadable
+inventory has `expected_count=null`, not an invented zero. Missing middle/tail
+snapshots, missing parent steps or attempts, duplicate step bindings, and ordinal
+gaps prohibit a successful comparison. A terminal result/decision reference must
+resolve to a retained snapshot; operator-authored terminal truth does not itself
+become a continuation decision.
+
+Each comparison checks request/step/run/attempt/invocation identity, request,
+result, decision, and decision-input digests, the SDK request/result contract,
+typed continuation inputs, and published step references. New decisions retain
+`decision_inputs_digest` atomically with their inputs and decision. Existing
+stores receive a nullable column under the normal serialized schema initializer;
+historical values remain null. Neither replay nor initialization may reconstruct
+historical input digests. An old writer can leave unsealed inputs, which the V2
+reader refuses as sufficient evidence.
+
+`status=matched` means every expected retained iteration was compared and matched.
+Missing evidence reports `insufficient_evidence`; invalid evidence or a differing
+decision reports `mismatch`. `no_decisions` means no evaluation occurred, and the
+CLI returns nonzero for every status except `matched`. Per-decision diagnostics
+identify missing fields or invalid integrity without exposing retained payloads.
+The reader uses an existing SQLite database in `mode=ro`, `query_only`, and one
+read transaction. It performs no schema initialization, audit write, tool call,
+model call, effect execution, or terminal-state transition. Queries are bounded
+to 10,000 rows and 64 MiB of retained values; exceeding either returns insufficient
+evidence with a resource-limit diagnostic.
+
+Completeness is relative to retained control-plane records, not independently
+authenticated historical existence. Coordinated privileged rewriting of the
+whole store is outside this comparison's evidence. Both
+`external_effects_verified` and `full_execution_verified` are always false. The
+reader does not re-evaluate objective sufficiency or re-observe external effects.
+Delta: `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_REPLAY_BT3_2026-09-12.md`.
+
+The child import hook's caller-path inspection permits only its own internal
+reentry, using thread-local state reset before loading extension code. This
+prevents Python 3.12 on POSIX from recursively inspecting `Path`'s internal
+`ntpath` import. Direct extension imports still pass the declared-stdlib and
+host-module checks, including on another thread. This import policy remains a
+cooperative boundary and does not provide OS containment of hostile code.
 
 After each iteration boundary, an application-owned deterministic governor
 evaluates only durable recorded inputs.
@@ -771,6 +846,47 @@ cannot produce authoritative success.
 All terminal runs publish one `FinalTruthRecord` using the existing result,
 completion, evidence, uncertainty, degradation, closure, and terminality
 vocabularies.
+
+The bounded loop's terminal publisher uses the shared control-plane transaction
+contract for final truth, attempt closure and run closure. It compares the retained
+run/attempt under the writer lock and refuses conflicting or already-present truth
+with `E_AGENT_TERMINAL_AUTHORITY_CONFLICT`. Wake authority is checked before and
+during publication, including before the transaction returns. A failed write or
+guard check rolls back that terminal transaction. Iteration/model evidence already
+retained before closeout is preserved.
+
+Runtime composition supplies one transaction owner and refuses differently
+configured execution, iteration and record database paths with
+`E_AGENT_CONTROL_PLANE_STORE_CONFLICT`. Terminal reads use that same owner.
+The bounded loop, denial and cancellation paths publish final truth through the
+existing `ControlPlanePublicationService`. Operator-stop publication resolves the
+accepted decision's action references against retained run/invocation-bound
+`MARK_TERMINAL` evidence; absent evidence fails with
+`E_AGENT_TERMINAL_OPERATOR_ACTION_MISSING`.
+
+Denied effect resolution commits its pending-status CAS, exact approval/run
+operator actions, reservation release, checkpoint rejection and terminal
+truth/attempt/run in one transaction. A failed publication leaves approval pending
+and can be retried without performing the refused write. The pending-gate adapter
+borrows the same transaction connection; its contract lives in core.
+
+Cancellation retains its operator intent and invocation cancellation before
+observing child teardown. It then compares the retained run/attempt and publishes
+truth/attempt/run together. Failure rolls back terminal publication without
+undoing cancellation. Retry reuses cancelled invocation identity and observes
+teardown again; a separate CLI cannot turn unknown child state into confirmed
+shutdown merely because the invocation is already marked cancelled.
+
+Current candidate acceptance and its proof limits are tracked under
+architectural-truth BT-5. These changes do not automatically reconcile older split
+terminal histories or establish broader family admission/recovery guarantees.
+
+`docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md` owns the common terminal join
+and historical refusal contract. Inspection and replay read the join in one
+snapshot; reentry validates it before work under the transaction owner. Conflicting
+inspection returns HTTP 409/nonzero CLI status, and replay cannot report a match.
+Parent admission is atomic, and incomplete retained parents are not automatically
+backfilled. Shared final-truth storage refuses competing identities for one run.
 
 ## Required proof
 

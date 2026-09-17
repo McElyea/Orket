@@ -98,7 +98,7 @@ def agent_model_use_receipt(*, usage_posture: str = "measured") -> dict[str, Any
     measured = usage_posture in {"measured", "estimated"}
     return {
         "object_type": "agent_model_use_receipt",
-        "schema_version": "agent_model_use_receipt.v1",
+        "schema_version": "agent_model_use_receipt.v2",
         "identity": agent_identity(),
         "call_id": "call-1",
         "role": "planner",
@@ -115,7 +115,7 @@ def agent_model_use_receipt(*, usage_posture: str = "measured") -> dict[str, Any
         "estimate_source": "host_tokenizer.v1" if usage_posture == "estimated" else None,
         "charged_input_tokens": 128,
         "charged_output_tokens": 64,
-        "latency_ms": 42,
+        "latency_ms": 42, "latency_posture": "reported",
         "finish_reason": "stop",
         "truncated": False,
         "substitution_posture": "requested",

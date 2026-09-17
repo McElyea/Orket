@@ -7,6 +7,7 @@ import pytest
 
 import orket.runtime.execution_pipeline as execution_pipeline_module
 from orket.runtime.execution_pipeline import ExecutionPipeline
+from tests.helpers.runtime_result import published_result
 
 
 @pytest.mark.asyncio
@@ -234,8 +235,9 @@ async def test_issue_dispatch_ignores_forwarded_target_issue_id(monkeypatch: pyt
 
 
 @pytest.mark.asyncio
+# Layer: contract
 async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Layer: unit. Verifies the internal collection path no longer returns a rock-shaped payload."""
+    """Layer: contract. Verifies the internal collection path no longer returns a rock-shaped payload."""
     pipeline = object.__new__(ExecutionPipeline)
     pipeline.workspace = Path("workspace/default")
     seen: dict[str, object] = {"sub_calls": []}
@@ -273,7 +275,10 @@ async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypat
 
         async def run_card(self, epic_id: str, **kwargs) -> dict[str, object]:
             seen["sub_calls"].append((epic_id, self._department, self._epic_workspace, kwargs))
-            return {"epic_id": epic_id, "department": self._department}
+            return published_result(session_id=kwargs["session_id"])
+
+        async def close(self):
+            pass
 
     class _PipelineWiringService:
         def create_sub_pipeline(self, *, parent_pipeline: object, epic_workspace: Path, department: str) -> object:
@@ -310,8 +315,8 @@ async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypat
             "core",
             Path("workspace/default") / "EPIC-1",
             {
-                "build_id": "collection-build",
-                "session_id": "collection-session",
+                "build_id": "collection-build-member-1",
+                "session_id": "collection-session-member-1",
                 "driver_steered": True,
                 "model_override": "gemma-4",
             },
@@ -321,17 +326,12 @@ async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypat
             "infra",
             Path("workspace/default") / "EPIC-2",
             {
-                "build_id": "collection-build",
-                "session_id": "collection-session",
+                "build_id": "collection-build-member-2",
+                "session_id": "collection-session-member-2",
                 "driver_steered": True,
                 "model_override": "gemma-4",
             },
         ),
     ]
-    assert result == {
-        "collection": "demo-collection",
-        "results": [
-            {"epic": "EPIC-1", "transcript": {"epic_id": "EPIC-1", "department": "core"}},
-            {"epic": "EPIC-2", "transcript": {"epic_id": "EPIC-2", "department": "infra"}},
-        ],
-    }
+    assert result.succeeded and result.collection == "demo-collection"
+    assert [member.target for member in result.members] == ["EPIC-1", "EPIC-2"]

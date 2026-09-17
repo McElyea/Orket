@@ -39,10 +39,11 @@ async def write_model_evidence(
     result: str,
     error_type: str | None,
     pii_fields: tuple[str, ...],
+    evidence_scope: str | None = None,
 ) -> OutwardModelEvidence:
-    directory = _evidence_dir(workspace_root=workspace_root, namespace=run.namespace, run_id=run.run_id)
+    directory = await asyncio.to_thread(_evidence_dir, workspace_root=workspace_root, namespace=run.namespace, run_id=run.run_id, evidence_scope=evidence_scope)
     turn = int(run.current_turn or 1)
-    refs = _evidence_refs(workspace_root=workspace_root, directory=directory, turn=turn)
+    refs = await asyncio.to_thread(_evidence_refs, workspace_root=workspace_root, directory=directory, turn=turn)
     prompt_payload = {
         "schema_version": "outward_model_prompt_redacted.v1",
         "run_id": run.run_id,
@@ -73,22 +74,10 @@ async def write_model_evidence(
         proposal_id=None,
         acceptance_result="extracted_pending_proposal" if tool_call is not None else "not_extracted",
     )
-    try:
-        await asyncio.to_thread(directory.mkdir, parents=True, exist_ok=True)
-        files = {
-            _turn_filename("model_prompt_redacted", turn): prompt_payload,
-            _turn_filename("model_response_redacted", turn): response_payload,
-            _turn_filename("proposal_extraction", turn): extraction_payload,
-            _turn_filename("model_invocation", turn): invocation_payload,
-            "model_prompt_redacted.json": prompt_payload,
-            "model_response_redacted.json": response_payload,
-            "proposal_extraction.json": extraction_payload,
-            "model_invocation.json": invocation_payload,
-        }
-        for filename, payload in files.items():
-            await _write_json(directory / filename, payload)
-    except OSError as exc:
-        raise OutwardModelObservabilityError("model observability write failed") from exc
+    await _persist_model_evidence(directory, turn, legacy_layout=evidence_scope is None, payloads={
+        "model_prompt_redacted": prompt_payload, "model_response_redacted": response_payload,
+        "proposal_extraction": extraction_payload, "model_invocation": invocation_payload,
+    })
     invocation_hash = await _file_sha256(directory / _turn_filename("model_invocation", turn))
     prompt_hash = await _file_sha256(directory / _turn_filename("model_prompt_redacted", turn))
     response_hash = await _file_sha256(directory / _turn_filename("model_response_redacted", turn))
@@ -112,31 +101,38 @@ async def write_model_evidence(
     )
 
 
-async def record_proposal_extraction_acceptance(
-    *,
-    workspace_root: Path,
-    run: OutwardRunRecord,
-    response: Any | None,
-    tool_call: dict[str, Any],
-    pii_fields: tuple[str, ...],
-    proposal_id: str | None,
-    acceptance_result: str = "accepted_for_proposal",
-) -> dict[str, Any]:
-    directory = _evidence_dir(workspace_root=workspace_root, namespace=run.namespace, run_id=run.run_id)
-    turn = int(run.current_turn or 1)
-    payload = _proposal_extraction_payload(
-        run=run,
-        response=response,
-        tool_call=tool_call,
-        pii_fields=pii_fields,
-        proposal_id=proposal_id,
-        acceptance_result=acceptance_result,
+async def _persist_model_evidence(directory: Path, turn: int, *, legacy_layout: bool, payloads: dict[str, dict]) -> None:
+    try:
+        await asyncio.to_thread(directory.mkdir, parents=True, exist_ok=True)
+        for stem, payload in payloads.items():
+            await _write_json(directory / _turn_filename(stem, turn), payload, mode="w" if legacy_layout else "x")
+            if legacy_layout:
+                await _write_json(directory / f"{stem}.json", payload, mode="w")
+    except OSError as exc:
+        raise OutwardModelObservabilityError("model observability write failed") from exc
+
+
+async def verify_model_evidence(*, workspace_root: Path, evidence: dict[str, Any]) -> None:
+    root = await asyncio.to_thread(workspace_root.resolve)
+    references = (
+        ("model_invocation_ref", "model_invocation_sha256"),
+        ("model_prompt_ref", "model_prompt_redacted_sha256"),
+        ("model_response_ref", "model_response_redacted_sha256"),
+        ("proposal_extraction_ref", "proposal_extraction_sha256"),
     )
-    turn_file = _turn_filename("proposal_extraction", turn)
-    await _write_json(directory / turn_file, payload)
-    await _write_json(directory / "proposal_extraction.json", payload)
-    payload["proposal_extraction_sha256"] = await _file_sha256(directory / turn_file)
-    return payload
+    for ref_key, digest_key in references:
+        ref, digest = evidence.get(ref_key), evidence.get(digest_key)
+        if not isinstance(ref, str) or not ref or not isinstance(digest, str) or not digest:
+            raise OutwardModelObservabilityError("E_OUTWARD_MODEL_EVIDENCE_REQUIRED")
+        path = await asyncio.to_thread((root / ref).resolve)
+        if not path.is_relative_to(root):
+            raise OutwardModelObservabilityError("E_OUTWARD_MODEL_EVIDENCE_SCOPE")
+        try:
+            actual = await _file_sha256(path)
+        except OSError as exc:
+            raise OutwardModelObservabilityError("E_OUTWARD_MODEL_EVIDENCE_UNAVAILABLE") from exc
+        if actual != digest:
+            raise OutwardModelObservabilityError("E_OUTWARD_MODEL_EVIDENCE_DIGEST")
 
 
 def _model_invocation_payload(
@@ -228,8 +224,8 @@ def _runtime_context_payload(runtime_context: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    async with aiofiles.open(path, mode="w", encoding="utf-8") as handle:
+async def _write_json(path: Path, payload: dict[str, Any], *, mode: str) -> None:
+    async with aiofiles.open(path, mode=mode, encoding="utf-8") as handle:
         await handle.write(json.dumps(payload, indent=2, sort_keys=True))
         await handle.write("\n")
 
@@ -239,9 +235,13 @@ async def _file_sha256(path: Path) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _evidence_dir(*, workspace_root: Path, namespace: str, run_id: str) -> Path:
+def _evidence_dir(*, workspace_root: Path, namespace: str, run_id: str, evidence_scope: str | None) -> Path:
     root = (workspace_root / "workspace").resolve()
     path = (root / _slug(namespace) / "runs" / _slug(run_id)).resolve()
+    if evidence_scope is not None:
+        if re.fullmatch(r"[0-9a-f]{64}", evidence_scope) is None:
+            raise OutwardModelObservabilityError("E_OUTWARD_MODEL_EVIDENCE_SCOPE")
+        path = (path / "model_attempts" / evidence_scope).resolve()
     if not path.is_relative_to(root):
         raise OutwardModelObservabilityError("model evidence path escaped workspace root")
     return path
@@ -378,6 +378,6 @@ def _redact(value: Any) -> Any:
 __all__ = [
     "OutwardModelEvidence",
     "OutwardModelObservabilityError",
-    "record_proposal_extraction_acceptance",
+    "verify_model_evidence",
     "write_model_evidence",
 ]

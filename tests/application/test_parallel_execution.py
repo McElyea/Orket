@@ -7,6 +7,7 @@ import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.orchestration.engine import OrchestrationEngine
+from tests.helpers.card_completion import text_acceptance
 from tests.turn_prompt_utils import extract_turn_prompt_context
 
 
@@ -36,8 +37,11 @@ class ParallelDummyProvider(LocalModelProvider):
             )
 
         self.active_calls -= 1
+        card_id = turn_context["issue_id"]
+        calls = [{"tool": "write_file", "args": {"path": f"agent_output/{card_id}.txt", "content": card_id}},
+                 {"tool": "update_issue_status", "args": {"status": "code_review"}}]
         return ModelResponse(
-            content='```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
+            content="\n".join(f"```json\n{json.dumps(call)}\n```" for call in calls),
             raw={"model": "dummy", "total_tokens": 100},
         )
 
@@ -68,8 +72,8 @@ def _seed_parallel_test_workspace(root: Path, *, company_name: str, epic_filenam
                 "departments": ["core"],
             }
         )
-    )
-    (root / "user_settings.json").write_text(json.dumps({}))
+    , encoding="utf-8")
+    (root / "user_settings.json").write_text(json.dumps({}), encoding="utf-8")
 
     for dialect_name in ["qwen", "llama3", "deepseek-r1", "phi", "generic"]:
         (root / "model" / "core" / "dialects" / f"{dialect_name}.json").write_text(
@@ -81,7 +85,7 @@ def _seed_parallel_test_workspace(root: Path, *, company_name: str, epic_filenam
                     "hallucination_guard": "N",
                 }
             )
-        )
+        , encoding="utf-8")
 
     (root / "model" / "core" / "roles" / "lead_architect.json").write_text(
         json.dumps(
@@ -90,10 +94,10 @@ def _seed_parallel_test_workspace(root: Path, *, company_name: str, epic_filenam
                 "summary": "lead_architect",
                 "type": "utility",
                 "description": "D",
-                "tools": ["update_issue_status"],
+                "tools": ["write_file", "update_issue_status"],
             }
         )
-    )
+    , encoding="utf-8")
     (root / "model" / "core" / "roles" / "integrity_guard.json").write_text(
         json.dumps(
             {
@@ -104,7 +108,7 @@ def _seed_parallel_test_workspace(root: Path, *, company_name: str, epic_filenam
                 "tools": ["update_issue_status"],
             }
         )
-    )
+    , encoding="utf-8")
     (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(
         json.dumps(
             {
@@ -115,7 +119,7 @@ def _seed_parallel_test_workspace(root: Path, *, company_name: str, epic_filenam
                 "tools": ["update_issue_status"],
             }
         )
-    )
+    , encoding="utf-8")
     (root / "model" / "core" / "teams" / "standard.json").write_text(
         json.dumps(
             {
@@ -127,11 +131,15 @@ def _seed_parallel_test_workspace(root: Path, *, company_name: str, epic_filenam
                 },
             }
         )
-    )
+    , encoding="utf-8")
     (root / "model" / "core" / "environments" / "standard.json").write_text(
         json.dumps({"name": "standard", "model": "dummy", "temperature": 0.1})
-    )
-    (root / "model" / "core" / "epics" / epic_filename).write_text(json.dumps(epic_payload))
+    , encoding="utf-8")
+    for issue in epic_payload["issues"]:
+        issue["summary"] = f"Write agent_output/{issue['id']}.txt containing exactly {issue['id']}"
+        issue["params"] = {"completion_acceptance": text_acceptance(
+            f"agent_output/{issue['id']}.txt", issue["id"], workload_id=issue["id"]).model_dump(mode="json")}
+    (root / "model" / "core" / "epics" / epic_filename).write_text(json.dumps(epic_payload), encoding="utf-8")
 
     return workspace, db_path
 
@@ -159,13 +167,17 @@ async def _run_epic_with_dummy_provider(
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
 
     start_time = time.perf_counter()
-    await engine.run_epic(epic_name)
+    try:
+        await engine.run_epic(epic_name)
+    finally:
+        await engine.close()
     total_duration = time.perf_counter() - start_time
     return total_duration, dummy_provider, engine
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+# Layer: integration
 async def test_parallel_execution_throughput(tmp_path, monkeypatch):
     """
     Verifies that independent issues are executed in parallel.
@@ -240,6 +252,7 @@ async def test_parallel_execution_throughput(tmp_path, monkeypatch):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+# Layer: integration
 async def test_dependency_chain_serial(tmp_path, monkeypatch):
     """
     Verifies that dependent issues are still executed serially.

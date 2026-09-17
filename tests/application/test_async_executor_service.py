@@ -12,7 +12,8 @@ from orket.driver_support_resources import DriverResourceMixin
 
 
 class _DriverResourceHarness(DriverResourceMixin):
-    pass
+    def _operator_workspace_root(self) -> Path:
+        return self.fs.workspace_root
 
 
 @pytest.mark.asyncio

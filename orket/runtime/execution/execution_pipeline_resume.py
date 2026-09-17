@@ -3,6 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from orket.application.services.runtime_execution_result_service import RuntimeExecutionCancelled
+from orket.application.services.runtime_result_lifetime import execute_collection_member
+from orket.core.contracts.runtime_execution_result import RuntimeCollectionMember, RuntimeCollectionResult
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
 from orket.schema import CardStatus, EpicConfig, IssueConfig, RockConfig
@@ -27,7 +30,7 @@ class ExecutionPipelineResumeMixin:
         session_id: str | None = None,
         driver_steered: bool = False,
         model_override: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> RuntimeCollectionResult:
         collection = await self.loader.load_asset_async("rocks", collection_name, RockConfig)
         requested_session_id = session_id or self.runtime_inputs.create_session_id()
         sid = self.execution_runtime_node.select_epic_collection_session_id(requested_session_id)
@@ -35,30 +38,28 @@ class ExecutionPipelineResumeMixin:
             build_id, collection_name, sanitize_name
         )
         results = []
-        for entry in collection.epics:
+        for index, entry in enumerate(collection.epics, start=1):
             epic_ws = self.workspace / entry["epic"]
-            sub_pipeline = self.pipeline_wiring_service.create_sub_pipeline(
-                parent_pipeline=self,
-                epic_workspace=epic_ws,
-                department=entry["department"],
-            )
-            res = await sub_pipeline.run_card(
-                entry["epic"],
-                build_id=active_build,
-                session_id=sid,
-                driver_steered=driver_steered,
-                model_override=model_override,
-            )
-            results.append({"epic": entry["epic"], "transcript": res})
-
-        log_event(
-            "epic_collection_phase_transition",
-            {"collection": collection.name, "phase": "bug_fix"},
-            workspace=self.workspace,
-        )
-        await self.bug_fix_manager.start_phase(collection.id)
-
-        return {"collection": collection.name, "results": results}
+            try:
+                res = await execute_collection_member(create=self.pipeline_wiring_service.create_sub_pipeline,
+                    creation={"parent_pipeline": self, "epic_workspace": epic_ws, "department": entry["department"]},
+                    target=entry["epic"], build_id=f"{active_build}-member-{index}", session_id=f"{sid}-member-{index}",
+                    execution={"driver_steered": driver_steered, "model_override": model_override})
+            except RuntimeExecutionCancelled as exc:
+                results.append(RuntimeCollectionMember(target=entry["epic"], result=exc.result))
+                raise RuntimeExecutionCancelled(RuntimeCollectionResult(session_id=sid, build_id=active_build,
+                    collection=collection.name, expected_members=tuple(entry["epic"] for entry in collection.epics),
+                    members=tuple(results), reason="Collection interrupted")) from exc
+            results.append(RuntimeCollectionMember(target=entry["epic"], result=res))
+            if not res.succeeded:
+                break
+        result = RuntimeCollectionResult(session_id=sid, build_id=active_build, collection=collection.name,
+            expected_members=tuple(entry["epic"] for entry in collection.epics), members=tuple(results))
+        if result.succeeded:
+            await self.bug_fix_manager.start_phase(collection.id)
+            log_event("epic_collection_phase_transition", {"collection": collection.name, "phase": "bug_fix"},
+                      workspace=self.workspace)
+        return result
 
     async def _find_parent_epic(self, issue_id: str) -> tuple[EpicConfig | None, str | None, IssueConfig | None]:
         for ename in await self.loader.list_assets_async("epics"):

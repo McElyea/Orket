@@ -1,7 +1,12 @@
 # ADR-0001: Volatility Tier Boundaries
 
 Date: 2026-02-13  
-Status: Accepted
+Status: Superseded by `docs/ARCHITECTURE.md` section 7 and dependency policy v2 (2026-09-14)
+
+This document preserves the earlier volatility-tier decision. Current enforcement
+uses the five normative layers and exact exceptions in
+`model/core/contracts/dependency_direction_policy.json`. The platform tier,
+inward-tier shortcut and legacy budget below are historical, not current rules.
 
 ## Context
 Orket has accumulated mixed-volatility modules across orchestration, integrations, policies, and interfaces. This makes dependency direction unclear and refactors high-risk.

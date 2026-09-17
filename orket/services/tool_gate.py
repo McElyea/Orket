@@ -1,5 +1,6 @@
-"""Compatibility shim: tool gate moved to `orket.core.policies.tool_gate`."""
+"""Existing service import surface for the application tool gate."""
 
-from orket.core.policies.tool_gate import ToolGate, ToolGateViolation
+from orket.application.services.tool_gate_service import ToolGate
+from orket.core.policies.tool_gate import ToolGateViolation
 
 __all__ = ["ToolGate", "ToolGateViolation"]

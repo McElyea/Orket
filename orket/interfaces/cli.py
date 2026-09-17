@@ -6,7 +6,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from orket.discovery import perform_first_run_setup, print_orket_manifest
+from orket.application.services.runtime_execution_result_service import RuntimeExecutionCancelled
+from orket.application.services.runtime_result_lifetime import close_runtime_owner
+from orket.application.services.runtime_result_projection import runtime_result_exit_code, runtime_result_lines
+from orket.discovery import perform_first_run_setup, print_orket_manifest, run_startup_checks
 from orket.extensions import ExtensionManager
 from orket.orchestration.engine import OrchestrationEngine
 
@@ -17,6 +20,13 @@ def _resolve_path_sync(value: str | Path = ".") -> Path:
 
 async def _resolve_path(value: str | Path = ".") -> Path:
     return await asyncio.to_thread(_resolve_path_sync, value)
+
+
+async def _finish_named_run(engine, result, *, cancelled=False) -> int:
+    if await close_runtime_owner(engine) and not cancelled:
+        raise asyncio.CancelledError("Runtime cleanup completed after caller cancellation")
+    print("\n".join(runtime_result_lines(result)))
+    return 130 if cancelled else runtime_result_exit_code(result)
 
 
 def parse_args(argv: list[str] | None = None, *, prog: str | None = None) -> argparse.Namespace:
@@ -236,8 +246,9 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
+    engine = None
     try:
-        startup_status = await asyncio.to_thread(perform_first_run_setup)
+        startup_status = await run_startup_checks(perform_first_run_setup)
         _emit_startup_status(startup_status)
         args = parse_args() if argv is None and prog is None else parse_args(argv, prog=prog)
         extension_manager = ExtensionManager()
@@ -512,26 +523,12 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
 
         await asyncio.to_thread(print_orket_manifest, args.department)
 
-        if args.rock:
-            print(f"Running Orket Card via legacy compatibility alias --rock: {args.rock}")
-            await engine.run_card(
-                args.rock,
-                build_id=args.build_id,
-                driver_steered=args.driver_steered,
-                model_override=args.model,
-            )
-            print(f"\n=== Card {args.rock} Complete (legacy compatibility alias --rock) ===")
-            return 0
-
-        if args.card:
-            print(f"Running Orket Card: {args.card}")
-            await engine.run_card(
-                args.card,
-                build_id=args.build_id,
-                driver_steered=args.driver_steered,
-                model_override=args.model,
-            )
-            return 0
+        if args.rock or args.card:
+            target = args.rock or args.card
+            print(f"Running Orket Card: {target}")
+            result = await engine.run_card(target, build_id=args.build_id,
+                driver_steered=args.driver_steered, model_override=args.model)
+            return await _finish_named_run(engine, result)
 
         if not args.epic:
             # Interactive Driver Mode
@@ -554,20 +551,18 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
             return 0
 
         print(f"Running Orket Epic: {args.epic}")
-        transcript = await engine.run_epic(
+        result = await engine.run_epic(
             args.epic,
             build_id=args.build_id,
             driver_steered=args.driver_steered,
             target_issue_id=args.resume,
             model_override=args.model,
         )
-        print("\n=== Orket EOS Run Complete ===")
-        for entry in transcript:
-            print(f"\n--- Card {entry.get('step_index', '?')} ({entry['role']}) ---")
-            print(entry["summary"])
-        return 0
+        return await _finish_named_run(engine, result)
 
-    except KeyboardInterrupt:
+    except RuntimeExecutionCancelled as exc:
+        return await _finish_named_run(engine, exc.result, cancelled=True)
+    except (KeyboardInterrupt, asyncio.CancelledError):
         print("\n[HALT] Interrupted by user.")
         return 130
     except (RuntimeError, ValueError, OSError, TypeError) as e:
@@ -576,3 +571,6 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
         traceback.print_exc()
         print(f"\n[FATAL] {e}")
         return 1
+    finally:
+        if engine is not None and await close_runtime_owner(engine):
+            raise asyncio.CancelledError("Runtime cleanup completed after caller cancellation")

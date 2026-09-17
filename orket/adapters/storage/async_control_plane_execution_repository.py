@@ -1,14 +1,22 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Awaitable, Callable, TypeVar
+from typing import TypeVar
 
 import aiosqlite
 
-from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
+from orket.adapters.storage.sqlite_connection import sqlite_connection_scope
 from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
+from orket.core.domain.control_plane_run_authority import same_run_admission
+from orket.core.domain.control_plane_state_revision import (
+    next_execution_record,
+    read_execution_record,
+    same_attempt_admission,
+    same_step_admission,
+)
 
 ResultT = TypeVar("ResultT")
 
@@ -20,8 +28,11 @@ class ControlPlaneExecutionConflictError(ValueError):
 class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
     """Durable SQLite repository for current run and attempt authority."""
 
-    def __init__(self, db_path: str | Path) -> None:
+    side_effecting = True
+
+    def __init__(self, db_path: str | Path, *, connection: aiosqlite.Connection | None = None) -> None:
         self.db_path = str(db_path)
+        self._connection = connection
         self._lock = asyncio.Lock()
         self._initialized = False
 
@@ -73,15 +84,13 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
         row_factory: bool = False,
         commit: bool = False,
     ) -> ResultT:
-        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
+        async with self._lock, sqlite_connection_scope(self.db_path, self._connection, commit=commit) as conn:
             if row_factory:
                 conn.row_factory = aiosqlite.Row
             if not self._initialized:
                 await self._ensure_initialized(conn)
                 self._initialized = True
             result = await operation(conn)
-            if commit:
-                await conn.commit()
             return result
 
     async def save_run_record(
@@ -89,20 +98,30 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
         *,
         record: RunRecord,
     ) -> RunRecord:
-        payload_json = record.model_dump_json()
+        snapshot = RunRecord.model_validate(record.model_dump(warnings=False))
 
         async def _op(conn: aiosqlite.Connection) -> RunRecord:
+            if not conn.in_transaction:
+                await conn.execute("BEGIN IMMEDIATE")
+            cursor = await conn.execute("SELECT payload_json FROM control_plane_runs WHERE run_id = ?", (snapshot.run_id,))
+            row = await cursor.fetchone()
+            existing = read_execution_record(RunRecord, row['payload_json']) if row is not None else None
+            if existing is not None and not same_run_admission(existing, snapshot):
+                raise ControlPlaneExecutionConflictError("E_CONTROL_PLANE_RUN_AUTHORITY_CONFLICT: immutable admission changed")
+            saved = next_execution_record(existing, snapshot, ControlPlaneExecutionConflictError)
+            if saved == existing:
+                return saved
             await conn.execute(
                 """
                 INSERT INTO control_plane_runs (run_id, payload_json)
                 VALUES (?, ?)
                 ON CONFLICT(run_id) DO UPDATE SET payload_json = excluded.payload_json
                 """,
-                (record.run_id, payload_json),
+                (saved.run_id, saved.model_dump_json()),
             )
-            return record
+            return saved
 
-        return await self._execute(_op, commit=True)
+        return await self._execute(_op, row_factory=True, commit=True)
 
     async def get_run_record(self, *, run_id: str) -> RunRecord | None:
         async def _op(conn: aiosqlite.Connection) -> RunRecord | None:
@@ -113,7 +132,7 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
             row = await cursor.fetchone()
             if row is None:
                 return None
-            return RunRecord.model_validate_json(str(row["payload_json"]))
+            return read_execution_record(RunRecord, str(row["payload_json"]))
 
         return await self._execute(_op, row_factory=True)
 
@@ -122,21 +141,22 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
         *,
         record: AttemptRecord,
     ) -> AttemptRecord:
-        payload_json = record.model_dump_json()
+        snapshot = AttemptRecord.model_validate(record.model_dump(warnings=False))
 
         async def _op(conn: aiosqlite.Connection) -> AttemptRecord:
+            if not conn.in_transaction:
+                await conn.execute("BEGIN IMMEDIATE")
             cursor = await conn.execute(
-                "SELECT run_id, attempt_ordinal FROM control_plane_attempts WHERE attempt_id = ?",
-                (record.attempt_id,),
+                "SELECT payload_json FROM control_plane_attempts WHERE attempt_id = ?",
+                (snapshot.attempt_id,),
             )
-            existing = await cursor.fetchone()
-            if existing is not None:
-                existing_run_id = str(existing["run_id"])
-                existing_attempt_ordinal = int(existing["attempt_ordinal"])
-                if existing_run_id != record.run_id or existing_attempt_ordinal != record.attempt_ordinal:
-                    raise ControlPlaneExecutionConflictError(
-                        "attempt_id reused with different run_id or attempt_ordinal"
-                    )
+            row = await cursor.fetchone()
+            existing = read_execution_record(AttemptRecord, row['payload_json']) if row is not None else None
+            if existing is not None and not same_attempt_admission(existing, snapshot):
+                raise ControlPlaneExecutionConflictError("E_CONTROL_PLANE_ATTEMPT_AUTHORITY_CONFLICT: immutable admission changed")
+            saved = next_execution_record(existing, snapshot, ControlPlaneExecutionConflictError)
+            if saved == existing:
+                return saved
             await conn.execute(
                 """
                 INSERT INTO control_plane_attempts (attempt_id, run_id, attempt_ordinal, payload_json)
@@ -144,13 +164,13 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
                 ON CONFLICT(attempt_id) DO UPDATE SET payload_json = excluded.payload_json
                 """,
                 (
-                    record.attempt_id,
-                    record.run_id,
-                    record.attempt_ordinal,
-                    payload_json,
+                    saved.attempt_id,
+                    saved.run_id,
+                    saved.attempt_ordinal,
+                    saved.model_dump_json(),
                 ),
             )
-            return record
+            return saved
 
         return await self._execute(_op, row_factory=True, commit=True)
 
@@ -163,7 +183,7 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
             row = await cursor.fetchone()
             if row is None:
                 return None
-            return AttemptRecord.model_validate_json(str(row["payload_json"]))
+            return read_execution_record(AttemptRecord, str(row["payload_json"]))
 
         return await self._execute(_op, row_factory=True)
 
@@ -179,7 +199,7 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
                 (run_id,),
             )
             rows = await cursor.fetchall()
-            return [AttemptRecord.model_validate_json(str(row["payload_json"])) for row in rows]
+            return [read_execution_record(AttemptRecord, str(row["payload_json"])) for row in rows]
 
         return await self._execute(_op, row_factory=True)
 
@@ -188,16 +208,22 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
         *,
         record: StepRecord,
     ) -> StepRecord:
-        payload_json = record.model_dump_json()
+        snapshot = StepRecord.model_validate(record.model_dump(warnings=False))
 
         async def _op(conn: aiosqlite.Connection) -> StepRecord:
+            if not conn.in_transaction:
+                await conn.execute("BEGIN IMMEDIATE")
             cursor = await conn.execute(
-                "SELECT attempt_id FROM control_plane_steps WHERE step_id = ?",
-                (record.step_id,),
+                "SELECT payload_json FROM control_plane_steps WHERE step_id = ?",
+                (snapshot.step_id,),
             )
-            existing = await cursor.fetchone()
-            if existing is not None and str(existing["attempt_id"]) != record.attempt_id:
-                raise ControlPlaneExecutionConflictError("step_id reused with different attempt_id")
+            row = await cursor.fetchone()
+            existing = read_execution_record(StepRecord, row['payload_json']) if row is not None else None
+            if existing is not None and not same_step_admission(existing, snapshot):
+                raise ControlPlaneExecutionConflictError("E_CONTROL_PLANE_STEP_AUTHORITY_CONFLICT: immutable admission changed")
+            saved = next_execution_record(existing, snapshot, ControlPlaneExecutionConflictError)
+            if saved == existing:
+                return saved
             await conn.execute(
                 """
                 INSERT INTO control_plane_steps (step_id, attempt_id, payload_json)
@@ -205,12 +231,12 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
                 ON CONFLICT(step_id) DO UPDATE SET payload_json = excluded.payload_json
                 """,
                 (
-                    record.step_id,
-                    record.attempt_id,
-                    payload_json,
+                    saved.step_id,
+                    saved.attempt_id,
+                    saved.model_dump_json(),
                 ),
             )
-            return record
+            return saved
 
         return await self._execute(_op, row_factory=True, commit=True)
 
@@ -223,7 +249,7 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
             row = await cursor.fetchone()
             if row is None:
                 return None
-            return StepRecord.model_validate_json(str(row["payload_json"]))
+            return read_execution_record(StepRecord, str(row["payload_json"]))
 
         return await self._execute(_op, row_factory=True)
 
@@ -239,7 +265,7 @@ class AsyncControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
                 (attempt_id,),
             )
             rows = await cursor.fetchall()
-            return [StepRecord.model_validate_json(str(row["payload_json"])) for row in rows]
+            return [read_execution_record(StepRecord, str(row["payload_json"])) for row in rows]
 
         return await self._execute(_op, row_factory=True)
 

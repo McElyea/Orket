@@ -11,53 +11,35 @@ LIFECYCLE_CATEGORY_V1 = (
     "degraded_completed",
 )
 
-_OPEN_CARD_STATUSES = {"ready", "waiting_for_developer", "ready_for_testing"}
-_RUNNING_CARD_STATUSES = {"in_progress", "started"}
-_BLOCKED_CARD_STATUSES = {"blocked", "guard_rejected", "canceled", "archived"}
-_REVIEW_CARD_STATUSES = {"code_review", "awaiting_guard_review", "guard_requested_changes", "guard_approved"}
-_COMPLETED_CARD_STATUSES = {"done"}
-_TERMINAL_FAILURE_CATEGORIES = {"prebuild_blocked", "artifact_run_failed"}
 _DEGRADED_RESOURCE_THRESHOLD = 90.0
 _DEGRADED_VRAM_RATIO = 0.95
 
 
-def card_filter_bucket(*, raw_status: str, lifecycle_category: str) -> str:
-    if lifecycle_category in _TERMINAL_FAILURE_CATEGORIES:
-        return "terminal_failure"
-    if raw_status in _BLOCKED_CARD_STATUSES:
-        return "blocked"
-    if raw_status in _REVIEW_CARD_STATUSES:
-        return "review"
-    if raw_status in _COMPLETED_CARD_STATUSES:
-        return "completed"
-    if raw_status in _RUNNING_CARD_STATUSES:
-        return "running"
-    return "open"
-
-
-def card_summary_text(*, run_summary: str, filter_bucket: str) -> str:
-    if run_summary:
-        return run_summary
+def card_summary_text(*, filter_bucket: str) -> str:
+    if filter_bucket == "terminal_failure":
+        return "The last run failed; inspect the card before retrying."
     if filter_bucket == "review":
-        return "Waiting on review or guard confirmation."
+        return "Completion acceptance requires review or guard confirmation."
     if filter_bucket == "blocked":
         return "Blocked until a dependency or operator action clears."
     if filter_bucket == "running":
         return "Currently executing."
     if filter_bucket == "completed":
-        return "Completed with no current run summary."
+        return "Retained evidence satisfies the declared card acceptance criteria."
     return "Ready to run."
 
 
 def card_next_action(*, run_primary_status: str, run_next_action: str, filter_bucket: str) -> str:
-    if run_primary_status in {"completed", "failed", "blocked"}:
-        return run_next_action or "inspect_run"
+    if filter_bucket == "completed":
+        return "inspect_verified_output"
     if filter_bucket == "review":
         return "review_or_guard"
     if filter_bucket == "blocked":
         return "resolve_blocker"
     if filter_bucket == "running":
         return "monitor_run"
+    if run_primary_status in {"completed", "failed", "blocked"}:
+        return run_next_action or "inspect_run"
     return "run_card"
 
 

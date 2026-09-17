@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
+from orket.adapters.storage.outward_store_transaction import OutwardStoreUnitOfWork
+from orket.application.services.outward_terminal_service import publish_outward_terminal
 from orket.application.services.trust_handoff_contract import failure_class
 from orket.application.services.trust_handoff_verifier import (
     TrustHandoffVerificationContext,
@@ -23,10 +24,12 @@ class TrustHandoffAdmissionService:
         run_store: OutwardRunStore,
         event_store: OutwardRunEventStore,
         utc_now: Any,
+        unit_of_work: OutwardStoreUnitOfWork,
     ) -> None:
         self.run_store = run_store
         self.event_store = event_store
         self.utc_now = utc_now
+        self.unit_of_work = unit_of_work
 
     async def admit_if_required(self, run: OutwardRunRecord) -> tuple[OutwardRunRecord, bool]:
         acceptance = _acceptance_contract(run)
@@ -55,31 +58,19 @@ class TrustHandoffAdmissionService:
         return run, True
 
     async def _reject(self, run: OutwardRunRecord, report: dict[str, Any], package_path: Path) -> OutwardRunRecord:
-        now = self.utc_now()
-        rejected = replace(run, status="completed", pending_proposals=(), completed_at=now, stop_reason=str(report.get("rejection_reason") or "trust_handoff_rejected"))
-        await self.run_store.update(rejected)
-        await self._append_once(
-            event_id=f"run:{run.run_id}:0050:trust_handoff_rejected",
-            event_type="trust_handoff_rejected",
-            run=rejected,
-            payload=_rejected_payload(report, package_path),
-        )
-        await self._append_once(
-            event_id=f"run:{run.run_id}:0060:handoff_rejected:completed",
-            event_type="run_completed",
-            run=rejected,
-            payload={
-                "run_id": run.run_id,
-                "status": "completed",
-                "outcome": "handoff_rejected",
-                "result_class": "handoff_rejected",
-                "evidence_sufficiency": "evidence_sufficient",
-                "rejection_reason": report.get("rejection_reason"),
-                "rejection_class": report.get("rejection_class"),
-                "completed_at": now,
-            },
-        )
-        return rejected
+        async with self.unit_of_work.transaction() as transaction:
+            current = await transaction.get_run(run.run_id)
+            if current != run:
+                raise RuntimeError("E_OUTWARD_HANDOFF_ADMISSION_CONFLICT")
+            now = self.utc_now()
+            event = LedgerEvent(
+                event_id=f"run:{run.run_id}:0050:trust_handoff_rejected", event_type="trust_handoff_rejected",
+                run_id=run.run_id, turn=0, agent_id="outward-agent", at=now,
+                payload=_rejected_payload(report, package_path),
+            )
+            await transaction.append_event(event)
+            return await publish_outward_terminal(transaction, run, at=now, outcome="handoff_rejected",
+                reason=str(report.get("rejection_reason") or "trust_handoff_rejected"), cause=event)
 
     async def _append_once(
         self,

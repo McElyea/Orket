@@ -83,8 +83,9 @@ def test_get_engine_recommendations_suggests_higher_missing_tier(monkeypatch):
     assert recommendations[0]["tier"] == "mid"
 
 
-def test_discover_project_assets_anchors_model_root_to_project_root(monkeypatch, tmp_path):
-    """Layer: contract. Verifies asset discovery resolves the model root from project root, not caller CWD."""
+# Layer: contract
+def test_discover_project_assets_passes_selected_project_to_loader(monkeypatch, tmp_path):
+    """Check the loader boundary; real filesystem root proof is integration coverage."""
     captures = {}
 
     class _FakeLoader:
@@ -99,11 +100,11 @@ def test_discover_project_assets_anchors_model_root_to_project_root(monkeypatch,
     off_root_cwd.mkdir()
     monkeypatch.chdir(off_root_cwd)
     monkeypatch.setattr("orket.discovery.ConfigLoader", _FakeLoader)
-    monkeypatch.setattr("orket.discovery._default_model_root", lambda: tmp_path / "model")
+    monkeypatch.setattr("orket.discovery._default_project_root", lambda: tmp_path)
 
     assets = discover_project_assets("core")
 
-    assert captures["root"] == tmp_path / "model"
+    assert captures["root"] == tmp_path
     assert captures["department"] == "core"
     assert assets == {
         "rocks": ["rocks-fixture"],

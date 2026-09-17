@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+from orket.application.services.control_plane_authority_service import ControlPlaneAuthorityService
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     release_execution_authority_if_present,
+)
+from orket.application.services.turn_tool_control_plane_state_gate import (
+    require_resolved_tool_dispatches,
+    require_turn_dispatch_contract,
 )
 from orket.application.services.turn_tool_control_plane_support import utc_now
 from orket.core.contracts import (
@@ -12,6 +17,7 @@ from orket.core.contracts import (
     RecoveryDecisionRecord,
     RunRecord,
 )
+from orket.core.contracts.control_plane_transaction import ControlPlaneTransactionFactory
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AttemptState,
@@ -28,6 +34,31 @@ from orket.core.domain import (
     validate_attempt_state_transition,
     validate_run_state_transition,
 )
+from orket.core.domain.control_plane_final_truth import validate_terminal_record_consistency
+
+
+async def finalize_turn_execution_atomic(
+    *, transactions: ControlPlaneTransactionFactory, authority: ControlPlaneAuthorityService,
+    run_id: str, attempt_id: str, authoritative_result_ref: str,
+    violation_reasons: list[str], executed_step_count: int | None, error_type: type[Exception],
+) -> tuple[RunRecord, AttemptRecord, FinalTruthRecord]:
+    """Read current authority and commit terminal records with resource release."""
+    async with transactions() as transaction:
+        run = await transaction.execution.get_run_record(run_id=run_id)
+        attempt = await transaction.execution.get_attempt_record(attempt_id=attempt_id)
+        if run is None:
+            raise error_type(f"governed turn-tool run not found: {run_id}")
+        if attempt is None:
+            raise error_type(f"governed turn-tool attempt not found: {attempt_id}")
+        if executed_step_count is None:
+            steps = await transaction.execution.list_step_records(attempt_id=attempt_id)
+            executed_step_count = sum(step.step_kind == "governed_tool_operation" for step in steps)
+        return await finalize_turn_execution(
+            execution_repository=transaction.execution,
+            publication=ControlPlanePublicationService(repository=transaction.records, authority=authority),
+            run=run, attempt=attempt, authoritative_result_ref=authoritative_result_ref,
+            violation_reasons=violation_reasons, executed_step_count=executed_step_count, error_type=error_type,
+        )
 
 
 def terminal_blocked_actions() -> list[str]:
@@ -138,12 +169,11 @@ async def finalize_turn_execution(
     executed_step_count: int,
     error_type: type[Exception],
 ) -> tuple[RunRecord, AttemptRecord, FinalTruthRecord]:
+    await require_resolved_tool_dispatches(execution_repository, run, error_type)
     existing_truth = await publication.repository.get_final_truth(run_id=run.run_id)
-    if existing_truth is not None:
-        if run.final_truth_record_id != existing_truth.final_truth_record_id:
-            run = run.model_copy(update={"final_truth_record_id": existing_truth.final_truth_record_id})
-            await execution_repository.save_run_record(record=run)
+    if validate_terminal_record_consistency(run, attempt, existing_truth):
         return run, attempt, existing_truth
+    await require_turn_dispatch_contract(publication.repository, run, error_type)
 
     ensure_current_execution_target(
         run=run,
@@ -155,7 +185,7 @@ async def finalize_turn_execution(
     if not violation_reasons:
         validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.COMPLETED)
         attempt = attempt.model_copy(update={"attempt_state": AttemptState.COMPLETED, "end_timestamp": closed_at})
-        await execution_repository.save_attempt_record(record=attempt)
+        attempt = await execution_repository.save_attempt_record(record=attempt)
         validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.COMPLETED)
         truth = await publication.publish_final_truth(
             final_truth_record_id=f"turn-tool-final-truth:{run.run_id}",
@@ -175,7 +205,7 @@ async def finalize_turn_execution(
         run = run.model_copy(
             update={"lifecycle_state": RunState.COMPLETED, "final_truth_record_id": truth.final_truth_record_id}
         )
-        await execution_repository.save_run_record(record=run)
+        run = await execution_repository.save_run_record(record=run)
         await release_execution_authority_if_present(
             publication=publication,
             run=run,
@@ -221,7 +251,7 @@ async def finalize_turn_execution(
             "recovery_decision_id": decision.decision_id,
         }
     )
-    await execution_repository.save_attempt_record(record=attempt)
+    attempt = await execution_repository.save_attempt_record(record=attempt)
     validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.FAILED_TERMINAL)
     truth = await publication.publish_final_truth(
         final_truth_record_id=f"turn-tool-final-truth:{run.run_id}",
@@ -246,7 +276,7 @@ async def finalize_turn_execution(
     run = run.model_copy(
         update={"lifecycle_state": RunState.FAILED_TERMINAL, "final_truth_record_id": truth.final_truth_record_id}
     )
-    await execution_repository.save_run_record(record=run)
+    run = await execution_repository.save_run_record(record=run)
     await release_execution_authority_if_present(
         publication=publication,
         run=run,
@@ -291,7 +321,7 @@ async def close_reconciliation_required_resume_mode(
             "failure_classification": decision.failure_classification,
         }
     )
-    await execution_repository.save_attempt_record(record=updated_attempt)
+    updated_attempt = await execution_repository.save_attempt_record(record=updated_attempt)
     truth = await publication.publish_final_truth(
         final_truth_record_id=f"turn-tool-final-truth:{run.run_id}",
         run_id=run.run_id,
@@ -307,7 +337,7 @@ async def close_reconciliation_required_resume_mode(
     updated_run = run.model_copy(
         update={"lifecycle_state": RunState.FAILED_TERMINAL, "final_truth_record_id": truth.final_truth_record_id}
     )
-    await execution_repository.save_run_record(record=updated_run)
+    updated_run = await execution_repository.save_run_record(record=updated_run)
     await release_execution_authority_if_present(
         publication=publication,
         run=updated_run,

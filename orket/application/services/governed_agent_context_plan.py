@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any
 
-from orket.application.services.governed_agent_wake_records import GovernedAgentWakeRepository
 from orket.core.contracts import RunRecord
+from orket.core.contracts.governed_agent_wake_records import GovernedAgentWakeRepository
+from orket.core.domain.control_plane_run_authority import same_run_admission
 from orket_extension_sdk import AgentIterationRequest, canonical_digest_sha256
 
 
@@ -73,16 +74,6 @@ async def retained_continuation_inputs(
 
 
 def same_run_authority(existing: RunRecord, expected: RunRecord) -> bool:
-    return cast(
-        bool,
-        existing.run_id == expected.run_id
-        and existing.workload_id == expected.workload_id
-        and existing.workload_version == expected.workload_version
-        and existing.policy_snapshot_id == expected.policy_snapshot_id
-        and existing.policy_digest == expected.policy_digest
-        and existing.configuration_snapshot_id == expected.configuration_snapshot_id
-        and existing.configuration_digest == expected.configuration_digest
-        and existing.admission_decision_receipt_ref == expected.admission_decision_receipt_ref
-        and existing.namespace_scope == expected.namespace_scope
-        and existing.current_attempt_id == expected.current_attempt_id,
-    )
+    # Reentry observes a new time; it retains the original admission timestamp.
+    retained_time = expected.model_copy(update={"creation_timestamp": existing.creation_timestamp})
+    return same_run_admission(existing, retained_time) and existing.current_attempt_id == expected.current_attempt_id

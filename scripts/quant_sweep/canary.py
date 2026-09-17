@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import argparse
-import json
 import math
 import os
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +13,7 @@ from quant_sweep.runtime import load_json, run_cmd
 
 def _build_canary_command(args: argparse.Namespace, out_path: Path) -> list[str]:
     command = [
-        "python",
+        sys.executable,
         "scripts/benchmarks/run_determinism_harness.py",
         "--task-bank",
         args.task_bank,

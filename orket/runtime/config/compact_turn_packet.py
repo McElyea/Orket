@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from orket.runtime.config import turn_prompt_contracts
+
 PACKET_VERSION = 'compact_turn_packet_v1'
 _ISSUE_PREFIX = 'Issue '
 _ISSUE_BRIEF_PREFIX = 'Issue Brief:\n'
@@ -26,6 +28,7 @@ _MISSING_INPUT_PREFIX = 'Missing Input Preflight Notice:\n'
 _PRIOR_TRANSCRIPT_PREFIX = 'Prior Transcript JSON:\n'
 _PROJECT_CONTEXT_MARKER = 'PROJECT CONTEXT (PAST DECISIONS):\n'
 _PATCH_MARKER = 'PATCH:\n'
+_ACCEPTANCE_MARKER = 'Declared card acceptance:\n'
 
 
 @dataclass(frozen=True)
@@ -86,16 +89,13 @@ def _append_unique_lines(target: list[str], candidates: list[str]) -> None:
         seen.add(line)
 
 
-def _extract_system_tail(system_content: str, marker: str, title: str) -> str:
-    if not system_content:
+def _extract_system_section(system_content: str, marker: str, title: str) -> str:
+    _, found, body = ('\n\n' + system_content).partition('\n\n' + marker)
+    if not found:
         return ''
-    index = system_content.find(marker)
-    if index < 0:
-        return ''
-    tail = system_content[index + len(marker) :].strip()
-    if not tail:
-        return ''
-    return f'{title}:\n{tail}'
+    for boundary in (_PROJECT_CONTEXT_MARKER, _PATCH_MARKER, _ACCEPTANCE_MARKER):
+        body = body.partition('\n\n' + boundary)[0]
+    return f'{title}:\n{body.strip()}' if body.strip() else ''
 
 
 def is_compact_turn_packet(messages: list[dict[str, str]]) -> bool:
@@ -114,7 +114,7 @@ def _render_compact_system_prompt(runtime_context: dict[str, Any]) -> str:
         'MODE: compact governed tool turn',
         'RULES:',
         '- Return exactly one JSON object.',
-        '- Response envelope: {"content":"","tool_calls":[...]}.',
+        '- Response envelope: {"content":"","tool_calls":[...]}. Each call: {"tool":"<allowed tool name>","args":{...}}.',
         '- content must be empty when tool_calls are present.',
         '- No prose, no markdown fences, no labels.',
         '- Use only tools, paths, statuses, and facts from the TURN PACKET.',
@@ -181,9 +181,9 @@ def _render_runtime_verifier(runtime_context: dict[str, Any]) -> str:
     runtime_verifier_contract = runtime_context.get('runtime_verifier_contract')
     lines: list[str] = []
     if runtime_verifier_ok is True:
-        lines.append('- runtime verifier: passed')
+        lines.append('- support verifier: no reported errors; this does not establish accepted completion')
     elif runtime_verifier_ok is False:
-        lines.append('- runtime verifier: failed')
+        lines.append('- support verifier: reported errors; consult declared acceptance and diagnostics')
     if not isinstance(runtime_verifier_contract, dict) or not runtime_verifier_contract:
         return 'Runtime Verification:\n' + '\n'.join(lines) if lines else ''
     commands = runtime_verifier_contract.get('commands')
@@ -270,23 +270,6 @@ def _render_architecture_contract(runtime_context: dict[str, Any]) -> str:
     return '\n'.join(lines)
 
 
-def _runtime_verifier_prompt_enabled(runtime_context: dict[str, Any]) -> bool:
-    artifact_contract = runtime_context.get('artifact_contract')
-    artifact_contract = artifact_contract if isinstance(artifact_contract, dict) else {}
-    profile_traits = runtime_context.get('profile_traits')
-    profile_traits = profile_traits if isinstance(profile_traits, dict) else {}
-    runtime_verifier_allowed = bool(profile_traits.get('runtime_verifier_allowed', True))
-    profile_intent = str(profile_traits.get('intent') or '').strip().lower()
-    runtime_verifier_contract = runtime_context.get('runtime_verifier_contract')
-    runtime_verifier_contract = runtime_verifier_contract if isinstance(runtime_verifier_contract, dict) else {}
-    artifact_kind = str(artifact_contract.get('kind') or '').strip().lower()
-    return runtime_verifier_allowed or (
-        bool(runtime_verifier_contract)
-        and profile_intent in {'write_artifact', 'build_app'}
-        and artifact_kind not in {'', 'none'}
-    )
-
-
 def _render_turn_packet(messages: list[dict[str, str]], runtime_context: dict[str, Any]) -> str:
     issue_header = _find_message_content(messages, _ISSUE_PREFIX)
     issue_brief = _find_message_content(messages, _ISSUE_BRIEF_PREFIX)
@@ -340,8 +323,7 @@ def _render_turn_packet(messages: list[dict[str, str]], runtime_context: dict[st
     primary_output = str(artifact_contract.get('primary_output') or '').strip()
     if primary_output:
         header_lines.append(f'- primary output: {primary_output}')
-    if runtime_context.get('runtime_verifier_ok') is True and required_statuses == ['done']:
-        header_lines.append('- runtime verifier passed; blocked is not allowed on this turn')
+    header_lines.append('- available tools: ' + ', '.join(_normalized_list(runtime_context.get('available_tools'))))
     header_lines.append('- response shape: {"content":"","tool_calls":[...]}')
     _append_unique_lines(
         header_lines,
@@ -388,8 +370,9 @@ def _render_turn_packet(messages: list[dict[str, str]], runtime_context: dict[st
         _renamed_section(artifact_semantic, _ARTIFACT_SEMANTIC_PREFIX, 'Artifact Checks')
         or _render_artifact_checks(runtime_context),
         _renamed_section(artifact_exact_shape, _ARTIFACT_EXACT_SHAPE_PREFIX, 'Exact Shape Hints'),
-        _renamed_section(runtime_verifier, _RUNTIME_VERIFIER_PREFIX, 'Runtime Verification')
-        or (_render_runtime_verifier(runtime_context) if _runtime_verifier_prompt_enabled(runtime_context) else ''),
+        (_renamed_section(runtime_verifier, _RUNTIME_VERIFIER_PREFIX, 'Runtime Verification')
+         or _render_runtime_verifier(runtime_context))
+        if turn_prompt_contracts.runtime_verifier_prompt_enabled(runtime_context) else '',
         _renamed_section(comment_contract, _COMMENT_CONTRACT_PREFIX, 'Review Comment Rules')
         or _render_comment_contract(runtime_context),
         _renamed_section(architecture_contract, _ARCHITECTURE_CONTRACT_PREFIX, 'Architecture Contract')
@@ -398,8 +381,9 @@ def _render_turn_packet(messages: list[dict[str, str]], runtime_context: dict[st
         _renamed_section(guard_rejection, _GUARD_REJECTION_PREFIX, 'Guard Review Rules'),
         _renamed_section(odr_prebuild, _ODR_PREBUILD_PREFIX, 'ODR Summary'),
         _renamed_section(odr_requirement, _ODR_REFINED_REQUIREMENT_PREFIX, 'ODR Requirement'),
-        _extract_system_tail(system_content, _PROJECT_CONTEXT_MARKER, 'Project Context'),
-        _extract_system_tail(system_content, _PATCH_MARKER, 'Patch'),
+        _extract_system_section(system_content, _PROJECT_CONTEXT_MARKER, 'Project Context'),
+        _extract_system_section(system_content, _PATCH_MARKER, 'Patch'),
+        _extract_system_section(system_content, _ACCEPTANCE_MARKER, 'Declared card acceptance'),
         preloaded_read_context,
         _renamed_section(missing_input_notice, _MISSING_INPUT_PREFIX, 'Missing Inputs'),
         prior_transcript,

@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 from orket.runtime.execution_pipeline import ExecutionPipeline
+from tests.helpers.runtime_result import published_result
 
 
 @pytest.mark.asyncio
@@ -21,6 +22,7 @@ async def test_run_gitea_state_loop_requires_gitea_mode():
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeypatch, tmp_path):
     """Layer: unit. Verifies the Gitea state loop dispatches claimed cards through the canonical card surface."""
     pipeline = object.__new__(ExecutionPipeline)
@@ -31,7 +33,7 @@ async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeyp
 
     async def _run_card(card_id: str, **_kwargs):
         called_cards.append(card_id)
-        return {"ok": True}
+        return published_result()
 
     pipeline.run_card = _run_card
 

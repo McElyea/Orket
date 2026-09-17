@@ -109,6 +109,16 @@ new callers must use `--card`; removal requires an explicit `0.7.0` contract del
 7. Provider-backed live proof scripts/tests that are not explicit sandbox acceptance work must set `ORKET_DISABLE_SANDBOX=1`.
 8. Any flow that intentionally creates real `orket-sandbox-*` resources must prove teardown in the same execution path before temp-workspace cleanup or handoff. Do not rely on delayed TTL cleanup for routine proof runs.
 9. Tests that touch the module-level `orket.state.runtime_state` singleton must use the `fresh_runtime_state` pytest fixture from `tests/conftest.py`.
+10. Repository checks and review exports share the Git-visible inventory in `scripts/common/git_inventory.py`. Tests must not depend on ignored local utilities. Git discovery failures are errors, not empty inventories or permission to walk ignored trees.
+11. Dependency enforcement is `python scripts/governance/check_dependency_direction.py`. Policy v2 uses the five normative layers and exact exceptions; the retired legacy-budget options have no compatibility mode. `python scripts/governance/export_dependency_graph.py` regenerates the observed graph and its separate verdict. A successful export or baseline collection does not mean the dependency verdict passes. Both commands share the same discovery, analysis and policy implementation.
+
+Optional repository review copy: `python -m scripts.governance.export_review_packet`.
+It writes `Agents/review/project_review_packet.txt` by default (`--output` overrides
+the path). This is a filtered source/config copy, not retained runtime evidence or
+a claim that every repository file is included. Exit 2 discloses byte/character
+limit omissions; exit 1 reports discovery/read/write errors. Review the filter and
+output before sharing. The ignored local `project_dump.py` is not repository
+tooling or a test prerequisite.
 
 ### Local provider development and testing
 

@@ -12,8 +12,12 @@ from orket.application.services.skill_adapter import synthesize_role_tool_profil
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_executor import TurnResult
 from orket.core.domain import ReservationStatus
+from orket.core.domain.execution import ExecutionTurn
 from orket.exceptions import CatastrophicFailure, ExecutionFailed
+from orket.runtime.config.contract_assets import DEFAULT_PROMPT_BUDGET_PATH
 from orket.schema import CardStatus, IssueConfig, SeatConfig, TeamConfig
+from tests.helpers.card_dispatch import install_dispatch_snapshot_stub
+from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
 
 class AsyncSpy:
@@ -36,8 +40,8 @@ class AsyncSpy:
 class FakeCards:
     def __init__(self):
         self.get_by_build = AsyncSpy(return_value=[])
-        self.get_independent_ready_issues = AsyncSpy(return_value=[])
-        self.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
+        self.independent_ready = AsyncSpy(return_value=[])
+        self.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.CODE_REVIEW))
         self.update_status = AsyncSpy(return_value=None)
         self.save = AsyncSpy(return_value=None)
 
@@ -75,7 +79,8 @@ class FakeSandbox:
 
 
 @pytest.fixture
-def orchestrator(tmp_path):
+def orchestrator(tmp_path, monkeypatch):
+    install_dispatch_snapshot_stub(monkeypatch)
     cards = FakeCards()
     snapshots = FakeSnapshots()
     loader = FakeLoader(tmp_path)
@@ -86,14 +91,16 @@ def orchestrator(tmp_path):
         snapshots=snapshots,
         org=org,
         config_root=tmp_path,
-        db_path="test.db",
+        db_path=str(tmp_path / "test.db"),
         loader=loader,
         sandbox_orchestrator=FakeSandbox(),
+        control_plane_clock=ProtocolLedgerClock().utc_now_iso,
     )
     return orch, cards, loader
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_completion(orchestrator, tmp_path):
     orch, cards, _loader = orchestrator
     epic = SimpleNamespace(name="Test Epic", issues=[], references=[])
@@ -102,7 +109,7 @@ async def test_execute_epic_completion(orchestrator, tmp_path):
 
     # Existing completed backlog means no candidates and immediate completion path.
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
-    cards.get_independent_ready_issues.side_effect = [[]]
+    cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     await orch.execute_epic(
@@ -113,10 +120,11 @@ async def test_execute_epic_completion(orchestrator, tmp_path):
         env=env,
     )
 
-    assert len(cards.get_independent_ready_issues.calls) == 1
+    assert len(cards.independent_ready.calls) == 1
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_raises_when_no_candidates_and_backlog_incomplete(orchestrator, tmp_path):
     orch, cards, _loader = orchestrator
     epic = SimpleNamespace(name="Stalled Epic", issues=[], references=[])
@@ -124,7 +132,7 @@ async def test_execute_epic_raises_when_no_candidates_and_backlog_incomplete(orc
     env = SimpleNamespace(temperature=0.1, timeout=30)
 
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.IN_PROGRESS)]]
-    cards.get_independent_ready_issues.side_effect = [[]]
+    cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     with pytest.raises(ExecutionFailed, match="No executable candidates while backlog incomplete"):
@@ -138,6 +146,7 @@ async def test_execute_epic_raises_when_no_candidates_and_backlog_incomplete(orc
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_propagates_dependency_block_before_stall(orchestrator, tmp_path):
     orch, cards, _loader = orchestrator
     parent = SimpleNamespace(id="ARC-1", status=CardStatus.BLOCKED, depends_on=[])
@@ -147,7 +156,7 @@ async def test_execute_epic_propagates_dependency_block_before_stall(orchestrato
     env = SimpleNamespace(temperature=0.1, timeout=30)
 
     cards.get_by_build.side_effect = [[parent, child], [parent, child]]
-    cards.get_independent_ready_issues.side_effect = [[], []]
+    cards.independent_ready.side_effect = [[], []]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     await orch.execute_epic(
@@ -164,13 +173,14 @@ async def test_execute_epic_propagates_dependency_block_before_stall(orchestrato
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_runs_scaffolder_stage(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
     epic = SimpleNamespace(name="Scaffold Epic", issues=[], references=[])
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
-    cards.get_independent_ready_issues.side_effect = [[]]
+    cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     hit = {"count": 0}
@@ -197,6 +207,7 @@ async def test_execute_epic_runs_scaffolder_stage(orchestrator, tmp_path, monkey
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_support_services_can_override_scaffolder(orchestrator, tmp_path, monkeypatch):
     """Layer: integration. Verifies execute_epic uses the explicit orchestrator support-service seam for scaffolder construction."""
     orch, cards, _loader = orchestrator
@@ -204,7 +215,7 @@ async def test_execute_epic_support_services_can_override_scaffolder(orchestrato
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
-    cards.get_independent_ready_issues.side_effect = [[]]
+    cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     hit = {"count": 0}
@@ -228,6 +239,7 @@ async def test_execute_epic_support_services_can_override_scaffolder(orchestrato
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_passes_microservices_pattern_to_stabilizers(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
@@ -242,7 +254,7 @@ async def test_execute_epic_passes_microservices_pattern_to_stabilizers(orchestr
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
-    cards.get_independent_ready_issues.side_effect = [[]]
+    cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     captured = {}
@@ -275,6 +287,7 @@ async def test_execute_epic_passes_microservices_pattern_to_stabilizers(orchestr
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_preserves_deferred_architecture_mode_for_stabilizers(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
@@ -289,7 +302,7 @@ async def test_execute_epic_preserves_deferred_architecture_mode_for_stabilizers
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
-    cards.get_independent_ready_issues.side_effect = [[]]
+    cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     captured = {}
@@ -322,13 +335,14 @@ async def test_execute_epic_preserves_deferred_architecture_mode_for_stabilizers
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_fails_on_scaffolder_validation_error(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
     epic = SimpleNamespace(name="Scaffold Fail Epic", issues=[], references=[])
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
-    cards.get_independent_ready_issues.side_effect = [[]]
+    cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     class _BadScaffolder:
@@ -351,13 +365,14 @@ async def test_execute_epic_fails_on_scaffolder_validation_error(orchestrator, t
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_runs_dependency_manager_stage(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
     epic = SimpleNamespace(name="Dependency Stage Epic", issues=[], references=[])
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
-    cards.get_independent_ready_issues.side_effect = [[]]
+    cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     hit = {"count": 0}
@@ -387,13 +402,14 @@ async def test_execute_epic_runs_dependency_manager_stage(orchestrator, tmp_path
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_fails_on_dependency_manager_validation_error(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
     epic = SimpleNamespace(name="Dependency Stage Fail Epic", issues=[], references=[])
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
-    cards.get_independent_ready_issues.side_effect = [[]]
+    cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     class _BadDependencyManager:
@@ -421,13 +437,14 @@ async def test_execute_epic_fails_on_dependency_manager_validation_error(orchest
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_runs_deployment_planner_stage(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
     epic = SimpleNamespace(name="Deploy Stage Epic", issues=[], references=[])
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
-    cards.get_independent_ready_issues.side_effect = [[]]
+    cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     hit = {"count": 0}
@@ -457,13 +474,14 @@ async def test_execute_epic_runs_deployment_planner_stage(orchestrator, tmp_path
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_fails_on_deployment_planner_validation_error(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
     epic = SimpleNamespace(name="Deploy Stage Fail Epic", issues=[], references=[])
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
-    cards.get_independent_ready_issues.side_effect = [[]]
+    cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     class _BadDeploymentPlanner:
@@ -652,6 +670,7 @@ async def test_handle_failure_approval_pending_preserves_issue_state_without_sch
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_honors_custom_loop_policy(orchestrator, tmp_path):
     orch, cards, _loader = orchestrator
     issue = SimpleNamespace(id="I1", status=CardStatus.READY, seat="dev")
@@ -665,7 +684,7 @@ async def test_execute_epic_honors_custom_loop_policy(orchestrator, tmp_path):
     env = SimpleNamespace(temperature=0.1, timeout=30)
 
     cards.get_by_build.side_effect = [[issue], [issue]]
-    cards.get_independent_ready_issues.side_effect = [[issue]]
+    cards.independent_ready.side_effect = [[issue]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     class CustomLoopPolicy:
@@ -700,6 +719,7 @@ async def test_execute_epic_honors_custom_loop_policy(orchestrator, tmp_path):
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test")
@@ -760,7 +780,7 @@ async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mo
         async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -775,7 +795,6 @@ async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mo
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
     orch.model_client_node = CustomModelClientNode()
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -795,8 +814,8 @@ async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mo
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_strategy(orchestrator, monkeypatch):
-    """Layer: integration. Verifies issue execution uses the explicit model override when selecting model and dialect."""
     orch, cards, loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test")
     issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
@@ -858,7 +877,7 @@ async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_str
         async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -873,7 +892,6 @@ async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_str
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
     orch.model_client_node = _ModelClientNode()
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -894,6 +912,7 @@ async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_str
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycles(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test")
@@ -966,7 +985,7 @@ async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycle
             await client.complete([{"role": "user", "content": "ping"}])
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -981,7 +1000,6 @@ async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycle
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
     orch.model_client_node = _ModelClientNode()
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     for cycle in range(20):
         await orch._execute_issue_turn(
@@ -1003,6 +1021,7 @@ async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycle
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test")
@@ -1047,7 +1066,7 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
         async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _Evaluator:
@@ -1083,7 +1102,6 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
     orch._trigger_sandbox = _fake_trigger
     orch.model_client_node = _ModelClientNode()
     orch.evaluator_node = _Evaluator()
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -1101,8 +1119,8 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orchestrator, monkeypatch):
-    """Layer: contract. Verifies post-verifier review gating with a patched runtime-verifier result."""
     orch, cards, _loader = orchestrator
     issue = IssueConfig(
         id="REV-1",
@@ -1131,7 +1149,7 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
             self.calls += 1
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _RuntimeVerifier:
@@ -1233,8 +1251,8 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_exhausted(orchestrator, monkeypatch):
-    """Layer: contract. Verifies patched runtime-verifier failures stop retrying once the retry budget is exhausted."""
     orch, cards, _loader = orchestrator
     issue = IssueConfig(
         id="REV-1",
@@ -1264,7 +1282,7 @@ async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_ex
             self.calls += 1
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _RuntimeVerifier:
@@ -1322,8 +1340,8 @@ async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_ex
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_marks_terminal_failure_for_repeated_guard_fingerprint(orchestrator, monkeypatch):
-    """Layer: contract. Verifies repeated patched runtime-verifier failures collapse into a terminal guard decision."""
     orch, cards, _loader = orchestrator
     seen_fingerprints = []
     seed_decision = GuardAgent().evaluate(
@@ -1362,7 +1380,7 @@ async def test_execute_issue_turn_marks_terminal_failure_for_repeated_guard_fing
             self.calls += 1
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _RuntimeVerifier:
@@ -1420,6 +1438,7 @@ async def test_execute_issue_turn_marks_terminal_failure_for_repeated_guard_fing
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_uses_prompt_resolver_when_policy_enabled(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     orch.org.process_rules["prompt_resolver_mode"] = "resolver"
@@ -1480,7 +1499,7 @@ async def test_execute_issue_turn_uses_prompt_resolver_when_policy_enabled(orche
             captured["system_prompt"] = system_prompt
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _Resolution:
@@ -1511,7 +1530,6 @@ async def test_execute_issue_turn_uses_prompt_resolver_when_policy_enabled(orche
     orch.model_client_node = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -1525,13 +1543,14 @@ async def test_execute_issue_turn_uses_prompt_resolver_when_policy_enabled(orche
         toolbox=SimpleNamespace(),
     )
 
-    assert captured["system_prompt"] == "RESOLVED PROMPT"
+    assert captured["system_prompt"].partition("\n\nDeclared card acceptance:\n")[0] == "RESOLVED PROMPT"
     assert captured["context"]["prompt_metadata"]["prompt_id"] == "role.architect+dialect.generic"
     assert captured["context"]["prompt_metadata"]["resolver_policy"] == "resolver_v1"
     assert captured["context"]["prompt_layers"]["role_base"]["version"] == "2.1.0"
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     orch.org.process_rules["prompt_resolver_mode"] = "compiler"
@@ -1587,7 +1606,7 @@ async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(or
             captured["system_prompt"] = system_prompt
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -1606,7 +1625,6 @@ async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(or
     orch.model_client_node = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -1620,12 +1638,13 @@ async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(or
         toolbox=SimpleNamespace(),
     )
 
-    assert captured["system_prompt"] == "COMPILER PROMPT"
+    assert captured["system_prompt"].partition("\n\nDeclared card acceptance:\n")[0] == "COMPILER PROMPT"
     assert captured["context"]["prompt_metadata"]["prompt_id"] == "legacy.prompt_compiler"
     assert captured["context"]["prompt_metadata"]["resolver_policy"] == "compiler"
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime_issue(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     orch.org.process_rules["prompt_resolver_mode"] = "compiler"
@@ -1694,7 +1713,7 @@ async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime
             captured["system_prompt"] = system_prompt
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -1709,7 +1728,6 @@ async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime
     orch.model_client_node = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -1723,10 +1741,11 @@ async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime
         toolbox=SimpleNamespace(),
     )
 
-    assert captured["system_prompt"] == "COMPILER PROMPT"
+    assert captured["system_prompt"].partition("\n\nDeclared card acceptance:\n")[0] == "COMPILER PROMPT"
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     orch.org.process_rules["prompt_resolver_mode"] = "resolver"
@@ -1780,7 +1799,7 @@ async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchest
         async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _Resolution:
@@ -1812,7 +1831,6 @@ async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchest
     orch.model_client_node = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -1838,8 +1856,8 @@ async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchest
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orchestrator, monkeypatch):
-    """Layer: contract. Verifies runtime prompt patches flow into resolver-mode execution without mutating assets."""
     orch, cards, loader = orchestrator
     orch.org.process_rules["prompt_resolver_mode"] = "resolver"
     monkeypatch.setenv("ORKET_PROMPT_PATCH", "Patch line one.\nPatch line two.")
@@ -1895,7 +1913,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orch
             captured["context"] = context
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _Resolution:
@@ -1927,7 +1945,6 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orch
     orch.model_client_node = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -1948,8 +1965,8 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orch
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orchestrator, monkeypatch):
-    """Layer: contract. Verifies compiler-mode execution also receives runtime prompt patches."""
     orch, cards, loader = orchestrator
     monkeypatch.setenv("ORKET_PROMPT_PATCH", "Compiler patch.")
     issue = IssueConfig(id="I1", seat="architect", summary="Design")
@@ -2004,7 +2021,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orch
             captured["system_prompt"] = system_prompt
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -2020,7 +2037,6 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orch
     orch.model_client_node = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -2036,23 +2052,25 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orch
 
     assert captured["compile_kwargs"]["patch"] == "Compiler patch."
     assert captured["context"]["prompt_metadata"]["prompt_patch_applied"] is True
-    assert captured["system_prompt"] == "COMPILER PROMPT"
+    assert captured["system_prompt"].partition("\n\nDeclared card acceptance:\n")[0] == "COMPILER PROMPT"
 
 
 @pytest.mark.asyncio
+# Layer: unit
+# Layer: unit
 async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch):
+    install_dispatch_snapshot_stub(monkeypatch)
     issue_ready = SimpleNamespace(
         id="I1",
         status=CardStatus.READY,
         seat="lead_architect",
         model_dump=lambda: {"id": "I1", "seat": "lead_architect", "summary": "Test", "status": "ready"},
     )
-    issue_done = SimpleNamespace(id="I1", status=CardStatus.DONE, seat="lead_architect")
+    issue_stopped = SimpleNamespace(id="I1", status=CardStatus.CANCELED, seat="lead_architect")
 
     cards = FakeCards()
-    cards.get_by_build.side_effect = [[issue_ready], [issue_done]]
-    cards.get_independent_ready_issues.side_effect = [[issue_ready], []]
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
+    cards.get_by_build.side_effect = [[issue_ready], [issue_stopped]]
+    cards.independent_ready.side_effect = [[issue_ready], []]
 
     snapshots = FakeSnapshots()
     loader = FakeLoader(tmp_path)
@@ -2070,7 +2088,7 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
         snapshots=snapshots,
         org=org,
         config_root=tmp_path,
-        db_path="test.db",
+        db_path=str(tmp_path / "test.db"),
         loader=loader,
         sandbox_orchestrator=FakeSandbox(),
     )
@@ -2111,7 +2129,7 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
         tool_strategy_hit["used"] = res.get("ok") is True and res.get("tool") == "custom_noop"
         return TurnResult(
             success=True,
-            turn=SimpleNamespace(role=context["role"], issue_id=context["issue_id"], content="done", note=""),
+            turn=ExecutionTurn(role=context["role"], issue_id=context["issue_id"], content="Turn handled; work awaits review.", note=""),
         )
 
     orch.decision_nodes.register_tool_strategy("custom-tool-strategy", CustomToolStrategy())
@@ -2593,15 +2611,14 @@ def test_resolve_architecture_pattern_preserves_architect_decides(orchestrator):
     assert orch._resolve_architecture_pattern() is None
 
 
+# Layer: unit
 def test_build_turn_context_protocol_governed_defaults(orchestrator):
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(process_rules={})
     issue = IssueConfig(id="ARC-3", seat="architect", summary="Design architecture")
     context = orch._build_turn_context(
-        run_id="run-3",
-        issue=issue,
-        seat_name="architect",
-        roles_to_load=["architect"],
+        run_id="run-3", issue=issue,
+        seat_name="architect", roles_to_load=["architect"],
         turn_status=CardStatus.IN_PROGRESS,
         selected_model="dummy-model",
         resume_mode=False,
@@ -2633,9 +2650,10 @@ def test_build_turn_context_protocol_governed_defaults(orchestrator):
     assert context["local_prompting_fallback_profile_id"] == ""
     assert context["prompt_budget_enabled"] is False
     assert context["prompt_budget_require_backend_tokenizer"] is False
-    assert context["prompt_budget_policy_path"] == "core/policies/prompt_budget.yaml"
+    assert context["prompt_budget_policy_path"] == str(DEFAULT_PROMPT_BUDGET_PATH)
 
 
+# Layer: unit
 def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkeypatch):
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(process_rules={})
@@ -2654,8 +2672,7 @@ def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkey
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", "openai_compat.qwen.openai_messages.v1")
     issue = IssueConfig(id="ARC-4", seat="architect", summary="Design architecture")
     context = orch._build_turn_context(
-        run_id="run-4",
-        issue=issue,
+        run_id="run-4", issue=issue,
         seat_name="architect",
         roles_to_load=["architect"],
         turn_status=CardStatus.IN_PROGRESS,
@@ -2681,7 +2698,7 @@ def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkey
     assert context["local_prompting_allow_fallback"] is True
     assert context["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
     assert context["prompt_budget_enabled"] is True
-    assert context["prompt_budget_policy_path"] == "core/policies/prompt_budget.yaml"
+    assert context["prompt_budget_policy_path"] == str(DEFAULT_PROMPT_BUDGET_PATH)
 
 
 def test_build_turn_context_protocol_determinism_invalid_network_mode_fails_fast(orchestrator, monkeypatch):
@@ -2809,6 +2826,7 @@ def test_auto_inject_small_project_reviewer_from_process_rules(orchestrator):
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_epic_requires_reviewer_for_small_project(orchestrator, tmp_path):
     orch, cards, _loader = orchestrator
     issue = SimpleNamespace(id="I1", status=CardStatus.READY, seat="coder")
@@ -2816,7 +2834,7 @@ async def test_execute_epic_requires_reviewer_for_small_project(orchestrator, tm
     team = SimpleNamespace(seats={"coder": SimpleNamespace(roles=["coder"])})
     env = SimpleNamespace(temperature=0.1, timeout=30)
     cards.get_by_build.side_effect = [[issue]]
-    cards.get_independent_ready_issues.side_effect = [[issue]]
+    cards.independent_ready.side_effect = [[issue]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
     with pytest.raises(ExecutionFailed, match="missing code_reviewer seat"):
@@ -2830,6 +2848,7 @@ async def test_execute_epic_requires_reviewer_for_small_project(orchestrator, tm
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     orch.org = SimpleNamespace(process_rules={"small_project_builder_variant": "architect"})
@@ -2885,7 +2904,7 @@ async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(o
             captured["role"] = context["role"]
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -2900,7 +2919,6 @@ async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(o
     orch.model_client_node = _ModelClient()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -2918,6 +2936,7 @@ async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(o
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_execute_issue_turn_does_not_coerce_builder_seat_when_small_project_policy_inactive(
     orchestrator, monkeypatch
 ):
@@ -2980,7 +2999,7 @@ async def test_execute_issue_turn_does_not_coerce_builder_seat_when_small_projec
             captured["reviewer_seat_choice"] = context["reviewer_seat_choice"]
             return TurnResult(
                 success=True,
-                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -2995,7 +3014,6 @@ async def test_execute_issue_turn_does_not_coerce_builder_seat_when_small_projec
     orch.model_client_node = _ModelClient()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
-    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -3267,30 +3285,3 @@ async def test_create_pending_gate_request_uses_policy_gate_mode(orchestrator):
     assert reservation is not None
     assert reservation.status is ReservationStatus.ACTIVE
     assert reservation.holder_ref == f"approval-request:{request_id}"
-
-
-@pytest.mark.asyncio
-async def test_build_dependency_context_resolves_dependency_statuses(orchestrator):
-    orch, cards, _loader = orchestrator
-    issue = IssueConfig(
-        id="COD-1",
-        seat="coder",
-        summary="Implement",
-        depends_on=["ARC-1", "REQ-1", "MISSING-1"],
-    )
-
-    def _get_by_id(card_id):
-        if card_id == "ARC-1":
-            return SimpleNamespace(status=CardStatus.DONE)
-        if card_id == "REQ-1":
-            return SimpleNamespace(status=CardStatus.CODE_REVIEW)
-        return None
-
-    cards.get_by_id.side_effect = _get_by_id
-    context = await orch._build_dependency_context(issue)
-
-    assert context["dependency_count"] == 3
-    assert context["dependency_statuses"]["ARC-1"] == "done"
-    assert context["dependency_statuses"]["REQ-1"] == "code_review"
-    assert context["dependency_statuses"]["MISSING-1"] == "missing"
-    assert set(context["unresolved_dependencies"]) == {"REQ-1", "MISSING-1"}

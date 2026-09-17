@@ -5,6 +5,12 @@ from typing import Any
 
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
+from orket.adapters.storage.outward_store_transaction import OutwardStoreUnitOfWork
+from orket.application.services.outward_control_plane_service import (
+    admit_outward_run,
+    outward_status_payload,
+    require_outward_authority,
+)
 from orket.core.domain.outward_run_events import LedgerEvent
 from orket.core.domain.outward_runs import OutwardRunRecord
 
@@ -25,39 +31,51 @@ class OutwardRunService:
         event_store: OutwardRunEventStore,
         run_id_factory: Callable[[], str],
         utc_now: Callable[[], str],
+        unit_of_work: OutwardStoreUnitOfWork | None = None,
     ) -> None:
         self.run_store = run_store
         self.event_store = event_store
         self.run_id_factory = run_id_factory
         self.utc_now = utc_now
+        self.unit_of_work = unit_of_work or OutwardStoreUnitOfWork.for_run_stores(run_store, event_store)
 
     async def submit(self, payload: Mapping[str, Any]) -> OutwardRunRecord:
         normalized = self._normalize_submission(payload)
         run_id = normalized["run_id"] or f"run-{self.run_id_factory()}"
         namespace = normalized["namespace"] or f"issue:{run_id}"
-        existing = await self.run_store.get(run_id)
-        if existing is not None:
-            await self._ensure_initial_event(existing)
-            return existing
+        async with self.unit_of_work.transaction() as transaction:
+            existing = await transaction.get_run(run_id)
+            if existing is not None:
+                existing.require_execution_admission()
+                if await transaction.get_event(f"run:{run_id}:submitted") is None:
+                    raise OutwardRunConflictError("E_OUTWARD_ADMISSION_EVENT_MISSING")
+                await require_outward_authority(transaction, existing)
+                return existing
+            namespace_owner = await transaction.get_active_by_namespace(namespace)
+            if namespace_owner is not None:
+                raise OutwardRunConflictError(f"namespace already has an active run: {namespace}")
+            record = OutwardRunRecord(
+                run_id=run_id,
+                status="queued",
+                namespace=namespace,
+                submitted_at=self.utc_now(),
+                current_turn=0,
+                max_turns=normalized["max_turns"],
+                task=normalized["task"],
+                policy_overrides=normalized["policy_overrides"],
+                execution_generation=1,
+            )
+            created = await transaction.create_run(record)
+            await transaction.append_event(self._initial_event(created))
+            await admit_outward_run(transaction, created)
+            return created
 
-        namespace_owner = await self.run_store.get_active_by_namespace(namespace)
-        if namespace_owner is not None and namespace_owner.run_id != run_id:
-            raise OutwardRunConflictError(f"namespace already has an active run: {namespace}")
-
-        submitted_at = self.utc_now()
-        record = OutwardRunRecord(
-            run_id=run_id,
-            status="queued",
-            namespace=namespace,
-            submitted_at=submitted_at,
-            current_turn=0,
-            max_turns=normalized["max_turns"],
-            task=normalized["task"],
-            policy_overrides=normalized["policy_overrides"],
-        )
-        created = await self.run_store.create(record)
-        await self._ensure_initial_event(created)
-        return created
+    async def status_payload(self, run_id: str) -> dict[str, Any]:
+        async with self.unit_of_work.transaction() as transaction:
+            run = await transaction.get_run(run_id)
+            if run is None:
+                raise OutwardRunValidationError(f"Run '{run_id}' not found")
+            return await outward_status_payload(transaction, run)
 
     async def get_status(self, run_id: str) -> OutwardRunRecord | None:
         clean_run_id = str(run_id or "").strip()
@@ -69,27 +87,23 @@ class OutwardRunService:
         clean_status = str(status or "").strip() or None
         return await self.run_store.list(status=clean_status, limit=limit, offset=offset)
 
-    async def _ensure_initial_event(self, record: OutwardRunRecord) -> None:
-        event_id = f"run:{record.run_id}:submitted"
-        if await self.event_store.get(event_id) is not None:
-            return
-        await self.event_store.append(
-            LedgerEvent(
-                event_id=event_id,
-                event_type="run_submitted",
-                run_id=record.run_id,
-                turn=0,
-                agent_id="operator",
-                at=record.submitted_at,
-                payload={
-                    "run_id": record.run_id,
-                    "namespace": record.namespace,
-                    "status": record.status,
-                    "submitted_at": record.submitted_at,
-                    "task_description": str(record.task.get("description") or ""),
-                    "policy_overrides": dict(record.policy_overrides),
-                },
-            )
+    @staticmethod
+    def _initial_event(record: OutwardRunRecord) -> LedgerEvent:
+        return LedgerEvent(
+            event_id=f"run:{record.run_id}:submitted",
+            event_type="run_submitted",
+            run_id=record.run_id,
+            turn=0,
+            agent_id="operator",
+            at=record.submitted_at,
+            payload={
+                "run_id": record.run_id,
+                "namespace": record.namespace,
+                "status": record.status,
+                "submitted_at": record.submitted_at,
+                "task_description": str(record.task.get("description") or ""),
+                "policy_overrides": dict(record.policy_overrides),
+            },
         )
 
     @staticmethod

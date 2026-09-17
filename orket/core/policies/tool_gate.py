@@ -1,45 +1,51 @@
 """
-Tool Gate Service - Mechanical Enforcement.
+Pure tool gate policy over explicit request, configuration and file facts.
 
 Intercepts tool calls before execution to enforce organizational invariants.
 """
 
-import asyncio
-import logging
-from pathlib import Path
-from typing import Any
+from copy import deepcopy
+from dataclasses import dataclass
+from typing import Any, Protocol
 
-from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.schema import CardStatus, CardType, OrganizationConfig
-from orket.services.ast_validator import ASTValidator
-from orket.services.idesign_validator import iDesignValidator
 
 
 class ToolGateViolation(Exception):
     """Raised when a tool call violates organizational policy."""
 
 
-_LOGGER = logging.getLogger(__name__)
+@dataclass(frozen=True)
+class FileWriteFacts:
+    requested_path: str
+    relative_path: str
+    error: str | None = None
+
+
+class ToolGateValidator(Protocol):
+    async def validate(
+        self, tool_name: str, args: dict[str, Any], context: dict[str, Any], roles: list[str]
+    ) -> str | None: ...
 
 
 class ToolGate:
     """Validates tool calls against organizational policy before execution."""
 
-    def __init__(self, organization: OrganizationConfig | None, workspace_root: Path):
-        self.org = organization
-        self.workspace_root = workspace_root
-        self.idesign_validator = iDesignValidator(organization)
+    def __init__(self, organization: OrganizationConfig | None):
+        self.org = deepcopy(organization)
 
-    async def validate(
+    def validate(
         self,
         tool_name: str,
         args: dict[str, Any],
         context: dict[str, Any],
         roles: list[str],
+        *,
+        file_facts: FileWriteFacts | None = None,
     ) -> str | None:
         if tool_name == "write_file":
-            violation = await self._validate_file_write(args, context, roles)
+            violation = self._validate_file_write(args, context, roles, file_facts)
             if violation:
                 return violation
 
@@ -60,83 +66,43 @@ class ToolGate:
 
         return None
 
-    async def _validate_file_write(
+    def _validate_file_write(
         self,
         args: dict[str, Any],
-        context: dict[str, Any] | None = None,
-        roles: list[str] | None = None,
+        context: dict[str, Any],
+        roles: list[str],
+        facts: FileWriteFacts | None,
     ) -> str | None:
-        context = context or {}
-        roles = roles or []
         file_path = args.get("path")
         if not file_path:
             return "write_file requires 'path' argument"
-
-        try:
-            full_path = Path(file_path)
-            if not full_path.is_absolute():
-                full_path = self.workspace_root / file_path
-
-            try:
-                full_path.resolve().relative_to(self.workspace_root.resolve())
-            except ValueError:
-                return f"Security violation: Cannot write outside workspace ({file_path})"
-
-            actual_role = str(context.get("role") or context.get("current_role") or "unknown")
-            actual_issue_id = str(context.get("issue_id") or context.get("card_id") or "unknown")
-            temp_turn = ExecutionTurn(
-                role=actual_role,
-                issue_id=actual_issue_id,
-                tool_calls=[ToolCall(tool="write_file", args=args)],
-            )
-
-            if self._idesign_enabled(context):
-                violations = self.idesign_validator.validate_turn(temp_turn, self.workspace_root)
-                if violations:
-                    return f"iDesign Violation: {violations[0].message} (Code: {violations[0].code.value})"
-
-                if full_path.suffix == ".py":
-                    content = args.get("content", "")
-                    ast_violations = await asyncio.to_thread(ASTValidator.validate_code, content, full_path.name)
-                    errors = [v for v in ast_violations if v.severity == "error"]
-                    if errors:
-                        return f"iDesign AST Violation: {errors[0].message} (Line: {errors[0].line})"
-
-            if self.org and hasattr(self.org, "forbidden_file_types"):
-                forbidden = self.org.forbidden_file_types
-                if any(str(full_path).endswith(ext) for ext in forbidden):
-                    return f"Policy violation: File type not allowed ({file_path})"
-
-            ownership_violation = self._validate_dependency_file_ownership(
-                full_path=full_path,
-                context=context,
-                roles=roles,
-            )
-            if ownership_violation:
-                return ownership_violation
-
-            deployment_ownership_violation = self._validate_deployment_file_ownership(
-                full_path=full_path,
-                context=context,
-                roles=roles,
-            )
-            if deployment_ownership_violation:
-                return deployment_ownership_violation
-
-        except (OSError, ValueError, TypeError) as e:
-            return f"Invalid file path: {e}"
-
-        return None
-
-    def _idesign_enabled(self, context: dict[str, Any]) -> bool:
-        if not isinstance(context, dict):
-            return False
-        return bool(context.get("idesign_enabled", False))
+        if facts is None:
+            return "write_file requires application file-validation facts"
+        if facts.error:
+            return facts.error
+        if not facts.requested_path or not facts.relative_path:
+            return "write_file requires resolved application path facts"
+        if (
+            self.org
+            and hasattr(self.org, "forbidden_file_types")
+            and any(facts.requested_path.endswith(ext) for ext in self.org.forbidden_file_types)
+        ):
+            return f"Policy violation: File type not allowed ({file_path})"
+        violation = self._validate_dependency_file_ownership(
+            relative_path=facts.relative_path,
+            context=context,
+            roles=roles,
+        )
+        return violation or self._validate_deployment_file_ownership(
+            relative_path=facts.relative_path,
+            context=context,
+            roles=roles,
+        )
 
     def _validate_dependency_file_ownership(
         self,
         *,
-        full_path: Path,
+        relative_path: str,
         context: dict[str, Any],
         roles: list[str],
     ) -> str | None:
@@ -165,7 +131,7 @@ class ToolGate:
             allowed_roles = ["dependency_manager"]
         allowed_role_set = {str(role).strip().lower() for role in allowed_roles if str(role).strip()}
 
-        rel_path = str(full_path.resolve().relative_to(self.workspace_root.resolve())).replace("\\", "/")
+        rel_path = relative_path
         managed_set = {str(path).strip().replace("\\", "/") for path in managed_files if str(path).strip()}
         if rel_path not in managed_set:
             return None
@@ -182,7 +148,7 @@ class ToolGate:
     def _validate_deployment_file_ownership(
         self,
         *,
-        full_path: Path,
+        relative_path: str,
         context: dict[str, Any],
         roles: list[str],
     ) -> str | None:
@@ -210,7 +176,7 @@ class ToolGate:
             allowed_roles = ["deployment_planner"]
         allowed_role_set = {str(role).strip().lower() for role in allowed_roles if str(role).strip()}
 
-        rel_path = str(full_path.resolve().relative_to(self.workspace_root.resolve())).replace("\\", "/")
+        rel_path = relative_path
         managed_set = {str(path).strip().replace("\\", "/") for path in managed_files if str(path).strip()}
         if rel_path not in managed_set:
             return None
@@ -246,8 +212,6 @@ class ToolGate:
         try:
             current_status = CardStatus(current_status_str)
             card_type = self._resolve_card_type(context)
-            if self.org and getattr(self.org, "bypass_governance", False):
-                _LOGGER.warning("Ignoring bypass_governance during tool gate transition validation.")
             wait_reason = args.get("wait_reason")
             StateMachine.validate_transition(
                 card_type,

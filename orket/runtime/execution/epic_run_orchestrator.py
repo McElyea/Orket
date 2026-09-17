@@ -5,22 +5,32 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
-from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
 from orket.application.services.control_plane_workload_catalog import (
     build_cards_workload_contract,
     resolve_cards_control_plane_workload_from_contract,
 )
+from orket.application.services.epic_approval_pause_service import EpicApprovalPauseService
+from orket.application.services.epic_preparation_service import EpicPreparationService
+from orket.application.services.epic_publication_service import EpicPublicationService
+from orket.application.services.epic_workload_outcome_service import EpicWorkloadOutcomeService
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults
 from orket.core.contracts import WorkloadContractV1
-from orket.exceptions import CardNotFound, ComplexityViolation, ExecutionFailed, OrketInfrastructureError
+from orket.core.contracts.epic_approval_recovery import EpicApprovalRecoveryRequest
+from orket.core.contracts.epic_export_recovery import EpicExportRecoveryRequest
+from orket.core.contracts.epic_publication import EpicAdmissionRecoveryRequest
+from orket.core.contracts.repositories import CardRepository
+from orket.core.contracts.runtime_execution_result import RuntimeExecutionResult
+from orket.exceptions import (
+    ComplexityViolation,
+)
 from orket.logging import log_event
 from orket.runtime.config_loader import ConfigLoader
 from orket.runtime.deterministic_mode_contract import deterministic_mode_contract_snapshot
 from orket.runtime.epic_run_finalize import EpicRunFinalizer
-from orket.runtime.epic_run_support import build_base_run_artifacts, set_control_plane_artifacts
+from orket.runtime.epic_run_support import build_execution_artifacts
 from orket.runtime.epic_run_types import (
-    CardsRepository,
     EpicRunCallbacks,
     EpicRunContext,
     EpicRunSetup,
@@ -30,6 +40,7 @@ from orket.runtime.epic_run_types import (
     SnapshotsRepository,
     SuccessRepository,
 )
+from orket.runtime.execution.epic_run_result_boundary import run_with_result
 from orket.runtime.phase_c_runtime_truth import normalize_truthful_runtime_policy
 from orket.runtime.route_decision_artifact import build_route_decision_artifact
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
@@ -45,7 +56,7 @@ class EpicRunOrchestrator:
     runtime_input_service: RuntimeInputService
     execution_runtime_node: Any
     pipeline_wiring_service: Any
-    cards_repo: CardsRepository
+    cards_repo: CardRepository
     sessions_repo: SessionsRepository
     snapshots_repo: SnapshotsRepository
     success_repo: SuccessRepository
@@ -55,6 +66,9 @@ class EpicRunOrchestrator:
     orchestrator: Any
     workload_shell: EpicWorkloadShell
     callbacks: EpicRunCallbacks
+    publication: EpicPublicationService
+    preparation: EpicPreparationService
+    approval_pauses: EpicApprovalPauseService | None = None
 
     async def run(
         self,
@@ -65,9 +79,22 @@ class EpicRunOrchestrator:
         driver_steered: bool = False,
         target_issue_id: str | None = None,
         model_override: str = "",
+        admission_recovery: dict[str, Any] | None = None,
+        export_recovery: dict[str, Any] | None = None, approval_recovery: dict[str, Any] | None = None,
         **_: Any,
-    ) -> list[dict[str, Any]]:
+    ) -> RuntimeExecutionResult:
         del driver_steered
+        if sum(value is not None for value in (admission_recovery, export_recovery, approval_recovery)) > 1:
+            raise ValueError("E_EPIC_RECOVERY_REQUESTS_EXCLUSIVE")
+        export_request = EpicExportRecoveryRequest.model_validate(export_recovery) if export_recovery is not None else None
+        if export_request is not None and session_id != export_request.session_id:
+            raise ValueError("E_EPIC_EXPORT_RECOVERY_SESSION_REQUIRED")
+        recovery_request = EpicAdmissionRecoveryRequest.model_validate(admission_recovery) if admission_recovery is not None else None
+        if recovery_request is not None and session_id != recovery_request.session_id:
+            raise ValueError("E_EPIC_ADMISSION_RECOVERY_SESSION_REQUIRED")
+        approval_request = EpicApprovalRecoveryRequest.model_validate(approval_recovery) if approval_recovery is not None else None
+        if approval_request is not None and session_id != approval_request.session_id:
+            raise ValueError("E_EPIC_APPROVAL_RECOVERY_SESSION_REQUIRED")
         setup = await self._load_setup(
             epic_name=epic_name,
             build_id=build_id,
@@ -75,19 +102,14 @@ class EpicRunOrchestrator:
             target_issue_id=target_issue_id,
             model_override=model_override,
         )
-        setup = await self._ensure_session_and_cards(setup)
-        context = await self._initialize_run(setup)
-        finalizer = self._build_finalizer()
-        try:
-            await self._execute_workload(context)
-            transcript = self.orchestrator.transcript
-            self.callbacks.set_transcript(transcript)
-            return await finalizer.finalize_success(context=context, transcript=transcript)
-        except (CardNotFound, ComplexityViolation, ExecutionFailed, OrketInfrastructureError) as exc:
-            transcript = self.orchestrator.transcript
-            self.callbacks.set_transcript(transcript)
-            await finalizer.finalize_failure(context=context, transcript=transcript, exc=exc)
-            raise
+        return await run_with_result(self, setup, recovery_request, export_request, approval_request)
+
+    async def _admit_and_initialize(self, setup, admissions, admission):
+        if admission is None:
+            admission = await admissions.claim(setup.run_id, setup.publication_request, self.preparation.export_binding)
+        admission = await admissions.begin_initialization(admission)
+        setup = await self._ensure_session_and_cards(replace(setup, admission=admission))
+        return await self._initialize_run(setup)
 
     async def _load_setup(
         self,
@@ -120,6 +142,7 @@ class EpicRunOrchestrator:
             department=self.department,
         )
         return EpicRunSetup(
+            epic_asset=epic_name,
             epic=epic,
             team=team,
             env=env,
@@ -131,6 +154,10 @@ class EpicRunOrchestrator:
             phase_c_truth_policy=normalize_truthful_runtime_policy(epic_params.get("truthful_runtime")),
             cards_workload_contract=cards_workload_contract,
             control_plane_workload_record=control_plane_workload_record,
+            publication_request={"scope": self.publication.request_scope(run_id), "contract": cards_workload_contract,
+                                 "epic": epic.model_dump(), "build_id": active_build, "department": self.department,
+                                 "team": team.model_dump(), "environment": env.model_dump(),
+                                 "target_issue_id": target_issue_id},
         )
 
     def _validate_idesign_policy(self, *, epic: Any, issue_count: int) -> None:
@@ -253,6 +280,7 @@ class EpicRunOrchestrator:
             workspace=self.workspace,
             run_id=setup.run_id,
             workload=setup.epic.name,
+            now=self.runtime_input_service.utc_now(),
         )
         self._apply_runtime_capabilities(run_contract_artifacts)
         context = EpicRunContext(
@@ -298,16 +326,7 @@ class EpicRunOrchestrator:
         }
 
     async def _start_run_ledger(self, context: EpicRunContext) -> None:
-        artifacts = build_base_run_artifacts(callbacks=self.callbacks, context=context)
-        artifacts["control_plane_workload_record"] = context.setup.control_plane_workload_record.model_dump(mode="json")
-        set_control_plane_artifacts(
-            artifacts,
-            control_plane_run=context.control_plane_run,
-            control_plane_attempt=context.control_plane_attempt,
-            control_plane_step=context.control_plane_start_step,
-            control_plane_checkpoint=context.control_plane_checkpoint,
-            control_plane_checkpoint_acceptance=context.control_plane_checkpoint_acceptance,
-        )
+        artifacts = build_execution_artifacts(callbacks=self.callbacks, context=context)
         await self.run_ledger.start_run(
             session_id=context.setup.run_id,
             run_type="epic",
@@ -328,6 +347,8 @@ class EpicRunOrchestrator:
                 target_issue_id=context.setup.target_issue_id,
                 resume_mode=context.setup.resume_mode,
                 model_override=context.setup.model_override or None,
+                **({"approval_resume_turns": context.approval_resume_turns}
+                   if context.approval_resume_turns is not None else {}),
             )
 
         await self.workload_shell.execute(
@@ -337,12 +358,11 @@ class EpicRunOrchestrator:
 
     def _build_finalizer(self) -> EpicRunFinalizer:
         return EpicRunFinalizer(
+            outcomes=EpicWorkloadOutcomeService(self.publication.repository, self.run_ledger),
+            preparation=self.preparation,
+            publication=self.publication,
             workspace=self.workspace,
             cards_repo=self.cards_repo,
-            sessions_repo=self.sessions_repo,
-            snapshots_repo=self.snapshots_repo,
-            success_repo=self.success_repo,
-            run_ledger=self.run_ledger,
             cards_epic_control_plane=self.cards_epic_control_plane,
             callbacks=self.callbacks,
         )

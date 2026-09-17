@@ -11,6 +11,7 @@ from orket.adapters.storage.async_repositories import (
 )
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.application.services.runtime_result_projection import RuntimeResult
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
@@ -91,12 +92,12 @@ class OrchestrationEngine:
         self.control_plane_repository = control_plane_services.control_plane_repository
         self.control_plane_execution_repository = control_plane_services.control_plane_execution_repository
         self.control_plane_publication = control_plane_services.control_plane_publication
+        self.control_plane_transactions = control_plane_services.control_plane_transactions
         self.tool_approval_control_plane_operator = control_plane_services.tool_approval_control_plane_operator
         self.kernel_action_control_plane = control_plane_services.kernel_action_control_plane
         self.kernel_action_control_plane_operator = control_plane_services.kernel_action_control_plane_operator
         self.kernel_action_control_plane_view = control_plane_services.kernel_action_control_plane_view
         self.kernel_gateway = kernel_gateway or KernelV1Gateway()
-
         self._pipeline = ExecutionPipeline(
             self.workspace_root,
             self.department,
@@ -164,7 +165,8 @@ class OrchestrationEngine:
         driver_steered: bool = False,
         target_issue_id: str | None = None,
         model_override: str | None = None,
-    ) -> Any:
+        admission_recovery: dict[str, Any] | None = None, export_recovery: dict[str, Any] | None = None, approval_recovery: dict[str, Any] | None = None,
+    ) -> RuntimeResult:
         """Canonical public runtime entrypoint for epic, rock, and issue execution."""
         return await self._pipeline.run_card(
             card_id,
@@ -173,6 +175,7 @@ class OrchestrationEngine:
             driver_steered=driver_steered,
             target_issue_id=target_issue_id,
             model_override=model_override,
+            admission_recovery=admission_recovery, export_recovery=export_recovery, approval_recovery=approval_recovery,
         )
 
     async def run_epic(
@@ -183,7 +186,7 @@ class OrchestrationEngine:
         driver_steered: bool = False,
         target_issue_id: str | None = None,
         model_override: str | None = None,
-    ) -> Any:
+    ) -> RuntimeResult:
         """Compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
             epic_id,
@@ -201,7 +204,7 @@ class OrchestrationEngine:
         session_id: str | None = None,
         driver_steered: bool = False,
         model_override: str | None = None,
-    ) -> Any:
+    ) -> RuntimeResult:
         """Compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
             issue_id,
@@ -223,7 +226,7 @@ class OrchestrationEngine:
         session_id: str | None = None,
         driver_steered: bool = False,
         model_override: str | None = None,
-    ) -> Any:
+    ) -> RuntimeResult:
         """Legacy compatibility wrapper over the canonical run_card surface."""
         return await self.run_card(
             rock_name,
@@ -299,6 +302,7 @@ class OrchestrationEngine:
         request_id: str | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
+        await self.initialize()
         return await engine_approvals.list_approvals(
             self,
             session_id=session_id,
@@ -308,6 +312,7 @@ class OrchestrationEngine:
         )
 
     async def get_approval(self, approval_id: str) -> dict[str, Any] | None:
+        await self.initialize()
         return await engine_approvals.get_approval(self, approval_id)
 
     async def decide_approval(
@@ -319,6 +324,7 @@ class OrchestrationEngine:
         notes: str | None = None,
         operator_actor_ref: str | None = None,
     ) -> dict[str, Any]:
+        await self.initialize()
         return await engine_approvals.decide_approval(
             self,
             approval_id=approval_id,

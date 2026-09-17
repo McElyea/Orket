@@ -1,6 +1,6 @@
 # Card Viewer/Runner Surface V1
 
-Last updated: 2026-04-08
+Last updated: 2026-09-12
 Status: Active
 Owner: Orket Core
 
@@ -57,7 +57,7 @@ This vocabulary is human-facing lifecycle truth. It does not replace the existin
 
 ## Truth Rules
 
-1. `artifact_run_verified` is admitted only when the run-facing verification summary records verified evidence. The shipped first slice uses `truthful_runtime_packet2.source_attribution.synthesis_status == verified`.
+1. `artifact_run_verified` requires successful retained run lifecycle and a published card completion outcome matching fresh sufficient build inspection, including expected cards and receipt digests. Authority is `operator_completion_service` and `docs/specs/CARD_COMPLETION_ACCEPTANCE_CONTRACT.md`. Source-attribution metadata remains separately visible and cannot establish completion verification.
 2. `artifact_run_completed_unverified` means the run completed, but the admitted verified-evidence condition above was not met.
 3. `degraded_completed` means the run completed, but degraded summary or evidence state limits trust. This includes canonical degraded run summaries and degraded cards-runtime resolution states.
 4. `prebuild_blocked` is admitted only when an ODR prebuild path stops before a primary artifact output exists.
@@ -75,6 +75,24 @@ This vocabulary is human-facing lifecycle truth. It does not replace the existin
 6. `completed`
 
 These filters are derived view buckets. They do not replace raw card status storage.
+
+`completed` requires current retained acceptance in either `done` or
+`guard_approved`. Unaccepted successful-looking lifecycle enters `review`.
+Card list/detail views expose `completion_accepted`, validated `completion_ref`
+(or null), and `completion_rejection` (or null). Card summaries describe the card;
+last-run lifecycle and summary remain separate. A failed run does not revoke an
+independently accepted card.
+
+Run list/detail views expose `completion_accepted`, `completion_rejection`,
+`accepted_receipts` and `unverified_cards`. Detail additionally retains
+`source_attribution` as its own projection. `verification`/`verification_status`
+refer to declared card acceptance. Evidence loss, reopening, a changed receipt or
+a missing/substituted published outcome revokes that verification claim on read.
+Historical rows remain visible; no read recaptures evidence or reruns acceptance.
+
+Unfiltered pagination applies the repository offset once. Filtered requests retain
+the existing 500-card scan bound; `total` describes matching scanned rows, not an
+unbounded inventory count.
 
 ## Card Detail Requirements
 

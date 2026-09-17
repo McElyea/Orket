@@ -1,6 +1,6 @@
 # SDK Versioning
 
-Last reviewed: 2026-09-11
+Last reviewed: 2026-09-16
 
 ## Canonical Source of Truth
 1. SDK version is defined only in `orket_extension_sdk/__version__.py`.
@@ -16,6 +16,24 @@ Last reviewed: 2026-09-11
 5. When an SDK release intentionally breaks compatibility with an admitted core window, the SDK changelog must name the affected core versions and migration requirement.
 
 ## CLI Contract
+
+The architectural-truth core `0.6.3` branch checkpoint uses SDK `0.7.0a1`, with a new
+required `agent_model_use_receipt.v2` host feature. Its compatibility scope is
+the matched remediation host checkpoint only, with scoped installed-artifact
+proof recorded in the canonical plan; it does not extend to other core versions
+or the nominal future window.
+Published core 0.6.0/0.6.2 packages retain their SDK 0.6.0 pins. New extension
+admissions must review nullable latency handling and explicitly declare v2;
+canonical historical v1 receipt reads remain supported without rewriting them.
+Candidate hashes, results and unverified surfaces belong to the active
+architectural-truth plan. The core branch checkpoint does not publish an SDK
+release or establish whole-lane or general release readiness.
+
+The same development candidate also versions generic `GenerateResponse` as
+`model_generate_response.v1`, with nullable latency and explicit posture.
+Generic `model.generate`/host-API consumers must handle null and preserve those
+fields. Its provider/aggregate timing authority is
+`docs/specs/MODEL_PROVIDER_TIMING.md`; it does not widen published compatibility.
 
 SDK `0.6.0` admission is explicitly narrowed to verified core `0.6.0` and
 `0.6.2`, using the matched artifacts recorded in

@@ -1,5 +1,8 @@
 # LIFECYCLE: live
+import json
 from pathlib import Path
+
+import pytest
 
 from scripts.odr.round_cap_probe import _movement_analysis, load_probe_config, load_probe_registry
 
@@ -15,18 +18,49 @@ CONFIG_PATH = (
 )
 
 
+# Layer: contract
 def test_round_cap_probe_config_freezes_probe_budget_and_registry() -> None:
-    """Layer: contract. Verifies the round-cap probe freezes a dedicated 20-round budget and only the prior MAX_ROUNDS cases."""
+    """Layer: contract. Checks the archived selection, without claiming retained benchmark evidence exists."""
     config = load_probe_config(CONFIG_PATH)
-    registry = load_probe_registry(config)
+    registry = json.loads(Path(config["probe_registry_path"]).read_text(encoding="utf-8"))
 
     assert config["probe_budget"] == 20
     assert config["continuity_mode"] == "v1_compiled_shared_state"
-    assert [spec.probe_id for spec in registry["probe_runs"]] == [
+    assert [spec["probe_id"] for spec in registry["probe_runs"]] == [
         "command_r_35b__gemma3_27b__missing_constraint_resolved__20",
         "magistral_small_2509__gemma3_27b__missing_constraint_resolved__20",
         "magistral_small_2509__gemma3_27b__overfitting__20",
     ]
+    assert {spec["source_stop_reason"] for spec in registry["probe_runs"]} == {"MAX_ROUNDS"}
+    assert [spec["source_locked_budget"] for spec in registry["probe_runs"]] == [5, 9, 5]
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("missing", [None, "source_config", "source_compare_artifact"])
+# Layer: integration
+def test_probe_registry_requires_source_files(tmp_path: Path, missing: str | None) -> None:
+    """Layer: integration. Real fixture files prove resolution and missing-input refusal, not benchmark replay."""
+    config = load_probe_config(CONFIG_PATH)
+    registry = json.loads(Path(config["probe_registry_path"]).read_text(encoding="utf-8"))
+    for index, spec in enumerate(registry["probe_runs"]):
+        for key in ("source_config", "source_compare_artifact"):
+            relative = f"{index}-{key}.json"
+            spec[key] = relative
+            if key != missing:
+                (tmp_path / relative).write_text('{"fixture_only": true}', encoding="utf-8")
+    registry_path = tmp_path / "registry.json"
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+    config["probe_registry_path"] = str(registry_path)
+    if missing:
+        message = "source config" if missing == "source_config" else "source compare artifact"
+        with pytest.raises(FileNotFoundError, match=message):
+            load_probe_registry(config)
+    else:
+        loaded = load_probe_registry(config)
+        assert len(loaded["probe_runs"]) == 3
+        for index, spec in enumerate(loaded["probe_runs"]):
+            assert spec.source_config_path == tmp_path / f"{index}-source_config.json"
+            assert spec.source_compare_artifact_path == tmp_path / f"{index}-source_compare_artifact.json"
 
 
 def test_movement_analysis_flags_flatline_before_round_cap() -> None:

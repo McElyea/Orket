@@ -18,7 +18,7 @@ from orket.adapters.storage.governed_agent_wake_repository_support import (
     utc_timestamp,
 )
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
-from orket.application.services.governed_agent_schedule_records import (
+from orket.core.contracts.governed_agent_schedule_records import (
     GovernedAgentScheduleEvaluationRecord,
     GovernedAgentScheduleEvaluationRequest,
     GovernedAgentScheduleEvaluationResult,

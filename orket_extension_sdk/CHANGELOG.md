@@ -4,6 +4,30 @@ All notable changes to `orket-extension-sdk` will be documented in this file.
 
 The format is based on Keep a Changelog and this package follows SemVer while in the `0.x` line.
 
+## [0.7.0a1] - 2026-09-13
+
+### Changed
+- `GenerateResponse` adds `model_generate_response.v1`, nullable nonnegative
+  integer latency and derived `reported`/`unavailable` posture. Dataclass
+  serialization retains these fields. Null generation reports unavailable
+  latency; generic host API consumers must handle null. Host observation adapters
+  share `llm.nonnegative_int_or_none` without coercing malformed metadata.
+- Development prerelease for `agent_model_use_receipt.v2`: nullable integer
+  latency and explicit `reported`/`unavailable` posture. Reported latency is a
+  host-provider observation, not independent clock or capacity proof. Token-usage
+  posture and charging are unchanged. Canonical historical v1 receipts remain
+  readable without new fields or rewritten payloads.
+- New agent declarations require the `agent_model_use_receipt.v2` host feature.
+  Older declarations must be reviewed and revalidated before new admission;
+  there is no v1 dispatch fallback that invents a latency measurement.
+- Ready frames advertise supported model-receipt versions. The matched host
+  refuses an older child handshake before reservation or inference; historical
+  ready-frame decoding remains available without the new field.
+- This prerelease requires the paired architectural-truth host candidate. It is
+  not compatible with the published core 0.6.0/0.6.2 artifacts, which pin SDK
+  0.6.0. Exact candidate compatibility requires the matched-artifact proof in the
+  canonical architectural-truth plan; no SDK or core release is claimed here.
+
 ## [0.6.0] - 2026-09-10
 
 ### Added

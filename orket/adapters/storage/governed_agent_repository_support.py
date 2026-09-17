@@ -6,14 +6,14 @@ from typing import Any, Literal, cast
 
 import aiosqlite
 
-from orket.application.services.governed_agent_ports import (
+from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
+from orket.core.contracts.governed_agent_ports import (
     GovernedAgentBrokerCallRecord,
     GovernedAgentInvocationBinding,
     GovernedAgentInvocationOutcome,
     GovernedAgentIterationSnapshot,
     GovernedAgentResultAcceptance,
 )
-from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
 from orket.core.domain import AttemptState, RunState
 from orket_extension_sdk import canonical_digest_sha256
 
@@ -21,11 +21,12 @@ from orket_extension_sdk import canonical_digest_sha256
 async def ensure_governed_agent_schema(conn: aiosqlite.Connection) -> None:
     await conn.executescript(
         """
+        BEGIN IMMEDIATE;
         CREATE TABLE IF NOT EXISTS governed_agent_invocations (
             invocation_id TEXT PRIMARY KEY, binding_json TEXT NOT NULL, request_json TEXT NOT NULL,
             state TEXT NOT NULL, result_json TEXT, result_digest TEXT, normalized_reason TEXT,
             uncertainty INTEGER NOT NULL DEFAULT 0, decision_inputs_json TEXT,
-            decision_json TEXT, decision_digest TEXT, cancelled_epoch INTEGER,
+            decision_json TEXT, decision_digest TEXT, decision_inputs_digest TEXT, cancelled_epoch INTEGER,
             cancellation_reason TEXT
         );
         CREATE TABLE IF NOT EXISTS governed_agent_calls (
@@ -37,6 +38,11 @@ async def ensure_governed_agent_schema(conn: aiosqlite.Connection) -> None:
         );
         """
     )
+    columns = await conn.execute("PRAGMA table_info(governed_agent_invocations)")
+    if "decision_inputs_digest" not in {row[1] for row in await columns.fetchall()}:
+        # Historical inputs stay unsealed; initialization must not invent old evidence.
+        await conn.execute("ALTER TABLE governed_agent_invocations ADD COLUMN decision_inputs_digest TEXT")
+    await conn.commit()
 
 
 async def parent_matches(

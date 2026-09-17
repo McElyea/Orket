@@ -145,8 +145,8 @@ async def close_gitea_state_claim_failure(
             "final_truth_record_id": final_truth.final_truth_record_id,
         }
     )
-    await execution_service.execution_repository.save_attempt_record(record=updated_attempt)
-    await execution_service.execution_repository.save_run_record(record=updated_run)
+    updated_attempt = await execution_service.execution_repository.save_attempt_record(record=updated_attempt)
+    updated_run = await execution_service.execution_repository.save_run_record(record=updated_run)
     return True
 
 
@@ -158,7 +158,7 @@ async def _sync_run_truth_id(
 ) -> None:
     if run.final_truth_record_id == final_truth.final_truth_record_id:
         return
-    await execution_service.execution_repository.save_run_record(
+    run = await execution_service.execution_repository.save_run_record(
         record=run.model_copy(update={"final_truth_record_id": final_truth.final_truth_record_id})
     )
 

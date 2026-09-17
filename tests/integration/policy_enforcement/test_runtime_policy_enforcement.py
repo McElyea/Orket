@@ -10,9 +10,9 @@ import orket.runtime.run_start_artifacts as run_start_artifacts
 import orket.runtime.run_start_contract_artifacts as run_start_contract_artifacts
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.middleware import TurnLifecycleInterceptors
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall
-from orket.core.policies.tool_gate import ToolGate
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.runtime.source_attribution_policy import (
     source_attribution_policy_snapshot,
@@ -122,8 +122,10 @@ async def _assert_run_start_policy_block(
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _spy_execute_epic)
     _override_snapshot_factory(monkeypatch, artifact_key=artifact_key, factory=invalid_factory)
 
-    with pytest.raises(ValueError, match=expected_error):
-        await pipeline.run_epic(epic_id, build_id=f"build-{epic_id}", session_id=f"sess-{epic_id}")
+    observed = await pipeline.run_epic(epic_id, build_id=f"build-{epic_id}", session_id=f"sess-{epic_id}")
+    assert observed.observation == "unresolved" and not observed.succeeded
+    assert expected_error in observed.reason
+    await pipeline.close()
 
     assert execute_calls["count"] == 0
 

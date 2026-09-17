@@ -30,3 +30,17 @@ async def current_journal_mode(db_path: str | Path) -> str:
         cursor = await conn.execute("PRAGMA journal_mode")
         row: Any = await cursor.fetchone()
     return str((row[0] if row else "") or "").lower()
+
+
+@asynccontextmanager
+async def sqlite_connection_scope(
+    db_path: str | Path, connection: aiosqlite.Connection | None = None, *, commit: bool = True,
+) -> AsyncIterator[aiosqlite.Connection]:
+    """Borrow an explicit transaction, or commit only the connection owned here."""
+    if connection is not None:
+        yield connection
+        return
+    async with connect_sqlite_wal(db_path) as owned:
+        yield owned
+        if commit:
+            await owned.commit()

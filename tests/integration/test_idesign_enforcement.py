@@ -134,6 +134,7 @@ async def test_architect_decides_policy_allows_non_idesign_above_threshold(tmp_p
     await engine.run_card("messy_epic")
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_idesign_structural_violation(tmp_path, monkeypatch):
     root = tmp_path
     (root / "config").mkdir()
@@ -184,7 +185,8 @@ async def test_idesign_structural_violation(tmp_path, monkeypatch):
 
     engine = OrchestrationEngine(root / "ws", db_path=db_path, config_root=root)
 
-    with pytest.raises(ExecutionFailed) as exc:
-        await engine.run_card("strict_epic")
-    assert "iDesign Violation" in str(exc.value)
+    observed = await engine.run_card("strict_epic")
+    assert observed.observation == "published" and not observed.succeeded
+    assert "iDesign Violation" in observed.reason
+    await engine.close()
 

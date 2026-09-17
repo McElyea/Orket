@@ -44,12 +44,15 @@ def register_streaming_routes(
             while True:
                 await websocket.receive_text()
         except WebSocketDisconnect:
+            pass
+        finally:
             await runtime_state.remove_websocket(websocket)
 
     @app.websocket("/ws/interactions/{session_id}")
     async def websocket_interactions(session_id: str, websocket: WebSocket) -> None:
         api_runtime_node = api_runtime_node_getter()
         interaction_manager = interaction_manager_getter()
+        stream_bus = stream_bus_getter()
         expected_key = os.getenv("ORKET_API_KEY")
         header_key = websocket.headers.get(api_key_name) or websocket.headers.get(api_key_name.lower())
         query_key = websocket.query_params.get("api_key")
@@ -76,4 +79,4 @@ def register_streaming_routes(
         except WebSocketDisconnect:
             pass
         finally:
-            await stream_bus_getter().unsubscribe(session_id, queue)
+            await stream_bus.unsubscribe(session_id, queue)

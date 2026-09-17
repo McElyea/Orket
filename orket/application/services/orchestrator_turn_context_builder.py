@@ -5,15 +5,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from orket.application.services.runtime_policy import allowed_architecture_patterns
 from orket.application.services.orchestrator_turn_context_gate_service import OrchestratorTurnContextGateService
 from orket.application.services.orchestrator_turn_context_policy import (
     normalize_turn_contract_override_list,
     resolve_policy_list,
     resolve_policy_token,
 )
-from orket.core.cards_runtime_contract import resolve_cards_runtime
+from orket.application.services.runtime_policy import allowed_architecture_patterns
+from orket.core.cards_runtime_contract import DEFAULT_RUNTIME_VERIFICATION_PATH, resolve_cards_runtime
 from orket.core.domain.verification_scope import build_verification_scope
+from orket.runtime.config.contract_assets import DEFAULT_PROMPT_BUDGET_PATH
 from orket.schema import CardStatus, IssueConfig
 
 
@@ -28,6 +29,7 @@ class TurnContextBuildInput:
     turn_index: int
     dependency_context: dict[str, Any] | None = None
     runtime_verifier_ok: bool | None = None
+    runtime_verifier_enabled: bool = True
     prompt_metadata: dict[str, Any] | None = None
     prompt_layers: dict[str, Any] | None = None
     idesign_enabled: bool = False
@@ -118,6 +120,8 @@ class OrchestratorTurnContextBuilder:
             issue=data.issue,
             turn_status=data.turn_status,
         )
+        if not data.runtime_verifier_enabled:
+            required_read_paths = [path for path in required_read_paths if path != DEFAULT_RUNTIME_VERIFICATION_PATH]
         required_write_paths = resolve_policy_list(
             loop_policy_node=self.loop_policy_node,
             attribute="required_write_paths_for_seat",
@@ -322,6 +326,7 @@ class OrchestratorTurnContextBuilder:
             "stage_gate_mode": gate_mode,
             "approval_required_tools": approval_required_tools,
             "runtime_verifier_ok": data.runtime_verifier_ok,
+            "runtime_verifier_enabled": data.runtime_verifier_enabled,
             "runtime_verifier_contract": runtime_verifier_contract,
             "runtime_retry_note": str(params.get("runtime_retry_note") or "") if isinstance(params, dict) else "",
             "prompt_metadata": data.prompt_metadata or {},
@@ -374,5 +379,5 @@ class OrchestratorTurnContextBuilder:
             "local_prompting_fallback_profile_id": local_prompting_fallback_profile_id,
             "prompt_budget_enabled": str(process_rules.get("prompt_budget_enabled") or protocol_governed_enabled).strip().lower() in {"1", "true", "yes", "on", "enabled"} if isinstance(process_rules.get("prompt_budget_enabled"), str) else bool(process_rules.get("prompt_budget_enabled", protocol_governed_enabled)),
             "prompt_budget_require_backend_tokenizer": str(process_rules.get("prompt_budget_require_backend_tokenizer") or "").strip().lower() in {"1", "true", "yes", "on", "enabled"} if isinstance(process_rules.get("prompt_budget_require_backend_tokenizer"), str) else bool(process_rules.get("prompt_budget_require_backend_tokenizer", False)),
-            "prompt_budget_policy_path": str(process_rules.get("prompt_budget_policy_path") or "core/policies/prompt_budget.yaml").strip() or "core/policies/prompt_budget.yaml",
+            "prompt_budget_policy_path": str(process_rules.get("prompt_budget_policy_path") or "").strip() or str(DEFAULT_PROMPT_BUDGET_PATH),
         }

@@ -1,12 +1,14 @@
 import asyncio
 import inspect
-import json
-import re
 from datetime import UTC, datetime
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+from orket.application.services.card_completion_turn_service import prepare_card_completion_turn
+from orket.application.services.card_dependency_service import (
+    build_card_dependency_context,
+    read_card_dispatch_snapshot,
+)
 from orket.application.services.dependency_manager import (
     DependencyManager,
     DependencyValidationError,
@@ -15,8 +17,16 @@ from orket.application.services.deployment_planner import (
     DeploymentPlanner,
     DeploymentValidationError,
 )
+from orket.application.services.epic_dispatch_batch import run_epic_dispatch_batch
+from orket.application.services.epic_setup_service import prepare_epic_workspace
+from orket.application.services.guard_review_payload import guard_review_for_turn
+from orket.application.services.orchestrator_failure_handler import OrchestratorFailureHandler
 from orket.application.services.orchestrator_review_preflight_service import (
     OrchestratorReviewPreflightService,
+)
+from orket.application.services.orchestrator_turn_context_builder import (
+    OrchestratorTurnContextBuilder,
+    TurnContextBuildInput,
 )
 from orket.application.services.orchestrator_turn_preparation_service import (
     OrchestratorTurnPreparationService,
@@ -39,23 +49,19 @@ from orket.application.services.runtime_policy import (
 )
 from orket.application.services.runtime_verifier import RuntimeVerifier
 from orket.application.services.scaffolder import Scaffolder, ScaffoldValidationError
-from orket.application.services.orchestrator_turn_context_builder import (
-    OrchestratorTurnContextBuilder,
-    TurnContextBuildInput,
-)
-from orket.application.services.orchestrator_failure_handler import OrchestratorFailureHandler
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, resolve_cards_runtime
+from orket.core.contracts.card_completion_commit import SUCCESSFUL_CARD_STATUSES, CardCompletionRequest
+from orket.core.domain.execution import ExecutionTurn
 from orket.core.domain.guard_review import GuardReviewPayload
 from orket.core.domain.state_machine import StateMachine
 from orket.core.domain.workitem_transition import WorkItemTransitionService
-from orket.core.policies.tool_gate import ToolGate
-from orket.decision_nodes.contracts import PlanningInput
 from orket.exceptions import CardNotFound, ExecutionFailed
 from orket.logging import log_event
 from orket.orchestration.models import ModelSelector
 from orket.runtime.settings import resolve_bool, resolve_str
-from orket.runtime_paths import resolve_control_plane_db_path
+from orket.runtime_paths import control_plane_db_for_runtime
 from orket.schema import (
     CardStatus,
     EnvironmentConfig,
@@ -478,6 +484,7 @@ async def _request_issue_transition(
     metadata: dict[str, Any] | None = None,
     roles: list[str] | None = None,
     allow_policy_override: bool = True,
+    completion_request: CardCompletionRequest | None = None,
 ) -> None:
     current_status = (
         issue.status if isinstance(issue.status, CardStatus) else CardStatus(str(issue.status).strip().lower())
@@ -491,54 +498,30 @@ async def _request_issue_transition(
     if wait_reason is not None and "wait_reason" not in metadata_payload:
         metadata_payload["wait_reason"] = wait_reason
 
-    if current_status == target_status:
-        await self.async_cards.update_status(
-            issue.id,
-            target_status,
-            assignee=assignee,
-            reason=reason,
-            metadata=metadata_payload or None,
+    if current_status != target_status:
+        transition_service = WorkItemTransitionService(
+            workflow_profile=self._resolve_workflow_profile(),
         )
-        _apply_issue_transition_locally(
-            issue=issue,
-            target_status=target_status,
-            assignee=assignee,
-            wait_reason=wait_reason,
-        )
-        await _publish_issue_control_plane_transition(
-            self,
-            issue=issue,
-            current_status=current_status,
-            target_status=target_status,
-            reason=reason,
-            assignee=assignee,
-            metadata_payload=metadata_payload,
-        )
-        return
-
-    transition_service = WorkItemTransitionService(
-        workflow_profile=self._resolve_workflow_profile(),
-    )
-    payload = {"status": target_status.value, "wait_reason": wait_reason}
-    transition = transition_service.request_transition(
-        action="set_status",
-        current_status=current_status,
-        payload=payload,
-        roles=roles or ["system"],
-    )
-    if not transition.ok and allow_policy_override:
+        payload = {"status": target_status.value, "wait_reason": wait_reason}
         transition = transition_service.request_transition(
-            action="system_set_status",
+            action="set_status",
             current_status=current_status,
-            payload={"status": target_status.value, "reason": reason, "wait_reason": wait_reason},
-            roles=["system"],
+            payload=payload,
+            roles=roles or ["system"],
         )
-    if not transition.ok:
-        raise ExecutionFailed(
-            "Transition rejected for issue "
-            f"{issue.id}: {transition.error_code.value if transition.error_code else 'UNKNOWN'} "
-            f"{transition.error or ''}".strip()
-        )
+        if not transition.ok and allow_policy_override:
+            transition = transition_service.request_transition(
+                action="system_set_status",
+                current_status=current_status,
+                payload={"status": target_status.value, "reason": reason, "wait_reason": wait_reason},
+                roles=["system"],
+            )
+        if not transition.ok:
+            raise ExecutionFailed(
+                "Transition rejected for issue "
+                f"{issue.id}: {transition.error_code.value if transition.error_code else 'UNKNOWN'} "
+                f"{transition.error or ''}".strip()
+            )
 
     await self.async_cards.update_status(
         issue.id,
@@ -546,6 +529,7 @@ async def _request_issue_transition(
         assignee=assignee,
         reason=reason,
         metadata=metadata_payload or None,
+        **({"completion_request": completion_request} if target_status.value in SUCCESSFUL_CARD_STATUSES else {}),
     )
     _apply_issue_transition_locally(
         issue=issue,
@@ -826,10 +810,10 @@ async def verify_issue(self: Any, issue_id: str, run_id: str | None = None) -> A
     """
     Runs empirical verification for a specific issue.
     """
+    from orket.application.services.fixture_verification_service import FixtureVerificationService
     from orket.core.domain.sandbox import SandboxStatus
     from orket.core.domain.verification import VerificationEngine
 
-    # 1. Load the latest IssueConfig from DB
     issue_data = await self.async_cards.get_by_id(issue_id)
     if not issue_data:
         from orket.exceptions import CardNotFound
@@ -849,7 +833,7 @@ async def verify_issue(self: Any, issue_id: str, run_id: str | None = None) -> A
     if run_id:
         verification_event["run_id"] = run_id
     log_event("verification_started", verification_event, self.workspace)
-    result = await asyncio.to_thread(VerificationEngine.verify, issue.verification, self.workspace)
+    result = await FixtureVerificationService(self.workspace).verify(issue.verification)
 
     # 3. Optional: Execute Sandbox Verification (HTTP)
     rock_id = issue.build_id
@@ -917,6 +901,7 @@ async def execute_epic(
     target_issue_id: str | None = None,
     resume_mode: bool = False,
     model_override: str | None = None,
+    approval_resume_turns: dict[str, int] | None = None,
 ) -> None:
     """
     Main execution loop for an Epic.
@@ -977,99 +962,8 @@ async def execute_epic(
         },
         self.workspace,
     )
-    if self._is_scaffolder_disabled():
-        log_event("scaffolder_skipped_policy", {"run_id": run_id, "epic": epic.name}, self.workspace)
-    else:
-        log_event("scaffolder_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
-        project_surface_profile = self._resolve_project_surface_profile()
-        architecture_pattern = self._resolve_architecture_pattern()
-        scaffolder = self.support_services.create_scaffolder(
-            workspace_root=self.workspace,
-            organization=self.org,
-            project_surface_profile=project_surface_profile,
-            architecture_pattern=architecture_pattern,
-        )
-        try:
-            scaffold_result = await scaffolder.ensure()
-        except ScaffoldValidationError as exc:
-            log_event(
-                "scaffolder_failed",
-                {"run_id": run_id, "epic": epic.name, "error": str(exc)},
-                self.workspace,
-            )
-            raise ExecutionFailed(f"Scaffolder validation failed: {exc}") from exc
-        log_event(
-            "scaffolder_completed",
-            {
-                "run_id": run_id,
-                "epic": epic.name,
-                "created_directories": len(scaffold_result.get("created_directories", [])),
-                "created_files": len(scaffold_result.get("created_files", [])),
-            },
-            self.workspace,
-        )
-
-    if self._is_dependency_manager_disabled():
-        log_event("dependency_manager_skipped_policy", {"run_id": run_id, "epic": epic.name}, self.workspace)
-    else:
-        log_event("dependency_manager_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
-        project_surface_profile = self._resolve_project_surface_profile()
-        architecture_pattern = self._resolve_architecture_pattern()
-        dependency_manager = self.support_services.create_dependency_manager(
-            workspace_root=self.workspace,
-            organization=self.org,
-            project_surface_profile=project_surface_profile,
-            architecture_pattern=architecture_pattern,
-        )
-        try:
-            dependency_result = await dependency_manager.ensure()
-        except DependencyValidationError as exc:
-            log_event(
-                "dependency_manager_failed",
-                {"run_id": run_id, "epic": epic.name, "error": str(exc)},
-                self.workspace,
-            )
-            raise ExecutionFailed(f"Dependency manager validation failed: {exc}") from exc
-        log_event(
-            "dependency_manager_completed",
-            {
-                "run_id": run_id,
-                "epic": epic.name,
-                "created_files": len(dependency_result.get("created_files", [])),
-            },
-            self.workspace,
-        )
-
-    if self._is_deployment_planner_disabled():
-        log_event("deployment_planner_skipped_policy", {"run_id": run_id, "epic": epic.name}, self.workspace)
-    else:
-        log_event("deployment_planner_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
-        project_surface_profile = self._resolve_project_surface_profile()
-        architecture_pattern = self._resolve_architecture_pattern()
-        deployment_planner = self.support_services.create_deployment_planner(
-            workspace_root=self.workspace,
-            organization=self.org,
-            project_surface_profile=project_surface_profile,
-            architecture_pattern=architecture_pattern,
-        )
-        try:
-            deployment_result = await deployment_planner.ensure()
-        except DeploymentValidationError as exc:
-            log_event(
-                "deployment_planner_failed",
-                {"run_id": run_id, "epic": epic.name, "error": str(exc)},
-                self.workspace,
-            )
-            raise ExecutionFailed(f"Deployment planner validation failed: {exc}") from exc
-        log_event(
-            "deployment_planner_completed",
-            {
-                "run_id": run_id,
-                "epic": epic.name,
-                "created_files": len(deployment_result.get("created_files", [])),
-            },
-            self.workspace,
-        )
+    if approval_resume_turns is None:
+        await prepare_epic_workspace(self, epic, run_id)
 
     # 1. Setup Execution Environment
     model_selector = ModelSelector(
@@ -1081,12 +975,7 @@ async def execute_epic(
 
     tool_gate = ToolGate(organization=self.org, workspace_root=self.workspace)
     from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
-    runtime_db_path = Path(self.db_path)
-    if not runtime_db_path.is_absolute():
-        runtime_db_path = Path(self.workspace) / runtime_db_path
-    turn_tool_control_plane_db_path = resolve_control_plane_db_path(
-        runtime_db_path.with_name("control_plane_records.sqlite3")
-    )
+    turn_tool_control_plane_db_path = control_plane_db_for_runtime(runtime_db=self.db_path)
 
     executor = TurnExecutor(
         StateMachine(),
@@ -1107,6 +996,7 @@ async def execute_epic(
         tool_gate=tool_gate,
         organization=self.org,
         decision_nodes=self.decision_nodes,
+        card_completion=self.card_completion,
     )
 
     # Concurrency/loop control via loop policy node.
@@ -1125,17 +1015,15 @@ async def execute_epic(
     while iteration_count < max_iterations:
         iteration_count += 1
 
-        backlog = await self.async_cards.get_by_build(active_build)
+        dispatch = await read_card_dispatch_snapshot(cards=self.async_cards, build_id=active_build)
+        backlog = list(dispatch.backlog)
         if await self._maybe_schedule_team_replan(backlog, run_id, active_build, team):
             continue
-        independent_ready = await self.async_cards.get_independent_ready_issues(active_build)
-        candidates = self.planner_node.plan(
-            PlanningInput(
-                backlog=backlog,
-                independent_ready=independent_ready,
-                target_issue_id=target_issue_id,
-            )
-        )
+        candidates = dispatch.plan(self.planner_node, target_issue_id)
+        if approval_resume_turns:
+            candidates = [card for card in dispatch.eligible if card.id in approval_resume_turns]
+            if {card.id for card in candidates} != set(approval_resume_turns):
+                raise ExecutionFailed("E_EPIC_APPROVAL_CARD_NOT_DISPATCHABLE")
 
         if not candidates:
             propagated_count = await self._propagate_dependency_blocks(backlog, run_id)
@@ -1148,12 +1036,11 @@ async def execute_epic(
                 outcome = outcome_fn(backlog)
             else:
                 is_done = self.loop_policy_node.is_backlog_done(backlog)
-                outcome = {"is_done": is_done, "event_name": "orchestrator_epic_complete" if is_done else None}
+                outcome = {"is_done": is_done}
 
             if outcome.get("is_done"):
-                event_name = outcome.get("event_name")
-                if event_name:
-                    log_event(event_name, {"epic": epic.name, "run_id": run_id}, self.workspace)
+                # Loop termination is not authority for accepted build completion.
+                log_event("orchestrator_epic_stopped", {"epic": epic.name, "run_id": run_id}, self.workspace)
                 break
 
             backlog_snapshot = [
@@ -1174,6 +1061,7 @@ async def execute_epic(
                     "iteration": iteration_count,
                     "reason": reason,
                     "backlog": backlog_snapshot,
+                    "dependency_rejections": dispatch.dependency_rejections,
                 },
                 self.workspace,
             )
@@ -1200,9 +1088,11 @@ async def execute_epic(
                     toolbox,
                     resume_mode=resume_mode,
                     model_override=model_override,
+                    **({"approval_turn_index": approval_resume_turns.pop(issue_data.id, None)}
+                       if approval_resume_turns is not None else {}),
                 )
 
-        await asyncio.gather(*(semaphore_wrapper(c) for c in candidates))
+        await run_epic_dispatch_batch(candidates, semaphore_wrapper)
 
     if iteration_count >= max_iterations:
         final_backlog = await self.async_cards.get_by_build(active_build)
@@ -1368,6 +1258,7 @@ async def _execute_issue_turn(
     toolbox: ToolBox,
     resume_mode: bool = False,
     model_override: str | None = None,
+    approval_turn_index: int | None = None,
 ) -> None:
     """Executes a single turn for one issue."""
     issue = IssueConfig.model_validate(issue_data.model_dump())
@@ -1378,6 +1269,8 @@ async def _execute_issue_turn(
     cards_runtime = resolve_cards_runtime(issue=issue)
     is_review_turn = self.loop_policy_node.is_review_turn(issue.status)
     dependency_context = await self._build_dependency_context(issue)
+    if dependency_context["unresolved_dependencies"]:
+        raise ExecutionFailed("E_CARD_DEPENDENCY_UNSATISFIED:" + ",".join(dependency_context["unresolved_dependencies"]))
     preflight = OrchestratorReviewPreflightService(
         workspace_root=self.workspace,
         organization=self.org,
@@ -1439,6 +1332,7 @@ async def _execute_issue_turn(
             runtime_result=runtime_result,
             resume_mode=resume_mode,
             model_override=model_override,
+            approval_turn_index=approval_turn_index,
         )
     )
     if preparation.stop_execution:
@@ -1454,6 +1348,10 @@ async def _execute_issue_turn(
     context = dict(preparation.context or {})
     system_desc = str(preparation.system_prompt or "")
     try:
+        system_desc += await prepare_card_completion_turn(
+            service=self.card_completion, cards=self.async_cards, context=context,
+            card_id=issue.id, session_id=run_id, seat_name=seat_name, turn_index=turn_index,
+        )
         log_event(
             "orchestrator_dispatch",
             {"run_id": run_id, "seat": seat_name, "issue_id": issue.id, "status": issue.status.value},
@@ -1502,6 +1400,7 @@ async def _execute_issue_turn(
                 team=team,
                 env=env,
                 active_build=active_build,
+                context=context,
             )
         else:
             await self._handle_failure(
@@ -1686,7 +1585,7 @@ def _build_turn_context(
             selected_model=selected_model,
             turn_index=turn_index,
             dependency_context=dependency_context,
-            runtime_verifier_ok=runtime_verifier_ok,
+            runtime_verifier_ok=runtime_verifier_ok, runtime_verifier_enabled=not self._is_runtime_verifier_disabled(),
             prompt_metadata=prompt_metadata,
             prompt_layers=prompt_layers,
             idesign_enabled=idesign_enabled,
@@ -1698,75 +1597,11 @@ def _build_turn_context(
 
 
 async def _build_dependency_context(self: Any, issue: IssueConfig) -> dict[str, Any]:
-    depends_on = list(issue.depends_on or [])
-    dependency_statuses: dict[str, str] = {}
-    unresolved_dependencies: list[str] = []
-    terminal_ok = {
-        CardStatus.DONE,
-        CardStatus.GUARD_APPROVED,
-        CardStatus.ARCHIVED,
-    }
-
-    for dep_id in depends_on:
-        dep = await self.async_cards.get_by_id(dep_id)
-        if not dep:
-            dependency_statuses[dep_id] = "missing"
-            unresolved_dependencies.append(dep_id)
-            continue
-        status_val = getattr(dep, "status", None)
-        status_text_value = getattr(status_val, "value", status_val)
-        status_text = str(status_text_value or "")
-        dependency_statuses[dep_id] = status_text
-        if status_val not in terminal_ok:
-            unresolved_dependencies.append(dep_id)
-
-    return {
-        "depends_on": depends_on,
-        "dependency_count": len(depends_on),
-        "dependency_statuses": dependency_statuses,
-        "unresolved_dependencies": unresolved_dependencies,
-    }
+    return await build_card_dependency_context(cards=self.async_cards, issue=issue)
 
 
-def _extract_guard_review_payload(self: Any, content: str) -> GuardReviewPayload:
-    blob = content or ""
-    decoder = json.JSONDecoder()
-    candidates: list[dict[str, Any]] = []
-
-    fenced_matches = re.findall(r"```json\s*([\s\S]*?)```", blob, flags=re.IGNORECASE)
-    for chunk in fenced_matches:
-        try:
-            parsed = json.loads(chunk.strip())
-            if isinstance(parsed, dict):
-                candidates.append(parsed)
-        except (json.JSONDecodeError, ValueError, TypeError):
-            continue
-
-    start = 0
-    while True:
-        brace_index = blob.find("{", start)
-        if brace_index == -1:
-            break
-        try:
-            parsed, end_pos = decoder.raw_decode(blob[brace_index:])
-            if isinstance(parsed, dict):
-                candidates.append(parsed)
-            start = brace_index + max(end_pos, 1)
-        except json.JSONDecodeError:
-            start = brace_index + 1
-
-    for parsed in candidates:
-        if {"rationale", "violations", "remediation_actions"} & set(parsed.keys()):
-            try:
-                return GuardReviewPayload.model_validate(parsed)
-            except (ValueError, TypeError):
-                continue
-    return GuardReviewPayload(
-        rationale=(blob.strip()[:500] if blob else "No rationale provided."),
-        violations=[],
-        remediation_actions=[],
-    )
-
+def _extract_guard_review_payload(self: Any, turn: ExecutionTurn) -> GuardReviewPayload:
+    return guard_review_for_turn(turn)
 
 def _resolve_guard_event(self: Any, status: Any) -> str | None:
     if status == CardStatus.DONE:
@@ -1823,7 +1658,7 @@ async def _handle_failure(
 ) -> None:
     handler = OrchestratorFailureHandler(
         workspace_root=self.workspace,
-        transcript=self.transcript,
+        report_timestamp=self.failure_report_clock(),
         async_cards=self.async_cards,
         evaluator_node=self.evaluator_node,
         request_issue_transition=self._request_issue_transition,

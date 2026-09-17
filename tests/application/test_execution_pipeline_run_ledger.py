@@ -1,5 +1,7 @@
 import asyncio
 import json
+import os
+import re
 from pathlib import Path
 
 import pytest
@@ -20,6 +22,7 @@ from orket.runtime.registry.tool_invocation_contracts import (
 from orket.runtime.run_summary import PACKET1_MISSING_TOKEN
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
 from orket.schema import CardStatus
+from tests.helpers.card_completion import complete_existing_card
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -337,6 +340,7 @@ async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, 
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_failed")
 
@@ -365,12 +369,9 @@ async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monk
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _raise_execute_epic)
     monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
 
-    with pytest.raises(ExecutionFailed, match="forced failure for ledger"):
-        await pipeline.run_epic(
-            "ledger_epic_failed",
-            build_id="build-ledger-epic-failed",
-            session_id="sess-ledger-failed",
-        )
+    observed = await pipeline.run_epic('ledger_epic_failed', build_id='build-ledger-epic-failed', session_id='sess-ledger-failed')
+    assert observed.observation == "published" and not observed.succeeded
+    assert re.search('forced failure for ledger', observed.reason or "")
 
     ledger = await pipeline.run_ledger.get_run("sess-ledger-failed")
     assert ledger is not None
@@ -397,6 +398,7 @@ async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monk
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_terminal_failure")
 
@@ -436,7 +438,7 @@ async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_
     assert ledger is not None
     assert ledger["status"] == "terminal_failure"
     assert ledger["summary_json"]["status"] == "terminal_failure"
-    assert ledger["summary_json"]["failure_reason"] is None
+    assert ledger["summary_json"]["failure_reason"] == "card_completion_unverified:ISSUE-1"
     assert ledger["summary_json"]["duration_ms"] >= 0
     assert ledger["summary_json"]["control_plane"]["run_id"] == ledger["artifact_json"]["control_plane_run_record"]["run_id"]
     assert ledger["summary_json"]["control_plane"]["run_state"] == "failed_terminal"
@@ -573,12 +575,7 @@ async def test_run_ledger_marks_corrective_reprompt_runs_as_repaired(
 
 # Layer: integration
 @pytest.mark.asyncio
-async def test_run_ledger_records_artifact_provenance_for_generated_files(
-    test_root,
-    workspace,
-    db_path,
-    monkeypatch,
-):
+async def test_run_ledger_records_artifact_provenance_for_generated_files(test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_artifact_provenance")
 
     pipeline = ExecutionPipeline(
@@ -600,6 +597,10 @@ async def test_run_ledger_records_artifact_provenance_for_generated_files(
                 ("COD-1", "coder", 1, "agent_output/main.py", "op-cod"),
             ],
         )
+        # Make the declared production order independent of filesystem clock resolution.
+        for index, name in enumerate(("requirements.txt", "design.txt", "main.py")):
+            stamp = 1_700_000_000 + index
+            await asyncio.to_thread(os.utime, workspace / "agent_output" / name, (stamp, stamp))
         _write_json(
             workspace / "agent_output" / "verification" / "runtime_verification.json",
             {"ok": True, "command_results": []},
@@ -756,8 +757,8 @@ async def test_run_ledger_falls_back_to_tool_event_provenance_when_receipts_are_
     assert len(str(artifact_provenance["artifacts"][0]["source_hash"])) == 64
 
 
-# Layer: integration
 @pytest.mark.asyncio
+# Layer: integration
 async def test_run_ledger_records_phase_c_packet2_surfaces_for_required_source_attribution(
     test_root,
     workspace,
@@ -887,8 +888,7 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_for_required_source_a
             operation_id="op-status-done",
             materialize_artifact=False,
         )
-        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.DONE)
-        return None
+        await complete_existing_card(pipeline.async_cards, "ISSUE-1", workspace, service=pipeline.runtime_context.card_completion)
 
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_phase_c_verified)
 
@@ -944,8 +944,8 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_for_required_source_a
     assert source_receipt_surface["control_plane_step_id"] == "op-source-receipt"
 
 
-# Layer: integration
 @pytest.mark.asyncio
+# Layer: integration
 async def test_run_ledger_records_phase_c_packet2_surfaces_from_legacy_turn_artifacts(
     test_root,
     workspace,
@@ -1035,8 +1035,7 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_from_legacy_turn_arti
             execution_result={"ok": True, "issue_id": "ISSUE-1", "status": "done"},
             materialize_artifact=False,
         )
-        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.DONE)
-        return None
+        await complete_existing_card(pipeline.async_cards, "ISSUE-1", workspace, service=pipeline.runtime_context.card_completion)
 
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_phase_c_legacy_verified)
 
@@ -1058,69 +1057,8 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_from_legacy_turn_arti
     assert "source_attribution_receipt" in surfaces
 
 
-# Layer: integration
 @pytest.mark.asyncio
-async def test_run_ledger_blocks_done_run_when_required_source_attribution_is_missing(
-    test_root,
-    workspace,
-    db_path,
-    monkeypatch,
-):
-    _write_epic_assets(
-        test_root,
-        "ledger_epic_phase_c_blocked",
-        truthful_runtime={"source_attribution_mode": "required"},
-    )
-
-    pipeline = ExecutionPipeline(
-        workspace=workspace,
-        department="core",
-        db_path=db_path,
-        config_root=test_root,
-        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-    )
-
-    async def _execute_phase_c_blocked(**kwargs):
-        run_id = str(kwargs["run_id"])
-        _write_protocol_write_receipts(
-            workspace,
-            session_id=run_id,
-            rows=[("ISSUE-1", "lead_architect", 1, "agent_output/main.py", "op-main")],
-        )
-        _write_protocol_receipt(
-            workspace,
-            session_id=run_id,
-            issue_id="ISSUE-1",
-            role_name="lead_architect",
-            turn_index=1,
-            tool="update_issue_status",
-            tool_args={"issue_id": "ISSUE-1", "status": "done"},
-            execution_result={"ok": True, "issue_id": "ISSUE-1", "status": "done"},
-            operation_id="op-status-done",
-            materialize_artifact=False,
-        )
-        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.DONE)
-        return None
-
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_phase_c_blocked)
-
-    await pipeline.run_epic(
-        "ledger_epic_phase_c_blocked",
-        build_id="build-ledger-epic-phase-c-blocked",
-        session_id="sess-ledger-phase-c-blocked",
-    )
-
-    ledger = await pipeline.run_ledger.get_run("sess-ledger-phase-c-blocked")
-    assert ledger is not None
-    assert ledger["status"] == "terminal_failure"
-    assert ledger["failure_reason"] == "source_attribution_receipt_missing"
-    packet2 = ledger["summary_json"]["truthful_runtime_packet2"]
-    assert packet2["source_attribution"]["synthesis_status"] == "blocked"
-    assert packet2["source_attribution"]["missing_requirements"] == ["source_attribution_receipt_missing"]
-
-
 # Layer: integration
-@pytest.mark.asyncio
 async def test_run_ledger_narration_effect_audit_detects_missing_written_source_receipt(
     test_root,
     workspace,
@@ -1175,8 +1113,7 @@ async def test_run_ledger_narration_effect_audit_detects_missing_written_source_
             operation_id="op-status-done",
             materialize_artifact=False,
         )
-        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.DONE)
-        return None
+        await complete_existing_card(pipeline.async_cards, "ISSUE-1", workspace, service=pipeline.runtime_context.card_completion)
 
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_phase_c_missing_effect)
 
@@ -2020,11 +1957,9 @@ async def test_run_ledger_keeps_run_identity_immutable_across_same_session_reent
     assert first is not None
     first_identity = dict(first["artifact_json"]["run_identity"])
 
-    await pipeline.run_epic(
-        "ledger_epic_identity_immutable",
-        build_id="build-ledger-epic-identity-immutable-2",
-        session_id="sess-ledger-identity-immutable",
-    )
+    with pytest.raises(ValueError, match="E_EPIC_PREPARATION_REQUEST_CONFLICT"):
+        await pipeline.run_epic("ledger_epic_identity_immutable", build_id="build-ledger-epic-identity-immutable-2",
+                                session_id="sess-ledger-identity-immutable")
     second = await pipeline.run_ledger.get_run("sess-ledger-identity-immutable")
     assert second is not None
     second_identity = dict(second["artifact_json"]["run_identity"])

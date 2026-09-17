@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from types import MethodType, SimpleNamespace
 
@@ -291,9 +292,11 @@ async def test_process_request_what_question_not_generic_fallback():
 
 
 @pytest.mark.asyncio
-async def test_process_request_blocks_implicit_structural_action_from_model():
+# Layer: contract
+async def test_process_request_blocks_implicit_structural_action_from_model(tmp_path):
     driver = OrketDriver.__new__(OrketDriver)
-    driver.model_root = Path("model")
+    driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
+    await asyncio.to_thread(driver.model_root.mkdir)
     driver.skill = None
     driver.dialect = None
 
@@ -311,10 +314,12 @@ async def test_process_request_blocks_implicit_structural_action_from_model():
 
 
 @pytest.mark.asyncio
-async def test_process_request_assign_team_reports_suggestion_only():
-    """Layer: integration. Verifies model->execute_plan path keeps assign_team non-mutating."""
+# Layer: contract
+async def test_process_request_assign_team_reports_suggestion_only(tmp_path):
+    """Verifies a controlled model response keeps assign_team non-mutating."""
     driver = OrketDriver.__new__(OrketDriver)
-    driver.model_root = Path("model")
+    driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
+    await asyncio.to_thread(driver.model_root.mkdir)
     driver.skill = None
     driver.dialect = None
 

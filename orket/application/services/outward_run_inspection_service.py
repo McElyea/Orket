@@ -5,6 +5,8 @@ from typing import Any
 
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
+from orket.adapters.storage.outward_store_transaction import OutwardStoreUnitOfWork
+from orket.application.services.outward_control_plane_service import outward_status_payload
 from orket.core.domain.outward_run_events import LedgerEvent
 
 
@@ -13,9 +15,11 @@ class OutwardRunInspectionError(ValueError):
 
 
 class OutwardRunInspectionService:
-    def __init__(self, *, run_store: OutwardRunStore, event_store: OutwardRunEventStore) -> None:
+    def __init__(self, *, run_store: OutwardRunStore, event_store: OutwardRunEventStore,
+                 unit_of_work: OutwardStoreUnitOfWork | None = None) -> None:
         self.run_store = run_store
         self.event_store = event_store
+        self.unit_of_work = unit_of_work or OutwardStoreUnitOfWork.for_run_stores(run_store, event_store)
 
     async def events(
         self,
@@ -52,14 +56,18 @@ class OutwardRunInspectionService:
 
     async def summary(self, run_id: str) -> dict[str, Any]:
         clean_run_id = _require_run_id(run_id)
-        run = await self.run_store.get(clean_run_id)
-        if run is None:
-            raise OutwardRunInspectionError(f"Run '{clean_run_id}' not found")
-        events = await self.event_store.list_for_run(clean_run_id)
+        async with self.unit_of_work.transaction() as transaction:
+            run = await transaction.get_run(clean_run_id)
+            if run is None:
+                raise OutwardRunInspectionError(f"Run '{clean_run_id}' not found")
+            authority = await outward_status_payload(transaction, run)
+            events = await self.event_store.list_for_run(clean_run_id)
         counts = Counter(event.event_type for event in events)
         return {
             "run_id": clean_run_id,
             "status": run.status,
+            "authority_state": authority["authority_state"],
+            "final_truth": authority["final_truth"],
             "current_turn": run.current_turn,
             "max_turns": run.max_turns,
             "started_at": run.started_at,

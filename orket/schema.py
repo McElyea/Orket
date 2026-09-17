@@ -154,6 +154,7 @@ class VerificationResult(BaseModel):
     passed: int = 0
     failed: int = 0
     logs: list[str] = Field(default_factory=list)
+    process_lifetime: dict[str, Any] | None = None
 
 
 class IssueVerification(BaseModel):

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Literal, cast
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.governed_agent_authority import ensure_governed_agent_authority
 from orket.application.services.governed_agent_effect_records import (
     approval_id as effect_approval_id,
 )
@@ -19,12 +20,7 @@ from orket.application.services.governed_agent_effect_records import (
 from orket.application.services.governed_agent_effect_terminal_service import (
     close_denied_agent_effect,
     record_uncertain_agent_effect,
-)
-from orket.application.services.governed_agent_ports import (
-    GovernedAgentAuthorityGuard,
-    GovernedAgentFileEffectExecutor,
-    GovernedAgentPendingGateRepository,
-    ensure_governed_agent_authority,
+    reject_denied_agent_checkpoint,
 )
 from orket.application.services.tool_approval_control_plane_operator_service import (
     ToolApprovalControlPlaneOperatorService,
@@ -33,6 +29,12 @@ from orket.application.services.tool_approval_control_plane_reservation_service 
     ToolApprovalControlPlaneReservationService,
 )
 from orket.core.contracts import OperatorActionRecord, RunRecord
+from orket.core.contracts.control_plane_transaction import ControlPlaneTransactionFactory
+from orket.core.contracts.governed_agent_ports import (
+    GovernedAgentAuthorityGuard,
+    GovernedAgentFileEffectExecutor,
+)
+from orket.core.contracts.pending_gate_repository import PendingGateRepository
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     CheckpointReobservationClass,
@@ -69,13 +71,15 @@ class GovernedAgentEffectService:
         *,
         execution_repository: ControlPlaneExecutionRepository,
         publication: ControlPlanePublicationService,
-        pending_gates: GovernedAgentPendingGateRepository,
+        pending_gates: PendingGateRepository,
         file_executor: GovernedAgentFileEffectExecutor,
+        transactions: ControlPlaneTransactionFactory,
     ) -> None:
         self._execution = execution_repository
         self._publication = publication
         self._pending = pending_gates
         self._files = file_executor
+        self._transactions = transactions
         self._operator = ToolApprovalControlPlaneOperatorService(
             publication=publication,
             execution_repository=execution_repository,
@@ -169,6 +173,19 @@ class GovernedAgentEffectService:
             return await self._existing_resolution(previous, normalized_decision)
         if previous_status != "pending":
             raise ValueError("E_AGENT_EFFECT_APPROVAL_ALREADY_RESOLVED")
+        if normalized_decision == "denied":
+            async with self._transactions() as transaction:
+                scoped = GovernedAgentEffectService(
+                    execution_repository=transaction.execution,
+                    publication=ControlPlanePublicationService(repository=transaction.records),
+                    pending_gates=transaction.pending_gates, file_executor=self._files,
+                    transactions=self._transactions,
+                )
+                return await scoped._resolve_pending(previous, normalized_decision, actor_ref, timestamp)
+        return await self._resolve_pending(previous, normalized_decision, actor_ref, timestamp)
+
+    async def _resolve_pending(self, previous, normalized_decision, actor_ref, timestamp):
+        approval_id = str(previous["request_id"])
         claimed = await self._pending.resolve_request(
             request_id=approval_id,
             status=normalized_decision,
@@ -191,12 +208,13 @@ class GovernedAgentEffectService:
         proposal = AgentEffectProposal.from_wire(cast(dict[str, Any], payload["proposal"]))
         checkpoint_id = str(payload["checkpoint_id"])
         if normalized_decision == "denied":
-            await self._reject_checkpoint(checkpoint_id, proposal, timestamp)
+            await reject_denied_agent_checkpoint(self._publication, checkpoint_id, proposal, timestamp)
             await close_denied_agent_effect(
                 execution_repository=self._execution,
                 publication=self._publication,
                 proposal=proposal,
                 timestamp=timestamp,
+                approval_action=operator_action,
             )
             return GovernedAgentEffectResolution(
                 effect_receipt(proposal, "denied", operator_action.action_id, (checkpoint_id,)),
@@ -361,20 +379,6 @@ class GovernedAgentEffectService:
             dependent_effect_entry_refs=(journal.journal_entry_id,),
         )
         return str(acceptance.checkpoint_id)
-
-    async def _reject_checkpoint(self, checkpoint_id, proposal, timestamp) -> None:
-        checkpoint = await self._publication.repository.get_checkpoint(checkpoint_id=checkpoint_id)
-        if checkpoint is None:
-            raise ValueError("E_AGENT_EFFECT_CHECKPOINT_MISSING")
-        await self._publication.reject_checkpoint(
-            acceptance_id=f"agent-effect-checkpoint-rejection:{proposal.proposal_id}",
-            checkpoint=checkpoint,
-            supervisor_authority_ref="governed-agent-effect-service:v1",
-            decision_timestamp=timestamp,
-            required_reobservation_class=CheckpointReobservationClass.NONE,
-            integrity_verification_ref=proposal.arguments_digest,
-            rejection_reasons=("operator_denied_effect",),
-        )
 
     async def _approval(self, approval_id: str) -> dict[str, Any] | None:
         rows = await self._pending.list_requests(limit=1000)

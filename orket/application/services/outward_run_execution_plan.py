@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import hashlib
-import json
 from collections.abc import Mapping
 from typing import Any
 
+from orket.core.domain.outward_authorization import args_hash
 from orket.core.domain.outward_runs import OutwardRunRecord
 
 EXPLICIT_TOOL_CALL_KEY = "governed_tool_call"
@@ -148,37 +147,12 @@ def step_event_id(run_id: str, turn: int, order: int, name: str) -> str:
     return f"run:{run_id}:{turn:02d}:{order:04d}:{name}"
 
 
-def args_hash(args: dict[str, Any]) -> str:
-    payload = json.dumps(args, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
-
-
 def model_proposal_ref(*, run_id: str, turn: int, tool: str, tool_args_hash: str) -> str:
     return f"model_proposal:{run_id}:{int(turn or 1)}:{tool}:{tool_args_hash}"
 
 
 def proposal_suffix(proposal_id: str) -> str:
     return str(proposal_id or "").rsplit(":", maxsplit=1)[-1] or "0000"
-
-
-def invalid_args_event_payload(tool: str, args: dict[str, Any], errors: list[dict[str, str]]) -> dict[str, Any]:
-    return {
-        "connector_name": tool,
-        "args_hash": args_hash(args),
-        "result_summary": {"ok": False, "error": "invalid_args", "errors": errors},
-        "duration_ms": 0,
-        "outcome": "failed",
-    }
-
-
-def failed_tool_event_payload(tool: str, args: dict[str, Any], error: str) -> dict[str, Any]:
-    return {
-        "connector_name": tool,
-        "args_hash": args_hash(args),
-        "result_summary": {"ok": False, "error": error},
-        "duration_ms": 0,
-        "outcome": "failed",
-    }
 
 
 def failure_reason(tool_event_payload: dict[str, Any]) -> str:
@@ -224,9 +198,7 @@ __all__ = [
     "args_hash",
     "current_step",
     "current_step_index",
-    "failed_tool_event_payload",
     "failure_reason",
-    "invalid_args_event_payload",
     "is_last_step",
     "model_proposal_ref",
     "model_tool_call",

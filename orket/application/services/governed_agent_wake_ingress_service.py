@@ -7,7 +7,7 @@ from typing import Any, Literal, cast
 from orket.application.services.governed_agent_wake_dispatcher import (
     GovernedAgentWakeDispatchEnvelope,
 )
-from orket.application.services.governed_agent_wake_records import (
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeEnqueueResult,
     GovernedAgentWakeRepository,
     GovernedAgentWakeRequest,

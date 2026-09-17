@@ -16,9 +16,9 @@ from orket.application.services.turn_tool_control_plane_support import (
     tool_operation_ref,
     tool_result_ref,
 )
-from orket.runtime.registry.protocol_hashing import build_step_id, derive_operation_id
 from orket.core.domain.control_plane_effect_journal import validate_effect_journal_chain
 from orket.core.domain.execution import ToolCall, ToolCallErrorClass
+from orket.runtime.registry.protocol_hashing import build_step_id, derive_operation_id
 
 if TYPE_CHECKING:
     from .turn_executor import TurnExecutor
@@ -32,15 +32,15 @@ async def load_checkpoint_snapshot_payload(
     context: dict[str, Any],
     state_snapshot_ref: str,
 ) -> dict[str, Any]:
+    return await load_checkpoint_snapshot_at(
+        turn_output_dir(executor=executor, issue_id=issue_id, role_name=role_name, context=context), state_snapshot_ref)
+
+
+async def load_checkpoint_snapshot_at(output_dir: Path, state_snapshot_ref: str) -> dict[str, Any]:
     snapshot_token = str(state_snapshot_ref or "").strip().split(":")[-1]
     if not snapshot_token:
         raise TurnToolControlPlaneError("governed turn checkpoint replay is missing snapshot identity")
-    snapshot_path = turn_output_dir(
-        executor=executor,
-        issue_id=issue_id,
-        role_name=role_name,
-        context=context,
-    ) / f"control_plane_checkpoint_snapshot_{snapshot_token}.json"
+    snapshot_path = output_dir / f"control_plane_checkpoint_snapshot_{snapshot_token}.json"
     payload = await asyncio.to_thread(_read_json_file, snapshot_path)
     if not isinstance(payload, dict):
         raise TurnToolControlPlaneError(
@@ -144,6 +144,10 @@ async def list_operation_artifact_ids(
         )
         / "operations"
     )
+    return await operation_artifact_ids_at(operations_dir)
+
+
+async def operation_artifact_ids_at(operations_dir: Path) -> list[str]:
     return await asyncio.to_thread(_list_operation_artifact_ids, operations_dir)
 
 

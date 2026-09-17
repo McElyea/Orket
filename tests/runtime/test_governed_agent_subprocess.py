@@ -8,19 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from orket.adapters.storage.async_control_plane_execution_repository import (
-    AsyncControlPlaneExecutionRepository,
-)
-from orket.adapters.storage.async_control_plane_record_repository import (
-    AsyncControlPlaneRecordRepository,
-)
 from orket.adapters.storage.async_governed_agent_repository import AsyncGovernedAgentRepository
+from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.application.services.governed_agent_broker_service import (
     GovernedAgentHostBroker,
     GovernedAgentModelObservation,
 )
 from orket.application.services.governed_agent_operator_service import GovernedAgentOperatorService
-from orket.application.services.governed_agent_ports import GovernedAgentInvocationOutcome
+from orket.core.contracts.governed_agent_ports import GovernedAgentInvocationOutcome
 from orket.core.domain import RunState
 from orket.extensions.governed_agent_invoker import GovernedAgentSubprocessInvoker
 from orket_extension_sdk.agent_fixtures import prefixed_digest
@@ -158,6 +153,7 @@ async def test_real_child_repairs_failed_structured_output_within_issued_budget(
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_host_cancellation_reaps_blocked_child(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     extension_root = tmp_path / "slow-agent"
@@ -184,12 +180,9 @@ async def test_host_cancellation_reaps_blocked_child(tmp_path: Path, monkeypatch
     )
     invocation = asyncio.create_task(invoker.invoke_once(binding=binding, request_payload=request))
     await asyncio.sleep(0.25)
-    records = AsyncControlPlaneRecordRepository(db_path)
     operator = GovernedAgentOperatorService(
-        execution_repository=AsyncControlPlaneExecutionRepository(db_path),
+        transactions=SQLiteControlPlaneTransactions(db_path),
         iteration_repository=repository,
-        operator_repository=records,
-        truth_repository=records,
         invoker=invoker,
     )
     cancelled = await operator.cancel_run(

@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.guard_review_payload import guard_review_for_turn
 from orket.core.domain.execution import ExecutionTurn
 from orket.runtime.error_codes import (
     ERR_JSON_MD_FENCE,
@@ -272,7 +273,7 @@ class ContractValidator:
                 break
         if not blocked_status:
             return True
-        payload = self.extract_guard_review_payload(turn.content or "")
+        payload = guard_review_for_turn(turn).model_dump()
         rationale = str(payload.get("rationale", "") or "").strip()
         violations = [str(item).strip() for item in (payload.get("violations", []) or []) if str(item).strip()]
         actions = [str(item).strip() for item in (payload.get("remediation_actions", []) or []) if str(item).strip()]
@@ -429,9 +430,6 @@ class ContractValidator:
 
     def non_json_residue(self, content: str) -> str:
         return self.response_parser.non_json_residue(content)
-
-    def extract_guard_review_payload(self, content: str) -> dict[str, Any]:
-        return self.response_parser.extract_guard_review_payload(content)
 
     @staticmethod
     def _trim_ascii_whitespace_once(content: str) -> tuple[str, str]:

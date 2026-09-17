@@ -7,7 +7,9 @@ from pathlib import Path
 from typing import Any
 
 from orket.application.middleware import TurnLifecycleInterceptors
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
+from orket.application.services.turn_tool_control_plane_support import run_id_for
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_contract_validator import ContractValidator
 from orket.application.workflows.turn_corrective_prompt import CorrectivePromptBuilder
@@ -15,9 +17,9 @@ from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.application.workflows.turn_path_resolver import PathResolver
 from orket.application.workflows.turn_response_parser import ResponseParser
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
+from orket.core.contracts.local_file_lock import LocalFileLockError
 from orket.core.domain.execution import ExecutionTurn
 from orket.core.domain.state_machine import StateMachine, StateMachineError
-from orket.core.policies.tool_gate import ToolGate
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
@@ -101,7 +103,16 @@ class TurnExecutor:
         context: dict[str, Any],
         system_prompt: str | None = None,
     ) -> TurnResult:
-        return await turn_executor_ops.execute_turn(self, issue, role, model_client, toolbox, context, system_prompt)
+        service = self.tool_dispatcher.control_plane_service
+        if service is None or bool(context.get("protocol_replay_mode")):
+            return await turn_executor_ops.execute_turn(self, issue, role, model_client, toolbox, context, system_prompt)
+        run_id = run_id_for(session_id=str(context.get("session_id", "unknown-session")),
+            issue_id=issue.id, role_name=str(role.name or "").strip(), turn_index=int(context.get("turn_index", 0)))
+        try:
+            async with service.execution_owners.hold(run_id):
+                return await turn_executor_ops.execute_turn(self, issue, role, model_client, toolbox, context, system_prompt)
+        except LocalFileLockError as exc:
+            return TurnResult.failed(f"Turn execution refused for {run_id}: {exc}", should_retry=False)
 
     async def _prepare_messages(
         self,

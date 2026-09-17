@@ -4,7 +4,12 @@ on:
   pull_request:
     paths:
       - "scripts/quant/run_quant_sweep.py"
+      - "scripts/quant_sweep/**"
       - "scripts/benchmarks/run_determinism_harness.py"
+      - "scripts/benchmarks/determinism_cli.py"
+      - "scripts/benchmarks/prototype_model_selector.py"
+      - "scripts/common/rerun_diff_ledger.py"
+      - "orket/core/contracts/model_timing.py"
       - "scripts/benchmarks/live_card_benchmark_runner.py"
       - "scripts/benchmarks/manage_baselines.py"
       - "scripts/quant/check_quant_sweep_kpis.py"
@@ -28,6 +33,8 @@ on:
       - "tests/application/test_quant_sweep_runner.py"
       - "tests/application/test_manage_baselines_script.py"
       - "tests/application/test_benchmark_telemetry_manifest.py"
+      - "tests/application/test_prototype_model_selector.py"
+      - "tests/integration/test_benchmark_command_admission.py"
       - "tests/application/test_quant_sweep_kpi_scripts.py"
       - "tests/application/test_quant_frontier_explorer.py"
       - "tests/application/test_context_ceiling_finder.py"
@@ -54,7 +61,8 @@ on:
       - "benchmarks/configs/quant_sweep_mixed.json"
       - "benchmarks/configs/context_sweep_profiles.json"
       - "benchmarks/configs/sidecar_profiles.json"
-      - "docs/QUANT_SWEEP_RUNBOOK.md"
+      - "docs/process/QUANT_SWEEP_RUNBOOK.md"
+      - "docs/specs/BENCHMARK_LATENCY_SUMMARY.md"
       - ".gitea/workflows/quant-sweep-smoke.yml"
   workflow_dispatch:
 
@@ -76,12 +84,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 
-      - name: Quant Sweep Unit Coverage
+      - name: Quant Sweep and Benchmark Coverage
         run: |
           python -m pytest \
             tests/application/test_quant_sweep_runner.py \
             tests/application/test_manage_baselines_script.py \
             tests/application/test_benchmark_telemetry_manifest.py \
+            tests/application/test_prototype_model_selector.py \
+            tests/integration/test_benchmark_command_admission.py \
             tests/application/test_quant_sweep_kpi_scripts.py \
             tests/application/test_quant_frontier_explorer.py \
             tests/application/test_context_ceiling_finder.py \

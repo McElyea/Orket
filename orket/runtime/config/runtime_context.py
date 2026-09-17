@@ -4,7 +4,7 @@ import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.adapters.storage.async_repositories import (
@@ -16,6 +16,10 @@ from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.runtime_paths import resolve_runtime_db_path
 from orket.settings import load_user_settings
+
+if TYPE_CHECKING:
+    from orket.application.services.card_completion_service import CardCompletionService
+    from orket.application.services.runtime_store_binding_service import RuntimeStoreBindingService
 
 ConfigLoaderFactory = Callable[..., Any]
 RunLedgerFactory = Callable[..., Any]
@@ -48,8 +52,11 @@ class OrketRuntimeContext:
     snapshots_repo: AsyncSnapshotRepository
     success_repo: AsyncSuccessRepository
     run_ledger: Any
+    storage_binding: RuntimeStoreBindingService
+    card_completion: CardCompletionService | None = None
 
     async def initialize(self) -> None:
+        await self.storage_binding.initialize()
         initialize = getattr(self.run_ledger, "initialize", None)
         if callable(initialize):
             await initialize()
@@ -78,6 +85,7 @@ class OrketRuntimeContext:
         db_path: str | None = None,
         config_root: Path | None = None,
         cards_repo: AsyncCardRepository | None = None,
+        card_completion: CardCompletionService | None = None,
         sessions_repo: AsyncSessionRepository | None = None,
         snapshots_repo: AsyncSnapshotRepository | None = None,
         success_repo: AsyncSuccessRepository | None = None,
@@ -90,8 +98,12 @@ class OrketRuntimeContext:
         telemetry_sink: TelemetrySink | None = None,
         primary_run_ledger_mode: str = "sqlite",
     ) -> OrketRuntimeContext:
+        # The legacy extension package imports the engine; compose after runtime types initialize.
+        from orket.application.services.card_completion_composition import build_card_completion_service
+        from orket.application.services.runtime_store_binding_service import RuntimeStoreBindingService
+
         runtime_nodes = decision_nodes if decision_nodes is not None else DecisionNodeRegistry()
-        resolved_workspace = Path(workspace_root)
+        resolved_workspace = Path(workspace_root).resolve()
         resolved_db_path = resolve_runtime_db_path(db_path)
         resolved_config_root = (
             config_root_resolver(config_root)
@@ -110,7 +122,10 @@ class OrketRuntimeContext:
         run_ledger_mode = orchestration_config.resolve_run_ledger_mode(user_settings=user_settings)
         gitea_state_pilot_enabled = orchestration_config.resolve_gitea_state_pilot_enabled(user_settings=user_settings)
         orchestration_config.validate_state_backend_mode(state_backend_mode, gitea_state_pilot_enabled)
-        cards = cards_repo or AsyncCardRepository(resolved_db_path)
+        completion = card_completion or build_card_completion_service(
+            db_path=resolved_db_path, workspace_root=resolved_workspace,
+        )
+        cards = cards_repo or AsyncCardRepository(resolved_db_path, completion_authority=completion)
         sessions = sessions_repo or AsyncSessionRepository(resolved_db_path)
         snapshots = snapshots_repo or AsyncSnapshotRepository(resolved_db_path)
         success = success_repo or AsyncSuccessRepository(resolved_db_path)
@@ -144,4 +159,6 @@ class OrketRuntimeContext:
             snapshots_repo=snapshots,
             success_repo=success,
             run_ledger=run_ledger,
+            card_completion=completion,
+            storage_binding=RuntimeStoreBindingService(resolved_db_path),
         )

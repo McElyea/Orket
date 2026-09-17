@@ -5,8 +5,10 @@ import json
 import time
 from typing import TYPE_CHECKING, Any
 
+from orket.application.services.card_completion_turn_service import verify_turn_completion_claims
 from orket.application.services.turn_tool_control_plane_recovery import TurnToolCheckpointRecoveryError
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneError
+from orket.core.contracts.card_completion_commit import CardCompletionRejected
 from orket.core.domain.state_machine import StateMachineError
 from orket.logging import log_event
 from orket.schema import IssueConfig, RoleConfig
@@ -95,6 +97,7 @@ async def execute_turn(
             context=context,
         )
         if completed_replay_turn is not None:
+            await verify_turn_completion_claims(toolbox=toolbox, turn=completed_replay_turn, context=context)
             current_turn = completed_replay_turn
             log_event(
                 "turn_complete",
@@ -182,6 +185,7 @@ async def execute_turn(
                 executor.workspace,
             )
 
+        await verify_turn_completion_claims(toolbox=toolbox, turn=turn, context=context)
         log_event(
             "turn_complete",
             {
@@ -227,6 +231,10 @@ async def execute_turn(
             turn=turn,
         )
         return TurnResult.succeeded(turn)
+
+    except CardCompletionRejected as exc:
+        await emit_failure(str(exc), "completion_rejected")
+        return TurnResult.failed(f"Completion rejected: {exc}", should_retry=False)
 
     except StateMachineError as exc:
         executor.middleware.apply_on_turn_failure(exc, issue=issue, role=role, context=context)

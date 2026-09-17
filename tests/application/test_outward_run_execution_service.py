@@ -42,6 +42,7 @@ def _approval_service(db_path: Path, clock: _Clock) -> OutwardApprovalService:
         event_store=OutwardRunEventStore(db_path),
         connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
         utc_now=clock,
+        workspace_root=Path(db_path).parent,
     )
 
 
@@ -181,29 +182,23 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
     assert len(proposals) == 1
     assert proposals[0].args_preview["content"] == "[REDACTED]"
 
-    clock.set("2026-04-25T12:01:00+00:00")
+    clock.set((datetime.fromisoformat(proposals[0].expires_at) - timedelta(seconds=1)).isoformat())
     approved = await _approval_service(db_path, clock).approve(proposals[0].proposal_id, operator_ref="operator:test")
     completed = await _execution_service(db_path, tmp_path, clock).continue_after_approval(approved.proposal_id)
 
     assert completed.status == "completed"
     assert target.read_text(encoding="utf-8") == "model approved content"
-    model_invocation = json.loads(
-        (tmp_path / "workspace" / "issue_run-exec" / "runs" / "run-exec" / "model_invocation.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    model_response = json.loads(
-        (tmp_path / "workspace" / "issue_run-exec" / "runs" / "run-exec" / "model_response_redacted.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    model_prompt_path = tmp_path / "workspace" / "issue_run-exec" / "runs" / "run-exec" / "model_prompt_redacted_turn_1.json"
-    model_response_path = tmp_path / "workspace" / "issue_run-exec" / "runs" / "run-exec" / "model_response_redacted_turn_1.json"
-    proposal_extraction = json.loads(
-        (tmp_path / "workspace" / "issue_run-exec" / "runs" / "run-exec" / "proposal_extraction.json").read_text(
-            encoding="utf-8"
-        )
-    )
+    events = await OutwardRunEventStore(db_path).list_for_run("run-exec")
+    proposal_event = next(event for event in events if event.event_type == "proposal_made")
+    invocation_path = tmp_path / proposal_event.payload["model_invocation_ref"]
+    evidence_dir = invocation_path.parent
+    assert evidence_dir.parent.name == "model_attempts"
+    model_invocation = json.loads(invocation_path.read_text(encoding="utf-8"))
+    model_prompt_path = evidence_dir / "model_prompt_redacted_turn_1.json"
+    model_response_path = evidence_dir / "model_response_redacted_turn_1.json"
+    model_response = json.loads(model_response_path.read_text(encoding="utf-8"))
+    extraction_path = tmp_path / proposal_event.payload["proposal_extraction_ref"]
+    proposal_extraction = json.loads(extraction_path.read_text(encoding="utf-8"))
     assert model_invocation["provider_name"] == "fake-provider"
     assert model_invocation["model_name"] == "fake-model"
     assert model_invocation["session_id"] == "fake-session"
@@ -211,12 +206,12 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
     assert model_invocation["completion_token_count"] == 7
     assert model_invocation["duration_ms"] == 23
     assert model_invocation["finish_reason"] == "tool_calls"
-    assert model_invocation["model_invocation_ref"] == "workspace/issue_run-exec/runs/run-exec/model_invocation_turn_1.json"
+    assert model_invocation["model_invocation_ref"] == proposal_event.payload["model_invocation_ref"]
     assert model_invocation["model_response_content_sha256"]
     assert model_response["extracted_tool_call_redacted"]["tool"] == "write_file"
     assert model_response["extracted_tool_call_redacted"]["args"]["content"] == "[REDACTED]"
-    assert proposal_extraction["proposal_id"] == "proposal:run-exec:write_file:0001"
-    assert proposal_extraction["acceptance_result"] == "accepted_for_proposal"
+    assert proposal_extraction["proposal_id"] is None
+    assert proposal_extraction["acceptance_result"] == "extracted_pending_proposal"
     assert proposal_extraction["model_response_content_sha256"] == model_invocation["model_response_content_sha256"]
     events = await OutwardRunEventStore(db_path).list_for_run("run-exec")
     assert [event.event_type for event in events] == [
@@ -234,12 +229,13 @@ async def test_outward_execution_pauses_before_write_and_continues_after_approva
     tool_event = next(event for event in events if event.event_type == "tool_invoked")
     assert tool_event.payload["args_hash"]
     proposal_event = next(event for event in events if event.event_type == "proposal_made")
-    assert proposal_event.payload["model_invocation_ref"] == "workspace/issue_run-exec/runs/run-exec/model_invocation_turn_1.json"
+    assert proposal_event.payload["model_invocation_sha256"] == hashlib.sha256(invocation_path.read_bytes()).hexdigest()
     assert proposal_event.payload["model_invocation_sha256"]
     assert proposal_event.payload["model_prompt_redacted_sha256"] == hashlib.sha256(model_prompt_path.read_bytes()).hexdigest()
     assert proposal_event.payload["model_response_content_sha256"] == model_invocation["model_response_content_sha256"]
     assert proposal_event.payload["model_response_redacted_sha256"] == hashlib.sha256(model_response_path.read_bytes()).hexdigest()
-    assert proposal_event.payload["proposal_extraction_sha256"]
+    assert tmp_path / proposal_event.payload["proposal_extraction_ref"] == extraction_path
+    assert proposal_event.payload["proposal_extraction_sha256"] == hashlib.sha256(extraction_path.read_bytes()).hexdigest()
     assert proposal_event.payload["tool_name"] == "write_file"
     assert proposal_event.payload["tool_args_hash"] == proposal_extraction["extracted_args_hash"]
     assert "model approved content" not in str(tool_event.payload)
@@ -360,7 +356,7 @@ async def test_outward_execution_two_step_read_then_write_tracks_turn_boundary(t
     assert [event.event_type for event in events].count("proposal_made") == 2
     assert [event.event_type for event in events].count("proposal_approved") == 2
     assert [event.turn for event in events if event.event_type == "proposal_made"] == [1, 2]
-    assert (tmp_path / "workspace" / "issue_run-two-step" / "runs" / "run-two-step" / "model_invocation_turn_2.json").exists()
+    assert all((tmp_path / event.payload["model_invocation_ref"]).exists() for event in events if event.event_type == "proposal_made")
 
 
 @pytest.mark.integration
@@ -468,7 +464,7 @@ async def test_outward_execution_delete_file_uses_hardened_connector_after_appro
     assert target.exists() is False
     events = await OutwardRunEventStore(db_path).list_for_run("run-delete-exec")
     tool_event = next(event for event in events if event.event_type == "tool_invoked")
-    assert set(tool_event.payload) == {"connector_name", "args_hash", "result_summary", "duration_ms", "outcome"}
+    assert set(tool_event.payload) == {"connector_name", "args_hash", "result_summary", "duration_ms", "timing", "outcome"}
     assert tool_event.payload["connector_name"] == "delete_file"
     assert tool_event.payload["outcome"] == "success"
 

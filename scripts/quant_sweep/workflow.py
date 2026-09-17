@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
-import json
 import os
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -19,7 +19,7 @@ from quant_sweep.metrics import (
     quant_rank,
 )
 from quant_sweep.runtime import load_json, run_cmd
-from quant_sweep.sidecar import quant_report_out, run_sidecar, sidecar_out
+from quant_sweep.sidecar import run_sidecar, sidecar_out
 
 
 def resolve_models_and_quants(args: argparse.Namespace) -> tuple[list[str], list[str]]:
@@ -116,7 +116,7 @@ def run_quant_harness(
     out_path: Path,
 ) -> None:
     cmd = [
-        "python",
+        sys.executable,
         "scripts/benchmarks/run_determinism_harness.py",
         "--task-bank",
         args.task_bank,

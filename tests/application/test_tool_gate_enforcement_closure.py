@@ -7,11 +7,12 @@ from typing import Any
 import pytest
 
 from orket.application.middleware import TurnLifecycleInterceptors
+from orket.application.services.runtime_result_projection import RuntimeExecutionResult, RuntimeOutcomeError
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
 from orket.extensions.contracts import RunAction
 from orket.extensions.runtime import ExtensionEngineAdapter, RunContext
 from orket.runtime.execution.execution_pipeline_card_dispatch import ExecutionPipelineCardDispatchMixin
@@ -233,11 +234,12 @@ async def test_run_card_primary_path_blocks_before_tool_execution(tmp_path: Path
 
 
 @pytest.mark.asyncio
+# Layer: contract
 async def test_extension_action_primary_path_reenters_run_card_under_same_deny_all_gate(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Layer: integration. Verifies normalized extension run actions re-enter the canonical blocked run_card path."""
+    """Layer: contract. Verifies normalized extension run actions re-enter the canonical blocked run_card path."""
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir()
     harness = _RunCardHarness(
@@ -252,19 +254,20 @@ async def test_extension_action_primary_path_reenters_run_card_under_same_deny_a
 
         async def run_card(self, card_id: str, **kwargs: Any) -> dict[str, Any]:
             _ = kwargs
-            return await harness.run_card(card_id)
+            payload = await harness.run_card(card_id)
+            assert not payload["success"]
+            return RuntimeExecutionResult(session_id="sess-1", observation="unresolved", reason=payload["error"])
 
     monkeypatch.setattr("orket.extensions.runtime.OrchestrationEngine", _EngineProxy)
 
     adapter = ExtensionEngineAdapter(RunContext(workspace=workspace_root, department="core"))
-    result = await adapter.execute_action(
-        RunAction(op="run_issue", target="ISSUE-9", params={"session_id": "sess-1"})
-    )
+    with pytest.raises(RuntimeOutcomeError) as rejected:
+        await adapter.execute_action(RunAction(op="run_issue", target="ISSUE-9", params={"session_id": "sess-1"}))
 
-    assert result["transcript"]["success"] is False
+    assert not rejected.value.result.succeeded
     assert harness.toolbox.calls == 0
     assert not (workspace_root / "agent_output" / "extension-denied.txt").exists()
-    assert "deny_all:write_file:write_file" in str(result["transcript"]["error"])
+    assert "deny_all:write_file:write_file" in rejected.value.result.reason
 
 
 @pytest.mark.asyncio

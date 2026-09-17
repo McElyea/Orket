@@ -17,7 +17,8 @@ from orket.adapters.storage.async_governed_agent_repository import AsyncGoverned
 from orket.adapters.storage.async_governed_agent_wake_repository import (
     AsyncGovernedAgentWakeRepository,
 )
-from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
+from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGateRepository
+from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.adapters.tools.governed_agent_file_effect_executor import GovernedAgentFileEffectExecutor
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.governed_agent_broker_service import (
@@ -26,13 +27,14 @@ from orket.application.services.governed_agent_broker_service import (
 )
 from orket.application.services.governed_agent_effect_resume_service import GovernedAgentEffectResumeService
 from orket.application.services.governed_agent_effect_service import GovernedAgentEffectService
-from orket.application.services.governed_agent_ports import GovernedAgentAuthorityStaleError
 from orket.application.services.governed_agent_supervisor import GovernedAgentWakeClaimGuard
 from orket.application.services.governed_agent_wake_dispatcher import (
     GovernedAgentProviderConfiguration,
     GovernedAgentWakeLoopDispatcher,
 )
-from orket.application.services.governed_agent_wake_records import GovernedAgentWakeRequest
+from orket.application.services.tool_gate_service import ToolGate
+from orket.core.contracts.governed_agent_ports import GovernedAgentAuthorityStaleError
+from orket.core.contracts.governed_agent_wake_records import GovernedAgentWakeRequest
 from orket.extensions.manager import ExtensionManager
 from orket_extension_sdk.agent_fixtures import agent_model_call_request, prefixed_digest
 from tests.runtime.governed_agent_test_support import (
@@ -46,6 +48,7 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_dispatcher_releases_work_that_exceeds_provider_capacity(tmp_path: Path) -> None:
     """Layer: integration. Durable claim admission is narrowed by the request's provider demand."""
     db_path = tmp_path / "agent.sqlite3"
@@ -84,10 +87,11 @@ async def test_dispatcher_releases_work_that_exceeds_provider_capacity(tmp_path:
             capacity_limit=1,
         ),
         effect_service=GovernedAgentEffectService(
+            transactions=SQLiteControlPlaneTransactions(db_path),
             execution_repository=execution,
             publication=publication,
             pending_gates=AsyncPendingGateRepository(db_path),
-            file_executor=GovernedAgentFileEffectExecutor(tmp_path),
+            file_executor=GovernedAgentFileEffectExecutor(tmp_path, tool_gate=ToolGate(None, tmp_path)),
         ),
         effect_resume_service=GovernedAgentEffectResumeService(
             execution_repository=execution,

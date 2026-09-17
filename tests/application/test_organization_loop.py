@@ -5,11 +5,13 @@ from pathlib import Path
 import pytest
 
 import orket.organization_loop as organization_loop_module
+from tests.helpers.runtime_result import published_result
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_run_forever_yields_after_fast_card_execution(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Layer: integration. Verifies the organization loop yields after a fast card path instead of hot-spinning."""
+    """Layer: unit. Verifies the organization loop yields after a fast card path instead of hot-spinning."""
     loop = organization_loop_module.OrganizationLoop.__new__(organization_loop_module.OrganizationLoop)
     loop.running = False
     loop.org = None
@@ -36,6 +38,10 @@ async def test_run_forever_yields_after_fast_card_execution(monkeypatch: pytest.
 
         async def run_card(self, card_id: str) -> None:
             executed_cards.append(card_id)
+            return published_result()
+
+        async def close(self):
+            executed_cards.append("closed")
 
     loop._find_next_critical_card = _fake_find
     monkeypatch.setattr(organization_loop_module.asyncio, "to_thread", _fake_to_thread)
@@ -46,5 +52,5 @@ async def test_run_forever_yields_after_fast_card_execution(monkeypatch: pytest.
     await organization_loop_module.OrganizationLoop.run_forever(loop)
 
     assert to_thread_calls == ["_fake_find"]
-    assert executed_cards == ["CARD-1"]
+    assert executed_cards == ["CARD-1", "closed"]
     assert sleep_calls == [0]

@@ -1,6 +1,6 @@
 # Tool Execution Gate V1
 
-Last updated: 2026-04-08
+Last updated: 2026-09-14
 Status: Active (implemented first-slice authority)
 Owner: Orket Core
 Archived lane requirements: `docs/projects/archive/ExtensionCapabilityAuthorization/TGE04082026-LANE-CLOSEOUT/TOOL_GATE_ENFORCEMENT_REQUIREMENTS.md`
@@ -61,7 +61,7 @@ Compatibility wrappers such as `run_issue(...)`, `run_epic(...)`, and `run_rock(
 The authoritative governed turn-tool gate on the canonical supported path is composed of four runtime-owned parts:
 1. Dispatcher binding gate inside `ToolDispatcher.execute_tools(...)` for undeclared-tool, skill-contract, missing-permission, and runtime-limit admission before execution.
 2. Dispatcher policy gate via `orket/application/workflows/turn_tool_dispatcher_support.py::tool_policy_violation(...)` for namespace, ring, capability-profile, determinism, and tool-to-tool boundary admission.
-3. Mechanical gate via `orket/core/policies/tool_gate.py::ToolGate.validate(...)` for path, state-transition, destructive-operation, and content or policy checks owned by `ToolGate`.
+3. Mechanical gate via `orket/application/services/tool_gate_service.py::ToolGate.validate(...)`. It gathers path and AST/iDesign facts in an owned worker, then invokes the pure policy in `orket/core/policies/tool_gate.py`. Core file policy requires explicit `FileWriteFacts` and performs no path resolution or external validation. Adapters consume the `ToolGateValidator` contract; application composition supplies the implementation.
 4. Approval gate inside `ToolDispatcher.execute_tools(...)` for bounded operator approval-required tool continuation on the governed turn-tool path.
 
 Dispatcher-local compatibility translation checks that still block before execution remain part of the same internal dispatcher seam and do not create a second authority center.

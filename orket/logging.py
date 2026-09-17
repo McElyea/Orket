@@ -10,6 +10,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, TypedDict
 
+from orket.core.contracts.invocation_timing import optional_duration_ms
 from orket.naming import sanitize_name
 from orket.time_utils import now_local
 
@@ -218,7 +219,7 @@ def _log_path(workspace: Path, role: str | None = None) -> Path:
     return workspace / "orket.log"
 
 
-RUNTIME_EVENT_SCHEMA_VERSION = "v1"
+RUNTIME_EVENT_SCHEMA_VERSION = "v2"
 RUNTIME_EVENT_ARTIFACT_EVENTS = {
     "determinism_violation", "packet1_emission_failure", "session_start", "session_end", "turn_start",
     "turn_complete", "turn_failed", "runtime_verifier_completed", "guard_retry_scheduled", "guard_terminal_failure",
@@ -278,7 +279,8 @@ def _build_runtime_event(event: str, data: dict[str, Any], role: str) -> dict[st
         "tool_contract_version": str(payload.get("tool_contract_version") or ""),
         "side_effect_signal_keys": list(payload.get("side_effect_signal_keys") or []),
         "packet1_conformance": payload.get("packet1_conformance"),
-        "duration_ms": int(payload.get("duration_ms") or 0),
+        "duration_ms": optional_duration_ms(payload.get("duration_ms")),
+        **({"timing": payload["timing"]} if "timing" in payload else {}),
         "tokens": payload.get("tokens"),
     }
 

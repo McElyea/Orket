@@ -10,6 +10,7 @@ from starlette.websockets import WebSocketDisconnect
 
 import orket.interfaces.api as api_module
 from orket.schema import CardStatus
+from tests.helpers.card_completion import complete_existing_card
 
 client = None
 
@@ -1209,7 +1210,7 @@ def test_run_metrics_uses_runtime_workspace(monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["ok"] is True
-    assert response.json()["workspace"].endswith("workspace\\runs\\SESS42")
+    assert Path(response.json()["workspace"]).parts[-3:] == ("workspace", "runs", "SESS42")
     assert captured["workspace_args"][1] == "SESS42"
 
 
@@ -1595,6 +1596,7 @@ async def test_runs_backlog_real_runtime_repository_empty(monkeypatch, tmp_path)
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_cards_endpoints_real_runtime_filters_and_pagination(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     from orket.orchestration.engine import OrchestrationEngine
@@ -1627,7 +1629,7 @@ async def test_cards_endpoints_real_runtime_filters_and_pagination(monkeypatch, 
             "priority": 2.0,
         }
     )
-    await real_engine.cards.update_status("CARD-B", CardStatus.DONE)
+    await complete_existing_card(real_engine.cards, "CARD-B", workspace_root, service=real_engine.runtime_context.card_completion)
 
     response = client.get(
         "/v1/cards?build_id=B-2&status=done&limit=1&offset=0",
@@ -2218,6 +2220,7 @@ async def test_session_replay_endpoint_without_target_returns_timeline(monkeypat
     assert payload["turns"][0]["turn_index"] == 1
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_execution_graph_endpoint_real_runtime(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     from orket.orchestration.engine import OrchestrationEngine
@@ -2235,51 +2238,17 @@ async def test_execution_graph_endpoint_real_runtime(monkeypatch, tmp_path):
         session_id,
         {"type": "epic", "name": "graph-run", "department": "core", "task_input": "demo"},
     )
-    await real_engine.cards.save(
-        {
-            "id": "A",
-            "session_id": session_id,
-            "build_id": "B-GRAPH",
-            "seat": "COD-1",
-            "summary": "Root",
-            "priority": 2.0,
-            "depends_on": [],
-        }
-    )
-    await real_engine.cards.save(
-        {
-            "id": "B",
-            "session_id": session_id,
-            "build_id": "B-GRAPH",
-            "seat": "COD-1",
-            "summary": "Depends on A",
-            "priority": 2.0,
-            "depends_on": ["A"],
-        }
-    )
-    await real_engine.cards.save(
-        {
-            "id": "C",
-            "session_id": session_id,
-            "build_id": "B-GRAPH",
-            "seat": "REV-1",
-            "summary": "Depends on B",
-            "priority": 2.0,
-            "depends_on": ["B"],
-        }
-    )
-    await real_engine.cards.save(
-        {
-            "id": "D",
-            "session_id": session_id,
-            "build_id": "B-GRAPH",
-            "seat": "REV-1",
-            "summary": "Depends on missing",
-            "priority": 2.0,
-            "depends_on": ["X-MISSING"],
-        }
-    )
-    await real_engine.cards.update_status("A", CardStatus.DONE)
+    for card_id, summary, seat, dependencies in [
+        ("A", "Root", "COD-1", []),
+        ("B", "Depends on A", "COD-1", ["A"]),
+        ("C", "Depends on B", "REV-1", ["B"]),
+        ("D", "Depends on missing", "REV-1", ["X-MISSING"]),
+    ]:
+        await real_engine.cards.save({
+            "id": card_id, "session_id": session_id, "build_id": "B-GRAPH",
+            "seat": seat, "summary": summary, "priority": 2.0, "depends_on": dependencies,
+        })
+    await complete_existing_card(real_engine.cards, "A", workspace_root, service=real_engine.runtime_context.card_completion)
 
     response = client.get(f"/v1/runs/{session_id}/execution-graph", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200

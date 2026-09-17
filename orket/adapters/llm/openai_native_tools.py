@@ -105,7 +105,16 @@ def build_openai_native_tooling(
     *,
     model: str,
     runtime_context: Mapping[str, Any],
+    tool_call_mode: str | None = None,
 ) -> tuple[list[dict[str, Any]], str | None, dict[str, Any]]:
+    transport_policy = runtime_context.get('tool_transport_policy')
+    if transport_policy is not None:
+        if transport_policy != 'profile':
+            raise ValueError('E_TOOL_TRANSPORT_POLICY_INVALID')
+        if tool_call_mode not in {'native', 'json_wrapper'}:
+            raise ValueError('E_TOOL_TRANSPORT_PROFILE_MODE_REQUIRED')
+        if tool_call_mode == 'json_wrapper':
+            return [], None, {}
     explicit_tools, explicit_tool_choice, explicit_payload_overrides = _explicit_native_tooling(runtime_context)
     if explicit_tools:
         return explicit_tools, explicit_tool_choice, explicit_payload_overrides

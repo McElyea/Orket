@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.guard_review_payload import extract_legacy_guard_review
 from orket.application.services.tool_parser import ToolParser
 from orket.core.domain.execution import ExecutionTurn, ToolCall, ToolCallErrorClass
 from orket.logging import log_event
@@ -481,36 +482,7 @@ class ResponseParser:
         return False
 
     def extract_guard_review_payload(self, content: str) -> dict[str, Any]:
-        blob = content or ""
-        decoder = json.JSONDecoder()
-        candidates: list[dict[str, Any]] = []
-
-        fenced_matches = re.findall(r"```json\s*([\s\S]*?)```", blob, flags=re.IGNORECASE)
-        for chunk in fenced_matches:
-            try:
-                parsed = json.loads(chunk.strip())
-                if isinstance(parsed, dict):
-                    candidates.append(parsed)
-            except (json.JSONDecodeError, ValueError, TypeError):
-                continue
-
-        start = 0
-        while True:
-            brace_index = blob.find("{", start)
-            if brace_index == -1:
-                break
-            try:
-                parsed, end_pos = decoder.raw_decode(blob[brace_index:])
-                if isinstance(parsed, dict):
-                    candidates.append(parsed)
-                start = brace_index + max(end_pos, 1)
-            except json.JSONDecodeError:
-                start = brace_index + 1
-
-        for parsed in candidates:
-            if {"rationale", "violations", "remediation_actions"} & set(parsed.keys()):
-                return parsed
-        return {}
+        return extract_legacy_guard_review(content)
 
 
 class _DuplicateKeyError(ValueError):

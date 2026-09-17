@@ -13,12 +13,12 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
     reservation_id_for_run,
     run_id_for_dispatch,
 )
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain import AttemptState, CapabilityClass, LeaseStatus, ReservationKind, ReservationStatus, RunState
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
 from orket.schema import (
     CardStatus,
     DialectConfig,

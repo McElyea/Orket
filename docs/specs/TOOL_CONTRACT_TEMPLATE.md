@@ -1,6 +1,6 @@
 # Orket Tool Contract Template
 
-Last updated: 2026-03-06  
+Last updated: 2026-09-12
 Status: Active (governance template)  
 Owner: Orket Core
 
@@ -76,7 +76,7 @@ observability:
     - determinism_class
 
 compatibility_mapping:
-  compatibility_surface_map_path: core/tools/compatibility_map.yaml
+  compatibility_surface_map_path: orket/runtime/config/assets/tools/compatibility_map.yaml
   compat_tool_name: openclaw.file_edit
   mapping_version: 1
   schema_compatibility_range: ">=1.0.0 <2.0.0"

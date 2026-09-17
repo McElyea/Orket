@@ -1,11 +1,11 @@
 # Layer: integration
-
 from __future__ import annotations
 
 from pathlib import Path
 
 import pytest
 
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run,
     reservation_id_for_run,
@@ -31,10 +31,10 @@ from orket.core.domain import (
 )
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("deterministic_turn_clock")]
 
 
 class _Model:

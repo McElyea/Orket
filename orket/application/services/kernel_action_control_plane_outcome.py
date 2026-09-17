@@ -42,7 +42,7 @@ async def enter_attempt_execution_if_needed(
         return attempt
     validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.EXECUTING)
     updated = attempt.model_copy(update={"attempt_state": AttemptState.EXECUTING, "start_timestamp": execution_timestamp})
-    await execution_repository.save_attempt_record(record=updated)
+    updated = await execution_repository.save_attempt_record(record=updated)
     return updated
 
 
@@ -67,7 +67,7 @@ async def finalize_attempt_from_commit(
             )
         validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.COMPLETED)
         updated = attempt.model_copy(update={"attempt_state": AttemptState.COMPLETED, "end_timestamp": committed_at})
-        await execution_repository.save_attempt_record(record=updated)
+        updated = await execution_repository.save_attempt_record(record=updated)
         return updated
     if observed_execution:
         if attempt.attempt_state is AttemptState.CREATED:
@@ -91,11 +91,11 @@ async def finalize_attempt_from_commit(
                 "failure_classification": failure_classification,
             }
         )
-        await execution_repository.save_attempt_record(record=updated)
+        updated = await execution_repository.save_attempt_record(record=updated)
         return updated
     validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.ABANDONED)
     updated = attempt.model_copy(update={"attempt_state": AttemptState.ABANDONED, "end_timestamp": committed_at})
-    await execution_repository.save_attempt_record(record=updated)
+    updated = await execution_repository.save_attempt_record(record=updated)
     return updated
 
 

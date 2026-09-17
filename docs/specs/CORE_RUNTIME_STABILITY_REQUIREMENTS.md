@@ -1,6 +1,6 @@
 # Runtime Stability Focus Requirements
 
-Last updated: 2026-03-14  
+Last updated: 2026-09-12
 Status: Active (requirements draft)  
 Owner: Orket Core
 
@@ -38,7 +38,7 @@ Stabilize runtime behavior by isolating experimentation inside workloads while c
 ### Requirements
 
 Behavior:
-1. `core/` owns canonical contracts only:
+1. Core contract authority covers:
    1. response protocol
    2. runtime execution engine
    3. run ledger
@@ -48,8 +48,28 @@ Behavior:
 3. Workloads may invoke only tools declared in their capability profile.
 4. Core runtime must remain deterministic regardless of workload behavior.
 5. Tool schema compatibility is validated at load time and run time.
-6. Artifact schema registry must exist at `core/artifacts/schema_registry.yaml`.
+6. Artifact schema registry must exist at `orket/runtime/config/assets/artifacts/schema_registry.yaml`.
 7. `run_determinism_class` is computed per run as the least-deterministic class across invoked tools.
+
+Runtime default resources:
+1. The canonical registry, compatibility map/schema, tool registry, prompt budget,
+   retention tiers, run artifact schemas and runtime invariant contract reside under
+   `orket/runtime/config/assets/` and ship as package data in the wheel and sdist.
+2. `orket.runtime.config.contract_assets` owns their default locations. Omitted
+   loader paths resolve beside the installed module, independently of CWD.
+   Runtime peers import this module through the `orket.runtime.config` surface.
+3. Existing explicit path arguments remain supported, including paths relative to
+   the caller's CWD. A supplied missing, unreadable or invalid file fails closed;
+   loaders do not fall back from it to shipped defaults. Files placed in a CWD
+   `core/` directory are not implicit overrides.
+4. The orchestration prompt-budget default uses that same authority. An explicit
+   organization `prompt_budget_policy_path` remains the selected override.
+5. The nine original data files move byte-for-byte. The invariant contract moves
+   to `assets/contracts/RUNTIME_INVARIANTS.md`, with its registry source reference
+   updated to the packaged location. Its documentation index remains at
+   `docs/specs/RUNTIME_INVARIANTS.md`. Loader validation and policy budgets remain
+   unchanged; new snapshots identify their actual selected source paths.
+   Existing retained snapshots are not rewritten.
 
 Interfaces:
 1. Current v0 boundary authority is the controller-workload contract in `docs/specs/CONTROLLER_WORKLOAD_V1.md`.
@@ -355,7 +375,7 @@ Reference:
 ### Requirements
 
 Behavior:
-1. The active closeout target is the shipped minimal `core` baseline in `core/tools/tool_registry.yaml`; broader OpenClaw-class breadth remains compatibility-layer scope.
+1. The active closeout target is the shipped minimal `core` baseline in `orket/runtime/config/assets/tools/tool_registry.yaml`; broader OpenClaw-class breadth remains compatibility-layer scope.
 2. Each canonical tool-registry entry must declare:
    1. `tool_name`
    2. `ring`
@@ -368,7 +388,7 @@ Behavior:
 6. Compatibility expansion cannot weaken core determinism rules.
 
 Interfaces:
-1. The canonical registry surface for this closeout is `core/tools/tool_registry.yaml`, and it requires:
+1. The canonical registry surface for this closeout is `orket/runtime/config/assets/tools/tool_registry.yaml`, and it requires:
    1. `tool_name`
    2. `ring`
    3. `tool_contract_version`

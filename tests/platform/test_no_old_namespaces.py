@@ -1,7 +1,9 @@
 ﻿import re
 from pathlib import Path
 
-from project_dump import git_list_files
+import pytest
+
+from scripts.common.git_inventory import git_list_files
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -25,6 +27,8 @@ IGNORE_DIRS = {
     ".gemini"
 }
 
+@pytest.mark.contract
+# Layer: contract
 def test_no_old_namespaces():
     """Layer: contract. Namespace policy covers Git-visible sources, not ignored dependencies or build copies."""
     failures = []
@@ -54,6 +58,8 @@ def test_no_old_namespaces():
     assert not failures, "Old namespaces still present:\n" + "\n".join(failures)
 
 
+@pytest.mark.contract
+# Layer: contract
 def test_no_legacy_shim_imports_in_code():
     """Layer: contract. Legacy import checks use the same Git-owned inventory as repository exports."""
     repo_root = Path(__file__).resolve().parents[2]
@@ -87,4 +93,3 @@ def test_no_legacy_shim_imports_in_code():
             if token in text:
                 failures.append(f"{path}: contains legacy import token '{token}'")
     assert not failures, "Legacy shim imports still present:\n" + "\n".join(failures)
-

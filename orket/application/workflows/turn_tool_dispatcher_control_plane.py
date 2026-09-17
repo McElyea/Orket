@@ -7,6 +7,21 @@ from typing import Any
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
 
 
+async def prepare_dispatch_if_needed(
+    *, control_plane_enabled: bool, control_plane_service: TurnToolControlPlaneService | None,
+    control_plane_run_id: str | None, control_plane_attempt_id: str | None,
+    tool_name: str, tool_args: dict[str, Any], binding: dict[str, Any] | None, operation_id: str,
+) -> None:
+    if not control_plane_enabled:
+        return
+    if control_plane_service is None or control_plane_run_id is None or control_plane_attempt_id is None:
+        raise ValueError("governed tool dispatch requires admitted control-plane authority")
+    await control_plane_service.prepare_dispatch(
+        run_id=control_plane_run_id, attempt_id=control_plane_attempt_id, step_id=operation_id,
+        tool_name=tool_name, tool_args=tool_args, binding=binding, operation_id=operation_id,
+    )
+
+
 async def publish_preflight_failure_if_needed(
     *,
     control_plane_enabled: bool,

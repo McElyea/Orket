@@ -233,7 +233,7 @@
       ],
       "properties": {
         "object_type": { "const": "agent_model_use_receipt" },
-        "schema_version": { "const": "agent_model_use_receipt.v1" },
+        "schema_version": { "enum": ["agent_model_use_receipt.v1", "agent_model_use_receipt.v2"] },
         "identity": { "$ref": "#/$defs/identity" },
         "call_id": { "$ref": "#/$defs/nonEmptyToken" },
         "role": { "type": "string", "minLength": 1, "maxLength": 64 },
@@ -250,12 +250,26 @@
         "estimate_source": { "type": ["string", "null"], "maxLength": 256 },
         "charged_input_tokens": { "type": "integer", "minimum": 0 },
         "charged_output_tokens": { "type": "integer", "minimum": 0 },
-        "latency_ms": { "type": "integer", "minimum": 0 },
+        "latency_ms": { "type": ["integer", "null"], "minimum": 0 },
+        "latency_posture": { "enum": ["reported", "unavailable"] },
         "finish_reason": { "type": ["string", "null"], "maxLength": 128 },
         "truncated": { "type": "boolean" },
         "substitution_posture": { "enum": ["requested", "substituted", "degraded"] }
       },
       "allOf": [
+        {
+          "if": { "properties": { "schema_version": { "const": "agent_model_use_receipt.v1" } } },
+          "then": {
+            "properties": { "latency_ms": { "type": "integer", "minimum": 0 } },
+            "not": { "required": ["latency_posture"] }
+          },
+          "else": {
+            "required": ["latency_posture"],
+            "if": { "properties": { "latency_posture": { "const": "reported" } } },
+            "then": { "properties": { "latency_ms": { "type": "integer", "minimum": 0 } } },
+            "else": { "properties": { "latency_ms": { "type": "null" } } }
+          }
+        },
         {
           "if": { "properties": { "usage_posture": { "enum": ["measured", "estimated"] } } },
           "then": {

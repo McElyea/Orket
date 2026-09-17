@@ -14,7 +14,7 @@ def _run_runtime_command(argv: list[str]) -> int:
         load_env()
         run_cli = create_cli_runtime()
         return int(asyncio.run(run_cli(argv, prog="orket runtime")))
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, asyncio.CancelledError):
         return 130
     except Exception as exc:
         print(f"\n[CRITICAL ERROR] Orket CLI crashed: {exc}")

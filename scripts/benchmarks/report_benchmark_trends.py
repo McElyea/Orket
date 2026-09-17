@@ -7,12 +7,14 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from scripts.benchmarks.benchmark_latency import read_latency_summary
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     import sys
 
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from common.rerun_diff_ledger import write_payload_with_diff_ledger
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from scripts.benchmarks.benchmark_latency import read_latency_summary
+    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 
 def _parse_args() -> argparse.Namespace:
@@ -72,7 +74,7 @@ def build_trend_report(inputs: list[Path]) -> dict[str, Any]:
             "flow": scored.get("flow"),
             "overall_avg_score": _to_float(scored.get("overall_avg_score")),
             "determinism_rate": _to_float(scored.get("determinism_rate")),
-            "avg_latency_ms": _to_float(scored.get("avg_latency_ms")),
+            **read_latency_summary(scored),
             "avg_cost_usd": _to_float(scored.get("avg_cost_usd")),
         }
         row["delta_overall_avg_score"] = _delta(

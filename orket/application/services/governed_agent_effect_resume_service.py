@@ -5,12 +5,12 @@ from typing import Any
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.governed_agent_iteration_policy import agent_payload_digest
-from orket.application.services.governed_agent_ports import (
+from orket.application.services.governed_agent_request_builder import build_next_agent_iteration_request
+from orket.core.contracts import CheckpointAcceptanceRecord, CheckpointRecord
+from orket.core.contracts.governed_agent_ports import (
     GovernedAgentAuthorityGuard,
     GovernedAgentIterationRepository,
 )
-from orket.application.services.governed_agent_request_builder import build_next_agent_iteration_request
-from orket.core.contracts import CheckpointAcceptanceRecord, CheckpointRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     CheckpointAcceptanceOutcome,
@@ -127,7 +127,7 @@ class GovernedAgentEffectResumeService:
         if run.lifecycle_state is RunState.EXECUTING:
             return
         await authority_guard.ensure_active()
-        await self._execution.save_run_record(
+        run = await self._execution.save_run_record(
             record=run.model_copy(update={"lifecycle_state": RunState.EXECUTING})
         )
         await authority_guard.ensure_active()

@@ -15,13 +15,16 @@ from orket.adapters.storage.async_control_plane_record_repository import (
 )
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.adapters.storage.async_governed_agent_repository import AsyncGovernedAgentRepository
-from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
+from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGateRepository
+from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
+from orket.adapters.storage.governed_agent_replay_store import GovernedAgentReplayStore
 from orket.adapters.tools.governed_agent_file_effect_executor import GovernedAgentFileEffectExecutor
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.governed_agent_effect_service import GovernedAgentEffectService
 from orket.application.services.governed_agent_inspection_service import GovernedAgentInspectionService
-from orket.application.services.governed_agent_ports import GovernedAgentAuthorityStaleError
+from orket.application.services.tool_gate_service import ToolGate
 from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
+from orket.core.contracts.governed_agent_ports import GovernedAgentAuthorityStaleError
 from orket.core.domain import AttemptState, ResidualUncertaintyClassification, RunState
 from orket_extension_sdk import AgentEffectProposal, AgentIterationRequest, canonical_digest_sha256
 from orket_extension_sdk.agent_fixtures import prefixed_digest
@@ -65,6 +68,7 @@ async def test_competing_approval_resolutions_admit_only_one_real_write(tmp_path
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_observe_and_approved_write_follow_existing_effect_authorities(tmp_path: Path) -> None:
     request, service, execution, records = await _setup(tmp_path)
     await AsyncFileTools(tmp_path).write_file("inputs/tickets.json", {"ready": True})
@@ -111,10 +115,9 @@ async def test_observe_and_approved_write_follow_existing_effect_authorities(tmp
     assert repeated.effect_journal_ref == resolved.effect_journal_ref
     assert len(await records.list_effect_journal_entries(run_id=request.identity.run_id)) == 2
     inspector = GovernedAgentInspectionService(
-        execution_repository=execution,
+        replay_repository=GovernedAgentReplayStore(tmp_path / "agent-effects.sqlite3"),
         iteration_repository=AsyncGovernedAgentRepository(tmp_path / "agent-effects.sqlite3"),
         call_repository=AsyncGovernedAgentRepository(tmp_path / "agent-effects.sqlite3"),
-        truth_repository=records,
         record_repository=records,
         pending_gate_repository=AsyncPendingGateRepository(tmp_path / "agent-effects.sqlite3"),
     )
@@ -307,16 +310,17 @@ async def _setup(tmp_path: Path):
             attempt_id=request.identity.attempt_id,
             step_kind="governed_agent_iteration",
             namespace_scope="issue:issue-1",
-            input_ref="sha256:" + "d" * 64,
+            input_ref="sha256:" + canonical_digest_sha256(request.to_wire()),
             observed_result_classification="proposal_recorded",
             closure_classification="step_open",
         )
     )
     service = GovernedAgentEffectService(
+        transactions=SQLiteControlPlaneTransactions(db_path),
         execution_repository=execution,
         publication=ControlPlanePublicationService(repository=records),
         pending_gates=AsyncPendingGateRepository(db_path),
-        file_executor=GovernedAgentFileEffectExecutor(tmp_path),
+        file_executor=GovernedAgentFileEffectExecutor(tmp_path, tool_gate=ToolGate(None, tmp_path)),
     )
     return request, service, execution, records
 

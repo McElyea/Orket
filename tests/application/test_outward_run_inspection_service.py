@@ -13,6 +13,7 @@ from orket.core.domain.outward_run_events import LedgerEvent
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+# Layer: integration
 async def test_outward_run_inspection_filters_summary_and_is_read_only(tmp_path) -> None:
     """Layer: integration. Verifies event filtering and summary derivation do not mutate run state."""
     db_path = tmp_path / "phase3-inspection.sqlite3"
@@ -24,7 +25,7 @@ async def test_outward_run_inspection_filters_summary_and_is_read_only(tmp_path)
         run_id_factory=lambda: "generated",
         utc_now=lambda: "2026-04-25T12:00:00+00:00",
     ).submit({"run_id": "run-inspect", "task": {"description": "Inspect", "instruction": "Do work"}})
-    await run_store.update(replace(run, status="completed", current_turn=1, completed_at="2026-04-25T12:01:00+00:00"))
+    await run_store.update(replace(run, current_turn=1))
     await event_store.append(
         LedgerEvent(
             event_id="run:run-inspect:tool",
@@ -47,7 +48,9 @@ async def test_outward_run_inspection_filters_summary_and_is_read_only(tmp_path)
     assert [event["event_type"] for event in filtered["events"]] == ["tool_invoked"]
     assert summary["event_count"] == 2
     assert summary["event_counts"] == {"run_submitted": 1, "tool_invoked": 1}
-    assert summary["terminal"] is True
+    assert summary["terminal"] is False
+    assert summary["authority_state"] == "shared"
+    assert summary["final_truth"] is None
     assert len(after_events) == len(before_events)
     assert after_run is not None
-    assert after_run.status == "completed"
+    assert after_run.status == "queued"

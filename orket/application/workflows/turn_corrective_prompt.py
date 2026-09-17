@@ -119,7 +119,7 @@ class CorrectivePromptBuilder:
                         )
         if "guard_rejection_payload_contract_not_met" in reason_set:
             lines.append(
-                "- If update_issue_status.status=blocked, include JSON payload keys: "
+                "- If update_issue_status.status=blocked, set that call's args.guard_review with JSON keys: "
                 "rationale (non-empty), violations (non-empty list), remediation_actions (non-empty list)."
             )
         if "hallucination_scope_contract_not_met" in reason_set:

@@ -14,7 +14,6 @@ WORKFLOW_TERMINAL_STATUSES = {
     CardStatus.GUARD_REJECTED,
     CardStatus.GUARD_APPROVED,
 }
-SUCCESS_STATUSES = {CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED}
 
 
 def build_legacy_transcript(transcript: list[Any]) -> list[dict[str, Any]]:
@@ -27,6 +26,8 @@ def build_legacy_transcript(transcript: list[Any]) -> list[dict[str, Any]]:
 def build_base_run_artifacts(*, callbacks: EpicRunCallbacks, context: EpicRunContext) -> dict[str, Any]:
     artifacts = dict(callbacks.run_artifact_refs(context.setup.run_id))
     artifacts.update(dict(context.run_contract_artifacts))
+    if context.setup.admission is not None:
+        artifacts["epic_run_admission"] = context.setup.admission.claim_ref()
     artifacts["deterministic_mode_contract"] = dict(context.deterministic_mode_contract)
     artifacts["route_decision_artifact"] = dict(context.route_decision_artifact)
     artifacts["packet1_facts"] = callbacks.build_packet1_facts(intended_model=context.setup.env.model)
@@ -58,3 +59,13 @@ async def await_infrastructure(operation: str, awaitable: Any) -> Any:
         return await awaitable
     except (RuntimeError, OSError, TimeoutError) as exc:
         raise OrketInfrastructureError(f"{operation}: {exc}") from exc
+
+
+def build_execution_artifacts(*, callbacks: EpicRunCallbacks, context: EpicRunContext) -> dict[str, Any]:
+    artifacts = build_base_run_artifacts(callbacks=callbacks, context=context)
+    artifacts["control_plane_workload_record"] = context.setup.control_plane_workload_record.model_dump(mode="json")
+    set_control_plane_artifacts(
+        artifacts, control_plane_run=context.control_plane_run, control_plane_attempt=context.control_plane_attempt,
+        control_plane_step=context.control_plane_start_step, control_plane_checkpoint=context.control_plane_checkpoint,
+        control_plane_checkpoint_acceptance=context.control_plane_checkpoint_acceptance)
+    return artifacts

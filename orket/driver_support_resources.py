@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from orket.core.policies.card_acceptance_admission import ModelAcceptanceDefinitionRejected, validate_model_card_payload
 from orket.logging import log_event
 
 
@@ -41,9 +42,15 @@ class DriverResourceMixin:
     async def _execute_structural_change(self, plan: dict[str, Any]) -> str:
         action = plan.get("action")
         new_asset = plan.get("new_asset", {})
+        workspace_path = self._operator_workspace_root()
+        try:
+            validate_model_card_payload(new_asset)
+        except ModelAcceptanceDefinitionRejected as exc:
+            log_event("driver_process_failed", {"error": str(exc), "action": action,
+                       "failure_kind": "acceptance_admission"}, workspace_path, role="DRIVER")
+            return f"Error: {exc}. Model proposals cannot declare completion acceptance; no assets were written."
         suggested_dept = plan.get("suggested_department", "core")
         dept_root = self.model_root / suggested_dept
-        workspace_path = Path("workspace/default")
 
         if not dept_root.exists():
             dept_root = self.model_root / "core"

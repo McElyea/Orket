@@ -104,8 +104,8 @@ class SandboxControlPlaneExecutionService:
             ),
             start_timestamp=creation_timestamp,
         )
-        await self.repository.save_run_record(record=run)
-        await self.repository.save_attempt_record(record=attempt)
+        run = await self.repository.save_run_record(record=run)
+        attempt = await self.repository.save_attempt_record(record=attempt)
         return run, attempt
 
     @staticmethod
@@ -143,8 +143,8 @@ class SandboxControlPlaneExecutionService:
         validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.WAITING)
         updated_attempt = attempt.model_copy(update={"attempt_state": AttemptState.WAITING})
         updated_run = run.model_copy(update={"lifecycle_state": RunState.WAITING_ON_OBSERVATION})
-        await self.repository.save_attempt_record(record=updated_attempt)
-        await self.repository.save_run_record(record=updated_run)
+        updated_attempt = await self.repository.save_attempt_record(record=updated_attempt)
+        updated_run = await self.repository.save_run_record(record=updated_run)
         return updated_run, updated_attempt
 
     async def resume_waiting_execution(
@@ -159,8 +159,8 @@ class SandboxControlPlaneExecutionService:
         validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.EXECUTING)
         updated_attempt = attempt.model_copy(update={"attempt_state": AttemptState.EXECUTING})
         updated_run = run.model_copy(update={"lifecycle_state": RunState.EXECUTING})
-        await self.repository.save_attempt_record(record=updated_attempt)
-        await self.repository.save_run_record(record=updated_run)
+        updated_attempt = await self.repository.save_attempt_record(record=updated_attempt)
+        updated_run = await self.repository.save_run_record(record=updated_run)
         return updated_run, updated_attempt
 
     async def mark_waiting_on_resource(
@@ -184,8 +184,8 @@ class SandboxControlPlaneExecutionService:
             }
         )
         updated_run = run.model_copy(update={"lifecycle_state": RunState.WAITING_ON_RESOURCE})
-        await self.repository.save_attempt_record(record=updated_attempt)
-        await self.repository.save_run_record(record=updated_run)
+        updated_attempt = await self.repository.save_attempt_record(record=updated_attempt)
+        updated_run = await self.repository.save_run_record(record=updated_run)
         return updated_run, updated_attempt
 
     async def start_new_attempt_after_reacquire(
@@ -228,7 +228,7 @@ class SandboxControlPlaneExecutionService:
                 checkpoint_acceptance=checkpoint_acceptance,
             )
             last_attempt = last_attempt.model_copy(update={"recovery_decision_id": decision.decision_id})
-            await self.repository.save_attempt_record(record=last_attempt)
+            last_attempt = await self.repository.save_attempt_record(record=last_attempt)
         next_attempt = AttemptRecord(
             attempt_id=next_attempt_id,
             run_id=run_id,
@@ -242,8 +242,8 @@ class SandboxControlPlaneExecutionService:
             start_timestamp=observed_at,
         )
         updated_run = run.model_copy(update={"lifecycle_state": RunState.EXECUTING, "current_attempt_id": next_attempt_id})
-        await self.repository.save_attempt_record(record=next_attempt)
-        await self.repository.save_run_record(record=updated_run)
+        next_attempt = await self.repository.save_attempt_record(record=next_attempt)
+        updated_run = await self.repository.save_run_record(record=updated_run)
         return updated_run, next_attempt, decision
 
     async def finalize_terminal_execution(
@@ -290,7 +290,7 @@ class SandboxControlPlaneExecutionService:
                     "failure_classification": failure_classification,
                 }
             )
-            await self.repository.save_attempt_record(record=updated_attempt)
+            updated_attempt = await self.repository.save_attempt_record(record=updated_attempt)
             if (
                 self.publication is not None
                 and side_effect_boundary_class is not None
@@ -313,7 +313,7 @@ class SandboxControlPlaneExecutionService:
                         "failure_classification": decision.failure_classification,
                     }
                 )
-                await self.repository.save_attempt_record(record=updated_attempt)
+                updated_attempt = await self.repository.save_attempt_record(record=updated_attempt)
 
         updated_run = run.model_copy(
             update={
@@ -321,7 +321,7 @@ class SandboxControlPlaneExecutionService:
                 "final_truth_record_id": final_truth_record_id,
             }
         )
-        await self.repository.save_run_record(record=updated_run)
+        updated_run = await self.repository.save_run_record(record=updated_run)
         return updated_run, updated_attempt, decision
 
     @staticmethod

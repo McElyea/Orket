@@ -29,6 +29,7 @@ class TurnPreparationInput:
     runtime_result: Any | None
     resume_mode: bool
     model_override: str | None
+    approval_turn_index: int | None = None
 
 
 @dataclass
@@ -178,7 +179,7 @@ class OrchestratorTurnPreparationService:
         seat_name, cards_runtime, seat_obj, runtime_builder_seat, runtime_reviewer_seat = dispatch_target
         is_guard_turn = is_review_turn and ("integrity_guard" in list(seat_obj.roles))
         turn_status = self.loop_policy_node.turn_status_for_issue(is_review_turn)
-        turn_index = len(self.transcript) + 1
+        turn_index = data.approval_turn_index if data.approval_turn_index is not None else len(self.transcript) + 1
         if is_guard_turn:
             turn_status = CardStatus.AWAITING_GUARD_REVIEW
         current_issue_status = getattr(data.issue, "status", None)

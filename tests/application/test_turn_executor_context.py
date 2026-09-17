@@ -4,9 +4,9 @@ from types import SimpleNamespace
 
 import pytest
 
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
 
@@ -66,8 +66,8 @@ async def test_prepare_messages_includes_dependency_context_block(tmp_path):
     assert "- dependency_count: 2" in rendered
     assert "- depends_on: REQ-1, ARC-1" in rendered
 
-
 @pytest.mark.asyncio
+# Layer: integration
 async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
     executor = TurnExecutor(
         StateMachine(),
@@ -132,7 +132,7 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
     )
 
     assert result.success is True
-    out_dir = Path(tmp_path) / "observability" / "sess-1" / "ISSUE-1" / "000_developer"
+    out_dir = Path(tmp_path) / "observability" / "sess-1" / "issue-1" / "000_developer"
     layers = json.loads((out_dir / "prompt_layers.json").read_text(encoding="utf-8"))
     checkpoint = json.loads((out_dir / "checkpoint.json").read_text(encoding="utf-8"))
 
@@ -140,8 +140,8 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
     assert checkpoint["prompt_metadata"]["prompt_id"] == "role.developer+dialect.generic"
     assert checkpoint["prompt_metadata"]["resolver_policy"] == "resolver_v1"
 
-
 @pytest.mark.asyncio
+# Layer: integration
 async def test_execute_turn_reprompt_overwrites_response_artifacts_with_accepted_response(tmp_path):
     executor = TurnExecutor(
         StateMachine(),
@@ -205,15 +205,15 @@ async def test_execute_turn_reprompt_overwrites_response_artifacts_with_accepted
     )
 
     assert result.success is True
-    out_dir = Path(tmp_path) / "observability" / "sess-reprompt" / "ISSUE-1" / "001_developer"
+    out_dir = Path(tmp_path) / "observability" / "sess-reprompt" / "issue-1" / "001_developer"
     assert "agent_output/main.py" in (out_dir / "model_response.txt").read_text(encoding="utf-8")
     response_raw = json.loads((out_dir / "model_response_raw.json").read_text(encoding="utf-8"))
     parsed_calls = json.loads((out_dir / "parsed_tool_calls.json").read_text(encoding="utf-8"))
     assert response_raw["response_id"] == "second"
     assert parsed_calls[0]["args"]["path"] == "agent_output/main.py"
 
-
 @pytest.mark.asyncio
+# Layer: integration
 async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_path):
     executor = TurnExecutor(
         StateMachine(),
@@ -270,7 +270,7 @@ async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_pat
     )
 
     assert result.success is True
-    out_dir = Path(tmp_path) / "observability" / "sess-2" / "ISSUE-1" / "001_developer"
+    out_dir = Path(tmp_path) / "observability" / "sess-2" / "issue-1" / "001_developer"
     budget = json.loads((out_dir / "prompt_budget_usage.json").read_text(encoding="utf-8"))
     structure = json.loads((out_dir / "prompt_structure.json").read_text(encoding="utf-8"))
     assert budget["ok"] is True
@@ -437,4 +437,3 @@ async def test_execute_turn_rejects_status_context_mismatch(tmp_path):
     assert result.success is False
     assert "status/context mismatch" in str(result.error or "")
     assert model.calls == 0
-

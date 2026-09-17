@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -188,7 +189,7 @@ def main() -> int:
         summary_file = out_dir / summary_template.format(context=context)
         summary_paths.append(str(summary_file).replace("\\", "/"))
         cmd = [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             str(args.model_id),
@@ -231,7 +232,7 @@ def main() -> int:
 
     context_out = out_dir / str(args.context_ceiling_out)
     finder_cmd = [
-        "python",
+        sys.executable,
         "scripts/context/context_ceiling_finder.py",
         "--contexts",
         ",".join(str(value) for value in contexts),

@@ -348,7 +348,7 @@ def _summarize_taxonomy(payload: dict[str, Any]) -> dict[str, Any]:
 def build_baseline() -> dict[str, Any]:
     dependency = build_dependency_snapshot()
     dependency.pop("generated_at", None)
-    dependency.pop("modules", None)
+    dependency["observed"] = {k: v for k, v in dependency["observed"].items() if k not in {"modules", "edges", "layers"}}
     taxonomy = _summarize_taxonomy(
         evaluate_test_taxonomy(root=PROJECT_ROOT / "tests")
     )
@@ -366,7 +366,7 @@ def build_baseline() -> dict[str, Any]:
     ruff = collect_ruff()
     sizes = collect_size_inventory()
     collection_ok = (
-        exceptions["valid"]
+        dependency["collection_ok"] and exceptions["valid"]
         and all(row["result"] == "success" for row in commands)
         and api_factory["result"] == "success"
         and ruff["executed"]

@@ -12,7 +12,6 @@ from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.adapters.tools.registry import BuiltInConnectorRegistry
 from orket.application.services.outward_model_observability import (
     OutwardModelObservabilityError,
-    record_proposal_extraction_acceptance,
     write_model_evidence,
 )
 from orket.application.services.outward_run_execution_plan import current_step_index, previous_tool_results
@@ -75,6 +74,7 @@ class OutwardModelToolCallService:
         run: OutwardRunRecord,
         expected_tool: str,
         governed_tools: set[str],
+        evidence_scope: str | None = None,
     ) -> OutwardModelToolCallResult:
         clean_expected_tool = str(expected_tool or "").strip()
         clean_governed_tools = {str(tool).strip() for tool in governed_tools if str(tool).strip()}
@@ -86,8 +86,6 @@ class OutwardModelToolCallService:
             raise OutwardModelToolCallError(
                 f"acceptance_contract tool is not in governed tool family: {clean_expected_tool}"
             )
-        if self.connector_registry.get(clean_expected_tool) is None:
-            raise OutwardModelToolCallError(f"acceptance_contract tool is not registered: {clean_expected_tool}")
         connector = self.connector_registry.get(clean_expected_tool)
         if connector is None:
             raise OutwardModelToolCallError(f"acceptance_contract tool is not registered: {clean_expected_tool}")
@@ -102,7 +100,7 @@ class OutwardModelToolCallService:
             "local_prompt_task_class": "tool_call",
             "required_action_tools": sorted(clean_governed_tools),
             "native_tools": _native_tools(clean_governed_tools, self.connector_registry),
-            "native_tool_choice": "required",
+            "native_tool_choice": "required", "tool_transport_policy": "profile",
             "outward_run_id": run.run_id,
             "outward_namespace": run.namespace,
             "turn_number": int(run.current_turn or 1),
@@ -139,7 +137,7 @@ class OutwardModelToolCallService:
                     tool_call=tool_call,
                     result=result,
                     error_type=error_type,
-                    pii_fields=connector.pii_fields,
+                    pii_fields=connector.pii_fields, evidence_scope=evidence_scope,
                 )
                 evidence_payload = evidence.model_invocation
         finally:
@@ -152,24 +150,6 @@ class OutwardModelToolCallService:
             response=response,
         )
 
-    async def record_proposal_extraction(
-        self,
-        *,
-        run: OutwardRunRecord,
-        model_result: OutwardModelToolCallResult,
-        proposal_id: str | None,
-        pii_fields: tuple[str, ...],
-        acceptance_result: str = "accepted_for_proposal",
-    ) -> dict[str, Any]:
-        return await record_proposal_extraction_acceptance(
-            workspace_root=self.workspace_root,
-            run=run,
-            response=model_result.response,
-            tool_call=model_result.tool_call,
-            pii_fields=pii_fields,
-            proposal_id=proposal_id,
-            acceptance_result=acceptance_result,
-        )
 
 
 def _prompt_messages(

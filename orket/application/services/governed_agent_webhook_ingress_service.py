@@ -11,7 +11,7 @@ from typing import Any
 from orket.application.services.governed_agent_wake_ingress_service import (
     GovernedAgentWakeSubmission,
 )
-from orket.application.services.governed_agent_webhook_records import (
+from orket.core.contracts.governed_agent_webhook_records import (
     GovernedAgentWebhookDeliveryRecord,
     GovernedAgentWebhookDeliveryRequest,
     GovernedAgentWebhookDeliveryResult,

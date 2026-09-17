@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+from orket.runtime.config.contract_assets import RUN_SUMMARY_SCHEMA_PATH
 from orket.runtime.registry.tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
@@ -137,9 +138,8 @@ def test_run_summary_schema_contract_is_canonical() -> None:
         tool_names=["workspace.read"],
         artifacts={"run_identity": _run_identity(run_id="sess-summary-contract")},
     )
-
     validate_run_summary_payload(payload)
-    schema = _read_json(Path("core/artifacts/run_summary_schema.json"))
+    schema = _read_json(RUN_SUMMARY_SCHEMA_PATH)
     assert schema["required"] == [
         "run_id",
         "status",

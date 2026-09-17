@@ -217,11 +217,9 @@ _APPROVED_INDEX = {name: index for index, name in enumerate(
         "commitment_recorded",
         "turn_completed",
         "run_completed",
-        "proposal_denied",
-        "proposal_policy_rejected",
     ],
     start=1,
-)}
+)} | {"proposal_denied": 7, "proposal_policy_rejected": 5}  # Rejection precedes completion in synthetic valid histories.
 
 
 def _write_ledger(root: Path, events: list[dict[str, Any]]) -> None:

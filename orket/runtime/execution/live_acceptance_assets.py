@@ -4,6 +4,13 @@ import json
 from pathlib import Path
 from typing import Any
 
+from orket.runtime.execution.live_acceptance_contracts import (
+    SUM_DESIGN_NOTE,
+    SUM_REQUIREMENT,
+    core_acceptance_definitions,
+    core_acceptance_runtime_contract,
+)
+
 _DIALECTS = ("qwen", "llama3", "deepseek-r1", "phi", "generic")
 
 
@@ -83,7 +90,7 @@ def _role_configs(*, source_attribution_receipt_task: bool) -> dict[str, dict[st
         "requirements_analyst": {
             "tools": ["write_file", "update_issue_status"],
             "description": (
-                "Produce concrete requirements for a tiny CLI summation program. "
+                f"Record this exact requirement text without extra whitespace: {SUM_REQUIREMENT} "
                 "You must write agent_output/requirements.txt and then set status to code_review. "
                 "Do not call comment or context-only tools."
             ),
@@ -94,6 +101,7 @@ def _role_configs(*, source_attribution_receipt_task: bool) -> dict[str, dict[st
                 "Design a one-class implementation based on requirements. "
                 "You must write architecture decision JSON to agent_output/design.txt with recommendation, "
                 "confidence, evidence, and frontend_framework when required, then set status to code_review. "
+                f"Use recommendation monolith, frontend_framework vue, and this exact notes value: {SUM_DESIGN_NOTE} "
                 "Do not call comment or context-only tools."
             ),
         },
@@ -269,6 +277,13 @@ def _epic_payload(
     )
 
     params: dict[str, Any] = {"model_overrides": model_overrides}
+    acceptance = core_acceptance_definitions(source_attribution_json=_source_attribution_receipt_payload())
+    for issue in issues:
+        definition = acceptance[issue["id"]]
+        issue["params"] = {
+            "completion_acceptance": definition,
+            "cards_runtime": core_acceptance_runtime_contract(issue["id"], definition),
+        }
     if truthful_runtime:
         params["truthful_runtime"] = dict(truthful_runtime)
 

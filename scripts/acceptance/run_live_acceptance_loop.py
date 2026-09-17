@@ -487,6 +487,7 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         ),
         "runtime_event_envelope_count": _runtime_event_presence_count(events),
         "runtime_event_schema_v1_count": _runtime_event_schema_version_count(events, "v1"),
+        "runtime_event_schema_v2_count": _runtime_event_schema_version_count(events, "v2"),
     }
 
     chain_complete = _chain_complete(db_summary)

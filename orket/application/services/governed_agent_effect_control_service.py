@@ -27,16 +27,16 @@ from orket.application.services.governed_agent_effect_service import (
     GovernedAgentEffectService,
 )
 from orket.application.services.governed_agent_iteration_policy import agent_payload_digest
-from orket.application.services.governed_agent_ports import GovernedAgentIterationRepository
 from orket.application.services.governed_agent_wake_ingress_service import (
     GovernedAgentWakeSubmission,
     notify_wake_ready,
 )
-from orket.application.services.governed_agent_wake_records import (
+from orket.core.contracts import EffectJournalEntryRecord
+from orket.core.contracts.governed_agent_ports import GovernedAgentIterationRepository
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeEnqueueResult,
     GovernedAgentWakeRepository,
 )
-from orket.core.contracts import EffectJournalEntryRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import CheckpointReobservationClass, ResidualUncertaintyClassification, RunState
 from orket_extension_sdk import AgentEffectReceipt, AgentIterationRequest, AgentIterationResult

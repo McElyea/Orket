@@ -9,6 +9,7 @@ def test_run_detail_view_uses_verified_completion_vocabulary() -> None:
     view = build_run_detail_view(
         session_id="run-verified",
         status="done",
+        completion={"completion_accepted": True, "completion_rejection": None},
         summary={
             "status": "done",
             "execution_profile": "builder_guard_app_v1",
@@ -32,7 +33,7 @@ def test_run_detail_view_uses_verified_completion_vocabulary() -> None:
     assert view["lifecycle_category"] == "artifact_run_verified"
     assert view["primary_status"] == "completed"
     assert view["verification"]["status"] == "verified"
-    assert view["summary"] == "Completed with verified evidence."
+    assert view["summary"] == "Completed with retained evidence for the declared acceptance criteria."
     assert "run.lifecycle.artifact_run_verified" in view["reason_codes"]
 
 
@@ -41,6 +42,7 @@ def test_run_detail_view_distinguishes_prebuild_blocked_from_artifact_failure() 
     view = build_run_detail_view(
         session_id="run-prebuild-blocked",
         status="failed",
+        completion={"completion_accepted": False, "completion_rejection": "E_CARD_RUN_NOT_COMPLETED"},
         summary={
             "status": "failed",
             "execution_profile": "odr_prebuild_builder_guard_v1",
@@ -82,6 +84,7 @@ def test_card_list_item_uses_terminal_failure_bucket_when_last_run_failed() -> N
             "status": "blocked",
         },
         run_view=run_view,
+        completion={"completion_accepted": False, "completion_rejection": "card_status:blocked"},
     )
 
     assert view["filter_bucket"] == "terminal_failure"

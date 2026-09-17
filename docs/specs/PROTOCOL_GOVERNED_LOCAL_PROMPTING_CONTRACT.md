@@ -1,6 +1,6 @@
 # Protocol-Governed Local Provider Compatibility Contract (v1.2)
 
-Last updated: 2026-09-10
+Last updated: 2026-09-12
 Status: Active (contract baseline)
 Owner: Orket Core
 
@@ -119,6 +119,12 @@ Requirements:
 
 ### LP-04: Stop Sequence Contract (MUST)
 
+Explicit host generation options use `docs/specs/MODEL_GENERATION_OPTIONS.md`.
+Requested stops preserve exact characters, precede profile stops, and deduplicate
+only identical strings. Explicit output limits narrow a resolved profile and
+remain present on an already admitted unresolved-profile path. This does not
+weaken strict-task/enforce profile admission.
+
 Each profile MUST define stop behavior per task class.
 
 Requirements:
@@ -139,6 +145,31 @@ For `strict_json` and `tool_call` task classes, prompt assembly MUST include:
 5. provider-enforced single-object JSON response modes are allowed and preferred when the active runtime contract uses one canonical `{"content":"","tool_calls":[...]}` envelope for `tool_call` turns; they MUST NOT be required only for older compatibility paths that still admit repeated top-level tool-call objects in one response.
 6. For `tool_call_mode=native`, the adapter MUST declare only the native tool names and bounded path surfaces admitted for that turn.
 7. If explicit turn-level required read or write paths are absent, bounded native declared-path surfaces MAY fall back to the active artifact contract read or write paths and the verification-scope active or provided context, but MUST NOT widen beyond those sources.
+8. Application callers may explicitly set internal `tool_transport_policy=profile`. The adapter then uses the already resolved profile's `tool_call_mode`: `native` retains the declared native schemas/choice; `json_wrapper` sends the prompt's tool schema through the structured JSON path without native request fields. Unknown policy/mode fails before generation. The outward planner uses this policy. Calls without it retain explicit native-request semantics, including refusal by providers that do not admit native tools; this is not a provider fallback or new native-tool admission.
+
+The OpenAI-compatible completion adapter accepts the explicit environment override
+`ORKET_LLM_OPENAI_RESPONSE_FORMAT=json_object`, alongside the existing `text` and
+`json_schema` tokens. For llama.cpp, it sends
+`response_format={"type":"json_object","schema":{"type":"object"}}`;
+other OpenAI-compatible providers receive `{"type":"json_object"}`. The
+explicit object schema is a documented llama.cpp request form, and the observed
+`b10809-5266f24da` host enforces it where bare JSON-object mode returns fenced
+text. Provider/model selection, tool transport and output validation are unchanged.
+This constrains JSON syntax; it does not validate the tool envelope or authorize
+an action. An unset override retains the selected profile behavior. See
+[llama.cpp's chat completion parameters](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md#post-v1chatcompletions-openai-compatible-chat-completions-api).
+Actual conformance still requires observing the selected server/model response.
+
+Compact card prompts preserve project context, prompt patches and declared
+acceptance as separate bounded sections. Their bodies, including paragraphs,
+must occur once; a section must not absorb and repeat the following sections.
+The application resolves the legacy verifier-enable setting and supplies
+`runtime_verifier_enabled` to prompt composition. Both compact and uncompressed
+prompts omit legacy verifier commands when disabled, and default review context
+does not require that disabled verifier's support artifact. Explicit caller read
+contracts remain honored. Explicit verifier commands
+replace the inferred no-argument app command. These rendering rules never disable
+declared card acceptance or turn a verifier-support result into completion authority.
 
 ### LP-06: Assistant Prefill Policy (SHOULD; MUST when configured)
 

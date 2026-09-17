@@ -7,7 +7,7 @@ from typing import Any, Literal, Protocol, cast
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError, ValidationError  # type: ignore[attr-defined]
 
-from orket.application.services.governed_agent_ports import (
+from orket.core.contracts.governed_agent_ports import (
     GovernedAgentAuthorityGuard,
     GovernedAgentAuthorityStaleError,
     GovernedAgentBrokerCallRepository,
@@ -54,7 +54,7 @@ class GovernedAgentModelObservation:
     input_tokens: int | None
     output_tokens: int | None
     estimate_source: str | None
-    latency_ms: int
+    latency_ms: int | None
     finish_reason: str | None
     truncated: bool = False
     status: ModelObservationStatus = "returned"
@@ -310,8 +310,7 @@ def _model_result(
         resolved_profile_ref=profile.resolved_profile_ref,
         provider=profile.provider,
         provider_version=profile.provider_version,
-        model=profile.model,
-        model_digest=profile.model_digest,
+        model=profile.model, model_digest=profile.model_digest,
         status=status,
         usage_posture=observation.usage_posture,
         input_tokens=observation.input_tokens,
@@ -320,6 +319,7 @@ def _model_result(
         charged_input_tokens=charged_input,
         charged_output_tokens=charged_output,
         latency_ms=observation.latency_ms,
+        latency_posture="reported" if observation.latency_ms is not None else "unavailable",
         finish_reason=observation.finish_reason,
         truncated=observation.truncated,
         substitution_posture=profile.substitution_posture,

@@ -5,13 +5,22 @@ from __future__ import annotations
 import sys
 import types
 import warnings
-from importlib import import_module
 from typing import Any
 
+from orket.core.domain import (
+    bug_fix_phase,
+    critical_path,
+    failure_reporter,
+    fixture_verifier,
+    reconciler,
+    sandbox,
+    sandbox_verifier,
+    verification,
+    verification_runner,
+)
 from orket.core.domain.bug_fix_phase import (
     BugDiscoveryMetrics,
     BugFixPhase,
-    BugFixPhaseManager,
     BugFixPhaseStatus,
 )
 from orket.core.domain.critical_path import CriticalPathEngine
@@ -30,20 +39,19 @@ from orket.schema import WaitReason
 warnings.warn("`orket.domain` is deprecated; import from `orket.core.domain` instead.", DeprecationWarning, stacklevel=2)
 
 _MODULE_ALIASES = {
-    "bug_fix_phase": "orket.core.domain.bug_fix_phase",
-    "critical_path": "orket.core.domain.critical_path",
-    "failure_reporter": "orket.core.domain.failure_reporter",
-    "fixture_verifier": "orket.core.domain.fixture_verifier",
-    "reconciler": "orket.core.domain.reconciler",
-    "sandbox": "orket.core.domain.sandbox",
-    "sandbox_verifier": "orket.core.domain.sandbox_verifier",
-    "verification": "orket.core.domain.verification",
-    "verification_runner": "orket.core.domain.verification_runner",
+    "bug_fix_phase": bug_fix_phase,
+    "critical_path": critical_path,
+    "failure_reporter": failure_reporter,
+    "fixture_verifier": fixture_verifier,
+    "reconciler": reconciler,
+    "sandbox": sandbox,
+    "sandbox_verifier": sandbox_verifier,
+    "verification": verification,
+    "verification_runner": verification_runner,
 }
 
 
-def _register_alias(module_name: str, target: str) -> None:
-    module = import_module(target)
+def _register_alias(module_name: str, module: types.ModuleType) -> None:
     sys.modules.setdefault(f"{__name__}.{module_name}", module)
     setattr(sys.modules[__name__], module_name, module)
 
@@ -70,7 +78,6 @@ __all__ = [
     "AGENT_OUTPUT_DIR",
     "BugDiscoveryMetrics",
     "BugFixPhase",
-    "BugFixPhaseManager",
     "BugFixPhaseStatus",
     "CardRecord",
     "CriticalPathEngine",

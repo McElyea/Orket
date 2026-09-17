@@ -6,24 +6,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+if str(Path(__file__).resolve().parents[2]) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from orket.runtime.runtime_invariant_registry import runtime_invariant_registry_snapshot
-
-try:
-    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
-except ModuleNotFoundError:  # pragma: no cover - script execution fallback
-    import importlib.util
-
-    helper_path = Path(__file__).resolve().parents[1] / "common" / "rerun_diff_ledger.py"
-    spec = importlib.util.spec_from_file_location("rerun_diff_ledger", helper_path)
-    if spec is None or spec.loader is None:  # pragma: no cover - defensive fallback
-        raise RuntimeError(f"E_DIFF_LEDGER_HELPER_LOAD_FAILED:{helper_path}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    write_payload_with_diff_ledger = module.write_payload_with_diff_ledger
+from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -31,7 +18,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--doc",
         default="",
-        help="Optional invariant authority doc path. Defaults to docs/specs/RUNTIME_INVARIANTS.md.",
+        help="Optional invariant authority doc path. Defaults to the shipped runtime invariant contract.",
     )
     parser.add_argument(
         "--out",

@@ -14,11 +14,11 @@ from orket.adapters.storage.async_control_plane_execution_repository import (
 from orket.adapters.storage.async_governed_agent_repository import (
     AsyncGovernedAgentRepository,
 )
-from orket.application.services.governed_agent_ports import (
+from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
+from orket.core.contracts.governed_agent_ports import (
     GovernedAgentInvocationBinding,
     GovernedAgentInvocationOutcome,
 )
-from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
 from orket.core.domain import AttemptState, RunState
 from orket.core.domain.governed_agent_continuation import (
     GovernedAgentContinuationInputs,
@@ -58,8 +58,12 @@ async def _save_parent_authority(
     binding: GovernedAgentInvocationBinding,
 ) -> AsyncControlPlaneExecutionRepository:
     repository = AsyncControlPlaneExecutionRepository(db_path)
+    current_run = await repository.get_run_record(run_id=binding.run_id)
+    current_attempt = await repository.get_attempt_record(attempt_id=binding.attempt_id)
+    current_step = await repository.get_step_record(step_id=binding.step_id)
     await repository.save_run_record(
         record=RunRecord(
+            state_revision=current_run.state_revision if current_run else None,
             run_id=binding.run_id,
             workload_id="governed-agent-loop",
             workload_version="governed_agent_loop.v1",
@@ -75,6 +79,7 @@ async def _save_parent_authority(
     )
     await repository.save_attempt_record(
         record=AttemptRecord(
+            state_revision=current_attempt.state_revision if current_attempt else None,
             attempt_id=binding.attempt_id,
             run_id=binding.run_id,
             attempt_ordinal=1,
@@ -85,6 +90,7 @@ async def _save_parent_authority(
     )
     await repository.save_step_record(
         record=StepRecord(
+            state_revision=current_step.state_revision if current_step else None,
             step_id=binding.step_id,
             attempt_id=binding.attempt_id,
             step_kind="governed_agent_iteration",

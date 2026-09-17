@@ -9,6 +9,7 @@ from orket.adapters.llm.openai_compat_runtime import (
     extract_openai_tool_calls,
     extract_openai_usage,
 )
+from orket.core.contracts.model_timing import nanoseconds_to_ms
 
 
 class ProviderExtractor(Protocol):
@@ -18,7 +19,7 @@ class ProviderExtractor(Protocol):
 
     def extract_usage(self, payload: Any) -> tuple[int | None, int | None, int | None]: ...
 
-    def extract_timings(self, payload: Any, latency_ms: int) -> tuple[float, float, float]: ...
+    def extract_timings(self, payload: Any, latency_ms: int) -> tuple[float | None, float | None, float | None]: ...
 
 
 class OpenAIExtractor:
@@ -31,8 +32,8 @@ class OpenAIExtractor:
     def extract_usage(self, payload: Any) -> tuple[int | None, int | None, int | None]:
         return extract_openai_usage(dict(payload)) if isinstance(payload, Mapping) else (None, None, None)
 
-    def extract_timings(self, payload: Any, latency_ms: int) -> tuple[float, float, float]:
-        return extract_openai_timings(dict(payload), latency_ms) if isinstance(payload, Mapping) else (0.0, float(latency_ms), float(latency_ms))
+    def extract_timings(self, payload: Any, latency_ms: int) -> tuple[float | None, float | None, float | None]:
+        return extract_openai_timings(dict(payload), latency_ms) if isinstance(payload, Mapping) else (None, None, None)
 
 
 class OllamaExtractor:
@@ -97,26 +98,11 @@ class OllamaExtractor:
         total = prompt + completion if isinstance(prompt, int) and isinstance(completion, int) else None
         return prompt, completion, total
 
-    def extract_timings(self, payload: Any, latency_ms: int) -> tuple[float, float, float]:
-        prompt_ms = _ns_to_ms(_get_value(payload, "prompt_eval_duration"))
-        predicted_ms = _ns_to_ms(_get_value(payload, "eval_duration"))
-        total_ms = _ns_to_ms(_get_value(payload, "total_duration"))
-        if total_ms is None:
-            total_ms = float(latency_ms)
-        if prompt_ms is None and predicted_ms is None:
-            prompt_ms = 0.0
-            predicted_ms = float(total_ms)
-        elif prompt_ms is None:
-            prompt_ms = max(0.0, float(total_ms) - float(predicted_ms or 0.0))
-        elif predicted_ms is None:
-            predicted_ms = max(0.0, float(total_ms) - float(prompt_ms or 0.0))
-        return float(prompt_ms), float(predicted_ms), float(total_ms)
-
-
-def _ns_to_ms(value: Any) -> float | None:
-    if not isinstance(value, (int, float)):
-        return None
-    return float(value) / 1_000_000.0
+    def extract_timings(self, payload: Any, latency_ms: int) -> tuple[float | None, float | None, float | None]:
+        del latency_ms  # Client elapsed time cannot establish a backend phase duration.
+        return (nanoseconds_to_ms(_get_value(payload, "prompt_eval_duration")),
+                nanoseconds_to_ms(_get_value(payload, "eval_duration")),
+                nanoseconds_to_ms(_get_value(payload, "total_duration")))
 
 
 def _get_value(payload: Any, key: str) -> Any:

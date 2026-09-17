@@ -5,12 +5,12 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.runtime.registry.tool_invocation_contracts import (
     PROTOCOL_RECEIPT_SCHEMA_VERSION,
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
-from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 
 
 def test_turn_artifact_writer_replay_round_trip(tmp_path: Path) -> None:
@@ -41,6 +41,7 @@ def test_turn_artifact_writer_replay_round_trip(tmp_path: Path) -> None:
     assert loaded == payload
 
 
+# Layer: integration
 def test_turn_artifact_writer_checkpoint_writes_file(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     writer.write_turn_checkpoint(
@@ -55,7 +56,7 @@ def test_turn_artifact_writer_checkpoint_writes_file(tmp_path: Path) -> None:
         prompt_metadata={"prompt_id": "p1"},
     )
 
-    out_dir = tmp_path / "observability" / "s1" / "ISSUE-1" / "002_coder"
+    out_dir = tmp_path / "observability" / "s1" / "issue-1" / "002_coder"
     checkpoint = out_dir / "checkpoint.json"
     assert checkpoint.exists()
     data = json.loads(checkpoint.read_text(encoding="utf-8"))
@@ -124,7 +125,7 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Pa
     )
     assert isinstance(receipt.get("receipt_digest"), str)
     assert len(receipt["receipt_digest"]) == 64
-    receipt_log = tmp_path / "observability" / "s1" / "ISSUE-1" / "004_coder" / "protocol_receipts.log"
+    receipt_log = tmp_path / "observability" / "s1" / "issue-1" / "004_coder" / "protocol_receipts.log"
     assert receipt_log.exists()
     rows = [json.loads(line) for line in receipt_log.read_text(encoding="utf-8").splitlines() if line.strip()]
     assert rows[0]["receipt_seq"] == 1
@@ -194,13 +195,13 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_compat_translation_
         },
     )
 
-    compat_translation_path = tmp_path / "observability" / "s1" / "ISSUE-1" / "004_coder" / "compat_translation.json"
+    compat_translation_path = tmp_path / "observability" / "s1" / "issue-1" / "004_coder" / "compat_translation.json"
     assert compat_translation_path.exists()
     payload = json.loads(compat_translation_path.read_text(encoding="utf-8"))
     assert payload["schema_version"] == "1.0"
     assert payload["translations"][0]["compat_tool_name"] == "openclaw.file_read"
     assert payload["translations"][0]["operation_id"] == "op-1"
-    latency_profile_path = tmp_path / "observability" / "s1" / "ISSUE-1" / "004_coder" / "compat_latency_profile.json"
+    latency_profile_path = tmp_path / "observability" / "s1" / "issue-1" / "004_coder" / "compat_latency_profile.json"
     assert latency_profile_path.exists()
     latency_payload = json.loads(latency_profile_path.read_text(encoding="utf-8"))
     assert latency_payload["profiles"][0]["compat_tool"] == "openclaw.file_read"

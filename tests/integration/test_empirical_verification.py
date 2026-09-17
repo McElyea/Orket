@@ -1,4 +1,5 @@
-﻿import json
+import json
+import re
 
 import pytest
 
@@ -13,7 +14,8 @@ def verify(input_data):
 """
 
 @pytest.mark.asyncio
-async def test_empirical_verification_pass(tmp_path, monkeypatch):
+# Layer: integration
+async def test_empirical_verification_pass_is_support_only(tmp_path, monkeypatch):
     root = tmp_path
     (root / "config").mkdir()
     (root / "model" / "core" / "epics").mkdir(parents=True)
@@ -28,7 +30,7 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
 
     # 1. Create Fixture File in verification/ directory
     fixture_file = workspace / "verification" / "test_fixture.py"
-    fixture_file.write_text(FIXTURE_CONTENT)
+    fixture_file.write_text(FIXTURE_CONTENT, encoding="utf-8")
 
     # 2. Create assets
     (root / "config" / "organization.json").write_text(json.dumps({
@@ -36,12 +38,12 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
         "architecture": {"idesign_threshold": 7, "cicd_rules": []},
         "process_rules": {"small_project_builder_variant": "architect"},
         "departments": ["core"]
-    }))
+    }), encoding="utf-8")
     for d in ["qwen", "llama3", "deepseek-r1", "phi", "generic"]:
-        (root / "model" / "core" / "dialects" / f"{d}.json").write_text(json.dumps({"model_family": d, "dsl_format": "J", "constraints": [], "hallucination_guard": "N"}))
-    (root / "model" / "core" / "roles" / "lead_architect.json").write_text(json.dumps({"id": "R", "summary": "lead_architect", "description": "D", "tools": ["update_issue_status", "write_file"]}))
-    (root / "model" / "core" / "roles" / "integrity_guard.json").write_text(json.dumps({"id": "V", "summary": "integrity_guard", "description": "V", "tools": ["update_issue_status"]}))
-    (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(json.dumps({"id": "C", "summary": "code_reviewer", "description": "R", "tools": ["update_issue_status"]}))
+        (root / "model" / "core" / "dialects" / f"{d}.json").write_text(json.dumps({"model_family": d, "dsl_format": "J", "constraints": [], "hallucination_guard": "N"}), encoding="utf-8")
+    (root / "model" / "core" / "roles" / "lead_architect.json").write_text(json.dumps({"id": "R", "summary": "lead_architect", "description": "D", "tools": ["update_issue_status", "write_file"]}), encoding="utf-8")
+    (root / "model" / "core" / "roles" / "integrity_guard.json").write_text(json.dumps({"id": "V", "summary": "integrity_guard", "description": "V", "tools": ["update_issue_status"]}), encoding="utf-8")
+    (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(json.dumps({"id": "C", "summary": "code_reviewer", "description": "R", "tools": ["update_issue_status"]}), encoding="utf-8")
     (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
         "name": "standard",
         "seats": {
@@ -49,8 +51,8 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
             "reviewer_seat": {"name": "R", "roles": ["code_reviewer"]},
             "verifier": {"name": "V", "roles": ["integrity_guard"]}
         }
-    }))
-    (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({"name": "standard", "model": "dummy", "temperature": 0.1}))
+    }), encoding="utf-8")
+    (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({"name": "standard", "model": "dummy", "temperature": 0.1}), encoding="utf-8")
 
     # Epic with Verification Scenarios
     (root / "model" / "core" / "epics" / "verify_epic.json").write_text(json.dumps({
@@ -67,7 +69,7 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
                 }
             }
         ]
-    }))
+    }), encoding="utf-8")
 
     # 3. Mock Provider
     class MockProvider(LocalModelProvider):
@@ -98,17 +100,23 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
 
     # 4. Run
     engine = OrchestrationEngine(workspace, db_path=str(root/"test.db"), config_root=root)
-    await engine.run_card("verify_epic")
+    try:
+        observed = await engine.run_card('verify_epic')
+        assert observed.observation == "published" and not observed.succeeded
+        assert re.search('E_CARD_COMPLETION_EVIDENCE_REQUIRED', observed.reason or "")
 
-    # 5. Assertions
-    issue = await engine.cards.get_by_id("I1")
-    assert issue.status == "done"
+        # 5. Assertions
+        issue = await engine.cards.get_by_id("I1")
+        assert issue.status != "done"
+        assert await engine.cards.read_completion_receipt("I1") is None
 
-    # Check that verification result was persisted
-    # Note: SQLiteCardRepository returns a dict where complex types are in 'verification' key
-    # after being loaded from 'verification_json'
-    assert hasattr(issue, "verification")
-    v = issue.verification
-    assert v["last_run"]["passed"] == 1
-    assert v["scenarios"][0]["status"] == "pass"
+        # Check that verification result was persisted
+        # Note: SQLiteCardRepository returns a dict where complex types are in 'verification' key
+        # after being loaded from 'verification_json'
+        assert hasattr(issue, "verification")
+        v = issue.verification
+        assert v["last_run"]["passed"] == 1
+        assert v["scenarios"][0]["status"] == "pass"
+    finally:
+        await engine.close()
 

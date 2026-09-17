@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import datetime
 from typing import Any
 
 
@@ -16,12 +18,16 @@ class PipelineWiringService:
 
         return WebhookDatabase()
 
-    def create_bug_fix_manager(self, organization: Any, webhook_db: Any) -> Any:
-        from orket.core.domain.bug_fix_phase import BugFixPhaseManager
+    def create_bug_fix_manager(
+        self, organization: Any, webhook_db: Any, *, workspace: Any, now_utc: Callable[[], datetime],
+    ) -> Any:
+        from orket.application.services.bug_fix_phase_manager import BugFixPhaseManager
 
         return BugFixPhaseManager(
             organization_config=organization.process_rules if organization else {},
             db=webhook_db,
+            workspace=workspace,
+            now_utc=now_utc,
         )
 
     def create_orchestrator(
@@ -35,6 +41,8 @@ class PipelineWiringService:
         db_path: str,
         loader: Any,
         sandbox_orchestrator: Any,
+        card_completion: Any = None,
+        control_plane_clock: Callable[[], str],
     ) -> Any:
         from orket.application.workflows.orchestrator import Orchestrator
 
@@ -47,6 +55,8 @@ class PipelineWiringService:
             db_path=db_path,
             loader=loader,
             sandbox_orchestrator=sandbox_orchestrator,
+            card_completion=card_completion,
+            control_plane_clock=control_plane_clock,
         )
 
     def create_sub_pipeline(self, *, parent_pipeline: Any, epic_workspace: Any, department: str) -> Any:

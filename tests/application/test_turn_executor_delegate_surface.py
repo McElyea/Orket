@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
 
 
 def _executor(tmp_path: Path) -> TurnExecutor:

@@ -53,8 +53,14 @@ Outputs:
 
 ## Candidate Comparison
 ```bash
-python scripts/prompt_lab/compare_candidates.py --stable-eval benchmarks/results/prompt_lab/prompt_eval_metrics.stable.json --candidate-eval benchmarks/results/prompt_lab/prompt_eval_metrics.candidate.json --stable-patterns benchmarks/results/prompt_lab/live_patterns.stable.json --candidate-patterns benchmarks/results/prompt_lab/live_patterns.candidate.json --thresholds benchmarks/results/prompt_lab/prompt_promotion_thresholds.json
+python scripts/prompt_lab/compare_candidates.py --stable-eval benchmarks/results/prompt_lab/prompt_eval_metrics.stable.json --candidate-eval benchmarks/results/prompt_lab/prompt_eval_metrics.candidate.json --stable-patterns benchmarks/results/prompt_lab/live_patterns.stable.json --candidate-patterns benchmarks/results/prompt_lab/live_patterns.candidate.json
 ```
+Default thresholds are tracked in `scripts/prompt_lab/prompt_promotion_thresholds.json`
+and resolved beside the script, independently of the working directory. Use
+`--thresholds <path>` for an explicit configuration override. Missing or invalid
+configuration fails before comparison; ignored results are not configuration authority.
+
 Exit code:
 1. `0`: candidate passes configured gates.
 2. `1`: candidate fails configured gates.
+3. `2`: threshold configuration or command arguments are invalid.

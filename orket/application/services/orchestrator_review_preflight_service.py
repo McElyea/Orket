@@ -12,9 +12,10 @@ from orket.application.services.runtime_verification_artifact_service import (
     RuntimeVerificationArtifactService,
 )
 from orket.application.services.runtime_verifier import build_runtime_guard_contract
+from orket.exceptions import CardNotFound
 from orket.logging import log_event
 from orket.orchestration.notes import Note
-from orket.schema import CardStatus, IssueConfig
+from orket.schema import CardStatus, IssueConfig, IssueVerification
 
 
 @dataclass
@@ -209,6 +210,12 @@ class OrchestratorReviewPreflightService:
             scenarios = getattr(verification_contract, "scenarios", None) or []
             if fixture_path or scenarios:
                 verification_result = await self.verify_issue(issue.id, run_id=run_id)
+                # Preparation later saves this in-memory issue. Preserve the actual
+                # persisted result and scenario observations instead of overwriting them.
+                verified_issue = await self.async_cards.get_by_id(issue.id)
+                if verified_issue is None:
+                    raise CardNotFound(f"Verified issue disappeared before turn preparation: {issue.id}")
+                issue.verification = IssueVerification.model_validate(verified_issue.verification)
                 self.notes.add(
                     Note(
                         from_role="system",

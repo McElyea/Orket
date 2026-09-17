@@ -255,8 +255,13 @@ def _validate_frame(payload: dict[str, Any]) -> None:
         validate_governed_agent_payload(frame_payload)
     elif message_type == "ready":
         expected_keys = {"supported_protocol_versions", "supported_contract_versions"}
-        if set(frame_payload) != expected_keys:
+        optional_keys = {"supported_model_receipt_versions"}
+        if not expected_keys <= set(frame_payload) or set(frame_payload) - expected_keys - optional_keys:
             raise ValueError("E_SDK_AGENT_READY_PAYLOAD_INVALID")
+        if "supported_model_receipt_versions" in frame_payload:
+            versions = frame_payload["supported_model_receipt_versions"]
+            if not isinstance(versions, list) or not versions or any(not isinstance(v, str) or not v for v in versions):
+                raise ValueError("E_SDK_AGENT_READY_PAYLOAD_INVALID")
     else:
         operation_types = {
             ("capability_call", "model.call.v1"): "agent_model_call_request",

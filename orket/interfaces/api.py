@@ -18,7 +18,11 @@ from fastapi.security import APIKeyHeader
 from orket import __version__
 from orket.application.services.api_runtime_composition import build_api_runtime_container
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
-from orket.application.services.outward_ledger_service import OutwardLedgerValidationError
+from orket.application.services.execution_graph_service import (
+    execution_graph_payload,
+    inspect_execution_graph,
+    persist_execution_graph_snapshot,
+)
 from orket.application.services.outward_run_execution_service import (
     OutwardRunExecutionValidationError,
 )
@@ -54,6 +58,7 @@ from orket.application.services.runtime_policy import (
     runtime_policy_options,
 )
 from orket.hardware import get_metrics_snapshot
+from orket.interfaces.api_app_context_middleware import ApiAppContextMiddleware
 from orket.interfaces.api_runtime_context import (
     ApiAppRuntimeContext,
     get_api_runtime_context,
@@ -65,6 +70,7 @@ from orket.interfaces.routers.extension_runtime import build_extension_runtime_r
 from orket.interfaces.routers.flows import build_flows_router
 from orket.interfaces.routers.governed_agents import build_governed_agents_router
 from orket.interfaces.routers.kernel import build_kernel_router
+from orket.interfaces.routers.outward_ledger import build_outward_ledger_router
 from orket.interfaces.routers.runs import build_runs_router
 from orket.interfaces.routers.sessions import build_sessions_router
 from orket.interfaces.routers.settings import build_settings_router
@@ -86,19 +92,6 @@ from orket.workloads import is_builtin_workload, run_builtin_workload, validate_
 LOGGER = logging.getLogger(__name__)
 _ACTIVE_API_APP: ContextVar[FastAPI | None] = ContextVar("orket_active_api_app", default=None)
 _PayloadT = TypeVar("_PayloadT")
-
-
-class _ApiAppContextMiddleware:
-    def __init__(self, asgi_app: Any, *, owner_app: FastAPI) -> None:
-        self._asgi_app = asgi_app
-        self._owner_app = owner_app
-
-    async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
-        token = _ACTIVE_API_APP.set(self._owner_app)
-        try:
-            await self._asgi_app(scope, receive, send)
-        finally:
-            _ACTIVE_API_APP.reset(token)
 
 
 def _resolve_default_project_root() -> Path:
@@ -172,7 +165,7 @@ async def _schedule_async_invocation_task(
             context.release_background_task(task)
 
         def _start_cleanup() -> None:
-            if context.closed:
+            if not context.accepting_work:
                 return
             cleanup_task = asyncio.create_task(_release_task())
             context.track_background_task(cleanup_task)
@@ -574,7 +567,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     context = get_api_runtime_context(_app)
     if context is None or context.project_root != configured_root:
         raise RuntimeError("API app runtime context does not match its configured project root.")
-    if context.closed:
+    if not context.accepting_work:
         raise RuntimeError("API app runtime context is closed.")
     broadcaster_task: asyncio.Task[Any] | None = None
     log_subscriber: Callable[[dict[str, Any]], None] | None = None
@@ -615,19 +608,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     finally:
         if log_subscriber is not None:
             unsubscribe_from_events(log_subscriber)
-        if broadcaster_task is not None:
-            broadcaster_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await broadcaster_task
-            context.release_background_task(broadcaster_task)
         await context.close()
-
-
-async def add_orket_version_header(request: Request, call_next: Callable[[Request], Any]) -> Any:
-    response = await call_next(request)
-    if str(request.url.path or "").startswith("/v1/"):
-        response.headers["X-Orket-Version"] = __version__
-    return response
 
 
 def _filter_operator_payload(payload: _PayloadT, *, surface: str) -> _PayloadT:
@@ -658,7 +639,7 @@ def _runtime_context(target_app: FastAPI | None = None) -> ApiAppRuntimeContext:
     context = get_api_runtime_context(selected_app)
     if context is None or context.project_root != root:
         raise RuntimeError("API app runtime context does not match its configured project root.")
-    if context.closed:
+    if not context.accepting_work:
         raise RuntimeError("API app runtime context is closed.")
     return context
 
@@ -755,7 +736,11 @@ v1_router.include_router(
         session_id_factory=lambda: _get_api_runtime_host().create_session_id(),
     )
 )
-v1_router.include_router(build_runs_router(lambda: _get_engine()))
+v1_router.include_router(build_runs_router(lambda: _get_engine(), outward_execution_service_getter=lambda: _get_outward_run_execution_service(), outbound_filter=lambda payload, surface: _filter_operator_payload(payload, surface=surface)))
+v1_router.include_router(build_outward_ledger_router(
+    service_getter=lambda: _get_outward_ledger_service(),
+    outbound_filter=lambda payload, surface: _filter_operator_payload(payload, surface=surface),
+))
 v1_router.include_router(
     build_settings_router(
         settings_order=SETTINGS_ORDER,
@@ -1043,7 +1028,7 @@ async def submit_run(payload: dict[str, Any] = _RUN_SUBMISSION_BODY) -> dict[str
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
-    return _filter_operator_payload(record.to_status_payload(), surface="api.runs.submit")
+    return _filter_operator_payload(await _get_outward_run_service().status_payload(record.run_id), surface="api.runs.submit")
 
 
 @v1_router.get("/runs")
@@ -1055,7 +1040,7 @@ async def list_runs(
     records = await _get_outward_run_service().list_runs(status=status, limit=limit, offset=offset)
     if records or status is not None or limit != 20 or offset != 0:
         payload = {
-            "items": [record.to_status_payload() for record in records],
+            "items": [await _get_outward_run_service().status_payload(record.run_id) for record in records],
             "count": len(records),
             "limit": limit,
             "offset": offset,
@@ -1136,41 +1121,11 @@ async def stream_outward_run_events(
     return StreamingResponse(_stream(), media_type="text/event-stream")
 
 
-@v1_router.get("/runs/{run_id}/ledger")
-async def export_outward_run_ledger(
-    run_id: str,
-    types: str | None = Query(default=None),
-    include_pii: bool = Query(default=False),
-) -> dict[str, Any]:
-    try:
-        payload = await _get_outward_ledger_service().export(
-            run_id,
-            types=_parse_event_types(types),
-            include_pii=include_pii,
-            operator_ref="operator:api",
-            record_request=include_pii,
-        )
-    except OutwardLedgerValidationError as exc:
-        status_code = 404 if "not found" in str(exc).lower() else 422
-        raise HTTPException(status_code=status_code, detail=str(exc)) from exc
-    return _filter_operator_payload(payload, surface="api.runs.ledger")
-
-
-@v1_router.get("/runs/{run_id}/ledger/verify")
-async def verify_outward_run_ledger(run_id: str) -> dict[str, Any]:
-    try:
-        payload = await _get_outward_ledger_service().verify_run(run_id)
-    except OutwardLedgerValidationError as exc:
-        status_code = 404 if "not found" in str(exc).lower() else 422
-        raise HTTPException(status_code=status_code, detail=str(exc)) from exc
-    return _filter_operator_payload(payload, surface="api.runs.ledger.verify")
-
-
 @v1_router.get("/runs/{session_id}")
 async def get_run_detail(session_id: str) -> dict[str, Any]:
     outward_record = await _get_outward_run_service().get_status(session_id)
     if outward_record is not None:
-        return _filter_operator_payload(outward_record.to_status_payload(), surface="api.runs.status")
+        return _filter_operator_payload(await _get_outward_run_service().status_payload(outward_record.run_id), surface="api.runs.status")
 
     runtime_engine = _get_engine()
     run_record = await runtime_engine.run_ledger.get_run(session_id)
@@ -1444,22 +1399,12 @@ async def get_execution_graph(session_id: str) -> dict[str, Any]:
     if run_record is None and session is None:
         raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
 
-    backlog = await runtime_engine.sessions.get_session_issues(session_id)
-    graph = await asyncio.to_thread(_build_execution_graph, backlog, session_id)
-    compact_edges = [
-        {"source": str(edge.get("source") or ""), "target": str(edge.get("target") or "")}
-        for edge in list(graph.get("edges") or [])
-        if str(edge.get("source") or "").strip() and str(edge.get("target") or "").strip()
-    ]
-    payload = {
-        "session_id": session_id,
-        "node_count": len(graph["nodes"]),
-        "edge_count": len(compact_edges),
-        "edges_detailed": graph["edges"],
-        **graph,
-        "edges": compact_edges,
-    }
-    await asyncio.to_thread(_persist_execution_graph_snapshot, session_id, payload)
+    graph = await inspect_execution_graph(cards=runtime_engine.cards, session_id=session_id)
+    index = {node["id"]: node["order_index"] for node in graph["nodes"]}
+    handoffs = await asyncio.to_thread(_derive_handoff_edges, session_id, index)
+    payload = execution_graph_payload(session_id=session_id, graph=graph, handoffs=handoffs)
+    run_path = await asyncio.to_thread(_validate_session_path, session_id)
+    await persist_execution_graph_snapshot(cards=runtime_engine.cards, run_path=run_path, payload=payload)
     return payload
 
 
@@ -1647,120 +1592,6 @@ def _coerce_datetime(value: str | None) -> datetime | None:
         raise HTTPException(status_code=400, detail=f"Invalid datetime: '{value}'") from exc
 
 
-def _build_execution_graph(backlog: list[dict[str, Any]], session_id: str) -> dict[str, Any]:
-    items = [item for item in backlog if isinstance(item, dict)]
-    index_by_id: dict[str, int] = {}
-    status_by_id: dict[str, str] = {}
-    for index, item in enumerate(items):
-        issue_id = str(item.get("id") or "").strip()
-        if not issue_id or issue_id in index_by_id:
-            continue
-        index_by_id[issue_id] = index
-        status_by_id[issue_id] = str(item.get("status") or "unknown").strip().lower()
-
-    edges: list[dict[str, Any]] = []
-    adjacency: dict[str, list[str]] = {issue_id: [] for issue_id in index_by_id}
-    in_degree: dict[str, int] = {issue_id: 0 for issue_id in index_by_id}
-    dependency_satisfied_statuses = {"done", "guard_approved", "archived"}
-
-    for item in items:
-        issue_id = str(item.get("id") or "").strip()
-        if issue_id not in index_by_id:
-            continue
-        for raw_dep in list(item.get("depends_on") or []):
-            dep_id = str(raw_dep or "").strip()
-            if not dep_id or dep_id not in index_by_id:
-                continue
-            edges.append({"source": dep_id, "target": issue_id, "kind": "depends_on"})
-            adjacency[dep_id].append(issue_id)
-            in_degree[issue_id] += 1
-
-    edge_keys = {(edge["source"], edge["target"], str(edge.get("kind") or "depends_on")) for edge in edges}
-
-    # Parent-child relationships (when present) are modeled as spawn edges.
-    for item in items:
-        issue_id = str(item.get("id") or "").strip()
-        parent_id = str(item.get("parent_id") or "").strip()
-        if issue_id not in index_by_id or parent_id not in index_by_id or parent_id == issue_id:
-            continue
-        key = (parent_id, issue_id, "spawn")
-        if key in edge_keys:
-            continue
-        edge_keys.add(key)
-        edges.append({"source": parent_id, "target": issue_id, "kind": "spawn"})
-
-    for handoff in _derive_handoff_edges(session_id, index_by_id):
-        key = (handoff["source"], handoff["target"], "handoff")
-        if key in edge_keys:
-            continue
-        edge_keys.add(key)
-        edges.append(handoff)
-
-    topo_queue = sorted(
-        [issue_id for issue_id, degree in in_degree.items() if degree == 0],
-        key=lambda issue_id: index_by_id[issue_id],
-    )
-    topo_in_degree = dict(in_degree)
-    execution_order: list[str] = []
-    while topo_queue:
-        current = topo_queue.pop(0)
-        execution_order.append(current)
-        for neighbor in sorted(adjacency.get(current, []), key=lambda issue_id: index_by_id[issue_id]):
-            topo_in_degree[neighbor] -= 1
-            if topo_in_degree[neighbor] == 0:
-                topo_queue.append(neighbor)
-        topo_queue.sort(key=lambda issue_id: index_by_id[issue_id])
-
-    has_cycle = len(execution_order) != len(index_by_id)
-    cycle_nodes: list[str] = []
-    if has_cycle:
-        cycle_nodes = sorted(
-            [issue_id for issue_id, degree in topo_in_degree.items() if degree > 0],
-            key=lambda issue_id: index_by_id[issue_id],
-        )
-
-    nodes: list[dict[str, Any]] = []
-    for item in items:
-        issue_id = str(item.get("id") or "").strip()
-        if issue_id not in index_by_id:
-            continue
-        depends_on = [str(dep).strip() for dep in list(item.get("depends_on") or []) if str(dep).strip()]
-        unresolved_dependencies = [dep for dep in depends_on if dep not in index_by_id]
-        dependency_statuses: dict[str, str] = {}
-        blocked_by: list[str] = []
-        for dep in depends_on:
-            dep_status = status_by_id.get(dep, "missing")
-            dependency_statuses[dep] = dep_status
-            if dep_status not in dependency_satisfied_statuses:
-                blocked_by.append(dep)
-        status = str(item.get("status") or "unknown").strip().lower()
-        blocked = bool(blocked_by) and status not in {"done", "archived", "guard_approved"}
-        nodes.append(
-            {
-                "id": issue_id,
-                "summary": item.get("summary"),
-                "seat": item.get("seat"),
-                "status": status,
-                "depends_on": depends_on,
-                "dependency_count": len(depends_on),
-                "dependency_statuses": dependency_statuses,
-                "blocked": blocked,
-                "blocked_by": blocked_by,
-                "unresolved_dependencies": unresolved_dependencies,
-                "in_degree": in_degree[issue_id],
-                "order_index": index_by_id[issue_id],
-            }
-        )
-
-    return {
-        "nodes": nodes,
-        "edges": edges,
-        "execution_order": execution_order,
-        "has_cycle": has_cycle,
-        "cycle_nodes": cycle_nodes,
-    }
-
-
 def _derive_handoff_edges(session_id: str, index_by_id: dict[str, int]) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     run_path = _validate_session_path(session_id)
@@ -1813,17 +1644,6 @@ def _derive_handoff_edges(session_id: str, index_by_id: dict[str, int]) -> list[
         previous_issue = issue_id
 
     return handoff_edges
-
-
-def _persist_execution_graph_snapshot(session_id: str, payload: dict[str, Any]) -> None:
-    try:
-        run_path = _validate_session_path(session_id)
-        path = run_path / "agent_output" / "observability" / "execution_graph_snapshot.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    except (OSError, TypeError, ValueError):
-        # Snapshot persistence should never fail the API response path.
-        return
 
 
 def _record_session_id(record: dict[str, Any]) -> str:
@@ -1967,8 +1787,7 @@ def _register_created_app_transport(target_app: FastAPI) -> None:
         allow_headers=config.allow_headers,
         allow_credentials=config.allow_credentials,
     )
-    target_app.add_middleware(_ApiAppContextMiddleware, owner_app=target_app)
-    target_app.middleware("http")(add_orket_version_header)
+    target_app.add_middleware(ApiAppContextMiddleware, owner_app=target_app, active_app=_ACTIVE_API_APP)
     target_app.add_api_route("/health", health, methods=["GET"])
     target_app.include_router(v1_router)
     _register_streaming_transport(target_app)

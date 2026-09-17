@@ -11,7 +11,7 @@ import aiosqlite
 from orket.adapters.storage.control_plane_operator_action_support import (
     ensure_operator_action_schema,
 )
-from orket.application.services.governed_agent_wake_records import (
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeAuthority,
     GovernedAgentWakeClaimResult,
     GovernedAgentWakeEnqueueResult,

@@ -1,6 +1,8 @@
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.logging import log_event
 from orket.project_paths import default_model_root, default_project_root, default_workspace_root
@@ -133,7 +135,7 @@ def get_engine_recommendations() -> list[dict[str, str]]:
 
 
 def discover_project_assets(department: str = "core") -> dict[str, list[str]]:
-    loader = ConfigLoader(_default_model_root(), department)
+    loader = ConfigLoader(_default_project_root(), department)
     return {
         "rocks": loader.list_assets("rocks"),
         "epics": loader.list_assets("epics"),
@@ -144,7 +146,7 @@ def discover_project_assets(department: str = "core") -> dict[str, list[str]]:
 def run_startup_reconciliation() -> str:
     """Run every-startup structural reconciliation and emit explicit path telemetry."""
     try:
-        from orket.core.domain.reconciler import StructuralReconciler
+        from orket.application.services.structural_reconciliation_service import StructuralReconciler
 
         reconciler = StructuralReconciler(
             root_path=_default_model_root(),
@@ -179,6 +181,11 @@ def perform_startup_checks() -> dict[str, str]:
     return {"reconciliation": reconciliation_result, "onboarding": onboarding_result}
 
 
+async def run_startup_checks(startup: Callable[[], dict[str, str]]) -> dict[str, str]:
+    """Retain the admitted startup worker, including structural writes, through cancellation."""
+    return await run_owned_thread(startup, label="runtime-startup-checks")
+
+
 def perform_first_run_setup() -> dict[str, str]:
     """Backward-compatible wrapper around explicit startup checks."""
     return perform_startup_checks()
@@ -188,7 +195,7 @@ def print_orket_manifest(department: str = "core") -> None:
     from orket.hardware import ModelTier, can_handle_model_tier, get_current_profile
 
     models, assets, hw = get_installed_models(), discover_project_assets(department), get_current_profile()
-    loader = ConfigLoader(_default_model_root(), department)
+    loader = ConfigLoader(_default_project_root(), department)
 
     manifest_header = (
         f"\n{'=' * 60}\n"
@@ -233,7 +240,7 @@ def print_orket_manifest(department: str = "core") -> None:
 
                     # Load the Epic to see the Seats
                     try:
-                        dept_loader = ConfigLoader(_default_model_root(), dept)
+                        dept_loader = ConfigLoader(_default_project_root(), dept)
                         epic = dept_loader.load_asset("epics", epic_name, EpicConfig)
                         dept_loader.load_asset("teams", epic.team, TeamConfig)
 

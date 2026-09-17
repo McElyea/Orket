@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 
 from orket.application.middleware import MiddlewareOutcome, TurnLifecycleInterceptors
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run,
     reservation_id_for_run,
@@ -17,7 +18,6 @@ from orket.application.services.turn_tool_control_plane_service import (
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain import ReservationStatus
 from orket.core.domain.execution import ExecutionTurn, ToolCall
-from orket.core.policies.tool_gate import ToolGate
 
 
 def _dispatcher(

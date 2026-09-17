@@ -5,16 +5,14 @@ from typing import Any, cast
 
 import aiosqlite
 
-from orket.core.domain.records import IssueRecord
 from orket.schema import CardStatus
 
 
 class CardMiscOps:
     """Miscellaneous card operations delegated from AsyncCardRepository."""
 
-    def __init__(self, execute: Any, get_by_build: Any) -> None:
+    def __init__(self, execute: Any) -> None:
         self._execute = execute
-        self._get_by_build = get_by_build
 
     async def add_transaction(self, card_id: str, role: str, action: str) -> None:
         async def _op(conn: aiosqlite.Connection) -> None:
@@ -73,12 +71,3 @@ class CardMiscOps:
             )
 
         await self._execute(_op, commit=True)
-
-    async def get_independent_ready_issues(self, build_id: str) -> list[IssueRecord]:
-        all_issues = cast(list[IssueRecord], await self._get_by_build(build_id))
-        done_ids = {issue.id for issue in all_issues if issue.status == CardStatus.DONE}
-        ready_candidates: list[IssueRecord] = []
-        for issue in all_issues:
-            if issue.status == CardStatus.READY and all(dep_id in done_ids for dep_id in issue.depends_on):
-                ready_candidates.append(issue)
-        return ready_candidates

@@ -119,7 +119,7 @@ def test_validate_extension_rejects_unsupported_manifest_version(tmp_path: Path)
     assert result["error_count"] == 1
     assert result["errors"][0]["code"] == "E_SDK_MANIFEST_VERSION_UNSUPPORTED"
 
-
+# Layer: integration
 def test_validate_extension_accepts_matching_agent_manifest_contract(tmp_path: Path) -> None:
     """Layer: contract. Strict author validation recognizes the additive agent-v0 contract."""
     (tmp_path / "demo_workload.py").write_text(
@@ -143,6 +143,7 @@ workloads:
       required_host_features:
         - governed_agent_loop.v1
         - agent_stdio_ipc.v1
+        - agent_model_use_receipt.v2
       model_profiles:
         - role: planner
           profile_ref: local.default

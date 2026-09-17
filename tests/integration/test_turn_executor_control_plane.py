@@ -1,5 +1,4 @@
 # Layer: integration
-
 from __future__ import annotations
 
 import json
@@ -8,13 +7,14 @@ from pathlib import Path
 import pytest
 
 from orket.application.services.control_plane_workload_catalog import TURN_TOOL_WORKLOAD
-from orket.application.services.turn_tool_control_plane_recovery import recover_pre_effect_attempt_for_resume_mode
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run,
     namespace_resource_id_for_run,
     reservation_id_for_run,
 )
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
+from orket.application.services.turn_tool_recovery_transaction import recover_pre_effect_attempt_atomic
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_executor_control_plane import write_turn_checkpoint_and_publish_if_needed
 from orket.core.contracts import StepRecord
@@ -34,10 +34,10 @@ from orket.core.domain import (
 )
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("deterministic_turn_clock")]
 
 
 class _Model:
@@ -94,13 +94,13 @@ def _context(*, protocol_governed_enabled: bool = True, resume_mode: bool = Fals
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_turn_executor_publishes_control_plane_run_attempt_step_effect_and_final_truth(tmp_path: Path) -> None:
     control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
-        workspace=Path(tmp_path),
-        control_plane_service=control_plane,
+        workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     toolbox = _Toolbox()
 
@@ -126,7 +126,7 @@ async def test_turn_executor_publishes_control_plane_run_attempt_step_effect_and
     resources = [] if run is None else await control_plane.publication.repository.list_resource_records(
         resource_id=namespace_resource_id_for_run(run=run)
     )
-    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
     snapshot_files = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
     receipt_rows = [
         json.loads(line)
@@ -192,8 +192,7 @@ async def test_turn_executor_publishes_control_plane_for_non_protocol_tool_execu
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
-        workspace=Path(tmp_path),
-        control_plane_service=control_plane,
+        workspace=Path(tmp_path), control_plane_service=control_plane,
     )
 
     await executor.execute_turn(_issue(), _role(), _Model(), _Toolbox(), _context(protocol_governed_enabled=False))
@@ -257,19 +256,19 @@ async def test_turn_executor_publishes_control_plane_for_non_protocol_tool_execu
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_turn_executor_resume_mode_reuses_control_plane_checkpoint_and_effect_truth(tmp_path: Path) -> None:
     control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
-        workspace=Path(tmp_path),
-        control_plane_service=control_plane,
+        workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     model = _Model()
     toolbox = _Toolbox()
 
     first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
-    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
     snapshot_files_before = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
     snapshot_payload = json.loads(snapshot_files_before[0].read_text(encoding="utf-8"))
     second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
@@ -305,6 +304,7 @@ async def test_turn_executor_resume_mode_reuses_control_plane_checkpoint_and_eff
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_turn_executor_completed_governed_reentry_reuses_artifacts_before_model_without_resume_mode(
     tmp_path: Path,
 ) -> None:
@@ -312,14 +312,13 @@ async def test_turn_executor_completed_governed_reentry_reuses_artifacts_before_
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
-        workspace=Path(tmp_path),
-        control_plane_service=control_plane,
+        workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     model = _Model()
     toolbox = _Toolbox()
 
     first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
-    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
     snapshot_files_before = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
     second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
     snapshot_files_after = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
@@ -343,19 +342,19 @@ async def test_turn_executor_completed_governed_reentry_reuses_artifacts_before_
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_turn_executor_completed_governed_reentry_requires_snapshot_artifact(tmp_path: Path) -> None:
     control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
-        workspace=Path(tmp_path),
-        control_plane_service=control_plane,
+        workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     model = _Model()
     toolbox = _Toolbox()
 
     first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
-    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
     snapshot_path = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))[0]
     snapshot_path.unlink()
 
@@ -370,19 +369,19 @@ async def test_turn_executor_completed_governed_reentry_requires_snapshot_artifa
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_turn_executor_completed_governed_reentry_requires_checkpoint_plan_alignment(tmp_path: Path) -> None:
     control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
-        workspace=Path(tmp_path),
-        control_plane_service=control_plane,
+        workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     model = _Model()
     toolbox = _Toolbox()
 
     first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
-    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
     snapshot_path = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))[0]
     snapshot_payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
     snapshot_payload["tool_calls"][0]["args"] = {"path": "agent_output/other.txt", "content": "wrong"}
@@ -399,6 +398,7 @@ async def test_turn_executor_completed_governed_reentry_requires_checkpoint_plan
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_via_same_attempt_checkpoint(
     tmp_path: Path,
 ) -> None:
@@ -406,8 +406,7 @@ async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
-        workspace=Path(tmp_path),
-        control_plane_service=control_plane,
+        workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
     pre_effect_turn = ExecutionTurn(
@@ -426,7 +425,7 @@ async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_
 
     model = _Model()
     toolbox = _Toolbox()
-    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
     first_snapshot_path = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))[0]
     first_snapshot_payload = json.loads(first_snapshot_path.read_text(encoding="utf-8"))
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
@@ -480,8 +479,7 @@ async def test_turn_executor_resume_mode_rejects_post_effect_unfinished_attempt(
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
-        workspace=Path(tmp_path),
-        control_plane_service=control_plane,
+        workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
     pre_effect_turn = ExecutionTurn(
@@ -554,8 +552,8 @@ async def test_turn_executor_resume_mode_rejects_post_effect_unfinished_attempt(
     assert truth.closure_basis is ClosureBasisClassification.RECONCILIATION_CLOSED
     assert truth.authoritative_result_ref == reconciliation.reconciliation_id
 
-
 @pytest.mark.asyncio
+# Layer: integration
 async def test_turn_executor_resume_mode_rejects_post_effect_truth_on_resumed_attempt_before_model(
     tmp_path: Path,
 ) -> None:
@@ -563,8 +561,7 @@ async def test_turn_executor_resume_mode_rejects_post_effect_truth_on_resumed_at
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
-        workspace=Path(tmp_path),
-        control_plane_service=control_plane,
+        workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
     pre_effect_turn = ExecutionTurn(
@@ -588,8 +585,8 @@ async def test_turn_executor_resume_mode_rejects_post_effect_truth_on_resumed_at
     )
     assert initial_run is not None
     assert initial_attempt is not None
-    _, resumed_attempt = await recover_pre_effect_attempt_for_resume_mode(
-        execution_repository=control_plane.execution_repository,
+    _, resumed_attempt = await recover_pre_effect_attempt_atomic(
+        transactions=control_plane.transactions,
         publication=control_plane.publication,
         run=initial_run,
         current_attempt=initial_attempt,
@@ -628,8 +625,8 @@ async def test_turn_executor_resume_mode_rejects_post_effect_truth_on_resumed_at
     assert truth.result_class is ResultClass.BLOCKED
     assert truth.closure_basis is ClosureBasisClassification.RECONCILIATION_CLOSED
 
-
 @pytest.mark.asyncio
+# Layer: integration
 async def test_turn_executor_resume_mode_rejects_step_only_truth_on_resumed_attempt_before_model(
     tmp_path: Path,
 ) -> None:
@@ -637,8 +634,7 @@ async def test_turn_executor_resume_mode_rejects_step_only_truth_on_resumed_atte
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
-        workspace=Path(tmp_path),
-        control_plane_service=control_plane,
+        workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
     pre_effect_turn = ExecutionTurn(
@@ -662,8 +658,8 @@ async def test_turn_executor_resume_mode_rejects_step_only_truth_on_resumed_atte
     )
     assert initial_run is not None
     assert initial_attempt is not None
-    _, resumed_attempt = await recover_pre_effect_attempt_for_resume_mode(
-        execution_repository=control_plane.execution_repository,
+    _, resumed_attempt = await recover_pre_effect_attempt_atomic(
+        transactions=control_plane.transactions,
         publication=control_plane.publication,
         run=initial_run,
         current_attempt=initial_attempt,

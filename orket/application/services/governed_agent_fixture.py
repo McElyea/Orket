@@ -36,7 +36,7 @@ class DeterministicAgentModelProvider:
             input_tokens=min(_token_estimate(request.messages[-1].content), request.max_input_tokens),
             output_tokens=min(_token_estimate(json.dumps(response)), request.max_output_tokens),
             estimate_source="utf8_bytes_div4_v1",
-            latency_ms=0,
+            latency_ms=None,
             finish_reason="fixture",
         )
 

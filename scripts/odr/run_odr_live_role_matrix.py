@@ -5,10 +5,11 @@ import asyncio
 import itertools
 import json
 import sys
+from contextlib import AsyncExitStack
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
@@ -16,7 +17,10 @@ if str(REPO_ROOT) not in sys.path:
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider  # noqa: E402
 from orket.kernel.v1.odr.core import DEFAULT_CODE_LEAK_PATTERNS, ReactorConfig, ReactorState, run_round  # noqa: E402
+from orket.kernel.v1.odr.prompt_contract import build_architect_messages, build_auditor_messages  # noqa: E402
 from orket.runtime.config.defaults import DEFAULT_LOCAL_MODEL  # noqa: E402 - repository path bootstrap
+from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger  # noqa: E402 - repository CLI bootstrap
+from scripts.odr.provider_admission import ProviderSelection, resolve_selection  # noqa: E402 - repository CLI bootstrap
 
 DEFAULT_ARCHITECTS = [DEFAULT_LOCAL_MODEL]
 DEFAULT_AUDITORS = [DEFAULT_LOCAL_MODEL]
@@ -30,7 +34,7 @@ class Pairing:
     auditor: str
 
 
-def _parse_list(raw: str) -> List[str]:
+def _parse_list(raw: str) -> list[str]:
     return [item.strip() for item in str(raw or "").split(",") if item.strip()]
 
 
@@ -46,15 +50,15 @@ def _json_safe(value: Any) -> Any:
     return str(value)
 
 
-def _load_scenarios() -> List[Dict[str, Any]]:
+def _load_scenarios() -> list[dict[str, Any]]:
     path = SCENARIO_ROOT / "scenarios.json"
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _load_scenario_inputs(scenario: Dict[str, Any]) -> Dict[str, Any]:
+def _load_scenario_inputs(scenario: dict[str, Any]) -> dict[str, Any]:
     folder = SCENARIO_ROOT / str(scenario["path"])
     seed_file = str(scenario.get("seed_file") or "").strip()
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "id": scenario["id"],
         "path": scenario["path"],
         "R0": (folder / "R0.md").read_text(encoding="utf-8"),
@@ -67,7 +71,7 @@ def _load_scenario_inputs(scenario: Dict[str, Any]) -> Dict[str, Any]:
     return payload
 
 
-def _scenario_brief(scenario_input: Dict[str, Any]) -> str:
+def _scenario_brief(scenario_input: dict[str, Any]) -> str:
     issue_lines = []
     for issue in scenario_input.get("A0", []):
         issue_lines.append(
@@ -85,76 +89,54 @@ def _scenario_brief(scenario_input: Dict[str, Any]) -> str:
 
 def _architect_messages(
     *,
-    scenario_input: Dict[str, Any],
+    scenario_input: dict[str, Any],
     current_requirement: str,
     prior_auditor_output: str,
     round_index: int,
-) -> List[Dict[str, str]]:
-    system = (
-        "You are the Architect role for requirement refinement.\n"
-        "Return exactly these sections, once each, in this exact order:\n"
-        "### REQUIREMENT\n"
-        "### CHANGELOG\n"
-        "### ASSUMPTIONS\n"
-        "### OPEN_QUESTIONS\n"
-        "Rules:\n"
-        "- No code fences.\n"
-        "- No source code.\n"
-        "- Keep statements concrete and testable.\n"
-        "- Preserve prior accepted constraints unless explicitly replaced.\n"
-        "- If a required numeric value is missing from seed input, do not invent it; use DECISION_REQUIRED wording.\n"
+) -> list[dict[str, str]]:
+    return build_architect_messages(
+        task=f"{_scenario_brief(scenario_input)}\nRound: {round_index}",
+        current_requirement=current_requirement,
+        prior_auditor_output=prior_auditor_output,
+        extra_rules=[
+            "Preserve prior accepted constraints unless explicitly replaced.",
+            "If a required numeric value is missing from seed input, do not invent it; use DECISION_REQUIRED wording.",
+            "Express input constraint metadata as plain-English requirements; do not copy its ledger block.",
+            "Keep the complete response within 250 words without omitting required behavior or sections.",
+        ],
     )
-    user = (
-        f"{_scenario_brief(scenario_input)}\n"
-        f"Round: {round_index}\n"
-        "Current requirement under refinement:\n"
-        f"{current_requirement}\n\n"
-        "Prior auditor output (if any):\n"
-        f"{prior_auditor_output or '- none'}\n"
-    )
-    return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
 
 def _auditor_messages(
     *,
-    scenario_input: Dict[str, Any],
+    scenario_input: dict[str, Any],
     architect_output: str,
     round_index: int,
-) -> List[Dict[str, str]]:
-    system = (
-        "You are the Auditor role for requirement refinement.\n"
-        "Return exactly these sections, once each, in this exact order:\n"
-        "### CRITIQUE\n"
-        "### PATCHES\n"
-        "### EDGE_CASES\n"
-        "### TEST_GAPS\n"
-        "Rules:\n"
-        "- No code fences.\n"
-        "- No source code.\n"
-        "- Be adversarial and concrete.\n"
-        "- Flag regressions, missing constraints, and hallucinated constants.\n"
+) -> list[dict[str, str]]:
+    return build_auditor_messages(
+        task=f"{_scenario_brief(scenario_input)}\nRound: {round_index}",
+        architect_output=architect_output,
+        extra_rules=[
+            "Flag regressions, missing constraints, and hallucinated constants.",
+            "Use seed decisions for required numeric values; absent values require DECISION_REQUIRED, not a guess.",
+            "Express input constraint metadata as plain English; do not copy its ledger block.",
+            "Keep the complete response within 250 words without omitting required findings or sections.",
+        ],
     )
-    user = (
-        f"{_scenario_brief(scenario_input)}\n"
-        f"Round: {round_index}\n"
-        "Architect output to audit:\n"
-        f"{architect_output}\n"
-    )
-    return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
 
 async def _run_scenario_live(
     *,
-    scenario_input: Dict[str, Any],
+    scenario_input: dict[str, Any],
     architect_provider: LocalModelProvider,
     auditor_provider: LocalModelProvider,
     rounds: int,
     odr_cfg: ReactorConfig,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     state = ReactorState()
     current_requirement = str(scenario_input.get("R0") or "")
     prior_auditor_output = ""
-    round_rows: List[Dict[str, Any]] = []
+    round_rows: list[dict[str, Any]] = []
     code_leak_rounds = 0
 
     for round_index in range(1, rounds + 1):
@@ -224,34 +206,26 @@ async def _run_scenario_live(
 async def _run_pairing(
     *,
     pairing: Pairing,
-    scenario_inputs: List[Dict[str, Any]],
+    scenario_inputs: list[dict[str, Any]],
     rounds: int,
     odr_cfg: ReactorConfig,
     temperature: float,
-    timeout: int,
-) -> Dict[str, Any]:
-    architect_provider = LocalModelProvider(
-        model=pairing.architect,
-        temperature=temperature,
-        timeout=timeout,
-    )
-    auditor_provider = LocalModelProvider(
-        model=pairing.auditor,
-        temperature=temperature,
-        timeout=timeout,
-    )
-
-    scenarios: List[Dict[str, Any]] = []
+    model_timeout: int,
+    provider_selection: ProviderSelection,
+) -> dict[str, Any]:
+    scenarios: list[dict[str, Any]] = []
     started = datetime.now(UTC).isoformat()
-    for scenario_input in scenario_inputs:
-        case = await _run_scenario_live(
-            scenario_input=scenario_input,
-            architect_provider=architect_provider,
-            auditor_provider=auditor_provider,
-            rounds=rounds,
-            odr_cfg=odr_cfg,
-        )
-        scenarios.append(case)
+    async with AsyncExitStack() as stack:
+        providers = [await stack.enter_async_context(LocalModelProvider(
+            model=model, temperature=temperature, timeout=model_timeout,
+            provider=provider_selection.provider, base_url=provider_selection.base_url,
+        )) for model in (pairing.architect, pairing.auditor)]
+        for scenario_input in scenario_inputs:
+            case = await _run_scenario_live(
+                scenario_input=scenario_input, architect_provider=providers[0], auditor_provider=providers[1],
+                rounds=rounds, odr_cfg=odr_cfg,
+            )
+            scenarios.append(case)
     ended = datetime.now(UTC).isoformat()
     return {
         "architect_model": pairing.architect,
@@ -263,6 +237,7 @@ async def _run_pairing(
 
 
 async def _main_async(args: argparse.Namespace) -> int:
+    selection = resolve_selection(args.provider, args.base_url)
     architects = _parse_list(args.architect_models)
     auditors = _parse_list(args.auditor_models)
     scenarios = _load_scenarios()
@@ -292,7 +267,7 @@ async def _main_async(args: argparse.Namespace) -> int:
         leak_gate_mode=str(args.leak_gate_mode or "balanced_v1"),
     )
 
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
     for index, pairing in enumerate(pairings, start=1):
         print(f"[{index}/{len(pairings)}] architect={pairing.architect} auditor={pairing.auditor}")
         row = await _run_pairing(
@@ -301,7 +276,8 @@ async def _main_async(args: argparse.Namespace) -> int:
             rounds=args.rounds,
             odr_cfg=odr_cfg,
             temperature=args.temperature,
-            timeout=args.timeout,
+            model_timeout=args.timeout,
+            provider_selection=selection,
         )
         results.append(row)
         print("  -> complete")
@@ -317,12 +293,12 @@ async def _main_async(args: argparse.Namespace) -> int:
             "odr_config": odr_cfg.as_dict(),
             "temperature": args.temperature,
             "timeout": args.timeout,
+            "provider_selection": selection.to_payload(),
         },
         "results": results,
     }
     out_path = Path(args.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(_json_safe(payload), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    await asyncio.to_thread(write_payload_with_diff_ledger, out_path, _json_safe(payload))
     print(f"Wrote {out_path}")
     return 0
 
@@ -333,6 +309,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--architect-models", default=",".join(DEFAULT_ARCHITECTS))
     parser.add_argument("--auditor-models", default=",".join(DEFAULT_AUDITORS))
+    parser.add_argument("--provider", default="")
+    parser.add_argument("--base-url", default="")
     parser.add_argument(
         "--scenario-ids",
         default="",

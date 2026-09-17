@@ -23,11 +23,13 @@ from orket.adapters.llm.openai_compat_runtime import (
     build_orket_session_id,
     build_prompt_fingerprint,
     normalize_openai_base_url,
+    response_format_payload,
     select_response_headers,
     validate_openai_messages,
 )
 from orket.adapters.llm.openai_native_tools import build_openai_native_tooling
 from orket.adapters.llm.provider_extractors import extractor_for_provider
+from orket.core.contracts.model_timing import MODEL_TIMING_SCHEMA_VERSION, nanoseconds_to_ms
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.logging import log_event
 from orket.runtime.config.defaults import configured_provider
@@ -158,9 +160,7 @@ class LocalModelProvider:
 
     @staticmethod
     def _ns_to_ms(value: Any) -> float | None:
-        if not isinstance(value, (int, float)):
-            return None
-        return float(value) / 1_000_000.0
+        return nanoseconds_to_ms(value)
 
     def _resolve_request_session_id(self, base_session_id: str) -> str:
         if self.provider_backend != "openai_compat":
@@ -231,7 +231,7 @@ class LocalModelProvider:
         )
         native_tools, native_tool_choice, native_payload_overrides = build_openai_native_tooling(
             model=self.model,
-            runtime_context=resolved_context,
+            runtime_context=resolved_context, tool_call_mode=policy.tool_call_mode,
         )
         if self.provider_name == "llama_cpp" and native_tools:
             raise ModelProviderError("llama.cpp first slice admits JSON-wrapper tool calls only.")
@@ -312,11 +312,9 @@ class LocalModelProvider:
                         "completion_tokens": completion_tokens,
                         "total_tokens": total_tokens,
                     },
-                    "timings": {
-                        "prompt_ms": prompt_ms,
-                        "predicted_ms": predicted_ms,
-                        "total_ms": total_ms,
-                    },
+                    "timing_schema_version": MODEL_TIMING_SCHEMA_VERSION,
+                    "timings": {"prompt_ms": prompt_ms, "predicted_ms": predicted_ms, "total_ms": total_ms},
+                    "latency_measurement": {"source": "perf_counter", "scope": "successful_attempt_until_response_observed"},
                     "provider": "ollama-async",
                     "provider_backend": "ollama",
                     "model": self.model,
@@ -404,8 +402,7 @@ class LocalModelProvider:
         if self.seed is not None:
             payload["seed"] = self.seed
         response_format = str(os.getenv("ORKET_LLM_OPENAI_RESPONSE_FORMAT", "")).strip().lower()
-        if response_format in {"text", "json_schema"}:
-            payload["response_format"] = {"type": response_format}
+        payload.update(response_format_payload(response_format, provider_name=self.provider_name))
         if native_tools:
             payload["tools"] = native_tools
         if native_tool_choice:
@@ -491,11 +488,9 @@ class LocalModelProvider:
                         "completion_tokens": completion_tokens,
                         "total_tokens": total_tokens,
                     },
-                    "timings": {
-                        "prompt_ms": prompt_ms,
-                        "predicted_ms": predicted_ms,
-                        "total_ms": total_ms,
-                    },
+                    "timing_schema_version": MODEL_TIMING_SCHEMA_VERSION,
+                    "timings": {"prompt_ms": prompt_ms, "predicted_ms": predicted_ms, "total_ms": total_ms},
+                    "latency_measurement": {"source": "perf_counter", "scope": "successful_attempt_until_response_observed"},
                     "provider": "openai-compat",
                     "provider_backend": self.provider_backend,
                     "provider_name": self.provider_name,

@@ -44,7 +44,7 @@ _PROVIDER_TRUTH_ROWS: tuple[dict[str, Any], ...] = (
         },
         "notes": [
             "streaming support is runtime-gated by ORKET_MODEL_STREAM_OPENAI_USE_STREAM for model-stream workloads.",
-            "json mode is runtime-gated by ORKET_LLM_OPENAI_RESPONSE_FORMAT values text|json_schema.",
+            "response format is runtime-gated by ORKET_LLM_OPENAI_RESPONSE_FORMAT values text|json_object|json_schema.",
             "tool call extraction is implemented when provider returns tool_calls payloads.",
             "transient timeout/connection retry loop is enabled on completion requests.",
         ],
@@ -91,6 +91,7 @@ _PROVIDER_TRUTH_ROWS: tuple[dict[str, Any], ...] = (
         "notes": [
             "llama.cpp resolves through OpenAI-compatible chat completions while preserving requested_provider=llama_cpp.",
             "Orket does not start, stop, supervise, or download llama.cpp models in this slice.",
+            "Explicit json_object requests include an object schema; output still requires runtime validation.",
             "Qwen3.6 and exact Qwen3.8 profiles use JSON-wrapper tools; governed-agent and streaming entrypoints preserve llama_cpp identity.",
             "Formal profile promotion requires conformance volume and template-audit gates beyond feature integration proof.",
         ],

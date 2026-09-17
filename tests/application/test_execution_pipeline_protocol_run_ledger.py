@@ -2,18 +2,20 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from pathlib import Path
 
 import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+from orket.exceptions import ExecutionFailed
+from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.runtime.registry.tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
-from orket.exceptions import ExecutionFailed
-from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.schema import CardStatus
+from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -103,20 +105,18 @@ def _write_protocol_turn_receipts(workspace: Path, *, session_id: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_execution_pipeline_supports_protocol_run_ledger_incomplete_path(
-    test_root,
-    workspace,
-    db_path,
-    monkeypatch,
-):
-    _write_epic_assets(test_root, "protocol_ledger_epic_incomplete")
-    protocol_repo = AsyncProtocolRunLedgerRepository(workspace)
+async def test_execution_pipeline_supports_protocol_run_ledger_incomplete_path(test_root, workspace, db_path, monkeypatch):
+    """Layer: integration. Ordered clock inputs admit the expected incomplete publication."""
+    await asyncio.to_thread(_write_epic_assets, test_root, "protocol_ledger_epic_incomplete")
+    clock = ProtocolLedgerClock()
+    protocol_repo = AsyncProtocolRunLedgerRepository(workspace, timestamp_factory=clock.utc_now_iso)
     pipeline = ExecutionPipeline(
         workspace=workspace,
         department="core",
         db_path=db_path,
         config_root=test_root,
         run_ledger_repo=protocol_repo,
+        runtime_inputs=clock,
     )
 
     async def _no_op_execute_epic(**_kwargs):
@@ -136,12 +136,12 @@ async def test_execution_pipeline_supports_protocol_run_ledger_incomplete_path(
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
     monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
 
-    await pipeline.run_epic(
+    observed = await pipeline.run_epic(
         "protocol_ledger_epic_incomplete",
         build_id="build-protocol-ledger-epic-incomplete",
         session_id="sess-protocol-incomplete",
     )
-
+    assert observed.observation == "published" and not observed.succeeded
     run = await protocol_repo.get_run("sess-protocol-incomplete")
     assert run is not None
     assert run["status"] == "incomplete"
@@ -152,7 +152,7 @@ async def test_execution_pipeline_supports_protocol_run_ledger_incomplete_path(
     assert "gitea_export" not in run["summary_json"]["artifact_ids"]
     assert run["artifact_json"]["workspace"] == str(workspace)
     assert run["artifact_json"]["run_summary"] == run["summary_json"]
-    assert _read_json(Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
+    assert await asyncio.to_thread(_read_json, Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
     assert run["artifact_json"]["gitea_export"]["provider"] == "gitea"
     events = await protocol_repo.list_events("sess-protocol-incomplete")
     assert [event["kind"] for event in events] == ["run_started", "packet2_fact", "run_finalized"]
@@ -161,6 +161,7 @@ async def test_execution_pipeline_supports_protocol_run_ledger_incomplete_path(
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_execution_pipeline_supports_protocol_run_ledger_failure_path(
     test_root,
     workspace,
@@ -194,12 +195,9 @@ async def test_execution_pipeline_supports_protocol_run_ledger_failure_path(
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _raise_execute_epic)
     monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
 
-    with pytest.raises(ExecutionFailed, match="forced protocol failure"):
-        await pipeline.run_epic(
-            "protocol_ledger_epic_failed",
-            build_id="build-protocol-ledger-epic-failed",
-            session_id="sess-protocol-failed",
-        )
+    observed = await pipeline.run_epic('protocol_ledger_epic_failed', build_id='build-protocol-ledger-epic-failed', session_id='sess-protocol-failed')
+    assert observed.observation == "published" and not observed.succeeded
+    assert re.search('forced protocol failure', observed.reason or "")
 
     run = await protocol_repo.get_run("sess-protocol-failed")
     assert run is not None
@@ -215,6 +213,7 @@ async def test_execution_pipeline_supports_protocol_run_ledger_failure_path(
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_execution_pipeline_type_error_crashes_without_failed_run_record(
     test_root,
     workspace,
@@ -236,12 +235,9 @@ async def test_execution_pipeline_type_error_crashes_without_failed_run_record(
 
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _raise_type_error)
 
-    with pytest.raises(TypeError, match="forced programming error"):
-        await pipeline.run_epic(
-            "protocol_ledger_epic_type_error",
-            build_id="build-protocol-ledger-epic-type-error",
-            session_id="sess-protocol-type-error",
-        )
+    observed = await pipeline.run_epic('protocol_ledger_epic_type_error', build_id='build-protocol-ledger-epic-type-error', session_id='sess-protocol-type-error')
+    assert observed.observation == "unresolved" and not observed.succeeded
+    assert re.search('forced programming error', observed.reason or "")
 
     run = await protocol_repo.get_run("sess-protocol-type-error")
     assert run is not None
@@ -252,6 +248,7 @@ async def test_execution_pipeline_type_error_crashes_without_failed_run_record(
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_execution_pipeline_protocol_run_ledger_terminal_failure_path(
     test_root,
     workspace,
@@ -296,10 +293,9 @@ async def test_execution_pipeline_protocol_run_ledger_terminal_failure_path(
     assert run is not None
     assert run["status"] == "terminal_failure"
     assert run["summary_json"]["status"] == "terminal_failure"
-    assert run["summary_json"]["failure_reason"] is None
+    assert run["summary_json"]["failure_reason"] == "card_completion_unverified:ISSUE-1"
     assert run["summary_json"]["duration_ms"] >= 0
     assert _read_json(Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
-
 
 @pytest.mark.asyncio
 async def test_execution_pipeline_materializes_protocol_receipts_into_run_ledger(

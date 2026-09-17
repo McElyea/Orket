@@ -13,8 +13,8 @@ from orket.application.services.sandbox_control_plane_execution_service import (
     SandboxControlPlaneExecutionService,
 )
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
-from orket.core.contracts import AttemptRecord, CheckpointRecord, RunRecord, StepRecord
-from orket.core.contracts.repositories import ControlPlaneExecutionRepository, ControlPlaneRecordRepository
+from orket.core.contracts import CheckpointRecord
+from orket.core.contracts.repositories import ControlPlaneRecordRepository
 from orket.core.domain import (
     AttemptState,
     CheckpointReobservationClass,
@@ -26,48 +26,11 @@ from orket.core.domain import (
 )
 from orket.core.domain.sandbox_lifecycle import TerminalReason
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
+from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
 
 pytestmark = pytest.mark.unit
 
 
-class InMemoryControlPlaneExecutionRepository(ControlPlaneExecutionRepository):
-    def __init__(self) -> None:
-        self.run_by_id: dict[str, RunRecord] = {}
-        self.attempt_by_id: dict[str, AttemptRecord] = {}
-        self.step_by_id: dict[str, StepRecord] = {}
-
-    async def save_run_record(self, *, record: RunRecord) -> RunRecord:
-        self.run_by_id[record.run_id] = record
-        return record
-
-    async def get_run_record(self, *, run_id: str) -> RunRecord | None:
-        return self.run_by_id.get(run_id)
-
-    async def save_attempt_record(self, *, record: AttemptRecord) -> AttemptRecord:
-        self.attempt_by_id[record.attempt_id] = record
-        return record
-
-    async def get_attempt_record(self, *, attempt_id: str) -> AttemptRecord | None:
-        return self.attempt_by_id.get(attempt_id)
-
-    async def list_attempt_records(self, *, run_id: str) -> list[AttemptRecord]:
-        return sorted(
-            [record for record in self.attempt_by_id.values() if record.run_id == run_id],
-            key=lambda item: item.attempt_ordinal,
-        )
-
-    async def save_step_record(self, *, record: StepRecord) -> StepRecord:
-        self.step_by_id[record.step_id] = record
-        return record
-
-    async def get_step_record(self, *, step_id: str) -> StepRecord | None:
-        return self.step_by_id.get(step_id)
-
-    async def list_step_records(self, *, attempt_id: str) -> list[StepRecord]:
-        return sorted(
-            [record for record in self.step_by_id.values() if record.attempt_id == attempt_id],
-            key=lambda item: item.step_id,
-        )
 
 
 @pytest.mark.asyncio

@@ -80,8 +80,8 @@ async def create_namespace_execution(
         starting_state_snapshot_ref=admission_ref,
         start_timestamp=created_at,
     )
-    await execution_repository.save_run_record(record=run)
-    await execution_repository.save_attempt_record(record=attempt)
+    run = await execution_repository.save_run_record(record=run)
+    attempt = await execution_repository.save_attempt_record(record=attempt)
     return run, attempt
 
 
@@ -114,7 +114,7 @@ async def activate_namespace_authority(
     try:
         validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.ADMITTED)
         run = run.model_copy(update={"lifecycle_state": RunState.ADMITTED})
-        await execution_repository.save_run_record(record=run)
+        run = await execution_repository.save_run_record(record=run)
         lease = await publication.publish_lease(
             lease_id=lease_id_for_run(run_id=run.run_id),
             resource_id=namespace_resource_id(issue_id=issue_id),
@@ -142,8 +142,8 @@ async def activate_namespace_authority(
         validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=AttemptState.EXECUTING)
         active_run = run.model_copy(update={"lifecycle_state": RunState.EXECUTING})
         active_attempt = attempt.model_copy(update={"attempt_state": AttemptState.EXECUTING})
-        await execution_repository.save_run_record(record=active_run)
-        await execution_repository.save_attempt_record(record=active_attempt)
+        active_run = await execution_repository.save_run_record(record=active_run)
+        active_attempt = await execution_repository.save_attempt_record(record=active_attempt)
         return active_run, active_attempt, reservation, lease
     except Exception:
         await _rollback_namespace_authority_activation(
@@ -303,8 +303,8 @@ async def close_namespace_mutation(
         authority_sources=[AuthoritySourceClass.RECEIPT_EVIDENCE],
         authoritative_result_ref=output_ref,
     )
-    await execution_repository.save_attempt_record(record=attempt.model_copy(update=attempt_update))
-    await execution_repository.save_run_record(
+    attempt = await execution_repository.save_attempt_record(record=attempt.model_copy(update=attempt_update))
+    run = await execution_repository.save_run_record(
         record=run.model_copy(update={"lifecycle_state": run_state, "final_truth_record_id": truth.final_truth_record_id})
     )
     released = await publication.publish_lease(

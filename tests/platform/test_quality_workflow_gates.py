@@ -9,7 +9,7 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
     text = workflow_path.read_text(encoding="utf-8")
 
     required_commands = [
-        "python scripts/governance/check_dependency_direction.py --legacy-edge-enforcement fail",
+        "python scripts/governance/check_dependency_direction.py",
         "python scripts/benchmarks/check_volatility_boundaries.py",
         "python -m pytest -q tests/platform/test_architecture_volatility_boundaries.py",
         "python scripts/governance/retention_plan.py --out benchmarks/results/governance/retention_plan.json",
@@ -55,7 +55,8 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
 
     # The quick gate job and the full quality job should both run these checks.
     duplicated_in_both_jobs = [
-        "python scripts/governance/check_dependency_direction.py --legacy-edge-enforcement fail",
+        "python -m pytest -q tests/contracts/test_core_effect_values.py tests/integration/test_core_effect_boundaries.py",
+        "python scripts/governance/check_dependency_direction.py",
         "python scripts/benchmarks/check_volatility_boundaries.py",
         "python scripts/governance/retention_plan.py --out benchmarks/results/governance/retention_plan.json",
         "python scripts/governance/check_retention_policy.py --plan benchmarks/results/governance/retention_plan.json --out benchmarks/results/governance/retention_policy_check.json --require-safety",
@@ -76,5 +77,8 @@ def test_nightly_benchmark_workflow_uses_valid_determinism_runs_and_extracted_fi
     text = workflow_path.read_text(encoding="utf-8")
 
     assert "--runs 2" in text
-    assert "python scripts/ci/memory_fixture_smoke.py --profile nightly --out-dir benchmarks/results/benchmarks/memory" in text
+    assert (
+        "python scripts/ci/memory_fixture_smoke.py --profile nightly --out-dir benchmarks/results/benchmarks/memory"
+        in text
+    )
     assert "python - <<'PY'" not in text

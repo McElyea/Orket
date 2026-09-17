@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
@@ -11,7 +13,7 @@ from orket.application.services.tool_approval_control_plane_operator_service imp
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
-from orket.core.contracts.control_plane_models import AttemptRecord, CheckpointRecord, RunRecord, StepRecord
+from orket.core.contracts.control_plane_models import CheckpointRecord, StepRecord
 from orket.core.domain import (
     AttemptState,
     AuthoritySourceClass,
@@ -34,10 +36,16 @@ from orket.kernel.v1.nervous_system_runtime import admit_proposal_v1
 from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
 from orket.orchestration.engine import OrchestrationEngine
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
-from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_unit_transaction import (
+    seed_unit_turn_execution as _seed_target_run_execution,
+)
+from tests.helpers.control_plane_unit_transaction import (
+    unit_control_plane_transactions,
+)
+from tests.helpers.runtime_result import published_result
 
 pytestmark = pytest.mark.unit
-
 
 class _FakePendingGates:
     def __init__(self, rows: list[dict[str, object]] | None = None) -> None:
@@ -51,15 +59,14 @@ class _FakePendingGates:
             rows = [row for row in rows if row["status"] == status]
         return rows[: max(1, int(limit))]
 
-    async def resolve_request(self, *, request_id: str, status: str, resolution=None) -> None:
+    async def resolve_request(self, *, request_id: str, status: str, resolution=None, expected_status=None) -> bool:
         for row in self.rows:
-            if row["request_id"] == request_id:
+            if row["request_id"] == request_id and (expected_status is None or row["status"] == expected_status):
                 row["status"] = status
                 row["resolution_json"] = dict(resolution or {})
                 row["resolved_at"] = "2026-03-03T12:01:00+00:00"
-                return
-        raise RuntimeError("request not found")
-
+                return True
+        return False
 
 def _tool_approval_row(tool_name: str = "write_file") -> dict[str, object]:
     return {
@@ -82,7 +89,6 @@ def _tool_approval_row(tool_name: str = "write_file") -> dict[str, object]:
         "updated_at": "2026-03-03T12:00:00+00:00",
         "resolved_at": None,
     }
-
 
 def _guard_review_row() -> dict[str, object]:
     return {
@@ -107,10 +113,12 @@ def _guard_review_row() -> dict[str, object]:
 
 def _make_engine(*, rows: list[dict[str, object]] | None = None) -> OrchestrationEngine:
     engine = object.__new__(OrchestrationEngine)
+    engine._initialized = True  # This unit fixture supplies already-composed in-memory approval owners.
     engine.pending_gates = _FakePendingGates(rows=rows)
     engine.control_plane_repository = InMemoryControlPlaneRecordRepository()
     engine.control_plane_execution_repository = InMemoryControlPlaneExecutionRepository()
     engine.control_plane_publication = ControlPlanePublicationService(repository=engine.control_plane_repository)
+    engine.control_plane_transactions = unit_control_plane_transactions(engine)
     engine.tool_approval_control_plane_operator = ToolApprovalControlPlaneOperatorService(
         publication=engine.control_plane_publication
     )
@@ -147,35 +155,6 @@ async def _seed_target_final_truth(engine: OrchestrationEngine) -> None:
         closure_basis=ClosureBasisClassification.RECONCILIATION_CLOSED,
         authority_sources=[AuthoritySourceClass.RECONCILIATION_RECORD],
         authoritative_result_ref="turn-tool-result:sess-1:ISS-1:coder:0001",
-    )
-
-
-async def _seed_target_run_execution(engine: OrchestrationEngine) -> None:
-    await engine.control_plane_execution_repository.save_run_record(
-        record=RunRecord(
-            run_id="turn-tool-run:sess-1:ISS-1:coder:0001",
-            workload_id="turn-tool-workload:coder",
-            workload_version="turn_tool_dispatcher.v1",
-            policy_snapshot_id="policy-snapshot-1",
-            policy_digest="sha256:policy-1",
-            configuration_snapshot_id="config-snapshot-1",
-            configuration_digest="sha256:config-1",
-            creation_timestamp="2026-03-03T11:59:00+00:00",
-            admission_decision_receipt_ref="approval-reservation:apr-1",
-            namespace_scope="issue:ISS-1",
-            lifecycle_state=RunState.EXECUTING,
-            current_attempt_id="turn-tool-attempt:sess-1:ISS-1:coder:0001:0001",
-        )
-    )
-    await engine.control_plane_execution_repository.save_attempt_record(
-        record=AttemptRecord(
-            attempt_id="turn-tool-attempt:sess-1:ISS-1:coder:0001:0001",
-            run_id="turn-tool-run:sess-1:ISS-1:coder:0001",
-            attempt_ordinal=1,
-            attempt_state=AttemptState.EXECUTING,
-            starting_state_snapshot_ref="turn-tool-checkpoint:sess-1:ISS-1:coder:0001:0001",
-            start_timestamp="2026-03-03T11:59:00+00:00",
-        )
     )
 
 
@@ -417,20 +396,18 @@ async def test_engine_get_approval_returns_none_when_missing() -> None:
 
 
 @pytest.mark.asyncio
-async def test_engine_decide_approval_resolves_pending_item() -> None:
+# Layer: unit
+async def test_engine_approval_retains_operator_intent_when_terminal_continuation_is_refused() -> None:
     engine = _make_engine()
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine)
     await _seed_target_resource(engine)
     await _seed_target_checkpoint(engine)
     await _seed_target_final_truth(engine)
-    result = await engine.decide_approval(
-        approval_id="apr-1",
-        decision="approve",
-        notes="safe",
-        operator_actor_ref="api_key_fingerprint:sha256:test",
-    )
-    assert result["status"] == "resolved"
+    with pytest.raises(ValueError, match="E_CONTROL_PLANE_TERMINAL_AUTHORITY_CONFLICT"):
+        await engine.decide_approval(approval_id="apr-1", decision="approve", notes="safe",
+                                   operator_actor_ref="api_key_fingerprint:sha256:test")
+    result = {"approval": await engine.get_approval("apr-1")}
     assert result["approval"]["status"] == "APPROVED"
     assert result["approval"]["resolution"]["decision"] == "approve"
     assert result["approval"]["control_plane_target_ref"] == "turn-tool-run:sess-1:ISS-1:coder:0001"
@@ -523,20 +500,19 @@ async def test_engine_decide_approval_resolves_pending_item() -> None:
     assert actions[0].actor_ref == "api_key_fingerprint:sha256:test"
     assert run_actions[0].result == "approved"
 
-
 @pytest.mark.asyncio
+# Layer: unit
 async def test_engine_decide_approval_continues_write_file_slice_on_same_session_issue() -> None:
     engine = _make_engine()
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine)
-    engine._pipeline = object()
     calls: list[dict[str, object]] = []
 
-    async def _run_card(card_id: str, *, session_id: str | None = None, **_kwargs):
-        calls.append({"card_id": card_id, "session_id": session_id})
-        return {"ok": True}
+    async def _resume_epic_approval(*, session_id: str, approval_id: str):
+        calls.append({"approval_id": approval_id, "session_id": session_id})
+        return published_result(session_id=session_id)
 
-    engine.run_card = _run_card
+    engine._pipeline = SimpleNamespace(resume_epic_approval=_resume_epic_approval)
 
     result = await engine.decide_approval(
         approval_id="apr-1",
@@ -545,23 +521,22 @@ async def test_engine_decide_approval_continues_write_file_slice_on_same_session
 
     assert result["status"] == "resolved"
     assert result["approval"]["status"] == "APPROVED"
-    assert calls == [{"card_id": "ISS-1", "session_id": "sess-1"}]
-
+    assert calls == [{"approval_id": "apr-1", "session_id": "sess-1"}]
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_engine_decide_approval_continues_create_issue_slice_on_same_session_issue() -> None:
     """Layer: unit."""
     engine = _make_engine(rows=[_tool_approval_row("create_issue")])
     await _seed_tool_approval_reservation(engine, tool_name="create_issue")
     await _seed_target_run_execution(engine)
-    engine._pipeline = object()
     calls: list[dict[str, object]] = []
 
-    async def _run_card(card_id: str, *, session_id: str | None = None, **_kwargs):
-        calls.append({"card_id": card_id, "session_id": session_id})
-        return {"ok": True}
+    async def _resume_epic_approval(*, session_id: str, approval_id: str):
+        calls.append({"approval_id": approval_id, "session_id": session_id})
+        return published_result(session_id=session_id)
 
-    engine.run_card = _run_card
+    engine._pipeline = SimpleNamespace(resume_epic_approval=_resume_epic_approval)
 
     result = await engine.decide_approval(
         approval_id="apr-1",
@@ -570,10 +545,11 @@ async def test_engine_decide_approval_continues_create_issue_slice_on_same_sessi
 
     assert result["status"] == "resolved"
     assert result["approval"]["status"] == "APPROVED"
-    assert calls == [{"card_id": "ISS-1", "session_id": "sess-1"}]
+    assert calls == [{"approval_id": "apr-1", "session_id": "sess-1"}]
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_engine_decide_approval_write_file_continuation_fails_closed_on_target_ref_drift() -> None:
     row = _tool_approval_row()
     row["payload_json"] = {
@@ -585,7 +561,7 @@ async def test_engine_decide_approval_write_file_continuation_fails_closed_on_ta
     engine._pipeline = object()
 
     async def _run_card(*args, **kwargs):
-        return {"ok": True}
+        return published_result(session_id=kwargs.get("session_id", "fixture-session"))
 
     engine.run_card = _run_card
 
@@ -597,39 +573,15 @@ async def test_engine_decide_approval_write_file_continuation_fails_closed_on_ta
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_engine_decide_approval_write_file_continuation_fails_closed_on_namespace_drift() -> None:
     engine = _make_engine()
     await _seed_tool_approval_reservation(engine)
-    await engine.control_plane_execution_repository.save_run_record(
-        record=RunRecord(
-            run_id="turn-tool-run:sess-1:ISS-1:coder:0001",
-            workload_id="turn-tool-workload:coder",
-            workload_version="turn_tool_dispatcher.v1",
-            policy_snapshot_id="policy-snapshot-1",
-            policy_digest="sha256:policy-1",
-            configuration_snapshot_id="config-snapshot-1",
-            configuration_digest="sha256:config-1",
-            creation_timestamp="2026-03-03T11:59:00+00:00",
-            admission_decision_receipt_ref="approval-reservation:apr-1",
-            namespace_scope="issue:OTHER",
-            lifecycle_state=RunState.EXECUTING,
-            current_attempt_id="turn-tool-attempt:sess-1:ISS-1:coder:0001:0001",
-        )
-    )
-    await engine.control_plane_execution_repository.save_attempt_record(
-        record=AttemptRecord(
-            attempt_id="turn-tool-attempt:sess-1:ISS-1:coder:0001:0001",
-            run_id="turn-tool-run:sess-1:ISS-1:coder:0001",
-            attempt_ordinal=1,
-            attempt_state=AttemptState.EXECUTING,
-            starting_state_snapshot_ref="turn-tool-checkpoint:sess-1:ISS-1:coder:0001:0001",
-            start_timestamp="2026-03-03T11:59:00+00:00",
-        )
-    )
+    await _seed_target_run_execution(engine, namespace="issue:OTHER")
     engine._pipeline = object()
 
     async def _run_card(*args, **kwargs):
-        return {"ok": True}
+        return published_result(session_id=kwargs.get("session_id", "fixture-session"))
 
     engine.run_card = _run_card
 
@@ -667,18 +619,18 @@ async def test_engine_decide_approval_conflict_after_resolution_raises() -> None
 
 
 @pytest.mark.asyncio
-async def test_engine_decide_approval_publishes_terminal_operator_command_for_denial() -> None:
+# Layer: unit
+async def test_engine_denial_retains_operator_command_when_terminal_continuation_is_refused() -> None:
     engine = _make_engine()
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine)
     await _seed_target_resource(engine)
     await _seed_target_checkpoint(engine)
     await _seed_target_final_truth(engine)
-    result = await engine.decide_approval(
-        approval_id="apr-1",
-        decision="deny",
-        operator_actor_ref="api_key_fingerprint:sha256:test",
-    )
+    with pytest.raises(ValueError, match="E_CONTROL_PLANE_TERMINAL_AUTHORITY_CONFLICT"):
+        await engine.decide_approval(approval_id="apr-1", decision="deny",
+                                   operator_actor_ref="api_key_fingerprint:sha256:test")
+    result = {"approval": await engine.get_approval("apr-1")}
     assert result["approval"]["status"] == "DENIED"
     assert result["approval"]["control_plane_target_ref"] == "turn-tool-run:sess-1:ISS-1:coder:0001"
     assert result["approval"]["control_plane_target_run"]["current_attempt_state"] == AttemptState.EXECUTING.value
@@ -859,6 +811,7 @@ async def test_engine_decide_approval_resolves_guard_review_hold_without_tool_op
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_engine_approvals_use_nervous_system_runtime_when_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
@@ -875,12 +828,7 @@ async def test_engine_approvals_use_nervous_system_runtime_when_enabled(monkeypa
         }
     )
 
-    engine = object.__new__(OrchestrationEngine)
-    engine.control_plane_repository = InMemoryControlPlaneRecordRepository()
-    engine.control_plane_publication = ControlPlanePublicationService(repository=engine.control_plane_repository)
-    engine.tool_approval_control_plane_operator = ToolApprovalControlPlaneOperatorService(
-        publication=engine.control_plane_publication
-    )
+    engine = _make_engine()
     items = await engine.list_approvals(status="PENDING", session_id="sess-ns-engine-1", limit=10)
     assert len(items) == 1
     approval_id = items[0]["approval_id"]

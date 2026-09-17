@@ -8,7 +8,11 @@ from urllib.parse import urlparse
 
 import httpx
 
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.storage.bound_filesystem import BOUND_FILESYSTEM_TOOLS, BoundFilesystemExecutor
 from orket.adapters.tools.families.filesystem import FileSystemTools
+from orket.core.contracts.owned_command import CommandExecutionUncertain, CommandRunner
+from orket.core.domain.outward_authorization import OutwardAuthorization
 
 BUILTIN_CONNECTOR_SIDE_EFFECTS: dict[str, bool] = {
     "read_file": False,
@@ -32,14 +36,35 @@ class BuiltInConnectorExecutor:
         self,
         *,
         workspace_root: Path,
+        command_runner: CommandRunner,
         http_allowlist: tuple[str, ...] = (),
     ) -> None:
         self.workspace_root = workspace_root
+        self.command_runner = command_runner
         self.file_tools = FileSystemTools(workspace_root, references=[])
+        self.bound_filesystem = BoundFilesystemExecutor()
         self.http_allowlist = tuple(host.strip().lower() for host in http_allowlist if host.strip())
 
-    async def invoke(self, connector_name: str, args: dict[str, Any], *, timeout_seconds: float) -> dict[str, Any]:
+    async def invoke(
+        self, connector_name: str, args: dict[str, Any], *, timeout_seconds: float,
+        authorization: OutwardAuthorization | None = None,
+    ) -> dict[str, Any]:
         name = str(connector_name or "").strip()
+        if authorization is not None and name in BOUND_FILESYSTEM_TOOLS:
+            if name != authorization.tool:
+                raise RuntimeError("E_OUTWARD_AUTHORIZATION_ARGUMENT_DRIFT")
+            return await self.bound_filesystem.invoke(authorization, args)
+        if name in BOUND_FILESYSTEM_TOOLS:
+            return await run_owned_io(lambda: self._invoke_filesystem(name, args), label=name)
+        if name == "run_command":
+            return await self._run_command(args, timeout_seconds=timeout_seconds)
+        if name == "http_get":
+            return await self._http_get(args, timeout_seconds=timeout_seconds)
+        if name == "http_post":
+            return await self._http_post(args, timeout_seconds=timeout_seconds)
+        raise BuiltInConnectorExecutionError(f"unsupported built-in connector: {connector_name}")
+
+    async def _invoke_filesystem(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         if name == "read_file":
             return await self.file_tools.read_file(args)
         if name == "write_file":
@@ -48,13 +73,7 @@ class BuiltInConnectorExecutor:
             return await self.file_tools.create_directory(args)
         if name == "delete_file":
             return await self._delete_file(args)
-        if name == "run_command":
-            return await self._run_command(args)
-        if name == "http_get":
-            return await self._http_get(args, timeout_seconds=timeout_seconds)
-        if name == "http_post":
-            return await self._http_post(args, timeout_seconds=timeout_seconds)
-        raise BuiltInConnectorExecutionError(f"unsupported built-in connector: {connector_name}")
+        raise BuiltInConnectorExecutionError(f"unsupported filesystem connector: {name}")
 
     async def _delete_file(self, args: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -69,34 +88,33 @@ class BuiltInConnectorExecutor:
         except (PermissionError, OSError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
 
-    async def _run_command(self, args: dict[str, Any]) -> dict[str, Any]:
-        process: asyncio.subprocess.Process | None = None
+    async def _run_command(self, args: dict[str, Any], *, timeout_seconds: float) -> dict[str, Any]:
         try:
             argv = _argv_from_command(args.get("command"))
-            process = await asyncio.create_subprocess_exec(
-                *argv,
-                cwd=str(self.workspace_root),
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            stdout, stderr = await process.communicate()
-            stdout_text = stdout.decode("utf-8", errors="replace")
-            stderr_text = stderr.decode("utf-8", errors="replace")
-            return {
-                "ok": process.returncode == 0,
-                "returncode": process.returncode,
-                "stdout_bytes": len(stdout_text.encode("utf-8")),
-                "stderr_bytes": len(stderr_text.encode("utf-8")),
-                "stdout_preview": stdout_text[:256],
-                "stderr_preview": stderr_text[:256],
-            }
-        except asyncio.CancelledError:
-            if process is not None and process.returncode is None:
-                process.kill()
-                await process.wait()
-            raise
-        except (OSError, ValueError, TypeError) as exc:
+        except (ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
+        result = await self.command_runner.run(
+            argv, cwd=self.workspace_root, timeout_seconds=timeout_seconds,
+        )
+        if (not result.cleanup_confirmed or result.reason in {"cleanup_unconfirmed", "capture_incomplete", "cancelled"}
+                or (result.reason == "completed" and not result.capture_complete)):
+            raise CommandExecutionUncertain(result)
+        stdout_text = result.stdout.decode("utf-8", errors="replace")
+        stderr_text = result.stderr.decode("utf-8", errors="replace")
+        payload = {
+            "ok": result.reason == "completed" and result.returncode == 0,
+            "returncode": result.returncode,
+            "stdout_bytes": len(result.stdout),
+            "stderr_bytes": len(result.stderr),
+            "stdout_preview": stdout_text[:256],
+            "stderr_preview": stderr_text[:256],
+            "process_lifetime": result.lifetime(),
+        }
+        if result.reason != "completed":
+            payload["error"] = result.reason
+        if result.reason == "timeout":
+            payload["timeout_seconds"] = timeout_seconds
+        return payload
 
     async def _http_get(self, args: dict[str, Any], *, timeout_seconds: float) -> dict[str, Any]:
         try:

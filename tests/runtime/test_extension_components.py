@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 from pathlib import Path
 
@@ -37,6 +38,7 @@ from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
 from orket_extension_sdk.llm import LLMProvider
 from orket_extension_sdk.memory import MemoryQueryRequest, MemoryWriteRequest
 from orket_extension_sdk.result import ArtifactRef, WorkloadResult
+from tests.helpers.runtime_result import published_result
 
 
 def test_extension_catalog_load_and_list(tmp_path: Path) -> None:
@@ -160,7 +162,7 @@ def test_manifest_parser_load_manifest_legacy(tmp_path: Path) -> None:
     )
     assert record.extension_id == "demo.ext"
 
-
+# Layer: integration
 def test_sdk_agent_manifest_metadata_survives_catalog_round_trip(tmp_path: Path) -> None:
     """Layer: contract. Host catalog storage preserves the typed agent negotiation fields."""
     parser = ManifestParser()
@@ -179,7 +181,7 @@ def test_sdk_agent_manifest_metadata_survives_catalog_round_trip(tmp_path: Path)
                     "output_contract": "agent_iteration_result.v1",
                     "agent": {
                         "contract_version": "governed_agent_loop.v1",
-                        "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1"],
+                        "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1", "agent_model_use_receipt.v2"],
                         "model_profiles": [{"role": "planner", "profile_ref": "local.default"}],
                         "resource_requirements": {"max_model_calls_per_iteration": 2},
                     },
@@ -200,8 +202,8 @@ def test_sdk_agent_manifest_metadata_survives_catalog_round_trip(tmp_path: Path)
     assert loaded.output_contract == "agent_iteration_result.v1"
     assert loaded.agent_declaration["contract_version"] == "governed_agent_loop.v1"
 
-
 @pytest.mark.asyncio
+# Layer: integration
 async def test_generic_sdk_executor_refuses_agent_workload_before_runtime_side_effects(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -222,7 +224,7 @@ async def test_generic_sdk_executor_refuses_agent_workload_before_runtime_side_e
         output_contract="agent_iteration_result.v1",
         agent_declaration={
             "contract_version": "governed_agent_loop.v1",
-            "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1"],
+            "required_host_features": ["governed_agent_loop.v1", "agent_stdio_ipc.v1", "agent_model_use_receipt.v2"],
         },
     )
     extension = ExtensionRecord(
@@ -507,6 +509,7 @@ def test_workload_executor_compile_workload() -> None:
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_extension_engine_adapter_normalizes_legacy_run_ops_to_run_card(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -519,7 +522,7 @@ async def test_extension_engine_adapter_normalizes_legacy_run_ops_to_run_card(
 
         async def run_card(self, card_id: str, **kwargs: object) -> dict[str, object]:
             calls.append((card_id, dict(kwargs)))
-            return {"card_id": card_id, "kwargs": dict(kwargs)}
+            return published_result(session_id=card_id)
 
     monkeypatch.setattr("orket.extensions.runtime.OrchestrationEngine", _FakeEngine)
 
@@ -540,15 +543,13 @@ async def test_extension_engine_adapter_normalizes_legacy_run_ops_to_run_card(
         ("demo-rock", {"build_id": "build-2"}),
         ("ISSUE-7", {"session_id": "session-7"}),
     ]
-    assert epic_result == {"transcript": {"card_id": "demo-epic", "kwargs": {"build_id": "build-1"}}}
-    assert rock_result == {"card_id": "demo-rock", "kwargs": {"build_id": "build-2"}}
-    assert issue_result == {"transcript": {"card_id": "ISSUE-7", "kwargs": {"session_id": "session-7"}}}
+    assert all(result["succeeded"] for result in (epic_result, rock_result, issue_result))
+    assert [result["session_id"] for result in (epic_result, rock_result, issue_result)] == ["demo-epic", "demo-rock", "ISSUE-7"]
 
-
+# Layer: unit
 def test_extension_engine_adapter_treats_run_rock_as_legacy_alias_only() -> None:
     """Layer: unit. Verifies extension runtime keeps `run_rock` as explicit alias normalization, not a primary op set member."""
-    runtime_text = (Path("orket/extensions/runtime.py")).read_text(encoding="utf-8-sig")
-
+    runtime_text = inspect.getsource(ExtensionEngineAdapter)
     assert 'if op in {"run_card", "run_epic", "run_rock", "run_issue"}:' not in runtime_text
     assert 'canonical_op = "run_card" if op in {"run_epic", "run_issue", "run_rock"} else op' in runtime_text
 

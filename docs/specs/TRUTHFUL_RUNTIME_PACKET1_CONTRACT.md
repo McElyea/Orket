@@ -1,6 +1,6 @@
 # Truthful Runtime Packet-1 Contract
 
-Last updated: 2026-03-27
+Last updated: 2026-09-12
 Status: Active
 Owner: Orket Core
 Canonical requirements source: `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
@@ -20,6 +20,17 @@ This contract governs the minimum runtime-owned truth surfaces for:
 4. packet-1 conformance
 
 Packet-1 proof artifacts demonstrate correctness of runtime truth surfaces. They do not claim semantic quality of generated artifacts.
+
+Card acceptance is governed separately by
+`docs/specs/CARD_COMPLETION_ACCEPTANCE_CONTRACT.md`. Its typed comparison and
+application-owned CLI verification/evidence service now feed a final SQLite
+completion gate and typed explicit/synthesized status requests. Standard runtime
+composition and turn context now use that gate. Final turn success and completed
+reentry validate receipt-bound retained acceptance; unconfigured repositories
+reject completion. Remaining outcome consumers and the full BT-3 proof envelope
+remain open.
+Packet-1 projections and runtime-verifier support artifacts cannot serve as card
+completion authorization or establish satisfaction of declared acceptance.
 
 Implementation archive:
 1. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`

@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.kernel_action_control_plane_failure import pre_effect_recovery_decision_id
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
 from orket.core.domain import (
     AttemptState,
@@ -17,7 +18,7 @@ from orket.core.domain import (
     TruthFailureClass,
 )
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
-from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
 
 pytestmark = pytest.mark.unit
 
@@ -37,6 +38,7 @@ def _service() -> tuple[
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_kernel_action_pre_effect_rejected_policy_publishes_terminal_recovery_decision() -> None:
     service, _, record_repo = _service()
 
@@ -63,16 +65,18 @@ async def test_kernel_action_pre_effect_rejected_policy_publishes_terminal_recov
         ],
     )
 
-    decision = None if attempt.recovery_decision_id is None else await record_repo.get_recovery_decision(
-        decision_id=attempt.recovery_decision_id
+    decision = await record_repo.get_recovery_decision(
+        decision_id=pre_effect_recovery_decision_id(run_id=run.run_id, status="REJECTED_POLICY")
     )
     assert run.lifecycle_state is RunState.FAILED_TERMINAL
     assert attempt.attempt_state is AttemptState.ABANDONED
-    assert attempt.side_effect_boundary_class is SideEffectBoundaryClass.PRE_EFFECT_FAILURE
-    assert attempt.failure_class == "kernel_action_policy_rejected"
-    assert attempt.failure_plane is FailurePlane.TRUTH
-    assert attempt.failure_classification is TruthFailureClass.CLAIM_EXCEEDS_AUTHORITY
+    assert attempt.side_effect_boundary_class is None
+    assert attempt.failure_class is attempt.failure_plane is attempt.failure_classification is None
+    assert attempt.recovery_decision_id is None
     assert decision is not None
+    assert decision.failure_classification_basis == "kernel_action_policy_rejected"
+    assert decision.failure_plane is FailurePlane.TRUTH
+    assert decision.failure_classification is TruthFailureClass.CLAIM_EXCEEDS_AUTHORITY
     assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
     assert decision.side_effect_boundary_class is SideEffectBoundaryClass.PRE_EFFECT_FAILURE
     assert final_truth.closure_basis is ClosureBasisClassification.POLICY_TERMINAL_STOP
@@ -80,6 +84,7 @@ async def test_kernel_action_pre_effect_rejected_policy_publishes_terminal_recov
 
 
 @pytest.mark.asyncio
+# Layer: unit
 async def test_kernel_action_pre_effect_error_publishes_terminal_recovery_decision() -> None:
     service, _, record_repo = _service()
 
@@ -106,16 +111,18 @@ async def test_kernel_action_pre_effect_error_publishes_terminal_recovery_decisi
         ],
     )
 
-    decision = None if attempt.recovery_decision_id is None else await record_repo.get_recovery_decision(
-        decision_id=attempt.recovery_decision_id
+    decision = await record_repo.get_recovery_decision(
+        decision_id=pre_effect_recovery_decision_id(run_id=run.run_id, status="ERROR")
     )
     assert run.lifecycle_state is RunState.FAILED_TERMINAL
     assert attempt.attempt_state is AttemptState.ABANDONED
-    assert attempt.side_effect_boundary_class is SideEffectBoundaryClass.PRE_EFFECT_FAILURE
-    assert attempt.failure_class == "kernel_action_error"
-    assert attempt.failure_plane is FailurePlane.EXECUTION
-    assert attempt.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
+    assert attempt.side_effect_boundary_class is None
+    assert attempt.failure_class is attempt.failure_plane is attempt.failure_classification is None
+    assert attempt.recovery_decision_id is None
     assert decision is not None
+    assert decision.failure_classification_basis == "kernel_action_error"
+    assert decision.failure_plane is FailurePlane.EXECUTION
+    assert decision.failure_classification is ExecutionFailureClass.ADAPTER_EXECUTION_FAILURE
     assert decision.authorized_next_action is RecoveryActionClass.TERMINATE_RUN
     assert decision.side_effect_boundary_class is SideEffectBoundaryClass.PRE_EFFECT_FAILURE
     assert final_truth.closure_basis is ClosureBasisClassification.POLICY_TERMINAL_STOP

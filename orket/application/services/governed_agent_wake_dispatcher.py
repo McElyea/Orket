@@ -28,8 +28,8 @@ from orket.application.services.governed_agent_supervisor import (
     GovernedAgentWakeClaimGuard,
     GovernedAgentWakeDispatchResult,
 )
-from orket.application.services.governed_agent_wake_records import GovernedAgentWakeRecord
 from orket.core.contracts import WorkloadRecord
+from orket.core.contracts.governed_agent_wake_records import GovernedAgentWakeRecord
 from orket.core.domain import RunState
 from orket.extensions.manager import ExtensionManager
 from orket.extensions.models import GovernedAgentWorkloadLaunch

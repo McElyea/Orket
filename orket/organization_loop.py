@@ -2,6 +2,7 @@ import asyncio
 from pathlib import Path
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
+from orket.application.services.runtime_result_projection import require_runtime_success
 from orket.core.domain.critical_path import CriticalPathEngine
 from orket.logging import log_event
 from orket.runtime import ConfigLoader, ExecutionPipeline
@@ -34,7 +35,10 @@ class OrganizationLoop:
                     workspace=Path("workspace/default"),
                 )
                 pipeline = ExecutionPipeline(Path("workspace/default"), str(next_card["dept"]))
-                await pipeline.run_card(str(next_card["id"]))
+                try:
+                    require_runtime_success(await pipeline.run_card(str(next_card["id"])))
+                finally:
+                    await pipeline.close()
             else:
                 # Idle jitter
                 await asyncio.sleep(10)

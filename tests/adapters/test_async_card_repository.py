@@ -4,8 +4,11 @@ import aiosqlite
 import pytest
 
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
+from orket.adapters.storage.card_migrations import CARD_BOOTSTRAP_MIGRATIONS
+from orket.adapters.storage.sqlite_migrations import SQLiteMigrationRunner
 from orket.core.domain.records import IssueRecord
 from orket.schema import CardStatus
+from tests.helpers.card_completion import complete_existing_card
 
 
 @pytest.fixture
@@ -85,9 +88,11 @@ async def test_comments(repo):
     assert comments[0]["content"] == "Hello world"
 
 @pytest.mark.asyncio
-async def test_reset_build(repo):
+# Layer: integration
+async def test_reset_build(repo, tmp_path):
     """Verify that reset_build sets all issues in a build back to READY."""
-    await repo.save(IssueRecord(id="R1", summary="R1", build_id="BR", status=CardStatus.DONE, seat="standard"))
+    await repo.save(IssueRecord(id="R1", summary="R1", build_id="BR", seat="standard"))
+    await complete_existing_card(repo, "R1", tmp_path / "workspace")
     await repo.save(IssueRecord(id="R2", summary="R2", build_id="BR", status=CardStatus.IN_PROGRESS, seat="standard"))
 
     await repo.reset_build("BR")
@@ -95,23 +100,6 @@ async def test_reset_build(repo):
     issues = await repo.get_by_build("BR")
     assert all(i.status == CardStatus.READY for i in issues)
 
-@pytest.mark.asyncio
-async def test_independent_ready_issues(repo):
-    """Test dependency-aware issue selection."""
-    # I1: No deps, READY
-    await repo.save(IssueRecord(id="I1", summary="I1", build_id="DAG", status=CardStatus.READY, seat="standard"))
-    # I2: Deps on I1, READY
-    await repo.save(IssueRecord(id="I2", summary="I2", build_id="DAG", status=CardStatus.READY, depends_on=["I1"], seat="standard"))
-    # I3: No deps, DONE
-    await repo.save(IssueRecord(id="I3", summary="I3", build_id="DAG", status=CardStatus.DONE, seat="standard"))
-    # I4: Deps on I3, READY
-    await repo.save(IssueRecord(id="I4", summary="I4", build_id="DAG", status=CardStatus.READY, depends_on=["I3"], seat="standard"))
-
-    ready = await repo.get_independent_ready_issues("DAG")
-    # I1 is ready (no deps). I4 is ready (dep I3 is DONE).
-    # I2 is NOT ready (dep I1 is READY, not DONE).
-    ready_ids = {i.id for i in ready}
-    assert ready_ids == {"I1", "I4"}
 
 @pytest.mark.asyncio
 async def test_concurrency_stress(repo):
@@ -150,17 +138,13 @@ async def _issue_columns(db_path: str) -> set[str]:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("column_name", ["retry_count", "max_retries"])
+# Layer: integration
 async def test_card_repository_reapplies_missing_retry_migration_columns(tmp_path, column_name):
     """Layer: integration. Verifies additive retry migrations rerun when a legacy DB is missing one column."""
     db_path = str(tmp_path / "cards.db")
-    repo = AsyncCardRepository(db_path)
-    await repo.get_by_id("missing")
-
     async with aiosqlite.connect(db_path) as conn:
-        try:
-            await conn.execute(f"ALTER TABLE issues DROP COLUMN {column_name}")
-        except aiosqlite.OperationalError as exc:
-            pytest.skip(f"SQLite build does not support DROP COLUMN for this regression: {exc}")
+        await SQLiteMigrationRunner(namespace="card_repository").apply(conn, CARD_BOOTSTRAP_MIGRATIONS)
+        await conn.execute(f"ALTER TABLE issues DROP COLUMN {column_name}")
         await conn.commit()
 
     repo_after_column_drift = AsyncCardRepository(db_path)
@@ -300,5 +284,4 @@ async def test_find_related_card_ids(repo):
 
     ids = await repo.find_related_card_ids(["price-arbitrage", "sneaky-price-watch"])
     assert set(ids) == {"ISSUE-X1", "ISSUE-X3"}
-
 

@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from orket.core.domain.outward_authorization import OutwardAuthorization
+
 
 @dataclass(frozen=True)
 class OutwardApprovalProposal:
@@ -21,6 +23,21 @@ class OutwardApprovalProposal:
     reason: str | None = None
     note: str | None = None
     decided_at: str | None = None
+    authorization_json: str | None = None
+    authorization_digest: str | None = None
+
+    @property
+    def authorization(self) -> OutwardAuthorization | None:
+        if self.authorization_json is None:
+            if self.authorization_digest is not None:
+                raise ValueError("E_OUTWARD_AUTHORIZATION_INCOMPLETE")
+            return None
+        binding = OutwardAuthorization.from_json(self.authorization_json, self.authorization_digest or "")
+        if (binding.proposal_id, binding.run_id, binding.namespace, binding.tool, binding.submitted_at, binding.expires_at) != (
+            self.proposal_id, self.run_id, self.namespace, self.tool, self.submitted_at, self.expires_at,
+        ):
+            raise ValueError("E_OUTWARD_AUTHORIZATION_PROPOSAL_MISMATCH")
+        return binding
 
     def to_queue_payload(self) -> dict[str, Any]:
         return {

@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-09-11
+Last updated: 2026-09-14
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
@@ -36,7 +36,7 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| architectural-truth | active-implementation | P1 | `docs/projects/architectural-truth/` | Orket Core | Preserve completed A/B guarantees; execute BT-0/BT-1 behavioral counterexamples and authorization/effect repair before remaining architecture cleanup. The canonical plan covers all September findings and gated workload, containment, and capacity expansion. |
+| architectural-truth | active-implementation | P1 | `docs/projects/architectural-truth/` | Orket Core | Execute C/D dependency enforcement, core purity and async safety, then quality and capability gates; scoped BT-1 through BT-5 accepted. |
 | northstar-aws-smoke-setup | paused-checkpoint | paused | `docs/projects/northstar-aws-smoke-setup/` | Orket Core | Paused pending Bedrock access. No-spend setup, randomized fixtures, and blocked handoff are implemented; reopen only when Bedrock access is available and the user explicitly requests live completion or reopen. This lane does not publicly admit `trusted_terraform_plan_decision_v1`. |
 | governed-proof | paused-checkpoint | paused | `docs/projects/governed-proof/` | Orket Core | Paused after the truthful 2026-04-19 provider-backed Bedrock checkpoint. `ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; reopen only when a bounded change can use an AWS account or Region with non-zero Bedrock inference quota for the admitted provider-backed governed-proof path, or for explicit retirement. |
 | northstar-governed-change-packets | paused-checkpoint | paused | `docs/projects/northstar-governed-change-packets/` | Orket Core | Paused after the truthful 2026-04-20 Terraform public-admission checkpoint. `ORKET_NORTHSTAR_SECOND_GOVERNED_CHANGE_PACKET_FAMILY_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; reopen only when a bounded change can truthfully provide the required non-secret live inputs, rerun the full Workstream 2 proof envelope, and re-evaluate the publication-readiness and publication-gate outputs in the same change, or for explicit retirement. |

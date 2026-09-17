@@ -75,7 +75,7 @@ class WorkItemTransitionService:
     ) -> bool:
         if action != "system_set_status":
             return False
-        if current_status != CardStatus.IN_PROGRESS or requested_status != CardStatus.READY:
+        if current_status not in {CardStatus.IN_PROGRESS, CardStatus.AWAITING_GUARD_REVIEW} or requested_status != CardStatus.READY:
             return False
         reason = str((payload or {}).get("reason", "")).strip().lower()
         return reason in {"retry_scheduled", "runtime_guard_retry_scheduled"}

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from orket.application.services.governed_agent_broker_service import GovernedAgentMemoryObservation
-from orket.application.services.governed_agent_ports import GovernedAgentIterationRepository
+from orket.core.contracts.governed_agent_ports import GovernedAgentIterationRepository
 from orket_extension_sdk import AgentMemoryEntry, AgentMemoryQueryRequest
 
 

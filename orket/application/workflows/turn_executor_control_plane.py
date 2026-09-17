@@ -15,13 +15,14 @@ from orket.application.services.turn_tool_control_plane_support import (
     run_namespace_scope,
     utc_now,
 )
-from orket.runtime.registry.protocol_hashing import hash_canonical_json
 from orket.core.contracts import CheckpointRecord
+from orket.core.contracts.card_completion_commit import is_card_completion_call
 from orket.core.domain import (
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
 )
 from orket.core.domain.execution import ExecutionTurn
+from orket.runtime.registry.protocol_hashing import hash_canonical_json
 
 from .turn_executor_runtime import state_delta_from_tool_calls
 
@@ -109,7 +110,8 @@ def _resource_dependencies(tool_calls: list[dict[str, Any]]) -> list[str]:
 
 def _status_only_tool_calls(tool_calls: list[dict[str, Any]]) -> bool:
     tool_names = [str(call.get("tool") or "").strip() for call in tool_calls if str(call.get("tool") or "").strip()]
-    return bool(tool_names) and all(name == "update_issue_status" for name in tool_names)
+    return (bool(tool_names) and all(name == "update_issue_status" for name in tool_names)
+            and not any(is_card_completion_call(call.get("tool"), call.get("args", {})) for call in tool_calls))
 
 
 def _checkpoint_turn_metadata(

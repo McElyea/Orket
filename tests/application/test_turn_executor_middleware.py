@@ -5,11 +5,11 @@ from pathlib import Path
 import pytest
 
 from orket.application.middleware import InterceptorKind, MiddlewareOutcome, TurnLifecycleInterceptors
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain import AttemptState, RunState
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
 from orket.exceptions import ModelConnectionError
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
@@ -2018,7 +2018,8 @@ async def test_turn_executor_autofills_required_status_tool_call(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_turn_executor_autofills_integrity_guard_done_when_runtime_passed(tmp_path):
+# Layer: unit
+async def test_turn_executor_does_not_autofill_done_from_legacy_runtime_success(tmp_path):
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -2053,8 +2054,5 @@ async def test_turn_executor_autofills_integrity_guard_done_when_runtime_passed(
     context["runtime_verifier_ok"] = True
 
     result = await executor.execute_turn(_guard_issue(), role, model, toolbox, context)
-    assert result.success is True
-    assert model.calls == 1
-    assert len(toolbox.calls) == 5
-    assert toolbox.calls[-1][0] == "update_issue_status"
-    assert toolbox.calls[-1][1]["status"] == "done"
+    assert result.success is False
+    assert all(call[0] != "update_issue_status" for call in toolbox.calls)

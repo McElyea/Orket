@@ -6,9 +6,10 @@ from types import SimpleNamespace
 
 import pytest
 
-import orket.core.domain.reconciler as reconciler_module
+import orket.application.services.structural_reconciliation_service as reconciler_module
 import orket.discovery as discovery_module
 import orket.interfaces.cli as cli_module
+from tests.helpers.runtime_result import published_result
 
 
 class _DummyExtensionManager:
@@ -264,8 +265,9 @@ async def test_cli_known_fatal_error_returns_nonzero(monkeypatch, capsys) -> Non
 
 
 @pytest.mark.asyncio
+# Layer: contract
 async def test_cli_rock_runtime_preserves_flag_but_routes_directly_to_run_card(monkeypatch, capsys) -> None:
-    """Layer: integration. Verifies the `--rock` CLI flag survives only as a hidden compatibility alias over the canonical card surface."""
+    """Layer: contract. Verifies the `--rock` CLI flag survives only as a hidden compatibility alias over the canonical card surface."""
 
     calls: list[tuple[str, object, object, object]] = []
 
@@ -275,7 +277,10 @@ async def test_cli_rock_runtime_preserves_flag_but_routes_directly_to_run_card(m
 
         async def run_card(self, card_id, build_id=None, driver_steered=False, model_override=None):
             calls.append(("run_card", card_id, build_id, driver_steered, model_override))
-            return {"card": card_id}
+            return published_result()
+
+        async def close(self):
+            calls.append(("close",))
 
         async def run_rock(self, rock_name, build_id=None, driver_steered=False):
             calls.append(("run_rock", rock_name, build_id, driver_steered))
@@ -297,5 +302,6 @@ async def test_cli_rock_runtime_preserves_flag_but_routes_directly_to_run_card(m
 
     assert ("run_card", "demo-rock", "build-7", True, None) in calls
     assert ("run_rock", "demo-rock", "build-7", True) not in calls
-    assert "Running Orket Card via legacy compatibility alias --rock: demo-rock" in out
-    assert "=== Card demo-rock Complete (legacy compatibility alias --rock) ===" in out
+    assert "Running Orket Card: demo-rock" in out
+    assert "Runtime fixture-session: success" in out
+    assert calls[-1] == ("close",)

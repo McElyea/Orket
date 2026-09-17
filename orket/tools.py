@@ -14,12 +14,20 @@ from orket.adapters.tools.families import (
     VisionTools,
 )
 from orket.adapters.tools.runtime import ToolRuntimeExecutor
+from orket.application.services.card_completion_service import CardCompletionService
+from orket.application.services.card_completion_turn_service import (
+    refresh_card_completion_request,
+    verify_card_completion_claims,
+)
+from orket.application.services.card_workspace_mutation_service import CardWorkspaceMutationService
+from orket.core.contracts.card_completion_commit import CardCompletionRejected, is_card_completion_call
+from orket.core.domain.execution import ExecutionTurn
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.runtime_paths import resolve_runtime_db_path
 
 if TYPE_CHECKING:
     from orket.adapters.storage.async_card_repository import AsyncCardRepository
-    from orket.core.policies.tool_gate import ToolGate
+    from orket.core.policies.tool_gate import ToolGateValidator as ToolGate
     from orket.schema import OrganizationConfig
 
 
@@ -35,15 +43,16 @@ class ToolBox:
         organization: OrganizationConfig | None = None,
         decision_nodes: DecisionNodeRegistry | None = None,
         runtime_executor: ToolRuntimeExecutor | None = None,
+        card_completion: CardCompletionService | None = None,
     ) -> None:
         self.root = Path(workspace_root)
         self.refs = [Path(r) for r in references]
         self.db_path = resolve_runtime_db_path(db_path)
         self.organization = organization
+        self.card_completion = card_completion
         self.decision_nodes = decision_nodes if decision_nodes is not None else DecisionNodeRegistry()
         self.tool_strategy_node = self.decision_nodes.resolve_tool_strategy(self.organization)
         self.runtime_executor = runtime_executor or ToolRuntimeExecutor()
-        self.fs = FileSystemTools(self.root, self.refs)
         self.vision = VisionTools(self.root, self.refs)
         self.cards = CardManagementTools(
             self.root,
@@ -52,6 +61,8 @@ class ToolBox:
             cards_repo=cards_repo,
             tool_gate=tool_gate,
         )
+        self.workspace_mutations = CardWorkspaceMutationService(self.cards.cards)
+        self.fs = FileSystemTools(self.root, self.refs, mutation_authority=self.workspace_mutations)
         self.governance = GovernanceTools(self.root, self.refs, cards=self.cards)
         self.academy = AcademyTools(self.root, self.refs)
         self.reforger = ReforgerTools(self.root, self.refs)
@@ -68,6 +79,13 @@ class ToolBox:
 
         tool_fn = tool_map[tool_name]
         resolved_context = dict(context or {})
+        if self.card_completion is not None and is_card_completion_call(tool_name, args):
+            try:
+                await refresh_card_completion_request(
+                    service=self.card_completion, cards=self.cards.cards, context=resolved_context,
+                )
+            except CardCompletionRejected as exc:
+                return {"ok": False, "error": str(exc), "error_code": "card_completion_rejected"}
         return await self.runtime_executor.invoke(
             tool_fn,
             args,
@@ -75,7 +93,14 @@ class ToolBox:
             tool_name=tool_name,
             tool_timeout_seconds=_resolve_tool_timeout_seconds(resolved_context),
             workspace=self.root,
+            mutation_authority=self.workspace_mutations if tool_fn in (
+                self.vision.image_generate, self.academy.archive_eval, self.academy.promote_prompt,
+                self.reforger.inspect, self.reforger.run,
+            ) else None,
         )
+
+    async def verify_completion_claims(self, turn: ExecutionTurn, context: dict[str, Any]) -> None:
+        await verify_card_completion_claims(cards=self.cards.cards, turn=turn, context=context)
 
     def nominate_card(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         return self.governance.nominate_card(args, context=dict(context or {}))

@@ -1,52 +1,39 @@
-"""
-Failure Reporter - Phase 3: Elegant Failure & Recovery
-
-Generates high-fidelity reports when the engine hits a governance or state boundary.
-Reconstructed for async native I/O and specific policy violation details.
-"""
+"""Pure failure values; application services own timestamps and publication."""
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 
-import aiofiles
-from pydantic import BaseModel, Field
-
-from orket.logging import log_event
+from pydantic import BaseModel, ConfigDict
 
 
 class PolicyViolationReport(BaseModel):
     """Structured artifact explaining a mechanical failure."""
 
-    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    model_config = ConfigDict(frozen=True)
+
+    timestamp: str
     session_id: str
     card_id: str
     violation_type: str  # "state_transition", "tool_gate", "structural", "timeout"
     detail: str
     attempted_action: dict[str, Any] | None = None
     remedy_suggestion: str
-    active_roles: list[str] = Field(default_factory=list)
+    active_roles: tuple[str, ...] = ()
 
 
 class FailureReporter:
-    """
-    Service responsible for generating troubleshooting artifacts.
-    """
+    """Construct a failure value from explicit inputs without effects."""
 
     @staticmethod
-    async def generate_report(
-        workspace: Path,
+    def build_report(
+        *,
+        timestamp: str,
         session_id: str,
         card_id: str,
         violation: str,
-        transcript: list[Any],
-        roles: list[str] | None = None,
-    ) -> Path:
-        """
-        Generates a JSON report for a failure.
-        """
+        roles: tuple[str, ...] = (),
+    ) -> PolicyViolationReport:
         # Determine violation type and remedy
         v_type = "governance"
         remedy = "Manual intervention required. Check the last turn in orket.log."
@@ -61,27 +48,12 @@ class FailureReporter:
             v_type = "structural"
             remedy = "Structural violation detected. Review architecture governance settings and scope contracts."
 
-        report = PolicyViolationReport(
+        return PolicyViolationReport(
+            timestamp=timestamp,
             session_id=session_id,
             card_id=card_id,
             violation_type=v_type,
             detail=violation,
             remedy_suggestion=remedy,
-            active_roles=roles or [],
+            active_roles=roles,
         )
-
-        from orket.core.domain.verification import AGENT_OUTPUT_DIR
-
-        report_dir = workspace / AGENT_OUTPUT_DIR
-        report_dir.mkdir(parents=True, exist_ok=True)
-        report_path = report_dir / f"policy_violation_{card_id}.json"
-
-        async with aiofiles.open(report_path, "w", encoding="utf-8") as f:
-            await f.write(report.model_dump_json(indent=4))
-
-        log_event(
-            "policy_violation_report_saved",
-            {"session_id": session_id, "card_id": card_id, "path": str(report_path)},
-            workspace,
-        )
-        return report_path

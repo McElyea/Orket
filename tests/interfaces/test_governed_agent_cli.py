@@ -12,8 +12,8 @@ import yaml
 from orket.adapters.storage.async_governed_agent_wake_repository import (
     AsyncGovernedAgentWakeRepository,
 )
-from orket.application.services.governed_agent_ports import GovernedAgentInvocationOutcome
-from orket.application.services.governed_agent_wake_records import GovernedAgentWakeRequest
+from orket.core.contracts.governed_agent_ports import GovernedAgentInvocationOutcome
+from orket.core.contracts.governed_agent_wake_records import GovernedAgentWakeRequest
 from orket.core.domain.governed_agent_continuation import (
     GovernedAgentContinuationInputs,
     decide_governed_agent_continuation,

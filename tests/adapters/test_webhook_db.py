@@ -120,8 +120,11 @@ async def test_get_bug_fix_phase_missing_returns_none(webhook_db):
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_save_and_get_bug_fix_phase_round_trip(webhook_db):
-    phase = BugFixPhase(id="phase-1", rock_id="ROCK-1", status=BugFixPhaseStatus.ACTIVE)
+    """Layer: integration. Persist and reopen an explicit-time phase using real SQLite."""
+    phase = BugFixPhase(id="phase-1", rock_id="ROCK-1", status=BugFixPhaseStatus.ACTIVE,
+                        started_at="2041-01-01T00:00:00+00:00")
 
     await webhook_db.save_bug_fix_phase(phase)
     loaded = await webhook_db.get_bug_fix_phase("ROCK-1")
@@ -132,8 +135,11 @@ async def test_save_and_get_bug_fix_phase_round_trip(webhook_db):
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_save_bug_fix_phase_overwrites_existing(webhook_db):
-    phase = BugFixPhase(id="phase-1", rock_id="ROCK-1", status=BugFixPhaseStatus.ACTIVE)
+    """Layer: integration. A phase update round-trips through the existing adapter."""
+    phase = BugFixPhase(id="phase-1", rock_id="ROCK-1", status=BugFixPhaseStatus.ACTIVE,
+                        started_at="2041-01-01T00:00:00+00:00")
     await webhook_db.save_bug_fix_phase(phase)
 
     phase.status = BugFixPhaseStatus.EXTENDED
@@ -182,6 +188,5 @@ async def test_close_pr_cycle_default_status_closed(webhook_db):
         )).fetchone()
 
     assert row["status"] == "closed"
-
 
 

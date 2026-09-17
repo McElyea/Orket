@@ -6,7 +6,7 @@ import pytest
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
 from orket.core.domain import ResultClass
 from orket.runtime.execution_pipeline import ExecutionPipeline
-from orket.schema import CardStatus
+from tests.helpers.card_completion import complete_existing_card
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -144,8 +144,8 @@ async def test_run_epic_publishes_invocation_scoped_control_plane_run_for_incomp
     assert effects[1].step_id == CardsEpicControlPlaneService.closeout_step_id_for(run_id=run_record["run_id"])
 
 
-# Layer: integration
 @pytest.mark.asyncio
+# Layer: integration
 async def test_run_epic_publishes_completed_control_plane_run_for_success_path(
     test_root,
     workspace,
@@ -161,7 +161,7 @@ async def test_run_epic_publishes_completed_control_plane_run_for_success_path(
     )
 
     async def _complete_execute_epic(**_kwargs):
-        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.DONE)
+        await complete_existing_card(pipeline.async_cards, "ISSUE-1", workspace, service=pipeline.runtime_context.card_completion)
         return None
 
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _complete_execute_epic)
@@ -223,7 +223,7 @@ async def test_run_epic_publishes_completed_control_plane_run_for_success_path(
 
 # Layer: integration
 @pytest.mark.asyncio
-async def test_run_epic_same_session_and_build_creates_new_invocation_scoped_control_plane_run(
+async def test_run_epic_same_session_reuses_publication_and_new_session_creates_invocation(
     test_root,
     workspace,
     db_path,
@@ -263,8 +263,12 @@ async def test_run_epic_same_session_and_build_creates_new_invocation_scoped_con
     first_run = await pipeline.orchestrator.control_plane_execution_repository.get_run_record(run_id=first_run_id)
     second_run = await pipeline.orchestrator.control_plane_execution_repository.get_run_record(run_id=second_run_id)
 
-    assert first_run_id != second_run_id
+    assert first_run_id == second_run_id
     assert first_run is not None
     assert first_run.lifecycle_state.value == "waiting_on_observation"
     assert second_run is not None
     assert second_run.lifecycle_state.value == "waiting_on_observation"
+    await pipeline.run_epic("cards_cp_rerun", build_id="build-cards-cp-rerun", session_id="sess-cards-cp-new")
+    new_ledger = await pipeline.run_ledger.get_run("sess-cards-cp-new")
+    assert new_ledger["artifact_json"]["control_plane_run_record"]["run_id"] != first_run_id
+    await pipeline.close()

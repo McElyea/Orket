@@ -1,21 +1,15 @@
-# Layer: unit
-
 from __future__ import annotations
 
 import ast
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-SCAN_ROOTS = (
-    REPO_ROOT / "orket",
-    REPO_ROOT / "scripts",
-)
-WORKLOAD_AUTHORITY_MATRIX_DOC = (
-    REPO_ROOT / "docs" / "specs" / "CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md"
-)
+from tests.helpers.source_paths import ORKET_ROOT, REPO_ROOT, relative_source_path, source_path
+
+SCAN_ROOTS = (ORKET_ROOT, REPO_ROOT / "scripts")
+WORKLOAD_AUTHORITY_MATRIX_DOC = REPO_ROOT / "docs" / "specs" / "CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md"
 ALLOWED_PATHS = {
-    REPO_ROOT / "orket" / "application" / "services" / "control_plane_workload_catalog.py",
-    REPO_ROOT / "orket" / "core" / "contracts" / "workload_identity.py",
+    ORKET_ROOT / "application" / "services" / "control_plane_workload_catalog.py",
+    ORKET_ROOT / "core" / "contracts" / "workload_identity.py",
 }
 LOW_LEVEL_BUILDERS = {
     "_build_control_plane_workload_record",
@@ -37,6 +31,10 @@ WORKLOAD_AUTHORITY_IMPORTS = {
     "sandbox_runtime_workload_for_tech_stack",
 }
 EXPECTED_GOVERNED_START_PATH_MATRIX = {
+    "outward governed execution": {
+        "status": "catalog-resolved",
+        "paths": {"orket/application/services/outward_control_plane_service.py"},
+    },
     "cards epic execution": {
         "status": "projection-resolved",
         "paths": {"orket/runtime/execution/epic_run_orchestrator.py"},
@@ -163,26 +161,26 @@ PRIVATE_EXTENSION_MANIFEST_IMPORT_OWNERS = {
     "orket/extensions/workload_loader.py",
 }
 RUNTIME_PIPELINE_METHOD_OWNERS = (
-    (REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline.py", "ExecutionPipeline"),
+    (ORKET_ROOT / "runtime" / "execution" / "execution_pipeline.py", "ExecutionPipeline"),
     (
-        REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_artifact_provenance.py",
+        ORKET_ROOT / "runtime" / "execution" / "execution_pipeline_artifact_provenance.py",
         "ExecutionPipelineArtifactProvenanceMixin",
     ),
     (
-        REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_card_dispatch.py",
+        ORKET_ROOT / "runtime" / "execution" / "execution_pipeline_card_dispatch.py",
         "ExecutionPipelineCardDispatchMixin",
     ),
     (
-        REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_ledger_events.py",
+        ORKET_ROOT / "runtime" / "execution" / "execution_pipeline_ledger_events.py",
         "ExecutionPipelineLedgerEventsMixin",
     ),
-    (REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_resume.py", "ExecutionPipelineResumeMixin"),
+    (ORKET_ROOT / "runtime" / "execution" / "execution_pipeline_resume.py", "ExecutionPipelineResumeMixin"),
     (
-        REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_run_summary.py",
+        ORKET_ROOT / "runtime" / "execution" / "execution_pipeline_run_summary.py",
         "ExecutionPipelineRunSummaryMixin",
     ),
     (
-        REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_runtime_artifacts.py",
+        ORKET_ROOT / "runtime" / "execution" / "execution_pipeline_runtime_artifacts.py",
         "ExecutionPipelineRuntimeArtifactsMixin",
     ),
 )
@@ -196,7 +194,7 @@ def _iter_python_files() -> list[Path]:
 
 
 def _relative_path(path: Path) -> str:
-    return path.relative_to(REPO_ROOT).as_posix()
+    return relative_source_path(path)
 
 
 def _builder_violations(path: Path) -> list[str]:
@@ -431,7 +429,7 @@ def _call_targets(node: ast.AST) -> set[str]:
             targets.add(child.func.attr)
     return targets
 
-
+# Layer: contract
 def test_only_workload_authority_seam_mints_control_plane_workload_records() -> None:
     violations: dict[str, list[str]] = {}
     for path in _iter_python_files():
@@ -442,7 +440,7 @@ def test_only_workload_authority_seam_mints_control_plane_workload_records() -> 
             violations[_relative_path(path)] = hits
     assert violations == {}
 
-
+# Layer: contract
 def test_governed_start_path_matrix_stays_classified_and_exact() -> None:
     matrix_rows = _parse_workload_authority_matrix_rows()
     expected_statuses = {
@@ -450,7 +448,7 @@ def test_governed_start_path_matrix_stays_classified_and_exact() -> None:
     }
     assert {start_path: row["status"] for start_path, row in matrix_rows.items()} == expected_statuses
 
-
+# Layer: contract
 def test_only_matrix_covered_modules_consume_catalog_workload_authority() -> None:
     expected_paths = {
         path
@@ -459,11 +457,11 @@ def test_only_matrix_covered_modules_consume_catalog_workload_authority() -> Non
     }
     assert _catalog_authority_consumer_paths() == expected_paths
 
-
+# Layer: contract
 def test_governed_turn_tool_runtime_entrypoints_stay_owned_by_exact_adapter_only_helpers() -> None:
     assert _turn_tool_control_plane_method_callers() == TURN_TOOL_RUNTIME_ENTRYPOINT_METHOD_OWNERS
 
-
+# Layer: contract
 def test_governed_turn_tool_matrix_note_names_adapter_only_runtime_entrypoints() -> None:
     matrix_rows = _parse_workload_authority_matrix_rows()
     truthful_note = matrix_rows["governed turn-tool"]["truthful_note"]
@@ -472,22 +470,26 @@ def test_governed_turn_tool_matrix_note_names_adapter_only_runtime_entrypoints()
     for relative_path in TURN_TOOL_ADAPTER_ONLY_RUNTIME_ENTRYPOINTS:
         assert relative_path in truthful_note
 
-
+# Layer: contract
 def test_catalog_resolved_publishers_do_not_restate_workload_identity_as_string_aliases() -> None:
     violations = {
         relative_path: sorted(
-            _class_assignment_targets(REPO_ROOT / relative_path) & banned_assignments
+            _class_assignment_targets(source_path(relative_path)) & banned_assignments
         )
         for relative_path, banned_assignments in CATALOG_RESOLVED_IDENTITY_ALIAS_BANS.items()
-        if _class_assignment_targets(REPO_ROOT / relative_path) & banned_assignments
+        if _class_assignment_targets(source_path(relative_path)) & banned_assignments
     }
     assert violations == {}
 
 
+# Layer: contract
 def test_rock_entrypoints_remain_routing_only_retirement_debt() -> None:
-    """Layer: unit. Verifies internal rock routing stays routing-only through the generic epic-collection entry."""
+    """Layer: contract. Verifies internal rock routing stays routing-only through the generic epic-collection entry."""
     call_targets = _call_targets(_load_execution_pipeline_method("_run_epic_collection_entry"))
 
+    assert "execute_collection_member" in call_targets
+    call_targets |= _call_targets(_load_module_function(
+        source_path("orket/application/services/runtime_result_lifetime.py"), function_name="execute_collection_member"))
     assert "run_card" in call_targets
     assert {
         "_build_control_plane_workload_record",
@@ -497,25 +499,7 @@ def test_rock_entrypoints_remain_routing_only_retirement_debt() -> None:
         "sandbox_runtime_workload_for_tech_stack",
     }.isdisjoint(call_targets)
 
-
-def test_runtime_epic_collection_entry_no_longer_returns_rock_shaped_payload() -> None:
-    """Layer: unit. Verifies the internal collection path emits collection-shaped runtime output."""
-    method = _load_execution_pipeline_method("_run_epic_collection_entry")
-    return_keys: set[str] = set()
-
-    for node in ast.walk(method):
-        if not isinstance(node, ast.Return):
-            continue
-        if not isinstance(node.value, ast.Dict):
-            continue
-        for key in node.value.keys:
-            if isinstance(key, ast.Constant) and isinstance(key.value, str):
-                return_keys.add(key.value)
-
-    assert "rock" not in return_keys
-    assert {"collection", "results"} <= return_keys
-
-
+# Layer: contract
 def test_no_non_test_runtime_path_calls_compatibility_wrappers() -> None:
     violations = {}
     for path in _iter_python_files():
@@ -527,16 +511,16 @@ def test_no_non_test_runtime_path_calls_compatibility_wrappers() -> None:
 
     assert violations == {}
 
-
+# Layer: contract
 def test_workload_adapter_shim_is_retired_and_has_no_non_test_importers() -> None:
-    """Layer: unit. Verifies the former runtime workload-adapter shim stays deleted and repo code does not reintroduce imports."""
-    workload_adapter_path = REPO_ROOT / "orket" / "runtime" / "workload_adapters.py"
+    """Layer: contract. Verifies the former runtime workload-adapter shim stays deleted and repo code does not reintroduce imports."""
+    workload_adapter_path = ORKET_ROOT / "runtime" / "workload_adapters.py"
     violations = _import_violations(module_names={"orket.runtime.workload_adapters"})
 
     assert workload_adapter_path.exists() is False
     assert violations == {}
 
-
+# Layer: contract
 def test_non_test_repo_code_does_not_import_extension_manifest_workload_alias() -> None:
     violations = _import_violations(
         module_names={"orket.extensions.models", "orket.extensions"},
@@ -545,58 +529,58 @@ def test_non_test_repo_code_does_not_import_extension_manifest_workload_alias() 
 
     assert violations == {}
 
-
+# Layer: contract
 def test_core_contracts_do_not_reexport_private_workload_builders() -> None:
-    core_contracts_init = (REPO_ROOT / "orket" / "core" / "contracts" / "__init__.py").read_text(encoding="utf-8-sig")
+    core_contracts_init = (ORKET_ROOT / "core" / "contracts" / "__init__.py").read_text(encoding="utf-8-sig")
 
     assert "_build_control_plane_workload_record" not in core_contracts_init
     assert "_build_control_plane_workload_record_from_workload_contract" not in core_contracts_init
 
-
+# Layer: contract
 def test_catalog_private_helpers_are_not_blessed_in_dunder_all() -> None:
-    """Layer: unit. Verifies catalog-local helper seams stay internal-only and are not exported as public module surface."""
-    exports = _module_all_exports(REPO_ROOT / "orket" / "application" / "services" / "control_plane_workload_catalog.py")
+    """Layer: contract. Verifies catalog-local helper seams stay internal-only and are not exported as public module surface."""
+    exports = _module_all_exports(ORKET_ROOT / "application" / "services" / "control_plane_workload_catalog.py")
 
     assert "_resolve_extension_control_plane_workload" not in exports
 
-
+# Layer: contract
 def test_private_catalog_helpers_have_only_exact_runtime_owner_importers() -> None:
-    """Layer: unit. Verifies private catalog helpers are consumed only by their exact runtime owner paths."""
+    """Layer: contract. Verifies private catalog helpers are consumed only by their exact runtime owner paths."""
     for helper_name, expected_importers in PRIVATE_CATALOG_HELPER_IMPORT_OWNERS.items():
         assert _named_importers(
             module_name="orket.application.services.control_plane_workload_catalog",
             imported_name=helper_name,
         ) == expected_importers
 
-
+# Layer: contract
 def test_extensions_package_root_does_not_reexport_manifest_workload_alias() -> None:
-    """Layer: unit. Verifies package-root extension exports do not bless manifest workload metadata nouns."""
-    extensions_init = (REPO_ROOT / "orket" / "extensions" / "__init__.py").read_text(encoding="utf-8-sig")
-    exports = _module_all_exports(REPO_ROOT / "orket" / "extensions" / "__init__.py")
+    """Layer: contract. Verifies package-root extension exports do not bless manifest workload metadata nouns."""
+    extensions_init = (ORKET_ROOT / "extensions" / "__init__.py").read_text(encoding="utf-8-sig")
+    exports = _module_all_exports(ORKET_ROOT / "extensions" / "__init__.py")
 
     assert "WorkloadRecord" not in extensions_init
     assert EXTENSION_MANIFEST_WORKLOAD_DESCRIPTOR not in exports
 
-
+# Layer: contract
 def test_extension_manager_dunder_all_does_not_bless_manifest_workload_descriptor() -> None:
-    """Layer: unit. Verifies manager-module exports do not bless manifest workload metadata nouns."""
-    exports = _module_all_exports(REPO_ROOT / "orket" / "extensions" / "manager.py")
+    """Layer: contract. Verifies manager-module exports do not bless manifest workload metadata nouns."""
+    exports = _module_all_exports(ORKET_ROOT / "extensions" / "manager.py")
 
     assert EXTENSION_MANIFEST_WORKLOAD_DESCRIPTOR not in exports
 
-
+# Layer: contract
 def test_extension_manager_module_does_not_expose_manifest_workload_descriptor() -> None:
-    """Layer: unit. Verifies manager module no longer exposes manifest workload metadata as a runtime attribute."""
+    """Layer: contract. Verifies manager module no longer exposes manifest workload metadata as a runtime attribute."""
     import importlib
 
     manager_module = importlib.import_module("orket.extensions.manager")
 
     assert not hasattr(manager_module, EXTENSION_MANIFEST_WORKLOAD_DESCRIPTOR)
 
-
+# Layer: contract
 def test_extension_manager_class_no_longer_exposes_generic_workload_lookup() -> None:
-    """Layer: unit. Verifies manifest metadata lookup is no longer blessed as a generic public workload surface."""
-    manager_path = REPO_ROOT / "orket" / "extensions" / "manager.py"
+    """Layer: contract. Verifies manifest metadata lookup is no longer blessed as a generic public workload surface."""
+    manager_path = ORKET_ROOT / "extensions" / "manager.py"
 
     assert _class_has_method(manager_path, class_name="ExtensionManager", method_name="resolve_workload") is False
     assert _class_has_method(manager_path, class_name="ExtensionManager", method_name="has_manifest_entry") is True
@@ -604,26 +588,26 @@ def test_extension_manager_class_no_longer_exposes_generic_workload_lookup() -> 
     assert _class_has_method(manager_path, class_name="ExtensionManager", method_name="_resolve_manifest_workload") is False
     assert _class_has_method(manager_path, class_name="ExtensionManager", method_name="_resolve_manifest_entry") is True
 
-
+# Layer: contract
 def test_extension_catalog_no_longer_exposes_public_manifest_lookup() -> None:
-    """Layer: unit. Verifies manifest metadata lookup stays internal to the extension catalog surface."""
-    catalog_path = REPO_ROOT / "orket" / "extensions" / "catalog.py"
+    """Layer: contract. Verifies manifest metadata lookup stays internal to the extension catalog surface."""
+    catalog_path = ORKET_ROOT / "extensions" / "catalog.py"
 
     assert _class_has_method(catalog_path, class_name="ExtensionCatalog", method_name="resolve_manifest_entry") is False
     assert _class_has_method(catalog_path, class_name="ExtensionCatalog", method_name="_resolve_manifest_entry") is True
 
-
+# Layer: contract
 def test_sessions_router_uses_manifest_presence_probe_instead_of_metadata_lookup() -> None:
-    """Layer: unit. Verifies interaction session routing validates extension workload ids through a boolean probe."""
-    router_text = (REPO_ROOT / "orket" / "interfaces" / "routers" / "sessions.py").read_text(encoding="utf-8-sig")
+    """Layer: contract. Verifies interaction session routing validates extension workload ids through a boolean probe."""
+    router_text = (ORKET_ROOT / "interfaces" / "routers" / "sessions.py").read_text(encoding="utf-8-sig")
 
     assert ".has_manifest_entry(" in router_text
     assert ".resolve_workload(" not in router_text
 
-
+# Layer: contract
 def test_controller_dispatcher_uses_manager_sdk_probe_instead_of_private_manifest_tuple() -> None:
-    """Layer: unit. Verifies controller dispatch uses boolean manager probes instead of resolving private manifest metadata."""
-    dispatcher_text = (REPO_ROOT / "orket" / "extensions" / "controller_dispatcher.py").read_text(
+    """Layer: contract. Verifies controller dispatch uses boolean manager probes instead of resolving private manifest metadata."""
+    dispatcher_text = (ORKET_ROOT / "extensions" / "controller_dispatcher.py").read_text(
         encoding="utf-8-sig"
     )
 
@@ -631,12 +615,12 @@ def test_controller_dispatcher_uses_manager_sdk_probe_instead_of_private_manifes
     assert ".uses_sdk_contract(" in dispatcher_text
     assert "._resolve_manifest_entry(" not in dispatcher_text
 
-
+# Layer: contract
 def test_extension_models_do_not_define_manifest_workload_alias() -> None:
     import importlib
     from dataclasses import fields
 
-    extension_models = (REPO_ROOT / "orket" / "extensions" / "models.py").read_text(encoding="utf-8-sig")
+    extension_models = (ORKET_ROOT / "extensions" / "models.py").read_text(encoding="utf-8-sig")
     models_module = importlib.import_module("orket.extensions.models")
     field_names = {field.name for field in fields(models_module.ExtensionRecord)}
 
@@ -650,9 +634,9 @@ def test_extension_models_do_not_define_manifest_workload_alias() -> None:
     assert "manifest_workloads" not in field_names
     assert "manifest_entries" in field_names
 
-
+# Layer: contract
 def test_extension_catalog_persisted_rows_use_manifest_entries_key() -> None:
-    """Layer: unit. Verifies installed extension catalog serialization no longer emits a generic workloads key."""
+    """Layer: contract. Verifies installed extension catalog serialization no longer emits a generic workloads key."""
     import importlib
 
     catalog_module = importlib.import_module("orket.extensions.catalog")
@@ -691,9 +675,9 @@ def test_extension_catalog_persisted_rows_use_manifest_entries_key() -> None:
     assert "manifest_entries" in row
     assert "workloads" not in row
 
-
+# Layer: contract
 def test_private_extension_manifest_type_is_only_imported_inside_extensions_package() -> None:
-    """Layer: unit. Verifies the private manifest metadata type does not escape extension-internal production code."""
+    """Layer: contract. Verifies the private manifest metadata type does not escape extension-internal production code."""
     assert _named_importers(
         module_name="orket.extensions.models",
         imported_name=PRIVATE_EXTENSION_MANIFEST_WORKLOAD_DESCRIPTOR,
@@ -702,25 +686,26 @@ def test_private_extension_manifest_type_is_only_imported_inside_extensions_pack
     ) == PRIVATE_EXTENSION_MANIFEST_IMPORT_OWNERS
 
 
+# Layer: contract
 def test_public_runtime_wrappers_collapse_to_run_card() -> None:
-    """Layer: unit. Verifies public runtime compatibility wrappers delegate to run_card instead of owning dispatch."""
+    """Layer: contract. Verifies public runtime compatibility wrappers delegate to run_card instead of owning dispatch."""
     engine_issue_targets = _call_targets(
         _load_class_method(
-            REPO_ROOT / "orket" / "orchestration" / "engine.py",
+            ORKET_ROOT / "orchestration" / "engine.py",
             class_name="OrchestrationEngine",
             method_name="run_issue",
         )
     )
     engine_epic_targets = _call_targets(
         _load_class_method(
-            REPO_ROOT / "orket" / "orchestration" / "engine.py",
+            ORKET_ROOT / "orchestration" / "engine.py",
             class_name="OrchestrationEngine",
             method_name="run_epic",
         )
     )
     engine_rock_targets = _call_targets(
         _load_class_method(
-            REPO_ROOT / "orket" / "orchestration" / "engine.py",
+            ORKET_ROOT / "orchestration" / "engine.py",
             class_name="OrchestrationEngine",
             method_name="run_rock",
         )
@@ -732,41 +717,41 @@ def test_public_runtime_wrappers_collapse_to_run_card() -> None:
     gitea_loop_targets = _call_targets(_load_execution_pipeline_method("run_gitea_state_loop"))
     gitea_loop_worker_targets = _call_targets(
         _load_class_method(
-            REPO_ROOT / "orket" / "runtime" / "execution" / "gitea_state_loop.py",
+            ORKET_ROOT / "runtime" / "execution" / "gitea_state_loop.py",
             class_name="GiteaStateLoopRunner",
             method_name="_work_claimed_card",
         )
     )
     organization_loop_targets = _call_targets(
         _load_class_method(
-            REPO_ROOT / "orket" / "organization_loop.py",
+            ORKET_ROOT / "organization_loop.py",
             class_name="OrganizationLoop",
             method_name="run_forever",
         )
     )
     webhook_targets = _call_targets(
         _load_class_method(
-            REPO_ROOT / "orket" / "adapters" / "vcs" / "gitea_webhook_handlers.py",
+            ORKET_ROOT / "adapters" / "vcs" / "gitea_webhook_handlers.py",
             class_name="PRLifecycleHandler",
             method_name="handle_pr_opened",
         )
     )
     extension_runtime_targets = _call_targets(
         _load_class_method(
-            REPO_ROOT / "orket" / "extensions" / "runtime.py",
+            ORKET_ROOT / "extensions" / "runtime.py",
             class_name="ExtensionEngineAdapter",
             method_name="execute_action",
         )
     )
     runtime_orchestrate_targets = _call_targets(
         _load_module_function(
-            REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline.py",
+            ORKET_ROOT / "runtime" / "execution" / "execution_pipeline.py",
             function_name="orchestrate",
         )
     )
     cli_targets = _call_targets(
         _load_module_function(
-            REPO_ROOT / "orket" / "interfaces" / "cli.py",
+            ORKET_ROOT / "interfaces" / "cli.py",
             function_name="run_cli",
         )
     )
@@ -787,7 +772,9 @@ def test_public_runtime_wrappers_collapse_to_run_card() -> None:
     }.isdisjoint(pipeline_card_targets)
     assert "run_card" in extension_runtime_targets
     assert {"run_epic", "run_issue", "run_rock"}.isdisjoint(extension_runtime_targets)
-    assert "run_card" in runtime_orchestrate_targets
+    assert "orchestrate_card" in runtime_orchestrate_targets
+    assert "run_card" in _call_targets(_load_module_function(
+        source_path("orket/runtime/execution/execution_pipeline.py"), function_name="orchestrate_card"))
     assert {"run_epic", "run_issue", "run_rock"}.isdisjoint(runtime_orchestrate_targets)
     assert "run_card" in cli_targets
     assert "run_epic" in cli_targets
@@ -802,24 +789,24 @@ def test_public_runtime_wrappers_collapse_to_run_card() -> None:
     assert "run_card" in webhook_targets
     assert "run_issue" not in webhook_targets
 
-
+# Layer: contract
 def test_extension_runtime_treats_run_rock_as_legacy_alias_not_primary_run_surface() -> None:
-    """Layer: unit. Verifies the extension runtime adapter keeps `run_rock` only as explicit alias normalization."""
-    extension_runtime_text = (REPO_ROOT / "orket" / "extensions" / "runtime.py").read_text(encoding="utf-8-sig")
+    """Layer: contract. Verifies the extension runtime adapter keeps `run_rock` only as explicit alias normalization."""
+    extension_runtime_text = (ORKET_ROOT / "extensions" / "runtime.py").read_text(encoding="utf-8-sig")
 
     assert 'if op in {"run_card", "run_epic", "run_rock", "run_issue"}:' not in extension_runtime_text
     assert 'canonical_op = "run_card" if op in {"run_epic", "run_issue", "run_rock"} else op' in extension_runtime_text
 
-
+# Layer: contract
 def test_execution_pipeline_no_longer_assembles_cards_workload_authority_input_directly() -> None:
-    """Layer: unit. Verifies the cards runtime path uses a catalog-local helper instead of assembling workload authority input locally."""
-    execution_pipeline_text = (REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline.py").read_text(
+    """Layer: contract. Verifies the cards runtime path uses a catalog-local helper instead of assembling workload authority input locally."""
+    execution_pipeline_text = (ORKET_ROOT / "runtime" / "execution" / "execution_pipeline.py").read_text(
         encoding="utf-8-sig"
     )
-    card_dispatch_text = (REPO_ROOT / "orket" / "runtime" / "execution" / "execution_pipeline_card_dispatch.py").read_text(
+    card_dispatch_text = (ORKET_ROOT / "runtime" / "execution" / "execution_pipeline_card_dispatch.py").read_text(
         encoding="utf-8-sig"
     )
-    epic_orchestrator_text = (REPO_ROOT / "orket" / "runtime" / "execution" / "epic_run_orchestrator.py").read_text(
+    epic_orchestrator_text = (ORKET_ROOT / "runtime" / "execution" / "epic_run_orchestrator.py").read_text(
         encoding="utf-8-sig"
     )
 
@@ -831,10 +818,10 @@ def test_execution_pipeline_no_longer_assembles_cards_workload_authority_input_d
     assert "resolve_control_plane_workload(" not in card_dispatch_text
     assert "resolve_control_plane_workload(" not in epic_orchestrator_text
 
-
+# Layer: contract
 def test_extension_manager_no_longer_assembles_extension_workload_authority_input_directly() -> None:
-    """Layer: unit. Verifies extension workload start uses a catalog-local helper instead of assembling workload authority input locally."""
-    extension_manager_text = (REPO_ROOT / "orket" / "extensions" / "manager.py").read_text(
+    """Layer: contract. Verifies extension workload start uses a catalog-local helper instead of assembling workload authority input locally."""
+    extension_manager_text = (ORKET_ROOT / "extensions" / "manager.py").read_text(
         encoding="utf-8-sig"
     )
 
@@ -842,9 +829,9 @@ def test_extension_manager_no_longer_assembles_extension_workload_authority_inpu
     assert "WorkloadAuthorityInput" not in extension_manager_text
     assert "resolve_control_plane_workload(" not in extension_manager_text
 
-
+# Layer: contract
 def test_run_arbiter_no_longer_assembles_odr_workload_authority_input_directly() -> None:
-    """Layer: unit. Verifies the ODR arbiter uses a catalog-local helper instead of assembling workload authority input locally."""
+    """Layer: contract. Verifies the ODR arbiter uses a catalog-local helper instead of assembling workload authority input locally."""
     run_arbiter_text = (REPO_ROOT / "scripts" / "odr" / "run_arbiter.py").read_text(
         encoding="utf-8-sig"
     )
@@ -853,10 +840,10 @@ def test_run_arbiter_no_longer_assembles_odr_workload_authority_input_directly()
     assert "WorkloadAuthorityInput" not in run_arbiter_text
     assert "resolve_control_plane_workload(" not in run_arbiter_text
 
-
+# Layer: contract
 def test_runtime_and_engine_expose_only_thin_run_rock_wrappers() -> None:
-    """Layer: unit. Verifies run_rock survives only as a thin legacy public wrapper over run_card."""
-    engine_path = REPO_ROOT / "orket" / "orchestration" / "engine.py"
+    """Layer: contract. Verifies run_rock survives only as a thin legacy public wrapper over run_card."""
+    engine_path = ORKET_ROOT / "orchestration" / "engine.py"
 
     assert _runtime_pipeline_has_method("run_rock") is True
     assert _class_has_method(engine_path, class_name="OrchestrationEngine", method_name="run_rock") is True
@@ -869,23 +856,23 @@ def test_runtime_and_engine_expose_only_thin_run_rock_wrappers() -> None:
         )
     ) == {"run_card"}
 
-
+# Layer: contract
 def test_runtime_execution_pipeline_no_longer_exposes_rock_named_internal_entry() -> None:
-    """Layer: unit. Verifies internal rock routing no longer survives as a rock-named helper."""
+    """Layer: contract. Verifies internal rock routing no longer survives as a rock-named helper."""
     assert _runtime_pipeline_has_method("_run_rock_entry") is False
 
-
+# Layer: contract
 def test_runtime_execution_pipeline_no_longer_exposes_orchestrate_rock_helper() -> None:
-    """Layer: unit. Verifies the legacy module-level rock helper is retired entirely."""
+    """Layer: contract. Verifies the legacy module-level rock helper is retired entirely."""
     import importlib
 
     execution_pipeline_module = importlib.import_module("orket.runtime.execution_pipeline")
 
     assert not hasattr(execution_pipeline_module, "orchestrate_rock")
 
-
+# Layer: contract
 def test_live_rock_benchmark_runner_prefers_canonical_card_surface() -> None:
-    """Layer: unit. Verifies live benchmark tooling uses the canonical card surface and card-mode benchmark metadata defaults."""
+    """Layer: contract. Verifies live benchmark tooling uses the canonical card surface and card-mode benchmark metadata defaults."""
     benchmark_runner_text = (
         REPO_ROOT / "scripts" / "benchmarks" / "live_rock_benchmark_runner.py"
     ).read_text(encoding="utf-8-sig")

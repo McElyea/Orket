@@ -5,6 +5,31 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3] - 2026-09-16 - "Architectural truth remediation checkpoint"
+
+### Changed
+- Retain the accumulated architectural-truth repairs for authorization, durable
+  effects and evidence, completion/replay, cancellation and shared run authority.
+  Preserve scoped BT-1 through BT-5 acceptance and its documented claim limits.
+- Separate core values/contracts from application effects, propagate explicit
+  clock inputs, and move governed-agent CLI coordination into application services.
+  Submission captures immutable options and owns preparation/provider cleanup.
+- Replace the dependency denylist with one classified allowed-edge policy and
+  fail-closed import analysis. Existing dependency failures remain visible.
+- Pair this branch candidate with SDK `0.7.0a1`; model receipts retain their
+  versioned semantics. Use the migrations and quarantined-history dispositions in
+  the architectural-truth plan and its durable contracts.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Operator/author action: install the pinned SDK alongside core, follow
+  `docs/requirements/sdk/VERSIONING.md`, and apply the relevant runtime-store,
+  retained-history and internal-import migrations before resuming existing work.
+- Stability: this is a versioned branch checkpoint. C/D, E1/E2, capability,
+  fresh full-suite/hosted CI, release-readiness and whole-lane acceptance gates
+  remain open. Exact historical and current proof scopes live in
+  `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`.
+
 ## [0.6.2] - 2026-09-11 - "llama.cpp defaults and Qwen3.8 promotion"
 
 ### Changed

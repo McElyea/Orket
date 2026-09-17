@@ -1,8 +1,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from contextlib import AbstractAsyncContextManager
 from typing import Any
 
+from orket.core.contracts.card_completion_commit import (
+    CardCompletionContext,
+    CardCompletionReceipt,
+    CardCompletionRequest,
+)
 from orket.core.contracts.control_plane_effect_journal_models import (
     CheckpointAcceptanceRecord,
     EffectJournalEntryRecord,
@@ -36,10 +42,35 @@ class CardRepository(ABC):
     async def get_by_build(self, build_id: str) -> list[IssueRecord]: ...
 
     @abstractmethod
+    async def get_by_session(self, session_id: str) -> list[IssueRecord]: ...
+
+    @abstractmethod
+    async def list_cards(
+        self, *, build_id: str | None = None, session_id: str | None = None, status: str | None = None,
+        limit: int = 50, offset: int = 0,
+    ) -> list[dict[str, Any]]: ...
+
+    @abstractmethod
+    async def reset_build(self, build_id: str) -> None: ...
+
+    @abstractmethod
     async def save(self, card_data: IssueRecord | dict[str, Any]) -> None: ...
 
     @abstractmethod
-    async def update_status(self, card_id: str, status: CardStatus, assignee: str | None = None) -> None: ...
+    async def update_status(
+        self, card_id: str, status: CardStatus, assignee: str | None = None,
+        reason: str | None = None, metadata: dict[str, Any] | None = None,
+        *, completion_request: CardCompletionRequest | None = None,
+    ) -> CardCompletionReceipt | None: ...
+
+    @abstractmethod
+    async def begin_completion_attempt(self, context: CardCompletionContext) -> None: ...
+
+    @abstractmethod
+    def completion_write_guard(self) -> AbstractAsyncContextManager[None]: ...
+
+    @abstractmethod
+    async def read_completion_receipt(self, card_id: str) -> CardCompletionReceipt | None: ...
 
 
 class SessionRepository(ABC):
@@ -223,10 +254,14 @@ class ControlPlaneRecordRepository(ABC):
     async def list_operator_actions(self, *, target_ref: str) -> list[OperatorActionRecord]: ...
 
     @abstractmethod
-    async def save_final_truth(self, *, record: FinalTruthRecord) -> FinalTruthRecord: ...
+    async def save_final_truth(self, *, record: FinalTruthRecord) -> FinalTruthRecord:
+        """Retain one immutable truth identity per run; accept only an identical retry."""
+        ...
 
     @abstractmethod
-    async def get_final_truth(self, *, run_id: str) -> FinalTruthRecord | None: ...
+    async def get_final_truth(self, *, run_id: str) -> FinalTruthRecord | None:
+        """Read the unique run-bound truth; refuse ambiguous or conflicting identities."""
+        ...
 
 
 class ControlPlaneExecutionRepository(ABC):
@@ -237,7 +272,13 @@ class ControlPlaneExecutionRepository(ABC):
         self,
         *,
         record: RunRecord,
-    ) -> RunRecord: ...
+    ) -> RunRecord:
+        """Create with revision None; CAS a read revision and return committed state/revision.
+
+        Identical current writes are no-ops. Immutable admission changes and stale
+        revisions conflict. Callers must retain the returned record after mutation.
+        """
+        ...
 
     @abstractmethod
     async def get_run_record(self, *, run_id: str) -> RunRecord | None: ...
@@ -247,7 +288,9 @@ class ControlPlaneExecutionRepository(ABC):
         self,
         *,
         record: AttemptRecord,
-    ) -> AttemptRecord: ...
+    ) -> AttemptRecord:
+        """Use the same creation/CAS contract as runs; preserve attempt admission."""
+        ...
 
     @abstractmethod
     async def get_attempt_record(self, *, attempt_id: str) -> AttemptRecord | None: ...
@@ -260,7 +303,9 @@ class ControlPlaneExecutionRepository(ABC):
         self,
         *,
         record: StepRecord,
-    ) -> StepRecord: ...
+    ) -> StepRecord:
+        """CAS observed step state; preserve attempt, kind, namespace and input identity."""
+        ...
 
     @abstractmethod
     async def get_step_record(self, *, step_id: str) -> StepRecord | None: ...

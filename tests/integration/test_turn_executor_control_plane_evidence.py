@@ -1,5 +1,4 @@
 # Layer: integration
-
 from __future__ import annotations
 
 import json
@@ -7,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
-from orket.runtime.registry.protocol_hashing import build_step_id, derive_operation_id
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_executor_control_plane import write_turn_checkpoint_and_publish_if_needed
 from orket.core.contracts import StepRecord
@@ -24,10 +23,11 @@ from orket.core.domain import (
 from orket.core.domain.control_plane_effect_journal import create_effect_journal_entry
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
+from orket.runtime.registry.protocol_hashing import build_step_id, derive_operation_id
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("deterministic_turn_clock")]
 
 
 class _Model:
@@ -94,7 +94,7 @@ def _operation_id() -> str:
 
 
 def _turn_dir(tmp_path: Path) -> Path:
-    return Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    return Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
 
 
 def _snapshot_path(tmp_path: Path) -> Path:
@@ -106,8 +106,7 @@ def _executor(tmp_path: Path) -> tuple[object, TurnExecutor]:
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
-        workspace=Path(tmp_path),
-        control_plane_service=control_plane,
+        workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     return control_plane, executor
 

@@ -7,6 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
+from orket.core.contracts.model_generation_options import exact_stop_sequences
 from orket.runtime.config.defaults import DEFAULT_LOCAL_PROVIDER
 
 E_LOCAL_PROMPT_PROFILE_SCHEMA = "E_LOCAL_PROMPT_PROFILE_SCHEMA"
@@ -252,9 +253,7 @@ class LocalPromptProfile(BaseModel):
             task = _normalize_token(task_class).lower()
             if task not in _TASK_CLASSES:
                 raise ValueError(f"unsupported task class '{task}' in stop_sequences_by_task_class")
-            if not isinstance(stops, list):
-                raise ValueError(f"stop_sequences_by_task_class.{task} must be a list")
-            normalized[task] = _normalize_token_list(stops, lowercase=False)
+            normalized[task] = exact_stop_sequences(stops, label=f"stop_sequences_by_task_class.{task}")
         return normalized
 
     @field_validator("sampling_bundles", mode="before")

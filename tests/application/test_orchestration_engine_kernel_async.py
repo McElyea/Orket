@@ -17,7 +17,7 @@ from orket.application.services.kernel_action_control_plane_view_service import 
 from orket.orchestration.engine import OrchestrationEngine
 from orket.orchestration.engine_kernel_async_service import KernelAsyncControlPlaneService
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
-from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
 
 pytestmark = pytest.mark.unit
 

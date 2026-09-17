@@ -43,6 +43,7 @@ def _approval_service(db_path: Path, clock: _Clock) -> OutwardApprovalService:
         event_store=OutwardRunEventStore(db_path),
         connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
         utc_now=clock,
+        workspace_root=Path(db_path).parent,
     )
 
 
@@ -91,8 +92,9 @@ async def test_outward_approval_request_pauses_before_effect_and_approve_continu
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+# Layer: integration
 async def test_outward_approval_deny_is_terminal_and_records_reason(tmp_path) -> None:
-    """Layer: integration. Verifies denial fails the outward run and records the reason."""
+    """Denial commits its blocked terminal result with the original reason."""
     db_path = tmp_path / "phase2-deny.sqlite3"
     await _seed_run(db_path, run_id="run-deny")
     service = _approval_service(db_path, _Clock("2026-04-25T12:01:00+00:00"))
@@ -109,14 +111,17 @@ async def test_outward_approval_deny_is_terminal_and_records_reason(tmp_path) ->
     assert denied.reason == "not safe"
     run = await OutwardRunStore(db_path).get("run-deny")
     assert run is not None
-    assert run.status == "failed"
+    assert run.status == "completed"
     assert run.stop_reason == "not safe"
     events = await OutwardRunEventStore(db_path).list_for_run("run-deny")
-    assert events[-1].event_type == "proposal_denied"
+    assert events[-1].event_type == "run_completed"
+    assert events[-1].payload["result"] == "blocked"
+    assert [event.event_type for event in events].count("proposal_denied") == 1
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+# Layer: integration
 async def test_outward_approval_timeout_auto_denies(tmp_path) -> None:
     """Layer: integration. Verifies pending proposals expire into system timeout denial."""
     db_path = tmp_path / "phase2-timeout.sqlite3"
@@ -142,7 +147,9 @@ async def test_outward_approval_timeout_auto_denies(tmp_path) -> None:
     assert run is not None
     assert run.status == "failed"
     events = await OutwardRunEventStore(db_path).list_for_run("run-timeout")
-    assert events[-1].event_type == "proposal_expired"
+    assert events[-1].event_type == "run_failed"
+    assert events[-1].payload["result"] == "blocked"
+    assert [event.event_type for event in events].count("proposal_expired") == 1
 
 
 @pytest.mark.integration

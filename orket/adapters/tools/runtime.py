@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
 
+from orket.core.contracts.card_completion_commit import CardWorkspaceMutationAuthority
 from orket.logging import log_event
 
 
 class ToolRuntimeExecutor:
     """Stable runtime seam for invoking mapped tool callables."""
+
+    side_effecting = True
 
     async def invoke(
         self,
@@ -20,6 +23,7 @@ class ToolRuntimeExecutor:
         tool_name: str | None = None,
         tool_timeout_seconds: float = 60.0,
         workspace: Path | None = None,
+        mutation_authority: CardWorkspaceMutationAuthority | None = None,
     ) -> dict[str, Any]:
         resolved_context = dict(context or {})
         try:
@@ -27,10 +31,13 @@ class ToolRuntimeExecutor:
         except (TypeError, ValueError):
             timeout_seconds = 60.0
         try:
-            result = await asyncio.wait_for(
-                self._invoke_tool_fn(tool_fn, args, resolved_context),
-                timeout=timeout_seconds,
-            )
+            async def operation():
+                return await self._invoke_tool_fn(tool_fn, args, resolved_context)
+
+            if mutation_authority is not None:
+                result = await self._invoke_guarded(mutation_authority, operation, timeout_seconds)
+            else:
+                result = await asyncio.wait_for(operation(), timeout=timeout_seconds)
             if isinstance(result, dict):
                 return result
             return {"ok": True, "result": result}
@@ -46,6 +53,31 @@ class ToolRuntimeExecutor:
             return {"ok": False, "error": "tool_timeout", "tool": resolved_tool_name}
         except (RuntimeError, ValueError, TypeError, KeyError, OSError) as exc:
             return {"ok": False, "error": str(exc)}
+
+    async def _invoke_guarded(
+        self, authority: CardWorkspaceMutationAuthority, operation: Callable[[], Awaitable[Any]], timeout_seconds: float,
+    ) -> Any:
+        task = asyncio.create_task(authority.run(operation))
+        joined = asyncio.gather(task, return_exceptions=True)
+        try:
+            result, = await asyncio.wait_for(asyncio.shield(joined), timeout=timeout_seconds)
+        except (TimeoutError, asyncio.CancelledError) as exc:
+            cancelled = isinstance(exc, asyncio.CancelledError)
+            task.cancel()
+            # Python 3.11 wait_for can stop waiting on repeated caller cancellation.
+            # Retain the application owner's join until its guarded write has drained.
+            while True:
+                try:
+                    await asyncio.shield(joined)
+                    break
+                except asyncio.CancelledError:
+                    cancelled = True
+            if cancelled:
+                raise asyncio.CancelledError from None
+            raise
+        if isinstance(result, BaseException):
+            raise result
+        return result
 
     async def _invoke_tool_fn(
         self,

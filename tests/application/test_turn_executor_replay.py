@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
-from orket.core.policies.tool_gate import ToolGate
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
 
@@ -51,6 +51,7 @@ def _role():
 
 
 @pytest.mark.asyncio
+# Layer: integration
 async def test_turn_executor_checkpoint_and_resume_tool_replay(tmp_path):
     executor = TurnExecutor(
         StateMachine(),
@@ -68,7 +69,7 @@ async def test_turn_executor_checkpoint_and_resume_tool_replay(tmp_path):
     assert second.success is True
     assert toolbox.calls == 1
 
-    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
     checkpoint = json.loads((turn_dir / "checkpoint.json").read_text(encoding="utf-8"))
     assert checkpoint["run_id"] == "run-1"
     assert checkpoint["issue_id"] == "ISSUE-1"

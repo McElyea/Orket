@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
+from orket.application.services.runtime_result_projection import require_runtime_success, runtime_result_payload
 from orket.orchestration.engine import OrchestrationEngine
 
 from .contracts import RunAction
@@ -32,8 +33,6 @@ class ExtensionEngineAdapter:
         # Legacy action ops normalize onto the canonical card surface.
         if canonical_op == "run_card":
             result = await self.engine.run_card(target, **params)
-            if op in {"run_epic", "run_issue"}:
-                return {"transcript": result}
-            return cast(dict[str, Any], result)
+            return runtime_result_payload(require_runtime_success(result))
 
         raise ValueError(f"Unsupported run action op '{action.op}'")

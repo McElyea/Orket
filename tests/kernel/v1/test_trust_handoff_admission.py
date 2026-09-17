@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from orket.adapters.storage.outward_approval_store import OutwardApprovalStore
@@ -11,7 +13,6 @@ from orket.application.services.outward_run_execution_service import OutwardRunE
 from orket.application.services.outward_run_service import OutwardRunService
 from scripts.proof.trust_handoff_emitter import emit_trust_handoff_package
 from tests.helpers.outward_model import patch_outward_model_client
-
 
 SOURCE_RUN_ID = "run-live-proof"
 SOURCE_AGENT_ID = "outward-agent"
@@ -65,6 +66,7 @@ async def _services(tmp_path):
         event_store=event_store,
         connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
         utc_now=lambda: "2026-05-04T12:00:01+00:00",
+        workspace_root=Path(db_path).parent,
     )
     execution_service = OutwardRunExecutionService(
         run_store=run_store,

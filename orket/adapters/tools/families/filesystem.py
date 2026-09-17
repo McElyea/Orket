@@ -6,16 +6,22 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.tools.families.base import BaseTools
+from orket.core.contracts.card_completion_commit import CardWorkspaceMutationAuthority
 
 _MAX_PATH_LOCKS = 1024
 
 
 class FileSystemTools(BaseTools):
-    def __init__(self, workspace_root: Path, references: list[Path]):
+    side_effecting = True
+
+    def __init__(
+        self, workspace_root: Path, references: list[Path], *, mutation_authority: CardWorkspaceMutationAuthority | None = None,
+    ):
         super().__init__(workspace_root, references)
         from orket.adapters.storage.async_file_tools import AsyncFileTools
 
         self.async_fs = AsyncFileTools(workspace_root, references)
+        self.mutation_authority = mutation_authority
         self._path_locks: OrderedDict[str, asyncio.Lock] = OrderedDict()
 
     def _get_path_lock(self, resolved_path: Path) -> asyncio.Lock:
@@ -61,7 +67,9 @@ class FileSystemTools(BaseTools):
             resolved = self.async_fs._resolve_safe_path(path_str, write=True)
             lock = self._get_path_lock(resolved)
             async with lock:
-                path = await self.async_fs.write_file(str(resolved), content)
+                async def write():
+                    return await self.async_fs.write_file(str(resolved), content)
+                path = await self.mutation_authority.run(write) if self.mutation_authority else await write()
             return {"ok": True, "path": path}
         except (PermissionError, OSError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
@@ -72,7 +80,9 @@ class FileSystemTools(BaseTools):
             resolved = self.async_fs._resolve_safe_path(path_str, write=True)
             lock = self._get_path_lock(resolved)
             async with lock:
-                path = await self.async_fs.create_directory(str(resolved))
+                async def create():
+                    return await self.async_fs.create_directory(str(resolved))
+                path = await self.mutation_authority.run(create) if self.mutation_authority else await create()
             return {"ok": True, "path": path}
         except (PermissionError, OSError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}

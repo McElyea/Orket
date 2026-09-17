@@ -60,13 +60,14 @@ async def test_connector_service_invokes_filesystem_connectors_and_returns_ledge
     read = await service.invoke("read_file", {"path": "nested/demo.txt"})
     deleted = await service.invoke("delete_file", {"path": "nested/demo.txt"})
 
-    assert set(created) == {"connector_name", "args_hash", "result_summary", "duration_ms", "outcome"}
+    assert set(created) == {"connector_name", "args_hash", "result_summary", "duration_ms", "timing", "outcome"}
+    assert created["timing"]["status"] == "measured" and created["duration_ms"] >= 0
     assert created["outcome"] == "success"
     assert written["outcome"] == "success"
     assert read["outcome"] == "success"
     assert read["result_summary"]["content_bytes"] == len("hello")
     assert deleted["outcome"] == "success"
-    assert (tmp_path / "nested" / "demo.txt").exists() is False
+    assert await asyncio.to_thread((tmp_path / "nested" / "demo.txt").exists) is False
 
 
 @pytest.mark.integration

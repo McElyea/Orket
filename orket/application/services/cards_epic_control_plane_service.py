@@ -4,6 +4,7 @@ import hashlib
 import json
 from datetime import UTC, datetime
 
+from orket.application.services.cards_epic_closeout import finalize_cards_epic_closeout
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots, snapshot_digest
 from orket.core.contracts import (
@@ -15,19 +16,14 @@ from orket.core.contracts import (
     StepRecord,
     WorkloadRecord,
 )
+from orket.core.contracts.control_plane_transaction import ControlPlaneTransaction, ControlPlaneTransactionFactory
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     AttemptState,
-    AuthoritySourceClass,
     CapabilityClass,
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
-    ClosureBasisClassification,
-    CompletionClassification,
-    DegradationClassification,
-    EvidenceSufficiencyClassification,
     ResidualUncertaintyClassification,
-    ResultClass,
     RunState,
     validate_attempt_state_transition,
     validate_run_state_transition,
@@ -47,9 +43,11 @@ class CardsEpicControlPlaneService:
         *,
         execution_repository: ControlPlaneExecutionRepository,
         publication: ControlPlanePublicationService,
+        transactions: ControlPlaneTransactionFactory,
     ) -> None:
         self.execution_repository = execution_repository
         self.publication = publication
+        self.transactions = transactions
 
     async def begin_execution(
         self,
@@ -61,6 +59,24 @@ class CardsEpicControlPlaneService:
         workload: WorkloadRecord,
         resume_mode: bool,
         target_issue_id: str | None,
+    ) -> tuple[RunRecord, AttemptRecord, StepRecord, CheckpointRecord, CheckpointAcceptanceRecord]:
+        async with self.transactions() as transaction:
+            return await self._transaction_service(transaction)._begin_execution(
+                session_id=session_id, build_id=build_id, epic_name=epic_name,
+                department=department, workload=workload, resume_mode=resume_mode,
+                target_issue_id=target_issue_id,
+            )
+
+    def _transaction_service(self, transaction: ControlPlaneTransaction) -> CardsEpicControlPlaneService:
+        return CardsEpicControlPlaneService(
+            execution_repository=transaction.execution,
+            publication=ControlPlanePublicationService(repository=transaction.records, authority=self.publication.authority),
+            transactions=self.transactions,
+        )
+
+    async def _begin_execution(
+        self, *, session_id: str, build_id: str, epic_name: str, department: str,
+        workload: WorkloadRecord, resume_mode: bool, target_issue_id: str | None,
     ) -> tuple[RunRecord, AttemptRecord, StepRecord, CheckpointRecord, CheckpointAcceptanceRecord]:
         created_at = self._utc_now()
         run_id = self.run_id_for(session_id=session_id, build_id=build_id, created_at=created_at)
@@ -102,16 +118,26 @@ class CardsEpicControlPlaneService:
             configuration_payload=configuration_payload,
             configuration_source_refs=[admission_ref],
         )
+        run, attempt, step = await self._start_execution(run=run, epic_name=epic_name, build_id=build_id)
+        start_effect = await self._ensure_effect(run=run, attempt=attempt, step=step, stage="start")
+        checkpoint, acceptance = await self._publish_start_checkpoint(
+            run=run, attempt=attempt, step=step, start_effect=start_effect,
+        )
+        return run, attempt, step, checkpoint, acceptance
+
+    async def _start_execution(
+        self, *, run: RunRecord, epic_name: str, build_id: str,
+    ) -> tuple[RunRecord, AttemptRecord, StepRecord]:
         attempt = AttemptRecord(
-            attempt_id=attempt_id,
-            run_id=run_id,
+            attempt_id=self.attempt_id_for(run_id=run.run_id),
+            run_id=run.run_id,
             attempt_ordinal=1,
             attempt_state=AttemptState.CREATED,
-            starting_state_snapshot_ref=admission_ref,
-            start_timestamp=created_at,
+            starting_state_snapshot_ref=run.admission_decision_receipt_ref,
+            start_timestamp=run.creation_timestamp,
         )
-        await self.execution_repository.save_run_record(record=run)
-        await self.execution_repository.save_attempt_record(record=attempt)
+        run = await self.execution_repository.save_run_record(record=run)
+        attempt = await self.execution_repository.save_attempt_record(record=attempt)
 
         validate_run_state_transition(current_state=run.lifecycle_state, next_state=RunState.ADMITTED)
         run = await self.execution_repository.save_run_record(record=run.model_copy(update={"lifecycle_state": RunState.ADMITTED}))
@@ -123,32 +149,32 @@ class CardsEpicControlPlaneService:
         )
         step = await self.execution_repository.save_step_record(
             record=StepRecord(
-                step_id=self.start_step_id_for(run_id=run_id),
+                step_id=self.start_step_id_for(run_id=run.run_id),
                 attempt_id=attempt.attempt_id,
                 step_kind="cards_epic_session_start",
-                input_ref=admission_ref,
-                output_ref=admission_ref,
+                input_ref=run.admission_decision_receipt_ref,
+                output_ref=run.admission_decision_receipt_ref,
                 capability_used=CapabilityClass.DETERMINISTIC_COMPUTE,
                 resources_touched=[
                     f"epic:{sanitize_name(str(epic_name))}",
                     f"build:{sanitize_name(str(build_id))}",
                 ],
                 observed_result_classification="cards_epic_run_started",
-                receipt_refs=[admission_ref],
+                receipt_refs=[run.admission_decision_receipt_ref],
                 closure_classification="step_completed",
             )
         )
-        start_effect = await self._ensure_effect(
-            run=run,
-            attempt=attempt,
-            step=step,
-            stage="start",
-        )
+        return run, attempt, step
+
+    async def _publish_start_checkpoint(
+        self, *, run: RunRecord, attempt: AttemptRecord, step: StepRecord,
+        start_effect: EffectJournalEntryRecord,
+    ) -> tuple[CheckpointRecord, CheckpointAcceptanceRecord]:
         checkpoint = await self.publication.publish_checkpoint(
             checkpoint=CheckpointRecord(
                 checkpoint_id=self.checkpoint_id_for(attempt_id=attempt.attempt_id),
                 parent_ref=attempt.attempt_id,
-                creation_timestamp=created_at,
+                creation_timestamp=run.creation_timestamp,
                 state_snapshot_ref=run.configuration_snapshot_id,
                 resumability_class=CheckpointResumabilityClass.RESUME_FORBIDDEN,
                 invalidation_conditions=[
@@ -171,105 +197,16 @@ class CardsEpicControlPlaneService:
             integrity_verification_ref=checkpoint.integrity_verification_ref,
             journal_entries=[start_effect],
         )
-        return run, attempt, step, checkpoint, checkpoint_acceptance
+        return checkpoint, checkpoint_acceptance
 
     async def finalize_execution(
-        self,
-        *,
-        run_id: str,
-        session_status: str,
-        failure_reason: str | None = None,
+        self, *, run_id: str, session_status: str, failure_reason: str | None = None,
     ) -> tuple[RunRecord, AttemptRecord]:
-        run = await self._require_run(run_id=run_id)
-        attempt = await self._require_attempt(attempt_id=run.current_attempt_id)
-        status = str(session_status or "").strip().lower()
-        ended_at = self._utc_now()
-        closeout_ref = self.closeout_ref_for(run_id=run_id, session_status=status)
-
-        if status == "done":
-            next_run_state = RunState.COMPLETED
-            next_attempt_state = AttemptState.COMPLETED
-            attempt_update = {"attempt_state": next_attempt_state, "end_timestamp": ended_at}
-        elif status in {"terminal_failure", "failed"}:
-            next_run_state = RunState.FAILED_TERMINAL
-            next_attempt_state = AttemptState.FAILED
-            attempt_update = {
-                "attempt_state": next_attempt_state,
-                "end_timestamp": ended_at,
-                "failure_class": str(failure_reason or status)[:200],
-            }
-        elif status == "incomplete":
-            next_run_state = RunState.WAITING_ON_OBSERVATION
-            next_attempt_state = AttemptState.WAITING
-            attempt_update = {"attempt_state": next_attempt_state}
-        else:
-            raise CardsEpicControlPlaneError(f"unsupported cards epic session_status={session_status!r}")
-
-        validate_attempt_state_transition(current_state=attempt.attempt_state, next_state=next_attempt_state)
-        attempt = await self.execution_repository.save_attempt_record(record=attempt.model_copy(update=attempt_update))
-        validate_run_state_transition(current_state=run.lifecycle_state, next_state=next_run_state)
-        run_update: dict[str, object] = {"lifecycle_state": next_run_state}
-        if next_run_state in {RunState.COMPLETED, RunState.FAILED_TERMINAL}:
-            closeout_step = await self.execution_repository.save_step_record(
-                record=StepRecord(
-                    step_id=self.closeout_step_id_for(run_id=run_id),
-                    attempt_id=attempt.attempt_id,
-                    step_kind="cards_epic_session_closeout",
-                    input_ref=self.start_step_id_for(run_id=run_id),
-                    output_ref=closeout_ref,
-                    capability_used=CapabilityClass.DETERMINISTIC_COMPUTE,
-                    resources_touched=[],
-                    observed_result_classification=f"cards_epic_session_{status}",
-                    receipt_refs=[closeout_ref],
-                    closure_classification="step_completed",
-                )
+        async with self.transactions() as transaction:
+            return await finalize_cards_epic_closeout(
+                self._transaction_service(transaction), run_id=run_id, session_status=session_status, failure_reason=failure_reason,
+                error_type=CardsEpicControlPlaneError,
             )
-            await self._ensure_effect(
-                run=run,
-                attempt=attempt,
-                step=closeout_step,
-                stage="closeout",
-            )
-            truth = await self.publication.publish_final_truth(
-                final_truth_record_id=self.final_truth_id_for(run_id=run_id),
-                run_id=run_id,
-                result_class=(ResultClass.SUCCESS if status == "done" else ResultClass.FAILED),
-                completion_classification=(
-                    CompletionClassification.SATISFIED
-                    if status == "done"
-                    else CompletionClassification.UNSATISFIED
-                ),
-                evidence_sufficiency_classification=EvidenceSufficiencyClassification.SUFFICIENT,
-                residual_uncertainty_classification=ResidualUncertaintyClassification.NONE,
-                degradation_classification=DegradationClassification.NONE,
-                closure_basis=ClosureBasisClassification.NORMAL_EXECUTION,
-                authority_sources=[AuthoritySourceClass.RECEIPT_EVIDENCE],
-                authoritative_result_ref=closeout_ref,
-            )
-            run_update["final_truth_record_id"] = truth.final_truth_record_id
-        else:
-            closeout_step = await self.execution_repository.save_step_record(
-                record=StepRecord(
-                    step_id=self.closeout_step_id_for(run_id=run_id),
-                    attempt_id=attempt.attempt_id,
-                    step_kind="cards_epic_session_wait",
-                    input_ref=self.start_step_id_for(run_id=run_id),
-                    output_ref=closeout_ref,
-                    capability_used=CapabilityClass.DETERMINISTIC_COMPUTE,
-                    resources_touched=[],
-                    observed_result_classification=f"cards_epic_session_{status}",
-                    receipt_refs=[closeout_ref],
-                    closure_classification="step_completed",
-                )
-            )
-            await self._ensure_effect(
-                run=run,
-                attempt=attempt,
-                step=closeout_step,
-                stage="wait",
-            )
-        run = await self.execution_repository.save_run_record(record=run.model_copy(update=run_update))
-        return run, attempt
 
     @staticmethod
     def run_id_for(*, session_id: str, build_id: str, created_at: str) -> str:

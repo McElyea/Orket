@@ -9,6 +9,7 @@ from orket.application.services.governed_agent_runtime import governed_agent_wak
 from orket.application.services.governed_agent_scheduled_wake_service import (
     governed_agent_schedule_evaluation_view,
 )
+from orket.application.services.governed_agent_terminal_history import GovernedAgentTerminalHistoryConflict
 from orket.application.services.governed_agent_wake_control_service import (
     governed_agent_wake_action_view,
 )
@@ -270,7 +271,10 @@ def _register_run_routes(
 
     @router.get("/agent-runs/{run_id}")
     async def inspect_run(run_id: str) -> dict[str, Any]:
-        inspection = await runtime_getter().inspect(run_id=run_id)
+        try:
+            inspection = await runtime_getter().inspect(run_id=run_id)
+        except GovernedAgentTerminalHistoryConflict as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
         if inspection is None:
             raise HTTPException(status_code=404, detail=f"Governed-agent run '{run_id}' not found.")
         return outbound_filter(inspection, "api.governed_agent.run.inspect")

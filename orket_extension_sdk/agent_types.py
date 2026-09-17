@@ -55,6 +55,7 @@ _OMIT_WHEN_NONE = {
     "agent_iteration_request": ("accepted_checkpoint_ref", "recovery_ref"),
     "agent_iteration_result": ("advisory_proposal", "advisory_proposal_ref"),
     "agent_model_call_request": ("profile_ref", "capability_class", "response_schema", "temperature", "seed"),
+    "agent_model_use_receipt": ("latency_posture",),
     "agent_effect_proposal": ("arguments", "arguments_ref"),
 }
 
@@ -165,7 +166,7 @@ class AgentToolDescription(AgentContractModel):
 
 class AgentModelUseReceipt(AgentWireModel):
     object_type: Literal["agent_model_use_receipt"] = "agent_model_use_receipt"
-    schema_version: Literal["agent_model_use_receipt.v1"] = "agent_model_use_receipt.v1"
+    schema_version: Literal["agent_model_use_receipt.v1", "agent_model_use_receipt.v2"] = "agent_model_use_receipt.v2"
     identity: AgentIdentity
     call_id: str = Field(min_length=1, max_length=256)
     role: str = Field(min_length=1, max_length=64)
@@ -182,7 +183,8 @@ class AgentModelUseReceipt(AgentWireModel):
     estimate_source: str | None = Field(max_length=256)
     charged_input_tokens: int = Field(ge=0)
     charged_output_tokens: int = Field(ge=0)
-    latency_ms: int = Field(ge=0)
+    latency_ms: int | None = Field(ge=0, strict=True)
+    latency_posture: Literal["reported", "unavailable"] | None = None
     finish_reason: str | None = Field(max_length=128)
     truncated: bool
     substitution_posture: Literal["requested", "substituted", "degraded"]

@@ -7,11 +7,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 import orket.interfaces.api as api_module
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.domain.outward_ledger import verify_ledger_export
 from tests.helpers.outward_model import patch_outward_model_client
 
 
-class _FrozenRuntimeInputs:
+class _FrozenRuntimeInputs(RuntimeInputService):
     def __init__(self, now: str) -> None:
         self.now = _parse(now)
 

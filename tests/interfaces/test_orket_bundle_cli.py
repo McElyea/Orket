@@ -479,7 +479,8 @@ def test_connectors_cli_lists_shows_and_tests_local_harness(tmp_path: Path, caps
     assert show_code == 0
     assert shown["name"] == "write_file"
     assert test_code == 0
-    assert set(tested) == {"connector_name", "args_hash", "result_summary", "duration_ms", "outcome"}
+    assert set(tested) == {"connector_name", "args_hash", "result_summary", "duration_ms", "timing", "outcome"}
+    assert tested["timing"]["status"] == "measured" and tested["duration_ms"] >= 0
     assert tested["outcome"] == "success"
     assert (tmp_path / "made").is_dir()
 

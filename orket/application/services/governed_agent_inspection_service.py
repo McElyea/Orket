@@ -1,43 +1,41 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Protocol
+from typing import Any
 
-from orket.application.services.governed_agent_iteration_policy import agent_payload_digest
-from orket.application.services.governed_agent_ports import (
+from orket.application.services.governed_agent_replay_service import replay_governed_agent_evidence
+from orket.application.services.governed_agent_scheduled_wake_service import (
+    governed_agent_schedule_evaluation_view,
+)
+from orket.application.services.governed_agent_terminal_history import agent_terminal_history_records
+from orket.application.services.governed_agent_wake_control_service import (
+    governed_agent_wake_action_view,
+)
+from orket.application.services.governed_agent_webhook_ingress_service import (
+    governed_agent_webhook_delivery_view,
+)
+from orket.core.contracts.governed_agent_ports import (
     GovernedAgentBrokerCallRepository,
     GovernedAgentIterationRepository,
     GovernedAgentIterationSnapshot,
 )
-from orket.application.services.governed_agent_schedule_records import (
+from orket.core.contracts.governed_agent_replay import GovernedAgentReplayRepository
+from orket.core.contracts.governed_agent_schedule_records import (
     GovernedAgentScheduleEvaluationRecord,
     GovernedAgentScheduleRepository,
 )
-from orket.application.services.governed_agent_scheduled_wake_service import (
-    governed_agent_schedule_evaluation_view,
-)
-from orket.application.services.governed_agent_terminal_service import GovernedAgentFinalTruthRepository
-from orket.application.services.governed_agent_wake_control_service import (
-    governed_agent_wake_action_view,
-)
-from orket.application.services.governed_agent_wake_records import (
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeActionRecord,
     GovernedAgentWakeControlRepository,
     GovernedAgentWakeRecord,
     GovernedAgentWakeRepository,
 )
-from orket.application.services.governed_agent_webhook_ingress_service import (
-    governed_agent_webhook_delivery_view,
-)
-from orket.application.services.governed_agent_webhook_records import (
+from orket.core.contracts.governed_agent_webhook_records import (
     GovernedAgentWebhookDeliveryRecord,
     GovernedAgentWebhookRepository,
 )
-from orket.core.contracts.repositories import ControlPlaneExecutionRepository, ControlPlaneRecordRepository
-from orket.core.domain.governed_agent_continuation import (
-    GovernedAgentContinuationInputs,
-    decide_governed_agent_continuation,
-)
+from orket.core.contracts.pending_gate_repository import PendingGateRepository
+from orket.core.contracts.repositories import ControlPlaneRecordRepository
 
 
 class GovernedAgentInspectionService:
@@ -46,21 +44,19 @@ class GovernedAgentInspectionService:
     def __init__(
         self,
         *,
-        execution_repository: ControlPlaneExecutionRepository,
         iteration_repository: GovernedAgentIterationRepository,
         call_repository: GovernedAgentBrokerCallRepository,
-        truth_repository: GovernedAgentFinalTruthRepository,
+        replay_repository: GovernedAgentReplayRepository,
         wake_repository: GovernedAgentWakeRepository | None = None,
         wake_control_repository: GovernedAgentWakeControlRepository | None = None,
         schedule_repository: GovernedAgentScheduleRepository | None = None,
         webhook_repository: GovernedAgentWebhookRepository | None = None,
         record_repository: ControlPlaneRecordRepository | None = None,
-        pending_gate_repository: GovernedAgentPendingGateRepository | None = None,
+        pending_gate_repository: PendingGateRepository | None = None,
     ) -> None:
-        self._execution = execution_repository
         self._iterations = iteration_repository
         self._calls = call_repository
-        self._truth = truth_repository
+        self._replay = replay_repository
         self._wakes = wake_repository
         self._wake_controls = wake_control_repository
         self._schedules = schedule_repository
@@ -69,12 +65,10 @@ class GovernedAgentInspectionService:
         self._pending = pending_gate_repository
 
     async def inspect(self, *, run_id: str) -> dict[str, Any] | None:
-        run = await self._execution.get_run_record(run_id=run_id)
+        run, attempts, truth = agent_terminal_history_records(await self._replay.read_replay_evidence(run_id=run_id))
         if run is None:
             return None
-        attempts = await self._execution.list_attempt_records(run_id=run_id)
         iterations = await self._iterations.list_iteration_snapshots(run_id=run_id)
-        truth = await self._truth.get_final_truth(run_id=run_id)
         wakes = () if self._wakes is None else await self._wakes.list_wakes(target_run_id=run_id)
         effects = [] if self._records is None else await self._records.list_effect_journal_entries(run_id=run_id)
         checkpoints = await self._checkpoint_views(attempts)
@@ -156,17 +150,8 @@ class GovernedAgentInspectionService:
         return [governed_agent_webhook_delivery_view(item) for item in deliveries]
 
     async def replay(self, *, run_id: str) -> dict[str, Any] | None:
-        snapshots = await self._iterations.list_iteration_snapshots(run_id=run_id)
-        if not snapshots and await self._execution.get_run_record(run_id=run_id) is None:
-            return None
-        replays = [_replay_snapshot(snapshot) for snapshot in snapshots]
-        return {
-            "object_type": "governed_agent_replay",
-            "schema_version": "governed_agent_replay.v1",
-            "run_id": run_id,
-            "status": ("matched" if all(item["matched"] for item in replays) else "mismatch") if replays else "no_decisions",
-            "decisions": replays,
-        }
+        evidence = await self._replay.read_replay_evidence(run_id=run_id)
+        return replay_governed_agent_evidence(run_id, evidence)
 
     async def _iteration_view(self, snapshot: GovernedAgentIterationSnapshot) -> dict[str, Any]:
         calls = await self._calls.list_call_records(invocation_id=snapshot.binding.invocation_id)
@@ -238,37 +223,6 @@ class GovernedAgentInspectionService:
             actions.extend(await self._records.list_operator_actions(target_ref=wake.wake_id))
         by_id = {action.action_id: action for action in actions}
         return [by_id[action_id].model_dump(mode="json") for action_id in sorted(by_id)]
-
-
-class GovernedAgentPendingGateRepository(Protocol):
-    async def list_requests(
-        self,
-        *,
-        session_id: str | None = None,
-        status: str | None = None,
-        limit: int = 100,
-    ) -> list[dict[str, Any]]: ...
-
-
-def _replay_snapshot(snapshot: GovernedAgentIterationSnapshot) -> dict[str, Any]:
-    if snapshot.decision_inputs is None or snapshot.decision_payload is None:
-        return {
-            "invocation_id": snapshot.binding.invocation_id,
-            "matched": False,
-            "reason": "decision_not_published",
-        }
-    replayed = decide_governed_agent_continuation(
-        GovernedAgentContinuationInputs(**snapshot.decision_inputs)
-    ).to_payload()
-    replayed_digest = agent_payload_digest(replayed)
-    return {
-        "invocation_id": snapshot.binding.invocation_id,
-        "matched": replayed == snapshot.decision_payload and replayed_digest == snapshot.decision_digest,
-        "recorded_decision_digest": snapshot.decision_digest,
-        "replayed_decision_digest": replayed_digest,
-        "rule": replayed["rule"],
-        "disposition": replayed["disposition"],
-    }
 
 
 def _wake_view(wake: GovernedAgentWakeRecord) -> dict[str, Any]:

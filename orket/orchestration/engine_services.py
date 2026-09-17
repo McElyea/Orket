@@ -6,7 +6,8 @@ from typing import Any
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
-from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
+from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGateRepository
+from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.kernel_action_control_plane_operator_service import (
     KernelActionControlPlaneOperatorService,
@@ -17,7 +18,7 @@ from orket.application.services.tool_approval_control_plane_operator_service imp
     ToolApprovalControlPlaneOperatorService,
 )
 from orket.logging import log_event
-from orket.runtime_paths import resolve_control_plane_db_path
+from orket.runtime_paths import control_plane_db_for_runtime
 
 
 def _dict_result(value: Any) -> dict[str, Any]:
@@ -61,6 +62,7 @@ class EngineControlPlaneServices:
         control_plane_repository: Any,
         control_plane_execution_repository: Any,
         control_plane_publication: Any,
+        control_plane_transactions: Any,
         tool_approval_control_plane_operator: Any,
         kernel_action_control_plane: Any,
         kernel_action_control_plane_operator: Any,
@@ -70,6 +72,7 @@ class EngineControlPlaneServices:
         self.control_plane_repository = control_plane_repository
         self.control_plane_execution_repository = control_plane_execution_repository
         self.control_plane_publication = control_plane_publication
+        self.control_plane_transactions = control_plane_transactions
         self.tool_approval_control_plane_operator = tool_approval_control_plane_operator
         self.kernel_action_control_plane = kernel_action_control_plane
         self.kernel_action_control_plane_operator = kernel_action_control_plane_operator
@@ -78,7 +81,7 @@ class EngineControlPlaneServices:
 
 def build_engine_control_plane_services(*, db_path: str | Path) -> EngineControlPlaneServices:
     """Build the engine's control-plane dependencies in one explicit composition step."""
-    control_plane_db_path = resolve_control_plane_db_path()
+    control_plane_db_path = control_plane_db_for_runtime(runtime_db=db_path)
     control_plane_repository = AsyncControlPlaneRecordRepository(control_plane_db_path)
     control_plane_execution_repository = AsyncControlPlaneExecutionRepository(control_plane_db_path)
     control_plane_publication = ControlPlanePublicationService(repository=control_plane_repository)
@@ -87,6 +90,7 @@ def build_engine_control_plane_services(*, db_path: str | Path) -> EngineControl
         control_plane_repository=control_plane_repository,
         control_plane_execution_repository=control_plane_execution_repository,
         control_plane_publication=control_plane_publication,
+        control_plane_transactions=SQLiteControlPlaneTransactions(control_plane_db_path),
         tool_approval_control_plane_operator=ToolApprovalControlPlaneOperatorService(
             publication=control_plane_publication
         ),

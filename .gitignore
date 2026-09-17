@@ -51,6 +51,7 @@ product/**/*.log
 
 # Agent Settings
 .claude/
+Agents/review/
 
 # Temp
 .env

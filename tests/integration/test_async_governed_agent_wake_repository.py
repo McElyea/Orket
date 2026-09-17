@@ -15,7 +15,7 @@ from orket.adapters.storage.async_governed_agent_wake_repository import (
 from orket.application.services.governed_agent_wake_ingress_service import (
     GovernedAgentWakeIngressService,
 )
-from orket.application.services.governed_agent_wake_records import (
+from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeAuthority,
     GovernedAgentWakeRequest,
 )

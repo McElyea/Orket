@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
+import asyncio
 from types import SimpleNamespace
 
 import pytest
@@ -107,10 +107,12 @@ def test_parse_model_plan_strict_mode_rejects_wrapped_json(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_process_request_strict_mode_rejects_non_json_envelope_output():
-    """Layer: integration. Verifies strict mode behavior on model output variants through runtime path."""
+# Layer: contract
+async def test_process_request_strict_mode_rejects_non_json_envelope_output(tmp_path):
+    """Verifies strict mode through the driver with controlled model output."""
     driver = OrketDriver.__new__(OrketDriver)
-    driver.model_root = Path("model")
+    driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
+    await asyncio.to_thread(driver.model_root.mkdir)
     driver.skill = None
     driver.dialect = None
     driver.json_parse_mode = "strict"
@@ -128,8 +130,9 @@ async def test_process_request_strict_mode_rejects_non_json_envelope_output():
 
 
 @pytest.mark.asyncio
-async def test_process_request_compatibility_mode_surfaces_degraded_parse(monkeypatch):
-    """Layer: integration. Verifies compatibility extraction is surfaced as degraded operator-visible behavior."""
+# Layer: contract
+async def test_process_request_compatibility_mode_surfaces_degraded_parse(monkeypatch, tmp_path):
+    """Verifies controlled non-JSON output produces a visible compatibility warning."""
     events = []
 
     def _capture(event_name, payload, *args, **kwargs):
@@ -137,7 +140,8 @@ async def test_process_request_compatibility_mode_surfaces_degraded_parse(monkey
 
     monkeypatch.setattr("orket.driver.log_event", _capture)
     driver = OrketDriver.__new__(OrketDriver)
-    driver.model_root = Path("model")
+    driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
+    await asyncio.to_thread(driver.model_root.mkdir)
     driver.skill = None
     driver.dialect = None
     driver.json_parse_mode = "compatibility"

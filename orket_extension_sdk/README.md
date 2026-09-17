@@ -33,6 +33,16 @@ pip install -e "./orket_extension_sdk[tts,testing]"
 - Bounded framed-stdio codec, cancellation view, progress reporter, and
   provider-neutral model/memory capability protocols
 
+## Generic Model Generation
+
+Generic `model.generate` responses in the development candidate expose
+`schema_version: model_generate_response.v1`, nullable integer `latency_ms`, and
+derived `latency_posture` (`reported` or `unavailable`). These are frozen dataclass
+fields and survive `dataclasses.asdict`. Invalid explicit latency is rejected;
+the null provider reports unavailable latency. Consumers must handle null and
+retain the response version/posture. The host contract is
+`docs/specs/MODEL_PROVIDER_TIMING.md`; the compatibility restriction below applies.
+
 ## Governed Agent Workloads
 
 Agent workloads use `AsyncAgentWorkload` and receive exactly one
@@ -48,6 +58,12 @@ schema/resource validation from the event loop. The host may reject an otherwise
 valid author manifest when required runtime features are unavailable.
 
 ## Versioning And Compatibility
+
+The architectural-truth worktree now uses development SDK `0.7.0a1` and its
+explicit nullable model-receipt feature. Use it only with the paired host
+candidate; published core `0.6.0` and `0.6.2` require SDK `0.6.0`. This overrides
+the nominal window below for the prerelease. Candidate proof and remaining gaps
+belong to the canonical architectural-truth plan; this is not a release claim.
 
 `orket_extension_sdk` has its own semantic version sourced from
 `orket_extension_sdk.__version__`; it does not follow the Orket core engine
@@ -105,13 +121,20 @@ Agent workloads remain inside `manifest_version: v0` but declare
 `workload_kind: agent`, the exact `agent_iteration_request.v1` and
 `agent_iteration_result.v1` contracts, an `agent` block, and the required
 `agent.iteration.v1` capability marker. The typed `agent` block rejects unknown
-fields and must request both `governed_agent_loop.v1` and
-`agent_stdio_ipc.v1`. The canonical wire schema is available through
+fields and must request `governed_agent_loop.v1`, `agent_stdio_ipc.v1`, and
+`agent_model_use_receipt.v2`. The canonical wire schema is available through
 `load_governed_agent_schema()` and is included in built distributions.
 
-The current Orket host recognizes and preserves these declarations but refuses
-runtime invocation until the governed agent broker and handshake are admitted.
-Manifest validation success is not runtime-admission evidence.
+Host admission checks the declared features before the dedicated governed-agent
+broker/handshake path can start a child. Generic workload dispatch refuses agent
+workloads. Manifest validation alone does not prove runtime or OS containment.
+
+New model receipts use v2: `latency_ms` is a nonnegative integer or null, with
+`latency_posture` set to `reported` or `unavailable`. Reported values come from
+the host model-provider observation; they do not certify a clock measurement.
+Historical v1 reads preserve their original integer and omit the new posture
+field. New declarations must explicitly admit v2 after their consumers are
+updated to handle unavailable latency.
 
 ## Data Handling Policy
 

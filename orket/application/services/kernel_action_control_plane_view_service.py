@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.application.services.kernel_action_control_plane_failure import read_pre_effect_recovery_decision
 from orket.application.services.kernel_action_control_plane_resource_lifecycle import (
     holder_ref_for_run,
     lease_id_for_run,
@@ -9,6 +10,7 @@ from orket.application.services.kernel_action_control_plane_resource_lifecycle i
     resource_id_for_run,
 )
 from orket.application.services.kernel_action_control_plane_service import KernelActionControlPlaneService
+from orket.core.domain import AttemptState
 
 
 class KernelActionControlPlaneViewService:
@@ -38,6 +40,11 @@ class KernelActionControlPlaneViewService:
             recovery_decision = await self.record_repository.get_recovery_decision(
                 decision_id=attempt.recovery_decision_id
             )
+        elif attempt is not None and attempt.attempt_state is AttemptState.ABANDONED:
+            recovery_decision = await read_pre_effect_recovery_decision(
+                repository=self.record_repository, run=run, attempt=attempt,
+                statuses=KernelActionControlPlaneService.ALLOWED_COMMIT_STATUSES - {"COMMITTED"},
+            )
         final_truth = await self.record_repository.get_final_truth(run_id=run_id)
         effects = await self.record_repository.list_effect_journal_entries(run_id=run_id)
         operator_actions = await self.record_repository.list_operator_actions(target_ref=run_id)
@@ -62,7 +69,8 @@ class KernelActionControlPlaneViewService:
             "current_attempt_failure_classification": None
             if attempt is None or attempt.failure_classification is None
             else attempt.failure_classification.value,
-            "current_recovery_decision_id": None if attempt is None else attempt.recovery_decision_id,
+            "current_recovery_decision_id": None if recovery_decision is None else recovery_decision.decision_id,
+            **_recovery_failure_summary(recovery_decision),
             "current_recovery_action": None
             if recovery_decision is None
             else recovery_decision.authorized_next_action.value,
@@ -127,6 +135,18 @@ class KernelActionControlPlaneViewService:
     ) -> dict[str, Any]:
         summary = await self.build_summary(session_id=session_id, trace_id=trace_id)
         return _augment_kernel_response(response=response, summary=summary)
+
+
+def _recovery_failure_summary(decision: Any) -> dict[str, Any]:
+    return {
+        "current_recovery_side_effect_boundary_class": None if decision is None
+        else decision.side_effect_boundary_class.value,
+        "current_recovery_failure_class": None if decision is None else decision.failure_classification_basis,
+        "current_recovery_failure_plane": None if decision is None or decision.failure_plane is None
+        else decision.failure_plane.value,
+        "current_recovery_failure_classification": None if decision is None or decision.failure_classification is None
+        else decision.failure_classification.value,
+    }
 
 
 def _augment_kernel_response(*, response: dict[str, Any], summary: dict[str, Any] | None) -> dict[str, Any]:

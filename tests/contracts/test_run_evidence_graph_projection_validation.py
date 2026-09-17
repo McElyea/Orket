@@ -8,7 +8,6 @@ import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
-from orket.runtime.registry.tool_invocation_contracts import build_tool_invocation_manifest
 from orket.core.contracts import AttemptRecord, CheckpointRecord, RunRecord
 from orket.core.domain import (
     AttemptState,
@@ -17,9 +16,10 @@ from orket.core.domain import (
     RunState,
     SideEffectBoundaryClass,
 )
+from orket.runtime.registry.tool_invocation_contracts import build_tool_invocation_manifest
 from orket.runtime.run_evidence_graph_projection import project_run_evidence_graph_primary_lineage
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
-from tests.application.test_sandbox_control_plane_execution_service import InMemoryControlPlaneExecutionRepository
+from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
 
 pytestmark = pytest.mark.contract
 
