@@ -5,14 +5,9 @@ from __future__ import annotations
 import time
 
 import pytest
-from fastapi.testclient import TestClient
 
-import orket.interfaces.coordinator_api as coordinator_api_module
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.coordinator_control_plane_lease_service import CoordinatorControlPlaneLeaseService
-from orket.application.services.coordinator_control_plane_reservation_service import (
-    CoordinatorControlPlaneReservationService,
-)
 from orket.core.domain import (
     CleanupAuthorityClass,
     LeaseStatus,
@@ -22,16 +17,9 @@ from orket.core.domain import (
     ReservationStatus,
 )
 from orket.core.domain.coordinator_card import Card
-from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
+from tests.helpers.coordinator import coordinator as coordinator
 
 pytestmark = pytest.mark.integration
-
-
-def _client(*, raise_server_exceptions: bool = True) -> TestClient:
-    return TestClient(
-        coordinator_api_module.app,
-        raise_server_exceptions=raise_server_exceptions,
-    )
 
 
 def _card(*, state: str, claimed_by: str | None = None, lease_expires_at: float | None = None) -> Card:
@@ -45,24 +33,6 @@ def _card(*, state: str, claimed_by: str | None = None, lease_expires_at: float 
         attempts=0,
         hedged_execution=False,
     )
-
-
-def _install_in_memory_control_plane(monkeypatch: pytest.MonkeyPatch) -> InMemoryControlPlaneRecordRepository:
-    repository = InMemoryControlPlaneRecordRepository()
-    publication = ControlPlanePublicationService(repository=repository)
-    monkeypatch.setattr(coordinator_api_module, "control_plane_repository", repository)
-    monkeypatch.setattr(coordinator_api_module, "control_plane_publication", publication)
-    monkeypatch.setattr(
-        coordinator_api_module,
-        "control_plane_lease_service",
-        CoordinatorControlPlaneLeaseService(publication=publication),
-    )
-    monkeypatch.setattr(
-        coordinator_api_module,
-        "control_plane_reservation_service",
-        CoordinatorControlPlaneReservationService(publication=publication),
-    )
-    return repository
 
 
 def _seed_active_coordinator_authority(
@@ -119,7 +89,7 @@ def _seed_active_coordinator_authority(
         )
     )
     asyncio.run(
-        coordinator_api_module.control_plane_lease_service.publish_resource_snapshot(card_id=card_id, lease=lease)
+        CoordinatorControlPlaneLeaseService(publication=publication).publish_resource_snapshot(card_id=card_id, lease=lease)
     )
 
 
@@ -142,13 +112,13 @@ def _publish_drifted_resource(*, publication: ControlPlanePublicationService, ca
     )
 
 
-def test_coordinator_api_claim_renew_and_complete_publish_lease_history(monkeypatch: pytest.MonkeyPatch) -> None:
-    repository = _install_in_memory_control_plane(monkeypatch)
-    coordinator_api_module.store.reset([_card(state="OPEN")])
+def test_coordinator_api_claim_renew_and_complete_publish_lease_history(coordinator, monkeypatch: pytest.MonkeyPatch) -> None:
+    repository = coordinator.owner.repository
+    coordinator.owner.store.reset([_card(state="OPEN")])
 
-    claimed = _client().post("/cards/card-1/claim", json={"node_id": "worker-a", "lease_duration": 5.0})
-    renewed = _client().post("/cards/card-1/renew", json={"node_id": "worker-a", "lease_duration": 7.0})
-    completed = _client().post("/cards/card-1/complete", json={"node_id": "worker-a", "result": {"ok": True}})
+    claimed = coordinator.client.post("/cards/card-1/claim", json={"node_id": "worker-a", "lease_duration": 5.0})
+    renewed = coordinator.client.post("/cards/card-1/renew", json={"node_id": "worker-a", "lease_duration": 7.0})
+    completed = coordinator.client.post("/cards/card-1/complete", json={"node_id": "worker-a", "result": {"ok": True}})
 
     assert claimed.status_code == 200
     assert renewed.status_code == 200
@@ -218,16 +188,16 @@ def test_coordinator_api_claim_renew_and_complete_publish_lease_history(monkeypa
     ]
 
 
-def test_coordinator_api_claim_after_expiry_publishes_expired_then_active_lease(monkeypatch: pytest.MonkeyPatch) -> None:
-    repository = _install_in_memory_control_plane(monkeypatch)
-    publication = coordinator_api_module.control_plane_publication
-    coordinator_api_module.store.reset(
+def test_coordinator_api_claim_after_expiry_publishes_expired_then_active_lease(coordinator, monkeypatch: pytest.MonkeyPatch) -> None:
+    repository = coordinator.owner.repository
+    publication = coordinator.owner.publication
+    coordinator.owner.store.reset(
         [_card(state="CLAIMED", claimed_by="worker-a", lease_expires_at=time.monotonic() - 1.0)]
     )
 
     _seed_active_coordinator_authority(publication=publication)
 
-    claimed = _client().post("/cards/card-1/claim", json={"node_id": "worker-b", "lease_duration": 5.0})
+    claimed = coordinator.client.post("/cards/card-1/claim", json={"node_id": "worker-b", "lease_duration": 5.0})
 
     assert claimed.status_code == 200
     claimed_payload = claimed.json()
@@ -275,16 +245,16 @@ def test_coordinator_api_claim_after_expiry_publishes_expired_then_active_lease(
     ]
 
 
-def test_coordinator_api_open_cards_publish_expired_lease_history(monkeypatch: pytest.MonkeyPatch) -> None:
-    repository = _install_in_memory_control_plane(monkeypatch)
-    publication = coordinator_api_module.control_plane_publication
-    coordinator_api_module.store.reset(
+def test_coordinator_api_open_cards_publish_expired_lease_history(coordinator, monkeypatch: pytest.MonkeyPatch) -> None:
+    repository = coordinator.owner.repository
+    publication = coordinator.owner.publication
+    coordinator.owner.store.reset(
         [_card(state="CLAIMED", claimed_by="worker-a", lease_expires_at=time.monotonic() - 1.0)]
     )
 
     _seed_active_coordinator_authority(publication=publication)
 
-    listed = _client().get("/cards", params={"state": "open"})
+    listed = coordinator.client.get("/cards", params={"state": "open"})
 
     assert listed.status_code == 200
     payload = listed.json()
@@ -319,12 +289,12 @@ def test_coordinator_api_open_cards_publish_expired_lease_history(monkeypatch: p
     ]
 
 
-def test_coordinator_api_fail_returns_release_state_control_plane_summary(monkeypatch: pytest.MonkeyPatch) -> None:
-    repository = _install_in_memory_control_plane(monkeypatch)
-    coordinator_api_module.store.reset([_card(state="OPEN")])
+def test_coordinator_api_fail_returns_release_state_control_plane_summary(coordinator, monkeypatch: pytest.MonkeyPatch) -> None:
+    repository = coordinator.owner.repository
+    coordinator.owner.store.reset([_card(state="OPEN")])
 
-    claimed = _client().post("/cards/card-1/claim", json={"node_id": "worker-a", "lease_duration": 5.0})
-    failed = _client().post("/cards/card-1/fail", json={"node_id": "worker-a", "result": {"ok": False}})
+    claimed = coordinator.client.post("/cards/card-1/claim", json={"node_id": "worker-a", "lease_duration": 5.0})
+    failed = coordinator.client.post("/cards/card-1/fail", json={"node_id": "worker-a", "result": {"ok": False}})
 
     assert claimed.status_code == 200
     assert failed.status_code == 200
@@ -357,22 +327,23 @@ def test_coordinator_api_fail_returns_release_state_control_plane_summary(monkey
     ]
 
 
-def test_coordinator_api_claim_fail_closes_authority_on_promotion_failure(
+@pytest.mark.parametrize("coordinator", [True], indirect=True)
+def test_coordinator_api_claim_fail_closes_authority_on_promotion_failure(coordinator,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    repository = _install_in_memory_control_plane(monkeypatch)
-    coordinator_api_module.store.reset([_card(state="OPEN")])
+    repository = coordinator.owner.repository
+    coordinator.owner.store.reset([_card(state="OPEN")])
 
     async def _raise_promote_failure(**_kwargs):
         raise RuntimeError("promote failed")
 
     monkeypatch.setattr(
-        coordinator_api_module.control_plane_publication,
+        coordinator.owner.publication,
         "promote_reservation_to_lease",
         _raise_promote_failure,
     )
 
-    claimed = _client(raise_server_exceptions=False).post(
+    claimed = coordinator.client.post(
         "/cards/card-1/claim",
         json={"node_id": "worker-a", "lease_duration": 5.0},
     )
@@ -398,25 +369,26 @@ def test_coordinator_api_claim_fail_closes_authority_on_promotion_failure(
     ]
 
 
-def test_coordinator_api_claim_after_expiry_fails_closed_before_store_mutation_on_resource_drift(
+@pytest.mark.parametrize("coordinator", [True], indirect=True)
+def test_coordinator_api_claim_after_expiry_fails_closed_before_store_mutation_on_resource_drift(coordinator,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    repository = _install_in_memory_control_plane(monkeypatch)
-    publication = coordinator_api_module.control_plane_publication
-    coordinator_api_module.store.reset(
+    repository = coordinator.owner.repository
+    publication = coordinator.owner.publication
+    coordinator.owner.store.reset(
         [_card(state="CLAIMED", claimed_by="worker-a", lease_expires_at=time.monotonic() - 1.0)]
     )
     _seed_active_coordinator_authority(publication=publication)
     _publish_drifted_resource(publication=publication)
 
-    claimed = _client(raise_server_exceptions=False).post(
+    claimed = coordinator.client.post(
         "/cards/card-1/claim",
         json={"node_id": "worker-b", "lease_duration": 5.0},
     )
 
     assert claimed.status_code == 500
     assert claimed.text == "Internal Server Error"
-    stored = coordinator_api_module.store.snapshot_card("card-1")
+    stored = coordinator.owner.store.snapshot_card("card-1")
     assert stored.state == "CLAIMED"
     assert stored.claimed_by == "worker-a"
     assert stored.attempts == 0
@@ -424,68 +396,68 @@ def test_coordinator_api_claim_after_expiry_fails_closed_before_store_mutation_o
     assert [record.status for record in leases] == [LeaseStatus.ACTIVE]
 
 
-def test_coordinator_api_renew_fails_closed_before_store_mutation_on_resource_drift(
+@pytest.mark.parametrize("coordinator", [True], indirect=True)
+def test_coordinator_api_renew_fails_closed_before_store_mutation_on_resource_drift(coordinator,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    _install_in_memory_control_plane(monkeypatch)
-    coordinator_api_module.store.reset([_card(state="OPEN")])
+    coordinator.owner.store.reset([_card(state="OPEN")])
 
-    claimed = _client().post("/cards/card-1/claim", json={"node_id": "worker-a", "lease_duration": 5.0})
+    claimed = coordinator.client.post("/cards/card-1/claim", json={"node_id": "worker-a", "lease_duration": 5.0})
     assert claimed.status_code == 200
-    original_expiry = coordinator_api_module.store.snapshot_card("card-1").lease_expires_at
-    _publish_drifted_resource(publication=coordinator_api_module.control_plane_publication)
+    original_expiry = coordinator.owner.store.snapshot_card("card-1").lease_expires_at
+    _publish_drifted_resource(publication=coordinator.owner.publication)
 
-    renewed = _client(raise_server_exceptions=False).post(
+    renewed = coordinator.client.post(
         "/cards/card-1/renew",
         json={"node_id": "worker-a", "lease_duration": 9.0},
     )
 
     assert renewed.status_code == 500
     assert renewed.text == "Internal Server Error"
-    stored = coordinator_api_module.store.snapshot_card("card-1")
+    stored = coordinator.owner.store.snapshot_card("card-1")
     assert stored.state == "CLAIMED"
     assert stored.claimed_by == "worker-a"
     assert stored.lease_expires_at == original_expiry
 
 
-def test_coordinator_api_complete_fails_closed_before_store_mutation_on_resource_drift(
+@pytest.mark.parametrize("coordinator", [True], indirect=True)
+def test_coordinator_api_complete_fails_closed_before_store_mutation_on_resource_drift(coordinator,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    _install_in_memory_control_plane(monkeypatch)
-    coordinator_api_module.store.reset([_card(state="OPEN")])
+    coordinator.owner.store.reset([_card(state="OPEN")])
 
-    claimed = _client().post("/cards/card-1/claim", json={"node_id": "worker-a", "lease_duration": 5.0})
+    claimed = coordinator.client.post("/cards/card-1/claim", json={"node_id": "worker-a", "lease_duration": 5.0})
     assert claimed.status_code == 200
-    _publish_drifted_resource(publication=coordinator_api_module.control_plane_publication)
+    _publish_drifted_resource(publication=coordinator.owner.publication)
 
-    completed = _client(raise_server_exceptions=False).post(
+    completed = coordinator.client.post(
         "/cards/card-1/complete",
         json={"node_id": "worker-a", "result": {"ok": True}},
     )
 
     assert completed.status_code == 500
     assert completed.text == "Internal Server Error"
-    stored = coordinator_api_module.store.snapshot_card("card-1")
+    stored = coordinator.owner.store.snapshot_card("card-1")
     assert stored.state == "CLAIMED"
     assert stored.claimed_by == "worker-a"
     assert stored.result is None
 
 
-def test_coordinator_api_open_cards_fail_closed_before_store_mutation_on_resource_drift(
+@pytest.mark.parametrize("coordinator", [True], indirect=True)
+def test_coordinator_api_open_cards_fail_closed_before_store_mutation_on_resource_drift(coordinator,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    _install_in_memory_control_plane(monkeypatch)
-    publication = coordinator_api_module.control_plane_publication
-    coordinator_api_module.store.reset(
+    publication = coordinator.owner.publication
+    coordinator.owner.store.reset(
         [_card(state="CLAIMED", claimed_by="worker-a", lease_expires_at=time.monotonic() - 1.0)]
     )
     _seed_active_coordinator_authority(publication=publication)
     _publish_drifted_resource(publication=publication)
 
-    listed = _client(raise_server_exceptions=False).get("/cards", params={"state": "open"})
+    listed = coordinator.client.get("/cards", params={"state": "open"})
 
     assert listed.status_code == 500
     assert listed.text == "Internal Server Error"
-    stored = coordinator_api_module.store.snapshot_card("card-1")
+    stored = coordinator.owner.store.snapshot_card("card-1")
     assert stored.state == "CLAIMED"
     assert stored.claimed_by == "worker-a"

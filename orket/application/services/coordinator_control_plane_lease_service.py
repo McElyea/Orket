@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import time
-from datetime import UTC, datetime
 from pathlib import Path
 
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
@@ -9,6 +7,7 @@ from orket.application.services.control_plane_publication_service import Control
 from orket.application.services.control_plane_resource_authority_checks import (
     require_resource_snapshot_matches_lease,
 )
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts import LeaseRecord
 from orket.core.domain import (
     CleanupAuthorityClass,
@@ -29,8 +28,11 @@ class CoordinatorControlPlaneLeaseService:
 
     CLEANUP_ELIGIBILITY_RULE = "coordinator_complete_or_fail"
 
-    def __init__(self, *, publication: ControlPlanePublicationService) -> None:
+    def __init__(
+        self, *, publication: ControlPlanePublicationService, runtime_inputs: RuntimeInputService | None = None,
+    ) -> None:
         self.publication = publication
+        self.runtime_inputs = runtime_inputs or RuntimeInputService()
 
     @staticmethod
     def lease_id_for(card_id: str) -> str:
@@ -57,7 +59,7 @@ class CoordinatorControlPlaneLeaseService:
         if not self._should_publish(card=card, node_id=node_id):
             return None
         epoch = lease_epoch if lease_epoch is not None else await self.next_claim_epoch(card_id=card.id, node_id=node_id)
-        timestamp = observed_at or self._utc_now()
+        timestamp = observed_at or self.runtime_inputs.utc_now_iso()
         lease = await self.publication.publish_lease(
             lease_id=self.lease_id_for(card.id),
             resource_id=self.resource_id_for(card.id),
@@ -95,7 +97,7 @@ class CoordinatorControlPlaneLeaseService:
         )
         if latest is None:
             return None
-        timestamp = observed_at or self._utc_now()
+        timestamp = observed_at or self.runtime_inputs.utc_now_iso()
         lease = await self.publication.publish_lease(
             lease_id=self.lease_id_for(card.id),
             resource_id=self.resource_id_for(card.id),
@@ -116,10 +118,12 @@ class CoordinatorControlPlaneLeaseService:
         *,
         card: Card,
         observed_at: str | None = None,
+        observed_monotonic: float | None = None,
     ) -> LeaseRecord | None:
         if card.hedged_execution or not str(card.claimed_by or "").strip():
             return None
-        if card.lease_expires_at is None or card.lease_expires_at > time.monotonic():
+        elapsed = self.runtime_inputs.monotonic_seconds() if observed_monotonic is None else observed_monotonic
+        if card.lease_expires_at is None or card.lease_expires_at > elapsed:
             return None
         latest = await self.publication.repository.get_latest_lease_record(lease_id=self.lease_id_for(card.id))
         if latest is None or latest.status is LeaseStatus.EXPIRED:
@@ -133,7 +137,7 @@ class CoordinatorControlPlaneLeaseService:
             lease=latest,
             error_context="coordinator expiry",
         )
-        timestamp = observed_at or self._utc_now()
+        timestamp = observed_at or self.runtime_inputs.utc_now_iso()
         lease = await self.publication.publish_lease(
             lease_id=self.lease_id_for(card.id),
             resource_id=self.resource_id_for(card.id),
@@ -172,7 +176,7 @@ class CoordinatorControlPlaneLeaseService:
             lease=latest,
             error_context=f"coordinator {str(final_state).strip().lower() or 'unknown'} closeout",
         )
-        timestamp = observed_at or self._utc_now()
+        timestamp = observed_at or self.runtime_inputs.utc_now_iso()
         lease = await self.publication.publish_lease(
             lease_id=self.lease_id_for(card_id),
             resource_id=self.resource_id_for(card_id),
@@ -318,11 +322,6 @@ class CoordinatorControlPlaneLeaseService:
         if status is LeaseStatus.RELEASED:
             return "released"
         return str(status.value)
-
-    @staticmethod
-    def _utc_now() -> str:
-        return datetime.now(UTC).isoformat()
-
 
 def build_coordinator_control_plane_lease_service(
     db_path: str | Path | None = None,

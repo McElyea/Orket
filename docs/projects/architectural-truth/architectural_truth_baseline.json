@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-18T17:40:35.378177Z",
+  "generated_at": "2026-09-18T18:36:04.691246Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -306,7 +306,7 @@
           "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 1024,
+      "files_scanned": 1026,
       "scan_roots": [
         "orket"
       ],
@@ -330,17 +330,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 324
+          "count": 326
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1554
+          "count": 1563
         },
         {
           "source": "application",
           "target": "core",
-          "count": 698
+          "count": 701
         },
         {
           "source": "application",
@@ -370,17 +370,17 @@
         {
           "source": "interfaces",
           "target": "adapters",
-          "count": 13
+          "count": 11
         },
         {
           "source": "interfaces",
           "target": "application",
-          "count": 76
+          "count": 77
         },
         {
           "source": "interfaces",
           "target": "core",
-          "count": 7
+          "count": 6
         },
         {
           "source": "interfaces",
@@ -543,39 +543,6 @@
             {
               "path": "orket/interfaces/cli.py",
               "line": 322,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.interfaces.coordinator_api",
-          "target": "orket.adapters.storage.async_control_plane_record_repository",
-          "sites": [
-            {
-              "path": "orket/interfaces/coordinator_api.py",
-              "line": 10,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.interfaces.coordinator_api",
-          "target": "orket.core.domain.coordinator_card",
-          "sites": [
-            {
-              "path": "orket/interfaces/coordinator_api.py",
-              "line": 24,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.interfaces.coordinator_api",
-          "target": "orket.runtime_paths",
-          "sites": [
-            {
-              "path": "orket/interfaces/coordinator_api.py",
-              "line": 25,
               "kind": "from"
             }
           ]
@@ -1178,10 +1145,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5013,
-    "missing_layer_total": 3412,
+    "tests_total": 5028,
+    "missing_layer_total": 3427,
     "by_layer": {
-      "unlabeled": 3412,
+      "unlabeled": 3427,
       "integration": 750,
       "unit": 168,
       "contract": 672,
@@ -1789,7 +1756,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3312
+    "missing_layers_omitted": 3327
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1813,7 +1780,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1024,
+    "python_files_scanned": 1026,
     "files_over_400_total": 66,
     "functions_over_70_total": 219,
     "largest_files": [
@@ -2080,7 +2047,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 589,
+    "scanned_files": 591,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -2191,50 +2158,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-17T16:26:48.938031Z",
-      "changed": true,
-      "before_digest": "sha256:03d68856c4f67bed9396a5a4e9c401264100a138f6a05e50b6ca5db64150c9dc",
-      "after_digest": "sha256:c0aea57b565163c22a4a40d0fd2e1f9a401b66b853340fa6598a272da530288c",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 3658,
-        "paths_total_current": 3658,
-        "paths_total_reference": 3658,
-        "churn_paths": 1,
-        "churn_ratio": 0.000273,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-17T16:29:10.029114Z",
-      "changed": true,
-      "before_digest": "sha256:c0aea57b565163c22a4a40d0fd2e1f9a401b66b853340fa6598a272da530288c",
-      "after_digest": "sha256:92f33ac3a0160f852eba84e4f2f1dcf19d41f58cea77660e93440cac210005d5",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 3658,
-        "paths_total_current": 3658,
-        "paths_total_reference": 3658,
-        "churn_paths": 5,
-        "churn_ratio": 0.001367,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.integration",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-17T16:53:03.870108Z",
       "changed": true,
@@ -3088,6 +3011,65 @@
           "$.dependency_graph.verdict.authority_cycles[0].modules[77]",
           "$.dependency_graph.verdict.authority_cycles[0].modules[78]",
           "$.dependency_graph.verdict.authority_cycles[0].modules[79]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T18:27:49.405691Z",
+      "changed": true,
+      "before_digest": "sha256:fbebc2feeb14c6214888a24aefcb49f7b65a90283c590b06c8620c95c0485cb8",
+      "after_digest": "sha256:47f5ff225018d04b57047d1c18dc797f8996b2d0f534d61354de419ef1496238",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 3,
+        "changed_paths": 72,
+        "initial_write": false,
+        "paths_total_previous": 3268,
+        "paths_total_current": 3229,
+        "paths_total_reference": 3268,
+        "churn_paths": 75,
+        "churn_ratio": 0.02295,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[11].count",
+          "$.dependency_graph.observed.layer_edges[12].count",
+          "$.dependency_graph.observed.layer_edges[13].count",
+          "$.dependency_graph.verdict.violations[14].sites[0].line",
+          "$.dependency_graph.verdict.violations[14].sites[0].path",
+          "$.dependency_graph.verdict.violations[14].source",
+          "$.dependency_graph.verdict.violations[14].target",
+          "$.dependency_graph.verdict.violations[15].sites[0].line",
+          "$.dependency_graph.verdict.violations[15].sites[0].path",
+          "$.dependency_graph.verdict.violations[15].source",
+          "$.dependency_graph.verdict.violations[15].target",
+          "$.dependency_graph.verdict.violations[16].sites[0].line",
+          "$.dependency_graph.verdict.violations[16].sites[0].path",
+          "$.dependency_graph.verdict.violations[16].source",
+          "$.dependency_graph.verdict.violations[16].target",
+          "$.dependency_graph.verdict.violations[17].sites[0].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T18:36:04.694252Z",
+      "changed": true,
+      "before_digest": "sha256:47f5ff225018d04b57047d1c18dc797f8996b2d0f534d61354de419ef1496238",
+      "after_digest": "sha256:ca515fcecdc1ff6e2f07449374e6b8e57c448d7c2fedc9a2967db7af238301c5",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 3229,
+        "paths_total_current": 3229,
+        "paths_total_reference": 3229,
+        "churn_paths": 1,
+        "churn_ratio": 0.00031,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }

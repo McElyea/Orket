@@ -1,14 +1,17 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import logging
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.coordinator_control_plane_lease_service import (
     CoordinatorControlPlaneLeaseService,
 )
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts import ReservationRecord
 from orket.core.domain import LeaseStatus, ReservationKind, ReservationStatus
 from orket.core.domain.coordinator_card import Card
+
+LOGGER = logging.getLogger(__name__)
 
 
 class CoordinatorControlPlaneReservationService:
@@ -16,8 +19,11 @@ class CoordinatorControlPlaneReservationService:
 
     PROMOTION_RULE = "promote_on_non_hedged_claim_confirmation"
 
-    def __init__(self, *, publication: ControlPlanePublicationService) -> None:
+    def __init__(
+        self, *, publication: ControlPlanePublicationService, runtime_inputs: RuntimeInputService | None = None,
+    ) -> None:
         self.publication = publication
+        self.runtime_inputs = runtime_inputs or RuntimeInputService()
 
     @staticmethod
     def reservation_id_for(card_id: str, lease_epoch: int) -> str:
@@ -38,7 +44,7 @@ class CoordinatorControlPlaneReservationService:
     ) -> ReservationRecord | None:
         if not self._should_publish(card=card, node_id=node_id):
             return None
-        timestamp = observed_at or self._utc_now()
+        timestamp = observed_at or self.runtime_inputs.utc_now_iso()
         return await self.publication.publish_reservation(
             reservation_id=self.reservation_id_for(card.id, lease_epoch),
             holder_ref=CoordinatorControlPlaneLeaseService.holder_ref_for(node_id),
@@ -58,7 +64,7 @@ class CoordinatorControlPlaneReservationService:
         lease_epoch: int,
         observed_at: str | None = None,
     ) -> ReservationRecord:
-        timestamp = str(observed_at or self._utc_now()).strip()
+        timestamp = str(observed_at or self.runtime_inputs.utc_now_iso()).strip()
         try:
             return await self.publication.promote_reservation_to_lease(
                 reservation_id=self.reservation_id_for(card_id, lease_epoch),
@@ -69,7 +75,8 @@ class CoordinatorControlPlaneReservationService:
                     f";publication_timestamp={timestamp}"
                 ),
             )
-        except Exception:
+        except Exception:  # Publication supervisor retains rollback after a failed promotion.
+            LOGGER.exception("Coordinator claim promotion failed", extra={"card_id": card_id, "lease_epoch": lease_epoch})
             await self._rollback_failed_promotion(
                 card_id=card_id,
                 lease_epoch=lease_epoch,
@@ -91,10 +98,6 @@ class CoordinatorControlPlaneReservationService:
             f";attempts={int(card.attempts)}"
             f";lease_expires_at_monotonic={expires_at}"
         )
-
-    @staticmethod
-    def _utc_now() -> str:
-        return datetime.now(UTC).isoformat()
 
     async def _rollback_failed_promotion(
         self,
@@ -129,7 +132,7 @@ class CoordinatorControlPlaneReservationService:
                 source_reservation_id=lease.source_reservation_id,
             )
             await CoordinatorControlPlaneLeaseService(
-                publication=self.publication
+                publication=self.publication, runtime_inputs=self.runtime_inputs,
             ).publish_resource_snapshot(card_id=card_id, lease=released_lease)
         reservation_id = self.reservation_id_for(card_id, lease_epoch)
         reservation = await self.publication.repository.get_latest_reservation_record(

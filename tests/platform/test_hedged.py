@@ -3,13 +3,18 @@
 import threading
 import time
 
+import pytest
+
 from orket.adapters.execution.worker_client import Worker
 from orket.core.domain.coordinator_card import Card
-from tests.utils import make_client, reset_store_with_cards
+from tests.helpers.coordinator import coordinator_sqlite as coordinator_sqlite
+from tests.utils import make_client
+
+pytestmark = pytest.mark.integration
 
 
-def test_hedged_execution_first_completion_wins() -> None:
-    reset_store_with_cards(
+def test_hedged_execution_first_completion_wins(coordinator_sqlite) -> None:
+    coordinator_sqlite.owner.store.reset(
         [
             Card(
                 id="hedged-card",
@@ -24,7 +29,7 @@ def test_hedged_execution_first_completion_wins() -> None:
         ]
     )
 
-    client = make_client(seed=202)
+    client = make_client(coordinator_sqlite.client, seed=202)
     worker_a = Worker(
         node_id="worker-a",
         base_url="",
@@ -81,4 +86,3 @@ def test_hedged_execution_first_completion_wins() -> None:
     body = complete_again_a.json()
     assert body["state"] == "DONE"
     assert body["result"] == {"worker": "worker-b", "winner": True}
-

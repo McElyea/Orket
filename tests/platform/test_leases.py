@@ -3,13 +3,18 @@
 import threading
 import time
 
+import pytest
+
 from orket.adapters.execution.worker_client import Worker
 from orket.core.domain.coordinator_card import Card
-from tests.utils import PausableMonotonic, make_client, reset_store_with_cards
+from tests.helpers.coordinator import coordinator_sqlite as coordinator_sqlite
+from tests.utils import PausableMonotonic, make_client
+
+pytestmark = pytest.mark.integration
 
 
-def test_lease_expiration_takeover_with_paused_worker_monotonic() -> None:
-    reset_store_with_cards(
+def test_lease_expiration_takeover_with_paused_worker_monotonic(coordinator_sqlite) -> None:
+    coordinator_sqlite.owner.store.reset(
         [
             Card(
                 id="lease-card",
@@ -24,7 +29,7 @@ def test_lease_expiration_takeover_with_paused_worker_monotonic() -> None:
         ]
     )
 
-    client = make_client(seed=101)
+    client = make_client(coordinator_sqlite.client, seed=101)
     paused_clock = PausableMonotonic()
     worker_a = Worker(
         node_id="worker-a",
@@ -70,4 +75,3 @@ def test_lease_expiration_takeover_with_paused_worker_monotonic() -> None:
     thread.join(timeout=2.0)
     assert "status" in completion_holder
     assert completion_holder["status"] in (403, 409, 200)
-

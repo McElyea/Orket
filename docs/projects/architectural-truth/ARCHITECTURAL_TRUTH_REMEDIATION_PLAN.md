@@ -14230,3 +14230,137 @@ under `.tmp/c-flow-authority/` with the failed staged check in
 `rejected-whitespace/`. Removing those four spaces changes no runtime or test
 input. The corrected local receipt is `final/local-checkpoint.json`; no previous
 receipt is overwritten. Final docs/release/index checks accompany that receipt.
+
+### Standalone coordinator authority checkpoint: 2026-09-18 (0.6.18)
+
+Previous goal turn: progress, locally committed and verified 0.6.17. Reentry
+verified clean HEAD `20b60f98a763e67ec9603f8885e4005866f73dad`, its annotated tag,
+all 114 directly bound receipt files, both native fixture/report cohorts,
+neighboring worktrees and the unchanged handoff. Snapshot:
+`.tmp/c-coordinator-authority/session-state.json`. No prior receipt was resealed.
+
+Unchanged-runtime preflight observes three concrete defects. Importing the
+standalone coordinator creates durable directories and global owners. Cancelling
+an actual ASGI claim after the real store mutation returns before its held worker;
+after the worker settles the card remains CLAIMED and SQLite has no lease record.
+A caller mutation after completed store input changes the retained nested result.
+The probe joins its actual worker, closes the client and asyncio executor, and
+verifies all Git-visible inputs unchanged. Original declarations, observations
+and database remain under `.tmp/c-coordinator-authority/before/`.
+
+The repair follows
+`docs/architecture/CONTRACT_DELTA_COORDINATOR_AUTHORITY_CD_2026-09-18.md`: explicit
+application ownership, captured input/time and retained admitted transitions,
+while preserving drift refusal, hedged semantics and promotion closeout. This
+does not replace the whole C/D/E/CAP objective or declare cross-store transactions.
+Commits remain local during 10 AM–6 PM America/Denver.
+
+#### Implemented authority and observed proof
+
+`create_coordinator_app(...)` creates a separate application-owned coordinator.
+The transport no longer constructs global app/store/repository owners; explicit
+application services own transitions and response projection. Project root and
+environment are captured at composition. Each admitted operation observes supplied
+UTC and monotonic time before store effects; nested complete/fail results are
+captured before awaiting and remain detached after return. The existing shared
+lease/reservation services use the same injected runtime input owner.
+
+One owner serializes card/store/publication transitions. Repeated request or
+close cancellation retains the real worker and publications. An admitted claim's
+lease publication settles before a queued renewal; close refuses new admission
+and waits. Unexpected failures are retained, close later admission with 503 and
+refuse a clean shutdown claim. Direct or descendant self-close is rejected.
+Public routes/response vocabulary, expected store refusals, non-hedged authority,
+hedged first completion, drift preflights and promotion rollback retain their
+regression checks. Migration and limits live in
+`docs/specs/COORDINATOR_RUNTIME_LIFECYCLE.md`.
+
+Observed path: **primary**. Result: **success for this checkpoint; partial success
+for the full goal**. Proof includes real local HTTP/server lifespan, ASGI, held
+store workers and SQLite. Controlled publication failures execute actual writes
+before injection; they prove retained uncertainty rather than transaction rollback.
+Original in-memory authority/drift cases remain contract controls. No provider
+execution claim is made.
+
+The first source run retains 3 passes and 2 failures, caused by new assertions
+expecting `active`/`released` rather than the existing lease status vocabulary.
+`initial-interpretation.json` records the correction to authoritative enum values;
+`initial/` retains original test inputs, fixtures, tracebacks and report. Original
+preflight defects remain under `before/`; neither history nor invariant was
+rewritten. Finite-input, concurrent renewal, cancellation/failure and public
+expiry/fail controls pass. A controlled reversed wall clock still returns 500,
+preserves the last accepted durable lease and quarantines the changed memory
+owner; this does not diagnose the historical host-clock regression.
+
+| Envelope | Pass / fail / error / skip | JUnit seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 39 / 0 / 0 / 0 | 5.890 |
+| Installed Windows 3.11 | 39 / 0 / 0 / 0 | 6.201 |
+| Installed Linux 3.11 | 39 / 0 / 0 / 0 | 19.494 |
+
+Fresh wheel/sdist/source parity covers 1,026 core Python files
+and 1,041 wheel package files. Core wheel SHA-256:
+`a2daaa95f1727ff610305899ccf203fb6092e0cc9e6276fcb3a0a9e599fd1a1b`;
+sdist SHA-256:
+`5fe8ff432f545e7f3706caa77c13b2bc37224b5c062bbd3d6f171ede54b29543`.
+Both installed cells check 433 actual core import origins, unchanged copied
+inputs and retained artifact bytes, valid/malformed public CLI behavior, ToolGate
+controls and absence of owned children/root test databases. Both native parents
+return and are reaped. The focused selection and native observations are in
+`.tmp/c-coordinator-authority/final/manifest.json` and `final/native-audit.json`.
+
+The refreshed graph has 1,026 modules, 3,254 import sites, 29 forbidden pairs,
+one authority cycle, ten analysis errors and zero unknown modules. Exactly three
+coordinator interface pairs are removed; none are added. Collection succeeds and
+release readiness remains false. Structural graph evidence does not prove whole
+repository conformance or runtime purity.
+
+No new Python 3.12, full canonical suite, hosted Quality/coverage or provider
+matrix is claimed. These remain final acceptance obligations. No transaction
+across memory and SQLite, crash recovery, multi-process shared ownership or hard
+shutdown deadline is established. Direct store reset/setup is outside request
+ownership; distinct owners need distinct roots for isolated durable history.
+Stock-clock cause/reliability and broader C/D/E/CAP remain open, as does explicit
+whole-lane acceptance. Continue remaining dependency/composition and core/input/
+async obligations under the full objective. No push was performed.
+
+Final staging rejected one extra EOF newline in the newly extracted
+`coordinator_read_service.py`. The original file, actual failed staged check,
+index tree, source/package/native observations and review are preserved under
+`.tmp/c-coordinator-authority/`, including `rejected-whitespace/`. The correction
+removes one byte and has an identical Python AST. The table and package hashes
+above bind a fresh corrected-byte cohort under `final/`; original proof was not
+overwritten. Staged whitespace now passes before checkpointing. The local receipt
+is `final/local-checkpoint.json`. No checkpoint was created from the rejected index.
+
+#### Exact 0.6.18 checkpoint files
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/CONTRIBUTOR.md`
+- `docs/architecture/CONTRACT_DELTA_COORDINATOR_AUTHORITY_CD_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/README.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/COORDINATOR_RUNTIME_LIFECYCLE.md`
+- `orket/application/services/coordinator_control_plane_lease_service.py`
+- `orket/application/services/coordinator_control_plane_reservation_service.py`
+- `orket/application/services/coordinator_read_service.py`
+- `orket/application/services/coordinator_runtime_service.py`
+- `orket/application/services/coordinator_store.py`
+- `orket/application/services/runtime_input_service.py`
+- `orket/interfaces/coordinator_api.py`
+- `pyproject.toml`
+- `tests/application/test_coordinator_store.py`
+- `tests/helpers/coordinator.py`
+- `tests/integration/test_coordinator_authority.py`
+- `tests/integration/test_coordinator_lifetime.py`
+- `tests/interfaces/test_coordinator_api.py`
+- `tests/interfaces/test_coordinator_api_control_plane.py`
+- `tests/platform/test_hedged.py`
+- `tests/platform/test_leases.py`
+- `tests/utils.py`

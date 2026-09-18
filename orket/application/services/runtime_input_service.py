@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from time import perf_counter_ns
+from time import monotonic, perf_counter_ns
 from uuid import uuid4
 
 
@@ -25,6 +25,10 @@ class RuntimeInputService:
 
     def utc_now_iso(self) -> str:
         return self.utc_now().isoformat()
+
+    def monotonic_seconds(self) -> float:
+        """Elapsed-time observation in the coordinator lease clock's seconds domain."""
+        return monotonic()
 
     def monotonic_ns(self) -> int:
         """Observation clock; never use this value as a deterministic decision input."""

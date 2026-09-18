@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-18T17:40:15.144404+00:00",
+  "generated_at": "2026-09-18T18:35:37.317454+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -833,15 +833,23 @@
       },
       "orket.application.services.coordinator_control_plane_lease_service": {
         "path": "orket/application/services/coordinator_control_plane_lease_service.py",
-        "sha256": "a302108001cdb8729e7c048a1b75c5125f84f6317965f8a48bfe9ec6357c0316"
+        "sha256": "9be5e2aa9aaba9efc8d7aec52390e45525476f38e9b8408ba8667273cc352e79"
       },
       "orket.application.services.coordinator_control_plane_reservation_service": {
         "path": "orket/application/services/coordinator_control_plane_reservation_service.py",
-        "sha256": "517413c89d909dc556d5f8b4949ce11addaf209eb1dd595f5eec94b1db379e49"
+        "sha256": "6e8c7285c5128f23fb681197417774b5948e210a32f32f3dccfd50f2e78717c1"
+      },
+      "orket.application.services.coordinator_read_service": {
+        "path": "orket/application/services/coordinator_read_service.py",
+        "sha256": "528dd9d4231314a2ebb427f550429696e634563208ec511e4b4bb7fd5ce3cae5"
+      },
+      "orket.application.services.coordinator_runtime_service": {
+        "path": "orket/application/services/coordinator_runtime_service.py",
+        "sha256": "00feead0afeb637301e004c848c1eada314db1ffad174fc2e49e295dc247d409"
       },
       "orket.application.services.coordinator_store": {
         "path": "orket/application/services/coordinator_store.py",
-        "sha256": "17afbcb6de738a3818b9740dfe2cd461d888e0d50632b05a36ade1cd6291d4c0"
+        "sha256": "0906886d4ba2043a8e6f9e2c952a730186e6b055f3d3d1eb56e53f433bd2f14b"
       },
       "orket.application.services.decision_context_service": {
         "path": "orket/application/services/decision_context_service.py",
@@ -1437,7 +1445,7 @@
       },
       "orket.application.services.runtime_input_service": {
         "path": "orket/application/services/runtime_input_service.py",
-        "sha256": "98deeb690a550ed49c00641cb4437c077c24e9ba8399a7fc2b4fe3aabf41c0ce"
+        "sha256": "172af48f0a2171c0edc1d447b43ac6efdc0bfbcd8dd1466541f4af94afaf20bd"
       },
       "orket.application.services.runtime_policy": {
         "path": "orket/application/services/runtime_policy.py",
@@ -2497,7 +2505,7 @@
       },
       "orket.interfaces.coordinator_api": {
         "path": "orket/interfaces/coordinator_api.py",
-        "sha256": "0916514d5ebd117670d1cd76e273643a7f5a62404216aced7c4b132fa0e8949b"
+        "sha256": "e742b3dd3aa868449664262bea2c99ec3eb8fb98f156ad1ac6b402160538d376"
       },
       "orket.interfaces.failure_lessons": {
         "path": "orket/interfaces/failure_lessons.py",
@@ -8026,49 +8034,56 @@
         "source": "orket.application.services.coordinator_control_plane_lease_service",
         "target": "orket.adapters.storage.async_control_plane_record_repository",
         "path": "orket/application/services/coordinator_control_plane_lease_service.py",
-        "line": 7,
+        "line": 5,
         "kind": "from"
       },
       {
         "source": "orket.application.services.coordinator_control_plane_lease_service",
         "target": "orket.application.services.control_plane_publication_service",
         "path": "orket/application/services/coordinator_control_plane_lease_service.py",
-        "line": 8,
+        "line": 6,
         "kind": "from"
       },
       {
         "source": "orket.application.services.coordinator_control_plane_lease_service",
         "target": "orket.application.services.control_plane_resource_authority_checks",
         "path": "orket/application/services/coordinator_control_plane_lease_service.py",
-        "line": 9,
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_control_plane_lease_service",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/services/coordinator_control_plane_lease_service.py",
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.coordinator_control_plane_lease_service",
         "target": "orket.core.contracts.__init__",
         "path": "orket/application/services/coordinator_control_plane_lease_service.py",
-        "line": 12,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.services.coordinator_control_plane_lease_service",
         "target": "orket.core.domain.__init__",
         "path": "orket/application/services/coordinator_control_plane_lease_service.py",
-        "line": 13,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.application.services.coordinator_control_plane_lease_service",
         "target": "orket.core.domain.coordinator_card",
         "path": "orket/application/services/coordinator_control_plane_lease_service.py",
-        "line": 19,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.application.services.coordinator_control_plane_lease_service",
         "target": "orket.runtime_paths",
         "path": "orket/application/services/coordinator_control_plane_lease_service.py",
-        "line": 20,
+        "line": 19,
         "kind": "from"
       },
       {
@@ -8087,30 +8102,121 @@
       },
       {
         "source": "orket.application.services.coordinator_control_plane_reservation_service",
-        "target": "orket.core.contracts.__init__",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/application/services/coordinator_control_plane_reservation_service.py",
         "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.application.services.coordinator_control_plane_reservation_service",
-        "target": "orket.core.domain.__init__",
+        "target": "orket.core.contracts.__init__",
         "path": "orket/application/services/coordinator_control_plane_reservation_service.py",
         "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.coordinator_control_plane_reservation_service",
-        "target": "orket.core.domain.coordinator_card",
+        "target": "orket.core.domain.__init__",
         "path": "orket/application/services/coordinator_control_plane_reservation_service.py",
         "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_control_plane_reservation_service",
+        "target": "orket.core.domain.coordinator_card",
+        "path": "orket/application/services/coordinator_control_plane_reservation_service.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_read_service",
+        "target": "orket.core.domain.coordinator_card",
+        "path": "orket/application/services/coordinator_read_service.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_runtime_service",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/coordinator_runtime_service.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_runtime_service",
+        "target": "orket.adapters.storage.async_control_plane_record_repository",
+        "path": "orket/application/services/coordinator_runtime_service.py",
+        "line": 17,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_runtime_service",
+        "target": "orket.application.services.control_plane_publication_service",
+        "path": "orket/application/services/coordinator_runtime_service.py",
+        "line": 18,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_runtime_service",
+        "target": "orket.application.services.coordinator_control_plane_lease_service",
+        "path": "orket/application/services/coordinator_runtime_service.py",
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_runtime_service",
+        "target": "orket.application.services.coordinator_control_plane_reservation_service",
+        "path": "orket/application/services/coordinator_runtime_service.py",
+        "line": 20,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_runtime_service",
+        "target": "orket.application.services.coordinator_read_service",
+        "path": "orket/application/services/coordinator_runtime_service.py",
+        "line": 23,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_runtime_service",
+        "target": "orket.application.services.coordinator_store",
+        "path": "orket/application/services/coordinator_runtime_service.py",
+        "line": 24,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_runtime_service",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/services/coordinator_runtime_service.py",
+        "line": 30,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_runtime_service",
+        "target": "orket.core.contracts.protocol_hashing",
+        "path": "orket/application/services/coordinator_runtime_service.py",
+        "line": 31,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_runtime_service",
+        "target": "orket.core.domain.coordinator_card",
+        "path": "orket/application/services/coordinator_runtime_service.py",
+        "line": 32,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.coordinator_store",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/services/coordinator_store.py",
+        "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.application.services.coordinator_store",
         "target": "orket.core.domain.coordinator_card",
         "path": "orket/application/services/coordinator_store.py",
-        "line": 7,
+        "line": 10,
         "kind": "from"
       },
       {
@@ -19910,51 +20016,37 @@
       },
       {
         "source": "orket.interfaces.coordinator_api",
-        "target": "orket.adapters.storage.async_control_plane_record_repository",
-        "path": "orket/interfaces/coordinator_api.py",
-        "line": 10,
-        "kind": "from"
-      },
-      {
-        "source": "orket.interfaces.coordinator_api",
         "target": "orket.application.services.control_plane_publication_service",
-        "path": "orket/interfaces/coordinator_api.py",
-        "line": 11,
-        "kind": "from"
-      },
-      {
-        "source": "orket.interfaces.coordinator_api",
-        "target": "orket.application.services.coordinator_control_plane_lease_service",
         "path": "orket/interfaces/coordinator_api.py",
         "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.coordinator_api",
-        "target": "orket.application.services.coordinator_control_plane_reservation_service",
+        "target": "orket.application.services.coordinator_read_service",
         "path": "orket/interfaces/coordinator_api.py",
         "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.coordinator_api",
+        "target": "orket.application.services.coordinator_runtime_service",
+        "path": "orket/interfaces/coordinator_api.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.interfaces.coordinator_api",
         "target": "orket.application.services.coordinator_store",
         "path": "orket/interfaces/coordinator_api.py",
-        "line": 16,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.coordinator_api",
-        "target": "orket.core.domain.coordinator_card",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/interfaces/coordinator_api.py",
-        "line": 24,
-        "kind": "from"
-      },
-      {
-        "source": "orket.interfaces.coordinator_api",
-        "target": "orket.runtime_paths",
-        "path": "orket/interfaces/coordinator_api.py",
-        "line": 25,
+        "line": 26,
         "kind": "from"
       },
       {
@@ -26968,7 +27060,7 @@
         "code": "unresolved_reflection"
       }
     ],
-    "files_scanned": 1024,
+    "files_scanned": 1026,
     "scan_roots": [
       "orket"
     ],
@@ -27153,6 +27245,8 @@
       "orket.application.services.control_plane_workload_catalog": "application",
       "orket.application.services.coordinator_control_plane_lease_service": "application",
       "orket.application.services.coordinator_control_plane_reservation_service": "application",
+      "orket.application.services.coordinator_read_service": "application",
+      "orket.application.services.coordinator_runtime_service": "application",
       "orket.application.services.coordinator_store": "application",
       "orket.application.services.decision_context_service": "application",
       "orket.application.services.decision_node_registry": "application",
@@ -28020,17 +28114,17 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 324
+        "count": 326
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1554
+        "count": 1563
       },
       {
         "source": "application",
         "target": "core",
-        "count": 698
+        "count": 701
       },
       {
         "source": "application",
@@ -28060,17 +28154,17 @@
       {
         "source": "interfaces",
         "target": "adapters",
-        "count": 13
+        "count": 11
       },
       {
         "source": "interfaces",
         "target": "application",
-        "count": 76
+        "count": 77
       },
       {
         "source": "interfaces",
         "target": "core",
-        "count": 7
+        "count": 6
       },
       {
         "source": "interfaces",
@@ -28233,39 +28327,6 @@
           {
             "path": "orket/interfaces/cli.py",
             "line": 322,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.interfaces.coordinator_api",
-        "target": "orket.adapters.storage.async_control_plane_record_repository",
-        "sites": [
-          {
-            "path": "orket/interfaces/coordinator_api.py",
-            "line": 10,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.interfaces.coordinator_api",
-        "target": "orket.core.domain.coordinator_card",
-        "sites": [
-          {
-            "path": "orket/interfaces/coordinator_api.py",
-            "line": 24,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.interfaces.coordinator_api",
-        "target": "orket.runtime_paths",
-        "sites": [
-          {
-            "path": "orket/interfaces/coordinator_api.py",
-            "line": 25,
             "kind": "from"
           }
         ]
@@ -28722,84 +28783,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-15T02:02:41.898130Z",
-      "changed": true,
-      "before_digest": "sha256:a734b89f3d08658f1bf13479060fd642fe5cd9888ba0e25ae0be2e309296b1bb",
-      "after_digest": "sha256:0ca31807738c695062f896a7a1fe59db7113e216550052230199e120ca5522bc",
-      "diff": {
-        "added_paths": 28,
-        "removed_paths": 7,
-        "changed_paths": 10504,
-        "initial_write": false,
-        "paths_total_previous": 43160,
-        "paths_total_current": 43325,
-        "paths_total_reference": 43325,
-        "churn_paths": 10539,
-        "churn_ratio": 0.243254,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[244].line",
-          "$.observed.edges[244].path",
-          "$.observed.edges[244].source",
-          "$.observed.edges[244].target",
-          "$.observed.edges[245].line",
-          "$.observed.edges[245].path",
-          "$.observed.edges[245].source",
-          "$.observed.edges[245].target",
-          "$.observed.edges[246].line",
-          "$.observed.edges[246].target",
-          "$.observed.edges[247].line",
-          "$.observed.edges[247].target",
-          "$.observed.edges[248].line",
-          "$.observed.edges[248].target",
-          "$.observed.edges[249].line",
-          "$.observed.edges[249].target",
-          "$.observed.edges[250].line",
-          "$.observed.edges[250].target",
-          "$.observed.edges[251].line"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-17T03:59:57.169887Z",
-      "changed": true,
-      "before_digest": "sha256:0ca31807738c695062f896a7a1fe59db7113e216550052230199e120ca5522bc",
-      "after_digest": "sha256:5ff2ee37f0dac02f0a1ebe1754986505f9745e747b4150f61df82a8cb3595842",
-      "diff": {
-        "added_paths": 15,
-        "removed_paths": 5,
-        "changed_paths": 8894,
-        "initial_write": false,
-        "paths_total_previous": 43325,
-        "paths_total_current": 43430,
-        "paths_total_reference": 43430,
-        "churn_paths": 8914,
-        "churn_ratio": 0.20525,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.analysis_errors[0].code",
-          "$.observed.analysis_errors[0].line",
-          "$.observed.analysis_errors[0].path",
-          "$.observed.analysis_errors[1].line",
-          "$.observed.analysis_errors[2].code",
-          "$.observed.analysis_errors[2].line",
-          "$.observed.analysis_errors[3].code",
-          "$.observed.analysis_errors[3].line",
-          "$.observed.analysis_errors[3].path",
-          "$.observed.analysis_errors[4].line",
-          "$.observed.analysis_errors[5].code",
-          "$.observed.analysis_errors[5].line",
-          "$.observed.analysis_errors[6].line",
-          "$.observed.analysis_errors[6].path",
-          "$.observed.analysis_errors[7].line",
-          "$.observed.analysis_errors[8].code",
-          "$.observed.analysis_errors[8].line",
-          "$.observed.analysis_errors[8].path",
-          "$.observed.analysis_errors[9].line"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-17T04:21:36.148027Z",
       "changed": true,
@@ -29781,6 +29764,66 @@
           "$.observed.edges[64].line",
           "$.observed.edges[64].target",
           "$.observed.edges[65].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T18:27:28.862897Z",
+      "changed": true,
+      "before_digest": "sha256:6bd63393ff96090c1f6112d54294a21f1512e94bf3b486d9b07f607ac8e743af",
+      "after_digest": "sha256:33eafb77f80432571ebadbc47164c04d264ab83e1ca0dfe462b626d19abbd9f7",
+      "diff": {
+        "added_paths": 16,
+        "removed_paths": 3,
+        "changed_paths": 10096,
+        "initial_write": false,
+        "paths_total_previous": 44151,
+        "paths_total_current": 44258,
+        "paths_total_reference": 44258,
+        "churn_paths": 10115,
+        "churn_ratio": 0.228546,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[543].line",
+          "$.observed.edges[544].line",
+          "$.observed.edges[545].line",
+          "$.observed.edges[546].line",
+          "$.observed.edges[546].target",
+          "$.observed.edges[547].line",
+          "$.observed.edges[547].target",
+          "$.observed.edges[548].line",
+          "$.observed.edges[548].target",
+          "$.observed.edges[549].line",
+          "$.observed.edges[549].target",
+          "$.observed.edges[550].line",
+          "$.observed.edges[550].path",
+          "$.observed.edges[550].source",
+          "$.observed.edges[550].target",
+          "$.observed.edges[551].line",
+          "$.observed.edges[551].target",
+          "$.observed.edges[552].line",
+          "$.observed.edges[552].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T18:35:44.355610Z",
+      "changed": true,
+      "before_digest": "sha256:33eafb77f80432571ebadbc47164c04d264ab83e1ca0dfe462b626d19abbd9f7",
+      "after_digest": "sha256:c1c1cf3e214fb8f3f2688083405d4d5bd713a1eb5e0af045298b130ea94714f9",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 44258,
+        "paths_total_current": 44258,
+        "paths_total_reference": 44258,
+        "churn_paths": 2,
+        "churn_ratio": 4.5e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.modules.orket.application.services.coordinator_read_service.sha256"
         ]
       }
     }

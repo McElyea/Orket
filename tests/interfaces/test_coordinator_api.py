@@ -1,17 +1,13 @@
 from __future__ import annotations
 
-import importlib
 import time
 
 import pytest
-from fastapi.testclient import TestClient
 
-import orket.interfaces.coordinator_api as coordinator_api_module
 from orket.core.domain.coordinator_card import Card
+from tests.helpers.coordinator import coordinator_sqlite as coordinator_sqlite
 
-
-def _client() -> TestClient:
-    return TestClient(coordinator_api_module.app)
+pytestmark = pytest.mark.integration
 
 
 def _card(*, state: str, claimed_by: str | None = None, lease_expires_at: float | None = None) -> Card:
@@ -48,17 +44,16 @@ def test_coordinator_api_maps_store_errors_to_http_responses(
     payload: dict[str, object],
     expected_status: int,
     expected_detail: str,
+    coordinator_sqlite,
 ) -> None:
-    """Layer: contract. Verifies coordinator API translates coordinator store errors at the HTTP boundary."""
-    coordinator_api_module.store.reset(cards_factory())
+    """Layer: integration. Real standalone API maps application errors at the HTTP boundary."""
+    coordinator_sqlite.owner.store.reset(cards_factory())
 
-    response = _client().post(path, json=payload)
+    response = coordinator_sqlite.client.post(path, json=payload)
 
     assert response.status_code == expected_status
     assert response.json()["detail"] == expected_detail
 
 
-def test_coordinator_api_module_import_does_not_seed_demo_cards() -> None:
-    reloaded = importlib.reload(coordinator_api_module)
-
-    assert reloaded.store.list_open_cards() == []
+def test_coordinator_factory_does_not_seed_demo_cards(coordinator_sqlite) -> None:
+    assert coordinator_sqlite.owner.store.list_open_cards() == []

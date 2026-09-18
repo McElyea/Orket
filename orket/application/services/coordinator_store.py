@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import threading
-import time
+from collections.abc import Callable
+from copy import deepcopy
+from math import isfinite
 from typing import Any
 
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.domain.coordinator_card import Card
 
 
@@ -30,7 +33,8 @@ class CoordinatorPermissionError(CoordinatorStoreError):
 class InMemoryCoordinatorStore:
     """Sync in-process coordinator store used by the standalone API and worker harness tests."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, monotonic_factory: Callable[[], float] | None = None) -> None:
+        self._monotonic_factory = monotonic_factory or RuntimeInputService().monotonic_seconds
         self._lock = threading.Lock()
         self._cards: dict[str, Card] = {}
         self._lease_meta: dict[str, dict[str, Any]] = {}
@@ -62,9 +66,11 @@ class InMemoryCoordinatorStore:
                 "winner": None,
             }
 
-    @staticmethod
-    def _now() -> float:
-        return time.monotonic()
+    def _now(self, observed: float | None = None) -> float:
+        value = self._monotonic_factory() if observed is None else observed
+        if not isfinite(value):
+            raise CoordinatorValidationError("monotonic observation must be finite")
+        return value
 
     def _get_meta(self, card_id: str) -> dict[str, Any]:
         meta = self._lease_meta.get(card_id)
@@ -94,9 +100,9 @@ class InMemoryCoordinatorStore:
             meta["primary_claimant"] = None
             meta["claimants"] = set()
 
-    def list_open_cards(self) -> list[Card]:
+    def list_open_cards(self, *, now: float | None = None) -> list[Card]:
         with self._lock:
-            now = self._now()
+            now = self._now(now)
             cards: list[Card] = []
             for card_id, card in self._cards.items():
                 meta = self._get_meta(card_id)
@@ -129,12 +135,14 @@ class InMemoryCoordinatorStore:
         renewed_before_hedge = last_renew_at is not None and last_renew_at <= hedge_deadline
         return not renewed_before_hedge
 
-    def claim(self, card_id: str, node_id: str, lease_duration: float) -> Card:
+    def claim(self, card_id: str, node_id: str, lease_duration: float, *, now: float | None = None) -> Card:
+        if not isfinite(lease_duration):
+            raise CoordinatorValidationError("lease_duration must be finite")
         if lease_duration <= 0:
             raise CoordinatorValidationError("lease_duration must be > 0")
 
         with self._lock:
-            now = self._now()
+            now = self._now(now)
             card = self._get_card(card_id)
             meta = self._get_meta(card_id)
 
@@ -162,12 +170,14 @@ class InMemoryCoordinatorStore:
 
             raise CoordinatorConflictError("card is already claimed")
 
-    def renew(self, card_id: str, node_id: str, lease_duration: float) -> Card:
+    def renew(self, card_id: str, node_id: str, lease_duration: float, *, now: float | None = None) -> Card:
+        if not isfinite(lease_duration):
+            raise CoordinatorValidationError("lease_duration must be finite")
         if lease_duration <= 0:
             raise CoordinatorValidationError("lease_duration must be > 0")
 
         with self._lock:
-            now = self._now()
+            now = self._now(now)
             card = self._get_card(card_id)
             meta = self._get_meta(card_id)
 
@@ -185,9 +195,12 @@ class InMemoryCoordinatorStore:
             meta["lease_duration"] = lease_duration
             return card.model_copy(deep=True)
 
-    def complete(self, card_id: str, node_id: str, result: dict[str, object] | None) -> Card:
+    def complete(
+        self, card_id: str, node_id: str, result: dict[str, object] | None, *, now: float | None = None,
+    ) -> Card:
+        result = deepcopy(result)
         with self._lock:
-            now = self._now()
+            now = self._now(now)
             card = self._get_card(card_id)
             meta = self._get_meta(card_id)
             self._reopen_if_expired(card, meta, now)
@@ -215,9 +228,12 @@ class InMemoryCoordinatorStore:
             meta["claimants"] = set()
             return card.model_copy(deep=True)
 
-    def fail(self, card_id: str, node_id: str, result: dict[str, object] | None) -> Card:
+    def fail(
+        self, card_id: str, node_id: str, result: dict[str, object] | None, *, now: float | None = None,
+    ) -> Card:
+        result = deepcopy(result)
         with self._lock:
-            now = self._now()
+            now = self._now(now)
             card = self._get_card(card_id)
             meta = self._get_meta(card_id)
             self._reopen_if_expired(card, meta, now)

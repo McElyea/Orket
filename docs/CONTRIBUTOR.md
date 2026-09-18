@@ -78,6 +78,7 @@ fixed ZIP metadata. Both Quality jobs enforce source/archive agreement.
 - Default runtime: `orket runtime`
 - Named card runtime: `orket runtime --card <card_id>`
 - API runtime: `python server.py`
+- Standalone coordinator: `python -m uvicorn orket.interfaces.coordinator_api:create_coordinator_app --factory`
 - Governed-action quickstart: `orket-quickstart` or `orket-quickstart --decision approve|deny`
 - Governed-run deterministic demo: `orket demo governed-run`
 - Test command: `python -m pytest -q`
@@ -85,6 +86,11 @@ fixed ZIP metadata. Both Quality jobs enforce source/archive agreement.
 Handled fatal outcomes from `orket runtime` must return a nonzero process status. The
 governed-run demo default is package-owned and must not depend on the caller's current
 working directory.
+
+The standalone coordinator has its own per-application owner and in-memory card
+store. Run its lifespan on embedded use and inspect retained state after a
+transition failure. Startup migration, storage roots and interruption limits live
+in `docs/specs/COORDINATOR_RUNTIME_LIFECYCLE.md`.
 
 Compatibility-only source wrapper:
 `python main.py [runtime arguments]` remains supported through `0.6.x`. The hidden

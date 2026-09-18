@@ -42,7 +42,7 @@ register also records review-discovered ship-risk and self-deception debt that i
 not accepted as target-architecture conformance.
 
 1. Dependency layering exceptions:
-   1. `orket/interfaces/coordinator_api.py` and `orket/interfaces/orket_bundle_cli.py` import core/domain types directly.
+   1. `orket/interfaces/orket_bundle_cli.py` imports core/domain types directly.
 2. Decision-node purity exceptions:
    1. `orket/decision_nodes/builtins.py` still retains mutable planning/routing context. Loop limits now consume immutable explicit values; application owns registry selection, executable tool bindings, provider construction and organization overrides. API authentication, observed paths, board loading and calendar inputs now belong to application services; API strategy retains request/presentation recommendations. API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths also live in explicit services.
 3. API runtime composition:
@@ -215,6 +215,13 @@ Responsibilities:
 6. observability sequencing
 
 Application services own runtime truth.
+
+The standalone coordinator factory creates an application-owned store,
+publication service and lifetime owner. Serialized admitted transitions capture
+inputs and retain workers/publications through cancellation; uncertain failures
+close admission and prevent a clean shutdown claim. This does not make memory
+and SQLite one transaction. Its startup and limits live in
+`docs/specs/COORDINATOR_RUNTIME_LIFECYCLE.md`.
 
 Flow authoring composition and bounded run admission belong to application.
 Captured definitions and host time/identity inputs feed distinct create/update

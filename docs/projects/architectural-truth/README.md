@@ -690,3 +690,15 @@ platform/provider union. Three forbidden pairs are removed; 32 pairs, one cycle
 and ten analysis errors remain. Original defects and the first shutdown-test
 expectation failure are retained. Exact proof and remaining obligations are in
 the canonical plan. The commit and annotated tag remain local during work hours.
+
+The local 0.6.18 standalone coordinator checkpoint replaces global owners with
+an explicit factory and application-owned transitions. Captured results and
+UTC/monotonic inputs, serialized publication and retained cancellation/close
+prevent unowned claimed cards on the demonstrated path. Unexpected failures
+close admission and prevent clean shutdown claims; memory and SQLite remain
+separate stores. Source and fresh installed Windows/Linux Python 3.11 each pass
+39 selected cases with real HTTP/SQLite, package/CLI and cleanup checks. Three
+forbidden pairs are removed; 29 pairs, one cycle and ten analysis errors remain.
+Original defects, test expectation corrections and remaining full-matrix/clock
+limits are retained in the canonical plan. Whole-lane acceptance remains open.
+The commit and annotated tag remain local during work hours.

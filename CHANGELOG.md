@@ -5,6 +5,22 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.18] - 2026-09-18 - "Owned coordinator transitions"
+
+### Changed
+- Replace standalone coordinator module-global owners with an explicit application factory and captured storage/clock inputs.
+- Capture nested results, serialize admitted card/publication transitions and retain their lifetime through cancellation and close.
+- Retain unexpected transition failures, refuse subsequent admission with 503 and prevent a clean shutdown claim.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration: `docs/specs/COORDINATOR_RUNTIME_LIFECYCLE.md` and `docs/architecture/CONTRACT_DELTA_COORDINATOR_AUTHORITY_CD_2026-09-18.md`.
+- Stability: 39 selected cases pass in source and fresh Windows/Linux Python
+  3.11 installations, with real HTTP/SQLite, package/CLI and cleanup checks.
+  Original counterexamples and two corrected test expectations remain retained.
+  Full platform/Quality/provider, C/D/E/CAP and whole-lane acceptance remain open.
+  Commit and annotated tag remain local during work hours.
+
 ## [0.6.17] - 2026-09-18 - "Atomic flow authoring"
 
 ### Changed
