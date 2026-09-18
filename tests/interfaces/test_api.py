@@ -1,3 +1,4 @@
+# Layer: contract
 import asyncio
 import hashlib
 import json
@@ -486,7 +487,7 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", "openai_compat.qwen.openai_messages.v1")
     monkeypatch.setenv("ORKET_ENABLE_GITEA_STATE_PILOT", "true")
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", "benchmarks/results/benchmarks/nonexistent_pilot_stability.json")
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"architecture_mode": "force_monolith"})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {"architecture_mode": "force_monolith"}))
     monkeypatch.setattr(
         api_module._get_engine(),
         "org",
@@ -526,7 +527,7 @@ def test_runtime_policy_get_falls_back_to_monolith_when_microservices_locked(mon
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "false")
     monkeypatch.setenv("ORKET_ARCHITECTURE_MODE", "force_microservices")
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -556,7 +557,7 @@ def test_runtime_policy_reports_unlock_from_valid_unlock_report(monkeypatch, tmp
         encoding="utf-8",
     )
     monkeypatch.setenv("ORKET_MICROSERVICES_UNLOCK_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -572,7 +573,7 @@ def test_runtime_policy_rejects_malformed_unlock_report(monkeypatch, tmp_path):
     report_path = tmp_path / "unlock_report.json"
     report_path.write_text(json.dumps({"unlocked": True}), encoding="utf-8")
     monkeypatch.setenv("ORKET_MICROSERVICES_UNLOCK_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -601,7 +602,7 @@ def test_runtime_policy_rejects_internally_inconsistent_unlock_report(monkeypatc
         encoding="utf-8",
     )
     monkeypatch.setenv("ORKET_MICROSERVICES_UNLOCK_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -631,7 +632,7 @@ def test_runtime_policy_reports_pilot_stability(monkeypatch, tmp_path):
         encoding="utf-8",
     )
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -646,7 +647,7 @@ def test_runtime_policy_rejects_malformed_pilot_stability_report(monkeypatch, tm
     report_path = tmp_path / "pilot_stability.json"
     report_path.write_text(json.dumps({"stable": True}), encoding="utf-8")
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -675,7 +676,7 @@ def test_runtime_policy_rejects_internally_inconsistent_pilot_stability_report(m
         encoding="utf-8",
     )
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -687,8 +688,8 @@ def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"existing": True})
-    monkeypatch.setattr(api_module, "save_user_settings", lambda settings: captured.update({"settings": settings}))
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {"existing": True}))
+    monkeypatch.setattr(api_module, 'save_user_settings_async', AsyncMock(side_effect=lambda settings, **_expected: captured.update({"settings": settings})))
 
     response = client.post(
         "/v1/system/runtime-policy",
@@ -734,7 +735,7 @@ def test_settings_get_returns_metadata_and_sources(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
     monkeypatch.setenv("ORKET_ARCHITECTURE_MODE", "force_microservices")
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"frontend_framework_mode": "force_react"})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {"frontend_framework_mode": "force_react"}))
     monkeypatch.setattr(
         api_module._get_engine(),
         "org",
@@ -767,8 +768,8 @@ def test_settings_patch_round_trip_persists_normalized_values(monkeypatch):
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
     captured = {}
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"existing": "x"})
-    monkeypatch.setattr(api_module, "save_user_settings", lambda settings: captured.update({"settings": settings}))
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {"existing": "x"}))
+    monkeypatch.setattr(api_module, 'save_user_settings_async', AsyncMock(side_effect=lambda settings, **_expected: captured.update({"settings": settings})))
 
     response = client.patch(
         "/v1/settings",
@@ -812,7 +813,7 @@ def test_settings_patch_round_trip_persists_normalized_values(monkeypatch):
 
 def test_settings_patch_rejects_invalid_values_structured(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.patch(
@@ -830,7 +831,7 @@ def test_settings_patch_rejects_invalid_values_structured(monkeypatch):
 def test_settings_patch_enforces_policy_guards(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "false")
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.patch(
@@ -846,7 +847,7 @@ def test_settings_patch_enforces_policy_guards(monkeypatch):
 def test_settings_patch_rejects_gitea_without_pilot(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.delenv("ORKET_ENABLE_GITEA_STATE_PILOT", raising=False)
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.patch(
@@ -861,7 +862,7 @@ def test_settings_patch_rejects_gitea_without_pilot(monkeypatch):
 
 def test_settings_patch_rejects_invalid_protocol_network_mode(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.patch(

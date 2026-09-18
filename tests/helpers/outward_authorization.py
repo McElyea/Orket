@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -13,6 +14,7 @@ import aiosqlite
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.outward_approval_store import OutwardApprovalStore
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
@@ -65,7 +67,19 @@ def boundary(tmp_path, monkeypatch):
 
 @asynccontextmanager
 async def outward_api(root: Path, inputs: FixedInputs, *, api_key: str = TEST_API_KEY):
-    app = create_api_app(project_root=root, runtime_inputs=inputs)
+    environment, created = dict(os.environ), []
+
+    def construct():
+        app = create_api_app(project_root=root, runtime_inputs=inputs, environment=environment)
+        created.append(app)
+        return app
+
+    try:
+        app = await run_owned_thread(construct, label="outward-test-api-bootstrap")
+    except asyncio.CancelledError:
+        if created:
+            await created[0].state.api_runtime_context.close()
+        raise
     context = app.state.api_runtime_context
     try:
         async with AsyncClient(

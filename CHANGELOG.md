@@ -5,6 +5,21 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.21] - 2026-09-18 - "Captured settings operations"
+
+### Changed
+- Capture nested runtime settings and per-operation paths; remove the process-wide data/path cache and implicit pytest behavior.
+- Own settings file workers through cancellation, atomically replace and verify published files, and refuse malformed or unreadable settings.
+- Retain preference migration progress for restart after partial publication, with native admission for cooperating writers and explicit conflict refusal.
+- Require a captured snapshot or pre-loop bootstrap for synchronous reads; explicitly isolate settings in the test fixture.
+- Bind persisted CLI settings after onboarding, and retain admin API file operations through request shutdown.
+- Refuse stale concurrent admin updates with HTTP 409 and compare retained migration values with JSON types preserved.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration: `docs/specs/SETTINGS_INPUT_OWNERSHIP.md` and `docs/architecture/CONTRACT_DELTA_SETTINGS_INPUTS_CD_2026-09-18.md`.
+- Stability: candidate verification and remaining full-plan gates are recorded in the architectural-truth plan. Work-hours commits and tags remain local.
+
 ## [0.6.20] - 2026-09-18 - "Owned webhook applications"
 
 ### Changed

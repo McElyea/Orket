@@ -1,12 +1,22 @@
 from __future__ import annotations
 
-import asyncio
 import os
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel
+
+from orket.application.services.user_settings_service import SettingsUpdateConflict
+
+
+async def _save_settings(save, payload, expected):
+    try:
+        await save(payload, expected=expected)
+    except SettingsUpdateConflict as exc:
+        raise HTTPException(status_code=409, detail={
+            "code": "settings_conflict", "message": "Stored settings changed or a writer is active. Reload before retrying.",
+        }) from exc
 
 
 class RuntimePolicyUpdateRequest(BaseModel):
@@ -32,8 +42,8 @@ def build_settings_router(
     settings_order: tuple[str, ...],
     settings_schema: dict[str, dict[str, Any]],
     runtime_policy_options: Callable[[], dict[str, Any]],
-    load_user_settings: Callable[[], dict[str, Any]],
-    save_user_settings: Callable[[dict[str, Any]], None],
+    load_user_settings: Callable[[], Awaitable[dict[str, Any]]],
+    save_user_settings: Callable[..., Awaitable[None]],
     runtime_policy_process_rules: Callable[[], dict[str, Any]],
     resolve_settings_snapshot: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]],
     parse_setting_value: Callable[[str, Any], Any | None],
@@ -65,7 +75,7 @@ def build_settings_router(
 
     @router.get("/settings")
     async def get_settings() -> dict[str, Any]:
-        user_settings = await asyncio.to_thread(load_user_settings)
+        user_settings = await load_user_settings()
         process_rules = runtime_policy_process_rules()
         return {"settings": resolve_settings_snapshot(user_settings, process_rules)}
 
@@ -112,7 +122,8 @@ def build_settings_router(
                 continue
             normalized[field] = parsed
 
-        user_settings = (await asyncio.to_thread(load_user_settings)).copy()
+        original_settings = await load_user_settings()
+        user_settings = original_settings.copy()
         process_rules = runtime_policy_process_rules()
         candidate = user_settings.copy()
         candidate.update(normalized)
@@ -130,7 +141,7 @@ def build_settings_router(
             raise settings_validation_error(errors)
 
         user_settings.update(normalized)
-        await asyncio.to_thread(save_user_settings, user_settings)
+        await _save_settings(save_user_settings, user_settings, original_settings)
         return {
             "ok": True,
             "saved": normalized,
@@ -139,7 +150,7 @@ def build_settings_router(
 
     @router.get("/system/runtime-policy")
     async def get_runtime_policy() -> dict[str, Any]:
-        user_settings = await asyncio.to_thread(load_user_settings)
+        user_settings = await load_user_settings()
         process_rules = runtime_policy_process_rules()
 
         architecture_mode = resolve_architecture_mode(
@@ -241,7 +252,8 @@ def build_settings_router(
 
     @router.post("/system/runtime-policy")
     async def update_runtime_policy(req: RuntimePolicyUpdateRequest) -> dict[str, Any]:
-        current = (await asyncio.to_thread(load_user_settings)).copy()
+        original_settings = await load_user_settings()
+        current = original_settings.copy()
         if req.architecture_mode is not None:
             current["architecture_mode"] = resolve_architecture_mode(req.architecture_mode, None, None)
         if req.frontend_framework_mode is not None:
@@ -304,7 +316,7 @@ def build_settings_router(
             current["gitea_state_pilot_enabled"] = bool(
                 resolve_gitea_state_pilot_enabled(req.gitea_state_pilot_enabled, None, None)
             )
-        await asyncio.to_thread(save_user_settings, current)
+        await _save_settings(save_user_settings, current, original_settings)
         return {
             "ok": True,
             "saved": {

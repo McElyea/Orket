@@ -96,6 +96,16 @@ factory result. The module-default app and adapter-owned handler are retired in
 0.6.20. Direct embeddings, captured input rotation, native Gitea review translation
 and interruption limits live in `docs/specs/WEBHOOK_RUNTIME_LIFECYCLE.md`.
 
+Bootstrap synchronous settings before starting an event loop, or explicitly bind
+`set_runtime_settings_context(...)` for synchronous runtime consumers. Async
+settings APIs observe persistence through owned workers; they do not refresh a
+bound runtime snapshot. Settings paths, strict read failures and resumable
+preference migration are specified in `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`.
+Tests select temporary settings files and export a temporary `ORKET_DURABLE_ROOT`
+for child processes, then bind explicit empty snapshots in their fixture;
+production behavior does not inspect `PYTEST_CURRENT_TEST`. CLI startup binds
+persisted settings after onboarding before constructing runtime components.
+
 Handled fatal outcomes from `orket runtime` must return a nonzero process status. The
 governed-run demo default is package-owned and must not depend on the caller's current
 working directory.

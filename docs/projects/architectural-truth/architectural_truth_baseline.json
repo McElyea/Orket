@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-18T20:52:14.519871Z",
+  "generated_at": "2026-09-18T22:36:25.332391Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -294,19 +294,9 @@
           "path": "orket/extensions/workload_loader.py",
           "line": 78,
           "code": "unresolved_dynamic_import"
-        },
-        {
-          "path": "orket/settings.py",
-          "line": 86,
-          "code": "unresolved_reflection"
-        },
-        {
-          "path": "orket/settings.py",
-          "line": 92,
-          "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 1037,
+      "files_scanned": 1039,
       "scan_roots": [
         "orket"
       ],
@@ -315,7 +305,7 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 226
+          "count": 228
         },
         {
           "source": "adapters",
@@ -325,22 +315,22 @@
         {
           "source": "adapters",
           "target": "core",
-          "count": 135
+          "count": 136
         },
         {
           "source": "application",
           "target": "adapters",
-          "count": 332
+          "count": 334
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1577
+          "count": 1578
         },
         {
           "source": "application",
           "target": "core",
-          "count": 706
+          "count": 708
         },
         {
           "source": "application",
@@ -375,7 +365,7 @@
         {
           "source": "interfaces",
           "target": "application",
-          "count": 79
+          "count": 80
         },
         {
           "source": "interfaces",
@@ -666,16 +656,6 @@
           "path": "orket/extensions/workload_loader.py",
           "line": 78,
           "code": "unresolved_dynamic_import"
-        },
-        {
-          "path": "orket/settings.py",
-          "line": 86,
-          "code": "unresolved_reflection"
-        },
-        {
-          "path": "orket/settings.py",
-          "line": 92,
-          "code": "unresolved_reflection"
         }
       ],
       "exceptions": {
@@ -831,10 +811,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5054,
-    "missing_layer_total": 3453,
+    "tests_total": 5079,
+    "missing_layer_total": 3478,
     "by_layer": {
-      "unlabeled": 3453,
+      "unlabeled": 3478,
       "integration": 750,
       "unit": 168,
       "contract": 672,
@@ -1442,7 +1422,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3353
+    "missing_layers_omitted": 3378
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1466,8 +1446,8 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1037,
-    "files_over_400_total": 65,
+    "python_files_scanned": 1039,
+    "files_over_400_total": 64,
     "functions_over_70_total": 218,
     "largest_files": [
       {
@@ -1621,16 +1601,16 @@
         "lines": 320
       },
       {
+        "path": "orket/interfaces/routers/settings.py",
+        "line": 40,
+        "name": "build_settings_router",
+        "lines": 302
+      },
+      {
         "path": "orket/interfaces/orket_bundle_cli.py",
         "line": 1219,
         "name": "main",
         "lines": 301
-      },
-      {
-        "path": "orket/interfaces/routers/settings.py",
-        "line": 30,
-        "name": "build_settings_router",
-        "lines": 300
       },
       {
         "path": "orket/runtime/config/provider_runtime_target.py",
@@ -1733,7 +1713,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 602,
+    "scanned_files": 603,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -1844,60 +1824,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-17T17:28:53.640109Z",
-      "changed": true,
-      "before_digest": "sha256:e8a658181c98fd72ab40c6122a78dfd141fa1289f08116c62b9c3f5cc6f213d0",
-      "after_digest": "sha256:0c4844d0f916302e25af65cf9ccfa8f850652731f053c444a6ffc941329741e6",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 3645,
-        "paths_total_current": 3645,
-        "paths_total_reference": 3645,
-        "churn_paths": 5,
-        "churn_ratio": 0.001372,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-17T18:18:27.127491Z",
-      "changed": true,
-      "before_digest": "sha256:0c4844d0f916302e25af65cf9ccfa8f850652731f053c444a6ffc941329741e6",
-      "after_digest": "sha256:865098c19fe8a91ad70535453b86cbf7a1a225b97e8148af858ae5164dd9d2b0",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 11,
-        "initial_write": false,
-        "paths_total_previous": 3645,
-        "paths_total_current": 3645,
-        "paths_total_reference": 3645,
-        "churn_paths": 11,
-        "churn_ratio": 0.003018,
-        "sample_paths": [
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.dependency_graph.observed.layer_edges[5].count",
-          "$.dependency_graph.observed.layer_edges[6].count",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files",
-          "$.size_inventory.python_files_scanned",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-17T19:09:20.877014Z",
       "changed": true,
@@ -2774,6 +2700,65 @@
           "$.test_taxonomy.missing_layer_total",
           "$.test_taxonomy.missing_layers_omitted",
           "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T22:17:01.027461Z",
+      "changed": true,
+      "before_digest": "sha256:354ab2e8dee63a9ad109c905447af111fb450e68a071cfb358e6c51bda2c6353",
+      "after_digest": "sha256:2823d31a12777d81ff3609ea0fb8505c008a7c209334a19994ad74962ae6ba6f",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 4,
+        "changed_paths": 23,
+        "initial_write": false,
+        "paths_total_previous": 2684,
+        "paths_total_current": 2656,
+        "paths_total_reference": 2684,
+        "churn_paths": 27,
+        "churn_ratio": 0.01006,
+        "sample_paths": [
+          "$.dependency_graph.observed.analysis_errors",
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[12].count",
+          "$.dependency_graph.verdict.analysis_errors",
+          "$.generated_at",
+          "$.noop_critical_paths.scanned_files",
+          "$.size_inventory.files_over_400_total",
+          "$.size_inventory.largest_functions[8].line",
+          "$.size_inventory.largest_functions[8].lines",
+          "$.size_inventory.largest_functions[8].name",
+          "$.size_inventory.largest_functions[8].path",
+          "$.size_inventory.largest_functions[9].line",
+          "$.size_inventory.largest_functions[9].lines",
+          "$.size_inventory.largest_functions[9].name",
+          "$.size_inventory.largest_functions[9].path"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T22:36:25.334891Z",
+      "changed": true,
+      "before_digest": "sha256:2823d31a12777d81ff3609ea0fb8505c008a7c209334a19994ad74962ae6ba6f",
+      "after_digest": "sha256:e936123d102bed0de6be09a1255f45e275457ebde0016f237102069ca82da8df",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2656,
+        "paths_total_current": 2656,
+        "paths_total_reference": 2656,
+        "churn_paths": 1,
+        "churn_ratio": 0.000377,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }

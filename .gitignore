@@ -91,6 +91,9 @@ benchmarks/staging/**
 docs/internal/
 coverage.json
 
+# Retained settings ownership files beside operator-selected settings paths
+*.settings-locks/
+
 # SDK runtime data (user-local; not versioned)
 data/voices/
 data/models/

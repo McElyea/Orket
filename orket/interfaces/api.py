@@ -83,7 +83,7 @@ from orket.kernel.v1.outbound_policy_gate import (
 )
 from orket.logging import log_event, subscribe_to_events, unsubscribe_from_events
 from orket.runtime.cors_config import resolve_cors_config
-from orket.settings import load_user_settings, save_user_settings
+from orket.settings import load_user_settings_async, save_user_settings_async
 from orket.streaming import CommitIntent, InteractionManager, StreamBus
 from orket.workloads import is_builtin_workload, run_builtin_workload, validate_builtin_workload_start
 
@@ -710,8 +710,8 @@ v1_router.include_router(
         settings_order=SETTINGS_ORDER,
         settings_schema=SETTINGS_SCHEMA,
         runtime_policy_options=lambda: runtime_policy_options(),
-        load_user_settings=lambda: load_user_settings(),
-        save_user_settings=lambda settings: save_user_settings(settings),
+        load_user_settings=lambda: load_user_settings_async(),
+        save_user_settings=lambda settings, **options: save_user_settings_async(settings, **options),
         runtime_policy_process_rules=lambda: _runtime_policy_process_rules(),
         resolve_settings_snapshot=lambda user_settings, process_rules: _resolve_settings_snapshot(
             user_settings, process_rules

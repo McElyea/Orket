@@ -106,21 +106,27 @@ def resolve_user_settings_path(
     *,
     create_parent: bool = True,
     migrate_legacy: bool = True,
+    invocation_root: Path | None = None,
+    environment: Mapping[str, str] | None = None,
 ) -> Path:
     if path is not None:
-        return path
-    target = durable_root() / "config" / "user_settings.json"
+        return (invocation_root / path).resolve() if invocation_root is not None else path
+    root = invocation_root or Path.cwd()
+    target = durable_root(invocation_root=root, environment=environment) / "config" / "user_settings.json"
     if migrate_legacy:
-        _migrate_legacy_file(legacy=Path.cwd() / "user_settings.json", target=target)
+        _migrate_legacy_file(legacy=root / "user_settings.json", target=target)
     if create_parent:
         target.parent.mkdir(parents=True, exist_ok=True)
     return target
 
 
-def resolve_user_preferences_path(path: Path | None = None, *, create_parent: bool = True) -> Path:
+def resolve_user_preferences_path(
+    path: Path | None = None, *, create_parent: bool = True,
+    invocation_root: Path | None = None, environment: Mapping[str, str] | None = None,
+) -> Path:
     if path is not None:
-        return path
-    target = durable_root() / "config" / "preferences.json"
+        return (invocation_root / path).resolve() if invocation_root is not None else path
+    target = durable_root(invocation_root=invocation_root, environment=environment) / "config" / "preferences.json"
     if create_parent:
         target.parent.mkdir(parents=True, exist_ok=True)
     return target

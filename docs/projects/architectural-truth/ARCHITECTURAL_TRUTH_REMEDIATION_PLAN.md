@@ -12477,7 +12477,7 @@ requested a versioned GitHub checkpoint and continued commits on the existing
 branch; its proof and publication disposition are recorded in the C/D checkpoint.
 The later user instruction restricts 10 AM-6 PM America/Denver work hours to
 local commits only. Retain commits and matching annotated tags locally during
-that window; do not push to GitHub. The 0.6.4 through 0.6.15 local checkpoints follow this
+that window; do not push to GitHub. The versioned local checkpoints recorded below follow this
 restriction; remote publication remains deferred.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
@@ -12516,14 +12516,15 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.20
-webhook checkpoint below. The current graph has 21 forbidden pairs, zero
-cross-layer cycles and ten unresolved import/reflection sites. Preserve original
-failures and the first webhook candidate; supplied-clock controls do not repair
-or diagnose historical host-clock reversal. Remaining core clocks, manifest
-reads, schema identities, captured settings, async reachability and adapter
-classification remain actionable. E1/E2, CAP-1/2/3, full-suite/hosted quality,
-release readiness and explicit whole-lane acceptance remain open.
+Next action: continue C/D from their numbered requirements after the 0.6.21
+settings checkpoint below. The graph has 21 forbidden pairs, zero cross-layer
+cycles and eight unresolved import/reflection sites. Preserve the original clock
+failures and all failed settings/full-suite observations. The full suite remains
+red; triage its current failure index, including the API background-start/shutdown
+race and quality-fixture drift. Remaining core clocks, manifest reads, schema
+identities, async reachability and adapter classification remain actionable.
+E1/E2, CAP-1/2/3, hosted quality, release readiness and explicit whole-lane
+acceptance remain open.
 
 The final BT-3 audit accepts builtin evidence-based completion and scoped replay.
 It preserves the initial installed failures, corrected external fixture coverage,
@@ -14688,3 +14689,212 @@ closure is implied.
 - `tests/interfaces/test_webhook_factory.py`
 - `tests/interfaces/test_webhook_rate_limit.py`
 - `tests/live/test_system_acceptance_pipeline.py`
+
+
+### Captured settings operations checkpoint: 2026-09-18 (0.6.21)
+
+The previous turn made progress: 0.6.20 was verified and committed/tagged locally
+as `ec7dddd48400d6460f295e24fab4607675552c53`. Reentry matches its full worktree
+and all 793 bound evidence files, plus original handoff and neighboring worktrees.
+The new snapshot is `.tmp/d-settings-inputs/session-state.json`, SHA-256
+`aa63749f69fb5266d8c1cb0a925b0dcd0df0ffbdc4b690fbdd8b46aca6b08e73`.
+Original clock failures remain retained; no new historical-cause or host-clock
+repair claim is made.
+
+Settings operations now capture paths/environment and nested JSON inputs before
+awaiting, and application owns verified file publication and preference migration.
+Runtime snapshots retain serialized values; getters return detached dictionaries.
+Implicit data/default-path caches, reflective global cache access and production
+pytest behavior are removed. The test fixture explicitly selects temporary files,
+empty runtime snapshots and dotenv bootstrap state.
+
+Native writer admission, retained workers and pending preference migration reuse
+existing lock/publication/lifetime mechanisms. Migration resumes in a new process
+only when retained source/destination bindings agree. Missing files remain empty;
+malformed or unreadable inputs refuse. Default global overrides are bootstrap
+inputs, not per-application isolation. Remaining cross-host, hostile-editor,
+full runtime-input and multi-file atomicity guarantees are not implied.
+Contract: `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`; delta:
+`docs/architecture/CONTRACT_DELTA_SETTINGS_INPUTS_CD_2026-09-18.md`.
+
+All seven settings counterexamples fail against 0.6.20 in `before/`, then pass in
+`captured/`. Real file/cancellation/restart/process-admission proof passes in
+`persistence/` and `settings-final/` (36 cases including strict-input controls).
+A 122-case consumer run has one stale test targeting the factory retired in
+0.6.19; its mock now targets the actual interface-owned factory. Its original
+failure remains in `consumers/`; this does not represent a new runtime failure.
+
+Two actual HTTP counterexamples in `api-before/` show the admin settings route
+returning a runtime snapshot instead of file contents and losing request ownership
+while its outer thread remains active during shutdown. The router now directly
+awaits async persistence operations. `api-repaired/` passes 113 cases, including
+actual TCP read/patch/readback and held-write shutdown. A later controlled
+overlap in `api-update-race/` retains two HTTP 200 responses with the earlier
+update lost. Both admin routes now compare their validation input under native
+writer ownership and return `settings_conflict` / HTTP 409 on stale or busy
+publication. Reload/retry retains both changes. Unconditional direct saves remain
+explicit replacement operations.
+
+The initial candidate wheel/sdist under `candidate/dist/` precedes the HTTP repair
+and is not acceptance of the final implementation. The final source, installed
+Windows/Linux Python 3.11/3.12 and broader regression results are recorded below. All retained source phases bind their own exact inputs. Full C/D/E/CAP,
+hosted proof and explicit whole-lane acceptance remain open; no remote Git action.
+
+The first full Windows source observation in `full-source/` completed with
+6,737 passed, 100 failed and 89 skipped. Its source bytes remained unchanged, but
+an absent legacy settings path acquired a root lock directory; the original
+declaration and failure remain retained. `post-full-state.json` reconciles that
+specific generated artifact without resealing. Missing packages in a different
+bare-Python interpreter, cold settings reads in CLI/independent API startup,
+existing fixture assumptions and wider API/quality failures are visible in
+`full-source-failure-index.json`. No passing full-suite claim is made.
+
+Five additional failures in `conditional-before/` cover stale HTTP publication,
+JSON exponent overflow, unsolicited preference metadata, conditional value
+semantics and the absent legacy lock. Two more in `migration-types-before/`
+show boolean/numeric equality concealing source drift. Repairs use canonical JSON
+comparisons, non-mutating metadata validation and legacy ownership only during
+actual migration. CLI startup explicitly binds persisted settings after onboarding;
+the API test worker constructs its cold app in an owned worker. Tests export a
+temporary durable root to child processes. Operational lock files remain retained
+and ignored, rather than being deleted to produce a clean inventory.
+
+`conditional-repaired/` passes 215 of 216 cases; its remaining installed CLI test
+still imports the earlier wheel, before the CLI bootstrap repair. The distinct
+`verified/` artifact and private environments address that stale-artifact boundary;
+their observed results and later superseding proof are recorded below. Earlier `candidate/` and `final/` artifacts remain
+retained. The original `final/source-final` 500 passes precede these repairs.
+
+The refreshed dependency observation has 1,039 modules, 3,283 import sites,
+21 forbidden pairs, no cross-layer cycles, eight analysis errors and no unknown
+modules. Two settings reflection errors are removed; no forbidden pair is added.
+Collection success remains separate from the failed policy/release verdict.
+
+The `verified/` candidate passes all 616 expanded source cases and all 616
+installed Windows Python 3.11 cases. Installed Linux Python 3.11 passes 615 and
+fails one CLI diagnostic assertion: its invalid settings path refuses during
+earlier capability selection with a critical diagnostic, while the Windows path
+refuses during startup with a fatal diagnostic. Both exit 1 without onboarding
+success. The corrected test requires that terminal failure, identifies the actual
+blocked path and rejects an unrelated settings-bridge error.
+
+A separate `pending-null-before/` probe also demonstrates a present `null`
+migration journal being overwritten as though absent. The loader now refuses
+that malformed record before either settings file changes. The distinct
+`journal-fixed/` candidate carries this correction; the earlier candidate is
+retained and is not final acceptance. Its planned Python 3.12 cells were not run
+after the Linux failure and newly discovered journal defect.
+
+The `python-selection/` process probe records that a bare `python` child on this
+Windows host selects the base interpreter even when the private environment is
+first on PATH; an explicit `sys.executable` child retains the private environment.
+It also independently demonstrates inherited `PYTEST_PLUGINS` breaking a foreign
+temporary pytest project. The next full runner scopes its database guard to the
+parent pytest argument. Bare-Python caller portability remains quality work;
+changing PATH alone is not a demonstrated repair.
+
+
+#### Final settings checkpoint proof and remaining quality findings
+
+Observed path: primary. Result: partial success for the full goal. Proof includes
+live local filesystem, independent process, actual TCP, installed CLI and real
+Gitea execution, alongside structural contracts; it is not new provider proof.
+
+The first `journal-fixed/source-final/` run retains 616 passes and one failure:
+Windows escaped the path in its OSError diagnostic. The corrected assertion
+identifies the offending filename and still requires exit 1, a fatal/critical
+diagnostic, no onboarding success and no settings-bridge error. Runtime package
+bytes did not change. The distinct `source-portable/` run passes all 617 cases,
+with unchanged Git-visible inputs. The earlier failed run remains intact.
+
+The same 617 unique cases pass in all four fresh installed environments:
+
+| Envelope | Pass / fail / error / skip | JUnit seconds | Core origins |
+|---|---:|---:|---:|
+| Source Windows 3.11 | 617 / 0 / 0 / 0 | 427.126 | source |
+| win-py311 | 617 / 0 / 0 / 0 | 448.652 | 921 |
+| linux-py311 | 617 / 0 / 0 / 0 | 345.136 | 921 |
+| win-py312 | 617 / 0 / 0 / 0 | 541.589 | 921 |
+| linux-py312 | 617 / 0 / 0 / 0 | 286.570 | 921 |
+
+Each installed verifier checks exact test identities, package hashes, actual core
+origins, unchanged harness inputs, normal/malformed CLI flows, ToolGate execution
+and owned-child teardown. The 1,893-file harness contains no core/SDK source
+shadow. All 1,039 core Python files and 1,054 packaged core files match the wheel
+and source archive. Four actual installed Gitea 1.25.4 flows also pass; all four
+server containers are removed and 469 imported core origins match that wheel.
+
+The fresh full Windows source run completes 6,936 cases:
+6,828 passed, 19 failed, 0 errors and
+89 skipped, without timeout or Git-visible input changes.
+Of the first full run's 100 failures, 82 now pass and
+18 still fail; 0 were not collected.
+Exact failures, tracebacks and the case comparison remain in
+`.tmp/d-settings-inputs/full-source-activated-failure-index.json`.
+The full suite remains failed; skips do not establish live/provider acceptance.
+The final checkpoint changes only this plan and its contract delta after the run.
+
+The additional marshaller failure has a retained `git clone` error reporting
+`Filename too long` under this runner's longer fixture path. Its negative result
+is truthful; no global Git configuration change or rerun conceals that refusal.
+Eleven remaining failures use a different bare-Python child without required
+packages. Other retained failures cover the existing test_api mock-policy
+violation, a SQLite execute wrapper that loses its async context-manager contract,
+the API background-start/shutdown race, an intended non-Git fixture discovering
+the parent repository, omitted CLI print-policy entries, an unstable-serializer
+fixture reporting a different contract error, and a stale runtime-alias target
+assertion. The earlier extension-generation timeout passes in this observation;
+that result alone does not diagnose or repair its earlier failure.
+
+Required follow-up remains in C/D and E1: classify the retained full failures,
+repair runtime defects and stale fixtures without broad waivers, finish explicit
+inputs/async boundaries and clear the dependency verdict. E1/E2, CAP-1/2/3,
+hosted Quality, release readiness and explicit whole-lane acceptance remain open.
+Historical clock failures and all earlier settings observations remain retained.
+
+Final retained artifact bindings:
+
+- `.tmp/d-settings-inputs/journal-fixed/manifest.json`: SHA-256 `f81b357cea0b3777fbbeac99799e8401a500f5af7ebdcdd15eef30bed7b329fa`.
+- `.tmp/d-settings-inputs/journal-fixed/source-report.json`: SHA-256 `40c7bbbaaf32634650d0ca198e6726b37d998ea9c6abb59e90759b43aa424722`.
+- `.tmp/d-settings-inputs/journal-fixed/native-audit.json`: SHA-256 `11074c8cfb3a3daea2a2ddf61e4a50f28ababbcb9f0100b90405b9b13c73d7ef`.
+- `.tmp/d-settings-inputs/installed-gitea/observation.json`: SHA-256 `af021b4bc5caacda7f933bfaf277d2e5eca53d720ad3f72afa0a61a64b1449c1`.
+- `.tmp/d-settings-inputs/full-source-activated/report.json`: SHA-256 `8d674170801ad3cb451442b229cd8ebaad988d1b053b3ea4d709249539b7d76d`.
+
+Local commit/tag binding is recorded in `.tmp/d-settings-inputs/local-checkpoint.json`.
+No GitHub push, merge, release publication or whole-lane closure is part of this checkpoint.
+
+#### Exact 0.6.21 checkpoint files
+
+- `.gitea/workflows/quality.yml`
+- `.gitignore`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/CONTRIBUTOR.md`
+- `docs/architecture/CONTRACT_DELTA_SETTINGS_INPUTS_CD_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`
+- `orket/adapters/storage/settings_file_store.py`
+- `orket/application/services/user_settings_service.py`
+- `orket/discovery.py`
+- `orket/interfaces/api.py`
+- `orket/interfaces/routers/settings.py`
+- `orket/runtime_paths.py`
+- `orket/settings.py`
+- `pyproject.toml`
+- `tests/application/test_settings_async_api.py`
+- `tests/application/test_settings_bridge.py`
+- `tests/application/test_settings_preferences_migration.py`
+- `tests/conftest.py`
+- `tests/helpers/outward_authorization.py`
+- `tests/helpers/settings_worker.py`
+- `tests/integration/test_settings_api_persistence.py`
+- `tests/integration/test_settings_input_ownership.py`
+- `tests/integration/test_settings_persistence_lifetime.py`
+- `tests/interfaces/test_api.py`
+- `tests/interfaces/test_cli_process_exit_semantics.py`
+- `tests/interfaces/test_server_entrypoint.py`
+- `tests/interfaces/test_settings_protocol_determinism_controls.py`

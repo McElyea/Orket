@@ -216,6 +216,13 @@ Responsibilities:
 
 Application services own runtime truth.
 
+`UserSettingsService` coordinates captured settings locations, verified file
+publication and resumable preference migration. The public settings boundary
+captures nested values before dispatch and retains file workers through
+cancellation. Explicit runtime snapshots and persistence reads have separate
+semantics, documented in `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`; this does not
+make all downstream runtime configuration immutable.
+
 The standalone coordinator factory creates an application-owned store,
 publication service and lifetime owner. Serialized admitted transitions capture
 inputs and retain workers/publications through cancellation; uncertain failures

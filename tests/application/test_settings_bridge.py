@@ -18,13 +18,13 @@ async def test_run_settings_sync_raises_typed_error_inside_event_loop() -> None:
         _run_settings_sync(_noop_settings(), operation="load_user_settings")
 
 
-def test_run_settings_sync_warns_when_runtime_context_is_bound(caplog) -> None:
-    """Layer: unit. Verifies sync bridge calls surface context var scoping drift."""
+def test_run_settings_sync_preserves_bound_runtime_context() -> None:
+    """Layer: unit. asyncio.run propagates the caller's captured context into its coroutine."""
+    async def read_snapshot():
+        return settings_module.load_user_settings()
+
     settings_module.set_runtime_settings_context(user_settings={"state_backend_mode": "sqlite"})
     try:
-        with caplog.at_level("WARNING", logger="orket.settings"):
-            assert _run_settings_sync(_noop_settings(), operation="load_user_settings") == {}
+        assert _run_settings_sync(read_snapshot(), operation="load_user_settings") == {"state_backend_mode": "sqlite"}
     finally:
         settings_module.clear_runtime_settings_context()
-
-    assert "not visible to _run_settings_sync callers" in caplog.text

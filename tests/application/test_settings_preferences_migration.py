@@ -27,10 +27,8 @@ def test_migrate_legacy_model_preferences_moves_keys_and_strips_user_settings(mo
         },
     )
 
-    monkeypatch.setattr(settings_module, "_SETTINGS_FILE", settings_path)
-    monkeypatch.setattr(settings_module, "_PREFERENCES_FILE", preferences_path)
-    monkeypatch.setattr(settings_module, "_SETTINGS_CACHE", None)
-    monkeypatch.setattr(settings_module, "_PREFERENCES_CACHE", None)
+    settings_module.set_settings_file(settings_path)
+    settings_module.set_preferences_file(preferences_path)
 
     preferences = settings_module.load_user_preferences()
 
@@ -51,10 +49,8 @@ def test_load_user_preferences_returns_existing_models_without_legacy(monkeypatc
     _write_json(settings_path, {"setup_complete": True})
     _write_json(preferences_path, {"models": {"architect": "deepseek-r1:32b"}})
 
-    monkeypatch.setattr(settings_module, "_SETTINGS_FILE", settings_path)
-    monkeypatch.setattr(settings_module, "_PREFERENCES_FILE", preferences_path)
-    monkeypatch.setattr(settings_module, "_SETTINGS_CACHE", None)
-    monkeypatch.setattr(settings_module, "_PREFERENCES_CACHE", None)
+    settings_module.set_settings_file(settings_path)
+    settings_module.set_preferences_file(preferences_path)
 
     preferences = settings_module.load_user_preferences()
 
@@ -63,34 +59,31 @@ def test_load_user_preferences_returns_existing_models_without_legacy(monkeypatc
 
 
 def test_load_user_preferences_skips_second_migration_save_once_marker_exists(monkeypatch, tmp_path: Path):
-    """Layer: contract. Verifies the persistent migration marker prevents repeat cold-start preference rewrites."""
+    """Layer: integration. Observe actual publication, then prove a marked reload leaves both files unchanged."""
     settings_path = tmp_path / "user_settings.json"
     preferences_path = tmp_path / "preferences.json"
     _write_json(settings_path, {"setup_complete": True})
+    settings_module.set_settings_file(settings_path)
+    settings_module.set_preferences_file(preferences_path)
+    publications = []
+    replace_file = Path.replace
 
-    monkeypatch.setattr(settings_module, "_SETTINGS_FILE", settings_path)
-    monkeypatch.setattr(settings_module, "_PREFERENCES_FILE", preferences_path)
-    monkeypatch.setattr(settings_module, "_SETTINGS_CACHE", None)
-    monkeypatch.setattr(settings_module, "_PREFERENCES_CACHE", None)
+    def observed_replace(source, target):
+        result = replace_file(source, target)
+        if target == preferences_path:
+            publications.append(target)
+        return result
 
+    monkeypatch.setattr(Path, "replace", observed_replace)
     first = settings_module.load_user_preferences()
     assert first["_meta"]["migration_markers"]["legacy_model_preferences_v1"] is True
-
-    save_calls: list[dict] = []
-    real_save = settings_module.save_user_preferences
-
-    def _capture_save(preferences: dict):
-        save_calls.append(dict(preferences))
-        return real_save(preferences)
-
-    monkeypatch.setattr(settings_module, "save_user_preferences", _capture_save)
-    monkeypatch.setattr(settings_module, "_SETTINGS_CACHE", None)
-    monkeypatch.setattr(settings_module, "_PREFERENCES_CACHE", None)
-
+    assert publications
+    before = settings_path.read_bytes(), preferences_path.read_bytes()
+    publications.clear()
     second = settings_module.load_user_preferences()
-
-    assert second["_meta"]["migration_markers"]["legacy_model_preferences_v1"] is True
-    assert save_calls == []
+    assert second == first
+    assert publications == []
+    assert (settings_path.read_bytes(), preferences_path.read_bytes()) == before
 
 
 def test_settings_import_has_no_config_directory_side_effect(monkeypatch, tmp_path: Path):

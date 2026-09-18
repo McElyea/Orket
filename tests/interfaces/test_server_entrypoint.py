@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import orket.runtime as runtime_module
+import orket.interfaces.runtime_entrypoints as entrypoints_module
 import orket.settings as settings_module
 
 
@@ -21,7 +21,7 @@ def test_server_entrypoint_bootstraps_repo_env_before_app_creation(monkeypatch) 
         return object()
 
     monkeypatch.setattr(settings_module, "load_env", fake_load_env)
-    monkeypatch.setattr(runtime_module, "create_api_app", fake_create_api_app)
+    monkeypatch.setattr(entrypoints_module, "create_api_app", fake_create_api_app)
     sys.modules.pop("server", None)
 
     server_module = importlib.import_module("server")

@@ -219,8 +219,15 @@ def fail_closed_sandbox_creation(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def clear_settings_caches_between_tests():
+def clear_settings_caches_between_tests(monkeypatch, tmp_path):
+    """Layer: integration. Isolate real settings paths explicitly instead of runtime pytest bypasses."""
     settings_module.clear_settings_cache()
+    monkeypatch.setenv("ORKET_DURABLE_ROOT", str(tmp_path / ".orket/durable"))
+    settings_module.set_settings_file(tmp_path / "settings" / "user_settings.json")
+    settings_module.set_preferences_file(tmp_path / "settings" / "preferences.json")
+    settings_module.set_runtime_settings_context(user_settings={}, user_preferences={})
+    monkeypatch.setattr(settings_module, "ENV_FILE", tmp_path / "settings" / ".env")
+    monkeypatch.setattr(settings_module, "_ENV_LOADED", True)
     yield
     settings_module.clear_settings_cache()
 
@@ -238,4 +245,3 @@ def fresh_runtime_state(monkeypatch):
         fresh = state_module.GlobalState()
     monkeypatch.setattr(state_module, "runtime_state", fresh)
     return fresh
-

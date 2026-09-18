@@ -4,6 +4,13 @@ Last updated: 2026-09-18
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Settings persistence is application-owned through `UserSettingsService` and
+captured per-operation locations. Runtime settings snapshots retain serialized
+values; exported dictionaries are detached. Synchronous cold reads require
+pre-loop bootstrap; asynchronous persistence reads remain distinct from bound
+runtime snapshots. Migration, native writer admission, interruption and input
+rotation limits live in `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`.
+
 The standalone coordinator uses an explicit application factory, captured
 project/environment/time inputs and per-owner serialized transition lifetime.
 Admitted store and control-plane work settles before cancellation or close returns.
@@ -915,7 +922,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 ```json
 {
   "version": 1,
-  "last_updated": "2026-09-13",
+  "last_updated": "2026-09-18",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",

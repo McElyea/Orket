@@ -1,6 +1,19 @@
+# Layer: contract
 from __future__ import annotations
 
 import orket.interfaces.api as api_module
+
+
+def _settings_reader(payload):
+    async def read():
+        return dict(payload)
+    return read
+
+
+def _settings_writer(captured):
+    async def write(settings, **_expected):
+        captured["settings"] = settings
+    return write
 
 
 def test_runtime_policy_options_exposes_protocol_determinism_fields(monkeypatch, test_client):
@@ -37,8 +50,8 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
     monkeypatch.setenv("ORKET_PROTOCOL_ENV_ALLOWLIST", "HOME,PATH")
     monkeypatch.setattr(
         api_module,
-        "load_user_settings",
-        lambda: {
+        'load_user_settings_async',
+        _settings_reader({
             "run_ledger_mode": "sqlite",
             "protocol_timezone": "UTC",
             "protocol_locale": "C.UTF-8",
@@ -48,7 +61,7 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
             "local_prompting_mode": "shadow",
             "local_prompting_allow_fallback": False,
             "local_prompting_fallback_profile_id": "",
-        },
+        }),
     )
     monkeypatch.setattr(
         api_module._get_engine(),
@@ -89,8 +102,8 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
 def test_runtime_policy_update_saves_protocol_determinism_fields(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"existing": True})
-    monkeypatch.setattr(api_module, "save_user_settings", lambda settings: captured.update({"settings": settings}))
+    monkeypatch.setattr(api_module, 'load_user_settings_async', _settings_reader({"existing": True}))
+    monkeypatch.setattr(api_module, 'save_user_settings_async', _settings_writer(captured))
 
     response = test_client.post(
         "/v1/system/runtime-policy",
@@ -124,8 +137,8 @@ def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch, test_cl
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
     captured = {}
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"existing": "x"})
-    monkeypatch.setattr(api_module, "save_user_settings", lambda settings: captured.update({"settings": settings}))
+    monkeypatch.setattr(api_module, 'load_user_settings_async', _settings_reader({"existing": "x"}))
+    monkeypatch.setattr(api_module, 'save_user_settings_async', _settings_writer(captured))
 
     response = test_client.patch(
         "/v1/settings",
@@ -158,7 +171,7 @@ def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch, test_cl
 def test_settings_patch_rejects_invalid_protocol_network_mode(monkeypatch, test_client):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module, 'load_user_settings_async', _settings_reader({}))
 
     response = test_client.patch(
         "/v1/settings",
@@ -176,13 +189,13 @@ def test_settings_get_reports_protocol_determinism_sources(monkeypatch, test_cli
     monkeypatch.setenv("ORKET_PROTOCOL_LOCALE", "en_US.UTF-8")
     monkeypatch.setattr(
         api_module,
-        "load_user_settings",
-        lambda: {
+        'load_user_settings_async',
+        _settings_reader({
             "run_ledger_mode": "dual_write",
             "protocol_network_mode": "allowlist",
             "protocol_network_allowlist": "api.example.com",
             "local_prompting_mode": "compat",
-        },
+        }),
     )
     monkeypatch.setattr(
         api_module._get_engine(),
@@ -218,8 +231,8 @@ def test_settings_get_keeps_run_ledger_mode_source_stable_under_env_override(mon
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "protocol")
     monkeypatch.setattr(
         api_module,
-        "load_user_settings",
-        lambda: {},
+        'load_user_settings_async',
+        _settings_reader({}),
     )
     monkeypatch.setattr(
         api_module._get_engine(),

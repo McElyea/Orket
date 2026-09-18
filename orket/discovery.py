@@ -1,3 +1,4 @@
+import os
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -10,7 +11,13 @@ from orket.runtime import ConfigLoader
 from orket.runtime.config.defaults import configured_provider
 from orket.runtime.config.provider_discovery import installed_models
 from orket.schema import EngineRegistry, EpicConfig, RockConfig, TeamConfig
-from orket.settings import load_user_settings, save_user_settings
+from orket.settings import (
+    load_user_preferences_async,
+    load_user_settings,
+    load_user_settings_async,
+    save_user_settings,
+    set_runtime_settings_context,
+)
 
 
 def _default_project_root() -> Path:
@@ -183,7 +190,12 @@ def perform_startup_checks() -> dict[str, str]:
 
 async def run_startup_checks(startup: Callable[[], dict[str, str]]) -> dict[str, str]:
     """Retain the admitted startup worker, including structural writes, through cancellation."""
-    return await run_owned_thread(startup, label="runtime-startup-checks")
+    environment = dict(os.environ)
+    result = await run_owned_thread(startup, label="runtime-startup-checks")
+    preferences = await load_user_preferences_async()
+    settings = await load_user_settings_async()
+    set_runtime_settings_context(user_settings=settings, user_preferences=preferences, environment=environment)
+    return result
 
 
 def perform_first_run_setup() -> dict[str, str]:

@@ -20,8 +20,7 @@ async def test_load_user_settings_async_reads_settings_inside_event_loop(monkeyp
     settings_path = tmp_path / "user_settings.json"
     _write_json(settings_path, {"state_backend_mode": "sqlite"})
 
-    monkeypatch.setattr(settings_module, "_SETTINGS_FILE", settings_path)
-    monkeypatch.setattr(settings_module, "_SETTINGS_CACHE", None)
+    settings_module.set_settings_file(settings_path)
 
     settings = await settings_module.load_user_settings_async()
 
@@ -36,8 +35,7 @@ async def test_load_user_settings_sync_fails_closed_inside_event_loop_without_ru
     settings_path = tmp_path / "user_settings.json"
     _write_json(settings_path, {"state_backend_mode": "sqlite"})
 
-    monkeypatch.setattr(settings_module, "_SETTINGS_FILE", settings_path)
-    monkeypatch.setattr(settings_module, "_SETTINGS_CACHE", None)
+    settings_module.set_settings_file(settings_path)
 
     with pytest.raises(SettingsBridgeError, match="set_runtime_settings_context"):
         settings_module.load_user_settings()
@@ -64,10 +62,8 @@ async def test_load_user_preferences_async_migrates_legacy_preferences(monkeypat
     preferences_path = tmp_path / "preferences.json"
     _write_json(settings_path, {"preferred_coder": "qwen2.5-coder:14b", "setup_complete": True})
 
-    monkeypatch.setattr(settings_module, "_SETTINGS_FILE", settings_path)
-    monkeypatch.setattr(settings_module, "_PREFERENCES_FILE", preferences_path)
-    monkeypatch.setattr(settings_module, "_SETTINGS_CACHE", None)
-    monkeypatch.setattr(settings_module, "_PREFERENCES_CACHE", None)
+    settings_module.set_settings_file(settings_path)
+    settings_module.set_preferences_file(preferences_path)
 
     preferences = await settings_module.load_user_preferences_async()
 

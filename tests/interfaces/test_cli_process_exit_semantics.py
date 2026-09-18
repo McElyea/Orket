@@ -127,7 +127,9 @@ def test_main_first_run_persistence_failure_exits_nonzero_without_success_claim(
     result = _run_main(tmp_path, "--help", durable_root=blocked_root)
 
     assert result.returncode == 1
-    assert "[FATAL]" in result.stdout
+    assert "[FATAL]" in result.stdout or "[CRITICAL ERROR]" in result.stdout
+    assert blocked_root.name in result.stdout + result.stderr
+    assert "SettingsBridgeError" not in result.stdout + result.stderr
     assert "[FIRST RUN]" not in result.stdout
 
 
