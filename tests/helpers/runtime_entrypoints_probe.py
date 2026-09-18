@@ -84,11 +84,12 @@ def webhook():
     app = runtime_entrypoints.create_webhook_app(CompositionConfig(module_profile='api-webhook-runtime'))
     import orket.webhook_server as transport
 
-    handler = transport.webhook_handler._handler
-    assert handler is not None
+    assert not hasattr(transport, "webhook_handler")
     body = b'{}'
-    signature = 'sha256=' + hmac.new(b'entrypoint-test-secret', body, hashlib.sha256).hexdigest()
+    signature = hmac.new(b'entrypoint-test-secret', body, hashlib.sha256).hexdigest()
     with TestClient(app) as client:
+        handler = app.state.webhook_runtime
+        assert handler is not None
         assert client.get('/health').status_code == 200
         rejected = client.post('/webhook/gitea', content=body, headers={'X-Gitea-Event': 'ping'})
         accepted = client.post('/webhook/gitea', content=body,
@@ -97,7 +98,7 @@ def webhook():
         assert accepted.status_code == 200 and accepted.json()['status'] == 'ignored'
     return {'unsigned_status': rejected.status_code, 'signed_status': accepted.status_code,
             'result': accepted.json(), 'client_closed': handler.client.is_closed,
-            'handler_released': transport.webhook_handler._handler is None,
+            'handler_released': handler.closed,
             'scope': 'Signed ignored event uses no outbound Gitea request or sandbox deployment'}
 
 

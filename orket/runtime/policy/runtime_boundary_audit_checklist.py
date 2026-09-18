@@ -39,10 +39,10 @@ _BOUNDARY_ROWS: tuple[dict[str, Any], ...] = (
     {
         "boundary_id": "BND-WEBHOOK-GITEA",
         "boundary_type": "webhook_handler",
-        "path": "orket/adapters/vcs/gitea_webhook_handler.py",
-        "owner": "adapters",
-        "exception_policy": "log_and_continue",
-        "required_context_fields": ["event_type", "issue_id"],
+        "path": "orket/webhook_server.py",
+        "owner": "interfaces",
+        "exception_policy": "log_and_return_error",
+        "required_context_fields": ["event_type", "delivery_id"],
     },
     {
         "boundary_id": "BND-BACKGROUND-LIVE-LOOP",

@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import os
 import shutil
+from collections.abc import Mapping
 from pathlib import Path
 
 
-def durable_root() -> Path:
-    raw = os.getenv("ORKET_DURABLE_ROOT", "").strip()
-    return Path(raw).resolve() if raw else (Path.cwd() / ".orket" / "durable")
+def durable_root(*, invocation_root: Path | None = None, environment: Mapping[str, str] | None = None) -> Path:
+    root = invocation_root or Path.cwd()
+    observed = os.environ if environment is None else environment
+    raw = observed.get("ORKET_DURABLE_ROOT", "").strip()
+    return (root / raw).resolve() if raw else (root / ".orket" / "durable")
 
 
 def _migrate_legacy_file(*, legacy: Path, target: Path) -> None:
@@ -24,20 +27,26 @@ def _migrate_legacy_dir(*, legacy: Path, target: Path) -> None:
     shutil.move(str(legacy), str(target))
 
 
-def resolve_runtime_db_path(db_path: str | None = None) -> str:
+def resolve_runtime_db_path(
+    db_path: str | None = None, *, invocation_root: Path | None = None, environment: Mapping[str, str] | None = None
+) -> str:
+    root = invocation_root or Path.cwd()
     if db_path:
-        return str(Path(db_path).resolve())
-    target = durable_root() / "db" / "orket_persistence.db"
-    _migrate_legacy_file(legacy=Path.cwd() / "orket_persistence.db", target=target)
+        return str((root / db_path).resolve())
+    target = durable_root(invocation_root=root, environment=environment) / "db" / "orket_persistence.db"
+    _migrate_legacy_file(legacy=root / "orket_persistence.db", target=target)
     target.parent.mkdir(parents=True, exist_ok=True)
     return str(target.resolve())
 
 
-def resolve_sandbox_lifecycle_db_path(db_path: str | None = None) -> str:
+def resolve_sandbox_lifecycle_db_path(
+    db_path: str | None = None, *, invocation_root: Path | None = None, environment: Mapping[str, str] | None = None
+) -> str:
     if db_path:
-        return db_path
-    target = durable_root() / "db" / "sandbox_lifecycle.db"
-    _migrate_legacy_file(legacy=Path.cwd() / "sandbox_lifecycle.db", target=target)
+        return str((invocation_root / db_path).resolve()) if invocation_root is not None else db_path
+    root = invocation_root or Path.cwd()
+    target = durable_root(invocation_root=root, environment=environment) / "db" / "sandbox_lifecycle.db"
+    _migrate_legacy_file(legacy=root / "sandbox_lifecycle.db", target=target)
     target.parent.mkdir(parents=True, exist_ok=True)
     return str(target)
 

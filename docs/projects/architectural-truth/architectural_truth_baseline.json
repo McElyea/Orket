@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-18T19:13:44.169439Z",
+  "generated_at": "2026-09-18T20:52:14.519871Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -306,7 +306,7 @@
           "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 1027,
+      "files_scanned": 1037,
       "scan_roots": [
         "orket"
       ],
@@ -315,32 +315,32 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 231
+          "count": 226
         },
         {
           "source": "adapters",
           "target": "application",
-          "count": 7
+          "count": 5
         },
         {
           "source": "adapters",
           "target": "core",
-          "count": 136
+          "count": 135
         },
         {
           "source": "application",
           "target": "adapters",
-          "count": 326
+          "count": 332
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1562
+          "count": 1577
         },
         {
           "source": "application",
           "target": "core",
-          "count": 701
+          "count": 706
         },
         {
           "source": "application",
@@ -370,12 +370,12 @@
         {
           "source": "interfaces",
           "target": "adapters",
-          "count": 11
+          "count": 9
         },
         {
           "source": "interfaces",
           "target": "application",
-          "count": 77
+          "count": 79
         },
         {
           "source": "interfaces",
@@ -385,7 +385,7 @@
         {
           "source": "interfaces",
           "target": "interfaces",
-          "count": 39
+          "count": 42
         }
       ]
     },
@@ -422,28 +422,6 @@
             {
               "path": "orket/adapters/tools/families/vision.py",
               "line": 8,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.vcs.gitea_webhook_handler",
-          "target": "orket.services.sandbox_orchestrator",
-          "sites": [
-            {
-              "path": "orket/adapters/vcs/gitea_webhook_handler.py",
-              "line": 26,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.vcs.gitea_webhook_handlers",
-          "target": "orket.orchestration.engine",
-          "sites": [
-            {
-              "path": "orket/adapters/vcs/gitea_webhook_handlers.py",
-              "line": 246,
               "kind": "from"
             }
           ]
@@ -642,28 +620,6 @@
             {
               "path": "orket/vendors/local.py",
               "line": 3,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.webhook_server",
-          "target": "orket.adapters.vcs.gitea_webhook_handler",
-          "sites": [
-            {
-              "path": "orket/webhook_server.py",
-              "line": 26,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.webhook_server",
-          "target": "orket.logging",
-          "sites": [
-            {
-              "path": "orket/webhook_server.py",
-              "line": 27,
               "kind": "from"
             }
           ]
@@ -875,10 +831,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5033,
-    "missing_layer_total": 3432,
+    "tests_total": 5054,
+    "missing_layer_total": 3453,
     "by_layer": {
-      "unlabeled": 3432,
+      "unlabeled": 3453,
       "integration": 750,
       "unit": 168,
       "contract": 672,
@@ -1367,126 +1323,126 @@
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 59,
+        "line": 61,
         "test_name": "test_webhook_handler_rejects_plaintext_gitea_url_without_override",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 68,
+        "line": 70,
         "test_name": "test_webhook_handler_allows_plaintext_only_with_explicit_local_override",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 85,
+        "line": 89,
         "test_name": "test_webhook_handler_context_manager_closes_http_client",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 96,
+        "line": 100,
         "test_name": "test_webhook_handler_accepts_injected_sandbox_orchestrator",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 115,
+        "line": 119,
         "test_name": "test_webhook_handler_passes_lifecycle_db_path_to_sandbox_orchestrator",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 127,
+        "line": 131,
         "test_name": "test_webhook_handler_uses_workspace_durable_db_path",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 138,
+        "line": 142,
         "test_name": "test_pr_cycle_tracking_real_db",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 167,
+        "line": 172,
         "test_name": "test_pr_review_duplicate_event_id_is_skipped_before_side_effects",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 194,
+        "line": 200,
         "test_name": "test_auto_reject_after_4_cycles",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 226,
+        "line": 233,
         "test_name": "test_pr_review_cycles_survive_handler_restart_to_escalate",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 312,
+        "line": 321,
         "test_name": "test_pr_review_approved_triggers_auto_merge",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 332,
+        "line": 342,
         "test_name": "test_pr_review_approved_reports_merge_failure",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 356,
+        "line": 367,
         "test_name": "test_pr_review_commented_is_ignored",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 376,
+        "line": 388,
         "test_name": "test_pr_opened_without_issue_id_is_ignored",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 394,
+        "line": 406,
         "test_name": "test_pr_review_escalation_failure_is_reported",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 422,
+        "line": 435,
         "test_name": "test_pr_merged_closes_cycle_and_skips_sandbox_deployment_with_explicit_reason",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 463,
+        "line": 479,
         "test_name": "test_pr_merged_skip_does_not_attempt_sandbox_creation",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 504,
+        "line": 523,
         "test_name": "test_auto_reject_creates_requirements_review_issue",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 538,
+        "line": 558,
         "test_name": "test_auto_reject_creates_unlabeled_requirements_issue_when_repo_labels_missing",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_webhook.py",
-        "line": 566,
+        "line": 587,
         "test_name": "test_auto_reject_reports_close_failure_without_marking_rejected",
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3332
+    "missing_layers_omitted": 3353
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1510,9 +1466,9 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1027,
-    "files_over_400_total": 66,
-    "functions_over_70_total": 219,
+    "python_files_scanned": 1037,
+    "files_over_400_total": 65,
+    "functions_over_70_total": 218,
     "largest_files": [
       {
         "path": "orket/interfaces/api.py",
@@ -1591,16 +1547,16 @@
         "lines": 591
       },
       {
+        "path": "orket/services/sandbox_orchestrator.py",
+        "lines": 578
+      },
+      {
         "path": "orket/streaming/model_provider.py",
         "lines": 577
       },
       {
         "path": "orket/interfaces/cli.py",
         "lines": 576
-      },
-      {
-        "path": "orket/services/sandbox_orchestrator.py",
-        "lines": 575
       },
       {
         "path": "orket/kernel/v1/state/lsi.py",
@@ -1777,7 +1733,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 592,
+    "scanned_files": 602,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -1888,51 +1844,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-17T16:56:59.868294Z",
-      "changed": true,
-      "before_digest": "sha256:645dd950f5b403d6f348fcb61eb6c445216ad5fb2d46908ab3ef904dd9286973",
-      "after_digest": "sha256:154b9f8db7f63f79da885310ebdd39e4149687cdecb86dac1600ae613820a334",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 3645,
-        "paths_total_current": 3645,
-        "paths_total_reference": 3645,
-        "churn_paths": 1,
-        "churn_ratio": 0.000274,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-17T16:59:04.096628Z",
-      "changed": true,
-      "before_digest": "sha256:154b9f8db7f63f79da885310ebdd39e4149687cdecb86dac1600ae613820a334",
-      "after_digest": "sha256:e8a658181c98fd72ab40c6122a78dfd141fa1289f08116c62b9c3f5cc6f213d0",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 6,
-        "initial_write": false,
-        "paths_total_previous": 3645,
-        "paths_total_current": 3645,
-        "paths_total_reference": 3645,
-        "churn_paths": 6,
-        "churn_ratio": 0.001646,
-        "sample_paths": [
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-17T17:28:53.640109Z",
       "changed": true,
@@ -2800,6 +2711,69 @@
           "$.dependency_graph.verdict.violations[23].target",
           "$.dependency_graph.verdict.violations[24].sites[0].line",
           "$.dependency_graph.verdict.violations[24].sites[0].path"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T20:33:21.903946Z",
+      "changed": true,
+      "before_digest": "sha256:71d2fdbff5288e6b6ff804659cc95b4a062651976d2c8b515b4ce375a6ee2067",
+      "after_digest": "sha256:2a76fa198c670bd28550103ea71e789b79de34bfa6ae2a981efccb8afc59ec35",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 4,
+        "changed_paths": 111,
+        "initial_write": false,
+        "paths_total_previous": 2736,
+        "paths_total_current": 2684,
+        "paths_total_reference": 2736,
+        "churn_paths": 115,
+        "churn_ratio": 0.042032,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[1].count",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[11].count",
+          "$.dependency_graph.observed.layer_edges[12].count",
+          "$.dependency_graph.observed.layer_edges[14].count",
+          "$.dependency_graph.verdict.violations[3].sites[0].line",
+          "$.dependency_graph.verdict.violations[3].sites[0].path",
+          "$.dependency_graph.verdict.violations[3].source",
+          "$.dependency_graph.verdict.violations[3].target",
+          "$.dependency_graph.verdict.violations[4].sites[0].line",
+          "$.dependency_graph.verdict.violations[4].sites[0].path",
+          "$.dependency_graph.verdict.violations[4].source",
+          "$.dependency_graph.verdict.violations[4].target",
+          "$.dependency_graph.verdict.violations[5].sites[0].line",
+          "$.dependency_graph.verdict.violations[5].sites[0].path"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T20:52:14.521873Z",
+      "changed": true,
+      "before_digest": "sha256:2a76fa198c670bd28550103ea71e789b79de34bfa6ae2a981efccb8afc59ec35",
+      "after_digest": "sha256:354ab2e8dee63a9ad109c905447af111fb450e68a071cfb358e6c51bda2c6353",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 2684,
+        "paths_total_current": 2684,
+        "paths_total_reference": 2684,
+        "churn_paths": 5,
+        "churn_ratio": 0.001863,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
         ]
       }
     }

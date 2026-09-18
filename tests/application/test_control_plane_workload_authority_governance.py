@@ -731,9 +731,9 @@ def test_public_runtime_wrappers_collapse_to_run_card() -> None:
     )
     webhook_targets = _call_targets(
         _load_class_method(
-            ORKET_ROOT / "adapters" / "vcs" / "gitea_webhook_handlers.py",
-            class_name="PRLifecycleHandler",
-            method_name="handle_pr_opened",
+            ORKET_ROOT / "application" / "services" / "gitea_webhook_runtime.py",
+            class_name="GiteaWebhookHandler",
+            method_name="_run_review",
         )
     )
     extension_runtime_targets = _call_targets(

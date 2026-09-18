@@ -79,6 +79,7 @@ fixed ZIP metadata. Both Quality jobs enforce source/archive agreement.
 - Named card runtime: `orket runtime --card <card_id>`
 - API runtime: `python server.py`
 - Standalone coordinator: `python -m uvicorn orket.interfaces.coordinator_api:create_coordinator_app --factory`
+- Standalone Gitea webhook: `python -m orket.webhook_server` or `python -m uvicorn orket.webhook_server:create_webhook_app --factory`
 - Governed-action quickstart: `orket-quickstart` or `orket-quickstart --decision approve|deny`
 - Governed-run deterministic demo: `orket demo governed-run`
 - Test command: `python -m pytest -q`
@@ -89,6 +90,11 @@ module-profile authorization gate; `CompositionConfig` and `create_engine` remai
 application exports through `orket.runtime`. The former runtime transport-factory
 exports are retired in 0.6.19. `API_RUNTIME_LIFECYCLE.md` documents the distinction
 between separate API owners and selected persistent stores.
+
+Standalone webhook apps also require their lifespan and retain one owner per
+factory result. The module-default app and adapter-owned handler are retired in
+0.6.20. Direct embeddings, captured input rotation, native Gitea review translation
+and interruption limits live in `docs/specs/WEBHOOK_RUNTIME_LIFECYCLE.md`.
 
 Handled fatal outcomes from `orket runtime` must return a nonzero process status. The
 governed-run demo default is package-owned and must not depend on the caller's current

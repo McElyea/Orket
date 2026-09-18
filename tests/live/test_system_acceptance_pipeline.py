@@ -7,7 +7,7 @@ import os
 import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
-from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
+from orket.application.services.gitea_webhook_runtime import GiteaWebhookHandler
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.exceptions import ExecutionFailed
 from orket.orchestration.engine import OrchestrationEngine
@@ -58,9 +58,7 @@ def _assert_runtime_verification_support_artifact(
     assert runtime_payload["evidence_summary"]["syntax_only"]["evaluated"] is True
     assert runtime_payload["evidence_summary"]["command_execution"]["evaluated"] is True
     assert runtime_payload["evidence_summary"]["behavioral_verification"]["evaluated"] is False
-    assert "behavioral_verification" in {
-        row["check"] for row in runtime_payload["evidence_summary"]["not_evaluated"]
-    }
+    assert "behavioral_verification" in {row["check"] for row in runtime_payload["evidence_summary"]["not_evaluated"]}
     assert isinstance(runtime_payload.get("command_results"), list)
     assert len(runtime_payload["command_results"]) >= 2
     record_path = workspace / runtime_payload["history"]["record_path"]
@@ -78,9 +76,7 @@ class MultiRoleAcceptanceProvider:
         required_write_paths = list(turn_context.get("required_write_paths", []))
         required_statuses = list(turn_context.get("required_statuses", []))
         missing_required_read_paths = {
-            str(path).strip()
-            for path in turn_context.get("missing_required_read_paths", [])
-            if str(path).strip()
+            str(path).strip() for path in turn_context.get("missing_required_read_paths", []) if str(path).strip()
         }
 
         def _render_calls(calls: list[dict]) -> str:
@@ -92,7 +88,9 @@ class MultiRoleAcceptanceProvider:
         readable_paths = [path for path in required_read_paths if path not in missing_required_read_paths]
 
         # Route by active seat/role first; issue-id fallback handles prompt format drift.
-        if active_seat in {"requirements_analyst", "requirements_seat"} or (not active_seat and active_issue_id == "req-1"):
+        if active_seat in {"requirements_analyst", "requirements_seat"} or (
+            not active_seat and active_issue_id == "req-1"
+        ):
             target_path = required_write_paths[0] if required_write_paths else "agent_output/requirements.txt"
             calls = [
                 {
@@ -315,8 +313,7 @@ async def test_system_acceptance_role_pipeline_with_guard_live_reports_truthfull
         _assert_runtime_verification_support_artifact(workspace, runtime_payload, run_id=run_root.name)
 
     issues_done = all(
-        issue is not None and issue.status == CardStatus.DONE
-        for issue in (req_issue, arc_issue, cod_issue, rev_issue)
+        issue is not None and issue.status == CardStatus.DONE for issue in (req_issue, arc_issue, cod_issue, rev_issue)
     )
     if issues_done:
         assert run_error is None
@@ -360,7 +357,7 @@ async def test_webhook_opened_event_triggers_issue_code_review(monkeypatch, tmp_
             captured["updated_to"] = (issue_id, status)
 
     class FakeEngine:
-        def __init__(self, workspace):
+        def __init__(self, workspace, **kwargs):
             self.workspace = workspace
             self.cards = FakeCards()
 
@@ -371,15 +368,15 @@ async def test_webhook_opened_event_triggers_issue_code_review(monkeypatch, tmp_
         async def close(self):
             captured["closed"] = True
 
-    def _fake_create_task(coro):
-        task = original_create_task(coro)
+    def _fake_create_task(coro, **kwargs):
+        task = original_create_task(coro, **kwargs)
         scheduled_tasks.append(task)
         return task
 
     monkeypatch.setattr("orket.orchestration.engine.OrchestrationEngine", FakeEngine, raising=False)
     monkeypatch.setattr("asyncio.create_task", _fake_create_task, raising=False)
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     payload = {
         "action": "opened",
         "pull_request": {"number": 42, "title": "[ISSUE-ABC1] tiny program"},
@@ -393,6 +390,5 @@ async def test_webhook_opened_event_triggers_issue_code_review(monkeypatch, tmp_
     assert result["status"] == "success"
     assert captured["updated_to"] == ("ISSUE-ABC1", "code_review")
     assert captured["run_card_id"] == "ISSUE-ABC1"
-
 
     assert captured["closed"]

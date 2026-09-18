@@ -9,6 +9,12 @@ of one API application, followed by its engine. The public factory is
 `orket.interfaces.runtime_entrypoints.create_api_app(CompositionConfig)`;
 `orket.interfaces.api.lifespan` delegates teardown to that container.
 
+API and standalone webhook owners share `ApplicationRuntimeLifetime`; their
+configuration and final resources remain separate. Managed background work uses
+`start_background`, which retains failures even when work finishes before close.
+Unexpected background failure stops new admission and prevents a clean teardown
+claim. Existing manually registered API tasks keep their registration contract.
+
 ## Factory and storage selection
 
 The admitted API, CLI and webhook factories live in

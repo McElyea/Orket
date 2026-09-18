@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -48,6 +48,20 @@ class PullRequestReviewWebhookPayload(_WebhookPayloadModel):
     repository: _WebhookRepository
 
 
+class _NativeGiteaReview(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    type: Literal["pull_request_review_approved", "pull_request_review_rejected", "pull_request_review_comment"]
+    content: str
+
+
+class NativeGiteaReviewWebhookPayload(_WebhookPayloadModel):
+    action: Literal["reviewed"]
+    pull_request: _WebhookPullRequestNumber
+    review: _NativeGiteaReview
+    repository: _WebhookRepository
+    sender: _WebhookUser
+
+
 class PullRequestOpenedWebhookPayload(_WebhookPayloadModel):
     action: str
     pull_request: _WebhookPullRequestOpened
@@ -60,9 +74,14 @@ class PullRequestMergedWebhookPayload(_WebhookPayloadModel):
     repository: _WebhookRepository
 
 
-def webhook_payload_validation_error(*, event_type: str, exc: ValidationError) -> dict[str, Any]:
+def webhook_payload_validation_error(*, event_type: str, exc: ValidationError | ValueError) -> dict[str, Any]:
     details: list[dict[str, str]] = []
-    for error in exc.errors():
+    errors = (
+        exc.errors()
+        if isinstance(exc, ValidationError)
+        else [{"loc": ("review",), "msg": str(exc), "type": "gitea_review_payload_invalid"}]
+    )
+    for error in errors:
         details.append(
             {
                 "loc": ".".join(str(part) for part in error.get("loc", ())),

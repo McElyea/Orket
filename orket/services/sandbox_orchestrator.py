@@ -9,6 +9,7 @@ import os
 import secrets
 import socket
 import subprocess
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -60,7 +61,9 @@ class SandboxOrchestrator:
         fs: AsyncFileTools | None = None,
         lifecycle_db_path: str | None = None,
         control_plane_db_path: str | None = None,
+        environment: Mapping[str, str] | None = None,
     ) -> None:
+        observed_environment = dict(os.environ if environment is None else environment)
         self.workspace_root = workspace_root
         self.registry = registry or SandboxRegistry()
         self.organization = organization
@@ -71,9 +74,9 @@ class SandboxOrchestrator:
         self.fs = fs or AsyncFileTools(workspace_root)
         self.instance_id = f"{socket.gethostname()}:{os.getpid()}"
         default_docker_host_id = socket.gethostname()
-        self.docker_context = os.getenv("DOCKER_CONTEXT", "default").strip() or "default"
+        self.docker_context = observed_environment.get("DOCKER_CONTEXT", "default").strip() or "default"
         self.docker_host_id = (
-            os.getenv("ORKET_DOCKER_HOST_ID", default_docker_host_id).strip() or default_docker_host_id
+            observed_environment.get("ORKET_DOCKER_HOST_ID", default_docker_host_id).strip() or default_docker_host_id
         )
         self.lifecycle_repository = AsyncSandboxLifecycleRepository(
             resolve_sandbox_lifecycle_db_path(lifecycle_db_path)
@@ -94,9 +97,7 @@ class SandboxOrchestrator:
             publication=self.control_plane_publication,
             execution_repository=self.control_plane_execution_repository,
         )
-        self.control_plane_operator = SandboxControlPlaneOperatorService(
-            publication=self.control_plane_publication
-        )
+        self.control_plane_operator = SandboxControlPlaneOperatorService(publication=self.control_plane_publication)
         self.control_plane_reservations = SandboxControlPlaneReservationService(
             publication=self.control_plane_publication
         )
@@ -115,14 +116,16 @@ class SandboxOrchestrator:
         self.runtime_inspector = SandboxRuntimeInspectionService(command_runner=self.command_runner)
         self._allowed_log_services = {
             item.strip()
-            for item in os.getenv(
+            for item in observed_environment.get(
                 "ORKET_SANDBOX_ALLOWED_LOG_SERVICES",
                 "api,frontend,db,database,pgadmin,mongo,mongo-express",
             ).split(",")
             if item.strip()
         }
-        self._initial_health_attempts = int(os.getenv("ORKET_SANDBOX_INITIAL_HEALTH_ATTEMPTS", "20"))
-        self._initial_health_delay_seconds = float(os.getenv("ORKET_SANDBOX_INITIAL_HEALTH_DELAY_SECONDS", "0.5"))
+        self._initial_health_attempts = int(observed_environment.get("ORKET_SANDBOX_INITIAL_HEALTH_ATTEMPTS", "20"))
+        self._initial_health_delay_seconds = float(
+            observed_environment.get("ORKET_SANDBOX_INITIAL_HEALTH_DELAY_SECONDS", "0.5")
+        )
 
     async def create_sandbox(
         self,

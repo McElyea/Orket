@@ -4,10 +4,12 @@ import logging
 import aiosqlite
 import pytest
 
-from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 from orket.adapters.vcs.webhook_db import WebhookDatabase
+from orket.application.services.gitea_webhook_runtime import GiteaWebhookHandler
 from orket.core.domain.sandbox import SandboxRegistry
 from tests.helpers.runtime_result import published_result
+
+pytestmark = pytest.mark.contract
 
 
 class _FakeResponse:
@@ -72,9 +74,11 @@ async def test_webhook_handler_allows_plaintext_only_with_explicit_local_overrid
 ):
     """Layer: unit. Verifies local plaintext Gitea requires an explicit degraded-mode override."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
-    caplog.set_level(logging.WARNING, logger="orket.adapters.vcs.gitea_webhook_handler")
+    caplog.set_level(logging.WARNING, logger="orket.adapters.vcs.gitea_webhook_client")
 
-    handler = GiteaWebhookHandler(gitea_url="http://localhost:3000", workspace=tmp_path, allow_insecure=True)
+    handler = await asyncio.to_thread(
+        GiteaWebhookHandler, gitea_url="http://localhost:3000", workspace=tmp_path, allow_insecure=True
+    )
     await handler.close()
 
     assert handler.gitea_url == "http://localhost:3000"
@@ -86,7 +90,7 @@ async def test_webhook_handler_context_manager_closes_http_client(monkeypatch, t
     """Layer: integration. Verifies async context-manager exit closes the shared HTTP client."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
-    async with GiteaWebhookHandler(workspace=tmp_path) as handler:
+    async with await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path) as handler:
         assert handler.client.is_closed is False
 
     assert handler.client.is_closed is True
@@ -104,7 +108,7 @@ async def test_webhook_handler_accepts_injected_sandbox_orchestrator(monkeypatch
 
     orchestrator = _FakeSandboxOrchestrator()
 
-    handler = GiteaWebhookHandler(workspace=tmp_path, sandbox_orchestrator=orchestrator)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path, sandbox_orchestrator=orchestrator)
 
     assert handler.sandbox_orchestrator is orchestrator
     assert handler.sandbox_registry is registry
@@ -117,7 +121,7 @@ async def test_webhook_handler_passes_lifecycle_db_path_to_sandbox_orchestrator(
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     lifecycle_db_path = tmp_path / "sandbox_lifecycle.db"
 
-    handler = GiteaWebhookHandler(workspace=tmp_path, lifecycle_db_path=str(lifecycle_db_path))
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path, lifecycle_db_path=str(lifecycle_db_path))
 
     assert handler.sandbox_orchestrator.lifecycle_repository.db_path == str(lifecycle_db_path)
     await handler.close()
@@ -128,7 +132,7 @@ async def test_webhook_handler_uses_workspace_durable_db_path(monkeypatch, tmp_p
     """Layer: unit. Verifies webhook event state is rooted in the injected workspace."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
 
     assert handler.db.db_path == tmp_path / ".orket" / "durable" / "db" / "webhook.db"
     await handler.close()
@@ -142,8 +146,9 @@ async def test_pr_cycle_tracking_real_db(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "test_webhooks.db"
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
+    await handler.client.aclose()
     handler.client = _FakeClient()
 
     payload = {
@@ -169,8 +174,9 @@ async def test_pr_review_duplicate_event_id_is_skipped_before_side_effects(monke
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "dedupe_test.db"
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
+    await handler.client.aclose()
     handler.client = _FakeClient()
 
     payload = {
@@ -195,8 +201,9 @@ async def test_auto_reject_after_4_cycles(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "reject_test.db"
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
+    await handler.client.aclose()
     handler.client = _FakeClient()
 
     payload = {
@@ -233,14 +240,16 @@ async def test_pr_review_cycles_survive_handler_restart_to_escalate(monkeypatch,
         "repository": {"name": "repo", "owner": {"login": "org"}},
     }
 
-    first_handler = GiteaWebhookHandler(workspace=tmp_path)
+    first_handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
+    await first_handler.client.aclose()
     first_handler.client = _FakeClient()
     await first_handler.handle_webhook("pull_request_review", payload)
     await first_handler.handle_webhook("pull_request_review", payload)
     db_path = first_handler.db.db_path
     await first_handler.close()
 
-    second_handler = GiteaWebhookHandler(workspace=tmp_path)
+    second_handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
+    await second_handler.client.aclose()
     second_handler.client = _FakeClient()
     result = await second_handler.handle_webhook("pull_request_review", payload)
     await second_handler.close()
@@ -269,7 +278,7 @@ async def test_pr_opened_updates_status_with_cardstatus_enum(monkeypatch, tmp_pa
             captured["status"] = status
 
     class _FakeEngine:
-        def __init__(self, _workspace):
+        def __init__(self, _workspace, **kwargs):
             self.cards = _FakeCards()
 
         async def run_card(self, _issue_id):
@@ -278,15 +287,15 @@ async def test_pr_opened_updates_status_with_cardstatus_enum(monkeypatch, tmp_pa
         async def close(self):
             captured["closed"] = True
 
-    def _fake_create_task(coro):
-        task = real_create_task(coro)
+    def _fake_create_task(coro, **kwargs):
+        task = real_create_task(coro, **kwargs)
         scheduled.append(task)
         return task
 
     monkeypatch.setattr(engine_module, "OrchestrationEngine", _FakeEngine)
     monkeypatch.setattr(asyncio, "create_task", _fake_create_task)
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     payload = {
         "action": "opened",
         "pull_request": {
@@ -312,7 +321,8 @@ async def test_pr_opened_updates_status_with_cardstatus_enum(monkeypatch, tmp_pa
 async def test_pr_review_approved_triggers_auto_merge(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
+    await handler.client.aclose()
     handler.client = _FakeClient()
 
     payload = {
@@ -333,7 +343,8 @@ async def test_pr_review_approved_reports_merge_failure(monkeypatch, tmp_path):
     """Layer: integration. Verifies approved reviews do not claim merge success when the merge API fails."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
+    await handler.client.aclose()
     handler.client = _FakeClient(
         post_responses={"/pulls/7/merge": _FakeResponse(status_code=409, text="merge conflict")},
     )
@@ -356,7 +367,8 @@ async def test_pr_review_approved_reports_merge_failure(monkeypatch, tmp_path):
 async def test_pr_review_commented_is_ignored(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
+    await handler.client.aclose()
     handler.client = _FakeClient()
 
     payload = {
@@ -376,7 +388,7 @@ async def test_pr_review_commented_is_ignored(monkeypatch, tmp_path):
 async def test_pr_opened_without_issue_id_is_ignored(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     payload = {
         "action": "opened",
         "pull_request": {"number": 9, "title": "no issue token"},
@@ -396,8 +408,9 @@ async def test_pr_review_escalation_failure_is_reported(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "escalation_failure.db"
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
+    await handler.client.aclose()
     handler.client = _FakeClient(
         post_responses={"/issues/42/comments": _FakeResponse(status_code=500, text="comment blocked")},
     )
@@ -423,8 +436,9 @@ async def test_pr_merged_closes_cycle_and_skips_sandbox_deployment_with_explicit
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "merged_test.db"
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
+    await handler.client.aclose()
     handler.client = _FakeClient()
 
     await handler.db.increment_pr_cycle("org/repo", 11)
@@ -449,7 +463,9 @@ async def test_pr_merged_closes_cycle_and_skips_sandbox_deployment_with_explicit
 
     async with aiosqlite.connect(db_path) as conn:
         conn.row_factory = aiosqlite.Row
-        row = await (await conn.execute("SELECT status FROM pr_review_cycles WHERE pr_key = ?", ("org/repo#11",))).fetchone()
+        row = await (
+            await conn.execute("SELECT status FROM pr_review_cycles WHERE pr_key = ?", ("org/repo#11",))
+        ).fetchone()
 
     await handler.close()
 
@@ -465,8 +481,9 @@ async def test_pr_merged_skip_does_not_attempt_sandbox_creation(monkeypatch, tmp
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "merged_failure.db"
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
+    await handler.client.aclose()
     handler.client = _FakeClient()
 
     await handler.db.increment_pr_cycle("org/repo", 12)
@@ -491,7 +508,9 @@ async def test_pr_merged_skip_does_not_attempt_sandbox_creation(monkeypatch, tmp
 
     async with aiosqlite.connect(db_path) as conn:
         conn.row_factory = aiosqlite.Row
-        row = await (await conn.execute("SELECT status FROM pr_review_cycles WHERE pr_key = ?", ("org/repo#12",))).fetchone()
+        row = await (
+            await conn.execute("SELECT status FROM pr_review_cycles WHERE pr_key = ?", ("org/repo#12",))
+        ).fetchone()
 
     await handler.close()
 
@@ -505,8 +524,9 @@ async def test_auto_reject_creates_requirements_review_issue(monkeypatch, tmp_pa
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "requirements_issue_test.db"
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
+    await handler.client.aclose()
     handler.client = _FakeClient(
         get_responses={
             "/labels": _FakeResponse(
@@ -540,8 +560,9 @@ async def test_auto_reject_creates_unlabeled_requirements_issue_when_repo_labels
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "requirements_issue_missing_labels.db"
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
+    await handler.client.aclose()
     handler.client = _FakeClient(
         get_responses={"/labels": _FakeResponse(status_code=200, json_payload=[])},
     )
@@ -568,8 +589,9 @@ async def test_auto_reject_reports_close_failure_without_marking_rejected(monkey
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "reject_failure.db"
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
+    await handler.client.aclose()
     handler.client = _FakeClient(
         patch_responses={"/pulls/55": _FakeResponse(status_code=503, text="gitea unavailable")},
     )
@@ -587,7 +609,9 @@ async def test_auto_reject_reports_close_failure_without_marking_rejected(monkey
 
     async with aiosqlite.connect(db_path) as conn:
         conn.row_factory = aiosqlite.Row
-        row = await (await conn.execute("SELECT status FROM pr_review_cycles WHERE pr_key = ?", ("org/repo#55",))).fetchone()
+        row = await (
+            await conn.execute("SELECT status FROM pr_review_cycles WHERE pr_key = ?", ("org/repo#55",))
+        ).fetchone()
 
     await handler.close()
 
@@ -602,7 +626,7 @@ async def test_pr_review_payload_validation_returns_structured_error(monkeypatch
     """Layer: unit. Verifies malformed PR review payloads fail before nested key access."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     result = await handler.handle_webhook(
         "pull_request_review",
         {
@@ -623,7 +647,7 @@ async def test_pr_opened_payload_validation_returns_structured_error(monkeypatch
     """Layer: unit. Verifies malformed PR-opened payloads fail before title access."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     result = await handler.handle_webhook(
         "pull_request",
         {
@@ -644,7 +668,7 @@ async def test_pr_merged_payload_validation_returns_structured_error(monkeypatch
     """Layer: unit. Verifies malformed merged PR payloads fail before repository owner access."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
-    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler = await asyncio.to_thread(GiteaWebhookHandler, workspace=tmp_path)
     result = await handler.handle_webhook(
         "pull_request",
         {

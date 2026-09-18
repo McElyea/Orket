@@ -69,13 +69,15 @@ async def get_visible(server: LocalGitea, path: str, *, params: dict[str, str] |
 
 
 @asynccontextmanager
-async def local_gitea():
+async def local_gitea(*, webhook_host: str | None = None):
     name = "orket-acceptance-gitea-" + uuid.uuid4().hex
+    webhook_options = ["--env", "GITEA__webhook__ALLOWED_HOST_LIST=" + webhook_host] if webhook_host else []
     container_id = await docker(
         "run", "--detach", "--name", name, "--label", "orket.acceptance=epic-export",
         "--publish", "127.0.0.1::3000", "--env", "GITEA__database__DB_TYPE=sqlite3",
         "--env", "GITEA__security__INSTALL_LOCK=true", "--env", "GITEA__service__DISABLE_REGISTRATION=true",
-        "--env", "GITEA__actions__ENABLED=false", "--env", "GITEA__server__DISABLE_SSH=true", "gitea/gitea:1.25")
+        "--env", "GITEA__actions__ENABLED=false", "--env", "GITEA__server__DISABLE_SSH=true",
+        *webhook_options, "gitea/gitea:1.25")
     try:
         port = (await docker("port", container_id, "3000/tcp")).rsplit(":", 1)[-1]
         server = LocalGitea(url="http://127.0.0.1:" + port, container_id=container_id)

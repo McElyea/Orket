@@ -1,4 +1,5 @@
 """Transport entrypoints request application authorization before composition."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -25,4 +26,4 @@ def create_webhook_app(config: CompositionConfig | None = None) -> Any:
     require_composition_capability("webhook.gitea.v1", config)
     from orket.webhook_server import create_webhook_app as build_webhook_app
 
-    return build_webhook_app(require_config=True)
+    return build_webhook_app(require_config=True, project_root=config.project_root if config else None)

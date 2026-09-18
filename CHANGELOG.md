@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.20] - 2026-09-18 - "Owned webhook applications"
+
+### Changed
+- Move Gitea review coordination into application services and replace the module-global webhook app with distinct factory results and captured configuration.
+- Share request, background task and shutdown ownership with the API; retain review engine cleanup and unexpected background failures.
+- Accept native Gitea HMAC signatures and translate its actual review events; preserve delivery identity through HTTP ingress and refuse conflicting review vocabulary.
+- Keep review-cycle thresholds and explicit unsupported sandbox behavior; document delivery deduplication and remote-effect limits.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration: `docs/specs/WEBHOOK_RUNTIME_LIFECYCLE.md` and `docs/architecture/CONTRACT_DELTA_WEBHOOK_AUTHORITY_CD_2026-09-18.md`.
+- Stability: checkpoint verification and unresolved gates remain in the active architectural-truth plan. The full remediation goal remains open; commits and annotated tags stay local during work hours.
+
 ## [0.6.19] - 2026-09-18 - "Interface-owned entrypoints"
 
 ### Changed

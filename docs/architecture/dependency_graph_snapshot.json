@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-18T19:13:10.908334+00:00",
+  "generated_at": "2026-09-18T20:51:45.772835+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -607,17 +607,13 @@
         "path": "orket/adapters/vcs/gitea_export_git.py",
         "sha256": "55eeb0a5bcc366c052c40f4ca6335a4ffe3d7cdc689fcb8e81d6070db5ca807a"
       },
-      "orket.adapters.vcs.gitea_webhook_handler": {
-        "path": "orket/adapters/vcs/gitea_webhook_handler.py",
-        "sha256": "905f5da88ceba1cf2b192701476e40ce21e01edf666bab297b7b8b614ca34f3c"
+      "orket.adapters.vcs.gitea_webhook_client": {
+        "path": "orket/adapters/vcs/gitea_webhook_client.py",
+        "sha256": "159e119f014bd8f7da1bd43dcb569ef759a247cf9ee258ba6ecb2dd00f54d66f"
       },
-      "orket.adapters.vcs.gitea_webhook_handlers": {
-        "path": "orket/adapters/vcs/gitea_webhook_handlers.py",
-        "sha256": "6be6c3e2f51f985280ca716a3785bc22afc6deab4148cb1838dcb99da4f453b3"
-      },
-      "orket.adapters.vcs.gitea_webhook_payloads": {
-        "path": "orket/adapters/vcs/gitea_webhook_payloads.py",
-        "sha256": "8912c9bffcc4156c5577568e4f90c7770244f7ede94e0e085d276db10f470939"
+      "orket.adapters.vcs.gitea_webhook_event": {
+        "path": "orket/adapters/vcs/gitea_webhook_event.py",
+        "sha256": "b51be9d505e82ef355799034c5bb6a4854b1faaf60d9658d3644bfbf3bd9a91f"
       },
       "orket.adapters.vcs.webhook_db": {
         "path": "orket/adapters/vcs/webhook_db.py",
@@ -709,7 +705,7 @@
       },
       "orket.application.services.api_runtime_container": {
         "path": "orket/application/services/api_runtime_container.py",
-        "sha256": "0bf0f950a98d729b968c1fc6e878ce712fe655e5a02d330755e6def6e1ef82eb"
+        "sha256": "3b001e0b967281225a949e11742fa7673af31e4b25e2938d7e6f450aa327fc77"
       },
       "orket.application.services.api_runtime_host_service": {
         "path": "orket/application/services/api_runtime_host_service.py",
@@ -718,6 +714,10 @@
       "orket.application.services.api_system_query_service": {
         "path": "orket/application/services/api_system_query_service.py",
         "sha256": "b4f01e4139d595e74bb62f123dbc0ebc3934b979f3f110737f12a812fc5e491d"
+      },
+      "orket.application.services.application_runtime_lifetime": {
+        "path": "orket/application/services/application_runtime_lifetime.py",
+        "sha256": "2e89f360d07f015cc823741b76a34ac6a29220502d250573399c8b5ced07bbdb"
       },
       "orket.application.services.bug_fix_phase_manager": {
         "path": "orket/application/services/bug_fix_phase_manager.py",
@@ -955,6 +955,18 @@
         "path": "orket/application/services/flow_runtime_service.py",
         "sha256": "d06a79f59514acfba95bb6693112c5fbad279380855f8a2ed8d7bdab13d00bed"
       },
+      "orket.application.services.gitea_pr_lifecycle_service": {
+        "path": "orket/application/services/gitea_pr_lifecycle_service.py",
+        "sha256": "8a464f5461b6b30bf71224edeb08fe20a7ad8bd6d1bbeb108f99fed10168e323"
+      },
+      "orket.application.services.gitea_pr_review_service": {
+        "path": "orket/application/services/gitea_pr_review_service.py",
+        "sha256": "0dc945a2d88a32da7114c495e37f0faa3885f2195a4fbc35b37b99d7212a2ec0"
+      },
+      "orket.application.services.gitea_sandbox_webhook_service": {
+        "path": "orket/application/services/gitea_sandbox_webhook_service.py",
+        "sha256": "1cf183ce9eeaa9e1e1cb244f74ae996557b1472d710908cf2397c2a6178b3b31"
+      },
       "orket.application.services.gitea_state_control_plane_checkpoint_service": {
         "path": "orket/application/services/gitea_state_control_plane_checkpoint_service.py",
         "sha256": "a74f0372af063d6effacf5a6724994aabdfc63a4ee67a5f2d9b79b1874fa6704"
@@ -990,6 +1002,14 @@
       "orket.application.services.gitea_state_worker_coordinator": {
         "path": "orket/application/services/gitea_state_worker_coordinator.py",
         "sha256": "c901bd75aa6e1bedc518a1f64882c24af8b13c6c06c13ba368218672d483c48b"
+      },
+      "orket.application.services.gitea_webhook_runtime": {
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "sha256": "705ff55b37b3e205ff20689f2b29b028387beb446bc40eb0fc6f8ee627fd83c3"
+      },
+      "orket.application.services.gitea_webhook_support": {
+        "path": "orket/application/services/gitea_webhook_support.py",
+        "sha256": "fa490f69e5f468987505067bd82a5c74c088c6d8fe09180b97c1827b15647a19"
       },
       "orket.application.services.governed_agent_admission": {
         "path": "orket/application/services/governed_agent_admission.py",
@@ -1703,6 +1723,14 @@
         "path": "orket/application/services/turn_tool_step_publication.py",
         "sha256": "cb162f37f19c7893262bcb414903ccbad93c3442fb380bed467de28ad42e34c2"
       },
+      "orket.application.services.webhook_configuration": {
+        "path": "orket/application/services/webhook_configuration.py",
+        "sha256": "b236fcc076fb6ae2257d9998aa1196f17f685c10d349e5b490e7d096cbf5a467"
+      },
+      "orket.application.services.webhook_ingress_policy": {
+        "path": "orket/application/services/webhook_ingress_policy.py",
+        "sha256": "cf8858d2d67a024d21f6251135ae9ab03dc764f2fe658131e6d17afe1cf81bb9"
+      },
       "orket.application.terraform_review.__init__": {
         "path": "orket/application/terraform_review/__init__.py",
         "sha256": "57dd0a078fd8db2cdebc6b214f1d24d2fcc4a1228a70dc82e13a42829d6931d0"
@@ -1982,6 +2010,10 @@
       "orket.core.contracts.gitea_export": {
         "path": "orket/core/contracts/gitea_export.py",
         "sha256": "a43e7c9db708cbf8d20b74f5220b257a7477f8ba488a34bd2804218b52de3c2a"
+      },
+      "orket.core.contracts.gitea_webhook": {
+        "path": "orket/core/contracts/gitea_webhook.py",
+        "sha256": "abdf6e6b660fdcf4b767732b2d171c0e5483b19b4e55577d3d64877c0406a169"
       },
       "orket.core.contracts.governed_agent_ports": {
         "path": "orket/core/contracts/governed_agent_ports.py",
@@ -2489,7 +2521,7 @@
       },
       "orket.interfaces.api_app_context_middleware": {
         "path": "orket/interfaces/api_app_context_middleware.py",
-        "sha256": "e80475a137e14ff697c93b014472b5145b0e2dd207d91e29044a6940b996a91c"
+        "sha256": "a29250816298dc050336bbdb8ba05b46a71fdb0256a480667416f3eb2fb15b33"
       },
       "orket.interfaces.api_generation": {
         "path": "orket/interfaces/api_generation.py",
@@ -2498,6 +2530,10 @@
       "orket.interfaces.api_runtime_context": {
         "path": "orket/interfaces/api_runtime_context.py",
         "sha256": "dcba3e7d2a8ee1a212c22192fd9fc3dba3865e6afd0df44f67961432fe665799"
+      },
+      "orket.interfaces.application_request_lifetime": {
+        "path": "orket/interfaces/application_request_lifetime.py",
+        "sha256": "d9d70d426af95d6c0d897ea2257900525580c430467cebad72bf162255332668"
       },
       "orket.interfaces.cli": {
         "path": "orket/interfaces/cli.py",
@@ -2613,7 +2649,7 @@
       },
       "orket.interfaces.runtime_entrypoints": {
         "path": "orket/interfaces/runtime_entrypoints.py",
-        "sha256": "c49936cc70ed5dca2096e55970a41a9db61263ee3da77bc17476e92b3ca2befd"
+        "sha256": "a5e2f296c2ecfbf877f1bae359df2da2b452cb6689c708542c87beae5d85015a"
       },
       "orket.interfaces.runtime_store_cli": {
         "path": "orket/interfaces/runtime_store_cli.py",
@@ -2626,6 +2662,10 @@
       "orket.interfaces.server_launcher": {
         "path": "orket/interfaces/server_launcher.py",
         "sha256": "edcceb1f7c00f7cba27671c65bcbed741e26bdcd9d2faa33684e48898cb4e1b5"
+      },
+      "orket.interfaces.webhook_app_context": {
+        "path": "orket/interfaces/webhook_app_context.py",
+        "sha256": "5038e8a481a83ced43c88481d5ed83a9e2a74ce2f4f8a327452d23665413e5fe"
       },
       "orket.kernel.v1.__init__": {
         "path": "orket/kernel/v1/__init__.py",
@@ -3713,7 +3753,7 @@
       },
       "orket.runtime.policy.runtime_boundary_audit_checklist": {
         "path": "orket/runtime/policy/runtime_boundary_audit_checklist.py",
-        "sha256": "b35f6822e3f2df9b9b1aa7c00d412e6dc701119c8fb5ef05800b7dee2e0a6d86"
+        "sha256": "77f1af8c7bab99ff81824d6c598d8ba8ad57cbfcc53510023b14bdcbc73dc8a9"
       },
       "orket.runtime.policy.runtime_config_ownership_map": {
         "path": "orket/runtime/policy/runtime_config_ownership_map.py",
@@ -4093,7 +4133,7 @@
       },
       "orket.runtime_paths": {
         "path": "orket/runtime_paths.py",
-        "sha256": "1b7e978e4b7ba8732f2d88876639c4a2740533a2654573981b195c4d2efda86b"
+        "sha256": "4240938bddaa8356f22781c2350f375aaa5894625721f56a83db07d6a3c8a198"
       },
       "orket.schema": {
         "path": "orket/schema.py",
@@ -4125,7 +4165,7 @@
       },
       "orket.services.sandbox_orchestrator": {
         "path": "orket/services/sandbox_orchestrator.py",
-        "sha256": "6e3357469f012101dd36d7b4d6087f5b92b3635ddcfd17e4ec2d595dfcceeda4"
+        "sha256": "267d110e1c0a42cbe52081c6f488be6d2bc2f6cdbea7b55f886211eaa24c339d"
       },
       "orket.services.scoped_memory_store": {
         "path": "orket/services/scoped_memory_store.py",
@@ -4205,7 +4245,7 @@
       },
       "orket.webhook_server": {
         "path": "orket/webhook_server.py",
-        "sha256": "59023a1d06399352bd57b862f107ea4064a667d8deea3d920a1a419fc9ed8a64"
+        "sha256": "3f7e26b23a00c4c9bdce1b03f7fcefa6c982a428d9d8525077eac838418fcda3"
       },
       "orket.workloads.__init__": {
         "path": "orket/workloads/__init__.py",
@@ -6502,66 +6542,10 @@
         "kind": "from"
       },
       {
-        "source": "orket.adapters.vcs.gitea_webhook_handler",
-        "target": "orket.adapters.vcs.gitea_webhook_handlers",
-        "path": "orket/adapters/vcs/gitea_webhook_handler.py",
-        "line": 15,
-        "kind": "from"
-      },
-      {
-        "source": "orket.adapters.vcs.gitea_webhook_handler",
-        "target": "orket.adapters.vcs.gitea_webhook_payloads",
-        "path": "orket/adapters/vcs/gitea_webhook_handler.py",
-        "line": 20,
-        "kind": "from"
-      },
-      {
-        "source": "orket.adapters.vcs.gitea_webhook_handler",
-        "target": "orket.adapters.vcs.webhook_db",
-        "path": "orket/adapters/vcs/gitea_webhook_handler.py",
-        "line": 24,
-        "kind": "from"
-      },
-      {
-        "source": "orket.adapters.vcs.gitea_webhook_handler",
-        "target": "orket.core.domain.sandbox",
-        "path": "orket/adapters/vcs/gitea_webhook_handler.py",
-        "line": 25,
-        "kind": "from"
-      },
-      {
-        "source": "orket.adapters.vcs.gitea_webhook_handler",
-        "target": "orket.services.sandbox_orchestrator",
-        "path": "orket/adapters/vcs/gitea_webhook_handler.py",
-        "line": 26,
-        "kind": "from"
-      },
-      {
-        "source": "orket.adapters.vcs.gitea_webhook_handlers",
-        "target": "orket.adapters.vcs.gitea_webhook_payloads",
-        "path": "orket/adapters/vcs/gitea_webhook_handlers.py",
-        "line": 9,
-        "kind": "from"
-      },
-      {
-        "source": "orket.adapters.vcs.gitea_webhook_handlers",
-        "target": "orket.logging",
-        "path": "orket/adapters/vcs/gitea_webhook_handlers.py",
-        "line": 15,
-        "kind": "from"
-      },
-      {
-        "source": "orket.adapters.vcs.gitea_webhook_handlers",
-        "target": "orket.schema",
-        "path": "orket/adapters/vcs/gitea_webhook_handlers.py",
-        "line": 16,
-        "kind": "from"
-      },
-      {
-        "source": "orket.adapters.vcs.gitea_webhook_handlers",
-        "target": "orket.orchestration.engine",
-        "path": "orket/adapters/vcs/gitea_webhook_handlers.py",
-        "line": 246,
+        "source": "orket.adapters.vcs.gitea_webhook_event",
+        "target": "orket.core.contracts.gitea_webhook",
+        "path": "orket/adapters/vcs/gitea_webhook_event.py",
+        "line": 5,
         "kind": "from"
       },
       {
@@ -7224,16 +7208,9 @@
       },
       {
         "source": "orket.application.services.api_runtime_container",
-        "target": "orket.application.services.command_process_supervisor",
+        "target": "orket.application.services.application_runtime_lifetime",
         "path": "orket/application/services/api_runtime_container.py",
-        "line": 12,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.api_runtime_container",
-        "target": "orket.core.contracts.owned_command",
-        "path": "orket/application/services/api_runtime_container.py",
-        "line": 13,
+        "line": 7,
         "kind": "from"
       },
       {
@@ -7339,6 +7316,20 @@
         "target": "orket.time_utils",
         "path": "orket/application/services/api_system_query_service.py",
         "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.application_runtime_lifetime",
+        "target": "orket.application.services.command_process_supervisor",
+        "path": "orket/application/services/application_runtime_lifetime.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.application_runtime_lifetime",
+        "target": "orket.core.contracts.owned_command",
+        "path": "orket/application/services/application_runtime_lifetime.py",
+        "line": 13,
         "kind": "from"
       },
       {
@@ -9022,6 +9013,41 @@
         "kind": "from"
       },
       {
+        "source": "orket.application.services.gitea_pr_lifecycle_service",
+        "target": "orket.application.services.gitea_webhook_support",
+        "path": "orket/application/services/gitea_pr_lifecycle_service.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_pr_lifecycle_service",
+        "target": "orket.core.contracts.gitea_webhook",
+        "path": "orket/application/services/gitea_pr_lifecycle_service.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_pr_review_service",
+        "target": "orket.application.services.gitea_webhook_support",
+        "path": "orket/application/services/gitea_pr_review_service.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_pr_review_service",
+        "target": "orket.core.contracts.gitea_webhook",
+        "path": "orket/application/services/gitea_pr_review_service.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_sandbox_webhook_service",
+        "target": "orket.application.services.gitea_webhook_support",
+        "path": "orket/application/services/gitea_sandbox_webhook_service.py",
+        "line": 5,
+        "kind": "from"
+      },
+      {
         "source": "orket.application.services.gitea_state_control_plane_checkpoint_service",
         "target": "orket.adapters.storage.async_control_plane_record_repository",
         "path": "orket/application/services/gitea_state_control_plane_checkpoint_service.py",
@@ -9383,6 +9409,132 @@
         "target": "orket.logging",
         "path": "orket/application/services/gitea_state_worker.py",
         "line": 24,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.adapters.vcs.gitea_webhook_client",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.adapters.vcs.gitea_webhook_event",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.adapters.vcs.webhook_db",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 17,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.application.services.application_runtime_lifetime",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 18,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.application.services.gitea_pr_lifecycle_service",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.application.services.gitea_pr_review_service",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 20,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.application.services.gitea_sandbox_webhook_service",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 21,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 22,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.application.services.webhook_configuration",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 23,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.application.services.webhook_ingress_policy",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 24,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.core.contracts.gitea_webhook",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 25,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.core.domain.sandbox",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 26,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.logging",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 27,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.runtime_paths",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 28,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.schema",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 29,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.services.sandbox_orchestrator",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 30,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_webhook_runtime",
+        "target": "orket.orchestration.engine",
+        "path": "orket/application/services/gitea_webhook_runtime.py",
+        "line": 169,
         "kind": "from"
       },
       {
@@ -15917,6 +16069,20 @@
         "kind": "from"
       },
       {
+        "source": "orket.application.services.webhook_configuration",
+        "target": "orket.settings",
+        "path": "orket/application/services/webhook_configuration.py",
+        "line": 47,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.webhook_ingress_policy",
+        "target": "orket.application.services.webhook_configuration",
+        "path": "orket/application/services/webhook_ingress_policy.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
         "source": "orket.application.terraform_review.__init__",
         "target": "orket.application.terraform_review.service",
         "path": "orket/application/terraform_review/__init__.py",
@@ -19873,23 +20039,16 @@
       },
       {
         "source": "orket.interfaces.api_app_context_middleware",
-        "target": "orket.__init__",
+        "target": "orket.interfaces.api_runtime_context",
         "path": "orket/interfaces/api_app_context_middleware.py",
         "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api_app_context_middleware",
-        "target": "orket.application.services.api_runtime_container",
+        "target": "orket.interfaces.application_request_lifetime",
         "path": "orket/interfaces/api_app_context_middleware.py",
         "line": 12,
-        "kind": "from"
-      },
-      {
-        "source": "orket.interfaces.api_app_context_middleware",
-        "target": "orket.interfaces.api_runtime_context",
-        "path": "orket/interfaces/api_app_context_middleware.py",
-        "line": 13,
         "kind": "from"
       },
       {
@@ -19911,6 +20070,20 @@
         "target": "orket.application.services.api_runtime_container",
         "path": "orket/interfaces/api_runtime_context.py",
         "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.interfaces.application_request_lifetime",
+        "target": "orket.__init__",
+        "path": "orket/interfaces/application_request_lifetime.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.interfaces.application_request_lifetime",
+        "target": "orket.application.services.application_runtime_lifetime",
+        "path": "orket/interfaces/application_request_lifetime.py",
+        "line": 11,
         "kind": "from"
       },
       {
@@ -20456,28 +20629,28 @@
         "source": "orket.interfaces.runtime_entrypoints",
         "target": "orket.runtime.policy.composition",
         "path": "orket/interfaces/runtime_entrypoints.py",
-        "line": 7,
+        "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.runtime_entrypoints",
         "target": "orket.interfaces.api",
         "path": "orket/interfaces/runtime_entrypoints.py",
-        "line": 12,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.runtime_entrypoints",
         "target": "orket.interfaces.cli",
         "path": "orket/interfaces/runtime_entrypoints.py",
-        "line": 19,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.runtime_entrypoints",
         "target": "orket.webhook_server",
         "path": "orket/interfaces/runtime_entrypoints.py",
-        "line": 26,
+        "line": 27,
         "kind": "from"
       },
       {
@@ -20492,6 +20665,13 @@
         "target": "orket.interfaces.replay_artifacts",
         "path": "orket/interfaces/scaffold_init.py",
         "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.interfaces.webhook_app_context",
+        "target": "orket.interfaces.application_request_lifetime",
+        "path": "orket/interfaces/webhook_app_context.py",
+        "line": 8,
         "kind": "from"
       },
       {
@@ -26427,145 +26607,138 @@
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_control_plane_execution_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 16,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_control_plane_record_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 17,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_executor_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 18,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_file_tools",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 19,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_sandbox_lifecycle_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 20,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.command_runner",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 21,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.control_plane_publication_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 22,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.control_plane_workload_catalog",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 23,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.decision_node_registry",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 26,
+        "line": 27,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_control_plane_effect_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 27,
+        "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_control_plane_execution_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 28,
+        "line": 29,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_control_plane_operator_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 29,
+        "line": 30,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_control_plane_reservation_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 30,
+        "line": 31,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_control_plane_resource_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 33,
+        "line": 34,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_restart_policy_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 36,
+        "line": 37,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_runtime_inspection_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 37,
+        "line": 38,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_runtime_lifecycle_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 38,
+        "line": 39,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_runtime_recovery_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 39,
+        "line": 40,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.core.domain.__init__",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 40,
-        "kind": "from"
-      },
-      {
-        "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.core.domain.sandbox",
-        "path": "orket/services/sandbox_orchestrator.py",
         "line": 41,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.core.domain.sandbox_lifecycle",
+        "target": "orket.core.domain.sandbox",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 42,
         "kind": "from"
@@ -26579,30 +26752,37 @@
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.core.domain.sandbox_lifecycle_records",
+        "target": "orket.core.domain.sandbox_lifecycle",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 44,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.core.domain.verification",
+        "target": "orket.core.domain.sandbox_lifecycle_records",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 45,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.logging",
+        "target": "orket.core.domain.verification",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 46,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.runtime_paths",
+        "target": "orket.logging",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 47,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.sandbox_orchestrator",
+        "target": "orket.runtime_paths",
+        "path": "orket/services/sandbox_orchestrator.py",
+        "line": 48,
         "kind": "from"
       },
       {
@@ -26840,28 +27020,35 @@
         "source": "orket.webhook_server",
         "target": "orket.__init__",
         "path": "orket/webhook_server.py",
-        "line": 25,
+        "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.webhook_server",
-        "target": "orket.adapters.vcs.gitea_webhook_handler",
+        "target": "orket.application.services.gitea_webhook_runtime",
         "path": "orket/webhook_server.py",
-        "line": 26,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.webhook_server",
-        "target": "orket.logging",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/webhook_server.py",
-        "line": 27,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.webhook_server",
-        "target": "orket.settings",
+        "target": "orket.application.services.webhook_configuration",
         "path": "orket/webhook_server.py",
-        "line": 28,
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.webhook_server",
+        "target": "orket.interfaces.webhook_app_context",
+        "path": "orket/webhook_server.py",
+        "line": 20,
         "kind": "from"
       },
       {
@@ -27057,7 +27244,7 @@
         "code": "unresolved_reflection"
       }
     ],
-    "files_scanned": 1027,
+    "files_scanned": 1037,
     "scan_roots": [
       "orket"
     ],
@@ -27184,9 +27371,8 @@
       "orket.adapters.vcs.__init__": "adapters",
       "orket.adapters.vcs.gitea_artifact_exporter": "adapters",
       "orket.adapters.vcs.gitea_export_git": "adapters",
-      "orket.adapters.vcs.gitea_webhook_handler": "adapters",
-      "orket.adapters.vcs.gitea_webhook_handlers": "adapters",
-      "orket.adapters.vcs.gitea_webhook_payloads": "adapters",
+      "orket.adapters.vcs.gitea_webhook_client": "adapters",
+      "orket.adapters.vcs.gitea_webhook_event": "adapters",
       "orket.adapters.vcs.webhook_db": "adapters",
       "orket.agents.agent": "application",
       "orket.agents.agent_factory": "application",
@@ -27212,6 +27398,7 @@
       "orket.application.services.api_runtime_container": "application",
       "orket.application.services.api_runtime_host_service": "application",
       "orket.application.services.api_system_query_service": "application",
+      "orket.application.services.application_runtime_lifetime": "application",
       "orket.application.services.bug_fix_phase_manager": "application",
       "orket.application.services.canonical_role_templates": "application",
       "orket.application.services.card_acceptance_evaluation": "application",
@@ -27271,6 +27458,9 @@
       "orket.application.services.fixture_verification_service": "application",
       "orket.application.services.flow_authoring_service": "application",
       "orket.application.services.flow_runtime_service": "application",
+      "orket.application.services.gitea_pr_lifecycle_service": "application",
+      "orket.application.services.gitea_pr_review_service": "application",
+      "orket.application.services.gitea_sandbox_webhook_service": "application",
       "orket.application.services.gitea_state_control_plane_checkpoint_service": "application",
       "orket.application.services.gitea_state_control_plane_claim_failure_service": "application",
       "orket.application.services.gitea_state_control_plane_closeout": "application",
@@ -27280,6 +27470,8 @@
       "orket.application.services.gitea_state_pilot": "application",
       "orket.application.services.gitea_state_worker": "application",
       "orket.application.services.gitea_state_worker_coordinator": "application",
+      "orket.application.services.gitea_webhook_runtime": "application",
+      "orket.application.services.gitea_webhook_support": "application",
       "orket.application.services.governed_agent_admission": "application",
       "orket.application.services.governed_agent_api_composition": "application",
       "orket.application.services.governed_agent_authority": "application",
@@ -27458,6 +27650,8 @@
       "orket.application.services.turn_tool_control_plane_support": "application",
       "orket.application.services.turn_tool_recovery_transaction": "application",
       "orket.application.services.turn_tool_step_publication": "application",
+      "orket.application.services.webhook_configuration": "application",
+      "orket.application.services.webhook_ingress_policy": "application",
       "orket.application.terraform_review.__init__": "application",
       "orket.application.terraform_review.artifacts": "application",
       "orket.application.terraform_review.deterministic": "application",
@@ -27528,6 +27722,7 @@
       "orket.core.contracts.epic_publication": "core",
       "orket.core.contracts.extension_templates": "core",
       "orket.core.contracts.gitea_export": "core",
+      "orket.core.contracts.gitea_webhook": "core",
       "orket.core.contracts.governed_agent_ports": "core",
       "orket.core.contracts.governed_agent_replay": "core",
       "orket.core.contracts.governed_agent_schedule_records": "core",
@@ -27657,6 +27852,7 @@
       "orket.interfaces.api_app_context_middleware": "interfaces",
       "orket.interfaces.api_generation": "interfaces",
       "orket.interfaces.api_runtime_context": "interfaces",
+      "orket.interfaces.application_request_lifetime": "interfaces",
       "orket.interfaces.cli": "interfaces",
       "orket.interfaces.coordinator_api": "interfaces",
       "orket.interfaces.failure_lessons": "interfaces",
@@ -27689,6 +27885,7 @@
       "orket.interfaces.runtime_store_cli": "interfaces",
       "orket.interfaces.scaffold_init": "interfaces",
       "orket.interfaces.server_launcher": "interfaces",
+      "orket.interfaces.webhook_app_context": "interfaces",
       "orket.kernel.v1.__init__": "application",
       "orket.kernel.v1.api": "application",
       "orket.kernel.v1.canonical": "application",
@@ -28096,32 +28293,32 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 231
+        "count": 226
       },
       {
         "source": "adapters",
         "target": "application",
-        "count": 7
+        "count": 5
       },
       {
         "source": "adapters",
         "target": "core",
-        "count": 136
+        "count": 135
       },
       {
         "source": "application",
         "target": "adapters",
-        "count": 326
+        "count": 332
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1562
+        "count": 1577
       },
       {
         "source": "application",
         "target": "core",
-        "count": 701
+        "count": 706
       },
       {
         "source": "application",
@@ -28151,12 +28348,12 @@
       {
         "source": "interfaces",
         "target": "adapters",
-        "count": 11
+        "count": 9
       },
       {
         "source": "interfaces",
         "target": "application",
-        "count": 77
+        "count": 79
       },
       {
         "source": "interfaces",
@@ -28166,7 +28363,7 @@
       {
         "source": "interfaces",
         "target": "interfaces",
-        "count": 39
+        "count": 42
       }
     ]
   },
@@ -28203,28 +28400,6 @@
           {
             "path": "orket/adapters/tools/families/vision.py",
             "line": 8,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.adapters.vcs.gitea_webhook_handler",
-        "target": "orket.services.sandbox_orchestrator",
-        "sites": [
-          {
-            "path": "orket/adapters/vcs/gitea_webhook_handler.py",
-            "line": 26,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.adapters.vcs.gitea_webhook_handlers",
-        "target": "orket.orchestration.engine",
-        "sites": [
-          {
-            "path": "orket/adapters/vcs/gitea_webhook_handlers.py",
-            "line": 246,
             "kind": "from"
           }
         ]
@@ -28426,28 +28601,6 @@
             "kind": "from"
           }
         ]
-      },
-      {
-        "source": "orket.webhook_server",
-        "target": "orket.adapters.vcs.gitea_webhook_handler",
-        "sites": [
-          {
-            "path": "orket/webhook_server.py",
-            "line": 26,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.webhook_server",
-        "target": "orket.logging",
-        "sites": [
-          {
-            "path": "orket/webhook_server.py",
-            "line": 27,
-            "kind": "from"
-          }
-        ]
       }
     ],
     "authority_cycles": [],
@@ -28510,66 +28663,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-17T04:58:29.875336Z",
-      "changed": true,
-      "before_digest": "sha256:24f2328381e1e87f91d7027f876bc2a6923895462451d68daa1d5fef2c3bb510",
-      "after_digest": "sha256:1bbf43abcf2298888b5d4f616b192b25eb7c717556838a4a3ac5bc8ba65d5a66",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 43391,
-        "paths_total_current": 43391,
-        "paths_total_reference": 43391,
-        "churn_paths": 2,
-        "churn_ratio": 4.6e-05,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.modules.orket.interfaces.governed_agent_wake_cli.sha256"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-17T05:16:03.197796Z",
-      "changed": true,
-      "before_digest": "sha256:1bbf43abcf2298888b5d4f616b192b25eb7c717556838a4a3ac5bc8ba65d5a66",
-      "after_digest": "sha256:4e2b715ce1eb616632dd3ffb9472889a34b86aa162e6e4bc9bed604a183d1e07",
-      "diff": {
-        "added_paths": 12,
-        "removed_paths": 8,
-        "changed_paths": 9000,
-        "initial_write": false,
-        "paths_total_previous": 43391,
-        "paths_total_current": 43389,
-        "paths_total_reference": 43391,
-        "churn_paths": 9020,
-        "churn_ratio": 0.207877,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[700].line",
-          "$.observed.edges[700].path",
-          "$.observed.edges[700].source",
-          "$.observed.edges[700].target",
-          "$.observed.edges[701].line",
-          "$.observed.edges[701].path",
-          "$.observed.edges[701].source",
-          "$.observed.edges[701].target",
-          "$.observed.edges[702].line",
-          "$.observed.edges[702].path",
-          "$.observed.edges[702].source",
-          "$.observed.edges[702].target",
-          "$.observed.edges[703].line",
-          "$.observed.edges[703].path",
-          "$.observed.edges[703].source",
-          "$.observed.edges[703].target",
-          "$.observed.edges[704].line",
-          "$.observed.edges[704].path",
-          "$.observed.edges[704].source"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-17T05:57:47.782381Z",
       "changed": true,
@@ -29551,6 +29644,66 @@
           "$.observed.edges[2320].source",
           "$.observed.edges[2320].target",
           "$.observed.edges[2321].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T20:33:01.561615Z",
+      "changed": true,
+      "before_digest": "sha256:c5eb42b31239544e78daa4735d77f5d8bd5e67f62c1482a887688b548cc51688",
+      "after_digest": "sha256:f8a04799de1e5f12fc19482a765d9b4ac9660b4c7e83194f70bc85653b579959",
+      "diff": {
+        "added_paths": 47,
+        "removed_paths": 10,
+        "changed_paths": 11133,
+        "initial_write": false,
+        "paths_total_previous": 43759,
+        "paths_total_current": 44008,
+        "paths_total_reference": 44008,
+        "churn_paths": 11190,
+        "churn_ratio": 0.254272,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[324].line",
+          "$.observed.edges[324].path",
+          "$.observed.edges[324].source",
+          "$.observed.edges[324].target",
+          "$.observed.edges[325].path",
+          "$.observed.edges[325].source",
+          "$.observed.edges[325].target",
+          "$.observed.edges[326].line",
+          "$.observed.edges[326].path",
+          "$.observed.edges[326].source",
+          "$.observed.edges[326].target",
+          "$.observed.edges[327].line",
+          "$.observed.edges[327].path",
+          "$.observed.edges[327].source",
+          "$.observed.edges[327].target",
+          "$.observed.edges[328].line",
+          "$.observed.edges[328].path",
+          "$.observed.edges[328].source",
+          "$.observed.edges[328].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T20:51:53.464242Z",
+      "changed": true,
+      "before_digest": "sha256:f8a04799de1e5f12fc19482a765d9b4ac9660b4c7e83194f70bc85653b579959",
+      "after_digest": "sha256:3c3098c9dd7ccf5d45a8d9d1f6963ceead78b352c0e2d92b67d8817241863fff",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 44008,
+        "paths_total_current": 44008,
+        "paths_total_reference": 44008,
+        "churn_paths": 2,
+        "churn_ratio": 4.5e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.modules.orket.application.services.application_runtime_lifetime.sha256"
         ]
       }
     }

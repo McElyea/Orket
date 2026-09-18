@@ -12516,17 +12516,14 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: complete the captured sandbox HTTP verification candidate below,
-then continue C/D from their numbered requirements. The local 0.6.15 source,
-four installed environments and actual llama.cpp cohort pass their scoped gates.
-The local 0.6.16 checkpoint passes its scoped gates below. Preserve every original failure;
-supplied-clock controls do not repair or diagnose historical host-clock reversal.
-The last sealed graph still has 35 forbidden pairs, one cross-layer cycle and ten
-unresolved import/reflection sites. Remaining core clocks, manifest file reads,
-schema-generated identities, explicit settings, async reachability and adapter
-classification remain actionable. E1/E2, capability requirements and implementation,
-full-suite/hosted quality proof, release readiness and explicit whole-lane user
-acceptance remain open. Keep BT-5 artifacts and family claim ceilings intact.
+Next action: continue C/D from their numbered requirements after the 0.6.20
+webhook checkpoint below. The current graph has 21 forbidden pairs, zero
+cross-layer cycles and ten unresolved import/reflection sites. Preserve original
+failures and the first webhook candidate; supplied-clock controls do not repair
+or diagnose historical host-clock reversal. Remaining core clocks, manifest
+reads, schema identities, captured settings, async reachability and adapter
+classification remain actionable. E1/E2, CAP-1/2/3, full-suite/hosted quality,
+release readiness and explicit whole-lane acceptance remain open.
 
 The final BT-3 audit accepts builtin evidence-based completion and scoped replay.
 It preserves the initial installed failures, corrected external fixture coverage,
@@ -14506,3 +14503,188 @@ Local commit and annotated `v0.6.19` are bound by
 - `tests/integration/test_outward_filesystem_lifetime.py`
 - `tests/integration/test_runtime_entrypoints.py`
 - `tests/runtime/test_module_registry.py`
+
+
+### Standalone webhook application authority: 2026-09-18 (0.6.20 checkpoint)
+
+Status: scoped implementation and verification complete; local publication is receipt-bound below.
+Full C/D/E/CAP and whole-lane obligations remain active.
+
+Reentry verified the clean 0.6.19 commit/tag and 232 bound evidence files, both
+retained installed cells, the original handoff and neighboring worktrees.
+`.tmp/c-dependency-frontier/session-state.json` has SHA-256
+`65a80825b441e5ae7af248d41cf22981aeec6dd1a2ad645e2e8961a5fc2942fe`.
+No remote Git operation was performed; the 10 AM-6 PM local-only restriction
+continues to govern commits and tags.
+
+Installed 0.6.19 probes retain three counterexamples: factory calls share the
+same app and changing the environment rotates existing-app authentication;
+transport drops delivery identity so repeated signed reviews increment twice;
+handler close releases the HTTP client while a held real-engine review is still
+pending. The first lifetime fixture omitted normal `load_env()` startup and
+failed; its original observation is retained, and the corrected bootstrapped
+probe establishes the lifetime defect. It does not establish provider behavior.
+
+The candidate moves review/lifecycle policies and engine ownership into application,
+keeps HTTP effects and wire translation in VCS adapters, and moves payload
+contracts into core. API and webhook owners share request/background/resource
+lifetime implementation. Captured roots/authentication/limits, owned bootstrap,
+delivery-ID retention and review cleanup have focused HTTP/SQLite coverage.
+There is no forwarding shim or new dependency exception.
+
+Observed path: primary, with explicit degraded HTTP for disposable local Gitea.
+Result: partial success while final source/package gates remain open.
+
+Retained phases under `.tmp/c-dependency-frontier/` include:
+
+- `webhook-source-before`: 73 passing legacy cases; not proof of missing ownership.
+- `lifetime-extraction`: 22 passes; `managed-background`: 14 passes.
+- `webhook-migrated`: 102 passes, no failures/errors/skips.
+- `webhook-owned-flow`: 45 passes, one failed stale governance selector and one
+  teardown error from a deliberately injected engine-close fault surviving into
+  the repository cleanup fixture. Both fixtures were corrected; the expanded
+  `webhook-owned-flow-corrected` has 58 passes and no failures/errors/skips.
+- `webhook-native-gitea`: one real Gitea 1.25.4 signature/delivery pass.
+- `webhook-native-review`: wrong fixture subscription timed out.
+  `webhook-native-review-subscribed` retained the actual ignored native review.
+- `webhook-native-review-translated`: three passes and one fixture timeout using
+  the wrong approval token. `webhook-native-gitea-corrected` has 16 passes,
+  including four actual Gitea cases plus HTTP ingress regressions. Actual approval
+  verifies remote merge; rejection/comment and repeated delivery inspect SQLite.
+- `webhook-native-policy-cycle`: three passes and one fixture failure caused by
+  consuming the deliberately replayed delivery from the capture queue as a new
+  review. Its evidence stays retained; the fixture now observes that replay.
+
+Native Gitea signature and payload mismatches were not covered by the old simulated
+clients. The new real flow is distinct from controlled review execution and
+structural governance checks. No fresh provider or hosted Quality success is
+claimed. Deduplication is intake identity, not an atomic remote transaction or
+anti-replay guarantee. Engine/settings capture, original host-clock diagnosis,
+remaining async paths, E/CAP and full platform acceptance remain open.
+
+The first uncommitted 0.6.20 artifact passed 255 source and installed cases on
+Windows/Linux Python 3.11, with 911 matching core origins per installed cell.
+Its actual four-case Gitea source flow also passed after correcting the capture
+queue. Those passes did not prove composable resource identity: an additional
+installed probe under `owner-identity-before/` constructed two real webhook
+owners beneath one parent. Dataclass value equality collapsed their registration;
+the parent reported closed while the second HTTP client remained open. The probe
+then explicitly closed both children and retained the regression evidence.
+
+The shared base now keeps object identity (`dataclass(eq=False)`); API's existing
+dataclass contract is otherwise unchanged. A real-owner integration regression
+passes with the background and API close contracts (21 cases). Fresh final
+artifacts and environments are under `.tmp/c-dependency-frontier/final/` and
+`webhook-final-*`; the earlier 255-case artifact and observation remain intact.
+
+#### Verified 0.6.20 scope
+
+The final artifact passes the same 256 unique selected cases in each envelope,
+with zero failures, errors or skips. This is focused regression acceptance,
+not a current full-suite or Python 3.12 result.
+
+| Envelope | Pass / fail / error / skip | JUnit seconds |
+|---|---:|---:|
+| Source Windows 3.11 | 256 / 0 / 0 / 0 | 158.227 |
+| webhook-final-win-py311 | 256 / 0 / 0 / 0 | 162.443 |
+| webhook-final-linux-py311 | 256 / 0 / 0 / 0 | 99.138 |
+
+Each installed cell verifies 911 actual core module origins, unchanged harness
+inputs, wheel identities, dependencies, actual valid/malformed CLI execution,
+ToolGate audit and retained cleanup evidence. Package parity covers 1,037 core
+Python files and 1,052 wheel package files. SDK/reference/starter artifacts are
+unchanged. The earlier candidate remains distinct and is not acceptance of the
+resource-identity fix.
+
+Actual Windows installed Gitea proof passes four cases on Gitea 1.25.4, with
+467 matching imported core origins and all 1,052 installed package files checked
+before and after. Native signatures and review wire values reach the HTTP
+listener; readback verifies merge, three-cycle escalation, four-cycle PR close
+and requirements issue creation. Replayed deliveries do not repeat policy
+effects. All four owned Gitea containers and listeners/clients are torn down.
+The earlier 19 source-phase Gitea containers are also confirmed absent. This
+does not establish production Gitea availability, provider review completion,
+reviewer-role authorization, cross-worker limiting or an atomic remote transaction.
+
+Observed path: primary; disposable HTTP is explicitly degraded transport.
+Observed result: success for this scoped gate; partial success for the full goal.
+The migrated controlled dispatch fixture passes separately as one source
+contract case; it is not a live provider or end-to-end model proof.
+
+The refreshed structural graph has 1,037 modules, 3,274 import sites, 21 forbidden
+pairs, zero authority cycles, ten analysis errors and zero unknown modules.
+Four webhook-related forbidden pairs were removed; none was added and no
+dependency exception was introduced. Collection succeeds; policy and release
+readiness remain false. The full numbered C/D, E1/E2 and CAP-1/2/3 obligations,
+historical host-clock diagnosis, fresh full platform/suite/provider and hosted
+Quality evidence, and explicit whole-lane acceptance remain open.
+
+Proof bindings:
+
+- Final core wheel: `.tmp/c-dependency-frontier/final/dist/orket-0.6.20-py3-none-any.whl`; SHA-256 `fb385b61ba0d1b5600a34d7cc49bc3c20439684edd0d46c6b98cf76fe9ac164f`.
+- Final core sdist: `.tmp/c-dependency-frontier/final/dist/orket-0.6.20.tar.gz`; SHA-256 `e516c526e7829a317319e8ea240bf1786d4478b4744925084852725be1be1b03`.
+- Final harness manifest: `.tmp/c-dependency-frontier/final/manifest.json`; SHA-256 `85dd8b5e95d8166c2e386d8ff9e99030df16e1db07f35b6e7ef0ee263bab77b2`.
+- Final source report: `.tmp/c-dependency-frontier/final/source-report.json`; SHA-256 `be8ec89783c32c43bea98697d98c1c910582670fe7ae78b8bdd827bcd26134af`.
+- Final native audit: `.tmp/c-dependency-frontier/final/native-audit.json`; SHA-256 `e042708126eef7349297ac8e0219bd38c519227cd0f356075bf58af84349d706`.
+- Installed actual Gitea observation: `.tmp/c-dependency-frontier/installed-gitea/observation.json`; SHA-256 `ea13bd33933c085eca6d9bdfd6aa194d69ca6a2fbe31a8d2a98031508c4208d0`.
+
+Local commit and annotated tag binding is retained in
+`.tmp/c-dependency-frontier/local-checkpoint.json`. No GitHub push is part of
+this work-hours checkpoint. No merge, release publication or whole-lane
+closure is implied.
+
+#### Exact 0.6.20 checkpoint files
+
+- `.env.example`
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/CONTRIBUTOR.md`
+- `docs/architecture/CONTRACT_DELTA_WEBHOOK_AUTHORITY_CD_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/process/PR_REVIEW_POLICY.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/API_RUNTIME_LIFECYCLE.md`
+- `docs/specs/RUNTIME_STORE_BINDING.md`
+- `docs/specs/WEBHOOK_RUNTIME_LIFECYCLE.md`
+- `orket/adapters/vcs/gitea_webhook_client.py`
+- `orket/adapters/vcs/gitea_webhook_event.py`
+- `orket/adapters/vcs/gitea_webhook_handler.py` (removed)
+- `orket/adapters/vcs/gitea_webhook_handlers.py` (removed)
+- `orket/adapters/vcs/gitea_webhook_payloads.py` (removed)
+- `orket/application/services/api_runtime_container.py`
+- `orket/application/services/application_runtime_lifetime.py`
+- `orket/application/services/gitea_pr_lifecycle_service.py`
+- `orket/application/services/gitea_pr_review_service.py`
+- `orket/application/services/gitea_sandbox_webhook_service.py`
+- `orket/application/services/gitea_webhook_runtime.py`
+- `orket/application/services/gitea_webhook_support.py`
+- `orket/application/services/webhook_configuration.py`
+- `orket/application/services/webhook_ingress_policy.py`
+- `orket/core/contracts/gitea_webhook.py`
+- `orket/interfaces/api_app_context_middleware.py`
+- `orket/interfaces/application_request_lifetime.py`
+- `orket/interfaces/runtime_entrypoints.py`
+- `orket/interfaces/webhook_app_context.py`
+- `orket/runtime/policy/runtime_boundary_audit_checklist.py`
+- `orket/runtime_paths.py`
+- `orket/services/sandbox_orchestrator.py`
+- `orket/webhook_server.py`
+- `pyproject.toml`
+- `tests/adapters/test_gitea_webhook.py`
+- `tests/application/test_control_plane_workload_authority_governance.py`
+- `tests/contract/test_application_background_lifetime.py`
+- `tests/contract/test_webhook_ingress_clock.py`
+- `tests/helpers/gitea_server.py`
+- `tests/helpers/runtime_entrypoints_probe.py`
+- `tests/helpers/webhook.py`
+- `tests/helpers/webhook_listener.py`
+- `tests/integration/test_webhook_gitea_live.py`
+- `tests/integration/test_webhook_ingress_ownership.py`
+- `tests/integration/test_webhook_review_lifetime.py`
+- `tests/integration/test_webhook_startup_lifetime.py`
+- `tests/interfaces/test_webhook_factory.py`
+- `tests/interfaces/test_webhook_rate_limit.py`
+- `tests/live/test_system_acceptance_pipeline.py`

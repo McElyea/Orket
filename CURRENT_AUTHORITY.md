@@ -2063,7 +2063,7 @@ Gitea webhook PR review/opened/merged handling validates consumed payload fields
 
 Gitea webhook authenticated API calls require `https://` `GITEA_URL` by default. Plaintext `http://` is admitted only when `ORKET_GITEA_ALLOW_INSECURE=true` or `allow_insecure=True` is explicitly set for local development, and that degraded transport posture emits `gitea_webhook_insecure_url_allowed`.
 
-Gitea webhook ingress validates `X-Gitea-Signature` against the canonical `sha256=<hex>` HMAC form, and the lazy webhook handler proxy now uses async-lock-guarded initialization so concurrent deliveries do not construct duplicate handler instances.
+Standalone Gitea webhook applications own captured configuration, request/review lifetime and HTTP cleanup through application services. There is no module-default app or handler proxy. Native bare HMAC digests and the previously admitted prefixed form are accepted. Native Gitea review vocabulary is translated explicitly, and delivery IDs survive ingress. Startup, migration and limits live in `docs/specs/WEBHOOK_RUNTIME_LIFECYCLE.md`.
 
 JWT access tokens issued through `orket/services/auth_service.py` now default to a 60-minute lifetime unless `ORKET_AUTH_TOKEN_EXPIRE_MINUTES` overrides it, include a `jti` claim on every token, and verify revocation against the SQLite token blocklist at `.orket/durable/db/auth_token_blocklist.sqlite3` resolved through `orket/runtime_paths.py`.
 
@@ -2079,7 +2079,7 @@ Interaction streaming now admits per-turn `stream_budget` overrides on the share
 
 Interaction session ownership is now explicitly split: `orket/state.py` keeps transport/runtime coordination only (event broadcast queue, websocket fanout, classic runtime task tracking, and interaction-session surface presence), while `orket/streaming/manager.py` remains the sole authority for interaction session and turn state; the API wires those surfaces together through explicit interaction-session start/close registration hooks.
 
-Webhook operator posture now exposes ingress rate limiting as a per-process surface, with `/health` returning `rate_limit_scope=per_process`, `webhook_rate_limit_per_minute`, and `worker_count_hint`, while `.env.example` documents sizing `ORKET_RATE_LIMIT` against the configured worker count when no shared limiter backend is present.
+Webhook health reports `rate_limit_scope=per_application_per_process`, `webhook_rate_limit_per_minute` and `worker_count_hint`. Limits are captured independently per app; the worker hint neither starts workers nor establishes a shared limit. Closing or failed background owners refuse new HTTP requests with 503. Review dedupe is intake evidence, not atomic remote completion or replay protection.
 
 Review-bundle replay validation now raises `ReviewBundleError` carrying explicit `error_code` and `field` metadata instead of untyped string-only `ValueError` failures, and the CLI replay surface preserves those structured bundle error codes in replay failure output.
 

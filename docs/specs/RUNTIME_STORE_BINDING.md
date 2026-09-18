@@ -1,7 +1,7 @@
 # Runtime store binding
 
 Status: Active contract; scoped BT-5 store binding and migration proof accepted
-Last updated: 2026-09-13
+Last updated: 2026-09-18
 Owner: Orket Core
 
 ## One binding per runtime store
@@ -17,6 +17,13 @@ workspace cannot select a different control-plane authority.
 An existing object must not change storage after process CWD changes. New
 invocations select their explicit paths independently. This contract does not
 make a workspace change equivalent to the originally authorized effect target.
+
+The runtime-path adapter accepts an explicit invocation root and captured
+environment for deferred webhook bootstrap. Relative durable roots and legacy
+runtime/sandbox filenames resolve against that invocation, even if process CWD
+changes before the worker runs. Callers omitting these inputs keep the existing
+invocation-time defaults. This preserves store selection; it does not introduce
+tenant isolation or another migration authority.
 
 ## Migration of old relative bindings
 
