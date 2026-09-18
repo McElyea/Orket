@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from orket.driver import OrketDriver
+from tests.helpers.model_selection import prepared_model_selection
 
 
 class _AlwaysMissingLoader:
@@ -75,16 +76,8 @@ def test_driver_init_anchors_default_paths_to_project_root(monkeypatch, tmp_path
             captures["allowed_roots"] = [Path(item) for item in allowed_roots]
 
     class _FakeProvider:
-        def __init__(self, model, temperature=0.1):  # type: ignore[no-untyped-def]
+        def __init__(self, model, temperature=0.1, environment=None):  # type: ignore[no-untyped-def]
             self.model = model
-
-    class _FakeSelector:
-        def __init__(self, organization=None):  # type: ignore[no-untyped-def]
-            _ = organization
-
-        def select(self, role, override=None):  # type: ignore[no-untyped-def]
-            _ = role
-            return override or "qwen3.5-coder"
 
     def _fake_load_engine_configs(self) -> None:
         self.skill = None
@@ -101,7 +94,7 @@ def test_driver_init_anchors_default_paths_to_project_root(monkeypatch, tmp_path
     monkeypatch.setattr("orket.driver.AsyncFileTools", _FakeFileTools)
     monkeypatch.setattr("orket.driver.ReforgerTools", _FakeReforgerTools)
     monkeypatch.setattr("orket.driver.LocalModelProvider", _FakeProvider)
-    monkeypatch.setattr("orket.orchestration.models.ModelSelector", _FakeSelector)
+    monkeypatch.setattr("orket.driver.prepare_bootstrap_model_selection", lambda **kwargs: prepared_model_selection())
     monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)
 
     driver = OrketDriver(model="qwen3.5-coder")

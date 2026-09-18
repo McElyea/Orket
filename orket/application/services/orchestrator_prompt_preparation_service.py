@@ -49,7 +49,7 @@ class OrchestratorPromptPreparationService:
         *,
         issue: Any,
         epic: Any,
-        prompt_strategy_node: Any,
+        model_selection: Any,
         run_id: str,
         seat_name: str,
         roles_to_load: list[str],
@@ -61,7 +61,7 @@ class OrchestratorPromptPreparationService:
         cards_runtime: dict[str, Any],
         role_config: Any,
     ) -> tuple[dict[str, Any], str]:
-        dialect_name = prompt_strategy_node.select_dialect(selected_model)
+        dialect_name = model_selection.select_dialect(selected_model)
         dialect = await self.load_asset("dialects", dialect_name, DialectConfig)
         skill = SkillConfig(
             name=role_config.name or seat_name,

@@ -20,6 +20,7 @@ from orket.application.services.deployment_planner import (
 from orket.application.services.epic_dispatch_batch import run_epic_dispatch_batch
 from orket.application.services.epic_setup_service import prepare_epic_workspace
 from orket.application.services.guard_review_payload import guard_review_for_turn
+from orket.application.services.model_selection_service import ModelSelectionService
 from orket.application.services.orchestrator_failure_handler import OrchestratorFailureHandler
 from orket.application.services.orchestrator_review_preflight_service import (
     OrchestratorReviewPreflightService,
@@ -60,7 +61,6 @@ from orket.core.domain.state_machine import StateMachine
 from orket.core.domain.workitem_transition import WorkItemTransitionService
 from orket.exceptions import CardNotFound, ExecutionFailed
 from orket.logging import log_event
-from orket.orchestration.models import ModelSelector
 from orket.runtime.settings import resolve_bool, resolve_str
 from orket.runtime_paths import control_plane_db_for_runtime
 from orket.schema import (
@@ -108,30 +108,6 @@ async def _close_provider_transport(provider: Any) -> None:
     maybe_awaitable = close_method()
     if inspect.isawaitable(maybe_awaitable):
         await maybe_awaitable
-
-
-def _select_prompt_strategy_model(
-    *,
-    prompt_strategy_node: Any,
-    role: str,
-    asset_config: Any,
-    override: str | None,
-) -> str:
-    select_model = prompt_strategy_node.select_model
-    override_token = str(override or "").strip()
-    if not override_token:
-        return str(select_model(role=role, asset_config=asset_config))
-    try:
-        signature = inspect.signature(select_model)
-    except (TypeError, ValueError):
-        signature = None
-    if signature is not None:
-        parameters = signature.parameters
-        if "override" in parameters or any(
-            parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in parameters.values()
-        ):
-            return str(select_model(role=role, asset_config=asset_config, override=override_token))
-    return str(select_model(role=role, asset_config=asset_config))
 
 
 def _should_suppress_reference_context_for_cards_runtime(cards_runtime: dict[str, Any] | None) -> bool:
@@ -966,12 +942,9 @@ async def execute_epic(
         await prepare_epic_workspace(self, epic, run_id)
 
     # 1. Setup Execution Environment
-    model_selector = ModelSelector(
-        organization=self.org,
-        preferences=preferences,
-        user_settings=user_settings,
+    model_selection = await ModelSelectionService(environment=self.decision_environment).prepare(
+        self.org, preferences, user_settings, strategy=self.decision_nodes.resolve_prompt_strategy(self.org),
     )
-    prompt_strategy_node = self.decision_nodes.resolve_prompt_strategy(model_selector, self.org)
 
     tool_gate = ToolGate(organization=self.org, workspace_root=self.workspace)
     from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
@@ -1083,7 +1056,7 @@ async def execute_epic(
                     env,
                     run_id,
                     active_build,
-                    prompt_strategy_node,
+                    model_selection,
                     executor,
                     toolbox,
                     resume_mode=resume_mode,
@@ -1253,7 +1226,7 @@ async def _execute_issue_turn(
     env: EnvironmentConfig,
     run_id: str,
     active_build: str,
-    prompt_strategy_node: Any,
+    model_selection: Any,
     executor: TurnExecutor,
     toolbox: ToolBox,
     resume_mode: bool = False,
@@ -1318,7 +1291,6 @@ async def _execute_issue_turn(
         resolve_prompt_patch=self._resolve_prompt_patch,
         resolve_prompt_patch_label=self._resolve_prompt_patch_label,
         close_provider_transport=_close_provider_transport,
-        select_prompt_strategy_model=_select_prompt_strategy_model,
         should_suppress_reference_context_for_cards_runtime=_should_suppress_reference_context_for_cards_runtime,
     )
     preparation = await preparation_service.prepare(
@@ -1328,7 +1300,7 @@ async def _execute_issue_turn(
             team=team,
             env=env,
             run_id=run_id,
-            prompt_strategy_node=prompt_strategy_node,
+            model_selection=model_selection,
             dependency_context=dependency_context,
             runtime_result=runtime_result,
             resume_mode=resume_mode,

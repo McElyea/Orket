@@ -1,17 +1,24 @@
 from __future__ import annotations
 
+import asyncio
+import os
+from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.application.services.runtime_input_service import RuntimeInputService
 
 
 class ApiRuntimeHostService:
     """Explicit owner for API-facing runtime object construction and session ids."""
 
-    def __init__(self, project_root: Path, *, runtime_inputs: RuntimeInputService | None = None) -> None:
+    def __init__(self, project_root: Path, *, runtime_inputs: RuntimeInputService | None = None,
+                 environment: Mapping[str, str] | None = None) -> None:
         self.project_root = Path(project_root).resolve()
         self.runtime_inputs = runtime_inputs or RuntimeInputService()
+        self.environment = MappingProxyType(dict(os.environ if environment is None else environment))
 
     def create_session_id(self) -> str:
         return self.runtime_inputs.create_session_id()
@@ -19,15 +26,33 @@ class ApiRuntimeHostService:
     def utc_now_iso(self) -> str:
         return self.runtime_inputs.utc_now_iso()
 
-    def create_preview_builder(self, model_root: Path | None = None) -> Any:
-        from orket.preview import PreviewBuilder
+    async def create_preview_builder(self, model_root: Path | None = None) -> Any:
+        from orket.application.services.preview_service import PreviewBuilder
 
-        return PreviewBuilder(model_root or self.project_root / "model")
+        return await run_owned_thread(
+            lambda: PreviewBuilder(model_root or self.project_root / "model", environment=self.environment),
+            label="api-preview-bootstrap",
+        )
 
-    def create_chat_driver(self) -> Any:
+    async def create_chat_driver(self) -> Any:
         from orket.driver import OrketDriver
 
-        return OrketDriver()
+        created = []
+
+        def construct():
+            driver = OrketDriver(project_root=self.project_root, environment=self.environment)
+            created.append(driver)
+            return driver
+
+        try:
+            return await run_owned_thread(construct, label="api-chat-driver-bootstrap")
+        except asyncio.CancelledError:
+            if created:
+                await self.close_chat_driver(created[0])
+            raise
+
+    async def close_chat_driver(self, driver: Any) -> None:
+        await run_owned_io(driver.provider.close, label="api-chat-driver-close", preserve_failure=True)
 
     def create_execution_pipeline(self, workspace_root: Path | None = None) -> Any:
         from orket.runtime.execution_pipeline import ExecutionPipeline

@@ -12740,3 +12740,160 @@ Exact changed files:
 - `tests/integration/test_protocol_validator_timing.py`
 - `tests/integration/test_toolbox_refactor.py`
 - `tests/platform/test_root_database_guard.py`
+
+
+### Captured model-selection checkpoint: 2026-09-17
+
+Observed path: primary. Result: partial success for the full goal. Core 0.6.11
+migrates model selection to application-owned preparation and immutable prompt
+inputs. Scoped source, installed and actual-provider observations follow below.
+
+Five unchanged 0.6.10 counterexamples demonstrate ambient environment, borrowed
+preferences and organization drift, synchronous score-file reads on the event-loop
+thread, and a prompt node invoking a supplied selector callback with a file effect.
+They are retained under `.tmp/d-model-selection/before.*`, with unchanged-source
+binding. These controls do not prove a ToolGate or OS containment escape.
+
+The first broad caller migration run retains 252 passes and 11 failures: epic
+preparation referenced `self.environment` instead of the existing captured
+`self.decision_environment`. The corrected source run passes all 269 focused cases,
+including real file/score changes, interrupted workers, real API/driver requests
+through a controlled local HTTP server, transport cleanup and preview compilation.
+All Git-visible inputs remained unchanged during both runs; root database guards
+passed. Logs, JUnit and source bindings remain under `focused-2-*` and `focused-3-*`.
+Additional invalid-score controls and complete source/package/native proof follow.
+
+Application owns compliance and emits the returned decision, including score-file
+status/digest. Unknown scores remain advisory `score_missing`; explicit overrides
+keep precedence. Preview coordination moves to application without a shim. API
+driver construction runs on an owned worker and each request closes its transport.
+Default settings keep their existing context/migration behavior on owned workers;
+global settings cache/path authority remains D2/D3 debt. Migration and limitations:
+`docs/architecture/CONTRACT_DELTA_MODEL_SELECTION_CD_2026-09-17.md`.
+
+The full goal remains active: remaining C/D input/async/dependency work, E1/E2,
+CAP-1/2/3, full-suite/hosted CI, historical failure diagnoses, successful live workload
+completion and explicit whole-lane acceptance remain open. Local commit only;
+no GitHub push is performed.
+
+The candidate graph removes three forbidden source/target pairs and introduces
+none: 41 forbidden pairs, one authority cycle and ten analysis errors remain.
+Graph collection succeeds; dependency conformance and release readiness remain
+false. Changed-file Ruff, docs hygiene, package-template parity and release metadata
+checks pass. The new wheel and source archive build successfully; this is structural
+package evidence pending execution in fresh installations.
+
+
+The primary selected source proof passes 1,853 cases without failures, errors or skips.
+Every Git-visible input remains unchanged during execution; changed-file Ruff and
+the worktree-root database guard pass. This is the selected regression cohort,
+not a fresh whole-repository test run. The two new integration modules also cover
+partial/nonfinite reports and unreadable paths without false compliance claims.
+
+| Installed envelope | Pass / fail / error / skip | Seconds | Core origins |
+|---|---:|---:|---:|
+| win-py311 | 1853 / 0 / 0 / 0 | 571.041 | 936 |
+| win-py312 | 1853 / 0 / 0 / 0 | 670.261 | 936 |
+| linux-py311 | 1853 / 0 / 0 / 0 | 388.868 | 936 |
+| linux-py312 | 1853 / 0 / 0 / 0 | 388.857 | 936 |
+
+All four primary fresh installations retain identical unique case identities, artifact and
+manifest binding, installed core origins, CLI/ToolGate controls and verified native
+cleanup. The support harness contains 1852 files; wheel/source
+parity covers 1014 core Python files and
+1029 core-package files.
+Wheel SHA-256: `55e050d422eafbb613e78d516895702ca4b4167c31a1373b900890ed7ffe590b`.
+Source archive SHA-256: `10f5b5d06a4816065dc09e894fb640419d4ae810da847f16a5637a6d3a2dbc5d`.
+
+Eight serial installed actual llama.cpp regression cases pass. A separate installed
+flow reads a real score report, captures compliance and selection settings, mutates
+the caller/process environment and caller policy, selects the captured fallback,
+obtains an actual llama.cpp response, and closes its HTTP transport. The observed
+runtime target performs no model auto-load. Operator-owned listener PID and creation
+identity remain the same before/after; no server was started or stopped. Controlled
+HTTP source cases are distinct from these actual inference observations. This is
+not successful whole-workload completion.
+
+A late caller inventory found `tests/benchmark_cold_start.py` still constructing
+the now-explicit synchronous driver bootstrap on its event loop. Its sole caller
+migration awaits the application host and closes driver/engine/subscription owners
+on the exercised normal path. Historical synchronous engine/clean-room bootstrap,
+initialization-failure cleanup and whole-benchmark scoring remain outside this proof.
+The benchmark is absent from the wheel/source archive. Original broad reports and
+their immutable support harness retain the old unused benchmark file; they are not
+rewritten. A separate real bootstrap/teardown control passes in source and all four
+same installed core artifacts, with unchanged support inputs and verified origins.
+Driver and benchmark fixtures retain explicit degraded prompting when local skill/
+dialect assets are missing; their HTTP and cleanup success is not proof of complete
+configuration. The benchmark control uses a read-only fixture prompt and controlled
+HTTP; the benchmark score correctly
+remains FAIL because no feature artifacts were produced. The exact one-file delta,
+all supplemental reports and current support binding are retained in
+`complete/benchmark-supplement.json`. Current acceptance is this explicit evidence
+union, not a claim that a single original harness contained the later caller bytes.
+
+All current evidence is retained under `.tmp/d-model-selection/complete/`, including
+source, fresh native, actual-provider, structural review and local checkpoint reports.
+The original 11 caller failures and five adverse controls remain retained under the
+parent directory. Prior 0.6.10 evidence bytes, the original handoff and neighboring
+worktrees remain unchanged. No new Python file exceeds 400 lines or new function
+70 lines. The existing 449-line driver grows by six lines for explicit environment
+capture and deferred transport construction after config validation; the oversized
+orchestration test grows by one line for its migrated preparation helper import.
+
+Dependency conformance remains red. Other prompt-policy, planning/routing, settings
+and async/lifetime work remains active, along with E1/E2, CAP-1/2/3, full-suite/hosted
+CI, release readiness, historical failure diagnoses and explicit whole-lane acceptance.
+No GitHub push is performed; commit and annotated tag are local checkpoint metadata.
+
+Exact changed files:
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/architecture/CONTRACT_DELTA_MODEL_SELECTION_CD_2026-09-17.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/architecture/event_taxonomy.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json`
+- `docs/projects/architectural-truth/README.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `model/core/contracts/dependency_direction_policy.json`
+- `orket/adapters/storage/model_score_reader.py`
+- `orket/application/services/api_runtime_composition.py`
+- `orket/application/services/api_runtime_container.py`
+- `orket/application/services/api_runtime_host_service.py`
+- `orket/application/services/decision_node_registry.py`
+- `orket/application/services/model_selection_service.py`
+- `orket/application/services/orchestrator_prompt_preparation_service.py`
+- `orket/application/services/orchestrator_turn_preparation_service.py`
+- `orket/application/services/preview_service.py`
+- `orket/application/workflows/orchestrator_ops.py`
+- `orket/core/contracts/model_selection.py`
+- `orket/core/policies/model_selection.py`
+- `orket/decision_nodes/builtins.py`
+- `orket/decision_nodes/contracts.py`
+- `orket/driver.py`
+- `orket/interfaces/api.py`
+- `orket/interfaces/routers/system.py`
+- `orket/orchestration/models.py`
+- `orket/preview.py`
+- `pyproject.toml`
+- `tests/application/test_decision_nodes_planner.py`
+- `tests/application/test_driver_config_loading.py`
+- `tests/application/test_driver_json_parse_modes.py`
+- `tests/application/test_model_selector_compliance.py`
+- `tests/application/test_model_selector_operator.py`
+- `tests/application/test_odr_prebuild_continuation.py`
+- `tests/application/test_orchestrator_epic.py`
+- `tests/benchmark_cold_start.py`
+- `tests/helpers/model_selection.py`
+- `tests/integration/test_model_selection_consumers.py`
+- `tests/integration/test_model_selection_inputs.py`
+- `tests/integration/test_orchestrator_issue_control_plane.py`
+- `tests/integration/test_orchestrator_scheduler_control_plane.py`
+- `tests/interfaces/test_api.py`
+- `tests/interfaces/test_api_operator_views.py`
+- `tests/runtime/test_local_provider_defaults.py`

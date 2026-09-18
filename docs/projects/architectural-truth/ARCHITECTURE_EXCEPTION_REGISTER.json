@@ -47,7 +47,7 @@
       "id": "AT-EX-007",
       "area": "decision-node-explicit-inputs",
       "status": "active_transition",
-      "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Mutable prompt-selector/planning/routing context and ambient prompt policy remain outside immutable snapshots.",
+      "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Model recommendations now use frozen values with application-owned settings/score preparation. Mutable planning/routing context and ambient prompt policy remain outside immutable snapshots.",
       "removal_condition": "All decision nodes receive immutable resolved configuration and have no environment or runtime-state reach-through.",
       "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
     },

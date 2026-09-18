@@ -1,7 +1,6 @@
-# Layer: integration
-
 from __future__ import annotations
 
+# Layer: integration
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -16,6 +15,7 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.core.domain import AttemptState, LeaseStatus, ReservationKind, ReservationStatus, RunState
 from orket.schema import CardStatus, EnvironmentConfig, IssueConfig, SeatConfig, TeamConfig
+from tests.helpers.model_selection import prepared_model_selection
 
 pytestmark = pytest.mark.integration
 
@@ -231,10 +231,10 @@ async def test_pre_dispatch_runtime_guard_retry_publishes_scheduler_effect_truth
         env=EnvironmentConfig(name="dev", model="test-model"),
         run_id="run-guard",
         active_build="build-1",
-        prompt_strategy_node=SimpleNamespace(
-            select_model=lambda **_kwargs: "test-model",
+        model_selection=prepared_model_selection(SimpleNamespace(
+            select_model=lambda _inputs: "test-model",
             select_dialect=lambda _selected_model: "json",
-        ),
+        )),
         executor=executor,
         toolbox=SimpleNamespace(),
     )

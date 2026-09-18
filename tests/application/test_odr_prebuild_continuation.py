@@ -10,6 +10,7 @@ from orket.application.workflows.turn_executor import TurnResult
 from orket.core.domain.execution import ExecutionTurn
 from orket.schema import CardStatus, IssueConfig
 from tests.helpers.card_dispatch import install_dispatch_snapshot_stub
+from tests.helpers.model_selection import prepared_model_selection
 
 pytestmark = pytest.mark.unit
 
@@ -144,7 +145,7 @@ async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
             return SimpleNamespace()
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -196,7 +197,7 @@ async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )
@@ -290,7 +291,7 @@ async def test_execute_issue_turn_uses_configured_odr_auditor_model(
             return _Client(provider)
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -343,7 +344,7 @@ async def test_execute_issue_turn_uses_configured_odr_auditor_model(
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 from orket.core.contracts.decision_inputs import LoopPolicyInputs, ToolSelectionInput
+from orket.core.contracts.model_selection import ModelSelectionInput
 
 
 @dataclass
@@ -73,7 +74,7 @@ class EvaluatorNode(Protocol):
 class PromptStrategyNode(Protocol):
     """Decision node: chooses model and dialect strategy for a turn."""
 
-    def select_model(self, role: str, asset_config: Any, override: str | None = None) -> str: ...
+    def select_model(self, inputs: ModelSelectionInput) -> str: ...
 
     def select_dialect(self, model: str) -> str: ...
 

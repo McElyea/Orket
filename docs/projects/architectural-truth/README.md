@@ -611,3 +611,11 @@ eight actual llama.cpp regression cases and a separate application-factory flow 
 The graph removes seven forbidden pairs without introducing others; 44 remain.
 The canonical plan retains input-drift and fixture failures, migration and proof limits.
 Whole-lane acceptance remains open.
+
+
+The 0.6.11 local model-selection checkpoint moves settings and score observation
+to application ownership; prompt strategy consumes immutable values. Preview and API
+driver lifetimes migrate with that boundary. 1,853 selected source cases and the
+same cases in four fresh installed cells pass, plus eight actual llama.cpp regressions
+and a separate installed selection/compliance/inference flow. Three forbidden pairs
+are removed; 41 remain. Full-plan acceptance remains open in the canonical plan.

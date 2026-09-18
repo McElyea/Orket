@@ -5,9 +5,9 @@ import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.application.services.governed_agent_api_composition import _configured_model
+from orket.application.services.model_selection_service import ModelSelectionService
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL, normalize_provider
 from orket.exceptions import ModelConnectionError
-from orket.orchestration.models import ModelSelector
 from orket.runtime.config.defaults import configured_provider
 from orket.runtime.config.local_prompt_profiles import normalize_provider_for_local_prompt_profile
 from orket.runtime.config.provider_runtime_target import default_base_url
@@ -52,14 +52,17 @@ async def test_unavailable_default_endpoint_does_not_switch_provider(monkeypatch
         await provider.close()
 
 
-def test_defaults_and_blank_settings_preserve_provider_identity(monkeypatch):
+@pytest.mark.asyncio
+# Layer: contract
+async def test_defaults_and_blank_settings_preserve_provider_identity(monkeypatch):
     monkeypatch.setenv("ORKET_LLM_PROVIDER", " ")
     monkeypatch.setenv("ORKET_MODEL_STREAM_PROVIDER", "real")
     assert configured_provider() == _real_provider_name() == "llama_cpp"
     assert provider_identity()["provider"] == "llama_cpp"
     assert normalize_provider("") == "openai_compat"
     assert normalize_provider_for_local_prompt_profile("") == "llama_cpp"
-    assert ModelSelector(preferences={}, user_settings={}).select("coder") == DEFAULT_LOCAL_MODEL
+    selection = await ModelSelectionService(environment={}).prepare(preferences={}, user_settings={})
+    assert selection.select("coder").final_model == DEFAULT_LOCAL_MODEL
 
 
 def test_unknown_provider_is_rejected_before_client_creation(monkeypatch):

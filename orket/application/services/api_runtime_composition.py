@@ -17,6 +17,7 @@ from orket.application.services.extension_runtime_service import ExtensionRuntim
 from orket.application.services.governed_agent_api_composition import (
     build_api_governed_agent_runtime,
 )
+from orket.application.services.model_selection_service import ModelSelectionService
 from orket.application.services.outward_approval_service import OutwardApprovalService
 from orket.application.services.outward_ledger_service import OutwardLedgerService
 from orket.application.services.outward_run_execution_service import OutwardRunExecutionService
@@ -24,7 +25,6 @@ from orket.application.services.outward_run_inspection_service import OutwardRun
 from orket.application.services.outward_run_service import OutwardRunService
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.extensions import ExtensionManager
-from orket.orchestration.models import ModelSelector
 from orket.runtime_paths import resolve_control_plane_db_path
 from orket.state import create_runtime_state
 from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus, StreamBusConfig
@@ -41,7 +41,7 @@ def build_api_runtime_container(
     runtime_node = build_decision_node_registry(environment=environment).resolve_api_runtime()
     authentication = ApiAuthenticationService(os.environ if environment is None else environment)
     runtime_state = create_runtime_state()
-    runtime_host = ApiRuntimeHostService(project_root=root, runtime_inputs=runtime_inputs)
+    runtime_host = ApiRuntimeHostService(project_root=root, runtime_inputs=runtime_inputs, environment=authentication.environment)
     stream_bus = _build_stream_bus()
     run_store, event_store, approval_store = _build_outward_stores()
     raw_allowlist = str(os.getenv("ORKET_CONNECTOR_HTTP_ALLOWLIST") or "")
@@ -88,7 +88,7 @@ def build_api_runtime_container(
             event_store=event_store,
             utc_now=runtime_host.utc_now_iso,
         ),
-        model_selector_factory=ModelSelector,
+        model_selection=ModelSelectionService(environment=authentication.environment),
     )
     governed_agent_runtime = build_api_governed_agent_runtime(
         runtime_host=runtime_host,

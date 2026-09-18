@@ -34,7 +34,6 @@
     "orket.organization_loop": "application",
     "orket.platform": "application",
     "orket.policy": "application",
-    "orket.preview": "adapters",
     "orket.project_paths": "adapters",
     "orket.quickstart": "interfaces",
     "orket.reforger": "application",
@@ -106,6 +105,7 @@
   "decision_core_contracts": [
     "orket.core.cards_runtime_contract",
     "orket.core.contracts.decision_inputs",
+    "orket.core.contracts.model_selection",
     "orket.exceptions",
     "orket.schema"
   ],

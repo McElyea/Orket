@@ -3,7 +3,8 @@ import shutil
 from datetime import UTC, datetime
 from pathlib import Path
 
-from orket.logging import subscribe_to_events
+from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
+from orket.logging import subscribe_to_events, unsubscribe_from_events
 from orket.orchestration.engine import OrchestrationEngine
 
 
@@ -21,6 +22,7 @@ class ColdStartReferee:
 
     def __init__(self, root_dir: Path):
         self.root_dir = root_dir
+        self.runtime_host = ApiRuntimeHostService(root_dir)
         self.timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         self.bench_id = f"benchmark_{self.timestamp}"
         self.workspace = root_dir / "workspace" / "runs" / self.bench_id
@@ -57,8 +59,7 @@ class ColdStartReferee:
 
         # We trigger the engine on the prompt
         # In a real cold start, we use the driver to turn prompt into an epic/issue
-        from orket.driver import OrketDriver
-        driver = OrketDriver()
+        driver = await self.runtime_host.create_chat_driver()
 
         try:
             # We wrap the driver request to simulate a fresh start
@@ -77,6 +78,10 @@ class ColdStartReferee:
 
         except Exception as e:
             print(f"  [FAIL] System crashed during cold start: {e}")
+        finally:
+            await self.runtime_host.close_chat_driver(driver)
+            await engine.close()
+            unsubscribe_from_events(self.on_event)
 
         self.evaluate()
 

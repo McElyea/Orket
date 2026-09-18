@@ -4,6 +4,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import AsyncMock
 
 import pytest
 from starlette.websockets import WebSocketDisconnect
@@ -425,39 +426,14 @@ def test_runtime_policy_options(monkeypatch):
 def test_model_assignments_endpoint_returns_selector_decisions(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(api_module, "_discover_active_roles", lambda _root: ["coder", "reviewer"])
-    monkeypatch.setattr(api_module, "load_user_preferences", lambda: {"models": {"coder": "qwen2.5-coder:14b"}})
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
     monkeypatch.setattr(api_module._get_engine(), "org", object())
 
-    class FakeSelector:
-        def __init__(self, organization=None, preferences=None, user_settings=None):
-            self._role = None
+    from tests.helpers.model_selection import ModelSelectionFixture
 
-        def select(self, role, department="core", override=None, asset_config=None):
-            self._role = role
-            if role == "coder":
-                return "qwen2.5-coder:14b"
-            return "llama3.1:8b"
-
-        def get_last_selection_decision(self):
-            if self._role == "coder":
-                return {
-                    "selected_model": "qwen2.5-coder:14b",
-                    "final_model": "qwen2.5-coder:14b",
-                    "demoted": False,
-                    "reason": "score_ok",
-                }
-            return {
-                "selected_model": "llama3.1:8b",
-                "final_model": "llama3.1:8b",
-                "demoted": False,
-                "reason": "fallback",
-            }
-
-        def get_dialect_name(self, model):
-            return "qwen" if "qwen" in model else "llama3"
-
-    monkeypatch.setattr(api_module._runtime_context(), "model_selector_factory", FakeSelector)
+    fixture = ModelSelectionFixture(
+        preferences={"models": {"coder": "qwen2.5-coder:14b", "reviewer": "llama3.1:8b"}},
+        user_settings={"model_compliance_policy": {"min_score": 85, "model_scores": {"qwen2.5-coder:14b": 90}}})
+    monkeypatch.setattr(api_module._runtime_context(), "model_selection", fixture)
 
     response = client.get("/v1/system/model-assignments", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
@@ -471,33 +447,15 @@ def test_model_assignments_endpoint_returns_selector_decisions(monkeypatch):
     assert payload["items"][1]["role"] == "reviewer"
     assert "generated_at" in payload
 
-
 def test_model_assignments_endpoint_respects_role_filter(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module, "load_user_preferences", lambda: {})
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
     monkeypatch.setattr(api_module._get_engine(), "org", object())
 
-    class FakeSelector:
-        def __init__(self, organization=None, preferences=None, user_settings=None):
-            self._role = None
+    from tests.helpers.model_selection import ModelSelectionFixture
 
-        def select(self, role, department="core", override=None, asset_config=None):
-            self._role = role
-            return "llama3.1:8b"
-
-        def get_last_selection_decision(self):
-            return {
-                "selected_model": "llama3.1:8b",
-                "final_model": "llama3.1:8b",
-                "demoted": False,
-                "reason": "fallback",
-            }
-
-        def get_dialect_name(self, model):
-            return "llama3"
-
-    monkeypatch.setattr(api_module._runtime_context(), "model_selector_factory", FakeSelector)
+    fixture = ModelSelectionFixture(
+        preferences={"models": {"coder": "llama3.1:8b", "reviewer": "llama3.1:8b"}})
+    monkeypatch.setattr(api_module._runtime_context(), "model_selection", fixture)
 
     response = client.get(
         "/v1/system/model-assignments?roles= coder, reviewer ,coder",
@@ -508,7 +466,6 @@ def test_model_assignments_endpoint_respects_role_filter(monkeypatch):
     assert payload["count"] == 2
     assert payload["filters"]["roles"] == ["coder", "reviewer"]
     assert [item["role"] for item in payload["items"]] == ["coder", "reviewer"]
-
 
 def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
@@ -986,7 +943,7 @@ def test_preview_asset_uses_runtime_invocation(monkeypatch):
             "unsupported_detail": "Unsupported preview mode 'issue'.",
         },
     )
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", lambda _model_root: FakeBuilder())
+    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", AsyncMock(return_value=FakeBuilder()))
 
     response = client.get(
         "/v1/system/preview-asset?path=model/core/epics/x.json&issue_id=ISSUE-9",
@@ -1018,7 +975,7 @@ def test_preview_asset_rejects_unsupported_mode(monkeypatch):
             "unsupported_detail": "Unsupported preview mode 'custom'.",
         },
     )
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", lambda _model_root: FakeBuilder())
+    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", AsyncMock(return_value=FakeBuilder()))
 
     response = client.get(
         "/v1/system/preview-asset?path=model/core/epics/x.json",
@@ -1050,7 +1007,7 @@ def test_preview_asset_uses_runtime_error_detail_for_unsupported_mode(monkeypatc
             "unsupported_detail": f"Unsupported preview invocation 'build_custom_preview' for mode '{target['mode']}'",
         },
     )
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", lambda _model_root: FakeBuilder())
+    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", AsyncMock(return_value=FakeBuilder()))
 
     response = client.get(
         "/v1/system/preview-asset?path=model/core/epics/x.json",
@@ -1062,16 +1019,18 @@ def test_preview_asset_uses_runtime_error_detail_for_unsupported_mode(monkeypatc
 
 
 def test_chat_driver_uses_runtime_invocation(monkeypatch):
-    """Layer: integration. Verifies chat-driver construction now comes from the explicit API runtime host."""
+    """Layer: contract. Verifies chat-driver construction now comes from the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
     class FakeDriver:
+        provider = type("Provider", (), {"close": AsyncMock()})()
+
         async def process_custom(self, message):
             captured["message"] = message
             return f"echo:{message}"
 
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_chat_driver", lambda: FakeDriver())
+    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_chat_driver", AsyncMock(return_value=FakeDriver()))
     monkeypatch.setattr(
         api_module._get_api_runtime_node(),
         "resolve_chat_driver_invocation",
@@ -1094,10 +1053,12 @@ def test_chat_driver_rejects_unsupported_runtime_method(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeDriver:
+        provider = type("Provider", (), {"close": AsyncMock()})()
+
         async def process_request(self, message):
             return f"echo:{message}"
 
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_chat_driver", lambda: FakeDriver())
+    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_chat_driver", AsyncMock(return_value=FakeDriver()))
     monkeypatch.setattr(
         api_module._get_api_runtime_node(),
         "resolve_chat_driver_invocation",

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 import re
 from typing import Any
 
@@ -11,6 +10,7 @@ from orket.core.cards_runtime_contract import (
     required_write_paths_for_seat as resolve_cards_required_write_paths,
 )
 from orket.core.contracts.decision_inputs import LoopPolicyInputs, ToolSelectionInput
+from orket.core.contracts.model_selection import ModelSelectionInput, model_dialect
 from orket.decision_nodes.api_runtime_strategy_node import (
     DefaultApiRuntimeStrategyNode as _DefaultApiRuntimeStrategyNode,
 )
@@ -70,32 +70,14 @@ class DefaultRouterNode:
 
 
 class DefaultPromptStrategyNode:
-    """
-    Built-in prompt/model strategy decision node.
-    Delegates to existing ModelSelector behavior to preserve runtime defaults.
-    """
+    """Pure recommendation over immutable, application-supplied values."""
 
-    def __init__(self, model_selector: Any) -> None:
-        self.model_selector = model_selector
-
-    def select_model(self, role: str, asset_config: Any, override: str | None = None) -> str:
-        override_token = str(override or "").strip()
-        if not override_token:
-            return str(self.model_selector.select(role=role, asset_config=asset_config))
-        try:
-            signature = inspect.signature(self.model_selector.select)
-        except (TypeError, ValueError):
-            signature = None
-        if signature is not None:
-            parameters = signature.parameters
-            if "override" in parameters or any(
-                parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in parameters.values()
-            ):
-                return str(self.model_selector.select(role=role, asset_config=asset_config, override=override_token))
-        return str(self.model_selector.select(role=role, asset_config=asset_config))
+    def select_model(self, inputs: ModelSelectionInput) -> str:
+        return (inputs.asset_model or inputs.environment_model or inputs.preferred_model
+                or inputs.organization_model or inputs.organization_default or inputs.default_model)
 
     def select_dialect(self, model: str) -> str:
-        return str(self.model_selector.get_dialect_name(model))
+        return model_dialect(model)
 
 
 class DefaultEvaluatorNode:

@@ -50,7 +50,7 @@ class ApiRuntimeContainer:
     outward_run_execution_service: Any | None = None
     outward_run_inspection_service: Any | None = None
     outward_ledger_service: Any | None = None
-    model_selector_factory: Any | None = None
+    model_selection: Any | None = None
     governed_agent_runtime: Any | None = None
     _background_tasks: set[asyncio.Task[Any]] = field(default_factory=set, repr=False)
     _cancellation_requests: set[asyncio.Task[Any]] = field(default_factory=set, repr=False)

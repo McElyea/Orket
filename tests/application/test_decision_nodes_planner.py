@@ -149,24 +149,14 @@ def test_default_router_prefers_integrity_guard_for_review():
     assert router.route(issue, team, is_review_turn=True) == "integrity_guard"
 
 
-def test_default_prompt_strategy_delegates_to_model_selector():
-    class FakeModelSelector:
-        def select(self, role, asset_config):
-            assert role == "lead_architect"
-            assert asset_config == "epic"
-            return "qwen2.5-coder:7b"
+# Layer: contract
+def test_default_prompt_strategy_selects_explicit_model_values():
+    from orket.core.contracts.model_selection import ModelSelectionInput
 
-        def get_dialect_name(self, model):
-            assert model == "qwen2.5-coder:7b"
-            return "qwen"
-
-    node = DefaultPromptStrategyNode(FakeModelSelector())
-
-    model = node.select_model("lead_architect", "epic")
-    dialect = node.select_dialect(model)
-
+    node = DefaultPromptStrategyNode()
+    model = node.select_model(ModelSelectionInput(role="lead_architect", preferred_model="qwen2.5-coder:7b"))
     assert model == "qwen2.5-coder:7b"
-    assert dialect == "qwen"
+    assert node.select_dialect(model) == "qwen"
 
 
 def test_registry_resolves_default_router():
@@ -191,25 +181,18 @@ def test_registry_resolves_custom_router():
 
 def test_registry_resolves_custom_prompt_strategy():
     class CustomPrompt:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "model-x"
 
         def select_dialect(self, model):
             return "generic"
-
-    class FakeSelector:
-        def select(self, role, asset_config):
-            return "fallback"
-
-        def get_dialect_name(self, model):
-            return "fallback"
 
     registry = DecisionNodeRegistry()
     custom = CustomPrompt()
     registry.register_prompt_strategy("custom-prompt", custom)
     org = SimpleNamespace(process_rules={"prompt_strategy_node": "custom-prompt"})
 
-    node = registry.resolve_prompt_strategy(FakeSelector(), org)
+    node = registry.resolve_prompt_strategy(org)
     assert node is custom
 
 

@@ -1,7 +1,6 @@
-# Layer: integration
-
 from __future__ import annotations
 
+# Layer: integration
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -29,6 +28,7 @@ from orket.schema import (
     SeatConfig,
     TeamConfig,
 )
+from tests.helpers.model_selection import prepared_model_selection
 
 pytestmark = pytest.mark.integration
 
@@ -181,10 +181,10 @@ async def test_orchestrator_issue_turn_publishes_issue_dispatch_and_non_protocol
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=SimpleNamespace(
-            select_model=lambda **_kwargs: "test-model",
+        model_selection=prepared_model_selection(SimpleNamespace(
+            select_model=lambda _inputs: "test-model",
             select_dialect=lambda _selected_model: "json",
-        ),
+        )),
         executor=executor,
         toolbox=toolbox,
     )

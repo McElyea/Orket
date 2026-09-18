@@ -1,15 +1,21 @@
 from __future__ import annotations
 
+import os
+from collections.abc import Mapping
+from copy import deepcopy
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.agents.agent import Agent
+from orket.application.services.model_selection_service import ModelSelectionService
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
 from orket.runtime import ConfigLoader
-from orket.schema import EpicConfig, RockConfig, TeamConfig
+from orket.schema import EpicConfig, OrganizationConfig, RockConfig, TeamConfig
 from orket.utils import sanitize_name
 
 
@@ -31,26 +37,33 @@ class PreviewBuilder:
     including fully-resolved prompts for every member.
     """
 
-    def __init__(self, model_root: Path = Path("model")):
-        self.model_root = model_root
-        self.fs = AsyncFileTools(Path())
+    def __init__(self, model_root: Path = Path("model"), *, environment: Mapping[str, str] | None = None):
+        self.project_root = (model_root.parent if model_root.name == "model" else model_root).resolve()
+        self.model_root = self.project_root / "model"
+        self.fs = AsyncFileTools(self.project_root)
+        self.model_selection = ModelSelectionService(environment=os.environ if environment is None else environment)
 
-        # Load Organization
-        org_path = model_root / "organization.json"
-        self.org = None
-        if org_path.exists():
-            from orket.schema import OrganizationConfig
+    async def _loader(self, department: str) -> ConfigLoader:
+        return await run_owned_thread(partial(ConfigLoader, self.project_root, department), label="preview-loader")
 
-            try:
-                self.org = OrganizationConfig.model_validate_json(self.fs.read_file_sync(str(org_path)))
-            except (ValueError, FileNotFoundError) as e:
-                log_event("preview_org_config_missing", {"error": str(e)}, workspace=Path("workspace/default"))
-                pass
+    async def _organization(self) -> OrganizationConfig | None:
+        try:
+            content = await run_owned_thread(partial(self.fs.read_file_sync, str(self.model_root / "organization.json")),
+                                             label="preview-organization")
+            return OrganizationConfig.model_validate_json(content)
+        except (ValueError, FileNotFoundError) as exc:
+            await run_owned_thread(partial(log_event, "preview_org_config_missing", {"error": str(exc)},
+                                          workspace=self.project_root / "workspace/default"), label="preview-config-observation")
+            return None
+
+    async def _asset(self, loader: ConfigLoader, category: str, name: str, model_type: Any) -> Any:
+        return await run_owned_io(partial(loader.load_asset_async, category, name, model_type), label="preview-asset")
 
     async def _get_compiled_prompt(
         self, seat_name: str, issue_summary: str, epic: EpicConfig, team: TeamConfig, department: str
     ) -> str:
-        loader = ConfigLoader(self.model_root, department)
+        epic, team = deepcopy(epic), deepcopy(team)
+        loader = await self._loader(department)
         seat = team.seats.get(sanitize_name(seat_name))
         if not seat:
             return "Seat not found."
@@ -61,20 +74,20 @@ class PreviewBuilder:
         role_objects = []
         for r_name in seat.roles:
             try:
-                role_objects.append(loader.load_asset("roles", r_name, RoleConfig))
+                role_objects.append(await self._asset(loader, "roles", r_name, RoleConfig))
             except (FileNotFoundError, ValueError, CardNotFound) as e:
-                log_event(
-                    "preview_role_asset_missing",
+                await run_owned_thread(partial(
+                    log_event, "preview_role_asset_missing",
                     {"role": r_name, "department": department, "error": str(e)},
-                    workspace=Path("workspace/default"),
-                )
-                pass
+                    workspace=self.project_root / "workspace/default",
+                ), label="preview-role-observation")
 
         # 2. Select Model
-        from orket.orchestration.models import ModelSelector
-
-        model_selector = ModelSelector(organization=self.org)
-        selected_model = model_selector.select(role=seat.roles[0] if seat.roles else "coder", asset_config=epic)
+        organization = await self._organization()
+        selection = await self.model_selection.prepare(organization)
+        role = seat.roles[0] if seat.roles else "coder"
+        asset_models = (getattr(epic, "params", {}) or {}).get("model_overrides", {})
+        selected_model = selection.select(role, asset_model=str(asset_models.get(role, ""))).final_model
 
         desc = f"Seat: {seat_name}.\nISSUE: {issue_summary}\n"
 
@@ -85,15 +98,15 @@ class PreviewBuilder:
             if ro.prompt:
                 desc += f"\n[{ro.name.upper()} GUIDELINES]\n{ro.prompt}\n"
 
-        if self.org:
+        if organization:
             desc += (
-                f"\n[ORGANIZATION: {self.org.name}]\n"
-                f"Ethos: {self.org.ethos}\n"
-                f"Branding Rules: {', '.join(self.org.branding.design_dos)}\n"
+                f"\n[ORGANIZATION: {organization.name}]\n"
+                f"Ethos: {organization.ethos}\n"
+                f"Branding Rules: {', '.join(organization.branding.design_dos)}\n"
             )
 
         config_root = self.model_root.parent if self.model_root.name == "model" else self.model_root
-        agent = Agent(
+        build_agent = partial(Agent,
             seat_name,
             desc,
             {},
@@ -101,12 +114,12 @@ class PreviewBuilder:
             strict_config=False,
             config_root=config_root,
         )
-        return agent.get_compiled_prompt()
+        return await run_owned_thread(lambda: build_agent().get_compiled_prompt(), label="preview-prompt-compilation")
 
     async def build_issue_preview(self, issue_id: str, epic_name: str, department: str = "core") -> dict[str, Any]:
-        loader = ConfigLoader(self.model_root, department)
-        epic = loader.load_asset("epics", epic_name, EpicConfig)
-        team = loader.load_asset("teams", epic.team, TeamConfig)
+        loader = await self._loader(department)
+        epic = await self._asset(loader, "epics", epic_name, EpicConfig)
+        team = await self._asset(loader, "teams", epic.team, TeamConfig)
 
         # 1. Try to find by ID
         issue = next((i for i in epic.issues if i.id == issue_id), None)
@@ -129,9 +142,9 @@ class PreviewBuilder:
         }
 
     async def build_epic_preview(self, epic_name: str, department: str = "core") -> dict[str, Any]:
-        loader = ConfigLoader(self.model_root, department)
-        epic = loader.load_asset("epics", epic_name, EpicConfig)
-        team = loader.load_asset("teams", epic.team, TeamConfig)
+        loader = await self._loader(department)
+        epic = await self._asset(loader, "epics", epic_name, EpicConfig)
+        team = await self._asset(loader, "teams", epic.team, TeamConfig)
 
         preview = {"type": "epic", "id": epic_name, "display_name": epic.name, "sequencing": []}
 
@@ -150,8 +163,8 @@ class PreviewBuilder:
         return preview
 
     async def build_rock_preview(self, rock_name: str, department: str = "core") -> dict[str, Any]:
-        loader = ConfigLoader(self.model_root, department)
-        rock = loader.load_asset("rocks", rock_name, RockConfig)
+        loader = await self._loader(department)
+        rock = await self._asset(loader, "rocks", rock_name, RockConfig)
 
         preview = {
             "type": "rock",

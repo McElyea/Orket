@@ -30,6 +30,15 @@ coverage follow `docs/specs/MODEL_PROVIDER_TIMING.md`.
 4. `turn_non_progress`
    - `issue_id`, `session_id`, `turn_index`, `turn_trace_id`, `reason`
 
+Model selection emits `model_selection_decision` with `run_id`, `issue_id`,
+`role` and `decision`. The returned decision contains `role`, `selected_model`,
+`final_model`, `demoted`, and `reason`, plus `score`/`min_score` when a finite score
+was used. Optional `score_source` records `path`, `status`, `sha256`, and `error`.
+Status is `observed`, `partial`, `missing`, `unavailable`, or `invalid` when a report
+was configured. Digest binds the bytes read; it does not certify model compliance.
+Selection and demotion are advisory and precede provider execution, not successful
+inference or workload admission. Existing history without provenance is unchanged.
+
 ## Operator Driver
 
 API security events retain their existing fields and are authored from the

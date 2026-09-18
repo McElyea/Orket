@@ -25,7 +25,7 @@ class TurnPreparationInput:
     team: Any
     env: Any
     run_id: str
-    prompt_strategy_node: Any
+    model_selection: Any
     dependency_context: dict[str, Any]
     runtime_result: Any | None
     resume_mode: bool
@@ -75,7 +75,6 @@ class OrchestratorTurnPreparationService:
         resolve_prompt_patch: Callable[[], str],
         resolve_prompt_patch_label: Callable[[], str],
         close_provider_transport: Callable[[Any], Awaitable[None]],
-        select_prompt_strategy_model: Callable[..., str],
         should_suppress_reference_context_for_cards_runtime: Callable[[dict[str, Any] | None], bool],
     ) -> None:
         self.workspace_root = workspace_root
@@ -99,7 +98,6 @@ class OrchestratorTurnPreparationService:
         self.resolve_prompt_patch = resolve_prompt_patch
         self.resolve_prompt_patch_label = resolve_prompt_patch_label
         self.close_provider_transport = close_provider_transport
-        self.select_prompt_strategy_model = select_prompt_strategy_model
         self.should_suppress_reference_context_for_cards_runtime = (
             should_suppress_reference_context_for_cards_runtime
         )
@@ -176,6 +174,7 @@ class OrchestratorTurnPreparationService:
         data: TurnPreparationInput,
     ) -> TurnPreparationResult:
         provider_options = ModelClientOptions(temperature=float(data.env.temperature), timeout=float(data.env.timeout))
+        asset_models = {str(k): str(v) for k, v in (getattr(data.epic, "params", {}) or {}).get("model_overrides", {}).items()}
         is_review_turn = self.loop_policy_node.is_review_turn(data.issue.status)
         dispatch_target = await self._resolve_dispatch_target(data=data, is_review_turn=is_review_turn)
         if dispatch_target is None:
@@ -229,28 +228,15 @@ class OrchestratorTurnPreparationService:
             )
             return TurnPreparationResult(stop_execution=True)
 
-        selected_model = self.select_prompt_strategy_model(
-            prompt_strategy_node=data.prompt_strategy_node,
-            role=roles_to_load[0],
-            asset_config=data.epic,
-            override=data.model_override,
+        selection = data.model_selection.select(
+            roles_to_load[0], asset_model=asset_models.get(roles_to_load[0], ""), override=data.model_override,
         )
-        model_selection_decision = {}
-        if hasattr(data.prompt_strategy_node, "model_selector"):
-            selector = data.prompt_strategy_node.model_selector
-            if hasattr(selector, "get_last_selection_decision"):
-                model_selection_decision = dict(selector.get_last_selection_decision() or {})
-        if model_selection_decision:
-            log_event(
-                "model_selection_decision",
-                {
-                    "run_id": data.run_id,
-                    "issue_id": data.issue.id,
-                    "role": roles_to_load[0],
-                    "decision": model_selection_decision,
-                },
-                self.workspace_root,
-            )
+        selected_model = selection.final_model
+        log_event(
+            "model_selection_decision",
+            {"run_id": data.run_id, "issue_id": data.issue.id, "role": roles_to_load[0],
+             "decision": selection.to_payload()}, self.workspace_root,
+        )
 
         provider = self.model_clients.create_provider(selected_model, provider_options)
         client = self.model_clients.create_client(provider)
@@ -331,7 +317,7 @@ class OrchestratorTurnPreparationService:
             resume_mode=data.resume_mode,
             cards_runtime=cards_runtime,
             role_config=role_config,
-            prompt_strategy_node=data.prompt_strategy_node,
+            model_selection=data.model_selection,
         )
         return TurnPreparationResult(
             stop_execution=False,

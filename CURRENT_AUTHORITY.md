@@ -25,6 +25,15 @@ requires an explicit `0.7.0` contract delta.
 
 ## Current Canonical Paths
 
+`ModelSelectionService` captures selection environment and caller configuration,
+owns settings/score preparation, and returns immutable decisions. Prompt strategies
+receive `ModelSelectionInput`; application applies advisory compliance policy.
+Configured score reports retain status and a digest of the observed bytes.
+Preview coordination lives in `orket/application/services/preview_service.py`;
+the API host owns asynchronous preview/driver bootstrap and request-driver cleanup.
+Retired imports, default-settings scope and current verification limits:
+`docs/architecture/CONTRACT_DELTA_MODEL_SELECTION_CD_2026-09-17.md`.
+
 Decision-node registry construction lives in
 `orket/application/services/decision_node_registry.py` and captures selection settings
 once. Tool strategies return immutable tuples of known names; application composition

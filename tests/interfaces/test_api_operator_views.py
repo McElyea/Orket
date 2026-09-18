@@ -225,30 +225,12 @@ def test_system_operator_views_surface_provider_and_health_status(monkeypatch, t
     """Layer: integration. Verifies provider and system health operator views expose degraded-first status on the API."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
-    class _FakeSelector:
-        def __init__(self, organization, preferences, user_settings) -> None:
-            del organization, preferences, user_settings
-            self._decision = {}
+    from tests.helpers.model_selection import ModelSelectionFixture
 
-        def select(self, *, role: str) -> str:
-            self._decision = {
-                "selected_model": f"{role}-selected",
-                "final_model": f"{role}-fallback",
-                "demoted": True,
-                "reason": "fallback_profile",
-            }
-            return f"{role}-selected"
-
-        def get_last_selection_decision(self) -> dict[str, object]:
-            return dict(self._decision)
-
-        def get_dialect_name(self, final_model: str) -> str:
-            return f"dialect:{final_model}"
-
+    fixture = ModelSelectionFixture(environment={"ORKET_MODEL_CODER": "coder-selected"},
+        user_settings={"model_compliance_policy": {"blocked_models": ["coder-selected"], "fallback_model": "coder-fallback"}})
     monkeypatch.setattr(api_module, "_discover_active_roles", lambda _root: ["coder"])
-    monkeypatch.setattr(api_module, "load_user_preferences", lambda: {})
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
-    monkeypatch.setattr(api_module._runtime_context(), "model_selector_factory", _FakeSelector)
+    monkeypatch.setattr(api_module._runtime_context(), "model_selection", fixture)
 
     client = test_client
     provider_response = client.get("/v1/system/provider-status", headers={"X-API-Key": "test-key"})

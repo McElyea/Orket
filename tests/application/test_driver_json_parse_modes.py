@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from orket.driver import OrketDriver
+from tests.helpers.model_selection import prepared_model_selection
 
 
 def test_parse_model_plan_compatibility_mode_accepts_wrapped_json(monkeypatch):
@@ -29,16 +30,8 @@ def test_driver_defaults_to_strict_json_for_governed_prompting(monkeypatch):
     """Layer: contract. Verifies governed driver construction defaults to strict JSON parsing."""
 
     class _FakeProvider:
-        def __init__(self, model, temperature=0.1):  # type: ignore[no-untyped-def]
+        def __init__(self, model, temperature=0.1, environment=None):  # type: ignore[no-untyped-def]
             self.model = model
-
-    class _FakeSelector:
-        def __init__(self, organization=None):  # type: ignore[no-untyped-def]
-            _ = organization
-
-        def select(self, role, override=None):  # type: ignore[no-untyped-def]
-            _ = role
-            return override or "qwen3.5-coder"
 
     def _fake_load_engine_configs(self) -> None:
         self.skill = object()
@@ -49,7 +42,7 @@ def test_driver_defaults_to_strict_json_for_governed_prompting(monkeypatch):
         self.config_load_failures = []
 
     monkeypatch.setattr("orket.driver.LocalModelProvider", _FakeProvider)
-    monkeypatch.setattr("orket.orchestration.models.ModelSelector", _FakeSelector)
+    monkeypatch.setattr("orket.driver.prepare_bootstrap_model_selection", lambda **kwargs: prepared_model_selection())
     monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)
 
     driver = OrketDriver(model="qwen3.5-coder")
@@ -61,16 +54,8 @@ def test_driver_explicit_compatibility_override_survives_governed_prompting(monk
     """Layer: unit. Verifies explicit compatibility mode stays opt-in even on governed paths."""
 
     class _FakeProvider:
-        def __init__(self, model, temperature=0.1):  # type: ignore[no-untyped-def]
+        def __init__(self, model, temperature=0.1, environment=None):  # type: ignore[no-untyped-def]
             self.model = model
-
-    class _FakeSelector:
-        def __init__(self, organization=None):  # type: ignore[no-untyped-def]
-            _ = organization
-
-        def select(self, role, override=None):  # type: ignore[no-untyped-def]
-            _ = role
-            return override or "qwen3.5-coder"
 
     def _fake_load_engine_configs(self) -> None:
         self.skill = object()
@@ -81,7 +66,7 @@ def test_driver_explicit_compatibility_override_survives_governed_prompting(monk
         self.config_load_failures = []
 
     monkeypatch.setattr("orket.driver.LocalModelProvider", _FakeProvider)
-    monkeypatch.setattr("orket.orchestration.models.ModelSelector", _FakeSelector)
+    monkeypatch.setattr("orket.driver.prepare_bootstrap_model_selection", lambda **kwargs: prepared_model_selection())
     monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)
 
     driver = OrketDriver(model="qwen3.5-coder", json_parse_mode="compatibility")

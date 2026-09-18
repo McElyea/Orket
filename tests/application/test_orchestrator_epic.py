@@ -17,6 +17,7 @@ from orket.exceptions import CatastrophicFailure, ExecutionFailed
 from orket.runtime.config.contract_assets import DEFAULT_PROMPT_BUDGET_PATH
 from orket.schema import CardStatus, IssueConfig, SeatConfig, TeamConfig
 from tests.helpers.card_dispatch import install_dispatch_snapshot_stub
+from tests.helpers.model_selection import prepared_model_selection
 from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
 
@@ -770,7 +771,7 @@ async def test_execute_issue_turn_uses_custom_model_clients(orchestrator, monkey
             return SimpleNamespace()
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -803,7 +804,7 @@ async def test_execute_issue_turn_uses_custom_model_clients(orchestrator, monkey
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )
@@ -865,9 +866,9 @@ async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_str
     captured = {"override": None, "dialect_model": None}
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config, override=None):
-            captured["override"] = override
-            return override or "dummy-model"
+        def select_model(self, inputs):
+            captured["override"] = "strategy-called"
+            return "dummy-model"
 
         def select_dialect(self, model):
             captured["dialect_model"] = model
@@ -900,13 +901,13 @@ async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_str
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
         model_override="google/gemma-4-26b-a4b",
     )
 
-    assert captured["override"] == "google/gemma-4-26b-a4b"
+    assert captured["override"] is None
     assert captured["dialect_model"] == "google/gemma-4-26b-a4b"
     assert orch.model_clients.provider_model == "google/gemma-4-26b-a4b"
 
@@ -974,7 +975,7 @@ async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycle
             return _Client(provider, self)
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -1009,7 +1010,7 @@ async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycle
             env=env,
             run_id=f"run-{cycle}",
             active_build="build-1",
-            prompt_strategy_node=_PromptStrategy(),
+            model_selection=prepared_model_selection(_PromptStrategy()),
             executor=_Executor(),
             toolbox=SimpleNamespace(),
         )
@@ -1056,7 +1057,7 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
             return SimpleNamespace()
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -1110,7 +1111,7 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )
@@ -1135,7 +1136,7 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
     env = SimpleNamespace(temperature=0.1, timeout=30)
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -1215,7 +1216,7 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=executor,
         toolbox=SimpleNamespace(),
     )
@@ -1268,7 +1269,7 @@ async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_ex
     env = SimpleNamespace(temperature=0.1, timeout=30)
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -1325,7 +1326,7 @@ async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_ex
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=executor,
         toolbox=SimpleNamespace(),
     )
@@ -1366,7 +1367,7 @@ async def test_execute_issue_turn_marks_terminal_failure_for_repeated_guard_fing
     env = SimpleNamespace(temperature=0.1, timeout=30)
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -1423,7 +1424,7 @@ async def test_execute_issue_turn_marks_terminal_failure_for_repeated_guard_fing
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=executor,
         toolbox=SimpleNamespace(),
     )
@@ -1485,7 +1486,7 @@ async def test_execute_issue_turn_uses_prompt_resolver_when_policy_enabled(orche
             return SimpleNamespace()
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -1538,7 +1539,7 @@ async def test_execute_issue_turn_uses_prompt_resolver_when_policy_enabled(orche
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )
@@ -1592,7 +1593,7 @@ async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(or
             return SimpleNamespace()
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -1633,7 +1634,7 @@ async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(or
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )
@@ -1700,7 +1701,7 @@ async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime
             return SimpleNamespace()
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -1736,7 +1737,7 @@ async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )
@@ -1787,7 +1788,7 @@ async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchest
             return SimpleNamespace()
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -1839,7 +1840,7 @@ async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchest
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )
@@ -1900,7 +1901,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orch
             return SimpleNamespace()
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -1953,7 +1954,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orch
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )
@@ -2007,7 +2008,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orch
             return SimpleNamespace()
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -2045,7 +2046,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orch
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )
@@ -2098,7 +2099,7 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
             return ("read_file",)
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
+        def select_model(self, inputs):
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -2873,8 +2874,8 @@ async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(o
     )
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
-            assert role == "architect"
+        def select_model(self, inputs):
+            assert inputs.role == "architect"
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -2928,7 +2929,7 @@ async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(o
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )
@@ -2967,8 +2968,8 @@ async def test_execute_issue_turn_does_not_coerce_builder_seat_when_small_projec
     )
 
     class _PromptStrategy:
-        def select_model(self, role, asset_config):
-            assert role == "product_owner"
+        def select_model(self, inputs):
+            assert inputs.role == "product_owner"
             return "dummy-model"
 
         def select_dialect(self, model):
@@ -3023,7 +3024,7 @@ async def test_execute_issue_turn_does_not_coerce_builder_seat_when_small_projec
         env=env,
         run_id="run-1",
         active_build="build-1",
-        prompt_strategy_node=_PromptStrategy(),
+        model_selection=prepared_model_selection(_PromptStrategy()),
         executor=_Executor(),
         toolbox=SimpleNamespace(),
     )

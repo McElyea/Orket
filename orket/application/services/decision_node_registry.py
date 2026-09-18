@@ -136,14 +136,14 @@ class DecisionNodeRegistry:
             router_name = rules.get("router_node", "default")
         return self._router_nodes.get(router_name, self._router_nodes["default"])
 
-    def resolve_prompt_strategy(self, model_selector: Any, organization: Any = None) -> PromptStrategyNode:
+    def resolve_prompt_strategy(self, organization: Any = None) -> PromptStrategyNode:
         prompt_name = "default"
         rules = _process_rules(organization)
         if rules:
             prompt_name = rules.get("prompt_strategy_node", "default")
         if prompt_name == "default":
-            return DefaultPromptStrategyNode(model_selector)
-        return self._prompt_strategy_nodes.get(prompt_name, DefaultPromptStrategyNode(model_selector))
+            return DefaultPromptStrategyNode()
+        return self._prompt_strategy_nodes.get(prompt_name, DefaultPromptStrategyNode())
 
     def resolve_evaluator(self, organization: Any = None) -> EvaluatorNode:
         evaluator_name = "default"

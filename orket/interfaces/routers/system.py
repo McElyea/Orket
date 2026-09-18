@@ -37,9 +37,7 @@ def build_system_router(
     now_local: Callable[[], Any],
     get_metrics_snapshot: Callable[[], dict[str, Any]],
     log_event: Callable[[str, dict[str, Any], Path], None],
-    model_selector_factory: Callable[[Any, dict[str, Any], dict[str, Any]], Any],
-    load_user_preferences: Callable[[], dict[str, Any]],
-    load_user_settings: Callable[[], dict[str, Any]],
+    model_selection_getter: Callable[[], Any],
     parse_roles_filter: Callable[[str | None], list[str]],
     discover_active_roles: Callable[[Path], list[str]],
     discover_team_topology: Callable[[Path], list[dict[str, Any]]],
@@ -141,25 +139,25 @@ def build_system_router(
         engine = engine_getter()
         role_filter = parse_roles_filter(roles)
         active_roles = role_filter or await asyncio.to_thread(discover_active_roles, project_root / "model")
-        preferences = await asyncio.to_thread(load_user_preferences)
-        user_settings = await asyncio.to_thread(load_user_settings)
-        selector = model_selector_factory(engine.org, preferences, user_settings)
+        selector = await model_selection_getter().prepare(engine.org)
 
         items: list[dict[str, Any]] = []
         for role in active_roles:
-            selected_model = selector.select(role=role)
-            decision = selector.get_last_selection_decision()
-            final_model = str(decision.get("final_model") or selected_model)
+            selected = selector.select(role=role)
+            decision = selected.to_payload()
+            final_model = selected.final_model
             items.append(
                 {
                     "role": role,
-                    "selected_model": str(decision.get("selected_model") or selected_model),
+                    "selected_model": selected.selected_model,
                     "final_model": final_model,
                     "demoted": bool(decision.get("demoted", False)),
                     "reason": str(decision.get("reason") or "unknown"),
-                    "dialect": selector.get_dialect_name(final_model),
+                    "dialect": selector.select_dialect(final_model),
                 }
             )
+            if "score_source" in decision:
+                items[-1]["score_source"] = decision["score_source"]
         return {
             "items": items,
             "count": len(items),
@@ -242,16 +240,19 @@ def build_system_router(
         runtime_host = runtime_host_getter()
         target = api_runtime_node.resolve_preview_target(path, issue_id)
         invocation = api_runtime_node.resolve_preview_invocation(target, issue_id)
-        builder = runtime_host.create_preview_builder(project_root_getter() / "model")
+        builder = await runtime_host.create_preview_builder(project_root_getter() / "model")
         return await invoke_async_method(builder, invocation, "preview")
 
     @router.post("/system/chat-driver")
     async def chat_driver(req: ChatDriverRequest) -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
         runtime_host = runtime_host_getter()
-        driver = runtime_host.create_chat_driver()
-        invocation = api_runtime_node.resolve_chat_driver_invocation(req.message)
-        response = await invoke_async_method(driver, invocation, "chat driver")
-        return {"response": response}
+        driver = await runtime_host.create_chat_driver()
+        try:
+            invocation = api_runtime_node.resolve_chat_driver_invocation(req.message)
+            response = await invoke_async_method(driver, invocation, "chat driver")
+            return {"response": response}
+        finally:
+            await runtime_host.close_chat_driver(driver)
 
     return router

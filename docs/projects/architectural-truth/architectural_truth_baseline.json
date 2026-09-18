@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-17T23:15:57.354872Z",
+  "generated_at": "2026-09-18T01:00:39.853637Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -137,7 +137,7 @@
     "root": "C:\\Source\\Orket-architectural-truth",
     "policy": {
       "path": "model/core/contracts/dependency_direction_policy.json",
-      "sha256": "a4d9bdad661e289e3ebd20bc396c5aa0f8275097aa2196040ee5f2e63c5b76c1",
+      "sha256": "461022d566b484bb5df62f9574362511f429bb4fe32e3ee0464282b63407974a",
       "contract": {
         "schema_version": "2.0.0",
         "policy_id": "dependency_direction_policy",
@@ -174,7 +174,6 @@
           "orket.organization_loop": "application",
           "orket.platform": "application",
           "orket.policy": "application",
-          "orket.preview": "adapters",
           "orket.project_paths": "adapters",
           "orket.quickstart": "interfaces",
           "orket.reforger": "application",
@@ -246,6 +245,7 @@
         "decision_core_contracts": [
           "orket.core.cards_runtime_contract",
           "orket.core.contracts.decision_inputs",
+          "orket.core.contracts.model_selection",
           "orket.exceptions",
           "orket.schema"
         ],
@@ -306,7 +306,7 @@
           "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 1010,
+      "files_scanned": 1014,
       "scan_roots": [
         "orket"
       ],
@@ -315,37 +315,37 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 238
+          "count": 235
         },
         {
           "source": "adapters",
           "target": "application",
-          "count": 16
+          "count": 13
         },
         {
           "source": "adapters",
           "target": "core",
-          "count": 137
+          "count": 134
         },
         {
           "source": "application",
           "target": "adapters",
-          "count": 312
+          "count": 318
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1523
+          "count": 1527
         },
         {
           "source": "application",
           "target": "core",
-          "count": 686
+          "count": 690
         },
         {
           "source": "application",
           "target": "decision_nodes",
-          "count": 4
+          "count": 5
         },
         {
           "source": "application",
@@ -355,12 +355,12 @@
         {
           "source": "core",
           "target": "core",
-          "count": 139
+          "count": 141
         },
         {
           "source": "decision_nodes",
           "target": "core",
-          "count": 6
+          "count": 8
         },
         {
           "source": "decision_nodes",
@@ -542,7 +542,7 @@
           "sites": [
             {
               "path": "orket/driver.py",
-              "line": 12,
+              "line": 14,
               "kind": "from"
             }
           ]
@@ -757,39 +757,6 @@
           ]
         },
         {
-          "source": "orket.preview",
-          "target": "orket.agents.agent",
-          "sites": [
-            {
-              "path": "orket/preview.py",
-              "line": 8,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.preview",
-          "target": "orket.orchestration.models",
-          "sites": [
-            {
-              "path": "orket/preview.py",
-              "line": 74,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.preview",
-          "target": "orket.runtime.__init__",
-          "sites": [
-            {
-              "path": "orket/preview.py",
-              "line": 11,
-              "kind": "from"
-            }
-          ]
-        },
-        {
           "source": "orket.runtime.policy.composition",
           "target": "orket.interfaces",
           "sites": [
@@ -914,6 +881,7 @@
             "orket.application.services.outward_model_admission_service",
             "orket.application.services.outward_model_tool_call_service",
             "orket.application.services.outward_run_execution_service",
+            "orket.application.services.preview_service",
             "orket.application.services.protocol_replay_service",
             "orket.application.services.run_ledger_summary_projection",
             "orket.application.services.runtime_policy",
@@ -953,10 +921,8 @@
             "orket.interfaces.routers.runs",
             "orket.interfaces.routers.sessions",
             "orket.orchestration.engine",
-            "orket.orchestration.models",
             "orket.orchestration.orchestration_config",
             "orket.organization_loop",
-            "orket.preview",
             "orket.runtime.__init__",
             "orket.runtime.artifact_provenance_block_policy",
             "orket.runtime.canonical_examples_library",
@@ -1222,7 +1188,7 @@
         "id": "AT-EX-007",
         "area": "decision-node-explicit-inputs",
         "status": "active_transition",
-        "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Mutable prompt-selector/planning/routing context and ambient prompt policy remain outside immutable snapshots.",
+        "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Model recommendations now use frozen values with application-owned settings/score preparation. Mutable planning/routing context and ambient prompt policy remain outside immutable snapshots.",
         "removal_condition": "All decision nodes receive immutable resolved configuration and have no environment or runtime-state reach-through.",
         "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
         "owner": "Orket Core"
@@ -1312,13 +1278,13 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 4940,
-    "missing_layer_total": 3356,
+    "tests_total": 4953,
+    "missing_layer_total": 3352,
     "by_layer": {
-      "unlabeled": 3356,
-      "integration": 735,
+      "unlabeled": 3352,
+      "integration": 750,
       "unit": 167,
-      "contract": 671,
+      "contract": 673,
       "live_truth": 11
     },
     "missing_layers_sample": [
@@ -1923,7 +1889,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3256
+    "missing_layers_omitted": 3252
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1948,17 +1914,17 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1010,
+    "python_files_scanned": 1014,
     "files_over_400_total": 68,
-    "functions_over_70_total": 222,
+    "functions_over_70_total": 221,
     "largest_files": [
       {
         "path": "orket/interfaces/api.py",
-        "lines": 1774
+        "lines": 1768
       },
       {
         "path": "orket/application/workflows/orchestrator_ops.py",
-        "lines": 1689
+        "lines": 1661
       },
       {
         "path": "orket/interfaces/orket_bundle_cli.py",
@@ -1989,16 +1955,16 @@
         "lines": 693
       },
       {
-        "path": "orket/decision_nodes/builtins.py",
-        "lines": 688
-      },
-      {
         "path": "orket/runtime/evidence/run_evidence_graph_rendering.py",
         "lines": 687
       },
       {
         "path": "orket/interfaces/prompts_cli.py",
         "lines": 677
+      },
+      {
+        "path": "orket/decision_nodes/builtins.py",
+        "lines": 670
       },
       {
         "path": "orket/application/services/runtime_verifier.py",
@@ -2160,7 +2126,7 @@
         "path": "orket/interfaces/routers/system.py",
         "line": 30,
         "name": "build_system_router",
-        "lines": 228
+        "lines": 229
       },
       {
         "path": "orket/interfaces/api_generation.py",
@@ -2175,14 +2141,8 @@
         "lines": 218
       },
       {
-        "path": "orket/application/workflows/orchestrator_ops.py",
-        "line": 894,
-        "name": "execute_epic",
-        "lines": 212
-      },
-      {
         "path": "orket/decision_nodes/builtins.py",
-        "line": 268,
+        "line": 250,
         "name": "generate_compose_file",
         "lines": 212
       },
@@ -2196,6 +2156,12 @@
         "path": "orket/application/services/prompt_linter.py",
         "line": 81,
         "name": "lint_prompt_asset",
+        "lines": 209
+      },
+      {
+        "path": "orket/application/workflows/orchestrator_ops.py",
+        "line": 870,
+        "name": "execute_epic",
         "lines": 209
       },
       {
@@ -2215,7 +2181,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 577,
+    "scanned_files": 579,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -2326,45 +2292,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-14T20:47:44.823772Z",
-      "changed": true,
-      "before_digest": "sha256:a9a9fb1a21e822b962758be0013a5679bab306c8de92215d350be2deeea7c1ba",
-      "after_digest": "sha256:afb336162a6dd0e0f44011393d80efcab3718a18ef33e6a721a030b38d402b95",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 36,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 36,
-        "churn_ratio": 0.010912,
-        "sample_paths": [
-          "$.dependency_graph.layer_edges[0].count",
-          "$.dependency_graph.layer_edges[1].count",
-          "$.dependency_graph.layer_edges[4].count",
-          "$.dependency_graph.layer_edges[5].count",
-          "$.dependency_graph.module_count",
-          "$.dependency_graph.scan.files_scanned",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files",
-          "$.size_inventory.functions_over_70_total",
-          "$.size_inventory.largest_files[14].lines",
-          "$.size_inventory.largest_files[14].path",
-          "$.size_inventory.largest_files[15].lines",
-          "$.size_inventory.largest_files[15].path",
-          "$.size_inventory.largest_files[16].path",
-          "$.size_inventory.largest_files[17].lines",
-          "$.size_inventory.largest_files[17].path",
-          "$.size_inventory.largest_files[18].lines",
-          "$.size_inventory.largest_files[18].path",
-          "$.size_inventory.largest_files[19].lines",
-          "$.size_inventory.largest_files[19].path"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-14T21:24:03.705924Z",
       "changed": true,
@@ -3235,6 +3162,45 @@
           "$.test_taxonomy.missing_layer_total",
           "$.test_taxonomy.missing_layers_omitted",
           "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T01:00:39.858681Z",
+      "changed": true,
+      "before_digest": "sha256:9ec22c096cfef8b3f957467ab197d4507df5716775255a29c6a2277cbd8a21b7",
+      "after_digest": "sha256:66bc5f347628dce9241e21260f1d1dffd3a78b9c5a1a78439d9f8bf137203dbc",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 5,
+        "changed_paths": 260,
+        "initial_write": false,
+        "paths_total_previous": 3430,
+        "paths_total_current": 3389,
+        "paths_total_reference": 3430,
+        "churn_paths": 266,
+        "churn_ratio": 0.077551,
+        "sample_paths": [
+          "$.architecture_exceptions.exceptions[5].reason",
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[1].count",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[6].count",
+          "$.dependency_graph.observed.layer_edges[8].count",
+          "$.dependency_graph.observed.layer_edges[9].count",
+          "$.dependency_graph.policy.contract.classifications.orket.preview",
+          "$.dependency_graph.policy.contract.decision_core_contracts[2]",
+          "$.dependency_graph.policy.contract.decision_core_contracts[3]",
+          "$.dependency_graph.policy.contract.decision_core_contracts",
+          "$.dependency_graph.policy.sha256",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[33]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[34]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[35]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[36]"
         ]
       }
     }

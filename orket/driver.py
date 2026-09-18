@@ -3,12 +3,14 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.adapters.tools.families.reforger_tools import ReforgerTools
+from orket.application.services.model_selection_service import prepare_bootstrap_model_selection
 from orket.driver_support_cli import DriverCliMixin
 from orket.driver_support_conversation import DriverConversationMixin
 from orket.driver_support_resources import DriverResourceMixin
@@ -47,7 +49,9 @@ class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
         strict_config: bool | None = None,
         json_parse_mode: str | None = None,
         project_root: Path | None = None,
+        environment: Mapping[str, str] | None = None,
     ) -> None:
+        captured_environment = dict(os.environ if environment is None else environment)
         self.project_root = Path(project_root).resolve() if project_root is not None else _default_project_root()
         self.model_root = default_model_root(self.project_root)
         self.workspace_root = default_workspace_root(self.project_root)
@@ -62,19 +66,18 @@ class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
             with contextlib.suppress(ValueError, FileNotFoundError):
                 self.org = OrganizationConfig.model_validate_json(self.fs.read_file_sync(str(org_path)))
 
-        from orket.orchestration.models import ModelSelector
-
-        selector = ModelSelector(organization=self.org)
-        selected_model = selector.select(role="operations_lead", override=model)
-
-        self.provider = provider or LocalModelProvider(model=selected_model, temperature=0.1)
+        if provider is None:
+            selection = prepare_bootstrap_model_selection(environment=captured_environment, organization=self.org)
+            selected_model = selection.select("operations_lead", override=model).final_model
+        self.provider = provider
+        self._configured_model_name = selected_model if provider is None else provider.model
         self.skill: SkillConfig | None = None
         self.dialect: DialectConfig | None = None
-        strict_from_env = str(os.getenv("ORKET_DRIVER_STRICT_CONFIG", "")).strip().lower()
+        strict_from_env = str(captured_environment.get("ORKET_DRIVER_STRICT_CONFIG", "")).strip().lower()
         self.strict_config_mode = (
             strict_config if strict_config is not None else strict_from_env in {"1", "true", "yes", "on"}
         )
-        parse_mode_from_env = str(os.getenv("ORKET_DRIVER_JSON_PARSE_MODE", "")).strip().lower()
+        parse_mode_from_env = str(captured_environment.get("ORKET_DRIVER_JSON_PARSE_MODE", "")).strip().lower()
         self.json_parse_mode = "compatibility"
         self.prompting_mode = "fallback"
         self.config_degraded = False
@@ -85,6 +88,9 @@ class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
             explicit_mode=json_parse_mode,
             env_mode=parse_mode_from_env,
         )
+        if self.provider is None:
+            self.provider = LocalModelProvider(model=self._configured_model_name, temperature=0.1,
+                                               environment=captured_environment)
 
     def _operator_workspace_root(self) -> Path:
         return Path(getattr(self, "workspace_root", _default_workspace_root()))
@@ -125,7 +131,7 @@ class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
             self.config_load_failures.append(failure)
             log_event("driver_config_dependency_failed", failure, workspace_root, role="DRIVER")
 
-        model_name = self.provider.model.lower()
+        model_name = (self.provider.model if self.provider is not None else self._configured_model_name).lower()
         if "deepseek" in model_name:
             family = "deepseek-r1"
         elif "llama" in model_name:

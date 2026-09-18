@@ -83,7 +83,7 @@ from orket.kernel.v1.outbound_policy_gate import (
 )
 from orket.logging import log_event, subscribe_to_events, unsubscribe_from_events
 from orket.runtime.cors_config import resolve_cors_config
-from orket.settings import load_user_preferences, load_user_settings, save_user_settings
+from orket.settings import load_user_settings, save_user_settings
 from orket.streaming import CommitIntent, InteractionManager, StreamBus
 from orket.workloads import is_builtin_workload, run_builtin_workload, validate_builtin_workload_start
 
@@ -823,13 +823,7 @@ v1_router.include_router(
         now_local=lambda: _runtime_context().system_queries.local_now(),
         get_metrics_snapshot=get_metrics_snapshot,
         log_event=lambda name, payload, workspace: log_event(name, payload, workspace),
-        model_selector_factory=lambda organization, preferences, user_settings: _runtime_context().model_selector_factory(
-            organization=organization,
-            preferences=preferences,
-            user_settings=user_settings,
-        ),
-        load_user_preferences=lambda: load_user_preferences(),
-        load_user_settings=lambda: load_user_settings(),
+        model_selection_getter=lambda: _runtime_context().model_selection,
         parse_roles_filter=lambda roles: _parse_roles_filter(roles),
         discover_active_roles=lambda root: _discover_active_roles(root),
         discover_team_topology=lambda root: _discover_team_topology(root),
