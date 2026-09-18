@@ -21,7 +21,7 @@ def test_main_logs_crash_and_exits(monkeypatch: pytest.MonkeyPatch, capsys: pyte
         captured["exc"] = exc
         captured["tb"] = tb
 
-    monkeypatch.setattr("orket.runtime.create_cli_runtime", _fake_create_cli_runtime)
+    monkeypatch.setattr("orket.interfaces.runtime_entrypoints.create_cli_runtime", _fake_create_cli_runtime)
     monkeypatch.setattr("orket.logging.log_crash", _fake_log_crash)
 
     with pytest.raises(SystemExit) as excinfo:

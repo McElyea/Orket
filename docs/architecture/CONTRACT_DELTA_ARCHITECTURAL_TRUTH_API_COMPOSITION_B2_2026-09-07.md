@@ -93,3 +93,11 @@ Status: Implemented B2 checkpoint
 - Downstream impact: code importing `orket.interfaces.api.app` must migrate to
   `orket.runtime.create_api_app(...)` or `orket.interfaces.api.create_api_app(...)`
   and retain the returned FastAPI instance.
+
+## Subsequent factory migration (0.6.19)
+
+The runtime transport-factory import paths above describe the original checkpoint.
+Current callers use `orket.interfaces.runtime_entrypoints`, preserving application
+capability admission. See
+`docs/architecture/CONTRACT_DELTA_INTERFACE_COMPOSITION_C_2026-09-18.md`.
+Historical release proof is not reinterpreted as proof of the new package.

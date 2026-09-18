@@ -16,7 +16,8 @@ from orket.application.services.governed_agent_inspection_service import Governe
 from orket.core.contracts.governed_agent_ports import GovernedAgentInvocationOutcome
 from orket.core.domain.governed_agent_continuation import decide_governed_agent_continuation
 from orket.interfaces.orket_bundle_cli import main
-from orket.runtime import CompositionConfig, create_api_app
+from orket.interfaces.runtime_entrypoints import create_api_app
+from orket.runtime import CompositionConfig
 from orket_extension_sdk.agent_fixtures import agent_iteration_result, prefixed_digest
 from tests.interfaces.test_governed_agent_api import _configure_api, _headers
 from tests.interfaces.test_governed_agent_cli import _decision_inputs

@@ -4,14 +4,15 @@ from pathlib import Path
 
 import uvicorn
 
-from orket.interfaces.server_launcher import LauncherConfigError
-from orket.interfaces.server_launcher import build_api_server_arg_parser
-from orket.interfaces.server_launcher import resolve_api_launch_settings_from_namespace
-from orket.runtime import CompositionConfig
-from orket.runtime import create_api_app
 import orket.settings as settings_module
+from orket.interfaces.runtime_entrypoints import create_api_app
+from orket.interfaces.server_launcher import (
+    LauncherConfigError,
+    build_api_server_arg_parser,
+    resolve_api_launch_settings_from_namespace,
+)
+from orket.runtime import CompositionConfig
 from orket.utils import get_reload_excludes
-
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 

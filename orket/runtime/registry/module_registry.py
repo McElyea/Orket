@@ -61,6 +61,9 @@ class ModuleResolutionError(Exception):
     message: str
     detail: dict[str, object]
 
+    def __str__(self) -> str:
+        return f"{self.code}: {self.message}"
+
     def to_payload(self) -> dict[str, object]:
         return {
             "ok": False,

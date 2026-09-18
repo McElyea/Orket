@@ -5,7 +5,8 @@ from functools import partial
 
 import pytest
 
-from orket.runtime import CompositionConfig, create_api_app
+from orket.interfaces.runtime_entrypoints import create_api_app
+from orket.runtime import CompositionConfig
 from tests.integration.test_api_active_request_ownership import serving_api
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]

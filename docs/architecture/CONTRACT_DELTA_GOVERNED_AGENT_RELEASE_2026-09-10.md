@@ -55,3 +55,11 @@ Minor bumps: core 0.6.0, SDK 0.6.0, external 0.2.0, effective 2026-09-10.
 Compatibility is breaking for all audiences; migration is required as above.
 The completed project is the governed continuous-agent lane. Detailed proof and
 release artifact identities live in `docs/releases/0.6.0/PROOF_REPORT.md`.
+
+## Subsequent factory migration (0.6.19)
+
+The runtime transport-factory import paths above describe the original checkpoint.
+Current callers use `orket.interfaces.runtime_entrypoints`, preserving application
+capability admission. See
+`docs/architecture/CONTRACT_DELTA_INTERFACE_COMPOSITION_C_2026-09-18.md`.
+Historical release proof is not reinterpreted as proof of the new package.

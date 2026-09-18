@@ -83,6 +83,13 @@ fixed ZIP metadata. Both Quality jobs enforce source/archive agreement.
 - Governed-run deterministic demo: `orket demo governed-run`
 - Test command: `python -m pytest -q`
 
+Embedded callers import `create_api_app`, `create_cli_runtime` and
+`create_webhook_app` from `orket.interfaces.runtime_entrypoints`. Keep its
+module-profile authorization gate; `CompositionConfig` and `create_engine` remain
+application exports through `orket.runtime`. The former runtime transport-factory
+exports are retired in 0.6.19. `API_RUNTIME_LIFECYCLE.md` documents the distinction
+between separate API owners and selected persistent stores.
+
 Handled fatal outcomes from `orket runtime` must return a nonzero process status. The
 governed-run demo default is package-owned and must not depend on the caller's current
 working directory.

@@ -10,7 +10,8 @@ import pytest
 
 from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY, BuiltInConnectorRegistry
 from orket.application.services.outward_connector_service import OutwardConnectorService
-from orket.runtime import CompositionConfig, create_api_app
+from orket.interfaces.runtime_entrypoints import create_api_app
+from orket.runtime import CompositionConfig
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 

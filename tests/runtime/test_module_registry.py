@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
+from orket.interfaces.runtime_entrypoints import create_api_app
 from orket.runtime import module_registry
-from orket.runtime.composition import CompositionConfig, create_api_app, create_engine
+from orket.runtime.policy.composition import CompositionConfig, create_engine
+
+pytestmark = pytest.mark.unit
 
 
 def test_resolve_module_profile_defaults_to_developer_local(monkeypatch):
@@ -50,7 +55,7 @@ def test_create_engine_uses_factory_with_engine_profile(monkeypatch):
         )
     )
     assert isinstance(engine, _FakeEngine)
-    assert str(captured["workspace"]).endswith("workspace\\default")
+    assert captured["workspace"] == (Path.cwd() / "workspace/default").resolve()
 
 
 def test_create_api_app_rejects_engine_only_profile():

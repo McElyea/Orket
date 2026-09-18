@@ -5,7 +5,8 @@ import asyncio
 
 import pytest
 
-from orket.runtime import CompositionConfig, create_api_app
+from orket.interfaces.runtime_entrypoints import create_api_app
+from orket.runtime import CompositionConfig
 from tests.helpers.outward_authorization import boundary as boundary
 from tests.integration.test_api_shutdown_ownership import accepts_connections, listener
 

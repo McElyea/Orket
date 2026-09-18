@@ -14364,3 +14364,145 @@ is `final/local-checkpoint.json`. No checkpoint was created from the rejected in
 - `tests/platform/test_hedged.py`
 - `tests/platform/test_leases.py`
 - `tests/utils.py`
+
+### Interface composition and authority cycle: 2026-09-18 (0.6.19 checkpoint)
+
+Previous goal turn: progress, locally committed and verified 0.6.18. Reentry
+verifies clean HEAD `7bcbc610fd7013eba028f251edcaf4e2d807c057`, its annotated tag,
+271 directly bound evidence files, original coordinator failures and corrected
+source/native cohorts, neighboring worktrees and the unchanged handoff. Snapshot:
+`.tmp/c-policy-composition/session-state.json`. No old receipt was resealed.
+
+The current C assessment targets application-to-interface composition. Move API,
+CLI and webhook factories to `orket.interfaces.runtime_entrypoints`, retaining
+application capability authorization and engine/configuration exports. Migrate
+concrete callers without a forwarding shim. The candidate graph removes all four
+targeted forbidden pairs and the cross-layer authority cycle; 25 forbidden pairs,
+ten analysis errors and zero unknown modules remain. This is structural evidence,
+not full runtime or C/D acceptance. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_INTERFACE_COMPOSITION_C_2026-09-18.md`.
+
+The unchanged source preflight passes 39 selected factory/launcher cases. The
+first new candidate run retains 48 passes and two failures. One new API test
+incorrectly expected 401; the existing authentication contract returns 403 with
+`Could not validate credentials`. The CLI failure exposes an existing diagnostic
+defect: installed 0.6.18 refuses a disabled profile with exit 1 but prints an empty
+exception message. `cli-error-before/` proves this against the unchanged installed
+package; `entrypoints/` retains original inputs, logs and fixtures. The candidate
+adds explicit code/message rendering without changing capability admission or
+structured payloads. The new API expectation follows the existing contract.
+
+The next run retains 49 passes and one remaining fixture failure: the new API
+probe expected database files after health-only requests, although runtime storage
+is initialized on use. The probe now performs real authenticated card writes,
+reads and cross-app absence checks before checking per-root databases. Runtime
+initialization behavior is unchanged; `corrected/` retains the original absence
+observation and test inputs.
+
+The existing engine-construction unit assertion used a Windows-only path suffix.
+Its platform-neutral replacement compares the complete resolved path. Existing
+webhook global state, settings-read ownership, historical host-clock diagnosis,
+remaining C/D/E/CAP and final full-matrix/whole-lane acceptance remain open.
+Commits remain local during 10 AM-6 PM America/Denver; no push is performed.
+
+The persistence follow-up retained another 49-pass/one-failure run (`persistence/`):
+the new card fixture omitted required fields and received 422. Completing those
+fields exposed a mistaken isolation expectation in `persistence-complete/`.
+Different project roots do not select different runtime stores: the existing
+`RUNTIME_STORE_BINDING.md` contract resolves the default database against the
+invocation directory. `storage-before/` proves real writes and cross-reads through
+unchanged installed 0.6.18: shared defaults return 200; explicitly distinct durable
+roots return 404. The only old-package probe adaptation is its factory import.
+The candidate now tests both declared bindings and documents this limit. No
+storage behavior or accepted invariant changed, and the earlier failures remain
+retained. The blank CLI diagnostic remains the independently reproduced defect.
+
+#### Verified 0.6.19 scope
+
+The final 163-case selection covers the twelve new fresh-process entrypoint
+controls, existing module/factory/launcher behavior and every migrated API
+lifetime, graph, extension generation, replay/history and filesystem caller.
+Source proof uses a fresh environment with the new 0.6.19 installed metadata;
+the native cells run the same case identities outside the checkout against the
+new wheel. Actual API authentication/card writes/readback, default sharing and
+explicit store isolation, teardown, CLI refusal diagnostics and signed ignored
+webhook admission pass. Existing controlled regressions keep their earlier claim
+limits; the signed ignored event sends no outbound Gitea request.
+
+| Cell | Cases | Failures/errors/skips | JUnit seconds |
+|---|---:|---|---:|
+| Source Windows Python 3.11 | 163 | 0/0/0 | 154.114 |
+| Installed policy-composition-win-py311 | 163 | 0/0/0 | 158.776 |
+| Installed policy-composition-linux-py311 | 163 | 0/0/0 | 90.673 |
+
+Installed proof additionally verifies wheel identities, dependency checks,
+actual imported package origins (901, 901),
+fresh valid/malformed public CLI flows, ToolGate audit and no surviving owned
+children or harness-root databases. Package parity binds
+1027 core Python sources and
+1042 wheel package files. All original
+counterexamples and corrected fixture assumptions remain retained and hash-checked.
+
+- Wheel SHA-256: `b93fb3f073c765b75ef09efaf0e4165816e28cc2017a1e9826b8d36e68507720`.
+- Source archive SHA-256: `634f7cef9ddc2236a3494bae05fd7ae5a1ebaf00f708de22adf4cd5d0c3f6b93`.
+- Manifest: `.tmp/c-policy-composition/manifest.json`, SHA-256 `2c7e16fe29481287f833895015b61581f837c3fbd233e77fec7840d705ab9724`.
+- Native audit: `.tmp/c-policy-composition/native-audit.json`, SHA-256 `1c6c782787e1a2e8f92ca2eb0a540e26399a0c251cd71340651b0ac850e4f89b`.
+- Source proof: `.tmp/c-policy-composition/source-final/report.json`, SHA-256 `6fe2d0b4f0818d7116ffba549c7d6780fc4f11aa6435a3c8f1da9393abb60d28`.
+
+The refreshed structural graph reports 1,027 modules, 3,253 import sites,
+25 forbidden source/target pairs, zero authority cycles, ten analysis errors
+and zero unknown modules. Four forbidden composition pairs are removed and none
+added; collection succeeds but dependency acceptance and `release_ready` remain
+false. Repository structural checks, Ruff, documentation hygiene, release metadata
+and staged whitespace are recorded in `review.json` and the local checkpoint.
+AC-01/03/04/05 remain partial for the explicit existing C/D debt; no full
+conformance is claimed.
+
+No fresh Python 3.12/full-suite matrix, provider flow, outbound Gitea operation,
+hosted Quality or whole-lane acceptance is established by this checkpoint.
+Remaining work includes the 25 dependency pairs, ten analysis errors, ambient
+settings/initialization ownership and global webhook lifetime, later E/CAP gates
+and final platform/provider/coverage/release proof. The historical Linux 3.11
+lease timestamp monotonicity cause is still unestablished; passing or ordered-clock
+controls do not establish its repair. Continue the full authorized plan from this
+checkpoint; do not close or archive the lane without explicit acceptance.
+Local commit and annotated `v0.6.19` are bound by
+`.tmp/c-policy-composition/local-checkpoint.json`; no GitHub push is performed.
+
+#### Exact 0.6.19 checkpoint files
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/CONTRIBUTOR.md`
+- `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_API_COMPOSITION_B2_2026-09-07.md`
+- `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_RELEASE_2026-09-10.md`
+- `docs/architecture/CONTRACT_DELTA_INTERFACE_COMPOSITION_C_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/README.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/API_RUNTIME_LIFECYCLE.md`
+- `orket/cli.py`
+- `orket/interfaces/runtime_entrypoints.py`
+- `orket/runtime/__init__.py`
+- `orket/runtime/policy/composition.py`
+- `orket/runtime/registry/module_registry.py`
+- `pyproject.toml`
+- `server.py`
+- `tests/application/test_main_crash_handler.py`
+- `tests/helpers/runtime_entrypoints_probe.py`
+- `tests/integration/test_api_active_request_ownership.py`
+- `tests/integration/test_api_shutdown_ownership.py`
+- `tests/integration/test_api_shutdown_timeout_race.py`
+- `tests/integration/test_api_stream_request_ownership.py`
+- `tests/integration/test_api_workspace_lifetime.py`
+- `tests/integration/test_execution_graph_acceptance.py`
+- `tests/integration/test_extension_generation_api_lifetime.py`
+- `tests/integration/test_governed_agent_replay_evidence.py`
+- `tests/integration/test_governed_agent_terminal_history.py`
+- `tests/integration/test_outward_filesystem_lifetime.py`
+- `tests/integration/test_runtime_entrypoints.py`
+- `tests/runtime/test_module_registry.py`

@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-18T18:35:37.317454+00:00",
+  "generated_at": "2026-09-18T19:13:10.908334+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1901,7 +1901,7 @@
       },
       "orket.cli": {
         "path": "orket/cli.py",
-        "sha256": "be3076415970ff7c886334187e9d2ec9217841907dafc0545264b6e1eea843d5"
+        "sha256": "3d6219cca19941e62ba4784ddb21b7ee0fe7262e4f0c7b584fb733d28c7a9863"
       },
       "orket.cli.setup_wizard": {
         "path": "orket/cli/setup_wizard.py",
@@ -2611,6 +2611,10 @@
         "path": "orket/interfaces/routers/system.py",
         "sha256": "8bfe0b393f0df5347694cbe8170e746947cb8b81ece9a2dfe1c3c88b2afa1fd7"
       },
+      "orket.interfaces.runtime_entrypoints": {
+        "path": "orket/interfaces/runtime_entrypoints.py",
+        "sha256": "c49936cc70ed5dca2096e55970a41a9db61263ee3da77bc17476e92b3ca2befd"
+      },
       "orket.interfaces.runtime_store_cli": {
         "path": "orket/interfaces/runtime_store_cli.py",
         "sha256": "0bc5ea68034adee85c9af365978156cc08d6bc2859b44e8caa12eba061334f69"
@@ -3097,7 +3101,7 @@
       },
       "orket.runtime.__init__": {
         "path": "orket/runtime/__init__.py",
-        "sha256": "2d102e3fd940bd3aa316a421054b6ac8a2d7605308404517213fb55f3b302503"
+        "sha256": "ce86bdebf31aca85d3586d19206afc836d8319ab4692336ba572d92925f0ac07"
       },
       "orket.runtime.artifact_provenance_block_policy": {
         "path": "orket/runtime/artifact_provenance_block_policy.py",
@@ -3589,7 +3593,7 @@
       },
       "orket.runtime.policy.composition": {
         "path": "orket/runtime/policy/composition.py",
-        "sha256": "e8b1680e2ec46269ff6efbacd0fc56c967276604114f57573e529c32b88ded3c"
+        "sha256": "0b782d2e4d8a828cfaccc8dd9f1bcf227fcc8894afe12855e6b5a00d6a3dc7ba"
       },
       "orket.runtime.policy.conformance_governance_contract": {
         "path": "orket/runtime/policy/conformance_governance_contract.py",
@@ -3837,7 +3841,7 @@
       },
       "orket.runtime.registry.module_registry": {
         "path": "orket/runtime/registry/module_registry.py",
-        "sha256": "0a9abb9607aa0accc9dc656a782abc5d150197b300c3400b3f4c484d24c92244"
+        "sha256": "e06d6202597b3c478d7bc79ea5b8411c7c9d672b291914f3bf498e6412204bb5"
       },
       "orket.runtime.registry.runtime_invariant_registry": {
         "path": "orket/runtime/registry/runtime_invariant_registry.py",
@@ -17748,14 +17752,14 @@
       },
       {
         "source": "orket.cli",
-        "target": "orket.logging",
+        "target": "orket.interfaces.runtime_entrypoints",
         "path": "orket/cli.py",
         "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.cli",
-        "target": "orket.runtime.__init__",
+        "target": "orket.logging",
         "path": "orket/cli.py",
         "line": 10,
         "kind": "from"
@@ -20446,6 +20450,34 @@
         "target": "orket.interfaces.operator_view_support",
         "path": "orket/interfaces/routers/system.py",
         "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.interfaces.runtime_entrypoints",
+        "target": "orket.runtime.policy.composition",
+        "path": "orket/interfaces/runtime_entrypoints.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.interfaces.runtime_entrypoints",
+        "target": "orket.interfaces.api",
+        "path": "orket/interfaces/runtime_entrypoints.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.interfaces.runtime_entrypoints",
+        "target": "orket.interfaces.cli",
+        "path": "orket/interfaces/runtime_entrypoints.py",
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.interfaces.runtime_entrypoints",
+        "target": "orket.webhook_server",
+        "path": "orket/interfaces/runtime_entrypoints.py",
+        "line": 26,
         "kind": "from"
       },
       {
@@ -24904,49 +24936,14 @@
         "source": "orket.runtime.policy.composition",
         "target": "orket.runtime.module_registry",
         "path": "orket/runtime/policy/composition.py",
-        "line": 8,
+        "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.runtime.policy.composition",
         "target": "orket.orchestration.engine",
         "path": "orket/runtime/policy/composition.py",
-        "line": 31,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.policy.composition",
-        "target": "orket.interfaces",
-        "path": "orket/runtime/policy/composition.py",
-        "line": 41,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.policy.composition",
-        "target": "orket.interfaces.api",
-        "path": "orket/runtime/policy/composition.py",
-        "line": 41,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.policy.composition",
-        "target": "orket.interfaces.cli",
-        "path": "orket/runtime/policy/composition.py",
-        "line": 50,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.policy.composition",
-        "target": "orket.__init__",
-        "path": "orket/runtime/policy/composition.py",
-        "line": 58,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.policy.composition",
-        "target": "orket.webhook_server",
-        "path": "orket/runtime/policy/composition.py",
-        "line": 58,
+        "line": 30,
         "kind": "from"
       },
       {
@@ -27060,7 +27057,7 @@
         "code": "unresolved_reflection"
       }
     ],
-    "files_scanned": 1026,
+    "files_scanned": 1027,
     "scan_roots": [
       "orket"
     ],
@@ -27656,7 +27653,6 @@
       "orket.extensions.workload_executor_support": "application",
       "orket.extensions.workload_loader": "application",
       "orket.hardware": "adapters",
-      "orket.interfaces": "interfaces",
       "orket.interfaces.api": "interfaces",
       "orket.interfaces.api_app_context_middleware": "interfaces",
       "orket.interfaces.api_generation": "interfaces",
@@ -27689,6 +27685,7 @@
       "orket.interfaces.routers.settings": "interfaces",
       "orket.interfaces.routers.streaming": "interfaces",
       "orket.interfaces.routers.system": "interfaces",
+      "orket.interfaces.runtime_entrypoints": "interfaces",
       "orket.interfaces.runtime_store_cli": "interfaces",
       "orket.interfaces.scaffold_init": "interfaces",
       "orket.interfaces.server_launcher": "interfaces",
@@ -28119,7 +28116,7 @@
       {
         "source": "application",
         "target": "application",
-        "count": 1563
+        "count": 1562
       },
       {
         "source": "application",
@@ -28134,7 +28131,7 @@
       {
         "source": "application",
         "target": "interfaces",
-        "count": 5
+        "count": 1
       },
       {
         "source": "core",
@@ -28169,7 +28166,7 @@
       {
         "source": "interfaces",
         "target": "interfaces",
-        "count": 35
+        "count": 39
       }
     ]
   },
@@ -28238,7 +28235,7 @@
         "sites": [
           {
             "path": "orket/cli.py",
-            "line": 9,
+            "line": 10,
             "kind": "from"
           }
         ]
@@ -28409,50 +28406,6 @@
         ]
       },
       {
-        "source": "orket.runtime.policy.composition",
-        "target": "orket.interfaces",
-        "sites": [
-          {
-            "path": "orket/runtime/policy/composition.py",
-            "line": 41,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.runtime.policy.composition",
-        "target": "orket.interfaces.api",
-        "sites": [
-          {
-            "path": "orket/runtime/policy/composition.py",
-            "line": 41,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.runtime.policy.composition",
-        "target": "orket.interfaces.cli",
-        "sites": [
-          {
-            "path": "orket/runtime/policy/composition.py",
-            "line": 50,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.runtime.policy.composition",
-        "target": "orket.webhook_server",
-        "sites": [
-          {
-            "path": "orket/runtime/policy/composition.py",
-            "line": 58,
-            "kind": "from"
-          }
-        ]
-      },
-      {
         "source": "orket.vendors.factory",
         "target": "orket.settings",
         "sites": [
@@ -28497,233 +28450,7 @@
         ]
       }
     ],
-    "authority_cycles": [
-      {
-        "modules": [
-          "orket.__init__",
-          "orket.adapters.vcs.gitea_webhook_handler",
-          "orket.adapters.vcs.gitea_webhook_handlers",
-          "orket.agents.agent",
-          "orket.application.services.api_runtime_composition",
-          "orket.application.services.api_runtime_host_service",
-          "orket.application.services.api_system_query_service",
-          "orket.application.services.dual_write_run_ledger",
-          "orket.application.services.dual_write_telemetry",
-          "orket.application.services.epic_approval_pause_service",
-          "orket.application.services.extension_runtime_service",
-          "orket.application.services.extension_runtime_support",
-          "orket.application.services.governed_agent_api_composition",
-          "orket.application.services.governed_agent_effect_control_service",
-          "orket.application.services.governed_agent_execution_composition",
-          "orket.application.services.governed_agent_inspection_service",
-          "orket.application.services.governed_agent_model_provider",
-          "orket.application.services.governed_agent_runtime",
-          "orket.application.services.governed_agent_scheduled_wake_service",
-          "orket.application.services.governed_agent_wake_dispatcher",
-          "orket.application.services.governed_agent_wake_ingress_service",
-          "orket.application.services.governed_agent_webhook_ingress_service",
-          "orket.application.services.local_model_factory",
-          "orket.application.services.model_client_factory",
-          "orket.application.services.operator_completion_service",
-          "orket.application.services.orchestrator_prompt_preparation_service",
-          "orket.application.services.orchestrator_turn_context_builder",
-          "orket.application.services.orchestrator_turn_preparation_service",
-          "orket.application.services.outward_model_admission_service",
-          "orket.application.services.outward_model_tool_call_service",
-          "orket.application.services.outward_run_execution_service",
-          "orket.application.services.preview_service",
-          "orket.application.services.protocol_replay_service",
-          "orket.application.services.provider_preparation_service",
-          "orket.application.services.run_ledger_summary_projection",
-          "orket.application.services.runtime_policy",
-          "orket.application.services.sdk_llm_provider",
-          "orket.application.services.sdk_memory_provider",
-          "orket.application.workflows.epic_approval_checkpoint",
-          "orket.application.workflows.orchestrator",
-          "orket.application.workflows.orchestrator_ops",
-          "orket.application.workflows.prompt_budget_guard",
-          "orket.application.workflows.turn_contract_validator",
-          "orket.application.workflows.turn_executor",
-          "orket.application.workflows.turn_executor_completed_replay",
-          "orket.application.workflows.turn_executor_control_plane",
-          "orket.application.workflows.turn_executor_control_plane_evidence",
-          "orket.application.workflows.turn_executor_model_artifacts",
-          "orket.application.workflows.turn_executor_model_flow",
-          "orket.application.workflows.turn_executor_ops",
-          "orket.application.workflows.turn_executor_partial_parse",
-          "orket.application.workflows.turn_executor_resume_replay",
-          "orket.application.workflows.turn_failure_traces",
-          "orket.application.workflows.turn_message_builder",
-          "orket.board",
-          "orket.discovery",
-          "orket.driver",
-          "orket.extensions.__init__",
-          "orket.extensions.manager",
-          "orket.extensions.runtime",
-          "orket.extensions.workload_artifacts",
-          "orket.extensions.workload_executor",
-          "orket.extensions.workload_executor_support",
-          "orket.interfaces.api",
-          "orket.interfaces.api_app_context_middleware",
-          "orket.interfaces.cli",
-          "orket.interfaces.operator_view_models",
-          "orket.interfaces.routers.cards",
-          "orket.interfaces.routers.flows",
-          "orket.interfaces.routers.governed_agents",
-          "orket.interfaces.routers.runs",
-          "orket.interfaces.routers.sessions",
-          "orket.orchestration.engine",
-          "orket.orchestration.orchestration_config",
-          "orket.organization_loop",
-          "orket.runtime.__init__",
-          "orket.runtime.artifact_provenance_block_policy",
-          "orket.runtime.canonical_examples_library",
-          "orket.runtime.capability_fallback_hierarchy",
-          "orket.runtime.clock_time_authority_policy",
-          "orket.runtime.cold_start_truth_test_contract",
-          "orket.runtime.compact_turn_packet",
-          "orket.runtime.config.model_profile_bios",
-          "orket.runtime.config.provider_discovery",
-          "orket.runtime.config.provider_runtime_target",
-          "orket.runtime.config.runtime_context",
-          "orket.runtime.config_loader",
-          "orket.runtime.conformance_governance_contract",
-          "orket.runtime.contract_bootstrap",
-          "orket.runtime.contract_schema",
-          "orket.runtime.cors_config",
-          "orket.runtime.decision_record_operating_principles_contract",
-          "orket.runtime.degradation_first_ui_standard",
-          "orket.runtime.demo_production_labeling_policy",
-          "orket.runtime.determinism_controls",
-          "orket.runtime.deterministic_mode_contract",
-          "orket.runtime.epic_run_finalize",
-          "orket.runtime.epic_run_orchestrator",
-          "orket.runtime.epic_run_support",
-          "orket.runtime.epic_run_types",
-          "orket.runtime.error_codes",
-          "orket.runtime.evidence.failure_replay_harness_contract",
-          "orket.runtime.evidence.protocol_ledger_parity_campaign",
-          "orket.runtime.evidence.protocol_replay",
-          "orket.runtime.evidence.replay_compatibility",
-          "orket.runtime.evidence.run_ledger_factory",
-          "orket.runtime.evidence.run_ledger_parity",
-          "orket.runtime.evidence.run_start_artifacts",
-          "orket.runtime.evidence.run_start_contract_artifacts",
-          "orket.runtime.evidence_package_generator_contract",
-          "orket.runtime.execution.epic_run_approval",
-          "orket.runtime.execution.epic_run_finalize",
-          "orket.runtime.execution.epic_run_orchestrator",
-          "orket.runtime.execution.epic_run_result_boundary",
-          "orket.runtime.execution.epic_run_support",
-          "orket.runtime.execution.epic_run_types",
-          "orket.runtime.execution.execution_pipeline",
-          "orket.runtime.execution.execution_pipeline_card_dispatch",
-          "orket.runtime.execution.execution_pipeline_ledger_events",
-          "orket.runtime.execution.execution_pipeline_run_summary",
-          "orket.runtime.execution.execution_pipeline_runtime_artifacts",
-          "orket.runtime.execution.gitea_state_loop",
-          "orket.runtime.execution.phase_c_runtime_truth",
-          "orket.runtime.execution.pipeline_wiring_service",
-          "orket.runtime.execution_pipeline",
-          "orket.runtime.execution_pipeline_artifact_provenance",
-          "orket.runtime.execution_pipeline_card_dispatch",
-          "orket.runtime.execution_pipeline_ledger_events",
-          "orket.runtime.execution_pipeline_resume",
-          "orket.runtime.execution_pipeline_run_summary",
-          "orket.runtime.execution_pipeline_runtime_artifacts",
-          "orket.runtime.execution_readiness_rubric",
-          "orket.runtime.failure_replay_harness_contract",
-          "orket.runtime.feature_flag_expiration_policy",
-          "orket.runtime.gitea_state_loop",
-          "orket.runtime.human_correction_capture_policy",
-          "orket.runtime.idempotency_discipline_policy",
-          "orket.runtime.interface_freeze_windows",
-          "orket.runtime.interrupt_semantics_policy",
-          "orket.runtime.local_remote_route_policy",
-          "orket.runtime.long_session_soak_test_contract",
-          "orket.runtime.model_profile_bios",
-          "orket.runtime.module_registry",
-          "orket.runtime.naming_discipline_policy",
-          "orket.runtime.narration_effect_audit_policy",
-          "orket.runtime.non_fatal_error_budget",
-          "orket.runtime.observability_redaction_test_contract",
-          "orket.runtime.operator_override_logging_policy",
-          "orket.runtime.persistence_corruption_test_contract",
-          "orket.runtime.phase_c_runtime_truth",
-          "orket.runtime.policy.capability_fallback_hierarchy",
-          "orket.runtime.policy.clock_time_authority_policy",
-          "orket.runtime.policy.composition",
-          "orket.runtime.policy.protocol_determinism_campaign",
-          "orket.runtime.policy.runtime_truth_drift_checker",
-          "orket.runtime.policy.safe_default_catalog",
-          "orket.runtime.policy.source_attribution_policy",
-          "orket.runtime.policy.trust_language_review_policy",
-          "orket.runtime.policy.workspace_hygiene_rules",
-          "orket.runtime.promotion_rollback_criteria",
-          "orket.runtime.prompt_budget_policy",
-          "orket.runtime.protocol_determinism_campaign",
-          "orket.runtime.protocol_ledger_parity_campaign",
-          "orket.runtime.protocol_receipt_materializer",
-          "orket.runtime.protocol_replay",
-          "orket.runtime.provider_quarantine_policy",
-          "orket.runtime.provider_quarantine_policy_contract",
-          "orket.runtime.provider_runtime_inventory",
-          "orket.runtime.provider_runtime_target",
-          "orket.runtime.provider_truth_table",
-          "orket.runtime.release_confidence_scorecard",
-          "orket.runtime.replay_compatibility",
-          "orket.runtime.replay_drift_classifier",
-          "orket.runtime.resource_pressure_simulation_lane",
-          "orket.runtime.retry_classification_policy",
-          "orket.runtime.route_decision_artifact",
-          "orket.runtime.run_ledger_factory",
-          "orket.runtime.run_ledger_parity",
-          "orket.runtime.run_ledger_projection",
-          "orket.runtime.run_phase_contract",
-          "orket.runtime.run_start_artifacts",
-          "orket.runtime.run_start_contract_artifacts",
-          "orket.runtime.run_summary",
-          "orket.runtime.run_summary_artifact_provenance",
-          "orket.runtime.run_summary_control_plane",
-          "orket.runtime.run_summary_packet2",
-          "orket.runtime.runtime_boundary_audit_checklist",
-          "orket.runtime.runtime_config_ownership_map",
-          "orket.runtime.runtime_context",
-          "orket.runtime.runtime_invariant_registry",
-          "orket.runtime.runtime_policy_versions",
-          "orket.runtime.runtime_truth_contracts",
-          "orket.runtime.runtime_truth_drift_checker",
-          "orket.runtime.runtime_truth_trace_ids",
-          "orket.runtime.safe_default_catalog",
-          "orket.runtime.sampling_discipline_guide",
-          "orket.runtime.settings",
-          "orket.runtime.source_attribution_policy",
-          "orket.runtime.state_transition_registry",
-          "orket.runtime.structured_warning_policy",
-          "orket.runtime.summary.run_summary",
-          "orket.runtime.timeout_streaming_contracts",
-          "orket.runtime.trust_language_review_policy",
-          "orket.runtime.truthful_memory_policy",
-          "orket.runtime.ui_lane_security_boundary_test_contract",
-          "orket.runtime.unknown_input_policy",
-          "orket.runtime.workload_shell",
-          "orket.runtime.workspace_hygiene_rules",
-          "orket.runtime.workspace_snapshot",
-          "orket.services.extension_memory_namespace",
-          "orket.services.memory_store",
-          "orket.services.scoped_memory_store",
-          "orket.webhook_server",
-          "orket.workloads.__init__",
-          "orket.workloads.model_stream_v1",
-          "orket.workloads.registry"
-        ],
-        "layers": [
-          "adapters",
-          "application",
-          "interfaces"
-        ]
-      }
-    ],
+    "authority_cycles": [],
     "analysis_errors": [
       {
         "path": "orket/extensions/agent_workload_subprocess.py",
@@ -28783,45 +28510,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-17T04:21:36.148027Z",
-      "changed": true,
-      "before_digest": "sha256:5ff2ee37f0dac02f0a1ebe1754986505f9745e747b4150f61df82a8cb3595842",
-      "after_digest": "sha256:24f2328381e1e87f91d7027f876bc2a6923895462451d68daa1d5fef2c3bb510",
-      "diff": {
-        "added_paths": 20,
-        "removed_paths": 19,
-        "changed_paths": 8912,
-        "initial_write": false,
-        "paths_total_previous": 43430,
-        "paths_total_current": 43391,
-        "paths_total_reference": 43430,
-        "churn_paths": 8951,
-        "churn_ratio": 0.206102,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[66].target",
-          "$.observed.edges[73].target",
-          "$.observed.edges[77].target",
-          "$.observed.edges[80].target",
-          "$.observed.edges[83].target",
-          "$.observed.edges[151].target",
-          "$.observed.edges[155].target",
-          "$.observed.edges[156].line",
-          "$.observed.edges[156].target",
-          "$.observed.edges[160].target",
-          "$.observed.edges[161].line",
-          "$.observed.edges[161].target",
-          "$.observed.edges[164].target",
-          "$.observed.edges[697].line",
-          "$.observed.edges[697].path",
-          "$.observed.edges[697].source",
-          "$.observed.edges[697].target",
-          "$.observed.edges[698].line",
-          "$.observed.edges[698].target"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-17T04:58:29.875336Z",
       "changed": true,
@@ -29824,6 +29512,45 @@
         "sample_paths": [
           "$.generated_at",
           "$.observed.modules.orket.application.services.coordinator_read_service.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T19:13:19.192548Z",
+      "changed": true,
+      "before_digest": "sha256:c1c1cf3e214fb8f3f2688083405d4d5bd713a1eb5e0af045298b130ea94714f9",
+      "after_digest": "sha256:c5eb42b31239544e78daa4735d77f5d8bd5e67f62c1482a887688b548cc51688",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 7,
+        "changed_paths": 2793,
+        "initial_write": false,
+        "paths_total_previous": 44258,
+        "paths_total_current": 43759,
+        "paths_total_reference": 44258,
+        "churn_paths": 2802,
+        "churn_ratio": 0.063311,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[1931].target",
+          "$.observed.edges[1932].target",
+          "$.observed.edges[2317].line",
+          "$.observed.edges[2317].path",
+          "$.observed.edges[2317].source",
+          "$.observed.edges[2317].target",
+          "$.observed.edges[2318].line",
+          "$.observed.edges[2318].path",
+          "$.observed.edges[2318].source",
+          "$.observed.edges[2318].target",
+          "$.observed.edges[2319].line",
+          "$.observed.edges[2319].path",
+          "$.observed.edges[2319].source",
+          "$.observed.edges[2319].target",
+          "$.observed.edges[2320].line",
+          "$.observed.edges[2320].path",
+          "$.observed.edges[2320].source",
+          "$.observed.edges[2320].target",
+          "$.observed.edges[2321].line"
         ]
       }
     }

@@ -702,3 +702,16 @@ forbidden pairs are removed; 29 pairs, one cycle and ten analysis errors remain.
 Original defects, test expectation corrections and remaining full-matrix/clock
 limits are retained in the canonical plan. Whole-lane acceptance remains open.
 The commit and annotated tag remain local during work hours.
+
+The local 0.6.19 composition checkpoint moves admitted API, CLI and webhook
+factories to `orket.interfaces.runtime_entrypoints` while application retains
+capability authorization. Old runtime factory exports are retired without a
+forwarding shim. Fatal module-profile refusals now include their existing code
+and reason. Real API observations distinguish separate owners from a shared
+default store, and prove explicit durable-root isolation. Source and fresh
+Windows/Linux Python 3.11 installations each pass 163 selected cases with
+package, actual CLI and cleanup proof. The four composition dependency pairs
+and the remaining authority cycle are removed; 25 pairs and ten analysis errors
+remain. Original failures, exact artifacts, migration and open full-plan gates
+are retained in the canonical plan. Commit and annotated tag stay local during
+work hours; whole-lane acceptance remains open.

@@ -8,7 +8,8 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.responses import StreamingResponse
 
-from orket.runtime import CompositionConfig, create_api_app
+from orket.interfaces.runtime_entrypoints import create_api_app
+from orket.runtime import CompositionConfig
 from tests.helpers.outward_authorization import TEST_API_KEY
 from tests.helpers.outward_authorization import boundary as boundary
 from tests.integration.test_api_active_request_ownership import serving_api

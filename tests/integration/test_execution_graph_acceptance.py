@@ -10,8 +10,8 @@ import pytest
 
 from orket.adapters.storage.card_migrations import CARD_BOOTSTRAP_MIGRATIONS
 from orket.adapters.storage.sqlite_migrations import SQLiteMigrationRunner
+from orket.interfaces.runtime_entrypoints import create_api_app
 from orket.orchestration.engine import OrchestrationEngine
-from orket.runtime import create_api_app
 from orket.runtime.policy.composition import CompositionConfig
 from orket.schema import CardStatus
 from tests.helpers.card_completion import complete_existing_card

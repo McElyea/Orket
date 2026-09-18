@@ -8,7 +8,8 @@ import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.application.services.extension_runtime_service import ExtensionRuntimeService
-from orket.runtime import CompositionConfig, create_api_app
+from orket.interfaces.runtime_entrypoints import create_api_app
+from orket.runtime import CompositionConfig
 from tests.integration.test_api_active_request_ownership import serving_api
 
 

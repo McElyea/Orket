@@ -1,13 +1,30 @@
 # API Runtime Lifecycle
 
-Last updated: 2026-09-17
+Last updated: 2026-09-18
 Status: Active
 
 `orket.application.services.api_runtime_container.ApiRuntimeContainer` owns the
 HTTP/WebSocket ASGI invocation tasks, registered background tasks and resources
 of one API application, followed by its engine. The public factory is
-`orket.runtime.create_api_app(CompositionConfig)`;
+`orket.interfaces.runtime_entrypoints.create_api_app(CompositionConfig)`;
 `orket.interfaces.api.lifespan` delegates teardown to that container.
+
+## Factory and storage selection
+
+The admitted API, CLI and webhook factories live in
+`orket.interfaces.runtime_entrypoints`; application owns `CompositionConfig`,
+engine construction and capability authorization. Migration from the retired
+runtime factory exports is recorded in
+`docs/architecture/CONTRACT_DELTA_INTERFACE_COMPOSITION_C_2026-09-18.md`.
+
+Distinct applications and project roots do not imply distinct persistent stores.
+The existing runtime database default is invocation-relative, as specified by
+`docs/specs/RUNTIME_STORE_BINDING.md`. Applications constructed with the same
+durable-root selection share card history. To select separate stores, supply a
+different `ORKET_DURABLE_ROOT` before each factory invocation; an engine retains
+its resolved absolute binding. Do not change process environment concurrently
+with construction. This is existing storage behavior, not a tenant-isolation
+guarantee or an automatic database migration.
 
 ## Captured authority and system observations
 

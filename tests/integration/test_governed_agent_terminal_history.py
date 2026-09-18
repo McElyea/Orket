@@ -21,7 +21,8 @@ from orket.application.services.governed_agent_inspection_service import Governe
 from orket.application.services.governed_agent_loop_service import GovernedAgentLoopService
 from orket.application.services.governed_agent_replay_service import replay_governed_agent_evidence
 from orket.core.domain import AttemptState, RunState
-from orket.runtime import CompositionConfig, create_api_app
+from orket.interfaces.runtime_entrypoints import create_api_app
+from orket.runtime import CompositionConfig
 from tests.helpers.governed_agent_clock import elapsed_agent_clock as elapsed_agent_clock
 from tests.integration.test_governed_agent_acceptance_failures import _run
 from tests.interfaces.test_governed_agent_api import _configure_api, _headers

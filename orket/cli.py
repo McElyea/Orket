@@ -6,8 +6,8 @@ import traceback
 
 
 def _run_runtime_command(argv: list[str]) -> int:
+    from orket.interfaces.runtime_entrypoints import create_cli_runtime
     from orket.logging import log_crash
-    from orket.runtime import create_cli_runtime
     from orket.settings import load_env
 
     try:
