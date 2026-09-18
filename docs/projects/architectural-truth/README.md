@@ -655,3 +655,20 @@ retained in source proof. Eight actual llama.cpp regressions and three separatel
 opted-in memory integrations also pass. The canonical plan retains original
 failures, exact evidence bindings and remaining limits. Whole-lane acceptance
 remains open; the commit and annotated tag remain local.
+
+The local 0.6.15 provider-preparation checkpoint replaces implicit client-type
+admission with an application-supplied core port and an explicit captured
+Ollama default host. Real HTTP controls reproduce the old inventory/quarantine
+bypass. All 2,715 selected source cases pass; each fresh Windows/Linux Python
+3.11/3.12 environment passes 2,710 installed cases, with five repository-only
+checks retained in source proof. Eight actual llama.cpp regressions and three
+opted-in memory integrations also pass. The canonical plan retains original
+bypass, fixture, source and native failures, the unintended LM Studio load and
+its verified targeted cleanup. The stock-clock regression remains unexplained;
+supplied-clock refusal/recovery controls do not establish host-clock reliability.
+The initial revised Windows 3.12 driver exceeded its outer budget after pytest
+passed; its fresh replacement passes with a declared 1,200-second driver budget,
+without relaxing product, test or CLI timeouts. The incomplete attempt remains retained.
+The graph removes one forbidden pair; 35 remain. Native CLI environment and
+concurrent provider lifetime work remain open alongside C/D/E/CAP. The commit
+and matching annotated tag remain local; whole-lane acceptance remains open.

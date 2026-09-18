@@ -32,7 +32,13 @@ from orket.adapters.llm.openai_native_tools import build_openai_native_tooling
 from orket.adapters.llm.provider_extractors import extractor_for_provider
 from orket.core.contracts.local_prompting import LocalPromptingPolicyResult, LocalPromptingPort
 from orket.core.contracts.model_timing import MODEL_TIMING_SCHEMA_VERSION, nanoseconds_to_ms
-from orket.core.contracts.provider_runtime import ProviderRuntimeTarget, normalize_provider, provider_from_environment
+from orket.core.contracts.provider_preparation import ProviderPreparationPort
+from orket.core.contracts.provider_runtime import (
+    DEFAULT_OLLAMA_BASE_URL,
+    ProviderRuntimeTarget,
+    normalize_provider,
+    provider_from_environment,
+)
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.logging import log_event
 
@@ -43,21 +49,9 @@ class ModelResponse:
     raw: dict[str, Any]
 
 
-def _read_provider_env(environment: Mapping[str, str]) -> str:
-    return provider_from_environment(environment)
-
-
-def _map_provider_backend(raw: str) -> str:
-    return normalize_provider(raw)
-
-
-def _map_provider_name(raw: str) -> str:
-    normalize_provider(raw)  # Reject unknown providers before constructing a client.
-    return raw
-
-
 class LocalModelProvider:
     """Side-effecting adapter: executes authorized local-provider HTTP inference."""
+    side_effecting = True
 
     def __init__(
         self,
@@ -67,6 +61,7 @@ class LocalModelProvider:
         timeout: int = 300,
         *,
         prompt_policy: LocalPromptingPort,
+        runtime_preparation: ProviderPreparationPort,
         provider: str = "",
         base_url: str = "",
         api_key: str = "",
@@ -81,6 +76,7 @@ class LocalModelProvider:
         """
         self._provider_environment = MappingProxyType(dict(os.environ if environment is None else environment))
         self._prompt_policy = prompt_policy
+        self._runtime_preparation = runtime_preparation
         self.requested_model = str(model or "").strip()
         self.model = self.requested_model
         self.temperature = self._resolve_temperature_override(temperature)
@@ -94,9 +90,9 @@ class LocalModelProvider:
         self._provider_override = str(provider or "").strip().lower()
         self._base_url_override = str(base_url or "").strip()
         self._api_key_override = str(api_key or "").strip()
-        provider_env = self._provider_override or _read_provider_env(self._provider_environment)
-        self.provider_backend = _map_provider_backend(provider_env)
-        self.provider_name = _map_provider_name(provider_env)
+        provider_env = self._provider_override or provider_from_environment(self._provider_environment)
+        self.provider_backend = normalize_provider(provider_env)
+        self.provider_name = provider_env
         self.openai_base_url = self._resolve_openai_base_url()
         self.openai_api_key = self._resolve_openai_api_key()
         self.ollama_host = self._resolve_ollama_host()
@@ -114,8 +110,7 @@ class LocalModelProvider:
                 ),
             )
         else:
-            self.client = ollama.AsyncClient(host=self.ollama_host) if self.ollama_host else ollama.AsyncClient()
-        self._provider_managed_client_id = id(self.client)
+            self.client = ollama.AsyncClient(host=self.ollama_host)
         self._closed = False
         self._openai_session_epoch = 0
         self._seen_context_epochs: set[int] = set()
@@ -213,7 +208,7 @@ class LocalModelProvider:
         if self._base_url_override:
             return self._base_url_override
         return str(self._provider_environment.get("ORKET_LLM_OLLAMA_HOST")
-                   or self._provider_environment.get("OLLAMA_HOST") or "").strip()
+                   or self._provider_environment.get("OLLAMA_HOST") or "").strip() or DEFAULT_OLLAMA_BASE_URL
 
     async def complete(
         self,

@@ -10,9 +10,11 @@ import httpx
 import pytest
 
 from orket.adapters.llm import local_model_provider as local_model_provider_module
+from orket.application.services import model_client_factory
 from orket.orchestration.engine import OrchestrationEngine
 from orket.schema import CardStatus
 from tests.helpers.card_completion import SOURCE, completion_definition
+from tests.helpers.provider_preparation import create_test_model_provider
 from tests.turn_prompt_utils import extract_turn_prompt_context
 
 
@@ -190,6 +192,7 @@ async def test_model_invocation_uses_runtime_provider_and_executes_real_tools(
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_MODE", "enforce")
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setattr(local_model_provider_module.httpx, "AsyncClient", lambda *args, **kwargs: fake_client)
+    monkeypatch.setattr(model_client_factory, "create_local_model_provider", create_test_model_provider)
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
     await engine.run_card("runtime_truth_epic", session_id="runtime-session-1")
@@ -226,6 +229,7 @@ async def test_model_invocation_uses_runtime_provider_and_executes_real_tools(
     assert any(payload.get("provider") == "openai-compat" for payload in raw_payloads)
     assert any(payload.get("profile_id") and payload.get("profile_id") != "unresolved" for payload in raw_payloads)
     assert any(payload.get("task_class") == "strict_json" for payload in raw_payloads)
+    assert all(payload["runtime_target"]["inventory_source"] == "test_fixture" for payload in raw_payloads)
 
 
 @pytest.mark.asyncio
@@ -246,6 +250,7 @@ async def test_standard_runtime_rejects_completion_despite_disabled_legacy_verif
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setattr(local_model_provider_module.httpx, "AsyncClient", lambda *args, **kwargs: fake_client)
+    monkeypatch.setattr(model_client_factory, "create_local_model_provider", create_test_model_provider)
     engine = OrchestrationEngine(workspace, department="core", db_path=str(tmp_path / "cards.db"), config_root=tmp_path)
     try:
         observed = await engine.run_card('runtime_truth_epic', session_id='rejected-session')

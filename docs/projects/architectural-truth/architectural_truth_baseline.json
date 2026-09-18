@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-18T08:52:31.389241Z",
+  "generated_at": "2026-09-18T12:17:35.793825Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -306,7 +306,7 @@
           "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 1019,
+      "files_scanned": 1021,
       "scan_roots": [
         "orket"
       ],
@@ -320,12 +320,12 @@
         {
           "source": "adapters",
           "target": "application",
-          "count": 8
+          "count": 7
         },
         {
           "source": "adapters",
           "target": "core",
-          "count": 134
+          "count": 135
         },
         {
           "source": "application",
@@ -335,12 +335,12 @@
         {
           "source": "application",
           "target": "application",
-          "count": 1547
+          "count": 1549
         },
         {
           "source": "application",
           "target": "core",
-          "count": 692
+          "count": 697
         },
         {
           "source": "application",
@@ -355,7 +355,7 @@
         {
           "source": "core",
           "target": "core",
-          "count": 142
+          "count": 144
         },
         {
           "source": "decision_nodes",
@@ -393,17 +393,6 @@
       "ok": false,
       "unknown_modules": [],
       "violations": [
-        {
-          "source": "orket.adapters.llm.local_model_provider_runtime_target",
-          "target": "orket.runtime.config.provider_runtime_target",
-          "sites": [
-            {
-              "path": "orket/adapters/llm/local_model_provider_runtime_target.py",
-              "line": 9,
-              "kind": "from"
-            }
-          ]
-        },
         {
           "source": "orket.adapters.tools.families.reforger_tools",
           "target": "orket.reforger.compiler",
@@ -794,8 +783,6 @@
         {
           "modules": [
             "orket.__init__",
-            "orket.adapters.llm.local_model_provider",
-            "orket.adapters.llm.local_model_provider_runtime_target",
             "orket.adapters.vcs.gitea_webhook_handler",
             "orket.adapters.vcs.gitea_webhook_handlers",
             "orket.agents.agent",
@@ -828,6 +815,7 @@
             "orket.application.services.outward_run_execution_service",
             "orket.application.services.preview_service",
             "orket.application.services.protocol_replay_service",
+            "orket.application.services.provider_preparation_service",
             "orket.application.services.run_ledger_summary_projection",
             "orket.application.services.runtime_policy",
             "orket.application.services.sdk_llm_provider",
@@ -1222,10 +1210,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 4977,
-    "missing_layer_total": 3376,
+    "tests_total": 4980,
+    "missing_layer_total": 3379,
     "by_layer": {
-      "unlabeled": 3376,
+      "unlabeled": 3379,
       "integration": 750,
       "unit": 168,
       "contract": 672,
@@ -1833,7 +1821,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3276
+    "missing_layers_omitted": 3279
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1857,7 +1845,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1019,
+    "python_files_scanned": 1021,
     "files_over_400_total": 66,
     "functions_over_70_total": 220,
     "largest_files": [
@@ -1931,11 +1919,11 @@
       },
       {
         "path": "orket/runtime/config/provider_runtime_target.py",
-        "lines": 615
+        "lines": 607
       },
       {
         "path": "orket/adapters/llm/local_model_provider.py",
-        "lines": 596
+        "lines": 591
       },
       {
         "path": "orket/streaming/model_provider.py",
@@ -2025,7 +2013,7 @@
       },
       {
         "path": "orket/runtime/config/provider_runtime_target.py",
-        "line": 294,
+        "line": 286,
         "name": "resolve_provider_runtime_target",
         "lines": 299
       },
@@ -2124,7 +2112,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 586,
+    "scanned_files": 587,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -2235,106 +2223,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-15T02:09:39.946568Z",
-      "changed": true,
-      "before_digest": "sha256:e850af5cae254b190dee4b41be29074f02b7dd3a642c3046a67b707350b300ae",
-      "after_digest": "sha256:96d27bfbb412cce04df87a42fb87e6736d4a5f5520f0d931fe4cfe17ac7b20a5",
-      "diff": {
-        "added_paths": 1,
-        "removed_paths": 7,
-        "changed_paths": 231,
-        "initial_write": false,
-        "paths_total_previous": 4126,
-        "paths_total_current": 4054,
-        "paths_total_reference": 4126,
-        "churn_paths": 239,
-        "churn_ratio": 0.057925,
-        "sample_paths": [
-          "$.architecture_exceptions.exceptions[2].evidence",
-          "$.architecture_exceptions.exceptions[2].reason",
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[0].count",
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.dependency_graph.observed.layer_edges[5].count",
-          "$.dependency_graph.observed.layer_edges[6].count",
-          "$.dependency_graph.observed.layer_edges[9].count",
-          "$.dependency_graph.observed.layer_edges[10].count",
-          "$.dependency_graph.observed.layer_edges[10].target",
-          "$.dependency_graph.observed.layer_edges[11].count",
-          "$.dependency_graph.observed.layer_edges[11].source",
-          "$.dependency_graph.observed.layer_edges[11].target",
-          "$.dependency_graph.observed.layer_edges[12].target",
-          "$.dependency_graph.observed.layer_edges[13].count",
-          "$.dependency_graph.observed.layer_edges[13].target",
-          "$.dependency_graph.observed.layer_edges[14].count",
-          "$.dependency_graph.observed.layer_edges[14].target",
-          "$.dependency_graph.observed.layer_edges[15].count"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-17T03:41:02.157707Z",
-      "changed": true,
-      "before_digest": "sha256:96d27bfbb412cce04df87a42fb87e6736d4a5f5520f0d931fe4cfe17ac7b20a5",
-      "after_digest": "sha256:4dfd8bfe5de7d1c12b8ece1f7711892447320713ebb35502b8a75f03c30641d6",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 3,
-        "initial_write": false,
-        "paths_total_previous": 4054,
-        "paths_total_current": 4054,
-        "paths_total_reference": 4054,
-        "churn_paths": 3,
-        "churn_ratio": 0.00074,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.integration",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-17T04:00:16.570044Z",
-      "changed": true,
-      "before_digest": "sha256:4dfd8bfe5de7d1c12b8ece1f7711892447320713ebb35502b8a75f03c30641d6",
-      "after_digest": "sha256:0cbe501e99662273cf9882dfbf2e1038e26139ce2b074e9f8aaecddf97486187",
-      "diff": {
-        "added_paths": 1,
-        "removed_paths": 5,
-        "changed_paths": 212,
-        "initial_write": false,
-        "paths_total_previous": 4054,
-        "paths_total_current": 4020,
-        "paths_total_reference": 4054,
-        "churn_paths": 218,
-        "churn_ratio": 0.053774,
-        "sample_paths": [
-          "$.dependency_graph.observed.analysis_errors[0].code",
-          "$.dependency_graph.observed.analysis_errors[0].line",
-          "$.dependency_graph.observed.analysis_errors[0].path",
-          "$.dependency_graph.observed.analysis_errors[1].line",
-          "$.dependency_graph.observed.analysis_errors[2].code",
-          "$.dependency_graph.observed.analysis_errors[2].line",
-          "$.dependency_graph.observed.analysis_errors[3].code",
-          "$.dependency_graph.observed.analysis_errors[3].line",
-          "$.dependency_graph.observed.analysis_errors[3].path",
-          "$.dependency_graph.observed.analysis_errors[4].line",
-          "$.dependency_graph.observed.analysis_errors[5].code",
-          "$.dependency_graph.observed.analysis_errors[5].line",
-          "$.dependency_graph.observed.analysis_errors[6].line",
-          "$.dependency_graph.observed.analysis_errors[6].path",
-          "$.dependency_graph.observed.analysis_errors[7].line",
-          "$.dependency_graph.observed.analysis_errors[8].code",
-          "$.dependency_graph.observed.analysis_errors[8].line",
-          "$.dependency_graph.observed.analysis_errors[8].path",
-          "$.dependency_graph.observed.analysis_errors[9].line",
-          "$.dependency_graph.observed.analysis_errors"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-17T04:21:55.590547Z",
       "changed": true,
@@ -3171,6 +3059,89 @@
         "churn_ratio": 0.000301,
         "sample_paths": [
           "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T11:06:53.136145Z",
+      "changed": true,
+      "before_digest": "sha256:323364e65fa9684dcd20bc308ec98e213d4170ea9abcb37c2f768e165b4c8c8d",
+      "after_digest": "sha256:1a512728128214520a4698d0116f707796fab79b8ffed135483c53bea6bf1151",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 2,
+        "changed_paths": 338,
+        "initial_write": false,
+        "paths_total_previous": 3320,
+        "paths_total_current": 3305,
+        "paths_total_reference": 3320,
+        "churn_paths": 340,
+        "churn_ratio": 0.10241,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[1].count",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[8].count",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[1]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[2]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[3]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[4]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[5]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[6]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[7]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[8]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[9]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[10]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[11]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[12]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[13]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[14]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T11:23:21.994857Z",
+      "changed": true,
+      "before_digest": "sha256:1a512728128214520a4698d0116f707796fab79b8ffed135483c53bea6bf1151",
+      "after_digest": "sha256:3da859b9594380dd26a677dfdd9f74548f1e8524765e3e658ae22fd0c502b3ad",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 3305,
+        "paths_total_current": 3305,
+        "paths_total_reference": 3305,
+        "churn_paths": 1,
+        "churn_ratio": 0.000303,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T12:17:35.796335Z",
+      "changed": true,
+      "before_digest": "sha256:3da859b9594380dd26a677dfdd9f74548f1e8524765e3e658ae22fd0c502b3ad",
+      "after_digest": "sha256:3bd5c8a2f116eac576749499102c4c4b9757cf288a811d306d67ad8d062b6b34",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 3305,
+        "paths_total_current": 3305,
+        "paths_total_reference": 3305,
+        "churn_paths": 5,
+        "churn_ratio": 0.001513,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
         ]
       }
     }

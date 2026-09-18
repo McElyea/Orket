@@ -1,6 +1,6 @@
 # ODR provider admission and native result evidence
 
-Last updated: 2026-09-14
+Last updated: 2026-09-18
 Status: Active contract; current acceptance is scoped in the architectural-truth plan.
 
 The quant-sweep entrypoint is `python scripts/odr/run_odr_quant_sweep.py`.
@@ -21,8 +21,10 @@ refuse before provider discovery. Discovery failure produces the declared
 preflight error artifact and CLI exit 2. Ollama installation is not a prerequisite
 for llama.cpp work; unavailable providers do not cause a provider switch.
 Child execution disables automatic model selection/loading for the admitted
-explicit model identities. The existing provider adapter still owns runtime
-policy and request validation.
+explicit model identities. Application owns runtime preparation and prompt policy;
+the adapter consumes the supplied core ports and validates the admitted target
+before executing inference. Pure endpoint normalization lives in
+`orket/core/contracts/provider_runtime.py`.
 
 The arbiter accepts current output only after existing shape/leak/trace checks
 and matching provider selection and architect/auditor model receipts. Absent,

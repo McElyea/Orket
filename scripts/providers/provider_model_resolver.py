@@ -10,6 +10,7 @@ if str(REPO_ROOT) not in sys.path:
 from orket.core.contracts.provider_runtime import (  # noqa: E402
     DEFAULT_LOCAL_PROVIDER,  # noqa: E402 - direct script bootstrap
     effective_provider,
+    normalize_base_url,
     normalize_provider,
 )
 from orket.core.contracts.provider_runtime import PROVIDER_CHOICES as PROVIDER_CHOICES  # noqa: E402
@@ -24,7 +25,6 @@ from orket.runtime.provider_runtime_target import (  # noqa: E402
 )
 from orket.runtime.provider_runtime_target import (  # noqa: E402 - direct script bootstrap
     default_base_url,
-    normalize_base_url,
 )
 from orket.runtime.provider_runtime_target import (  # noqa: E402 - direct script bootstrap
     rank_models as rank_models,

@@ -1,4 +1,4 @@
-# Layer: integration
+# Layer: integration. Protocol lifecycle fixtures use supplied ordered clocks.
 from __future__ import annotations
 
 from pathlib import Path
@@ -9,6 +9,7 @@ import pytest
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.application.services.dual_write_run_ledger import AsyncDualModeLedgerRepository
+from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
 
 @pytest.mark.asyncio
@@ -33,7 +34,7 @@ async def test_async_run_ledger_finalize_rejects_done_with_failure(tmp_path: Pat
 @pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_writes_both_backends_and_reports_clean_parity(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
-    protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace")
+    protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso)
     telemetry: list[dict[str, Any]] = []
 
     dual_repo = AsyncDualModeLedgerRepository(
@@ -154,7 +155,7 @@ async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_
 @pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_supports_protocol_primary_reads(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
-    protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace")
+    protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso)
     dual_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
@@ -184,7 +185,7 @@ async def test_async_dual_write_run_ledger_logs_sink_failures_without_interrupti
 ) -> None:
     """Layer: unit. Verifies telemetry sink failures stay non-fatal and emit an explicit warning signal."""
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
-    protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace")
+    protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso)
     logged: list[dict[str, Any]] = []
 
     def _capture_log(event: str, data: dict[str, Any] | None = None, **_: Any) -> None:
@@ -265,7 +266,7 @@ async def test_async_dual_write_run_ledger_distinguishes_parity_check_crash_from
 ) -> None:
     """Layer: unit. Verifies parity telemetry distinguishes a comparator crash from a real parity mismatch."""
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
-    protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace")
+    protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso)
     telemetry: list[dict[str, Any]] = []
 
     async def _boom(**_: Any) -> dict[str, Any]:
@@ -337,7 +338,7 @@ async def test_async_dual_write_run_ledger_recovers_pending_start_intent_before_
 
     recovered_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
-        protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace"),
+        protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso),
     )
 
     await recovered_repo.start_run(
@@ -363,7 +364,7 @@ async def test_async_dual_write_run_ledger_recovers_pending_finalize_intent_befo
     tmp_path: Path,
 ) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
-    working_protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace")
+    working_protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso)
     broken_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=_FinalizeFailingProtocolRepository(working_protocol_repo),
@@ -385,7 +386,7 @@ async def test_async_dual_write_run_ledger_recovers_pending_finalize_intent_befo
 
     recovered_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
-        protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace"),
+        protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso),
     )
 
     await recovered_repo.start_run(
@@ -428,7 +429,7 @@ async def test_async_dual_write_run_ledger_rechecks_recovery_without_duplicate_e
 
     recovered_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
-        protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace"),
+        protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso),
     )
     await recovered_repo.initialize()
     await recovered_repo.get_run("sess-init-once")

@@ -7,6 +7,7 @@ import pytest
 
 from orket.adapters.llm import local_model_provider_runtime_target as targeting
 from orket.adapters.llm.local_model_provider import ModelResponse
+from orket.application.services import provider_preparation_service as preparation_owner
 from orket.application.services.governed_agent_api_composition import _settings
 from orket.application.services.governed_agent_broker_service import GovernedAgentResolvedModelProfile
 from orket.application.services.governed_agent_model_provider import GovernedAgentLocalModelProvider
@@ -52,7 +53,7 @@ async def test_blocked_target_is_not_cached_or_admitted(monkeypatch) -> None:
                                   timeout=30, environment={})
     async def resolve(**kwargs):
         return _target(status="BLOCKED")
-    monkeypatch.setattr(targeting, "resolve_provider_runtime_target", resolve)
+    monkeypatch.setattr(preparation_owner, "resolve_provider_runtime_target", resolve)
     try:
         for _ in range(2):
             with pytest.raises(ModelConnectionError):
@@ -68,7 +69,7 @@ async def test_pinned_target_prevents_environment_model_reselection(monkeypatch)
     monkeypatch.setenv("ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL", "1")
     async def forbidden(**kwargs):
         pytest.fail("Pinned governed model must not be resolved a second time")
-    monkeypatch.setattr(targeting, "resolve_provider_runtime_target", forbidden)
+    monkeypatch.setattr(preparation_owner, "resolve_provider_runtime_target", forbidden)
     provider = create_local_model_provider("qwen", provider="llama_cpp", base_url=_target().base_url,
                                   runtime_target=_target())
     try:

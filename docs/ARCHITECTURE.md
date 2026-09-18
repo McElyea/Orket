@@ -255,6 +255,13 @@ Integration boundaries for external systems, including:
 Adapters translate between external semantics and Orket contracts.
 Adapters do not define policy or runtime authority.
 
+Provider preparation follows that boundary through the core
+`ProviderPreparationPort`. Application owns captured discovery/load policy; the
+LLM adapter binds an admitted target to the same provider, model request and
+endpoint before inference, regardless of the HTTP client type. Pure endpoint
+normalization lives in core. Migration and remaining concurrency/native CLI
+limits: `docs/architecture/CONTRACT_DELTA_PROVIDER_PREPARATION_CD_2026-09-18.md`.
+
 `LocalPromptingService` in `orket/application/services/local_prompting_service.py`
 owns prompt policy. `create_local_model_provider` captures environment and injects
 that authority through the core `LocalPromptingPort`; raw provider construction

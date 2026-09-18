@@ -37,6 +37,16 @@ requires an explicit `0.7.0` contract delta.
 
 ## Current Canonical Paths
 
+`ProviderPreparationService` in
+`orket/application/services/provider_preparation_service.py` owns captured local
+provider preparation settings. The application factory injects the core
+`ProviderPreparationPort`; the adapter requires an admitted target bound to the
+same provider, model request and endpoint before inference. Client type and mock
+transport no longer suppress preparation. Pure endpoint normalization lives in
+`orket/core/contracts/provider_runtime.py`; the Ollama client receives an explicit
+captured/default host. Migration and remaining lifetime/native CLI limits:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_PREPARATION_CD_2026-09-18.md`.
+
 `orket/application/workflows/turn_tool_result_persistence.py` owns protocol and
 ordinary result publication inputs. It captures nested values before awaiting and
 retains each admitted file worker through cancellation, preserving worker errors.

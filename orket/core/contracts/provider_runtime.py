@@ -4,12 +4,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from typing import Any, cast
+from urllib.parse import urlparse
 
 from orket.core.contracts.protocol_hashing import canonical_json
 from orket_extension_sdk import FrozenJson
 
 DEFAULT_LOCAL_PROVIDER = "llama_cpp"
 DEFAULT_LOCAL_MODEL = "orcarouter_qwen3.8-27b-uncensored-q4_k_l"
+DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434"
 PROVIDER_CHOICES = (DEFAULT_LOCAL_PROVIDER, "lmstudio", "ollama", "openai_compat")
 
 
@@ -32,6 +34,18 @@ def normalize_provider(provider: str) -> str:
     if raw not in PROVIDER_CHOICES:
         raise ValueError(f"E_UNKNOWN_PROVIDER_INPUT:{raw}")
     return "ollama" if raw == "ollama" else "openai_compat"
+
+
+def normalize_base_url(raw: str | None, *, default: str) -> str:
+    value = str(raw or "").strip() or str(default or "").strip()
+    if "://" not in value:
+        value = f"http://{value}"
+    parsed = urlparse(value)
+    if not parsed.scheme or not parsed.netloc:
+        raise ValueError(f"Invalid base URL '{value}'")
+    base = f"{parsed.scheme}://{parsed.netloc}"
+    path = parsed.path.rstrip("/")
+    return f"{base}{path}" if path else base
 
 
 @dataclass(frozen=True)

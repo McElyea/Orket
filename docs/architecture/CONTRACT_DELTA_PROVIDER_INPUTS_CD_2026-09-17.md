@@ -56,8 +56,10 @@
   the loop clock independently of timeout callback ordering.
 - Complete provider composition, prompting/profile inputs, CLI executable/process
   environment capture, native-process policy, and shared-client concurrency/shutdown
-  remain broader C/D work. The adapter's preparation dependency on application policy
-  remains visible; no dependency exception or classification waiver is added.
+  remain broader C/D work. The subsequent preparation port removes the adapter's
+  direct application dependency and binds its default Ollama host explicitly:
+  `docs/architecture/CONTRACT_DELTA_PROVIDER_PREPARATION_CD_2026-09-18.md`.
+  No dependency exception or classification waiver is added.
 - Historical host-clock and Linux approval/resume failures remain unresolved.
   Current source, package, installed and live evidence belongs in the canonical plan.
 

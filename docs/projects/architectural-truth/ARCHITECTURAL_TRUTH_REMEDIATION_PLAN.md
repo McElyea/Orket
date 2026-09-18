@@ -13648,3 +13648,258 @@ Exact changed paths for this checkpoint:
 - `tests/runtime/test_epic_run_orchestrator.py`
 - `tests/runtime/test_extension_components.py`
 - `tests/runtime/test_sdk_memory_provider.py`
+
+### Provider preparation authority candidate: 2026-09-18
+
+The observations below retain the state at each earlier gate. Current scoped
+status and remaining limits are recorded in the revised acceptance checkpoint
+at the end of this section.
+
+The clean preceding local checkpoint is `26e01721a936cac7afb6b509743517854e2e0c90`,
+annotated `v0.6.14`. Its receipt SHA-256 is
+`fe396a951c442ed9d83df12b4ac6c7bb12c9c32ff4d121e19b3629cd2cca859b`.
+All 321 bound evidence files and the working snapshot matched before edits;
+`.tmp/c-provider-admission/session-state.json` records that verification.
+The original handoff and prior receipts remain unchanged. No remote Git action
+is part of this candidate.
+
+Four real loopback HTTP controls execute against unchanged 0.6.14. The two
+ordinary-client controls pass; the derived-client controls fail because inference
+skips inventory and because quarantine does not prevent its HTTP request.
+The original test bytes, complete input declaration, log and XML remain under
+`.tmp/c-provider-admission/before/`. These are actual HTTP requests with controlled
+response bodies, not model inference or hostile-code containment proof.
+
+Application composition now supplies `ProviderPreparationService` through the
+core `ProviderPreparationPort`. Its immutable request captures provider, requested
+model, normalized endpoint, timeout and API-key input before preparation awaits.
+An admitted target must retain that provider/backend/request/endpoint identity;
+auto-selection can still choose a different admitted model. Client-class and
+mock-transport detection no longer bypass preparation. Raw adapter callers require
+the port, and isolated transport tests explicitly supply controlled admission.
+Pure endpoint normalization moves into core with its three script consumers;
+the old application helper is not retained as a forwarding shim. Migration:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_PREPARATION_CD_2026-09-18.md`.
+
+The initial focused boundary run passes all 15 HTTP/inventory/load cases. A wider
+126-case regression run passes 123 and fails three llama.cpp fixture cases whose
+configured default endpoint is port 8080 while their fabricated admitted target
+and HTTP transport use port 1234. The fixtures now declare that endpoint explicitly;
+target identity checks stay strict. Adding a forwarding mock transport over real
+HTTP covers the second retired bypass route. All 128 aligned cases pass. Reports,
+inputs and failure evidence remain under `boundary/`, `focused/` and `aligned/`.
+
+The actual Ollama client constructor also demonstrates a captured-input gap:
+with an explicit empty environment, its declared host is empty while its actual
+HTTP client consumes a controlled ambient `OLLAMA_HOST` at port 19991. The client
+is closed after observation. `ollama-host-before.json` and its retained source
+record this contract observation without claiming network inference. The adapter
+now supplies the captured host or canonical default explicitly. All 129 combined
+cases pass in `configured/`, including the new constructor contract. Fresh full
+source, package, installed and actual-provider gates remain pending.
+
+The next 67-case related selection passes, but its retained response metadata
+exposes an unintended fixture effect: the three orchestration tests use fake
+inference while real LM Studio discovery auto-loads `qwen_qwen3-14b`. The attempted
+environment override used incorrect setting names. That is a verification defect,
+not live model-inference proof. `related-before/` retains original tests and target
+observations, including empty loaded-before and verified loaded-after values.
+`fixture-load-cleanup-before.json` and `fixture-load-cleanup.json` retain the idle
+model observation, targeted native unload and subsequent empty loaded inventory;
+no other model or server was stopped. The fixtures now supply controlled admission
+through the actual application factory and assert that provenance in the captured
+response. All 67 corrected cases pass in `related-controlled/` with automatic
+selection/loading explicitly disabled. Fresh broad source and native acceptance
+use those same exact setting names; tests of loading policy must supply their own
+controlled inputs. The loader side effect and verified cleanup remain retained.
+
+The refreshed static graph has 1,021 modules, 3,234 import sites, 35 forbidden
+pairs, one authority cycle, ten analysis errors and no unknown classifications.
+The adapter-to-runtime preparation edge is removed without a dependency exception.
+Collection success is separate from the still-failed verdict. The 0.6.15 wheel
+and source archive build successfully, and the fresh private source-proof
+environment imports the installed 0.6.15 package outside the repository. The
+refreshed baseline uses that environment and collects successfully while reporting
+`release_ready=false`; prior baseline observations remain historical. Expanded
+source execution and fresh installed/native/provider acceptance remain pending.
+
+The first expanded source execution covers 2,713 unique cases in 350 modules:
+2,708 pass and five fail, with no errors/skips in 749.66 seconds. Inputs stay
+unchanged and no root database is created. The failures are isolated-response
+fixtures in `test_turn_executor_runtime_context_bridge.py` and
+`test_generation_request_options.py`: real discovery rejects fabricated model
+names or the absent Ollama CLI before reaching the intended prompt/options
+assertions. Both now declare controlled admission through the application factory;
+the SDK fixture also aligns its configured endpoint with its mock transport.
+The original report, XML, log, module bytes and all fixture files remain bound in
+`complete/source-1-retention.json`. After admission and endpoint correction, all
+47 targeted cases pass. The fresh complete source rerun passes all 2,713 cases in
+350 modules in 736.82 seconds, with no failures/errors/skips, unchanged inputs and
+no root database. Changed-file Ruff passes. The same 1,021 core Python files and
+1,036 wheel package files match the retained source archive and wheel. This is
+source regression plus package parity, not fresh installed acceptance. The native
+partition is 2,708 runtime cases plus five repository-only structural cases;
+Windows/Linux Python 3.11/3.12 and actual llama.cpp gates remain pending.
+
+The initial installed partition is declared before native execution in
+`runtime-matrix/selection-declaration.json`, SHA-256
+`dcf5d36d88c39f4fa7f6a6a1e41dfd6f9c25a8b5de775c173646f187127b1c49`.
+Its manifest SHA-256 is
+`054b8a443a7673363b94eec0f0be3ebdc5b46fb5c1e7de92a9c536b05f3f9c94`.
+Linux Python 3.11 passes all 2,708 cases in 636.10 seconds; Linux Python 3.12
+passes 2,707 and fails one in 675.60 seconds. Both processes return and their
+artifact audits match retained bytes. The original Windows cells are not run.
+
+The Linux 3.12 failure is
+`test_async_dual_write_run_ledger_supports_protocol_primary_reads`, which raises
+`E_DUAL_WRITE:PRIMARY_UNAVAILABLE:ValueError:E_LEDGER_TIMESTAMP_NON_MONOTONIC`.
+The original fixture, report, test module and installed wheel remain unchanged.
+`native-clock-observation/original-fixture.tar` captures the fixture before reading
+its copied SQLite database. Actual stored values are:
+
+- SQLite start: `2026-09-18T11:48:57.441908+00:00`.
+- Protocol start: `2026-09-18T11:48:57.466937+00:00`.
+- SQLite end/update: `2026-09-18T11:48:44.359051+00:00`.
+
+SQLite retains status `incomplete`; the protocol ledger retains only `run_started`.
+The pending finalize intent records SQLite acknowledgement and protocol timestamp
+refusal; no terminal graph exists. The rejected protocol timestamp was not retained.
+The observed stock-clock chronology regresses; the cause of that movement remains
+unknown. This is not a diagnosed host defect or a runtime clock repair.
+
+The copied-fixture reader initially omitted SQLite's URI option, then a read-only
+schema probe created empty WAL and SHM files in the copy. All original archived
+bytes stayed identical; the final immutable read changed no copy bytes. These
+reader errors and auxiliary hashes remain in `native-clock-observation/observation.json`.
+The original installed fixture was never reopened for those diagnostic reads.
+
+The dual-ledger lifecycle test module now supplies the existing
+`ProtocolLedgerClock` consistently, including the named success test. Two new
+real SQLite/protocol integration controls exercise backward supplied time with
+both primary modes, retained partial effects, absent uncommitted terminal graph,
+and recovery without duplicate events after a later supplied time. All 28 targeted
+source cases pass. The named success case plus the two refusal/recovery controls
+also pass against the unchanged installed Linux 3.12 wheel, with 427 core origins
+verified. Its initial child report hashes the launcher log before the last print;
+that single incorrect hash is retained. `controlled-clock-installed/settled-audit.json`
+independently verifies settled launcher bytes, XML, unchanged copied inputs and
+installed origins after the parent exits. This is three controlled cases, not
+replacement acceptance or stock-clock stability proof.
+
+The revised acceptance was separately declared under `ordered-clock/`, using
+`runtime-matrix-ordered-clock/` and the unchanged runtime wheel. At that point,
+fresh source, four serial installed cells and actual llama.cpp proof remained
+required before a local checkpoint. The original failed cohort and both utility
+diagnostic errors remain retained; full C/D/E/CAP acceptance remains open.
+
+The revised source gate passes all 2,715 unique cases in 351 modules in 736.17
+seconds, with no failures/errors/skips. Changed-file Ruff, unchanged inputs and
+absence of a root database also pass. Its native partition is 2,710 runtime cases
+plus the same five required repository-only checks. At that source checkpoint,
+revised native/provider gates and the local commit/tag remained pending.
+
+The first revised Linux Python 3.11 cell passed all 2,710 cases in 733.75
+seconds. The completed revised cohort and scoped checkpoint follow.
+
+#### Revised provider-preparation acceptance checkpoint
+
+The separately declared revised cohort passes. Five repository-only checks
+remain in source proof; the other 2,710 cases run in each fresh installed cell.
+The disjoint partition covers all 2,715 selected source cases. No case is
+skipped or removed to make the installed result pass.
+
+| Environment | Pass / fail / error / skip | Seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 2715 / 0 / 0 / 0 | 735.947 |
+| Installed linux-py311 | 2710 / 0 / 0 / 0 | 733.700 |
+| Installed linux-py312 | 2710 / 0 / 0 / 0 | 591.496 |
+| Installed win-py311 | 2710 / 0 / 0 / 0 | 733.948 |
+| Installed win-py312 (outer-budget retry) | 2710 / 0 / 0 / 0 | 860.220 |
+
+Table times are JUnit durations; earlier elapsed command totals also include
+driver overhead.
+
+The first revised Windows 3.12 attempt passed all 2,710 pytest cases in
+883.468 seconds, but its 900-second outer driver budget expired before the
+final report and execution receipt existed. Its 20,301 retained files remain
+bound in `runtime-matrix-ordered-clock/win-py312-timeout.json`; that attempt
+is incomplete. A fresh Windows 3.12 replacement uses the identical wheel,
+manifest, harness and cases under a separately declared 1,200-second budget for
+the complete driver. Product, per-test and CLI deadlines are unchanged. The other
+three passing fresh environments remain required; the table uses the completed
+replacement result. Its declaration and exact prefix mapping remain in the audit.
+
+Each installed cell verifies package origins, retained inputs and artifacts,
+public CLI behavior, controlled ToolGate refusal and observed process teardown.
+The local HTTP/SQLite/files/process regressions include controlled providers
+and clocks; their passing assertions are not actual model-inference proof.
+
+Separate installed Windows 3.11 proof passes eight actual llama.cpp cases in 134.338
+seconds: CLI continuation, API memory/replay, effect restart and abrupt API
+process recovery. The existing operator server retains its process identity;
+all observed proof children are terminal. Three separately opted-in installed
+SDK/storage/synthesis integrations also pass; those helpers make no model call.
+
+The revised artifact audit is `runtime-matrix-ordered-clock/audit.json`,
+SHA-256 `066b308e41bc46c80182cbc4c3cd1ea793e16ce334c0cefd960e5b437798616a`. The unchanged runtime wheel
+matches 1,021 core Python files and 1,036 package files. Wheel SHA-256:
+`a1e6d3af9d14f6d5d383845b85df1127375c10a0e530604c2a30f797e52ef7e4`; sdist SHA-256:
+`7d8e7e657a05086050161a444ae1da0a133450b1e64f9376a64f3a6c076aee30`.
+
+Original bypass, fixture, source and native failures remain retained, including
+the unintended LM Studio load and verified targeted cleanup. The initial
+Linux 3.12 wall-clock regression remains unexplained. Ordered supplied-clock
+controls do not repair or establish the reliability of the stock clock.
+
+This is the local 0.6.15 checkpoint, with its matching annotated tag and
+byte-bound receipt at `ordered-clock/local-checkpoint.json`. No remote Git
+operation or push is part of this checkpoint. It is partial overall success:
+whole C/D/E/CAP, the canonical full suite/quality envelope, hosted CI, release
+readiness and explicit whole-lane acceptance remain open.
+
+Remaining blockers or drift: full native CLI executable/process environment
+capture, concurrent first-preparation ownership, shared-client request lifetime
+and shutdown, remaining provider settings and whole C/D/E/CAP acceptance remain
+open. Pinned targets are not live revocation channels. This candidate does not
+promote another provider or establish live Ollama inference, model quality,
+capacity, hostile-code containment or whole-lane acceptance.
+
+#### Current provider-preparation candidate file set
+
+Git-visible changes relative to the sealed 0.6.14 checkpoint; verification artifacts
+remain under `.tmp/c-provider-admission/`. These are the exact 0.6.15 checkpoint paths.
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/architecture/CONTRACT_DELTA_PROVIDER_INPUTS_CD_2026-09-17.md`
+- `docs/architecture/CONTRACT_DELTA_PROVIDER_PREPARATION_CD_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/README.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/ODR_PROVIDER_ADMISSION.md`
+- `orket/adapters/llm/local_model_provider.py`
+- `orket/adapters/llm/local_model_provider_runtime_target.py`
+- `orket/application/services/local_model_factory.py`
+- `orket/application/services/provider_preparation_service.py`
+- `orket/core/contracts/provider_preparation.py`
+- `orket/core/contracts/provider_runtime.py`
+- `orket/runtime/config/provider_runtime_target.py`
+- `pyproject.toml`
+- `scripts/odr/provider_admission.py`
+- `scripts/providers/provider_model_resolver.py`
+- `scripts/streaming/provider_identity.py`
+- `tests/adapters/test_local_model_provider_context_reset.py`
+- `tests/adapters/test_local_model_provider_runtime_target.py`
+- `tests/adapters/test_local_model_provider_telemetry.py`
+- `tests/adapters/test_model_invocation.py`
+- `tests/application/test_async_dual_write_run_ledger.py`
+- `tests/application/test_governed_agent_local_provider.py`
+- `tests/application/test_turn_executor_runtime_context_bridge.py`
+- `tests/contract/test_generation_request_options.py`
+- `tests/helpers/provider_preparation.py`
+- `tests/integration/test_dual_ledger_clock_refusal.py`
+- `tests/integration/test_provider_preparation_authority.py`

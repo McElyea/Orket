@@ -1,91 +1,23 @@
+"""Bind application-prepared target values before adapter inference."""
 from __future__ import annotations
 
 from typing import Any
 
-import httpx
-
-from orket.core.contracts.provider_runtime import ProviderRuntimeTarget
-from orket.exceptions import ModelConnectionError
-from orket.runtime.config.provider_runtime_target import (
-    ProviderRuntimeWarmupError,
-    resolve_bool_env,
-    resolve_float_env,
-    resolve_int_env,
-    resolve_provider_runtime_target,
-)
-
-
-def _uses_httpx_mock_transport(client: Any) -> bool:
-    transport = getattr(client, "_transport", None)
-    return (
-        transport is not None
-        and str(transport.__class__.__name__ or "") == "MockTransport"
-        and str(transport.__class__.__module__ or "").startswith("httpx")
-    )
-
-
-def uses_runtime_managed_client(
-    *,
-    provider_backend: str,
-    client: Any,
-    provider_managed_client_id: int | None = None,
-) -> bool:
-    if provider_backend == "openai_compat":
-        return (
-            client is not None
-            and str(client.__class__.__name__ or "") == "AsyncClient"
-            and str(client.__class__.__module__ or "").startswith("httpx")
-            and (not _uses_httpx_mock_transport(client) or id(client) == provider_managed_client_id)
-        )
-    return bool(client) and str(client.__class__.__module__ or "").startswith("ollama")
+from orket.core.contracts.provider_preparation import ProviderPreparationRequest, require_prepared_target
+from orket.core.contracts.provider_runtime import DEFAULT_OLLAMA_BASE_URL, ProviderRuntimeTarget
 
 
 async def ensure_provider_runtime_target(provider: Any) -> str:
     if getattr(provider, "_runtime_target", None) is not None:
         return str(provider.model)
-    if not uses_runtime_managed_client(
-        provider_backend=str(provider.provider_backend),
-        client=getattr(provider, "client", None),
-        provider_managed_client_id=getattr(provider, "_provider_managed_client_id", None),
-    ):
-        return str(provider.model)
-    try:
-        environment = provider._provider_environment
-        target = await resolve_provider_runtime_target(
-            provider=str(provider.provider_name),
-            requested_model=str(provider.requested_model),
-            base_url=provider.openai_base_url if provider.provider_backend == "openai_compat" else provider.ollama_host,
-            timeout_s=max(1.0, float(provider.timeout)),
-            auto_select_model=resolve_bool_env(
-                "ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL",
-                "ORKET_LLM_AUTO_SELECT_MODEL",
-                default=True,
-                environment=environment,
-            ),
-            auto_load_local_model=resolve_bool_env(
-                "ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL",
-                "ORKET_LLM_AUTO_LOAD_LOCAL_MODEL",
-                default=True,
-                environment=environment,
-            ),
-            model_load_timeout_s=resolve_float_env("ORKET_PROVIDER_RUNTIME_MODEL_LOAD_TIMEOUT_SEC", default=180.0,
-                                                 environment=environment),
-            model_ttl_sec=resolve_int_env("ORKET_PROVIDER_RUNTIME_MODEL_TTL_SEC", default=600, environment=environment),
-            api_key=getattr(provider, "openai_api_key", "") or None,
-            environment=environment,
-        )
-    except (ProviderRuntimeWarmupError, httpx.HTTPError) as exc:
-        raise ModelConnectionError(
-            "Provider runtime preparation failed "
-            f"provider={provider.provider_name} requested_model={provider.requested_model or '(unset)'}: {exc}"
-        ) from exc
-    if target.status != "OK" or not str(target.model_id or "").strip():
-        available = ", ".join(target.available_models[:12]) or "(no models discovered)"
-        raise ModelConnectionError(
-            "Provider runtime target resolution failed "
-            f"provider={target.requested_provider} requested_model={provider.requested_model or '(unset)'} "
-            f"resolution_mode={target.resolution_mode} available={available}"
-        )
+    request = ProviderPreparationRequest(
+        provider=str(provider.provider_name), requested_model=str(provider.requested_model),
+        base_url=(provider.openai_base_url if provider.provider_backend == "openai_compat"
+                  else provider.ollama_host or DEFAULT_OLLAMA_BASE_URL),
+        timeout_s=max(1.0, float(provider.timeout)), api_key=getattr(provider, "openai_api_key", "") or "",
+    )
+    target = await provider._runtime_preparation.prepare(request)
+    require_prepared_target(request, target)
     provider._runtime_target = target
     provider.model = str(target.model_id)
     if provider.provider_backend == "openai_compat":

@@ -11,10 +11,14 @@ from urllib.parse import urlparse
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.core.contracts.provider_runtime import (
     DEFAULT_LOCAL_PROVIDER,
+    DEFAULT_OLLAMA_BASE_URL,
     PROVIDER_CHOICES,
     ProviderRuntimeTarget,
     effective_provider,
     normalize_provider,
+)
+from orket.core.contracts.provider_runtime import (
+    normalize_base_url as _normalize_base_url,
 )
 from orket.runtime.config.gguf_model_inventory import (
     GGUFModelInventoryResult,
@@ -86,19 +90,7 @@ def default_base_url(provider: str, *, environment: Mapping[str, str] | None = N
         raw = str(environment.get(key, "")).strip()
         if raw:
             return raw
-    return "http://127.0.0.1:11434"
-
-
-def normalize_base_url(raw: str | None, *, default: str) -> str:
-    value = str(raw or "").strip() or str(default or "").strip()
-    if "://" not in value:
-        value = f"http://{value}"
-    parsed = urlparse(value)
-    if not parsed.scheme or not parsed.netloc:
-        raise ValueError(f"Invalid base URL '{value}'")
-    base = f"{parsed.scheme}://{parsed.netloc}"
-    path = parsed.path.rstrip("/")
-    return f"{base}{path}" if path else base
+    return DEFAULT_OLLAMA_BASE_URL
 
 
 def resolve_bool_env(*keys: str, default: bool, environment: Mapping[str, str] | None = None) -> bool:
@@ -222,7 +214,7 @@ async def list_provider_models(
     environment = MappingProxyType(dict(os.environ if environment is None else environment))
     requested = effective_provider(provider, default=DEFAULT_LOCAL_PROVIDER)
     canonical = normalize_provider(requested)
-    resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested, environment=environment))
+    resolved_base_url = _normalize_base_url(base_url, default=default_base_url(requested, environment=environment))
     if requested == "lmstudio":
         models = await _owned_inventory(_list_installed_lmstudio_models_sync, timeout_s=timeout_s)
         return {
@@ -318,14 +310,14 @@ async def resolve_provider_runtime_target(
             canonical_provider="unknown",
             requested_model=str(requested_model or "").strip(),
             model_id="",
-            base_url=normalize_base_url(base_url, default=default_base_url(DEFAULT_LOCAL_PROVIDER, environment=environment)),
+            base_url=_normalize_base_url(base_url, default=default_base_url(DEFAULT_LOCAL_PROVIDER, environment=environment)),
             resolution_mode="unknown_provider_input",
             inventory_source="unknown_input_policy",
             available_models=[],
             status="BLOCKED",
         )
     canonical_provider = normalize_provider(requested_provider)
-    resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested_provider, environment=environment))
+    resolved_base_url = _normalize_base_url(base_url, default=default_base_url(requested_provider, environment=environment))
     requested_model_token = str(requested_model or "").strip()
     quarantine_policy = resolve_provider_quarantine_policy(environment=environment)
     quarantined_providers = {

@@ -5,9 +5,9 @@ from dataclasses import asdict, dataclass
 from urllib.parse import urlsplit
 
 from orket.application.services.local_model_factory import create_local_model_provider
-from orket.core.contracts.provider_runtime import normalize_provider
+from orket.core.contracts.provider_runtime import normalize_base_url, normalize_provider
 from orket.runtime.config.defaults import configured_provider
-from orket.runtime.config.provider_runtime_target import default_base_url, list_provider_models, normalize_base_url
+from orket.runtime.config.provider_runtime_target import default_base_url, list_provider_models
 
 
 @dataclass(frozen=True)

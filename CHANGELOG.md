@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.15] - 2026-09-18 - "Explicit provider preparation"
+
+### Changed
+- Application composition supplies provider preparation through a core port over captured inputs.
+- Require admitted provider, model request and endpoint identity before inference; client subclasses and mock transports no longer bypass preparation.
+- Move pure endpoint normalization into core and migrate its internal callers without a forwarding shim.
+- Bind the Ollama client's default host explicitly instead of inheriting an excluded ambient host.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `required`
+- Internal migration: `docs/architecture/CONTRACT_DELTA_PROVIDER_PREPARATION_CD_2026-09-18.md`.
+- Stability: scoped proof passes: 2,715 source cases, 2,710 installed runtime
+  cases in each Windows/Linux Python 3.11/3.12 cell, eight actual llama.cpp
+  regressions and three opted-in memory integrations. Five repository-only
+  checks remain in source proof. The final Windows 3.12 proof uses a declared
+  outer-budget retry. Original failures and verified fixture-load
+  cleanup are retained; the earlier stock-clock regression remains unexplained.
+  Native CLI environment capture, concurrent preparation/shutdown and full
+  architectural-truth acceptance remain open. Commit and tag remain local.
+
 ## [0.6.14] - 2026-09-18 - "Captured SDK memory requests"
 
 ### Changed

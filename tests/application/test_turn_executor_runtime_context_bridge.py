@@ -9,12 +9,12 @@ import pytest
 
 from orket.adapters.llm import local_model_provider as local_model_provider_module
 from orket.adapters.llm.local_model_provider import LocalModelProvider
-from orket.application.services.local_model_factory import create_local_model_provider
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_executor_runtime import invoke_model_complete
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.provider_preparation import create_test_model_provider
 
 
 class _FakeOpenAIClient:
@@ -126,13 +126,14 @@ async def test_invoke_model_complete_uses_provider_fallback_when_wrapper_omits_r
 async def test_turn_executor_bridges_runtime_context_through_wrapped_model_client(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
+    """Layer: contract. Controlled admission reaches the actual prompt-policy refusal."""
     fake_client = _FakeOpenAIClient()
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
     monkeypatch.delenv("ORKET_LOCAL_PROMPTING_MODE", raising=False)
     monkeypatch.setattr(local_model_provider_module.httpx, "AsyncClient", lambda *args, **kwargs: fake_client)
 
-    provider = create_local_model_provider(model="unknown-unmapped-model")
+    provider = create_test_model_provider(model="unknown-unmapped-model")
     model_client = _WrappedClient(provider)
     executor = TurnExecutor(
         state_machine=StateMachine(),

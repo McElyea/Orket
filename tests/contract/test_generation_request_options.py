@@ -7,11 +7,13 @@ import json
 import httpx
 import pytest
 
+from orket.application.services import sdk_llm_provider
 from orket.application.services.local_prompting_service import resolve_local_prompting_policy
 from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sync_bridge import run_coro_sync
 from orket.runtime.config.local_prompt_profiles import DEFAULT_LOCAL_PROMPT_PROFILE_REGISTRY_PATH
 from orket_extension_sdk.llm import GenerateRequest
+from tests.helpers.provider_preparation import create_test_model_provider
 
 
 class OllamaTransport:
@@ -37,6 +39,8 @@ def test_sdk_options_reach_transport_without_mutating_provider_defaults(monkeypa
         return httpx.Response(200, json={"choices": [{"message": {"content": "controlled"}}]})
 
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_MODE", "shadow")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://controlled.test/v1")
+    monkeypatch.setattr(sdk_llm_provider, "create_local_model_provider", create_test_model_provider)
     if backend == "ollama":
         monkeypatch.setattr("orket.adapters.llm.local_model_provider.ollama.AsyncClient", lambda **_: OllamaTransport(observed))
     provider = LocalModelCapabilityProvider(model=model, temperature=0.9, seed=None, provider=backend)
