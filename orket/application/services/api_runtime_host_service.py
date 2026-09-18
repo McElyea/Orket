@@ -23,6 +23,11 @@ class ApiRuntimeHostService:
     def create_session_id(self) -> str:
         return self.runtime_inputs.create_session_id()
 
+    def create_flow_authoring_service(self) -> Any:
+        from orket.application.services.flow_runtime_service import build_flow_authoring_service
+
+        return build_flow_authoring_service(self.project_root, self.runtime_inputs)
+
     def utc_now_iso(self) -> str:
         return self.runtime_inputs.utc_now_iso()
 

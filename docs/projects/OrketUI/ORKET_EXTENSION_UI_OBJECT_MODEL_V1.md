@@ -1,6 +1,6 @@
 # ORKET_EXTENSION_UI_OBJECT_MODEL_V1
 
-Last updated: 2026-04-09
+Last updated: 2026-09-18
 Status: Active shipped provenance support doc
 Authority status: Active Orket-side shipped provenance support doc. Summarizes current host-owned nouns and remaining extension-owned projections, but does not itself create new host authority.
 Owner: Orket Core
@@ -43,6 +43,12 @@ The following nouns are safe to treat as host-owned because they already exist o
 12. card authoring payload fields now admitted through [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md): `display_category`, `expected_output_type`, `approval_expectation`, and `artifact_expectation`
 13. neutral flow node kinds now admitted through [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md): `start`, `card`, `branch`, `merge`, and `final`
 14. Prompt Reforger service-result classes and result-envelope semantics already fixed by [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md)
+
+Flow ids and revisions are minted by the application's supplied runtime inputs.
+An atomic save guard consumes the current revision once; create-id collisions
+preserve the existing object. A cancellation or shutdown response is not rollback
+proof: inspect host state before treating a local draft as saved or unsaved.
+These rules do not expand the admitted single-card run boundary or add history.
 
 Where a host view model already exists, the extension should prefer that read model over raw payload invention.
 

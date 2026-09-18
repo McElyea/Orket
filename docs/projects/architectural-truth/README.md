@@ -679,3 +679,14 @@ without relaxing product, test or CLI timeouts. The incomplete attempt remains r
 The graph removes one forbidden pair; 35 remain. Native CLI environment and
 concurrent provider lifetime work remain open alongside C/D/E/CAP. The commit
 and matching annotated tag remain local; whole-lane acceptance remains open.
+
+The local 0.6.17 flow authoring checkpoint captures definitions before awaits,
+applies revision guards atomically in SQLite and refuses create-id collisions.
+Application owns composition, supplied inputs and bounded run admission; storage
+retains admitted commits and cleanup through cancellation. Source and fresh
+Windows/Linux Python 3.11 installations pass 46 selected cases, with package,
+actual CLI and cleanup checks. This intermediate proof does not repeat the full
+platform/provider union. Three forbidden pairs are removed; 32 pairs, one cycle
+and ten analysis errors remain. Original defects and the first shutdown-test
+expectation failure are retained. Exact proof and remaining obligations are in
+the canonical plan. The commit and annotated tag remain local during work hours.

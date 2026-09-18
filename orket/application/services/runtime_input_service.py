@@ -14,6 +14,12 @@ class RuntimeInputService:
     def create_effect_owner_id(self) -> str:
         return str(uuid4())
 
+    def create_flow_id(self) -> str:
+        return f"FLOW-{uuid4().hex[:8].upper()}"
+
+    def create_flow_revision_id(self) -> str:
+        return f"frv_{uuid4().hex}"
+
     def utc_now(self) -> datetime:
         return datetime.now(UTC)
 

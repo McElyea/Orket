@@ -5,6 +5,22 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.17] - 2026-09-18 - "Atomic flow authoring"
+
+### Changed
+- Capture submitted flow definitions before awaiting; enforce revision guards atomically in SQLite and refuse create-id collisions.
+- Application owns flow storage composition, supplied clock/identity inputs and bounded single-card run admission.
+- Retain admitted database operations and cleanup through cancellation; interrupted requests may already have committed.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration: `docs/architecture/CONTRACT_DELTA_FLOW_AUTHORITY_CD_2026-09-18.md`.
+- Stability: 46 selected cases pass in source and fresh Windows/Linux Python 3.11
+  installations, with package/CLI/cleanup checks. Original counterexamples and
+  the corrected shutdown-response test expectation remain retained. This is a
+  focused checkpoint; fresh Python 3.12, broad platform/quality/provider gates
+  and whole-lane acceptance remain open. Commit and annotated tag remain local.
+
 ## [0.6.16] - 2026-09-18 - "Captured HTTP verification"
 
 ### Changed

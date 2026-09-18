@@ -696,9 +696,8 @@ v1_router.include_router(build_card_authoring_router(lambda: _get_engine(), lamb
 v1_router.include_router(
     build_flows_router(
         engine_getter=lambda: _get_engine(),
-        project_root_getter=lambda: _project_root(),
+        host_getter=lambda: _get_api_runtime_host(),
         schedule_async_invocation_task=_schedule_async_invocation_task,
-        session_id_factory=lambda: _get_api_runtime_host().create_session_id(),
     )
 )
 v1_router.include_router(build_runs_router(lambda: _get_engine(), outward_execution_service_getter=lambda: _get_outward_run_execution_service(), outbound_filter=lambda payload, surface: _filter_operator_payload(payload, surface=surface)))

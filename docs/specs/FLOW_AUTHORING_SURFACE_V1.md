@@ -1,6 +1,6 @@
 # Flow Authoring Surface V1
 
-Last updated: 2026-04-09
+Last updated: 2026-09-18
 Status: Active shipped authority
 Owner: Orket Core
 Source requirements: [docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md)
@@ -110,10 +110,30 @@ Must return at least:
 8. `200` on `POST /v1/flows/{flow_id}/runs` is authoritative acceptance only. Downstream run completion remains governed by the existing runtime policy and epic environment after handoff.
 9. The current admitted run slice composes with cards created or updated through [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md) because issue-type authored cards are projected onto the canonical run-card surface before flow-run acceptance resolves assigned cards.
 
+Save admission captures a detached definition, revision and timestamp before the
+first awaited read. Guarded saves compare the supplied revision in the SQLite
+update: simultaneous writers using the same current revision cannot both succeed.
+An explicit empty guard fails with `409 revision_conflict`; omitted/null guards
+retain unconditional update semantics. A replacement revision must differ from
+the current revision. Updates preserve `created_at` and never insert missing ids.
+Create-id collisions return `409 flow_id_conflict` without replacing the old row.
+
+Storage retains admitted database work and connection cleanup through cancellation.
+A cancelled request can have committed; cancellation and shutdown's pre-response
+503 are not rollback evidence. Clients inspect the current revision after an
+interrupted save. Storage/cleanup errors remain failures. Validation does not
+create the flow database or its parent directory. Semantically invalid drafts
+remain persistable with negative validation; they cannot run.
+
+Run acceptance describes the selected saved revision. It is not a transaction
+across subsequent flow/card edits and downstream execution, and does not introduce
+flow history. Migration and proof limits:
+[flow authority delta](docs/architecture/CONTRACT_DELTA_FLOW_AUTHORITY_CD_2026-09-18.md).
+
 ## 6. Mounted current slice
 
 1. The routes above are mounted through [orket/interfaces/routers/flows.py](orket/interfaces/routers/flows.py) and included by [orket/interfaces/api.py](orket/interfaces/api.py).
-2. Flow persistence now uses the canonical durable path `.orket/durable/db/orket_ui_flows.sqlite3` via [orket/runtime_paths.py](orket/runtime_paths.py).
+2. Application composition in [orket/application/services/flow_runtime_service.py](orket/application/services/flow_runtime_service.py) selects `.orket/durable/db/orket_ui_flows.sqlite3` under the captured project root. The host supplies runtime clock and identity inputs; the storage adapter owns directory and SQLite effects.
 3. The neutral host node kinds above do not promote UI palette labels into host truth.
 4. `GET /v1/flows` and `GET /v1/flows/{flow_id}` are now canonical host inspection surfaces for persisted flow definitions.
 5. The bounded run-composition path may resolve assigned cards through the authored-card runtime projection maintained by [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md).

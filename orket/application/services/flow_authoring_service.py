@@ -11,7 +11,7 @@ class FlowAuthoringNotFoundError(Exception):
 
 
 class FlowAuthoringConflictError(Exception):
-    """Raised when the caller acts on stale revision state."""
+    """Raised when an identity collision or revision guard refuses a write."""
 
 
 class FlowRuntimeNotAdmittedError(Exception):
@@ -128,11 +128,12 @@ class FlowAuthoringService:
         }
 
     async def create_flow(self, definition: FlowDefinitionWriteModel) -> FlowWriteResult:
+        definition = FlowDefinitionWriteModel.model_validate(definition.model_dump())
         validation = self.validate_definition(definition)
         flow_id = self._flow_id_factory()
         revision_id = self._revision_id_factory()
         saved_at = self._now_iso_factory()
-        await self._flow_repo.save_flow(
+        created = await self._flow_repo.create_flow(
             flow_id=flow_id,
             revision_id=revision_id,
             name=definition.name,
@@ -141,6 +142,8 @@ class FlowAuthoringService:
             created_at=saved_at,
             updated_at=saved_at,
         )
+        if not created:
+            raise FlowAuthoringConflictError("flow_id_conflict: generated flow id already exists")
         return FlowWriteResult(
             flow_id=flow_id,
             revision_id=revision_id,
@@ -158,28 +161,30 @@ class FlowAuthoringService:
         definition: FlowDefinitionWriteModel,
         expected_revision_id: str | None = None,
     ) -> FlowWriteResult:
+        definition = FlowDefinitionWriteModel.model_validate(definition.model_dump())
+        validation = self.validate_definition(definition)
+        revision_id = self._revision_id_factory()
+        now_iso = self._now_iso_factory()
         existing = await self._flow_repo.get_flow(flow_id)
         if existing is None:
             raise FlowAuthoringNotFoundError(flow_id)
 
-        current_revision_id = str(existing.get("revision_id") or "").strip() or None
-        if expected_revision_id and current_revision_id and expected_revision_id != current_revision_id:
+        current_revision_id = str(existing["revision_id"])
+        if expected_revision_id is not None and expected_revision_id != current_revision_id:
             raise FlowAuthoringConflictError(
                 f"revision_conflict: expected '{expected_revision_id}' but found '{current_revision_id}'"
             )
-
-        validation = self.validate_definition(definition)
-        revision_id = self._revision_id_factory()
-        now_iso = self._now_iso_factory()
-        await self._flow_repo.save_flow(
+        updated = await self._flow_repo.update_flow(
             flow_id=flow_id,
             revision_id=revision_id,
+            expected_revision_id=expected_revision_id,
             name=definition.name,
             description=definition.description,
             payload=definition.model_dump(),
-            created_at=str(existing.get("created_at") or now_iso),
             updated_at=now_iso,
         )
+        if not updated:
+            raise FlowAuthoringConflictError("revision_conflict: current revision changed or replacement repeated it")
         return FlowWriteResult(
             flow_id=flow_id,
             revision_id=revision_id,
@@ -245,7 +250,7 @@ class FlowAuthoringService:
     async def prepare_flow_run(self, *, flow_id: str, expected_revision_id: str | None = None) -> tuple[str, str]:
         flow_detail = await self.get_flow(flow_id)
         revision_id = str(flow_detail.get("revision_id") or "")
-        if expected_revision_id and revision_id and expected_revision_id != revision_id:
+        if expected_revision_id is not None and expected_revision_id != revision_id:
             raise FlowAuthoringConflictError(
                 f"revision_conflict: expected '{expected_revision_id}' but found '{revision_id}'"
             )

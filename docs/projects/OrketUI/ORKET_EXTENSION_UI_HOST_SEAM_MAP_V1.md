@@ -1,6 +1,6 @@
 # ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1
 
-Last updated: 2026-04-09
+Last updated: 2026-09-18
 Status: Active shipped provenance support doc
 Authority status: Active Orket-side shipped provenance support doc. Subordinate to shipped host authority and not itself a new host-seam grant.
 Owner: Orket Core
@@ -123,6 +123,13 @@ The three card-authoring routes above are now the admitted write seams for creat
 4. `PUT /v1/flows/{flow_id}`
 5. `POST /v1/flows/validate`
 6. `POST /v1/flows/{flow_id}/runs`
+
+Guarded saves consume the expected current revision atomically; stale or explicit
+empty guards return `409 revision_conflict`. Create-id collisions return
+`409 flow_id_conflict` and preserve the existing flow. An interrupted request may
+have committed; reread the current revision before deciding how to save again.
+Validation creates no flow storage or host identity. See
+`docs/specs/FLOW_AUTHORING_SURFACE_V1.md` for the authoritative save semantics.
 
 The current admitted flow-run slice is bounded:
 

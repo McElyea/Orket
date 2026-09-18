@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 import json
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any, TypeVar
 
 import aiosqlite
+
+from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 
 from .sqlite_connection import connect_sqlite_wal
 
@@ -16,9 +17,10 @@ ResultT = TypeVar("ResultT")
 class AsyncFlowRepository:
     """Async SQLite repository for persisted flow definitions."""
 
+    side_effecting = True
+
     def __init__(self, db_path: str | Path) -> None:
-        self.db_path = str(db_path)
-        self._write_lock = asyncio.Lock()
+        self.db_path = str(Path(db_path).absolute())
 
     async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
         await conn.execute(
@@ -42,8 +44,13 @@ class AsyncFlowRepository:
         commit: bool = False,
         row_factory: bool = False,
     ) -> ResultT:
+        db_path = self.db_path
+
         async def _run() -> ResultT:
-            async with connect_sqlite_wal(self.db_path) as conn:
+            await run_owned_thread(
+                lambda: Path(db_path).parent.mkdir(parents=True, exist_ok=True), label="flow-storage-parent",
+            )
+            async with connect_sqlite_wal(db_path) as conn:
                 if row_factory:
                     conn.row_factory = aiosqlite.Row
                 await self._ensure_initialized(conn)
@@ -52,10 +59,7 @@ class AsyncFlowRepository:
                     await conn.commit()
                 return result
 
-        if commit:
-            async with self._write_lock:
-                return await _run()
-        return await _run()
+        return await run_owned_io(_run, label="flow-storage-operation", preserve_failure=True)
 
     async def list_flows(self, *, limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
         async def _op(conn: aiosqlite.Connection) -> list[dict[str, Any]]:
@@ -90,7 +94,7 @@ class AsyncFlowRepository:
 
         return await self._execute(_op, row_factory=True)
 
-    async def save_flow(
+    async def create_flow(
         self,
         *,
         flow_id: str,
@@ -100,20 +104,49 @@ class AsyncFlowRepository:
         payload: dict[str, Any],
         created_at: str,
         updated_at: str,
-    ) -> None:
+    ) -> bool:
         payload_json = json.dumps(payload, ensure_ascii=True, sort_keys=True)
 
-        async def _op(conn: aiosqlite.Connection) -> None:
-            await conn.execute(
+        async def _op(conn: aiosqlite.Connection) -> bool:
+            cursor = await conn.execute(
                 """
-                INSERT OR REPLACE INTO flows (
+                INSERT INTO flows (
                     flow_id, revision_id, name, description, payload_json, created_at, updated_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(flow_id) DO NOTHING
                 """,
                 (flow_id, revision_id, name, description, payload_json, created_at, updated_at),
             )
+            return cursor.rowcount == 1
 
-        await self._execute(_op, commit=True)
+        return await self._execute(_op, commit=True)
+
+    async def update_flow(
+        self,
+        *,
+        flow_id: str,
+        revision_id: str,
+        expected_revision_id: str | None,
+        name: str,
+        description: str,
+        payload: dict[str, Any],
+        updated_at: str,
+    ) -> bool:
+        payload_json = json.dumps(payload, ensure_ascii=True, sort_keys=True)
+
+        async def _op(conn: aiosqlite.Connection) -> bool:
+            cursor = await conn.execute(
+                """
+                UPDATE flows SET revision_id = ?, name = ?, description = ?, payload_json = ?, updated_at = ?
+                WHERE flow_id = ? AND revision_id != ?
+                  AND (? IS NULL OR revision_id = ?)
+                """,
+                (revision_id, name, description, payload_json, updated_at, flow_id,
+                 revision_id, expected_revision_id, expected_revision_id),
+            )
+            return cursor.rowcount == 1
+
+        return await self._execute(_op, commit=True)
 
     def _deserialize_row(self, row: dict[str, Any]) -> dict[str, Any]:
         payload_raw = row.get("payload_json")

@@ -14115,3 +14115,118 @@ helpers and retained proof remain under `.tmp/d-core-residual/`.
 - `tests/integration/test_sandbox_verification_json_admission.py`
 - `tests/integration/test_sandbox_verification_lifetime.py`
 - `tests/integration/test_sandbox_verification_persistence.py`
+
+### Flow authoring authority checkpoint: 2026-09-18
+
+Previous goal turn: progress, locally committed 0.6.16. Reentry verified the clean
+`152724c1519e48ab347f6fd9bed4c92b441298a3` worktree and annotated tag, all 296 directly
+bound predecessor evidence files, older provider evidence, unchanged neighboring
+worktrees and the original handoff. New snapshot:
+`.tmp/c-flow-authority/session-state.json`. No predecessor receipt was regenerated.
+
+The three retained flow preflights above define this C/D repair. Contract delta:
+`docs/architecture/CONTRACT_DELTA_FLOW_AUTHORITY_CD_2026-09-18.md`. Capture caller
+definitions before awaits, enforce revision comparison in SQLite, refuse create
+collisions, retain admitted database lifetime, and move router storage/input/run
+authority into application composition. Preserve the current single-card ceiling.
+
+Scoped verification will use real public ASGI/SQLite flows and affected regressions,
+with fresh focused installed-wheel proof. This intermediate checkpoint does not
+require repeating every earlier 2,800-case envelope; the full supported matrix,
+Quality/coverage gates and final provider/regression proof remain whole-lane
+acceptance obligations. No old matrix is acceptance of changed runtime bytes.
+Commits and annotated tags remain local during 10 AM–6 PM America/Denver.
+
+#### Scoped flow-authoring proof and remaining obligations
+
+Observed path: **primary**. Result: **success for this checkpoint; partial success
+for the full goal**. Live local proof exercises authenticated ASGI requests and
+real SQLite operations. Controlled run-admission/scheduler cases are contract
+proof and do not establish provider-backed card completion.
+
+All three original defects are covered: synchronized actual reads now produce one
+200 and one 409, caller mutation after an awaited read does not change the saved
+definition, and create-id collision preserves the first row with 409. Additional
+controls cover supplied host time/ids, isolated roots, missing/stale/empty guards,
+repeated revision refusal, nonpersisting validation, invalid draft/run behavior,
+captured repository payload/path and repeated cancellation through real commit
+and connection cleanup. A controlled post-close failure takes precedence over
+cancellation; the real committed row remains independently visible. Application
+shutdown waits for the admitted operation and returns its existing pre-header 503.
+
+The first source run retained 40 passes and one failure: the new shutdown test
+incorrectly expected a propagated cancellation instead of the already specified
+503. `source-1/` preserves the actual inputs, traceback and fixture bytes;
+`source-1-interpretation.json` records the correction. No runtime lifecycle rule
+was weakened. The runner's original bytes are retained in `source-1-runner.py`
+and match the declaration hash. The original three preflights stay byte-identical.
+
+| Envelope | Pass / fail / error / skip | JUnit seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 46 / 0 / 0 / 0 | 9.797 |
+| Installed Windows 3.11 | 46 / 0 / 0 / 0 | 9.689 |
+| Installed Linux 3.11 | 46 / 0 / 0 / 0 | 9.122 |
+
+The installed drivers verify all 842 actually imported core origins, unchanged
+harness inputs, original artifact bytes, valid and malformed public CLI paths,
+the ToolGate audit and absence of owned child processes/root test databases.
+Both native parents return and are reaped. Fresh wheel/sdist/source parity covers
+1,024 core Python files and 1,039 wheel package files. Core wheel SHA-256:
+`84b737e2f9d5034dfa54c1fba1ced1fc99b4e504165eeecf878d5f003cb00a3a`;
+sdist SHA-256:
+`80a39bb2c89f861f81bf3e3828894875c4dabf54ffa37b261516207bfaaaff91`.
+The exact focused corpus and native observations are in
+`.tmp/c-flow-authority/manifest.json` and `native-audit.json`.
+
+The refreshed structural graph has 1,024 modules, 3,242 import sites, 32 forbidden
+pairs, one authority cycle, ten analysis errors and zero unknown modules. Exactly
+the flow router's three forbidden pairs are removed; none are added. Baseline
+collection succeeds and still reports release-ready false. These are structural
+observations, not whole-repository conformance or purity acceptance.
+
+No fresh Python 3.12, full canonical suite, hosted Quality/coverage or provider
+matrix was run for this intermediate checkpoint. Those remain final C/D and
+whole-plan obligations. Old 0.6.16 matrices prove their own runtime bytes only.
+Flow history, crash/power-loss recovery, multi-process stress and a transaction
+across flow/card edits and execution are not established. Cancellation or a 503
+response can follow a committed save; clients inspect current state. Broader
+async/input, C/D/E/CAP and explicit whole-lane acceptance remain open. Continue
+remaining C dependency/composition and D purity/lifetime obligations; do not
+replace the full objective with this completed slice. No push was performed.
+
+#### Exact 0.6.17 checkpoint files
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/API_FRONTEND_CONTRACT.md`
+- `docs/ARCHITECTURE.md`
+- `docs/architecture/CONTRACT_DELTA_FLOW_AUTHORITY_CD_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md`
+- `docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/README.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`
+- `orket/adapters/storage/async_flow_repository.py`
+- `orket/application/services/api_runtime_host_service.py`
+- `orket/application/services/flow_authoring_service.py`
+- `orket/application/services/flow_runtime_service.py`
+- `orket/application/services/runtime_input_service.py`
+- `orket/interfaces/api.py`
+- `orket/interfaces/routers/flows.py`
+- `orket/runtime_paths.py`
+- `pyproject.toml`
+- `tests/contracts/test_flow_run_admission.py`
+- `tests/helpers/flow_authoring.py`
+- `tests/integration/test_flow_authoring_authority.py`
+- `tests/integration/test_flow_storage_lifetime.py`
+
+Final staging rejected two Markdown trailing-space line breaks in the new delta.
+The initial `checkpoint.json`, index record and original document remain retained
+under `.tmp/c-flow-authority/` with the failed staged check in
+`rejected-whitespace/`. Removing those four spaces changes no runtime or test
+input. The corrected local receipt is `final/local-checkpoint.json`; no previous
+receipt is overwritten. Final docs/release/index checks accompany that receipt.

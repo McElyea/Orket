@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-18T15:42:36.677962Z",
+  "generated_at": "2026-09-18T17:40:35.378177Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -306,7 +306,7 @@
           "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 1023,
+      "files_scanned": 1024,
       "scan_roots": [
         "orket"
       ],
@@ -315,7 +315,7 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 230
+          "count": 231
         },
         {
           "source": "adapters",
@@ -330,17 +330,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 323
+          "count": 324
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1551
+          "count": 1554
         },
         {
           "source": "application",
           "target": "core",
-          "count": 697
+          "count": 698
         },
         {
           "source": "application",
@@ -370,17 +370,17 @@
         {
           "source": "interfaces",
           "target": "adapters",
-          "count": 15
+          "count": 13
         },
         {
           "source": "interfaces",
           "target": "application",
-          "count": 74
+          "count": 76
         },
         {
           "source": "interfaces",
           "target": "core",
-          "count": 8
+          "count": 7
         },
         {
           "source": "interfaces",
@@ -647,39 +647,6 @@
           ]
         },
         {
-          "source": "orket.interfaces.routers.flows",
-          "target": "orket.adapters.storage.async_flow_repository",
-          "sites": [
-            {
-              "path": "orket/interfaces/routers/flows.py",
-              "line": 12,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.interfaces.routers.flows",
-          "target": "orket.exceptions",
-          "sites": [
-            {
-              "path": "orket/interfaces/routers/flows.py",
-              "line": 20,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.interfaces.routers.flows",
-          "target": "orket.runtime_paths",
-          "sites": [
-            {
-              "path": "orket/interfaces/routers/flows.py",
-              "line": 21,
-              "kind": "from"
-            }
-          ]
-        },
-        {
           "source": "orket.interfaces.routers.sessions",
           "target": "orket.core.domain.__init__",
           "sites": [
@@ -850,6 +817,7 @@
             "orket.interfaces.cli",
             "orket.interfaces.operator_view_models",
             "orket.interfaces.routers.cards",
+            "orket.interfaces.routers.flows",
             "orket.interfaces.routers.governed_agents",
             "orket.interfaces.routers.runs",
             "orket.interfaces.routers.sessions",
@@ -1210,10 +1178,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5001,
-    "missing_layer_total": 3400,
+    "tests_total": 5013,
+    "missing_layer_total": 3412,
     "by_layer": {
-      "unlabeled": 3400,
+      "unlabeled": 3412,
       "integration": 750,
       "unit": 168,
       "contract": 672,
@@ -1821,7 +1789,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3300
+    "missing_layers_omitted": 3312
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1845,13 +1813,13 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1023,
+    "python_files_scanned": 1024,
     "files_over_400_total": 66,
-    "functions_over_70_total": 220,
+    "functions_over_70_total": 219,
     "largest_files": [
       {
         "path": "orket/interfaces/api.py",
-        "lines": 1768
+        "lines": 1767
       },
       {
         "path": "orket/application/workflows/orchestrator_ops.py",
@@ -2112,7 +2080,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 588,
+    "scanned_files": 589,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -2223,45 +2191,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-17T06:09:50.991257Z",
-      "changed": true,
-      "before_digest": "sha256:cc97c6d0c8156e6f838377eeebe331ea3a4d8113f5d0537da36c7fc3cb6e9ac3",
-      "after_digest": "sha256:03d68856c4f67bed9396a5a4e9c401264100a138f6a05e50b6ca5db64150c9dc",
-      "diff": {
-        "added_paths": 1,
-        "removed_paths": 21,
-        "changed_paths": 444,
-        "initial_write": false,
-        "paths_total_previous": 3786,
-        "paths_total_current": 3658,
-        "paths_total_reference": 3786,
-        "churn_paths": 466,
-        "churn_ratio": 0.123085,
-        "sample_paths": [
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[0].count",
-          "$.dependency_graph.observed.layer_edges[1].count",
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.dependency_graph.observed.layer_edges[5].count",
-          "$.dependency_graph.observed.layer_edges[6].count",
-          "$.dependency_graph.observed.layer_edges[9].count",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[6]",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[7]",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[8]",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[9]",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[10]",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[11]",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[12]",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[13]",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[14]",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[15]",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[16]",
-          "$.dependency_graph.verdict.authority_cycles[0].modules[17]"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-17T16:26:48.938031Z",
       "changed": true,
@@ -3120,6 +3049,45 @@
           "$.test_taxonomy.missing_layer_total",
           "$.test_taxonomy.missing_layers_omitted",
           "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T17:40:35.380682Z",
+      "changed": true,
+      "before_digest": "sha256:8dda565f6f6bfda7d9487fda7dec588c7c714506a26de04786f075aeccc20a72",
+      "after_digest": "sha256:fbebc2feeb14c6214888a24aefcb49f7b65a90283c590b06c8620c95c0485cb8",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 3,
+        "changed_paths": 198,
+        "initial_write": false,
+        "paths_total_previous": 3305,
+        "paths_total_current": 3268,
+        "paths_total_reference": 3305,
+        "churn_paths": 202,
+        "churn_ratio": 0.06112,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[11].count",
+          "$.dependency_graph.observed.layer_edges[12].count",
+          "$.dependency_graph.observed.layer_edges[13].count",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[68]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[69]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[70]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[71]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[72]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[73]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[74]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[75]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[76]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[77]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[78]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[79]"
         ]
       }
     }

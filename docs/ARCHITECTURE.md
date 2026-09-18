@@ -216,6 +216,13 @@ Responsibilities:
 
 Application services own runtime truth.
 
+Flow authoring composition and bounded run admission belong to application.
+Captured definitions and host time/identity inputs feed distinct create/update
+storage operations. SQLite enforces guarded saves atomically and refuses create
+collisions; admitted database work retains ownership through cancellation.
+Migration and interruption semantics:
+`docs/architecture/CONTRACT_DELTA_FLOW_AUTHORITY_CD_2026-09-18.md`.
+
 SDK memory coordination likewise belongs to application. The public synchronous
 memory write captures nested request metadata before bridge submission; scope,
 control and policy semantics retain their existing authorities. Migration and

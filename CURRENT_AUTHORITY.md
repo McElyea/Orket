@@ -4,6 +4,14 @@ Last updated: 2026-09-18
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Flow authoring uses captured definitions and application-host clock/identity inputs.
+Storage refuses create collisions and applies expected-revision guards in the
+SQLite update. Admitted operations retain commit/cleanup lifetime through repeated
+cancellation; an interrupted request may have committed. The router delegates
+storage composition and bounded run admission to application. Save, interruption
+and migration authority is `docs/specs/FLOW_AUTHORING_SURFACE_V1.md` and
+`docs/architecture/CONTRACT_DELTA_FLOW_AUTHORITY_CD_2026-09-18.md`.
+
 Sandbox HTTP verification belongs to `SandboxVerificationService` in application.
 Core captures immutable target/scenario values and interprets observations; the
 execution adapter owns the HTTP client. Exact falsy/null comparison, cancellation,
@@ -886,7 +894,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 75. Canonical Tool Execution Gate authority now lives in `docs/specs/TOOL_EXECUTION_GATE_V1.md`; the shipped first slice closes the supported `run_card(...) -> TurnExecutor -> ToolDispatcher` path plus normalized extension actions that re-enter `run_card(...)`, requires construction-time `tool_gate` authority on that supported path, keeps direct `ToolDispatcher.execute_tools(...)`, direct `ToolBox.execute(...)`, and direct card-family method invocation inventory-only internal seams, keeps direct `Agent.run(...)` as retained legacy compatibility that now fail-closes before any direct tool call when `tool_gate` or effect-journal authority is missing, keeps SDK capability registry invocation out of scope under `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`, and fixes the canonical audit command and stable output path at `python scripts/security/build_tool_gate_audit.py --strict` and `benchmarks/results/security/tool_gate_audit.json`
 76. Canonical Card Viewer/Runner operator surface now lives in `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`; the first truthful operator slice reads through `GET /v1/cards/view`, `GET /v1/cards/{card_id}/view`, `GET /v1/runs/view`, `GET /v1/runs/{session_id}/view`, `GET /v1/system/provider-status`, and `GET /v1/system/health-view`, uses `POST /v1/system/run-active` as the canonical run/rerun action, admits lifecycle categories `prebuild_blocked`, `artifact_run_failed`, `artifact_run_completed_unverified`, `artifact_run_verified`, and `degraded_completed`, and admits card filter buckets `open`, `running`, `blocked`, `review`, `terminal_failure`, and `completed` via `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/operator_view_models.py`, `orket/interfaces/operator_view_support.py`, `orket/interfaces/routers/cards.py`, `orket/interfaces/routers/runs.py`, `orket/interfaces/routers/system.py`, and `orket/interfaces/api.py`
 77. Canonical Card Authoring surface now lives in `docs/specs/CARD_AUTHORING_SURFACE_V1.md`; the current shipped host slice admits `POST /v1/cards`, `PUT /v1/cards/{card_id}`, and `POST /v1/cards/validate`, mints canonical host `card_id` plus card authoring `revision_id`, persists host authoring payload and revision markers on the canonical card surface, upserts issue-target authored cards into the bounded runtime projection `config/epics/orket_ui_authored_cards.json` for canonical run-card resolution, and fail-closes stale saves with `409 revision_conflict` via `docs/specs/CARD_AUTHORING_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/card_authoring.py`, `orket/application/services/card_authoring_service.py`, `orket/application/services/card_authoring_runtime_projection_service.py`, and `orket/interfaces/api.py`
-78. Canonical Flow Authoring surface now lives in `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`; the current shipped host slice admits `GET /v1/flows`, `GET /v1/flows/{flow_id}`, `POST /v1/flows`, `PUT /v1/flows/{flow_id}`, `POST /v1/flows/validate`, and bounded `POST /v1/flows/{flow_id}/runs`, persists flow truth at `.orket/durable/db/orket_ui_flows.sqlite3` via `orket/runtime_paths.py::resolve_flow_authoring_db_path`, admits neutral node kinds `start`, `card`, `branch`, `merge`, and `final`, composes with the authored-card runtime projection for current run-card resolution, bounds current run initiation to exactly one `card` node that resolves to the canonical `issue` runtime target, and treats `200` plus returned `session_id` as authoritative acceptance only while downstream run completion remains governed by the existing runtime policy via `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/flows.py`, `orket/application/services/flow_authoring_service.py`, `orket/adapters/storage/async_flow_repository.py`, `orket/runtime_paths.py`, and `orket/interfaces/api.py`
+78. Canonical Flow Authoring surface now lives in `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`; the current shipped host slice admits `GET /v1/flows`, `GET /v1/flows/{flow_id}`, `POST /v1/flows`, `PUT /v1/flows/{flow_id}`, `POST /v1/flows/validate`, and bounded `POST /v1/flows/{flow_id}/runs`, persists flow truth at `.orket/durable/db/orket_ui_flows.sqlite3` via `orket/application/services/flow_runtime_service.py::build_flow_authoring_service`, admits neutral node kinds `start`, `card`, `branch`, `merge`, and `final`, composes with the authored-card runtime projection for current run-card resolution, bounds current run initiation to exactly one `card` node that resolves to the canonical `issue` runtime target, and treats `200` plus returned `session_id` as authoritative acceptance only while downstream run completion remains governed by the existing runtime policy via `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/flows.py`, `orket/application/services/flow_authoring_service.py`, `orket/adapters/storage/async_flow_repository.py`, `orket/application/services/flow_runtime_service.py`, and `orket/interfaces/api.py`
 79. Canonical API startup security and CORS posture now live in `orket/runtime/config/startup_checks.py`, `orket/runtime/config/cors_config.py`, `orket/interfaces/api.py`, `docs/SECURITY.md`, and `docs/API_FRONTEND_CONTRACT.md`; flat `orket/runtime/startup_checks.py` and `orket/runtime/cors_config.py` remain compatibility aliases only. Non-local startup fails closed when `ORKET_ENCRYPTION_KEY`, `SESSION_SECRET`, `GITEA_WEBHOOK_SECRET`, or `ORKET_API_KEY` is missing or still set to a documented placeholder, `X-API-Key` validation uses timing-safe comparison, `ORKET_GITEA_ALLOW_INSECURE=true` with an HTTPS `GITEA_URL` emits a startup warning, and browser CORS defaults to `allow_origins=[]` unless `ORKET_ALLOWED_ORIGINS` supplies an explicit origin allowlist.
 80. Canonical kernel outbound projection policy now lives in `orket/kernel/v1/outbound_policy_gate.py`, `orket/kernel/v1/nervous_system_runtime.py`, `docs/SECURITY.md`, and `docs/API_FRONTEND_CONTRACT.md`; projection packs scrub configured paths, sensitive-key leaves, email-like values, and built-in leak patterns before digesting and returning `policy_context` or `tool_context_summary`, and report redaction counts plus redacted paths under `policy_summary.outbound_policy_gate`.
 81. Prompt Reforger generic service portability claims now live in `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`; `gemma-3-4b-it-qat` and other sub-7B targets are `unsupported` for product portability claims until exact corpus evidence clears, and lower corpus bars must be named as narrower tiers rather than described as clearing the frozen 5-slice portability corpus.
@@ -1104,9 +1112,11 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
         "update_route": "PUT /v1/flows/{flow_id}",
         "validate_route": "POST /v1/flows/validate",
         "run_route": "POST /v1/flows/{flow_id}/runs",
-        "stale_save_guard": "expected_revision_id",
+        "stale_save_guard": "atomic_sql_expected_revision_id",
+        "create_collision": "409_flow_id_conflict_preserves_existing",
+        "interruption": "admitted_storage_drains_commit_and_cleanup_outcome_requires_inspection",
         "storage_path": ".orket/durable/db/orket_ui_flows.sqlite3",
-        "storage_resolver": "orket/runtime_paths.py::resolve_flow_authoring_db_path",
+        "storage_resolver": "orket/application/services/flow_runtime_service.py::build_flow_authoring_service",
         "run_card_resolution_support": "config/epics/orket_ui_authored_cards.json via card authoring runtime projection",
         "admitted_node_kinds": [
           "start",
@@ -1131,7 +1141,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
           "orket/interfaces/routers/flows.py",
           "orket/application/services/flow_authoring_service.py",
           "orket/adapters/storage/async_flow_repository.py",
-          "orket/runtime_paths.py",
+          "orket/application/services/flow_runtime_service.py",
           "orket/interfaces/api.py"
         ]
       },
