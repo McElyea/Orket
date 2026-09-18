@@ -5,8 +5,8 @@ from typing import Any
 
 from orket.application.services.command_process_supervisor import CommandProcessSupervisor
 from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
+from orket.application.services.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket.capabilities.audio_player import build_audio_player
-from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket.capabilities.sdk_static_provider import StaticLLMCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider

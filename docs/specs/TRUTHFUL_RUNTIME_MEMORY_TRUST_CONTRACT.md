@@ -1,6 +1,6 @@
 # Truthful Runtime Memory Trust Contract
 
-Last updated: 2026-03-17
+Last updated: 2026-09-18
 Status: Active
 Owner: Orket Core
 Phase closeout authority: `docs/projects/archive/truthful-runtime/TRH03172026-PHASE-D-CLOSEOUT/CLOSEOUT.md`
@@ -26,6 +26,16 @@ Out of scope:
 3. Phase E promotion, scorecard, and expectation-alignment work
 
 ## Canonical Metadata Surface
+
+SDK memory coordination belongs to
+`orket.application.services.sdk_memory_provider.SQLiteMemoryCapabilityProvider`.
+Its public synchronous `write` captures the request, including nested metadata,
+before bridge submission. Caller mutation after that capture cannot alter the
+published request. Runtime controls retain per-invocation evaluation, and existing
+scope and profile policy authorities are reused. This does not make competing
+profile policy observation, write and readback one transaction. Migration and
+remaining lifetime/clock limits are recorded in
+`docs/architecture/CONTRACT_DELTA_SDK_MEMORY_OWNER_CD_2026-09-18.md`.
 
 Stored memory rows participating in this contract must carry these additive metadata keys:
 1. `memory_policy_version`

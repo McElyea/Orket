@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -180,11 +181,10 @@ async def _no_export(**_kwargs: Any) -> None:
     return None
 
 
-@pytest.mark.contract
 @pytest.mark.asyncio
-# Layer: contract
+# Layer: unit
 async def test_epic_run_orchestrator_rejects_unvalidated_collaborator_truth(tmp_path: Path) -> None:
-    """Layer: contract. Placeholder control-plane records cannot establish a published result."""
+    """Layer: unit. Placeholder control-plane records cannot establish a published result."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     cards_repo = AsyncCardRepository(tmp_path / "cards.db")
@@ -236,6 +236,7 @@ async def test_epic_run_orchestrator_rejects_unvalidated_collaborator_truth(tmp_
         organization=SimpleNamespace(architecture=SimpleNamespace(idesign_threshold=10)),
         runtime_input_service=SimpleNamespace(
             create_session_id=lambda: "sess-epic-runner", create_effect_owner_id=lambda: "fixture-owner",
+            utc_now=lambda: datetime(2026, 9, 12, 12, tzinfo=UTC),
             utc_now_iso=lambda: "2026-09-12T12:00:00+00:00"),
         execution_runtime_node=SimpleNamespace(
             select_run_id=lambda session_id: str(session_id),

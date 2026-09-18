@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-18T05:31:49.129394Z",
+  "generated_at": "2026-09-18T08:52:31.389241Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -315,12 +315,12 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 230
+          "count": 229
         },
         {
           "source": "adapters",
           "target": "application",
-          "count": 11
+          "count": 8
         },
         {
           "source": "adapters",
@@ -335,7 +335,7 @@
         {
           "source": "application",
           "target": "application",
-          "count": 1543
+          "count": 1547
         },
         {
           "source": "application",
@@ -455,39 +455,6 @@
             {
               "path": "orket/adapters/vcs/gitea_webhook_handlers.py",
               "line": 246,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.capabilities.sdk_memory_provider",
-          "target": "orket.services.extension_memory_namespace",
-          "sites": [
-            {
-              "path": "orket/capabilities/sdk_memory_provider.py",
-              "line": 6,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.capabilities.sdk_memory_provider",
-          "target": "orket.services.profile_write_policy",
-          "sites": [
-            {
-              "path": "orket/capabilities/sdk_memory_provider.py",
-              "line": 13,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.capabilities.sdk_memory_provider",
-          "target": "orket.services.scoped_memory_store",
-          "sites": [
-            {
-              "path": "orket/capabilities/sdk_memory_provider.py",
-              "line": 14,
               "kind": "from"
             }
           ]
@@ -864,6 +831,7 @@
             "orket.application.services.run_ledger_summary_projection",
             "orket.application.services.runtime_policy",
             "orket.application.services.sdk_llm_provider",
+            "orket.application.services.sdk_memory_provider",
             "orket.application.workflows.epic_approval_checkpoint",
             "orket.application.workflows.orchestrator",
             "orket.application.workflows.orchestrator_ops",
@@ -881,7 +849,6 @@
             "orket.application.workflows.turn_failure_traces",
             "orket.application.workflows.turn_message_builder",
             "orket.board",
-            "orket.capabilities.sdk_memory_provider",
             "orket.discovery",
             "orket.driver",
             "orket.extensions.__init__",
@@ -1255,13 +1222,13 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 4969,
-    "missing_layer_total": 3368,
+    "tests_total": 4977,
+    "missing_layer_total": 3376,
     "by_layer": {
-      "unlabeled": 3368,
+      "unlabeled": 3376,
       "integration": 750,
-      "unit": 167,
-      "contract": 673,
+      "unit": 168,
+      "contract": 672,
       "live_truth": 11
     },
     "missing_layers_sample": [
@@ -1866,19 +1833,18 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3268
+    "missing_layers_omitted": 3276
   },
   "ruff": {
     "proof": "structural_lint",
     "executed": true,
     "exit_code": 1,
-    "issues_total": 91,
+    "issues_total": 89,
     "by_code": {
       "B009": 2,
       "B905": 2,
       "F401": 7,
-      "F841": 1,
-      "I001": 11,
+      "I001": 10,
       "PTH108": 1,
       "SIM105": 1,
       "SIM118": 1,
@@ -2158,7 +2124,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 585,
+    "scanned_files": 586,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -2269,89 +2235,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-15T00:08:02.510201Z",
-      "changed": true,
-      "before_digest": "sha256:474cea1cecd0e167d29bdf28c83229f850ea36518c0864f9cd69c3c7f2e12c92",
-      "after_digest": "sha256:0ce7bbd13fbb47b8930dd21977d61c5e553e4618a3e705780363c3765370b85d",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 1,
-        "churn_ratio": 0.000303,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-15T00:44:44.519658Z",
-      "changed": true,
-      "before_digest": "sha256:0ce7bbd13fbb47b8930dd21977d61c5e553e4618a3e705780363c3765370b85d",
-      "after_digest": "sha256:16f25c4cdb84d866fd2c6b5fc8a9d5edd4f4963bc49b0193a07713f3a5834228",
-      "diff": {
-        "added_paths": 7,
-        "removed_paths": 9,
-        "changed_paths": 8,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 4126,
-        "paths_total_reference": 4126,
-        "churn_paths": 24,
-        "churn_ratio": 0.005817,
-        "sample_paths": [
-          "$.architecture_exceptions.exceptions[0].evidence",
-          "$.architecture_exceptions.exceptions[0].reason",
-          "$.dependency_graph.forbidden_edge_hits",
-          "$.dependency_graph.layer_edges",
-          "$.dependency_graph.legacy_edge_budget",
-          "$.dependency_graph.module_count",
-          "$.dependency_graph.scan",
-          "$.dependency_graph.top_module_edges",
-          "$.dependency_graph.collection_ok",
-          "$.dependency_graph.observed",
-          "$.dependency_graph.root",
-          "$.dependency_graph.schema_version",
-          "$.dependency_graph.verdict",
-          "$.dependency_graph.policy.forbidden_edges",
-          "$.dependency_graph.policy.policy_id",
-          "$.dependency_graph.policy.schema_version",
-          "$.dependency_graph.policy.contract",
-          "$.dependency_graph.policy.sha256",
-          "$.dependency_graph.policy.path",
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-15T00:59:43.084520Z",
-      "changed": true,
-      "before_digest": "sha256:16f25c4cdb84d866fd2c6b5fc8a9d5edd4f4963bc49b0193a07713f3a5834228",
-      "after_digest": "sha256:e850af5cae254b190dee4b41be29074f02b7dd3a642c3046a67b707350b300ae",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 4126,
-        "paths_total_current": 4126,
-        "paths_total_reference": 4126,
-        "churn_paths": 5,
-        "churn_ratio": 0.001212,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-15T02:09:39.946568Z",
       "changed": true,
@@ -3207,6 +3090,87 @@
           "$.test_taxonomy.missing_layer_total",
           "$.test_taxonomy.missing_layers_omitted",
           "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T07:17:12.137848Z",
+      "changed": true,
+      "before_digest": "sha256:ebe7427ca68b843d74972e8b7e1a8786a8fac34fe57546dbce00ce7d6da275f1",
+      "after_digest": "sha256:93de782dbe63213effa5dc6075d417c4d2d7f975313ad91471425cd5fa82b265",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 4,
+        "changed_paths": 145,
+        "initial_write": false,
+        "paths_total_previous": 3361,
+        "paths_total_current": 3320,
+        "paths_total_reference": 3361,
+        "churn_paths": 149,
+        "churn_ratio": 0.044332,
+        "sample_paths": [
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[1].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[38]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[39]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[40]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[41]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[42]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[43]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[44]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[45]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[46]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[47]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[48]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[49]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[50]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[51]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[52]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[53]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[54]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T08:03:11.769525Z",
+      "changed": true,
+      "before_digest": "sha256:93de782dbe63213effa5dc6075d417c4d2d7f975313ad91471425cd5fa82b265",
+      "after_digest": "sha256:2aedeca1570b2682a4d4a4fed6d6e2f2adb519fc0a68046b42292f51ed9e61b6",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 3320,
+        "paths_total_current": 3320,
+        "paths_total_reference": 3320,
+        "churn_paths": 3,
+        "churn_ratio": 0.000904,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.contract",
+          "$.test_taxonomy.by_layer.unit"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T08:52:31.391739Z",
+      "changed": true,
+      "before_digest": "sha256:2aedeca1570b2682a4d4a4fed6d6e2f2adb519fc0a68046b42292f51ed9e61b6",
+      "after_digest": "sha256:323364e65fa9684dcd20bc308ec98e213d4170ea9abcb37c2f768e165b4c8c8d",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 3320,
+        "paths_total_current": 3320,
+        "paths_total_reference": 3320,
+        "churn_paths": 1,
+        "churn_ratio": 0.000301,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }

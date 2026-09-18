@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-18T05:30:29.772414+00:00",
+  "generated_at": "2026-09-18T07:14:09.216926+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -521,7 +521,7 @@
       },
       "orket.adapters.storage.sqlite_connection": {
         "path": "orket/adapters/storage/sqlite_connection.py",
-        "sha256": "891c6956189bcde2947e9223eddfb326f84a91ed843ad991108b290f6e8b13ea"
+        "sha256": "696407dbaec4929053fcd920cc54e19b4488d5445ecd0531c512b79d515c6cce"
       },
       "orket.adapters.storage.sqlite_migrations": {
         "path": "orket/adapters/storage/sqlite_migrations.py",
@@ -1571,6 +1571,10 @@
         "path": "orket/application/services/sdk_llm_provider.py",
         "sha256": "9b21b8c268e89a12500761b038d37e38b25ae2eb6b22e66e77de6c9a078cc908"
       },
+      "orket.application.services.sdk_memory_provider": {
+        "path": "orket/application/services/sdk_memory_provider.py",
+        "sha256": "de8ef4f72c3743f4e8930ac35f428f1f1807554a588cea564b5f9553ce2a2bb2"
+      },
       "orket.application.services.skill_adapter": {
         "path": "orket/application/services/skill_adapter.py",
         "sha256": "5e49ee5fb81cf276b49bb8a2412ab6021e599990cb2611550cea74afb33c79ef"
@@ -1850,10 +1854,6 @@
       "orket.capabilities.piper_voice_assets": {
         "path": "orket/capabilities/piper_voice_assets.py",
         "sha256": "f00c326ccb78c83c70eafe98043e1a15cfe55fb74a8ec557177434dd94a6191a"
-      },
-      "orket.capabilities.sdk_memory_provider": {
-        "path": "orket/capabilities/sdk_memory_provider.py",
-        "sha256": "3849315ebfe95ef390e4babedd25977b0a789606bc455c8a4bb5a88a6917a226"
       },
       "orket.capabilities.sdk_static_provider": {
         "path": "orket/capabilities/sdk_static_provider.py",
@@ -2437,7 +2437,7 @@
       },
       "orket.extensions.workload_artifacts": {
         "path": "orket/extensions/workload_artifacts.py",
-        "sha256": "0ea8108b0d07273bfedd3206b84f8ff50c6d2f2b87a34f59878b9463b1d68c7c"
+        "sha256": "741510edafdc12175095d1eece92dd81c756e00fd810c113ac3da7d00e9beb28"
       },
       "orket.extensions.workload_executor": {
         "path": "orket/extensions/workload_executor.py",
@@ -14723,6 +14723,34 @@
         "kind": "from"
       },
       {
+        "source": "orket.application.services.sdk_memory_provider",
+        "target": "orket.capabilities.sync_bridge",
+        "path": "orket/application/services/sdk_memory_provider.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sdk_memory_provider",
+        "target": "orket.services.extension_memory_namespace",
+        "path": "orket/application/services/sdk_memory_provider.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sdk_memory_provider",
+        "target": "orket.services.profile_write_policy",
+        "path": "orket/application/services/sdk_memory_provider.py",
+        "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sdk_memory_provider",
+        "target": "orket.services.scoped_memory_store",
+        "path": "orket/application/services/sdk_memory_provider.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
         "source": "orket.application.services.skill_adapter",
         "target": "orket.application.services.skill_loader",
         "path": "orket/application/services/skill_adapter.py",
@@ -17425,34 +17453,6 @@
         "kind": "from"
       },
       {
-        "source": "orket.capabilities.sdk_memory_provider",
-        "target": "orket.capabilities.sync_bridge",
-        "path": "orket/capabilities/sdk_memory_provider.py",
-        "line": 5,
-        "kind": "from"
-      },
-      {
-        "source": "orket.capabilities.sdk_memory_provider",
-        "target": "orket.services.extension_memory_namespace",
-        "path": "orket/capabilities/sdk_memory_provider.py",
-        "line": 6,
-        "kind": "from"
-      },
-      {
-        "source": "orket.capabilities.sdk_memory_provider",
-        "target": "orket.services.profile_write_policy",
-        "path": "orket/capabilities/sdk_memory_provider.py",
-        "line": 13,
-        "kind": "from"
-      },
-      {
-        "source": "orket.capabilities.sdk_memory_provider",
-        "target": "orket.services.scoped_memory_store",
-        "path": "orket/capabilities/sdk_memory_provider.py",
-        "line": 14,
-        "kind": "from"
-      },
-      {
         "source": "orket.capabilities.tts_piper",
         "target": "orket.adapters.execution.owned_command_limits",
         "path": "orket/capabilities/tts_piper.py",
@@ -19183,14 +19183,14 @@
       },
       {
         "source": "orket.extensions.workload_artifacts",
-        "target": "orket.capabilities.audio_player",
+        "target": "orket.application.services.sdk_memory_provider",
         "path": "orket/extensions/workload_artifacts.py",
         "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
-        "target": "orket.capabilities.sdk_memory_provider",
+        "target": "orket.capabilities.audio_player",
         "path": "orket/extensions/workload_artifacts.py",
         "line": 9,
         "kind": "from"
@@ -27197,6 +27197,7 @@
       "orket.application.services.sandbox_terminal_outcome_service": "application",
       "orket.application.services.scaffolder": "application",
       "orket.application.services.sdk_llm_provider": "application",
+      "orket.application.services.sdk_memory_provider": "application",
       "orket.application.services.skill_adapter": "application",
       "orket.application.services.skill_loader": "application",
       "orket.application.services.skills_validator": "application",
@@ -27267,7 +27268,6 @@
       "orket.capabilities.__init__": "adapters",
       "orket.capabilities.audio_player": "adapters",
       "orket.capabilities.piper_voice_assets": "adapters",
-      "orket.capabilities.sdk_memory_provider": "adapters",
       "orket.capabilities.sdk_static_provider": "adapters",
       "orket.capabilities.sdk_voice_provider": "adapters",
       "orket.capabilities.sync_bridge": "adapters",
@@ -27861,12 +27861,12 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 230
+        "count": 229
       },
       {
         "source": "adapters",
         "target": "application",
-        "count": 11
+        "count": 8
       },
       {
         "source": "adapters",
@@ -27881,7 +27881,7 @@
       {
         "source": "application",
         "target": "application",
-        "count": 1543
+        "count": 1547
       },
       {
         "source": "application",
@@ -28001,39 +28001,6 @@
           {
             "path": "orket/adapters/vcs/gitea_webhook_handlers.py",
             "line": 246,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.capabilities.sdk_memory_provider",
-        "target": "orket.services.extension_memory_namespace",
-        "sites": [
-          {
-            "path": "orket/capabilities/sdk_memory_provider.py",
-            "line": 6,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.capabilities.sdk_memory_provider",
-        "target": "orket.services.profile_write_policy",
-        "sites": [
-          {
-            "path": "orket/capabilities/sdk_memory_provider.py",
-            "line": 13,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.capabilities.sdk_memory_provider",
-        "target": "orket.services.scoped_memory_store",
-        "sites": [
-          {
-            "path": "orket/capabilities/sdk_memory_provider.py",
-            "line": 14,
             "kind": "from"
           }
         ]
@@ -28410,6 +28377,7 @@
           "orket.application.services.run_ledger_summary_projection",
           "orket.application.services.runtime_policy",
           "orket.application.services.sdk_llm_provider",
+          "orket.application.services.sdk_memory_provider",
           "orket.application.workflows.epic_approval_checkpoint",
           "orket.application.workflows.orchestrator",
           "orket.application.workflows.orchestrator_ops",
@@ -28427,7 +28395,6 @@
           "orket.application.workflows.turn_failure_traces",
           "orket.application.workflows.turn_message_builder",
           "orket.board",
-          "orket.capabilities.sdk_memory_provider",
           "orket.discovery",
           "orket.driver",
           "orket.extensions.__init__",
@@ -29553,6 +29520,66 @@
           "$.observed.edges[1861].source",
           "$.observed.edges[1861].target",
           "$.observed.edges[1862].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T07:04:40.101152Z",
+      "changed": true,
+      "before_digest": "sha256:28a0be56dafbb0b1bb027f00001bbd9ec46823351be1b626068e1b82dacabefe",
+      "after_digest": "sha256:770f8762004100c9fb2396b69dfc30675550338035503b2fd8921fb3d75f9c6f",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 5,
+        "changed_paths": 1298,
+        "initial_write": false,
+        "paths_total_previous": 44020,
+        "paths_total_current": 43981,
+        "paths_total_reference": 44020,
+        "churn_paths": 1305,
+        "churn_ratio": 0.029646,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[1503].line",
+          "$.observed.edges[1503].path",
+          "$.observed.edges[1503].source",
+          "$.observed.edges[1503].target",
+          "$.observed.edges[1504].line",
+          "$.observed.edges[1504].path",
+          "$.observed.edges[1504].source",
+          "$.observed.edges[1504].target",
+          "$.observed.edges[1505].line",
+          "$.observed.edges[1505].path",
+          "$.observed.edges[1505].source",
+          "$.observed.edges[1505].target",
+          "$.observed.edges[1506].line",
+          "$.observed.edges[1506].path",
+          "$.observed.edges[1506].source",
+          "$.observed.edges[1506].target",
+          "$.observed.edges[1507].line",
+          "$.observed.edges[1507].path",
+          "$.observed.edges[1507].source"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T07:14:15.026480Z",
+      "changed": true,
+      "before_digest": "sha256:770f8762004100c9fb2396b69dfc30675550338035503b2fd8921fb3d75f9c6f",
+      "after_digest": "sha256:fe8c4a42bb06b713b016692b777794829ca7651beb21002fc42d5603c472e909",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 43981,
+        "paths_total_current": 43981,
+        "paths_total_reference": 43981,
+        "churn_paths": 2,
+        "churn_ratio": 4.5e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.modules.orket.application.services.sdk_memory_provider.sha256"
         ]
       }
     }

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
+from orket.application.services.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket.services.scoped_memory_store import MemoryControls
 from orket_extension_sdk.memory import MemoryQueryRequest, MemoryWriteRequest
 

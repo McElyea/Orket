@@ -58,46 +58,13 @@ async def test_memory_store_search_exposes_trust_and_filters_stale_context_rende
 
 @pytest.mark.asyncio
 async def test_memory_store_initializes_once_under_concurrent_calls(monkeypatch, tmp_path: Path) -> None:
-    """Layer: unit. Verifies store initialization is guarded under concurrent first-use calls."""
+    """Layer: integration. Concurrent first use initializes one real SQLite connection."""
     connects = {"count": 0}
+    original_connect = memory_store_module.aiosqlite.connect
 
-    class _Cursor:
-        def __init__(self, rows=None) -> None:
-            self._rows = list(rows or [])
-
-        async def fetchone(self):
-            return self._rows[0] if self._rows else ("wal",)
-
-        async def fetchall(self):
-            return list(self._rows)
-
-    class _FakeConnection:
-        async def __aenter__(self) -> "_FakeConnection":
-            return self
-
-        async def __aexit__(self, exc_type, exc, tb) -> None:
-            return None
-
-        async def execute(self, _sql: str, *_args, **_kwargs):
-            await asyncio.sleep(0)
-            if "PRAGMA table_info" in _sql:
-                return _Cursor(
-                    [
-                        (0, "id", "INTEGER", 0, None, 1),
-                        (1, "content", "TEXT", 1, None, 0),
-                        (2, "metadata_json", "TEXT", 1, None, 0),
-                        (3, "keywords", "TEXT", 1, None, 0),
-                        (4, "content_hash", "TEXT", 0, None, 0),
-                    ]
-                )
-            return _Cursor()
-
-        async def commit(self) -> None:
-            return None
-
-    def _connect(_path: str, **_kwargs: object) -> _FakeConnection:
+    def _connect(*args, **kwargs):
         connects["count"] += 1
-        return _FakeConnection()
+        return original_connect(*args, **kwargs)
 
     monkeypatch.setattr(memory_store_module.aiosqlite, "connect", _connect)
     store = MemoryStore(tmp_path / "memory.db")
@@ -105,6 +72,10 @@ async def test_memory_store_initializes_once_under_concurrent_calls(monkeypatch,
     await asyncio.gather(store._ensure_initialized(), store._ensure_initialized(), store._ensure_initialized())
 
     assert connects["count"] == 1
+    await store.remember("Concurrent initialization preserves searchable records.")
+    rows = await store.search("searchable")
+    assert len(rows) == 1
+    assert rows[0]["content"] == "Concurrent initialization preserves searchable records."
 
 
 @pytest.mark.asyncio

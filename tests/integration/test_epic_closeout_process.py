@@ -4,9 +4,11 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import sqlite3
 import sys
 from pathlib import Path
 
+import psutil
 import pytest
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
@@ -34,6 +36,22 @@ async def read_barrier(process):
             return json.loads(line)
 
 
+async def kill_and_reap(process):
+    def owned_processes():
+        owner = psutil.Process(process.pid)
+        return [owner, *owner.children(recursive=True)]
+
+    # Windows venv launchers can finish draining pipes while their worker exits.
+    # Retain that worker's identity before killing its launcher, then await both.
+    owners = await asyncio.to_thread(owned_processes)
+    deadline = asyncio.get_running_loop().time() + 10
+    process.kill()
+    await asyncio.wait_for(process.communicate(), timeout=10)
+    remaining = max(0, deadline - asyncio.get_running_loop().time())
+    _, alive = await asyncio.to_thread(psutil.wait_procs, owners, timeout=remaining)
+    assert not alive, f"Closeout workers did not exit: {[owner.pid for owner in alive]}"
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("stage", ["before_commit", "after_commit"])
 # Layer: integration
@@ -43,8 +61,7 @@ async def test_killed_closeout_is_atomic_and_concurrent_reentry_reuses_committed
     try:
         marker = await asyncio.wait_for(read_barrier(process), timeout=40)
         assert process.returncode is None
-        process.kill()
-        await asyncio.wait_for(process.communicate(), timeout=10)
+        await kill_and_reap(process)
         execution = AsyncControlPlaneExecutionRepository(marker["cp_db"])
         records = AsyncControlPlaneRecordRepository(marker["cp_db"])
         run = await execution.get_run_record(run_id=marker["run_id"])
@@ -68,8 +85,14 @@ async def test_killed_closeout_is_atomic_and_concurrent_reentry_reuses_committed
         assert len(entries) == 2
         # This is closeout reentry only; it does not silently rerun work or finish other stores.
         assert (await AsyncSessionRepository(db_path).get_session("publication-session"))["status"] != "done"
+    except sqlite3.Error as exc:
+        exc.add_note(
+            f"Native SQLite code={getattr(exc, 'sqlite_errorcode', None)} "
+            f"name={getattr(exc, 'sqlite_errorname', None)} stage={stage}"
+        )
+        raise
     finally:
         for child in [process, *resumed]:
             if child.returncode is None:
-                child.kill()
+                await kill_and_reap(child)
             await child.communicate()

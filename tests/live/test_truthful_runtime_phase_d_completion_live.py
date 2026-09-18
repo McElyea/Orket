@@ -4,18 +4,18 @@ from pathlib import Path
 
 import pytest
 
-from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
+from orket.application.services.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket.runtime.truthful_memory_policy import render_reference_context_rows, render_scoped_memory_rows
 from orket.services.memory_store import MemoryStore
 from orket.services.scoped_memory_store import ScopedMemoryStore
 from orket_extension_sdk.memory import MemoryQueryRequest, MemoryWriteRequest
 from tests.live.test_runtime_stability_closeout_live import _live_enabled
 
-pytestmark = pytest.mark.end_to_end
+pytestmark = pytest.mark.integration
 
 
 def test_phase_d_live_durable_memory_requires_explicit_user_correction(tmp_path: Path) -> None:
-    """Layer: end-to-end. Verifies the real SQLite memory provider blocks contradicting durable-fact writes until user correction is explicit."""
+    """Layer: integration. Verifies the real SQLite memory provider blocks contradicting durable-fact writes until user correction is explicit."""
     if not _live_enabled():
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof.")
 
@@ -69,7 +69,7 @@ def test_phase_d_live_durable_memory_requires_explicit_user_correction(tmp_path:
 
 @pytest.mark.asyncio
 async def test_phase_d_live_companion_governed_memory_context_filters_stale_rows(tmp_path: Path) -> None:
-    """Layer: end-to-end. Verifies governed Companion memory context rendering excludes stale rows and labels trust."""
+    """Layer: integration. Verifies governed Companion memory context rendering excludes stale rows and labels trust."""
     if not _live_enabled():
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof.")
 
@@ -112,7 +112,7 @@ async def test_phase_d_live_companion_governed_memory_context_filters_stale_rows
 
 @pytest.mark.asyncio
 async def test_phase_d_live_reference_context_rendering_filters_stale_project_memory(tmp_path: Path) -> None:
-    """Layer: end-to-end. Verifies the real project-memory reference context renderer excludes stale rows and labels included trust."""
+    """Layer: integration. Verifies the real project-memory reference context renderer excludes stale rows and labels included trust."""
     if not _live_enabled():
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof.")
 

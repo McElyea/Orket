@@ -1,5 +1,7 @@
+"""Application ownership of SDK memory scope, policy and publication coordination."""
 from __future__ import annotations
 
+from copy import deepcopy
 from pathlib import Path
 
 from orket.capabilities.sync_bridge import run_coro_sync
@@ -13,13 +15,15 @@ from orket.services.extension_memory_namespace import (
 from orket.services.profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
 from orket.services.scoped_memory_store import MemoryControls, ScopedMemoryRecord, ScopedMemoryStore
 from orket_extension_sdk.memory import (
-    MemoryScope as SDKMemoryScope,
     MemoryProvider,
     MemoryQueryRequest,
     MemoryQueryResponse,
     MemoryRecord,
     MemoryWriteRequest,
     MemoryWriteResponse,
+)
+from orket_extension_sdk.memory import (
+    MemoryScope as SDKMemoryScope,
 )
 
 
@@ -40,7 +44,7 @@ class SQLiteMemoryCapabilityProvider(MemoryProvider):
         if request.scope == "session_memory":
             if not self._controls.effective_session_enabled():
                 return self._disabled_write_response(request=request, error_code="memory_session_disabled")
-            record = await self._store.write_session(
+            await self._store.write_session(
                 session_id=self._scoped_session_id(request.scope, request.session_id),
                 key=request.key,
                 value=request.value,
@@ -56,7 +60,7 @@ class SQLiteMemoryCapabilityProvider(MemoryProvider):
         if not self._controls.effective_profile_enabled():
             return self._disabled_write_response(request=request, error_code="memory_profile_disabled")
         try:
-            record = await self._store.write_profile(
+            await self._store.write_profile(
                 key=self._scoped_profile_key(request.key),
                 value=request.value,
                 metadata=request.metadata,
@@ -109,7 +113,9 @@ class SQLiteMemoryCapabilityProvider(MemoryProvider):
         return MemoryQueryResponse(ok=True, records=sdk_records)
 
     def write(self, request: MemoryWriteRequest) -> MemoryWriteResponse:
-        return run_coro_sync(self._write_async(request))
+        # The frozen SDK request still contains borrowed mutable metadata.
+        captured = deepcopy(request)
+        return run_coro_sync(self._write_async(captured))
 
     def query(self, request: MemoryQueryRequest) -> MemoryQueryResponse:
         return run_coro_sync(self._query_async(request))

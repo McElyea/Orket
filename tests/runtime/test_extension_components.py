@@ -14,7 +14,7 @@ from orket.application.services.control_plane_workload_catalog import (
     WorkloadAuthorityInput,
     resolve_control_plane_workload,
 )
-from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
+from orket.application.services.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.sync_bridge import run_coro_sync
 from orket.extensions.catalog import ExtensionCatalog

@@ -209,6 +209,16 @@ Responsibilities:
 
 Application services own runtime truth.
 
+SDK memory coordination likewise belongs to application. The public synchronous
+memory write captures nested request metadata before bridge submission; scope,
+control and policy semantics retain their existing authorities. Migration and
+remaining shared-bridge/store limits:
+`docs/architecture/CONTRACT_DELTA_SDK_MEMORY_OWNER_CD_2026-09-18.md`.
+
+The shared SQLite adapter verifies WAL mode before yielding a connection. Its
+bounded busy-family retry applies only to admission, closing failed connections
+before another attempt; caller statements and commits are not replayed.
+
 Tool-result publication captures nested input values and retains each admitted
 file worker through cancellation. Protocol receipts, ordinary replay files and
 control-plane step publication remain separate effects; an interrupted publication

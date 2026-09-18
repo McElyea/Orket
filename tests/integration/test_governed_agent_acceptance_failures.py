@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -14,6 +15,7 @@ from orket.application.services.governed_agent_loop_service import GovernedAgent
 from orket.core.domain import RunState
 from orket.extensions.governed_agent_invoker import GovernedAgentSubprocessInvoker
 from orket_extension_sdk.agent_fixtures import prefixed_digest
+from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from tests.helpers.governed_agent_clock import elapsed_agent_clock as elapsed_agent_clock
 from tests.runtime.governed_agent_test_support import (
     TEMPLATE_ROOT,
@@ -77,6 +79,7 @@ async def test_fixed_negative_acceptance_cases_remain_host_governed(tmp_path, mo
 
 
 async def _run(tmp_path, source, request):
+    started = time.monotonic_ns()
     extension = tmp_path / "extension"
     await asyncio.to_thread(extension.mkdir)
     await asyncio.to_thread((extension / "governed_agent.py").write_text, source, encoding="utf-8")
@@ -84,19 +87,38 @@ async def _run(tmp_path, source, request):
     repository = AsyncGovernedAgentRepository(db)
     broker = GovernedAgentHostBroker(iteration_repository=repository, call_repository=repository,
                                     model_provider=DeterministicModelProvider(), model_profiles=resolved_profiles())
+    invoker = GovernedAgentSubprocessInvoker(extension_root=extension, entrypoint="governed_agent:GovernedTicketAgent",
+                                            allowed_stdlib_modules=("json",), broker=broker)
     service = GovernedAgentLoopService(
         execution_repository=AsyncControlPlaneExecutionRepository(db), iteration_repository=repository,
         transactions=SQLiteControlPlaneTransactions(db), verifier=SecondIterationVerifier(),
-        invoker=GovernedAgentSubprocessInvoker(extension_root=extension, entrypoint="governed_agent:GovernedTicketAgent",
-                                              allowed_stdlib_modules=("json",), broker=broker),
+        invoker=invoker,
     )
     now = datetime.now(UTC)
     count = request["remaining_run_budget"]["iterations"]
-    result = await service.run_bounded(
-        initial_request_payload=request, workload_record=agent_workload_record(),
-        extension_digest="sha256:" + "e" * 64, configuration_digest="sha256:" + "c" * 64,
-        admission_receipt_ref="agent-admission:test", creation_timestamp_utc=now.isoformat(),
-        decision_timestamps_utc=[(now + timedelta(seconds=i)).isoformat() for i in range(count)],
-        next_lease_expiries_utc=[request["lease_expires_at_utc"]] * (count - 1),
-    )
+    try:
+        result = await service.run_bounded(
+            initial_request_payload=request, workload_record=agent_workload_record(),
+            extension_digest="sha256:" + "e" * 64, configuration_digest="sha256:" + "c" * 64,
+            admission_receipt_ref="agent-admission:test", creation_timestamp_utc=now.isoformat(),
+            decision_timestamps_utc=[(now + timedelta(seconds=i)).isoformat() for i in range(count)],
+            next_lease_expiries_utc=[request["lease_expires_at_utc"]] * (count - 1),
+        )
+    except (OSError, ValueError) as exc:
+        await _retain_invocation_failure(tmp_path, invoker, request, started, f"{type(exc).__name__}: {exc}")
+        raise
+    if result.normalized_reason:
+        await _retain_invocation_failure(tmp_path, invoker, request, started, result.normalized_reason)
     return result, repository
+
+
+async def _retain_invocation_failure(tmp_path, invoker, request, started, reason):
+    """Layer: integration support. Retain observed diagnostics without changing deadlines or outcomes."""
+    await asyncio.to_thread(write_payload_with_diff_ledger, tmp_path / "native_invocation_failure.json", {
+        "reason": reason,
+        "elapsed_ns": time.monotonic_ns() - started,
+        "request_deadline_utc": request["deadline_utc"],
+        "request_lease_expires_at_utc": request["lease_expires_at_utc"],
+        "last_child_diagnostic_tail": invoker.last_diagnostic_tail,
+        "scope": "Observed final child diagnostic tail; absence of text does not establish the original latency cause.",
+    })

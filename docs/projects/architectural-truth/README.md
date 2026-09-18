@@ -640,3 +640,18 @@ proof attempts remain preserved with their limits; their causes are not repaired
 by this cohort. No forbidden pair is added or removed; 39 remain. Full-plan
 acceptance remains open. Evidence and exact limits remain in the canonical plan and
 `docs/architecture/CONTRACT_DELTA_TOOL_RESULT_WORKERS_D_2026-09-17.md`.
+
+
+The 0.6.14 local SDK memory/SQLite checkpoint moves memory coordination into application
+ownership and captures nested write inputs before bridge submission. Cold-database
+controls also exposed shared WAL admission contention; the connection owner now
+uses a bounded busy-family retry before yielding, without replaying caller work.
+Original failures and corrected focused proof remain in the canonical plan.
+All 2,634 selected source cases pass after correcting the process-death fixture
+to await the actual Python worker's exit before SQLite reentry. Native-handle
+observations prove that narrower teardown guarantee. All four fresh Windows/Linux
+Python 3.11/3.12 cells pass the other 2,629 cases, with five repository-only checks
+retained in source proof. Eight actual llama.cpp regressions and three separately
+opted-in memory integrations also pass. The canonical plan retains original
+failures, exact evidence bindings and remaining limits. Whole-lane acceptance
+remains open; the commit and annotated tag remain local.

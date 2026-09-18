@@ -12516,14 +12516,15 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the scoped
-0.6.13 tool-result checkpoint below. The current source/native/provider cohort
-passes; earlier failed candidate gates and their retained causes remain unresolved.
+Next action: complete the SDK memory/SQLite admission candidate below, then
+continue C/D from their numbered requirements after the scoped 0.6.13 checkpoint.
+The sealed 0.6.13 source/native/provider cohort passes its selected gates;
+0.6.14 remains under verification. Earlier failed candidate gates remain retained.
 Controlled native diagnostics reproduce connection loss when a response is delayed
 beyond the unchanged child deadline; they do not establish the original latency
 source. The separate captured-input and worker-lifetime repair does not diagnose
 the retained Windows timeout or directory-publication failures.
-Repair the 39 remaining forbidden pairs, one
+Repair the 36 remaining forbidden pairs, one
 cross-layer cycle and ten unresolved import/reflection sites while preserving
 adversarial positive and negative proof. SDK memory and provider target ownership,
 remaining explicit inputs, worker lifetimes and replay capture remain actionable.
@@ -13373,3 +13374,277 @@ Exact changed paths for this checkpoint:
 - `tests/helpers/tool_result_persistence.py`
 - `tests/integration/test_tool_result_persistence.py`
 - `tests/integration/test_turn_result_worker_ownership.py`
+
+
+### SDK memory and SQLite admission checkpoint: 2026-09-18
+
+The preceding local checkpoint is `0cb8737dc0b08132174c0b0a9cdb7d439e1108de`,
+annotated `v0.6.13`. Its receipt SHA-256 is
+`0bbafd8a1253abfd3cc02a63dbe6f87231c3748f2f22bb5c5aeb93c0ab73d39d`.
+The clean worktree and all 125 bound evidence files matched before edits;
+`.tmp/d-memory-owner/session-state.json` records this. No remote Git operation is
+part of the candidate.
+
+Two of four new public SDK bridge/SQLite controls fail on unchanged 0.6.13:
+nested metadata mutated by the caller while storage is suspended reaches both
+session and profile rows. Two unchanged-input controls already pass. The original
+fixture files, XML, logs, test bytes and declarations remain in
+`.tmp/d-memory-owner/before/` and `before-source/`.
+
+`SQLiteMemoryCapabilityProvider` moves from adapter-classified capabilities to
+application services, captures each write request before bridge submission, and
+retains existing controls, profile policy, namespace and wire contracts. All
+internal callers migrate without a shim. The initial 37-case input/policy/extension
+selection passes. The existing Phase D opt-in memory tests are labeled integration:
+they exercise SDK/storage/synthesis helpers, not a public CLI/API workload.
+
+A broader 47-case selection then passes 46 and fails one simultaneous cold-database
+case with `database is locked`. Its original fixture remains under `focused/`.
+A separately declared 32-case campaign fails eight cases; fuller traceback output
+in a second fixed campaign fails six at `ensure_wal_mode`'s native
+`PRAGMA journal_mode=WAL`. These are real concurrent connections, not a mocked lock.
+Simply observing current mode and accepting a verified competing transition still
+fails six cases. That candidate and all original reports remain retained.
+
+The shared connection owner now bounds WAL admission by the existing five-second
+busy wait budget, closing a failed bootstrap connection before retrying only
+native busy-family errors. New bootstrap connections use native timeout zero;
+admitted connections retain the 5,000ms native busy timeout. The first narrow-code
+implementation missed extended `SQLITE_BUSY_RECOVERY` and failed all 32 cases;
+a six-case diagnostic records code 261 in both concurrent failures. Primary-code
+classification repairs that omission. The final fixed 32-case campaign passes.
+No caller statement, transaction or commit is replayed; non-busy and non-WAL
+outcomes reject. Contract and source references:
+`docs/architecture/CONTRACT_DELTA_SDK_MEMORY_OWNER_CD_2026-09-18.md`.
+
+Twelve focused SDK/admission cases pass, including retained-lock budget exhaustion,
+cancellation with observed connection-thread teardown, no reentry after a real
+busy caller statement, missing-database refusal and in-memory/non-WAL refusal.
+The timeout observation uses a predeclared seven-second outer test bound around
+the five-second admission policy; native scheduling/close overhead is not a hard
+real-time guarantee. Fresh combined regressions, source/package/installed and
+separately opted-in/provider proof remain pending.
+
+The combined selection subsequently passes all 55 cases, and the separately
+opted-in Phase D SDK/storage/synthesis helper selection passes all three cases.
+A 46-case wider storage preflight passes 45 and exposes one outdated fake cursor:
+its coroutine-only `execute` lacks aiosqlite's actual cursor context protocol.
+The original test and failure remain under `storage-preflight/` and
+`storage-preflight-source/`. Replacing that fake with observed real connections
+also checks searchable stored data; the same 46 cases pass under `storage-real/`.
+This correction changes no runtime behavior and is labeled integration.
+
+The refreshed static graph records 1,019 modules, 3,225 imports, 36 forbidden
+pairs, one authority cycle, ten analysis errors and no unknown classifications.
+`graph-delta.json` binds exactly the three removed SDK-memory-to-application pairs
+and no added forbidden pair. The baseline collects successfully with
+`release_ready=false`; its installed command probes use the fresh 0.6.14 wheel.
+The broader source/installed selection retains prior regressions and adds direct
+shared-SQLite consumer tests. Its serial native schedule is declared before
+execution. Fresh broad source, installed and actual-provider gates remain pending.
+
+The first expanded source run executes 2,634 cases from 341 modules: 2,632 pass
+and two fail, without errors or skips, in 750.49s. Changed-file Ruff, input
+identity, unique cases and the root-database guard pass. The original report,
+three fixture source files and 98 retained fixture artifacts are bound by
+`complete/source-1-retention.json`.
+
+Both failures reproduce against the sealed **0.6.13 installed wheel**, with
+verified package origins and unchanged harness inputs. The after-commit
+process-death fixture incorrectly pauses on the first control-plane transaction,
+which is now initialization; no run ledger exists at that point. Its barrier now
+wraps completed `finalize_execution`, whose return follows the actual closeout
+commit. The existing parent assertions still verify killed-process committed
+truth and concurrent reentry. The placeholder collaborator fixture omitted the
+existing `utc_now` input and therefore failed before its intended validation
+boundary; it now supplies the fixed clock value. Its stand-in test uses the unit
+label consistently. No production code, deadlines or assertions change for these
+corrections. All nine affected source cases pass. Evidence and unchanged runtime
+hashes: `fixture-drift-diagnosis.json`, `prior-drift/`, and `fixture-alignment/`.
+The corrected full source and installed gates remain pending.
+
+The second 2,634-case source run passes 2,632 and fails two different cases in
+737.61s. The before-commit killed-process case encounters native SQLite
+`disk I/O error` while reopening its control-plane store; the original extended
+error code was not printed. Terminal-history `unreferenced-truth-reentry` reaches
+`recovery_pending` with `E_SDK_AGENT_FRAME_READ_TIMEOUT` during its second
+invocation. The retained database has three completed first-invocation model
+calls and no admitted second-invocation model call. This does not locate the
+original delay within child startup, frame exchange or host work. Original
+tracebacks, seven source files and 85 fixture artifacts remain bound by
+`complete/source-2-retention.json`.
+
+Inspection operates on separate copied databases. All copied databases pass
+SQLite `quick_check`; the interrupted closeout remains executing without final
+truth. Neither copied recovery nor a later pass explains the original I/O error.
+One declared installed 0.6.14 diagnostic campaign executes ten process-death
+cases and all 28 terminal-history cases. All 38 pass in 91.88s, with 54 observed
+native invocation completions/teardowns, matching origins and inputs, and no
+SQLite admission error. Its observations are in `native-diagnostics/`; they are
+diagnostics, not a replacement acceptance gate.
+
+The existing fixtures now annotate native SQLite exceptions with their code/name
+and retain a failed invocation's elapsed duration, deadline/lease and final child
+stderr under a stable diff-ledger artifact. Outcomes, assertions and deadlines
+are unchanged. All 33 focused process/agent cases pass, including two observed
+negative cases that write the new diagnostic artifact. The next full source
+cohort is declared once with stop-on-first-failure enabled; a passing cohort will
+not establish causes for these retained native failures. Fresh installed and
+actual-provider gates and both original diagnoses remain open.
+
+The third source cohort stops at the first failure: 1,074 pass and the same
+before-commit reopen fails with `SQLITE_IOERR_TRUNCATE` (1546) in 238.05s.
+`complete/source-3-retention.json` binds the original report, four input files
+and 82 fixture artifacts. Its diagnostics do not reach the separate frame-timeout
+case. No runtime I/O retry or deadline change follows from that error code.
+
+Two private installed diagnostic runs collect the full 2,634-case union and
+execute its original 1,075-case prefix. Each reproduces the failure after 1,074
+passes, with matching wheel origins, unchanged inputs and observed process
+teardown. The SQLite log alone omits the native cause. A forwarding observer on
+SQLite 3.50.4's Windows `SetEndOfFile` call records error 1224
+(`ERROR_USER_MAPPED_FILE`) while setting `control_plane_records.sqlite3-shm`
+to zero bytes. All 28,446 observed calls retain their original native result and
+LastError. Evidence: `vfs-diagnostic/`, `win-truncate-diagnostic/`, and
+`sqlite-native-diagnosis.json` under `.tmp/d-memory-owner/`.
+
+A third prefix run passes but its process observer patches a duplicate imported
+test module and captures no handles. `process-death-diagnostic/interpretation.json`
+records that missing coverage explicitly. The corrected observer uses pytest's
+executing module and fails closed on missing handles. Its 1,075 cases pass, but
+the native handles establish an actual teardown gap: immediately after the
+launcher `communicate()` returns, the launcher is signaled and its Python worker
+still returns `WAIT_TIMEOUT`. Both are terminated by later case teardown.
+This demonstrates that pipe draining did not establish worker exit; it does not
+directly identify the mapping owner in the earlier failed executions.
+
+The closeout fixture now captures its launcher and descendant process identities
+before the deliberate kill and waits for their exit before reopening the store.
+It shares the existing ten-second teardown budget between pipe draining and
+process waits. Process-death, rollback/commit and concurrent-reentry assertions
+remain unchanged. Evidence of the gap: `process-exit-observed/`. All nine focused
+closeout/orchestrator cases and changed-file Ruff pass. Both corrected installed
+process-death cases pass with native-handle observation: each still observes an
+unsignaled Python worker after pipe drain, then all captured handles signaled at
+`kill_and_reap` return before the first database reopen. Evidence:
+`process-exit-fixed/` and `process-exit-verified/`. This is scoped fixture proof;
+the full source gate, installed cells and actual provider regressions remain
+pending. The separate frame-read timeout remains
+unexplained; no successful diagnostic cohort repairs that historical claim.
+
+The fourth declared source cohort passes all 2,634 cases from 341 modules in
+733.892s, with no failures, errors or skips. Changed-file Ruff, root-database
+protection, exact case uniqueness and unchanged source inputs also pass.
+`complete/source-report.json` binds this run; the three failed source cohorts
+remain separately retained. The unchanged core wheel is now eligible for the
+declared serial installed cohort. Installed/provider gates remain pending.
+
+The initial installed Linux 3.11 cell passes 2,629 cases and fails five in
+626.26s, with no errors or skips. The added consumer selection mistakenly includes
+two repository-only modules: `test_architecture_volatility_boundaries.py` scans
+source trees and `test_no_old_namespaces.py` requires Git-visible inventory.
+Their five checks already pass in the source cohort; an installed-only harness
+intentionally contains neither core sources nor Git metadata. The failed cell,
+original harness/manifest, launcher bytes and independent audit remain under
+`complete/`; the original cohort is stopped without running its remaining cells.
+
+The fresh `runtime-matrix/selection-declaration.json` binds an explicit partition:
+2,629 installed cases from 339 modules plus the five source-only structural cases
+account for all 2,634 source cases, without overlap or omitted cases. No test code,
+runtime wheel, assertion or native deadline changes for this correction. The new
+manifest and private environment prefix distinguish this cohort from the failed
+one. Its four serial cells must pass the same declared installed cases, verified
+package origins, CLI flows, retained inputs and process teardown. Installed and
+actual-provider acceptance remain pending.
+
+The corrected declared cohort subsequently passes without failures, errors or
+skips. These are JUnit durations; console totals also include small reporting
+overheads.
+
+| Envelope | Passed cases | Seconds |
+|---|---:|---:|
+| Source Windows 3.11 | 2,634 | 733.892 |
+| Installed Linux 3.11 | 2,629 | 581.273 |
+| Installed Linux 3.12 | 2,629 | 605.424 |
+| Installed Windows 3.11 | 2,629 | 728.847 |
+| Installed Windows 3.12 | 2,629 | 851.176 |
+
+Every installed cell verifies 955 actual core origins against the same wheel,
+four package identities, dependency checks, unchanged copied inputs, real CLI
+primary/degraded behavior, the strict controlled ToolGate audit and process
+teardown. All four native parent sessions returned and were reaped. The slower
+Windows 3.12 cell completed within the unchanged 900-second driver deadline;
+these observations do not establish a capacity or general latency guarantee.
+
+The independent audit is `.tmp/d-memory-owner/runtime-matrix/audit.json`, SHA-256
+`3bd943ea77b649ebc694e76996bffd3d4a59f21b9b55b74ec64147800e2ea21f`.
+It verifies the exact disjoint source/installed partition, all native retained
+bytes, current package/support inputs and original failed-cohort bindings.
+The 1,863-file support harness and corrected manifest remain in `runtime-matrix/`;
+the original 2,634-case manifest and failed Linux cell remain in `complete/`.
+Do not interpret the original manifest as the successful installed selection.
+The successful source report remains `complete/source-report.json`, SHA-256
+`18384d25dc83e3411e3505637ba38f4148f901b8bbe1b24c575ee5b678497bd4`.
+
+Eight actual installed llama.cpp regression cases pass in 133.718s, covering CLI
+continuation, API memory/replay, effect restart and abrupt API process recovery.
+Provider setup disables automatic model selection/loading and uses the existing
+operator server; its process identity is unchanged afterward. The live proof
+passes origin, candidate-wheel, evidence, extension-input and teardown checks.
+Three separately opted-in installed SDK/storage/synthesis integrations also pass;
+they are not model calls or public CLI/API workload proof. Their records are
+`runtime-matrix/live-provider.json` and `runtime-matrix/opted-in/opted-in.json`.
+
+The core wheel was built from its sdist. All 1,019 core Python sources and 1,034
+wheel package files match; SDK/reference/starter artifacts remain unchanged.
+Core wheel SHA-256: `afeb1170f3ed12af4f2cfa9c25ac3b06749990569e6f5bffe8a706b113f04710`.
+Core sdist SHA-256: `0b813b55eed5bd6f6aac5fcfa9d11deb8b2342ebe86566715bb0bf2a675674f7`.
+The static verdict still fails at 36 forbidden pairs, one cross-layer cycle and
+ten analysis errors; collection success remains separate from conformance.
+
+Observed path: primary, with expected degraded malformed-board CLI behavior.
+Result: scoped proof success and partial overall progress. Proof includes live
+installed filesystem/SQLite/native and actual provider execution plus structural
+checks. Full canonical pytest/coverage, hosted Quality, whole C/D/E/CAP gates,
+release readiness and explicit whole-lane acceptance remain unverified.
+The separate historical frame-read timeout remains unexplained. The original
+source failures, native diagnostic campaigns and earlier checkpoint evidence
+remain retained. Final review, exact index verification and the local commit/tag
+receipt live under `complete/`; no remote Git action is part of this checkpoint.
+
+Remaining blockers or drift: shared bridge lifecycle, synchronous lower-store
+initialization, memory-synthesis clocks, competing profile policy/write/readback
+atomicity, same-key conflict admission and full C/D/E/CAP requirements remain open.
+No whole-memory purity, hostile containment, broad capacity or whole-lane
+acceptance is claimed. Historical failures from earlier checkpoints remain bound
+by their receipts.
+
+Exact changed paths for this checkpoint:
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/architecture/CONTRACT_DELTA_SDK_MEMORY_OWNER_CD_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/README.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/TRUTHFUL_RUNTIME_MEMORY_TRUST_CONTRACT.md`
+- `orket/adapters/storage/sqlite_connection.py`
+- `orket/application/services/sdk_memory_provider.py`
+- `orket/capabilities/sdk_memory_provider.py` (removed)
+- `orket/extensions/workload_artifacts.py`
+- `pyproject.toml`
+- `tests/application/test_memory_toggle_controls.py`
+- `tests/helpers/epic_publication_worker.py`
+- `tests/integration/test_epic_closeout_process.py`
+- `tests/integration/test_governed_agent_acceptance_failures.py`
+- `tests/integration/test_memory_rag.py`
+- `tests/integration/test_sdk_memory_inputs.py`
+- `tests/integration/test_sqlite_wal_admission.py`
+- `tests/live/test_truthful_runtime_phase_d_completion_live.py`
+- `tests/runtime/test_epic_run_orchestrator.py`
+- `tests/runtime/test_extension_components.py`
+- `tests/runtime/test_sdk_memory_provider.py`

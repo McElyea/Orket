@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.14] - 2026-09-18 - "Captured SDK memory requests"
+
+### Changed
+- Move SDK memory policy and scope coordination into application ownership.
+- Capture nested memory-write request values before submitting work to the synchronous bridge.
+- Preserve existing memory controls, profile policy, extension namespaces and SDK wire types.
+- Admit SQLite WAL connections with a bounded busy-family retry that closes failed
+  bootstrap connections and never replays caller statements or commits.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Internal import migration: `docs/architecture/CONTRACT_DELTA_SDK_MEMORY_OWNER_CD_2026-09-18.md`.
+- Stability: scoped source and installed proof passes: 2,634 source cases, 2,629
+  runtime cases in each of four Windows/Linux Python 3.11/3.12 cells, eight actual
+  llama.cpp regressions and three opted-in memory integrations. Five repository-only
+  checks remain in source proof. Shared bridge/store lifetime, competing
+  profile-write atomicity and memory clocks remain outside this scoped guarantee.
+  The full architectural-truth goal remains active.
+
 ## [0.6.13] - 2026-09-18 - "Owned tool-result publication"
 
 ### Changed

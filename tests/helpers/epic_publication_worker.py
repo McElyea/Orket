@@ -1,14 +1,12 @@
-"""Native process-death probe for the explicit control-plane closeout transaction."""
+"""Layer: integration. Native process death at explicit control-plane closeout boundaries."""
 from __future__ import annotations
 
 import asyncio
 import json
 import sys
-from contextlib import asynccontextmanager
 from pathlib import Path
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
-from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.application.services.runtime_result_projection import require_runtime_success
 from orket.core.domain import RunState
 from orket.settings import load_env
@@ -34,15 +32,17 @@ def install_barrier(pipeline, stage):
 
         AsyncControlPlaneExecutionRepository.save_run_record = paused_write
     else:
-        original = SQLiteControlPlaneTransactions.__call__
+        original = pipeline.cards_epic_control_plane.finalize_execution
 
-        @asynccontextmanager
-        async def paused_commit(factory):
-            async with original(factory) as transaction:
-                yield transaction
-            await barrier(pipeline)
+        async def paused_closeout(**kwargs):
+            # The returned closeout has exited and committed its transaction.
+            # Initialization commits must not trigger the closeout barrier.
+            result = await original(**kwargs)
+            if result[0].lifecycle_state == RunState.COMPLETED:
+                await barrier(pipeline)
+            return result
 
-        SQLiteControlPlaneTransactions.__call__ = paused_commit
+        pipeline.cards_epic_control_plane.finalize_execution = paused_closeout
 
 
 async def main(root, workspace, db, mode):
