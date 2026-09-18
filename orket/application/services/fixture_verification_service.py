@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from uuid import UUID
 
+from orket.adapters.execution.fixture_runner import RUNNER_CODE
 from orket.application.services.command_process_supervisor import (
     CommandProcessCancelled,
     CommandProcessSupervisor,
@@ -16,7 +17,6 @@ from orket.application.services.command_process_supervisor import (
 from orket.application.services.fixture_container_owner import FixtureContainerCancelled, FixtureContainerOwner
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.domain.fixture_verifier import VerificationSecurityError, interpret_fixture, resolve_execution_mode
-from orket.core.domain.verification_runner import RUNNER_CODE
 from orket.exceptions import OrketInfrastructureError
 from orket.logging import log_event
 from orket.schema import IssueVerification, VerificationResult

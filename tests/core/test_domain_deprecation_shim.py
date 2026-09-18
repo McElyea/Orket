@@ -24,7 +24,7 @@ def test_legacy_domain_state_machine_alias_keeps_wait_reason() -> None:
 # Layer: contract
 @pytest.mark.parametrize("name", [
     "bug_fix_phase", "critical_path", "failure_reporter", "fixture_verifier", "reconciler",
-    "sandbox", "sandbox_verifier", "verification", "verification_runner",
+    "sandbox", "sandbox_verifier", "verification",
 ])
 def test_existing_domain_module_aliases_retain_canonical_identity(name):
     legacy = importlib.import_module(f"orket.domain.{name}")

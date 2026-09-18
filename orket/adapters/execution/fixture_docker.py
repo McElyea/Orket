@@ -6,8 +6,8 @@ import re
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 
+from orket.adapters.execution.fixture_runner import RUNNER_CODE
 from orket.core.contracts.owned_command import OwnedCommandResult
-from orket.core.domain.verification_runner import RUNNER_CODE
 
 OWNER_LABEL = "org.orket.verification.owner"
 

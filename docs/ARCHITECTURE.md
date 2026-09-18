@@ -151,6 +151,13 @@ current proof limits are in
 `docs/architecture/CONTRACT_DELTA_CORE_EFFECT_BOUNDARIES_D_2026-09-14.md`.
 This is not whole-core purity or C/D acceptance.
 
+Sandbox HTTP verification follows the same boundary: core captures explicit
+scenario/target/time values and compares observations; application owns HTTP
+dispatch, client cleanup and result adoption. Fixture subprocess support code
+resides in the execution adapter. Exact comparison and migration semantics are in
+`docs/specs/SANDBOX_HTTP_VERIFICATION.md`. Core clocks, schema identities and other
+remaining effects still require D acceptance.
+
 The orchestrator's supplied control-plane clock covers both issue dispatch and
 scheduler namespace publication, including activation-failure cleanup. Direct
 composition retains the UTC adapter default. The clock wiring does not make the

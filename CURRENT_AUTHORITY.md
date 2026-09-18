@@ -4,6 +4,15 @@ Last updated: 2026-09-18
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Sandbox HTTP verification belongs to `SandboxVerificationService` in application.
+Core captures immutable target/scenario values and interprets observations; the
+execution adapter owns the HTTP client. Exact falsy/null comparison, cancellation,
+admission and migration semantics live in `docs/specs/SANDBOX_HTTP_VERIFICATION.md`.
+The fixture subprocess payload has one definition in
+`orket/adapters/execution/fixture_runner.py`. These support probes do not confer
+card-completion authority or hostile-code containment. Current candidate proof
+and unresolved C/D obligations remain in the architectural-truth plan.
+
 SDK memory policy/scope coordination lives in
 `orket/application/services/sdk_memory_provider.py`. Its synchronous write entry
 captures nested request metadata before the existing bridge accepts it. The SDK

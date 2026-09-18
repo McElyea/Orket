@@ -16,7 +16,6 @@ from orket.core.domain import (
     sandbox,
     sandbox_verifier,
     verification,
-    verification_runner,
 )
 from orket.core.domain.bug_fix_phase import (
     BugDiscoveryMetrics,
@@ -30,10 +29,8 @@ from orket.core.domain.fixture_verifier import FixtureVerifier, VerificationSecu
 from orket.core.domain.reconciler import StructuralReconciler
 from orket.core.domain.records import CardRecord, IssueRecord
 from orket.core.domain.sandbox import PortAllocation, Sandbox, SandboxRegistry, SandboxStatus, TechStack
-from orket.core.domain.sandbox_verifier import SandboxVerifier
 from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.core.domain.verification import AGENT_OUTPUT_DIR, VERIFICATION_DIR, VerificationEngine
-from orket.core.domain.verification_runner import RUNNER_CODE
 from orket.schema import WaitReason
 
 warnings.warn("`orket.domain` is deprecated; import from `orket.core.domain` instead.", DeprecationWarning, stacklevel=2)
@@ -47,7 +44,6 @@ _MODULE_ALIASES = {
     "sandbox": sandbox,
     "sandbox_verifier": sandbox_verifier,
     "verification": verification,
-    "verification_runner": verification_runner,
 }
 
 
@@ -88,11 +84,9 @@ __all__ = [
     "IssueRecord",
     "PolicyViolationReport",
     "PortAllocation",
-    "RUNNER_CODE",
     "Sandbox",
     "SandboxRegistry",
     "SandboxStatus",
-    "SandboxVerifier",
     "StateMachine",
     "StateMachineError",
     "StructuralReconciler",

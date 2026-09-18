@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.16] - 2026-09-18 - "Captured HTTP verification"
+
+### Changed
+- Application owns sandbox HTTP verification, captured target/scenario inputs and client cleanup; core interprets immutable observations.
+- Compare every expected JSON value, including falsy values and null, without boolean/numeric coercion. Missing endpoints count as failed scenarios.
+- Retain cleanup through repeated cancellation, stop further dispatch and publish no new scenario state on cancellation.
+- Move the shared native fixture payload into the execution adapter without changing its executable contents.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration: `docs/architecture/CONTRACT_DELTA_SANDBOX_VERIFICATION_CD_2026-09-18.md`.
+- Stability: scoped proof passes 2808 source cases and 2803 installed
+  cases in each Windows/Linux Python 3.11/3.12 cell, plus eight actual llama.cpp
+  regressions and three opted-in memory integrations. Five repository-only
+  checks stay in source proof. Original false passes and candidate regressions
+  remain retained. Docker deployment, full-workload completion and whole
+  architectural-truth acceptance are not established. Commit and tag remain local.
+
 ## [0.6.15] - 2026-09-18 - "Explicit provider preparation"
 
 ### Changed

@@ -1,4 +1,7 @@
+"""One native fixture payload shared by process and container execution adapters."""
 from __future__ import annotations
+
+side_effecting = True
 
 RUNNER_CODE = r"""
 import json

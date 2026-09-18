@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-18T10:49:34.009037+00:00",
+  "generated_at": "2026-09-18T15:42:09.718250+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -137,7 +137,11 @@
       },
       "orket.adapters.execution.fixture_docker": {
         "path": "orket/adapters/execution/fixture_docker.py",
-        "sha256": "8e275220e445dbe5f7f17a802e170feb634bc3bd26d7ea27d8b497e650d2bc08"
+        "sha256": "4c1becff4b8ca997e55b05574f53da537bf3c8ceab85fc92c70c0647c7a9b03b"
+      },
+      "orket.adapters.execution.fixture_runner": {
+        "path": "orket/adapters/execution/fixture_runner.py",
+        "sha256": "40e5e7a07c5e2f0e2a7f117aeff33d23a59de963a65c2b3a9facc8edddebf786"
       },
       "orket.adapters.execution.openclaw_jsonl_adapter": {
         "path": "orket/adapters/execution/openclaw_jsonl_adapter.py",
@@ -170,6 +174,10 @@
       "orket.adapters.execution.process_lifecycle": {
         "path": "orket/adapters/execution/process_lifecycle.py",
         "sha256": "3c851567d37cb46e7dbf5643904c57fd6ed8e1cc46ac4b8e2f7484b8fa85487c"
+      },
+      "orket.adapters.execution.sandbox_http": {
+        "path": "orket/adapters/execution/sandbox_http.py",
+        "sha256": "2a2b0614cecb3478c6c197e02376fff7a8fb5285902fab372090a119057528a8"
       },
       "orket.adapters.execution.worker_client": {
         "path": "orket/adapters/execution/worker_client.py",
@@ -929,7 +937,7 @@
       },
       "orket.application.services.fixture_verification_service": {
         "path": "orket/application/services/fixture_verification_service.py",
-        "sha256": "f52947c0b42aef055699ad57826d2fe7071add2d6bfe68c80649a32fcd8f6633"
+        "sha256": "122103421184f98ffa2a1814f089beaf263981f5806c90a5505fed908e48a123"
       },
       "orket.application.services.flow_authoring_service": {
         "path": "orket/application/services/flow_authoring_service.py",
@@ -1567,6 +1575,10 @@
         "path": "orket/application/services/sandbox_terminal_outcome_service.py",
         "sha256": "05b00a5d7287db46fd4e531c0407780989ce7ec2e04498e48cf28a74121d594b"
       },
+      "orket.application.services.sandbox_verification_service": {
+        "path": "orket/application/services/sandbox_verification_service.py",
+        "sha256": "98bc116278e22eaf6831b8ec6f1e8e1c2b1410954ab745ea563238a02cebf87d"
+      },
       "orket.application.services.scaffolder": {
         "path": "orket/application/services/scaffolder.py",
         "sha256": "d2dcb440b62c38f93c98d9a4a6fb45ef3f1ea7d4a40e2927617fa911d0c775fa"
@@ -1713,7 +1725,7 @@
       },
       "orket.application.workflows.orchestrator_ops": {
         "path": "orket/application/workflows/orchestrator_ops.py",
-        "sha256": "73d208351033b78a63c1f65fdd233c0c6a43ea4f82f2e8afbac8ad0c0d62547a"
+        "sha256": "86b43142d3697e50b3c4ca1944aa5a2ee1118ea1d61053f85d8ed2c880f54fb6"
       },
       "orket.application.workflows.prompt_budget_guard": {
         "path": "orket/application/workflows/prompt_budget_guard.py",
@@ -2245,7 +2257,7 @@
       },
       "orket.core.domain.sandbox_verifier": {
         "path": "orket/core/domain/sandbox_verifier.py",
-        "sha256": "da96a16f216a3e66988222c6df5abaafd3ec1851028302d48b4a0260353eeda0"
+        "sha256": "21c4ef08648a1ed71b1b6d163c3b4caecbd419c4f2b0f67a55febe071197337f"
       },
       "orket.core.domain.state_machine": {
         "path": "orket/core/domain/state_machine.py",
@@ -2253,11 +2265,7 @@
       },
       "orket.core.domain.verification": {
         "path": "orket/core/domain/verification.py",
-        "sha256": "a32e0a79ad491b4937df47ce32a565c27fc06ecacb092e991eb0337e68f91573"
-      },
-      "orket.core.domain.verification_runner": {
-        "path": "orket/core/domain/verification_runner.py",
-        "sha256": "7a8c12d704afd0e6c82452133aaa34e08516fcb9f541b2fe2b4c69704dafdaf1"
+        "sha256": "7bf9e55a9a7fc07816482b9165ea47efd84ee7494004666908c4ec93168111b7"
       },
       "orket.core.domain.verification_scope": {
         "path": "orket/core/domain/verification_scope.py",
@@ -2317,7 +2325,7 @@
       },
       "orket.domain.__init__": {
         "path": "orket/domain/__init__.py",
-        "sha256": "810b1cdd1937e53a1f32354df77b2334718177740bd6909885870ebc21818c3e"
+        "sha256": "f01b864542e4d128f097ae66e99fe8690594e9dd250f275537ee7b9d3ff4de55"
       },
       "orket.domain.execution": {
         "path": "orket/domain/execution.py",
@@ -4225,14 +4233,14 @@
       },
       {
         "source": "orket.adapters.execution.fixture_docker",
-        "target": "orket.core.contracts.owned_command",
+        "target": "orket.adapters.execution.fixture_runner",
         "path": "orket/adapters/execution/fixture_docker.py",
         "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.adapters.execution.fixture_docker",
-        "target": "orket.core.domain.verification_runner",
+        "target": "orket.core.contracts.owned_command",
         "path": "orket/adapters/execution/fixture_docker.py",
         "line": 10,
         "kind": "from"
@@ -4249,6 +4257,20 @@
         "target": "orket.core.contracts.owned_command",
         "path": "orket/adapters/execution/owned_command_process.py",
         "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.execution.sandbox_http",
+        "target": "orket.core.contracts.protocol_hashing",
+        "path": "orket/adapters/execution/sandbox_http.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.execution.sandbox_http",
+        "target": "orket.core.domain.sandbox_verifier",
+        "path": "orket/adapters/execution/sandbox_http.py",
+        "line": 7,
         "kind": "from"
       },
       {
@@ -8789,35 +8811,35 @@
       },
       {
         "source": "orket.application.services.fixture_verification_service",
-        "target": "orket.application.services.command_process_supervisor",
+        "target": "orket.adapters.execution.fixture_runner",
         "path": "orket/application/services/fixture_verification_service.py",
         "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.application.services.fixture_verification_service",
-        "target": "orket.application.services.fixture_container_owner",
+        "target": "orket.application.services.command_process_supervisor",
         "path": "orket/application/services/fixture_verification_service.py",
-        "line": 16,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.application.services.fixture_verification_service",
-        "target": "orket.application.services.runtime_input_service",
+        "target": "orket.application.services.fixture_container_owner",
         "path": "orket/application/services/fixture_verification_service.py",
         "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.services.fixture_verification_service",
-        "target": "orket.core.domain.fixture_verifier",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/application/services/fixture_verification_service.py",
         "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.application.services.fixture_verification_service",
-        "target": "orket.core.domain.verification_runner",
+        "target": "orket.core.domain.fixture_verifier",
         "path": "orket/application/services/fixture_verification_service.py",
         "line": 19,
         "kind": "from"
@@ -14759,6 +14781,41 @@
         "kind": "from"
       },
       {
+        "source": "orket.application.services.sandbox_verification_service",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/sandbox_verification_service.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sandbox_verification_service",
+        "target": "orket.adapters.execution.sandbox_http",
+        "path": "orket/application/services/sandbox_verification_service.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sandbox_verification_service",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/services/sandbox_verification_service.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sandbox_verification_service",
+        "target": "orket.core.domain.sandbox_verifier",
+        "path": "orket/application/services/sandbox_verification_service.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sandbox_verification_service",
+        "target": "orket.schema",
+        "path": "orket/application/services/sandbox_verification_service.py",
+        "line": 17,
+        "kind": "from"
+      },
+      {
         "source": "orket.application.services.sdk_llm_provider",
         "target": "orket.application.services.local_model_factory",
         "path": "orket/application/services/sdk_llm_provider.py",
@@ -16195,14 +16252,14 @@
       },
       {
         "source": "orket.application.workflows.orchestrator_ops",
-        "target": "orket.core.domain.sandbox",
+        "target": "orket.application.services.sandbox_verification_service",
         "path": "orket/application/workflows/orchestrator_ops.py",
         "line": 790,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.orchestrator_ops",
-        "target": "orket.core.domain.verification",
+        "target": "orket.core.domain.sandbox",
         "path": "orket/application/workflows/orchestrator_ops.py",
         "line": 791,
         "kind": "from"
@@ -18309,9 +18366,16 @@
       },
       {
         "source": "orket.core.domain.sandbox_verifier",
+        "target": "orket.core.contracts.protocol_hashing",
+        "path": "orket/core/domain/sandbox_verifier.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.core.domain.sandbox_verifier",
         "target": "orket.schema",
         "path": "orket/core/domain/sandbox_verifier.py",
-        "line": 6,
+        "line": 8,
         "kind": "from"
       },
       {
@@ -18325,28 +18389,14 @@
         "source": "orket.core.domain.verification",
         "target": "orket.schema",
         "path": "orket/core/domain/verification.py",
-        "line": 13,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.core.domain.verification",
         "target": "orket.core.domain.fixture_verifier",
         "path": "orket/core/domain/verification.py",
-        "line": 15,
-        "kind": "from"
-      },
-      {
-        "source": "orket.core.domain.verification",
-        "target": "orket.core.domain.sandbox_verifier",
-        "path": "orket/core/domain/verification.py",
-        "line": 16,
-        "kind": "from"
-      },
-      {
-        "source": "orket.core.domain.verification",
-        "target": "orket.core.domain.verification_runner",
-        "path": "orket/core/domain/verification.py",
-        "line": 17,
+        "line": 14,
         "kind": "from"
       },
       {
@@ -18638,100 +18688,79 @@
       },
       {
         "source": "orket.domain.__init__",
-        "target": "orket.core.domain.verification_runner",
-        "path": "orket/domain/__init__.py",
-        "line": 10,
-        "kind": "from"
-      },
-      {
-        "source": "orket.domain.__init__",
         "target": "orket.core.domain.bug_fix_phase",
         "path": "orket/domain/__init__.py",
-        "line": 21,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.domain.__init__",
         "target": "orket.core.domain.critical_path",
         "path": "orket/domain/__init__.py",
-        "line": 26,
+        "line": 25,
         "kind": "from"
       },
       {
         "source": "orket.domain.__init__",
         "target": "orket.core.domain.execution",
         "path": "orket/domain/__init__.py",
-        "line": 27,
+        "line": 26,
         "kind": "from"
       },
       {
         "source": "orket.domain.__init__",
         "target": "orket.core.domain.failure_reporter",
         "path": "orket/domain/__init__.py",
-        "line": 28,
+        "line": 27,
         "kind": "from"
       },
       {
         "source": "orket.domain.__init__",
         "target": "orket.core.domain.fixture_verifier",
         "path": "orket/domain/__init__.py",
-        "line": 29,
+        "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.domain.__init__",
         "target": "orket.core.domain.reconciler",
         "path": "orket/domain/__init__.py",
-        "line": 30,
+        "line": 29,
         "kind": "from"
       },
       {
         "source": "orket.domain.__init__",
         "target": "orket.core.domain.records",
         "path": "orket/domain/__init__.py",
-        "line": 31,
+        "line": 30,
         "kind": "from"
       },
       {
         "source": "orket.domain.__init__",
         "target": "orket.core.domain.sandbox",
         "path": "orket/domain/__init__.py",
-        "line": 32,
-        "kind": "from"
-      },
-      {
-        "source": "orket.domain.__init__",
-        "target": "orket.core.domain.sandbox_verifier",
-        "path": "orket/domain/__init__.py",
-        "line": 33,
+        "line": 31,
         "kind": "from"
       },
       {
         "source": "orket.domain.__init__",
         "target": "orket.core.domain.state_machine",
         "path": "orket/domain/__init__.py",
-        "line": 34,
+        "line": 32,
         "kind": "from"
       },
       {
         "source": "orket.domain.__init__",
         "target": "orket.core.domain.verification",
         "path": "orket/domain/__init__.py",
-        "line": 35,
-        "kind": "from"
-      },
-      {
-        "source": "orket.domain.__init__",
-        "target": "orket.core.domain.verification_runner",
-        "path": "orket/domain/__init__.py",
-        "line": 36,
+        "line": 33,
         "kind": "from"
       },
       {
         "source": "orket.domain.__init__",
         "target": "orket.schema",
         "path": "orket/domain/__init__.py",
-        "line": 37,
+        "line": 34,
         "kind": "from"
       },
       {
@@ -26900,7 +26929,7 @@
         "code": "unresolved_reflection"
       }
     ],
-    "files_scanned": 1021,
+    "files_scanned": 1023,
     "scan_roots": [
       "orket"
     ],
@@ -26910,6 +26939,7 @@
       "orket.adapters.__init__": "adapters",
       "orket.adapters.execution.__init__": "adapters",
       "orket.adapters.execution.fixture_docker": "adapters",
+      "orket.adapters.execution.fixture_runner": "adapters",
       "orket.adapters.execution.openclaw_jsonl_adapter": "adapters",
       "orket.adapters.execution.owned_command_limits": "adapters",
       "orket.adapters.execution.owned_command_linux": "adapters",
@@ -26918,6 +26948,7 @@
       "orket.adapters.execution.owned_command_worker": "adapters",
       "orket.adapters.execution.owned_io": "adapters",
       "orket.adapters.execution.process_lifecycle": "adapters",
+      "orket.adapters.execution.sandbox_http": "adapters",
       "orket.adapters.execution.worker_client": "adapters",
       "orket.adapters.llm.__init__": "adapters",
       "orket.adapters.llm.llama_cpp_render_verification": "adapters",
@@ -27267,6 +27298,7 @@
       "orket.application.services.sandbox_runtime_recovery_service": "application",
       "orket.application.services.sandbox_terminal_evidence_service": "application",
       "orket.application.services.sandbox_terminal_outcome_service": "application",
+      "orket.application.services.sandbox_verification_service": "application",
       "orket.application.services.scaffolder": "application",
       "orket.application.services.sdk_llm_provider": "application",
       "orket.application.services.sdk_memory_provider": "application",
@@ -27439,7 +27471,6 @@
       "orket.core.domain.sandbox_verifier": "core",
       "orket.core.domain.state_machine": "core",
       "orket.core.domain.verification": "core",
-      "orket.core.domain.verification_runner": "core",
       "orket.core.domain.verification_scope": "core",
       "orket.core.domain.workflow_profiles": "core",
       "orket.core.domain.workitem_transition": "core",
@@ -27934,7 +27965,7 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 229
+        "count": 230
       },
       {
         "source": "adapters",
@@ -27944,17 +27975,17 @@
       {
         "source": "adapters",
         "target": "core",
-        "count": 135
+        "count": 136
       },
       {
         "source": "application",
         "target": "adapters",
-        "count": 320
+        "count": 323
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1549
+        "count": 1551
       },
       {
         "source": "application",
@@ -27974,7 +28005,7 @@
       {
         "source": "core",
         "target": "core",
-        "count": 144
+        "count": 140
       },
       {
         "source": "decision_nodes",
@@ -28683,44 +28714,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-15T00:44:35.248679Z",
-      "changed": true,
-      "before_digest": "sha256:5234c9aa96bf9a50e55588ad28b4cad5e7aedf6aad3790f0260298bcc56f0359",
-      "after_digest": "sha256:7c98931e37e859931d2ce05db855dd017de1160d25a74e69376c2460cbf1c850",
-      "diff": {
-        "added_paths": 7,
-        "removed_paths": 10,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 8888,
-        "paths_total_current": 43160,
-        "paths_total_reference": 43160,
-        "churn_paths": 19,
-        "churn_ratio": 0.00044,
-        "sample_paths": [
-          "$.forbidden_edge_hits",
-          "$.layer_edges",
-          "$.legacy_edge_budget",
-          "$.module_count",
-          "$.modules",
-          "$.scan",
-          "$.top_module_edges",
-          "$.collection_ok",
-          "$.observed",
-          "$.root",
-          "$.schema_version",
-          "$.verdict",
-          "$.generated_at",
-          "$.policy.forbidden_edges",
-          "$.policy.policy_id",
-          "$.policy.schema_version",
-          "$.policy.contract",
-          "$.policy.sha256",
-          "$.policy.path"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-15T00:58:48.313966Z",
       "changed": true,
@@ -29680,6 +29673,87 @@
           "$.observed.edges[985].line",
           "$.observed.edges[985].path",
           "$.observed.edges[985].source"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T14:34:48.349801Z",
+      "changed": true,
+      "before_digest": "sha256:b7a958999bf2c6022b704616afcd659a14f01f313ed4a1025cf48d3ecf8f8beb",
+      "after_digest": "sha256:bf5f27f4eda20aff39a8e407f3037cc43c7680a5cc50f4e85b62a2f38bbe0b60",
+      "diff": {
+        "added_paths": 9,
+        "removed_paths": 2,
+        "changed_paths": 9682,
+        "initial_write": false,
+        "paths_total_previous": 44079,
+        "paths_total_current": 44126,
+        "paths_total_reference": 44126,
+        "churn_paths": 9693,
+        "churn_ratio": 0.219666,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[2].target",
+          "$.observed.edges[3].target",
+          "$.observed.edges[6].line",
+          "$.observed.edges[6].path",
+          "$.observed.edges[6].source",
+          "$.observed.edges[6].target",
+          "$.observed.edges[7].line",
+          "$.observed.edges[7].path",
+          "$.observed.edges[7].source",
+          "$.observed.edges[7].target",
+          "$.observed.edges[8].line",
+          "$.observed.edges[8].path",
+          "$.observed.edges[8].source",
+          "$.observed.edges[8].target",
+          "$.observed.edges[9].line",
+          "$.observed.edges[9].path",
+          "$.observed.edges[9].source",
+          "$.observed.edges[9].target",
+          "$.observed.edges[10].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T15:00:08.918838Z",
+      "changed": true,
+      "before_digest": "sha256:bf5f27f4eda20aff39a8e407f3037cc43c7680a5cc50f4e85b62a2f38bbe0b60",
+      "after_digest": "sha256:33db5127370c467064f67ed70bc3b973378fb51f6656c77d503e1bc6317b526f",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 44126,
+        "paths_total_current": 44126,
+        "paths_total_reference": 44126,
+        "churn_paths": 2,
+        "churn_ratio": 4.5e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.modules.orket.core.domain.sandbox_verifier.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T15:42:16.562219Z",
+      "changed": true,
+      "before_digest": "sha256:33db5127370c467064f67ed70bc3b973378fb51f6656c77d503e1bc6317b526f",
+      "after_digest": "sha256:0651c05cde97e66746f921a6ea5ce4f2c56f8ade8dd51174691faad7063ed6ca",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 44126,
+        "paths_total_current": 44126,
+        "paths_total_reference": 44126,
+        "churn_paths": 2,
+        "churn_ratio": 4.5e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.modules.orket.core.domain.sandbox_verifier.sha256"
         ]
       }
     }

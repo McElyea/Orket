@@ -187,6 +187,11 @@ listing remains uncertain because the daemon may still have an in-flight create.
 `last_run`. These events are diagnostic observations, not a durable recovery owner.
 Historical stored results are not migrated to fabricate the additive nullable field.
 
+HTTP verification has its own captured-input and client-lifetime contract in
+`docs/specs/SANDBOX_HTTP_VERIFICATION.md`. The shared fixture executable payload
+lives in `orket/adapters/execution/fixture_runner.py`; its process/container policy
+and native teardown obligations above are unchanged.
+
 ## OS references
 
 The Windows backend follows [Job Objects](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects),

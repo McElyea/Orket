@@ -12477,7 +12477,7 @@ requested a versioned GitHub checkpoint and continued commits on the existing
 branch; its proof and publication disposition are recorded in the C/D checkpoint.
 The later user instruction restricts 10 AM-6 PM America/Denver work hours to
 local commits only. Retain commits and matching annotated tags locally during
-that window; do not push to GitHub. The 0.6.4 through 0.6.13 local checkpoints follow this
+that window; do not push to GitHub. The 0.6.4 through 0.6.15 local checkpoints follow this
 restriction; remote publication remains deferred.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
@@ -12516,23 +12516,17 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: complete the SDK memory/SQLite admission candidate below, then
-continue C/D from their numbered requirements after the scoped 0.6.13 checkpoint.
-The sealed 0.6.13 source/native/provider cohort passes its selected gates;
-0.6.14 remains under verification. Earlier failed candidate gates remain retained.
-Controlled native diagnostics reproduce connection loss when a response is delayed
-beyond the unchanged child deadline; they do not establish the original latency
-source. The separate captured-input and worker-lifetime repair does not diagnose
-the retained Windows timeout or directory-publication failures.
-Repair the 36 remaining forbidden pairs, one
-cross-layer cycle and ten unresolved import/reflection sites while preserving
-adversarial positive and negative proof. SDK memory and provider target ownership,
-remaining explicit inputs, worker lifetimes and replay capture remain actionable.
-The latest Linux lifecycle tests now use verified ordered clock inputs; the original
-host-clock and Windows publication observations remain retained and unexplained.
-Keep BT-5 artifacts and family claim ceilings intact. E1/E2, capability requirements
-acceptance and implementation, full-suite/hosted quality proof, release readiness
-and explicit whole-lane user acceptance remain open.
+Next action: complete the captured sandbox HTTP verification candidate below,
+then continue C/D from their numbered requirements. The local 0.6.15 source,
+four installed environments and actual llama.cpp cohort pass their scoped gates.
+The local 0.6.16 checkpoint passes its scoped gates below. Preserve every original failure;
+supplied-clock controls do not repair or diagnose historical host-clock reversal.
+The last sealed graph still has 35 forbidden pairs, one cross-layer cycle and ten
+unresolved import/reflection sites. Remaining core clocks, manifest file reads,
+schema-generated identities, explicit settings, async reachability and adapter
+classification remain actionable. E1/E2, capability requirements and implementation,
+full-suite/hosted quality proof, release readiness and explicit whole-lane user
+acceptance remain open. Keep BT-5 artifacts and family claim ceilings intact.
 
 The final BT-3 audit accepts builtin evidence-based completion and scoped replay.
 It preserves the initial installed failures, corrected external fixture coverage,
@@ -13903,3 +13897,221 @@ remain under `.tmp/c-provider-admission/`. These are the exact 0.6.15 checkpoint
 - `tests/helpers/provider_preparation.py`
 - `tests/integration/test_dual_ledger_clock_refusal.py`
 - `tests/integration/test_provider_preparation_authority.py`
+
+
+### Captured sandbox HTTP verification candidate: 2026-09-18
+
+The local 0.6.15 receipt remains unchanged. Reentry verified all 262 directly bound
+evidence files, the original handoff and neighboring worktrees before editing.
+The starting snapshot is `.tmp/d-core-residual/session-state.json`, SHA-256
+`e3217e66fdc93c4a1f1936f9b0fc0d7af467db25dd6c8b45abeee42ba90308a8`.
+
+Unchanged 0.6.15 runtime produced seven real HTTP false passes in the new preflight:
+six mismatched falsy expectations and one caller-mutated expectation while the
+response was pending. Six matching controls and six provider admission controls
+passed (19 total). Original source, XML, logs and fixture hashes are retained in
+`.tmp/d-core-residual/before/` and `preflight-inputs/`.
+
+Application now owns sandbox HTTP verification; core captures immutable target,
+scenario and explicit timestamp inputs and interprets observations. Every expected
+JSON value is compared, including null; numeric representations and booleans are
+not coerced. Missing endpoint scenarios fail without HTTP. The existing owned-I/O
+supervisor retains transport cleanup through repeated cancellation and prevents
+further dispatch or scenario adoption after cancellation. The fixture subprocess
+payload moves into the execution adapter with unchanged executable contents.
+Internal core execution imports are removed without a forwarding shim.
+Contract and migration: `docs/specs/SANDBOX_HTTP_VERIFICATION.md` and
+`docs/architecture/CONTRACT_DELTA_SANDBOX_VERIFICATION_CD_2026-09-18.md`.
+
+Targeted proof: `after/` passes 33 cases; `lifetime/` passes 67 cases with three
+pytest JUnit-property warnings. Its quick report incorrectly labels property-bearing
+cases as nonpassing; retained pytest XML/logs show zero failures/errors/skips.
+New measurements use supported suite-level properties. `composed/` passes 108 cases
+in 11.68 seconds, including actual loopback HTTP, real SQLite and native fixture
+execution through `Orchestrator.verify_issue`. Timeout, repeated cancellation,
+cleanup failure, captured URL/body/expectations, concurrent responsiveness and
+strict value comparison controls pass. The 0.5-second responsiveness bound was
+fixed in the contract delta before measurement. No Docker deployment or model
+inference is claimed by these controlled local HTTP tests.
+
+At the initial targeted checkpoint, broad source, fresh package, four installed
+environments and actual llama.cpp proof were pending. Their completed scoped
+acceptance follows below; overall result remains partial success.
+Both Quality jobs now include the new contract and integration modules. Before
+native runs, declare the complete-driver proof budget separately from unchanged
+product/request/CLI deadlines; preserve the previous 0.6.15 outer-budget failure.
+No remote Git operation or push has been performed.
+
+Remaining blockers or drift: core clocks, manifest loading and schema identity
+factories still prevent whole-core purity. Full async reachability, remaining C
+violations, E1/E2 and CAP acceptance remain open. HTTP observations do not confer
+whole-workload or card-completion authority; fixture/HTTP result merging is not a
+transaction across remote effects. Client closure does not prove remote server
+work stopped. No provider, containment or trusted-code claim is expanded.
+
+The current graph collects 1,023 modules and 3,237 import sites: 35 forbidden pairs,
+one authority cycle, ten analysis errors and zero unknown classifications. The
+verdict remains failed; moving HTTP effects out of core is not whole-core purity
+or dependency acceptance. The baseline collects successfully with release readiness
+false. The native fixture payload is exactly equal to the 0.6.15 executable string.
+The original 67-case JUnit parser discrepancy is independently reconciled in
+`.tmp/d-core-residual/lifetime-junit-audit.json` without altering its report.
+
+The initial broad source run passed 2,801 cases in 1,017.86 seconds with no
+failures/errors/skips and five existing warnings. An independent real HTTP probe
+then identified a candidate regression: the result omitted the admitted base URL.
+`target-evidence-before/` retains that failure. The pure captured input now keeps
+the base URL and interpretation restores its log entry without rereading mutable
+state. `target-evidence-after/` passes 58 cases, including the original probe and
+captured target/body, lifetime and persisted-result controls. The original source
+report, 30 changed input files, fixture bytes and initial wheel remain bound in
+`complete/source-1-retention.json`; the corrected package/source cohort is fresh.
+
+Before any native execution, the outer complete-driver budget is declared at
+1,500 seconds (wrapper 1,800) based on the initial source duration. The initial
+1,200/1,500-second proposal and wrapper are retained separately. This is a proof
+harness scheduling change; product, request, per-test and CLI deadlines do not
+change. The responsiveness acceptance bound remains 0.5 seconds.
+
+Independent remaining-C preflight also confirms a real flow revision race. Two
+public FastAPI authoring requests read the same expected revision from SQLite;
+both return 200 and one overwrites the other, instead of one 200 and one 409.
+The barrier waits after actual reads and fabricates no row or write outcome.
+`.tmp/c-flow-authority/preflight/observation.json` retains requests, responses and
+stored state. Its parent formatter raised `KeyError: definition` after retaining
+the observation; `interpretation.json` records the error and flattened response
+shape without rerunning or rewriting the probe. Client and request tasks settled.
+This is in-process ASGI/SQLite proof, not a TCP or provider run. A second real SQLite service probe also confirms caller edits to a flow
+definition and nested node after its first awaited read are persisted as if
+they were the admitted input. `.tmp/c-flow-authority/input-preflight/` retains
+the unchanged-input observation and database; the held read fabricates no
+row or write result. `collision-preflight/` independently records two
+application creates using the same supplied id: both return created while
+the second replaces the first SQLite row. The C/D flow composition, captured
+definition, create collision and atomic revision-guard repair remains
+actionable after this checkpoint.
+
+Source-bootstrap review caught a harness selection error before the revised broad
+run: the second private environment selected the initial `dist/` wheel instead of
+the rebuilt `dist-target/` wheel. Its log, setup report and original helper are
+retained under `complete/rejected-source-bootstrap/`. The initial bootstrap log and
+full initial setup report had already been overwritten; the diff ledger retains
+the initial structured payload digest, not those original bytes. This is an
+explicit evidence-retention limitation, not complete bootstrap preservation.
+The initial wheel, private environment, source-1 report, copied Git inputs and
+fixture bytes remain intact. No revised broad/native acceptance used that second
+environment. The corrected helper selects the exact build-report wheel and keeps
+per-environment setup logs. A third fresh `sandbox-http-final-source` environment
+matches all 1,038 wheel package files and all 1,023 current core Python files;
+`complete/source-origin-audit.json` binds that verification. Graph and baseline
+collection also pass again, while dependency conformance and release readiness
+remain false. Revised source/native/provider gates remain pending at this point.
+
+The revised source cohort passed 2,801 cases in 1,004.30 seconds; its first
+installed Linux 3.11 cell passed 2,796 cases in 778.732 seconds.
+Both retain their exact sources, fixtures and native audit in
+`complete/source-2-retention.json`. They are earlier candidate observations, not
+acceptance of the final runtime: independent real HTTP probes found two further
+admission defects. Model serialization converted unsupported dataclasses and
+Pydantic objects to dictionaries before JSON validation (four failures and one
+plain-JSON control in `json-admission-before/`). Mutated invalid scenario ids were
+validated only after dispatch (two failures in `shape-admission-before/`).
+
+Core now canonicalizes original scenario values before model serialization and
+validates every captured scenario schema before HTTP. Unsupported values or an
+invalid scenario reject the whole batch, including any preceding valid requests.
+Callers explicitly convert Python objects to JSON values. The tracked integration
+module exercises real HTTP non-dispatch, unchanged pending status and valid JSON
+admission. `json-admission-after/` passes 67 cases, including both original probe
+modules and existing value, HTTP, lifetime and SQLite controls. Both Quality jobs
+include the new module.
+
+The fresh final source/package cohort uses `json-inputs/`; its four serial native
+environments use `runtime-matrix-json/` and the `sandbox-http-json-` prefix. Earlier
+candidate artifacts remain intact, including the explicitly recorded bootstrap
+retention limitation. The declared 1,500-second driver and 1,800-second wrapper
+budgets preserve all existing product, request, test and CLI deadlines. Final
+source/native/provider proof passed as recorded in the scoped acceptance below. Commits remain local during the user's
+10 AM–6 PM America/Denver work hours; no remote Git operation is part of this proof.
+
+#### Captured HTTP verification scoped acceptance
+
+The final source cohort passes 2808 cases. Five repository-only cases stay
+in source proof; the other 2803 cases pass in each fresh installed cell.
+The source and installed selections form a complete disjoint partition.
+
+| Environment | Pass / fail / error / skip | Seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 2808 / 0 / 0 / 0 | 996.625 |
+| Installed linux-py311 | 2803 / 0 / 0 / 0 | 772.789 |
+| Installed linux-py312 | 2803 / 0 / 0 / 0 | 758.377 |
+| Installed win-py311 | 2803 / 0 / 0 / 0 | 995.865 |
+| Installed win-py312 | 2803 / 0 / 0 / 0 | 1139.397 |
+
+Each cell verifies package origins, unchanged harness inputs, retained artifact
+hashes, real public CLI behavior, controlled ToolGate refusal and owned process
+teardown. All four complete drivers use the predeclared 1,500-second outer
+budget; product, test, request and CLI deadlines are unchanged.
+
+Eight separate actual llama.cpp regressions pass in 160.363 seconds
+through the installed Windows 3.11 package. The existing operator server keeps
+its process identity. Three opted-in SDK/storage/synthesis integrations also
+pass; those three make no model inference claim. Controlled HTTP server tests
+are real network observations with supplied bodies, not deployed Docker proof.
+
+The package matches 1023 core Python files and
+1038 wheel package files. Wheel SHA-256:
+`9f9ce464283b6a95b58ede71baf389168832304a9b2ad5b65ccb0a80f9c38d04`; sdist SHA-256:
+`3358a72029da8de3b1a9169a775e1abcb3f11a4a870ea60bb196a208f5badfbe`.
+The bound artifact audit is `.tmp/d-core-residual/runtime-matrix-json/audit.json`,
+SHA-256 `df4f0d0c3fbfb5893289246615171c137f52908ef07e92f864951be91194869f`.
+
+Original seven false-pass observations, candidate target-evidence and raw-input
+admission regressions, and the JUnit-property reporting discrepancy remain
+retained. Earlier source and native candidates keep their actual inputs.
+The initial bootstrap log/report retention limitation remains disclosed above;
+no previous receipt is resealed.
+This is a local 0.6.16 checkpoint, with an annotated tag on the commit and
+receipt at `.tmp/d-core-residual/json-inputs/local-checkpoint.json`. No remote Git
+operation or push is part of it. Whole C/D/E/CAP, canonical full-suite and
+hosted quality proof, release readiness and explicit whole-lane acceptance
+remain open; this checkpoint is partial overall success.
+
+#### Current sandbox HTTP candidate file set
+
+The following Git-visible paths are the exact local 0.6.16 checkpoint. The native fixture
+payload moves between the listed deleted core and added adapter paths. Local
+helpers and retained proof remain under `.tmp/d-core-residual/`.
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/architecture/CONTRACT_DELTA_SANDBOX_VERIFICATION_CD_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/README.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/SANDBOX_HTTP_VERIFICATION.md`
+- `docs/specs/VERIFICATION_PROCESS_LIFETIME_CONTRACT.md`
+- `orket/adapters/execution/fixture_docker.py`
+- `orket/adapters/execution/fixture_runner.py`
+- `orket/adapters/execution/sandbox_http.py`
+- `orket/application/services/fixture_verification_service.py`
+- `orket/application/services/sandbox_verification_service.py`
+- `orket/application/workflows/orchestrator_ops.py`
+- `orket/core/domain/sandbox_verifier.py`
+- `orket/core/domain/verification.py`
+- `orket/core/domain/verification_runner.py`
+- `orket/domain/__init__.py`
+- `pyproject.toml`
+- `tests/application/test_resize_extracted_components.py`
+- `tests/contracts/test_sandbox_verification_values.py`
+- `tests/core/test_domain_deprecation_shim.py`
+- `tests/helpers/observed_http_server.py`
+- `tests/integration/test_provider_preparation_authority.py`
+- `tests/integration/test_sandbox_verification_authority.py`
+- `tests/integration/test_sandbox_verification_json_admission.py`
+- `tests/integration/test_sandbox_verification_lifetime.py`
+- `tests/integration/test_sandbox_verification_persistence.py`

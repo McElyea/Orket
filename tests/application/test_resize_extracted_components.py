@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+from orket.application.services.sandbox_verification_service import SandboxVerificationService
 from orket.core.domain.fixture_verifier import FixtureVerifier
-from orket.core.domain.sandbox_verifier import SandboxVerifier
 from orket.orchestration.engine_services import KernelGatewayFacade
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.schema import IssueVerification, VerificationScenario
@@ -21,18 +21,22 @@ def test_fixture_verifier_mark_all_failed() -> None:
 
 
 @pytest.mark.asyncio
-async def test_sandbox_verifier_skips_non_endpoint_scenarios() -> None:
+@pytest.mark.contract
+async def test_sandbox_verifier_rejects_non_endpoint_scenarios() -> None:
+    """Layer: contract. A configured scenario cannot disappear from pass/fail counts."""
     class _Sandbox:
         id = "sbx"
         api_url = "http://localhost"
 
-    verifier = SandboxVerifier()
+    verifier = SandboxVerificationService()
     verification = IssueVerification(
         fixture_path="",
         scenarios=[VerificationScenario(id="S1", description="d", input_data={}, expected_output={})],
     )
     result = await verifier.verify_sandbox(_Sandbox(), verification)
     assert result.total_scenarios == 1
+    assert (result.passed, result.failed) == (0, 1)
+    assert verification.scenarios[0].status == "fail"
 
 
 def test_orchestration_config_prefers_env(monkeypatch) -> None:

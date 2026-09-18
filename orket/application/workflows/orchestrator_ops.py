@@ -787,8 +787,8 @@ async def verify_issue(self: Any, issue_id: str, run_id: str | None = None) -> A
     Runs empirical verification for a specific issue.
     """
     from orket.application.services.fixture_verification_service import FixtureVerificationService
+    from orket.application.services.sandbox_verification_service import SandboxVerificationService
     from orket.core.domain.sandbox import SandboxStatus
-    from orket.core.domain.verification import VerificationEngine
 
     issue_data = await self.async_cards.get_by_id(issue_id)
     if not issue_data:
@@ -819,7 +819,7 @@ async def verify_issue(self: Any, issue_id: str, run_id: str | None = None) -> A
         if run_id:
             sandbox_event["run_id"] = run_id
         log_event("verification_sandbox_started", sandbox_event, self.workspace)
-        sb_result = await VerificationEngine.verify_sandbox(sandbox, issue.verification)
+        sb_result = await SandboxVerificationService().verify_sandbox(sandbox, issue.verification)
         # Merge results
         result.passed += sb_result.passed
         result.failed += sb_result.failed

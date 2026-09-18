@@ -1,6 +1,4 @@
 """Layer: integration. Actual HTTP clients cannot bypass application preparation policy."""
-import asyncio
-import json
 from contextlib import asynccontextmanager
 
 import httpx
@@ -8,6 +6,7 @@ import pytest
 
 from orket.application.services.local_model_factory import create_local_model_provider
 from orket.exceptions import ModelConnectionError
+from tests.helpers.observed_http_server import observed_http_server
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -18,40 +17,15 @@ class DerivedClient(httpx.AsyncClient):
 
 @asynccontextmanager
 async def observed_http_provider():
-    requests, owners, errors = [], set(), []
+    async def response_for_request(request):
+        first, _ = request
+        payload = ({"data": [{"id": "fixture"}]} if first.startswith("GET /v1/models ") else
+                   {"choices": [{"message": {"content": "observed"}, "finish_reason": "stop"}],
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2}})
+        return 200, payload
 
-    async def respond(reader, writer):
-        owner = asyncio.current_task()
-        owners.add(owner)
-        try:
-            head = await reader.readuntil(b"\r\n\r\n")
-            first, *headers = head.decode().split("\r\n")
-            length = next((int(h.split(":", 1)[1]) for h in headers if h.lower().startswith("content-length:")), 0)
-            body = await reader.readexactly(length)
-            requests.append((first, json.loads(body) if body else None))
-            payload = ({"data": [{"id": "fixture"}]} if first.startswith("GET /v1/models ") else
-                       {"choices": [{"message": {"content": "observed"}, "finish_reason": "stop"}],
-                        "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2}})
-            content = json.dumps(payload).encode()
-            writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n" +
-                         f"Content-Length: {len(content)}\r\nConnection: close\r\n\r\n".encode() + content)
-            await writer.drain()
-        except (ConnectionError, asyncio.IncompleteReadError, ValueError) as exc:
-            errors.append(repr(exc))
-        finally:
-            writer.close()
-            await writer.wait_closed()
-            owners.remove(owner)
-
-    server = await asyncio.start_server(respond, "127.0.0.1", 0)
-    try:
-        yield f"http://127.0.0.1:{server.sockets[0].getsockname()[1]}/v1", requests
-    finally:
-        server.close()
-        await server.wait_closed()
-        if owners:
-            await asyncio.wait_for(asyncio.gather(*owners), timeout=5)
-        assert not owners and not errors
+    async with observed_http_server(response_for_request) as (url, requests):
+        yield url + "/v1", requests
 
 
 @pytest.mark.parametrize("client_kind", ["ordinary-client", "derived-client", "forwarding-mock-client"])
