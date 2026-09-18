@@ -15,14 +15,15 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 try:
-    from orket.adapters.llm.local_model_provider import LocalModelProvider
+    from orket.application.services.local_model_factory import create_local_model_provider
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
     from scripts.providers.provider_runtime_warmup import ProviderRuntimeWarmupError, warmup_provider_model
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
     from providers.provider_runtime_warmup import ProviderRuntimeWarmupError, warmup_provider_model
-    from orket.adapters.llm.local_model_provider import LocalModelProvider
+
+    from orket.application.services.local_model_factory import create_local_model_provider
 
 
 _GUIDE_TOOL_NAME = "emit_prompt_patch"
@@ -40,7 +41,7 @@ class GuideModelSpec:
     base_url: str = ""
 
     @classmethod
-    def parse(cls, raw: str) -> "GuideModelSpec":
+    def parse(cls, raw: str) -> GuideModelSpec:
         parts = [part.strip() for part in str(raw or "").split("|")]
         if len(parts) not in {3, 4}:
             raise ValueError("guide spec must be label|provider|model or label|provider|model|base_url")
@@ -264,7 +265,7 @@ async def _invoke_guide_model(
     timeout_sec: int,
     max_prompt_patch_chars: int,
 ) -> tuple[str, str, str, dict[str, Any], dict[str, Any] | None, str]:
-    provider = LocalModelProvider(
+    provider = create_local_model_provider(
         model=str(runtime_payload.get("requested_model") or guide_spec.model),
         temperature=0.0,
         seed=7,

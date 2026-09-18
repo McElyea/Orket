@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TypedDict
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
@@ -79,9 +80,11 @@ class OrchestratorSchedulerControlPlaneService:
         *,
         execution_repository: ControlPlaneExecutionRepository,
         publication: ControlPlanePublicationService,
+        now_utc: Callable[[], str] | None = None,
     ) -> None:
         self.execution_repository = execution_repository
         self.publication = publication
+        self.now_utc = now_utc if now_utc is not None else utc_now
 
     async def publish_scheduler_transition(
         self,
@@ -287,7 +290,7 @@ class OrchestratorSchedulerControlPlaneService:
                 expected_namespace_scope=namespace_scope(issue_id=issue_id),
             )
             return run_id
-        created_at = utc_now()
+        created_at = self.now_utc()
         run, attempt = await create_namespace_execution(
             execution_repository=self.execution_repository,
             publication=self.publication,
@@ -312,6 +315,7 @@ class OrchestratorSchedulerControlPlaneService:
             issue_id=issue_id,
             step_kind=step_kind,
             created_at=created_at,
+            now_utc=self.now_utc,
         )
         await publish_mutation_step_and_effect(
             execution_repository=self.execution_repository,
@@ -341,7 +345,7 @@ class OrchestratorSchedulerControlPlaneService:
             result_class=result_class,
             completion_classification=completion_classification,
             closure_basis=closure_basis,
-            ended_at=utc_now(),
+            ended_at=self.now_utc(),
         )
         return run_id
 

@@ -120,6 +120,21 @@ this transaction does not establish atomicity across their complete lifecycle,
 automatic recovery or remote fencing. Current acceptance scope is recorded in
 the architectural-truth plan.
 
+## Scheduler publication clock
+
+The orchestrator also supplies `control_plane_clock` to scheduler transition and
+child-issue publication. Admission, normal closeout and activation-failure cleanup
+consume that clock. Direct scheduler construction accepts `now_utc` and otherwise
+retains the UTC adapter default. Cleanup observes its supplied clock after the
+activation failure; it does not reuse an admission timestamp as a fabricated end.
+
+This wiring does not extend the issue-dispatch atomicity contract to the scheduler.
+Scheduler closeout remains a sequence of publications: a reversed timestamp fails
+lease validation and can leave partial terminal publication with active authority.
+The runtime does not clamp that input or invent a release. Atomic scheduler
+closeout and recovery remain architectural-truth work; the scoped clock delta is
+`docs/architecture/CONTRACT_DELTA_SCHEDULER_CLOCK_D_2026-09-17.md`.
+
 ## Governed tool approval denial
 
 Both immediate approval resolution and retained epic-pause continuation use

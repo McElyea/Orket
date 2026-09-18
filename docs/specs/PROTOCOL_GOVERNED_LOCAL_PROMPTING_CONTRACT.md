@@ -17,6 +17,27 @@ Core principle:
 2. Prompting is an integration contract, not an authority boundary.
 3. Runtime validators and schemas remain the enforcement authority.
 
+## Request and registry ownership
+
+`LocalPromptingService` in `orket/application/services/local_prompting_service.py`
+owns prompt policy. `create_local_model_provider` captures environment and injects
+that authority through the core `LocalPromptingPort`; raw provider construction
+requires the port. The SDK model owner lives in
+`orket/application/services/sdk_llm_provider.py`. Request messages and nested context
+are copied before provider preparation can await. The registry worker is retained
+through cancellation; parsing and provenance use the same observed bytes, with no
+shared mutable registry cache. Policy values are immutable; transport and telemetry
+exports are detached. The packaged registry location and profile semantics are
+unchanged. Migration and remaining scope:
+`docs/architecture/CONTRACT_DELTA_PROMPT_POLICY_CD_2026-09-17.md`.
+
+Environment changes apply to newly constructed providers. Per-request context
+overrides retain their existing precedence. A configured missing or malformed
+registry fails; an unresolved model still follows the existing shadow/compat/enforce
+and strict-task rules. Registry digests describe the bytes actually parsed, not a
+claim that the file stayed unchanged afterward. Cancellation may wait for a slow
+filesystem read to settle; a worker failure remains visible during cancellation.
+
 ## 2. Scope
 
 In scope:

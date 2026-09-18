@@ -59,7 +59,7 @@ def test_generate_guide_candidate_emits_bounded_prompt_patch(monkeypatch, tmp_pa
             "resolution_mode": "canonical",
         },
     )
-    monkeypatch.setattr(guide_script, "LocalModelProvider", _FakeProvider)
+    monkeypatch.setattr(guide_script, "create_local_model_provider", _FakeProvider)
 
     out_path = tmp_path / "guide_generation.json"
     payload = guide_script.generate_guide_candidate(

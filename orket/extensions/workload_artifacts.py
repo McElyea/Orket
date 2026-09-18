@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Any
 
 from orket.application.services.command_process_supervisor import CommandProcessSupervisor
+from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.audio_player import build_audio_player
-from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket.capabilities.sdk_static_provider import StaticLLMCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController

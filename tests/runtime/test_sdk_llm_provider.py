@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from orket.adapters.llm.local_model_provider import ModelResponse
-from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
+from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket_extension_sdk.llm import GenerateRequest
 
 

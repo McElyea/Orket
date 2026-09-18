@@ -1,10 +1,11 @@
+# Layer: integration. Actual provider role-response checks with observed transport cleanup.
 from __future__ import annotations
 
 import os
 
 import pytest
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.application.services.local_model_factory import create_local_model_provider
 
 
 def _live_enabled() -> bool:
@@ -76,18 +77,14 @@ def _assert_role_output(role: str, text: str) -> None:
 
 
 async def _complete_for_role(system_prompt: str, task: str) -> str:
-    provider = LocalModelProvider(
-        model=_model_name(),
-        temperature=0.0,
-        seed=_seed_value(),
-        timeout=300,
-    )
-    response = await provider.complete(
-        [
+    async with create_local_model_provider(
+        model=_model_name(), temperature=0.0, seed=_seed_value(), timeout=300,
+    ) as provider:
+        response = await provider.complete([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": task},
-        ]
-    )
+        ])
+    assert provider.client.is_closed
     return response.content or ""
 
 

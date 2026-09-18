@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.application.services.local_model_factory import create_local_model_provider
 from orket.application.workflows.turn_contract_validator import ContractValidator
 from orket.application.workflows.turn_corrective_prompt import CorrectivePromptBuilder
 from orket.application.workflows.turn_response_parser import ResponseParser
@@ -33,7 +33,7 @@ async def prove() -> dict:
     parser = ResponseParser(ROOT, lambda *args, **kwargs: None)
     validator = ContractValidator(ROOT, parser)
     builder = CorrectivePromptBuilder(ROOT)
-    client = LocalModelProvider(model=DEFAULT_LOCAL_MODEL, provider="llama_cpp", timeout=90)
+    client = create_local_model_provider(model=DEFAULT_LOCAL_MODEL, provider="llama_cpp", timeout=90)
     rows = []
     try:
         # Deliberately request noncompliance to exercise a real validator rejection.

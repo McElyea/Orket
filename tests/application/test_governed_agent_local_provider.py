@@ -6,10 +6,11 @@ from dataclasses import replace
 import pytest
 
 from orket.adapters.llm import local_model_provider_runtime_target as targeting
-from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
+from orket.adapters.llm.local_model_provider import ModelResponse
 from orket.application.services.governed_agent_api_composition import _settings
 from orket.application.services.governed_agent_broker_service import GovernedAgentResolvedModelProfile
 from orket.application.services.governed_agent_model_provider import GovernedAgentLocalModelProvider
+from orket.application.services.local_model_factory import create_local_model_provider
 from orket.core.contracts.provider_runtime import ProviderRuntimeTarget
 from orket.exceptions import ModelConnectionError
 from orket_extension_sdk import AgentModelCallRequest
@@ -47,7 +48,7 @@ async def test_openai_transport_preserves_governed_usage_and_truncation(provider
 @pytest.mark.asyncio
 async def test_blocked_target_is_not_cached_or_admitted(monkeypatch) -> None:
     """Layer: contract. A nonempty but quarantined target cannot proceed on a retry."""
-    provider = LocalModelProvider("qwen", provider="llama_cpp", base_url=_target().base_url,
+    provider = create_local_model_provider("qwen", provider="llama_cpp", base_url=_target().base_url,
                                   timeout=30, environment={})
     async def resolve(**kwargs):
         return _target(status="BLOCKED")
@@ -68,7 +69,7 @@ async def test_pinned_target_prevents_environment_model_reselection(monkeypatch)
     async def forbidden(**kwargs):
         pytest.fail("Pinned governed model must not be resolved a second time")
     monkeypatch.setattr(targeting, "resolve_provider_runtime_target", forbidden)
-    provider = LocalModelProvider("qwen", provider="llama_cpp", base_url=_target().base_url,
+    provider = create_local_model_provider("qwen", provider="llama_cpp", base_url=_target().base_url,
                                   runtime_target=_target())
     try:
         assert await targeting.ensure_provider_runtime_target(provider) == "qwen"
@@ -81,7 +82,7 @@ async def test_pinned_target_prevents_environment_model_reselection(monkeypatch)
 def test_pinned_target_rejects_mismatched_admission(target) -> None:
     """Layer: contract. Admission identity and client identity must agree before client creation."""
     with pytest.raises(ValueError, match="E_PROVIDER_PINNED_TARGET_MISMATCH"):
-        LocalModelProvider("qwen", provider="llama_cpp", base_url=_target().base_url, runtime_target=target)
+        create_local_model_provider("qwen", provider="llama_cpp", base_url=_target().base_url, runtime_target=target)
 
 
 @pytest.mark.parametrize("provider", ["llama_cpp", "lmstudio", "ollama", "openai_compat"])

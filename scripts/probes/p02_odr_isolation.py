@@ -11,14 +11,21 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
-from orket.core.contracts.provider_runtime import (
+from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
+    create_local_model_provider,  # noqa: E402 - project path bootstrap
+)
+from orket.core.contracts.provider_runtime import (  # noqa: E402 - project path bootstrap
     DEFAULT_LOCAL_MODEL,
     DEFAULT_LOCAL_PROVIDER,  # noqa: E402 - direct script bootstrap
 )
-from orket.kernel.v1.canonical import odr_raw_signature
-from orket.kernel.v1.odr.live_runner import run_live_refinement
-from scripts.probes.probe_support import applied_probe_env, is_environment_blocker, now_utc_iso, write_report
+from orket.kernel.v1.canonical import odr_raw_signature  # noqa: E402 - project path bootstrap
+from orket.kernel.v1.odr.live_runner import run_live_refinement  # noqa: E402 - project path bootstrap
+from scripts.probes.probe_support import (  # noqa: E402 - project path bootstrap
+    applied_probe_env,
+    is_environment_blocker,
+    now_utc_iso,
+    write_report,
+)
 
 DEFAULT_OUTPUT = "benchmarks/results/probes/p02_odr_isolation.json"
 
@@ -40,13 +47,13 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 async def _run_once(args: argparse.Namespace, run_index: int) -> dict[str, Any]:
-    architect_provider = LocalModelProvider(
+    architect_provider = create_local_model_provider(
         model=str(args.model),
         temperature=float(args.temperature),
         seed=int(args.seed),
         timeout=int(args.timeout),
     )
-    auditor_provider = LocalModelProvider(
+    auditor_provider = create_local_model_provider(
         model=str(args.model),
         temperature=float(args.temperature),
         seed=int(args.seed),

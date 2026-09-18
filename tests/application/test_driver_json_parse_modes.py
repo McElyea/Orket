@@ -41,7 +41,7 @@ def test_driver_defaults_to_strict_json_for_governed_prompting(monkeypatch):
         self.config_dependency_classification = {}
         self.config_load_failures = []
 
-    monkeypatch.setattr("orket.driver.LocalModelProvider", _FakeProvider)
+    monkeypatch.setattr("orket.driver.create_local_model_provider", _FakeProvider)
     monkeypatch.setattr("orket.driver.prepare_bootstrap_model_selection", lambda **kwargs: prepared_model_selection())
     monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)
 
@@ -65,7 +65,7 @@ def test_driver_explicit_compatibility_override_survives_governed_prompting(monk
         self.config_dependency_classification = {}
         self.config_load_failures = []
 
-    monkeypatch.setattr("orket.driver.LocalModelProvider", _FakeProvider)
+    monkeypatch.setattr("orket.driver.create_local_model_provider", _FakeProvider)
     monkeypatch.setattr("orket.driver.prepare_bootstrap_model_selection", lambda **kwargs: prepared_model_selection())
     monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)
 

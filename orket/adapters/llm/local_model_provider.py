@@ -6,6 +6,7 @@ import json
 import os
 import time
 from collections.abc import Mapping
+from copy import deepcopy
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any
@@ -19,7 +20,6 @@ from orket.adapters.llm.local_model_provider_runtime_target import (
     provider_runtime_target_payload,
     validate_pinned_runtime_target,
 )
-from orket.adapters.llm.local_prompting_policy import LocalPromptingPolicyResult, resolve_local_prompting_policy
 from orket.adapters.llm.openai_compat_runtime import (
     build_orket_session_id,
     build_prompt_fingerprint,
@@ -30,6 +30,7 @@ from orket.adapters.llm.openai_compat_runtime import (
 )
 from orket.adapters.llm.openai_native_tools import build_openai_native_tooling
 from orket.adapters.llm.provider_extractors import extractor_for_provider
+from orket.core.contracts.local_prompting import LocalPromptingPolicyResult, LocalPromptingPort
 from orket.core.contracts.model_timing import MODEL_TIMING_SCHEMA_VERSION, nanoseconds_to_ms
 from orket.core.contracts.provider_runtime import ProviderRuntimeTarget, normalize_provider, provider_from_environment
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
@@ -65,6 +66,7 @@ class LocalModelProvider:
         seed: int | None = None,
         timeout: int = 300,
         *,
+        prompt_policy: LocalPromptingPort,
         provider: str = "",
         base_url: str = "",
         api_key: str = "",
@@ -78,6 +80,7 @@ class LocalModelProvider:
         `connect_timeout_seconds` is the TCP connection establishment timeout in seconds.
         """
         self._provider_environment = MappingProxyType(dict(os.environ if environment is None else environment))
+        self._prompt_policy = prompt_policy
         self.requested_model = str(model or "").strip()
         self.model = self.requested_model
         self.temperature = self._resolve_temperature_override(temperature)
@@ -217,14 +220,11 @@ class LocalModelProvider:
         messages: list[dict[str, str]],
         runtime_context: dict[str, Any] | None = None,
     ) -> ModelResponse:
-        resolved_context = dict(runtime_context or {})
+        resolved_context, captured_messages = deepcopy(runtime_context or {}), deepcopy(messages)
         effective_model = await ensure_provider_runtime_target(self)
-        policy = await resolve_local_prompting_policy(
-            provider_backend=self.provider_backend,
-            profile_provider=self.provider_name,
-            model=effective_model,
-            messages=list(messages),
-            runtime_context=resolved_context,
+        policy = await self._prompt_policy.resolve(
+            provider_backend=self.provider_backend, profile_provider=self.provider_name,
+            model=effective_model, messages=captured_messages, runtime_context=resolved_context,
         )
         native_tools, native_tool_choice, native_payload_overrides = build_openai_native_tooling(
             model=self.model,
@@ -234,7 +234,7 @@ class LocalModelProvider:
             raise ModelProviderError("llama.cpp first slice admits JSON-wrapper tool calls only.")
         if self.provider_backend == "openai_compat":
             return await self._complete_openai_compat(
-                policy.messages,
+                policy.message_payload(),
                 policy,
                 runtime_context=resolved_context,
                 native_tools=native_tools,
@@ -242,7 +242,7 @@ class LocalModelProvider:
                 native_payload_overrides=native_payload_overrides,
             )
         return await self._complete_ollama(
-            policy.messages,
+            policy.message_payload(),
             policy,
             native_tools=native_tools,
             native_tool_choice=native_tool_choice,

@@ -12477,7 +12477,7 @@ requested a versioned GitHub checkpoint and continued commits on the existing
 branch; its proof and publication disposition are recorded in the C/D checkpoint.
 The later user instruction restricts 10 AM-6 PM America/Denver work hours to
 local commits only. Retain commits and matching annotated tags locally during
-that window; do not push to GitHub. The 0.6.4 through 0.6.9 local checkpoints follow this
+that window; do not push to GitHub. The 0.6.4 through 0.6.12 local checkpoints follow this
 restriction; remote publication remains deferred.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
@@ -12516,15 +12516,22 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: investigate the retained Linux approval/resume deadline failures in
-the dual-ledger candidate before accepting its installed gate; then continue C/D
-from their numbered requirements and retained dependency counterexamples. Scoped BT-5 acceptance is recorded in the five-requirement
-disposition above; preserve its exact artifacts, original failures and family
-ceilings. C now has one allowed-edge policy, complete classification and exact
-exception enforcement; its current repository verdict is red. Repair its 51
-forbidden pairs, cross-layer cycle and 10 unresolved import/reflection sites,
-retaining adversarial positive and negative proof. D owns remaining clock/core/async work. Thirty later numbered obligations,
-full-suite/hosted quality proof and whole-lane user acceptance remain active.
+Next action: continue C/D from their numbered requirements after the local
+0.6.12 partial prompt-policy checkpoint. First investigate the retained Windows
+3.12 coherent/inspect native connection loss; installed acceptance remains open.
+Then exercise the protocol/non-protocol tool
+result workers with controlled interruption and capture probes: the retained
+Windows timeout ended at a plain thread future in protocol result persistence.
+That observation does not identify its latency cause or prove an escaped write.
+Repair the 39 remaining forbidden pairs, one
+cross-layer cycle and ten unresolved import/reflection sites while preserving
+adversarial positive and negative proof. SDK memory and provider target ownership,
+remaining explicit inputs, worker lifetimes and replay capture remain actionable.
+The latest Linux lifecycle tests now use verified ordered clock inputs; the original
+host-clock and Windows publication observations remain retained and unexplained.
+Keep BT-5 artifacts and family claim ceilings intact. E1/E2, capability requirements
+acceptance and implementation, full-suite/hosted quality proof, release readiness
+and explicit whole-lane user acceptance remain open.
 
 The final BT-3 audit accepts builtin evidence-based completion and scoped replay.
 It preserves the initial installed failures, corrected external fixture coverage,
@@ -12897,3 +12904,309 @@ Exact changed files:
 - `tests/interfaces/test_api.py`
 - `tests/interfaces/test_api_operator_views.py`
 - `tests/runtime/test_local_provider_defaults.py`
+
+
+### Captured prompt-policy partial checkpoint: 2026-09-17
+
+This continues the full C/D objective from the sealed 0.6.11 checkpoint. It is
+not whole-lane acceptance. The session snapshot in `.tmp/d-prompt-policy/session-state.json`
+matched the clean worktree, the 74 bound prior evidence files, both neighboring
+checkouts and the original handoff before edits. The original handoff and previous
+checkpoints remain unchanged. All commits remain local under the user's instruction;
+no remote Git action is part of this checkpoint.
+
+Application now owns prompt-policy preparation and SDK model composition. Its factory
+captures provider settings, and messages/nested request context are copied before
+provider preparation can await. A read-only owned worker captures registry bytes once;
+application parses those same bytes and binds their SHA-256. There is no shared mutable
+registry cache. Policy results are immutable, with detached HTTP and telemetry exports.
+The migration contract is
+`docs/architecture/CONTRACT_DELTA_PROMPT_POLICY_CD_2026-09-17.md`.
+
+Four adverse controls failed as expected against unchanged 0.6.11: message/context
+drift during loading, session environment drift, a hash from bytes different from the
+parsed registry, and cancellation escaping an unfinished worker. Their original log,
+XML, source binding and file fixtures remain under `.tmp/d-prompt-policy/`. The first
+migration run passed 168 cases and failed 11 old list-equality assertions; the next
+passed 203 and failed one remaining Gemma tuple comparison, whose next assertion also
+needed migration. The final focused selection passed 46 cases, including all 11 new
+registry/input/worker and local TCP HTTP cases. These controlled integration checks do
+not themselves prove actual model inference.
+
+The current graph collects successfully and removes exactly the two old prompt-policy
+adapter-to-runtime pairs: 39 forbidden pairs, one authority cycle and ten analysis
+errors remain. The baseline collects successfully with `release_ready=false`. Full
+source regression, package/native acceptance and actual llama.cpp proof are recorded below.
+The existing provider runtime-target adapter-to-application edge, mutable legacy
+profile schema/file loader, global settings authority, planner/router inputs and other
+C/D, E and capability/whole-lane gates remain active. No OS containment or complete
+persisted replay-input snapshot is claimed.
+
+The first broad source attempt executed 2,025 cases: 2,024 passed and one failed
+before model invocation at unchanged `capture_run_start_artifacts`, where Windows
+returned `WinError 5` while renaming the staging directory. Source input hashes were
+unchanged, Ruff passed and the root DB guard was clear. Its 76-file fixture, log,
+XML and source report are retained; the destination was absent when inspected.
+This is another observed occurrence of the earlier retained publication failure,
+not a diagnosed cause or a prompt-policy regression claim. Later green execution
+must not be presented as a causal fix. No production retry or fallback was added.
+
+An installed 0.6.12 application-factory request completed on actual llama.cpp after
+caller/process settings were deliberately changed; captured mode, registry hash,
+output cap and transport close were observed. The operator server identity was
+unchanged. Four opt-in live role-response checks also passed with a candidate that
+corrects their layer label and closes the provider. Those exact candidate bytes
+now replace the tracked role test. These are integration/response checks, not
+whole-workload completion. The relative-path/current-directory dependency in
+legacy registry selection remains an explicit-input limitation for later C/D work.
+
+The second source attempt passed all 2,025 cases. Both installed Windows cells
+also passed 2,025; the first Linux 3.11/3.12 cells each passed 2,024 and failed one
+lifecycle case with `lease publication timestamps must increase monotonically`.
+Linux 3.11 failed `test_system_acceptance_raw_json_tool_calls_complete_flow`;
+Linux 3.12 failed `test_turn_executor_create_issue_approval_resume_continues_same_governed_run`.
+Their original 122-file and 15-file fixtures remain byte-bound. Database inspection
+used copies, preserving the original main files and sidecars. The rejected candidate
+timestamps and clock actor were not recorded; their exact deltas remain unknown.
+
+Those two test modules now use the existing ordered turn/issue clock fixture.
+The failing cases additionally check that the composed issue clock or persisted
+lease timestamps actually fall within supplied fixture bounds. The production
+monotonicity guard is unchanged. All 61 focused lifecycle and clock-contract cases
+pass, including the separate explicit clock-reversal rejection/rollback controls.
+The existing oversized middleware module grows only for this clock binding and
+persisted-state assertion. This fixes test input nondeterminism, not the unknown
+host-clock cause or stock-clock runtime reliability. The original gate remains
+under `.tmp/d-prompt-policy/complete`; fresh source/native proof uses
+`.tmp/d-prompt-policy/clock-inputs` with the exact same core wheel and source archive.
+
+The clock-input gate passed 2,029 source cases (645.184 seconds), with four explicit
+lease-contract controls added to the earlier selection. Windows 3.11/3.12 passed
+all 2,029 in 720.59/808.80 seconds. Linux 3.11/3.12 each passed 2,027 and failed two
+in 722.66/723.15 seconds. All four parent sessions returned and were reaped.
+The two previously corrected lifecycle cases passed. Fresh failures were:
+
+- Both Linux cells: the normal native effect approval/resume case returned
+  `recovery_pending` with `E_SDK_AGENT_FRAME_READ_TIMEOUT`, instead of completion.
+  The cases lasted 9.690/9.683 seconds; their existing eight-second request and
+  seven-second lease limits remain unchanged. Contention is a hypothesis, not an
+  established cause; the earlier native-artifact audit overlapped this campaign.
+- Linux 3.11: `test_illegal_state_transition_blocked` left the card ready after
+  a lease timestamp rejection, instead of reaching its expected policy block.
+- Linux 3.12: `test_execute_issue_turn_blocks_review_when_runtime_verifier_fails`
+  rejected scheduler release at `2026-09-18T02:53:21.228116+00:00`, after admission
+  at `2026-09-18T02:53:30.537287+00:00`: a 9.309171-second reversal. The clock actor
+  remains unknown.
+
+Original failure fixtures and reports are bound by `clock-inputs/native-failure-retention.json`.
+SQLite inspection used copies. The two resume fixtures contain three files each;
+the engine-boundary and scheduler fixtures contain 102 and five files. Original
+inventories and bytes remain unchanged after inspection. The first 2,025-case native
+gate is separately revalidated and bound by `clock-inputs/original-native.json`.
+
+Scheduler composition exposed a concrete additional D2 gap: the orchestrator's
+supplied clock reached issue dispatch but not scheduler publication or its cleanup.
+Two pre-fix tests supplied a 2041 pipeline clock and observed wall time in both
+transition and child-creation records. Their log/XML and input digests are retained
+in `scheduler-before-binding.json`; the recovered original test bytes exactly match
+that pre-edit digest. Scheduler admission, closeout and activation-failure cleanup
+now use the supplied clock. The durable delta is
+`docs/architecture/CONTRACT_DELTA_SCHEDULER_CLOCK_D_2026-09-17.md`.
+
+The first focused scheduler/orchestrator gate passed 75 cases. Extended real-store
+controls cover both mutation kinds, promotion failure and exact retained reversal
+rejection. An initial expected child-run-id omitted canonical identity metadata
+(five pass/two fail); correcting that assertion and the engine-boundary fixture
+produced nine passes. Engine-boundary tests now supply ordered inputs, verify the
+composed scheduler clock and close their engine. The production lease guard and
+native request/lease deadlines remain unchanged. Scheduler terminal publication
+is still non-atomic; no rollback/repair or stock-clock stability guarantee is added.
+The production clock change requires a fresh artifact and final acceptance campaign;
+the earlier prompt-policy artifacts remain retained historical candidates.
+
+After all four broad cells finished, an isolated instrumented recheck of the exact
+earlier installed Linux 3.11 wheel/test passed the normal resume case in 3.03 seconds.
+Both real child ready frames arrived about 0.58/0.54 seconds after their frame waits
+started; the traced case ended at 2.6981 seconds. Original request/lease deadlines
+were unchanged, and existing child-return-code assertions passed. Evidence:
+`clock-inputs/resume-timing.json`, including input hashes and frame/bootstrap/teardown
+observations from its private harness. This is diagnostic execution, not a replacement
+acceptance run or proof that contention caused the prior timeout.
+
+Fresh artifacts and the final regression campaign use
+`.tmp/d-prompt-policy/scheduler-inputs` and separate private environments prefixed
+`prompt-policy-scheduler-`. The scheduler's existing oversized service grows from
+425 to 429 lines solely to declare, retain and pass its clock; the counterexamples
+justify this correctness change. No new Python file exceeds 400 lines or adds a
+function over 70 lines. Dependency collection remains successful with 39 forbidden
+pairs, one cycle and ten analysis errors; baseline collection still reports
+`release_ready=false`. Final scoped source/native/provider results are recorded below; installed and whole-plan acceptance remain open.
+
+The scheduler-input source gate passed all 2,036 cases, but its first installed
+campaign did not pass: Windows 3.11/3.12 had one/two failures, retained separately
+under `scheduler-inputs/paired-windows-audit.json` and `windows-failure-retention.json`.
+Linux 3.11 then passed 2,035 and failed `test_parallel_execution_throughput` in
+458.33 seconds. Its parallel and serial timings were 2.14/7.73 seconds and actual
+maximum concurrent provider calls were three/one; those assertions passed. The
+completion assertion failed because issue lease closeout rejected non-increasing
+timestamps, leaving P1 in code review. The original 317-file fixture and reports
+are byte-bound by `scheduler-inputs/linux311-parallel-failure.json`; SQL inspection
+opened copies only. The clock actor and rejected timestamp delta remain unknown.
+
+The remaining original Linux 3.12 cell and the subsequently proposed standalone
+Windows rechecks were not executed: the campaign paused for this concrete input
+gap. The parallel test now supplies the existing ordered turn/issue clock and
+checks the actual composed issue clock against that fixture. Setup and engine
+construction run off the event loop; engine cleanup remains awaited. Its real
+parallel/serial behavior and card-completion assertions are unchanged. All 14
+focused parallel, scheduler, issue-input and lease-reversal controls pass. This
+repairs test-input nondeterminism, not host time or a native timeout cause.
+
+Final verification now uses `.tmp/d-prompt-policy/ordered-inputs`, with the exact
+scheduler-corrected runtime wheel and source archive. Only the parallel test input
+changes from the preceding harness. The new predeclared native schedule runs Linux
+3.11, Linux 3.12, Windows 3.11 and Windows 3.12 individually, after fresh source
+validation. Artifact audits and actual provider runs follow all native cells.
+Original native request/lease and test wait limits remain unchanged. This standalone campaign is recorded below and provides no simultaneous-cell capacity or whole-plan acceptance.
+
+The first current-artifact Windows pair also failed: 3.11 passed 2,035
+and failed one case in 718.81 seconds; 3.12 passed 2,034 and failed two in
+800.02 seconds. Both terminal-history fixtures stopped before their history
+assertions with `E_SDK_AGENT_FRAME_READ_TIMEOUT` (10.901/11.463 seconds).
+The 3.12 protocol resume ownership case also exceeded its unchanged 20-second
+completion wait, at `persist_protocol_operation` awaiting a file worker.
+Both cells retained correct origins, unchanged inputs and no child processes.
+Their original reports and fixtures are preserved by `paired-windows-audit.json`
+and `windows-failure-retention.json`; SQLite inspection uses copies only.
+A standalone Windows schedule was declared, then superseded without execution
+when Linux 3.11 exposed the parallel fixture clock gap described above.
+The final standalone cells include that test-input correction with identical
+runtime artifacts and unchanged deadlines. Their actual results are recorded below.
+Timeout causes and the broader worker-ownership
+boundary remain open; no causal repair or paired capacity is claimed.
+
+
+The final source gate passed all 2036 selected cases in 453.708 seconds,
+with no failures/errors/skips, unchanged source inputs, passing changed-file Ruff
+and a clear root database guard. The same identities ran in four fresh installed
+cells; three passed and Windows 3.12 failed. All bound the same manifest and
+artifacts and checked actual core origins:
+
+| Installed cell | Cases / failures | Seconds | Core origins |
+|---|---:|---:|---:|
+| win-py311 | 2036 / 0 | 451.893 | 944 |
+| win-py312 | 2036 / 1 | 531.659 | 944 |
+| linux-py311 | 2036 / 0 | 394.405 | 944 |
+| linux-py312 | 2036 / 0 | 362.019 | 944 |
+
+The final Windows 3.12 cell remains failed: the coherent/inspect terminal-history
+fixture returned `recovery_pending` with `Connection lost` after 10.405 seconds,
+before the terminal-history assertions. This is a different retained reason from
+the earlier frame-timeout observations; no common cause is established. The case is
+`tests/integration/test_governed_agent_terminal_history.py::test_retained_terminal_consistency_precedes_result_or_reentry[coherent-inspect]`.
+Its original fixture/report bytes are bound by `ordered-inputs/windows-failure-retention.json`.
+Actual origins, exact case identities, unchanged inputs, CLI flows, tool-gate audit,
+root database guard and absence of child processes all passed in that cell.
+**Installed acceptance remains open.** The audit retains `native_cells=false`;
+the local commit is a partial checkpoint, not a release or whole-lane acceptance.
+
+
+The current installed cells each ran alone; the first paired Windows attempt
+failed as recorded above. Artifact audits and provider runs followed all native
+cells. Only the parallel fixture input changed; runtime artifacts and native
+deadlines were unchanged. This is not installed-gate or concurrent-capacity acceptance or
+a diagnosis of the earlier timeout; the current schedule is `native-schedule.json`.
+
+Eight serial actual llama.cpp regression cases also passed, separately from the
+installed factory/policy request and four role-response checks described above.
+The exact artifact and input bindings are in `.tmp/d-prompt-policy/ordered-inputs/manifest.json`,
+`audit.json`, `prompt-live.json`, `roles-candidate-report.json` and the local checkpoint.
+The earlier Windows publication failure, Linux clock actor and native deadline failures remain unexplained;
+these results establish only their observed per-cell outcomes, not stock-clock reliability
+or a causal fix for either host observation. Full-suite/hosted-CI/release and whole-lane
+acceptance, remaining C/D/E and capability requirements gates remain open.
+
+Core wheel SHA-256: `e1bdfebac60c76e9dfd62486016186e830e35784b13167a1c7e47cc4ccf358e3`.
+Core source archive SHA-256: `7aec153e09efc704e6638a65b9b8f5d4433392f20331f920975ff038e286a4e1`.
+
+The oversized driver/telemetry imports and CLI import formatting grew only to wire
+the explicit application factory and satisfy existing import checks. CLI path bootstrap
+and standalone synchronous tooling exemptions are annotated at the relevant lines;
+they do not waive runtime async rules or clear the repository-wide Ruff backlog.
+
+Exact changed paths for this checkpoint:
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/architecture/CONTRACT_DELTA_PROMPT_POLICY_CD_2026-09-17.md`
+- `docs/architecture/CONTRACT_DELTA_SCHEDULER_CLOCK_D_2026-09-17.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json`
+- `docs/projects/architectural-truth/README.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`
+- `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`
+- `orket/adapters/llm/local_model_provider.py`
+- `orket/adapters/llm/local_prompting_lmstudio_session.py`
+- `orket/adapters/llm/local_prompting_policy.py`
+- `orket/adapters/storage/prompt_registry_reader.py`
+- `orket/application/services/extension_runtime_service.py`
+- `orket/application/services/extension_runtime_support.py`
+- `orket/application/services/governed_agent_model_provider.py`
+- `orket/application/services/local_model_factory.py`
+- `orket/application/services/local_prompting_rules.py`
+- `orket/application/services/local_prompting_service.py`
+- `orket/application/services/local_prompting_session.py`
+- `orket/application/services/model_client_factory.py`
+- `orket/application/services/orchestrator_scheduler_control_plane_mutation.py`
+- `orket/application/services/orchestrator_scheduler_control_plane_service.py`
+- `orket/application/services/outward_model_tool_call_service.py`
+- `orket/application/services/sdk_llm_provider.py`
+- `orket/application/workflows/orchestrator.py`
+- `orket/capabilities/sdk_llm_provider.py`
+- `orket/core/contracts/local_prompting.py`
+- `orket/driver.py`
+- `orket/extensions/workload_artifacts.py`
+- `pyproject.toml`
+- `scripts/audit/replay_turn.py`
+- `scripts/odr/model_runtime_control.py`
+- `scripts/odr/provider_admission.py`
+- `scripts/odr/run_odr_live_role_matrix.py`
+- `scripts/probes/p02_odr_isolation.py`
+- `scripts/prompt_lab/guide_model_prompt_patch.py`
+- `scripts/prompt_lab/run_functiongemma_tool_call_judge.py`
+- `scripts/proof/run_qwen38_repair_readiness.py`
+- `scripts/proof/run_qwen38_runtime_readiness.py`
+- `scripts/protocol/local_prompting_conformance_runner.py`
+- `scripts/workloads/code_review_probe.py`
+- `scripts/workloads/workload_support.py`
+- `tests/adapters/test_local_model_provider_context_reset.py`
+- `tests/adapters/test_local_model_provider_telemetry.py`
+- `tests/adapters/test_local_model_provider_timeout.py`
+- `tests/adapters/test_local_prompting_policy.py`
+- `tests/application/test_driver_config_loading.py`
+- `tests/application/test_driver_json_parse_modes.py`
+- `tests/application/test_governed_agent_local_provider.py`
+- `tests/application/test_orchestrator_scheduler_control_plane_mutation_guards.py`
+- `tests/application/test_parallel_execution.py`
+- `tests/application/test_turn_executor_middleware.py`
+- `tests/application/test_turn_executor_runtime_context_bridge.py`
+- `tests/contract/test_generation_request_options.py`
+- `tests/contract/test_sdk_generate_timing.py`
+- `tests/integration/test_engine_boundaries.py`
+- `tests/integration/test_extension_generation_lifetime.py`
+- `tests/integration/test_odr_native_provider_admission.py`
+- `tests/integration/test_prompt_policy_inputs.py`
+- `tests/integration/test_provider_inventory_inputs.py`
+- `tests/integration/test_scheduler_clock_inputs.py`
+- `tests/integration/test_system_acceptance_flow.py`
+- `tests/live/test_role_unit_live.py`
+- `tests/runtime/test_local_provider_defaults.py`
+- `tests/runtime/test_sdk_llm_provider.py`
+- `tests/scripts/test_model_runtime_control.py`
+- `tests/scripts/test_run_functiongemma_tool_call_judge.py`
+- `tests/scripts/test_run_prompt_reforger_guide_model_comparison.py`

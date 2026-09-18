@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from urllib.parse import urlsplit
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.application.services.local_model_factory import create_local_model_provider
 from orket.core.contracts.provider_runtime import normalize_provider
 from orket.runtime.config.defaults import configured_provider
 from orket.runtime.config.provider_runtime_target import default_base_url, list_provider_models, normalize_base_url
@@ -46,7 +46,7 @@ def selection_from_plan(plan: dict) -> ProviderSelection:
 
 async def available_models(selection: ProviderSelection) -> set[str]:
     # The adapter owns API-key interpretation and client cleanup; keys never enter the plan.
-    async with LocalModelProvider(
+    async with create_local_model_provider(
         model="odr-inventory", provider=selection.provider, base_url=selection.base_url, timeout=30,
     ) as provider:
         inventory = await list_provider_models(

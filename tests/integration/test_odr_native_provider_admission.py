@@ -9,7 +9,7 @@ import sys
 
 import pytest
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.application.services.local_model_factory import create_local_model_provider
 from scripts.odr import run_odr_live_role_matrix as live_matrix
 from scripts.odr.provider_admission import ProviderSelection
 from scripts.odr.run_arbiter import ArbiterFailure, RunArbiter
@@ -118,11 +118,11 @@ def test_odr_pairing_closes_real_provider_clients(tmp_path, monkeypatch, mode):
     providers = []
 
     def record_provider(*args, **kwargs):
-        provider = LocalModelProvider(*args, **kwargs)
+        provider = create_local_model_provider(*args, **kwargs)
         providers.append(provider)
         return provider
 
-    monkeypatch.setattr(live_matrix, "LocalModelProvider", record_provider)
+    monkeypatch.setattr(live_matrix, "create_local_model_provider", record_provider)
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_MODE", "shadow")
     monkeypatch.setenv("ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL", "false")
     monkeypatch.setenv("ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL", "false")

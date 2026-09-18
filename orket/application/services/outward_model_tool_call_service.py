@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.adapters.tools.registry import BuiltInConnectorRegistry
+from orket.application.services.local_model_factory import create_local_model_provider
 from orket.application.services.outward_model_observability import (
     OutwardModelObservabilityError,
     write_model_evidence,
@@ -48,7 +48,7 @@ def create_configured_model_client() -> OutwardModelClient:
         or os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER")
         or ""
     ).strip()
-    return LocalModelProvider(
+    return create_local_model_provider(
         model=model,
         temperature=0.0,
         timeout=_positive_int_env("ORKET_MODEL_STREAM_REAL_TIMEOUT_S", default=300),

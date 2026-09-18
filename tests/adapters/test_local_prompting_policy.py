@@ -4,7 +4,8 @@ import warnings
 
 import pytest
 
-from orket.adapters.llm.local_prompting_policy import (
+from orket.application.services.local_prompting_rules import _parse_bool
+from orket.application.services.local_prompting_service import (
     E_LOCAL_PROMPT_PROFILE_REQUIRED,
     E_LOCAL_PROMPT_ROLE_FORBIDDEN,
     resolve_local_prompting_policy,
@@ -29,7 +30,7 @@ async def test_resolve_local_prompting_policy_selects_matching_profile_for_ollam
     assert result.rendered_prompt_byte_count > 0
     assert result.effective_stop_sequences
     assert result.sampling_bundle["max_output_tokens"] > 0
-    assert result.intro_phrase_denylist == _QWEN_INTRO_DENYLIST
+    assert result.intro_phrase_denylist == tuple(_QWEN_INTRO_DENYLIST)
     assert result.thinking_block_format == "none"
     assert result.lmstudio_session_mode == "none"
     assert result.lmstudio_session_id == ""
@@ -152,7 +153,7 @@ async def test_resolve_local_prompting_policy_uses_tool_call_bundle_when_require
     assert result.sampling_bundle["seed_policy"] == "fixed"
     assert result.sampling_bundle["seed_value"] == 17
     assert result.sampling_bundle["max_output_tokens"] == 2048
-    assert result.intro_phrase_denylist == _QWEN_INTRO_DENYLIST
+    assert result.intro_phrase_denylist == tuple(_QWEN_INTRO_DENYLIST)
 
 
 @pytest.mark.asyncio
@@ -210,8 +211,8 @@ async def test_resolve_local_prompting_policy_selects_gemma_profile_for_openai_c
     assert result.task_class == "tool_call"
     assert result.sampling_bundle["seed_policy"] == "fixed"
     assert result.sampling_bundle["seed_value"] == 71
-    assert result.effective_stop_sequences == ["<|tool_end|>", "</s>"]
-    assert result.intro_phrase_denylist == []
+    assert result.effective_stop_sequences == ("<|tool_end|>", "</s>")
+    assert result.intro_phrase_denylist == ()
 
 
 @pytest.mark.asyncio
@@ -323,7 +324,7 @@ async def test_resolve_local_prompting_policy_adds_qwen_no_think_hint_for_openai
 
     assert result.profile_id == "openai_compat.qwen.openai_messages.v1"
     assert result.messages[-1]["content"].endswith("/no_think")
-    assert result.intro_phrase_denylist == _QWEN_INTRO_DENYLIST
+    assert result.intro_phrase_denylist == tuple(_QWEN_INTRO_DENYLIST)
     assert result.sampling_bundle["max_output_tokens"] == 1536
     assert "reasoning_suppression:qwen_no_think_prompt_hint" in result.warnings
 
@@ -358,6 +359,6 @@ def test_local_prompting_bool_parse_warns_on_unrecognized_token() -> None:
     """Layer: unit. Verifies local prompting boolean parsing fails closed and emits an explicit warning on invalid tokens."""
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        assert resolve_local_prompting_policy.__globals__["_parse_bool"]("maybe") is False
+        assert _parse_bool("maybe") is False
 
     assert any("Unrecognized boolean token" in str(item.message) for item in caught)

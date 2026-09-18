@@ -6,7 +6,7 @@ from dataclasses import asdict
 import pytest
 
 from orket.adapters.llm.local_model_provider import ModelResponse
-from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
+from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_static_provider import StaticLLMCapabilityProvider
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse, NullLLMProvider
 
@@ -20,7 +20,7 @@ def test_sdk_generation_preserves_unavailable_latency(monkeypatch, latency):
         async def complete(self, *, messages, runtime_context):
             return ModelResponse(content="answer",raw={"latency_ms":latency,"input_tokens":4,"output_tokens":2})
 
-    monkeypatch.setattr("orket.capabilities.sdk_llm_provider.LocalModelProvider",lambda **kwargs: ObservationProvider())
+    monkeypatch.setattr("orket.application.services.sdk_llm_provider.create_local_model_provider",lambda **kwargs: ObservationProvider())
     provider = LocalModelCapabilityProvider(model="fixture",temperature=0,seed=0)
     result = provider.generate(GenerateRequest(system_prompt="",user_message="question"))
     measured = type(latency) is int and latency >= 0

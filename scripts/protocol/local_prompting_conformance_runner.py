@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import hashlib
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
+    create_local_model_provider,  # noqa: E402 - project path bootstrap
+)
 
 try:
     from scripts.protocol.local_prompting_conformance_helpers import (
@@ -39,7 +41,7 @@ async def run_cases(
     lmstudio_session_id: str,
     mock: bool,
 ) -> dict[str, Any]:
-    provider_client = None if mock else LocalModelProvider(model=model, temperature=0.0, timeout=90)
+    provider_client = None if mock else create_local_model_provider(model=model, temperature=0.0, timeout=90)
     failures: dict[str, int] = {}
     rows: list[dict[str, Any]] = []
     render_hashes: list[str] = []

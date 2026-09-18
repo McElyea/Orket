@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-18T01:00:39.853637Z",
+  "generated_at": "2026-09-18T03:21:54.929811Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -306,7 +306,7 @@
           "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 1014,
+      "files_scanned": 1018,
       "scan_roots": [
         "orket"
       ],
@@ -315,12 +315,12 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 235
+          "count": 230
         },
         {
           "source": "adapters",
           "target": "application",
-          "count": 13
+          "count": 11
         },
         {
           "source": "adapters",
@@ -330,17 +330,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 318
+          "count": 319
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1527
+          "count": 1541
         },
         {
           "source": "application",
           "target": "core",
-          "count": 690
+          "count": 692
         },
         {
           "source": "application",
@@ -355,7 +355,7 @@
         {
           "source": "core",
           "target": "core",
-          "count": 141
+          "count": 142
         },
         {
           "source": "decision_nodes",
@@ -400,28 +400,6 @@
             {
               "path": "orket/adapters/llm/local_model_provider_runtime_target.py",
               "line": 9,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.llm.local_prompting_policy",
-          "target": "orket.runtime.compact_turn_packet",
-          "sites": [
-            {
-              "path": "orket/adapters/llm/local_prompting_policy.py",
-              "line": 23,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.adapters.llm.local_prompting_policy",
-          "target": "orket.runtime.local_prompt_profiles",
-          "sites": [
-            {
-              "path": "orket/adapters/llm/local_prompting_policy.py",
-              "line": 27,
               "kind": "from"
             }
           ]
@@ -542,7 +520,7 @@
           "sites": [
             {
               "path": "orket/driver.py",
-              "line": 14,
+              "line": 15,
               "kind": "from"
             }
           ]
@@ -851,7 +829,6 @@
             "orket.__init__",
             "orket.adapters.llm.local_model_provider",
             "orket.adapters.llm.local_model_provider_runtime_target",
-            "orket.adapters.llm.local_prompting_policy",
             "orket.adapters.vcs.gitea_webhook_handler",
             "orket.adapters.vcs.gitea_webhook_handlers",
             "orket.agents.agent",
@@ -873,6 +850,7 @@
             "orket.application.services.governed_agent_wake_dispatcher",
             "orket.application.services.governed_agent_wake_ingress_service",
             "orket.application.services.governed_agent_webhook_ingress_service",
+            "orket.application.services.local_model_factory",
             "orket.application.services.model_client_factory",
             "orket.application.services.operator_completion_service",
             "orket.application.services.orchestrator_prompt_preparation_service",
@@ -885,6 +863,7 @@
             "orket.application.services.protocol_replay_service",
             "orket.application.services.run_ledger_summary_projection",
             "orket.application.services.runtime_policy",
+            "orket.application.services.sdk_llm_provider",
             "orket.application.workflows.epic_approval_checkpoint",
             "orket.application.workflows.orchestrator",
             "orket.application.workflows.orchestrator_ops",
@@ -902,7 +881,6 @@
             "orket.application.workflows.turn_failure_traces",
             "orket.application.workflows.turn_message_builder",
             "orket.board",
-            "orket.capabilities.sdk_llm_provider",
             "orket.capabilities.sdk_memory_provider",
             "orket.discovery",
             "orket.driver",
@@ -987,7 +965,6 @@
             "orket.runtime.idempotency_discipline_policy",
             "orket.runtime.interface_freeze_windows",
             "orket.runtime.interrupt_semantics_policy",
-            "orket.runtime.local_prompt_profiles",
             "orket.runtime.local_remote_route_policy",
             "orket.runtime.long_session_soak_test_contract",
             "orket.runtime.model_profile_bios",
@@ -1188,7 +1165,7 @@
         "id": "AT-EX-007",
         "area": "decision-node-explicit-inputs",
         "status": "active_transition",
-        "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Model recommendations now use frozen values with application-owned settings/score preparation. Mutable planning/routing context and ambient prompt policy remain outside immutable snapshots.",
+        "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Model recommendations now use frozen values with application-owned settings/score preparation. Local prompt policy now captures settings and request values in application, binds one registry read and owns worker lifetime. Mutable planning/routing context, global settings authority and other legacy input boundaries remain outside immutable snapshots.",
         "removal_condition": "All decision nodes receive immutable resolved configuration and have no environment or runtime-state reach-through.",
         "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
         "owner": "Orket Core"
@@ -1278,10 +1255,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 4953,
-    "missing_layer_total": 3352,
+    "tests_total": 4963,
+    "missing_layer_total": 3362,
     "by_layer": {
-      "unlabeled": 3352,
+      "unlabeled": 3362,
       "integration": 750,
       "unit": 167,
       "contract": 673,
@@ -1889,7 +1866,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3252
+    "missing_layers_omitted": 3262
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1914,8 +1891,8 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1014,
-    "files_over_400_total": 68,
+    "python_files_scanned": 1018,
+    "files_over_400_total": 67,
     "functions_over_70_total": 221,
     "largest_files": [
       {
@@ -2181,7 +2158,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 579,
+    "scanned_files": 584,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -2292,74 +2269,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-14T21:24:03.705924Z",
-      "changed": true,
-      "before_digest": "sha256:afb336162a6dd0e0f44011393d80efcab3718a18ef33e6a721a030b38d402b95",
-      "after_digest": "sha256:810e3c0a3c34d15619ee8a3c19364785b7976e563418f9183ce92ac38a51f6ce",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 5,
-        "churn_ratio": 0.001516,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-14T22:17:55.946747Z",
-      "changed": true,
-      "before_digest": "sha256:810e3c0a3c34d15619ee8a3c19364785b7976e563418f9183ce92ac38a51f6ce",
-      "after_digest": "sha256:b2d215e7b2ab9658a0c2754baddcdc69989b3f65b6c5b88af62702f657513cc8",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 5,
-        "churn_ratio": 0.001516,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-14T22:47:58.016629Z",
-      "changed": true,
-      "before_digest": "sha256:b2d215e7b2ab9658a0c2754baddcdc69989b3f65b6c5b88af62702f657513cc8",
-      "after_digest": "sha256:3c424f363c5b97815681fb622a2fb3b3bede5a857b893b7c7c04118f0b6b3285",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 1,
-        "churn_ratio": 0.000303,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-14T23:27:05.505076Z",
       "changed": true,
@@ -3201,6 +3110,90 @@
           "$.dependency_graph.verdict.authority_cycles[0].modules[34]",
           "$.dependency_graph.verdict.authority_cycles[0].modules[35]",
           "$.dependency_graph.verdict.authority_cycles[0].modules[36]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T01:54:49.466031Z",
+      "changed": true,
+      "before_digest": "sha256:66bc5f347628dce9241e21260f1d1dffd3a78b9c5a1a78439d9f8bf137203dbc",
+      "after_digest": "sha256:27acc9fe53554d0ffe63dd2228548005668c4170ea07531aad88a0f7b5f41c9a",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 3,
+        "changed_paths": 269,
+        "initial_write": false,
+        "paths_total_previous": 3389,
+        "paths_total_current": 3361,
+        "paths_total_reference": 3389,
+        "churn_paths": 272,
+        "churn_ratio": 0.08026,
+        "sample_paths": [
+          "$.architecture_exceptions.exceptions[5].reason",
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[1].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[8].count",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[3]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[4]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[5]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[6]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[7]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[8]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[9]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[10]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[11]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[12]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[13]",
+          "$.dependency_graph.verdict.authority_cycles[0].modules[14]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T02:08:22.366435Z",
+      "changed": true,
+      "before_digest": "sha256:27acc9fe53554d0ffe63dd2228548005668c4170ea07531aad88a0f7b5f41c9a",
+      "after_digest": "sha256:f695cc0fd2a2c520e9ee02aa5848a462819ffd7d4a68b03c52bc72993658396b",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 3361,
+        "paths_total_current": 3361,
+        "paths_total_reference": 3361,
+        "churn_paths": 1,
+        "churn_ratio": 0.000298,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T03:21:54.944331Z",
+      "changed": true,
+      "before_digest": "sha256:f695cc0fd2a2c520e9ee02aa5848a462819ffd7d4a68b03c52bc72993658396b",
+      "after_digest": "sha256:bdc56ac8cc1b81fcc6cd7f3a907dd7fe232b625d89d58291350599bac5c08fd0",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 6,
+        "initial_write": false,
+        "paths_total_previous": 3361,
+        "paths_total_current": 3361,
+        "paths_total_reference": 3361,
+        "churn_paths": 6,
+        "churn_ratio": 0.001785,
+        "sample_paths": [
+          "$.generated_at",
+          "$.size_inventory.functions_over_70_total",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
         ]
       }
     }

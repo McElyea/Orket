@@ -10,6 +10,7 @@ from typing import Any
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.adapters.tools.families.reforger_tools import ReforgerTools
+from orket.application.services.local_model_factory import create_local_model_provider
 from orket.application.services.model_selection_service import prepare_bootstrap_model_selection
 from orket.driver_support_cli import DriverCliMixin
 from orket.driver_support_conversation import DriverConversationMixin
@@ -89,7 +90,7 @@ class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
             env_mode=parse_mode_from_env,
         )
         if self.provider is None:
-            self.provider = LocalModelProvider(model=self._configured_model_name, temperature=0.1,
+            self.provider = create_local_model_provider(model=self._configured_model_name, temperature=0.1,
                                                environment=captured_environment)
 
     def _operator_workspace_root(self) -> Path:

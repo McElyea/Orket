@@ -14,6 +14,7 @@ from orket.application.services.governed_agent_broker_service import (
     GovernedAgentResolvedModelProfile,
     UsagePosture,
 )
+from orket.application.services.local_model_factory import create_local_model_provider
 from orket.core.contracts.provider_runtime import PROVIDER_CHOICES, ProviderRuntimeTarget
 from orket.exceptions import ModelTimeoutError
 from orket.runtime.config.provider_runtime_target import resolve_provider_runtime_target
@@ -93,7 +94,7 @@ async def prepare_governed_agent_local_runtime(
     maximum_timeout = max(item.timeout_ms for item in requests_by_role.values()) / 1000
     unique_targets = {target.model_id: target for target in targets.values()}
     clients = {
-        model_id: LocalModelProvider(
+        model_id: create_local_model_provider(
             model_id,
             temperature=0,
             timeout=max(1, int(maximum_timeout)),

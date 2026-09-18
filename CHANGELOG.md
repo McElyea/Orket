@@ -5,6 +5,27 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.12] - 2026-09-17 - "Captured prompt and scheduler inputs"
+
+### Changed
+- Move prompt-policy preparation and SDK model composition into application ownership.
+- Capture provider settings and nested request inputs before asynchronous preparation.
+- Bind registry provenance to one read and retain worker lifetime through cancellation.
+- Return immutable policy values with detached transport and telemetry exports.
+- Carry the supplied control-plane clock into scheduler publication and failure cleanup.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Follow `docs/architecture/CONTRACT_DELTA_PROMPT_POLICY_CD_2026-09-17.md`.
+- Scheduler clock scope: `docs/architecture/CONTRACT_DELTA_SCHEDULER_CLOCK_D_2026-09-17.md`.
+- Stability: partial local checkpoint. 2,036 selected source cases and three
+  installed Windows/Linux cells pass; Windows 3.12 passes 2,035 and fails one
+  native-agent fixture with `Connection lost`. Installed acceptance remains open.
+  Eight actual llama.cpp regressions, an installed policy/factory flow and four
+  live role-response checks pass. Lifecycle fixtures use explicit clocks;
+  production reversal rejection and native deadlines are unchanged. Retained
+  failures, remaining architecture debt and whole-plan acceptance stay open.
+
 ## [0.6.11] - 2026-09-17 - "Captured model-selection inputs"
 
 ### Changed

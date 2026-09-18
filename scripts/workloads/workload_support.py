@@ -11,8 +11,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
-from scripts.probes.probe_support import applied_probe_env, json_safe
+from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
+    create_local_model_provider,  # noqa: E402 - project path bootstrap
+)
+from scripts.probes.probe_support import applied_probe_env, json_safe  # noqa: E402 - project path bootstrap
 
 TModel = TypeVar("TModel", bound=BaseModel)
 
@@ -104,7 +106,7 @@ async def run_strict_json_model(
     ollama_host: str,
     temperature: float,
     seed: int,
-    timeout: int,
+    timeout: int,  # noqa: ASYNC109 - standalone CLI tooling
     messages: list[dict[str, str]],
     runtime_context: dict[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any]]:
@@ -113,7 +115,7 @@ async def run_strict_json_model(
         ollama_host=str(ollama_host or "").strip() or None,
         disable_sandbox=True,
     ):
-        local_provider = LocalModelProvider(
+        local_provider = create_local_model_provider(
             model=str(model),
             temperature=float(temperature),
             seed=int(seed),

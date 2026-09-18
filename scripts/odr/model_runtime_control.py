@@ -5,7 +5,8 @@ import subprocess
 import time
 from typing import Any
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
+from orket.adapters.llm.local_model_provider import ModelResponse
+from orket.application.services.local_model_factory import create_local_model_provider
 from orket.runtime.provider_runtime_inventory import list_loaded_lmstudio_model_ids_sync
 from scripts.providers.lmstudio_model_cache import clear_loaded_models, default_lmstudio_base_url
 
@@ -157,14 +158,14 @@ async def complete_with_transient_provider(
     model: str,
     messages: list[dict[str, str]],
     temperature: float,
-    timeout: int,
+    timeout: int,  # noqa: ASYNC109 - standalone CLI tooling
     provider_name: str = "",
     base_url: str = "",
     api_key: str = "",
     swap_timeout_s: float = DEFAULT_SWAP_TIMEOUT_SEC,
     swap_poll_interval_s: float = DEFAULT_SWAP_POLL_INTERVAL_SEC,
 ) -> tuple[ModelResponse, int, dict[str, Any]]:
-    provider = LocalModelProvider(
+    provider = create_local_model_provider(
         model=model,
         temperature=temperature,
         timeout=timeout,

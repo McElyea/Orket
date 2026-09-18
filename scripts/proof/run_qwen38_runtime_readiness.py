@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT))
 
 from orket.adapters.llm.llama_cpp_render_verification import expected_text_render
 from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.application.services.local_model_factory import create_local_model_provider
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.exceptions import ModelProviderError
 from orket.runtime.config.local_prompt_profiles import (
@@ -151,7 +152,7 @@ def must_stop_cases(client: httpx.Client) -> list[dict]:
 
 
 async def adapter_cases() -> list[dict]:
-    client = LocalModelProvider(model=DEFAULT_LOCAL_MODEL, provider="llama_cpp")
+    client = create_local_model_provider(model=DEFAULT_LOCAL_MODEL, provider="llama_cpp")
     rows = []
     try:
         for task in ("strict_json", "tool_call", "concise_text", "reasoning"):

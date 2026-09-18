@@ -7,8 +7,8 @@ import json
 import httpx
 import pytest
 
-from orket.adapters.llm.local_prompting_policy import resolve_local_prompting_policy
-from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
+from orket.application.services.local_prompting_service import resolve_local_prompting_policy
+from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sync_bridge import run_coro_sync
 from orket.runtime.config.local_prompt_profiles import DEFAULT_LOCAL_PROMPT_PROFILE_REGISTRY_PATH
 from orket_extension_sdk.llm import GenerateRequest
@@ -95,7 +95,7 @@ async def test_large_request_never_widens_selected_profile(provider, mode):
     result = await resolve_local_prompting_policy(**arguments, runtime_context={"local_prompting_mode": mode,
         "local_prompt_max_output_tokens": 999999, "local_prompt_stop_sequences": [" caller-stop\n"]})
     assert result.sampling_bundle["max_output_tokens"] == baseline.sampling_bundle["max_output_tokens"]
-    assert result.effective_stop_sequences == [" caller-stop\n", *baseline.effective_stop_sequences]
+    assert result.effective_stop_sequences == (" caller-stop\n", *baseline.effective_stop_sequences)
 
 
 @pytest.mark.asyncio
@@ -111,7 +111,7 @@ async def test_profile_file_preserves_exact_stops_or_rejects_invalid_elements(tm
         messages=[{"role": "user", "content": "hello"}], runtime_context={"local_prompt_profile_registry_path": str(path)})
     if stops == ["  PROFILE\n", " "]:
         result = await operation
-        assert result.effective_stop_sequences == [*stops, "<|eot_id|>", "</s>"]
+        assert result.effective_stop_sequences == (*stops, "<|eot_id|>", "</s>")
     else:
         with pytest.raises(ValueError, match="stop_sequences"):
             await operation

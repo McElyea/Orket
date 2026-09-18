@@ -8,7 +8,10 @@ import pytest
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.orchestration.engine import OrchestrationEngine
 from tests.helpers.card_completion import text_acceptance
+from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.turn_prompt_utils import extract_turn_prompt_context
+
+pytestmark = pytest.mark.usefixtures("deterministic_turn_clock")
 
 
 class ParallelDummyProvider(LocalModelProvider):
@@ -152,8 +155,10 @@ async def _run_epic_with_dummy_provider(
     epic_filename: str,
     epic_payload: dict,
     monkeypatch,
+    clock,
 ):
-    workspace, db_path = _seed_parallel_test_workspace(
+    workspace, db_path = await asyncio.to_thread(
+        _seed_parallel_test_workspace,
         root,
         company_name=company_name,
         epic_filename=epic_filename,
@@ -164,10 +169,14 @@ async def _run_epic_with_dummy_provider(
     monkeypatch.setattr(LocalModelProvider, "__init__", lambda *args, **kwargs: None)
     monkeypatch.setattr(LocalModelProvider, "complete", dummy_provider.complete)
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
+    engine = await asyncio.to_thread(
+        OrchestrationEngine, workspace, department="core", db_path=db_path, config_root=root)
 
     start_time = time.perf_counter()
     try:
+        before = clock()
+        observed = engine._pipeline.orchestrator.issue_control_plane.now_utc()
+        assert before < observed < clock()
         await engine.run_epic(epic_name)
     finally:
         await engine.close()
@@ -178,7 +187,7 @@ async def _run_epic_with_dummy_provider(
 @pytest.mark.integration
 @pytest.mark.asyncio
 # Layer: integration
-async def test_parallel_execution_throughput(tmp_path, monkeypatch):
+async def test_parallel_execution_throughput(tmp_path, monkeypatch, deterministic_turn_clock):
     """
     Verifies that independent issues are executed in parallel.
     The assertion compares a parallel-ready epic against a serial dependency chain
@@ -207,6 +216,7 @@ async def test_parallel_execution_throughput(tmp_path, monkeypatch):
             ],
         },
         monkeypatch=monkeypatch,
+        clock=deterministic_turn_clock,
     )
     serial_duration, serial_provider, _serial_engine = await _run_epic_with_dummy_provider(
         root=tmp_path / "serial",
@@ -227,6 +237,7 @@ async def test_parallel_execution_throughput(tmp_path, monkeypatch):
             ],
         },
         monkeypatch=monkeypatch,
+        clock=deterministic_turn_clock,
     )
 
     print(f"Parallel Duration: {parallel_duration:.2f}s")
@@ -253,7 +264,7 @@ async def test_parallel_execution_throughput(tmp_path, monkeypatch):
 @pytest.mark.integration
 @pytest.mark.asyncio
 # Layer: integration
-async def test_dependency_chain_serial(tmp_path, monkeypatch):
+async def test_dependency_chain_serial(tmp_path, monkeypatch, deterministic_turn_clock):
     """
     Verifies that dependent issues are still executed serially.
     P1 -> P2 -> P3
@@ -280,6 +291,7 @@ async def test_dependency_chain_serial(tmp_path, monkeypatch):
             ],
         },
         monkeypatch=monkeypatch,
+        clock=deterministic_turn_clock,
     )
 
     assert dummy_provider.max_parallel == 1, "Chain should have been executed serially"

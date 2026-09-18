@@ -115,6 +115,7 @@ class Orchestrator:
         self.scheduler_control_plane = OrchestratorSchedulerControlPlaneService(
             execution_repository=self.control_plane_execution_repository,
             publication=self.control_plane_publication,
+            now_utc=control_plane_clock if control_plane_clock is not None else utc_now_iso,
         )
         self.tool_approval_control_plane_reservation = ToolApprovalControlPlaneReservationService(
             publication=self.control_plane_publication

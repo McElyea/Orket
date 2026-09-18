@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.application.services.local_model_factory import create_local_model_provider
 from orket.capabilities.sync_bridge import run_coro_sync
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse, nonnegative_int_or_none
 
 
 class LocalModelCapabilityProvider:
-    """Side-effecting synchronous SDK adapter; async callers must offload and drain it."""
+    """Application-owned SDK model composition; async callers must offload and drain it."""
 
     def __init__(
         self,
@@ -17,7 +17,7 @@ class LocalModelCapabilityProvider:
         timeout: int = 300,
         provider: str = "",
     ) -> None:
-        self._provider = LocalModelProvider(
+        self._provider = create_local_model_provider(
             model=model,
             temperature=temperature,
             seed=seed,

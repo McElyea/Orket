@@ -16,6 +16,9 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider  # noqa: E402
+from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
+    create_local_model_provider,  # noqa: E402 - project path bootstrap
+)
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL  # noqa: E402 - direct script bootstrap
 from orket.kernel.v1.odr.core import DEFAULT_CODE_LEAK_PATTERNS, ReactorConfig, ReactorState, run_round  # noqa: E402
 from orket.kernel.v1.odr.prompt_contract import build_architect_messages, build_auditor_messages  # noqa: E402
@@ -216,7 +219,7 @@ async def _run_pairing(
     scenarios: list[dict[str, Any]] = []
     started = datetime.now(UTC).isoformat()
     async with AsyncExitStack() as stack:
-        providers = [await stack.enter_async_context(LocalModelProvider(
+        providers = [await stack.enter_async_context(create_local_model_provider(
             model=model, temperature=temperature, timeout=model_timeout,
             provider=provider_selection.provider, base_url=provider_selection.base_url,
         )) for model in (pairing.architect, pairing.auditor)]

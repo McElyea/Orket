@@ -9,7 +9,7 @@ from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.command_process_supervisor import CommandProcessSupervisor
-from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
+from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL

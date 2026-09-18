@@ -13,18 +13,27 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
-from orket.core.contracts.provider_runtime import (
+from orket.adapters.llm.local_model_provider import LocalModelProvider  # noqa: E402 - project path bootstrap
+from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
+    create_local_model_provider,  # noqa: E402 - project path bootstrap
+)
+from orket.core.contracts.provider_runtime import (  # noqa: E402 - project path bootstrap
     DEFAULT_LOCAL_MODEL,
     DEFAULT_LOCAL_PROVIDER,  # noqa: E402 - direct script bootstrap
 )
-from scripts.probes.probe_support import applied_probe_env, is_environment_blocker, json_safe, now_utc_iso, write_report
-from scripts.workloads.code_review_probe_reporting import (
+from scripts.probes.probe_support import (  # noqa: E402 - project path bootstrap
+    applied_probe_env,
+    is_environment_blocker,
+    json_safe,
+    now_utc_iso,
+    write_report,
+)
+from scripts.workloads.code_review_probe_reporting import (  # noqa: E402 - project path bootstrap
     build_model_assisted_payload,
     quality_summary,
     score_review_bundle,
 )
-from scripts.workloads.code_review_probe_support import (
+from scripts.workloads.code_review_probe_support import (  # noqa: E402 - project path bootstrap
     DEFAULT_PROMPT_PROFILE,
     DEFAULT_REVIEW_METHOD,
     artifact_inventory,
@@ -176,9 +185,9 @@ def _write_artifacts(
 
 
 async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
-    fixture_path = Path(str(args.fixture)).resolve()
-    answer_key_path = Path(str(args.answer_key)).resolve()
-    workspace = Path(str(args.workspace)).resolve()
+    fixture_path = Path(str(args.fixture)).resolve()  # noqa: ASYNC240 - standalone CLI tooling
+    answer_key_path = Path(str(args.answer_key)).resolve()  # noqa: ASYNC240 - standalone CLI tooling
+    workspace = Path(str(args.workspace)).resolve()  # noqa: ASYNC240 - standalone CLI tooling
     if not fixture_path.is_file():
         raise FileNotFoundError(f"fixture_not_found:{fixture_path}")
     if not answer_key_path.is_file():
@@ -219,7 +228,7 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         ollama_host=str(args.ollama_host or "").strip() or None,
         disable_sandbox=True,
     ):
-        provider = LocalModelProvider(
+        provider = create_local_model_provider(
             model=str(args.model),
             temperature=float(args.temperature),
             seed=int(args.seed),

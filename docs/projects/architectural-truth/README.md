@@ -619,3 +619,13 @@ driver lifetimes migrate with that boundary. 1,853 selected source cases and the
 same cases in four fresh installed cells pass, plus eight actual llama.cpp regressions
 and a separate installed selection/compliance/inference flow. Three forbidden pairs
 are removed; 41 remain. Full-plan acceptance remains open in the canonical plan.
+
+The 0.6.12 partial local prompt-policy checkpoint captures settings and nested
+request values, binds one registry read and owns its worker lifetime. Application
+composes the provider and SDK model wrapper; returned policy values are immutable.
+The supplied scheduler clock also covers closeout and activation-failure cleanup.
+2,036 selected cases pass in source and three installed cells. Windows 3.12 passes
+2,035 and fails one native-agent fixture with `Connection lost`; installed acceptance
+remains open. Eight actual llama.cpp regressions, a factory flow and four role-response
+checks pass. Two forbidden pairs are removed; 39 remain. The canonical plan retains
+all failed observations and evidence limits. Whole-plan acceptance remains open.

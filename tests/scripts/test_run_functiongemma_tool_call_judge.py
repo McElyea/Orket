@@ -134,7 +134,7 @@ def test_main_records_fallback_judge_verdicts(monkeypatch, tmp_path: Path) -> No
         async def close(self):
             return None
 
-    monkeypatch.setattr(script, "LocalModelProvider", _FakeProvider)
+    monkeypatch.setattr(script, "create_local_model_provider", _FakeProvider)
 
     exit_code = script.main(
         [
@@ -260,7 +260,7 @@ def test_main_prefers_native_tool_call_payload_and_normalizes_flat_dimensions(mo
         async def close(self):
             return None
 
-    monkeypatch.setattr(script, "LocalModelProvider", _FakeProvider)
+    monkeypatch.setattr(script, "create_local_model_provider", _FakeProvider)
 
     exit_code = script.main(
         [
@@ -401,7 +401,7 @@ def test_main_falls_back_when_primary_judge_path_is_all_inconclusive(monkeypatch
         async def close(self):
             return None
 
-    monkeypatch.setattr(script, "LocalModelProvider", _FakeProvider)
+    monkeypatch.setattr(script, "create_local_model_provider", _FakeProvider)
 
     exit_code = script.main(
         [

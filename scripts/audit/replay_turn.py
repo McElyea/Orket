@@ -5,17 +5,26 @@ import argparse
 import asyncio
 import json
 import sys
+from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
-from orket.orchestration.engine import OrchestrationEngine
-from scripts.audit.audit_support import normalize_text, now_utc_iso, sha256_text, text_diff_location, write_report
-from scripts.probes.probe_support import is_environment_blocker, json_safe
+from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
+    create_local_model_provider,  # noqa: E402 - project path bootstrap
+)
+from orket.orchestration.engine import OrchestrationEngine  # noqa: E402 - project path bootstrap
+from scripts.audit.audit_support import (  # noqa: E402 - project path bootstrap
+    normalize_text,
+    now_utc_iso,
+    sha256_text,
+    text_diff_location,
+    write_report,
+)
+from scripts.probes.probe_support import is_environment_blocker, json_safe  # noqa: E402 - project path bootstrap
 
 DEFAULT_OUTPUT = "benchmarks/results/audit/replay_turn.json"
 
@@ -43,7 +52,7 @@ async def _default_replay_call(
     model: str,
     runtime_context: dict[str, Any],
 ) -> dict[str, Any]:
-    provider = LocalModelProvider(model=model, temperature=0.0, timeout=300)
+    provider = create_local_model_provider(model=model, temperature=0.0, timeout=300)
     try:
         response = await provider.complete(messages, runtime_context=runtime_context)
     finally:
@@ -66,7 +75,7 @@ async def replay_turn_report(
 ) -> dict[str, Any]:
     replay_source = await asyncio.to_thread(
         _load_replay_source,
-        workspace=Path(workspace).resolve(),
+        workspace=Path(workspace).resolve(),  # noqa: ASYNC240 - standalone CLI tooling
         session_id=str(session_id),
         issue_id=str(issue_id),
         turn_index=int(turn_index),
@@ -97,7 +106,7 @@ async def replay_turn_report(
             "proof_kind": "live" if blocked else "structural",
             "observed_path": "blocked" if blocked else "primary",
             "observed_result": "environment blocker" if blocked else "failure",
-            "workspace": str(Path(workspace).resolve()),
+            "workspace": str(Path(workspace).resolve()),  # noqa: ASYNC240 - standalone CLI tooling
             "session_id": str(session_id),
             "issue_id": str(issue_id),
             "turn_index": int(turn_index),
@@ -124,7 +133,7 @@ async def replay_turn_report(
         "proof_kind": "live",
         "observed_path": "primary",
         "observed_result": "success" if match else "failure",
-        "workspace": str(Path(workspace).resolve()),
+        "workspace": str(Path(workspace).resolve()),  # noqa: ASYNC240 - standalone CLI tooling
         "session_id": str(session_id),
         "issue_id": str(issue_id),
         "turn_index": int(turn_index),

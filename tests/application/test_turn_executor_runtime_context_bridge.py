@@ -9,6 +9,7 @@ import pytest
 
 from orket.adapters.llm import local_model_provider as local_model_provider_module
 from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.application.services.local_model_factory import create_local_model_provider
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_executor_runtime import invoke_model_complete
@@ -131,7 +132,7 @@ async def test_turn_executor_bridges_runtime_context_through_wrapped_model_clien
     monkeypatch.delenv("ORKET_LOCAL_PROMPTING_MODE", raising=False)
     monkeypatch.setattr(local_model_provider_module.httpx, "AsyncClient", lambda *args, **kwargs: fake_client)
 
-    provider = LocalModelProvider(model="unknown-unmapped-model")
+    provider = create_local_model_provider(model="unknown-unmapped-model")
     model_client = _WrappedClient(provider)
     executor = TurnExecutor(
         state_machine=StateMachine(),

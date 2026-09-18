@@ -8,6 +8,7 @@ from types import MappingProxyType
 from typing import Any
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.application.services.local_model_factory import create_local_model_provider
 from orket.core.contracts.decision_inputs import ModelClientOptions
 
 
@@ -32,7 +33,7 @@ class ModelClientFactory:
         object.__setattr__(self, "environment", MappingProxyType(dict(self.environment)))
 
     def create_provider(self, selected_model: str, options: ModelClientOptions) -> LocalModelProvider:
-        return LocalModelProvider(
+        return create_local_model_provider(
             model=selected_model, temperature=options.temperature, timeout=options.timeout, environment=self.environment
         )
 

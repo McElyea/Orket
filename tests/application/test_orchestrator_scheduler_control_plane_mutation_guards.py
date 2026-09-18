@@ -122,6 +122,7 @@ async def test_activate_namespace_authority_fail_closes_reservation_and_lease_on
             issue_id="ISSUE-2",
             step_kind="issue_status_transition",
             created_at="2026-03-25T19:10:00+00:00",
+            now_utc=lambda: "2026-03-25T19:10:05+00:00",
         )
 
     reservation = await record_repo.get_latest_reservation_record(
@@ -139,6 +140,7 @@ async def test_activate_namespace_authority_fail_closes_reservation_and_lease_on
     assert reservation.status is ReservationStatus.INVALIDATED
     assert lease is not None
     assert lease.status is LeaseStatus.RELEASED
+    assert lease.publication_timestamp == "2026-03-25T19:10:05+00:00"
     assert [record.current_observed_state.split(";")[0] for record in resource_history] == [
         "lease_status:lease_active",
         "lease_status:lease_released",

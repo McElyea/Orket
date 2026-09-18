@@ -151,6 +151,12 @@ current proof limits are in
 `docs/architecture/CONTRACT_DELTA_CORE_EFFECT_BOUNDARIES_D_2026-09-14.md`.
 This is not whole-core purity or C/D acceptance.
 
+The orchestrator's supplied control-plane clock covers both issue dispatch and
+scheduler namespace publication, including activation-failure cleanup. Direct
+composition retains the UTC adapter default. The clock wiring does not make the
+scheduler's multi-publication closeout atomic; migration and limits are recorded in
+`docs/architecture/CONTRACT_DELTA_SCHEDULER_CLOCK_D_2026-09-17.md`.
+
 Bug-fix phase core values likewise consume explicit time. Application owns their
 manager, cache, verified persistence and event workers. Migration and limits:
 `docs/architecture/CONTRACT_DELTA_BUG_FIX_PHASE_D_2026-09-16.md`.
@@ -232,6 +238,19 @@ Integration boundaries for external systems, including:
 
 Adapters translate between external semantics and Orket contracts.
 Adapters do not define policy or runtime authority.
+
+`LocalPromptingService` in `orket/application/services/local_prompting_service.py`
+owns prompt policy. `create_local_model_provider` captures environment and injects
+that authority through the core `LocalPromptingPort`; raw provider construction
+requires the port. The SDK model owner lives in
+`orket/application/services/sdk_llm_provider.py`. Request messages and nested context
+are copied before provider preparation can await. The registry worker is retained
+through cancellation; parsing and provenance use the same observed bytes, with no
+shared mutable registry cache. Policy values are immutable; transport and telemetry
+exports are detached. The packaged registry location and profile semantics are
+unchanged. Migration and remaining scope:
+`docs/architecture/CONTRACT_DELTA_PROMPT_POLICY_CD_2026-09-17.md`.
+
 
 ### `interfaces`
 

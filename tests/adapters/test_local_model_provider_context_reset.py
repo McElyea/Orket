@@ -5,7 +5,7 @@ import json
 import httpx
 import pytest
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.application.services.local_model_factory import create_local_model_provider
 
 
 @pytest.mark.asyncio
@@ -13,7 +13,7 @@ async def test_openai_compat_context_reset_status_tracks_epoch_rotation(monkeypa
     """Layer: integration. Verifies explicit-session backends surface fresh vs unknown context truth across resets."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = LocalModelProvider(model="dummy")
+    provider = create_local_model_provider(model="dummy")
     seen_session_ids: list[str] = []
 
     async def _handler(request: httpx.Request) -> httpx.Response:
@@ -52,7 +52,7 @@ async def test_ollama_context_reset_status_is_stateless_backend(monkeypatch: pyt
     """Layer: contract. Verifies stateless backends are labeled explicitly instead of implying reset semantics."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
     monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
-    provider = LocalModelProvider(model="qwen2.5-coder:7b")
+    provider = create_local_model_provider(model="qwen2.5-coder:7b")
 
     class _CaptureClient:
         async def chat(self, model, messages, options, format=None):  # type: ignore[no-untyped-def]

@@ -12,7 +12,9 @@ from orket.core.domain import AttemptState, RunState
 from orket.core.domain.state_machine import StateMachine
 from orket.exceptions import ModelConnectionError
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 
+pytestmark = pytest.mark.usefixtures("deterministic_turn_clock")
 
 class _ToolBox:
     def __init__(self):
@@ -668,8 +670,10 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
 
 
 @pytest.mark.asyncio
-async def test_turn_executor_create_issue_approval_resume_continues_same_governed_run(tmp_path):
-    """Layer: unit."""
+@pytest.mark.integration
+async def test_turn_executor_create_issue_approval_resume_continues_same_governed_run(tmp_path, deterministic_turn_clock):
+    """Layer: integration. Real control-plane stores use ordered inputs; provider and approval repo are controlled."""
+    before = deterministic_turn_clock()
     control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
     executor = TurnExecutor(
         StateMachine(),
@@ -806,6 +810,9 @@ async def test_turn_executor_create_issue_approval_resume_continues_same_governe
     truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
 
     assert second.success is True
+    lease = await control_plane.publication.repository.get_latest_lease_record(lease_id=f"turn-tool-lease:{run_id}")
+    assert lease is not None
+    assert before < lease.granted_timestamp < lease.publication_timestamp < deterministic_turn_clock()
     assert model.calls == 1
     assert toolbox.calls == [("create_issue", {"seat": "reviewer", "summary": "Follow-up task"})]
     assert len(repo.rows) == 1

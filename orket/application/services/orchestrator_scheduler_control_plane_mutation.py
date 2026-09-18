@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots
 from orket.application.services.orchestrator_issue_control_plane_support import (
@@ -9,7 +11,6 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
     lease_id_for_run,
     namespace_resource_id,
     namespace_scope,
-    utc_now,
 )
 from orket.core.contracts import AttemptRecord, LeaseRecord, ReservationRecord, RunRecord, StepRecord, WorkloadRecord
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
@@ -98,6 +99,7 @@ async def activate_namespace_authority(
     issue_id: str,
     step_kind: str,
     created_at: str,
+    now_utc: Callable[[], str],
 ) -> tuple[RunRecord, AttemptRecord, ReservationRecord, LeaseRecord]:
     workload_id = workload.workload_id
     reservation = await publication.publish_reservation(
@@ -152,6 +154,7 @@ async def activate_namespace_authority(
             run_id=run.run_id,
             reservation_id=reservation.reservation_id,
             step_kind=step_kind,
+            failed_at=now_utc(),
         )
         raise
 
@@ -163,8 +166,8 @@ async def _rollback_namespace_authority_activation(
     run_id: str,
     reservation_id: str,
     step_kind: str,
+    failed_at: str,
 ) -> None:
-    failed_at = utc_now()
     lease = await publication.repository.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run_id))
     if lease is not None and lease.status is LeaseStatus.ACTIVE:
         released = await publication.publish_lease(

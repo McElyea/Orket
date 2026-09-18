@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os
+from collections.abc import Mapping
 from typing import Any
 
 E_LOCAL_PROMPT_LMSTUDIO_SESSION_MODE_INVALID = "E_LOCAL_PROMPT_LMSTUDIO_SESSION_MODE_INVALID"
@@ -24,11 +24,11 @@ def normalize_lmstudio_session_mode(value: Any) -> str:
     return token
 
 
-def resolve_lmstudio_session_settings(context: dict[str, Any], provider_backend: str) -> tuple[str, str]:
+def resolve_lmstudio_session_settings(context: dict[str, Any], provider_backend: str, environment: Mapping[str, str]) -> tuple[str, str]:
     if provider_backend != "openai_compat":
         return "none", ""
     mode = normalize_lmstudio_session_mode(
-        context.get("lmstudio_session_mode") or os.getenv("ORKET_LMSTUDIO_SESSION_MODE") or "none"
+        context.get("lmstudio_session_mode") or environment.get("ORKET_LMSTUDIO_SESSION_MODE") or "none"
     )
     if mode == "none":
         return mode, ""
@@ -36,7 +36,7 @@ def resolve_lmstudio_session_settings(context: dict[str, Any], provider_backend:
         return mode, _first_non_empty(
             [
                 context.get("lmstudio_session_id"),
-                os.getenv("ORKET_LMSTUDIO_SESSION_ID"),
+                environment.get("ORKET_LMSTUDIO_SESSION_ID"),
                 "orket_lmstudio_fixed",
             ]
         )
@@ -45,6 +45,6 @@ def resolve_lmstudio_session_settings(context: dict[str, Any], provider_backend:
             context.get("session_id"),
             context.get("conversation_id"),
             context.get("lmstudio_session_id"),
-            os.getenv("ORKET_LMSTUDIO_SESSION_ID"),
+            environment.get("ORKET_LMSTUDIO_SESSION_ID"),
         ]
     )

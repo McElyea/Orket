@@ -9,7 +9,7 @@ import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.application.services.extension_runtime_support import generate_response
-from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
+from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
 
 REQUEST = GenerateRequest(system_prompt="", user_message="hello")

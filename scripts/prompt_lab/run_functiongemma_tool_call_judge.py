@@ -14,12 +14,13 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 try:
-    from orket.adapters.llm.local_model_provider import LocalModelProvider
+    from orket.application.services.local_model_factory import create_local_model_provider
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
-    from orket.adapters.llm.local_model_provider import LocalModelProvider
+
+    from orket.application.services.local_model_factory import create_local_model_provider
 
 
 DEFAULT_SCORE_REPORT = Path("benchmarks/staging/General/prompt_reforger_gemma_tool_use_score.json")
@@ -418,7 +419,7 @@ async def _run_judgments(
     packets: list[dict[str, Any]],
     timeout_sec: int,
 ) -> list[dict[str, Any]]:
-    provider = LocalModelProvider(
+    provider = create_local_model_provider(
         model=target.model,
         timeout=max(1, int(timeout_sec)),
         provider=target.provider,

@@ -1,3 +1,4 @@
+# Layer: unit. Existing behavior exercised through application composition.
 # LIFECYCLE: live
 from __future__ import annotations
 
@@ -109,7 +110,7 @@ async def test_complete_with_transient_provider_threads_explicit_provider_overri
     async def _fake_release_model_residency(**kwargs):  # type: ignore[no-untyped-def]
         return {"status": "released", **kwargs}
 
-    monkeypatch.setattr(control, "LocalModelProvider", _FakeProvider)
+    monkeypatch.setattr(control, "create_local_model_provider", _FakeProvider)
     monkeypatch.setattr(control, "release_model_residency", _fake_release_model_residency)
 
     response, _latency_ms, release = await control.complete_with_transient_provider(

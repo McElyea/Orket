@@ -10,7 +10,10 @@ from orket.core.domain import ReservationStatus
 from orket.orchestration.engine import OrchestrationEngine
 from orket.schema import CardStatus
 from tests.helpers.card_completion import text_acceptance
+from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.turn_prompt_utils import extract_turn_prompt_context
+
+pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("deterministic_turn_clock")]
 
 # Fixture acceptance coverage is intentionally secondary to canonical-asset acceptance flow.
 FIXTURE_SECONDARY = True
@@ -368,7 +371,9 @@ async def test_system_acceptance_tool_approval_continues_same_governed_run(tmp_p
 
 @pytest.mark.asyncio
 # Layer: integration
-async def test_system_acceptance_raw_json_tool_calls_complete_flow(tmp_path, monkeypatch):
+async def test_system_acceptance_raw_json_tool_calls_complete_flow(
+    tmp_path, monkeypatch, deterministic_turn_clock,
+):
     root = tmp_path
     workspace = root / "workspace"
     workspace.mkdir()
@@ -383,6 +388,9 @@ async def test_system_acceptance_raw_json_tool_calls_complete_flow(tmp_path, mon
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
     try:
+        before = deterministic_turn_clock()
+        observed = engine._pipeline.orchestrator.issue_control_plane.now_utc()
+        assert before < observed < deterministic_turn_clock()
         await engine.run_card("acceptance_raw_json")
 
         issue = await engine.cards.get_by_id("ISSUE-A")
