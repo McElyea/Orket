@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable
 from typing import Any
 
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
@@ -104,61 +102,6 @@ async def publish_step_if_needed(
     return f"turn-tool-result:{operation_id}"
 
 
-async def persist_non_protocol_tool_result_if_needed(
-    *,
-    persist_tool_result: Callable[..., None],
-    persist_operation_result: Callable[..., None],
-    session_id: str,
-    issue_id: str,
-    role_name: str,
-    turn_index: int,
-    tool_name: str,
-    tool_args: dict[str, Any],
-    result: dict[str, Any],
-    control_plane_enabled: bool,
-    control_plane_service: TurnToolControlPlaneService | None,
-    control_plane_run_id: str | None,
-    control_plane_attempt_id: str | None,
-    binding: dict[str, Any] | None,
-    operation_id: str,
-    replayed: bool,
-) -> str | None:
-    if control_plane_enabled:
-        await asyncio.to_thread(
-            persist_operation_result,
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
-            operation_id=operation_id,
-            tool_name=tool_name,
-            tool_args=tool_args,
-            result=result,
-        )
-    await asyncio.to_thread(
-        persist_tool_result,
-        session_id=session_id,
-        issue_id=issue_id,
-        role_name=role_name,
-        turn_index=turn_index,
-        tool_name=tool_name,
-        tool_args=tool_args,
-        result=result,
-    )
-    return await publish_step_if_needed(
-        control_plane_enabled=control_plane_enabled,
-        control_plane_service=control_plane_service,
-        control_plane_run_id=control_plane_run_id,
-        control_plane_attempt_id=control_plane_attempt_id,
-        tool_name=tool_name,
-        tool_args=tool_args,
-        result=result,
-        binding=binding,
-        operation_id=operation_id,
-        replayed=bool(replayed),
-    )
-
-
 async def finalize_execution_if_needed(
     *,
     control_plane_enabled: bool,
@@ -188,7 +131,6 @@ async def finalize_execution_if_needed(
 __all__ = [
     "begin_control_plane_execution_if_needed",
     "finalize_execution_if_needed",
-    "persist_non_protocol_tool_result_if_needed",
     "publish_preflight_failure_if_needed",
     "publish_step_if_needed",
 ]

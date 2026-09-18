@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-09-17
+Last updated: 2026-09-18
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -24,6 +24,14 @@ card runtime. Neither is part of the canonical runtime path list below; removal
 requires an explicit `0.7.0` contract delta.
 
 ## Current Canonical Paths
+
+`orket/application/workflows/turn_tool_result_persistence.py` owns protocol and
+ordinary result publication inputs. It captures nested values before awaiting and
+retains each admitted file worker through cancellation, preserving worker errors.
+The enclosing governed turn keeps its native owner until that work settles.
+Files and control-plane publication remain separate effects; interruption can leave
+artifacts with unresolved dispatch authority. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_TOOL_RESULT_WORKERS_D_2026-09-17.md`.
 
 `LocalPromptingService` in `orket/application/services/local_prompting_service.py`
 owns prompt policy. `create_local_model_provider` captures environment and injects

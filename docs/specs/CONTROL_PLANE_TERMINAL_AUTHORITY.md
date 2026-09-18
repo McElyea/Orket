@@ -1,6 +1,6 @@
 # Control-plane terminal authority
 
-Last updated: 2026-09-16
+Last updated: 2026-09-18
 Status: Active contract; historical-consistency implementation acceptance remains scoped in the architectural-truth plan.
 
 ## Common record contract
@@ -241,6 +241,19 @@ control-plane transaction. They require matching attempt, namespace and call
 references. Exceptions and cancellation roll back both writes, preserving the
 dispatch marker and any physical effect. An already admitted operation cannot
 receive another dispatch from this path.
+
+Before result-file publication awaits, application captures nested arguments,
+result, binding metadata and protocol capsule, and resolves the context values
+needed by the receipt. Each admitted file worker remains owned until it settles,
+including repeated cancellation and elapsed caller timeouts. The enclosing turn
+therefore retains its native lock while the worker can still write. A worker error
+observed during cancellation remains an error. Cancellation after that worker
+settles stops subsequent publication; it does not imply rollback of a written file.
+Result files, protocol receipts and control-plane records are not one transaction.
+An existing file without coherent dispatch resolution cannot authorize redispatch
+or successful completion. Ordinary ungoverned result caching shares file-worker
+ownership, but gains no native turn lock. Migration and remaining limits:
+`docs/architecture/CONTRACT_DELTA_TOOL_RESULT_WORKERS_D_2026-09-17.md`.
 
 An unresolved marker refuses ordinary reentry, resume, preflight abandonment and
 terminal closure without releasing execution authority. Error or cancellation

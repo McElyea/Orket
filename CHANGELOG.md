@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.13] - 2026-09-18 - "Owned tool-result publication"
+
+### Changed
+- Capture nested tool-result and protocol-receipt inputs before file publication awaits.
+- Retain admitted file workers and the enclosing turn owner through repeated cancellation and caller timeout.
+- Preserve worker errors during interruption; keep partial-file and unresolved-dispatch truth explicit.
+- Consolidate protocol and ordinary result persistence under one application module.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Internal import migration and limitations: `docs/architecture/CONTRACT_DELTA_TOOL_RESULT_WORKERS_D_2026-09-17.md`.
+- Stability: scoped local checkpoint. The source recheck and four fresh installed
+  Windows/Linux Python 3.11/3.12 cells each pass 2,066 selected cases. Eight actual
+  llama.cpp regressions and two actual file-write/publication turns pass. The initial
+  source rename failure and incomplete Linux invocation remain retained; historical
+  native and rename causes are unresolved. Full architecture, quality, capability
+  and whole-lane gates remain open. No remote Git publication is included.
+
 ## [0.6.12] - 2026-09-17 - "Captured prompt and scheduler inputs"
 
 ### Changed

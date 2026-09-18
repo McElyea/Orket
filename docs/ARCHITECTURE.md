@@ -1,6 +1,6 @@
 # Orket Architecture (Target State)
 
-Last updated: 2026-09-17
+Last updated: 2026-09-18
 Status: Active target architecture (transitioning)
 
 Canonical architecture specification for the Orket runtime.
@@ -208,6 +208,12 @@ Responsibilities:
 6. observability sequencing
 
 Application services own runtime truth.
+
+Tool-result publication captures nested input values and retains each admitted
+file worker through cancellation. Protocol receipts, ordinary replay files and
+control-plane step publication remain separate effects; an interrupted publication
+cannot authorize redispatch merely because a file exists. Ownership and migration:
+`docs/architecture/CONTRACT_DELTA_TOOL_RESULT_WORKERS_D_2026-09-17.md`.
 
 Extension scaffolding follows that ownership: application selects the command,
 storage drains materialization and verifies files, and both source and installed

@@ -1,7 +1,7 @@
 # Architectural Truth
 
 Date: 2026-07-29
-Last updated: 2026-09-17
+Last updated: 2026-09-18
 Status: Active project registry
 Owner: Orket Core
 
@@ -629,3 +629,14 @@ The supplied scheduler clock also covers closeout and activation-failure cleanup
 remains open. Eight actual llama.cpp regressions, a factory flow and four role-response
 checks pass. Two forbidden pairs are removed; 39 remain. The canonical plan retains
 all failed observations and evidence limits. Whole-plan acceptance remains open.
+
+
+The 0.6.13 local tool-result checkpoint captures publication inputs and retains
+file workers and the enclosing governed turn owner through interruption. Thirty
+new integration cases pass; the source recheck and four fresh installed cells
+each pass 2,066 selected cases. Eight actual llama.cpp regressions and two real
+file-write/publication turns pass. Earlier native, source-rename and incomplete
+proof attempts remain preserved with their limits; their causes are not repaired
+by this cohort. No forbidden pair is added or removed; 39 remain. Full-plan
+acceptance remains open. Evidence and exact limits remain in the canonical plan and
+`docs/architecture/CONTRACT_DELTA_TOOL_RESULT_WORKERS_D_2026-09-17.md`.

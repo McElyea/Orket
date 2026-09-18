@@ -1,7 +1,7 @@
 # Architectural Truth Remediation Plan
 
 Date: 2026-07-29
-Last updated: 2026-09-17
+Last updated: 2026-09-18
 Status: Active implementation plan; scoped BT-1 through BT-5 accepted; C/D is the next ordered gate
 Roadmap state: Priority Now
 Owner: Orket Core
@@ -12477,7 +12477,7 @@ requested a versioned GitHub checkpoint and continued commits on the existing
 branch; its proof and publication disposition are recorded in the C/D checkpoint.
 The later user instruction restricts 10 AM-6 PM America/Denver work hours to
 local commits only. Retain commits and matching annotated tags locally during
-that window; do not push to GitHub. The 0.6.4 through 0.6.12 local checkpoints follow this
+that window; do not push to GitHub. The 0.6.4 through 0.6.13 local checkpoints follow this
 restriction; remote publication remains deferred.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
@@ -12516,13 +12516,13 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the local
-0.6.12 partial prompt-policy checkpoint. First investigate the retained Windows
-3.12 coherent/inspect native connection loss; installed acceptance remains open.
-Then exercise the protocol/non-protocol tool
-result workers with controlled interruption and capture probes: the retained
-Windows timeout ended at a plain thread future in protocol result persistence.
-That observation does not identify its latency cause or prove an escaped write.
+Next action: continue C/D from their numbered requirements after the scoped
+0.6.13 tool-result checkpoint below. The current source/native/provider cohort
+passes; earlier failed candidate gates and their retained causes remain unresolved.
+Controlled native diagnostics reproduce connection loss when a response is delayed
+beyond the unchanged child deadline; they do not establish the original latency
+source. The separate captured-input and worker-lifetime repair does not diagnose
+the retained Windows timeout or directory-publication failures.
 Repair the 39 remaining forbidden pairs, one
 cross-layer cycle and ten unresolved import/reflection sites while preserving
 adversarial positive and negative proof. SDK memory and provider target ownership,
@@ -13210,3 +13210,166 @@ Exact changed paths for this checkpoint:
 - `tests/scripts/test_model_runtime_control.py`
 - `tests/scripts/test_run_functiongemma_tool_call_judge.py`
 - `tests/scripts/test_run_prompt_reforger_guide_model_comparison.py`
+
+
+### Tool-result worker checkpoint: 2026-09-18
+
+The preceding 0.6.12 partial local checkpoint is commit
+`a340b69f7584f7f6ae45f73b5bdab8e81027a090`. Its receipt SHA-256 is
+`99b599a728a914536b71d5f83cdecd09aeb72eeeec965c8f0b76983880ef3119`.
+The worktree and all 164 bound prior evidence files matched before edits;
+`.tmp/d-tool-results/session-state.json` records that check. No remote Git action
+is part of this candidate.
+
+The retained Windows 3.12 native failure was inspected on a new SQLite copy.
+Its first iteration completed three model calls; the second completed planner
+and actor calls before interruption with `Connection lost`. A declared, serial,
+instrumented execution of the unchanged 28-case terminal-history module passes.
+A separate deliberately delayed actor response reproduces `ConnectionResetError`
+during parent frame write at 8.25 elapsed seconds; the child exits 1 and reports
+`E_SDK_AGENT_FRAME_READ_TIMEOUT`. Both runs retain exact installed origins,
+unchanged inputs and observed native cleanup. The eight-second request deadline
+and seven-second lease are unchanged. Diagnosis is bound at
+`.tmp/d-native-connection/diagnosis.json` (SHA-256
+`6d68a533bfec599773fce6138c6b172fff84a2bc272bcb71fbb7ba07cade5a5d`).
+This is a demonstrated delayed-response mechanism, not proof of the original
+failure's phase, latency source or cause. Its original stderr/timing were not
+retained. The failing installed acceptance remains open; no passing repeat
+supersedes it and no native runtime/deadline change was made.
+
+Separate actual filesystem/SQLite controls on unchanged 0.6.12 fail in 18 cases:
+borrowed nested input changes and caller cancellation/timeout escaping an admitted
+file worker. Four normal worker-error controls already pass. The failed report,
+fixture files, logs, XML, original test bytes and source bindings remain under
+`.tmp/d-tool-results/before/` and `before-source/`. These controls prove those
+specific defects independently of the prior Windows 20-second timeout observation.
+
+Application result publication now lives in
+`orket/application/workflows/turn_tool_result_persistence.py`. It captures nested
+arguments, results, binding and execution capsule, and resolves needed context
+values before awaiting. The existing owned-I/O adapter drains each admitted file
+worker through repeated cancellation and elapsed caller timeout, preserving worker
+errors. A governed turn retains its native owner until that worker settles. The
+old two internal import locations have no forwarding shims. Contract and limits:
+`docs/architecture/CONTRACT_DELTA_TOOL_RESULT_WORKERS_D_2026-09-17.md`.
+
+The focused 58-case selection passes, including all 30 new cases, concurrent
+independent publications, ungoverned ordinary caching, actual turn file effects,
+competing-caller refusal, interrupted reentry refusal and protocol/replay parity.
+The worker-loop responsiveness bound was declared as 0.5 seconds before execution.
+The two Quality jobs include both new regression modules; their focused workflow
+and new-case selection passes 32 cases. These are real filesystem, SQLite and
+native-lock observations with controlled providers/workers/clocks, not live model
+inference. The fresh source, package/native and actual llama.cpp observations follow below.
+
+Cancellation can leave an operation/receipt file with unresolved dispatch authority.
+Files and control-plane publication are not one transaction; no automatic repair,
+redispatch, forced thread stop or whole async/replay guarantee is added. C/D, E1/E2,
+CAP-1/2/3, historical failure causes, full-suite/hosted CI, release readiness and
+explicit whole-lane acceptance remain open.
+
+
+The fresh source recheck passes all 2,066 cases from 265 modules in 454.304
+JUnit seconds, with unchanged inputs, passing changed-file Ruff and a clear root
+database guard. The first source attempt passed 2,065 and failed one unchanged
+run-start UI-lane contract fixture at `run_start_artifacts.py:93` with Windows
+`PermissionError [WinError 5]` during directory rename, before its immutability
+assertion. Its original 62 files and report remain bound by
+`complete/source-1-failure-retention.json`. The isolated unchanged case and a rename
+of a separate fixture copy pass; neither establishes the original cause. The
+full recheck was separately declared and does not erase the first observation.
+
+The same 2,066 case identities ran serially in four fresh installed environments:
+
+| Installed cell | Pass / fail / error / skip | JUnit seconds | Core origins |
+|---|---:|---:|---:|
+| linux-py311 | 2066 / 0 / 0 / 0 | 475.061 | 945 |
+| linux-py312 | 2066 / 0 / 0 / 0 | 416.330 | 945 |
+| win-py311 | 2066 / 0 / 0 / 0 | 457.500 | 945 |
+| win-py312 | 2066 / 0 / 0 / 0 | 527.559 | 945 |
+
+All four check current installed origins, exact wheel/source identities, retained
+artifact bytes, unchanged harness inputs, real CLI/tool-gate behavior, the root
+database guard and observed child teardown. The fresh declared cohort passes;
+this is not simultaneous-cell capacity, stock-clock reliability, or a causal fix
+for prior native failures. Native deadlines and fixture wait limits are unchanged.
+
+An earlier Linux 3.11 invocation accidentally omitted the one-shot-test opt-in and
+root-database-guard flags. It was stopped after 931 passes and is not acceptance.
+The shared driver could not summarize its interrupted synthetic JUnit row
+(`KeyError: classname`); no report was produced. Its actual logs, fixtures and
+terminal/cleanup observations remain bound by `complete/incomplete-linux311.json`.
+The replacement wrapper passes both flags explicitly and uses separate private
+targets. Linux process creation wall-times shifted during the stop checks; exact
+native start ticks and the owned command/parent identified the signaled driver.
+No production process-identity defect or clock-adjustment cause is inferred.
+
+After the native runs, eight actual llama.cpp regressions and two additional
+installed application turns pass. The latter use the actual ToolBox to write
+`agent_output/publication.txt` and verify ordinary replay/protocol receipt bytes,
+digests and SQLite final truth. Provider clients close, proof processes finish,
+and the existing operator server identity is preserved. Its served model is
+`orcarouter_qwen3.8-27b-uncensored-q4_k_l`. These two turns use explicit ordered
+control-plane clocks; they are application integration proof, not a new public
+CLI/API, broad workload, cancellation-under-live-model or capacity claim.
+
+The first direct-flow harness failed both cases during fixture setup because its
+driver had not created the `results` parent directory; neither case reached model
+inference. `complete/direct-live-initial/retention.json` preserves those original
+inputs and errors. The corrected driver creates that directory before pytest and
+uses a fresh target under `direct-live-corrected`; product and test bytes are
+unchanged. This is a proof-driver repair, not a runtime fix.
+
+Those two actual turns then failed the exact-output checks: they wrote `proof.txt`
+with other content. Their transmitted compact messages contained only generic
+issue requirements; the intended path/content supplied in a custom system prompt
+was absent. The failed responses, files and SQLite artifacts remain under
+`direct-live-corrected/failure-retention.json`. A separately declared fixture
+places the exact action in `issue.requirements`; the fresh
+`direct-live-explicit-inputs` run passes the unchanged output assertions. Product
+code is unchanged. This does not establish preservation of arbitrary system-only
+instructions by compact prompting; that boundary remains outside this proof.
+
+Evidence namespace: `.tmp/d-tool-results/complete`, including `manifest.json`,
+`audit.json`, `direct-live-explicit-inputs/direct-live.json`, `review.json` and the local checkpoint receipt.
+The wheel built from the fresh sdist contains 1,019 core Python files and 1,034
+package files matching source; SDK/reference/starter artifacts are unchanged.
+Core wheel SHA-256: `4a2a1ecf95f6d2c31a3919ba138bccfd0eddd21b49bab1a2b3419724ed5a1269`.
+Core sdist SHA-256: `8f38efbac471f9b70cf6c87afd69fe228aaef1f04581195e90a48203ee919973`.
+The dependency graph has 1,019 modules, 3,225 import sites, the same 39 forbidden
+pairs, one cycle, ten analysis errors and zero unknown classifications. Collection
+success is separate from its failed verdict; the baseline remains release-ready
+false. No exception is added. Publication helper extraction reduces the protocol
+module from 446 to 309 lines; the 631-line dispatcher shrinks by one and remains
+oversized. New Python files/functions stay within their limits.
+
+Observed path: primary. Result: scoped proof success and partial overall progress.
+Proof includes live installed filesystem/SQLite/native execution, actual provider
+flows and structural checks. Full canonical pytest/coverage, hosted Quality,
+whole-architecture/async and capability gates, release readiness and explicit
+whole-lane acceptance remain unverified. Remaining blockers or drift include the
+failed dependency verdict, non-atomic file/control-plane publication and retained
+historical native/rename causes. The commit and annotated tag remain local; no
+remote Git action is part of this checkpoint.
+
+Exact changed paths for this checkpoint:
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/architecture/CONTRACT_DELTA_TOOL_RESULT_WORKERS_D_2026-09-17.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/README.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`
+- `orket/application/workflows/turn_tool_dispatcher.py`
+- `orket/application/workflows/turn_tool_dispatcher_control_plane.py`
+- `orket/application/workflows/turn_tool_dispatcher_protocol.py`
+- `orket/application/workflows/turn_tool_result_persistence.py`
+- `pyproject.toml`
+- `tests/helpers/tool_result_persistence.py`
+- `tests/integration/test_tool_result_persistence.py`
+- `tests/integration/test_turn_result_worker_ownership.py`

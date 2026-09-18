@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-18T03:21:04.393696+00:00",
+  "generated_at": "2026-09-18T05:30:29.772414+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1813,7 +1813,7 @@
       },
       "orket.application.workflows.turn_tool_dispatcher": {
         "path": "orket/application/workflows/turn_tool_dispatcher.py",
-        "sha256": "c9a4e2eb001ede044d1d9b66c4cf0637656e188e68ed516ebc2a8cc59733b580"
+        "sha256": "0c4766c24f14a629e50cfb23d048c2bb8f6ead206638099b1cda386902cf9ae2"
       },
       "orket.application.workflows.turn_tool_dispatcher_compatibility": {
         "path": "orket/application/workflows/turn_tool_dispatcher_compatibility.py",
@@ -1821,15 +1821,19 @@
       },
       "orket.application.workflows.turn_tool_dispatcher_control_plane": {
         "path": "orket/application/workflows/turn_tool_dispatcher_control_plane.py",
-        "sha256": "13d2c2f9af286470a6690b641348f9f4601cff8e557f5404e5f4fd8664d461c8"
+        "sha256": "f820c13f58d0983492121a9d8ec7c69fb7d1c813710a953d62414b7372900f85"
       },
       "orket.application.workflows.turn_tool_dispatcher_protocol": {
         "path": "orket/application/workflows/turn_tool_dispatcher_protocol.py",
-        "sha256": "2575e8ed962c440e24d9780f08f7e748839b8a3cf228efb07e6ff339f58b7fb9"
+        "sha256": "b093b06d97bd63bad9f5b32ec6cc347992021578f362bb5be96a25813e1fe328"
       },
       "orket.application.workflows.turn_tool_dispatcher_support": {
         "path": "orket/application/workflows/turn_tool_dispatcher_support.py",
         "sha256": "ff8bbc8c8a99a9dc5f7fd59955cdfb3afc1ff8132000a1d571a492df4f2a1b72"
+      },
+      "orket.application.workflows.turn_tool_result_persistence": {
+        "path": "orket/application/workflows/turn_tool_result_persistence.py",
+        "sha256": "6567339ca7c5e29e4f0a70d882ded98b05b34b0c9856a5d29e490629762b3e5b"
       },
       "orket.board": {
         "path": "orket/board.py",
@@ -17186,14 +17190,21 @@
         "source": "orket.application.workflows.turn_tool_dispatcher",
         "target": "orket.application.workflows.turn_tool_dispatcher_protocol",
         "path": "orket/application/workflows/turn_tool_dispatcher.py",
-        "line": 38,
+        "line": 37,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_tool_dispatcher",
         "target": "orket.application.workflows.turn_tool_dispatcher_support",
         "path": "orket/application/workflows/turn_tool_dispatcher.py",
-        "line": 43,
+        "line": 41,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_tool_dispatcher",
+        "target": "orket.application.workflows.turn_tool_result_persistence",
+        "path": "orket/application/workflows/turn_tool_dispatcher.py",
+        "line": 51,
         "kind": "from"
       },
       {
@@ -17221,7 +17232,7 @@
         "source": "orket.application.workflows.turn_tool_dispatcher_control_plane",
         "target": "orket.application.services.turn_tool_control_plane_service",
         "path": "orket/application/workflows/turn_tool_dispatcher_control_plane.py",
-        "line": 7,
+        "line": 5,
         "kind": "from"
       },
       {
@@ -17247,72 +17258,37 @@
       },
       {
         "source": "orket.application.workflows.turn_tool_dispatcher_protocol",
-        "target": "orket.core.contracts.protocol_receipt_timing",
+        "target": "orket.core.domain.execution",
         "path": "orket/application/workflows/turn_tool_dispatcher_protocol.py",
         "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_tool_dispatcher_protocol",
-        "target": "orket.core.contracts.tool_invocation_contracts",
-        "path": "orket/application/workflows/turn_tool_dispatcher_protocol.py",
-        "line": 18,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.workflows.turn_tool_dispatcher_protocol",
-        "target": "orket.core.domain.execution",
+        "target": "orket.application.services.governed_turn_tool_approval_continuation_service",
         "path": "orket/application/workflows/turn_tool_dispatcher_protocol.py",
         "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_tool_dispatcher_protocol",
-        "target": "orket.application.services.governed_turn_tool_approval_continuation_service",
-        "path": "orket/application/workflows/turn_tool_dispatcher_protocol.py",
-        "line": 21,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.workflows.turn_tool_dispatcher_protocol",
-        "target": "orket.application.services.turn_tool_control_plane_resource_lifecycle",
-        "path": "orket/application/workflows/turn_tool_dispatcher_protocol.py",
-        "line": 24,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.workflows.turn_tool_dispatcher_protocol",
-        "target": "orket.application.services.turn_tool_control_plane_service",
-        "path": "orket/application/workflows/turn_tool_dispatcher_protocol.py",
-        "line": 29,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.workflows.turn_tool_dispatcher_protocol",
         "target": "orket.application.workflows.turn_path_resolver",
         "path": "orket/application/workflows/turn_tool_dispatcher_protocol.py",
-        "line": 30,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_tool_dispatcher_protocol",
         "target": "orket.application.workflows.turn_tool_dispatcher_compatibility",
         "path": "orket/application/workflows/turn_tool_dispatcher_protocol.py",
-        "line": 31,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.workflows.turn_tool_dispatcher_protocol",
-        "target": "orket.application.workflows.turn_tool_dispatcher_control_plane",
-        "path": "orket/application/workflows/turn_tool_dispatcher_protocol.py",
-        "line": 32,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_tool_dispatcher_protocol",
         "target": "orket.application.workflows.turn_tool_dispatcher_support",
         "path": "orket/application/workflows/turn_tool_dispatcher_protocol.py",
-        "line": 33,
+        "line": 24,
         "kind": "from"
       },
       {
@@ -17341,6 +17317,55 @@
         "target": "orket.utils",
         "path": "orket/application/workflows/turn_tool_dispatcher_support.py",
         "line": 25,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_tool_result_persistence",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/workflows/turn_tool_result_persistence.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_tool_result_persistence",
+        "target": "orket.application.services.turn_tool_control_plane_resource_lifecycle",
+        "path": "orket/application/workflows/turn_tool_result_persistence.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_tool_result_persistence",
+        "target": "orket.application.services.turn_tool_control_plane_service",
+        "path": "orket/application/workflows/turn_tool_result_persistence.py",
+        "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_tool_result_persistence",
+        "target": "orket.core.contracts.protocol_receipt_timing",
+        "path": "orket/application/workflows/turn_tool_result_persistence.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_tool_result_persistence",
+        "target": "orket.core.contracts.tool_invocation_contracts",
+        "path": "orket/application/workflows/turn_tool_result_persistence.py",
+        "line": 17,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_tool_result_persistence",
+        "target": "orket.application.workflows.turn_tool_dispatcher_control_plane",
+        "path": "orket/application/workflows/turn_tool_result_persistence.py",
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_tool_result_persistence",
+        "target": "orket.application.workflows.turn_tool_dispatcher_support",
+        "path": "orket/application/workflows/turn_tool_result_persistence.py",
+        "line": 20,
         "kind": "from"
       },
       {
@@ -26804,7 +26829,7 @@
         "code": "unresolved_reflection"
       }
     ],
-    "files_scanned": 1018,
+    "files_scanned": 1019,
     "scan_roots": [
       "orket"
     ],
@@ -27237,6 +27262,7 @@
       "orket.application.workflows.turn_tool_dispatcher_control_plane": "application",
       "orket.application.workflows.turn_tool_dispatcher_protocol": "application",
       "orket.application.workflows.turn_tool_dispatcher_support": "application",
+      "orket.application.workflows.turn_tool_result_persistence": "application",
       "orket.board": "application",
       "orket.capabilities.__init__": "adapters",
       "orket.capabilities.audio_player": "adapters",
@@ -27850,12 +27876,12 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 319
+        "count": 320
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1541
+        "count": 1543
       },
       {
         "source": "application",
@@ -29488,6 +29514,45 @@
           "$.observed.modules.orket.application.services.orchestrator_scheduler_control_plane_mutation.sha256",
           "$.observed.modules.orket.application.services.orchestrator_scheduler_control_plane_service.sha256",
           "$.observed.modules.orket.application.workflows.orchestrator.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-18T05:30:35.849092Z",
+      "changed": true,
+      "before_digest": "sha256:074d19127d2923b89b579142642391ab9626fec4a4da89fa9fcaf2a3c97396fd",
+      "after_digest": "sha256:28a0be56dafbb0b1bb027f00001bbd9ec46823351be1b626068e1b82dacabefe",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 0,
+        "changed_paths": 4332,
+        "initial_write": false,
+        "paths_total_previous": 43980,
+        "paths_total_current": 44020,
+        "paths_total_reference": 44020,
+        "churn_paths": 4337,
+        "churn_ratio": 0.098523,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[1855].line",
+          "$.observed.edges[1856].line",
+          "$.observed.edges[1857].line",
+          "$.observed.edges[1857].path",
+          "$.observed.edges[1857].source",
+          "$.observed.edges[1857].target",
+          "$.observed.edges[1858].line",
+          "$.observed.edges[1858].target",
+          "$.observed.edges[1859].line",
+          "$.observed.edges[1859].target",
+          "$.observed.edges[1860].line",
+          "$.observed.edges[1860].path",
+          "$.observed.edges[1860].source",
+          "$.observed.edges[1860].target",
+          "$.observed.edges[1861].line",
+          "$.observed.edges[1861].path",
+          "$.observed.edges[1861].source",
+          "$.observed.edges[1861].target",
+          "$.observed.edges[1862].line"
         ]
       }
     }

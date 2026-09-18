@@ -31,14 +31,12 @@ from .turn_tool_dispatcher_compatibility import resolve_compatibility_translatio
 from .turn_tool_dispatcher_control_plane import (
     begin_control_plane_execution_if_needed,
     finalize_execution_if_needed,
-    persist_non_protocol_tool_result_if_needed,
     prepare_dispatch_if_needed,
     publish_preflight_failure_if_needed,
 )
 from .turn_tool_dispatcher_protocol import (
     collect_protocol_preflight_violations,
     load_or_execute_tool,
-    persist_protocol_operation,
 )
 from .turn_tool_dispatcher_support import (
     as_positive_float,
@@ -50,6 +48,7 @@ from .turn_tool_dispatcher_support import (
     runtime_limit_violations,
     tool_policy_violation,
 )
+from .turn_tool_result_persistence import persist_non_protocol_tool_result_if_needed, persist_protocol_operation
 
 
 class ToolDispatcher:
