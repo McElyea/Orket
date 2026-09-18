@@ -1,7 +1,9 @@
-﻿from datetime import UTC, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 
+from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
+from orket.core.contracts.decision_inputs import LoopPolicyInputs
 from orket.decision_nodes.builtins import (
     DefaultApiRuntimeStrategyNode,
     DefaultEvaluatorNode,
@@ -10,7 +12,6 @@ from orket.decision_nodes.builtins import (
     DefaultRouterNode,
 )
 from orket.decision_nodes.contracts import PlanningInput
-from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.exceptions import CatastrophicFailure, ExecutionFailed, GovernanceViolation
 from orket.schema import CardStatus
 
@@ -407,9 +408,10 @@ def test_registry_resolves_default_tool_strategy():
 
 
 def test_registry_resolves_custom_tool_strategy_from_process_rules(monkeypatch):
+    """Layer: contract. Process rules select the registered tool recommendation strategy."""
     class CustomToolStrategy:
-        def compose(self, toolbox):
-            return {"custom": lambda *_args, **_kwargs: {"ok": True}}
+        def select_tools(self, inputs):
+            return ("read_file",)
 
     monkeypatch.delenv("ORKET_TOOL_STRATEGY_NODE", raising=False)
 
@@ -424,13 +426,14 @@ def test_registry_resolves_custom_tool_strategy_from_process_rules(monkeypatch):
 
 
 def test_registry_tool_strategy_env_override_wins(monkeypatch):
+    """Layer: contract. Captured environment selection takes precedence over process rules."""
     class CustomToolStrategy:
-        def compose(self, toolbox):
-            return {"custom": lambda *_args, **_kwargs: {"ok": True}}
+        def select_tools(self, inputs):
+            return ("read_file",)
 
     monkeypatch.setenv("ORKET_TOOL_STRATEGY_NODE", "custom-tools")
 
-    registry = DecisionNodeRegistry()
+    registry = build_decision_node_registry()
     custom = CustomToolStrategy()
     registry.register_tool_strategy("custom-tools", custom)
     org = SimpleNamespace(process_rules={"tool_strategy_node": "default"})
@@ -581,7 +584,7 @@ def test_registry_api_runtime_env_override_wins(monkeypatch):
 
     monkeypatch.setenv("ORKET_API_RUNTIME_NODE", "custom-api")
 
-    registry = DecisionNodeRegistry()
+    registry = build_decision_node_registry()
     custom = CustomApiRuntime()
     registry.register_api_runtime("custom-api", custom)
     org = SimpleNamespace(process_rules={"api_runtime_node": "default"})
@@ -621,6 +624,7 @@ def test_registry_resolves_custom_sandbox_policy(monkeypatch):
 
 
 def test_registry_sandbox_policy_env_override_wins(monkeypatch):
+    """Layer: contract. Captured environment selection takes precedence over process rules."""
     class CustomSandboxPolicy:
         def build_sandbox_id(self, rock_id):
             return "sandbox-custom"
@@ -635,7 +639,7 @@ def test_registry_sandbox_policy_env_override_wins(monkeypatch):
             return "version: '3.8'"
 
     monkeypatch.setenv("ORKET_SANDBOX_POLICY_NODE", "custom-sandbox")
-    registry = DecisionNodeRegistry()
+    registry = build_decision_node_registry()
     custom = CustomSandboxPolicy()
     registry.register_sandbox_policy("custom-sandbox", custom)
     org = SimpleNamespace(process_rules={"sandbox_policy_node": "default"})
@@ -649,6 +653,7 @@ def test_registry_resolves_default_loader_strategy():
 
 
 def test_registry_loader_strategy_env_override_wins(monkeypatch):
+    """Layer: contract. Captured environment selection takes precedence over process rules."""
     class CustomLoaderStrategy:
         def organization_modular_paths(self, config_dir):
             return (config_dir / "a.json", config_dir / "b.json")
@@ -665,11 +670,8 @@ def test_registry_loader_strategy_env_override_wins(monkeypatch):
         def list_asset_search_paths(self, config_dir, model_dir, dept, category):
             return [config_dir / category]
 
-        def apply_organization_overrides(self, org, get_setting):
-            return org
-
     monkeypatch.setenv("ORKET_LOADER_STRATEGY_NODE", "custom-loader")
-    registry = DecisionNodeRegistry()
+    registry = build_decision_node_registry()
     custom = CustomLoaderStrategy()
     registry.register_loader_strategy("custom-loader", custom)
     org = SimpleNamespace(process_rules={"loader_strategy_node": "default"})
@@ -707,7 +709,7 @@ def test_registry_execution_runtime_env_override_wins(monkeypatch):
             return "ROCKBUILDX"
 
     monkeypatch.setenv("ORKET_EXECUTION_RUNTIME_NODE", "custom-runtime")
-    registry = DecisionNodeRegistry()
+    registry = build_decision_node_registry()
     custom = CustomExecutionRuntime()
     registry.register_execution_runtime("custom-runtime", custom)
     org = SimpleNamespace(process_rules={"execution_runtime_node": "default"})
@@ -720,7 +722,7 @@ def test_registry_resolves_default_orchestration_loop_policy():
     from orket.decision_nodes.builtins import DefaultOrchestrationLoopPolicyNode
     node = registry.resolve_orchestration_loop()
     assert isinstance(node, DefaultOrchestrationLoopPolicyNode)
-    assert node.context_window(None) == 10
+    assert node.context_window(LoopPolicyInputs()) == 10
     assert node.is_review_turn(CardStatus.CODE_REVIEW) is True
     assert node.is_review_turn(CardStatus.READY) is False
     assert node.turn_status_for_issue(True) == CardStatus.CODE_REVIEW
@@ -820,6 +822,7 @@ def test_registry_resolves_default_orchestration_loop_policy():
 
 
 def test_registry_orchestration_loop_env_override_wins(monkeypatch):
+    """Layer: contract. Captured environment selection takes precedence over process rules."""
     class CustomLoop:
         def concurrency_limit(self, organization):
             return 1
@@ -831,71 +834,38 @@ def test_registry_orchestration_loop_env_override_wins(monkeypatch):
             return False
 
     monkeypatch.setenv("ORKET_ORCHESTRATION_LOOP_NODE", "custom-loop")
-    registry = DecisionNodeRegistry()
+    registry = build_decision_node_registry()
     custom = CustomLoop()
     registry.register_orchestration_loop("custom-loop", custom)
     org = SimpleNamespace(process_rules={"orchestration_loop_node": "default"})
     assert registry.resolve_orchestration_loop(org) is custom
 
 
-def test_default_orchestration_loop_context_window_env_override(monkeypatch):
+def test_default_orchestration_loop_context_window_explicit_inputs():
+    """Layer: contract. Explicit valid/invalid context limits preserve defaults."""
     from orket.decision_nodes.builtins import DefaultOrchestrationLoopPolicyNode
 
-    monkeypatch.setenv("ORKET_CONTEXT_WINDOW", "3")
     node = DefaultOrchestrationLoopPolicyNode()
-    assert node.context_window(None) == 3
-
-    monkeypatch.setenv("ORKET_CONTEXT_WINDOW", "bad")
-    assert node.context_window(None) == 10
+    assert node.context_window(LoopPolicyInputs(context_window="3")) == 3
+    assert node.context_window(LoopPolicyInputs(context_window="bad")) == 10
 
 
-def test_default_orchestration_loop_max_iterations_defaults_and_overrides(monkeypatch):
+def test_default_orchestration_loop_max_iterations_defaults_and_overrides():
+    """Layer: contract. Captured environment limits precede organization values."""
     from orket.decision_nodes.builtins import DefaultOrchestrationLoopPolicyNode
 
-    monkeypatch.delenv("ORKET_ORCHESTRATOR_MAX_ITERATIONS", raising=False)
     node = DefaultOrchestrationLoopPolicyNode()
-    assert node.max_iterations(SimpleNamespace(process_rules={})) == 40
-    assert node.max_iterations(SimpleNamespace(process_rules={"orchestrator_max_iterations": "28"})) == 28
-
-    monkeypatch.setenv("ORKET_ORCHESTRATOR_MAX_ITERATIONS", "33")
-    assert node.max_iterations(SimpleNamespace(process_rules={"orchestrator_max_iterations": "28"})) == 33
-
-    monkeypatch.setenv("ORKET_ORCHESTRATOR_MAX_ITERATIONS", "bad")
-    assert node.max_iterations(SimpleNamespace(process_rules={})) == 40
+    assert node.max_iterations(LoopPolicyInputs()) == 40
+    assert node.max_iterations(LoopPolicyInputs(configured_max_iterations="28")) == 28
+    assert node.max_iterations(LoopPolicyInputs(max_iterations="33", configured_max_iterations="28")) == 33
+    assert node.max_iterations(LoopPolicyInputs(max_iterations="bad")) == 40
 
 
-def test_default_orchestration_loop_concurrency_defaults_and_overrides(monkeypatch):
+def test_default_orchestration_loop_concurrency_defaults_and_overrides():
+    """Layer: contract. Explicit concurrency limits preserve normalization and defaults."""
     from orket.decision_nodes.builtins import DefaultOrchestrationLoopPolicyNode
 
-    monkeypatch.delenv("ORKET_ORCHESTRATOR_CONCURRENCY", raising=False)
     node = DefaultOrchestrationLoopPolicyNode()
-    assert node.concurrency_limit(None) == 3
-
-    monkeypatch.setenv("ORKET_ORCHESTRATOR_CONCURRENCY", "1")
-    assert node.concurrency_limit(None) == 1
-
-    monkeypatch.setenv("ORKET_ORCHESTRATOR_CONCURRENCY", "bad")
-    assert node.concurrency_limit(None) == 3
-
-
-def test_registry_resolves_default_model_client_policy():
-    registry = DecisionNodeRegistry()
-    from orket.decision_nodes.builtins import DefaultModelClientPolicyNode
-    assert isinstance(registry.resolve_model_client(), DefaultModelClientPolicyNode)
-
-
-def test_registry_model_client_env_override_wins(monkeypatch):
-    class CustomModelClient:
-        def create_provider(self, selected_model, env):
-            return object()
-
-        def create_client(self, provider):
-            return object()
-
-    monkeypatch.setenv("ORKET_MODEL_CLIENT_NODE", "custom-model-client")
-    registry = DecisionNodeRegistry()
-    custom = CustomModelClient()
-    registry.register_model_client("custom-model-client", custom)
-    org = SimpleNamespace(process_rules={"model_client_node": "default"})
-    assert registry.resolve_model_client(org) is custom
-
+    assert node.concurrency_limit(LoopPolicyInputs()) == 3
+    assert node.concurrency_limit(LoopPolicyInputs(concurrency="1")) == 1
+    assert node.concurrency_limit(LoopPolicyInputs(concurrency="bad")) == 3

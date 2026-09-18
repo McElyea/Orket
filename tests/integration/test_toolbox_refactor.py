@@ -1,10 +1,11 @@
-﻿import sqlite3
+import sqlite3
 
 import pytest
 
+from orket.adapters.tools.families import AcademyTools, CardManagementTools, FileSystemTools, VisionTools
+from orket.application.services.decision_node_registry import DecisionNodeRegistry
+from orket.application.services.toolbox import ToolBox, get_tool_map
 from orket.core.types import CardStatus
-from orket.decision_nodes.registry import DecisionNodeRegistry
-from orket.tools import AcademyTools, CardManagementTools, FileSystemTools, ToolBox, VisionTools, get_tool_map
 
 
 def test_toolbox_composition(tmp_path):
@@ -49,31 +50,22 @@ def test_tool_map_default_parity(tmp_path):
 
 @pytest.mark.asyncio
 async def test_toolbox_execute_uses_resolved_tool_strategy(tmp_path):
-    """Layer: unit. Verifies execute() normalizes None context before dispatching through the runtime seam."""
+    """Layer: integration. Selected names execute the application-owned filesystem binding."""
     class CustomToolStrategy:
-        def compose(self, toolbox):
-            return {
-                "custom_sync": lambda args, context=None: {"ok": True, "value": args["x"], "context": context}
-            }
+        def select_tools(self, inputs):
+            assert "read_file" in inputs.available_names
+            return ("read_file",)
 
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
-
+    (tmp_path / "selected.txt").write_text("original content", encoding="utf-8")
     registry = DecisionNodeRegistry()
     registry.register_tool_strategy("custom", CustomToolStrategy())
     org = type("Org", (), {"process_rules": {"tool_strategy_node": "custom"}})()
+    toolbox = ToolBox(policy={}, workspace_root=str(tmp_path), references=[],
+                      organization=org, decision_nodes=registry)
+    res = await toolbox.execute("read_file", {"path": "selected.txt"}, context=None)
+    assert res["ok"] is True and res["content"] == "original content"
+    assert tuple(get_tool_map(toolbox)) == ("read_file",)
 
-    toolbox = ToolBox(
-        policy={},
-        workspace_root=str(workspace),
-        references=[],
-        organization=org,
-        decision_nodes=registry,
-    )
-
-    res = await toolbox.execute("custom_sync", {"x": 7}, context=None)
-
-    assert res == {"ok": True, "value": 7, "context": {}}
 
 @pytest.mark.asyncio
 async def test_filesystem_tools_security(tmp_path):

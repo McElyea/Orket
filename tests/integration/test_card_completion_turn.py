@@ -8,11 +8,11 @@ import pytest
 
 from orket.application.services.runtime_verifier import RuntimeVerifier
 from orket.application.services.tool_gate_service import ToolGate
+from orket.application.services.toolbox import ToolBox
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.records import IssueRecord
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
-from orket.tools import ToolBox
 from tests.helpers.card_completion import completion_components, completion_definition, write_completion_source
 
 pytestmark = pytest.mark.integration

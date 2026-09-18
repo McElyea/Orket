@@ -77,7 +77,7 @@ def orchestrator(tmp_path: Path, monkeypatch):
         snapshots=snapshots,
         org=org,
         config_root=tmp_path,
-        db_path="test.db",
+        db_path=str(tmp_path / "test.db"),
         loader=loader,
         sandbox_orchestrator=FakeSandbox(),
     )
@@ -184,7 +184,7 @@ async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
     )
 
     orch.memory = _Memory()
-    orch.model_client_node = _ModelClientNode()
+    orch.model_clients = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
     orch._request_issue_transition = AsyncSpy(return_value=None)
@@ -329,9 +329,9 @@ async def test_execute_issue_turn_uses_configured_odr_auditor_model(
         _fake_odr_prebuild,
     )
 
-    model_client_node = _ModelClientNode()
+    model_clients = _ModelClientNode()
     orch.memory = _Memory()
-    orch.model_client_node = model_client_node
+    orch.model_clients = model_clients
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
     orch._request_issue_transition = AsyncSpy(return_value=None)
@@ -353,5 +353,5 @@ async def test_execute_issue_turn_uses_configured_odr_auditor_model(
     assert model_client is not auditor_client
     assert model_client.provider.model == "dummy-model"
     assert auditor_client.provider.model == "auditor-model"
-    assert model_client_node.provider_models[:2] == ["dummy-model", "auditor-model"]
-    assert model_client_node.providers[1].close_calls == 1
+    assert model_clients.provider_models[:2] == ["dummy-model", "auditor-model"]
+    assert model_clients.providers[1].close_calls == 1

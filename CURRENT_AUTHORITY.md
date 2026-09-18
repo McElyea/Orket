@@ -25,6 +25,15 @@ requires an explicit `0.7.0` contract delta.
 
 ## Current Canonical Paths
 
+Decision-node registry construction lives in
+`orket/application/services/decision_node_registry.py` and captures selection settings
+once. Tool strategies return immutable tuples of known names; application composition
+alone binds executable tools through `orket.application.services.toolbox.ToolBox`. `ModelClientFactory` owns provider/client construction
+over captured settings. Loop limits consume `LoopPolicyInputs`; `ConfigLoader` applies
+captured organization overrides without a strategy mutation callback. Migration,
+retired configuration and remaining prompt/settings/async limitations are in
+`docs/architecture/CONTRACT_DELTA_DECISION_INPUTS_CD_2026-09-17.md`.
+
 API authentication and security configuration are application-owned in
 `ApiAuthenticationService`; each app captures its key, profile/mode, bypass,
 startup checks and CORS settings at construction. HTTP and both WebSocket routes

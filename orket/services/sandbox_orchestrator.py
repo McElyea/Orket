@@ -23,6 +23,7 @@ from orket.application.services.control_plane_publication_service import Control
 from orket.application.services.control_plane_workload_catalog import (
     sandbox_runtime_workload_for_tech_stack,
 )
+from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.application.services.sandbox_control_plane_effect_service import SandboxControlPlaneEffectService
 from orket.application.services.sandbox_control_plane_execution_service import SandboxControlPlaneExecutionService
 from orket.application.services.sandbox_control_plane_operator_service import SandboxControlPlaneOperatorService
@@ -42,7 +43,6 @@ from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError
 from orket.core.domain.sandbox_lifecycle import SandboxState as LifecycleState
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
 from orket.core.domain.verification import AGENT_OUTPUT_DIR
-from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
 from orket.runtime_paths import resolve_control_plane_db_path, resolve_sandbox_lifecycle_db_path
 
@@ -64,7 +64,7 @@ class SandboxOrchestrator:
         self.workspace_root = workspace_root
         self.registry = registry or SandboxRegistry()
         self.organization = organization
-        self.decision_nodes = decision_nodes or DecisionNodeRegistry()
+        self.decision_nodes = decision_nodes or build_decision_node_registry()
         self.sandbox_policy_node = self.decision_nodes.resolve_sandbox_policy(self.organization)
         self.command_runner = command_runner or CommandRunner()
         self.templates_dir = Path(__file__).parent.parent.parent / "infrastructure" / "sandbox_templates"

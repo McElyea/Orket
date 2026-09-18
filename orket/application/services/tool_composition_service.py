@@ -1,7 +1,11 @@
+"""Application-owned executable bindings; strategies select known tool names only."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any
+
+from orket.core.contracts.decision_inputs import ToolSelectionInput
 
 
 def compose_default_tool_map(toolbox: Any) -> dict[str, Callable[..., Any]]:
@@ -25,3 +29,13 @@ def compose_default_tool_map(toolbox: Any) -> dict[str, Callable[..., Any]]:
         "reforger_inspect": toolbox.reforger.inspect,
         "reforger_run": toolbox.reforger.run,
     }
+
+
+def select_tool_bindings(toolbox: Any, strategy: Any) -> dict[str, Callable[..., Any]]:
+    known = compose_default_tool_map(toolbox)
+    selected = strategy.select_tools(ToolSelectionInput(tuple(known)))
+    if not isinstance(selected, tuple) or any(not isinstance(name, str) or name not in known for name in selected):
+        raise ValueError("Tool strategy must select a tuple of application-owned tool names.")
+    if len(selected) != len(set(selected)):
+        raise ValueError("Tool strategy selected duplicate tool names.")
+    return {name: known[name] for name in selected}

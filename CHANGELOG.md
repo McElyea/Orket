@@ -5,6 +5,22 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.10] - 2026-09-17 - "Application-owned strategy composition"
+
+### Changed
+- Move decision-node registration and settings capture into application composition.
+- Restrict tool strategy output to known tool names; application owns executable bindings.
+- Retire model-client policy nodes in favor of an application factory over captured settings.
+- Supply immutable loop limits and apply organization overrides in the application loader.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Follow `docs/architecture/CONTRACT_DELTA_DECISION_INPUTS_CD_2026-09-17.md`.
+- Stability: local checkpoint. 1,815 selected cases pass in source and each of four
+  fresh installed Windows/Linux Python 3.11/3.12 cells. Eight actual llama.cpp regressions,
+  one application-factory live flow and changed-file Ruff pass. Full architectural-truth
+  acceptance, remaining dependency debt and historical failure diagnoses remain open.
+
 ## [0.6.9] - 2026-09-17 - "Captured API authority and packaged scaffolds"
 
 ### Changed

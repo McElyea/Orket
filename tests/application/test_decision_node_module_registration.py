@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.application.services.decision_node_registry import DecisionNodeRegistry
 
 
 class _StubPlanner:

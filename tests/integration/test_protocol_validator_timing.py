@@ -10,12 +10,12 @@ import pytest
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
+from orket.application.services.toolbox import ToolBox
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.contracts.protocol_hashing import hash_canonical_json
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.runtime.evidence.protocol_receipt_materializer import materialize_protocol_receipts
-from orket.tools import ToolBox
 from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]

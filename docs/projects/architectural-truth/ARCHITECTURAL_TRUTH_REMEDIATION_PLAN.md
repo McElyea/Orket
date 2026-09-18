@@ -12546,3 +12546,197 @@ Preserve BT-1's atomic event/publication boundary, accepted BT-1/BT-2/BT-3 behav
 all original failure evidence and legacy quarantine. Wider outward autonomy still
 requires the ordered workload, containment and capacity gates. The whole lane
 remains active. Branch checkpoint publication does not imply lane or release acceptance.
+
+
+### Application-owned strategy composition checkpoint: 2026-09-17
+
+Observed path: primary. Result: partial success for the full goal. Corrected core 0.6.10
+passes fresh selected source, all four installed and actual provider gates below.
+
+Four retained before-state assertions under `.tmp/d-decision-inputs/` demonstrate
+ambient registry drift, ambient loop-limit drift, loader mutation of its caller's
+organization, and a strategy substituting a callable that writes a real file.
+The last is executable-binding authority drift at the direct ToolBox seam; it is
+not a demonstrated ToolGate bypass or hostile-code containment escape.
+
+Application now captures registry settings, constructs providers/clients and binds
+known tool names. Loop strategy consumes immutable scalar values; organization
+overrides belong to ConfigLoader. The migration contract is
+`docs/architecture/CONTRACT_DELTA_DECISION_INPUTS_CD_2026-09-17.md`.
+The focused run retained 85 passes and one HTTP fixture failure: selecting LM Studio
+admitted its host CLI discovery path, which selected `qwen_qwen3-14b` instead of the
+fixture model and applied that profile's sampling. This is not evidence of an isolated
+fixture or a verified absence of host model effects. The corrected fixture explicitly
+selects generic HTTP, disables auto selection/loading, and passes along with the
+affected orchestration tests (89 cases). Original evidence remains unchanged.
+
+Independent Linux deadline investigation also repeated the complete original 0.6.7
+1,213-case cohort on Python 3.11 and 3.12 with clock/frame observations. Both passed,
+retaining the original request/lease/handshake limits; both traces contain 1,213 unique
+case starts, and neither run required child cleanup. Receipts, hashes and selected
+invocation timing are in `.tmp/d-resume-deadline-diagnosis/analysis.json`. Passing
+instrumented repetitions do not explain or repair the retained resume failures.
+
+Remaining C/D work includes mutable prompt/planner/router inputs, ambient prompt
+policy reads, synchronous loader bridges and settings bootstrap, further owned I/O,
+clock/identity propagation and dependency violations. Existing insecure-bypass warning
+drift remains. The prior live pipeline failed with `card_completion_unverified`;
+no successful workload completion is inferred. E1/E2, CAP-1/2/3, full-suite/hosted CI,
+release readiness and explicit whole-lane acceptance remain open. Local commits only
+during the user's 10 AM-6 PM America/Denver work hours; no push is performed.
+
+
+Initial graph review found four removed and four newly forbidden pairs: the two
+new pure-contract imports needed explicit admission, and `orket.tools` was still
+classified as an adapter while composing application effects. The correction moves
+ToolBox itself into application services and migrates all callers without a shim;
+it does not relabel the old module or waive forbidden directions. Initial source
+and package evidence remains under `.tmp/d-decision-inputs/complete/`; subsequent
+attempts remain under `.tmp/d-decision-inputs/final/`. The accepted proof below
+uses `.tmp/d-decision-inputs/clock-repaired/`.
+
+The initial expanded source cohort passes 1,796 cases, but its input-stability gate
+fails: the root control-plane database was present before execution and absent after.
+Its before hash and exact diagnosis are retained in `.tmp/d-decision-inputs/root-database-diagnosis.json`.
+A guarded rerun identifies two ODR tests using relative `test.db`; observed-status
+closeout accesses the root database. Their fixture now uses `tmp_path`. The guard
+also fails the process if a caller catches its rejection; allowed nested-database and
+blocked-root subprocess controls pass. The targeted repair passes 22 cases. The
+original deletion actor remains unestablished; the original run is not accepted.
+The corrected graph has 44 forbidden pairs (seven removed, none introduced), one
+authority cycle and ten analysis errors. Collection passes; dependency verdict and
+release readiness remain false. Fresh broad and installed results are recorded below.
+
+The first corrected guarded source run retains 1,810 passes and two failures,
+with all source inputs unchanged and no root database. One test still returned a
+retired executable alias; it now selects the canonical archive tool. The related
+agent-factory fixture also now uses application-owned bindings. The other failure
+is a Windows `PermissionError: [WinError 5]` publishing `runtime_contracts_staging`
+to `runtime_contracts`; the runtime truthfully returns `unresolved`. Its 78 fixture
+files and original source report are bound in `final/source-1-failure-retention.json`.
+No host actor or causal explanation is established, and no retry/deadline or runtime
+behavior is changed to hide it. Fresh follow-up and broad proof are separate observations.
+
+
+Corrected 0.6.10 proof: the full selected source cohort passes 1,815 cases with
+no failures, errors or skips in 461.522 seconds. All Git-visible inputs
+remain unchanged during that execution; the worktree-root database guard observes no forbidden access and
+the final root database is absent. Changed-file Ruff passes. This is fresh proof of
+the corrected candidate, not acceptance of the earlier input-drifting run.
+
+| Installed envelope | Pass / fail / error / skip | Seconds | Core origins |
+|---|---:|---:|---:|
+| win-py311 | 1,815 / 0 / 0 / 0 | 602.555 | 928 |
+| win-py312 | 1,815 / 0 / 0 / 0 | 698.530 | 928 |
+| linux-py311 | 1,815 / 0 / 0 / 0 | 456.946 | 928 |
+| linux-py312 | 1,815 / 0 / 0 / 0 | 457.777 | 928 |
+
+The first four installed runs omitted the one-shot opt-in flag: each passed 1,807
+cases and skipped eight, so none was accepted. With that flag restored, Windows
+3.11/3.12 and Linux 3.11 passed 1,815 cases; Linux 3.12 passed 1,814 and failed the
+approval-completion case on decreasing issue lease time. Those reports remain in
+`.tmp/d-decision-inputs/final/`. Its stored issue lease used real September time
+while the turn fixture used January time. The pipeline's explicit runtime-clock
+injection bypassed the older fixture patch. An independent actual-construction
+counterexample failed before repair; the corrected fixture and clock-reversal
+controls then passed 15 focused cases. The approval integration test now asserts
+that the pipeline issue clock falls within the fixture's ordered observations.
+Production clock semantics and reversal rejection remain unchanged. This repairs
+fixture coverage; it does not establish the host clock actor or the refused delta.
+The first read-only SQLite diagnostic changed the fixture inventory (consistent
+with sidecar behavior); its before inventory was not retained. The later immutable
+read binds 113 post-inspection fixture files. Native reports/logs remain separately
+bound. No claim is made that the first inspection preserved every sidecar byte.
+
+All four final native gates run the same unique test identities using installed core
+origins. Their exact input, CLI, ToolGate, ownership and cleanup checks pass. The
+support harness binds 1848 files without a core/SDK source shadow.
+The wheel contains 1010 core Python files and
+1025 core-package files, with source/archive parity.
+Wheel SHA-256: `64b52cb943bd1f402463a20c5351c520f07a5aaf4f1afdd6cac156d209af037d`.
+Source archive SHA-256: `6746bfe3b7958694e13339d1f0bb14c66fe499b715474bd41508e84bbeb12464`.
+
+Eight serial actual installed llama.cpp regression cases pass. A separate installed
+`ModelClientFactory` flow also returns a real llama.cpp response after caller and
+process provider settings are changed, then closes its HTTP transport. This proves
+the changed construction seam, not successful application workload completion.
+The operator-owned server PID/creation identity is the same before/after; it was not
+started or stopped by these gates. `.tmp/d-decision-inputs/clock-repaired/` binds source,
+native, provider and operator observations; initial failures and Linux diagnostics
+remain retained separately. Two additional source context-window regressions also
+passed on the earlier candidate; they are outside the 1,815-case primary cohort.
+The historical root-database removal actor is still unestablished; the reproduced
+ODR fixture creation path has been repaired.
+
+No new forbidden pairs were introduced. Seven were removed; 44 forbidden pairs,
+one authority cycle and ten analysis errors remain. Registry relocation retains
+its existing broad registration surface (fewer methods); it is not a new expanded
+plugin API. The one-line growth in oversized orchestration wiring supplies the
+captured environment; the corresponding oversized test adds an actual file fixture.
+No new Python file exceeds 400 lines or new function exceeds 70 lines.
+
+The retained checkpoint verifies preservation of the prior 0.6.9 proof bytes and
+neighboring worktrees before local commit. Full-suite/hosted CI, all remaining
+C/D, E1/E2, CAP-1/2/3, historical failure diagnoses, live workload completion and
+explicit whole-lane acceptance remain open. This is a local checkpoint, not a release
+readiness or whole-plan acceptance claim; no GitHub push is performed.
+
+Exact changed files:
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/architecture/CONTRACT_DELTA_DECISION_INPUTS_CD_2026-09-17.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json`
+- `docs/projects/architectural-truth/README.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `model/core/contracts/dependency_direction_policy.json`
+- `orket/adapters/tools/__init__.py`
+- `orket/adapters/tools/default_strategy.py`
+- `orket/agents/agent_factory.py`
+- `orket/application/services/api_runtime_composition.py`
+- `orket/application/services/decision_context_service.py`
+- `orket/application/services/decision_node_registry.py`
+- `orket/application/services/model_client_factory.py`
+- `orket/application/services/orchestrator_turn_preparation_service.py`
+- `orket/application/services/tool_composition_service.py`
+- `orket/application/services/toolbox.py`
+- `orket/application/workflows/orchestrator.py`
+- `orket/application/workflows/orchestrator_ops.py`
+- `orket/core/contracts/decision_inputs.py`
+- `orket/decision_nodes/__init__.py`
+- `orket/decision_nodes/builtins.py`
+- `orket/decision_nodes/contracts.py`
+- `orket/decision_nodes/registry.py`
+- `orket/orchestration/engine.py`
+- `orket/runtime/config/config_loader.py`
+- `orket/runtime/config/runtime_context.py`
+- `orket/runtime/execution/execution_pipeline.py`
+- `orket/services/sandbox_orchestrator.py`
+- `orket/tools.py`
+- `pyproject.toml`
+- `tests/adapters/test_parallel_file_locking.py`
+- `tests/application/test_agent_factory.py`
+- `tests/application/test_decision_node_module_registration.py`
+- `tests/application/test_decision_node_override_matrix.py`
+- `tests/application/test_decision_nodes_planner.py`
+- `tests/application/test_odr_prebuild_continuation.py`
+- `tests/application/test_orchestrator_epic.py`
+- `tests/application/test_runtime_authority_contracts.py`
+- `tests/core/test_card_management_state_machine.py`
+- `tests/helpers/root_database_guard.py`
+- `tests/helpers/turn_control_plane_clock.py`
+- `tests/integration/test_card_completion_control_plane.py`
+- `tests/integration/test_card_completion_turn.py`
+- `tests/integration/test_card_completion_workspace_guard.py`
+- `tests/integration/test_decision_input_boundaries.py`
+- `tests/integration/test_epic_approval_continuation.py`
+- `tests/integration/test_governed_guard_rejection.py`
+- `tests/integration/test_orchestrator_issue_control_plane.py`
+- `tests/integration/test_protocol_validator_timing.py`
+- `tests/integration/test_toolbox_refactor.py`
+- `tests/platform/test_root_database_guard.py`

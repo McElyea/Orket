@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any
 
 from orket.adapters.tools.families import (
     AcademyTools,
-    BaseTools,
     CardManagementTools,
     FileSystemTools,
     GovernanceTools,
@@ -20,9 +19,10 @@ from orket.application.services.card_completion_turn_service import (
     verify_card_completion_claims,
 )
 from orket.application.services.card_workspace_mutation_service import CardWorkspaceMutationService
+from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
+from orket.application.services.tool_composition_service import select_tool_bindings
 from orket.core.contracts.card_completion_commit import CardCompletionRejected, is_card_completion_call
 from orket.core.domain.execution import ExecutionTurn
-from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.runtime_paths import resolve_runtime_db_path
 
 if TYPE_CHECKING:
@@ -50,7 +50,7 @@ class ToolBox:
         self.db_path = resolve_runtime_db_path(db_path)
         self.organization = organization
         self.card_completion = card_completion
-        self.decision_nodes = decision_nodes if decision_nodes is not None else DecisionNodeRegistry()
+        self.decision_nodes = decision_nodes if decision_nodes is not None else build_decision_node_registry()
         self.tool_strategy_node = self.decision_nodes.resolve_tool_strategy(self.organization)
         self.runtime_executor = runtime_executor or ToolRuntimeExecutor()
         self.vision = VisionTools(self.root, self.refs)
@@ -124,7 +124,7 @@ class ToolBox:
 
 
 def get_tool_map(toolbox: ToolBox) -> dict[str, Callable[..., Any]]:
-    return toolbox.tool_strategy_node.compose(toolbox)
+    return select_tool_bindings(toolbox, toolbox.tool_strategy_node)
 
 
 def _resolve_tool_timeout_seconds(context: dict[str, Any]) -> float:
@@ -144,16 +144,3 @@ def _resolve_tool_timeout_seconds(context: dict[str, Any]) -> float:
         if value > 0:
             return value
     return 60.0
-
-
-__all__ = [
-    "BaseTools",
-    "FileSystemTools",
-    "VisionTools",
-    "CardManagementTools",
-    "GovernanceTools",
-    "AcademyTools",
-    "ReforgerTools",
-    "ToolBox",
-    "get_tool_map",
-]

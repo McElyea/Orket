@@ -1,6 +1,5 @@
 """Tool execution adapters (runtime, strategy, families)."""
 
-from orket.adapters.tools.default_strategy import compose_default_tool_map
 from orket.adapters.tools.builtin_connectors import (
     BUILTIN_CONNECTOR_SIDE_EFFECTS,
     BuiltInConnectorExecutor,
@@ -33,7 +32,6 @@ __all__ = [
     "DEFAULT_BUILTIN_CONNECTOR_REGISTRY",
     "BUILTIN_CONNECTOR_SIDE_EFFECTS",
     "BuiltInConnectorExecutor",
-    "compose_default_tool_map",
     "BaseTools",
     "FileSystemTools",
     "VisionTools",

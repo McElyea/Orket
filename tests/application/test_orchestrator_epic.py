@@ -720,7 +720,7 @@ async def test_execute_epic_honors_custom_loop_policy(orchestrator, tmp_path):
 
 @pytest.mark.asyncio
 # Layer: unit
-async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, monkeypatch):
+async def test_execute_issue_turn_uses_custom_model_clients(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test")
     issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
@@ -794,7 +794,7 @@ async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mo
     orch.memory = _Memory()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
-    orch.model_client_node = CustomModelClientNode()
+    orch.model_clients = CustomModelClientNode()
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -808,9 +808,9 @@ async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mo
         toolbox=SimpleNamespace(),
     )
 
-    assert orch.model_client_node.provider_calls == 1
-    assert orch.model_client_node.client_calls == 1
-    assert orch.model_client_node.close_calls == 1
+    assert orch.model_clients.provider_calls == 1
+    assert orch.model_clients.client_calls == 1
+    assert orch.model_clients.close_calls == 1
 
 
 @pytest.mark.asyncio
@@ -891,7 +891,7 @@ async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_str
     orch.memory = _Memory()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
-    orch.model_client_node = _ModelClientNode()
+    orch.model_clients = _ModelClientNode()
 
     await orch._execute_issue_turn(
         issue_data=issue_data,
@@ -908,7 +908,7 @@ async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_str
 
     assert captured["override"] == "google/gemma-4-26b-a4b"
     assert captured["dialect_model"] == "google/gemma-4-26b-a4b"
-    assert orch.model_client_node.provider_model == "google/gemma-4-26b-a4b"
+    assert orch.model_clients.provider_model == "google/gemma-4-26b-a4b"
 
 
 @pytest.mark.asyncio
@@ -999,7 +999,7 @@ async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycle
     orch.memory = _Memory()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
-    orch.model_client_node = _ModelClientNode()
+    orch.model_clients = _ModelClientNode()
 
     for cycle in range(20):
         await orch._execute_issue_turn(
@@ -1014,10 +1014,10 @@ async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycle
             toolbox=SimpleNamespace(),
         )
 
-    assert orch.model_client_node.provider_calls == 20
-    assert orch.model_client_node.client_calls == 20
-    assert orch.model_client_node.complete_calls == 20
-    assert orch.model_client_node.close_calls == 20
+    assert orch.model_clients.provider_calls == 20
+    assert orch.model_clients.client_calls == 20
+    assert orch.model_clients.complete_calls == 20
+    assert orch.model_clients.close_calls == 20
 
 
 @pytest.mark.asyncio
@@ -1100,7 +1100,7 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
     orch.memory = _Memory()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _fake_trigger
-    orch.model_client_node = _ModelClientNode()
+    orch.model_clients = _ModelClientNode()
     orch.evaluator_node = _Evaluator()
 
     await orch._execute_issue_turn(
@@ -1527,7 +1527,7 @@ async def test_execute_issue_turn_uses_prompt_resolver_when_policy_enabled(orche
     )
 
     orch.memory = _Memory()
-    orch.model_client_node = _ModelClientNode()
+    orch.model_clients = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
 
@@ -1622,7 +1622,7 @@ async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(or
     )
 
     orch.memory = _Memory()
-    orch.model_client_node = _ModelClientNode()
+    orch.model_clients = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
 
@@ -1725,7 +1725,7 @@ async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime
     )
 
     orch.memory = _Memory()
-    orch.model_client_node = _ModelClientNode()
+    orch.model_clients = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
 
@@ -1828,7 +1828,7 @@ async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchest
     monkeypatch.setattr("orket.application.workflows.orchestrator.PromptResolver.resolve", _fake_resolve)
 
     orch.memory = _Memory()
-    orch.model_client_node = _ModelClientNode()
+    orch.model_clients = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
 
@@ -1942,7 +1942,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orch
     monkeypatch.setattr("orket.application.workflows.orchestrator.PromptResolver.resolve", _fake_resolve)
 
     orch.memory = _Memory()
-    orch.model_client_node = _ModelClientNode()
+    orch.model_clients = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
 
@@ -2034,7 +2034,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orch
     monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", _fake_compile)
 
     orch.memory = _Memory()
-    orch.model_client_node = _ModelClientNode()
+    orch.model_clients = _ModelClientNode()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
 
@@ -2076,7 +2076,7 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
     loader = FakeLoader(tmp_path)
     loader.queue_assets(
         [
-            SimpleNamespace(name="lead_architect", description="Role", tools=["custom_noop"]),
+            SimpleNamespace(name="lead_architect", description="Role", tools=["read_file"]),
             SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
         ]
     )
@@ -2094,8 +2094,8 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
     )
 
     class CustomToolStrategy:
-        def compose(self, toolbox):
-            return {"custom_noop": lambda args, context=None: {"ok": True, "tool": "custom_noop", "args": args}}
+        def select_tools(self, inputs):
+            return ("read_file",)
 
     class _PromptStrategy:
         def select_model(self, role, asset_config):
@@ -2125,8 +2125,9 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
     tool_strategy_hit = {"used": False}
 
     async def _fake_execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
-        res = await toolbox.execute("custom_noop", {"x": 1}, context=context)
-        tool_strategy_hit["used"] = res.get("ok") is True and res.get("tool") == "custom_noop"
+        (tmp_path / "strategy.txt").write_text("application-owned binding", encoding="utf-8")
+        res = await toolbox.execute("read_file", {"path": "strategy.txt"}, context=context)
+        tool_strategy_hit["used"] = res.get("ok") is True and res.get("content") == "application-owned binding"
         return TurnResult(
             success=True,
             turn=ExecutionTurn(role=context["role"], issue_id=context["issue_id"], content="Turn handled; work awaits review.", note=""),
@@ -2134,7 +2135,7 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
 
     orch.decision_nodes.register_tool_strategy("custom-tool-strategy", CustomToolStrategy())
     orch.decision_nodes.resolve_prompt_strategy = lambda *_args, **_kwargs: _PromptStrategy()
-    orch.model_client_node = _ModelClient()
+    orch.model_clients = _ModelClient()
     orch.memory = _Memory()
     orch._save_checkpoint = AsyncSpy(return_value=None)
 
@@ -2916,7 +2917,7 @@ async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(o
     )
 
     orch.memory = _Memory()
-    orch.model_client_node = _ModelClient()
+    orch.model_clients = _ModelClient()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
 
@@ -3011,7 +3012,7 @@ async def test_execute_issue_turn_does_not_coerce_builder_seat_when_small_projec
     )
 
     orch.memory = _Memory()
-    orch.model_client_node = _ModelClient()
+    orch.model_clients = _ModelClient()
     orch._save_checkpoint = _noop
     orch._trigger_sandbox = _noop
 

@@ -52,7 +52,6 @@
     "orket.tool_families": "adapters",
     "orket.tool_runtime": "adapters",
     "orket.tool_strategy": "adapters",
-    "orket.tools": "adapters",
     "orket.utils": "adapters",
     "orket.vendors": "adapters",
     "orket.webhook_server": "interfaces",
@@ -106,6 +105,7 @@
   ],
   "decision_core_contracts": [
     "orket.core.cards_runtime_contract",
+    "orket.core.contracts.decision_inputs",
     "orket.exceptions",
     "orket.schema"
   ],

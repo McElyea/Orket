@@ -1,6 +1,6 @@
-﻿from types import SimpleNamespace
+from types import SimpleNamespace
 
-from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 
 
 def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
@@ -21,7 +21,7 @@ def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
             "resolve_asset_id": lambda self, p, i: "X",
         },
     )()
-    tool_custom = type("ToolCustom", (), {"compose": lambda self, toolbox: {}})()
+    tool_custom = type("ToolCustom", (), {"select_tools": lambda self, inputs: ()})()
     sandbox_custom = type(
         "SandboxCustom",
         (),
@@ -41,7 +41,6 @@ def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
             "department_paths": lambda self, config_dir, model_dir, name: [config_dir / f"{name}.json"],
             "asset_paths": lambda self, config_dir, model_dir, dept, category, name: [config_dir / category / f"{name}.json"],
             "list_asset_search_paths": lambda self, config_dir, model_dir, dept, category: [config_dir / category],
-            "apply_organization_overrides": lambda self, org, get_setting: org,
         },
     )()
     execution_custom = type(
@@ -78,7 +77,8 @@ def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
 
 def test_runtime_override_matrix_env_precedence(monkeypatch):
     """Layer: contract. Verifies env overrides still win over process rules on the surviving API runtime seam."""
-    registry = DecisionNodeRegistry()
+    monkeypatch.setenv("ORKET_API_RUNTIME_NODE", "api-custom")
+    registry = build_decision_node_registry()
     api_custom = type(
         "ApiCustom",
         (),

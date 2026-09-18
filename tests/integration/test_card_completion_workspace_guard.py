@@ -11,10 +11,10 @@ import pytest
 from orket.adapters.tools.families.filesystem import FileSystemTools
 from orket.adapters.tools.runtime import ToolRuntimeExecutor
 from orket.application.services.card_workspace_mutation_service import CardWorkspaceMutationService
+from orket.application.services.toolbox import ToolBox
 from orket.core.contracts.card_completion_commit import CardCompletionRejected
 from orket.core.domain.records import IssueRecord
 from orket.schema import CardStatus
-from orket.tools import ToolBox
 from tests.helpers.card_completion import completion_components, completion_definition, write_completion_source
 
 pytestmark = pytest.mark.integration
@@ -121,19 +121,19 @@ async def test_sync_tool_write_retains_guard_until_thread_finishes(tmp_path, sto
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("tool_name", ["archive_eval", "archive_alias"])
+@pytest.mark.parametrize("selected", [False, True], ids=["default", "selected"])
 # Layer: integration
-async def test_builtin_sync_writer_uses_completion_guard_even_under_strategy_alias(tmp_path, tool_name):
+async def test_builtin_sync_writer_uses_completion_guard_under_selected_strategy(tmp_path, selected):
     workspace = tmp_path / "project" / "workspace" / "active"
     source = workspace.parent / "runs" / "seed"
     await asyncio.to_thread(source.mkdir, parents=True)
     await asyncio.to_thread((source / "result.txt").write_bytes, b"retained result")
     repo, _ = completion_components(tmp_path / "cards.db", workspace)
     toolbox = ToolBox(None, str(workspace), [], db_path=repo.db_path, cards_repo=repo)
-    if tool_name == "archive_alias":
-        toolbox.tool_strategy_node = SimpleNamespace(compose=lambda tools: {tool_name: tools.academy.archive_eval})
+    if selected:
+        toolbox.tool_strategy_node = SimpleNamespace(select_tools=lambda inputs: ("archive_eval",))
     async with repo.completion_write_guard():
-        writing = asyncio.create_task(toolbox.execute(tool_name, {"session_id": "seed", "label": "guard"}))
+        writing = asyncio.create_task(toolbox.execute("archive_eval", {"session_id": "seed", "label": "guard"}))
         finished, _ = await asyncio.wait({writing}, timeout=0.1)
         assert not finished
         assert not await asyncio.to_thread((workspace.parent.parent / "evals").exists)

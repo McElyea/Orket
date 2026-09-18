@@ -9,11 +9,11 @@ from orket.adapters.storage.async_repositories import (
     AsyncSnapshotRepository,
     AsyncSuccessRepository,
 )
+from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.runtime_result_projection import RuntimeResult
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
-from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
 from orket.orchestration import engine_approvals
 from orket.orchestration.engine_kernel_async_service import KernelAsyncControlPlaneService
@@ -51,7 +51,7 @@ class OrchestrationEngine:
         runtime_bootstrap_service: Any | None = None,
         runtime_inputs: RuntimeInputService | None = None,
     ) -> None:
-        self.decision_nodes = decision_nodes or DecisionNodeRegistry()
+        self.decision_nodes = decision_nodes or build_decision_node_registry()
         self.runtime_bootstrap_service = runtime_bootstrap_service or DEFAULT_RUNTIME_BOOTSTRAP_SERVICE
         self.runtime_inputs = runtime_inputs or RuntimeInputService()
         self.runtime_bootstrap_service.bootstrap_environment()

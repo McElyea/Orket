@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, cast
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
@@ -12,6 +14,9 @@ from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGat
 from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.application.services.card_completion_service import CardCompletionService
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.decision_context_service import capture_loop_policy_inputs
+from orket.application.services.decision_node_registry import build_decision_node_registry
+from orket.application.services.model_client_factory import ModelClientFactory
 from orket.application.services.orchestrator_issue_control_plane_service import (
     OrchestratorIssueControlPlaneService,
 )
@@ -23,7 +28,6 @@ from orket.application.services.tool_approval_control_plane_reservation_service 
     ToolApprovalControlPlaneReservationService,
 )
 from orket.core.contracts.repositories import CardRepository, SnapshotRepository
-from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.orchestration.notes import NoteStore
 from orket.runtime_paths import control_plane_db_for_runtime
 from orket.schema import CardStatus, EnvironmentConfig, EpicConfig, IssueConfig, TeamConfig
@@ -73,7 +77,9 @@ class Orchestrator:
         card_completion: CardCompletionService | None = None,
         failure_report_clock: Callable[[], str] = utc_now_iso,
         control_plane_clock: Callable[[], str] | None = None,
+        environment: Mapping[str, str] | None = None,
     ) -> None:
+        self.decision_environment = MappingProxyType(dict(os.environ if environment is None else environment))
         self.workspace = workspace.resolve()
         self.async_cards = async_cards
         self.card_completion = card_completion
@@ -113,13 +119,14 @@ class Orchestrator:
         self.tool_approval_control_plane_reservation = ToolApprovalControlPlaneReservationService(
             publication=self.control_plane_publication
         )
-        self.decision_nodes = DecisionNodeRegistry()
+        self.decision_nodes = build_decision_node_registry(environment=self.decision_environment)
         self.planner_node = self.decision_nodes.resolve_planner(self.org)
         self.router_node = self.decision_nodes.resolve_router(self.org)
         self.evaluator_node = self.decision_nodes.resolve_evaluator(self.org)
         self.loop_policy_node = self.decision_nodes.resolve_orchestration_loop(self.org)
-        self.context_window = self.loop_policy_node.context_window(self.org)
-        self.model_client_node = self.decision_nodes.resolve_model_client(self.org)
+        self.loop_inputs = capture_loop_policy_inputs(self.org, self.decision_environment)
+        self.context_window = self.loop_policy_node.context_window(self.loop_inputs)
+        self.model_clients = ModelClientFactory(self.decision_environment)
         self.support_services = build_orchestrator_support_services()
 
     def _resolve_architecture_mode(self, *args: Any, **kwargs: Any) -> Any:

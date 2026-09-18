@@ -9,13 +9,13 @@ import pytest
 
 from orket.application.services.card_completion_turn_service import prepare_card_completion_turn
 from orket.application.services.tool_gate_service import ToolGate
+from orket.application.services.toolbox import ToolBox
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.core.domain.records import IssueRecord
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
-from orket.tools import ToolBox
 from tests.helpers.card_completion import completion_components, completion_definition, write_completion_source
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 

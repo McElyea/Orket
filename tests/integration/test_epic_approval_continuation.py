@@ -23,9 +23,14 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio, pytest.mark.usefixtu
 
 @pytest.mark.parametrize("decision", ["approve", "deny"])
 # Layer: integration
-async def test_approval_http_response_distinguishes_decision_from_runtime_outcome(tmp_path, monkeypatch, decision):
+async def test_approval_http_response_distinguishes_decision_from_runtime_outcome(
+    tmp_path, monkeypatch, decision, deterministic_turn_clock,
+):
     """Real ASGI route/stores with ordered turn time; reversal has separate rollback controls."""
     async with approval_engine(tmp_path, monkeypatch, setup=True) as engine:
+        before = deterministic_turn_clock()
+        observed = engine._pipeline.orchestrator.issue_control_plane.now_utc()
+        assert before < observed < deterministic_turn_clock()
         approval = await pause(engine)
         app = FastAPI()
         app.include_router(build_approvals_router(lambda: engine), prefix="/v1")

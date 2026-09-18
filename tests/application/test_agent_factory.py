@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 from orket.agents.agent_factory import build_team_agents
+from orket.application.services.toolbox import ToolBox
 from orket.exceptions import AgentConfigurationError
 
 
@@ -22,36 +23,25 @@ class _Provider:
         return ""
 
 
-def _toolbox_with_tools() -> SimpleNamespace:
-    def _read_file() -> None:
-        return None
-
-    def _write_file() -> None:
-        return None
-
-    return SimpleNamespace(
-        tool_strategy_node=SimpleNamespace(
-            compose=lambda _toolbox: {
-                "read_file": _read_file,
-                "write_file": _write_file,
-            }
-        )
-    )
+def _toolbox_with_tools(tmp_path) -> ToolBox:
+    toolbox = ToolBox({}, str(tmp_path), [], db_path=str(tmp_path / "cards.db"))
+    toolbox.tool_strategy_node = SimpleNamespace(select_tools=lambda inputs: ("read_file", "write_file"))
+    return toolbox
 
 
-def test_build_team_agents_limits_tools_to_role_allowlist() -> None:
+def test_build_team_agents_limits_tools_to_role_allowlist(tmp_path) -> None:
     team = SimpleNamespace(
         name="demo",
         seats={"coder": SimpleNamespace(roles=["coder"])},
         roles={"coder": SimpleNamespace(tools=["read_file"])},
     )
 
-    agents = build_team_agents(team, _Provider(), _toolbox_with_tools())
+    agents = build_team_agents(team, _Provider(), _toolbox_with_tools(tmp_path))
 
     assert set(agents["coder"].tools) == {"read_file"}
 
 
-def test_build_team_agents_assigns_no_tools_when_seat_has_no_roles() -> None:
+def test_build_team_agents_assigns_no_tools_when_seat_has_no_roles(tmp_path) -> None:
     team = SimpleNamespace(
         name="demo",
         seats={"unassigned": SimpleNamespace(roles=[])},
@@ -59,10 +49,10 @@ def test_build_team_agents_assigns_no_tools_when_seat_has_no_roles() -> None:
     )
 
     with pytest.raises(AgentConfigurationError, match="seat has no executable tools"):
-        build_team_agents(team, _Provider(), _toolbox_with_tools())
+        build_team_agents(team, _Provider(), _toolbox_with_tools(tmp_path))
 
 
-def test_build_team_agents_logs_error_when_role_config_is_missing(caplog) -> None:
+def test_build_team_agents_logs_error_when_role_config_is_missing(caplog, tmp_path) -> None:
     """Layer: unit. Verifies misconfigured role scopes are visible and fail closed."""
     team = SimpleNamespace(
         name="demo",
@@ -72,7 +62,7 @@ def test_build_team_agents_logs_error_when_role_config_is_missing(caplog) -> Non
     caplog.set_level("ERROR", logger="orket")
 
     with pytest.raises(AgentConfigurationError, match="seat has no executable tools"):
-        build_team_agents(team, _Provider(), _toolbox_with_tools())
+        build_team_agents(team, _Provider(), _toolbox_with_tools(tmp_path))
 
     assert any(record.message == "seat_role_config_missing" for record in caplog.records)
     assert any(

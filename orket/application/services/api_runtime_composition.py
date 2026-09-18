@@ -12,6 +12,7 @@ from orket.application.services.api_authentication_service import ApiAuthenticat
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
 from orket.application.services.api_system_query_service import ApiSystemQueryService
+from orket.application.services.decision_node_registry import build_decision_node_registry
 from orket.application.services.extension_runtime_service import ExtensionRuntimeService
 from orket.application.services.governed_agent_api_composition import (
     build_api_governed_agent_runtime,
@@ -22,7 +23,6 @@ from orket.application.services.outward_run_execution_service import OutwardRunE
 from orket.application.services.outward_run_inspection_service import OutwardRunInspectionService
 from orket.application.services.outward_run_service import OutwardRunService
 from orket.application.services.runtime_input_service import RuntimeInputService
-from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.extensions import ExtensionManager
 from orket.orchestration.models import ModelSelector
 from orket.runtime_paths import resolve_control_plane_db_path
@@ -38,7 +38,7 @@ def build_api_runtime_container(
 ) -> ApiRuntimeContainer:
     """Build the complete application-owned runtime graph for one API app."""
     root = Path(project_root).resolve()
-    runtime_node = DecisionNodeRegistry().resolve_api_runtime()
+    runtime_node = build_decision_node_registry(environment=environment).resolve_api_runtime()
     authentication = ApiAuthenticationService(os.environ if environment is None else environment)
     runtime_state = create_runtime_state()
     runtime_host = ApiRuntimeHostService(project_root=root, runtime_inputs=runtime_inputs)

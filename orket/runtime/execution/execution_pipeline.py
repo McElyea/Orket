@@ -16,12 +16,12 @@ from orket.adapters.storage.epic_continuation_lock import EpicContinuationLocks
 from orket.adapters.storage.epic_publication_repository import SQLiteEpicPublicationRepository
 from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
+from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.application.services.epic_approval_pause_service import EpicApprovalPauseService
 from orket.application.services.epic_preparation_service import EpicPreparationService
 from orket.application.services.epic_publication_service import EpicPublicationService
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
-from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
 from orket.orchestration.orchestration_config import OrchestrationConfig, process_rule_value
 from orket.runtime.config_loader import ConfigLoader
@@ -71,7 +71,7 @@ class ExecutionPipeline(
     ):
         from orket.orchestration.notes import NoteStore
 
-        runtime_nodes = decision_nodes or DecisionNodeRegistry()
+        runtime_nodes = decision_nodes or build_decision_node_registry()
         self.runtime_context = runtime_context or OrketRuntimeContext.from_env(
             workspace_root=workspace,
             department=department,

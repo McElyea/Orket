@@ -156,7 +156,7 @@ async def test_orchestrator_issue_turn_publishes_issue_dispatch_and_non_protocol
         catastrophic_failure_message=lambda *_args: "catastrophic failure",
         unexpected_failure_action_message=lambda action, issue_id: f"{action}:{issue_id}",
     )
-    orch.model_client_node = SimpleNamespace(
+    orch.model_clients = SimpleNamespace(
         create_provider=lambda _selected_model, _env: provider,
         create_client=lambda _provider: client,
     )

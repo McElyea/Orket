@@ -50,6 +50,7 @@ from orket.application.services.runtime_policy import (
 from orket.application.services.runtime_verifier import RuntimeVerifier
 from orket.application.services.scaffolder import Scaffolder, ScaffoldValidationError
 from orket.application.services.tool_gate_service import ToolGate
+from orket.application.services.toolbox import ToolBox
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, resolve_cards_runtime
 from orket.core.contracts.card_completion_commit import SUCCESSFUL_CARD_STATUSES, CardCompletionRequest
@@ -81,7 +82,6 @@ from orket.settings import (
     load_user_settings_async,
     set_runtime_settings_context,
 )
-from orket.tools import ToolBox
 from orket.utils import sanitize_name
 
 load_user_preferences = _load_user_preferences
@@ -1000,7 +1000,7 @@ async def execute_epic(
     )
 
     # Concurrency/loop control via loop policy node.
-    concurrency_limit = self.loop_policy_node.concurrency_limit(self.org)
+    concurrency_limit = self.loop_policy_node.concurrency_limit(self.loop_inputs)
     semaphore = asyncio.Semaphore(concurrency_limit)
 
     log_event(
@@ -1010,7 +1010,7 @@ async def execute_epic(
     )
 
     iteration_count = 0
-    max_iterations = self.loop_policy_node.max_iterations(self.org)
+    max_iterations = self.loop_policy_node.max_iterations(self.loop_inputs)
 
     while iteration_count < max_iterations:
         iteration_count += 1
@@ -1305,7 +1305,8 @@ async def _execute_issue_turn(
         transcript=self.transcript,
         router_node=self.router_node,
         loop_policy_node=self.loop_policy_node,
-        model_client_node=self.model_client_node,
+        model_clients=self.model_clients,
+        environment=self.decision_environment,
         support_services=self.support_services,
         request_issue_transition=self._request_issue_transition,
         resolve_small_project_team_policy=self._resolve_small_project_team_policy,

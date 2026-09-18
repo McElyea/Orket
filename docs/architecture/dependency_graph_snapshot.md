@@ -1,12 +1,12 @@
 # Dependency Graph Snapshot
 
-Generated: `2026-09-17T21:51:02.949406+00:00`
+Generated: `2026-09-17T23:11:21.453873+00:00`
 
 Generated from the canonical dependency policy; do not edit this view by hand.
 This is conservative static import evidence, not a runtime call graph or a core-purity proof.
 
 Collection: `True`. Policy verdict: `False`.
-Files: 1007; import sites: 3194; forbidden pairs: 51; analysis errors: 10; authority cycles: 1.
+Files: 1010; import sites: 3201; forbidden pairs: 44; analysis errors: 10; authority cycles: 1.
 
 ## Module classification
 
@@ -59,7 +59,6 @@ Files: 1007; import sites: 3194; forbidden pairs: 51; analysis errors: 10; autho
 | `orket.tool_families` | `adapters` |
 | `orket.tool_runtime` | `adapters` |
 | `orket.tool_strategy` | `adapters` |
-| `orket.tools` | `adapters` |
 | `orket.utils` | `adapters` |
 | `orket.vendors` | `adapters` |
 | `orket.webhook_server` | `interfaces` |
@@ -81,7 +80,7 @@ Files: 1007; import sites: 3194; forbidden pairs: 51; analysis errors: 10; autho
 | `adapters` | `core` |
 | `decision_nodes` | `core` |
 
-Decision-node core targets: `orket.core.cards_runtime_contract`, `orket.exceptions`, `orket.schema`
+Decision-node core targets: `orket.core.cards_runtime_contract`, `orket.core.contracts.decision_inputs`, `orket.exceptions`, `orket.schema`
 
 Side-effect-free adapter targets: none declared
 
@@ -89,20 +88,17 @@ Side-effect-free adapter targets: none declared
 
 | Source | Target | Import sites |
 |---|---|---:|
-| `adapters` | `adapters` | 243 |
-| `adapters` | `application` | 19 |
-| `adapters` | `core` | 141 |
-| `adapters` | `decision_nodes` | 1 |
-| `application` | `adapters` | 308 |
-| `application` | `application` | 1506 |
-| `application` | `core` | 678 |
-| `application` | `decision_nodes` | 8 |
+| `adapters` | `adapters` | 238 |
+| `adapters` | `application` | 16 |
+| `adapters` | `core` | 137 |
+| `application` | `adapters` | 312 |
+| `application` | `application` | 1523 |
+| `application` | `core` | 686 |
+| `application` | `decision_nodes` | 4 |
 | `application` | `interfaces` | 5 |
 | `core` | `core` | 139 |
-| `decision_nodes` | `adapters` | 2 |
-| `decision_nodes` | `application` | 1 |
-| `decision_nodes` | `core` | 4 |
-| `decision_nodes` | `decision_nodes` | 7 |
+| `decision_nodes` | `core` | 6 |
+| `decision_nodes` | `decision_nodes` | 3 |
 | `interfaces` | `adapters` | 15 |
 | `interfaces` | `application` | 74 |
 | `interfaces` | `core` | 8 |

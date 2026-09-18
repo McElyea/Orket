@@ -1,18 +1,16 @@
 from __future__ import annotations
 
 import inspect
-import os
 import re
-from collections.abc import Callable
 from typing import Any
 
-from orket.adapters.tools.default_strategy import compose_default_tool_map
 from orket.core.cards_runtime_contract import (
     required_read_paths_for_seat as resolve_cards_required_read_paths,
 )
 from orket.core.cards_runtime_contract import (
     required_write_paths_for_seat as resolve_cards_required_write_paths,
 )
+from orket.core.contracts.decision_inputs import LoopPolicyInputs, ToolSelectionInput
 from orket.decision_nodes.api_runtime_strategy_node import (
     DefaultApiRuntimeStrategyNode as _DefaultApiRuntimeStrategyNode,
 )
@@ -237,11 +235,11 @@ class DefaultEvaluatorNode:
 class DefaultToolStrategyNode:
     """
     Built-in tool strategy decision node.
-    Preserves the legacy static tool mapping behavior.
+    Selects names from the application-owned tool inventory.
     """
 
-    def compose(self, toolbox: Any) -> dict[str, Callable[..., Any]]:
-        return compose_default_tool_map(toolbox)
+    def select_tools(self, inputs: ToolSelectionInput) -> tuple[str, ...]:
+        return inputs.available_names
 
 
 class DefaultSandboxPolicyNode:
@@ -513,15 +511,6 @@ class DefaultLoaderStrategyNode:
             model_dir / "core" / category,
         ]
 
-    def apply_organization_overrides(self, org: Any, get_setting: Any) -> Any:
-        env_name = get_setting("ORKET_ORG_NAME")
-        if env_name:
-            org.name = env_name
-
-        env_vision = get_setting("ORKET_ORG_VISION")
-        if env_vision:
-            org.vision = env_vision
-        return org
 
 
 class DefaultExecutionRuntimeStrategyNode:
@@ -554,8 +543,8 @@ class DefaultOrchestrationLoopPolicyNode:
     Preserves existing concurrency and iteration defaults.
     """
 
-    def concurrency_limit(self, organization: Any) -> int:
-        raw = os.getenv("ORKET_ORCHESTRATOR_CONCURRENCY")
+    def concurrency_limit(self, inputs: LoopPolicyInputs) -> int:
+        raw = inputs.concurrency
         if raw is not None:
             try:
                 return max(1, int(raw))
@@ -563,10 +552,8 @@ class DefaultOrchestrationLoopPolicyNode:
                 pass
         return 3
 
-    def max_iterations(self, organization: Any) -> int:
-        process_rules = getattr(organization, "process_rules", None)
-        configured = process_rules.get("orchestrator_max_iterations") if isinstance(process_rules, dict) else None
-        raw = os.getenv("ORKET_ORCHESTRATOR_MAX_ITERATIONS") or configured
+    def max_iterations(self, inputs: LoopPolicyInputs) -> int:
+        raw = inputs.max_iterations or inputs.configured_max_iterations
         if raw is not None:
             try:
                 return max(1, int(raw))
@@ -575,8 +562,8 @@ class DefaultOrchestrationLoopPolicyNode:
         # Default above 20 so multi-issue builder+guard epics can complete without a custom loop policy.
         return 40
 
-    def context_window(self, organization: Any) -> int:
-        raw = os.getenv("ORKET_CONTEXT_WINDOW", "10")
+    def context_window(self, inputs: LoopPolicyInputs) -> int:
+        raw = inputs.context_window
         try:
             return max(1, int(raw))
         except (TypeError, ValueError):
@@ -699,31 +686,3 @@ class DefaultOrchestrationLoopPolicyNode:
         backlog: list[Any],
     ) -> bool:
         return iteration_count >= max_iterations and not self.is_backlog_done(backlog)
-
-
-class _DefaultAsyncModelClient:
-    def __init__(self, provider: Any) -> None:
-        self.provider = provider
-
-    async def complete(self, messages: Any) -> Any:
-        return await self.provider.complete(messages)
-
-    async def close(self) -> None:
-        close_method = getattr(self.provider, "close", None)
-        if callable(close_method):
-            await close_method()
-
-
-class DefaultModelClientPolicyNode:
-    """
-    Built-in model client policy node.
-    Preserves LocalModelProvider selection and async client wrapping behavior.
-    """
-
-    def create_provider(self, selected_model: str, env: Any) -> Any:
-        from orket.adapters.llm.local_model_provider import LocalModelProvider
-
-        return LocalModelProvider(model=selected_model, temperature=env.temperature, timeout=env.timeout)
-
-    def create_client(self, provider: Any) -> Any:
-        return _DefaultAsyncModelClient(provider)

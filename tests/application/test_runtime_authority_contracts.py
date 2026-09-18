@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+from orket.application.services.decision_node_registry import DecisionNodeRegistry
 from orket.decision_nodes.contracts import ApiRuntimeStrategyNode
-from orket.decision_nodes.registry import DecisionNodeRegistry
 
 pytestmark = pytest.mark.contract
 

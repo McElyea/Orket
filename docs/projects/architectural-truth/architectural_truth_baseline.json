@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-17T21:51:28.678657Z",
+  "generated_at": "2026-09-17T23:15:57.354872Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -137,7 +137,7 @@
     "root": "C:\\Source\\Orket-architectural-truth",
     "policy": {
       "path": "model/core/contracts/dependency_direction_policy.json",
-      "sha256": "4dbb6aa205ffaa2fa3a7161b53788b42625651887bed9777a2ee717cf563303d",
+      "sha256": "a4d9bdad661e289e3ebd20bc396c5aa0f8275097aa2196040ee5f2e63c5b76c1",
       "contract": {
         "schema_version": "2.0.0",
         "policy_id": "dependency_direction_policy",
@@ -192,7 +192,6 @@
           "orket.tool_families": "adapters",
           "orket.tool_runtime": "adapters",
           "orket.tool_strategy": "adapters",
-          "orket.tools": "adapters",
           "orket.utils": "adapters",
           "orket.vendors": "adapters",
           "orket.webhook_server": "interfaces",
@@ -246,6 +245,7 @@
         ],
         "decision_core_contracts": [
           "orket.core.cards_runtime_contract",
+          "orket.core.contracts.decision_inputs",
           "orket.exceptions",
           "orket.schema"
         ],
@@ -306,7 +306,7 @@
           "code": "unresolved_reflection"
         }
       ],
-      "files_scanned": 1007,
+      "files_scanned": 1010,
       "scan_roots": [
         "orket"
       ],
@@ -315,42 +315,37 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 243
+          "count": 238
         },
         {
           "source": "adapters",
           "target": "application",
-          "count": 19
+          "count": 16
         },
         {
           "source": "adapters",
           "target": "core",
-          "count": 141
-        },
-        {
-          "source": "adapters",
-          "target": "decision_nodes",
-          "count": 1
+          "count": 137
         },
         {
           "source": "application",
           "target": "adapters",
-          "count": 308
+          "count": 312
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1506
+          "count": 1523
         },
         {
           "source": "application",
           "target": "core",
-          "count": 678
+          "count": 686
         },
         {
           "source": "application",
           "target": "decision_nodes",
-          "count": 8
+          "count": 4
         },
         {
           "source": "application",
@@ -364,23 +359,13 @@
         },
         {
           "source": "decision_nodes",
-          "target": "adapters",
-          "count": 2
-        },
-        {
-          "source": "decision_nodes",
-          "target": "application",
-          "count": 1
-        },
-        {
-          "source": "decision_nodes",
           "target": "core",
-          "count": 4
+          "count": 6
         },
         {
           "source": "decision_nodes",
           "target": "decision_nodes",
-          "count": 7
+          "count": 3
         },
         {
           "source": "interfaces",
@@ -547,39 +532,6 @@
             {
               "path": "orket/cli/setup_wizard.py",
               "line": 12,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.decision_nodes.builtins",
-          "target": "orket.adapters.llm.local_model_provider",
-          "sites": [
-            {
-              "path": "orket/decision_nodes/builtins.py",
-              "line": 724,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.decision_nodes.builtins",
-          "target": "orket.adapters.tools.default_strategy",
-          "sites": [
-            {
-              "path": "orket/decision_nodes/builtins.py",
-              "line": 9,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.decision_nodes.registry",
-          "target": "orket.settings",
-          "sites": [
-            {
-              "path": "orket/decision_nodes/registry.py",
-              "line": 31,
               "kind": "from"
             }
           ]
@@ -882,50 +834,6 @@
           ]
         },
         {
-          "source": "orket.tools",
-          "target": "orket.application.services.card_completion_service",
-          "sites": [
-            {
-              "path": "orket/tools.py",
-              "line": 17,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.tools",
-          "target": "orket.application.services.card_completion_turn_service",
-          "sites": [
-            {
-              "path": "orket/tools.py",
-              "line": 18,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.tools",
-          "target": "orket.application.services.card_workspace_mutation_service",
-          "sites": [
-            {
-              "path": "orket/tools.py",
-              "line": 22,
-              "kind": "from"
-            }
-          ]
-        },
-        {
-          "source": "orket.tools",
-          "target": "orket.decision_nodes.registry",
-          "sites": [
-            {
-              "path": "orket/tools.py",
-              "line": 25,
-              "kind": "from"
-            }
-          ]
-        },
-        {
           "source": "orket.vendors.factory",
           "target": "orket.settings",
           "sites": [
@@ -998,6 +906,7 @@
             "orket.application.services.governed_agent_wake_dispatcher",
             "orket.application.services.governed_agent_wake_ingress_service",
             "orket.application.services.governed_agent_webhook_ingress_service",
+            "orket.application.services.model_client_factory",
             "orket.application.services.operator_completion_service",
             "orket.application.services.orchestrator_prompt_preparation_service",
             "orket.application.services.orchestrator_turn_context_builder",
@@ -1027,8 +936,6 @@
             "orket.board",
             "orket.capabilities.sdk_llm_provider",
             "orket.capabilities.sdk_memory_provider",
-            "orket.decision_nodes.builtins",
-            "orket.decision_nodes.registry",
             "orket.discovery",
             "orket.driver",
             "orket.extensions.__init__",
@@ -1057,7 +964,6 @@
             "orket.runtime.clock_time_authority_policy",
             "orket.runtime.cold_start_truth_test_contract",
             "orket.runtime.compact_turn_packet",
-            "orket.runtime.config.config_loader",
             "orket.runtime.config.model_profile_bios",
             "orket.runtime.config.provider_discovery",
             "orket.runtime.config.provider_runtime_target",
@@ -1188,9 +1094,7 @@
             "orket.runtime.workspace_snapshot",
             "orket.services.extension_memory_namespace",
             "orket.services.memory_store",
-            "orket.services.sandbox_orchestrator",
             "orket.services.scoped_memory_store",
-            "orket.tools",
             "orket.webhook_server",
             "orket.workloads.__init__",
             "orket.workloads.model_stream_v1",
@@ -1199,7 +1103,6 @@
           "layers": [
             "adapters",
             "application",
-            "decision_nodes",
             "interfaces"
           ]
         }
@@ -1319,7 +1222,7 @@
         "id": "AT-EX-007",
         "area": "decision-node-explicit-inputs",
         "status": "active_transition",
-        "reason": "API authentication, observed paths, board loading and calendar settings now use application authority and captured inputs. Other decision-node strategy selection still reads environment, provider policy or mutable registry/runtime settings outside immutable snapshots.",
+        "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Mutable prompt-selector/planning/routing context and ambient prompt policy remain outside immutable snapshots.",
         "removal_condition": "All decision nodes receive immutable resolved configuration and have no environment or runtime-state reach-through.",
         "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
         "owner": "Orket Core"
@@ -1409,10 +1312,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 4935,
-    "missing_layer_total": 3351,
+    "tests_total": 4940,
+    "missing_layer_total": 3356,
     "by_layer": {
-      "unlabeled": 3351,
+      "unlabeled": 3356,
       "integration": 735,
       "unit": 167,
       "contract": 671,
@@ -2020,19 +1923,19 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3251
+    "missing_layers_omitted": 3256
   },
   "ruff": {
     "proof": "structural_lint",
     "executed": true,
     "exit_code": 1,
-    "issues_total": 92,
+    "issues_total": 91,
     "by_code": {
       "B009": 2,
       "B905": 2,
       "F401": 7,
       "F841": 1,
-      "I001": 12,
+      "I001": 11,
       "PTH108": 1,
       "SIM105": 1,
       "SIM118": 1,
@@ -2045,7 +1948,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1007,
+    "python_files_scanned": 1010,
     "files_over_400_total": 68,
     "functions_over_70_total": 222,
     "largest_files": [
@@ -2055,7 +1958,7 @@
       },
       {
         "path": "orket/application/workflows/orchestrator_ops.py",
-        "lines": 1688
+        "lines": 1689
       },
       {
         "path": "orket/interfaces/orket_bundle_cli.py",
@@ -2078,16 +1981,16 @@
         "lines": 731
       },
       {
-        "path": "orket/decision_nodes/builtins.py",
-        "lines": 729
-      },
-      {
         "path": "orket/kernel/v1/state/promotion.py",
         "lines": 699
       },
       {
         "path": "orket/adapters/storage/async_protocol_run_ledger.py",
         "lines": 693
+      },
+      {
+        "path": "orket/decision_nodes/builtins.py",
+        "lines": 688
       },
       {
         "path": "orket/runtime/evidence/run_evidence_graph_rendering.py",
@@ -2279,7 +2182,7 @@
       },
       {
         "path": "orket/decision_nodes/builtins.py",
-        "line": 270,
+        "line": 268,
         "name": "generate_compose_file",
         "lines": 212
       },
@@ -2312,7 +2215,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 572,
+    "scanned_files": 577,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -2423,113 +2326,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-14T18:39:29.042832Z",
-      "changed": true,
-      "before_digest": "sha256:dc65102bc545581592ec21a8abb838ac6a979da747b2d2cb3cdbd701d2138ba9",
-      "after_digest": "sha256:943da7591c847a4235891889d2ebe6a6e86e0f0cfd2a82cf1ec3ad04bb565a91",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 28,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 28,
-        "churn_ratio": 0.008487,
-        "sample_paths": [
-          "$.dependency_graph.layer_edges[0].count",
-          "$.dependency_graph.layer_edges[1].count",
-          "$.dependency_graph.layer_edges[4].count",
-          "$.dependency_graph.module_count",
-          "$.dependency_graph.scan.files_scanned",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files",
-          "$.size_inventory.files_over_400_total",
-          "$.size_inventory.functions_over_70_total",
-          "$.size_inventory.largest_files[18].lines",
-          "$.size_inventory.largest_files[18].path",
-          "$.size_inventory.largest_files[19].lines",
-          "$.size_inventory.largest_files[19].path",
-          "$.size_inventory.largest_files[20].lines",
-          "$.size_inventory.largest_files[20].path",
-          "$.size_inventory.largest_files[21].lines",
-          "$.size_inventory.largest_files[21].path",
-          "$.size_inventory.largest_files[22].lines",
-          "$.size_inventory.largest_files[22].path",
-          "$.size_inventory.largest_files[23].path"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-14T19:20:52.348035Z",
-      "changed": true,
-      "before_digest": "sha256:943da7591c847a4235891889d2ebe6a6e86e0f0cfd2a82cf1ec3ad04bb565a91",
-      "after_digest": "sha256:2b71d72776d6f71797f86fdb99aa3480b7e1767cc61edeffd71f2fed2f305040",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 7,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 7,
-        "churn_ratio": 0.002122,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.contract",
-          "$.test_taxonomy.by_layer.integration",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-14T19:41:10.551499Z",
-      "changed": true,
-      "before_digest": "sha256:2b71d72776d6f71797f86fdb99aa3480b7e1767cc61edeffd71f2fed2f305040",
-      "after_digest": "sha256:c062a4e5d322687309c9d8f594f17b8cef1e9b9bad0ee9c3a09dca34118b7f70",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 3,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 3,
-        "churn_ratio": 0.000909,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.integration",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-14T20:13:23.712259Z",
-      "changed": true,
-      "before_digest": "sha256:c062a4e5d322687309c9d8f594f17b8cef1e9b9bad0ee9c3a09dca34118b7f70",
-      "after_digest": "sha256:a9a9fb1a21e822b962758be0013a5679bab306c8de92215d350be2deeea7c1ba",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 3299,
-        "paths_total_current": 3299,
-        "paths_total_reference": 3299,
-        "churn_paths": 1,
-        "churn_ratio": 0.000303,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-14T20:47:44.823772Z",
       "changed": true,
@@ -3304,6 +3100,137 @@
           "$.size_inventory.largest_functions[8].line",
           "$.size_inventory.largest_functions[15].line",
           "$.size_inventory.python_files_scanned",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T22:56:49.912600Z",
+      "changed": true,
+      "before_digest": "sha256:83be6e4dcfb74874ffadf61ca120b3368db075072cecb5516cc473f811d8f28d",
+      "after_digest": "sha256:b95a5b3352ea0433e30f65343a7dc5f681d6913030ac174d9781f6e44440008e",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 8,
+        "changed_paths": 339,
+        "initial_write": false,
+        "paths_total_previous": 3552,
+        "paths_total_current": 3521,
+        "paths_total_reference": 3552,
+        "churn_paths": 347,
+        "churn_ratio": 0.097691,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[1].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[3].source",
+          "$.dependency_graph.observed.layer_edges[3].target",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[4].target",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.observed.layer_edges[5].target",
+          "$.dependency_graph.observed.layer_edges[6].count",
+          "$.dependency_graph.observed.layer_edges[6].target",
+          "$.dependency_graph.observed.layer_edges[7].count",
+          "$.dependency_graph.observed.layer_edges[7].target",
+          "$.dependency_graph.observed.layer_edges[8].count",
+          "$.dependency_graph.observed.layer_edges[8].source",
+          "$.dependency_graph.observed.layer_edges[8].target",
+          "$.dependency_graph.observed.layer_edges[9].count",
+          "$.dependency_graph.observed.layer_edges[9].source",
+          "$.dependency_graph.observed.layer_edges[10].count"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T22:57:45.578318Z",
+      "changed": true,
+      "before_digest": "sha256:b95a5b3352ea0433e30f65343a7dc5f681d6913030ac174d9781f6e44440008e",
+      "after_digest": "sha256:b07e1f1c4134a6a3ff157eb0e72aae967a28017d257727bb3ca7aeedcf996662",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 9,
+        "initial_write": false,
+        "paths_total_previous": 3521,
+        "paths_total_current": 3521,
+        "paths_total_reference": 3521,
+        "churn_paths": 9,
+        "churn_ratio": 0.002556,
+        "sample_paths": [
+          "$.dependency_graph.verdict.violations[13].sites[0].line",
+          "$.dependency_graph.verdict.violations[43].sites[0].line",
+          "$.dependency_graph.verdict.violations[44].sites[0].line",
+          "$.dependency_graph.verdict.violations[45].sites[0].line",
+          "$.dependency_graph.verdict.violations[46].sites[0].line",
+          "$.generated_at",
+          "$.ruff.by_code.F401",
+          "$.ruff.by_code.I001",
+          "$.ruff.issues_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T23:11:48.032669Z",
+      "changed": true,
+      "before_digest": "sha256:b07e1f1c4134a6a3ff157eb0e72aae967a28017d257727bb3ca7aeedcf996662",
+      "after_digest": "sha256:bf819e2c54b03c9ee2b62c6937ff7826ae36cf08173056f2ee5909a7fc5246a7",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 8,
+        "changed_paths": 118,
+        "initial_write": false,
+        "paths_total_previous": 3521,
+        "paths_total_current": 3430,
+        "paths_total_reference": 3521,
+        "churn_paths": 127,
+        "churn_ratio": 0.036069,
+        "sample_paths": [
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[1].count",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.dependency_graph.policy.contract.classifications.orket.tools",
+          "$.dependency_graph.policy.contract.decision_core_contracts[1]",
+          "$.dependency_graph.policy.contract.decision_core_contracts[2]",
+          "$.dependency_graph.policy.contract.decision_core_contracts",
+          "$.dependency_graph.policy.sha256",
+          "$.dependency_graph.verdict.violations[13].sites[0].line",
+          "$.dependency_graph.verdict.violations[13].sites[0].path",
+          "$.dependency_graph.verdict.violations[13].source",
+          "$.dependency_graph.verdict.violations[13].target",
+          "$.dependency_graph.verdict.violations[14].sites[0].line",
+          "$.dependency_graph.verdict.violations[14].sites[0].path",
+          "$.dependency_graph.verdict.violations[14].source",
+          "$.dependency_graph.verdict.violations[14].target",
+          "$.dependency_graph.verdict.violations[15].sites[0].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-17T23:15:57.368877Z",
+      "changed": true,
+      "before_digest": "sha256:bf819e2c54b03c9ee2b62c6937ff7826ae36cf08173056f2ee5909a7fc5246a7",
+      "after_digest": "sha256:9ec22c096cfef8b3f957467ab197d4507df5716775255a29c6a2277cbd8a21b7",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 6,
+        "initial_write": false,
+        "paths_total_previous": 3430,
+        "paths_total_current": 3430,
+        "paths_total_reference": 3430,
+        "churn_paths": 6,
+        "churn_ratio": 0.001749,
+        "sample_paths": [
+          "$.architecture_exceptions.exceptions[5].reason",
+          "$.generated_at",
           "$.test_taxonomy.by_layer.unlabeled",
           "$.test_taxonomy.missing_layer_total",
           "$.test_taxonomy.missing_layers_omitted",

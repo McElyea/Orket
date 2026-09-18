@@ -12,7 +12,7 @@ from orket.adapters.storage.async_repositories import (
     AsyncSnapshotRepository,
     AsyncSuccessRepository,
 )
-from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.runtime_paths import resolve_runtime_db_path
 from orket.settings import load_user_settings
@@ -102,7 +102,7 @@ class OrketRuntimeContext:
         from orket.application.services.card_completion_composition import build_card_completion_service
         from orket.application.services.runtime_store_binding_service import RuntimeStoreBindingService
 
-        runtime_nodes = decision_nodes if decision_nodes is not None else DecisionNodeRegistry()
+        runtime_nodes = decision_nodes if decision_nodes is not None else build_decision_node_registry()
         resolved_workspace = Path(workspace_root).resolve()
         resolved_db_path = resolve_runtime_db_path(db_path)
         resolved_config_root = (

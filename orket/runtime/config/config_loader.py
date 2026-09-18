@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from collections.abc import Coroutine
 from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.async_file_tools import AsyncFileTools
-from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
 
@@ -38,7 +41,7 @@ class ConfigLoader:
         self.model_dir = root / "model"
         self.department = department
         self.organization = organization
-        self.decision_nodes = decision_nodes or DecisionNodeRegistry()
+        self.decision_nodes = decision_nodes or build_decision_node_registry()
         self.loader_strategy_node = self.decision_nodes.resolve_loader_strategy(self.organization)
         self.file_tools = AsyncFileTools(self.root)
 
@@ -58,20 +61,24 @@ class ConfigLoader:
             return str(path)
 
     async def _read_text(self, p: Path) -> str:
-        relative_path = await asyncio.to_thread(self._relative_path_for_read, p)
+        relative_path = await run_owned_thread(partial(self._relative_path_for_read, p), label="config-read-path")
         return await self.file_tools.read_file(relative_path)
+
+    async def _exists(self, path: Path) -> bool:
+        return await run_owned_thread(path.exists, label="config-path-observation")
 
     def load_organization(self) -> OrganizationConfig | None:
         return self._run_async(self.load_organization_async())
 
     async def load_organization_async(self) -> OrganizationConfig | None:
         from orket.schema import OrganizationConfig
-        from orket.settings import get_setting, load_user_settings_async, set_runtime_settings_context
+        from orket.settings import load_user_settings_async, set_runtime_settings_context
 
+        environment = dict(os.environ)
         org_data = {}
 
         info_path, arch_path = self.loader_strategy_node.organization_modular_paths(self.config_dir)
-        if info_path.exists() and arch_path.exists():
+        if await self._exists(info_path) and await self._exists(arch_path):
             try:
                 info = json.loads(await self._read_text(info_path))
                 arch = json.loads(await self._read_text(arch_path))
@@ -82,7 +89,7 @@ class ConfigLoader:
         if not org_data:
             paths = self.loader_strategy_node.organization_fallback_paths(self.config_dir, self.model_dir)
             for p in paths:
-                if p.exists():
+                if await self._exists(p):
                     try:
                         org_data = json.loads(await self._read_text(p))
                         break
@@ -98,9 +105,11 @@ class ConfigLoader:
             log_event("config_validation_failed", {"error": str(exc)}, workspace=self.root)
             return None
 
-        set_runtime_settings_context(user_settings=await load_user_settings_async())
-        overridden = self.loader_strategy_node.apply_organization_overrides(org, get_setting)
-        return overridden if isinstance(overridden, OrganizationConfig) else org
+        settings = await load_user_settings_async()
+        set_runtime_settings_context(user_settings=settings)
+        overrides = {field: value for field, key in (("name", "ORKET_ORG_NAME"), ("vision", "ORKET_ORG_VISION"))
+                     if (value := environment.get(key, settings.get(key)))}
+        return OrganizationConfig.model_validate({**org.model_dump(), **overrides})
 
     def load_department(self, name: str) -> DepartmentConfig | None:
         return self._run_async(self.load_department_async(name))
@@ -110,7 +119,7 @@ class ConfigLoader:
 
         paths = self.loader_strategy_node.department_paths(self.config_dir, self.model_dir, name)
         for p in paths:
-            if p.exists():
+            if await self._exists(p):
                 raw = await self._read_text(p)
                 return DepartmentConfig.model_validate_json(raw)
         return None
@@ -141,7 +150,7 @@ class ConfigLoader:
         )
 
         for p in paths:
-            if p.exists():
+            if await self._exists(p):
                 return await self._read_text(p)
 
         raise CardNotFound(f"Asset '{name}' not found in category '{category}' for department '{dept}'.")
@@ -164,4 +173,4 @@ class ConfigLoader:
                         assets.add(f.stem)
             return sorted(list(assets))
 
-        return await asyncio.to_thread(_collect_assets)
+        return await run_owned_thread(_collect_assets, label="config-asset-inventory")

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import os
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from orket.application.services.cards_odr_stage import run_cards_odr_prebuild
@@ -11,6 +11,7 @@ from orket.application.services.orchestrator_prompt_preparation_service import (
     OrchestratorPromptPreparationService,
 )
 from orket.core.cards_runtime_contract import resolve_cards_runtime
+from orket.core.contracts.decision_inputs import ModelClientOptions
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
 from orket.schema import CardStatus, IssueConfig, RoleConfig
@@ -61,7 +62,8 @@ class OrchestratorTurnPreparationService:
         transcript: list[Any],
         router_node: Any,
         loop_policy_node: Any,
-        model_client_node: Any,
+        model_clients: Any,
+        environment: Mapping[str, str],
         support_services: Any,
         request_issue_transition: Callable[..., Awaitable[None]],
         resolve_small_project_team_policy: Callable[[Any, Any], dict[str, Any]],
@@ -84,7 +86,8 @@ class OrchestratorTurnPreparationService:
         self.transcript = transcript
         self.router_node = router_node
         self.loop_policy_node = loop_policy_node
-        self.model_client_node = model_client_node
+        self.model_clients = model_clients
+        self.environment = MappingProxyType(dict(environment))
         self.support_services = support_services
         self.request_issue_transition = request_issue_transition
         self.resolve_small_project_team_policy = resolve_small_project_team_policy
@@ -172,6 +175,7 @@ class OrchestratorTurnPreparationService:
         *,
         data: TurnPreparationInput,
     ) -> TurnPreparationResult:
+        provider_options = ModelClientOptions(temperature=float(data.env.temperature), timeout=float(data.env.timeout))
         is_review_turn = self.loop_policy_node.is_review_turn(data.issue.status)
         dispatch_target = await self._resolve_dispatch_target(data=data, is_review_turn=is_review_turn)
         if dispatch_target is None:
@@ -248,18 +252,18 @@ class OrchestratorTurnPreparationService:
                 self.workspace_root,
             )
 
-        provider = self.model_client_node.create_provider(selected_model, data.env)
-        client = self.model_client_node.create_client(provider)
+        provider = self.model_clients.create_provider(selected_model, provider_options)
+        client = self.model_clients.create_client(provider)
         if bool(cards_runtime.get("odr_active")) and not is_review_turn:
             odr_auditor_model = (
                 str(cards_runtime.get("odr_auditor_model") or "").strip()
-                or str(os.environ.get("ORKET_ODR_AUDITOR_MODEL") or "").strip()
+                or str(self.environment.get("ORKET_ODR_AUDITOR_MODEL") or "").strip()
                 or selected_model
             )
             odr_auditor_provider = None
             try:
-                odr_auditor_provider = self.model_client_node.create_provider(odr_auditor_model, data.env)
-                odr_auditor_client = self.model_client_node.create_client(odr_auditor_provider)
+                odr_auditor_provider = self.model_clients.create_provider(odr_auditor_model, provider_options)
+                odr_auditor_client = self.model_clients.create_client(odr_auditor_provider)
                 odr_result = await run_cards_odr_prebuild(
                     workspace=self.workspace_root,
                     issue=data.issue,

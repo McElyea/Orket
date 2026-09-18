@@ -603,3 +603,11 @@ installed cells pass 1,751 cases each; eight actual installed llama.cpp cases an
 changed-file Ruff pass. The canonical plan retains original failures, exact file and
 evidence bindings, migration and limits. Whole-plan acceptance, historical clock/resume
 failures and live pipeline completion remain open.
+
+The 0.6.10 local checkpoint moves registry and ToolBox composition into application
+services, captures loop/provider inputs and retires executable strategy callbacks.
+The corrected source and all four fresh installed cells pass 1,815 cases each;
+eight actual llama.cpp regression cases and a separate application-factory flow pass.
+The graph removes seven forbidden pairs without introducing others; 44 remain.
+The canonical plan retains input-drift and fixture failures, migration and proof limits.
+Whole-lane acceptance remains open.

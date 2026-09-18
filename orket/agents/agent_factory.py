@@ -5,9 +5,9 @@ from typing import Any
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.agents.agent import Agent
+from orket.application.services.toolbox import ToolBox, get_tool_map
 from orket.exceptions import AgentConfigurationError
 from orket.logging import log_event
-from orket.tools import ToolBox, get_tool_map
 
 
 def build_team_agents(

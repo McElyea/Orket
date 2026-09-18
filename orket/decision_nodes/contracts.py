@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Protocol
+
+from orket.core.contracts.decision_inputs import LoopPolicyInputs, ToolSelectionInput
 
 
 @dataclass
@@ -78,9 +79,9 @@ class PromptStrategyNode(Protocol):
 
 
 class ToolStrategyNode(Protocol):
-    """Decision node: composes tool-name to callable mappings."""
+    """Decision node: selects immutable names from application-owned bindings."""
 
-    def compose(self, toolbox: Any) -> dict[str, Callable[..., Any]]: ...
+    def select_tools(self, inputs: ToolSelectionInput) -> tuple[str, ...]: ...
 
 
 class ApiRuntimeStrategyNode(Protocol):
@@ -194,7 +195,6 @@ class LoaderStrategyNode(Protocol):
 
     def list_asset_search_paths(self, config_dir: Any, model_dir: Any, dept: str, category: str) -> list[Any]: ...
 
-    def apply_organization_overrides(self, org: Any, get_setting: Any) -> Any: ...
 
 
 class ExecutionRuntimeStrategyNode(Protocol):
@@ -212,11 +212,11 @@ class ExecutionRuntimeStrategyNode(Protocol):
 class OrchestrationLoopPolicyNode(Protocol):
     """Decision node: execution-loop policy knobs for orchestrator runtime."""
 
-    def concurrency_limit(self, organization: Any) -> int: ...
+    def concurrency_limit(self, inputs: LoopPolicyInputs) -> int: ...
 
-    def max_iterations(self, organization: Any) -> int: ...
+    def max_iterations(self, inputs: LoopPolicyInputs) -> int: ...
 
-    def context_window(self, organization: Any) -> int: ...
+    def context_window(self, inputs: LoopPolicyInputs) -> int: ...
 
     def is_review_turn(self, issue_status: Any) -> bool: ...
 
@@ -236,11 +236,3 @@ class OrchestrationLoopPolicyNode(Protocol):
         max_iterations: int,
         backlog: list[Any],
     ) -> bool: ...
-
-
-class ModelClientPolicyNode(Protocol):
-    """Decision node: model provider/client construction policy."""
-
-    def create_provider(self, selected_model: str, env: Any) -> Any: ...
-
-    def create_client(self, provider: Any) -> Any: ...
