@@ -5,7 +5,7 @@ from orket.core.domain.execution import ExecutionTurn
 
 
 def _turn(raw: dict) -> ExecutionTurn:
-    return ExecutionTurn(
+    return ExecutionTurn(timestamp=None,
         issue_id="I-1",
         role="coder",
         content="",

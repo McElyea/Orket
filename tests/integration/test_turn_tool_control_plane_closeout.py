@@ -192,7 +192,7 @@ async def test_turn_executor_post_effect_tool_failure_publishes_terminal_recover
 @pytest.mark.asyncio
 async def test_turn_executor_resume_mode_interrupts_effect_boundary_uncertain_attempt(tmp_path: Path) -> None:
     control_plane, executor = _executor(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="",
@@ -259,7 +259,7 @@ async def test_turn_executor_resume_mode_interrupts_effect_boundary_uncertain_at
 @pytest.mark.asyncio
 async def test_turn_control_plane_rejects_regular_begin_after_reconciliation_closed_terminal_run(tmp_path: Path) -> None:
     control_plane, executor = _executor(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="",
@@ -312,7 +312,7 @@ async def test_turn_executor_resume_mode_fails_closed_after_reconciliation_close
                 "raw": {"total_tokens": 1},
             }
 
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="",
@@ -366,7 +366,7 @@ async def test_turn_executor_recovery_pending_run_fails_before_model_and_checkpo
                 "raw": {"total_tokens": 1},
             }
 
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="",
@@ -402,7 +402,7 @@ async def test_turn_executor_recovery_pending_run_fails_before_model_and_checkpo
 @pytest.mark.asyncio
 async def test_turn_control_plane_allows_same_attempt_writes_after_checkpoint_recovery(tmp_path: Path) -> None:
     control_plane, executor = _executor(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="",

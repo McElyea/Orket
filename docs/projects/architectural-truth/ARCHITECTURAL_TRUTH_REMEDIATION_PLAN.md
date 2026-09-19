@@ -12516,8 +12516,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.23
-protocol query checkpoint below. The graph has 18 forbidden pairs, zero cross-layer
+Next action: continue C/D from their numbered requirements after the 0.6.24
+explicit execution-turn-time checkpoint below. The graph has 18 forbidden pairs, zero cross-layer
 cycles and eight unresolved import/reflection sites. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff still has 103 findings. The prior stale benchmark expectation passes in the
@@ -15193,3 +15193,148 @@ prohibited; any off-hours branch/tag publication receives a separate timed recei
 - `pyproject.toml`
 - `tests/e2e/test_protocol_query_commands.py`
 - `tests/integration/test_protocol_query_ownership.py`
+
+
+### Explicit execution-turn time candidate: 2026-09-18 (0.6.24)
+
+Observed path: primary; result: partial success. The full architectural-truth goal
+remains active. Reentry matched clean commit `4a958951`, all 495 directly bound
+0.6.23 artifacts, its publication receipt, and the unchanged original/reference
+worktrees. The new fixed snapshot is `.tmp/d-turn-time/session-state.json`, SHA-256
+`1964ead8f99f3a8e6aca861d3093e8c70c1dad9a3a7bc418fad6b1e5bdcfe170`.
+Prior checkpoints and the historical Linux clock diagnosis remain unchanged.
+
+The retained `before/report.json` observes four cases: two pass and two fail.
+The core constructor accepts missing time, and actual completed-turn reentry
+invents a response timestamp despite reusing the same stored checkpoint. The
+reentry fixture uses controlled model output, a real verified file write, SQLite
+publication and native execution ownership; it is not live model inference.
+
+Core now requires a keyword timestamp or explicit absence. Agent captures its
+selected application clock before awaiting and supplies its observed value.
+Completed replay and pre-effect resume supply `None`, because existing snapshots
+lack the original response time. Synthetic test/script constructors explicitly
+supply `None` (96 calls in 23 files). No checkpoint format or persisted history
+changes. Contract/migration authority:
+`docs/architecture/CONTRACT_DELTA_TURN_TIME_D_2026-09-18.md`.
+
+The first repaired cohort passes 42 cases with unchanged inputs and no skips in
+`repaired/report.json`. A separate held-provider case now verifies captured clock
+selection before the await. Initial changed-file lint found three new test-only
+findings (import order and two synchronous directory traversals); these are
+retained in `preflight/ruff-changed.log` and repaired before final proof. Final
+source, installed, lint, graph and checkpoint review are pending.
+
+This is D2 work only. Other core clocks, manifest reads, schema identity defaults,
+application clocks (including ResponseParser), async reachability and adapter
+classification remain actionable. C/D/E/CAP, fresh full-suite and hosted Quality,
+release readiness and explicit whole-lane user acceptance remain open. Work-hour
+pushes remain prohibited; this candidate is being prepared for a local commit.
+
+
+#### Final 0.6.24 turn-time proof
+
+Observed result: partial success; scoped execution-turn-time proof passes. Source
+executes the prior 755-case C/D/BT regression cohort plus affected constructor,
+Agent and parser cases: **1045 pass, no failures/errors/skips**.
+Source elapsed time is 742.766 seconds (736.08 seconds in pytest).
+The source inputs were unchanged throughout that run.
+
+The first structural cohort retained one failure among 51 cases: the new test
+arguments interrupted the workflow prefix expected by its existing contract test.
+Only those arguments were reordered afterward, preserving every token in each
+command and both jobs' test selection. `workflow-repair.json` binds both versions;
+the corrected structural cohort passes all 51. The installed harness includes the
+corrected workflow. No runtime, test, shipped script, package or policy source changed after
+the main source run. The initial source wrapper is retained separately.
+
+| Installed envelope | Pass / fail / error / skip | JUnit seconds | Core origins |
+|---|---:|---:|---:|
+| t24-win-py311 | 1045 / 0 / 0 / 0 | 697.140 | 930 |
+| t24-linux-py311 | 1045 / 0 / 0 / 0 | 428.930 | 930 |
+| t24-win-py312 | 1045 / 0 / 0 / 0 | 861.574 | 930 |
+| t24-linux-py312 | 1045 / 0 / 0 / 0 | 462.575 | 930 |
+
+All four cells execute the exact source case identities, check installed origins,
+wheel identities and unchanged copied inputs, exercise actual valid/malformed CLI
+startup and ToolGate denial, and verify owned child termination. All parent sessions
+returned and were reaped. The 1900-file harness has no core/SDK source shadow.
+Source, wheel and sdist agree on 1,044 core Python files and 1,059 package files.
+Source/driver/launcher budgets were declared before their runs as 1,500/1,800/2,100
+seconds; product assertions, including the 0.5-second held-provider bound, were not
+relaxed. At most one Windows and one WSL installed cell ran concurrently.
+
+Manifest: `.tmp/d-turn-time/candidate/manifest.json`, SHA-256
+`2f26554a45227ae0e583d33a118c933bc687e2c1981ad1d9d757a903b4ac2157`. Native audit SHA-256:
+`09968c55ac38a4807e7b2b24cd8b3c9d3889ceb3ff10004ca26f8f1936f50c35`. Core wheel SHA-256:
+`1d0cc49be99d170c1a656cabad2688909c28580dbc19fbfd3367c2a9029c226b`. Core sdist SHA-256:
+`309aef03aeab06667a2485f0a843f27484f095df90acb4ce85ca5d6a2d21bb5d`.
+
+The primary reentry proof exercises a controlled model response, a verified real
+file effect, SQLite publications, checkpoint reuse and native execution ownership.
+The Agent clock cases intentionally exercise documented missing-config degradation
+with controlled responses. They verify one supplied observation and capture of the
+clock before a held provider wait. These are live local application/integration
+observations, not live provider inference. Constructor admission and value parity
+are contract proof; workflow, lint, dependency and package comparisons are structural.
+
+Changed Python, docs hygiene, release metadata and whitespace checks pass. Canonical
+Ruff remains at 103 findings; dependency observation remains 1,044 modules, 3,291
+sites, 18 forbidden pairs, zero cycles, eight analysis errors and zero unknown
+modules. The only added internal edge is allowed Agent-to-clock-adapter access.
+The five-line growth in the existing oversized Agent file wires/captures this clock
+and supplies the now-required constructor input; no unrelated authority was added.
+
+No fresh full-suite, hosted CI, live provider/Qwen readiness, Gitea or Docker proof
+is claimed. Starlette/AnyIO deprecations remain. Windows 3.12 again reports Pydantic
+`UnsupportedFieldAttributeWarning` for `run_id`, and Linux 3.12 for `session_id`,
+during concurrent API construction. The cause remains unestablished; no warning
+was suppressed and no schema-race fix is claimed.
+Other core/application clocks, manifest reads, schema identity inputs, async
+reachability and adapter classification remain C/D work. No host-clock repair,
+original response-time persistence, C/D/E/CAP acceptance, release readiness or
+whole-lane acceptance is claimed. Publication is local commit/tag only in this
+checkpoint; no GitHub push is performed.
+
+#### Exact 0.6.24 checkpoint files
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/architecture/CONTRACT_DELTA_TURN_TIME_D_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `orket/agents/agent.py`
+- `orket/application/workflows/turn_executor_completed_replay.py`
+- `orket/application/workflows/turn_executor_resume_replay.py`
+- `orket/core/domain/execution.py`
+- `orket/time_utils.py`
+- `pyproject.toml`
+- `scripts/proof/run_qwen38_repair_readiness.py`
+- `scripts/security/build_tool_gate_audit.py`
+- `tests/application/test_compatibility_pilot_parity.py`
+- `tests/application/test_odr_prebuild_continuation.py`
+- `tests/application/test_orchestrator_epic.py`
+- `tests/application/test_tool_gate_enforcement_closure.py`
+- `tests/application/test_turn_contract_validator.py`
+- `tests/application/test_turn_executor_token_states.py`
+- `tests/application/test_turn_path_resolver.py`
+- `tests/application/test_turn_tool_dispatcher.py`
+- `tests/application/test_turn_tool_dispatcher_policy_enforcement.py`
+- `tests/application/test_turn_tool_dispatcher_replay_isolation.py`
+- `tests/contracts/test_execution_turn_time.py`
+- `tests/integration/policy_enforcement/test_runtime_policy_enforcement.py`
+- `tests/integration/test_card_completion_receipt_inspection.py`
+- `tests/integration/test_epic_outcome_recovery.py`
+- `tests/integration/test_idesign_naming.py`
+- `tests/integration/test_protocol_validator_timing.py`
+- `tests/integration/test_turn_dispatch_contract.py`
+- `tests/integration/test_turn_executor_control_plane.py`
+- `tests/integration/test_turn_executor_control_plane_evidence.py`
+- `tests/integration/test_turn_recovery_transaction.py`
+- `tests/integration/test_turn_time_inputs.py`
+- `tests/integration/test_turn_tool_control_plane_closeout.py`
+- `tests/runtime/test_protocol_error_code_adoption.py`

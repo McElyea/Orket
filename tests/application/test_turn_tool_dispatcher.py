@@ -113,7 +113,7 @@ def test_tool_dispatcher_skill_binding_resolution(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_blocks_execution(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -151,7 +151,7 @@ async def test_tool_dispatcher_protocol_preflight_blocks_execution(tmp_path: Pat
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_enforces_max_tool_calls(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -190,7 +190,7 @@ async def test_tool_dispatcher_protocol_preflight_enforces_max_tool_calls(tmp_pa
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_enforces_required_tool_presence(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -223,7 +223,7 @@ async def test_tool_dispatcher_protocol_preflight_allows_multi_read_for_required
     (tmp_path / "agent_output").mkdir()
     (tmp_path / "agent_output" / "requirements.txt").write_text("req\n", encoding="utf-8")
     (tmp_path / "agent_output" / "main.py").write_text("print('ok')\n", encoding="utf-8")
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="code_reviewer",
         issue_id="REV-1",
         content="",
@@ -269,7 +269,7 @@ async def test_tool_dispatcher_protocol_preflight_rejects_insufficient_reads_for
     (tmp_path / "agent_output").mkdir()
     (tmp_path / "agent_output" / "requirements.txt").write_text("req\n", encoding="utf-8")
     (tmp_path / "agent_output" / "main.py").write_text("print('ok')\n", encoding="utf-8")
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="code_reviewer",
         issue_id="REV-1",
         content="",
@@ -307,7 +307,7 @@ async def test_tool_dispatcher_protocol_preflight_rejects_insufficient_reads_for
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_rejects_duplicate_single_shot_required_tool(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -340,7 +340,7 @@ async def test_tool_dispatcher_protocol_preflight_rejects_duplicate_single_shot_
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_enforces_required_sequence(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -373,7 +373,7 @@ async def test_tool_dispatcher_protocol_preflight_enforces_required_sequence(tmp
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_enforces_workspace_constraints(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -402,7 +402,7 @@ async def test_tool_dispatcher_protocol_preflight_enforces_workspace_constraints
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_is_fail_fast(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -439,7 +439,7 @@ async def test_tool_dispatcher_protocol_operation_idempotency_reuses_cached_resu
     operation_store: dict[tuple[str, str, str, int, str], dict[str, Any]] = {}
     receipt_rows: list[dict[str, Any]] = []
     dispatcher = _dispatcher(tmp_path, operation_store=operation_store, receipt_rows=receipt_rows)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -467,7 +467,7 @@ async def test_tool_dispatcher_protocol_operation_idempotency_reuses_cached_resu
     assert isinstance(turn.tool_calls[0].result, dict)
     assert turn.tool_calls[0].result.get("call_count") == 1
 
-    second_turn = ExecutionTurn(
+    second_turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -490,7 +490,7 @@ async def test_tool_dispatcher_treats_non_dict_middleware_result_as_explicit_fai
         tmp_path,
         middleware=TurnLifecycleInterceptors([_BadAfterTool()]),
     )
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -541,7 +541,7 @@ async def test_tool_dispatcher_replay_mode_uses_operation_record_and_skips_execu
         "turn_index": 1,
         "protocol_governed_enabled": True,
     }
-    live_turn = ExecutionTurn(
+    live_turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -550,7 +550,7 @@ async def test_tool_dispatcher_replay_mode_uses_operation_record_and_skips_execu
     await dispatcher.execute_tools(turn=live_turn, toolbox=toolbox, context=context, issue=None)
     assert toolbox.calls == 1
 
-    replay_turn = ExecutionTurn(
+    replay_turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -583,7 +583,7 @@ async def test_tool_dispatcher_replay_mode_missing_operation_fails_closed(tmp_pa
             return {"ok": True}
 
     toolbox = _Toolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -610,7 +610,7 @@ async def test_tool_dispatcher_replay_mode_missing_operation_fails_closed(tmp_pa
 async def test_tool_dispatcher_protocol_receipt_uses_turn_raw_metadata(tmp_path: Path) -> None:
     receipt_rows: list[dict[str, Any]] = []
     dispatcher = _dispatcher(tmp_path, receipt_rows=receipt_rows)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -673,7 +673,7 @@ async def test_tool_dispatcher_protocol_receipt_uses_turn_raw_metadata(tmp_path:
 async def test_tool_dispatcher_executes_compatibility_mapping_and_records_translation(tmp_path: Path) -> None:
     receipt_rows: list[dict[str, Any]] = []
     dispatcher = _dispatcher(tmp_path, receipt_rows=receipt_rows)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -742,7 +742,7 @@ async def test_tool_dispatcher_executes_compatibility_mapping_and_records_transl
 async def test_tool_dispatcher_preflight_failure_publishes_control_plane_final_truth(tmp_path: Path) -> None:
     control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
     dispatcher = _dispatcher(tmp_path, control_plane_service=control_plane)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",

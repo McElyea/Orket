@@ -4,6 +4,12 @@ Last updated: 2026-09-18
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Core `ExecutionTurn` requires an explicit keyword timestamp or explicit `None`.
+`Agent` captures its application-supplied clock before awaiting; stored-turn replay
+and pre-effect resume preserve missing original response times as `None`.
+Migration and limits:
+`docs/architecture/CONTRACT_DELTA_TURN_TIME_D_2026-09-18.md`.
+
 Protocol CLI and HTTP inspection delegate to application-owned query services.
 Captured options and requested identities precede owned path/file workers; API
 request teardown retains replay and parity work through cancellation. HTTP query

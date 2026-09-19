@@ -21,7 +21,7 @@ async def _completed(tmp_path):
     await repo.save(IssueRecord(id="card", summary="Increment", seat="developer"))
     repo, service, bound, evaluation = await complete_existing_card(repo, "card", tmp_path / "workspace")
     receipt = await repo.read_completion_receipt("card")
-    turn = ExecutionTurn(role="integrity_guard", issue_id="card", content="", tokens_used=0,
+    turn = ExecutionTurn(timestamp=None, role="integrity_guard", issue_id="card", content="", tokens_used=0,
                          tool_calls=[ToolCall(tool="update_issue_status", args={"status": "done"},
                                               result={"ok": True, "completion_ref": receipt.digest})])
     context = {"issue_id": "card", "card_completion_context": bound, "card_completion_request": evaluation.request}

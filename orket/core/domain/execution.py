@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
@@ -36,7 +36,8 @@ class ExecutionTurn:
     content: str = ""
     tool_calls: list[ToolCall] = field(default_factory=list)
     tokens_used: int = 0
-    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
+    # None explicitly means that the caller has no observed turn time.
+    timestamp: datetime | None = field(kw_only=True)
     note: str = ""
     raw: dict[str, Any] = field(default_factory=dict)
     partial_parse_failure: bool = False

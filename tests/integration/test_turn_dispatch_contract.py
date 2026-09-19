@@ -116,7 +116,7 @@ async def test_fresh_turn_binds_dispatch_contract_and_retains_pre_effect_recover
     control = build_turn_tool_control_plane_service(tmp_path / 'control_plane.sqlite3')
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
                             workspace=tmp_path, control_plane_service=control)
-    turn = ExecutionTurn(role='developer', issue_id='ISSUE-1', content='', tool_calls=[
+    turn = ExecutionTurn(timestamp=None, role='developer', issue_id='ISSUE-1', content='', tool_calls=[
         ToolCall(tool='write_file', args={'path': 'agent_output/out.txt', 'content': 'new'})])
     await write_turn_checkpoint_and_publish_if_needed(executor=executor, turn=turn, context=_context(), prompt_hash='prompt')
     run_id = 'turn-tool-run:run-1:ISSUE-1:developer:0001'

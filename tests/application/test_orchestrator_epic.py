@@ -781,7 +781,7 @@ async def test_execute_issue_turn_uses_custom_model_clients(orchestrator, monkey
         async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -878,7 +878,7 @@ async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_str
         async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -986,7 +986,7 @@ async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycle
             await client.complete([{"role": "user", "content": "ping"}])
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -1067,7 +1067,7 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
         async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _Evaluator:
@@ -1150,7 +1150,7 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
             self.calls += 1
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _RuntimeVerifier:
@@ -1283,7 +1283,7 @@ async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_ex
             self.calls += 1
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _RuntimeVerifier:
@@ -1381,7 +1381,7 @@ async def test_execute_issue_turn_marks_terminal_failure_for_repeated_guard_fing
             self.calls += 1
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _RuntimeVerifier:
@@ -1500,7 +1500,7 @@ async def test_execute_issue_turn_uses_prompt_resolver_when_policy_enabled(orche
             captured["system_prompt"] = system_prompt
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _Resolution:
@@ -1607,7 +1607,7 @@ async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(or
             captured["system_prompt"] = system_prompt
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -1714,7 +1714,7 @@ async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime
             captured["system_prompt"] = system_prompt
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -1800,7 +1800,7 @@ async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchest
         async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _Resolution:
@@ -1914,7 +1914,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orch
             captured["context"] = context
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     class _Resolution:
@@ -2022,7 +2022,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orch
             captured["system_prompt"] = system_prompt
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -2131,7 +2131,7 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
         tool_strategy_hit["used"] = res.get("ok") is True and res.get("content") == "application-owned binding"
         return TurnResult(
             success=True,
-            turn=ExecutionTurn(role=context["role"], issue_id=context["issue_id"], content="Turn handled; work awaits review.", note=""),
+            turn=ExecutionTurn(timestamp=None, role=context["role"], issue_id=context["issue_id"], content="Turn handled; work awaits review.", note=""),
         )
 
     orch.decision_nodes.register_tool_strategy("custom-tool-strategy", CustomToolStrategy())
@@ -2906,7 +2906,7 @@ async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(o
             captured["role"] = context["role"]
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -3001,7 +3001,7 @@ async def test_execute_issue_turn_does_not_coerce_builder_seat_when_small_projec
             captured["reviewer_seat_choice"] = context["reviewer_seat_choice"]
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):

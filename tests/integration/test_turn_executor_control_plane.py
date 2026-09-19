@@ -409,7 +409,7 @@ async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_
         workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
-    pre_effect_turn = ExecutionTurn(
+    pre_effect_turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="",
@@ -448,7 +448,7 @@ async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_
     assert model.calls == 0
     assert toolbox.calls == 1
     assert result.turn is not None
-    assert result.turn.note == "control_plane_checkpoint_resume"
+    assert result.turn.note == "control_plane_checkpoint_resume" and result.turn.timestamp is None
     assert run is not None
     assert len(attempts) == 1
     assert attempts[0].attempt_state.value == "attempt_completed"
@@ -482,7 +482,7 @@ async def test_turn_executor_resume_mode_rejects_post_effect_unfinished_attempt(
         workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
-    pre_effect_turn = ExecutionTurn(
+    pre_effect_turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="",
@@ -564,7 +564,7 @@ async def test_turn_executor_resume_mode_rejects_post_effect_truth_on_resumed_at
         workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
-    pre_effect_turn = ExecutionTurn(
+    pre_effect_turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="",
@@ -637,7 +637,7 @@ async def test_turn_executor_resume_mode_rejects_step_only_truth_on_resumed_atte
         workspace=Path(tmp_path), control_plane_service=control_plane,
     )
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
-    pre_effect_turn = ExecutionTurn(
+    pre_effect_turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="",

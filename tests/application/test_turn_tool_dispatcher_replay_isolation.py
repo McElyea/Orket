@@ -96,7 +96,7 @@ async def test_replay_mode_with_protocol_enabled_skips_persistence_side_effects(
         "args": {"path": "a.txt", "content": "x"},
     }
 
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role=role_name,
         issue_id=issue_id,
         content="",
@@ -151,7 +151,7 @@ async def test_replay_mode_with_protocol_disabled_skips_legacy_tool_result_persi
         "args": {"path": "a.txt", "content": "x"},
     }
 
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role=role_name,
         issue_id=issue_id,
         content="",

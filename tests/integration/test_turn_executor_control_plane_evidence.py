@@ -114,7 +114,7 @@ def _executor(tmp_path: Path) -> tuple[object, TurnExecutor]:
 async def _seed_checkpoint_only(tmp_path: Path):
     control_plane, executor = _executor(tmp_path)
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="",

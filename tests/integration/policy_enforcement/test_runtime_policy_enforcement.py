@@ -266,7 +266,7 @@ async def test_tool_gate_violation_blocks_before_tool_execution(tmp_path: Path) 
         tool_validation_error_factory=lambda violations: RuntimeError(str(violations)),
     )
     toolbox = _NoOpToolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",

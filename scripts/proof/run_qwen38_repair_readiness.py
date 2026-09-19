@@ -46,7 +46,7 @@ async def prove() -> dict:
             ],
             runtime_context={"local_prompt_task_class": "concise_text", "local_prompting_mode": "enforce"},
         )
-        turn = ExecutionTurn(role="actor", issue_id="repair-proof", content=initial.content, raw=initial.raw)
+        turn = ExecutionTurn(timestamp=None, role="actor", issue_id="repair-proof", content=initial.content, raw=initial.raw)
         diagnostics = validator.local_prompt_anti_meta_diagnostics(turn, context)
         violations = diagnostics["violations"]
         if not violations:
@@ -60,7 +60,7 @@ async def prove() -> dict:
         deterministic = corrective == builder.build_corrective_instruction(failures, context)
         for attempt in range(1, 3):
             response = await client.complete([{"role": "user", "content": corrective}], runtime_context=context)
-            observed = ExecutionTurn(role="actor", issue_id="repair-proof", content=response.content, raw=response.raw)
+            observed = ExecutionTurn(timestamp=None, role="actor", issue_id="repair-proof", content=response.content, raw=response.raw)
             errors = validator.local_prompt_anti_meta_diagnostics(observed, context)["violations"]
             try:
                 payload = json.loads(response.content)

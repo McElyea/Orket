@@ -56,7 +56,7 @@ class _NoOpToolbox:
 async def test_tool_dispatcher_preflight_rejects_ring_policy_violation(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -94,7 +94,7 @@ async def test_tool_dispatcher_preflight_rejects_ring_policy_violation(tmp_path:
 async def test_tool_dispatcher_preflight_rejects_capability_violation(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -133,7 +133,7 @@ async def test_tool_dispatcher_preflight_rejects_capability_violation(tmp_path: 
 async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -176,7 +176,7 @@ async def test_tool_dispatcher_preflight_rejects_ring_policy_violation_without_p
 ) -> None:
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -215,7 +215,7 @@ async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation_witho
 ) -> None:
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -255,7 +255,7 @@ async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation_witho
 async def test_tool_dispatcher_preflight_rejects_missing_compatibility_mapping(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -294,7 +294,7 @@ async def test_tool_dispatcher_preflight_rejects_missing_compatibility_mapping(t
 async def test_tool_dispatcher_emits_determinism_violation_for_declared_pure_side_effect_tool(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -332,7 +332,7 @@ async def test_tool_dispatcher_emits_determinism_violation_for_declared_pure_sid
 async def test_tool_dispatcher_preflight_rejects_tool_invocation_boundary_violation(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -380,7 +380,7 @@ async def test_tool_dispatcher_records_determinism_violation_event(tmp_path: Pat
 
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",
@@ -438,7 +438,7 @@ async def test_tool_dispatcher_records_preflight_boundary_rejection_as_runtime_e
 
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",

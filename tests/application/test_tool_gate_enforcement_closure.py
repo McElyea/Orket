@@ -297,7 +297,7 @@ async def test_direct_tool_dispatcher_internal_seam_blocks_under_same_deny_all_p
     """Layer: integration. Verifies the internal dispatcher seam still blocks before execution under the deny-all gate."""
     dispatcher = _build_dispatcher(tmp_path, _DenyAllToolGate(tmp_path))
     toolbox = _WritingToolbox(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="",

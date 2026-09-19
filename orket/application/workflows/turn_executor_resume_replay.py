@@ -95,6 +95,7 @@ async def load_pre_effect_resume_turn_if_needed(
             operation_refs=operation_refs,
         )
     return ExecutionTurn(
+        timestamp=None,  # Reusing a tool plan does not observe a new model response.
         role=role_name,
         issue_id=issue_id,
         content="",

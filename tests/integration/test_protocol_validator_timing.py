@@ -39,7 +39,7 @@ def _runtime(workspace: Path):
 
 
 async def _dispatch(dispatcher, toolbox, timing_context=None, *, replay=False):
-    turn = ExecutionTurn(role="coder", issue_id="TIMING-1", content="", tool_calls=[
+    turn = ExecutionTurn(timestamp=None, role="coder", issue_id="TIMING-1", content="", tool_calls=[
         ToolCall(tool="read_file", args={"path": "input.txt"}),
     ])
     await dispatcher.execute_tools(turn=turn, toolbox=toolbox, context={

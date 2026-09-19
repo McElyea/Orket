@@ -6,7 +6,7 @@ from orket.services.idesign_validator import ViolationCode, iDesignValidator
 
 def test_idesign_naming_violations():
     # 1. Manager naming violation
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="lead_architect",
         issue_id="ISSUE-01",
         content="Creating a manager",
@@ -20,7 +20,7 @@ def test_idesign_naming_violations():
     assert "Manager component" in violations[0].message
 
     # 2. Engine naming violation
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="lead_architect",
         issue_id="ISSUE-01",
         content="Creating an engine",
@@ -34,7 +34,7 @@ def test_idesign_naming_violations():
     assert "Engine component" in violations[0].message
 
     # 3. Valid naming
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="lead_architect",
         issue_id="ISSUE-01",
         content="Creating a valid manager",
@@ -47,7 +47,7 @@ def test_idesign_naming_violations():
 
 def test_idesign_allowed_categories():
     # 1. Invalid category
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="lead_architect",
         issue_id="ISSUE-01",
         content="Creating a generic file",

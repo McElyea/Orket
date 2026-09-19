@@ -20,7 +20,7 @@ def _role() -> RoleConfig:
 
 def test_contract_validator_collect_contract_violations_happy_path(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         tool_calls=[
@@ -38,7 +38,7 @@ def test_contract_validator_collect_contract_violations_happy_path(tmp_path: Pat
 
 def test_contract_validator_reports_consistency_scope_violation(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content='{"tool":"write_file","args":{"path":"a.txt","content":"ok"}} extra prose',
@@ -54,7 +54,7 @@ def test_contract_validator_reports_consistency_scope_violation(tmp_path: Path) 
 
 def test_contract_validator_rejects_blank_required_write_content(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         tool_calls=[
@@ -75,7 +75,7 @@ def test_contract_validator_rejects_blank_required_write_content(tmp_path: Path)
 
 def test_contract_validator_rejects_artifact_semantic_contract_violations(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         tool_calls=[
@@ -116,7 +116,7 @@ def test_contract_validator_rejects_artifact_semantic_contract_violations(tmp_pa
 
 def test_contract_validator_reports_high_specificity_preserve_tokens_for_semantic_retry(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         tool_calls=[
@@ -162,7 +162,7 @@ def test_contract_validator_reports_high_specificity_preserve_tokens_for_semanti
 
 def test_contract_validator_allows_recovered_truncated_tool_only_payload(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content='```json\n{"tool":"write_file","args":{"path":"a.txt","content":"ok"}\n```',
@@ -177,7 +177,7 @@ def test_contract_validator_allows_recovered_truncated_tool_only_payload(tmp_pat
 
 def test_contract_validator_allows_recovered_quote_heavy_legacy_tool_only_payload(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content=(
@@ -220,7 +220,7 @@ def test_contract_validator_allows_recovered_quote_heavy_legacy_tool_only_payloa
 
 def test_contract_validator_rejects_prefixed_prose_even_with_recovered_tool_call(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content='I will now comply: {"tool":"write_file","args":{"path":"a.txt","content":"ok"}',
@@ -236,7 +236,7 @@ def test_contract_validator_rejects_prefixed_prose_even_with_recovered_tool_call
 
 def test_contract_validator_allows_think_prefixed_tool_only_payload(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content=(
@@ -254,7 +254,7 @@ def test_contract_validator_allows_think_prefixed_tool_only_payload(tmp_path: Pa
 
 def test_contract_validator_allows_thinking_process_prefixed_tool_only_payload(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content=(
@@ -273,7 +273,7 @@ def test_contract_validator_allows_thinking_process_prefixed_tool_only_payload(t
 def test_contract_validator_local_prompt_reports_markdown_fence_leaf_code(tmp_path: Path) -> None:
     """Layer: contract. Verifies protocol-governed local prompting rejects fenced JSON payloads."""
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content='```json\n{"ok":true}\n```',
@@ -292,7 +292,7 @@ def test_contract_validator_local_prompt_reports_markdown_fence_leaf_code(tmp_pa
 def test_contract_validator_local_prompt_rejects_markdown_fence_on_legacy_non_protocol_tool_path(tmp_path: Path) -> None:
     """Layer: contract. Verifies legacy tool-call turns reject fenced JSON blocks instead of relying on repair."""
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content='```json\n{"tool":"write_file","args":{"path":"a.txt","content":"ok"}}\n```',
@@ -311,7 +311,7 @@ def test_contract_validator_local_prompt_rejects_markdown_fence_on_legacy_non_pr
 
 def test_contract_validator_local_prompt_allows_leading_think_block_when_profile_permits(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content="<think>plan</think>\n{\"ok\":true}",
@@ -327,7 +327,7 @@ def test_contract_validator_local_prompt_allows_leading_think_block_when_profile
 
 def test_contract_validator_local_prompt_rejects_think_block_after_payload(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content='{"ok":true}<think>extra</think>',
@@ -345,7 +345,7 @@ def test_contract_validator_local_prompt_rejects_think_block_after_payload(tmp_p
 
 def test_contract_validator_local_prompt_rejects_profile_intro_denylist_prefix(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content='Sure {"ok":true}',
@@ -360,7 +360,7 @@ def test_contract_validator_local_prompt_rejects_profile_intro_denylist_prefix(t
 
 def test_contract_validator_local_prompt_rejects_tool_call_meta_prefix_from_profile_denylist(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
         content='Thinking Process:\n{"tool":"write_file","args":{"path":"a.txt","content":"ok"}}',
@@ -381,7 +381,7 @@ def test_contract_validator_local_prompt_rejects_tool_call_meta_prefix_from_prof
 
 def test_contract_validator_accepts_comment_contract_when_comment_is_structured(tmp_path: Path) -> None:
     validator = _validator(tmp_path)
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="reviewer",
         issue_id="ISSUE-2",
         tool_calls=[
@@ -418,7 +418,7 @@ def test_contract_validator_rejects_comment_contract_when_terms_are_missing(tmp_
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
     (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="reviewer",
         issue_id="ISSUE-3",
         tool_calls=[ToolCall(tool="add_issue_comment", args={"comment": "Need more detail."})],
@@ -445,7 +445,7 @@ def test_contract_validator_rejects_comment_contract_when_required_paths_are_not
     ui_dir.mkdir(parents=True, exist_ok=True)
     (ui_dir / "operator_panel.md").write_text("# Operator Panel\n", encoding="utf-8")
     (ui_dir / "style_notes.md").write_text("# Style Notes\n", encoding="utf-8")
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="reviewer",
         issue_id="ISSUE-4",
         tool_calls=[

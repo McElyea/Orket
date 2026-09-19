@@ -23,6 +23,7 @@ from orket.exceptions import AgentConfigurationError, CardNotFound
 from orket.logging import log_event
 from orket.runtime import ConfigLoader
 from orket.schema import DialectConfig, SkillConfig
+from orket.time_utils import utc_now_datetime
 from orket.utils import sanitize_name
 
 logger = logging.getLogger(__name__)
@@ -95,8 +96,10 @@ class Agent:
         tool_gate: Any | None = None,
         strict_config: bool = True,
         journal: ControlPlaneAuthorityService | NullControlPlaneAuthorityService | None = None,
+        turn_clock: Callable[[], datetime] = utc_now_datetime,
     ) -> None:
         self.name = name
+        self.turn_clock = turn_clock
         self.description = description
         self.tools = tools
         self.provider = provider
@@ -188,6 +191,7 @@ class Agent:
         transcript: list[dict[str, Any]] | None = None,
     ) -> ExecutionTurn:
         """Executes the turn and returns a structured ExecutionTurn object."""
+        turn_clock = self.turn_clock
         await self._ensure_configs_loaded_async()
 
         # 1. COMPILE INSTRUCTIONS
@@ -258,6 +262,7 @@ class Agent:
             )
             parsed_calls = []
         turn = ExecutionTurn(
+            timestamp=turn_clock(),
             role=self.name,
             issue_id=context.get("issue_id", "unknown"),
             thought=thought,

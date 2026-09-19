@@ -110,7 +110,7 @@ def test_response_parser_protocol_errors_emit_registered_codes(tmp_path: Path) -
 
 @pytest.mark.asyncio
 async def test_protocol_preflight_validator_errors_emit_registered_codes(tmp_path: Path) -> None:
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         role="coder",
         issue_id="ISSUE-1",
         content="",

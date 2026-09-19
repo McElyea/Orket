@@ -137,6 +137,12 @@ Defines stable domain primitives:
 
 Core must remain deterministic and dependency-minimal.
 
+`ExecutionTurn` requires an explicit timestamp or explicit absence; constructing
+a core turn never reads the host clock. Application `Agent` supplies captured
+clock authority. Existing replay/resume snapshots lack original response times,
+so reconstructed turns carry `None`. Migration and remaining clock scope:
+`docs/architecture/CONTRACT_DELTA_TURN_TIME_D_2026-09-18.md`.
+
 Governed-agent shared invocation/broker ports and wake/schedule/webhook records
 reside in `orket/core/contracts/`. Concrete authority-guard invocation remains in
 application; storage adapters implement the shared core ports. Migration and

@@ -273,7 +273,7 @@ async def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
     direct_dispatch_result = "blocked"
     try:
         await direct_dispatcher.execute_tools(
-            turn=ExecutionTurn(
+            turn=ExecutionTurn(timestamp=None,
                 role="developer",
                 issue_id="ISSUE-1",
                 content="",

@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-19T02:15:52.912952+00:00",
+  "generated_at": "2026-09-19T03:38:20.650116+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -625,7 +625,7 @@
       },
       "orket.agents.agent": {
         "path": "orket/agents/agent.py",
-        "sha256": "bd382b8ceccec28daff306deb79081df9eabaed7a3269cf1d4812ff5e4c3117d"
+        "sha256": "246ca94f2024f6edff7a9413bfa2d0186974f591ad119fe6d1ae55d0831fe223"
       },
       "orket.agents.agent_factory": {
         "path": "orket/agents/agent_factory.py",
@@ -1837,7 +1837,7 @@
       },
       "orket.application.workflows.turn_executor_completed_replay": {
         "path": "orket/application/workflows/turn_executor_completed_replay.py",
-        "sha256": "0a37c8aa012c0d1711b15320cf0c04117cfd2871aba00b761dd98d2787ca4505"
+        "sha256": "71e9cd121d4109131f0d2c387663c98678df4f680c0598d4e7acd8c123b7d6f5"
       },
       "orket.application.workflows.turn_executor_control_plane": {
         "path": "orket/application/workflows/turn_executor_control_plane.py",
@@ -1865,7 +1865,7 @@
       },
       "orket.application.workflows.turn_executor_resume_replay": {
         "path": "orket/application/workflows/turn_executor_resume_replay.py",
-        "sha256": "482e9a8505079abed332a8371d6bac96720d0a6d37eb2af9f4dd2f3861447988"
+        "sha256": "c79e725606af615c4acf8b91885896440d26bbccb3810539748a216fe9e65182"
       },
       "orket.application.workflows.turn_executor_runtime": {
         "path": "orket/application/workflows/turn_executor_runtime.py",
@@ -2225,7 +2225,7 @@
       },
       "orket.core.domain.execution": {
         "path": "orket/core/domain/execution.py",
-        "sha256": "8d1d6ed0b25e4689520688a8161c1b04785e1693fbc6c32a10868a7e77240a83"
+        "sha256": "a650121e5c729e62c0cabc843acc2ccd264425d25daa8ce7eef3046fa6f55d20"
       },
       "orket.core.domain.failure_reporter": {
         "path": "orket/core/domain/failure_reporter.py",
@@ -4249,7 +4249,7 @@
       },
       "orket.time_utils": {
         "path": "orket/time_utils.py",
-        "sha256": "2633a1a93714e0f7ef985bbeb129aec0c1faff5128185c7d6e4dbab1b1b97836"
+        "sha256": "29db3da73ad96ee5eb6eeb5220fa5dd039f9a41a203e3a6b717008163cbe0850"
       },
       "orket.utils": {
         "path": "orket/utils.py",
@@ -6711,9 +6711,16 @@
       },
       {
         "source": "orket.agents.agent",
-        "target": "orket.utils",
+        "target": "orket.time_utils",
         "path": "orket/agents/agent.py",
         "line": 26,
+        "kind": "from"
+      },
+      {
+        "source": "orket.agents.agent",
+        "target": "orket.utils",
+        "path": "orket/agents/agent.py",
+        "line": 27,
         "kind": "from"
       },
       {
@@ -28445,7 +28452,7 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 338
+        "count": 339
       },
       {
         "source": "application",
@@ -28757,27 +28764,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-17T17:28:20.355050Z",
-      "changed": true,
-      "before_digest": "sha256:350534f1403129f1a93d9ebe5d7e5257bbb90165179690a4b4b29ca742b0375f",
-      "after_digest": "sha256:e1288527279631527a3d12db43aa0c7f2bae4113c3a0d5a5e44a41b274d4b795",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 43556,
-        "paths_total_current": 43556,
-        "paths_total_reference": 43556,
-        "churn_paths": 2,
-        "churn_ratio": 4.6e-05,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.modules.orket.extensions.agent_workload_subprocess.sha256"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-17T18:18:09.560961Z",
       "changed": true,
@@ -29780,6 +29766,45 @@
         "sample_paths": [
           "$.generated_at",
           "$.observed.modules.orket.interfaces.routers.sessions.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-19T03:38:34.257063Z",
+      "changed": true,
+      "before_digest": "sha256:4e3b8a858a63acc647ecf4afbb5624389bba896250ff50b71c7451ea347450a1",
+      "after_digest": "sha256:f10662c637f49dd51babe42a4739c82b878cbcd3cd09e3faf833f45307090ffc",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 7147,
+        "initial_write": false,
+        "paths_total_previous": 44166,
+        "paths_total_current": 44177,
+        "paths_total_reference": 44177,
+        "churn_paths": 7148,
+        "churn_ratio": 0.161804,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[344].target",
+          "$.observed.edges[345].line",
+          "$.observed.edges[345].path",
+          "$.observed.edges[345].source",
+          "$.observed.edges[345].target",
+          "$.observed.edges[346].line",
+          "$.observed.edges[346].target",
+          "$.observed.edges[347].line",
+          "$.observed.edges[347].target",
+          "$.observed.edges[348].line",
+          "$.observed.edges[348].target",
+          "$.observed.edges[349].line",
+          "$.observed.edges[349].target",
+          "$.observed.edges[350].line",
+          "$.observed.edges[350].path",
+          "$.observed.edges[350].source",
+          "$.observed.edges[350].target",
+          "$.observed.edges[351].line",
+          "$.observed.edges[351].path"
         ]
       }
     }

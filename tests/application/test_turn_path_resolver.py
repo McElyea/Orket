@@ -31,7 +31,7 @@ def test_required_path_helpers_delegate_to_partition(tmp_path: Path) -> None:
 
 
 def test_required_write_and_observed_paths() -> None:
-    turn = ExecutionTurn(
+    turn = ExecutionTurn(timestamp=None,
         issue_id="ISSUE-1",
         role="coder",
         content="{}",

@@ -133,7 +133,7 @@ async def test_compatibility_pilot_live_and_replay_parity(tmp_path: Path) -> Non
     live_results: list[dict[str, Any]] = []
 
     for turn_index, (tool_name, tool_args) in enumerate(pilot_calls, start=1):
-        turn = ExecutionTurn(
+        turn = ExecutionTurn(timestamp=None,
             role="coder",
             issue_id="ISSUE-PILOT",
             content="",
@@ -157,7 +157,7 @@ async def test_compatibility_pilot_live_and_replay_parity(tmp_path: Path) -> Non
     assert live_call_count >= 4
 
     for turn_index, (tool_name, tool_args) in enumerate(pilot_calls, start=1):
-        turn = ExecutionTurn(
+        turn = ExecutionTurn(timestamp=None,
             role="coder",
             issue_id="ISSUE-PILOT",
             content="",

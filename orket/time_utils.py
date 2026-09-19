@@ -30,3 +30,8 @@ def now_local() -> datetime:
 def utc_now_iso() -> str:
     """Adapter clock for callers that supply an explicit UTC report timestamp."""
     return datetime.now(UTC).isoformat()
+
+
+def utc_now_datetime() -> datetime:
+    """Host clock supplied by application composition to live turn construction."""
+    return datetime.now(UTC)

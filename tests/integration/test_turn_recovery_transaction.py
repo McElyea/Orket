@@ -40,7 +40,7 @@ async def unfinished_turn(tmp_path, *, observed=True):
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
                             workspace=tmp_path, control_plane_service=control)
     args = {"path": "agent_output/out.txt", "content": "observed"}
-    turn = ExecutionTurn(role="developer", issue_id="ISSUE-1", content="",
+    turn = ExecutionTurn(timestamp=None, role="developer", issue_id="ISSUE-1", content="",
                          tool_calls=[ToolCall(tool="write_file", args=args)])
     await write_turn_checkpoint_and_publish_if_needed(executor=executor, turn=turn, context=_context(), prompt_hash="prompt")
     run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"

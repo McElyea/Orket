@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.24] - 2026-09-18 - "Explicit turn time"
+
+### Fixed
+- Require an explicit timestamp or explicit absence when constructing core execution turns.
+- Capture the Agent's supplied clock before awaiting; retain the UTC host clock as its application default.
+- Stop inventing response timestamps when replaying or resuming stored turns whose checkpoints lack that observation.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration and limits: `docs/architecture/CONTRACT_DELTA_TURN_TIME_D_2026-09-18.md`.
+- Stability: a scoped architectural-truth checkpoint; C/D and whole-lane acceptance remain open.
+
 ## [0.6.23] - 2026-09-18 - "Owned protocol queries"
 
 ### Fixed

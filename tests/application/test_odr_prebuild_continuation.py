@@ -158,7 +158,7 @@ async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
             captured["context"] = context
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):
@@ -303,7 +303,7 @@ async def test_execute_issue_turn_uses_configured_odr_auditor_model(
         async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
             return TurnResult(
                 success=True,
-                turn=ExecutionTurn(content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
+                turn=ExecutionTurn(timestamp=None, content="Turn handled; work awaits review.", role=context["role"], issue_id=context["issue_id"], note=""),
             )
 
     async def _noop(*args, **kwargs):

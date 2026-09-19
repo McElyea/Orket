@@ -74,6 +74,7 @@ async def load_completed_turn_replay_if_needed(
         snapshot_payload=snapshot_payload,
     )
     return ExecutionTurn(
+        timestamp=None,  # The retained checkpoint has no original response timestamp.
         role=role_name,
         issue_id=issue_id,
         content="",

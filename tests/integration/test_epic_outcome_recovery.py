@@ -50,7 +50,7 @@ async def test_restart_recovers_after_outcome_inspection_failure(test_root, work
     async def execute_fixture(**kwargs):
         await accept_publication_card(pipeline, workspace)
         kwargs["epic"].params["retained_runtime_note"] = "captured after setup"
-        pipeline.orchestrator.transcript.append(ExecutionTurn(role="coder", issue_id="ISSUE-1", content="retained output"))
+        pipeline.orchestrator.transcript.append(ExecutionTurn(timestamp=None, role="coder", issue_id="ISSUE-1", content="retained output"))
 
     pipeline.orchestrator.execute_epic = execute_fixture
     try:
