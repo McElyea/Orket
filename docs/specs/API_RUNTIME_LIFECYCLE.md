@@ -1,6 +1,6 @@
 # API Runtime Lifecycle
 
-Last updated: 2026-09-18
+Last updated: 2026-09-19
 Status: Active
 
 `orket.application.services.api_runtime_container.ApiRuntimeContainer` owns the
@@ -32,6 +32,23 @@ authentication, not merely the presence of the environment flag. A configured ke
 still rejects anonymous/wrong-key access when that flag is set. Production/staging
 still reject the insecure flag at startup. These semantics do not make all manually
 registered API background tasks managed or impose a startup/shutdown deadline.
+
+## Interaction cancellation
+
+Interaction cancellation is admitted by application `InteractionCancellationService`.
+The selected session bounds the target lookup; accepted operator actions follow
+observed interruption and stream publication, with captured actor and clock.
+Admitted work remains owned through interruption and audit publication. Missing
+or foreign targets return 404; idle or terminal targets return 409. State, stream
+and SQLite remain separate effects; audit failure does not undo interruption.
+Migration and recovery limits:
+`docs/architecture/CONTRACT_DELTA_INTERACTION_CANCEL_CD_2026-09-19.md`.
+
+A successful cancellation response retains `{ "ok": true, "target": ... }`.
+Retrying a terminal turn returns 409 and creates no second interruption or accepted
+operator action. Session-scope audit receipts also identify the actual interrupted
+turn. This cancels the interaction state; it does not assert that every workload
+effect or external provider has stopped.
 
 ## Factory and storage selection
 

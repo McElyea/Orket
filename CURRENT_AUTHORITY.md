@@ -4,6 +4,15 @@ Last updated: 2026-09-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Interaction cancellation is admitted by application `InteractionCancellationService`.
+The selected session bounds the target lookup; accepted operator actions follow
+observed interruption and stream publication, with captured actor and clock.
+Admitted work remains owned through interruption and audit publication. Missing
+or foreign targets return 404; idle or terminal targets return 409. State, stream
+and SQLite remain separate effects; audit failure does not undo interruption.
+Migration and recovery limits:
+`docs/architecture/CONTRACT_DELTA_INTERACTION_CANCEL_CD_2026-09-19.md`.
+
 API hardware observations and event publication run in application-owned workers
 retained through request interruption and shutdown. Events capture the selected
 root and nested payload before dispatch. Extension model catalogs capture provider

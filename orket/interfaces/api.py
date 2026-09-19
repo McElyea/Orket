@@ -784,7 +784,7 @@ v1_router.include_router(
         run_builtin_workload=lambda **kwargs: run_builtin_workload(**kwargs),
         commit_intent_factory=lambda reason: CommitIntent(type="decision", ref=f"fail_closed:{reason}"),
         workspace_root_getter=lambda: _project_root(),
-        control_plane_publication_getter=lambda: _get_engine().control_plane_publication,
+        cancellation_service_getter=lambda: _runtime_context().interaction_cancellation(),
     )
 )
 v1_router.include_router(build_extension_runtime_router(service_getter=lambda: _get_extension_runtime_service()))

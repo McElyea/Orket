@@ -10,6 +10,7 @@ from orket.application.services.application_runtime_lifetime import (
     RequestAdmissionClosed,
     close_owned_resource,
 )
+from orket.application.services.interaction_cancellation_service import InteractionCancellationService
 
 
 class ApiRequestAdmissionClosed(RequestAdmissionClosed):
@@ -48,6 +49,12 @@ class ApiRuntimeContainer(ApplicationRuntimeLifetime):
     def __post_init__(self) -> None:
         self.project_root = Path(self.project_root).resolve()
         self.events = ApiEventService(self.project_root)
+
+    def interaction_cancellation(self) -> InteractionCancellationService:
+        return InteractionCancellationService(
+            manager=self.interaction_manager, publication=self.engine.control_plane_publication,
+            utc_now=self.api_runtime_host.utc_now_iso,
+        )
 
     async def _close_final_resource(self) -> None:
         await close_owned_resource(self.engine)

@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.27] - 2026-09-19 - "Observed interaction cancellation"
+
+### Fixed
+- Validate cancellation targets within the requested interaction session and refuse missing, idle or terminal targets without publishing an accepted action.
+- Retain admitted cancellation through stream and durable operator-action publication, including repeated interruption and application shutdown.
+- Capture actor, selected manager/publication and explicit clock before awaiting; bind cancellation receipts to the actual interrupted turn.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration and limits: `docs/architecture/CONTRACT_DELTA_INTERACTION_CANCEL_CD_2026-09-19.md`.
+- Stability: scoped C/D progress; the full architectural-truth lane remains active.
+
 ## [0.6.26] - 2026-09-19 - "Owned API observations"
 
 ### Fixed

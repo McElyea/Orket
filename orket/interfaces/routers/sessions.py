@@ -3,15 +3,19 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from orket.application.services.interaction_cancellation_service import (
+    InteractionCancelConflict,
+    InteractionCancelDisabled,
+    InteractionCancellationService,
+    InteractionCancelNotFound,
+)
 from orket.application.services.protocol_replay_service import ProtocolReplayService
-from orket.core.domain import OperatorCommandClass, OperatorInputClass
 from orket.interfaces.routers.protocol_queries import build_protocol_query_router
 
 
@@ -45,7 +49,7 @@ def build_sessions_router(
     commit_intent_factory: Callable[[str], Any],
     workspace_root_getter: Callable[[], Path] = Path.cwd,
     protocol_replay_service_getter: Callable[[], Any] | None = None,
-    control_plane_publication_getter: Callable[[], Any] | None = None,
+    cancellation_service_getter: Callable[[], InteractionCancellationService] | None = None,
 ) -> APIRouter:
     router = APIRouter()
 
@@ -201,36 +205,18 @@ def build_sessions_router(
         req: InteractionCancelRequest,
         request: Request,
     ) -> dict[str, Any]:
-        interaction_manager = interaction_manager_getter()
-        if not interaction_manager.stream_enabled():
-            raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
-        target = req.turn_id or session_id
-        try:
-            await interaction_manager.cancel(target)
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        if cancellation_service_getter is None:
+            raise HTTPException(status_code=503, detail="Interaction cancellation service is unavailable.")
+        service = cancellation_service_getter()
         actor_ref = str(getattr(request.state, "authenticated_actor_ref", "") or "").strip()
-        if actor_ref and control_plane_publication_getter is not None:
-            timestamp = datetime.now(UTC).isoformat()
-            target_ref = f"interaction-turn:{target}" if req.turn_id else f"interaction-session:{session_id}"
-            affected_resource_refs = [f"interaction-session:{session_id}"]
-            if req.turn_id:
-                affected_resource_refs.append(target_ref)
-            publication = control_plane_publication_getter()
-            await publication.publish_operator_action(
-                action_id=f"interaction-operator-action:{session_id}:{target}:{timestamp}",
-                actor_ref=actor_ref,
-                input_class=OperatorInputClass.COMMAND,
-                target_ref=target_ref,
-                timestamp=timestamp,
-                precondition_basis_ref=f"{target_ref}:cancel_requested",
-                result="accepted_cancel",
-                command_class=OperatorCommandClass.CANCEL_RUN,
-                affected_transition_refs=[f"{target_ref}:cancel_requested"],
-                affected_resource_refs=affected_resource_refs,
-                receipt_refs=[f"interaction-cancel:{target}"],
-            )
-        return {"ok": True, "target": target}
+        try:
+            return await service.cancel(session_id=session_id, turn_id=req.turn_id, actor_ref=actor_ref)
+        except InteractionCancelNotFound as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except InteractionCancelConflict as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except InteractionCancelDisabled as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.get("/marshaller/runs")
     async def list_marshaller_run_rows(limit: int = 20) -> dict[str, Any]:

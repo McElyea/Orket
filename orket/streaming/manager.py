@@ -14,8 +14,12 @@ from typing import Any
 
 import aiofiles
 
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.core.contracts.interaction_cancellation import InteractionCancellation
+
 from .bus import StreamBus
 from .contracts import CommitHandle, CommitIntent, StreamEvent, StreamEventType, mono_ts_ms_now
+from .interaction_cancellation import cancel_interaction
 from .session_context import (
     SESSION_CONTEXT_VERSION,
     build_packet1_context_envelope,
@@ -337,50 +341,17 @@ class InteractionManager:
     async def subscribe(self, session_id: str) -> asyncio.Queue[StreamEvent]:
         return await self.bus.subscribe(session_id)
 
-    async def cancel(self, target_id: str) -> None:
-        finalized_at = _utc_now_iso()
-        async with self._lock:
-            # target may be session_id or turn_id
-            if target_id in self._sessions:
-                session = self._sessions[target_id]
-                if session.active_turn_id is None:
-                    return
-                session_id = target_id
-                turn_id = session.active_turn_id
-            else:
-                turn_match = None
-                for (sid, tid), state in self._turns.items():
-                    if tid == target_id:
-                        turn_match = (sid, tid, state)
-                        break
-                if turn_match is None:
-                    return
-                session_id, turn_id, _ = turn_match
-
-            turn_state = self._turns.get((session_id, turn_id))
-            if turn_state is None:
-                return
-            if turn_state.terminal_event == StreamEventType.TURN_FINAL.value:
-                return
-            if turn_state.terminal_event is not None:
-                return
-            turn_state.canceled.set()
-            turn_state.terminal_event = StreamEventType.TURN_INTERRUPTED.value
-            turn_state.finalized_at = finalized_at
-            session_state = self._sessions.get(session_id)
-            if session_state is not None:
-                session_state.updated_at = finalized_at
-                turn_record = self._find_turn_record(session_state, turn_id)
-                if turn_record is not None:
-                    turn_record["terminal_event"] = StreamEventType.TURN_INTERRUPTED.value
-                    turn_record["status"] = "interrupted"
-                    turn_record["finalized_at"] = finalized_at
-
-        await self.bus.publish(
-            session_id=session_id,
-            turn_id=turn_id,
-            event_type=StreamEventType.TURN_INTERRUPTED,
-            payload={"authoritative": False, "reason": "canceled"},
+    async def cancel(
+        self, target_id: str, *, session_id: str | None = None, session_target: bool = False,
+        timestamp: str | None = None,
+    ) -> InteractionCancellation:
+        finalized_at = _utc_now_iso() if timestamp is None else timestamp
+        return await run_owned_io(
+            lambda: cancel_interaction(
+                target_id=target_id, expected_session_id=session_id, timestamp=finalized_at,
+                session_target=session_target,
+                sessions=self._sessions, turns=self._turns, lock=self._lock, bus=self.bus,
+            ), label="interaction-state-cancellation", preserve_failure=True,
         )
 
     async def finalize(self, session_id: str, turn_id: str) -> CommitHandle:

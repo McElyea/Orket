@@ -1776,18 +1776,11 @@ async def test_interaction_cancel_endpoint_publishes_operator_action_for_session
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_DURABLE_ROOT", str(Path(tmp_path) / "durable"))
     from orket.orchestration.engine import OrchestrationEngine
+    from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus
 
-    class _FakeInteractionManager:
-        def __init__(self) -> None:
-            self.cancelled_targets: list[str] = []
-
-        def stream_enabled(self) -> bool:
-            return True
-
-        async def cancel(self, target: str) -> None:
-            self.cancelled_targets.append(target)
-
-    fake_interaction_manager = _FakeInteractionManager()
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
+    manager = InteractionManager(bus=StreamBus(), commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
+                                 project_root=tmp_path)
     workspace_root = Path(tmp_path) / "workspace"
     workspace_root.mkdir(parents=True, exist_ok=True)
     real_engine = OrchestrationEngine(
@@ -1795,9 +1788,10 @@ async def test_interaction_cancel_endpoint_publishes_operator_action_for_session
         db_path=str(Path(tmp_path) / "runtime.db"),
     )
     monkeypatch.setattr(api_module._runtime_context(), "engine", real_engine)
-    monkeypatch.setattr(api_module._runtime_context(), "interaction_manager", fake_interaction_manager)
+    monkeypatch.setattr(api_module._runtime_context(), "interaction_manager", manager)
 
-    session_id = f"INT-CANCEL-SESSION-{tmp_path.parent.name}-{tmp_path.name}"
+    session_id = await manager.start({})
+    turn_id = await manager.begin_turn(session_id, {}, {})
     response = client.post(
         f"/v1/interactions/{session_id}/cancel",
         json={},
@@ -1806,7 +1800,6 @@ async def test_interaction_cancel_endpoint_publishes_operator_action_for_session
 
     assert response.status_code == 200
     assert response.json() == {"ok": True, "target": session_id}
-    assert fake_interaction_manager.cancelled_targets == [session_id]
     operator_actions = await real_engine.control_plane_repository.list_operator_actions(
         target_ref=f"interaction-session:{session_id}"
     )
@@ -1816,7 +1809,7 @@ async def test_interaction_cancel_endpoint_publishes_operator_action_for_session
     assert latest.input_class.value == "operator_command"
     assert latest.command_class.value == "cancel_run"
     assert latest.result == "accepted_cancel"
-    assert latest.affected_resource_refs == [f"interaction-session:{session_id}"]
+    assert latest.affected_resource_refs == [f"interaction-session:{session_id}", f"interaction-turn:{turn_id}"]
 
 
 @pytest.mark.asyncio
@@ -1825,18 +1818,11 @@ async def test_interaction_cancel_endpoint_publishes_operator_action_for_turn_sc
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_DURABLE_ROOT", str(Path(tmp_path) / "durable"))
     from orket.orchestration.engine import OrchestrationEngine
+    from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus
 
-    class _FakeInteractionManager:
-        def __init__(self) -> None:
-            self.cancelled_targets: list[str] = []
-
-        def stream_enabled(self) -> bool:
-            return True
-
-        async def cancel(self, target: str) -> None:
-            self.cancelled_targets.append(target)
-
-    fake_interaction_manager = _FakeInteractionManager()
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
+    manager = InteractionManager(bus=StreamBus(), commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
+                                 project_root=tmp_path)
     workspace_root = Path(tmp_path) / "workspace"
     workspace_root.mkdir(parents=True, exist_ok=True)
     real_engine = OrchestrationEngine(
@@ -1844,10 +1830,10 @@ async def test_interaction_cancel_endpoint_publishes_operator_action_for_turn_sc
         db_path=str(Path(tmp_path) / "runtime.db"),
     )
     monkeypatch.setattr(api_module._runtime_context(), "engine", real_engine)
-    monkeypatch.setattr(api_module._runtime_context(), "interaction_manager", fake_interaction_manager)
+    monkeypatch.setattr(api_module._runtime_context(), "interaction_manager", manager)
 
-    session_id = f"INT-CANCEL-TURN-{tmp_path.parent.name}-{tmp_path.name}"
-    turn_id = "turn-42"
+    session_id = await manager.start({})
+    turn_id = await manager.begin_turn(session_id, {}, {})
     response = client.post(
         f"/v1/interactions/{session_id}/cancel",
         json={"turn_id": turn_id},
@@ -1856,7 +1842,6 @@ async def test_interaction_cancel_endpoint_publishes_operator_action_for_turn_sc
 
     assert response.status_code == 200
     assert response.json() == {"ok": True, "target": turn_id}
-    assert fake_interaction_manager.cancelled_targets == [turn_id]
     operator_actions = await real_engine.control_plane_repository.list_operator_actions(
         target_ref=f"interaction-turn:{turn_id}"
     )

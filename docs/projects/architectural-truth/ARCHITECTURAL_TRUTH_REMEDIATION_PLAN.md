@@ -12516,8 +12516,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.26
-API observation ownership work below. The graph has 12 forbidden pairs, zero cross-layer
+Next action: continue C/D from their numbered requirements after the 0.6.27
+interaction cancellation work below. The graph has 11 forbidden pairs, zero cross-layer
 cycles and eight unresolved import/reflection sites. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff still has 103 findings. The prior stale benchmark expectation passes in the
@@ -15583,3 +15583,95 @@ transactional durable store or cross-application WebSocket filter.
 Continue from the numbered C/D requirements and the remaining boundary map;
 0.6.26 is a checkpoint, not whole-lane acceptance. Keep 10 AM–6 PM America/Denver
 commits local; any authorized off-hours push has a separate publication receipt.
+
+### Interaction cancellation ownership checkpoint: 2026-09-19 (0.6.27)
+
+Application `InteractionCancellationService` owns admission, captured actor/clock
+and selected manager/publication inputs. The state adapter scopes cancellation
+under its existing lock and returns a core observed outcome. Missing and foreign
+targets return 404; idle or terminal targets return 409. An explicit turn operand
+equal to the session identifier cannot select session cancellation. Only a new
+interruption followed by stream publication permits an accepted operator action;
+both session- and turn-scope audit references identify the actual interrupted turn.
+Admitted state, stream and SQLite work remains owned through request interruption.
+
+The baseline operator/CLI cohort passed 77 cases. Seven retained real API
+counterexamples returned success for missing, idle, foreign or terminal targets,
+or published a second accepted action for an interrupted turn. The first repair
+passed 22 cases. The expanded ownership cohort passed 30, including real ASGI,
+stream and SQLite paths, repeated cancellation, timeout, shutdown, clock capture,
+concurrent duplicate refusal, session/turn identifier confusion, and a native
+SQLite trigger refusing the audit insert. Fixed fixture bounds are 0.5 seconds
+for concurrent heartbeat responsiveness and 3 seconds for settlement after release.
+Read-only queries of separate copies of the retained before-state SQLite files
+confirm one accepted action in each rejected-target case and two in each repeated
+cancel case. `cancel-counterexample-audit.json` retains those original-file hashes,
+counts and the preceding failed in-memory deserialization attempt; no original
+database or journal was modified by the analysis.
+
+Observed path: primary, with deliberate rejected/degraded requests. Result:
+partial success for the full goal. Live proof covers those local API/state/store
+paths and installed CLI/filesystem checks. Graph/lint/size/workflow proof is
+structural. No live model/provider, Gitea, Docker or hosted CI proof is claimed.
+
+The final source run passed 1,240 cases with no failures, errors or skips in
+401.937 seconds including runner overhead. All 1,212
+prior identities remain and 28 were added. The same cases
+pass in each installed cell; dependency, actual import origin, unchanged support,
+valid/malformed CLI, ToolGate, root-database and cleanup checks also pass. Every
+owned source/native launcher returned and its session was reaped.
+
+| Installed cell | Tests / failures / errors / skips | Core origins |
+|---|---:|---:|
+| a27-win-py311 | 1240 / 0 / 0 / 0 | 941 |
+| a27-linux-py311 | 1240 / 0 / 0 / 0 | 941 |
+| a27-win-py312 | 1240 / 0 / 0 / 0 | 941 |
+| a27-linux-py312 | 1240 / 0 / 0 / 0 | 941 |
+
+The manifest binds 1,907 support files without core/SDK
+source shadowing. Wheel/sdist parity matches 1,053 core Python
+and 1,068 package files without mismatch. Private environments
+install core 0.6.27 and retain unchanged SDK 0.7.0a1 and reference/starter 0.3.0a1
+artifacts. Source/native/launcher budgets stay 1,500/1,800/2,100 seconds; product
+deadlines and test assertions were not widened.
+
+Evidence under `.tmp/c-operator-boundaries/`:
+- `candidate/source-report.json`: SHA-256 `fcce5305418330d87c35795c62b5b6ba2ce131214d7a1a6acc775a931cb40363`.
+- `candidate/manifest.json`: SHA-256 `e4ed3cc85442aa772a4a1054bed771252888536c48f34776126065d21317b4ae`.
+- `candidate/native-audit.json`: SHA-256 `ced36be0bfb6ec35cc8d7ccf33d9a2031556c8264ae32996367bd71e2cd28f34`.
+- Core wheel: SHA-256 `2261b7ca862f9c42878af5b639a7f4892bfb75cade8604efeaa4b02472a795c7`.
+- Core sdist: SHA-256 `4544b30401d69b7e9aad25c791465b2d83c2a38241a77c1abb6b88bc4ed7fab3`.
+- `before`, `cancel-counterexamples`, `cancel-repaired`, `cancel-ownership` and
+  `structural` preserve inputs, command declarations, logs and reports.
+- `case-continuity.json`, `size-review.json`, `warning-observation.json`,
+  `ruff-comparison.json`, `remaining-boundaries.json`, `final-collection/collection.json`
+  and `review.json` retain their declared proof scope. Exact touched files are in
+  `CHANGESET.md`; local commit/tag evidence is separate from execution proof.
+
+Structural tests passed all 51 cases. The graph contains 1,053 modules and 3,315
+import sites: 11 forbidden pairs, eight unresolved import/reflection sites, zero
+unknown modules and zero cross-layer cycles. The sessions-router/core-domain
+pair was removed without exceptions or reclassification. Canonical Ruff still
+has the same 103 path/code/message findings; collection succeeds while dependency
+and release-ready verdicts remain false. New Python file/function/class limits
+pass; touched existing oversized files did not grow. Observed warnings remain
+recorded and are not treated as repaired by passing tests.
+
+State, stream publication and audit are separate effects. Audit refusal returns
+500 after an observable interruption; retry returns 409 and cannot manufacture
+the missing record. This checkpoint admits no transactional cancellation,
+automatic recovery of missing publications, process-death durability, universal
+workload/provider teardown or hard deadline for a hung publisher. Anonymous
+requests under the existing insecure posture have no authenticated operator action.
+The contract and embedding migration are in
+`docs/architecture/CONTRACT_DELTA_INTERACTION_CANCEL_CD_2026-09-19.md`.
+
+All prior sealed artifacts, historical clock diagnosis and `.26` publication remain
+unchanged. This checkpoint is kept local under the user's current instruction;
+GitHub publication is deferred. Other CLI/driver/operator/session dependencies,
+core clocks/identities and complete async classification remain active C/D work.
+Full E1/E2, CAP-1/2/3, full Quality/coverage, hosted CI, release readiness and
+explicit whole-lane acceptance remain open. The last full-suite observation is
+still the retained `.22` run (6,852 passed, one stale benchmark expectation failed,
+89 skipped); the corrected benchmark expectation passes the focused later cohorts.
+This checkpoint is not a fresh all-green full-suite claim.

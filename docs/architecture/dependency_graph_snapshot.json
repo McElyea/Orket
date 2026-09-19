@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-19T06:05:02.971075+00:00",
+  "generated_at": "2026-09-19T07:07:59.917008+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -721,7 +721,7 @@
       },
       "orket.application.services.api_runtime_container": {
         "path": "orket/application/services/api_runtime_container.py",
-        "sha256": "94397127161034705838586a20fd6cac572aa169558a97f9045e8cefe4bb6d85"
+        "sha256": "480da18f65255746e302f60273364cf903636927f91d1afe2805755c05a6acfd"
       },
       "orket.application.services.api_runtime_host_service": {
         "path": "orket/application/services/api_runtime_host_service.py",
@@ -1206,6 +1206,10 @@
       "orket.application.services.guard_review_payload": {
         "path": "orket/application/services/guard_review_payload.py",
         "sha256": "13ca8d0159135259ab430aa54c42f0ceb4c21fea4bebc68b1ac225ad327e9c45"
+      },
+      "orket.application.services.interaction_cancellation_service": {
+        "path": "orket/application/services/interaction_cancellation_service.py",
+        "sha256": "eec16c793587262744951f911cf12258f33cec655a581a130f48532996df7f97"
       },
       "orket.application.services.kernel_action_control_plane_failure": {
         "path": "orket/application/services/kernel_action_control_plane_failure.py",
@@ -2079,6 +2083,10 @@
         "path": "orket/core/contracts/governed_agent_webhook_records.py",
         "sha256": "fad6f4bedb4f2f2443b39f58762bc7c7aa6cfacce63d8dbfbb663c4460dad08a"
       },
+      "orket.core.contracts.interaction_cancellation": {
+        "path": "orket/core/contracts/interaction_cancellation.py",
+        "sha256": "77126c1bda7b14f70259cfee0b669e2f3d6e8d9436c4ac8164b84eb0ea27e897"
+      },
       "orket.core.contracts.invocation_timing": {
         "path": "orket/core/contracts/invocation_timing.py",
         "sha256": "cc026915c5da04775ac060fa78cb13594312bf4b6f688b61195b9f8b0527d3fc"
@@ -2565,7 +2573,7 @@
       },
       "orket.interfaces.api": {
         "path": "orket/interfaces/api.py",
-        "sha256": "f264463d8363d1aa20694f68ba06e8d5e275664dcf308505066e8adf45574edb"
+        "sha256": "2ee956961b775e6ddde0decdda97796e6c0825e068ae8a99fc44e5cd83e9bcd1"
       },
       "orket.interfaces.api_app_context_middleware": {
         "path": "orket/interfaces/api_app_context_middleware.py",
@@ -2685,7 +2693,7 @@
       },
       "orket.interfaces.routers.sessions": {
         "path": "orket/interfaces/routers/sessions.py",
-        "sha256": "9f3cc9a75006dfcd94d99a240a225a6f21592c5480edf40a0320549a26b9491d"
+        "sha256": "d6820d418c92ac2fcec53cb23c01eec4f9d1c5413ae23be2990bdd0f3ae97258"
       },
       "orket.interfaces.routers.settings": {
         "path": "orket/interfaces/routers/settings.py",
@@ -4255,13 +4263,17 @@
         "path": "orket/streaming/contracts.py",
         "sha256": "2ccbbbfb752043f65787946fade2595414d8ae4118006a91f921329d8a58b042"
       },
+      "orket.streaming.interaction_cancellation": {
+        "path": "orket/streaming/interaction_cancellation.py",
+        "sha256": "fbe0071a7babafbb4a4225c25eaea203eb524b2d41cace376f3300d1eac35c2a"
+      },
       "orket.streaming.law_checker": {
         "path": "orket/streaming/law_checker.py",
         "sha256": "62ca20e5108627ffe620d955d609368dcd2bcd0d2ed12fe5bbebb192ac95f1f1"
       },
       "orket.streaming.manager": {
         "path": "orket/streaming/manager.py",
-        "sha256": "725d6b5ca879865087cc84f29501b3685e4e70fc6109439d1b6ec4e99a9955a9"
+        "sha256": "e3b47203dd3e40e32f9e8eff1d1fb3710bf4f3f3d3dcd03e247afe63175d8b03"
       },
       "orket.streaming.model_provider": {
         "path": "orket/streaming/model_provider.py",
@@ -7326,6 +7338,13 @@
         "target": "orket.application.services.application_runtime_lifetime",
         "path": "orket/application/services/api_runtime_container.py",
         "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.api_runtime_container",
+        "target": "orket.application.services.interaction_cancellation_service",
+        "path": "orket/application/services/api_runtime_container.py",
+        "line": 13,
         "kind": "from"
       },
       {
@@ -11330,6 +11349,34 @@
         "target": "orket.core.domain.guard_review",
         "path": "orket/application/services/guard_review_payload.py",
         "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.interaction_cancellation_service",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/interaction_cancellation_service.py",
+        "line": 5,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.interaction_cancellation_service",
+        "target": "orket.application.services.control_plane_publication_service",
+        "path": "orket/application/services/interaction_cancellation_service.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.interaction_cancellation_service",
+        "target": "orket.core.domain.__init__",
+        "path": "orket/application/services/interaction_cancellation_service.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.interaction_cancellation_service",
+        "target": "orket.streaming.manager",
+        "path": "orket/application/services/interaction_cancellation_service.py",
+        "line": 8,
         "kind": "from"
       },
       {
@@ -20805,37 +20852,37 @@
       },
       {
         "source": "orket.interfaces.routers.sessions",
-        "target": "orket.application.services.protocol_replay_service",
+        "target": "orket.application.services.interaction_cancellation_service",
         "path": "orket/interfaces/routers/sessions.py",
-        "line": 13,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.routers.sessions",
-        "target": "orket.core.domain.__init__",
+        "target": "orket.application.services.protocol_replay_service",
         "path": "orket/interfaces/routers/sessions.py",
-        "line": 14,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.routers.sessions",
         "target": "orket.interfaces.routers.protocol_queries",
         "path": "orket/interfaces/routers/sessions.py",
-        "line": 15,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.routers.sessions",
         "target": "orket.marshaller.cli",
         "path": "orket/interfaces/routers/sessions.py",
-        "line": 237,
+        "line": 223,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.routers.sessions",
         "target": "orket.marshaller.cli",
         "path": "orket/interfaces/routers/sessions.py",
-        "line": 245,
+        "line": 231,
         "kind": "from"
       },
       {
@@ -27146,6 +27193,27 @@
         "kind": "from"
       },
       {
+        "source": "orket.streaming.interaction_cancellation",
+        "target": "orket.core.contracts.interaction_cancellation",
+        "path": "orket/streaming/interaction_cancellation.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.streaming.interaction_cancellation",
+        "target": "orket.streaming.bus",
+        "path": "orket/streaming/interaction_cancellation.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.streaming.interaction_cancellation",
+        "target": "orket.streaming.contracts",
+        "path": "orket/streaming/interaction_cancellation.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
         "source": "orket.streaming.law_checker",
         "target": "orket.streaming.contracts",
         "path": "orket/streaming/law_checker.py",
@@ -27154,23 +27222,44 @@
       },
       {
         "source": "orket.streaming.manager",
-        "target": "orket.streaming.bus",
+        "target": "orket.adapters.execution.owned_io",
         "path": "orket/streaming/manager.py",
         "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.streaming.manager",
-        "target": "orket.streaming.contracts",
+        "target": "orket.core.contracts.interaction_cancellation",
         "path": "orket/streaming/manager.py",
         "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.streaming.manager",
+        "target": "orket.streaming.bus",
+        "path": "orket/streaming/manager.py",
+        "line": 20,
+        "kind": "from"
+      },
+      {
+        "source": "orket.streaming.manager",
+        "target": "orket.streaming.contracts",
+        "path": "orket/streaming/manager.py",
+        "line": 21,
+        "kind": "from"
+      },
+      {
+        "source": "orket.streaming.manager",
+        "target": "orket.streaming.interaction_cancellation",
+        "path": "orket/streaming/manager.py",
+        "line": 22,
+        "kind": "from"
+      },
+      {
+        "source": "orket.streaming.manager",
         "target": "orket.streaming.session_context",
         "path": "orket/streaming/manager.py",
-        "line": 19,
+        "line": 23,
         "kind": "from"
       },
       {
@@ -27496,7 +27585,7 @@
         "code": "unresolved_dynamic_import"
       }
     ],
-    "files_scanned": 1050,
+    "files_scanned": 1053,
     "scan_roots": [
       "orket"
     ],
@@ -27773,6 +27862,7 @@
       "orket.application.services.governed_turn_tool_approval_continuation_service": "application",
       "orket.application.services.guard_agent": "application",
       "orket.application.services.guard_review_payload": "application",
+      "orket.application.services.interaction_cancellation_service": "application",
       "orket.application.services.kernel_action_control_plane_failure": "application",
       "orket.application.services.kernel_action_control_plane_operator_service": "application",
       "orket.application.services.kernel_action_control_plane_outcome": "application",
@@ -27991,6 +28081,7 @@
       "orket.core.contracts.governed_agent_schedule_records": "core",
       "orket.core.contracts.governed_agent_wake_records": "core",
       "orket.core.contracts.governed_agent_webhook_records": "core",
+      "orket.core.contracts.interaction_cancellation": "core",
       "orket.core.contracts.invocation_timing": "core",
       "orket.core.contracts.local_file_lock": "core",
       "orket.core.contracts.local_prompting": "core",
@@ -28536,6 +28627,7 @@
       "orket.streaming.__init__": "adapters",
       "orket.streaming.bus": "adapters",
       "orket.streaming.contracts": "adapters",
+      "orket.streaming.interaction_cancellation": "adapters",
       "orket.streaming.law_checker": "adapters",
       "orket.streaming.manager": "adapters",
       "orket.streaming.model_provider": "adapters",
@@ -28558,7 +28650,7 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 230
+        "count": 234
       },
       {
         "source": "adapters",
@@ -28568,22 +28660,22 @@
       {
         "source": "adapters",
         "target": "core",
-        "count": 136
+        "count": 138
       },
       {
         "source": "application",
         "target": "adapters",
-        "count": 345
+        "count": 347
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1589
+        "count": 1591
       },
       {
         "source": "application",
         "target": "core",
-        "count": 712
+        "count": 713
       },
       {
         "source": "application",
@@ -28618,12 +28710,12 @@
       {
         "source": "interfaces",
         "target": "application",
-        "count": 81
+        "count": 82
       },
       {
         "source": "interfaces",
         "target": "core",
-        "count": 4
+        "count": 3
       },
       {
         "source": "interfaces",
@@ -28736,17 +28828,6 @@
         ]
       },
       {
-        "source": "orket.interfaces.routers.sessions",
-        "target": "orket.core.domain.__init__",
-        "sites": [
-          {
-            "path": "orket/interfaces/routers/sessions.py",
-            "line": 14,
-            "kind": "from"
-          }
-        ]
-      },
-      {
         "source": "orket.vendors.factory",
         "target": "orket.settings",
         "sites": [
@@ -28819,45 +28900,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-17T22:56:30.561221Z",
-      "changed": true,
-      "before_digest": "sha256:a346df53d9a466dfdca1ad022e2be588e5df699fc6a9e7dc437d46c848603baf",
-      "after_digest": "sha256:b9561a73d80e52548a051c542cf6166ae3c1f56cfbbb91dbbdfe74bbe2a5ed5d",
-      "diff": {
-        "added_paths": 17,
-        "removed_paths": 12,
-        "changed_paths": 9756,
-        "initial_write": false,
-        "paths_total_previous": 43786,
-        "paths_total_current": 43853,
-        "paths_total_reference": 43853,
-        "churn_paths": 9785,
-        "churn_ratio": 0.223132,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[269].target",
-          "$.observed.edges[270].line",
-          "$.observed.edges[270].target",
-          "$.observed.edges[271].target",
-          "$.observed.edges[272].target",
-          "$.observed.edges[273].target",
-          "$.observed.edges[274].target",
-          "$.observed.edges[275].target",
-          "$.observed.edges[276].target",
-          "$.observed.edges[277].line",
-          "$.observed.edges[277].target",
-          "$.observed.edges[278].line",
-          "$.observed.edges[278].path",
-          "$.observed.edges[278].source",
-          "$.observed.edges[278].target",
-          "$.observed.edges[279].line",
-          "$.observed.edges[279].target",
-          "$.observed.edges[280].line",
-          "$.observed.edges[280].target"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-17T22:57:26.941622Z",
       "changed": true,
@@ -29809,6 +29851,45 @@
           "$.observed.edges[645].target",
           "$.observed.modules.orket.application.services.extension_runtime_service.sha256",
           "$.observed.modules.orket.interfaces.routers.system.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-19T07:08:06.549961Z",
+      "changed": true,
+      "before_digest": "sha256:a92db570b306d4638eb1bc9f0ac30d516a4893fa327faa3661b0548eecdde961",
+      "after_digest": "sha256:bc136537aaada6fd2c9d92384af94264c89074de464b4a2527dd21d1db354549",
+      "diff": {
+        "added_paths": 17,
+        "removed_paths": 1,
+        "changed_paths": 9087,
+        "initial_write": false,
+        "paths_total_previous": 44284,
+        "paths_total_current": 44413,
+        "paths_total_reference": 44413,
+        "churn_paths": 9105,
+        "churn_ratio": 0.205008,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[429].line",
+          "$.observed.edges[429].path",
+          "$.observed.edges[429].source",
+          "$.observed.edges[429].target",
+          "$.observed.edges[430].line",
+          "$.observed.edges[430].target",
+          "$.observed.edges[431].line",
+          "$.observed.edges[431].target",
+          "$.observed.edges[432].line",
+          "$.observed.edges[432].target",
+          "$.observed.edges[433].line",
+          "$.observed.edges[433].target",
+          "$.observed.edges[434].line",
+          "$.observed.edges[434].target",
+          "$.observed.edges[435].line",
+          "$.observed.edges[435].target",
+          "$.observed.edges[436].line",
+          "$.observed.edges[436].target",
+          "$.observed.edges[437].line"
         ]
       }
     }
