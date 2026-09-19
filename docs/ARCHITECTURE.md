@@ -137,6 +137,14 @@ Defines stable domain primitives:
 
 Core must remain deterministic and dependency-minimal.
 
+Bundle commands enter application `BundleService`; the side-effecting storage
+adapter retains archive/file workers through cancellation. Packing checks admitted
+manifest agreement and required members, verifies a temporary archive, replaces
+and verifies the destination before success. Core manifest validation consumes
+supplied payloads. Offline ledger verification and CLI connector registry
+composition also enter application. Migration and interruption/publication limits:
+`docs/architecture/CONTRACT_DELTA_BUNDLE_AUTHORITY_CD_2026-09-18.md`.
+
 `ExecutionTurn` requires an explicit timestamp or explicit absence; constructing
 a core turn never reads the host clock. Application `Agent` supplies captured
 clock authority. Existing replay/resume snapshots lack original response times,

@@ -12516,8 +12516,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.24
-explicit execution-turn-time checkpoint below. The graph has 18 forbidden pairs, zero cross-layer
+Next action: continue C/D from their numbered requirements after the 0.6.25
+bundle command authority checkpoint below. The graph has 15 forbidden pairs, zero cross-layer
 cycles and eight unresolved import/reflection sites. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff still has 103 findings. The prior stale benchmark expectation passes in the
@@ -15338,3 +15338,162 @@ checkpoint; no GitHub push is performed.
 - `tests/integration/test_turn_time_inputs.py`
 - `tests/integration/test_turn_tool_control_plane_closeout.py`
 - `tests/runtime/test_protocol_error_code_adoption.py`
+
+
+### Bundle command authority candidate: 2026-09-18 (0.6.25)
+
+The clean 0.6.24 checkpoint and all 349 bound artifacts were verified before edits;
+its predecessor's 495 artifacts and original/reference worktrees also matched.
+Off-hours publication of 0.6.24 is retained separately at
+`.tmp/d-turn-time-publication/receipt.json` (22:37 Denver); no work-hours push occurred.
+The new reentry snapshot is `.tmp/c-bundle-authority/session-state.json`, SHA-256
+`cad3895c1358ea376b3463967303100960101f6f626039ba50bb6a3846172a3b`.
+
+This C/D candidate moves bundle validation/packing/inspection policy to application,
+file/archive work to classified retained adapters, and retires core's unused
+manifest path loader. Offline ledger verification and CLI connector registry
+composition now also enter application. Contract, migration, publication and
+interruption limits are in
+`docs/architecture/CONTRACT_DELTA_BUNDLE_AUTHORITY_CD_2026-09-18.md`.
+No compatibility forwarding export or dependency exception is introduced.
+
+Before migration the 31 existing bundle/core/ledger cases passed. The migrated
+30-case run passed; the removed archive-name test was moved to a contract module.
+The next 40-case run proved real filesystem/archive behavior, deterministic bytes,
+CRLF, changed-source rejection, failed pre-publication verification, reference
+containment, and worker cancellation/timeout. The expanded 42-case CLI-authority
+run passed. Every phase retained its inputs and reported no failures/errors/skips.
+These early subprocess CLI cases used the preceding installed wheel; the candidate
+source/native envelopes must install 0.6.25 before counting them as candidate CLI
+proof. The predeclared responsiveness bound is 0.5 seconds; held-worker settlement
+is bounded at 3 seconds in controlled tests, not a bound on arbitrary OS I/O.
+
+Candidate source/package/native gates and structural collection remain pending.
+The full architectural-truth objective, C/D/E/CAP, full-suite and hosted/live
+integration gates, release readiness and explicit whole-lane acceptance stay open.
+
+
+The initial candidate wheel/source environment is retained under `candidate/`.
+Review found an encoding classification bug before native acceptance: mutation of
+an admitted manifest to invalid UTF-8 returned the unsafe-path code; initial invalid
+UTF-8 also lost the manifest filename in its diagnostic. The initial full source
+run was deliberately terminated through its recorded pytest owner and three
+observed descendants before edits. All four processes were observed terminated;
+the helper reaped pytest and retained an incomplete exit-15 report with no finalized
+JUnit cases. `inputs_unchanged=true` is not a passing test result. Abort declaration
+and receipt are retained at the proof root.
+
+`encoding-before` records the two reproducing failures among four cases. The store
+now captures original manifest bytes; application decodes them with the known
+manifest path, and packing compares bytes before and during archive publication.
+Fresh source/native acceptance must use `final-candidate/` and the separate
+`bundle-authority-final-source` environment. Prior source/wheel and all failed
+observations are retained rather than relabeled as final proof.
+
+
+`encoding-repaired` passes all 45 focused cases. Final graph collection reports
+1,048 modules, 3,299 import sites, 15 forbidden pairs (three removed, none added),
+zero unknowns/cycles and eight existing analysis errors; release-ready remains
+false. Final canonical Ruff retains the same 103 path/code/message diagnostics
+as 0.6.24, including the pre-existing `GuardName` UP042 in the touched core file.
+Changed-file Ruff is not claimed clean. Docs hygiene, release metadata, whitespace
+and the 51 structural cases pass.
+
+A lint observation overlapped the final sdist build and reported changing inventory.
+It is retained as invalid proof, even though its 103 diagnostics matched. Later
+Git-visible state matched its original declaration; the build log records the
+transient root sdist staging tree. That is the likely cause, but the failed runner
+did not retain the intermediate after snapshot, so exact differing paths cannot be
+reconstructed. `final-ruff-3` ran after build completion, retains both inventories,
+and verifies unchanged inputs and the exact diagnostic comparison. The mismatch
+and this proof limitation are recorded under the candidate proof root.
+
+
+#### Final 0.6.25 bundle command proof
+
+Observed bundle path: primary; result: partial success at whole-lane scope.
+Retained malformed-startup and controlled Agent fixtures keep their prior degraded
+path classification; no live provider claim is added. The final
+candidate source and all four installed cells pass the same 1159 unique cases,
+with zero failures, errors or skips. Source elapsed time is
+503.578 seconds. The same selected C/D/BT cohort includes
+the prior 1,045 cases plus affected bundle, connector and ledger coverage.
+
+| Installed envelope | Pass / fail / error / skip | JUnit seconds | Actual core origins |
+|---|---:|---:|---:|
+| b25f-win-py311 | 1159 / 0 / 0 / 0 | 518.601 | 937 |
+| b25f-linux-py311 | 1159 / 0 / 0 / 0 | 386.478 | 937 |
+| b25f-win-py312 | 1159 / 0 / 0 / 0 | 597.705 | 937 |
+| b25f-linux-py312 | 1159 / 0 / 0 / 0 | 354.282 | 937 |
+
+Live proof includes actual file/archive publication and readback, offline ledger
+verification, connector filesystem effects, and process-level validate/pack/inspect
+commands from a foreign working directory using the candidate installation.
+Controlled worker holds and corruption/mutation hooks cover interruption and
+negative publication paths; this is not live model/provider proof. Cancellation
+may follow a completed archive replacement, as documented. Structural proof is
+reported separately: 51 governance cases pass; 15 dependency pairs and eight
+analysis errors remain, and canonical Ruff retains 103 existing diagnostics.
+The touched core enum diagnostic is retained, not suppressed or called green.
+
+The final envelope contains 1902 unchanged support files,
+with no core/SDK source shadow. Source, wheel and sdist agree on
+1048 core Python files and
+1063 package files. Installed origin checks,
+wheel identities, dependency checks, installed valid/malformed runtime startup,
+ToolGate denial, absence of a root test database and owned process teardown pass.
+SDK/reference/starter versions and artifacts are unchanged.
+
+- Manifest SHA-256: `dabe43f4fe2de50f8a8e05ab9ad5dad17f825db234c26c7fd9ffe7c1ca43ae46`.
+- Native audit SHA-256: `828f9b81094f5524e872ce32d0602778d1b60e1a99e7365d2dd18c2231dcf69b`.
+- Core wheel SHA-256: `6d9a2e03618eb9a6a958cb5b57daa3b5f2b78da6e9a9e2470f55d0be9fb7f86c`.
+- Core sdist SHA-256: `de1bc78c089c8e0cd1663dd9e686af5678ba87848f2f861509e473fd643a4fec`.
+
+Retained observations include the initial 31-case baseline, migrated 30-case run,
+40/42-case iterations, interrupted initial source proof, two encoding failures,
+45-case repair, before/after command counterexamples, and invalid concurrent-build
+lint inventory observation. All keep their original inputs and limitations. The
+final source/native gates use a separate candidate and private environments.
+Source/native/launcher budgets were declared at 1500/1800/2100 seconds; product
+deadlines and the 0.5-second responsiveness assertion were not relaxed.
+
+No fresh full-suite, hosted CI, external provider, live Gitea or Docker acceptance
+is inferred. C/D/E/CAP, release readiness and explicit whole-lane acceptance remain
+open. Earlier accepted BT artifacts and original/reference worktrees remain
+retained; this is a checkpoint rather than closure of the active objective.
+
+#### Exact 0.6.25 checkpoint files
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/architecture/CONTRACT_DELTA_BUNDLE_AUTHORITY_CD_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `orket/adapters/storage/bundle_store.py`
+- `orket/adapters/storage/outward_ledger_file_store.py`
+- `orket/application/services/bundle_policy.py`
+- `orket/application/services/bundle_service.py`
+- `orket/application/services/outward_connector_service.py`
+- `orket/application/services/outward_ledger_service.py`
+- `orket/core/domain/orket_manifest.py`
+- `orket/interfaces/orket_bundle_cli.py`
+- `pyproject.toml`
+- `tests/contracts/test_bundle_manifest_inputs.py`
+- `tests/core/test_orket_manifest_contract.py`
+- `tests/integration/test_bundle_operation_ownership.py`
+- `tests/interfaces/test_orket_bundle_cli.py`
+
+
+The final warning observation is `.tmp/c-bundle-authority/warning-observation.json`.
+Source, Linux 3.11/3.12 and Windows 3.12 each report the two existing
+Starlette/AnyIO deprecations. Windows 3.11 additionally reports Pydantic
+`UnsupportedFieldAttributeWarning` for alias `session_id` in
+`test_concurrent_requests_observe_their_own_app_root`. The same warning class was
+seen in preceding checkpoints on other cells/fields. Its cause remains unresolved;
+passing results and differing occurrence do not establish a repair. All native
+launcher sessions have returned and been reaped; each audit row verifies all 937
+core origins and every retained installed-flow/cleanup check.

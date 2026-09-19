@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import zipfile
@@ -9,17 +10,10 @@ import httpx
 
 import orket.cli as entrypoint_module
 import orket.interfaces.orket_bundle_cli as cli_module
+from orket.application.services.bundle_service import BundleService
 from orket.interfaces.orket_bundle_cli import (
-    ERROR_ENGINE_INCOMPATIBLE,
-    ERROR_GUARD_FILE_MISSING,
-    ERROR_INSPECT_MANIFEST_NOT_FOUND,
-    ERROR_MANIFEST_NOT_FOUND,
-    ERROR_MANIFEST_SCHEMA,
     ERROR_SDK_COMMAND_REQUIRED,
-    ERROR_STATE_MACHINE_MISSING,
-    _is_safe_archive_name,
     main,
-    validate_bundle,
 )
 
 
@@ -49,50 +43,56 @@ def _create_valid_bundle(bundle_root: Path) -> None:
 
 
 def test_validate_bundle_success(tmp_path: Path) -> None:
+    """Layer: integration. Validate real bundle files through the application boundary."""
     _create_valid_bundle(tmp_path)
-    result = validate_bundle(tmp_path)
+    result = asyncio.run(BundleService().validate(tmp_path))
     assert result["ok"] is True
     assert result["error_count"] == 0
 
 
 def test_validate_bundle_manifest_missing(tmp_path: Path) -> None:
-    result = validate_bundle(tmp_path)
+    """Layer: integration. Validate real bundle files through the application boundary."""
+    result = asyncio.run(BundleService().validate(tmp_path))
     assert result["ok"] is False
-    assert result["errors"][0]["code"] == ERROR_MANIFEST_NOT_FOUND
+    assert result["errors"][0]["code"] == "E_MANIFEST_NOT_FOUND"
 
 
 def test_validate_bundle_schema_error_is_deterministic(tmp_path: Path) -> None:
+    """Layer: integration. Validate real bundle files through the application boundary."""
     _write_json(tmp_path / "orket.json", _fixture_payload("invalid_missing_permissions.json"))
-    result = validate_bundle(tmp_path)
+    result = asyncio.run(BundleService().validate(tmp_path))
     assert result["ok"] is False
-    assert result["errors"][0]["code"] == ERROR_MANIFEST_SCHEMA
+    assert result["errors"][0]["code"] == "E_MANIFEST_SCHEMA"
     assert result["errors"][0]["location"] == "permissions"
 
 
 def test_validate_bundle_missing_state_machine_file(tmp_path: Path) -> None:
+    """Layer: integration. Validate real bundle files through the application boundary."""
     _create_valid_bundle(tmp_path)
     (tmp_path / "state_machine.json").unlink()
-    result = validate_bundle(tmp_path)
+    result = asyncio.run(BundleService().validate(tmp_path))
     assert result["ok"] is False
-    assert any(item["code"] == ERROR_STATE_MACHINE_MISSING for item in result["errors"])
+    assert any(item["code"] == "E_STATE_MACHINE_MISSING" for item in result["errors"])
 
 
 def test_validate_bundle_missing_guard_file_returns_expected_code(tmp_path: Path) -> None:
+    """Layer: integration. Validate real bundle files through the application boundary."""
     _create_valid_bundle(tmp_path)
     (tmp_path / "guards" / "hallucination.json").unlink()
-    result = validate_bundle(tmp_path)
+    result = asyncio.run(BundleService().validate(tmp_path))
     assert result["ok"] is False
-    assert any(item["code"] == ERROR_GUARD_FILE_MISSING for item in result["errors"])
+    assert any(item["code"] == "E_GUARD_FILE_MISSING" for item in result["errors"])
 
 
 def test_cli_validate_json_exit_code_for_failure(tmp_path: Path, capsys) -> None:
+    """Layer: integration. Validate real bundle files through the application boundary."""
     _write_json(tmp_path / "orket.json", _fixture_payload("invalid_guard_enum.json"))
     code = main(["validate", str(tmp_path), "--json"])
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
     assert code == 1
     assert payload["ok"] is False
-    assert payload["errors"][0]["code"] == ERROR_MANIFEST_SCHEMA
+    assert payload["errors"][0]["code"] == "E_MANIFEST_SCHEMA"
 
 
 def test_cli_pack_and_inspect_archive_success(tmp_path: Path, capsys) -> None:
@@ -120,6 +120,7 @@ def test_cli_pack_and_inspect_archive_success(tmp_path: Path, capsys) -> None:
 
 
 def test_cli_inspect_archive_without_manifest_fails(tmp_path: Path, capsys) -> None:
+    """Layer: integration. Validate real bundle files through the application boundary."""
     archive_path = tmp_path / "invalid.orket"
     with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("notes.txt", "missing manifest")
@@ -128,7 +129,7 @@ def test_cli_inspect_archive_without_manifest_fails(tmp_path: Path, capsys) -> N
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
     assert payload["ok"] is False
-    assert payload["errors"][0]["code"] == ERROR_INSPECT_MANIFEST_NOT_FOUND
+    assert payload["errors"][0]["code"] == "E_INSPECT_MANIFEST_NOT_FOUND"
 
 
 def test_cli_pack_is_deterministic_for_same_source(tmp_path: Path, capsys) -> None:
@@ -147,20 +148,16 @@ def test_cli_pack_is_deterministic_for_same_source(tmp_path: Path, capsys) -> No
     assert hash_one == hash_two
 
 
-def test_is_safe_archive_name_rejects_path_traversal() -> None:
-    assert _is_safe_archive_name("agents/reader.json") is True
-    assert _is_safe_archive_name("../escape.txt") is False
-    assert _is_safe_archive_name("/absolute.txt") is False
-    assert _is_safe_archive_name("nested//double/slash.txt") is False
 
 
 def test_cli_validate_detects_engine_incompatibility(tmp_path: Path, capsys) -> None:
+    """Layer: integration. Validate real bundle files through the application boundary."""
     _create_valid_bundle(tmp_path)
     code = main(["validate", str(tmp_path), "--engine-version", "0.9.0", "--json"])
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
     assert payload["ok"] is False
-    assert any(item["code"] == ERROR_ENGINE_INCOMPATIBLE for item in payload["errors"])
+    assert any(item["code"] == "E_ENGINE_INCOMPATIBLE" for item in payload["errors"])
 
 
 def test_cli_validate_rejects_model_override_when_policy_disallows(tmp_path: Path, capsys) -> None:

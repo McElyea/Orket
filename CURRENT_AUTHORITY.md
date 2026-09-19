@@ -4,6 +4,14 @@ Last updated: 2026-09-18
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Bundle commands enter application `BundleService`; the side-effecting storage
+adapter retains archive/file workers through cancellation. Packing checks admitted
+manifest agreement and required members, verifies a temporary archive, replaces
+and verifies the destination before success. Core manifest validation consumes
+supplied payloads. Offline ledger verification and CLI connector registry
+composition also enter application. Migration and interruption/publication limits:
+`docs/architecture/CONTRACT_DELTA_BUNDLE_AUTHORITY_CD_2026-09-18.md`.
+
 Core `ExecutionTurn` requires an explicit keyword timestamp or explicit `None`.
 `Agent` captures its application-supplied clock before awaiting; stored-turn replay
 and pre-effect resume preserve missing original response times as `None`.

@@ -9,7 +9,6 @@ from pydantic import ValidationError
 from orket.core.domain.orket_manifest import (
     OrketManifest,
     is_engine_compatible,
-    load_orket_manifest,
     resolve_model_selection,
 )
 
@@ -24,7 +23,7 @@ def _load_fixture_payload(name: str) -> dict:
 
 def test_valid_manifest_fixture_passes() -> None:
     """Layer: contract. The valid bundle fixture admits the released core minor."""
-    manifest = load_orket_manifest(_fixture_path("valid_minimal.json"))
+    manifest = OrketManifest.model_validate(_load_fixture_payload("valid_minimal.json"))
     assert manifest.apiVersion == "orket.io/v1"
     assert manifest.kind == "Orket"
     assert manifest.metadata.engineVersion == ">=0.3.0,<0.7.0"
@@ -61,13 +60,15 @@ def test_invalid_engine_version_specifier_fails() -> None:
 
 
 def test_engine_compatibility_check() -> None:
-    manifest = load_orket_manifest(_fixture_path("valid_minimal.json"))
+    """Layer: contract. Explicit manifest values determine version compatibility."""
+    manifest = OrketManifest.model_validate(_load_fixture_payload("valid_minimal.json"))
     assert is_engine_compatible(manifest, "0.3.9") is True
     assert is_engine_compatible(manifest, "0.9.0") is False
 
 
 def test_model_selection_prefers_manifest_candidates() -> None:
-    manifest = load_orket_manifest(_fixture_path("valid_minimal.json"))
+    """Layer: contract. Explicit model availability determines candidate selection."""
+    manifest = OrketManifest.model_validate(_load_fixture_payload("valid_minimal.json"))
     result = resolve_model_selection(
         manifest,
         available_models=["qwen2.5-coder:3b", "llama3.2:3b"],

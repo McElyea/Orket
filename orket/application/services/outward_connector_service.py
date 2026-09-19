@@ -11,9 +11,14 @@ from urllib.parse import urlparse
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import ValidationError as JsonSchemaValidationError
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.bound_filesystem import BOUND_FILESYSTEM_TOOLS
 from orket.adapters.tools.builtin_connectors import BuiltInConnectorExecutor
-from orket.adapters.tools.registry import BuiltInConnectorMetadata, BuiltInConnectorRegistry
+from orket.adapters.tools.registry import (
+    DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
+    BuiltInConnectorMetadata,
+    BuiltInConnectorRegistry,
+)
 from orket.application.services.command_process_supervisor import CommandProcessCancelled, CommandProcessSupervisor
 from orket.application.services.connector_invocation_timing import ConnectorInvocationTimer
 from orket.application.services.runtime_input_service import RuntimeInputService
@@ -47,6 +52,17 @@ class OutwardConnectorPolicyError(PermissionError):
 
 
 class OutwardConnectorService:
+    @classmethod
+    async def for_workspace(cls, workspace_root: Path, *, http_allowlist: tuple[str, ...] = ()) -> OutwardConnectorService:
+        """Compose the built-in connector registry at the application boundary."""
+        selected_allowlist = tuple(http_allowlist)
+
+        def compose() -> OutwardConnectorService:
+            return cls(connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
+                       workspace_root=workspace_root.resolve(), http_allowlist=selected_allowlist)
+
+        return await run_owned_thread(compose, label="connector-workspace-composition")
+
     def __init__(
         self,
         *,

@@ -5,20 +5,16 @@ import asyncio
 import json
 import os
 import sys
-import tomllib
-import zipfile
-from importlib import metadata
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any
 
 import httpx
 import yaml
-from pydantic import ValidationError
 
-from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
 from orket.application.review.bundle_validation import ReviewBundleError, load_review_replay_artifacts
 from orket.application.review.models import ReviewSnapshot, SnapshotBounds
 from orket.application.review.run_service import ReviewRunService
+from orket.application.services.bundle_service import BundleService
 from orket.application.services.extension_scaffold_service import extension_template_kinds, init_external_extension
 from orket.application.services.governed_agent_admission import (
     SUPPORTED_GOVERNED_AGENT_HOST_FEATURES,
@@ -39,12 +35,7 @@ from orket.application.services.outward_connector_service import (
     OutwardConnectorNotFoundError,
     OutwardConnectorService,
 )
-from orket.core.domain.orket_manifest import (
-    OrketManifest,
-    is_engine_compatible,
-    resolve_model_selection,
-)
-from orket.core.domain.outward_ledger import verify_ledger_export
+from orket.application.services.outward_ledger_service import verify_ledger_file
 from orket.interfaces.api_generation import run_api_add_transaction
 from orket.interfaces.governed_agent_cli import (
     add_governed_agent_subparser,
@@ -56,19 +47,6 @@ from orket.reforger.cli import add_reforge_subparser, handle_reforge
 from orket_extension_sdk import __version__ as sdk_version
 from orket_extension_sdk.validate import validate_extension as validate_sdk_extension_tool
 
-ERROR_MANIFEST_NOT_FOUND = "E_MANIFEST_NOT_FOUND"
-ERROR_MANIFEST_PARSE = "E_MANIFEST_PARSE"
-ERROR_MANIFEST_SCHEMA = "E_MANIFEST_SCHEMA"
-ERROR_STATE_MACHINE_MISSING = "E_STATE_MACHINE_MISSING"
-ERROR_AGENT_FILE_MISSING = "E_AGENT_FILE_MISSING"
-ERROR_PROMPT_FILE_MISSING = "E_PROMPT_FILE_MISSING"
-ERROR_GUARD_FILE_MISSING = "E_GUARD_FILE_MISSING"
-ERROR_ENGINE_INCOMPATIBLE = "E_ENGINE_INCOMPATIBLE"
-ERROR_PACK_SOURCE_NOT_DIRECTORY = "E_PACK_SOURCE_NOT_DIRECTORY"
-ERROR_PACK_VALIDATE_FAILED = "E_PACK_VALIDATE_FAILED"
-ERROR_PACK_UNSAFE_ARCHIVE_PATH = "E_PACK_UNSAFE_ARCHIVE_PATH"
-ERROR_INSPECT_TARGET_NOT_FOUND = "E_INSPECT_TARGET_NOT_FOUND"
-ERROR_INSPECT_MANIFEST_NOT_FOUND = "E_INSPECT_MANIFEST_NOT_FOUND"
 ERROR_SDK_COMMAND_REQUIRED = "E_SDK_COMMAND_REQUIRED"
 ERROR_SDK_MANIFEST_NOT_FOUND = "E_SDK_MANIFEST_NOT_FOUND"
 ERROR_SDK_ENTRYPOINT_INVALID = "E_SDK_ENTRYPOINT_INVALID"
@@ -84,486 +62,6 @@ def _default_review_workspace() -> str:
     return str((Path(__file__).resolve().parents[2] / "workspace" / "default").resolve())
 
 
-def _resolve_manifest_path(target: Path) -> tuple[Path | None, Path]:
-    if target.is_file():
-        return target, target.parent
-
-    if not target.exists():
-        return None, target
-
-    for filename in ("orket.yaml", "orket.yml", "orket.json"):
-        candidate = target / filename
-        if candidate.is_file():
-            return candidate, target
-    return None, target
-
-
-def _current_engine_version() -> str:
-    try:
-        return metadata.version("orket")
-    except metadata.PackageNotFoundError:
-        pyproject = Path(__file__).resolve().parents[2] / "pyproject.toml"
-        try:
-            data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
-            version = str((data.get("project") or {}).get("version") or "").strip()
-            return version or "0.0.0"
-        except (OSError, tomllib.TOMLDecodeError, AttributeError):
-            return "0.0.0"
-
-
-def _parse_manifest_content(*, suffix: str, text: str) -> dict[str, Any]:
-    if suffix == ".json":
-        raw = json.loads(text)
-    elif suffix in {".yaml", ".yml"}:
-        try:
-            import yaml
-        except ModuleNotFoundError as exc:
-            raise ValueError("YAML parsing support is unavailable (missing PyYAML).") from exc
-        raw = yaml.safe_load(text)
-    else:
-        raise ValueError(f"Unsupported manifest extension: {suffix}")
-    if not isinstance(raw, dict):
-        raise ValueError("Manifest payload must be an object.")
-    return raw
-
-
-def _load_manifest_payload(path: Path) -> dict[str, Any]:
-    suffix = path.suffix.lower()
-    text = path.read_text(encoding="utf-8")
-    return _parse_manifest_content(suffix=suffix, text=text)
-
-
-def _schema_validation_errors(exc: ValidationError) -> list[dict[str, str]]:
-    rows: list[dict[str, str]] = []
-    for item in exc.errors():
-        loc = ".".join(str(part) for part in item.get("loc", ()))
-        rows.append(
-            {
-                "code": ERROR_MANIFEST_SCHEMA,
-                "location": loc,
-                "message": str(item.get("msg") or "schema violation"),
-            }
-        )
-    rows.sort(key=lambda row: (row["location"], row["message"]))
-    return rows
-
-
-def _bundle_reference_errors(bundle_root: Path, manifest: OrketManifest) -> list[dict[str, str]]:
-    errors: list[dict[str, str]] = []
-
-    state_machine_path = bundle_root / manifest.stateMachine.file
-    if not state_machine_path.is_file():
-        errors.append(
-            {
-                "code": ERROR_STATE_MACHINE_MISSING,
-                "location": "stateMachine.file",
-                "message": f"Missing referenced file: {manifest.stateMachine.file}",
-            }
-        )
-
-    for agent in manifest.agents:
-        agent_file = f"agents/{agent.name}.json"
-        if not (bundle_root / agent_file).is_file():
-            errors.append(
-                {
-                    "code": ERROR_AGENT_FILE_MISSING,
-                    "location": f"agents.{agent.name}",
-                    "message": f"Missing referenced file: {agent_file}",
-                }
-            )
-        prompt_file = f"prompts/{agent.name}.md"
-        if not (bundle_root / prompt_file).is_file():
-            errors.append(
-                {
-                    "code": ERROR_PROMPT_FILE_MISSING,
-                    "location": f"prompts.{agent.name}",
-                    "message": f"Missing referenced file: {prompt_file}",
-                }
-            )
-
-    for guard in manifest.guards:
-        guard_file = f"guards/{guard.value}.json"
-        if not (bundle_root / guard_file).is_file():
-            errors.append(
-                {
-                    "code": ERROR_GUARD_FILE_MISSING,
-                    "location": f"guards.{guard.value}",
-                    "message": f"Missing referenced file: {guard_file}",
-                }
-            )
-    errors.sort(key=lambda row: (row["code"], row["location"], row["message"]))
-    return errors
-
-
-def _bundle_archive_reference_errors(entry_names: set[str], manifest: OrketManifest) -> list[dict[str, str]]:
-    errors: list[dict[str, str]] = []
-    state_machine_file = str(manifest.stateMachine.file).replace("\\", "/")
-    if state_machine_file not in entry_names:
-        errors.append(
-            {
-                "code": ERROR_STATE_MACHINE_MISSING,
-                "location": "stateMachine.file",
-                "message": f"Missing referenced file: {state_machine_file}",
-            }
-        )
-
-    for agent in manifest.agents:
-        agent_file = f"agents/{agent.name}.json"
-        if agent_file not in entry_names:
-            errors.append(
-                {
-                    "code": ERROR_AGENT_FILE_MISSING,
-                    "location": f"agents.{agent.name}",
-                    "message": f"Missing referenced file: {agent_file}",
-                }
-            )
-        prompt_file = f"prompts/{agent.name}.md"
-        if prompt_file not in entry_names:
-            errors.append(
-                {
-                    "code": ERROR_PROMPT_FILE_MISSING,
-                    "location": f"prompts.{agent.name}",
-                    "message": f"Missing referenced file: {prompt_file}",
-                }
-            )
-
-    for guard in manifest.guards:
-        guard_file = f"guards/{guard.value}.json"
-        if guard_file not in entry_names:
-            errors.append(
-                {
-                    "code": ERROR_GUARD_FILE_MISSING,
-                    "location": f"guards.{guard.value}",
-                    "message": f"Missing referenced file: {guard_file}",
-                }
-            )
-
-    errors.sort(key=lambda row: (row["code"], row["location"], row["message"]))
-    return errors
-
-
-def validate_bundle(
-    target: Path,
-    *,
-    engine_version: str = "",
-    available_models: list[str] | None = None,
-    model_override: str = "",
-) -> dict[str, Any]:
-    manifest_path, bundle_root = _resolve_manifest_path(target)
-    if manifest_path is None:
-        return {
-            "ok": False,
-            "target": str(target),
-            "error_count": 1,
-            "errors": [
-                {
-                    "code": ERROR_MANIFEST_NOT_FOUND,
-                    "location": "manifest",
-                    "message": "Manifest not found. Expected one of: orket.yaml, orket.yml, orket.json",
-                }
-            ],
-        }
-
-    try:
-        payload = _load_manifest_payload(manifest_path)
-    except (ValueError, json.JSONDecodeError) as exc:
-        return {
-            "ok": False,
-            "target": str(target),
-            "error_count": 1,
-            "errors": [
-                {
-                    "code": ERROR_MANIFEST_PARSE,
-                    "location": str(manifest_path.name),
-                    "message": str(exc),
-                }
-            ],
-        }
-
-    try:
-        manifest = OrketManifest.model_validate(payload)
-    except ValidationError as exc:
-        rows = _schema_validation_errors(exc)
-        return {
-            "ok": False,
-            "target": str(target),
-            "error_count": len(rows),
-            "errors": rows,
-        }
-
-    rows = _bundle_reference_errors(bundle_root, manifest)
-    effective_engine_version = str(engine_version or "").strip() or _current_engine_version()
-    if not is_engine_compatible(manifest, effective_engine_version):
-        rows.append(
-            {
-                "code": ERROR_ENGINE_INCOMPATIBLE,
-                "location": "metadata.engineVersion",
-                "message": (
-                    f"Engine version {effective_engine_version} does not satisfy "
-                    f"manifest range {manifest.metadata.engineVersion}."
-                ),
-            }
-        )
-
-    model_selection: dict[str, Any] | None = None
-    if available_models is not None or str(model_override or "").strip():
-        model_selection = resolve_model_selection(
-            manifest,
-            available_models=list(available_models or []),
-            model_override=str(model_override or ""),
-        )
-        if not bool(model_selection.get("ok")):
-            rows.append(
-                {
-                    "code": str(model_selection.get("code") or "E_MODEL_SELECTION"),
-                    "location": "model",
-                    "message": str(model_selection.get("message") or "model selection failed"),
-                }
-            )
-
-    rows.sort(key=lambda row: (row["code"], row["location"], row["message"]))
-    if rows:
-        result = {
-            "ok": False,
-            "target": str(target),
-            "manifest_path": str(manifest_path),
-            "manifest_name": manifest.metadata.name,
-            "manifest_version": manifest.metadata.version,
-            "engine_version_checked": effective_engine_version,
-            "error_count": len(rows),
-            "errors": rows,
-        }
-        if model_selection is not None:
-            result["model_selection"] = model_selection
-        return result
-
-    result = {
-        "ok": True,
-        "target": str(target),
-        "manifest_path": str(manifest_path),
-        "manifest_name": manifest.metadata.name,
-        "manifest_version": manifest.metadata.version,
-        "engine_version_checked": effective_engine_version,
-        "error_count": 0,
-        "errors": [],
-    }
-    if model_selection is not None:
-        result["model_selection"] = model_selection
-    return result
-
-
-def pack_bundle(source: Path, out_path: Path | None = None) -> dict[str, Any]:
-    if not source.is_dir():
-        return {
-            "ok": False,
-            "target": str(source),
-            "error_count": 1,
-            "errors": [
-                {
-                    "code": ERROR_PACK_SOURCE_NOT_DIRECTORY,
-                    "location": "source",
-                    "message": "Pack source must be a directory containing an Orket manifest and assets.",
-                }
-            ],
-        }
-
-    validation = validate_bundle(source)
-    if not bool(validation.get("ok")):
-        return {
-            "ok": False,
-            "target": str(source),
-            "error_count": 1,
-            "errors": [
-                {
-                    "code": ERROR_PACK_VALIDATE_FAILED,
-                    "location": "bundle",
-                    "message": "Bundle must pass 'orket validate' before packing.",
-                }
-            ],
-            "validation": validation,
-        }
-
-    manifest_path, _bundle_root = _resolve_manifest_path(source)
-    assert manifest_path is not None
-    payload = _load_manifest_payload(manifest_path)
-    manifest = OrketManifest.model_validate(payload)
-    destination = (
-        out_path if out_path is not None else Path.cwd() / f"{manifest.metadata.name}-{manifest.metadata.version}.orket"
-    )
-    destination = destination.resolve()
-    destination.parent.mkdir(parents=True, exist_ok=True)
-
-    source_files = sorted(path.resolve() for path in source.rglob("*") if path.is_file())
-    entries: list[tuple[Path, str]] = []
-    for file_path in source_files:
-        if file_path == destination:
-            continue
-        arcname = str(file_path.relative_to(source.resolve())).replace("\\", "/")
-        if not _is_safe_archive_name(arcname):
-            return {
-                "ok": False,
-                "target": str(source),
-                "error_count": 1,
-                "errors": [
-                    {
-                        "code": ERROR_PACK_UNSAFE_ARCHIVE_PATH,
-                        "location": "archive",
-                        "message": f"Unsafe archive path derived from source: {arcname}",
-                    }
-                ],
-            }
-        entries.append((file_path, arcname))
-
-    with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for file_path, arcname in sorted(entries, key=lambda item: item[1]):
-            info = zipfile.ZipInfo(filename=arcname, date_time=(1980, 1, 1, 0, 0, 0))
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = (0o644 & 0xFFFF) << 16
-            archive.writestr(info, file_path.read_bytes())
-
-    return {
-        "ok": True,
-        "source": str(source),
-        "output": str(destination),
-        "manifest_name": manifest.metadata.name,
-        "manifest_version": manifest.metadata.version,
-        "file_count": len(entries),
-        "error_count": 0,
-        "errors": [],
-    }
-
-
-def inspect_target(target: Path) -> dict[str, Any]:
-    if not target.exists():
-        return {
-            "ok": False,
-            "target": str(target),
-            "error_count": 1,
-            "errors": [
-                {
-                    "code": ERROR_INSPECT_TARGET_NOT_FOUND,
-                    "location": "target",
-                    "message": f"Target not found: {target}",
-                }
-            ],
-        }
-
-    if target.is_file() and target.suffix.lower() == ".orket":
-        with zipfile.ZipFile(target, "r") as archive:
-            names = sorted(name for name in archive.namelist() if not name.endswith("/"))
-            manifest_name = next(
-                (name for name in ("orket.yaml", "orket.yml", "orket.json") if name in names),
-                None,
-            )
-            if manifest_name is None:
-                return {
-                    "ok": False,
-                    "target": str(target),
-                    "error_count": 1,
-                    "errors": [
-                        {
-                            "code": ERROR_INSPECT_MANIFEST_NOT_FOUND,
-                            "location": "archive",
-                            "message": "Archive missing manifest: expected orket.yaml, orket.yml, or orket.json.",
-                        }
-                    ],
-                }
-            try:
-                manifest_payload = _parse_manifest_content(
-                    suffix=Path(manifest_name).suffix.lower(),
-                    text=archive.read(manifest_name).decode("utf-8"),
-                )
-                manifest = OrketManifest.model_validate(manifest_payload)
-            except (ValueError, ValidationError, json.JSONDecodeError) as exc:
-                return {
-                    "ok": False,
-                    "target": str(target),
-                    "error_count": 1,
-                    "errors": [
-                        {
-                            "code": ERROR_MANIFEST_PARSE,
-                            "location": manifest_name,
-                            "message": str(exc),
-                        }
-                    ],
-                }
-            errors = _bundle_archive_reference_errors(set(names), manifest)
-            if errors:
-                return {
-                    "ok": False,
-                    "target": str(target),
-                    "error_count": len(errors),
-                    "errors": errors,
-                }
-            return _inspect_summary(
-                target=str(target),
-                manifest=manifest,
-                manifest_path=manifest_name,
-                entry_count=len(names),
-            )
-
-    validation = validate_bundle(target)
-    if not bool(validation.get("ok")):
-        return validation
-    manifest_path, _bundle_root = _resolve_manifest_path(target)
-    assert manifest_path is not None
-    manifest = OrketManifest.model_validate(_load_manifest_payload(manifest_path))
-    return _inspect_summary(
-        target=str(target),
-        manifest=manifest,
-        manifest_path=str(manifest_path),
-        entry_count=None,
-    )
-
-
-def _inspect_summary(
-    *,
-    target: str,
-    manifest: OrketManifest,
-    manifest_path: str,
-    entry_count: int | None,
-) -> dict[str, Any]:
-    summary = {
-        "ok": True,
-        "target": target,
-        "manifest_path": manifest_path,
-        "name": manifest.metadata.name,
-        "version": manifest.metadata.version,
-        "engineVersion": manifest.metadata.engineVersion,
-        "model": {
-            "preferred": manifest.model.preferred,
-            "minimum": manifest.model.minimum,
-            "fallback": list(manifest.model.fallback),
-            "allowOverride": bool(manifest.model.allowOverride),
-        },
-        "permissions": {
-            "filesystem_read_count": len(manifest.permissions.filesystem.read),
-            "filesystem_write_count": len(manifest.permissions.filesystem.write),
-            "network_allowed": bool(manifest.permissions.network.allowed),
-            "tools_allowed_count": len(manifest.permissions.tools.allowed),
-        },
-        "agents_count": len(manifest.agents),
-        "guards": [guard.value for guard in manifest.guards],
-        "error_count": 0,
-        "errors": [],
-    }
-    if entry_count is not None:
-        summary["entry_count"] = entry_count
-    return summary
-
-
-def _is_safe_archive_name(name: str) -> bool:
-    normalized = str(name or "").replace("\\", "/")
-    if not normalized or normalized.startswith("/") or normalized.startswith("./"):
-        return False
-    pure = PurePosixPath(normalized)
-    if pure.is_absolute():
-        return False
-    if ".." in pure.parts:
-        return False
-    return normalized == str(pure)
-
-
 def validate_sdk_extension(target: Path, *, strict: bool = False) -> dict[str, Any]:
     return validate_sdk_extension_tool(target, strict=strict, include_import_scan=False)
 
@@ -575,7 +73,6 @@ def validate_external_extension(target: Path, *, strict: bool = False) -> dict[s
         include_import_scan=True,
         host_supported_features=SUPPORTED_GOVERNED_AGENT_HOST_FEATURES,
     )
-
 
 
 def _run_api_base_url() -> str:
@@ -760,8 +257,7 @@ def _handle_ledger_command(args: argparse.Namespace) -> int:
             if 200 <= int(status_code) < 300:
                 Path(str(args.out)).write_text(json.dumps(body, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         elif command == "verify":
-            raw = Path(str(args.file)).read_text(encoding="utf-8")
-            body = verify_ledger_export(json.loads(raw))
+            body = asyncio.run(verify_ledger_file(Path(str(args.file))))
             status_code = 200 if body["result"] in {"valid", "partial_valid"} else 1
         elif command == "summary":
             status_code, body = _run_api_request("GET", f"/v1/runs/{args.run_id}/ledger/verify")
@@ -780,11 +276,10 @@ def _connector_http_allowlist() -> tuple[str, ...]:
 
 
 def _connector_service(workspace_root: str) -> OutwardConnectorService:
-    return OutwardConnectorService(
-        connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
-        workspace_root=Path(workspace_root).resolve(),
+    return asyncio.run(OutwardConnectorService.for_workspace(
+        Path(workspace_root),
         http_allowlist=_connector_http_allowlist(),
-    )
+    ))
 
 
 def _handle_connectors_command(args: argparse.Namespace) -> int:
@@ -846,7 +341,7 @@ def _parser() -> argparse.ArgumentParser:
     validate_parser.add_argument("target", nargs="?", default=".", help="Bundle directory or manifest file path.")
     validate_parser.add_argument(
         "--engine-version",
-        default=_current_engine_version(),
+        default="",
         help="Engine version used for compatibility checks.",
     )
     validate_parser.add_argument(
@@ -1225,15 +720,14 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(f"unrecognized arguments: {' '.join(runtime_args)}")
     if args.command == "validate":
         available_models = list(args.available_model or [])
-        result = validate_bundle(
+        result = asyncio.run(BundleService(engine_version=str(args.engine_version)).validate(
             Path(args.target),
-            engine_version=str(args.engine_version),
             available_models=(available_models if available_models else None),
             model_override=str(args.model_override or ""),
-        )
+        ))
     elif args.command == "pack":
         out = Path(args.out) if str(args.out).strip() else None
-        result = pack_bundle(Path(args.source), out_path=out)
+        result = asyncio.run(BundleService().pack(Path(args.source), out_path=out))
     elif args.command == "inspect":
         target = Path(args.target)
         if is_governed_run_bundle(target):
@@ -1242,7 +736,7 @@ def main(argv: list[str] | None = None) -> int:
             except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
                 result = _governed_run_error(exc)
         else:
-            result = inspect_target(target)
+            result = asyncio.run(BundleService().inspect(target))
     elif args.command == "demo":
         return _handle_demo_command(args)
     elif args.command == "sdk":

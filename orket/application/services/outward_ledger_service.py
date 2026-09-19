@@ -4,8 +4,10 @@ import asyncio
 from collections import Counter
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
+from pathlib import Path
 from typing import Any
 
+from orket.adapters.storage.outward_ledger_file_store import OutwardLedgerFileStore
 from orket.adapters.storage.outward_ledger_snapshot_store import OutwardLedgerSnapshotStore
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
@@ -28,6 +30,12 @@ from orket.core.domain.outward_runs import OutwardRunRecord
 
 class OutwardLedgerValidationError(ValueError):
     pass
+
+
+async def verify_ledger_file(path: Path) -> dict[str, Any]:
+    """Offline verification owns the selected read and applies the canonical core verifier."""
+    payload = await OutwardLedgerFileStore().read(path)
+    return verify_ledger_export(payload)
 
 
 @dataclass(frozen=True)

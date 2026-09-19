@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import enum
-import json
-from pathlib import Path
 from typing import Any, Literal
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
@@ -133,13 +131,6 @@ class OrketManifest(BaseModel):
         if len(set(raw)) != len(raw):
             raise ValueError("guards contains duplicates")
         return value
-
-
-def load_orket_manifest(path: str | Path) -> OrketManifest:
-    raw = json.loads(Path(path).read_text(encoding="utf-8"))
-    if not isinstance(raw, dict):
-        raise ValueError("manifest payload must be a JSON object")
-    return OrketManifest.model_validate(raw)
 
 
 def manifest_json_schema() -> dict[str, Any]:
