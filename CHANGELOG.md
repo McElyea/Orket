@@ -5,6 +5,20 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.32] - 2026-09-19 - "Owned prompt and setup commands"
+
+### Fixed
+- Move prompt metadata policy, asset commands and setup admission into core/application ownership; retire synchronous prompt helpers and the ambiguous setup file entrypoint.
+- Reject prompt path escapes and identity drift, use the supplied SLA date for published metadata, and verify file bytes under shared native ownership.
+- Refuse invalid setup profiles before effects; preserve unrelated settings and report completion only after verified organization/settings publication.
+- Capture vision model selection and image inputs, retain inference/publication through interruption, and reject missing or unverified encoder output.
+- Move operator runtime interpretation into application while preserving HTTP completion and prebuild vocabulary.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration and limits: `docs/architecture/CONTRACT_DELTA_COMMAND_AUTHORITY_CD_2026-09-19.md`.
+- Stability: scoped C/D candidate; the full architectural-truth lane remains active.
+
 ## [0.6.31] - 2026-09-19 - "Owned interaction transitions"
 
 ### Fixed

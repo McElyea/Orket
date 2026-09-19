@@ -4,6 +4,14 @@ Last updated: 2026-09-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Application owns prompt asset commands, validated interactive setup, captured
+vision command inputs and operator runtime interpretation. Core owns prompt
+metadata transitions over a supplied date. Prompt/setup/image publication uses
+owned workers and verified file bytes; failed acknowledgement can leave effects.
+The setup module entrypoint is `python -m orket.interfaces.setup_cli`.
+Migration, native ownership locations and verification limits:
+`docs/architecture/CONTRACT_DELTA_COMMAND_AUTHORITY_CD_2026-09-19.md`.
+
 Application interaction services own admission, workload adoption, cancellation,
 finalization and session close. Captured inputs and per-session transition ownership
 prevent interrupted calls from stranding turns or returning unobserved commit
@@ -1019,6 +1027,8 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
     "runtime_entrypoints": {
       "cli_console_entrypoint": "orket.cli:main",
       "cli_default": "orket runtime",
+      "interactive_setup": "python -m orket.interfaces.setup_cli",
+      "prompt_commands": "python -m orket.interfaces.prompts_cli --root <project> ...",
       "cli_named_card": "orket runtime --card <card_id>",
       "cli_source_wrapper_compatibility": "python main.py [runtime arguments]",
       "cli_source_wrapper_compatibility_status": "supported_through_0.6.x_removal_requires_explicit_0.7.0_contract_delta",

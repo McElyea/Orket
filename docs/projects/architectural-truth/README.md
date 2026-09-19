@@ -1,7 +1,7 @@
 # Architectural Truth
 
 Date: 2026-07-29
-Last updated: 2026-09-18
+Last updated: 2026-09-19
 Status: Active project registry
 Owner: Orket Core
 
@@ -9,12 +9,14 @@ Current gate: scoped BT-1 through BT-5 are accepted. C/D dependency enforcement,
 core purity, explicit inputs and async safety are next, followed by E1/E2 and the
 gated capability obligations. The whole lane remains active.
 
-The local 0.6.16 checkpoint moves sandbox HTTP execution out of core, captures
-inputs and repairs false passes for falsy expectations and concurrent edits.
-The scoped 2808-case source cohort, four installed environments and separate
-actual llama.cpp proof pass. The canonical plan retains exact coverage, input
-bindings and adverse observations. Remaining core effects and C/D/E/CAP stay
-open. Contract: `docs/specs/SANDBOX_HTTP_VERIFICATION.md`. Commit and tag remain local.
+The 0.6.32 command-authority checkpoint removes the last four forbidden static
+pairs. Eight unresolved dynamic-import/reflection sites still fail the dependency
+verdict. Prompt/setup/vision effects now enter application owners; operator runtime
+interpretation also belongs to application. The scoped 1,546-case source cohort and four fresh installed
+Windows/Linux Python 3.11/3.12 environments pass. Exact retained failures, proof and pending obligations live in
+the canonical plan. Contract:
+`docs/architecture/CONTRACT_DELTA_COMMAND_AUTHORITY_CD_2026-09-19.md`.
+GitHub publication remains deferred; commits and annotated tags stay local.
 
 C's v2 allowed-edge implementation replaces the transition denylist. The checker,
 exporter and baseline share one Git-visible import inventory; repository violations

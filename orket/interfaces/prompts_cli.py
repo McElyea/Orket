@@ -1,477 +1,18 @@
+"""Prompt command argument parsing and output; application owns file operations."""
 from __future__ import annotations
 
 import argparse
+import asyncio
 import difflib
 import json
-from datetime import date
+import sys
 from pathlib import Path
 from typing import Any
 
-from orket.application.services.prompt_linter import lint_prompt_file
-from orket.application.services.prompt_resolver import PromptResolver
-from orket.schema import DialectConfig, RoleConfig, SkillConfig
-
-VALID_STATUSES = {"draft", "candidate", "canary", "stable", "deprecated"}
-ALLOWED_STATUS_TRANSITIONS = {
-    "draft": {"candidate", "canary", "deprecated"},
-    "candidate": {"canary", "stable", "deprecated"},
-    "canary": {"stable", "deprecated"},
-    "stable": {"deprecated"},
-    "deprecated": set(),
-}
+from orket.application.services.prompt_asset_service import PromptAssetService
 
 
-def _core_root(root: Path) -> Path:
-    return root / "model" / "core"
-
-
-def _asset_dir(root: Path, kind: str) -> Path:
-    if kind == "role":
-        return _core_root(root) / "roles"
-    if kind == "dialect":
-        return _core_root(root) / "dialects"
-    raise ValueError(f"Unsupported asset kind: {kind}")
-
-
-def _iter_assets(root: Path, kind: str) -> list[Path]:
-    return sorted(_asset_dir(root, kind).glob("*.json"))
-
-
-def _load_json(path: Path) -> dict[str, Any]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError(f"Prompt asset must be a JSON object: {path}")
-    return payload
-
-
-def _save_json(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-
-
-def _parse_iso_date(value: str) -> date | None:
-    text = str(value or "").strip()
-    if not text:
-        return None
-    try:
-        return date.fromisoformat(text)
-    except ValueError:
-        return None
-
-
-def _kind_and_name_from_id(prompt_id: str) -> tuple[str, str]:
-    raw = str(prompt_id or "").strip()
-    if raw.startswith("role."):
-        return "role", raw[len("role.") :]
-    if raw.startswith("dialect."):
-        return "dialect", raw[len("dialect.") :]
-    raise ValueError(f"Unsupported prompt id format: {prompt_id}")
-
-
-def _asset_path_by_id(root: Path, prompt_id: str) -> Path:
-    kind, name = _kind_and_name_from_id(prompt_id)
-    path = _asset_dir(root, kind) / f"{name}.json"
-    if not path.exists():
-        raise FileNotFoundError(f"Prompt asset not found: {path}")
-    return path
-
-
-def _collect_placeholder_issues(text: str, path: Path, field: str) -> list[str]:
-    errors: list[str] = []
-    if "{{" not in text:
-        return errors
-    if "}}" not in text or text.count("{{") != text.count("}}"):
-        errors.append(f"{path}: {field} has unbalanced placeholder delimiters.")
-    return errors
-
-
-def _validate_prompt_metadata(path: Path, payload: dict[str, Any], kind: str) -> list[str]:
-    errors: list[str] = []
-    metadata = payload.get("prompt_metadata")
-    if not isinstance(metadata, dict):
-        return [f"{path}: prompt_metadata must be an object."]
-
-    prompt_id = str(metadata.get("id") or "").strip()
-    version = str(metadata.get("version") or "").strip()
-    status = str(metadata.get("status") or "").strip()
-    owner = str(metadata.get("owner") or "").strip()
-    updated_at = str(metadata.get("updated_at") or "").strip()
-    expected_id = f"{kind}.{path.stem}"
-
-    if prompt_id != expected_id:
-        errors.append(f"{path}: prompt_metadata.id must equal '{expected_id}' (got '{prompt_id}').")
-    if not version:
-        errors.append(f"{path}: prompt_metadata.version is required.")
-    if status not in VALID_STATUSES:
-        errors.append(f"{path}: prompt_metadata.status must be one of {sorted(VALID_STATUSES)}.")
-    if not owner:
-        errors.append(f"{path}: prompt_metadata.owner is required.")
-    if not updated_at:
-        errors.append(f"{path}: prompt_metadata.updated_at is required.")
-
-    lineage = metadata.get("lineage")
-    if not isinstance(lineage, dict):
-        errors.append(f"{path}: prompt_metadata.lineage must be an object.")
-    else:
-        parent = lineage.get("parent")
-        if parent is not None and not str(parent).strip():
-            errors.append(f"{path}: prompt_metadata.lineage.parent must be null or non-empty.")
-
-    changelog = metadata.get("changelog")
-    if not isinstance(changelog, list) or not changelog:
-        errors.append(f"{path}: prompt_metadata.changelog must be a non-empty list.")
-    else:
-        versions = set()
-        for idx, entry in enumerate(changelog):
-            if not isinstance(entry, dict):
-                errors.append(f"{path}: prompt_metadata.changelog[{idx}] must be an object.")
-                continue
-            v = str(entry.get("version") or "").strip()
-            d = str(entry.get("date") or "").strip()
-            n = str(entry.get("notes") or "").strip()
-            if not v:
-                errors.append(f"{path}: prompt_metadata.changelog[{idx}].version missing.")
-            if not d:
-                errors.append(f"{path}: prompt_metadata.changelog[{idx}].date missing.")
-            if not n:
-                errors.append(f"{path}: prompt_metadata.changelog[{idx}].notes missing.")
-            if v:
-                versions.add(v)
-        if version and version not in versions:
-            errors.append(f"{path}: prompt_metadata.version '{version}' missing from changelog entries.")
-
-    text_fields: list[tuple[str, str]] = []
-    for key in ("prompt", "description", "dsl_format", "hallucination_guard"):
-        if key in payload and isinstance(payload.get(key), str):
-            text_fields.append((key, str(payload[key])))
-    constraints = payload.get("constraints")
-    if isinstance(constraints, list):
-        for idx, value in enumerate(constraints):
-            if isinstance(value, str):
-                text_fields.append((f"constraints[{idx}]", value))
-
-    for field_name, text in text_fields:
-        errors.extend(_collect_placeholder_issues(text, path, field_name))
-    return errors
-
-
-def validate_prompt_assets(root: Path) -> list[str]:
-    lint = lint_prompt_assets(root)
-    return [item["message"] for item in lint["errors"]]
-
-
-def lint_prompt_assets(root: Path) -> dict[str, Any]:
-    violations: list[dict[str, Any]] = []
-    for kind in ("role", "dialect"):
-        for path in _iter_assets(root, kind):
-            violations.extend(lint_prompt_file(path, kind))
-    errors = [item for item in violations if str(item.get("severity") or "") == "strict"]
-    warnings = [item for item in violations if str(item.get("severity") or "") != "strict"]
-    # Keep CLI-compatible "message" field with file context.
-    for item in violations:
-        file_path = str(item.get("file") or "").strip()
-        message = str(item.get("message") or "").strip()
-        item["message"] = f"{file_path}: [{item.get('rule_id')}] {message}"
-    return {
-        "ok": not errors,
-        "error_count": len(errors),
-        "warning_count": len(warnings),
-        "errors": errors,
-        "warnings": warnings,
-        "violations": violations,
-    }
-
-
-def list_prompts(root: Path, kind: str = "all", status: str = "") -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    kinds = ("role", "dialect") if kind == "all" else (kind,)
-    for item_kind in kinds:
-        for path in _iter_assets(root, item_kind):
-            payload = _load_json(path)
-            metadata = payload.get("prompt_metadata") or {}
-            row = {
-                "kind": item_kind,
-                "name": path.stem,
-                "path": str(path),
-                "id": metadata.get("id"),
-                "version": metadata.get("version"),
-                "status": metadata.get("status"),
-                "owner": metadata.get("owner"),
-                "updated_at": metadata.get("updated_at"),
-            }
-            if status and str(row.get("status") or "").strip() != status:
-                continue
-            rows.append(row)
-    return rows
-
-
-def find_stale_candidate_prompts(
-    root: Path,
-    *,
-    max_candidate_age_days: int = 14,
-    as_of: date | None = None,
-) -> list[dict[str, Any]]:
-    anchor = as_of or date.today()
-    stale_rows: list[dict[str, Any]] = []
-    for row in list_prompts(root, kind="all", status="candidate"):
-        updated_at = _parse_iso_date(str(row.get("updated_at") or ""))
-        if updated_at is None:
-            stale_rows.append(
-                {
-                    **row,
-                    "age_days": None,
-                    "stale": True,
-                    "reason": "updated_at_missing_or_invalid",
-                }
-            )
-            continue
-        age_days = (anchor - updated_at).days
-        is_stale = age_days >= int(max_candidate_age_days)
-        stale_rows.append(
-            {
-                **row,
-                "age_days": age_days,
-                "stale": is_stale,
-                "reason": "candidate_age_exceeded" if is_stale else "within_sla",
-            }
-        )
-    return [row for row in stale_rows if bool(row.get("stale"))]
-
-
-def enforce_candidate_prompt_sla(
-    root: Path,
-    *,
-    max_candidate_age_days: int = 14,
-    renew_ids: list[str] | None = None,
-    as_of: date | None = None,
-    apply_changes: bool = False,
-) -> dict[str, Any]:
-    anchor = as_of or date.today()
-    renew = {str(item).strip() for item in (renew_ids or []) if str(item).strip()}
-    stale = find_stale_candidate_prompts(
-        root,
-        max_candidate_age_days=max_candidate_age_days,
-        as_of=anchor,
-    )
-    actions: list[dict[str, Any]] = []
-    for row in stale:
-        prompt_id = str(row.get("id") or "").strip()
-        if not prompt_id:
-            continue
-        if prompt_id in renew:
-            result = update_prompt_metadata(
-                root,
-                prompt_id=prompt_id,
-                mode="promote",
-                status="candidate",
-                notes=f"SLA renewal at {anchor.isoformat()}.",
-                apply_changes=apply_changes,
-            )
-            actions.append(
-                {
-                    "id": prompt_id,
-                    "action": "renewed_candidate",
-                    "age_days": row.get("age_days"),
-                    "applied": bool(apply_changes),
-                    "result": result,
-                }
-            )
-            continue
-
-        result = update_prompt_metadata(
-            root,
-            prompt_id=prompt_id,
-            mode="deprecate",
-            notes=(
-                f"SLA auto-deprecate at {anchor.isoformat()}: candidate age exceeded {max_candidate_age_days} days."
-            ),
-            apply_changes=apply_changes,
-        )
-        actions.append(
-            {
-                "id": prompt_id,
-                "action": "auto_deprecated",
-                "age_days": row.get("age_days"),
-                "applied": bool(apply_changes),
-                "result": result,
-            }
-        )
-
-    stale_without_renewal = [row for row in stale if str(row.get("id") or "").strip() not in renew]
-    return {
-        "ok": len(stale_without_renewal) == 0 or bool(apply_changes),
-        "as_of": anchor.isoformat(),
-        "max_candidate_age_days": int(max_candidate_age_days),
-        "stale_count": len(stale),
-        "renew_count": len([a for a in actions if a["action"] == "renewed_candidate"]),
-        "deprecate_count": len([a for a in actions if a["action"] == "auto_deprecated"]),
-        "actions": actions,
-    }
-
-
-def show_prompt(root: Path, prompt_id: str) -> dict[str, Any]:
-    path = _asset_path_by_id(root, prompt_id)
-    payload = _load_json(path)
-    return {"path": str(path), "payload": payload}
-
-
-def _load_role(root: Path, role_name: str) -> RoleConfig:
-    return RoleConfig.model_validate(_load_json(_asset_dir(root, "role") / f"{role_name}.json"))
-
-
-def _load_dialect(root: Path, dialect_name: str) -> DialectConfig:
-    return DialectConfig.model_validate(_load_json(_asset_dir(root, "dialect") / f"{dialect_name}.json"))
-
-
-def resolve_prompt(
-    root: Path,
-    *,
-    role: str,
-    dialect: str,
-    selection_policy: str = "stable",
-    version_exact: str = "",
-    strict: bool = True,
-    profile: str = "default",
-) -> dict[str, Any]:
-    role_cfg = _load_role(root, role)
-    dialect_cfg = _load_dialect(root, dialect)
-    skill = SkillConfig(
-        name=role_cfg.name or role,
-        intent=role_cfg.description,
-        responsibilities=[role_cfg.description],
-        tools=list(role_cfg.tools or []),
-        prompt_metadata=dict(role_cfg.prompt_metadata or {}),
-    )
-    resolution = PromptResolver.resolve(
-        skill=skill,
-        dialect=dialect_cfg,
-        selection_policy=selection_policy,
-        context={
-            "prompt_context_profile": profile,
-            "prompt_resolver_policy": "resolver_v1",
-            "prompt_selection_policy": selection_policy,
-            "prompt_selection_strict": bool(strict),
-            "prompt_version_exact": version_exact.strip(),
-        },
-    )
-    return {
-        "prompt": resolution.system_prompt,
-        "metadata": resolution.metadata,
-        "layers": resolution.layers,
-    }
-
-
-def _append_changelog(metadata: dict[str, Any], *, version: str, notes: str) -> None:
-    changelog = metadata.setdefault("changelog", [])
-    if not isinstance(changelog, list):
-        changelog = []
-        metadata["changelog"] = changelog
-    changelog.append(
-        {
-            "version": version,
-            "date": date.today().isoformat(),
-            "notes": notes,
-        }
-    )
-
-
-def _assert_status_transition_allowed(*, current_status: str, target_status: str) -> None:
-    current = str(current_status or "").strip()
-    target = str(target_status or "").strip()
-    if not current:
-        return
-    if current == target:
-        return
-    allowed = ALLOWED_STATUS_TRANSITIONS.get(current, set())
-    if target not in allowed:
-        raise ValueError(f"Invalid status transition: {current} -> {target}. Allowed: {sorted(allowed)}")
-
-
-def update_prompt_metadata(
-    root: Path,
-    *,
-    prompt_id: str,
-    mode: str,
-    version: str = "",
-    status: str = "",
-    notes: str = "",
-    promotion_report: dict[str, Any] | None = None,
-    apply_changes: bool = False,
-) -> dict[str, Any]:
-    path = _asset_path_by_id(root, prompt_id)
-    payload = _load_json(path)
-    metadata = dict(payload.get("prompt_metadata") or {})
-    old_version = str(metadata.get("version") or "").strip()
-    old_status = str(metadata.get("status") or "").strip()
-    lineage = metadata.get("lineage")
-    if not isinstance(lineage, dict):
-        lineage = {"parent": None}
-    metadata["lineage"] = lineage
-
-    if mode == "new":
-        next_version = str(version or "").strip()
-        if not next_version:
-            raise ValueError("new requires --version")
-        next_status = str(status or "draft").strip()
-        if next_status not in VALID_STATUSES:
-            raise ValueError(f"Invalid status: {next_status}")
-        lineage["parent"] = old_version or None
-        metadata["version"] = next_version
-        metadata["status"] = next_status
-        metadata["updated_at"] = date.today().isoformat()
-        _append_changelog(metadata, version=next_version, notes=notes or "New prompt version created.")
-    elif mode == "promote":
-        target_status = str(status or "stable").strip()
-        if target_status not in VALID_STATUSES:
-            raise ValueError(f"Invalid status: {target_status}")
-        if isinstance(promotion_report, dict) and target_status in {"canary", "stable"} and not bool(
-            promotion_report.get("pass")
-        ):
-            blockers = promotion_report.get("blockers", [])
-            blocker_codes: list[str] = []
-            if isinstance(blockers, list):
-                for item in blockers:
-                    if isinstance(item, dict):
-                        code = str(item.get("code") or "").strip()
-                        if code:
-                            blocker_codes.append(code)
-            suffix = f" blockers={','.join(blocker_codes)}" if blocker_codes else ""
-            raise ValueError(f"Promotion criteria not met for {target_status}.{suffix}")
-        _assert_status_transition_allowed(
-            current_status=old_status,
-            target_status=target_status,
-        )
-        metadata["status"] = target_status
-        metadata["updated_at"] = date.today().isoformat()
-        _append_changelog(
-            metadata,
-            version=str(metadata.get("version") or old_version or "unknown"),
-            notes=notes or f"Prompt promoted to {target_status}.",
-        )
-    elif mode == "deprecate":
-        metadata["status"] = "deprecated"
-        metadata["updated_at"] = date.today().isoformat()
-        _append_changelog(
-            metadata,
-            version=str(metadata.get("version") or old_version or "unknown"),
-            notes=notes or "Prompt deprecated.",
-        )
-    else:
-        raise ValueError(f"Unsupported update mode: {mode}")
-
-    payload["prompt_metadata"] = metadata
-    if apply_changes:
-        _save_json(path, payload)
-    return {
-        "path": str(path),
-        "mode": mode,
-        "apply_changes": apply_changes,
-        "before": {"version": old_version, "status": old_status},
-        "after": {"version": metadata.get("version"), "status": metadata.get("status")},
-        "metadata": metadata,
-    }
-
-
-def _print_json(payload: dict[str, Any]) -> None:
+def _print_json(payload: Any) -> None:
     print(json.dumps(payload, indent=2, ensure_ascii=False))
 
 
@@ -516,13 +57,13 @@ def _build_parser() -> argparse.ArgumentParser:
     p_new = sub.add_parser("new", help="Create new prompt version metadata entry.")
     p_new.add_argument("--id", required=True)
     p_new.add_argument("--version", required=True)
-    p_new.add_argument("--status", choices=sorted(VALID_STATUSES), default="draft")
+    p_new.add_argument("--status", choices=sorted(PromptAssetService.statuses), default="draft")
     p_new.add_argument("--notes", default="")
     p_new.add_argument("--apply", action="store_true")
 
     p_promote = sub.add_parser("promote", help="Promote prompt status.")
     p_promote.add_argument("--id", required=True)
-    p_promote.add_argument("--status", choices=sorted(VALID_STATUSES), default="stable")
+    p_promote.add_argument("--status", choices=sorted(PromptAssetService.statuses), default="stable")
     p_promote.add_argument("--notes", default="")
     p_promote.add_argument("--promotion-report", default="", help="Optional JSON report with pass/blockers.")
     p_promote.add_argument("--apply", action="store_true")
@@ -544,133 +85,79 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = _build_parser()
-    args = parser.parse_args(argv)
-    root = Path(args.root).resolve()
-
-    if args.cmd == "list":
-        rows = list_prompts(root, kind=args.kind, status=args.status)
-        if args.json:
-            _print_json({"count": len(rows), "items": rows})
-        else:
-            for row in rows:
-                print(
-                    f"{row['id']}  kind={row['kind']} status={row['status']} "
-                    f"version={row['version']} path={row['path']}"
-                )
-        return 0
-
-    if args.cmd == "show":
-        _print_json(show_prompt(root, args.id))
-        return 0
-
-    if args.cmd == "validate":
-        lint = lint_prompt_assets(root)
-        payload = {
-            "ok": lint["ok"],
-            "error_count": lint["error_count"],
-            "warning_count": lint["warning_count"],
-            "errors": [item["message"] for item in lint["errors"]],
-            "warnings": [item["message"] for item in lint["warnings"]],
-        }
-        if args.json or lint["error_count"]:
-            _print_json(payload)
-        if lint["error_count"]:
-            return 1
-        print("Prompt assets valid.")
-        return 0
-
+async def _resolve(service: PromptAssetService, args: argparse.Namespace) -> int:
     if args.cmd == "resolve":
-        resolved = resolve_prompt(
-            root,
-            role=args.role,
-            dialect=args.dialect,
-            selection_policy=args.selection_policy,
-            version_exact=args.version_exact,
-            strict=bool(args.strict),
-            profile=args.profile,
-        )
-        payload = {
-            "metadata": resolved["metadata"],
-            "layers": resolved["layers"],
-        }
+        resolved = await service.execute("resolve", role=args.role, dialect=args.dialect,
+            selection_policy=args.selection_policy, version_exact=args.version_exact,
+            strict=bool(args.strict), profile=args.profile)
+        payload = {"metadata": resolved["metadata"], "layers": resolved["layers"]}
         if args.include_prompt:
             payload["prompt"] = resolved["prompt"]
         _print_json(payload)
         return 0
+    left = await service.execute("resolve", role=args.role, dialect=args.dialect,
+        selection_policy=args.left_policy, version_exact=args.left_version_exact, strict=bool(args.strict))
+    right = await service.execute("resolve", role=args.role, dialect=args.dialect,
+        selection_policy=args.right_policy, version_exact=args.right_version_exact, strict=bool(args.strict))
+    diff = list(difflib.unified_diff(str(left["prompt"] or "").splitlines(), str(right["prompt"] or "").splitlines(),
+        fromfile=f"{args.left_policy}:{args.left_version_exact or 'auto'}",
+        tofile=f"{args.right_policy}:{args.right_version_exact or 'auto'}", lineterm=""))
+    _print_json({"left_metadata": left["metadata"], "right_metadata": right["metadata"], "prompt_diff": diff})
+    return 0
 
-    if args.cmd == "diff":
-        left = resolve_prompt(
-            root,
-            role=args.role,
-            dialect=args.dialect,
-            selection_policy=args.left_policy,
-            version_exact=args.left_version_exact,
-            strict=bool(args.strict),
-        )
-        right = resolve_prompt(
-            root,
-            role=args.role,
-            dialect=args.dialect,
-            selection_policy=args.right_policy,
-            version_exact=args.right_version_exact,
-            strict=bool(args.strict),
-        )
-        left_prompt = str(left["prompt"] or "").splitlines()
-        right_prompt = str(right["prompt"] or "").splitlines()
-        diff_lines = list(
-            difflib.unified_diff(
-                left_prompt,
-                right_prompt,
-                fromfile=f"{args.left_policy}:{args.left_version_exact or 'auto'}",
-                tofile=f"{args.right_policy}:{args.right_version_exact or 'auto'}",
-                lineterm="",
-            )
-        )
-        _print_json(
-            {
-                "left_metadata": left["metadata"],
-                "right_metadata": right["metadata"],
-                "prompt_diff": diff_lines,
-            }
-        )
+
+def _print_lint(lint: dict[str, Any], *, as_json: bool) -> int:
+    payload = {"ok": lint["ok"], "error_count": lint["error_count"], "warning_count": lint["warning_count"],
+               "errors": [item["message"] for item in lint["errors"]],
+               "warnings": [item["message"] for item in lint["warnings"]]}
+    if as_json or lint["error_count"]:
+        _print_json(payload)
+    if lint["error_count"]:
+        return 1
+    print("Prompt assets valid.")
+    return 0
+
+
+async def _run(service: PromptAssetService, args: argparse.Namespace, report_path: str | None) -> int:
+    if args.cmd == "list":
+        rows = await service.execute("list", kind=args.kind, status=args.status)
+        if args.json:
+            _print_json({"count": len(rows), "items": rows})
+        else:
+            for row in rows:
+                print(f"{row['id']}  kind={row['kind']} status={row['status']} version={row['version']} path={row['path']}")
         return 0
-
+    if args.cmd == "show":
+        _print_json(await service.execute("show", prompt_id=args.id))
+        return 0
+    if args.cmd == "validate":
+        return _print_lint(await service.execute("lint"), as_json=bool(args.json))
+    if args.cmd in {"resolve", "diff"}:
+        return await _resolve(service, args)
     if args.cmd in {"new", "promote", "deprecate"}:
-        promotion_report: dict[str, Any] | None = None
-        report_path = str(getattr(args, "promotion_report", "") or "").strip()
-        if report_path:
-            promotion_report = _load_json(Path(report_path))
-        result = update_prompt_metadata(
-            root,
-            prompt_id=args.id,
-            mode=args.cmd,
-            version=getattr(args, "version", ""),
-            status=getattr(args, "status", ""),
-            notes=getattr(args, "notes", ""),
-            promotion_report=promotion_report,
-            apply_changes=bool(getattr(args, "apply", False)),
-        )
+        result = await service.execute("update", prompt_id=args.id, mode=args.cmd,
+            version=getattr(args, "version", ""), status=getattr(args, "status", ""), notes=args.notes,
+            promotion_report_path=report_path, apply_changes=bool(args.apply))
         _print_json(result)
         return 0
+    result = await service.execute("enforce_sla", max_candidate_age_days=args.max_candidate_age_days,
+        renew_ids=args.renew, as_of=args.as_of or None, apply_changes=bool(args.apply))
+    _print_json(result)
+    return 0 if result["ok"] else 1
 
-    if args.cmd == "enforce-sla":
-        as_of = _parse_iso_date(str(args.as_of or "").strip()) if str(args.as_of or "").strip() else None
-        result = enforce_candidate_prompt_sla(
-            root,
-            max_candidate_age_days=int(args.max_candidate_age_days),
-            renew_ids=list(args.renew or []),
-            as_of=as_of,
-            apply_changes=bool(args.apply),
-        )
-        _print_json(result)
-        if not result.get("ok", False):
-            return 1
-        return 0
 
-    parser.error(f"Unknown command: {args.cmd}")
-    return 2
+def main(argv: list[str] | None = None) -> int:
+    args = _build_parser().parse_args(argv)
+    root = Path(args.root).absolute()
+    report = str(getattr(args, "promotion_report", "") or "").strip()
+    report_path = str(Path(report).absolute()) if report else None
+    try:
+        return asyncio.run(_run(PromptAssetService(root), args, report_path))
+    except (OSError, RuntimeError, ValueError, TypeError) as exc:
+        print(f"Prompt command failed: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        return 130
 
 
 if __name__ == "__main__":

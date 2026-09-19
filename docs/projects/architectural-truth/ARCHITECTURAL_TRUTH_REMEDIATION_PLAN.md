@@ -12516,9 +12516,9 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.31
-interaction lifecycle work below. The graph has four forbidden pairs, zero cross-layer
-cycles and eight unresolved import/reflection sites. Preserve every failed and
+Next action: continue C/D from their numbered requirements after the verified
+0.6.32 command-authority checkpoint. The graph has zero
+forbidden static pairs, zero cross-layer cycles and eight unresolved import/reflection sites. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff has 96 findings. The prior stale benchmark expectation passes in the
 new source/native selection, but no fresh all-green full suite is claimed.
@@ -16129,3 +16129,139 @@ This checkpoint is committed and tagged locally; no GitHub push is performed.
 Full C/D/E1/E2/CAP-1/2/3, fresh full Quality/coverage, hosted/live-provider acceptance,
 release readiness and explicit whole-lane acceptance remain open. The last full
 suite remains the retained .22 observation, not a fresh repository-wide green.
+
+
+### Command authority checkpoint: 2026-09-19 (0.6.32)
+
+Application now owns prompt commands, setup admission, captured vision inputs and
+operator runtime interpretation. Core owns supplied-date prompt metadata policy.
+The prompt CLI keeps its command tree while retiring its synchronous helper API;
+interactive setup moves to `python -m orket.interfaces.setup_cli`. Migration,
+strict refusals, native ownership paths and partial-effect limits live in
+`docs/architecture/CONTRACT_DELTA_COMMAND_AUTHORITY_CD_2026-09-19.md`.
+
+Reentry verified the .31 checkpoint, 1,585 sealed evidence files, historical
+handoff and both neighboring worktrees. The corroborated host-clock discontinuity
+remains diagnosed with unknown actor. No old snapshot or counterexample was replaced.
+
+Retained evidence under `.tmp/c-remaining-boundaries/` includes:
+- `command-counterexamples`: two prompt failures (path escape and incorrect SLA
+  publication date), plus a setup negative test that only hit the broken old module
+  spelling. That setup result was not accepted as admission proof.
+- `setup-entrypoint-counterexample`: the actual old file entrypoint admits an unknown
+  profile and claims success; the valid-profile control passes.
+- `prompt-first-repair`: runner preparation stops at a nonexistent selected test
+  filename. No pytest process or runtime proof is inferred from its partial inputs.
+- `prompt-repair-observation`: 16 tests pass but source input stability fails because
+  canonical-asset queries create a root lock identity.
+- `command-ownership`: 39 tests pass but a second canonical-asset test still creates
+  that lock. Both generated lock files were retained after process termination.
+  The two tests now copy canonical assets into their own temporary roots.
+- `vision-counterexample`: collection fails because Pillow is absent. This is not
+  behavior proof. `vision-encoder-counterexample` then demonstrates false success
+  using a controlled encoder that produces no file, without optional dependencies.
+- `remaining-boundary-behavior`: 84 tests pass with no failure/error/skip and unchanged
+  inputs. It includes real CLI children, local native locks, filesystem publication,
+  HTTP/SQLite operator views and controlled held-worker/encoder faults. Subsequent
+  contract, responsiveness and partial-setup cases require the final source gate.
+- `affected-final`: 89 tests pass and one new partial-setup test fails with inputs
+  unchanged. The test wrote malformed data to `user_preferences.json`, while the
+  actual preferences authority is `preferences.json`. The fixture path is corrected;
+  no production refusal or success is inferred from the misnamed file.
+
+The corrected command and structural union (`command-repaired`) passes 76 cases
+with no failure/error/skip and unchanged inputs. This includes the actual partial
+setup failure, retained workers, independent native ownership, the fixed 0.5-second
+responsiveness bound and 3-second settlement bound after controlled holds release.
+Canonical Ruff still has 96 pre-existing findings; final changed-file comparison
+and package/native gates remain pending.
+
+The initial graph/baseline collection observes 1,082 modules, 3,399 import sites,
+zero forbidden pairs, zero unknown classifications/cycles and eight analysis errors.
+All four prior forbidden pairs were removed without a policy exception or layer
+reclassification. The dependency verdict and release-ready flag remain false.
+
+Observed path: primary for admitted work and explicit refusals; degraded for failed
+publication. Result: partial success for the whole goal. Filesystem/CLI/HTTP proof
+is local live behavior with controlled fault seams; pure metadata/import/size/lint
+proof is structural. `torch`, `diffusers`, and Pillow are absent from the current
+source proof environment, so no live Stable Diffusion inference is claimed.
+The completed source/package/native gate is recorded below. Full-suite/hosted
+Quality, remaining C/D/E, CAP-1/2/3 and whole-lane acceptance remain pending.
+Preserve local-only publication disposition; no GitHub push is performed.
+
+#### Final command-authority checkpoint proof
+
+Both initial Python 3.11 native cells retained 1,545 passes and one canonical-prompt
+failure: the inherited harness omitted the role/dialect directories newly required
+by that test. Their `native-initial-audit.json` preserves exact cases, installed
+origins, matching input/artifact hashes and observed teardown. Neither is acceptance.
+The corrected harness adds all 28 canonical role/dialect support files and checks
+that the architect/generic fixtures are present. No application or test bytes
+changed. The original passing source run, wheel/sdist and source environment remain
+bound and are reused; all four installed cells below use fresh repaired harnesses.
+`candidate-repaired/harness-repair.json` records the exact additions and unchanged
+package/source inputs. The original candidate and failed native results remain intact.
+
+Observed path: primary for admitted work and explicit refusals; degraded for failed
+publication. Result: partial success for the whole goal. Fresh selected source
+passes 1,546 cases with no failure/error/skip in
+525.062 seconds including runner overhead. All
+1,481 prior case identities remain, with 65 added.
+The same identities pass in all four fresh installed environments:
+
+| Installed cell | Tests / failures / errors / skips | Core origins | Pytest seconds |
+|---|---:|---:|---:|
+| a32r-win-py311 | 1546 / 0 / 0 / 0 | 977 | 522.394 |
+| a32r-linux-py311 | 1546 / 0 / 0 / 0 | 977 | 337.643 |
+| a32r-win-py312 | 1546 / 0 / 0 / 0 | 977 | 658.587 |
+| a32r-linux-py312 | 1546 / 0 / 0 / 0 | 977 | 381.766 |
+
+The wheel was built from the source archive. Parity matches 1,082
+core Python files and 1,097 package files without mismatch.
+The harness binds 1,961 support files without core/SDK
+source shadow. Core is 0.6.32; SDK 0.7.0a1 and reference/starter 0.3.0a1 retain
+their identities. Source/native/launcher budgets remain 1,500/1,800/2,100 seconds;
+product deadlines and controlled responsiveness/settlement bounds are unchanged.
+Native origins, copied-input hashes, dependencies, actual CLI/ToolGate controls and
+owned process cleanup pass. Proof launchers returned and their sessions were reaped.
+
+Local live proof covers actual prompt/setup CLI subprocesses, native file admission
+in independent processes, verified filesystem effects, HTTP/SQLite operator views,
+interruption and cleanup. Held workers, injected write/readback faults and image
+encoders retain their controlled scope. These are not live Stable Diffusion or
+new llama.cpp inference claims. Core metadata and graph/size/lint/workflow checks
+are structural. Hosted Quality and a fresh full-suite green remain unverified.
+The actual installed image command also returns its dependency refusal with no
+image output under `vision-live-admission/`; that blocked flow confirms the missing
+optional dependency boundary, not successful inference.
+
+Changed Python lint, source/index whitespace, docs hygiene, size limits and release
+metadata pass. Canonical Ruff retains 96 findings with no new diagnostics. The
+generated graph has 1,082 modules, 3,399 import sites, zero forbidden pairs, zero
+unknown classifications/cycles and eight unresolved import/reflection errors.
+Collection succeeds; dependency conformance and release readiness remain false.
+No exception, reclassification or weakened dependency rule produced this result.
+
+Exact retained evidence under `.tmp/c-remaining-boundaries/`:
+- `candidate-repaired/source-report.json`: SHA-256 `44df3c9d19dc20e32ab60b5839222b75d3fb4d72d148a05fb563f3870830edf7`.
+- `candidate-repaired/manifest.json`: SHA-256 `132634b42d377a89af4c9257e05c0535de6f42b181a0fbd42ab400f64131fce7`.
+- `candidate-repaired/native-audit.json`: SHA-256 `f12a1cfaaf4bac8d9c0a3fc9e08eedba3e1f2f5d89380ba6c58da73dcfbb975e`.
+- `case-continuity.json`, `collection-final/collection.json`, `ruff-comparison.json`,
+  `size-review.json`, `prebuild-review.json` and the retained failed observations above.
+- `CHANGESET.md`: exact 38 changed paths for this checkpoint.
+
+The local commit and matching annotated tag follow final review and source/index
+binding. GitHub publication remains deferred under the user's local-only instruction.
+A separate installed-loader observation under `next-import-observation/` fails:
+both legacy and direct SDK loaders return the first extension's module after a
+different root with the same module name is selected. The report binds the installed
+loader to this candidate's exact source digest and retains both selected sources,
+actual module origins and subprocess outputs. This controlled trusted-source probe
+is outside the passing 1,546-case cohort, and does not claim full workload execution
+or hostile-code containment. Preserve it as the next C loader-repair counterexample.
+
+Remaining C dynamic imports and observed cross-root module substitution,
+D clocks/identities/input ownership/async reachability,
+E1/E2 quality and bounded authority, CAP-1/2/3, full-suite/hosted acceptance and
+explicit whole-lane user acceptance remain open. This checkpoint does not close C/D.

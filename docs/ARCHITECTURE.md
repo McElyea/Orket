@@ -42,7 +42,7 @@ register also records review-discovered ship-risk and self-deception debt that i
 not accepted as target-architecture conformance.
 
 1. Dependency layering exceptions:
-   1. The generated dependency graph records remaining transport/core/adapter boundary violations and unresolved dynamic imports. Bundle CLI core/domain imports were removed in 0.6.25; they are no longer a current exception.
+   1. The 0.6.32 generated graph has no forbidden static pairs or cross-layer cycles, but eight unresolved dynamic-import/reflection sites still fail its verdict. Core purity and runtime ownership remain separate C/D obligations; zero static pairs does not establish full conformance.
 2. Decision-node purity exceptions:
    1. `orket/decision_nodes/builtins.py` still retains mutable planning/routing context. Loop limits now consume immutable explicit values; application owns registry selection, executable tool bindings, provider construction and organization overrides. API authentication, observed paths, board loading and calendar inputs now belong to application services; API strategy retains request/presentation recommendations. API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths also live in explicit services.
 3. API runtime composition:
@@ -287,6 +287,14 @@ receipts. Storage verifies immutable commit/trace artifacts; API workloads belon
 to the application lifetime. Core owns stream/context values. Migration, response
 vocabulary and remaining failure limits:
 `docs/architecture/CONTRACT_DELTA_INTERACTION_LIFECYCLE_CD_2026-09-19.md`.
+
+Application owns prompt asset commands, validated interactive setup, captured
+vision command inputs and operator runtime interpretation. Core owns prompt
+metadata transitions over a supplied date. Prompt/setup/image publication uses
+owned workers and verified file bytes; failed acknowledgement can leave effects.
+The setup module entrypoint is `python -m orket.interfaces.setup_cli`.
+Migration, native ownership locations and verification limits:
+`docs/architecture/CONTRACT_DELTA_COMMAND_AUTHORITY_CD_2026-09-19.md`.
 
 Application crash publication captures the selected absolute diagnostic workspace
 and supplied clock. Native append/rotation ownership and closed-file readback

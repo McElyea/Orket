@@ -1,13 +1,13 @@
 {
   "schema_version": "architectural_truth.exception_register.v1",
   "owner": "Orket Core",
-  "last_reviewed": "2026-09-17",
+  "last_reviewed": "2026-09-19",
   "exceptions": [
     {
       "id": "AT-EX-001",
       "area": "dependency-policy-model",
       "status": "active_unaccepted_ship_risk",
-      "reason": "The v2 allowed-edge checker now exposes existing forbidden edges, unresolved import/reflection routes and authority cycles. Its implementation and repository conformance are not yet accepted; no broad transition label grants an exemption.",
+      "reason": "The 0.6.32 graph has zero forbidden static pairs and cross-layer cycles, but eight unresolved import/reflection sites still fail its verdict. Repository conformance remains unaccepted; no broad transition label grants an exemption.",
       "removal_condition": "One ratified manifest defines allowed layers and edges, and the checker fails every unexpected edge unless an exact governed exception exists.",
       "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#c-one-enforceable-dependency-model"
     },

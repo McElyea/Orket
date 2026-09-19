@@ -14,7 +14,7 @@ def test_runtime_print_usage_is_whitelisted():
 
     allowed_files = {
         "orket/interfaces/cli.py",
-        "orket/cli/setup_wizard.py",
+        "orket/interfaces/setup_cli.py",
         "orket/discovery.py",
         # Verification subprocess contract writes JSON to stdout by design.
         "orket/domain/verification.py",

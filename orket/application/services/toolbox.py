@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -9,7 +10,6 @@ from orket.adapters.tools.families import (
     CardManagementTools,
     FileSystemTools,
     GovernanceTools,
-    VisionTools,
 )
 from orket.adapters.tools.runtime import ToolRuntimeExecutor
 from orket.application.services.card_completion_service import CardCompletionService
@@ -21,9 +21,11 @@ from orket.application.services.card_workspace_mutation_service import CardWorks
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.application.services.reforger_service import ReforgerService
 from orket.application.services.tool_composition_service import select_tool_bindings
+from orket.application.services.vision_service import VisionService
 from orket.core.contracts.card_completion_commit import CardCompletionRejected, is_card_completion_call
 from orket.core.domain.execution import ExecutionTurn
 from orket.runtime_paths import resolve_runtime_db_path
+from orket.settings import get_setting
 
 if TYPE_CHECKING:
     from orket.adapters.storage.async_card_repository import AsyncCardRepository
@@ -53,7 +55,7 @@ class ToolBox:
         self.decision_nodes = decision_nodes if decision_nodes is not None else build_decision_node_registry()
         self.tool_strategy_node = self.decision_nodes.resolve_tool_strategy(self.organization)
         self.runtime_executor = runtime_executor or ToolRuntimeExecutor()
-        self.vision = VisionTools(self.root, self.refs)
+        self.vision = VisionService(self.root, tuple(self.refs), get_setting("sd_model", "runwayml/stable-diffusion-v1-5"))
         self.cards = CardManagementTools(
             self.root,
             self.refs,
@@ -73,6 +75,8 @@ class ToolBox:
         args: dict[str, Any],
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
+        if tool_name == "image_generate":
+            args = deepcopy(args)
         tool_map = get_tool_map(self)
         if tool_name not in tool_map:
             return {"ok": False, "error": f"Unknown tool '{tool_name}'"}

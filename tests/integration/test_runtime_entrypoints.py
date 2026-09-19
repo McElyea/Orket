@@ -14,7 +14,7 @@ from orket.interfaces import runtime_entrypoints
 PROBE = Path(__file__).resolve().parents[1] / 'helpers/runtime_entrypoints_probe.py'
 
 
-async def child(root, arguments, *, profile='developer-local'):
+async def child(root, arguments, *, profile='developer-local', input_text=None):
     import orket
 
     environment = dict(os.environ, PYTHONPATH=str(Path(orket.__file__).parent.parent), ORKET_DISABLE_SANDBOX='1',
@@ -22,9 +22,11 @@ async def child(root, arguments, *, profile='developer-local'):
                        ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL='0', PYTHONUTF8='1', PYTHONIOENCODING='utf-8')
     environment.pop('ORKET_DURABLE_ROOT', None)
     process = await asyncio.create_subprocess_exec(sys.executable, *arguments, cwd=root, env=environment,
+                                                   stdin=asyncio.subprocess.PIPE if input_text is not None else None,
                                                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     try:
-        stdout, stderr = await asyncio.wait_for(process.communicate(), 30)
+        supplied = input_text.encode('utf-8') if input_text is not None else None
+        stdout, stderr = await asyncio.wait_for(process.communicate(supplied), 30)
     finally:
         if process.returncode is None:
             process.kill()

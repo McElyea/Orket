@@ -1,13 +1,19 @@
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
-from orket.interfaces.prompts_cli import resolve_prompt
+import pytest
+
+from tests.application.test_prompts_cli import _command
+
+pytestmark = pytest.mark.integration
 
 
-def test_canonical_prompt_resolution_from_repo_assets() -> None:
-    resolved = resolve_prompt(
-        Path(),
+def test_canonical_prompt_resolution_from_repo_assets(tmp_path: Path) -> None:
+    shutil.copytree(Path('model'), tmp_path / 'model')
+    resolved = _command(
+        tmp_path, "resolve",
         role="architect",
         dialect="generic",
         selection_policy="stable",

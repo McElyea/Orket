@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.application.services.operator_completion_service import card_filter_bucket, operator_verification
-from orket.core.cards_runtime_contract import ODR_EXECUTION_PROFILE, resolve_cards_runtime
+from orket.application.services.operator_completion_service import card_filter_bucket
+from orket.application.services.operator_runtime_service import classify_operator_run, inspect_operator_card_runtime
 from orket.interfaces.operator_view_support import (
     CARD_VIEW_FILTERS_V1,
     _dict,
@@ -137,7 +137,7 @@ def build_card_detail_view(
     completion: dict[str, Any],
 ) -> dict[str, Any]:
     payload = _card_payload(card)
-    runtime = resolve_cards_runtime(issue=_IssueViewShim(payload))
+    runtime = inspect_operator_card_runtime(payload)
     list_item = build_card_list_item_view(card=payload, run_view=run_view, completion=completion)
     return {
         **list_item,
@@ -169,73 +169,14 @@ def card_view_matches_filter(view: dict[str, Any], filter_name: str | None) -> b
 
 
 def _classify_run_outcome(*, summary: dict[str, Any], status: str | None, completion: dict[str, Any]) -> dict[str, Any]:
-    raw_status = _text(status) or _text(summary.get("status"))
-    status_token = raw_status.lower()
-    packet1 = _dict(summary.get("truthful_runtime_packet1"))
-    packet1_provenance = _dict(packet1.get("provenance"))
-    cards_runtime = _cards_runtime(summary)
-    execution_profile = _text(summary.get("execution_profile")) or _text(cards_runtime.get("execution_profile"))
-    stop_reason = _text(summary.get("stop_reason")) or _text(cards_runtime.get("stop_reason"))
-    failure_reason = _text(summary.get("failure_reason"))
-    primary_output_kind = _text(packet1_provenance.get("primary_output_kind")) or "none"
-    truth_classification = _text(packet1_provenance.get("truth_classification"))
-    cards_resolution_state = _text(summary.get("cards_runtime_resolution_state")) or _text(cards_runtime.get("resolution_state"))
-    verification = operator_verification(completion)
-    degraded = bool(summary.get("is_degraded")) or truth_classification == "degraded"
-    reason_codes = _reason_codes(verification["reason_codes"])
-    if cards_resolution_state and cards_resolution_state != "resolved":
-        degraded = True
-        reason_codes.append(f"cards_runtime.{cards_resolution_state}")
-    if stop_reason:
-        reason_codes.append(f"run.stop_reason.{stop_reason.lower()}")
-    if failure_reason:
-        reason_codes.append(f"run.failure_reason.{failure_reason.lower()}")
-    lifecycle_category = ""
-    primary_status = "unknown"
-    if status_token in {"failed", "terminal_failure"}:
-        primary_status = "failed"
-        if (execution_profile == ODR_EXECUTION_PROFILE or bool(summary.get("odr_active")) or bool(cards_runtime.get("odr_active"))) and primary_output_kind == "none":
-            lifecycle_category = "prebuild_blocked"
-            primary_status = "blocked"
-        else:
-            lifecycle_category = "artifact_run_failed"
-    elif status_token in {"done", "completed"}:
-        primary_status = "completed"
-        if degraded:
-            lifecycle_category = "degraded_completed"
-        elif verification["status"] == "verified":
-            lifecycle_category = "artifact_run_verified"
-        else:
-            lifecycle_category = "artifact_run_completed_unverified"
-    elif status_token in {"started", "in_progress", "executing"}:
-        primary_status = "running"
-    elif status_token == "incomplete":
-        primary_status = "open"
-    elif status_token in {"canceled", "cancelled", "operator_blocked"}:
-        primary_status = "blocked"
-    else:
-        primary_status = status_token or "unknown"
-    if lifecycle_category:
-        reason_codes.insert(0, f"run.lifecycle.{lifecycle_category}")
-    summary_text = _run_summary_text(
-        lifecycle_category=lifecycle_category,
-        primary_status=primary_status,
-        degraded=degraded,
-        verification=verification,
-    )
-    return {
-        "raw_status": raw_status or "unknown",
-        "primary_status": primary_status,
-        "degraded": degraded,
-        "summary": summary_text,
-        "reason_codes": _reason_codes(reason_codes),
-        "next_action": _run_next_action(lifecycle_category=lifecycle_category, primary_status=primary_status, degraded=degraded),
-        "lifecycle_category": lifecycle_category or None,
-        "execution_profile": execution_profile or None,
-        "stop_reason": stop_reason or None,
-        "failure_reason": failure_reason or None,
-        "verification": verification,
-    }
+    classification = classify_operator_run(summary=summary, status=status, completion=completion)
+    lifecycle = classification["lifecycle_category"] or ""
+    primary = classification["primary_status"]
+    degraded = classification["degraded"]
+    return {**classification,
+            "summary": _run_summary_text(lifecycle_category=lifecycle, primary_status=primary,
+                                         degraded=degraded, verification=classification["verification"]),
+            "next_action": _run_next_action(lifecycle_category=lifecycle, primary_status=primary, degraded=degraded)}
 
 
 def _key_artifacts(*, summary: dict[str, Any], artifacts: dict[str, Any]) -> list[str]:
@@ -344,9 +285,3 @@ def _card_payload(card: Any) -> dict[str, Any]:
         dumped = card.model_dump(mode="json")
         return dumped if isinstance(dumped, dict) else {}
     return dict(getattr(card, "__dict__", {}) or {})
-
-
-class _IssueViewShim:
-    def __init__(self, payload: dict[str, Any]) -> None:
-        self.seat = _text(payload.get("seat"))
-        self.params = _dict(payload.get("params"))

@@ -82,7 +82,14 @@ fixed ZIP metadata. Both Quality jobs enforce source/archive agreement.
 - Standalone Gitea webhook: `python -m orket.webhook_server` or `python -m uvicorn orket.webhook_server:create_webhook_app --factory`
 - Governed-action quickstart: `orket-quickstart` or `orket-quickstart --decision approve|deny`
 - Governed-run deterministic demo: `orket demo governed-run`
+- Interactive project setup: `python -m orket.interfaces.setup_cli`
 - Test command: `python -m pytest -q`
+
+Prompt commands use `python -m orket.interfaces.prompts_cli --root <project> ...`.
+Prompt reads share model-file ownership with writers and can create native lock
+identities; tests should copy canonical assets into their own temporary roots.
+Setup, prompt and vision command ownership, migration and partial-effect limits
+live in `docs/architecture/CONTRACT_DELTA_COMMAND_AUTHORITY_CD_2026-09-19.md`.
 
 Python test/tool launchers must use `sys.executable` for repository-owned child
 Python commands so private environments retain their dependencies. Explicit

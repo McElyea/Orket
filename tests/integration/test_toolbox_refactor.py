@@ -99,9 +99,10 @@ async def test_write_file_creation(tmp_path):
     assert (workspace / "subdir" / "new.txt").read_text() == "data"
 
 def test_vision_tools_stub(tmp_path):
+    """Layer: contract. Unsupported analysis remains an explicit refusal."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
-    vision = VisionTools(workspace, [])
+    vision = VisionTools(workspace, [], model_id='fixture-unused')
 
     res = vision.image_analyze({"path": "test.png"})
     assert res["ok"] is False

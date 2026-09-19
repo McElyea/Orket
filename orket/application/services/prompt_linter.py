@@ -11,9 +11,8 @@ from orket.application.services.canonical_role_templates import (
     CANONICAL_PIPELINE_ROLES,
     canonical_role_conformance_violations,
 )
+from orket.core.contracts.prompt_assets import VALID_STATUSES
 from orket.schema import DialectConfig, RoleConfig
-
-VALID_STATUSES = {"draft", "candidate", "canary", "stable", "deprecated"}
 
 LintSeverity = Literal["soft", "strict"]
 LintLocation = Literal["system", "user", "context", "output"]
@@ -289,9 +288,9 @@ def lint_prompt_asset(path: Path, payload: dict[str, Any], kind: str) -> list[di
     return violations
 
 
-def lint_prompt_file(path: Path, kind: str) -> list[dict[str, Any]]:
+def lint_prompt_text(path: Path, content: str, kind: str) -> list[dict[str, Any]]:
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(content)
     except json.JSONDecodeError as exc:
         return [
             _violation(
@@ -304,3 +303,8 @@ def lint_prompt_file(path: Path, kind: str) -> list[dict[str, Any]]:
             )
         ]
     return lint_prompt_asset(path, payload, kind)
+
+
+def lint_prompt_file(path: Path, kind: str) -> list[dict[str, Any]]:
+    """Synchronous CLI/worker entrypoint; async commands supply observed text."""
+    return lint_prompt_text(path, path.read_text(encoding="utf-8"), kind)
