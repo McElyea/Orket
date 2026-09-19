@@ -1,7 +1,7 @@
 # Runtime project roots
 
 Status: Active contract; scoped BT-5 project-root proof accepted
-Last updated: 2026-09-17
+Last updated: 2026-09-19
 Owner: Orket Core
 
 ## Project selection
@@ -25,12 +25,18 @@ For project root `P`:
 | Structural reconciler board | `P/model` |
 | Default driver/reconciler workspace | `P/workspace/default` |
 | Card execution config root | Existing explicit override, otherwise invocation project `P` |
+| Runtime CLI startup crash log | Captured `P/workspace/default/orket_crash.log`, independent of execution `--workspace` |
 | Card execution workspace | Existing explicit `--workspace`/application input |
 
 Changing the execution workspace does not implicitly select another project or
 move board assets. API-owned roots remain explicit and instance-owned. Existing
 objects that capture a project root retain it; concurrent process-wide working
 directory changes during invocation are not supported.
+
+Runtime CLI crash publication retains the invocation root captured before bootstrap.
+It prints the actual saved path after verified append; diagnostic failure preserves
+the original fatal error and nonzero exit. Migration and publication limits:
+`docs/architecture/CONTRACT_DELTA_CLI_CRASH_CD_2026-09-19.md`.
 
 Package-owned contracts, schemas, registries and the governed-run demo retain
 their existing packaged-asset authority. They do not become caller-owned defaults

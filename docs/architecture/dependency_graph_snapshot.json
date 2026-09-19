@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-19T10:04:35.670008+00:00",
+  "generated_at": "2026-09-19T10:45:42.359274+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -358,6 +358,10 @@
       "orket.adapters.storage.control_plane_transaction": {
         "path": "orket/adapters/storage/control_plane_transaction.py",
         "sha256": "2288e2b11c5c66439296884bcd6b06865db749f03d59ccd5524e17638add1a7f"
+      },
+      "orket.adapters.storage.crash_log_store": {
+        "path": "orket/adapters/storage/crash_log_store.py",
+        "sha256": "dd52f8913a55147eea3542c6213a1a6bce6676842ad9f8481ccf322ac2218e5e"
       },
       "orket.adapters.storage.driver_resource_store": {
         "path": "orket/adapters/storage/driver_resource_store.py",
@@ -882,6 +886,10 @@
       "orket.application.services.coordinator_store": {
         "path": "orket/application/services/coordinator_store.py",
         "sha256": "0906886d4ba2043a8e6f9e2c952a730186e6b055f3d3d1eb56e53f433bd2f14b"
+      },
+      "orket.application.services.crash_report_service": {
+        "path": "orket/application/services/crash_report_service.py",
+        "sha256": "40ec1a5cc4ed841a0ea5497a997fcc73eaa375ca9a770bbe8fd99b4f359bfd14"
       },
       "orket.application.services.decision_context_service": {
         "path": "orket/application/services/decision_context_service.py",
@@ -2021,7 +2029,7 @@
       },
       "orket.cli": {
         "path": "orket/cli.py",
-        "sha256": "3d6219cca19941e62ba4784ddb21b7ee0fe7262e4f0c7b584fb733d28c7a9863"
+        "sha256": "54653756f3f951d7c30665be73d0c092dd1e4174d20ed0a300c917647df1f716"
       },
       "orket.cli.setup_wizard": {
         "path": "orket/cli/setup_wizard.py",
@@ -2909,7 +2917,7 @@
       },
       "orket.logging": {
         "path": "orket/logging.py",
-        "sha256": "a04c3463f9f8ac4961cebe2d500ccca2e464ed9e5ea0ea3788bb234d741bf6f3"
+        "sha256": "b71aaf31644f9136ef0fc956511bd7cecf3cb5661e722638d66b1fc6230cbad7"
       },
       "orket.marshaller.__init__": {
         "path": "orket/marshaller/__init__.py",
@@ -5249,6 +5257,20 @@
         "target": "orket.core.contracts.control_plane_transaction",
         "path": "orket/adapters/storage/control_plane_transaction.py",
         "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.crash_log_store",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/adapters/storage/crash_log_store.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.crash_log_store",
+        "target": "orket.adapters.storage.local_file_lock",
+        "path": "orket/adapters/storage/crash_log_store.py",
+        "line": 10,
         "kind": "from"
       },
       {
@@ -8433,6 +8455,20 @@
         "source": "orket.application.services.coordinator_store",
         "target": "orket.core.domain.coordinator_card",
         "path": "orket/application/services/coordinator_store.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.crash_report_service",
+        "target": "orket.adapters.storage.crash_log_store",
+        "path": "orket/application/services/crash_report_service.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.crash_report_service",
+        "target": "orket.time_utils",
+        "path": "orket/application/services/crash_report_service.py",
         "line": 10,
         "kind": "from"
       },
@@ -18513,28 +18549,28 @@
         "source": "orket.cli",
         "target": "orket.interfaces.runtime_entrypoints",
         "path": "orket/cli.py",
-        "line": 9,
-        "kind": "from"
-      },
-      {
-        "source": "orket.cli",
-        "target": "orket.logging",
-        "path": "orket/cli.py",
-        "line": 10,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.cli",
         "target": "orket.settings",
         "path": "orket/cli.py",
-        "line": 11,
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.cli",
+        "target": "orket.application.services.crash_report_service",
+        "path": "orket/cli.py",
+        "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.cli",
         "target": "orket.interfaces.orket_bundle_cli",
         "path": "orket/cli.py",
-        "line": 31,
+        "line": 50,
         "kind": "from"
       },
       {
@@ -21635,21 +21671,21 @@
         "source": "orket.logging",
         "target": "orket.core.contracts.invocation_timing",
         "path": "orket/logging.py",
-        "line": 13,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.logging",
         "target": "orket.naming",
         "path": "orket/logging.py",
-        "line": 14,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.logging",
         "target": "orket.time_utils",
         "path": "orket/logging.py",
-        "line": 15,
+        "line": 14,
         "kind": "from"
       },
       {
@@ -27771,7 +27807,7 @@
         "code": "unresolved_dynamic_import"
       }
     ],
-    "files_scanned": 1061,
+    "files_scanned": 1063,
     "scan_roots": [
       "orket"
     ],
@@ -27836,6 +27872,7 @@
       "orket.adapters.storage.control_plane_operator_action_support": "adapters",
       "orket.adapters.storage.control_plane_recovery_store": "adapters",
       "orket.adapters.storage.control_plane_transaction": "adapters",
+      "orket.adapters.storage.crash_log_store": "adapters",
       "orket.adapters.storage.driver_resource_store": "adapters",
       "orket.adapters.storage.dual_write_intent_store": "adapters",
       "orket.adapters.storage.epic_approval_pause_store": "adapters",
@@ -27967,6 +28004,7 @@
       "orket.application.services.coordinator_read_service": "application",
       "orket.application.services.coordinator_runtime_service": "application",
       "orket.application.services.coordinator_store": "application",
+      "orket.application.services.crash_report_service": "application",
       "orket.application.services.decision_context_service": "application",
       "orket.application.services.decision_node_registry": "application",
       "orket.application.services.dependency_manager": "application",
@@ -28844,7 +28882,7 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 228
+        "count": 230
       },
       {
         "source": "adapters",
@@ -28859,7 +28897,7 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 362
+        "count": 364
       },
       {
         "source": "application",
@@ -28894,12 +28932,12 @@
       {
         "source": "interfaces",
         "target": "adapters",
-        "count": 2
+        "count": 1
       },
       {
         "source": "interfaces",
         "target": "application",
-        "count": 81
+        "count": 82
       },
       {
         "source": "interfaces",
@@ -28924,17 +28962,6 @@
           {
             "path": "orket/adapters/tools/families/vision.py",
             "line": 8,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.cli",
-        "target": "orket.logging",
-        "sites": [
-          {
-            "path": "orket/cli.py",
-            "line": 10,
             "kind": "from"
           }
         ]
@@ -29034,45 +29061,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-18T05:30:35.849092Z",
-      "changed": true,
-      "before_digest": "sha256:074d19127d2923b89b579142642391ab9626fec4a4da89fa9fcaf2a3c97396fd",
-      "after_digest": "sha256:28a0be56dafbb0b1bb027f00001bbd9ec46823351be1b626068e1b82dacabefe",
-      "diff": {
-        "added_paths": 5,
-        "removed_paths": 0,
-        "changed_paths": 4332,
-        "initial_write": false,
-        "paths_total_previous": 43980,
-        "paths_total_current": 44020,
-        "paths_total_reference": 44020,
-        "churn_paths": 4337,
-        "churn_ratio": 0.098523,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[1855].line",
-          "$.observed.edges[1856].line",
-          "$.observed.edges[1857].line",
-          "$.observed.edges[1857].path",
-          "$.observed.edges[1857].source",
-          "$.observed.edges[1857].target",
-          "$.observed.edges[1858].line",
-          "$.observed.edges[1858].target",
-          "$.observed.edges[1859].line",
-          "$.observed.edges[1859].target",
-          "$.observed.edges[1860].line",
-          "$.observed.edges[1860].path",
-          "$.observed.edges[1860].source",
-          "$.observed.edges[1860].target",
-          "$.observed.edges[1861].line",
-          "$.observed.edges[1861].path",
-          "$.observed.edges[1861].source",
-          "$.observed.edges[1861].target",
-          "$.observed.edges[1862].line"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-18T07:04:40.101152Z",
       "changed": true,
@@ -29979,6 +29967,45 @@
           "$.observed.edges[1389].target",
           "$.observed.edges[1390].line",
           "$.observed.modules.orket.application.services.project_vendor_factory.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-19T10:45:48.305420Z",
+      "changed": true,
+      "before_digest": "sha256:a7ac60e0f7d966e66063f3531eef4883149666590462c94a93dbc1eb1765f1c1",
+      "after_digest": "sha256:849884f93edfdd188954aa8cfdfc6a02a251b3416f7b100c906d8a64293a2301",
+      "diff": {
+        "added_paths": 8,
+        "removed_paths": 1,
+        "changed_paths": 9817,
+        "initial_write": false,
+        "paths_total_previous": 44639,
+        "paths_total_current": 44684,
+        "paths_total_reference": 44684,
+        "churn_paths": 9826,
+        "churn_ratio": 0.2199,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[126].line",
+          "$.observed.edges[126].path",
+          "$.observed.edges[126].source",
+          "$.observed.edges[126].target",
+          "$.observed.edges[127].line",
+          "$.observed.edges[127].path",
+          "$.observed.edges[127].source",
+          "$.observed.edges[127].target",
+          "$.observed.edges[128].line",
+          "$.observed.edges[128].path",
+          "$.observed.edges[128].source",
+          "$.observed.edges[129].line",
+          "$.observed.edges[129].path",
+          "$.observed.edges[129].source",
+          "$.observed.edges[129].target",
+          "$.observed.edges[130].line",
+          "$.observed.edges[130].target",
+          "$.observed.edges[131].line",
+          "$.observed.edges[131].target"
         ]
       }
     }

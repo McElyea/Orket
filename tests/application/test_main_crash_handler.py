@@ -6,7 +6,8 @@ import runpy
 import pytest
 
 
-def test_main_logs_crash_and_exits(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.unit
+def test_main_logs_crash_and_exits(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], tmp_path) -> None:
     """Layer: unit. Verifies the CLI crash handler logs once and exits cleanly on fatal startup errors."""
 
     def _fake_create_cli_runtime():
@@ -17,12 +18,13 @@ def test_main_logs_crash_and_exits(monkeypatch: pytest.MonkeyPatch, capsys: pyte
 
     captured: dict[str, object] = {}
 
-    def _fake_log_crash(exc: Exception, tb: str) -> None:
+    async def _fake_publish(self, exc: Exception, tb: str):
         captured["exc"] = exc
         captured["tb"] = tb
+        return tmp_path / "orket_crash.log"
 
     monkeypatch.setattr("orket.interfaces.runtime_entrypoints.create_cli_runtime", _fake_create_cli_runtime)
-    monkeypatch.setattr("orket.logging.log_crash", _fake_log_crash)
+    monkeypatch.setattr("orket.application.services.crash_report_service.CrashReportService.publish", _fake_publish)
 
     with pytest.raises(SystemExit) as excinfo:
         runpy.run_module("main", run_name="__main__")

@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.30] - 2026-09-19 - "Verified crash publication"
+
+### Fixed
+- Route runtime CLI crash publication through application ownership with captured invocation roots and explicit clock inputs.
+- Verify appended diagnostics before reporting their actual path; retain file workers and native ownership through interruption.
+- Remove process-global crash routing, preserve rotation defaults, and keep original fatal errors visible when diagnostic publication fails.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration and limits: `docs/architecture/CONTRACT_DELTA_CLI_CRASH_CD_2026-09-19.md`.
+- Stability: scoped C/D progress; the full architectural-truth lane remains active.
+
 ## [0.6.29] - 2026-09-19 - "Explicit project vendors"
 
 ### Fixed

@@ -2,7 +2,6 @@ import asyncio
 import contextlib
 import json
 import logging
-import logging.handlers
 import os
 import queue
 import threading
@@ -452,28 +451,3 @@ def get_member_metrics(workspace: Path) -> dict[str, _MemberMetrics]:
             except (json.JSONDecodeError, KeyError):
                 continue
     return metrics
-
-
-def log_crash(exception: Exception, traceback_str: str, workspace: Path | None = None) -> None:
-    """
-    Safely logs a crash to a rotating file.
-    """
-    if workspace is None:
-        workspace = Path("workspace/default")
-
-    workspace.mkdir(parents=True, exist_ok=True)
-    crash_log = workspace / "orket_crash.log"
-
-    # Create a dedicated logger for crashes to avoid interference with the main logger
-    crash_logger = logging.getLogger("orket_crash")
-    crash_logger.setLevel(logging.ERROR)
-
-    if not crash_logger.handlers:
-        handler = logging.handlers.RotatingFileHandler(
-            crash_log, maxBytes=5 * 1024 * 1024, backupCount=5, encoding="utf-8"
-        )
-        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        handler.setFormatter(formatter)
-        crash_logger.addHandler(handler)
-
-    crash_logger.error(f"CRITICAL CRASH: {type(exception).__name__}\n{traceback_str}")

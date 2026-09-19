@@ -280,6 +280,13 @@ callers consume package-owned archives. Canonical authoring sources and the
 mechanical archive check are documented in
 `docs/architecture/CONTRACT_DELTA_EXTENSION_SCAFFOLD_PACKAGING_D_2026-09-17.md`.
 
+Application crash publication captures the selected absolute diagnostic workspace
+and supplied clock. Native append/rotation ownership and closed-file readback
+precede a saved-path claim; cancellation retains the worker through lock release.
+Runtime CLI startup captures its invocation root, preserves fatal exit status and
+reports diagnostic failure without hiding the original error. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_CLI_CRASH_CD_2026-09-19.md`.
+
 Application project-vendor composition captures supplied settings and explicit
 project/database locations. Local catalog workers and runtime-card operations
 retain ownership through interruption; missing cards and unverified status writes

@@ -12516,8 +12516,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.29
-project vendor work below. The graph has six forbidden pairs, zero cross-layer
+Next action: continue C/D from their numbered requirements after the 0.6.30
+CLI crash publication work below. The graph has five forbidden pairs, zero cross-layer
 cycles and eight unresolved import/reflection sites. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff has 100 findings. The prior stale benchmark expectation passes in the
@@ -15896,3 +15896,122 @@ the user's current instruction. The full C/D/E1/E2/CAP-1/2/3 objective, fresh fu
 Quality/coverage, hosted CI, release readiness and explicit whole-lane acceptance
 remain open. The last full-suite observation remains the retained .22 run; this
 is not a fresh whole-repository all-green claim.
+
+### CLI crash publication checkpoint: 2026-09-19 (0.6.30)
+
+Application `CrashReportService` owns crash publication over an explicit absolute
+workspace and supplied clock. Error type, traceback and timestamp are captured
+before worker dispatch. Storage declares side effects and retains native
+append/rotation ownership through closed-file readback and cleanup. There is no
+global crash handler or deferred background write. The old adapter export is
+retired without a shim.
+
+Runtime CLI bootstrap imports are inside its fatal boundary. The invocation root
+is captured before bootstrap; its startup diagnostic remains
+`<invocation>/workspace/default/orket_crash.log`, independent of the execution
+`--workspace`. A saved claim follows matching readback and names the actual
+absolute path. Publication failure preserves the original error/traceback and
+diagnostic failure with exit 1; interruption retains exit 130.
+
+The reentry check preserved the .29 commit, all 422 sealed artifacts, both
+neighboring worktrees and the historical handoff. The Linux lease-clock failure
+remains diagnosed by retained host-clock evidence; its actor remains unknown.
+The installed two-workspace probe at `.tmp/c-cli-crash-observation/report.json`
+showed the second crash written into the first workspace, with no second log.
+The original logs, source/wheel identity and probe remain unchanged.
+
+Evidence under `.tmp/c-cli-crash-boundary/` preserves the 14-case existing baseline
+and two failing public-boundary regressions. One stopped at the inaccurate
+saved-path claim; the other showed a secondary filesystem error escaping the
+fatal handler. The separate installed probe establishes wrong-root routing.
+Initial repair passed 33 cases, then the process/native-owner cohort passed 37.
+No failed observation was overwritten or counted as successful proof.
+
+The initial .30 source and both Python 3.11 installed cells passed 1,400 cases.
+Review then found synchronous file assertions/setup in the new async fixtures.
+`fixture-io-revision.json` binds the three corrected test files and unchanged
+package sources. Their I/O now runs in workers; assertions and case identities
+remain. The initial source, two native cells and `intermediate-audit.json` remain
+retained; initial Python 3.12 cells were not started. Final artifacts and all
+four native environments below were rebuilt after the fixture revision.
+
+Observed path: primary for admitted publication and deliberate native refusal;
+degraded for failed CLI diagnostics. Result: partial success for the full goal.
+Live proof covers real diagnostic files, sequential/concurrent roots, append,
+rotation, Unicode/oversized records, actual CLI processes, cross-process native
+ownership, failed readback and cancellation/timeout with retained cleanup.
+Clock, held-worker and storage-failure fixtures have their stated controlled
+scope. Unit CLI wiring and graph/lint/workflow/metadata/size checks are structural.
+
+The affected cohort passed 48 cases and structural checks passed 51. Final source
+passed 1,400 cases without failure/error/skip in
+411.422 seconds including runner overhead. All
+1,366 prior identities remain, with 34 added.
+The same cases pass in all four installed environments. Every owned source/native
+process returned and its session was reaped. Actual core origins, dependencies,
+support hashes, public CLI/ToolGate flows, root-database guards and cleanup pass.
+
+| Installed cell | Tests / failures / errors / skips | Core origins | Pytest seconds |
+|---|---:|---:|---:|
+| a30f-win-py311 | 1400 / 0 / 0 / 0 | 956 | 418.534 |
+| a30f-linux-py311 | 1400 / 0 / 0 / 0 | 956 | 388.162 |
+| a30f-win-py312 | 1400 / 0 / 0 / 0 | 956 | 518.051 |
+| a30f-linux-py312 | 1400 / 0 / 0 / 0 | 956 | 325.552 |
+
+The harness binds 1,919 support files without core/SDK
+source shadowing. Wheel/sdist parity matches 1,063 core Python
+and 1,078 package files with no mismatch. Core is 0.6.30;
+SDK 0.7.0a1 and reference/starter 0.3.0a1 retain their package identities.
+Source/native/launcher budgets remain 1,500/1,800/2,100 seconds. Product/test
+deadlines were not widened: the controlled worker proof retains 0.5-second
+independent-loop responsiveness and 3-second settlement after release.
+
+Evidence under `.tmp/c-cli-crash-boundary/`:
+- `candidate-final/source-report.json`: SHA-256 `12a453033415ac5924c85777e921ee8ce77c32826fc9a417559c230db8dfa59d`.
+- `candidate-final/manifest.json`: SHA-256 `050a2497ad77d41012f1b2f868b28ede0dc814a49beb53ee004b30a37a9b345c`.
+- `candidate-final/native-audit.json`: SHA-256 `a33e925c942b40a72519430cd694154c2db33dad877d489786dd12ae58fc850c`.
+- Core wheel: SHA-256 `03766318ba65669ae645783a1e0d9c114432fb64c5f27272e000621654a8315d`.
+- Core sdist: SHA-256 `170d199d00cc262ec9a9767987d316c22b3033ffe07ca3980f1cda5468ec11ff`.
+- `case-continuity.json`, `size-review-final.json`, `ruff-comparison-final.json`,
+  `collection/collection.json` and `review.json` record their stated scopes.
+  `CHANGESET.md` lists the exact 19 tracked paths.
+
+The graph has 1,063 modules and 3,341 import
+sites: five forbidden pairs, eight analysis errors, zero unknown modules and zero
+cross-layer cycles. `orket.cli -> orket.logging` was removed without policy
+exception or reclassification. Canonical Ruff remains 100 findings with none
+added. Collection succeeds; dependency and release-ready verdicts remain false.
+All new Python files/functions/classes fit size limits. Existing `orket/logging.py`
+shrinks by 26 lines; its remaining oversized functions are unchanged.
+
+Rotation and append are separate filesystem effects. Failed publication can
+leave partial append/rotation and requires inspection before retry. Native busy
+ownership is a truthful refusal, not an unbounded wait. Preserve the log's
+`.owners/` lock identities. No exactly-once retry, power-loss, hostile-editor,
+remote-filesystem or hung-worker deadline guarantee is added. Diagnostic text is
+not replay/lease authority. Global logging, schema identity/clock, async reachability
+and adapter-classification work remain active D. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_CLI_CRASH_CD_2026-09-19.md`.
+
+This checkpoint is committed and tagged locally; no GitHub push is performed.
+Full C/D/E1/E2/CAP-1/2/3, fresh whole Quality/coverage, hosted CI, release readiness
+and explicit whole-lane acceptance remain open. No live provider, Gitea-server,
+Docker or hostile-process acceptance is claimed. The last full-suite observation
+remains the retained .22 run; this is not a fresh whole-repository green claim.
+
+An independent installed interaction-admission observation is retained at
+`.tmp/c-interaction-start-observation/report.json` (SHA-256
+`85c29a06abd5d96cddfd8f89495c9108dc44c834a39f2ac4903d5356de798064`). Cancellation
+returned while acceptance-event publication was held; the session stayed active,
+the acceptance queue stayed empty, and a new turn was refused as already active.
+The fixture then removed the session and subscriber and closed its event loop.
+This is direct manager/bus proof with a controlled event hold, not HTTP/provider
+acceptance. It exposes the next admission/publication ownership work within the
+remaining C/D gate; it is not repaired or accepted by the crash-publication change.
+The companion `.tmp/c-interaction-finalize-observation/report.json` (SHA-256
+`b763a92ca8f48e3e82530ad8c70aa97db856bdda868e15e8d92f6acb9b492fe0`) demonstrates
+the finalization interruption: retry returns a pending handle while no commit
+file exists and the session stays active. Its healthy control writes the actual
+commit file and becomes idle. Both sessions/subscriptions and the event loop were
+closed; original commit/trace files remain. This is another direct-manager
+counterexample for the next C/D ownership repair, not repaired .30 behavior.
