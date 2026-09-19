@@ -20,7 +20,7 @@ async def test_cancel_retains_transition_and_audit_through_interruption(tmp_path
     owner = app.state.api_runtime_context
     manager, repo = owner.interaction_manager, owner.engine.control_plane_repository
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {}, {})
     await queue.get()
     entered, release = asyncio.Event(), asyncio.Event()
@@ -73,7 +73,7 @@ async def test_cancel_retains_transition_and_audit_through_interruption(tmp_path
         assert len(records) == 1 and records[0].timestamp == CAPTURED_TIME
         assert records[0].receipt_refs == [f"interaction-cancel:{turn_id}"]
         assert (await queue.get()).event_type.value == "turn_interrupted" and queue.empty()
-        timeline = await manager.get_session_replay_timeline(session_id)
+        timeline = await manager.queries.get_session_replay_timeline(session_id)
         assert timeline["turns"][-1]["finalized_at"] == CAPTURED_TIME
     finally:
         release.set()
@@ -98,7 +98,7 @@ async def test_sqlite_refusal_cannot_report_success_or_republish_cancel(tmp_path
     try:
         response = await _cancel(app, session_id, turn_id)
         assert response.status_code == 500
-        timeline = await manager.get_session_replay_timeline(session_id)
+        timeline = await manager.queries.get_session_replay_timeline(session_id)
         assert timeline["turns"][-1]["terminal_event"] == "turn_interrupted"
         assert await repo.list_operator_actions(target_ref=target_ref) == []
         repeated = await _cancel(app, session_id, turn_id)

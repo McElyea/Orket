@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from orket.streaming.contracts import StreamEvent, StreamEventType
+from orket.core.contracts.interaction_stream import StreamEvent, StreamEventType
+
+pytestmark = pytest.mark.contract
 
 
 def test_stream_event_requires_valid_type():

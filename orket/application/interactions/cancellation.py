@@ -1,4 +1,4 @@
-"""Side-effecting interaction state and stream cancellation adapter."""
+"""Application-owned interaction cancellation transition."""
 from __future__ import annotations
 
 import asyncio
@@ -6,11 +6,8 @@ from collections.abc import Mapping
 from typing import Any
 
 from orket.core.contracts.interaction_cancellation import InteractionCancellation
-
-from .bus import StreamBus
-from .contracts import StreamEventType
-
-side_effecting = True
+from orket.core.contracts.interaction_stream import StreamEventType
+from orket.streaming.bus import StreamBus
 
 
 def _target(

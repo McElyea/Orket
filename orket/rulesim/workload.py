@@ -5,14 +5,14 @@ import time
 from pathlib import Path
 from typing import Any
 
-from orket.streaming.contracts import CommitIntent, StreamEventType
-from orket.streaming.manager import InteractionContext
+from orket.application.interactions.context import InteractionContext
+from orket.core.contracts.interaction_stream import CommitIntent, StreamEventType
 
 from .artifacts import write_artifact_bundle, write_checkpoint_episode
 from .canonical import canonical_json
+from .contracts import Strategy
 from .metrics import compute_run_hints
 from .runner import BatchResult, RuleSystemContractError, aggregate_summary, run_episode
-from .contracts import Strategy
 from .strategies import GreedyHeuristicStrategy, MixedStrategy, RandomUniformStrategy, ScriptedStrategy
 from .toys import build_toy_rulesystem
 from .types import AgentConfig, RunConfig, parse_run_config

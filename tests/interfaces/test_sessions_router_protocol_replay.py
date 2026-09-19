@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
+from orket.application.interactions.commands import InteractionCommands
 from orket.interfaces.routers.sessions import build_sessions_router
 
 
@@ -66,12 +67,9 @@ def _build_client(workspace_root: Path) -> TestClient:
     app = FastAPI()
     app.include_router(
         build_sessions_router(
-            interaction_manager_getter=lambda: _StubInteractionManager(),
-            extension_manager_getter=lambda: _StubExtensionManager(),
-            is_builtin_workload=lambda _workload_id: False,
-            validate_builtin_workload_start=lambda **_kwargs: None,
-            run_builtin_workload=lambda **_kwargs: None,
-            commit_intent_factory=lambda _reason: {"type": "decision"},
+            turn_service_getter=lambda: InteractionCommands(
+                _StubInteractionManager(), _StubExtensionManager(), None, workspace_root,
+            ),
             workspace_root_getter=lambda: workspace_root,
         ),
         prefix="/v1",

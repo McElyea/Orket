@@ -2,8 +2,12 @@
 from __future__ import annotations
 
 # Layer: contract
-import scripts.streaming.run_provider_scenario_direct as direct_script
+import pytest
+
 import scripts.streaming.run_stream_scenario as api_script
+from scripts.streaming.provider_identity import provider_identity
+
+pytestmark = pytest.mark.contract
 
 
 def test_direct_provider_identity_prefers_observed_resolved_model(monkeypatch) -> None:
@@ -11,7 +15,7 @@ def test_direct_provider_identity_prefers_observed_resolved_model(monkeypatch) -
     monkeypatch.setenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "qwen3.5-coder")
 
-    payload = direct_script._provider_identity(resolved_model_id="qwen3.5-4b")
+    payload = provider_identity(resolved_model_id="qwen3.5-4b")
 
     assert payload["provider_name"] == "lmstudio"
     assert payload["provider_model_id"] == "qwen3.5-4b"

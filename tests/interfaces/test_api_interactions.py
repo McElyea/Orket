@@ -3,9 +3,12 @@ import asyncio
 import pytest
 from starlette.websockets import WebSocketDisconnect
 
+import orket.application.interactions.commands as interaction_commands
 import orket.interfaces.api as api_module
 import orket.marshaller.cli as marshaller_cli
-from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus
+from tests.helpers.interactions import create_interaction_manager
+
+pytestmark = pytest.mark.integration
 
 client = None
 
@@ -142,7 +145,7 @@ def test_interaction_model_stream_preflight_runtime_error_maps_to_503(monkeypatc
     def _raise_runtime_error(*, workload_id, input_config, turn_params):
         raise RuntimeError("Real model provider unavailable.")
 
-    monkeypatch.setattr(api_module, "validate_builtin_workload_start", _raise_runtime_error)
+    monkeypatch.setattr(interaction_commands, "validate_builtin_workload_start", _raise_runtime_error)
 
     start = client.post(
         "/v1/interactions/sessions",
@@ -168,7 +171,7 @@ def test_builtin_hint_request_cancel_turn_emits_turn_interrupted(monkeypatch):
     async def _hints_cancel(*, workload_id, input_config, turn_params, interaction_context):
         return {"request_cancel_turn": 1, "post_finalize_wait_ms": 0}
 
-    monkeypatch.setattr(api_module, "run_builtin_workload", _hints_cancel)
+    monkeypatch.setattr(interaction_commands, "run_builtin_workload", _hints_cancel)
 
     start = client.post(
         "/v1/interactions/sessions",
@@ -200,11 +203,7 @@ def test_interaction_builtin_turn_exposes_bounded_packet1_context(monkeypatch, t
     monkeypatch.setattr(
         api_module._runtime_context(),
         "interaction_manager",
-        InteractionManager(
-            bus=StreamBus(),
-            commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
-            project_root=tmp_path,
-        ),
+        create_interaction_manager(tmp_path),
         raising=False,
     )
 
@@ -219,7 +218,7 @@ def test_interaction_builtin_turn_exposes_bounded_packet1_context(monkeypatch, t
         captured_lineage.extend(interaction_context.packet1_provider_lineage())
         return {"post_finalize_wait_ms": 0}
 
-    monkeypatch.setattr(api_module, "run_builtin_workload", _capture_context)
+    monkeypatch.setattr(interaction_commands, "run_builtin_workload", _capture_context)
 
     start = client.post(
         "/v1/interactions/sessions",
@@ -282,11 +281,7 @@ def test_interaction_extension_turn_includes_manifest_required_capabilities(monk
     monkeypatch.setattr(
         api_module._runtime_context(),
         "interaction_manager",
-        InteractionManager(
-            bus=StreamBus(),
-            commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
-            project_root=tmp_path,
-        ),
+        create_interaction_manager(tmp_path),
         raising=False,
     )
 
@@ -373,11 +368,7 @@ def test_interaction_session_inspection_surfaces_expose_context_lineage(monkeypa
     monkeypatch.setattr(
         api_module._runtime_context(),
         "interaction_manager",
-        InteractionManager(
-            bus=StreamBus(),
-            commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
-            project_root=tmp_path,
-        ),
+        create_interaction_manager(tmp_path),
         raising=False,
     )
 
@@ -385,7 +376,7 @@ def test_interaction_session_inspection_surfaces_expose_context_lineage(monkeypa
         _ = (workload_id, input_config, turn_params, interaction_context)
         return {"post_finalize_wait_ms": 0}
 
-    monkeypatch.setattr(api_module, "run_builtin_workload", _capture_context)
+    monkeypatch.setattr(interaction_commands, "run_builtin_workload", _capture_context)
 
     start = client.post(
         "/v1/interactions/sessions",
@@ -466,11 +457,7 @@ def test_interaction_session_targeted_replay_fails_closed(monkeypatch, tmp_path)
     monkeypatch.setattr(
         api_module._runtime_context(),
         "interaction_manager",
-        InteractionManager(
-            bus=StreamBus(),
-            commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
-            project_root=tmp_path,
-        ),
+        create_interaction_manager(tmp_path),
         raising=False,
     )
 

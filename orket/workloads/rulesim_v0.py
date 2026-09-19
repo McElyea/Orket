@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.application.interactions.context import InteractionContext
 from orket.rulesim.workload import run_rulesim_v0 as _run_rulesim_v0
 from orket.rulesim.workload import validate_rulesim_v0_start as _validate_rulesim_v0_start
-from orket.streaming.manager import InteractionContext
 
 
 async def run_rulesim_v0(

@@ -5,11 +5,15 @@ import asyncio
 
 import pytest
 
+from orket.application.interactions.commit import CommitOrchestrator
+from orket.application.interactions.manager import InteractionManager
+from orket.core.contracts.interaction_stream import StreamEventType
 from orket.core.contracts.provider_runtime import ProviderRuntimeTarget
-from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus, StreamBusConfig
-from orket.streaming.contracts import StreamEventType
+from orket.streaming import StreamBus, StreamBusConfig
 from orket.streaming.model_provider import ModelStreamProvider, ProviderEvent, ProviderEventType, ProviderTurnRequest
 from orket.workloads import run_builtin_workload
+
+pytestmark = pytest.mark.integration
 
 
 async def _drain_until_commit(queue: asyncio.Queue):
@@ -23,7 +27,7 @@ async def _drain_until_commit(queue: asyncio.Queue):
 
 @pytest.mark.asyncio
 async def test_stream_test_spam_deltas_emits_drop_ranges_and_commit_ok(tmp_path):
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(
             StreamBusConfig(
                 best_effort_max_events_per_turn=8,
@@ -35,7 +39,7 @@ async def test_stream_test_spam_deltas_emits_drop_ranges_and_commit_ok(tmp_path)
         project_root=tmp_path,
     )
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {"seed": 7}, {})
     context = await manager.create_context(session_id, turn_id)
     await queue.get()  # turn_accepted
@@ -57,13 +61,13 @@ async def test_stream_test_spam_deltas_emits_drop_ranges_and_commit_ok(tmp_path)
 
 @pytest.mark.asyncio
 async def test_stream_test_finalize_then_wait_cancel_after_final_is_noop(tmp_path):
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(),
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
     )
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {"seed": 9}, {})
     context = await manager.create_context(session_id, turn_id)
     await queue.get()  # turn_accepted
@@ -97,13 +101,13 @@ async def test_stream_test_finalize_then_wait_cancel_after_final_is_noop(tmp_pat
 @pytest.mark.asyncio
 async def test_model_stream_v1_stub_path_commits_ok(tmp_path, monkeypatch):
     monkeypatch.setenv("ORKET_MODEL_STREAM_PROVIDER", "stub")
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(),
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
     )
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {"seed": 5}, {})
     context = await manager.create_context(session_id, turn_id)
     await queue.get()  # turn_accepted
@@ -129,13 +133,13 @@ async def test_model_stream_v1_stub_path_commits_ok(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_model_stream_v1_stub_cancel_before_first_token_interrupts(tmp_path, monkeypatch):
     monkeypatch.setenv("ORKET_MODEL_STREAM_PROVIDER", "stub")
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(),
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
     )
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {"seed": 5}, {})
     context = await manager.create_context(session_id, turn_id)
     await queue.get()  # turn_accepted
@@ -232,13 +236,13 @@ async def test_model_stream_v1_real_path_uses_shared_runtime_target(tmp_path, mo
     monkeypatch.setattr("orket.workloads.model_stream_v1.resolve_provider_runtime_target", _fake_resolve)
     monkeypatch.setattr("orket.workloads.model_stream_v1.OpenAICompatModelStreamProvider", _FakeOpenAIProvider)
 
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(),
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
     )
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {"seed": 5}, {})
     context = await manager.create_context(session_id, turn_id)
     await queue.get()  # turn_accepted

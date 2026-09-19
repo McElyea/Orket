@@ -6,16 +6,15 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any
 
-from .contracts import (
+from orket.core.contracts.interaction_stream import (
     BEST_EFFORT_EVENTS,
     BOUNDED_EVENTS,
     EventClass,
     StreamEvent,
     StreamEventType,
     event_class,
-    mono_ts_ms_now,
-    wall_ts_now_iso,
 )
+from orket.streaming.clocks import mono_ts_ms_now, wall_ts_now_iso
 
 
 @dataclass
@@ -43,9 +42,12 @@ class StreamBusConfig:
 
 
 class StreamBus:
+    side_effecting = True
+
     def __init__(self, config: StreamBusConfig | None = None) -> None:
         self.config = config or StreamBusConfig()
         self._subscribers: dict[str, set[asyncio.Queue[StreamEvent]]] = defaultdict(set)
+        self._subscriber_closed: dict[asyncio.Queue[StreamEvent], asyncio.Event] = {}
         self._turn_states: dict[tuple[str, str], _TurnBusState] = {}
         self._lock = asyncio.Lock()
 
@@ -53,6 +55,7 @@ class StreamBus:
         queue: asyncio.Queue[StreamEvent] = asyncio.Queue(maxsize=self._subscriber_queue_maxsize())
         async with self._lock:
             self._subscribers[session_id].add(queue)
+            self._subscriber_closed[queue] = asyncio.Event()
         return queue
 
     async def configure_turn_budget(
@@ -74,7 +77,8 @@ class StreamBus:
 
     async def unsubscribe(self, session_id: str, queue: asyncio.Queue[StreamEvent]) -> None:
         async with self._lock:
-            if session_id in self._subscribers:
+            if queue in self._subscribers.get(session_id, set()):
+                self._subscriber_closed.pop(queue).set()
                 self._subscribers[session_id].discard(queue)
                 if not self._subscribers[session_id]:
                     self._subscribers.pop(session_id, None)
@@ -91,7 +95,7 @@ class StreamBus:
         state_key = (session_id, turn_id)
         event: StreamEvent | None = None
         advisory_event: StreamEvent | None = None
-        subscribers: list[asyncio.Queue[StreamEvent]] = []
+        subscribers: list[tuple[asyncio.Queue[StreamEvent], asyncio.Event]] = []
 
         async with self._lock:
             self._evict_turn_states_locked()
@@ -126,7 +130,7 @@ class StreamBus:
             if dropped:
                 state.next_seq += 1
                 self._append_drop_range(state.pending_dropped_ranges, dropped_seq, dropped_seq)
-                subscribers = list(self._subscribers.get(session_id, set()))
+                subscribers = [(queue, self._subscriber_closed[queue]) for queue in self._subscribers.get(session_id, set())]
                 if subscribers and not state.stream_truncated_emitted:
                     state.stream_truncated_emitted = True
                     advisory_event = self._build_event_locked(
@@ -166,13 +170,26 @@ class StreamBus:
                 state.commit_final_emitted = True
 
             if event is not None:
-                subscribers = list(self._subscribers.get(session_id, set()))
+                subscribers = [(queue, self._subscriber_closed[queue]) for queue in self._subscribers.get(session_id, set())]
 
         outgoing_event = advisory_event or event
         if outgoing_event is not None:
-            for queue in subscribers:
-                await queue.put(outgoing_event)
+            for queue, closed in subscribers:
+                await self._deliver(queue, closed, outgoing_event)
         return event
+
+    @staticmethod
+    async def _deliver(queue: asyncio.Queue[StreamEvent], closed: asyncio.Event, event: StreamEvent) -> None:
+        if closed.is_set():
+            return
+        # Detaching a transport withdraws its delivery obligation and must wake
+        # any publisher blocked on that bounded queue. Both waiters are joined.
+        async with asyncio.TaskGroup() as group:
+            delivery = group.create_task(queue.put(event))
+            detached = group.create_task(closed.wait())
+            await asyncio.wait((delivery, detached), return_when=asyncio.FIRST_COMPLETED)
+            delivery.cancel()
+            detached.cancel()
 
     async def purge_turn(self, session_id: str, turn_id: str, *, drain_subscriber_queues: bool = True) -> None:
         async with self._lock:
@@ -231,10 +248,8 @@ class StreamBus:
             if event.session_id != session_id or event.turn_id != turn_id:
                 retained.append(event)
         for event in retained:
-            try:
-                queue.put_nowait(event)
-            except asyncio.QueueFull:
-                pass
+            # No await separates drain and restore; retained is a subset of the original queue.
+            queue.put_nowait(event)
 
     @staticmethod
     def _build_event_locked(

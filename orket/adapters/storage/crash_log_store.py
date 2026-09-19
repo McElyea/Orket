@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import os
-import stat
 from dataclasses import dataclass
 from pathlib import Path
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.file_admission import require_regular_or_absent
 from orket.adapters.storage.local_file_lock import NativeFileLocks
 
 
@@ -33,11 +33,11 @@ class CrashLogStore:
         root = self.workspace.resolve()
         root.mkdir(parents=True, exist_ok=True)
         target = root / "orket_crash.log"
-        _require_regular_or_absent(target)
+        require_regular_or_absent(target, error_code="E_CRASH_LOG_NOT_REGULAR")
         locks = NativeFileLocks(target, suffix=".owners", error_prefix="E_CRASH", empty_key_error="E_CRASH_KEY")
         with locks.hold_sync("append"):
             for path in [target, *[target.with_name(f"{target.name}.{n}") for n in range(1, self.backup_count + 1)]]:
-                _require_regular_or_absent(path)
+                require_regular_or_absent(path, error_code="E_CRASH_LOG_NOT_REGULAR")
             if target.exists() and target.stat().st_size + len(payload) >= self.max_bytes:
                 self._rotate(target)
             _append_bytes(target, payload)
@@ -50,16 +50,6 @@ class CrashLogStore:
             destination = target.with_name(f"{target.name}.{number}")
             if source.exists():
                 source.replace(destination)
-
-
-def _require_regular_or_absent(path: Path) -> None:
-    try:
-        observed = path.lstat()
-    except FileNotFoundError:
-        return
-    if (not stat.S_ISREG(observed.st_mode)
-            or getattr(observed, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)):
-        raise ValueError("E_CRASH_LOG_NOT_REGULAR")
 
 
 def _append_bytes(target: Path, payload: bytes) -> None:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import inspect
 import json
 from collections.abc import Sequence
@@ -12,16 +11,18 @@ from orket.application.services.extension_workload_control_plane_service import 
     ExtensionWorkloadControlPlaneService,
     ExtensionWorkloadControlPlaneStart,
 )
+from orket.core.contracts.interaction_stream import CommitIntent, StreamEventType
 from orket.core.domain import AuthoritySourceClass, ResultClass
-from orket.streaming.contracts import CommitIntent, StreamEventType
 
 from .contracts import RunPlan
 from .governed_identity import (
     EXTENSION_WORKLOAD_OPERATOR_SURFACE_RESULT,
     build_extension_control_bundle,
     build_extension_policy_payload,
-    build_governed_identity as build_runtime_governed_identity,
     digest_prefixed,
+)
+from .governed_identity import (
+    build_governed_identity as build_runtime_governed_identity,
 )
 from .models import ExtensionRecord, _ExtensionManifestEntry
 from .runtime import ExtensionEngineAdapter, RunContext

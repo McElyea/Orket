@@ -14,6 +14,9 @@ from orket.application.services.api_authentication_service import ApiAuthenticat
 from orket.schema import CardStatus
 from orket.settings import load_user_settings_async, save_user_settings
 from tests.helpers.card_completion import complete_existing_card
+from tests.helpers.interactions import create_interaction_manager
+
+pytestmark = pytest.mark.contract
 
 client = None
 
@@ -1776,11 +1779,9 @@ async def test_interaction_cancel_endpoint_publishes_operator_action_for_session
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_DURABLE_ROOT", str(Path(tmp_path) / "durable"))
     from orket.orchestration.engine import OrchestrationEngine
-    from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus
 
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
-    manager = InteractionManager(bus=StreamBus(), commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
-                                 project_root=tmp_path)
+    manager = create_interaction_manager(tmp_path)
     workspace_root = Path(tmp_path) / "workspace"
     workspace_root.mkdir(parents=True, exist_ok=True)
     real_engine = OrchestrationEngine(
@@ -1818,11 +1819,9 @@ async def test_interaction_cancel_endpoint_publishes_operator_action_for_turn_sc
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_DURABLE_ROOT", str(Path(tmp_path) / "durable"))
     from orket.orchestration.engine import OrchestrationEngine
-    from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus
 
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
-    manager = InteractionManager(bus=StreamBus(), commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
-                                 project_root=tmp_path)
+    manager = create_interaction_manager(tmp_path)
     workspace_root = Path(tmp_path) / "workspace"
     workspace_root.mkdir(parents=True, exist_ok=True)
     real_engine = OrchestrationEngine(

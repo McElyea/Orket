@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import time
-from datetime import UTC, datetime
+import re
 from enum import StrEnum
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class StreamEventType(StrEnum):
@@ -58,6 +57,7 @@ class StreamEvent(BaseModel):
 
 
 class CommitIntent(BaseModel):
+    model_config = ConfigDict(frozen=True)
     type: Literal["tool_result", "decision", "turn_finalize"]
     ref: str
     payload_digest: str | None = None
@@ -66,7 +66,7 @@ class CommitIntent(BaseModel):
 class CommitHandle(BaseModel):
     session_id: str
     turn_id: str
-    status: Literal["pending"] = "pending"
+    status: Literal["committed"] = "committed"
     requested_at_mono_ts_ms: int
 
 
@@ -76,25 +76,25 @@ class EventClass(StrEnum):
     BOUNDED = "bounded"
 
 
-MUST_DELIVER_EVENTS: set[StreamEventType] = {
+MUST_DELIVER_EVENTS: frozenset[StreamEventType] = frozenset({
     StreamEventType.TURN_ACCEPTED,
     StreamEventType.TURN_INTERRUPTED,
     StreamEventType.TURN_FINAL,
     StreamEventType.COMMIT_FINAL,
-}
+})
 
-BEST_EFFORT_EVENTS: set[StreamEventType] = {
+BEST_EFFORT_EVENTS: frozenset[StreamEventType] = frozenset({
     StreamEventType.TOKEN_DELTA,
     StreamEventType.MODEL_LOADING,
     StreamEventType.MODEL_SELECTED,
     StreamEventType.MODEL_READY,
-}
+})
 
-BOUNDED_EVENTS: set[StreamEventType] = {
+BOUNDED_EVENTS: frozenset[StreamEventType] = frozenset({
     StreamEventType.TOOL_CALL_STARTED,
     StreamEventType.TOOL_CALL_RESULT,
     StreamEventType.STREAM_TRUNCATED,
-}
+})
 
 
 def event_class(event_type: StreamEventType) -> EventClass:
@@ -105,9 +105,7 @@ def event_class(event_type: StreamEventType) -> EventClass:
     return EventClass.BOUNDED
 
 
-def mono_ts_ms_now() -> int:
-    return int(time.monotonic_ns() / 1_000_000)
-
-
-def wall_ts_now_iso() -> str:
-    return datetime.now(UTC).isoformat()
+def validate_interaction_id(value: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", value):
+        raise ValueError("E_INTERACTION_ID_INVALID")
+    return value

@@ -2,20 +2,24 @@ from __future__ import annotations
 
 import pytest
 
-from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus
-from orket.streaming.contracts import CommitIntent, StreamEventType
+from orket.application.interactions.commit import CommitOrchestrator
+from orket.application.interactions.manager import InteractionManager
+from orket.core.contracts.interaction_stream import CommitIntent, StreamEventType
+from orket.streaming import StreamBus
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.mark.asyncio
 async def test_manager_begin_turn_emits_turn_accepted_and_linear_policy(tmp_path):
     """Layer: unit. Verifies interaction manager enforces linear turns and emits turn acceptance."""
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(),
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
     )
     session_id = await manager.start({"npc": "guard"})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {"text": "hi"}, {"persona": "guard"})
     event = await queue.get()
     assert event.event_type == StreamEventType.TURN_ACCEPTED
@@ -27,20 +31,20 @@ async def test_manager_begin_turn_emits_turn_accepted_and_linear_policy(tmp_path
 @pytest.mark.asyncio
 async def test_manager_cancel_then_finalize_emits_single_terminal_plus_commit(tmp_path):
     """Layer: unit. Verifies cancel then finalize emits one terminal event and one authoritative commit result."""
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(),
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
     )
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {}, {})
     await queue.get()  # turn_accepted
     await manager.cancel(turn_id)
     interrupted = await queue.get()
     assert interrupted.event_type == StreamEventType.TURN_INTERRUPTED
     handle = await manager.finalize(session_id, turn_id)
-    assert handle.status == "pending"
+    assert handle.status == "committed"
     commit = await queue.get()
     assert commit.event_type == StreamEventType.COMMIT_FINAL
     assert commit.payload["authoritative"] is True
@@ -50,13 +54,13 @@ async def test_manager_cancel_then_finalize_emits_single_terminal_plus_commit(tm
 async def test_manager_commit_fail_closed_outcome(tmp_path):
     """Layer: unit. Verifies interaction manager preserves fail-closed commit outcomes."""
     bus = StreamBus()
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=bus,
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
     )
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {}, {})
     await queue.get()  # accepted
     context = await manager.create_context(session_id, turn_id)
@@ -92,7 +96,7 @@ async def test_commit_orchestrator_persists_authority_artifact(tmp_path):
 @pytest.mark.asyncio
 async def test_manager_session_snapshot_and_replay_expose_context_lineage(tmp_path):
     """Layer: unit. Verifies interaction manager exposes explicit session-context envelope and provider lineage."""
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(),
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
@@ -141,18 +145,18 @@ async def test_manager_session_snapshot_and_replay_expose_context_lineage(tmp_pa
         "extension_manifest_required_capabilities",
     ]
 
-    detail = await manager.get_session_detail(session_id)
+    detail = await manager.queries.get_session_detail(session_id)
     assert detail is not None
     assert detail["surface"] == "interaction_session"
     assert detail["turn_count"] == 1
 
-    snapshot = await manager.get_session_snapshot(session_id)
+    snapshot = await manager.queries.get_session_snapshot(session_id)
     assert snapshot is not None
     assert snapshot["session_context_pipeline"]["context_version"] == "packet1_session_context_v1"
     assert snapshot["session_context_pipeline"]["latest_context_envelope"]["turn_request"]["workload_id"] == "stream_test_v1"
     assert snapshot["replay_boundary"]["timeline_view"] == "inspection_only"
 
-    replay = await manager.get_session_replay_timeline(session_id)
+    replay = await manager.queries.get_session_replay_timeline(session_id)
     assert replay is not None
     assert replay["turn_count"] == 1
     assert replay["turns"][0]["turn_index"] == 1
@@ -163,13 +167,13 @@ async def test_manager_session_snapshot_and_replay_expose_context_lineage(tmp_pa
 async def test_manager_model_stream_turns_get_high_default_stream_budget(tmp_path):
     """Layer: unit. Verifies model_stream_v1 turns receive the raised default token budget without caller-supplied overrides."""
     bus = StreamBus()
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=bus,
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
     )
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(
         session_id,
         {"seed": 5},
@@ -196,7 +200,7 @@ async def test_manager_model_stream_turns_get_high_default_stream_budget(tmp_pat
 def test_manager_stream_enabled_is_cached_at_construction(monkeypatch, tmp_path):
     """Layer: unit. Verifies stream toggle resolution is fixed when the manager is constructed."""
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(),
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
@@ -219,7 +223,7 @@ async def test_manager_session_lifecycle_hooks_track_surface_presence(tmp_path):
     async def _closed(session_id: str) -> None:
         closed.append(session_id)
 
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(),
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,

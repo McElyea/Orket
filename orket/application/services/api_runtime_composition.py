@@ -8,6 +8,8 @@ from orket.adapters.storage.outward_approval_store import OutwardApprovalStore
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
 from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
+from orket.application.interactions.commit import CommitOrchestrator
+from orket.application.interactions.manager import InteractionManager
 from orket.application.services.api_authentication_service import ApiAuthenticationService
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
@@ -27,7 +29,7 @@ from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.extensions import ExtensionManager
 from orket.runtime_paths import resolve_control_plane_db_path
 from orket.state import create_runtime_state
-from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus, StreamBusConfig
+from orket.streaming import StreamBus, StreamBusConfig
 
 
 def build_api_runtime_container(
@@ -42,7 +44,7 @@ def build_api_runtime_container(
     authentication = ApiAuthenticationService(os.environ if environment is None else environment)
     runtime_state = create_runtime_state()
     runtime_host = ApiRuntimeHostService(project_root=root, runtime_inputs=runtime_inputs, environment=authentication.environment)
-    stream_bus = _build_stream_bus()
+    stream_bus = _build_stream_bus(authentication.environment)
     run_store, event_store, approval_store = _build_outward_stores()
     raw_allowlist = str(os.getenv("ORKET_CONNECTOR_HTTP_ALLOWLIST") or "")
     http_allowlist = tuple(host.strip().lower() for host in raw_allowlist.split(",") if host.strip())
@@ -64,7 +66,8 @@ def build_api_runtime_container(
         system_queries=ApiSystemQueryService(root, environment=authentication.environment,
                                             runtime_inputs=runtime_host.runtime_inputs),
         stream_bus=stream_bus,
-        interaction_manager=_build_interaction_manager(root, stream_bus, runtime_state),
+        interaction_manager=_build_interaction_manager(root, stream_bus, runtime_state, runtime_host,
+                                                       authentication.environment),
         extension_manager=extension_manager,
         extension_runtime_service=ExtensionRuntimeService(project_root=root, environment=authentication.environment),
         outward_run_store=run_store,
@@ -97,23 +100,25 @@ def build_api_runtime_container(
     container.governed_agent_runtime = governed_agent_runtime
     container.register_owned_resource(governed_agent_runtime)
     container.register_owned_resource(container.extension_runtime_service)
+    container.register_owned_resource(container.interaction_manager)
     return container
 
 
-def _build_stream_bus() -> StreamBus:
+def _build_stream_bus(environment: Mapping[str, str]) -> StreamBus:
     return StreamBus(
         StreamBusConfig(
-            best_effort_max_events_per_turn=int(os.getenv("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN", "256")),
+            best_effort_max_events_per_turn=int(environment.get("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN", "256")),
             best_effort_max_events_per_turn_override=int(
-                os.getenv("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN_OVERRIDE", "2048")
+                environment.get("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN_OVERRIDE", "2048")
             ),
-            bounded_max_events_per_turn=int(os.getenv("ORKET_STREAM_BOUNDED_MAX_EVENTS_PER_TURN", "128")),
-            max_bytes_per_turn_queue=int(os.getenv("ORKET_STREAM_MAX_BYTES_PER_TURN_QUEUE", "1000000")),
+            bounded_max_events_per_turn=int(environment.get("ORKET_STREAM_BOUNDED_MAX_EVENTS_PER_TURN", "128")),
+            max_bytes_per_turn_queue=int(environment.get("ORKET_STREAM_MAX_BYTES_PER_TURN_QUEUE", "1000000")),
         )
     )
 
 
-def _build_interaction_manager(root: Path, bus: StreamBus, state: object) -> InteractionManager:
+def _build_interaction_manager(root: Path, bus: StreamBus, state: object, host: ApiRuntimeHostService,
+                               environment: Mapping[str, str]) -> InteractionManager:
     async def register_session(session_id: str) -> None:
         await state.register_interaction_session(session_id)  # type: ignore[attr-defined]
 
@@ -124,6 +129,8 @@ def _build_interaction_manager(root: Path, bus: StreamBus, state: object) -> Int
         bus=bus,
         commit_orchestrator=CommitOrchestrator(project_root=root),
         project_root=root,
+        inputs=host.runtime_inputs,
+        stream_enabled=str(environment.get("ORKET_STREAM_EVENTS_V1", "false")).strip().lower() in {"1", "true", "yes", "on"},
         on_session_started=register_session,
         on_session_closed=unregister_session,
     )

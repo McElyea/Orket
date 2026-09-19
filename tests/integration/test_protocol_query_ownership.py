@@ -262,9 +262,7 @@ async def test_default_router_root_resolves_only_in_query_worker(tmp_path, monke
     _write_protocol_run(tmp_path, "run-a", status="incomplete", ok=True)
     app = FastAPI()
     app.include_router(build_sessions_router(
-        interaction_manager_getter=lambda: None, extension_manager_getter=lambda: None,
-        is_builtin_workload=lambda _: False, validate_builtin_workload_start=lambda **_: None,
-        run_builtin_workload=lambda **_: None, commit_intent_factory=lambda _: None,
+        turn_service_getter=lambda: None,
     ), prefix="/v1")
     monkeypatch.chdir(tmp_path)
     resolve, loop_thread = Path.resolve, threading.get_ident()

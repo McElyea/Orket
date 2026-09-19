@@ -3,9 +3,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from orket.adapters.execution.owned_io import run_owned_io
+from orket.application.interactions.manager import InteractionManager
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
-from orket.streaming.manager import InteractionManager
 
 
 class InteractionCancelNotFound(ValueError):

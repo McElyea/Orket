@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.31] - 2026-09-19 - "Owned interaction transitions"
+
+### Fixed
+- Move interaction lifecycle and workload admission into application services, with pure stream/context values in core.
+- Retain interrupted admission and finalization through verified publication; close unadopted turns with a failed outcome and preserve failed attempts on retry.
+- Adopt HTTP workloads into the API lifetime before returning admission; refuse premature public finalization and drain workloads before session teardown.
+- Verify immutable commit and trace files under native ownership; capture nested inputs, clocks, identities and stream enablement explicitly.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration and limits: `docs/architecture/CONTRACT_DELTA_INTERACTION_LIFECYCLE_CD_2026-09-19.md`.
+- Stability: scoped C/D candidate; the full architectural-truth lane remains active.
+
 ## [0.6.30] - 2026-09-19 - "Verified crash publication"
 
 ### Fixed

@@ -13,7 +13,6 @@ def register_streaming_routes(
     authentication_getter: Callable[[], Any],
     runtime_host_getter: Callable[[], Any],
     interaction_manager_getter: Callable[[], Any],
-    stream_bus_getter: Callable[[], Any],
     runtime_state_getter: Callable[[], Any],
     events_getter: Callable[[], Any],
 ) -> None:
@@ -48,7 +47,6 @@ def register_streaming_routes(
     async def websocket_interactions(session_id: str, websocket: WebSocket) -> None:
         authentication = authentication_getter()
         interaction_manager = interaction_manager_getter()
-        stream_bus = stream_bus_getter()
         header_key = websocket.headers.get(api_key_name) or websocket.headers.get(api_key_name.lower())
         query_key = websocket.query_params.get("api_key")
         supplied_key = authentication.websocket_key(header_key, query_key)
@@ -66,12 +64,10 @@ def register_streaming_routes(
             await websocket.close(code=4400)
             return
         await websocket.accept()
-        queue = await interaction_manager.subscribe(session_id)
-        try:
-            while True:
-                event = await queue.get()
-                await websocket.send_json(event.model_dump())
-        except WebSocketDisconnect:
-            pass
-        finally:
-            await stream_bus.unsubscribe(session_id, queue)
+        async with interaction_manager.streams.subscribe(session_id) as queue:
+            try:
+                while True:
+                    event = await queue.get()
+                    await websocket.send_json(event.model_dump())
+            except WebSocketDisconnect:
+                pass

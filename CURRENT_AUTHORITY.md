@@ -4,6 +4,14 @@ Last updated: 2026-09-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Application interaction services own admission, workload adoption, cancellation,
+finalization and session close. Captured inputs and per-session transition ownership
+prevent interrupted calls from stranding turns or returning unobserved commit
+receipts. Storage verifies immutable commit/trace artifacts; API workloads belong
+to the application lifetime. Core owns stream/context values. Migration, response
+vocabulary and remaining failure limits:
+`docs/architecture/CONTRACT_DELTA_INTERACTION_LIFECYCLE_CD_2026-09-19.md`.
+
 Application crash publication captures the selected absolute diagnostic workspace
 and supplied clock. Native append/rotation ownership and closed-file readback
 precede a saved-path claim; cancellation retains the worker through lock release.

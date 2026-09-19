@@ -26,6 +26,7 @@ For project root `P`:
 | Default driver/reconciler workspace | `P/workspace/default` |
 | Card execution config root | Existing explicit override, otherwise invocation project `P` |
 | Runtime CLI startup crash log | Captured `P/workspace/default/orket_crash.log`, independent of execution `--workspace` |
+| Interaction commit and trace artifacts | Explicit `P/workspace/interactions/<session>/<turn>/` |
 | Card execution workspace | Existing explicit `--workspace`/application input |
 
 Changing the execution workspace does not implicitly select another project or

@@ -5,6 +5,8 @@ import contextlib
 import os
 from typing import Any
 
+from orket.application.interactions.context import InteractionContext
+from orket.core.contracts.interaction_stream import CommitIntent, StreamEventType
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL, PROVIDER_CHOICES
 from orket.runtime.config.defaults import configured_provider
 from orket.runtime.config.provider_runtime_target import (
@@ -13,8 +15,6 @@ from orket.runtime.config.provider_runtime_target import (
     resolve_int_env,
     resolve_provider_runtime_target,
 )
-from orket.streaming.contracts import CommitIntent, StreamEventType
-from orket.streaming.manager import InteractionContext
 from orket.streaming.model_provider import (
     ModelStreamProvider,
     OllamaModelStreamProvider,

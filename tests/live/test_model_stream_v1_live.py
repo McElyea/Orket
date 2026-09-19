@@ -5,8 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus
-from orket.streaming.contracts import StreamEventType
+from orket.application.interactions.commit import CommitOrchestrator
+from orket.application.interactions.manager import InteractionManager
+from orket.core.contracts.interaction_stream import StreamEventType
+from orket.streaming import StreamBus
 from orket.workloads import run_builtin_workload
 from tests.live.test_runtime_stability_closeout_live import _live_enabled, _live_model
 
@@ -37,13 +39,13 @@ async def test_model_stream_v1_live_repeated_cancel_before_first_token_interrupt
 
     _configure_real_stream_env(monkeypatch)
 
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(),
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
     )
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {"seed": 246}, {})
     context = await manager.create_context(session_id, turn_id)
     await queue.get()  # turn_accepted
@@ -100,13 +102,13 @@ async def test_model_stream_v1_live_cancel_after_final_is_noop(tmp_path: Path, m
 
     _configure_real_stream_env(monkeypatch)
 
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(),
         commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
         project_root=tmp_path,
     )
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {"seed": 247}, {})
     context = await manager.create_context(session_id, turn_id)
     await queue.get()  # turn_accepted

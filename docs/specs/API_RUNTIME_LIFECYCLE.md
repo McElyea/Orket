@@ -33,6 +33,25 @@ still rejects anonymous/wrong-key access when that flag is set. Production/stagi
 still reject the insecure flag at startup. These semantics do not make all manually
 registered API background tasks managed or impose a startup/shutdown deadline.
 
+## Interaction admission and close
+
+Application interaction services own admission, workload adoption, cancellation,
+finalization and session close. Captured inputs and per-session transition ownership
+prevent interrupted calls from stranding turns or returning unobserved commit
+receipts. Storage verifies immutable commit/trace artifacts; API workloads belong
+to the application lifetime. Core owns stream/context values. Migration, response
+vocabulary and remaining failure limits:
+`docs/architecture/CONTRACT_DELTA_INTERACTION_LIFECYCLE_CD_2026-09-19.md`.
+
+HTTP admission transfers work to the API lifetime before returning a turn ID.
+Premature public finalization of managed work is refused. A committed receipt
+follows verified publication; failed attempts remain failures on retry. Shutdown
+drains workloads before closing and unregistering sessions. Stream subscriptions
+release their publication waiters when detached, including a full bounded queue;
+this does not acknowledge delivery to a disconnected client. Stream enablement and
+queue limits use the captured API environment. Provider/workload implementation
+configuration beyond these inputs remains governed by its existing contracts.
+
 ## Interaction cancellation
 
 Interaction cancellation is admitted by application `InteractionCancellationService`.

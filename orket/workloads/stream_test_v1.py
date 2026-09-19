@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.streaming.contracts import CommitIntent, StreamEventType
-from orket.streaming.manager import InteractionContext
+from orket.application.interactions.context import InteractionContext
+from orket.core.contracts.interaction_stream import CommitIntent, StreamEventType
 
 
 def _int_value(value: Any, default: int, *, minimum: int = 0) -> int:

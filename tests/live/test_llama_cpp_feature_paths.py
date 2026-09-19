@@ -6,11 +6,13 @@ import os
 
 import pytest
 
+from orket.application.interactions.commit import CommitOrchestrator
+from orket.application.interactions.manager import InteractionManager
 from orket.application.services.extension_runtime_service import ExtensionRuntimeService
+from orket.core.contracts.interaction_stream import StreamEventType
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.runtime.config.provider_discovery import installed_models
-from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus
-from orket.streaming.contracts import StreamEventType
+from orket.streaming import StreamBus
 from orket.workloads import run_builtin_workload
 from orket.workloads.model_stream_v1 import validate_model_stream_v1_start
 from scripts.odr.model_runtime_control import complete_with_transient_provider
@@ -38,10 +40,10 @@ async def test_llama_cpp_builtin_stream_reaches_committed_terminal_state(tmp_pat
     monkeypatch.setenv("ORKET_MODEL_STREAM_OPENAI_USE_STREAM", "true")
     monkeypatch.setenv("ORKET_MODEL_STREAM_REAL_TIMEOUT_S", "60")
     validate_model_stream_v1_start(input_config={}, turn_params={})
-    manager = InteractionManager(bus=StreamBus(), commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
+    manager = InteractionManager(stream_enabled=True, bus=StreamBus(), commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
                                  project_root=tmp_path)
     session = await manager.start({})
-    queue = await manager.subscribe(session)
+    queue = await manager.bus.subscribe(session)
     turn = await manager.begin_turn(session, {}, {})
     context = await manager.create_context(session, turn)
     await asyncio.wait_for(run_builtin_workload(workload_id="model_stream_v1",

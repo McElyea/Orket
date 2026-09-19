@@ -4,8 +4,10 @@ import asyncio
 
 import pytest
 
+from orket.core.contracts.interaction_stream import StreamEventType
 from orket.streaming.bus import StreamBus, StreamBusConfig
-from orket.streaming.contracts import StreamEventType
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.mark.asyncio
@@ -102,8 +104,8 @@ async def test_bus_emits_single_stream_truncated_event_for_best_effort_budget_ex
     assert truncated[0].payload["dropped_seq_ranges"] == [{"start_seq": 256, "end_seq": 256}]
 
 
-def test_bus_drain_queue_ignores_queuefull_when_requeueing_retained_events() -> None:
-    """Layer: unit. Verifies turn purge stays best-effort when subscriber requeueing overflows."""
+def test_bus_drain_queue_propagates_unexpected_queuefull() -> None:
+    """Layer: unit. A broken queue cannot silently discard another turn's retained events."""
 
     class _Event:
         def __init__(self, session_id: str, turn_id: str) -> None:
@@ -128,7 +130,8 @@ def test_bus_drain_queue_ignores_queuefull_when_requeueing_retained_events() -> 
 
     queue = _Queue()
 
-    StreamBus._drain_queue_for_turn(queue, session_id="s1", turn_id="t1")
+    with pytest.raises(asyncio.QueueFull):
+        StreamBus._drain_queue_for_turn(queue, session_id="s1", turn_id="t1")
 
     assert queue.task_done_calls == 2
 

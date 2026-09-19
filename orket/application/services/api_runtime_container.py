@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, ClassVar
 
+from orket.application.interactions.commands import InteractionCommands
 from orket.application.services.api_event_service import ApiEventService
 from orket.application.services.application_runtime_lifetime import (
     ApplicationRuntimeLifetime,
@@ -55,6 +56,9 @@ class ApiRuntimeContainer(ApplicationRuntimeLifetime):
             manager=self.interaction_manager, publication=self.engine.control_plane_publication,
             utc_now=self.api_runtime_host.utc_now_iso,
         )
+
+    def interactions(self) -> InteractionCommands:
+        return InteractionCommands(self.interaction_manager, self.extension_manager, self, self.project_root)
 
     async def _close_final_resource(self) -> None:
         await close_owned_resource(self.engine)

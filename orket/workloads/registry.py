@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.streaming.manager import InteractionContext
+from orket.application.interactions.context import InteractionContext
 
 from .marshaller_v0 import run_marshaller_v0, validate_marshaller_v0_start
 from .model_stream_v1 import run_model_stream_v1, validate_model_stream_v1_start

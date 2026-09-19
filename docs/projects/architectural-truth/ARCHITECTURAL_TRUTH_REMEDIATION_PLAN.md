@@ -12516,11 +12516,11 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.30
-CLI crash publication work below. The graph has five forbidden pairs, zero cross-layer
+Next action: continue C/D from their numbered requirements after the 0.6.31
+interaction lifecycle work below. The graph has four forbidden pairs, zero cross-layer
 cycles and eight unresolved import/reflection sites. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 100 findings. The prior stale benchmark expectation passes in the
+Ruff has 96 findings. The prior stale benchmark expectation passes in the
 new source/native selection, but no fresh all-green full suite is claimed.
 Remaining core clocks, schema identities, async reachability and
 adapter classification remain actionable. E1/E2, CAP-1/2/3, hosted Quality, release
@@ -16015,3 +16015,117 @@ file exists and the session stays active. Its healthy control writes the actual
 commit file and becomes idle. Both sessions/subscriptions and the event loop were
 closed; original commit/trace files remain. This is another direct-manager
 counterexample for the next C/D ownership repair, not repaired .30 behavior.
+
+### Interaction lifecycle checkpoint: 2026-09-19 (0.6.31)
+
+Application owns interaction admission, state, workload adoption, cancellation,
+finalization, queries and subscription cleanup. Core owns stream/context values;
+the bus and file publication remain adapters. Retired adapter manager/contracts/
+context/cancellation exports have no shims. API routes delegate workload policy
+and dispatch to application commands. Captured nested inputs, clock/identity
+values and API stream settings no longer rely on later caller mutation or ambient
+enablement. Other workload/provider settings remain active D work.
+
+Interrupted admission retains publication, then fails the unadopted turn closed.
+Finalization owns one attempt and every waiter observes its success or retained
+failure. Failed retries cannot return an unobserved pending handle. A committed
+receipt follows verified immutable commit/trace publication; its outcome can
+still be fail_closed. Workload contexts cannot author lifecycle events or claim
+authority. Public HTTP admission adopts its task into the API lifetime before
+returning; public finalize cannot precede that workload's result. API shutdown
+drains workloads before sessions. Session close refuses a still-running managed
+workload. Subscriber detach releases a full-queue publisher and joins waiters.
+The direct scenario CLI joins its runner and subscription cleanup before verdict.
+
+The reentry check preserved .30, all 645 sealed artifacts, neighboring worktrees
+and the historical handoff. Earlier installed start/finalization counterexamples
+remain bound to .30 source and wheel bytes. The host-clock discontinuity diagnosis
+is retained and corroborated; its actor remains unknown.
+
+Evidence under `.tmp/c-interaction-lifecycle/` retains four initial failing
+transition tests; 15 explicit-environment fixture failures; two broader transport
+failures; the full-subscriber detach failure; and two stale assertion failures
+from the first affected/structural union. Repairs passed 27 transition/cancellation,
+96 transport, 18 input/artifact/adoption, 33 subscriber and four direct-scenario/
+provider-identity cases. The final affected union passes 177 cases; structural
+checks pass 51. No failed observation was overwritten or counted as passing.
+Prebuild also retained a whitespace failure, then removed one extra EOF blank
+line without an AST change and regenerated graph/baseline before final binding.
+The first expanded source run retained 1,479 passes and two more captured-input
+WebSocket fixture failures. A five-case repair passes with explicit stream
+enablement while ambient and later caller values say disabled. The revision
+changes only that fixture and the plan; all package bytes remain unchanged, so
+the built wheel/sdist and source environment are retained. The final source
+selection below was executed again after this repair.
+
+Precommit source binding first compared a raw CRLF hash with a Git-normalized
+blob. `retired-source-binding.json` verifies the exact original bytes against
+the sealed .30 wheel and checkpoint and proves the only Git difference is the
+declared CRLF-to-LF normalization. Original proof and the failed helper remain.
+
+Observed path: primary for admitted publication and deliberate refusal; degraded
+for failed admission/finalization. Result: partial success for the full goal.
+Live local proof includes real TCP HTTP through Uvicorn, interrupted ASGI admission,
+native file ownership in separate processes, exact-content conflict/readback
+failure, actual direct CLI stub runs, bounded queues, cancellation and teardown.
+Held-worker/event fixtures and controlled workload functions retain their stated
+scope. Core values and import/workflow/lint/size checks are structural. Stub and
+controlled provider fixtures are not live model-provider acceptance.
+
+Final source passes 1,481 cases with no failure/error/skip in
+563.594 seconds including runner overhead. All
+1,400 prior case identities remain, with 81
+added. The same cases pass in all four fresh installed environments. Owned proof
+processes returned and sessions were reaped. Package origins, dependencies, support
+hashes, public CLI/ToolGate checks, database guards and owned cleanup pass.
+
+| Installed cell | Tests / failures / errors / skips | Core origins | Pytest seconds |
+|---|---:|---:|---:|
+| a31-win-py311 | 1481 / 0 / 0 / 0 | 967 | 591.207 |
+| a31-linux-py311 | 1481 / 0 / 0 / 0 | 967 | 413.132 |
+| a31-win-py312 | 1481 / 0 / 0 / 0 | 967 | 640.263 |
+| a31-linux-py312 | 1481 / 0 / 0 / 0 | 967 | 352.338 |
+
+The harness binds 1,928 support files without core/SDK
+source shadowing. Wheel/sdist parity matches 1,074 core Python
+and 1,089 package files with no mismatch. Core is 0.6.31; SDK
+0.7.0a1 and reference/starter 0.3.0a1 retain their identities. The unchanged
+source/native/launcher budgets are 1,500/1,800/2,100 seconds. Product deadlines
+were not widened. Controlled responsiveness remains 0.5 seconds and settlement
+after a released hold remains 3 seconds.
+
+Evidence under `.tmp/c-interaction-lifecycle/`:
+- `candidate/source-report.json`: SHA-256 `60c8639293d57c8b34fa98fcaf469bb9f0573fb68315e4fb5c602cc7449285a7`.
+- `candidate/manifest.json`: SHA-256 `eaae221739ee0031a81a9b8e8776940f5ed1e7afd0c5243f6370472adc981759`.
+- `candidate/native-audit.json`: SHA-256 `34a6fbc88a3ef54bbd332058cf11aabb3ed496cf30e8691c68a77bd5832be8a0`.
+- Core wheel: SHA-256 `9f5c36ef428e47b296f61032db6825dd9ad79e715039316bab8e980344453302`.
+- Core sdist: SHA-256 `8e1e8a5fd86993ef817f16ce4fa64eb5bdc5a708544aa52f7ce07aa663208381`.
+- `case-continuity.json`, `size-review-repaired.json`, `ruff-comparison-repaired.json`,
+  `collection-final/collection.json` and `review.json` state their proof scopes.
+  `CHANGESET.md` lists all 72 exact tracked paths, including deletions.
+
+The graph contains 1,074 modules and 3,371
+import sites: four forbidden pairs, eight analysis errors, no unknown modules or
+cross-layer cycles. The API-to-streaming-authority pair was removed without a
+policy exception or reclassification. Canonical Ruff falls from 100 to 96 findings
+with none added. All changed Python lint, docs hygiene, release metadata and staged
+whitespace checks pass. Export success does not make dependency/release verdicts
+green. New files/functions/classes meet size limits; existing oversized files do
+not grow. The existing long session router shrinks; the bus publish function stays
+the same length; the CLI scenario coroutine grows by 11 lines for required owned
+cleanup. Existing long migrated tests shrink or retain length. The size review
+records these changes explicitly rather than claiming untouched oversized code.
+
+Commit, trace, stream and state are separate effects. Publication failure can leave
+an artifact or partial delivery, and blocked sessions retain failure for inspection.
+No restart reconstruction, exactly-once workload execution, hostile-editor fencing,
+remote-filesystem guarantee or hard deadline for hung subscribers/workers is added.
+Native busy ownership is refusal; preserve `.owners/` identities. Drain the API
+owner before closing its interaction sessions. Migration, response vocabulary and
+remaining limits are in
+`docs/architecture/CONTRACT_DELTA_INTERACTION_LIFECYCLE_CD_2026-09-19.md`.
+
+This checkpoint is committed and tagged locally; no GitHub push is performed.
+Full C/D/E1/E2/CAP-1/2/3, fresh full Quality/coverage, hosted/live-provider acceptance,
+release readiness and explicit whole-lane acceptance remain open. The last full
+suite remains the retained .22 observation, not a fresh repository-wide green.

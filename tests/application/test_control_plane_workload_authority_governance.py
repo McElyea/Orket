@@ -600,9 +600,9 @@ def test_extension_catalog_no_longer_exposes_public_manifest_lookup() -> None:
 def test_sessions_router_uses_manifest_presence_probe_instead_of_metadata_lookup() -> None:
     """Layer: contract. Verifies interaction session routing validates extension workload ids through a boolean probe."""
     router_text = (ORKET_ROOT / "interfaces" / "routers" / "sessions.py").read_text(encoding="utf-8-sig")
-
-    assert ".has_manifest_entry(" in router_text
-    assert ".resolve_workload(" not in router_text
+    commands = (ORKET_ROOT / "application" / "interactions" / "commands.py").read_text(encoding="utf-8-sig")
+    assert "turn_service_getter().begin(" in router_text and ".has_manifest_entry(" in commands
+    assert all(".resolve_workload(" not in text for text in (router_text, commands))
 
 # Layer: contract
 def test_controller_dispatcher_uses_manager_sdk_probe_instead_of_private_manifest_tuple() -> None:

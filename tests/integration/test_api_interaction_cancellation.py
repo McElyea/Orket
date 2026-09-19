@@ -11,7 +11,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 def _app(tmp_path, monkeypatch):
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
-    return create_api_app(project_root=tmp_path, environment={"ORKET_API_KEY": "expected"})
+    return create_api_app(project_root=tmp_path, environment={"ORKET_API_KEY": "expected", "ORKET_STREAM_EVENTS_V1": "true"})
 
 
 async def _cancel(app, session_id, turn_id=None):
@@ -37,7 +37,7 @@ async def test_cancel_rejects_unobserved_or_foreign_effect(tmp_path, monkeypatch
             turn_id = "does-not-exist"
         elif target in {"foreign-turn", "finalized", "session-as-turn"}:
             actual_session = await manager.start({}) if target == "foreign-turn" else session_id
-            queue = await manager.subscribe(actual_session)
+            queue = await manager.bus.subscribe(actual_session)
             turn_id = await manager.begin_turn(actual_session, {}, {})
             await queue.get()
             if target == "finalized":
@@ -50,7 +50,7 @@ async def test_cancel_rejects_unobserved_or_foreign_effect(tmp_path, monkeypatch
         assert await owner.engine.control_plane_repository.list_operator_actions(target_ref=target_ref) == []
         if target in {"foreign-turn", "session-as-turn"}:
             assert queue.empty()
-            detail = await manager.get_session_replay_timeline(actual_session)
+            detail = await manager.queries.get_session_replay_timeline(actual_session)
             assert detail["turns"][-1]["terminal_event"] is None
     finally:
         await owner.close()
@@ -62,7 +62,7 @@ async def test_cancel_publishes_once_after_real_transition(tmp_path, monkeypatch
     owner = app.state.api_runtime_context
     manager = owner.interaction_manager
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, {}, {})
     await queue.get()
     target = turn_id if turn_scope else session_id

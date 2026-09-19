@@ -16,6 +16,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 
 from orket import __version__
+from orket.application.interactions.manager import InteractionManager
 from orket.application.services.api_runtime_composition import build_api_runtime_container
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
 from orket.application.services.api_startup_service import api_runtime_lifespan
@@ -83,8 +84,6 @@ from orket.kernel.v1.outbound_policy_gate import (
 )
 from orket.runtime.cors_config import resolve_cors_config
 from orket.settings import load_user_settings_async, save_user_settings_async
-from orket.streaming import CommitIntent, InteractionManager, StreamBus
-from orket.workloads import is_builtin_workload, run_builtin_workload, validate_builtin_workload_start
 
 LOGGER = logging.getLogger(__name__)
 _ACTIVE_API_APP: ContextVar[FastAPI | None] = ContextVar("orket_active_api_app", default=None)
@@ -566,10 +565,6 @@ def _get_api_runtime_host(target_app: FastAPI | None = None) -> ApiRuntimeHostSe
     return _runtime_context(target_app).api_runtime_host
 
 
-def _get_stream_bus(target_app: FastAPI | None = None) -> StreamBus:
-    return cast(StreamBus, _runtime_context(target_app).stream_bus)
-
-
 def _get_engine(target_app: FastAPI | None = None) -> Any:
     return _runtime_context(target_app).engine
 
@@ -777,12 +772,7 @@ v1_router.include_router(
 )
 v1_router.include_router(
     build_sessions_router(
-        interaction_manager_getter=lambda: _get_interaction_manager(),
-        extension_manager_getter=lambda: _get_extension_manager(),
-        is_builtin_workload=lambda workload_id: is_builtin_workload(workload_id),
-        validate_builtin_workload_start=lambda **kwargs: validate_builtin_workload_start(**kwargs),
-        run_builtin_workload=lambda **kwargs: run_builtin_workload(**kwargs),
-        commit_intent_factory=lambda reason: CommitIntent(type="decision", ref=f"fail_closed:{reason}"),
+        turn_service_getter=lambda: _runtime_context().interactions(),
         workspace_root_getter=lambda: _project_root(),
         cancellation_service_getter=lambda: _runtime_context().interaction_cancellation(),
     )
@@ -1320,7 +1310,7 @@ async def get_session_detail(session_id: str) -> Any:
     runtime_engine = _get_engine()
     session = await _invoke_async_method(runtime_engine.sessions, invocation, "session")
     if not session:
-        interaction_session = await _get_interaction_manager().get_session_detail(session_id)
+        interaction_session = await _get_interaction_manager().queries.get_session_detail(session_id)
         if interaction_session is not None:
             return interaction_session
         raise HTTPException(**runtime_node.session_detail_not_found_error(session_id))
@@ -1333,7 +1323,7 @@ async def get_session_status(session_id: str) -> dict[str, Any]:
     runtime_engine = _get_engine()
     session = await runtime_engine.sessions.get_session(session_id)
     if not session:
-        interaction_status = await _get_interaction_manager().get_session_status(session_id)
+        interaction_status = await _get_interaction_manager().queries.get_session_status(session_id)
         if interaction_status is not None:
             return cast(dict[str, Any], interaction_status)
         raise HTTPException(**runtime_node.session_detail_not_found_error(session_id))
@@ -1394,7 +1384,7 @@ async def replay_session_turn(
     session = await runtime_engine.sessions.get_session(session_id)
     if not issue_id and turn_index is None:
         if run_record is None and session is None:
-            interaction_timeline = await _get_interaction_manager().get_session_replay_timeline(
+            interaction_timeline = await _get_interaction_manager().queries.get_session_replay_timeline(
                 session_id,
                 role=role,
             )
@@ -1408,7 +1398,7 @@ async def replay_session_turn(
             detail="Both 'issue_id' and 'turn_index' are required for targeted replay.",
         )
     if run_record is None and session is None:
-        interaction_session = await _get_interaction_manager().get_session_detail(session_id)
+        interaction_session = await _get_interaction_manager().queries.get_session_detail(session_id)
         if interaction_session is not None:
             raise HTTPException(
                 status_code=422,
@@ -1434,7 +1424,7 @@ async def get_session_snapshot(session_id: str) -> Any:
     runtime_engine = _get_engine()
     snapshot = await _invoke_async_method(runtime_engine.snapshots, invocation, "snapshot")
     if not snapshot:
-        interaction_snapshot = await _get_interaction_manager().get_session_snapshot(session_id)
+        interaction_snapshot = await _get_interaction_manager().queries.get_session_snapshot(session_id)
         if interaction_snapshot is not None:
             return interaction_snapshot
         raise HTTPException(**runtime_node.session_snapshot_not_found_error(session_id))
@@ -1675,7 +1665,6 @@ def _register_streaming_transport(target_app: FastAPI) -> None:
         authentication_getter=lambda: _runtime_context(target_app).authentication,
         runtime_host_getter=lambda: _get_api_runtime_host(target_app),
         interaction_manager_getter=lambda: _get_interaction_manager(target_app),
-        stream_bus_getter=lambda: _get_stream_bus(target_app),
         runtime_state_getter=lambda: _get_runtime_state(target_app),
         events_getter=lambda: _runtime_context(target_app).events,
     )

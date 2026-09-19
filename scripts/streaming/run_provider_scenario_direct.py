@@ -15,17 +15,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.streaming import (
-    CommitOrchestrator,
-    InteractionManager,
-    StreamBus,
-    StreamBusConfig,
-    StreamLawChecker,
-    StreamLawViolation,
-)
-from orket.streaming.contracts import StreamEventType
-from orket.workloads import run_builtin_workload
-from scripts.streaming.provider_identity import provider_identity as _provider_identity
 
 
 def _parse_payload(path: Path) -> dict[str, Any]:
@@ -102,7 +91,29 @@ def _stream_digest(events: list[dict[str, Any]]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+async def _settle_scenario(manager, session_id, queue, runner, *, cancel: bool) -> None:
+    from orket.adapters.execution.owned_io import run_owned_io
+
+    async def operation():
+        await manager.bus.unsubscribe(session_id, queue)
+        if cancel:
+            runner.cancel()
+        result, = await asyncio.gather(runner, return_exceptions=True)
+        await manager.close(session_id)
+        if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
+            raise result
+
+    await run_owned_io(operation, label="streaming-scenario-cleanup", preserve_failure=True)
+
+
 async def _run(scenario_path: Path, timeout_s: float) -> int:
+    from orket.application.interactions.commit import CommitOrchestrator
+    from orket.application.interactions.manager import InteractionManager
+    from orket.core.contracts.interaction_stream import StreamEventType
+    from orket.streaming import StreamBus, StreamBusConfig, StreamLawChecker, StreamLawViolation
+    from orket.workloads import run_builtin_workload
+    from scripts.streaming.provider_identity import provider_identity as _provider_identity
+
     scenario = _parse_payload(scenario_path)
     scenario_id = str(scenario.get("scenario_id") or scenario_path.stem)
     run_id = f"run-{uuid4().hex[:12]}"
@@ -118,7 +129,7 @@ async def _run(scenario_path: Path, timeout_s: float) -> int:
     require_commit_final = bool(expected.get("require_commit_final", False))
     min_token_deltas = _int(expected.get("min_token_deltas"), 0)
 
-    manager = InteractionManager(
+    manager = InteractionManager(stream_enabled=True,
         bus=StreamBus(
             StreamBusConfig(
                 best_effort_max_events_per_turn=_int(os.getenv("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN"), 256),
@@ -131,7 +142,7 @@ async def _run(scenario_path: Path, timeout_s: float) -> int:
     )
 
     session_id = await manager.start({})
-    queue = await manager.subscribe(session_id)
+    queue = await manager.bus.subscribe(session_id)
     turn_id = await manager.begin_turn(session_id, input_payload=input_config, turn_params=turn_params)
     context = await manager.create_context(session_id, turn_id)
     await queue.get()  # turn_accepted
@@ -147,7 +158,7 @@ async def _run(scenario_path: Path, timeout_s: float) -> int:
             await manager.cancel(turn_id)
         await manager.finalize(session_id, turn_id)
 
-    asyncio.create_task(_runner())
+    runner = asyncio.create_task(_runner())
 
     events: list[dict[str, Any]] = []
     violations: list[dict[str, Any]] = []
@@ -159,64 +170,68 @@ async def _run(scenario_path: Path, timeout_s: float) -> int:
     cancel_issued = False
     commit_outcome = None
 
-    while True:
-        if (time.time() - started) > timeout_s:
-            violations.append(
-                {
-                    "code": "E_TIMEOUT",
-                    "message": f"timeout waiting for {'commit_final' if require_commit_final else 'terminal'} after {timeout_s}s",
-                    "kind": "expectation",
-                }
-            )
-            break
-        try:
-            event = await asyncio.wait_for(queue.get(), timeout=0.5)
-        except asyncio.TimeoutError:
-            continue
-
-        row = event.model_dump(mode="json")
-        required_fields = {"schema_v", "session_id", "turn_id", "seq", "event_type", "payload"}
-        missing = sorted(field for field in required_fields if field not in row)
-        if missing:
-            violations.append(
-                {
-                    "code": "E_ENVELOPE_FIELDS",
-                    "message": f"missing canonical envelope fields: {', '.join(missing)}",
-                    "kind": "law",
-                }
-            )
-            break
-
-        events.append(row)
-        event_type = str(row.get("event_type"))
-        seen_counts[event_type] = seen_counts.get(event_type, 0) + 1
-        print(
-            f"seq={row.get('seq')} type={event_type} mono_ts_ms={row.get('mono_ts_ms')} "
-            f"keys={sorted((row.get('payload') or {}).keys())}"
-        )
-
-        try:
-            checker.consume(row)
-        except StreamLawViolation as exc:
-            violations.append({"code": "E_STREAM_LAW", "message": str(exc), "kind": "law"})
-            break
-
-        if cancel_at and not cancel_issued:
-            trigger_type = str(cancel_at.get("event_type") or "")
-            trigger_count = _int(cancel_at.get("after_count"), 1)
-            if event_type == trigger_type and seen_counts[event_type] >= trigger_count:
-                await manager.cancel(turn_id)
-                cancel_issued = True
-
-        if event_type in {StreamEventType.TURN_FINAL.value, StreamEventType.TURN_INTERRUPTED.value}:
-            terminal = event_type
-            if not require_commit_final:
+    try:
+        while True:
+            if (time.time() - started) > timeout_s:
+                violations.append(
+                    {
+                        "code": "E_TIMEOUT",
+                        "message": f"timeout waiting for {'commit_final' if require_commit_final else 'terminal'} after {timeout_s}s",
+                        "kind": "expectation",
+                    }
+                )
                 break
-        if event_type == StreamEventType.COMMIT_FINAL.value:
-            commit_final = row
-            payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
-            commit_outcome = str(payload.get("commit_outcome") or "") or None
-            break
+            try:
+                event = await asyncio.wait_for(queue.get(), timeout=0.5)
+            except TimeoutError:
+                continue
+
+            row = event.model_dump(mode="json")
+            required_fields = {"schema_v", "session_id", "turn_id", "seq", "event_type", "payload"}
+            missing = sorted(field for field in required_fields if field not in row)
+            if missing:
+                violations.append(
+                    {
+                        "code": "E_ENVELOPE_FIELDS",
+                        "message": f"missing canonical envelope fields: {', '.join(missing)}",
+                        "kind": "law",
+                    }
+                )
+                break
+
+            events.append(row)
+            event_type = str(row.get("event_type"))
+            seen_counts[event_type] = seen_counts.get(event_type, 0) + 1
+            print(
+                f"seq={row.get('seq')} type={event_type} mono_ts_ms={row.get('mono_ts_ms')} "
+                f"keys={sorted((row.get('payload') or {}).keys())}"
+            )
+
+            try:
+                checker.consume(row)
+            except StreamLawViolation as exc:
+                violations.append({"code": "E_STREAM_LAW", "message": str(exc), "kind": "law"})
+                break
+
+            if cancel_at and not cancel_issued:
+                trigger_type = str(cancel_at.get("event_type") or "")
+                trigger_count = _int(cancel_at.get("after_count"), 1)
+                if event_type == trigger_type and seen_counts[event_type] >= trigger_count:
+                    await manager.cancel(turn_id)
+                    cancel_issued = True
+
+            if event_type in {StreamEventType.TURN_FINAL.value, StreamEventType.TURN_INTERRUPTED.value}:
+                terminal = event_type
+                if not require_commit_final:
+                    break
+            if event_type == StreamEventType.COMMIT_FINAL.value:
+                commit_final = row
+                payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
+                commit_outcome = str(payload.get("commit_outcome") or "") or None
+                break
+
+    finally:
+        await _settle_scenario(manager, session_id, queue, runner, cancel=terminal is None)
 
     token_delta_count = sum(1 for row in events if str(row.get("event_type")) == StreamEventType.TOKEN_DELTA.value)
     if min_token_deltas and token_delta_count < min_token_deltas:

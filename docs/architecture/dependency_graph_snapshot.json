@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-19T10:45:42.359274+00:00",
+  "generated_at": "2026-09-19T12:26:47.943992+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -361,7 +361,7 @@
       },
       "orket.adapters.storage.crash_log_store": {
         "path": "orket/adapters/storage/crash_log_store.py",
-        "sha256": "dd52f8913a55147eea3542c6213a1a6bce6676842ad9f8481ccf322ac2218e5e"
+        "sha256": "0630c0067501e3100b3e4129e507b23dc157fc1f05aae6e6060d7645199379df"
       },
       "orket.adapters.storage.driver_resource_store": {
         "path": "orket/adapters/storage/driver_resource_store.py",
@@ -390,6 +390,10 @@
       "orket.adapters.storage.extension_template_store": {
         "path": "orket/adapters/storage/extension_template_store.py",
         "sha256": "76edcbcf36d94d65381781615dd5370d6094b1a7e91dab86e72c1960dc0a53bf"
+      },
+      "orket.adapters.storage.file_admission": {
+        "path": "orket/adapters/storage/file_admission.py",
+        "sha256": "9721687e2a27493a6e7a2eace05964c1d7054d14d5c253049fe94c17ddc46a2f"
       },
       "orket.adapters.storage.gitea_http_client": {
         "path": "orket/adapters/storage/gitea_http_client.py",
@@ -434,6 +438,10 @@
       "orket.adapters.storage.governed_agent_wake_repository_support": {
         "path": "orket/adapters/storage/governed_agent_wake_repository_support.py",
         "sha256": "ac70d4f730f2f4150fed1aae91deb71bc082ad62da7aabc3642f748a4fc132bc"
+      },
+      "orket.adapters.storage.interaction_artifact_store": {
+        "path": "orket/adapters/storage/interaction_artifact_store.py",
+        "sha256": "74582efbb6cc4864b8aeb418ff972da5c4821e744e517aa743dbcca3142c2145"
       },
       "orket.adapters.storage.local_file_lock": {
         "path": "orket/adapters/storage/local_file_lock.py",
@@ -655,6 +663,46 @@
         "path": "orket/application/__init__.py",
         "sha256": "6c25dd5d53d98b10fdd667c58c72cf29c6764a24f2cfa679333a622ffc65ac80"
       },
+      "orket.application.interactions.__init__": {
+        "path": "orket/application/interactions/__init__.py",
+        "sha256": "c52b3c895ca15131d9ad078605e55e00434dfbb3e6d9dda02988a25113766f7d"
+      },
+      "orket.application.interactions.cancellation": {
+        "path": "orket/application/interactions/cancellation.py",
+        "sha256": "4d18a002089074b90d9858fb0cf16529571aa8953dedfa223f8048414d3ca060"
+      },
+      "orket.application.interactions.commands": {
+        "path": "orket/application/interactions/commands.py",
+        "sha256": "82b39e38f2eae8042c0891cc6ed2434042b121231cc09768e93fead2e08e438c"
+      },
+      "orket.application.interactions.commit": {
+        "path": "orket/application/interactions/commit.py",
+        "sha256": "f78c48ad693ad79f2c568551572fb3f770bb454aeb0882e7bf40f0cfe036dae4"
+      },
+      "orket.application.interactions.context": {
+        "path": "orket/application/interactions/context.py",
+        "sha256": "bdb9efb8015fe17831140bcd26402eed85b1dfb8dbdc9cb9ad62789816e3ecb6"
+      },
+      "orket.application.interactions.finalization": {
+        "path": "orket/application/interactions/finalization.py",
+        "sha256": "a8139d244bc0a1c5b733b4b3db872cb43618436246560720226f3a965f3bdd3a"
+      },
+      "orket.application.interactions.manager": {
+        "path": "orket/application/interactions/manager.py",
+        "sha256": "2c07946a30bfc854fc5b1cbaeedbc3c7d4343672f887f323ce5b17fe54366023"
+      },
+      "orket.application.interactions.queries": {
+        "path": "orket/application/interactions/queries.py",
+        "sha256": "498efb7c70f494b6a9094e66ce18b86f84b27d558faf0dc237649b8a3d9d9b23"
+      },
+      "orket.application.interactions.state": {
+        "path": "orket/application/interactions/state.py",
+        "sha256": "20092cf58dff7c48f716e11170c8bb80daf7669c8f2ba5bf813c339b0e01b45a"
+      },
+      "orket.application.interactions.streams": {
+        "path": "orket/application/interactions/streams.py",
+        "sha256": "b6db29a17e30b7d46bc8cc3b504702eeeb6a85836d87f2f70c7a96a7fe1647cc"
+      },
       "orket.application.middleware.__init__": {
         "path": "orket/application/middleware/__init__.py",
         "sha256": "fdf5482c69ebe30c1dec37e5f85313457c2459cfffb6c95d3c06de9c51ccd22f"
@@ -725,11 +773,11 @@
       },
       "orket.application.services.api_runtime_composition": {
         "path": "orket/application/services/api_runtime_composition.py",
-        "sha256": "de48c82c06c9542197deb96e3e1722240ae210b572ce1527f870aac0d99bb7e0"
+        "sha256": "baa7085294e8794c783b3ae1d3da85b6c039fc83d16390a9b4b7e65818c585dd"
       },
       "orket.application.services.api_runtime_container": {
         "path": "orket/application/services/api_runtime_container.py",
-        "sha256": "480da18f65255746e302f60273364cf903636927f91d1afe2805755c05a6acfd"
+        "sha256": "5080b587528dcf575b89f940f1198ccb961f6883f68798b95af7585910975890"
       },
       "orket.application.services.api_runtime_host_service": {
         "path": "orket/application/services/api_runtime_host_service.py",
@@ -1241,7 +1289,7 @@
       },
       "orket.application.services.interaction_cancellation_service": {
         "path": "orket/application/services/interaction_cancellation_service.py",
-        "sha256": "eec16c793587262744951f911cf12258f33cec655a581a130f48532996df7f97"
+        "sha256": "3be1d41b6abd241d34e66a9d9fab6f3cd4b5dc1f873e60474f38e8b90f71f3a3"
       },
       "orket.application.services.kernel_action_control_plane_failure": {
         "path": "orket/application/services/kernel_action_control_plane_failure.py",
@@ -2139,6 +2187,14 @@
         "path": "orket/core/contracts/interaction_cancellation.py",
         "sha256": "77126c1bda7b14f70259cfee0b669e2f3d6e8d9436c4ac8164b84eb0ea27e897"
       },
+      "orket.core.contracts.interaction_context": {
+        "path": "orket/core/contracts/interaction_context.py",
+        "sha256": "dc122f92facfe66dceb34b7aa4be7dd4d8d2005bc736120c5acfe4bddecf1383"
+      },
+      "orket.core.contracts.interaction_stream": {
+        "path": "orket/core/contracts/interaction_stream.py",
+        "sha256": "52a8e9c6d86d346246de569231b84d9d83af4e38a6ed00e2b91bc9289367dbc9"
+      },
       "orket.core.contracts.invocation_timing": {
         "path": "orket/core/contracts/invocation_timing.py",
         "sha256": "cc026915c5da04775ac060fa78cb13594312bf4b6f688b61195b9f8b0527d3fc"
@@ -2609,7 +2665,7 @@
       },
       "orket.extensions.workload_executor_support": {
         "path": "orket/extensions/workload_executor_support.py",
-        "sha256": "bbd63de690a45e234e4c813a48943b24bea87d82e493af898e47132f12a46ab2"
+        "sha256": "f08e55ee474b5decd35f42cb4fe848820c8f858d73e6844ccad52dc2a12e0880"
       },
       "orket.extensions.workload_loader": {
         "path": "orket/extensions/workload_loader.py",
@@ -2621,7 +2677,7 @@
       },
       "orket.interfaces.api": {
         "path": "orket/interfaces/api.py",
-        "sha256": "2ee956961b775e6ddde0decdda97796e6c0825e068ae8a99fc44e5cd83e9bcd1"
+        "sha256": "db18bfc371c0cf35a8d0fdba52b933014f4aa2da217d53b1189f7ee454515eac"
       },
       "orket.interfaces.api_app_context_middleware": {
         "path": "orket/interfaces/api_app_context_middleware.py",
@@ -2741,7 +2797,7 @@
       },
       "orket.interfaces.routers.sessions": {
         "path": "orket/interfaces/routers/sessions.py",
-        "sha256": "d6820d418c92ac2fcec53cb23c01eec4f9d1c5413ae23be2990bdd0f3ae97258"
+        "sha256": "d7b6ed7326348082922b16d6985929a01f9764d96cc4c565998727facab3e33d"
       },
       "orket.interfaces.routers.settings": {
         "path": "orket/interfaces/routers/settings.py",
@@ -2749,7 +2805,7 @@
       },
       "orket.interfaces.routers.streaming": {
         "path": "orket/interfaces/routers/streaming.py",
-        "sha256": "a85eb401fd8f3283efa55d02a7cda09689459abb94e509ad1c889884656ed17c"
+        "sha256": "3e9606b233e461d93c6c34679b317bd026dc6c95bd1f44d237df15faff5cc08b"
       },
       "orket.interfaces.routers.system": {
         "path": "orket/interfaces/routers/system.py",
@@ -3245,7 +3301,7 @@
       },
       "orket.rulesim.workload": {
         "path": "orket/rulesim/workload.py",
-        "sha256": "b8e1ac15e55de372d5937c3b8d2a1777975de1c3676ddfbcba6497a729259786"
+        "sha256": "7f184da0bc9adc47a6912c071d5dd7acf72eb3affc8c60ce333b86b8b1b1680f"
       },
       "orket.runtime.__init__": {
         "path": "orket/runtime/__init__.py",
@@ -4301,35 +4357,23 @@
       },
       "orket.streaming.__init__": {
         "path": "orket/streaming/__init__.py",
-        "sha256": "979a7262a9f3735bad08dcd631cbb9cbc2c2e3ce55a664be3a9243b1de625d70"
+        "sha256": "451f49608a123c98a0975e67649d0848c6134bc7be5594cad31fb5913c7cbbbc"
       },
       "orket.streaming.bus": {
         "path": "orket/streaming/bus.py",
-        "sha256": "0da541ac6a33ed8c0d84a3038e829f3a80722b4e8660b36b2b264b46a8842e3e"
+        "sha256": "4a3329b3b45be0f15fbb0f27cbc17edc57a3fd12e1cdb8af1f26b2298f326e43"
       },
-      "orket.streaming.contracts": {
-        "path": "orket/streaming/contracts.py",
-        "sha256": "2ccbbbfb752043f65787946fade2595414d8ae4118006a91f921329d8a58b042"
-      },
-      "orket.streaming.interaction_cancellation": {
-        "path": "orket/streaming/interaction_cancellation.py",
-        "sha256": "fbe0071a7babafbb4a4225c25eaea203eb524b2d41cace376f3300d1eac35c2a"
+      "orket.streaming.clocks": {
+        "path": "orket/streaming/clocks.py",
+        "sha256": "b75da6aad75f51c0bb620661742631acaabaffe8cb147173552f4692276ffcee"
       },
       "orket.streaming.law_checker": {
         "path": "orket/streaming/law_checker.py",
-        "sha256": "62ca20e5108627ffe620d955d609368dcd2bcd0d2ed12fe5bbebb192ac95f1f1"
-      },
-      "orket.streaming.manager": {
-        "path": "orket/streaming/manager.py",
-        "sha256": "e3b47203dd3e40e32f9e8eff1d1fb3710bf4f3f3d3dcd03e247afe63175d8b03"
+        "sha256": "0ea146c6da6e30da75e875c075bfbb17964a8edd103e2dff9e0aea6e07a28b33"
       },
       "orket.streaming.model_provider": {
         "path": "orket/streaming/model_provider.py",
         "sha256": "c5baca7bc1599f797d319fac90ff06130eaa3142dc493ab014576b442bdbacab"
-      },
-      "orket.streaming.session_context": {
-        "path": "orket/streaming/session_context.py",
-        "sha256": "dc122f92facfe66dceb34b7aa4be7dd4d8d2005bc736120c5acfe4bddecf1383"
       },
       "orket.time_utils": {
         "path": "orket/time_utils.py",
@@ -4357,23 +4401,23 @@
       },
       "orket.workloads.marshaller_v0": {
         "path": "orket/workloads/marshaller_v0.py",
-        "sha256": "62ba8c9106a0139882a945825af67a5843fd390cd4f15732f633964f73def67f"
+        "sha256": "4f06c918a97e19a672023993b85a3aa296984ebf73d755458a5bc3238fc70bab"
       },
       "orket.workloads.model_stream_v1": {
         "path": "orket/workloads/model_stream_v1.py",
-        "sha256": "840144b6e44dac5da42286b66adea318126dbf8b3d3f573ac8ea6bfb01d5f796"
+        "sha256": "dda1458805c8240787990f5e499c7d70d132978e457c045e4b04b40fccd5523a"
       },
       "orket.workloads.registry": {
         "path": "orket/workloads/registry.py",
-        "sha256": "7b37e8491989f3b0a52dc27cc33cb1c499f613446a40eec4466a1278d2984b2d"
+        "sha256": "ee0c7fa532f5345082f2d9783747358190a10103e28f3dd26b802823eb1568a4"
       },
       "orket.workloads.rulesim_v0": {
         "path": "orket/workloads/rulesim_v0.py",
-        "sha256": "26f749703783bd0f03784049c25279cd65ae7567d20f155e6664e3bc7bf6401a"
+        "sha256": "085b59ecf889fc1ccc567864c1f6644fa1b5757d4bf9920aca6eea191a1a6b3e"
       },
       "orket.workloads.stream_test_v1": {
         "path": "orket/workloads/stream_test_v1.py",
-        "sha256": "d65c1c241056a5b4b6c67e41f537e3808fad2eb68b4705238f1759282a65ac46"
+        "sha256": "7f9ecd2cc3bd6c7c84b4a9c45a68b493623b987e93446e9cf969f954bd415297"
       }
     },
     "edges": [
@@ -5263,6 +5307,13 @@
         "source": "orket.adapters.storage.crash_log_store",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/adapters/storage/crash_log_store.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.crash_log_store",
+        "target": "orket.adapters.storage.file_admission",
+        "path": "orket/adapters/storage/crash_log_store.py",
         "line": 9,
         "kind": "from"
       },
@@ -5607,6 +5658,34 @@
         "target": "orket.core.contracts.governed_agent_wake_records",
         "path": "orket/adapters/storage/governed_agent_wake_repository_support.py",
         "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.interaction_artifact_store",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/adapters/storage/interaction_artifact_store.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.interaction_artifact_store",
+        "target": "orket.adapters.storage.file_admission",
+        "path": "orket/adapters/storage/interaction_artifact_store.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.interaction_artifact_store",
+        "target": "orket.adapters.storage.local_file_lock",
+        "path": "orket/adapters/storage/interaction_artifact_store.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.interaction_artifact_store",
+        "target": "orket.core.contracts.interaction_stream",
+        "path": "orket/adapters/storage/interaction_artifact_store.py",
+        "line": 12,
         "kind": "from"
       },
       {
@@ -6856,6 +6935,223 @@
         "kind": "from"
       },
       {
+        "source": "orket.application.interactions.cancellation",
+        "target": "orket.core.contracts.interaction_cancellation",
+        "path": "orket/application/interactions/cancellation.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.cancellation",
+        "target": "orket.core.contracts.interaction_stream",
+        "path": "orket/application/interactions/cancellation.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.cancellation",
+        "target": "orket.streaming.bus",
+        "path": "orket/application/interactions/cancellation.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.commands",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/interactions/commands.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.commands",
+        "target": "orket.workloads.__init__",
+        "path": "orket/application/interactions/commands.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.commands",
+        "target": "orket.application.interactions.manager",
+        "path": "orket/application/interactions/commands.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.commit",
+        "target": "orket.adapters.storage.interaction_artifact_store",
+        "path": "orket/application/interactions/commit.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.commit",
+        "target": "orket.core.contracts.interaction_stream",
+        "path": "orket/application/interactions/commit.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.context",
+        "target": "orket.core.contracts.interaction_context",
+        "path": "orket/application/interactions/context.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.context",
+        "target": "orket.core.contracts.interaction_stream",
+        "path": "orket/application/interactions/context.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.finalization",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/interactions/finalization.py",
+        "line": 5,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.finalization",
+        "target": "orket.core.contracts.interaction_stream",
+        "path": "orket/application/interactions/finalization.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.finalization",
+        "target": "orket.application.interactions.state",
+        "path": "orket/application/interactions/finalization.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/interactions/manager.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/interactions/manager.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.core.contracts.interaction_cancellation",
+        "path": "orket/application/interactions/manager.py",
+        "line": 13,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.core.contracts.interaction_stream",
+        "path": "orket/application/interactions/manager.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.streaming.bus",
+        "path": "orket/application/interactions/manager.py",
+        "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.application.interactions.cancellation",
+        "path": "orket/application/interactions/manager.py",
+        "line": 17,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.application.interactions.commit",
+        "path": "orket/application/interactions/manager.py",
+        "line": 18,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.application.interactions.context",
+        "path": "orket/application/interactions/manager.py",
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.application.interactions.finalization",
+        "path": "orket/application/interactions/manager.py",
+        "line": 20,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.application.interactions.queries",
+        "path": "orket/application/interactions/manager.py",
+        "line": 21,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.application.interactions.state",
+        "path": "orket/application/interactions/manager.py",
+        "line": 22,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.manager",
+        "target": "orket.application.interactions.streams",
+        "path": "orket/application/interactions/manager.py",
+        "line": 23,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.queries",
+        "target": "orket.core.contracts.interaction_context",
+        "path": "orket/application/interactions/queries.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.queries",
+        "target": "orket.application.interactions.state",
+        "path": "orket/application/interactions/queries.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.state",
+        "target": "orket.core.contracts.interaction_context",
+        "path": "orket/application/interactions/state.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.state",
+        "target": "orket.core.contracts.interaction_stream",
+        "path": "orket/application/interactions/state.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.streams",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/interactions/streams.py",
+        "line": 4,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.interactions.streams",
+        "target": "orket.streaming.bus",
+        "path": "orket/application/interactions/streams.py",
+        "line": 5,
+        "kind": "from"
+      },
+      {
         "source": "orket.application.middleware.__init__",
         "target": "orket.application.middleware.hooks",
         "path": "orket/application/middleware/__init__.py",
@@ -7249,149 +7545,170 @@
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.api_authentication_service",
+        "target": "orket.application.interactions.commit",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.api_runtime_container",
+        "target": "orket.application.interactions.manager",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.api_runtime_host_service",
+        "target": "orket.application.services.api_authentication_service",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.api_system_query_service",
+        "target": "orket.application.services.api_runtime_container",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.decision_node_registry",
+        "target": "orket.application.services.api_runtime_host_service",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.extension_runtime_service",
+        "target": "orket.application.services.api_system_query_service",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.governed_agent_api_composition",
+        "target": "orket.application.services.decision_node_registry",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
+        "target": "orket.application.services.extension_runtime_service",
+        "path": "orket/application/services/api_runtime_composition.py",
+        "line": 18,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.api_runtime_composition",
+        "target": "orket.application.services.governed_agent_api_composition",
+        "path": "orket/application/services/api_runtime_composition.py",
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.api_runtime_composition",
         "target": "orket.application.services.model_selection_service",
-        "path": "orket/application/services/api_runtime_composition.py",
-        "line": 20,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.outward_approval_service",
-        "path": "orket/application/services/api_runtime_composition.py",
-        "line": 21,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.outward_ledger_service",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.outward_run_execution_service",
+        "target": "orket.application.services.outward_approval_service",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.outward_run_inspection_service",
+        "target": "orket.application.services.outward_ledger_service",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.outward_run_service",
+        "target": "orket.application.services.outward_run_execution_service",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 25,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.application.services.runtime_input_service",
+        "target": "orket.application.services.outward_run_inspection_service",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 26,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.extensions.__init__",
+        "target": "orket.application.services.outward_run_service",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 27,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.runtime_paths",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.state",
+        "target": "orket.extensions.__init__",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 29,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_composition",
-        "target": "orket.streaming.__init__",
+        "target": "orket.runtime_paths",
         "path": "orket/application/services/api_runtime_composition.py",
         "line": 30,
         "kind": "from"
       },
       {
+        "source": "orket.application.services.api_runtime_composition",
+        "target": "orket.state",
+        "path": "orket/application/services/api_runtime_composition.py",
+        "line": 31,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.api_runtime_composition",
+        "target": "orket.streaming.__init__",
+        "path": "orket/application/services/api_runtime_composition.py",
+        "line": 32,
+        "kind": "from"
+      },
+      {
         "source": "orket.application.services.api_runtime_container",
-        "target": "orket.application.services.api_event_service",
+        "target": "orket.application.interactions.commands",
         "path": "orket/application/services/api_runtime_container.py",
         "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_container",
-        "target": "orket.application.services.application_runtime_lifetime",
+        "target": "orket.application.services.api_event_service",
         "path": "orket/application/services/api_runtime_container.py",
         "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.application.services.api_runtime_container",
+        "target": "orket.application.services.application_runtime_lifetime",
+        "path": "orket/application/services/api_runtime_container.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.api_runtime_container",
         "target": "orket.application.services.interaction_cancellation_service",
         "path": "orket/application/services/api_runtime_container.py",
-        "line": 13,
+        "line": 14,
         "kind": "from"
       },
       {
@@ -11512,21 +11829,21 @@
       },
       {
         "source": "orket.application.services.interaction_cancellation_service",
-        "target": "orket.application.services.control_plane_publication_service",
+        "target": "orket.application.interactions.manager",
         "path": "orket/application/services/interaction_cancellation_service.py",
         "line": 6,
         "kind": "from"
       },
       {
         "source": "orket.application.services.interaction_cancellation_service",
-        "target": "orket.core.domain.__init__",
+        "target": "orket.application.services.control_plane_publication_service",
         "path": "orket/application/services/interaction_cancellation_service.py",
         "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.application.services.interaction_cancellation_service",
-        "target": "orket.streaming.manager",
+        "target": "orket.core.domain.__init__",
         "path": "orket/application/services/interaction_cancellation_service.py",
         "line": 8,
         "kind": "from"
@@ -20362,7 +20679,14 @@
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.application.services.extension_workload_control_plane_service",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 11,
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.extensions.workload_executor_support",
+        "target": "orket.core.contracts.interaction_stream",
+        "path": "orket/extensions/workload_executor_support.py",
+        "line": 14,
         "kind": "from"
       },
       {
@@ -20374,14 +20698,14 @@
       },
       {
         "source": "orket.extensions.workload_executor_support",
-        "target": "orket.streaming.contracts",
+        "target": "orket.extensions.contracts",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 16,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
-        "target": "orket.extensions.contracts",
+        "target": "orket.extensions.governed_identity",
         "path": "orket/extensions/workload_executor_support.py",
         "line": 18,
         "kind": "from"
@@ -20390,35 +20714,35 @@
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.governed_identity",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 19,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.models",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 26,
+        "line": 27,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.runtime",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 27,
+        "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.sdk_workload_runner",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 28,
+        "line": 29,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.workload_artifacts",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 29,
+        "line": 30,
         "kind": "from"
       },
       {
@@ -20444,198 +20768,191 @@
       },
       {
         "source": "orket.interfaces.api",
-        "target": "orket.application.services.api_runtime_composition",
+        "target": "orket.application.interactions.manager",
         "path": "orket/interfaces/api.py",
         "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
-        "target": "orket.application.services.api_runtime_host_service",
+        "target": "orket.application.services.api_runtime_composition",
         "path": "orket/interfaces/api.py",
         "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
-        "target": "orket.application.services.api_startup_service",
+        "target": "orket.application.services.api_runtime_host_service",
         "path": "orket/interfaces/api.py",
         "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
-        "target": "orket.application.services.execution_graph_service",
+        "target": "orket.application.services.api_startup_service",
         "path": "orket/interfaces/api.py",
         "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
+        "target": "orket.application.services.execution_graph_service",
+        "path": "orket/interfaces/api.py",
+        "line": 23,
+        "kind": "from"
+      },
+      {
+        "source": "orket.interfaces.api",
         "target": "orket.application.services.outward_run_execution_service",
         "path": "orket/interfaces/api.py",
-        "line": 27,
+        "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.outward_run_inspection_service",
         "path": "orket/interfaces/api.py",
-        "line": 30,
+        "line": 31,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.outward_run_service",
         "path": "orket/interfaces/api.py",
-        "line": 33,
+        "line": 34,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.run_ledger_summary_projection",
         "path": "orket/interfaces/api.py",
-        "line": 37,
+        "line": 38,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.runtime_policy",
         "path": "orket/interfaces/api.py",
-        "line": 40,
+        "line": 41,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.api_app_context_middleware",
         "path": "orket/interfaces/api.py",
-        "line": 61,
+        "line": 62,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.api_runtime_context",
         "path": "orket/interfaces/api.py",
-        "line": 62,
+        "line": 63,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.card_authoring",
         "path": "orket/interfaces/api.py",
-        "line": 67,
+        "line": 68,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.cards",
         "path": "orket/interfaces/api.py",
-        "line": 68,
+        "line": 69,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.extension_runtime",
         "path": "orket/interfaces/api.py",
-        "line": 69,
+        "line": 70,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.flows",
         "path": "orket/interfaces/api.py",
-        "line": 70,
+        "line": 71,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.governed_agents",
         "path": "orket/interfaces/api.py",
-        "line": 71,
+        "line": 72,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.kernel",
         "path": "orket/interfaces/api.py",
-        "line": 72,
+        "line": 73,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.outward_ledger",
         "path": "orket/interfaces/api.py",
-        "line": 73,
+        "line": 74,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.runs",
         "path": "orket/interfaces/api.py",
-        "line": 74,
+        "line": 75,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.sessions",
         "path": "orket/interfaces/api.py",
-        "line": 75,
+        "line": 76,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.settings",
         "path": "orket/interfaces/api.py",
-        "line": 76,
+        "line": 77,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.streaming",
         "path": "orket/interfaces/api.py",
-        "line": 77,
+        "line": 78,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.system",
         "path": "orket/interfaces/api.py",
-        "line": 78,
+        "line": 79,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.kernel.v1.outbound_policy_gate",
         "path": "orket/interfaces/api.py",
-        "line": 79,
+        "line": 80,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.runtime.cors_config",
         "path": "orket/interfaces/api.py",
-        "line": 84,
+        "line": 85,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.settings",
         "path": "orket/interfaces/api.py",
-        "line": 85,
-        "kind": "from"
-      },
-      {
-        "source": "orket.interfaces.api",
-        "target": "orket.streaming.__init__",
-        "path": "orket/interfaces/api.py",
         "line": 86,
-        "kind": "from"
-      },
-      {
-        "source": "orket.interfaces.api",
-        "target": "orket.workloads.__init__",
-        "path": "orket/interfaces/api.py",
-        "line": 87,
         "kind": "from"
       },
       {
@@ -21151,37 +21468,44 @@
       },
       {
         "source": "orket.interfaces.routers.sessions",
+        "target": "orket.application.interactions.commands",
+        "path": "orket/interfaces/routers/sessions.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.interfaces.routers.sessions",
         "target": "orket.application.services.interaction_cancellation_service",
         "path": "orket/interfaces/routers/sessions.py",
-        "line": 12,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.routers.sessions",
         "target": "orket.application.services.protocol_replay_service",
         "path": "orket/interfaces/routers/sessions.py",
-        "line": 18,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.routers.sessions",
         "target": "orket.interfaces.routers.protocol_queries",
         "path": "orket/interfaces/routers/sessions.py",
-        "line": 19,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.routers.sessions",
         "target": "orket.marshaller.cli",
         "path": "orket/interfaces/routers/sessions.py",
-        "line": 223,
+        "line": 102,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.routers.sessions",
         "target": "orket.marshaller.cli",
         "path": "orket/interfaces/routers/sessions.py",
-        "line": 231,
+        "line": 110,
         "kind": "from"
       },
       {
@@ -22761,14 +23085,14 @@
       },
       {
         "source": "orket.rulesim.workload",
-        "target": "orket.streaming.contracts",
+        "target": "orket.application.interactions.context",
         "path": "orket/rulesim/workload.py",
         "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.rulesim.workload",
-        "target": "orket.streaming.manager",
+        "target": "orket.core.contracts.interaction_stream",
         "path": "orket/rulesim/workload.py",
         "line": 9,
         "kind": "from"
@@ -22789,21 +23113,21 @@
       },
       {
         "source": "orket.rulesim.workload",
-        "target": "orket.rulesim.metrics",
+        "target": "orket.rulesim.contracts",
         "path": "orket/rulesim/workload.py",
         "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.rulesim.workload",
-        "target": "orket.rulesim.runner",
+        "target": "orket.rulesim.metrics",
         "path": "orket/rulesim/workload.py",
         "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.rulesim.workload",
-        "target": "orket.rulesim.contracts",
+        "target": "orket.rulesim.runner",
         "path": "orket/rulesim/workload.py",
         "line": 15,
         "kind": "from"
@@ -27458,107 +27782,37 @@
       },
       {
         "source": "orket.streaming.__init__",
-        "target": "orket.streaming.contracts",
+        "target": "orket.streaming.law_checker",
         "path": "orket/streaming/__init__.py",
         "line": 2,
         "kind": "from"
       },
       {
         "source": "orket.streaming.__init__",
-        "target": "orket.streaming.law_checker",
+        "target": "orket.streaming.model_provider",
         "path": "orket/streaming/__init__.py",
         "line": 3,
         "kind": "from"
       },
       {
-        "source": "orket.streaming.__init__",
-        "target": "orket.streaming.manager",
-        "path": "orket/streaming/__init__.py",
-        "line": 4,
-        "kind": "from"
-      },
-      {
-        "source": "orket.streaming.__init__",
-        "target": "orket.streaming.model_provider",
-        "path": "orket/streaming/__init__.py",
-        "line": 5,
-        "kind": "from"
-      },
-      {
         "source": "orket.streaming.bus",
-        "target": "orket.streaming.contracts",
+        "target": "orket.core.contracts.interaction_stream",
         "path": "orket/streaming/bus.py",
         "line": 9,
         "kind": "from"
       },
       {
-        "source": "orket.streaming.interaction_cancellation",
-        "target": "orket.core.contracts.interaction_cancellation",
-        "path": "orket/streaming/interaction_cancellation.py",
-        "line": 8,
-        "kind": "from"
-      },
-      {
-        "source": "orket.streaming.interaction_cancellation",
-        "target": "orket.streaming.bus",
-        "path": "orket/streaming/interaction_cancellation.py",
-        "line": 10,
-        "kind": "from"
-      },
-      {
-        "source": "orket.streaming.interaction_cancellation",
-        "target": "orket.streaming.contracts",
-        "path": "orket/streaming/interaction_cancellation.py",
-        "line": 11,
-        "kind": "from"
-      },
-      {
-        "source": "orket.streaming.law_checker",
-        "target": "orket.streaming.contracts",
-        "path": "orket/streaming/law_checker.py",
-        "line": 6,
-        "kind": "from"
-      },
-      {
-        "source": "orket.streaming.manager",
-        "target": "orket.adapters.execution.owned_io",
-        "path": "orket/streaming/manager.py",
+        "source": "orket.streaming.bus",
+        "target": "orket.streaming.clocks",
+        "path": "orket/streaming/bus.py",
         "line": 17,
         "kind": "from"
       },
       {
-        "source": "orket.streaming.manager",
-        "target": "orket.core.contracts.interaction_cancellation",
-        "path": "orket/streaming/manager.py",
-        "line": 18,
-        "kind": "from"
-      },
-      {
-        "source": "orket.streaming.manager",
-        "target": "orket.streaming.bus",
-        "path": "orket/streaming/manager.py",
-        "line": 20,
-        "kind": "from"
-      },
-      {
-        "source": "orket.streaming.manager",
-        "target": "orket.streaming.contracts",
-        "path": "orket/streaming/manager.py",
-        "line": 21,
-        "kind": "from"
-      },
-      {
-        "source": "orket.streaming.manager",
-        "target": "orket.streaming.interaction_cancellation",
-        "path": "orket/streaming/manager.py",
-        "line": 22,
-        "kind": "from"
-      },
-      {
-        "source": "orket.streaming.manager",
-        "target": "orket.streaming.session_context",
-        "path": "orket/streaming/manager.py",
-        "line": 23,
+        "source": "orket.streaming.law_checker",
+        "target": "orket.core.contracts.interaction_stream",
+        "path": "orket/streaming/law_checker.py",
+        "line": 6,
         "kind": "from"
       },
       {
@@ -27633,22 +27887,36 @@
       },
       {
         "source": "orket.workloads.marshaller_v0",
-        "target": "orket.marshaller.cli",
+        "target": "orket.application.interactions.context",
         "path": "orket/workloads/marshaller_v0.py",
         "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.workloads.marshaller_v0",
-        "target": "orket.streaming.contracts",
+        "target": "orket.core.contracts.interaction_stream",
         "path": "orket/workloads/marshaller_v0.py",
         "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.workloads.marshaller_v0",
-        "target": "orket.streaming.manager",
+        "target": "orket.marshaller.cli",
         "path": "orket/workloads/marshaller_v0.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.workloads.model_stream_v1",
+        "target": "orket.application.interactions.context",
+        "path": "orket/workloads/model_stream_v1.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.workloads.model_stream_v1",
+        "target": "orket.core.contracts.interaction_stream",
+        "path": "orket/workloads/model_stream_v1.py",
         "line": 9,
         "kind": "from"
       },
@@ -27656,35 +27924,21 @@
         "source": "orket.workloads.model_stream_v1",
         "target": "orket.core.contracts.provider_runtime",
         "path": "orket/workloads/model_stream_v1.py",
-        "line": 8,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.workloads.model_stream_v1",
         "target": "orket.runtime.config.defaults",
         "path": "orket/workloads/model_stream_v1.py",
-        "line": 9,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.workloads.model_stream_v1",
         "target": "orket.runtime.config.provider_runtime_target",
         "path": "orket/workloads/model_stream_v1.py",
-        "line": 10,
-        "kind": "from"
-      },
-      {
-        "source": "orket.workloads.model_stream_v1",
-        "target": "orket.streaming.contracts",
-        "path": "orket/workloads/model_stream_v1.py",
-        "line": 16,
-        "kind": "from"
-      },
-      {
-        "source": "orket.workloads.model_stream_v1",
-        "target": "orket.streaming.manager",
-        "path": "orket/workloads/model_stream_v1.py",
-        "line": 17,
+        "line": 12,
         "kind": "from"
       },
       {
@@ -27696,7 +27950,7 @@
       },
       {
         "source": "orket.workloads.registry",
-        "target": "orket.streaming.manager",
+        "target": "orket.application.interactions.context",
         "path": "orket/workloads/registry.py",
         "line": 5,
         "kind": "from"
@@ -27731,7 +27985,7 @@
       },
       {
         "source": "orket.workloads.rulesim_v0",
-        "target": "orket.rulesim.workload",
+        "target": "orket.application.interactions.context",
         "path": "orket/workloads/rulesim_v0.py",
         "line": 5,
         "kind": "from"
@@ -27745,21 +27999,21 @@
       },
       {
         "source": "orket.workloads.rulesim_v0",
-        "target": "orket.streaming.manager",
+        "target": "orket.rulesim.workload",
         "path": "orket/workloads/rulesim_v0.py",
         "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.workloads.stream_test_v1",
-        "target": "orket.streaming.contracts",
+        "target": "orket.application.interactions.context",
         "path": "orket/workloads/stream_test_v1.py",
         "line": 5,
         "kind": "from"
       },
       {
         "source": "orket.workloads.stream_test_v1",
-        "target": "orket.streaming.manager",
+        "target": "orket.core.contracts.interaction_stream",
         "path": "orket/workloads/stream_test_v1.py",
         "line": 6,
         "kind": "from"
@@ -27807,7 +28061,7 @@
         "code": "unresolved_dynamic_import"
       }
     ],
-    "files_scanned": 1063,
+    "files_scanned": 1074,
     "scan_roots": [
       "orket"
     ],
@@ -27880,6 +28134,7 @@
       "orket.adapters.storage.epic_export_dispatch_store": "adapters",
       "orket.adapters.storage.epic_publication_repository": "adapters",
       "orket.adapters.storage.extension_template_store": "adapters",
+      "orket.adapters.storage.file_admission": "adapters",
       "orket.adapters.storage.gitea_http_client": "adapters",
       "orket.adapters.storage.gitea_lease_manager": "adapters",
       "orket.adapters.storage.gitea_state_adapter": "adapters",
@@ -27891,6 +28146,7 @@
       "orket.adapters.storage.governed_agent_repository_support": "adapters",
       "orket.adapters.storage.governed_agent_wake_control_support": "adapters",
       "orket.adapters.storage.governed_agent_wake_repository_support": "adapters",
+      "orket.adapters.storage.interaction_artifact_store": "adapters",
       "orket.adapters.storage.local_file_lock": "adapters",
       "orket.adapters.storage.model_score_reader": "adapters",
       "orket.adapters.storage.operation_commit_registry": "adapters",
@@ -27946,6 +28202,16 @@
       "orket.agents.agent_factory": "application",
       "orket.agents.model_family_registry": "application",
       "orket.application.__init__": "application",
+      "orket.application.interactions.__init__": "application",
+      "orket.application.interactions.cancellation": "application",
+      "orket.application.interactions.commands": "application",
+      "orket.application.interactions.commit": "application",
+      "orket.application.interactions.context": "application",
+      "orket.application.interactions.finalization": "application",
+      "orket.application.interactions.manager": "application",
+      "orket.application.interactions.queries": "application",
+      "orket.application.interactions.state": "application",
+      "orket.application.interactions.streams": "application",
       "orket.application.middleware.__init__": "application",
       "orket.application.middleware.hooks": "application",
       "orket.application.review.__init__": "application",
@@ -28317,6 +28583,8 @@
       "orket.core.contracts.governed_agent_wake_records": "core",
       "orket.core.contracts.governed_agent_webhook_records": "core",
       "orket.core.contracts.interaction_cancellation": "core",
+      "orket.core.contracts.interaction_context": "core",
+      "orket.core.contracts.interaction_stream": "core",
       "orket.core.contracts.invocation_timing": "core",
       "orket.core.contracts.local_file_lock": "core",
       "orket.core.contracts.local_prompting": "core",
@@ -28860,12 +29128,9 @@
       "orket.state": "application",
       "orket.streaming.__init__": "adapters",
       "orket.streaming.bus": "adapters",
-      "orket.streaming.contracts": "adapters",
-      "orket.streaming.interaction_cancellation": "adapters",
+      "orket.streaming.clocks": "adapters",
       "orket.streaming.law_checker": "adapters",
-      "orket.streaming.manager": "adapters",
       "orket.streaming.model_provider": "adapters",
-      "orket.streaming.session_context": "adapters",
       "orket.time_utils": "adapters",
       "orket.utils": "adapters",
       "orket.vendors.base": "adapters",
@@ -28882,7 +29147,7 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 230
+        "count": 224
       },
       {
         "source": "adapters",
@@ -28892,22 +29157,22 @@
       {
         "source": "adapters",
         "target": "core",
-        "count": 136
+        "count": 137
       },
       {
         "source": "application",
         "target": "adapters",
-        "count": 364
+        "count": 360
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1609
+        "count": 1632
       },
       {
         "source": "application",
         "target": "core",
-        "count": 716
+        "count": 732
       },
       {
         "source": "application",
@@ -28931,13 +29196,8 @@
       },
       {
         "source": "interfaces",
-        "target": "adapters",
-        "count": 1
-      },
-      {
-        "source": "interfaces",
         "target": "application",
-        "count": 82
+        "count": 83
       },
       {
         "source": "interfaces",
@@ -28973,17 +29233,6 @@
           {
             "path": "orket/cli/setup_wizard.py",
             "line": 12,
-            "kind": "from"
-          }
-        ]
-      },
-      {
-        "source": "orket.interfaces.api",
-        "target": "orket.streaming.__init__",
-        "sites": [
-          {
-            "path": "orket/interfaces/api.py",
-            "line": 86,
             "kind": "from"
           }
         ]
@@ -29061,66 +29310,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-18T07:04:40.101152Z",
-      "changed": true,
-      "before_digest": "sha256:28a0be56dafbb0b1bb027f00001bbd9ec46823351be1b626068e1b82dacabefe",
-      "after_digest": "sha256:770f8762004100c9fb2396b69dfc30675550338035503b2fd8921fb3d75f9c6f",
-      "diff": {
-        "added_paths": 2,
-        "removed_paths": 5,
-        "changed_paths": 1298,
-        "initial_write": false,
-        "paths_total_previous": 44020,
-        "paths_total_current": 43981,
-        "paths_total_reference": 44020,
-        "churn_paths": 1305,
-        "churn_ratio": 0.029646,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[1503].line",
-          "$.observed.edges[1503].path",
-          "$.observed.edges[1503].source",
-          "$.observed.edges[1503].target",
-          "$.observed.edges[1504].line",
-          "$.observed.edges[1504].path",
-          "$.observed.edges[1504].source",
-          "$.observed.edges[1504].target",
-          "$.observed.edges[1505].line",
-          "$.observed.edges[1505].path",
-          "$.observed.edges[1505].source",
-          "$.observed.edges[1505].target",
-          "$.observed.edges[1506].line",
-          "$.observed.edges[1506].path",
-          "$.observed.edges[1506].source",
-          "$.observed.edges[1506].target",
-          "$.observed.edges[1507].line",
-          "$.observed.edges[1507].path",
-          "$.observed.edges[1507].source"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-18T07:14:15.026480Z",
-      "changed": true,
-      "before_digest": "sha256:770f8762004100c9fb2396b69dfc30675550338035503b2fd8921fb3d75f9c6f",
-      "after_digest": "sha256:fe8c4a42bb06b713b016692b777794829ca7651beb21002fc42d5603c472e909",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 43981,
-        "paths_total_current": 43981,
-        "paths_total_reference": 43981,
-        "churn_paths": 2,
-        "churn_ratio": 4.5e-05,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.modules.orket.application.services.sdk_memory_provider.sha256"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-18T10:49:39.928586Z",
       "changed": true,
@@ -30006,6 +30195,66 @@
           "$.observed.edges[130].target",
           "$.observed.edges[131].line",
           "$.observed.edges[131].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-19T12:16:37.934577Z",
+      "changed": true,
+      "before_digest": "sha256:849884f93edfdd188954aa8cfdfc6a02a251b3416f7b100c906d8a64293a2301",
+      "after_digest": "sha256:9f99c729468c87aef9ea5c3543d7f51e2ef3365453d21aca516e7a819293fdc9",
+      "diff": {
+        "added_paths": 60,
+        "removed_paths": 10,
+        "changed_paths": 12702,
+        "initial_write": false,
+        "paths_total_previous": 44684,
+        "paths_total_current": 45071,
+        "paths_total_reference": 45071,
+        "churn_paths": 12772,
+        "churn_ratio": 0.283375,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[126].line",
+          "$.observed.edges[127].line",
+          "$.observed.edges[127].target",
+          "$.observed.edges[128].line",
+          "$.observed.edges[128].path",
+          "$.observed.edges[128].source",
+          "$.observed.edges[129].line",
+          "$.observed.edges[129].target",
+          "$.observed.edges[130].path",
+          "$.observed.edges[130].source",
+          "$.observed.edges[130].target",
+          "$.observed.edges[131].line",
+          "$.observed.edges[131].target",
+          "$.observed.edges[132].line",
+          "$.observed.edges[132].target",
+          "$.observed.edges[133].line",
+          "$.observed.edges[133].target",
+          "$.observed.edges[134].line",
+          "$.observed.edges[134].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-19T12:26:54.996960Z",
+      "changed": true,
+      "before_digest": "sha256:9f99c729468c87aef9ea5c3543d7f51e2ef3365453d21aca516e7a819293fdc9",
+      "after_digest": "sha256:bcb1b0b3e0da57dd0a4addc346b7183338e51b17613ba913208a5f0fb22c5141",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 45071,
+        "paths_total_current": 45071,
+        "paths_total_reference": 45071,
+        "churn_paths": 2,
+        "churn_ratio": 4.4e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.modules.orket.application.interactions.queries.sha256"
         ]
       }
     }

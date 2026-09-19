@@ -12,12 +12,14 @@ pytestmark = pytest.mark.integration
 @pytest.mark.parametrize('route', ['/ws/events', '/ws/interactions/captured'])
 def test_websocket_authentication_retains_app_key_and_mode(tmp_path, monkeypatch, mode, route):
     monkeypatch.setenv('ORKET_DISABLE_SANDBOX', '1')
-    monkeypatch.setenv('ORKET_STREAM_EVENTS_V1', 'true')
+    monkeypatch.setenv('ORKET_STREAM_EVENTS_V1', 'false')
     monkeypatch.setenv('ORKET_DURABLE_ROOT', str(tmp_path/'.orket/durable'))
     monkeypatch.setenv('ORKET_OUTWARD_PIPELINE_DB_PATH', str(tmp_path/'outward.db'))
-    environment = {'ORKET_API_KEY': 'captured-key', 'ORKET_API_SECURITY_MODE': mode, 'ORKET_ENV': 'local'}
+    environment = {'ORKET_API_KEY': 'captured-key', 'ORKET_API_SECURITY_MODE': mode, 'ORKET_ENV': 'local',
+                   'ORKET_STREAM_EVENTS_V1': 'true'}
     app = create_api_app(project_root=tmp_path, environment=environment)
-    environment.update(ORKET_API_KEY='changed-key', ORKET_API_SECURITY_MODE='enforce' if mode == 'compat' else 'compat')
+    environment.update(ORKET_API_KEY='changed-key', ORKET_API_SECURITY_MODE='enforce' if mode == 'compat' else 'compat',
+                       ORKET_STREAM_EVENTS_V1='false')
     monkeypatch.setenv('ORKET_API_KEY', 'changed-key')
     with TestClient(app) as client:
         with client.websocket_connect(route, headers={'X-API-Key': 'captured-key'}):

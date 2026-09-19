@@ -4,9 +4,9 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
+from orket.application.interactions.context import InteractionContext
+from orket.core.contracts.interaction_stream import CommitIntent, StreamEventType
 from orket.marshaller.cli import default_run_id, execute_marshaller_from_files
-from orket.streaming.contracts import CommitIntent, StreamEventType
-from orket.streaming.manager import InteractionContext
 
 
 def _resolve_input_path(raw: str) -> Path:
