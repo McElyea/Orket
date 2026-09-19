@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.29] - 2026-09-19 - "Explicit project vendors"
+
+### Fixed
+- Move vendor selection and local project coordination into application services with captured settings and explicit project/database locations.
+- Refuse unsupported vendors, nonexistent runtime cards, invalid catalog identities and unverified status writes; retain admitted operations through interruption.
+- Read the selected project catalog, preserve declared rock status, resolve cross-department epic references, and keep existing card-completion admission.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration and limits: `docs/architecture/CONTRACT_DELTA_PROJECT_VENDOR_CD_2026-09-19.md`.
+- Stability: scoped C/D progress; the full architectural-truth lane remains active.
+
 ## [0.6.28] - 2026-09-19 - "Owned driver commands"
 
 ### Fixed

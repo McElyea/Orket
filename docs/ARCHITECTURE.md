@@ -280,6 +280,13 @@ callers consume package-owned archives. Canonical authoring sources and the
 mechanical archive check are documented in
 `docs/architecture/CONTRACT_DELTA_EXTENSION_SCAFFOLD_PACKAGING_D_2026-09-17.md`.
 
+Application project-vendor composition captures supplied settings and explicit
+project/database locations. Local catalog workers and runtime-card operations
+retain ownership through interruption; missing cards and unverified status writes
+cannot return success. Unsupported vendor selections are refused. Migration,
+catalog identity rules and observation limits:
+`docs/architecture/CONTRACT_DELTA_PROJECT_VENDOR_CD_2026-09-19.md`.
+
 Driver resource commands and model-proposed structural writes enter application
 services that capture inputs, retain workers and share native model-file admission.
 Application `ReforgerService` owns asynchronous compiler tools, retained route-input

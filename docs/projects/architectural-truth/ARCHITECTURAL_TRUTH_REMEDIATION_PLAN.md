@@ -12516,8 +12516,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.28
-driver command work below. The graph has eight forbidden pairs, zero cross-layer
+Next action: continue C/D from their numbered requirements after the 0.6.29
+project vendor work below. The graph has six forbidden pairs, zero cross-layer
 cycles and eight unresolved import/reflection sites. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff has 100 findings. The prior stale benchmark expectation passes in the
@@ -15799,3 +15799,100 @@ instruction. Full C/D, E1/E2, CAP-1/2/3, full Quality/coverage, hosted CI, relea
 readiness and explicit whole-lane acceptance remain open. The last full-suite
 observation remains the retained .22 run described above; this is not a fresh
 all-green full-suite claim.
+
+### Project vendor ownership checkpoint: 2026-09-19 (0.6.29)
+
+Application `create_project_vendor` is an asynchronous composition boundary with
+supplied settings and explicit absolute project/database paths for local use.
+Unsupported vendor selections are refused. HTTP-client construction runs in an
+owned worker; interrupted construction drains and closes an unadopted client.
+The returned Gitea transport keeps its existing explicit close responsibility.
+The old adapter-owned factory and local coordinator are retired without aliases.
+
+Local catalog interpretation and runtime-card coordination are application-owned.
+Catalog workers use the selected project layout, preserve declared rock status,
+resolve cross-department epic references and consume the schema's canonical card
+aliases. Displayed catalog metadata is separate from execution admission. Card
+IDs must be declared and unique in the returned list; reads do not mint IDs.
+Runtime reads no longer invent missing cards, and a status write cannot return
+success until readback observes the requested state. Existing completion gates
+still reject unsupported successful statuses. Database directory initialization
+and admitted operations retain ownership through cancellation and timeout.
+
+The reentry check preserved the .28 commit, all 1,104 sealed artifacts, both
+neighboring worktrees and the historical handoff. The Linux lease clock failure
+remains diagnosed by retained host-clock evidence; its actor remains unknown.
+The original installed vendor probe is retained under `.tmp/c-vendor-observation/`.
+It showed a fabricated missing-card read; the corresponding missing-card update
+correctly raised, so no unsupported-success write claim is made for that probe.
+
+Evidence under `.tmp/c-vendor-boundaries/` preserves the eight-case baseline and
+three failing real-path counterexamples: fabricated reads, the doubled model-root
+catalog search and database retargeting after a working-directory change. The
+first repair retained ten passes and a database-directory initialization failure.
+Later repairs pass. A controlled constructor hold demonstrated event-loop blocking
+before the factory's owned-worker cutover; its independent watchdog released and
+closed the real HTTP client. Original inputs, logs and failed reports remain.
+
+Observed path: primary, including deliberate refusals. Result: partial success
+for the full goal. Live proof covers real model files, SQLite, worker lifetimes,
+HTTPX with a loopback HTTP server and client/server cleanup. It does not establish
+live Gitea-server, provider, Docker, hostile-process or hosted CI acceptance.
+Graph, lint, workflow, metadata and size checks are structural.
+
+The affected cohort passed 61 cases, and structural checks passed 51. Final source
+passed 1,366 cases without failure/error/skip in
+408.844 seconds including runner overhead. All
+1,309 prior identities remain, with 57 added.
+The same cases pass in all four installed environments. Every owned source/native
+process returned and its session was reaped. Actual core origins, dependencies,
+support hashes, CLI/ToolGate flows, root-database guards and cleanup checks pass.
+
+| Installed cell | Tests / failures / errors / skips | Core origins | Pytest seconds |
+|---|---:|---:|---:|
+| a29-win-py311 | 1366 / 0 / 0 / 0 | 954 | 414.911 |
+| a29-linux-py311 | 1366 / 0 / 0 / 0 | 954 | 326.19 |
+| a29-win-py312 | 1366 / 0 / 0 / 0 | 954 | 514.104 |
+| a29-linux-py312 | 1366 / 0 / 0 / 0 | 954 | 330.607 |
+
+The harness binds 1,915 support files without core/SDK
+source shadowing. Wheel/sdist parity matches 1,061 core Python
+and 1,076 package files with no mismatch. Core is 0.6.29;
+SDK 0.7.0a1 and reference/starter 0.3.0a1 are unchanged. Source/native/launcher
+budgets remain 1,500/1,800/2,100 seconds. Product/test deadlines were not widened:
+controlled operations retain 0.5-second responsiveness and 3-second post-release
+settlement bounds. Earlier successful intermediate cohorts do not substitute for
+this final package's proof.
+
+Evidence under `.tmp/c-vendor-boundaries/`:
+- `candidate/source-report.json`: SHA-256 `614a8814eb5e6e674b9309d1a7b82d19ad0cd923bb5e6c8fec834ff07880f046`.
+- `candidate/manifest.json`: SHA-256 `871ff5dde7444e8f1e6312bc27741830b1043d411379e309c870a6abf4eeb6a0`.
+- `candidate/native-audit.json`: SHA-256 `7286964adf95c1490e584b3504f8f5b020edcb03de010b1637058048a17971c2`.
+- Core wheel: SHA-256 `2b4428c87e18e50c714db81f1d8b47b742e74dd48b3f97543305bb40431fa0db`.
+- Core sdist: SHA-256 `f68557cc34eab1705510f4d7a5d2d0405ecbb1fafd2f58105787840e6cb8ea34`.
+- `case-continuity.json`, `size-review.json`, `ruff-comparison.json`,
+  `collection-final/collection.json` and `review.json` record their stated scopes.
+  `CHANGESET.md` lists the exact 18 tracked paths.
+
+The graph has 1,061 modules and 3,337 import
+sites: six forbidden pairs, eight analysis errors, zero unknown modules and zero
+cross-layer cycles. The two vendor boundary pairs were removed without policy
+exceptions or reclassification. Canonical Ruff remains 100 findings with none
+added. Collection succeeds; dependency and release-ready verdicts remain false.
+All six new Python files fit file/function/class limits.
+
+Catalog observations are not a multi-file snapshot. Status mutation and readback
+are separate transactions; concurrent changes can cause verification refusal,
+and success does not reserve state against later writers. Local card creation
+remains explicitly unsupported by this vendor view. No hard hung-worker deadline
+or whole-runtime shutdown/automatic recovery guarantee is added. Global schema
+identity/clock, async reachability and adapter classification work remain active D;
+the existing Gitea request transport's defaults/environment are not re-admitted
+by this factory proof. Migration:
+`docs/architecture/CONTRACT_DELTA_PROJECT_VENDOR_CD_2026-09-19.md`.
+
+This checkpoint is committed and tagged locally; no GitHub push is performed under
+the user's current instruction. The full C/D/E1/E2/CAP-1/2/3 objective, fresh full
+Quality/coverage, hosted CI, release readiness and explicit whole-lane acceptance
+remain open. The last full-suite observation remains the retained .22 run; this
+is not a fresh whole-repository all-green claim.
