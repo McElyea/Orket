@@ -5,6 +5,13 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.35] - 2026-09-19
+
+### Fixed
+- Retain SDK and legacy artifact/provenance workers through cancellation and caller timeout, with verified JSON publication and captured caller inputs.
+- Preserve confirmed control-plane outcomes and original projection errors; retain observed SDK capability effects on validation failures.
+- Leave extension interaction finalization to its application owner so real contexts no longer reject premature reserved events. Legacy synchronous callbacks now run in owned workers.
+
 ## [0.6.34] - 2026-09-19 - "Owned SDK process lifetime"
 
 ### Fixed

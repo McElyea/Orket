@@ -12516,9 +12516,9 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: repair the installed SDK artifact-publication worker that outlives
-caller cancellation, after the verified 0.6.34 native-lifetime checkpoint, and
-continue all numbered C/D requirements. The graph has zero forbidden
+Next action: capture consistent workload policy inputs and continue the full
+extension install/integrity async inventory after the verified 0.6.35 publication
+checkpoint, together with all numbered C/D requirements. The graph has zero forbidden
 static pairs, zero cross-layer cycles and six unresolved import/reflection diagnostics. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff has 95 findings. The prior stale benchmark expectation passes in the
@@ -16691,3 +16691,137 @@ Evidence under `.tmp/d-sdk-lifetime/`:
 
 The exact 32 changed paths are in `CHANGESET.md`. Local commit/tag follow
 final review and source/index binding. No GitHub push is performed during work hours.
+
+
+### Workload publication ownership candidate: 2026-09-19 (0.6.35)
+
+The active full goal continues from the verified 0.6.34 local checkpoint. All
+1,398 sealed evidence hashes and unchanged prior sources were checked before
+editing; the historical clock diagnosis and original Linux failure are retained.
+No GitHub push is performed during the user's 10 AM-6 PM Denver work hours.
+
+The installed manifest-worker counterexample now has twelve source regressions
+for cancellation/timeout during actual SDK validation, manifest and provenance
+workers. The original thirteen failures also include a confirmed successful run
+being incorrectly finalized as failed after provenance refusal, masking the
+original error with a terminal-authority conflict. Additional real interaction
+regressions expose reserved lifecycle events from both executor families. A first
+nested-input assertion incorrectly expected raw data in a redacted summary; that
+failed harness is retained. The corrected assertion compares its documented
+payload digest and demonstrates mutation after admission. No production source
+changed between those two observations.
+
+Application now owns these workers, captures caller inputs and preserves known
+closeout outcomes. Storage verifies individual JSON writes. Legacy synchronous
+preparation/validation/summary callbacks run in retained workers. Real interaction
+completion belongs to the application manager. The old fake-context test is
+renamed and checks this corrected contract; it is an explicit replacement of
+`test_run_workload_with_interaction_context_emits_events_and_commit`, not a claim
+that the old final-event behavior is preserved.
+
+The first repair passes 42 selected cases. Expanded source proof passes 69 cases
+with actual filesystem/SQLite/native SDK execution, held workers and independent
+control-plane reads. These are bounded integration observations; synthetic holds
+and injected errors are controlled observations, not hostile-code proof. A real
+provenance destination directory also exercises native replacement refusal and
+preserves confirmed execution truth. Fixed responsiveness/settlement bounds are
+0.5 seconds and 5 seconds after release. Fresh source/installed acceptance is
+pending. Contract: `docs/architecture/CONTRACT_DELTA_WORKLOAD_PUBLICATION_D_2026-09-19.md`.
+
+Retained evidence is under `.tmp/d-workload-publication/`: `before/`,
+`inputs-before/`, `inputs-corrected-before/`, `first-repair/` and `expanded-repair/`.
+Ambient policy rereads, same-artifact-root concurrency, partial control-plane
+closeout, full extension install/integrity async reachability and remaining
+C/D/E/CAP requirements stay open. Do not treat this candidate as whole-lane closure.
+
+The first broader candidate is retained with 1,723 passes and two failures in
+existing legacy registration interruption tests (`candidate/source-final/`). Its
+combined preparation worker wrongly admitted compilation after cancellation
+during loading. Loading, compilation and material validation now retain separate
+owned stages, preserving the old cancellation boundary. The targeted repaired
+selection passes 41 cases in 39.18 seconds (`admission-repaired/`); both existing
+interruption tests are unchanged. The first candidate archive and every failure
+remain retained. A fresh repaired source/installed gate is still required.
+
+
+#### Final workload publication checkpoint proof
+
+Observed path: primary for trusted workload execution and retained workers;
+expected failure for controlled/native publication refusals. Full-goal result:
+partial success. The 0.6.35 source gate passes 1,725 cases with no
+failures, errors or skips (710.375 seconds including
+runner overhead). It preserves 1,687 prior identities and explicitly
+replaces the obsolete fake-context final-event expectation with the owner contract.
+There are 37 additional publication/input cases. Four fresh
+installed cells pass exactly the same case identities:
+
+| Installed cell | Tests / failures / errors / skips | Core origins | Pytest seconds |
+|---|---:|---:|---:|
+| a35r-win-py311 | 1725 / 0 / 0 / 0 | 987 | 758.057 |
+| a35r-linux-py311 | 1725 / 0 / 0 / 0 | 987 | 545.858 |
+| a35r-win-py312 | 1725 / 0 / 0 / 0 | 987 | 918.865 |
+| a35r-linux-py312 | 1725 / 0 / 0 / 0 | 987 | 566.62 |
+
+The wheel built from the source archive matches 1,088 core
+Python files and 1,104 package files. The frozen harness binds
+1,984 support files without core/SDK source shadow.
+Installed origins, dependencies, retained copied inputs, CLI/ToolGate controls
+and owned-process cleanup pass. SDK 0.7.0a1 and reference/starter 0.3.0a1 remain
+unchanged. Native and source launchers returned and were reaped.
+
+Live proof uses actual trusted SDK children, legacy registration and callbacks,
+filesystem/SQLite effects and real interaction manager finalization. Held workers
+and injected failures are controlled integration observations. Native directory
+replacement refusal provides an actual OS failure. Structural proof comprises
+package parity, dependency graph, lint, size and workflow checks. The graph has
+1,088 modules, 3,425 import sites, zero forbidden pairs/cycles/unknown modules,
+and six unresolved diagnostics. Canonical Ruff remains 95 with no new findings.
+The oversized executor shrinks from 467 to 442 lines; no whole-file conformance
+claim is made. The first candidate retained 1,723 passes and two legacy loading cancellation failures;
+its combined worker incorrectly admitted compilation after interruption. The repaired
+helper preserves a cancellation boundary between loading, compilation and material
+validation. The original failures and archive remain retained.
+Prior clock diagnosis, failing tests and the corrected redaction
+assertion remain retained; no failed evidence was overwritten or reclassified.
+
+This does not establish a fresh all-green full suite, hosted CI, live provider
+capability, transactionality across publications, policy immutability or hostile
+containment. Remaining C/D/E/CAP work and explicit whole-lane acceptance stay
+active. Post-proof documentation changes report observations only; their exact
+before/after hashes are retained in `post-proof-documents.json`.
+
+Evidence under `.tmp/d-workload-publication/`:
+- `candidate-repaired/source-report.json`: `f4a173a3637973d6ebf973ae94b959803d09460109181f084e8ce7321cc0f59a`.
+- `candidate-repaired/manifest.json`: `bb0b6ad1ffae392d7678b76dbc99b6e3ef338d82507d2a5137509162a705c987`.
+- `candidate-repaired/native-audit.json`: `35b042cd6333964f0e0b3b79e8b71b64465b060a0060bab962c320ae509113b9`.
+- `case-continuity.json`, `repaired-size-review.json`, `repaired-ruff-comparison.json`,
+  `collection-repaired/collection.json`, `review.json` and `CHANGESET.md`.
+
+Local commit and annotated tag follow source/index review. No GitHub push is
+performed during the user's 10 AM-6 PM America/Denver work hours.
+
+The next independent installed observation confirms an existing D input defect:
+changing provenance verbosity while the manifest worker is held yields different
+policy digests in the returned result and provenance JSON. The actual workload
+returns success; the worker settles and zero child processes remain. This is
+policy-input inconsistency, separate from publication lifetime. The report binds
+502 installed core origins and retained files at `next-policy-observation/report.json`
+(SHA-256 `b4b31ab0cb1766a8ef7b100c4c799012ea18516aaa760abd38053b12a385a985`). Capture one policy
+per invocation next; do not reinterpret this failed observation as policy acceptance.
+
+A separate installed Windows observation executes an actual SDK memory write,
+then deliberately refuses artifact validation. Independent SQLite inspection
+finds the written value and `post_effect_observed` failed attempt, with the
+capability result retained as closeout predecessor. No child processes remain.
+This controlled failure uses 502 installed core origins; it is separate from the
+matrix case count. The first supplementary report is unadmitted as an artifact
+binding: its independent SQLite readers were not explicitly closed before hashing,
+so two temporary WAL/SHM files disappeared at interpreter exit. Its report, stable
+database bytes and `validation-effect-observation/retention-failure.json` remain
+retained. The corrected probe closes readers before hashing; all 66 file hashes
+match after process exit. A helper-generation attempt used an incorrect database
+suffix and stopped before creating the new probe; the separate corrected helper
+and the initial attempt are both retained. Report: `validation-effect-observation-closed/report.json`
+(SHA-256 `23a4e7f84bc2e43285bf5d92f0e4c39cecbe556c51e1b2569608033c607a16e9`).
+`next-async-inventory.json` records four source-bound synchronous manager/CLI
+routes as structural debt, not live latency proof or a complete async inventory.

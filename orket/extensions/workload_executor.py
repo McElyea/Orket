@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
 from collections.abc import Callable
+from copy import deepcopy
+from functools import partial
 from pathlib import Path
 from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.workload_artifact_store import prepare_artifact_root
 from orket.application.services.extension_workload_control_plane_service import (
     ExtensionWorkloadControlPlaneService,
     build_extension_workload_control_plane_service,
@@ -27,9 +29,7 @@ from .workload_executor_support import (
     build_sdk_context,
     compile_workload,
     control_plane_identity,
-    digest_file,
     emit_default_model_events,
-    emit_turn_final_if_needed,
     execute_plan_actions,
     finalize_started_failure,
     prior_step_ref,
@@ -37,9 +37,9 @@ from .workload_executor_support import (
     sdk_failure_class,
     sdk_result_class,
     sdk_side_effect_observed,
-    write_json_file,
 )
 from .workload_loader import WorkloadLoader
+from .workload_publication import prepare_legacy_workload, publish_manifest, publish_provenance
 
 
 class WorkloadExecutor:
@@ -70,18 +70,12 @@ class WorkloadExecutor:
         department: str,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
-        loaded_workload = await run_owned_thread(
-            lambda: self.loader.load_legacy_workload(extension, workload.workload_id), label="legacy-extension-load")
-        run_plan = compile_workload(loaded_workload, input_config, interaction_context)
-        if run_plan.workload_id != workload.workload_id:
-            raise ValueError("RunPlan workload_id mismatch")
-        if self.artifacts.reproducibility.reliable_mode_enabled():
-            self.artifacts.reproducibility.validate_required_materials(loaded_workload.required_materials())
-            self.artifacts.reproducibility.validate_clean_git_if_required()
+        input_config, control_plane_workload_record = deepcopy(input_config), deepcopy(control_plane_workload_record)
+        loaded_workload, run_plan = await prepare_legacy_workload(
+            self.loader, self.artifacts, extension, workload, input_config, interaction_context)
 
         plan_hash = run_plan.plan_hash()
         artifact_root = self.artifacts.artifact_root(extension.extension_id, workload.workload_id, plan_hash, input_config)
-        artifact_root.mkdir(parents=True, exist_ok=True)
         governed_identity = build_governed_identity(
             artifacts=self.artifacts,
             extension=extension,
@@ -93,6 +87,7 @@ class WorkloadExecutor:
             department=department,
             input_identity=plan_hash,
         )
+        await run_owned_thread(partial(prepare_artifact_root, artifact_root), label="legacy-artifact-root")
         control_plane_start = await begin_control_plane_execution(
             control_plane=self.control_plane,
             extension=extension,
@@ -105,6 +100,7 @@ class WorkloadExecutor:
             control_plane_workload_record=control_plane_workload_record,
         )
 
+        closeout = None
         try:
             run_result = await execute_plan_actions(
                 run_plan=run_plan,
@@ -112,26 +108,18 @@ class WorkloadExecutor:
                 department=department,
                 interaction_context=interaction_context,
             )
-            validation_errors = self.artifacts.run_validators(loaded_workload, run_result, artifact_root)
+            validation_errors = await run_owned_thread(
+                partial(self.artifacts.run_validators, loaded_workload, run_result, artifact_root),
+                label="legacy-workload-validation")
             if validation_errors:
                 raise RuntimeError("Post-run validation failed: " + "; ".join(validation_errors))
-            summary = loaded_workload.summarize({"run_result": run_result, "artifact_root": str(artifact_root)})
+            summary = await run_owned_thread(
+                partial(loaded_workload.summarize, {"run_result": run_result, "artifact_root": str(artifact_root)}),
+                label="legacy-workload-summary")
             if not isinstance(summary, dict):
                 raise TypeError("summarize(run_artifacts) must return a dict")
-            await emit_turn_final_if_needed(
-                interaction_context=interaction_context,
-                summary=summary,
-                workload_id=workload.workload_id,
-            )
-            artifact_manifest = await asyncio.to_thread(
-                self.artifacts.build_artifact_manifest,
-                artifact_root,
-                plan_hash=plan_hash,
-                governed_identity=governed_identity,
-            )
-            artifact_manifest_path = artifact_root / "artifact_manifest.json"
-            await asyncio.to_thread(write_json_file, artifact_manifest_path, artifact_manifest)
-            artifact_manifest_hash = f"sha256:{str(artifact_manifest.get('manifest_sha256') or '').strip()}"
+            artifact_manifest, artifact_manifest_path, artifact_manifest_hash = await publish_manifest(
+                self.artifacts, artifact_root, plan_hash=plan_hash, governed_identity=governed_identity)
             closeout = await self.control_plane.finalize_execution(
                 run_id=control_plane_start.run.run_id,
                 outcome=ResultClass.SUCCESS,
@@ -145,7 +133,7 @@ class WorkloadExecutor:
                 capability_effects=(),
                 closeout=closeout,
             )
-            provenance = await asyncio.to_thread(
+            provenance_path, provenance_hash = await publish_provenance(partial(
                 self.artifacts.build_provenance,
                 extension=extension,
                 workload=loaded_workload,
@@ -160,11 +148,10 @@ class WorkloadExecutor:
                 department=department,
                 control_plane_workload_record=control_plane_workload_record,
                 control_plane_execution=control_plane,
-            )
-            provenance_path = artifact_root / "provenance.json"
-            await asyncio.to_thread(write_json_file, provenance_path, provenance)
-            provenance_hash = await asyncio.to_thread(digest_file, provenance_path)
+            ), artifact_root)
         except Exception as exc:
+            if closeout is not None:
+                raise  # Projection failure cannot replace an already confirmed execution outcome.
             await finalize_started_failure(
                 control_plane=self.control_plane,
                 control_plane_start=control_plane_start,
@@ -208,6 +195,7 @@ class WorkloadExecutor:
         department: str,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
+        input_config, control_plane_workload_record = deepcopy(input_config), deepcopy(control_plane_workload_record)
         agent_markers = agent_discriminator_reasons(
             {
                 "workload_id": workload.workload_id,
@@ -225,7 +213,6 @@ class WorkloadExecutor:
             json.dumps(input_config, sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
         artifact_root = self.artifacts.artifact_root(extension.extension_id, workload.workload_id, input_digest, input_config)
-        artifact_root.mkdir(parents=True, exist_ok=True)
         governed_identity = build_governed_identity(
             artifacts=self.artifacts,
             extension=extension,
@@ -257,6 +244,7 @@ class WorkloadExecutor:
             admitted_capabilities=set(authorization_envelope.admitted_capabilities),
         )
         module_name, _attr_name = WorkloadLoader.parse_sdk_entrypoint(workload.entrypoint)
+        await run_owned_thread(partial(prepare_artifact_root, artifact_root), label="sdk-artifact-root")
         await run_owned_thread(
             lambda: self.loader.validate_extension_imports(Path(extension.path), module_name,
                 allowed_stdlib_modules=extension.allowed_stdlib_modules, enforce_declared_stdlib=True),
@@ -308,7 +296,8 @@ class WorkloadExecutor:
                 call_records=list(capability_report.get("call_records") or []),
             )
             result = subprocess_result.workload_result
-            await asyncio.to_thread(self.artifacts.validate_sdk_artifacts, result, artifact_root)
+            await run_owned_thread(partial(self.artifacts.validate_sdk_artifacts, result, artifact_root),
+                                   label="sdk-artifact-validation")
             run_result = {
                 "status": "ok" if result.ok else "error",
                 "output": result.output,
@@ -351,30 +340,17 @@ class WorkloadExecutor:
             await finalize_started_failure(
                 control_plane=self.control_plane,
                 control_plane_start=control_plane_start,
-                prior_step_ref=prior_step_ref(control_plane_start=control_plane_start, capability_steps=()),
+                prior_step_ref=prior_step_ref(control_plane_start=control_plane_start, capability_steps=capability_steps),
                 failure_class=f"sdk_workload_{type(exc).__name__}",
-                side_effect_observed=False,
+                side_effect_observed=sdk_side_effect_observed(capability_report=capability_report),
                 exc=exc,
             )
             raise
 
-        if subprocess_error is None:
-            await emit_turn_final_if_needed(
-                interaction_context=interaction_context,
-                summary=summary,
-                workload_id=workload.workload_id,
-            )
-
+        closeout = None
         try:
-            artifact_manifest = await asyncio.to_thread(
-                self.artifacts.build_artifact_manifest,
-                artifact_root,
-                plan_hash=input_digest,
-                governed_identity=governed_identity,
-            )
-            artifact_manifest_path = artifact_root / "artifact_manifest.json"
-            await asyncio.to_thread(write_json_file, artifact_manifest_path, artifact_manifest)
-            artifact_manifest_hash = f"sha256:{str(artifact_manifest.get('manifest_sha256') or '').strip()}"
+            artifact_manifest, artifact_manifest_path, artifact_manifest_hash = await publish_manifest(
+                self.artifacts, artifact_root, plan_hash=input_digest, governed_identity=governed_identity)
             outcome = sdk_result_class(
                 subprocess_error=subprocess_error,
                 capability_report=capability_report,
@@ -409,7 +385,7 @@ class WorkloadExecutor:
                 capability_effects=capability_effects,
                 closeout=closeout,
             )
-            provenance = await asyncio.to_thread(
+            provenance_path, provenance_hash = await publish_provenance(partial(
                 self.artifacts.build_sdk_provenance,
                 extension=extension,
                 workload=workload,
@@ -423,11 +399,10 @@ class WorkloadExecutor:
                 control_plane_workload_record=control_plane_workload_record,
                 sdk_capability_report=capability_report,
                 control_plane_execution=control_plane,
-            )
-            provenance_path = artifact_root / "provenance.json"
-            await asyncio.to_thread(write_json_file, provenance_path, provenance)
-            provenance_hash = await asyncio.to_thread(digest_file, provenance_path)
+            ), artifact_root)
         except Exception as exc:
+            if closeout is not None:
+                raise  # Projection failure cannot replace an already confirmed execution outcome.
             await finalize_started_failure(
                 control_plane=self.control_plane,
                 control_plane_start=control_plane_start,

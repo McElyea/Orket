@@ -696,8 +696,9 @@ async def test_run_workload_rejects_private_orket_imports(tmp_path):
         )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
-async def test_run_workload_with_interaction_context_emits_events_and_commit(tmp_path):
+async def test_run_workload_context_leaves_finalization_to_owner(tmp_path):
     repo = tmp_path / "ext_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(repo)
@@ -725,11 +726,8 @@ async def test_run_workload_with_interaction_context_emits_events_and_commit(tmp
     )
     assert result.workload_id == "mystery_v1"
     assert any(name == "model_selected" for name, _ in ctx.events)
-    assert any(name == "turn_final" for name, _ in ctx.events)
-    turn_final_payload = next(payload for name, payload in ctx.events if name == "turn_final")
-    assert turn_final_payload["authoritative"] is True
-    assert turn_final_payload["summary"]
-    assert len(ctx.commits) == 1
+    assert not any(name == "turn_final" or payload.get("authoritative") for name, payload in ctx.events)
+    assert not ctx.commits  # The interaction owner finalizes after it observes the workload result.
 
 
 @pytest.mark.asyncio

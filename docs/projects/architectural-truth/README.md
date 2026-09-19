@@ -9,17 +9,18 @@ Current gate: scoped BT-1 through BT-5 are accepted. C/D dependency enforcement,
 core purity, explicit inputs and async safety are next, followed by E1/E2 and the
 gated capability obligations. The whole lane remains active.
 
-The local 0.6.34 checkpoint owns SDK children/descendants and private exchange
-workers through interruption, and preserves unresolved control-plane state on
-missing or uncertain child results. It also packages the controller schema and
-honors each schema selection through owned readers. Source and four fresh Windows/Linux Python
-3.11/3.12 installations pass 1,688 identical cases, preserving all
-1,629 prior cases. Contract: `docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md`.
-Failed observations and precise proof ceilings remain in the canonical plan.
-The next installed counterexample shows artifact-manifest publication continuing
-after cancellation; its writer was released/drained and no children remained.
-Six dependency diagnostics, Ruff 95 and later C/D/E/CAP obligations remain open.
-GitHub publication remains deferred; commits and annotated tags stay local.
+The local 0.6.35 checkpoint owns SDK/legacy artifact and provenance workers,
+verifies JSON publication, captures caller inputs and preserves confirmed execution
+outcomes on later projection failure. Real interaction completion belongs to its
+application owner. Source and four fresh Windows/Linux Python 3.11/3.12 installations
+pass 1,725 identical cases. The prior final-event test is explicitly
+replaced by the corrected owner contract; all other prior identities are retained.
+Contract: `docs/architecture/CONTRACT_DELTA_WORKLOAD_PUBLICATION_D_2026-09-19.md`.
+Earlier SDK native-lifetime and packaged-schema guarantees remain covered.
+Six dependency diagnostics, Ruff 95, ambient policy inputs, broader async inventory
+and later C/D/E/CAP obligations remain open. Failed proof and precise limits stay
+in the canonical plan. GitHub publication remains deferred; commits and annotated
+tags stay local during work hours.
 
 C's v2 allowed-edge implementation replaces the transition denylist. The checker,
 exporter and baseline share one Git-visible import inventory; repository violations

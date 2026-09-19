@@ -47,7 +47,7 @@ register also records review-discovered ship-risk and self-deception debt that i
 not accepted as target-architecture conformance.
 
 1. Dependency layering exceptions:
-   1. The 0.6.34 generated graph has no forbidden static pairs or cross-layer cycles, but six unresolved dynamic-import/reflection sites still fail its verdict. Core purity and runtime ownership remain separate C/D obligations; zero static pairs does not establish full conformance.
+   1. The 0.6.35 generated graph has no forbidden static pairs or cross-layer cycles, but six unresolved dynamic-import/reflection sites still fail its verdict. Core purity and runtime ownership remain separate C/D obligations; zero static pairs does not establish full conformance.
 2. Decision-node purity exceptions:
    1. `orket/decision_nodes/builtins.py` still retains mutable planning/routing context. Loop limits now consume immutable explicit values; application owns registry selection, executable tool bindings, provider construction and organization overrides. API authentication, observed paths, board loading and calendar inputs now belong to application services; API strategy retains request/presentation recommendations. API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths also live in explicit services.
 3. API runtime composition:
@@ -234,6 +234,12 @@ Responsibilities:
 6. observability sequencing
 
 Application services own runtime truth.
+
+Application retains SDK and legacy artifact/provenance workers through interruption,
+captures caller inputs before awaiting and preserves confirmed execution outcomes
+when later projection publication fails. Storage verifies each published JSON file;
+interaction lifecycle completion stays with the interaction owner. Contract and
+remaining policy/concurrency limits: `docs/architecture/CONTRACT_DELTA_WORKLOAD_PUBLICATION_D_2026-09-19.md`.
 
 SDK process supervision reuses the native command owner; side-effecting storage
 owns private request/result files. Application retains admitted workers and

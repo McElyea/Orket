@@ -188,6 +188,12 @@ Controller proof also exercises installed nested workloads and the packaged
 schema, explicit schema replacement, captured validation inputs and read-worker
 interruption. Keep both controller regression modules in the Quality selection.
 
+Workload publication regressions exercise real SDK/legacy paths and the actual
+interaction manager, including native write refusals and retained cancellation.
+Fake contexts alone cannot establish lifecycle authority. Keep publication/input
+ownership modules in both Quality selections; contract and proof limits live in
+`docs/architecture/CONTRACT_DELTA_WORKLOAD_PUBLICATION_D_2026-09-19.md`.
+
 ### Local provider development and testing
 
 1. Develop local provider support in this priority order: **llama.cpp**, **LM Studio**, then **Ollama**. Their runtime selection tokens are `llama_cpp`, `lmstudio`, and `ollama`.

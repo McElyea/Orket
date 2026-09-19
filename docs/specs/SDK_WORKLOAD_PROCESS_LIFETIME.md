@@ -58,6 +58,7 @@ native observation when available through another owned worker. Publication
 failure or interruption remains attached to the typed uncertainty; it cannot
 convert unknown execution into an ordinary terminal failure or clean cancellation.
 
-This contract does not settle remaining SDK artifact/provenance worker ownership,
-cross-store atomicity, arbitrary workload recovery, transitive import provenance,
-independent objective verification, or capability acceptance.
+Artifact/provenance worker lifetime and confirmed-outcome preservation are owned
+by `docs/architecture/CONTRACT_DELTA_WORKLOAD_PUBLICATION_D_2026-09-19.md`.
+Cross-store atomicity, arbitrary workload recovery, transitive import provenance,
+independent objective verification and capability acceptance remain separate work.

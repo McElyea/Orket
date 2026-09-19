@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import inspect
-import json
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -11,7 +10,7 @@ from orket.application.services.extension_workload_control_plane_service import 
     ExtensionWorkloadControlPlaneService,
     ExtensionWorkloadControlPlaneStart,
 )
-from orket.core.contracts.interaction_stream import CommitIntent, StreamEventType
+from orket.core.contracts.interaction_stream import StreamEventType
 from orket.core.domain import AuthoritySourceClass, ResultClass
 
 from .contracts import RunPlan
@@ -204,13 +203,6 @@ def control_plane_identity(*, extension_id: str, workload_id: str, input_identit
     return creation_timestamp, run_id
 
 
-async def emit_turn_final_if_needed(*, interaction_context: Any | None, summary: dict[str, Any], workload_id: str) -> None:
-    if interaction_context is None:
-        return
-    await interaction_context.emit_event(StreamEventType.TURN_FINAL, {"authoritative": True, "summary": summary})
-    await interaction_context.request_commit(CommitIntent(type="turn_finalize", ref=workload_id))
-
-
 async def finalize_started_failure(
     *,
     control_plane: ExtensionWorkloadControlPlaneService,
@@ -282,24 +274,13 @@ def error_result_ref(run_id: str, exc: Exception) -> str:
     return f"{run_id}:error:{type(exc).__name__}"
 
 
-def write_json_file(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(json.dumps(payload, indent=2, sort_keys=True).encode("utf-8"))
-
-
-def digest_file(path: Path) -> str:
-    return digest_prefixed(path.read_bytes())
-
-
 __all__ = [
     "begin_control_plane_execution",
     "build_governed_identity",
     "build_sdk_context",
     "compile_workload",
     "control_plane_identity",
-    "digest_file",
     "emit_default_model_events",
-    "emit_turn_final_if_needed",
     "error_result_ref",
     "execute_plan_actions",
     "finalize_started_failure",
@@ -308,5 +289,4 @@ __all__ = [
     "sdk_failure_class",
     "sdk_result_class",
     "sdk_side_effect_observed",
-    "write_json_file",
 ]

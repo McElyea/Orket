@@ -55,6 +55,7 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
 
     # The quick gate job and the full quality job should both run these checks.
     duplicated_in_both_jobs = [
+        "tests/integration/test_workload_publication_ownership.py tests/integration/test_workload_publication_inputs.py tests/integration/test_legacy_publication_ownership.py",
         "tests/integration/test_extension_module_origin.py tests/integration/test_extension_load_ownership.py",
         "tests/integration/test_run_start_publication.py tests/integration/test_run_start_ownership.py",
         "tests/integration/test_sdk_process_lifetime.py tests/integration/test_sdk_process_control_plane.py tests/integration/test_sdk_exchange_ownership.py tests/contracts/test_sdk_process_observations.py tests/runtime/test_controller_dispatcher.py tests/runtime/test_controller_observability.py tests/integration/test_controller_schema_ownership.py",
