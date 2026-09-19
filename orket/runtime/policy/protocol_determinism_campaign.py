@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.protocol_query_scope import validate_protocol_replay_paths
 from orket.runtime.protocol_replay import ProtocolReplayEngine
 
 
@@ -31,6 +32,7 @@ def compare_protocol_determinism_campaign(
     run_ids: list[str],
     baseline_run_id: str | None = None,
 ) -> dict[str, Any]:
+    runs_root = runs_root.resolve()
     candidates = resolve_run_ids(runs_root=runs_root, run_ids=run_ids)
     if not candidates:
         raise ValueError("No run ids found with events.log under runs root.")
@@ -44,6 +46,7 @@ def compare_protocol_determinism_campaign(
     baseline_events = baseline_dir / "events.log"
     if not baseline_events.exists():
         raise ValueError(f"Baseline events.log not found: {baseline_events}")
+    validate_protocol_replay_paths(baseline_events, baseline_dir / "artifacts", allowed_root=runs_root)
 
     engine = ProtocolReplayEngine()
     comparisons: list[dict[str, Any]] = []
@@ -62,6 +65,7 @@ def compare_protocol_determinism_campaign(
             mismatch_count += 1
             continue
 
+        validate_protocol_replay_paths(events_path, candidate_dir / "artifacts", allowed_root=runs_root)
         comparison = engine.compare_replays(
             run_a_events_path=baseline_events,
             run_b_events_path=events_path,
@@ -70,8 +74,6 @@ def compare_protocol_determinism_campaign(
         )
         deterministic_match = bool(comparison.get("deterministic_match", False))
         drift_report = dict(comparison.get("drift_report") or {})
-        if run_id == baseline:
-            deterministic_match = True
         if not deterministic_match:
             mismatch_count += 1
         comparisons.append(
@@ -79,6 +81,10 @@ def compare_protocol_determinism_campaign(
                 "run_id": run_id,
                 "status": "ok",
                 "deterministic_match": deterministic_match,
+                "comparison_status": comparison["comparison_status"],
+                "comparison_scope": comparison["comparison_scope"],
+                "event_count_a": comparison["event_count_a"],
+                "event_count_b": comparison["event_count_b"],
                 "difference_count": len(comparison.get("differences") or []),
                 "state_digest_a": comparison.get("state_digest_a"),
                 "state_digest_b": comparison.get("state_digest_b"),

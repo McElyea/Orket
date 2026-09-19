@@ -1,15 +1,15 @@
 # Protocol Replay Campaign Output Schema (v1)
 
-Last updated: 2026-03-06  
+Last updated: 2026-09-18
 Status: Active (schema contract)  
 Owner: Orket Core
 
 This document freezes the output contract for protocol replay campaign comparisons.
 
 Reference implementation surfaces:
-1. `orket/runtime/protocol_determinism_campaign.py`
+1. `orket/runtime/policy/protocol_determinism_campaign.py`
 2. `scripts/protocol/run_protocol_determinism_campaign.py`
-3. CLI command: `orket protocol campaign`
+3. CLI command: `orket runtime protocol campaign`
 4. API endpoint: `/v1/protocol/replay/campaign`
 
 ## Purpose
@@ -78,6 +78,9 @@ Field rules:
 5. `state_digest_a`: baseline state digest when `status == "ok"`.
 6. `state_digest_b`: candidate state digest when `status == "ok"`.
 7. `differences`: deterministic diff rows from replay comparator.
+8. Optional `comparison_status`: `matched`, `mismatched`, or `insufficient_evidence`.
+9. Optional `comparison_scope`: `observed_protocol_state`; this is not completed-run proof.
+10. Optional `event_count_a` and `event_count_b`: observed event counts on each side.
 
 ## Difference Row Shape
 
@@ -107,11 +110,15 @@ For a fixed campaign invocation (`runs_root`, `baseline_run_id`, `run_id` filter
 2. Comparison row ordering is deterministic.
 3. `difference_count` equals `len(differences)` exactly.
 4. `all_match` is derived mechanically from `mismatch_count`.
+5. The baseline preserves the comparator's verdict. Empty event sequences on either
+   side yield `insufficient_evidence`, `deterministic_match=false` and a campaign
+   mismatch, even when both default digests agree and no content differences exist.
+6. Path and worker ownership follow `docs/specs/PROTOCOL_QUERY_LIFETIME.md`.
 
 ## Exit-Code Contract
 
 For script and CLI strict mode:
-1. `--strict` exits non-zero when `all_match == false`.
+1. Script `--strict` and CLI `--protocol-strict` exit non-zero when `all_match == false`.
 2. Non-strict mode always exits zero unless invocation fails before campaign output is produced.
 
 ## Validation Guidance
@@ -121,7 +128,8 @@ Operator validation checks:
 2. `mismatch_count` aligns with number of rows where:
    - `status == "missing_events"` OR
    - `deterministic_match == false`
-3. For each mismatched row, `difference_count > 0` unless `status == "missing_events"`.
+3. Content mismatches normally have `difference_count > 0`; missing events and
+   `comparison_status == "insufficient_evidence"` need no fabricated content diff.
 
 ## Compatibility Policy
 

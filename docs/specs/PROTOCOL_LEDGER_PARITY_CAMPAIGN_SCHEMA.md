@@ -1,15 +1,22 @@
 # Protocol Ledger Parity Campaign Schema (v1)
 
-Last updated: 2026-03-27  
+Last updated: 2026-09-18
 Status: Active (schema contract)  
 Owner: Orket Core
 
 This document defines the stable output contract for ledger parity campaign artifacts emitted by:
 
-1. `orket/runtime/protocol_ledger_parity_campaign.py`
+1. `orket/runtime/evidence/protocol_ledger_parity_campaign.py`
 2. `scripts/protocol/run_protocol_ledger_parity_campaign.py`
 3. `GET /v1/protocol/ledger-parity/campaign`
-4. `orket protocol parity-campaign`
+4. `orket runtime protocol parity-campaign`
+
+Application query lifetime and path authority follow
+`docs/specs/PROTOCOL_QUERY_LIFETIME.md`. Every selected requested or discovered
+session id must remain under the selected runs root before ledger comparison.
+Two absent projections may agree with null digests; parity does not certify that
+a run occurred or completed. SQLite and protocol observations are not a joint
+transactional snapshot.
 
 ## Top-Level Fields
 

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.protocol_command_service import ProtocolCommand, execute_protocol_command
 from orket.application.services.runtime_execution_result_service import RuntimeExecutionCancelled
 from orket.application.services.runtime_result_lifetime import close_runtime_owner
 from orket.application.services.runtime_result_projection import runtime_result_exit_code, runtime_result_lines
@@ -318,151 +319,29 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
             return 0
 
         if args.command == "protocol":
-            from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
-            from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
-            from orket.runtime.protocol_determinism_campaign import compare_protocol_determinism_campaign
-            from orket.runtime.protocol_ledger_parity_campaign import compare_protocol_ledger_parity_campaign
-            from orket.runtime.protocol_replay import ProtocolReplayEngine
-            from orket.runtime.run_ledger_parity import compare_run_ledger_rows
-
-            def _run_root(run_id: str) -> Path:
-                base = (Path(args.workspace).resolve() / "runs").resolve()
-                candidate = (base / str(run_id).strip()).resolve()
-                if not candidate.is_relative_to(base):
-                    raise ValueError(f"Invalid run id path: {run_id}")
-                return candidate
-
-            def _resolve_events_path(*, run_id: str, override: str | None) -> Path:
-                override_value = str(override or "").strip()
-                if override_value:
-                    return Path(override_value).resolve()
-                return _run_root(run_id) / "events.log"
-
-            def _resolve_artifact_root(*, run_id: str, override: str | None) -> Path | None:
-                override_value = str(override or "").strip()
-                if override_value:
-                    return Path(override_value).resolve()
-                candidate = _run_root(run_id) / "artifacts"
-                return candidate if candidate.exists() else None
-
-            protocol_engine = ProtocolReplayEngine()
-            if args.subcommand == "replay":
-                run_id = str(args.target or "").strip()
-                if not run_id:
-                    raise ValueError(
-                        "protocol replay requires target run_id "
-                        "(e.g. 'orket runtime protocol replay <run_id>')."
-                    )
-                events_path = _resolve_events_path(run_id=run_id, override=args.protocol_events_a)
-                if not events_path.exists():
-                    raise ValueError(f"events.log not found for run '{run_id}' at {events_path}")
-                replay = await asyncio.to_thread(
-                    protocol_engine.replay_from_ledger,
-                    events_log_path=events_path,
-                    artifact_root=_resolve_artifact_root(run_id=run_id, override=args.protocol_artifacts_a),
-                )
-                print(json.dumps(replay, indent=2, ensure_ascii=False))
-                return 0
-
-            if args.subcommand == "compare":
-                run_a = str(args.target or "").strip()
-                run_b = str(args.protocol_run_b or "").strip()
-                if not run_a or not run_b:
-                    raise ValueError(
-                        "protocol compare requires run A target and --protocol-run-b <run_id> "
-                        "(e.g. 'orket runtime protocol compare <run_a> --protocol-run-b <run_b>')."
-                    )
-                events_a = _resolve_events_path(run_id=run_a, override=args.protocol_events_a)
-                events_b = _resolve_events_path(run_id=run_b, override=args.protocol_events_b)
-                if not events_a.exists():
-                    raise ValueError(f"events.log not found for run '{run_a}' at {events_a}")
-                if not events_b.exists():
-                    raise ValueError(f"events.log not found for run '{run_b}' at {events_b}")
-                comparison = await asyncio.to_thread(
-                    protocol_engine.compare_replays,
-                    run_a_events_path=events_a,
-                    run_b_events_path=events_b,
-                    run_a_artifact_root=_resolve_artifact_root(run_id=run_a, override=args.protocol_artifacts_a),
-                    run_b_artifact_root=_resolve_artifact_root(run_id=run_b, override=args.protocol_artifacts_b),
-                )
-                print(json.dumps(comparison, indent=2, ensure_ascii=False))
-                if bool(args.protocol_strict) and not bool(comparison.get("deterministic_match")):
-                    raise ValueError("Protocol replay mismatch detected under --protocol-strict.")
-                return 0
-
-            if args.subcommand == "parity":
-                run_id = str(args.target or "").strip()
-                if not run_id:
-                    raise ValueError(
-                        "protocol parity requires target run_id "
-                        "(e.g. 'orket runtime protocol parity <run_id>')."
-                    )
-                sqlite_db = (
-                    await _resolve_path(str(args.protocol_sqlite_db))
-                    if str(args.protocol_sqlite_db or "").strip()
-                    else await _resolve_path(Path(args.workspace) / ".orket" / "durable" / "db" / "orket_persistence.db")
-                )
-                if not sqlite_db.exists():
-                    raise ValueError(f"SQLite run ledger database not found: {sqlite_db}")
-                parity = await compare_run_ledger_rows(
-                    sqlite_repo=AsyncRunLedgerRepository(sqlite_db),
-                    protocol_repo=AsyncProtocolRunLedgerRepository(await _resolve_path(args.workspace)),
-                    session_id=run_id,
-                )
-                print(json.dumps(parity, indent=2, ensure_ascii=False))
-                if bool(args.protocol_strict) and not bool(parity.get("parity_ok")):
-                    raise ValueError("Run ledger parity mismatch detected under --protocol-strict.")
-                return 0
-
-            if args.subcommand == "campaign":
-                runs_root = (
-                    await _resolve_path(str(args.protocol_runs_root))
-                    if str(args.protocol_runs_root or "").strip()
-                    else await _resolve_path(Path(args.workspace) / "runs")
-                )
-                campaign = await asyncio.to_thread(
-                    compare_protocol_determinism_campaign,
-                    runs_root=runs_root,
-                    run_ids=list(args.protocol_campaign_run_id or []),
-                    baseline_run_id=str(args.protocol_baseline_run_id or "").strip() or None,
-                )
-                print(json.dumps(campaign, indent=2, ensure_ascii=False))
-                if bool(args.protocol_strict) and not bool(campaign.get("all_match", False)):
-                    raise ValueError("Protocol replay campaign mismatch detected under --protocol-strict.")
-                return 0
-
-            if args.subcommand == "parity-campaign":
-                sqlite_db = (
-                    await _resolve_path(str(args.protocol_sqlite_db))
-                    if str(args.protocol_sqlite_db or "").strip()
-                    else await _resolve_path(Path(args.workspace) / ".orket" / "durable" / "db" / "orket_persistence.db")
-                )
-                if not sqlite_db.exists():
-                    raise ValueError(f"SQLite run ledger database not found: {sqlite_db}")
-                campaign = await compare_protocol_ledger_parity_campaign(
-                    sqlite_db=sqlite_db,
-                    protocol_root=await _resolve_path(args.workspace),
-                    session_ids=list(args.protocol_parity_session_id or []),
-                    discover_limit=max(0, int(args.protocol_parity_discover_limit)),
-                )
-                print(json.dumps(campaign, indent=2, ensure_ascii=False))
-                if bool(args.protocol_strict):
-                    mismatches = int(campaign.get("mismatch_count") or 0)
-                    allowed = max(0, int(args.protocol_max_parity_mismatches))
-                    if mismatches > allowed:
-                        raise ValueError("Run ledger parity campaign mismatch detected under --protocol-strict.")
-                return 0
-
-            raise ValueError(
-                "Supported protocol commands: 'orket runtime protocol replay <run_id>', "
-                "'orket runtime protocol compare <run_a> --protocol-run-b <run_b>', or "
-                "'orket runtime protocol parity <run_id> [--protocol-sqlite-db <path>]', or "
-                "'orket runtime protocol campaign [--protocol-runs-root <path>] "
-                "[--protocol-campaign-run-id <run_id>] "
-                "[--protocol-baseline-run-id <run_id>]', or "
-                "'orket runtime protocol parity-campaign [--protocol-sqlite-db <path>] "
-                "[--protocol-parity-session-id <id>]'."
-            )
+            result = await execute_protocol_command(ProtocolCommand(
+                action=str(args.subcommand or ""),
+                workspace=Path(args.workspace),
+                invocation_root=Path.cwd(),
+                run_a=str(args.target or "").strip(),
+                run_b=str(args.protocol_run_b or "").strip(),
+                events_a=args.protocol_events_a,
+                events_b=args.protocol_events_b,
+                artifacts_a=args.protocol_artifacts_a,
+                artifacts_b=args.protocol_artifacts_b,
+                runs_root=args.protocol_runs_root,
+                campaign_run_ids=tuple(args.protocol_campaign_run_id or ()),
+                baseline_run_id=args.protocol_baseline_run_id,
+                parity_session_ids=tuple(args.protocol_parity_session_id or ()),
+                discover_limit=int(args.protocol_parity_discover_limit),
+                sqlite_db=args.protocol_sqlite_db,
+                strict=bool(args.protocol_strict),
+                max_parity_mismatches=int(args.protocol_max_parity_mismatches),
+            ))
+            print(json.dumps(result.payload, indent=2, ensure_ascii=False))
+            if result.strict_failure:
+                raise ValueError(result.strict_failure)
+            return 0
 
         workspace = await _resolve_path(args.workspace)
         engine = OrchestrationEngine(workspace, args.department)

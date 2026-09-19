@@ -5,13 +5,14 @@ import logging
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated, Any, cast
+from typing import Any, cast
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from orket.application.services.protocol_replay_service import LedgerFramingError, ProtocolReplayService
+from orket.application.services.protocol_replay_service import ProtocolReplayService
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
+from orket.interfaces.routers.protocol_queries import build_protocol_query_router
 
 
 class InteractionSessionStartRequest(BaseModel):
@@ -42,7 +43,7 @@ def build_sessions_router(
     validate_builtin_workload_start: Callable[..., None],
     run_builtin_workload: Callable[..., Any],
     commit_intent_factory: Callable[[str], Any],
-    workspace_root_getter: Callable[[], Path] = lambda: Path().resolve(),
+    workspace_root_getter: Callable[[], Path] = Path.cwd,
     protocol_replay_service_getter: Callable[[], Any] | None = None,
     control_plane_publication_getter: Callable[[], Any] | None = None,
 ) -> APIRouter:
@@ -64,7 +65,7 @@ def build_sessions_router(
     def _get_protocol_replay_service() -> Any:
         if protocol_replay_service_getter is not None:
             return protocol_replay_service_getter()
-        return ProtocolReplayService(workspace_root=_workspace_root())
+        return ProtocolReplayService(workspace_root=workspace_root_getter())
 
     @router.post("/interactions/sessions")
     async def start_interaction_session(req: InteractionSessionStartRequest) -> dict[str, Any]:
@@ -158,7 +159,7 @@ def build_sessions_router(
                         interaction_context=context,
                     )
                     await interaction_manager.finalize(session_id, turn_id)
-            except (RuntimeError, ValueError, TypeError, OSError, asyncio.TimeoutError) as exc:
+            except (RuntimeError, ValueError, TypeError, OSError, TimeoutError) as exc:
                 await interaction_manager.cancel(turn_id)
                 await context.request_commit(commit_intent_factory(str(exc)))
                 await interaction_manager.finalize(session_id, turn_id)
@@ -171,7 +172,7 @@ def build_sessions_router(
             except asyncio.CancelledError:
                 _logger.warning("interaction turn canceled: session=%s turn=%s", session_id, turn_id)
                 raise
-            except (RuntimeError, ValueError, TypeError, OSError, asyncio.TimeoutError) as exc:
+            except (RuntimeError, ValueError, TypeError, OSError, TimeoutError) as exc:
                 _logger.error(
                     "interaction turn failed: session=%s turn=%s error=%s",
                     session_id,
@@ -253,76 +254,5 @@ def build_sessions_router(
         except ValueError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
-    @router.get("/protocol/runs/{run_id}/replay")
-    async def replay_protocol_run(run_id: str) -> Any:
-        try:
-            replay = await _get_protocol_replay_service().replay_protocol_run(run_id=run_id)
-        except FileNotFoundError as exc:
-            raise HTTPException(status_code=404, detail=str(exc)) from exc
-        except LedgerFramingError as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
-        return replay
-
-    @router.get("/protocol/replay/compare")
-    async def compare_protocol_replays(run_a: str, run_b: str) -> Any:
-        try:
-            comparison = await _get_protocol_replay_service().compare_protocol_replays(run_a=run_a, run_b=run_b)
-        except FileNotFoundError as exc:
-            raise HTTPException(status_code=404, detail=str(exc)) from exc
-        except LedgerFramingError as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
-        return comparison
-
-    @router.get("/protocol/replay/campaign")
-    async def campaign_protocol_replays(
-        run_id: Annotated[list[str] | None, Query()] = None,
-        baseline_run: str | None = None,
-        runs_root: str | None = None,
-    ) -> Any:
-        try:
-            return await _get_protocol_replay_service().compare_protocol_determinism_campaign(
-                run_ids=list(run_id or []),
-                baseline_run=baseline_run,
-                runs_root=runs_root,
-            )
-        except FileNotFoundError as exc:
-            raise HTTPException(status_code=404, detail=str(exc)) from exc
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    @router.get("/protocol/runs/{run_id}/ledger-parity")
-    async def compare_protocol_and_sqlite_run_ledgers(run_id: str, sqlite_db_path: str | None = None) -> Any:
-        try:
-            return await _get_protocol_replay_service().compare_protocol_and_sqlite_run_ledgers(
-                run_id=run_id,
-                sqlite_db_path=sqlite_db_path,
-            )
-        except FileNotFoundError as exc:
-            raise HTTPException(status_code=404, detail=str(exc)) from exc
-        except LedgerFramingError as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    @router.get("/protocol/ledger-parity/campaign")
-    async def campaign_protocol_ledger_parity(
-        session_id: Annotated[list[str] | None, Query()] = None,
-        sqlite_db_path: str | None = None,
-        discover_limit: int = 200,
-    ) -> Any:
-        try:
-            return await _get_protocol_replay_service().compare_protocol_ledger_parity_campaign(
-                session_ids=list(session_id or []),
-                sqlite_db_path=sqlite_db_path,
-                discover_limit=discover_limit,
-            )
-        except FileNotFoundError as exc:
-            raise HTTPException(status_code=404, detail=str(exc)) from exc
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
-
+    router.include_router(build_protocol_query_router(_get_protocol_replay_service))
     return router

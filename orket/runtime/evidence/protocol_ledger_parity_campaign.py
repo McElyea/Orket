@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 from typing import Any
 
 import aiosqlite
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
+from orket.application.services.protocol_query_scope import resolve_protocol_run_root
 from orket.runtime.run_ledger_parity import compare_run_ledger_rows
 
 
@@ -32,6 +33,7 @@ def _discover_protocol_session_ids(protocol_root: Path) -> list[str]:
     for run_dir in sorted(runs_root.iterdir(), key=lambda item: item.name):
         if not run_dir.is_dir():
             continue
+        resolve_protocol_run_root(protocol_root, run_dir.name)
         if not (run_dir / "events.log").exists():
             continue
         session_ids.append(run_dir.name)
@@ -39,7 +41,7 @@ def _discover_protocol_session_ids(protocol_root: Path) -> list[str]:
 
 
 async def _discover_sqlite_session_ids(*, sqlite_db: Path, limit: int) -> list[str]:
-    if not await asyncio.to_thread(sqlite_db.exists):
+    if not await run_owned_thread(sqlite_db.exists, label="protocol-parity-sqlite-exists"):
         return []
     rows: list[str] = []
     async with connect_sqlite_wal(sqlite_db) as conn:
@@ -99,6 +101,25 @@ def _campaign_summary_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return summary
 
 
+async def _campaign_candidates(
+    sqlite_db: Path, protocol_root: Path, requested_ids: list[str], discover_limit: int,
+) -> tuple[list[str], list[str], list[str]]:
+    def validate(ids: list[str]) -> None:
+        for session_id in ids:
+            resolve_protocol_run_root(protocol_root, session_id)
+
+    await run_owned_thread(lambda: validate(requested_ids), label="protocol-parity-request-paths")
+    sqlite_ids = await _discover_sqlite_session_ids(sqlite_db=sqlite_db, limit=discover_limit)
+    protocol_ids = await run_owned_thread(
+        lambda: _discover_protocol_session_ids(protocol_root), label="protocol-parity-discovery",
+    )
+    campaign_ids = requested_ids or _normalize_session_ids(sqlite_ids + protocol_ids)
+    if not campaign_ids:
+        raise ValueError("No session ids available for parity campaign.")
+    await run_owned_thread(lambda: validate(campaign_ids), label="protocol-parity-selected-paths")
+    return campaign_ids, sqlite_ids, protocol_ids
+
+
 async def compare_protocol_ledger_parity_campaign(
     *,
     sqlite_db: Path,
@@ -107,16 +128,11 @@ async def compare_protocol_ledger_parity_campaign(
     discover_limit: int = 200,
 ) -> dict[str, Any]:
     requested_ids = _normalize_session_ids(session_ids)
-    discovered_sqlite_ids = await _discover_sqlite_session_ids(
-        sqlite_db=sqlite_db,
-        limit=max(0, int(discover_limit)),
+    invocation_root = Path.cwd()
+    sqlite_db, protocol_root = invocation_root / sqlite_db, invocation_root / protocol_root
+    campaign_ids, discovered_sqlite_ids, discovered_protocol_ids = await _campaign_candidates(
+        sqlite_db, protocol_root, requested_ids, max(0, int(discover_limit)),
     )
-    discovered_protocol_ids = _discover_protocol_session_ids(protocol_root)
-
-    campaign_ids = requested_ids or _normalize_session_ids(discovered_sqlite_ids + discovered_protocol_ids)
-
-    if not campaign_ids:
-        raise ValueError("No session ids available for parity campaign.")
 
     sqlite_repo = AsyncRunLedgerRepository(sqlite_db)
     protocol_repo = AsyncProtocolRunLedgerRepository(protocol_root)

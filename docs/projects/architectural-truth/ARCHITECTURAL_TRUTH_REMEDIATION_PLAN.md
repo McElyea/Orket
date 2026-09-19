@@ -12516,15 +12516,15 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.22
-API startup checkpoint below. The graph has 20 forbidden pairs, zero cross-layer
-cycles and eight unresolved import/reflection sites. Preserve the historical clock
-failures and all failed source/native observations. The full run's one stale
-benchmark expectation is corrected and passes focused proof; a fresh all-green
-full suite remains unclaimed. Canonical Ruff still has 105 findings. Remaining core
-clocks, manifest reads, schema identities, async reachability and adapter
-classification remain actionable. E1/E2, CAP-1/2/3, hosted Quality, release readiness
-and explicit whole-lane acceptance remain open.
+Next action: continue C/D from their numbered requirements after the 0.6.23
+protocol query checkpoint below. The graph has 18 forbidden pairs, zero cross-layer
+cycles and eight unresolved import/reflection sites. Preserve every failed and
+passing source/native observation and the historical clock diagnosis. Canonical
+Ruff still has 103 findings. The prior stale benchmark expectation passes in the
+new source/native selection, but no fresh all-green full suite is claimed.
+Remaining core clocks, manifest reads, schema identities, async reachability and
+adapter classification remain actionable. E1/E2, CAP-1/2/3, hosted Quality, release
+readiness and explicit whole-lane acceptance remain open.
 
 The final BT-3 audit accepts builtin evidence-based completion and scoped replay.
 It preserves the initial installed failures, corrected external fixture coverage,
@@ -15061,3 +15061,135 @@ Remote publication, if performed outside work hours, has a separate receipt and 
 - `tests/platform/test_runtime_print_policy.py`
 - `tests/rulesim/test_live_path_contract_failures.py`
 - `tests/runtime/test_runtime_subpackage_boundaries.py`
+
+
+### Protocol query authority candidate: 2026-09-18 (0.6.23)
+
+Observed path: primary. Result: partial success; the whole goal remains active.
+Reentry verified all 531 artifacts bound by the prior 0.6.22 checkpoint, the
+publication receipt and unchanged original/reference worktrees before editing.
+The fixed reentry snapshot is `.tmp/c-transport-authority/session-state.json`
+(SHA-256 `c1aae1297aac7920de1efc9f8e2713825cb0a197704bd90eb26e69eef5d30d6f`).
+The historical Linux clock diagnosis remains retained; it does not identify the
+host actor or claim host-clock repair.
+
+Five real counterexamples in `before/report.json` failed as expected: cancellation
+returned while a ledger worker read, API shutdown declared its owner closed before
+that worker settled, root resolution blocked the event loop, an empty campaign
+claimed a match, and an authenticated TCP request read a parity ledger outside its
+workspace. The latter returned 200 and matching digests; it was not merely an
+unreached path discovered by inspection.
+
+Application now owns CLI dispatch, captured query inputs, path validation and
+worker/query lifetime. The HTTP protocol router delegates to this authority.
+Core comparison requires events on both sides and exposes observed-state scope;
+campaigns retain the baseline comparator result instead of forcing a match.
+Requested/discovered session ids and linked inputs are checked before comparison.
+Explicit CLI input files retain their operator-selected path authority. No adapter
+proxy, extra dependency exception or capability expansion was added. Contracts:
+`docs/specs/PROTOCOL_QUERY_LIFETIME.md` and
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_QUERIES_CD_2026-09-18.md`.
+
+`repaired-initial/report.json` records 74 passing affected cases. The distinct
+`adversarial/report.json` records 14 passing cases including actual TCP refusal of
+linked event/receipt/artifact files, preservation of ledger failure after
+cancellation, discovered SQLite path refusal and populated comparison scope.
+Inputs remained unchanged during each run; no cases skipped. These observations
+precede the strengthened first-worker input-capture assertion and final package
+candidate. Fresh package/native/actual CLI proof and final review remain pending.
+This is not full-suite, hosted Quality, provider, release or whole-lane acceptance.
+
+
+#### Final 0.6.23 protocol query proof
+
+The earlier package and `candidate/source-final/` observation remain retained
+({'cases': 754, 'failure': 0, 'error': 0, 'skipped': 0}). Review then found the default router getter still resolving
+`.` on the event-loop thread; `default-getter-before/observation.json` records an
+actual ASGI request returning 200 with that resolution. The getter now captures
+the working directory without resolving it; owned workers resolve query paths.
+`default-getter-after/observation.json` and the new regression record the correction.
+The final candidate uses separate archives, private environments and harness.
+
+| Envelope | Pass / fail / error / skip | Seconds (source elapsed; native JUnit) | Core origins |
+|---|---:|---:|---:|
+| Source Windows 3.11 | 755 / 0 / 0 / 0 | 827.531 | source |
+| q23b-win-py311 | 755 / 0 / 0 / 0 | 861.172 | 926 |
+| q23b-linux-py311 | 755 / 0 / 0 / 0 | 543.050 | 926 |
+| q23b-win-py312 | 755 / 0 / 0 / 0 | 1069.560 | 926 |
+| q23b-linux-py312 | 755 / 0 / 0 / 0 | 607.312 | 926 |
+
+Every installed cell checks exact case identities, actual imported origins,
+unchanged copied support files, wheel identities, real valid/malformed CLI startup,
+ToolGate denial and retained child termination. The 1898-file
+harness includes no core/SDK source shadow. Source, wheel and sdist agree on all
+1044 core Python files and 1059 package files.
+At most one Windows and one WSL cell run concurrently. The earlier source run took
+832 seconds; before this final run the process budgets were declared as 1,200 seconds
+for source, 1,500 for each native driver and 1,800 for its launcher. Runtime and test
+assertions, including the 0.5-second responsiveness bound, remain unchanged. This
+is portability proof, not capacity acceptance.
+
+The new end-to-end case executes the installed CLI's five protocol operations,
+explicit external event input, strict empty-campaign refusal and path-escape refusal
+through actual startup and filesystem/SQLite observations. Integration proof includes
+authenticated TCP requests, held real file workers, repeated cancellation, worker
+failure after cancellation, captured ids, discovered-id refusal and linked-file
+refusal. The default router probe uses ASGI transport, not TCP. Populated incomplete
+runs can match observed state; no run-completion or receipt-authenticity claim is added.
+
+Final manifest: `.tmp/c-transport-authority/final-candidate/manifest.json`, SHA-256
+`c4847f70ac319c4b4b15dfb076befa59b1bfbb564521dd6f1314f256ed26883f`. Native audit SHA-256:
+`8a5589a8c5c546e308a138e61cf02e558d158babfcf947055e9d7cdc7db33608`. Core wheel SHA-256:
+`f616ac1c2b890b15be2dac3bdce88e8caa75522b30349be47205920b9902dce7`. Core sdist SHA-256:
+`145dab8e9e1f23eff55dfd028196bf3ee60919f88619e6057bbcf775a9f9ff7d`.
+
+The separate final structural cohort passes 51 cases. Canonical Ruff reports 103
+findings; changed Python passes its narrower check. The graph has 1,044 modules,
+3,290 sites, 18 forbidden pairs, zero cross-layer cycles, eight analysis errors and
+zero unknown modules. The two CLI-to-storage edges were removed without adding
+exceptions; dependency and release-readiness verdicts still fail.
+
+Native Windows 3.11, Windows 3.12 and Linux 3.12 retain a Pydantic
+`UnsupportedFieldAttributeWarning` during concurrent API construction, naming
+`session_id` on Windows 3.11 and `approval_id` on the two 3.12 cells.
+The previous 0.6.22 Windows 3.11 log contains the same warning class for `limit`; its cause
+is not established by this checkpoint. Actual query binding is exercised by the
+TCP parity refusal cases, but the concurrent-schema warning remains visible quality
+debt. Existing Starlette/AnyIO deprecation warnings are also retained.
+
+No fresh full-suite, hosted Quality, provider or Gitea proof is claimed. The previous
+0.6.22 full-suite observation (6,852 pass, one stale expectation failure, 89 skips)
+and its focused correction remain retained; that corrected contract is also selected
+in this candidate. Query lifetime does not add forced thread termination, a joint
+SQLite/protocol snapshot, filesystem fencing against external mutation, hostile-code
+containment, or any C/D/E/CAP or whole-lane acceptance. Work-hour pushes remain
+prohibited; any off-hours branch/tag publication receives a separate timed receipt.
+
+#### Exact 0.6.23 checkpoint files
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/architecture/CONTRACT_DELTA_PROTOCOL_QUERIES_CD_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md`
+- `docs/specs/PROTOCOL_QUERY_LIFETIME.md`
+- `docs/specs/PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md`
+- `docs/specs/SUPERVISOR_RUNTIME_SESSION_BOUNDARY_V1.md`
+- `orket/application/services/protocol_command_service.py`
+- `orket/application/services/protocol_query_scope.py`
+- `orket/application/services/protocol_replay_service.py`
+- `orket/core/contracts/protocol_replay_comparison.py`
+- `orket/interfaces/cli.py`
+- `orket/interfaces/routers/protocol_queries.py`
+- `orket/interfaces/routers/sessions.py`
+- `orket/runtime/evidence/protocol_ledger_parity_campaign.py`
+- `orket/runtime/evidence/protocol_replay.py`
+- `orket/runtime/policy/protocol_determinism_campaign.py`
+- `pyproject.toml`
+- `tests/e2e/test_protocol_query_commands.py`
+- `tests/integration/test_protocol_query_ownership.py`

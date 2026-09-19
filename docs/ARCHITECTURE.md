@@ -216,6 +216,13 @@ Responsibilities:
 
 Application services own runtime truth.
 
+Protocol inspection follows that ownership: CLI and HTTP delegate to application
+query services that capture requested inputs and retain filesystem/query cleanup
+through cancellation. Core compares explicit snapshots with event evidence
+admission; application campaigns preserve the comparator's baseline verdict.
+Path scope, explicit CLI operands and observed-state limits are specified in
+`docs/specs/PROTOCOL_QUERY_LIFETIME.md`.
+
 `UserSettingsService` coordinates captured settings locations, verified file
 publication and resumable preference migration. The public settings boundary
 captures nested values before dispatch and retains file workers through

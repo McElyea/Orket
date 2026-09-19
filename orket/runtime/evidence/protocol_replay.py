@@ -7,6 +7,7 @@ from typing import Any
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.core.contracts import protocol_hashing
+from orket.core.contracts.protocol_replay_comparison import compare_protocol_snapshots
 from orket.runtime.contract_bootstrap import load_runtime_contract_snapshots
 from orket.runtime.replay_compatibility import (
     evaluate_replay_compatibility,
@@ -268,78 +269,10 @@ class ProtocolReplayEngine:
             require_replay_artifact_completeness=bool(require_replay_artifact_completeness),
         )
 
-        differences: list[dict[str, Any]] = []
-        self._maybe_add_difference(differences, "status", replay_a["status"], replay_b["status"])
-        self._maybe_add_difference(differences, "failure_class", replay_a["failure_class"], replay_b["failure_class"])
-        self._maybe_add_difference(
-            differences, "failure_reason", replay_a["failure_reason"], replay_b["failure_reason"]
-        )
-        self._maybe_add_difference(
-            differences, "last_event_seq", replay_a["last_event_seq"], replay_b["last_event_seq"]
-        )
-        self._maybe_add_difference(
-            differences,
-            "ledger_schema_version",
-            replay_a["ledger_schema_version"],
-            replay_b["ledger_schema_version"],
-        )
-        self._maybe_add_difference(
-            differences,
-            "runtime_contract_hash",
-            replay_a["runtime_contract_hash"],
-            replay_b["runtime_contract_hash"],
-        )
-        self._maybe_add_difference(
-            differences,
-            "runtime_policy_versions",
-            replay_a["runtime_policy_versions"],
-            replay_b["runtime_policy_versions"],
-        )
-        self._maybe_add_difference(
-            differences,
-            "compatibility_validation",
-            replay_a["compatibility_validation"],
-            replay_b["compatibility_validation"],
-        )
-        self._maybe_add_difference(differences, "operations", replay_a["operations"], replay_b["operations"])
-        self._maybe_add_difference(
-            differences,
-            "artifact_inventory",
-            replay_a["artifact_inventory"],
-            replay_b["artifact_inventory"],
-        )
-        self._maybe_add_difference(
-            differences,
-            "receipt_inventory",
-            replay_a["receipt_inventory"],
-            replay_b["receipt_inventory"],
-        )
-
-        deterministic_match = replay_a["state_digest"] == replay_b["state_digest"]
-        drift_report = classify_replay_drift(differences=differences)
+        comparison = compare_protocol_snapshots(replay_a, replay_b)
         return {
-            "deterministic_match": deterministic_match and not differences,
-            "state_digest_a": replay_a["state_digest"],
-            "state_digest_b": replay_b["state_digest"],
-            "differences": differences,
-            "drift_report": drift_report,
+            **comparison,
+            "drift_report": classify_replay_drift(differences=comparison["differences"]),
             "run_a": replay_a,
             "run_b": replay_b,
         }
-
-    @staticmethod
-    def _maybe_add_difference(
-        differences: list[dict[str, Any]],
-        field: str,
-        value_a: Any,
-        value_b: Any,
-    ) -> None:
-        if value_a == value_b:
-            return
-        differences.append(
-            {
-                "field": str(field),
-                "a": value_a,
-                "b": value_b,
-            }
-        )

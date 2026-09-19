@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.23] - 2026-09-18 - "Owned protocol queries"
+
+### Fixed
+- Delegate protocol CLI dispatch to application services and retain replay/parity workers through cancellation and API shutdown.
+- Capture query inputs before awaiting, resolve paths off the event loop, and refuse requested or discovered session paths and linked files escaping the selected query root.
+- Require observed events on both sides of replay comparisons; an empty baseline cannot make its campaign pass.
+- Preserve explicit CLI file operands, HTTP error mappings and populated comparison fields; add comparison scope, evidence status and event counts.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration and limits: `docs/specs/PROTOCOL_QUERY_LIFETIME.md` and `docs/architecture/CONTRACT_DELTA_PROTOCOL_QUERIES_CD_2026-09-18.md`.
+- Stability: this checkpoint retains separate source, installed and quality observations in the architectural-truth plan; whole-lane acceptance remains open.
+
 ## [0.6.22] - 2026-09-18 - "Owned API startup"
 
 ### Fixed

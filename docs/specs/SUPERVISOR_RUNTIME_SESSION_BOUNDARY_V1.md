@@ -1,6 +1,6 @@
 # Supervisor Runtime Session Boundary V1
 
-Last updated: 2026-04-01
+Last updated: 2026-09-18
 Status: Active
 Owner: Orket Core
 Source requirements: `docs/projects/archive/SupervisorRuntime/SRF03312026-LANE-CLOSEOUT/SUPERVISOR_RUNTIME_FOUNDATIONS_REQUIREMENTS.md`
@@ -138,7 +138,7 @@ For the admitted protocol surfaces:
 
 The selected session boundary must fail closed when:
 1. a requested workspace path escapes the resolved workspace root
-2. a requested `runs_root` or SQLite path escapes the resolved workspace root on the admitted protocol surfaces
+2. a requested `runs_root`, SQLite path, explicit/discovered session directory or linked protocol file escapes its selected root; application path and worker lifetime authority is `docs/specs/PROTOCOL_QUERY_LIFETIME.md`
 3. the target workload id is missing or unsupported for the selected turn path
 4. a client attempts to substitute subordinate identifiers for the host-owned `session_id`
 5. a later surface tries to treat replay, reconstruction, comparison, or parity artifacts as execution or continuation authority
