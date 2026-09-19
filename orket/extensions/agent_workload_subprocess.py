@@ -12,6 +12,8 @@ import threading
 from pathlib import Path
 from typing import cast
 
+from orket.adapters.execution.extension_modules import load_extension_module
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.extensions.sdk_workload_subprocess import (
     DeclaredStdlibImportHook,
     _guarded_import,
@@ -115,7 +117,7 @@ def _load_workload(
     sys.meta_path.insert(0, import_hook)
     builtins.__import__ = _guarded_import(import_hook, builtins.__import__)
     importlib.import_module = _guarded_import_module(import_hook, importlib.import_module)
-    module = importlib.import_module(module_name)
+    module = load_extension_module(extension_root, module_name)
     target = getattr(module, attr_name, None)
     if target is None:
         raise ValueError(f"E_SDK_ENTRYPOINT_MISSING: {entrypoint}")
@@ -134,11 +136,10 @@ async def _run(argv: list[str]) -> int:
     allowed_payload = json.loads(argv[2])
     if not isinstance(allowed_payload, list) or not all(isinstance(item, str) for item in allowed_payload):
         raise ValueError("E_SDK_AGENT_CHILD_STDLIB_INVALID")
-    workload = await asyncio.to_thread(
-        _load_workload,
-        extension_root=extension_root,
-        entrypoint=entrypoint,
-        allowed_stdlib_modules=set(allowed_payload),
+    workload = await run_owned_thread(
+        lambda: _load_workload(extension_root=extension_root, entrypoint=entrypoint,
+                               allowed_stdlib_modules=set(allowed_payload)),
+        label="agent-extension-load",
     )
     reader = _DaemonStdinReader()
     await run_agent_workload(

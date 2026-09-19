@@ -4,6 +4,13 @@ Last updated: 2026-09-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Epic bootstrap retains its filesystem worker through interruption. Initial artifact
+publication retries native Windows access/sharing refusals within a two-second
+budget, verifies directory identity and preserves incomplete staging on exhaustion.
+Publication may complete before cancellation; ledger startup remains a later step.
+Contract, diagnostics and limits:
+`docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
+
 Application owns prompt asset commands, validated interactive setup, captured
 vision command inputs and operator runtime interpretation. Core owns prompt
 metadata transitions over a supplied date. Prompt/setup/image publication uses
@@ -394,6 +401,14 @@ verify external effects, objective satisfaction, or full execution. Its complete
 comparison claim is relative to the retained control-plane inventory. Contract:
 `docs/specs/GOVERNED_AGENT_LOOP_V1.md`; delta:
 `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_REPLAY_BT3_2026-09-12.md`.
+
+Extension entrypoint loading shares selected-origin admission in
+`orket/adapters/execution/extension_modules.py`. Legacy/direct SDK loaders and
+both child entrypoints verify package parents and the selected module before
+adoption. Conflicting cached roots refuse explicitly; Python's same-root cache
+and trusted-code posture remain. Legacy registration and SDK source-validation
+workers retain interruption ownership. Migration and exact limits:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_ORIGINS_CD_2026-09-19.md`.
 
 `sdk_workload_subprocess.py` bounds import-hook origin inspection with thread-local
 reentry state. POSIX Python 3.12 `Path` construction can import `ntpath` internally;

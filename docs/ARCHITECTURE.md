@@ -10,6 +10,11 @@ Rules in this document are normative for target-state architecture and for new/m
 
 The architecture is intentionally minimal. Each rule exists to prevent a real systemic failure mode.
 
+Run-start bootstrap retains its worker through interruption; side-effecting storage
+owns bounded native directory publication. Retry timing does not replace captured
+run time. The concrete refusal and partial-effect limits live in
+`docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
+
 ## Implementation Status
 
 This document describes the target architecture of the Orket runtime.
@@ -42,7 +47,7 @@ register also records review-discovered ship-risk and self-deception debt that i
 not accepted as target-architecture conformance.
 
 1. Dependency layering exceptions:
-   1. The 0.6.32 generated graph has no forbidden static pairs or cross-layer cycles, but eight unresolved dynamic-import/reflection sites still fail its verdict. Core purity and runtime ownership remain separate C/D obligations; zero static pairs does not establish full conformance.
+   1. The 0.6.33 generated graph has no forbidden static pairs or cross-layer cycles, but six unresolved dynamic-import/reflection sites still fail its verdict. Core purity and runtime ownership remain separate C/D obligations; zero static pairs does not establish full conformance.
 2. Decision-node purity exceptions:
    1. `orket/decision_nodes/builtins.py` still retains mutable planning/routing context. Loop limits now consume immutable explicit values; application owns registry selection, executable tool bindings, provider construction and organization overrides. API authentication, observed paths, board loading and calendar inputs now belong to application services; API strategy retains request/presentation recommendations. API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths also live in explicit services.
 3. API runtime composition:
@@ -229,6 +234,12 @@ Responsibilities:
 6. observability sequencing
 
 Application services own runtime truth.
+
+Extension entrypoint adoption uses a shared side-effecting source-origin adapter.
+Application retains legacy registration and SDK validation workers through
+interruption. Selected module/package identity checks do not establish transitive
+import provenance or hostile-code containment. Migration and remaining lifetime
+scope: `docs/architecture/CONTRACT_DELTA_EXTENSION_ORIGINS_CD_2026-09-19.md`.
 
 Protocol inspection follows that ownership: CLI and HTTP delegate to application
 query services that capture requested inputs and retain filesystem/query cleanup

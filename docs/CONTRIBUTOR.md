@@ -151,6 +151,10 @@ new callers must use `--card`; removal requires an explicit `0.7.0` contract del
 ## Testing
 
 1. Prefer real filesystems, databases, and integration paths over mocks when practical.
+   Bootstrap publication proof must retain native access failures and incomplete
+   staging, exercise held-handle release/exhaustion and owned interruption, and
+   distinguish Windows from POSIX rename behavior. See
+   `docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
 2. Keep tests deterministic and isolated.
 3. For refactors, prove parity with regression tests.
 4. Provider-backed runtime selection and local warmup authority live in `orket/runtime/config/provider_runtime_target.py`; `orket/runtime/provider_runtime_target.py` is a one-release compatibility alias. Pure provider identity and target values live in `orket/core/contracts/provider_runtime.py`. Runtime paths and provider verification scripts must reuse these authorities and supply captured provider settings where available.
@@ -169,6 +173,11 @@ a claim that every repository file is included. Exit 2 discloses byte/character
 limit omissions; exit 1 reports discovery/read/write errors. Review the filter and
 output before sharing. The ignored local `project_dump.py` is not repository
 tooling or a test prerequisite.
+
+Extension tests that create independent source roots must use distinct top-level
+module names or separate Python processes. A cached module from another root is
+an admission error, not a fixture to reuse. Source-origin and load-worker limits
+live in `docs/architecture/CONTRACT_DELTA_EXTENSION_ORIGINS_CD_2026-09-19.md`.
 
 ### Local provider development and testing
 

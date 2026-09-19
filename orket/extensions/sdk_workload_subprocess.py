@@ -11,6 +11,7 @@ import threading
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.extension_modules import load_extension_module
 from orket.extensions.import_guard import ExtensionImportGuard
 from orket.extensions.sdk_capability_authorization import (
     FIRST_SLICE_CAPABILITIES,
@@ -131,7 +132,11 @@ def _run_request(request: dict[str, Any]) -> dict[str, Any]:
     importlib.import_module = _guarded_import_module(import_hook, importlib.import_module)
     try:
         module_name, attr_name = WorkloadLoader.parse_sdk_entrypoint(entrypoint)
-        module = importlib.import_module(module_name)
+        WorkloadLoader.validate_extension_imports(
+            extension_root, module_name, allowed_stdlib_modules=tuple(allowed_stdlib_modules),
+            enforce_declared_stdlib=True,
+        )
+        module = load_extension_module(extension_root, module_name)
         target = getattr(module, attr_name, None)
         run_callable = _resolve_run_callable(target, entrypoint)
         result = run_callable(sdk_context, dict(request.get("input_payload", {})))

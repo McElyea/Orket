@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.storage.run_start_publication import publish_run_start_directory
 from orket.runtime.contract_bootstrap import (
     RuntimeContractSnapshots,
     load_runtime_contract_snapshots,
@@ -21,6 +22,8 @@ _DETERMINISM_RANK = {
 }
 _RUN_IDENTITY_SCOPE = "session_bootstrap"
 _RUN_IDENTITY_PROJECTION_SOURCE = "session_bootstrap_artifacts"
+# Bootstrap may wait for a short native file hold, but never retry indefinitely.
+_PUBLICATION_RETRY_SECONDS = 2.0
 
 
 def capture_run_start_artifacts(
@@ -90,7 +93,7 @@ def capture_run_start_artifacts(
     )
 
     if using_staging_root:
-        active_root.replace(runtime_root)
+        publish_run_start_directory(active_root, runtime_root, retry_seconds=_PUBLICATION_RETRY_SECONDS)
         active_root = runtime_root
         snapshot_paths = _relocate_path_map(snapshot_paths, from_root=staging_root, to_root=runtime_root)
         runtime_contract_artifacts = _relocate_path_payload(

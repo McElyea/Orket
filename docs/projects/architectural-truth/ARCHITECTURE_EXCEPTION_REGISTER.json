@@ -7,7 +7,7 @@
       "id": "AT-EX-001",
       "area": "dependency-policy-model",
       "status": "active_unaccepted_ship_risk",
-      "reason": "The 0.6.32 graph has zero forbidden static pairs and cross-layer cycles, but eight unresolved import/reflection sites still fail its verdict. Repository conformance remains unaccepted; no broad transition label grants an exemption.",
+      "reason": "The 0.6.33 graph has zero forbidden static pairs and cross-layer cycles, but six unresolved import/reflection sites still fail its verdict. Repository conformance remains unaccepted; no broad transition label grants an exemption.",
       "removal_condition": "One ratified manifest defines allowed layers and edges, and the checker fails every unexpected edge unless an exact governed exception exists.",
       "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#c-one-enforceable-dependency-model"
     },

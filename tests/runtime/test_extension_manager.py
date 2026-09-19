@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -9,7 +10,6 @@ import pytest
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
-from orket.application.services.config_precedence_resolver import ConfigPrecedenceResolver
 from orket.extensions.manager import ExtensionManager
 
 
@@ -27,12 +27,12 @@ def _init_test_extension_repo(repo_root):
         "extension_id": "mystery.extension",
         "extension_version": "1.0.0",
         "extension_api_version": "1.0.0",
-        "module": "mystery_extension",
+        "module": "mystery_" + hashlib.sha256(str(repo_root).encode()).hexdigest()[:16],
         "register_callable": "register",
         "workloads": [{"workload_id": "mystery_v1", "workload_version": "1.0.0"}],
     }
     (repo_root / "orket_extension.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    (repo_root / "mystery_extension.py").write_text(
+    (repo_root / f"{manifest['module']}.py").write_text(
         "\n".join(
             [
                 "from __future__ import annotations",

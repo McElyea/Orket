@@ -5,6 +5,20 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.33] - 2026-09-19 - "Selected extension module origins"
+
+### Fixed
+- Verify selected extension modules and package parents before adopting cached objects; reject a cached module from a different root.
+- Validate actual package initializers, including package-over-file precedence, before extension loading.
+- Retain legacy registration and SDK source-validation workers through cancellation; share origin checks with SDK and governed-agent children.
+- Isolate test extension module names so separate temporary projects cannot reuse earlier fixture code.
+- Retain bootstrap workers through interruption; retry transient native Windows directory publication refusals within a bounded budget while preserving incomplete staging on exhaustion. Contract: `docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration and limits: `docs/architecture/CONTRACT_DELTA_EXTENSION_ORIGINS_CD_2026-09-19.md`.
+- Stability: scoped C/D candidate; dynamic import governance, remaining async ownership and whole-lane acceptance remain open.
+
 ## [0.6.32] - 2026-09-19 - "Owned prompt and setup commands"
 
 ### Fixed

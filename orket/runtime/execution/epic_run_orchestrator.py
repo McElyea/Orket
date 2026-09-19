@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass, replace
+from functools import partial
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
 from orket.application.services.control_plane_workload_catalog import (
     build_cards_workload_contract,
@@ -275,12 +276,10 @@ class EpicRunOrchestrator:
             {"epic": setup.epic.name, "run_id": setup.run_id, "build_id": setup.build_id},
             workspace=self.workspace,
         )
-        run_contract_artifacts = await asyncio.to_thread(
-            capture_run_start_artifacts,
-            workspace=self.workspace,
-            run_id=setup.run_id,
-            workload=setup.epic.name,
-            now=self.runtime_input_service.utc_now(),
+        run_contract_artifacts = await run_owned_thread(
+            partial(capture_run_start_artifacts, workspace=self.workspace, run_id=setup.run_id,
+                    workload=setup.epic.name, now=self.runtime_input_service.utc_now()),
+            label="capture run-start artifacts",
         )
         self._apply_runtime_capabilities(run_contract_artifacts)
         context = EpicRunContext(

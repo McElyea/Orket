@@ -9,13 +9,16 @@ Current gate: scoped BT-1 through BT-5 are accepted. C/D dependency enforcement,
 core purity, explicit inputs and async safety are next, followed by E1/E2 and the
 gated capability obligations. The whole lane remains active.
 
-The 0.6.32 command-authority checkpoint removes the last four forbidden static
-pairs. Eight unresolved dynamic-import/reflection sites still fail the dependency
-verdict. Prompt/setup/vision effects now enter application owners; operator runtime
-interpretation also belongs to application. The scoped 1,546-case source cohort and four fresh installed
-Windows/Linux Python 3.11/3.12 environments pass. Exact retained failures, proof and pending obligations live in
-the canonical plan. Contract:
-`docs/architecture/CONTRACT_DELTA_COMMAND_AUTHORITY_CD_2026-09-19.md`.
+The local 0.6.33 checkpoint verifies selected extension entrypoints and parents,
+owns registration/source-validation workers, and retains bootstrap publication
+through interruption with bounded native Windows retry. Source and four fresh
+Windows/Linux Python 3.11/3.12 installations pass 1,629 identical cases.
+The initial failed source gate, native holds, corrected harnesses and exact
+remaining limits stay in the canonical plan. Six dependency diagnostics and the
+observed SDK child-cancellation leak remain open, alongside all later C/D/E/CAP
+obligations. Contracts:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_ORIGINS_CD_2026-09-19.md` and
+`docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
 GitHub publication remains deferred; commits and annotated tags stay local.
 
 C's v2 allowed-edge implementation replaces the transition denylist. The checker,

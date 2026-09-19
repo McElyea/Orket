@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import ast
-import contextlib
-import importlib
 import inspect
 import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
+from orket.adapters.execution.extension_modules import extension_module_scope, read_extension_sources
 from orket_extension_sdk.result import WorkloadResult
 from orket_extension_sdk.workload import Workload as SDKWorkload
 from orket_extension_sdk.workload import WorkloadContext as SDKWorkloadContext
@@ -35,12 +34,7 @@ class WorkloadLoader:
             allowed_stdlib_modules=extension.allowed_stdlib_modules,
         )
 
-        added_path = False
-        if str(extension_path) not in sys.path:
-            sys.path.insert(0, str(extension_path))
-            added_path = True
-        try:
-            module = importlib.import_module(extension.module)
+        with extension_module_scope(extension_path, extension.module) as module:
             register = getattr(module, extension.register_callable, None)
             if register is None or not callable(register):
                 raise ValueError(
@@ -53,10 +47,6 @@ class WorkloadLoader:
             if workload is None:
                 raise ValueError(f"Extension '{extension.extension_id}' does not register workload '{workload_id}'")
             return workload
-        finally:
-            if added_path:
-                with contextlib.suppress(ValueError):
-                    sys.path.remove(str(extension_path))
 
     def load_sdk_workload(self, extension: ExtensionRecord, workload: _ExtensionManifestEntry) -> SDKWorkload:
         extension_path = Path(extension.path).resolve()
@@ -70,12 +60,7 @@ class WorkloadLoader:
             enforce_declared_stdlib=True,
         )
 
-        added_path = False
-        if str(extension_path) not in sys.path:
-            sys.path.insert(0, str(extension_path))
-            added_path = True
-        try:
-            module = importlib.import_module(module_name)
+        with extension_module_scope(extension_path, module_name) as module:
             target = getattr(module, attr_name, None)
             if target is None:
                 raise ValueError(f"E_SDK_ENTRYPOINT_MISSING: {workload.entrypoint}")
@@ -100,10 +85,6 @@ class WorkloadLoader:
             if run_method is None or not callable(run_method):
                 raise ValueError(f"E_SDK_ENTRYPOINT_INVALID: {workload.entrypoint}")
             return cast(SDKWorkload, instance)
-        finally:
-            if added_path:
-                with contextlib.suppress(ValueError):
-                    sys.path.remove(str(extension_path))
 
     @staticmethod
     def parse_sdk_entrypoint(entrypoint: str) -> tuple[str, str]:
@@ -121,17 +102,18 @@ class WorkloadLoader:
         allowed_stdlib_modules: tuple[str, ...] = (),
         enforce_declared_stdlib: bool | None = None,
     ) -> None:
-        module_path = extension_path / Path(*module_name.split("."))
-        file_path = module_path.with_suffix(".py")
-        package_init_path = module_path / "__init__.py"
-        if file_path.exists():
-            source_path = file_path
-        elif package_init_path.exists():
-            source_path = package_init_path
-        else:
-            raise FileNotFoundError(f"Extension module source not found for '{module_name}' under {extension_path}")
+        for source_path, source in read_extension_sources(extension_path, module_name):
+            WorkloadLoader._validate_source_imports(
+                source_path, source, allowed_stdlib_modules, enforce_declared_stdlib,
+            )
 
-        source = source_path.read_text(encoding="utf-8")
+    @staticmethod
+    def _validate_source_imports(
+        source_path: Path,
+        source: str,
+        allowed_stdlib_modules: tuple[str, ...],
+        enforce_declared_stdlib: bool | None,
+    ) -> None:
         tree = ast.parse(source, filename=str(source_path))
         blocked_prefixes = (
             "orket.orchestration",

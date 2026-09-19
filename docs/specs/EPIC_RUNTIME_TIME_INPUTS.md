@@ -1,6 +1,6 @@
 # Epic bootstrap and summary time inputs
 
-Last updated: 2026-09-14
+Last updated: 2026-09-19
 Status: Active contract; scoped acceptance belongs to the architectural-truth plan.
 
 The standard `ExecutionPipeline` receives a `RuntimeInputService`. Epic bootstrap
@@ -8,6 +8,12 @@ captures one `utc_now()` value from that service before invoking
 `capture_run_start_artifacts(now=...)` in its owned worker. Run identity and the
 workspace snapshot consume this explicit value. Bootstrap must not bypass the
 selected input service with a second implicit clock read.
+
+The worker remains owned through repeated cancellation and timeout. Directory
+publication retries preserve that captured timestamp. A worker failure remains
+unresolved; published bootstrap files can precede interruption of ledger startup.
+The publication budget, refusal and retained-evidence contract is
+`docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
 
 Epic outcome observation and preparation/publication continue to use that
 service's existing UTC input seam. Protocol-ledger event timestamps have their

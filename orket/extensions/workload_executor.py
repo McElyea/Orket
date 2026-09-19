@@ -7,6 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.extension_workload_control_plane_service import (
     ExtensionWorkloadControlPlaneService,
     build_extension_workload_control_plane_service,
@@ -69,7 +70,8 @@ class WorkloadExecutor:
         department: str,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
-        loaded_workload = await asyncio.to_thread(self.loader.load_legacy_workload, extension, workload.workload_id)
+        loaded_workload = await run_owned_thread(
+            lambda: self.loader.load_legacy_workload(extension, workload.workload_id), label="legacy-extension-load")
         run_plan = compile_workload(loaded_workload, input_config, interaction_context)
         if run_plan.workload_id != workload.workload_id:
             raise ValueError("RunPlan workload_id mismatch")
@@ -255,12 +257,10 @@ class WorkloadExecutor:
             admitted_capabilities=set(authorization_envelope.admitted_capabilities),
         )
         module_name, _attr_name = WorkloadLoader.parse_sdk_entrypoint(workload.entrypoint)
-        await asyncio.to_thread(
-            self.loader.validate_extension_imports,
-            Path(extension.path),
-            module_name,
-            allowed_stdlib_modules=extension.allowed_stdlib_modules,
-            enforce_declared_stdlib=True,
+        await run_owned_thread(
+            lambda: self.loader.validate_extension_imports(Path(extension.path), module_name,
+                allowed_stdlib_modules=extension.allowed_stdlib_modules, enforce_declared_stdlib=True),
+            label="sdk-extension-source-validation",
         )
         control_plane_start = await begin_control_plane_execution(
             control_plane=self.control_plane,

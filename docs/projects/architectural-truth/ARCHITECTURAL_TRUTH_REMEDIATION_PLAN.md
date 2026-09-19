@@ -12516,11 +12516,12 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the verified
-0.6.32 command-authority checkpoint. The graph has zero
-forbidden static pairs, zero cross-layer cycles and eight unresolved import/reflection sites. Preserve every failed and
+Next action: repair the observed SDK cancellation/child-lifetime failure after
+the verified 0.6.33 extension-origin/publication checkpoint, and continue all
+numbered C/D requirements. The graph has zero forbidden
+static pairs, zero cross-layer cycles and six unresolved import/reflection diagnostics. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 96 findings. The prior stale benchmark expectation passes in the
+Ruff has 95 findings. The prior stale benchmark expectation passes in the
 new source/native selection, but no fresh all-green full suite is claimed.
 Remaining core clocks, schema identities, async reachability and
 adapter classification remain actionable. E1/E2, CAP-1/2/3, hosted Quality, release
@@ -16265,3 +16266,239 @@ Remaining C dynamic imports and observed cross-root module substitution,
 D clocks/identities/input ownership/async reachability,
 E1/E2 quality and bounded authority, CAP-1/2/3, full-suite/hosted acceptance and
 explicit whole-lane user acceptance remain open. This checkpoint does not close C/D.
+
+
+### Extension source-origin candidate: 2026-09-19 (0.6.33)
+
+Shared adapter admission now checks the selected Python entrypoint and every
+package parent before registration, construction or run-callable adoption. A
+cached object from a different root refuses with `E_EXT_MODULE_ORIGIN_MISMATCH`.
+Actual package precedence and parent initializers are included in source policy
+validation; redirected package search paths refuse before leaf execution.
+Legacy registration, SDK source validation and agent-child loading retain their
+workers through interruption. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_ORIGINS_CD_2026-09-19.md`.
+
+The installed .32 wrong-root observation remains sealed in
+`.tmp/c-remaining-boundaries/next-import-observation/`. New evidence lives under
+`.tmp/c-extension-loading/` and binds the .32 local checkpoint without altering it.
+`origin-counterexamples/` retains ten cases with eight failures and two valid
+controls. Both direct loaders previously adopted the wrong cached entrypoint or
+parent; package precedence and parent policy checks also failed. Inputs stayed
+unchanged. The first repaired affected run (`origin-repair/`) retains 65 passes
+and three failures: separate extension-manager fixtures reused the same module
+name across different temporary roots. Those tests now derive a unique module
+name from their selected root; production retains explicit cache-conflict refusal.
+
+`origin-owned/` passes 72 affected cases. The subsequent `validation-owned/` passes
+all 18 focused cases, including real registration and SDK preflight workers held
+at controlled seams. Cancellation/repeated cancellation/timeout stay pending until
+release, then settle within the predefined 3-second bound. An independent real
+filesystem operation meets the predefined 0.5-second responsiveness bound.
+All these proof processes returned; source input hashes stayed unchanged.
+
+Observed path: primary for valid loads and refusals. Result: partial success for
+the full objective. Local subprocess/file/registration flows are live with
+controlled trusted fixture code; import graph and workflow checks are structural.
+This does not attest every transitive/dynamic helper import, loaded source bytes,
+concurrent editor fencing, hot reload, or hostile-code containment. Later legacy
+compile/validator/summary callbacks, SDK subprocess lifetime and remaining effects
+still require D. The import checker remains failed with six diagnostics (shared
+loader import/cache reads and four escaped guard importer references), zero
+forbidden pairs/cycles and zero unknown classifications. No checker exemption,
+policy change or dependency reclassification was introduced.
+
+Source/package/four-native checkpoint acceptance remains pending. Fresh full-suite
+and hosted Quality, C/D/E, CAP-1/2/3, release readiness and explicit whole-lane
+acceptance remain open. No .33 commit or tag exists yet. GitHub publication stays
+deferred under the user's local-only instruction.
+
+
+The first prebuild check retained an existing unused `ConfigPrecedenceResolver`
+import in the touched extension-manager tests. Removing that unused import clears
+the changed-file lint failure and reduces canonical Ruff debt from 96 to 95.
+The failed prebuild log/review and original lint observation remain retained;
+`prebuild-repaired/` and `ruff-repaired/` record the corrected checks.
+
+
+#### Source gate refused: retained runtime-publication failure
+
+The first complete .33 source gate ran 1,620 cases: 1,618 passed and two failed,
+with no errors/skips in 553.03 pytest seconds. Source inputs stayed unchanged;
+the runner returned/reaped. `candidate/source-final/` retains the declaration,
+JUnit, complete log and failed fixture artifacts. No installed native cell,
+.33 commit or tag has been admitted; the built wheel/sdist remain retained.
+
+Both `test_native_cli_preserves_unfinished_truth_and_exit[pending-card]` and
+`[signal-epic]` fail during run-start contract publication. The actual
+`runtime_contracts_staging` directory replace raises `PermissionError` with Windows
+error 5. Final directories are absent and staging remains. Pending-card's missing
+`run_ledger` table is downstream of initialization stopping before ledger creation.
+The runtime reports an unresolved, blocked outcome, not success.
+
+`source-failure-diagnosis.json` binds the failure. `source-identity-comparison.json`
+confirms the relevant publisher, bootstrap, workspace inventory, orchestrator and
+CLI fixture bytes match the tested .32 worktree. Two working files have CRLF where
+Git blobs have LF; the explicit normalization comparison matches. No source bytes
+were regenerated or normalized to hide that difference. Source equality is not
+by itself evidence of the failure's cause.
+
+On copies of the retained staging content, `rename-observation/` records an unheld
+successful rename, Windows error 32 with a directory handle held, and matching
+error 5 with a member file held without delete sharing. Closing each controlled
+handle permits publication with identical bytes. Original failed fixtures remain
+unchanged. These are native Windows controls, not mocked exceptions. The original
+holder/mechanism remains unknown: do not infer an antivirus actor, label an
+environment blocker, or treat a passing rerun as a repair.
+
+A separate installed .33 SDK probe confirms caller cancellation returning while
+its controlled workload child remains alive. The repaired ancestry check accounts
+for Windows' venv launcher. The diagnostic kills/reaps both owned processes and
+observes zero remaining children. The initial ownership-probe failure and actual
+cancellation failure remain under `sdk-lifetime-observation*/`. These failed flows
+are outside the passing focused origin/worker cohort, and establish no SDK child
+cancellation or full D completion guarantee.
+
+Next work must address owned run-start publication and refusal/recovery semantics
+under real native file holds, preserve failed evidence, and renew the complete
+source/package/native gate. SDK process lifetime, six unresolved C diagnostics,
+remaining D/E/CAP work and whole-lane acceptance stay open. GitHub publication is
+deferred; the latest local commit/tag remains .32.
+
+
+#### Run-start publication repair candidate
+
+The original source gate and native copy controls remain unchanged. New storage
+publication retries only Windows native access/sharing errors 5/32, within the
+runtime's explicit two-second budget, and verifies the renamed directory identity.
+It retains completed staging on exhaustion, refuses an existing destination, and
+does not regenerate artifacts or replay partial bootstrap. Epic startup now drains
+the entire worker through interruption with the already captured run timestamp.
+Contract: `docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
+
+`publication-counterexamples/` retains five actual native-handle/conflict failures
+against old publication. `publication-repair/` passes 47 cases: released and
+persistent directory/member holds, destination conflict, existing artifact contracts
+and native CLI lifecycle. File bytes are compared independently. These controls
+establish handling of a sufficient native refusal condition, not the original holder.
+
+`publication-owned/` retains 9 passes and 2 harness failures: gather erased the
+cancellation subtype and the timeout wrapper expected the wrong exception behavior.
+The corrected harness uses an actual wait_for deadline after worker entry and
+inspects the terminal task result directly. `publication-owned-corrected/` passes
+all 11 cases, with the same production bytes: actual pipeline/stores/artifacts,
+controlled worker delay/failure, native holds, and explicit summary-clock cases.
+Repeated cancellation/timeout cannot return before settlement; worker failure
+remains unresolved. Independent filesystem work meets the predefined 0.5-second
+responsiveness bound, and released work settles within five seconds.
+
+These are live local Windows filesystem/pipeline/CLI observations with controlled
+fixtures; workflow, lint, graph and package comparisons are structural. Source
+inputs stayed unchanged in every run and each runner returned/reaped. Full repaired
+source/package/four-native gates are pending. SDK child cancellation remains a
+separate observed D defect; no full C/D or whole-lane acceptance is claimed.
+
+
+#### Retained Python 3.12 timeout-wrapper assertion failure
+
+The repaired `candidate-publication/` source gate passes 1,629 cases with no
+failures/errors/skips in 561.13 pytest seconds. Fresh installed Windows and Linux
+Python 3.11 each pass all 1,629. Both Python 3.12 cells pass 1,628 and fail only
+`test_bootstrap_worker_settles_before_interruption_truth[published-timeout]`.
+`native-audit-failed.json` retains every cell, exact inputs, package origins and
+all successful integrity/cleanup checks; all launchers returned/reaped. This
+matrix is not admitted and no .33 commit/tag has been created.
+
+The actual result is `RuntimeExecutionCancelled`, while the test expected
+`TimeoutError`. The worker-settlement assertions preceding that check pass.
+`timeout-wrapper-observation/` independently executes a minimal cancellation
+subtype through standard-library `asyncio.wait_for` on all four native interpreters
+and retains their exact implementation sources. Both 3.11 interpreters convert
+the subtype to `TimeoutError`; both 3.12 interpreters propagate it. Every control
+cancels its child once. Those controls establish wrapper semantics, not runtime
+ownership by themselves.
+
+The portable harness accepts those two precise timeout observations, additionally
+requires the operation's cancellation count before releasing the worker, and
+checks cancelled task state plus the structured runtime observation when present.
+Direct/repeated cancellation still requires `RuntimeExecutionCancelled`; all
+publication, retained-failure, ledger absence and responsiveness assertions remain.
+`publication-timeout-portable/` and `publication-timeout-portable-py312/` each pass
+four real-pipeline cases in Windows source execution. Production code and deadlines
+are unchanged. The renewed complete source/native envelope will live separately
+under `candidate-portable/`; original failed and passing envelopes remain intact.
+
+
+#### Final extension-origin and run-start publication checkpoint proof
+
+Observed path: primary for valid loading and owned interruption; degraded for
+native hold/retry recovery and explicit persistent refusal. Result: partial success
+for the full objective. The repaired selected source cohort passes 1,629
+cases with no failures/errors/skips in 563.781 seconds
+including runner overhead. All 1,546 prior case identities remain;
+83 are added. Those same identities pass in four fresh installations:
+
+| Installed cell | Tests / failures / errors / skips | Core origins | Pytest seconds |
+|---|---:|---:|---:|
+| a33r-win-py311 | 1629 / 0 / 0 / 0 | 980 | 596.879 |
+| a33r-linux-py311 | 1629 / 0 / 0 / 0 | 980 | 439.099 |
+| a33r-win-py312 | 1629 / 0 / 0 / 0 | 980 | 752.886 |
+| a33r-linux-py312 | 1629 / 0 / 0 / 0 | 980 | 445.959 |
+
+`candidate-portable/` is a separate build and fresh source/native environment
+set. The original `candidate/` wheel, sdist, failed 1,620-case gate, inputs and
+fixtures remain byte-identical. Original native-hold controls and every failed
+counterexample, fixture-isolation, harness and lint observation remain retained.
+The first repaired matrix, including both Python 3.12 timeout-wrapper assertion
+failures, remains retained in `candidate-publication/native-audit-failed.json`.
+Independent four-interpreter controls diagnose that harness error. The corrected
+harness adds cancellation-count/state checks and retains every lifetime assertion;
+production bytes and deadlines are identical to that first repaired matrix.
+The publication fix is supported by independently held native directory/member
+handles and actual pipeline ownership proof; the original holder remains unknown.
+A passing renewed gate does not retroactively identify that actor.
+
+The wheel was built from its source archive. Package parity matches
+1,084 core Python files and 1,099 package
+files. The harness binds 1,967 support files without
+core/SDK source shadow. Core is 0.6.33; SDK 0.7.0a1 and reference/starter 0.3.0a1
+remain unchanged. Source/native/launcher budgets remain 1,500/1,800/2,100 seconds.
+Installed origins, copied input hashes, installed package dependency checks, CLI/ToolGate controls
+and process cleanup pass. Every acceptance launcher returned and was reaped.
+
+Live proof covers controlled trusted extension loading, real native file holds,
+bootstrap files/stores/CLI and worker interruption. POSIX open handles allow rename;
+Windows tests additionally exercise bounded retries and persistent refusal. Import
+graph, package parity, lint, sizes and workflow assertions are structural. No new
+live provider or hostile-code containment proof is claimed. Hosted Quality and a
+fresh whole-repository suite remain unverified. Changed-file checks pass. Canonical
+Ruff remains at 95 findings with none added; three initial import-order findings
+were corrected and both observations retained.
+
+The graph contains 1,084 modules and 3,406 import sites,
+zero forbidden pairs/cycles/unknown classifications and six unresolved import/
+cache/guard diagnostics. Dependency conformance and release readiness remain
+false. No exemption, reclassification or weakened checker produced this result.
+
+The separately observed SDK child-cancellation leak remains unfixed. Its installed
+runner hash matches this candidate's unchanged runner. The diagnostic killed and
+reaped its owned launcher/child and observed zero remaining children; that cleanup
+is diagnostic work, not product ownership. The initial ancestry-probe failure also
+remains retained. Next work is this concrete D lifetime defect, followed by all
+remaining C/D/E/CAP obligations; this checkpoint does not close C/D.
+
+Exact evidence under `.tmp/c-extension-loading/`:
+
+- `candidate-portable/source-report.json`: SHA-256 `3c5fff24fb94c5803f6df960d22f7896de1fc5ab92fdfbb1b731c8b110afbfaf`.
+- `candidate-portable/manifest.json`: SHA-256 `d19da0652eeaa2c7a0fb1fdc82d74274decf3f3daf92b0ca48e02ed335522d50`.
+- `candidate-portable/native-audit.json`: SHA-256 `2ee3b75c29d603779b4590a169e0bd78ac52bf00a39eaf380a060d44fa52de13`.
+- `candidate/source-final/report.json`: SHA-256 `49a045c2124f626df9e6aecd8b8ccf8bd4143749007b247b7b67f80612d64404` (retained failure).
+- `publication-owned-corrected/report.json`, `publication-repair/report.json`,
+  `case-continuity.json`, `collection-publication-final/collection.json`,
+  `portable-ruff-comparison.json`, `portable-size-review.json` and
+  `portable-prebuild-review.json`.
+- `CHANGESET.md`: exact 29 changed paths.
+
+Local commit and annotated tag follow final review and source/index binding.
+No GitHub push is performed. Full-suite/hosted acceptance, remaining C/D/E/CAP,
+release readiness and explicit whole-lane user acceptance remain open.
