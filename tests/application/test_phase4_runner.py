@@ -1,7 +1,9 @@
+# Layer: integration. Real child commands with the selected test interpreter.
 from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -10,12 +12,13 @@ def test_phase4_runner_executes_001_to_060_and_writes_report(tmp_path: Path) -> 
     scored_out = tmp_path / "phase4_scored.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/benchmarks/run_phase4_benchmark.py",
             "--runs",
             "1",
             "--runner-template",
-            "python scripts/benchmarks/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}",
+            f'{Path(sys.executable).as_posix()} scripts/benchmarks/determinism_control_runner.py '
+            "--task {task_file} --venue {venue} --flow {flow}",
             "--raw-out",
             str(raw_out),
             "--scored-out",

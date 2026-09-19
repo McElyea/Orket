@@ -1,3 +1,4 @@
+# Layer: contract. Controlled command dispatch; live child proof is recorded separately.
 from __future__ import annotations
 
 import importlib.util
@@ -64,10 +65,10 @@ def test_run_benchmark_suite_invokes_memory_checks_when_paths_are_provided(monke
     rc = module.main()
     assert rc == 0
     assert len(recorded) == 4
-    assert recorded[2][0:2] == ["python", "scripts/benchmarks/check_memory_determinism.py"]
+    assert recorded[2][0:2] == [sys.executable, "scripts/benchmarks/check_memory_determinism.py"]
     assert "--trace" in recorded[2]
     assert "--retrieval-trace" in recorded[2]
-    assert recorded[3][0:2] == ["python", "scripts/benchmarks/compare_memory_determinism.py"]
+    assert recorded[3][0:2] == [sys.executable, "scripts/benchmarks/compare_memory_determinism.py"]
     assert "--left-retrieval" in recorded[3]
     assert "--right-retrieval" in recorded[3]
 

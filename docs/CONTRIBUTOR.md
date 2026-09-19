@@ -84,6 +84,12 @@ fixed ZIP metadata. Both Quality jobs enforce source/archive agreement.
 - Governed-run deterministic demo: `orket demo governed-run`
 - Test command: `python -m pytest -q`
 
+Python test/tool launchers must use `sys.executable` for repository-owned child
+Python commands so private environments retain their dependencies. Explicit
+operator-supplied runner commands keep their selected executable. Scope a
+repository-only pytest plugin to the parent pytest arguments when child tools
+execute tests in a foreign project; do not export it through `PYTEST_PLUGINS`.
+
 Embedded callers import `create_api_app`, `create_cli_runtime` and
 `create_webhook_app` from `orket.interfaces.runtime_entrypoints`. Keep its
 module-profile authorization gate; `CompositionConfig` and `create_engine` remain

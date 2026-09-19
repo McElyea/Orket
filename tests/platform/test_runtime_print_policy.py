@@ -4,6 +4,7 @@ from pathlib import Path
 
 def test_runtime_print_usage_is_whitelisted():
     """
+    Layer: contract. Static output-boundary check; not runtime execution proof.
     Guardrail: runtime/library modules should use structured logging.
     `print()` is only allowed in explicitly interactive/intentional files.
     """
@@ -23,7 +24,9 @@ def test_runtime_print_usage_is_whitelisted():
         "orket/cli.py",
         "orket/interfaces/governed_agent_cli.py",
         "orket/interfaces/orket_bundle_cli.py",
+        "orket/interfaces/outward_authority_cli.py",
         "orket/interfaces/prompts_cli.py",
+        "orket/interfaces/runtime_store_cli.py",
         "orket/quickstart/governed_action_demo.py",
     }
 
@@ -42,4 +45,3 @@ def test_runtime_print_usage_is_whitelisted():
                 violations.append(f"{rel}:{lineno}")
 
     assert not violations, "Disallowed print() usage found:\n" + "\n".join(violations)
-

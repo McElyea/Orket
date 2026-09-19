@@ -73,7 +73,10 @@ def test_validate_marshaller_workload_start_rejects_missing_paths() -> None:
 
 
 @pytest.mark.asyncio
-async def test_run_builtin_marshaller_workload(tmp_path: Path) -> None:
+@pytest.mark.integration
+@pytest.mark.parametrize("long_git_path", [False, True], ids=["ordinary", "long-git-path"])
+async def test_run_builtin_marshaller_workload(tmp_path: Path, long_git_path: bool) -> None:
+    """Layer: integration. Real Git execution with object paths beyond Windows MAX_PATH."""
     repo, head = _init_repo(tmp_path)
     patch = _make_patch(repo, "workload run\n")
     run_request_path = _write_json(
@@ -103,12 +106,20 @@ async def test_run_builtin_marshaller_workload(tmp_path: Path) -> None:
             "rationale": "test",
         },
     )
+    relative_run = Path("workspace/default/stabilizer/run/workload-marshaller-run")
+    clone_suffix = relative_run / "attempts/1/workspace_clone"
+    workspace_root = tmp_path
+    if long_git_path:
+        # Keep native cwd launchable while .git/objects/<hash> exceeds MAX_PATH.
+        padding = 240 - len(str(tmp_path / clone_suffix)) - 1
+        assert 0 < padding < 255, "fixture root must leave room for a launchable long-path clone"
+        workspace_root = tmp_path / ("w" * padding)
     input_config = {
         "run_request_path": str(run_request_path),
         "proposal_paths": [str(proposal_path)],
         "run_id": "workload-marshaller-run",
         "allowed_paths": ["app.txt"],
-        "workspace_root": str(tmp_path),
+        "workspace_root": str(workspace_root),
     }
     validate_builtin_workload_start(
         workload_id="marshaller_v0",
@@ -123,10 +134,13 @@ async def test_run_builtin_marshaller_workload(tmp_path: Path) -> None:
         interaction_context=ctx,
     )
     assert hints == {"post_finalize_wait_ms": 0}
-    run_dir = tmp_path / "workspace" / "default" / "stabilizer" / "run" / "workload-marshaller-run"
+    run_dir = workspace_root / relative_run
     assert run_dir.exists()
     assert (run_dir / "summary.json").exists()
     assert len(ctx.events) >= 2
     token_delta_payload = next(payload for _event_name, payload in ctx.events if "delta" in payload)
     assert token_delta_payload["delta"] == "marshaller result: accept=True attempts=1"
     assert len(ctx.commits) == 1
+    clone = run_dir / "attempts" / "1" / "workspace_clone"
+    assert (clone / "app.txt").read_text(encoding="utf-8") == "workload run\n"
+    assert (repo / "app.txt").read_text(encoding="utf-8") == "hello\n"

@@ -35,9 +35,12 @@ class ApiAuthenticationService:
     def enforce_insecure_bypass_policy(self, logger: logging.Logger) -> bool:
         if not self.insecure_bypass:
             return False
-        logger.critical("orket_insecure_no_api_key_enabled", extra={
-            "warning": "API authentication is disabled. Never set this in non-local environments.",
-        })
+        warning = (
+            "API authentication is disabled. Never set this in non-local environments."
+            if self.authenticate(None) else
+            "Insecure no-key authentication is configured, but the captured policy rejects anonymous requests."
+        )
+        logger.critical("orket_insecure_no_api_key_enabled", extra={"warning": warning})
         if self.environment.get("ORKET_ENV", "").strip().lower() in {"production", "staging"}:
             raise RuntimeError("ORKET_ALLOW_INSECURE_NO_API_KEY is forbidden when ORKET_ENV is production or staging.")
         return True

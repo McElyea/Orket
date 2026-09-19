@@ -1,7 +1,9 @@
+# Layer: integration. Real child commands with the selected test interpreter.
 from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -39,7 +41,7 @@ def test_check_skill_contracts_script_passes_valid_manifest(tmp_path: Path) -> N
     manifest.write_text(json.dumps(_valid_manifest()) + "\n", encoding="utf-8")
 
     result = subprocess.run(
-        ["python", "scripts/governance/check_skill_contracts.py", "--manifest", str(manifest)],
+        [sys.executable, "scripts/governance/check_skill_contracts.py", "--manifest", str(manifest)],
         capture_output=True,
         text=True,
         check=False,
@@ -57,7 +59,7 @@ def test_check_skill_contracts_script_fails_invalid_manifest(tmp_path: Path) -> 
 
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/governance/check_skill_contracts.py",
             "--manifest",
             str(manifest),

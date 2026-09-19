@@ -1,7 +1,9 @@
+# Layer: integration. Real child commands with the selected test interpreter.
 from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -18,7 +20,7 @@ def test_run_textmystery_policy_conformance_pass(tmp_path: Path) -> None:
     output = tmp_path / "policy_report.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/extensions/run_textmystery_policy_conformance.py",
             "--textmystery-root",
             str(repo),
@@ -44,7 +46,7 @@ def test_run_textmystery_policy_conformance_fail(tmp_path: Path) -> None:
     output = tmp_path / "policy_report.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/extensions/run_textmystery_policy_conformance.py",
             "--textmystery-root",
             str(repo),
@@ -68,7 +70,7 @@ def test_run_textmystery_policy_conformance_requires_root_argument_or_env(monkey
 
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/extensions/run_textmystery_policy_conformance.py",
             "--test",
             "tests/test_policy_gate.py",

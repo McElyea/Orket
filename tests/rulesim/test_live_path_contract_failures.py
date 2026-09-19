@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import random
-import time
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +9,7 @@ import pytest
 from orket.rulesim.contracts import TerminalResult, TransitionResult
 from orket.rulesim.workload import run_rulesim_v0_sync
 
+# Layer: integration. Controlled contract violations through the actual RuleSim workload.
 
 class _BaseRuleSystem:
     def initial_state(self, seed: int, scenario: dict[str, Any], ruleset: dict[str, Any], agents: list[str]) -> dict[str, Any]:
@@ -48,8 +48,12 @@ class _NondeterministicObserveRuleSystem(_BaseRuleSystem):
 
 
 class _UnstableSerializeStateRuleSystem(_BaseRuleSystem):
+    def __init__(self) -> None:
+        self._serializations = 0
+
     def serialize_state(self, state: dict[str, Any]) -> dict[str, Any]:
-        return {"tick": int(state["tick"]), "nonce": time.time_ns()}
+        self._serializations += 1
+        return {"tick": int(state["tick"]), "nonce": self._serializations}
 
 
 class _InPlaceApplyRuleSystem(_BaseRuleSystem):
@@ -88,4 +92,3 @@ def test_live_path_rejects_in_place_apply_action(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr("orket.rulesim.workload.build_toy_rulesystem", lambda _rid: _InPlaceApplyRuleSystem())
     with pytest.raises(ValueError, match="apply_action mutated input state in place|returned the input state object"):
         run_rulesim_v0_sync(input_config=_config(), workspace_path=tmp_path)
-

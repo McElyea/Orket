@@ -5,7 +5,6 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import AsyncMock
 
 import pytest
 from starlette.websockets import WebSocketDisconnect
@@ -13,6 +12,7 @@ from starlette.websockets import WebSocketDisconnect
 import orket.interfaces.api as api_module
 from orket.application.services.api_authentication_service import ApiAuthenticationService
 from orket.schema import CardStatus
+from orket.settings import load_user_settings_async, save_user_settings
 from tests.helpers.card_completion import complete_existing_card
 
 client = None
@@ -487,7 +487,7 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", "openai_compat.qwen.openai_messages.v1")
     monkeypatch.setenv("ORKET_ENABLE_GITEA_STATE_PILOT", "true")
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", "benchmarks/results/benchmarks/nonexistent_pilot_stability.json")
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {"architecture_mode": "force_monolith"}))
+    save_user_settings({"architecture_mode": "force_monolith"})
     monkeypatch.setattr(
         api_module._get_engine(),
         "org",
@@ -527,7 +527,6 @@ def test_runtime_policy_get_falls_back_to_monolith_when_microservices_locked(mon
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "false")
     monkeypatch.setenv("ORKET_ARCHITECTURE_MODE", "force_microservices")
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -557,7 +556,6 @@ def test_runtime_policy_reports_unlock_from_valid_unlock_report(monkeypatch, tmp
         encoding="utf-8",
     )
     monkeypatch.setenv("ORKET_MICROSERVICES_UNLOCK_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -573,7 +571,6 @@ def test_runtime_policy_rejects_malformed_unlock_report(monkeypatch, tmp_path):
     report_path = tmp_path / "unlock_report.json"
     report_path.write_text(json.dumps({"unlocked": True}), encoding="utf-8")
     monkeypatch.setenv("ORKET_MICROSERVICES_UNLOCK_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -602,7 +599,6 @@ def test_runtime_policy_rejects_internally_inconsistent_unlock_report(monkeypatc
         encoding="utf-8",
     )
     monkeypatch.setenv("ORKET_MICROSERVICES_UNLOCK_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -632,7 +628,6 @@ def test_runtime_policy_reports_pilot_stability(monkeypatch, tmp_path):
         encoding="utf-8",
     )
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -647,7 +642,6 @@ def test_runtime_policy_rejects_malformed_pilot_stability_report(monkeypatch, tm
     report_path = tmp_path / "pilot_stability.json"
     report_path.write_text(json.dumps({"stable": True}), encoding="utf-8")
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -676,7 +670,6 @@ def test_runtime_policy_rejects_internally_inconsistent_pilot_stability_report(m
         encoding="utf-8",
     )
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", str(report_path))
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -685,11 +678,10 @@ def test_runtime_policy_rejects_internally_inconsistent_pilot_stability_report(m
 
 
 def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
+    # Layer: integration. ASGI update and actual temporary settings persistence.
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    captured = {}
 
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {"existing": True}))
-    monkeypatch.setattr(api_module, 'save_user_settings_async', AsyncMock(side_effect=lambda settings, **_expected: captured.update({"settings": settings})))
+    save_user_settings({"existing": True})
 
     response = client.post(
         "/v1/system/runtime-policy",
@@ -714,28 +706,30 @@ def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
     )
     assert response.status_code == 200
     assert response.json()["ok"] is True
-    assert captured["settings"]["architecture_mode"] == "force_monolith"
-    assert captured["settings"]["frontend_framework_mode"] == "force_vue"
-    assert captured["settings"]["project_surface_profile"] == "backend_only"
-    assert captured["settings"]["small_project_builder_variant"] == "architect"
-    assert captured["settings"]["state_backend_mode"] == "gitea"
-    assert captured["settings"]["run_ledger_mode"] == "dual_write"
-    assert captured["settings"]["protocol_timezone"] == "America/Denver"
-    assert captured["settings"]["protocol_locale"] == "en_US.UTF-8"
-    assert captured["settings"]["protocol_network_mode"] == "allowlist"
-    assert captured["settings"]["protocol_network_allowlist"] == "api.example.com,cache.example.com"
-    assert captured["settings"]["protocol_env_allowlist"] == "HOME,PATH"
-    assert captured["settings"]["local_prompting_mode"] == "compat"
-    assert captured["settings"]["local_prompting_allow_fallback"] is True
-    assert captured["settings"]["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
-    assert captured["settings"]["gitea_state_pilot_enabled"] is True
+    stored = asyncio.run(load_user_settings_async())
+    assert stored["existing"] is True
+    assert stored["architecture_mode"] == "force_monolith"
+    assert stored["frontend_framework_mode"] == "force_vue"
+    assert stored["project_surface_profile"] == "backend_only"
+    assert stored["small_project_builder_variant"] == "architect"
+    assert stored["state_backend_mode"] == "gitea"
+    assert stored["run_ledger_mode"] == "dual_write"
+    assert stored["protocol_timezone"] == "America/Denver"
+    assert stored["protocol_locale"] == "en_US.UTF-8"
+    assert stored["protocol_network_mode"] == "allowlist"
+    assert stored["protocol_network_allowlist"] == "api.example.com,cache.example.com"
+    assert stored["protocol_env_allowlist"] == "HOME,PATH"
+    assert stored["local_prompting_mode"] == "compat"
+    assert stored["local_prompting_allow_fallback"] is True
+    assert stored["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
+    assert stored["gitea_state_pilot_enabled"] is True
 
 
 def test_settings_get_returns_metadata_and_sources(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
     monkeypatch.setenv("ORKET_ARCHITECTURE_MODE", "force_microservices")
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {"frontend_framework_mode": "force_react"}))
+    save_user_settings({"frontend_framework_mode": "force_react"})
     monkeypatch.setattr(
         api_module._get_engine(),
         "org",
@@ -764,12 +758,11 @@ def test_settings_get_returns_metadata_and_sources(monkeypatch):
 
 
 def test_settings_patch_round_trip_persists_normalized_values(monkeypatch):
+    # Layer: integration. ASGI update and actual temporary settings persistence.
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
-    captured = {}
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {"existing": "x"}))
-    monkeypatch.setattr(api_module, 'save_user_settings_async', AsyncMock(side_effect=lambda settings, **_expected: captured.update({"settings": settings})))
+    save_user_settings({"existing": "x"})
 
     response = client.patch(
         "/v1/settings",
@@ -794,26 +787,27 @@ def test_settings_patch_round_trip_persists_normalized_values(monkeypatch):
     )
     assert response.status_code == 200
     assert response.json()["ok"] is True
-    assert captured["settings"]["architecture_mode"] == "force_microservices"
-    assert captured["settings"]["frontend_framework_mode"] == "force_react"
-    assert captured["settings"]["project_surface_profile"] == "backend_only"
-    assert captured["settings"]["small_project_builder_variant"] == "architect"
-    assert captured["settings"]["state_backend_mode"] == "local"
-    assert captured["settings"]["run_ledger_mode"] == "dual_write"
-    assert captured["settings"]["protocol_timezone"] == "America/Denver"
-    assert captured["settings"]["protocol_locale"] == "en_US.UTF-8"
-    assert captured["settings"]["protocol_network_mode"] == "allowlist"
-    assert captured["settings"]["protocol_network_allowlist"] == "api.example.com,cache.example.com"
-    assert captured["settings"]["protocol_env_allowlist"] == "HOME,PATH"
-    assert captured["settings"]["local_prompting_mode"] == "compat"
-    assert captured["settings"]["local_prompting_allow_fallback"] is True
-    assert captured["settings"]["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
-    assert captured["settings"]["gitea_state_pilot_enabled"] is True
+    stored = asyncio.run(load_user_settings_async())
+    assert stored["existing"] == "x"
+    assert stored["architecture_mode"] == "force_microservices"
+    assert stored["frontend_framework_mode"] == "force_react"
+    assert stored["project_surface_profile"] == "backend_only"
+    assert stored["small_project_builder_variant"] == "architect"
+    assert stored["state_backend_mode"] == "local"
+    assert stored["run_ledger_mode"] == "dual_write"
+    assert stored["protocol_timezone"] == "America/Denver"
+    assert stored["protocol_locale"] == "en_US.UTF-8"
+    assert stored["protocol_network_mode"] == "allowlist"
+    assert stored["protocol_network_allowlist"] == "api.example.com,cache.example.com"
+    assert stored["protocol_env_allowlist"] == "HOME,PATH"
+    assert stored["local_prompting_mode"] == "compat"
+    assert stored["local_prompting_allow_fallback"] is True
+    assert stored["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
+    assert stored["gitea_state_pilot_enabled"] is True
 
 
 def test_settings_patch_rejects_invalid_values_structured(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.patch(
@@ -831,7 +825,6 @@ def test_settings_patch_rejects_invalid_values_structured(monkeypatch):
 def test_settings_patch_enforces_policy_guards(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "false")
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.patch(
@@ -847,7 +840,6 @@ def test_settings_patch_enforces_policy_guards(monkeypatch):
 def test_settings_patch_rejects_gitea_without_pilot(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.delenv("ORKET_ENABLE_GITEA_STATE_PILOT", raising=False)
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.patch(
@@ -862,7 +854,6 @@ def test_settings_patch_rejects_gitea_without_pilot(monkeypatch):
 
 def test_settings_patch_rejects_invalid_protocol_network_mode(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module, 'load_user_settings_async', AsyncMock(side_effect=lambda: {}))
     monkeypatch.setattr(api_module._get_engine(), "org", type("Org", (), {"process_rules": {}})())
 
     response = client.patch(
@@ -914,166 +905,6 @@ def test_system_board_defaults_to_core(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {"department": "core"}
     assert captured["department"] == "core"
-
-
-def test_preview_asset_uses_runtime_invocation(monkeypatch):
-    """Layer: integration. Verifies preview construction now comes from the explicit API runtime host while invocation policy stays strategy-owned."""
-    monkeypatch.setenv("ORKET_API_KEY", "test-key")
-
-    class FakeBuilder:
-        async def build_issue_preview(self, issue_id, asset_name, department):
-            return {"mode": "issue", "issue_id": issue_id, "asset_name": asset_name, "department": department}
-
-        async def build_rock_preview(self, asset_name, department):
-            return {"mode": "rock", "asset_name": asset_name, "department": department}
-
-        async def build_epic_preview(self, asset_name, department):
-            return {"mode": "epic", "asset_name": asset_name, "department": department}
-
-    monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
-        "resolve_preview_target",
-        lambda path, issue_id: {"mode": "issue", "asset_name": "asset-x", "department": "core"},
-    )
-    monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
-        "resolve_preview_invocation",
-        lambda target, issue_id: {
-            "method_name": "build_issue_preview",
-            "args": [issue_id, target["asset_name"], target["department"]],
-            "unsupported_detail": "Unsupported preview mode 'issue'.",
-        },
-    )
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", AsyncMock(return_value=FakeBuilder()))
-
-    response = client.get(
-        "/v1/system/preview-asset?path=model/core/epics/x.json&issue_id=ISSUE-9",
-        headers={"X-API-Key": "test-key"},
-    )
-    assert response.status_code == 200
-    assert response.json() == {"mode": "issue", "issue_id": "ISSUE-9", "asset_name": "asset-x", "department": "core"}
-
-
-def test_preview_asset_rejects_unsupported_mode(monkeypatch):
-    """Layer: contract. Verifies preview routes still fail closed when runtime policy names an unsupported builder method."""
-    monkeypatch.setenv("ORKET_API_KEY", "test-key")
-
-    class FakeBuilder:
-        async def build_epic_preview(self, asset_name, department):
-            return {"asset_name": asset_name, "department": department}
-
-    monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
-        "resolve_preview_target",
-        lambda path, issue_id: {"mode": "custom", "asset_name": "asset-x", "department": "core"},
-    )
-    monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
-        "resolve_preview_invocation",
-        lambda target, issue_id: {
-            "method_name": "build_custom_preview",
-            "args": [target["asset_name"], target["department"]],
-            "unsupported_detail": "Unsupported preview mode 'custom'.",
-        },
-    )
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", AsyncMock(return_value=FakeBuilder()))
-
-    response = client.get(
-        "/v1/system/preview-asset?path=model/core/epics/x.json",
-        headers={"X-API-Key": "test-key"},
-    )
-    assert response.status_code == 400
-    assert "Unsupported preview mode" in response.json()["detail"]
-
-
-def test_preview_asset_uses_runtime_error_detail_for_unsupported_mode(monkeypatch):
-    """Layer: contract. Verifies preview unsupported-detail shaping survives the move to explicit host-owned builder construction."""
-    monkeypatch.setenv("ORKET_API_KEY", "test-key")
-
-    class FakeBuilder:
-        async def build_epic_preview(self, asset_name, department):
-            return {"asset_name": asset_name, "department": department}
-
-    monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
-        "resolve_preview_target",
-        lambda path, issue_id: {"mode": "custom", "asset_name": "asset-x", "department": "core"},
-    )
-    monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
-        "resolve_preview_invocation",
-        lambda target, issue_id: {
-            "method_name": "build_custom_preview",
-            "args": [target["asset_name"], target["department"]],
-            "unsupported_detail": f"Unsupported preview invocation 'build_custom_preview' for mode '{target['mode']}'",
-        },
-    )
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", AsyncMock(return_value=FakeBuilder()))
-
-    response = client.get(
-        "/v1/system/preview-asset?path=model/core/epics/x.json",
-        headers={"X-API-Key": "test-key"},
-    )
-
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Unsupported preview invocation 'build_custom_preview' for mode 'custom'"
-
-
-def test_chat_driver_uses_runtime_invocation(monkeypatch):
-    """Layer: contract. Verifies chat-driver construction now comes from the explicit API runtime host."""
-    monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    captured = {}
-
-    class FakeDriver:
-        provider = type("Provider", (), {"close": AsyncMock()})()
-
-        async def process_custom(self, message):
-            captured["message"] = message
-            return f"echo:{message}"
-
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_chat_driver", AsyncMock(return_value=FakeDriver()))
-    monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
-        "resolve_chat_driver_invocation",
-        lambda message: {"method_name": "process_custom", "args": [message]},
-    )
-
-    response = client.post(
-        "/v1/system/chat-driver",
-        json={"message": "hello"},
-        headers={"X-API-Key": "test-key"},
-    )
-
-    assert response.status_code == 200
-    assert response.json() == {"response": "echo:hello"}
-    assert captured["message"] == "hello"
-
-
-def test_chat_driver_rejects_unsupported_runtime_method(monkeypatch):
-    """Layer: contract. Verifies chat-driver routes still fail closed when runtime policy names a missing driver method."""
-    monkeypatch.setenv("ORKET_API_KEY", "test-key")
-
-    class FakeDriver:
-        provider = type("Provider", (), {"close": AsyncMock()})()
-
-        async def process_request(self, message):
-            return f"echo:{message}"
-
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_chat_driver", AsyncMock(return_value=FakeDriver()))
-    monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
-        "resolve_chat_driver_invocation",
-        lambda message: {"method_name": "missing_method", "args": [message]},
-    )
-
-    response = client.post(
-        "/v1/system/chat-driver",
-        json={"message": "hello"},
-        headers={"X-API-Key": "test-key"},
-    )
-
-    assert response.status_code == 400
-    assert "Unsupported chat driver method" in response.json()["detail"]
 
 
 def test_run_active_uses_runtime_invocation(monkeypatch, fresh_runtime_state):

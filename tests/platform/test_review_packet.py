@@ -86,8 +86,13 @@ def test_inventory_and_export_work_in_a_real_git_worktree(tmp_path: Path):
 
 @pytest.mark.integration
 # Layer: integration
-def test_git_failure_is_not_an_empty_inventory_or_filesystem_fallback(tmp_path: Path):
+def test_git_failure_is_not_an_empty_inventory_or_filesystem_fallback(tmp_path: Path, monkeypatch):
     """Layer: integration. Failed discovery is visible and preserves an existing output artifact."""
+    # An in-repository --basetemp must not discover the enclosing checkout.
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent.resolve()))
+    discovery = subprocess.run(["git", "-C", str(tmp_path), "rev-parse", "--show-toplevel"],
+                               capture_output=True, text=True, timeout=20, check=False)
+    assert discovery.returncode != 0 and "not a git repository" in discovery.stderr.lower()
     output = tmp_path / "packet.txt"
     output.write_text("preserve existing packet", encoding="utf-8")
     with pytest.raises(GitInventoryError):

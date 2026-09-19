@@ -18,6 +18,7 @@ from fastapi.security import APIKeyHeader
 from orket import __version__
 from orket.application.services.api_runtime_composition import build_api_runtime_container
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
+from orket.application.services.api_startup_service import api_runtime_lifespan
 from orket.application.services.execution_graph_service import (
     execution_graph_payload,
     inspect_execution_graph,
@@ -81,7 +82,7 @@ from orket.kernel.v1.outbound_policy_gate import (
     load_outbound_policy_config_file,
     merge_outbound_policy_config,
 )
-from orket.logging import log_event, subscribe_to_events, unsubscribe_from_events
+from orket.logging import log_event
 from orket.runtime.cors_config import resolve_cors_config
 from orket.settings import load_user_settings_async, save_user_settings_async
 from orket.streaming import CommitIntent, InteractionManager, StreamBus
@@ -512,68 +513,15 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
 # --- Lifespan ---
 
 
-def _on_log_record_factory(
-    loop: asyncio.AbstractEventLoop,
-    state: Any,
-) -> Callable[[dict[str, Any]], None]:
-    def on_log_record(record: dict[str, Any]) -> None:
-        loop.call_soon_threadsafe(state.event_queue.put_nowait, record)
-
-    return on_log_record
-
-
-def _resolve_app_project_root(_app: FastAPI) -> Path:
-    return Path(getattr(_app.state, "project_root", _resolve_default_project_root())).resolve()
-
-
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    from orket.utils import ensure_log_dir
-
-    configured_root = await asyncio.to_thread(_resolve_app_project_root, _app)
     context = get_api_runtime_context(_app)
-    if context is None or context.project_root != configured_root:
+    configured_root = getattr(_app.state, "project_root", None)
+    if context is None or configured_root is None:
         raise RuntimeError("API app runtime context does not match its configured project root.")
-    if not context.accepting_work:
-        raise RuntimeError("API app runtime context is closed.")
-    broadcaster_task: asyncio.Task[Any] | None = None
-    log_subscriber: Callable[[dict[str, Any]], None] | None = None
-    try:
-        context.authentication.validate_startup(LOGGER)
-        runtime_engine = _get_engine(_app)
-        initialize = getattr(runtime_engine, "initialize", None)
-        if callable(initialize):
-            await initialize()
-
-        await asyncio.to_thread(ensure_log_dir)
-        broadcaster_task = asyncio.create_task(event_broadcaster(_app))
-        context.track_background_task(broadcaster_task)
-        loop = asyncio.get_running_loop()
-        log_subscriber = _on_log_record_factory(loop, context.runtime_state)
-        subscribe_to_events(log_subscriber)
-        governed_agent_runtime = context.governed_agent_runtime
-        if governed_agent_runtime is not None:
-            await governed_agent_runtime.start(context)
-        insecure_bypass = context.authentication.insecure_bypass
-        log_event(
-            "api_security_posture",
-            {
-                "api_key_configured": context.authentication.key_configured,
-                "insecure_no_api_key_bypass": insecure_bypass,
-            },
-            _project_root(_app),
-        )
-        if insecure_bypass:
-            log_event(
-                "api_security_warning",
-                {"message": "ORKET_ALLOW_INSECURE_NO_API_KEY bypasses /v1 auth without ORKET_API_KEY."},
-                _project_root(_app),
-            )
+    state, runtime_node = context.runtime_state, context.api_runtime_node
+    async with api_runtime_lifespan(context, configured_root, lambda: event_broadcaster(state, runtime_node)):
         yield
-    finally:
-        if log_subscriber is not None:
-            unsubscribe_from_events(log_subscriber)
-        await context.close()
 
 
 def _filter_operator_payload(payload: _PayloadT, *, surface: str) -> _PayloadT:
@@ -1710,18 +1658,18 @@ async def list_logs(
 # --- WS ---
 
 
-async def event_broadcaster(target_app: FastAPI | None = None) -> None:
-    state = _get_runtime_state(target_app)
-    runtime_node = _get_api_runtime_node(target_app)
+async def event_broadcaster(state: Any, runtime_node: Any) -> None:
     while True:
         record = await state.event_queue.get()
-        for ws in await state.get_websockets():
-            try:
-                await ws.send_json(record)
-            except (WebSocketDisconnect, RuntimeError, ValueError) as exc:
-                if isinstance(exc, WebSocketDisconnect) or runtime_node.should_remove_websocket(exc):
-                    await state.remove_websocket(ws)
-        state.event_queue.task_done()
+        try:
+            for ws in await state.get_websockets():
+                try:
+                    await ws.send_json(record)
+                except (WebSocketDisconnect, RuntimeError, ValueError) as exc:
+                    if isinstance(exc, WebSocketDisconnect) or runtime_node.should_remove_websocket(exc):
+                        await state.remove_websocket(ws)
+        finally:
+            state.event_queue.task_done()
 
 
 def _register_streaming_transport(target_app: FastAPI) -> None:

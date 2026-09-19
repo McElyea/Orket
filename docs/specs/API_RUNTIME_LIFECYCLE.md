@@ -7,13 +7,31 @@ Status: Active
 HTTP/WebSocket ASGI invocation tasks, registered background tasks and resources
 of one API application, followed by its engine. The public factory is
 `orket.interfaces.runtime_entrypoints.create_api_app(CompositionConfig)`;
-`orket.interfaces.api.lifespan` delegates teardown to that container.
+`orket.interfaces.api.lifespan` delegates initialization and teardown to
+`orket.application.services.api_startup_service.api_runtime_lifespan`.
 
 API and standalone webhook owners share `ApplicationRuntimeLifetime`; their
 configuration and final resources remain separate. Managed background work uses
 `start_background`, which retains failures even when work finishes before close.
 Unexpected background failure stops new admission and prevents a clean teardown
 claim. Existing manually registered API tasks keep their registration contract.
+
+Startup captures the engine, authentication, state, root and governed-agent owner
+before awaiting. Initialization is an admitted invocation: concurrent close cancels
+and drains it before resources and the engine. Root validation uses an owned file
+worker. The event broadcaster receives captured state/strategy inputs and uses
+managed background admission; it never reacquires the app context after close.
+Its delivery failure releases queue bookkeeping, closes new admission and remains
+observable at teardown even when the task has already finished. A registered
+subscription resource unsubscribes after admitted work settles. Startup no longer
+creates an unused invocation-level `logs/` directory; actual log publication still
+creates its own destination parent.
+
+The startup posture's `insecure_no_api_key_bypass` describes effective anonymous
+authentication, not merely the presence of the environment flag. A configured key
+still rejects anonymous/wrong-key access when that flag is set. Production/staging
+still reject the insecure flag at startup. These semantics do not make all manually
+registered API background tasks managed or impose a startup/shutdown deadline.
 
 ## Factory and storage selection
 
@@ -157,7 +175,9 @@ Task completion and a cooperative resource's successful close are local lifecycl
 observations. Generic task cancellation is not a durable effect receipt. Native
 command cleanup observations follow `VERIFICATION_PROCESS_LIFETIME_CONTRACT.md`;
 the outward journal keeps unresolved dispatch according to its own contract.
-Already completed tasks are outside this close-time failure collector.
+Already completed manually registered tasks are outside the close-time failure
+collector. Managed background tasks, including the event broadcaster, retain their
+unexpected failures when they finish.
 
 The factory owns admitted ASGI invocations and the connector calls they await.
 Builtin filesystem connectors now drain their I/O before caller cancellation or

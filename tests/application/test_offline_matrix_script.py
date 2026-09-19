@@ -1,7 +1,9 @@
+# Layer: integration. Real child commands with the selected test interpreter.
 from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -9,7 +11,7 @@ def test_check_offline_matrix_passes_with_offline_spec() -> None:
     out_path = Path("benchmarks/results/benchmarks/offline_matrix_check_test.json")
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/benchmarks/check_offline_matrix.py",
             "--matrix-doc",
             "docs/specs/OFFLINE_CAPABILITY_MATRIX.md",
@@ -30,7 +32,7 @@ def test_check_offline_matrix_fails_when_doc_missing(tmp_path: Path) -> None:
     out_path = tmp_path / "offline_check.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/benchmarks/check_offline_matrix.py",
             "--matrix-doc",
             str(tmp_path / "missing.md"),

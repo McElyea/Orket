@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -49,7 +50,7 @@ def main() -> int:
         Path(str(args.memory_compare_out)).parent.mkdir(parents=True, exist_ok=True)
 
     harness_cmd = [
-        "python",
+        sys.executable,
         "scripts/benchmarks/run_determinism_harness.py",
         "--task-bank",
         args.task_bank,
@@ -73,7 +74,7 @@ def main() -> int:
     _run(harness_cmd)
 
     score_cmd = [
-        "python",
+        sys.executable,
         "scripts/benchmarks/score_benchmark_run.py",
         "--report",
         args.raw_out,
@@ -90,7 +91,7 @@ def main() -> int:
     memory_retrieval_trace = str(args.memory_retrieval_trace or "").strip()
     if memory_trace:
         check_cmd = [
-            "python",
+            sys.executable,
             "scripts/benchmarks/check_memory_determinism.py",
             "--trace",
             memory_trace,
@@ -105,7 +106,7 @@ def main() -> int:
     compare_right = str(args.memory_compare_right or "").strip()
     if compare_left and compare_right:
         compare_cmd = [
-            "python",
+            sys.executable,
             "scripts/benchmarks/compare_memory_determinism.py",
             "--left",
             compare_left,

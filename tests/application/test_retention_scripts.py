@@ -1,7 +1,9 @@
+# Layer: integration. Real child commands with the selected test interpreter.
 from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -40,7 +42,7 @@ def test_retention_plan_and_policy_check_scripts(tmp_path: Path) -> None:
 
     plan = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/governance/retention_plan.py",
             "--inventory",
             str(inventory),
@@ -64,7 +66,7 @@ def test_retention_plan_and_policy_check_scripts(tmp_path: Path) -> None:
 
     check = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/governance/check_retention_policy.py",
             "--plan",
             str(out_plan),

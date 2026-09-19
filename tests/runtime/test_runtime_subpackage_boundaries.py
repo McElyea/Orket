@@ -6,6 +6,11 @@ from pathlib import Path
 
 RUNTIME_ROOT = Path(__file__).resolve().parents[2] / "orket" / "runtime"
 DOMAIN_PACKAGES = frozenset({"config", "evidence", "execution", "policy", "registry", "summary"})
+MIGRATED_TARGETS = {
+    "operation_commit_registry": "orket.adapters.storage.operation_commit_registry",
+    "protocol_error_codes": "orket.core.contracts.protocol_error_codes",
+    "result_error_invariants": "orket.core.contracts.result_error_invariants",
+}
 
 
 def test_runtime_flat_modules_are_one_release_alias_shims() -> None:
@@ -14,7 +19,12 @@ def test_runtime_flat_modules_are_one_release_alias_shims() -> None:
         if path.name == "__init__.py":
             continue
         source = path.read_text(encoding="utf-8")
-        assert "_import_module(\"orket.runtime." in source, path
+        if path.stem in MIGRATED_TARGETS:
+            target = MIGRATED_TARGETS[path.stem]
+            assert f'_import_module("{target}")' in source, path
+            assert importlib.import_module(f"orket.runtime.{path.stem}") is importlib.import_module(target)
+        else:
+            assert "_import_module(\"orket.runtime." in source, path
         assert "_sys.modules[__name__] = _module" in source, path
 
 

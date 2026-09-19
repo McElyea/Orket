@@ -1,8 +1,10 @@
+# Layer: integration. Real child commands with the selected test interpreter.
 from __future__ import annotations
 
 import importlib.util
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -26,7 +28,7 @@ def test_run_meta_breaker_scenarios_emits_pack_report(tmp_path, monkeypatch):
     output = tmp_path / "meta_breaker_scenarios.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/extensions/run_meta_breaker_scenarios.py",
             "--project-root",
             str(tmp_path),

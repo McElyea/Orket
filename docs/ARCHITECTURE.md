@@ -264,6 +264,9 @@ WebSocket and startup security checks. Explorer/metrics workers and rooted board
 reads are application-owned; pure EOS calculation consumes captured baseline and
 explicit time. Migration and remaining composition/lifetime work:
 `docs/architecture/CONTRACT_DELTA_API_AUTHORITY_INPUTS_CD_2026-09-17.md`.
+Application also retains API initialization through close and owns event subscription
+cleanup and managed broadcaster admission. Startup and failure semantics:
+`docs/architecture/CONTRACT_DELTA_API_STARTUP_D_2026-09-18.md`.
 
 Governed-agent CLI submission, inspection/replay and operator controls delegate
 to application command services. Submission captures immutable options and owns

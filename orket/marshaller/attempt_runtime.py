@@ -225,7 +225,9 @@ class AttemptRuntime:
         clone_path = attempt_dir / "workspace_clone"
         await asyncio.to_thread(shutil.rmtree, clone_path, True)
         clone_result = await run_process(
-            ("git", "clone", "--quiet", str(repo_path), str(clone_path)),
+            # Scope Windows long-path support to this command and the owned clone.
+            ("git", "-c", "core.longpaths=true", "clone", "--quiet", "--config", "core.longpaths=true",
+             str(repo_path), str(clone_path)),
             cwd=attempt_dir,
         )
         if clone_result.returncode != 0:

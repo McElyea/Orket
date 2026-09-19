@@ -1,7 +1,9 @@
+# Layer: integration. Real child commands with the selected test interpreter.
 from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -69,7 +71,7 @@ def test_run_quant_sweep_injects_runtime_env_from_matrix_config(tmp_path: Path) 
                 "task_limit": 1,
                 "canary_runs": 0,
                 "runner_template": (
-                    f"python {fake_runner} "
+                    f"{Path(sys.executable).as_posix()} {fake_runner.as_posix()} "
                     "--task {task_file} --runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir}"
                 ),
                 "runtime_env": {
@@ -86,7 +88,7 @@ def test_run_quant_sweep_injects_runtime_env_from_matrix_config(tmp_path: Path) 
     summary_out = tmp_path / "sweep_summary.json"
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "placeholder",

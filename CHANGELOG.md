@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.22] - 2026-09-18 - "Owned API startup"
+
+### Fixed
+- Retain API initialization through shutdown, capture broadcaster inputs before admission, and retain completed broadcaster failures.
+- Own log subscription cleanup and report effective anonymous access in the startup security posture.
+- Keep benchmark child commands in the selected Python environment and repair retained quality fixtures without relaxing runtime checks.
+- Enable Git long-path support only for a marshaller clone operation and its owned repository; native working-directory launch limits still apply.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+- Contract and proof limits: `docs/architecture/CONTRACT_DELTA_API_STARTUP_D_2026-09-18.md` and the architectural-truth plan.
+- Stability: source, installed and full-suite results are recorded separately in the active plan; this checkpoint is not whole-lane acceptance.
+
 ## [0.6.21] - 2026-09-18 - "Captured settings operations"
 
 ### Changed

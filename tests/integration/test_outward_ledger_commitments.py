@@ -41,16 +41,17 @@ async def test_append_captures_payload_before_awaiting_commitment_write(tmp_path
     service = await seed_ledger(tmp_path / "captured.sqlite3", 0)
     event = ledger_event(1)
     reached, release = asyncio.Event(), asyncio.Event()
-    original = aiosqlite.Connection.execute
+    original = aiosqlite.Connection._execute
 
-    async def pause(connection, sql, *args, **kwargs):
-        cursor = await original(connection, sql, *args, **kwargs)
-        if sql.startswith("INSERT INTO outward_ledger_commits_v2"):
+    async def pause(connection, operation, *args, **kwargs):
+        # Keep execute's awaitable/context-manager protocol intact; hold actual I/O.
+        result = await original(connection, operation, *args, **kwargs)
+        if args and isinstance(args[0], str) and args[0].startswith("INSERT INTO outward_ledger_commits_v2"):
             reached.set()
             await asyncio.wait_for(release.wait(), timeout=10)
-        return cursor
+        return result
 
-    monkeypatch.setattr(aiosqlite.Connection, "execute", pause)
+    monkeypatch.setattr(aiosqlite.Connection, "_execute", pause)
     task = asyncio.create_task(service.event_store.append(event))
     try:
         await asyncio.wait_for(reached.wait(), timeout=10)

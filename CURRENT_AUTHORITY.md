@@ -199,7 +199,11 @@ migration. Migration preserves request/native-lock identities, checks source
 ownership and cannot merge unrelated histories or grant effect approval.
 
 API application teardown authority lives in `docs/specs/API_RUNTIME_LIFECYCLE.md`
-and `orket/application/services/api_runtime_container.py`. Admission stops when
+and `orket/application/services/api_runtime_container.py`. Application service
+`api_startup_service.py` retains initialization as an admitted invocation, owns
+log subscription cleanup and starts the broadcaster with captured inputs and
+retained failure observation. Its security posture reports effective anonymous
+access. Admission stops when
 close starts; concurrent and cancelled callers await one teardown. `closed`
 requires successful active-request and registered-owner cleanup, and failed teardown
 remains failed on reentry. The container tracks its own per-task cancellation

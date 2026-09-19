@@ -1,7 +1,9 @@
+# Layer: integration. Real child commands with the selected test interpreter.
 from __future__ import annotations
 
 import asyncio
 import json
+import sys
 
 import pytest
 
@@ -58,7 +60,7 @@ async def test_generate_tool_scoreboard_script_emits_scoreboard(tmp_path) -> Non
 
     out_path = tmp_path / "tool_scoreboard.json"
     result = await asyncio.create_subprocess_exec(
-        "python",
+        sys.executable,
         "scripts/governance/generate_tool_scoreboard.py",
         "--root",
         str(tmp_path),
@@ -104,7 +106,7 @@ async def test_generate_tool_scoreboard_script_fails_closed_on_incomplete_ledger
 
     out_path = tmp_path / "tool_scoreboard.json"
     result = await asyncio.create_subprocess_exec(
-        "python",
+        sys.executable,
         "scripts/governance/generate_tool_scoreboard.py",
         "--root",
         str(tmp_path),

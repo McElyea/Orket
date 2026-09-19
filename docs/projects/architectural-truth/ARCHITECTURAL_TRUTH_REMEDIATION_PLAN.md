@@ -12516,15 +12516,15 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.21
-settings checkpoint below. The graph has 21 forbidden pairs, zero cross-layer
-cycles and eight unresolved import/reflection sites. Preserve the original clock
-failures and all failed settings/full-suite observations. The full suite remains
-red; triage its current failure index, including the API background-start/shutdown
-race and quality-fixture drift. Remaining core clocks, manifest reads, schema
-identities, async reachability and adapter classification remain actionable.
-E1/E2, CAP-1/2/3, hosted quality, release readiness and explicit whole-lane
-acceptance remain open.
+Next action: continue C/D from their numbered requirements after the 0.6.22
+API startup checkpoint below. The graph has 20 forbidden pairs, zero cross-layer
+cycles and eight unresolved import/reflection sites. Preserve the historical clock
+failures and all failed source/native observations. The full run's one stale
+benchmark expectation is corrected and passes focused proof; a fresh all-green
+full suite remains unclaimed. Canonical Ruff still has 105 findings. Remaining core
+clocks, manifest reads, schema identities, async reachability and adapter
+classification remain actionable. E1/E2, CAP-1/2/3, hosted Quality, release readiness
+and explicit whole-lane acceptance remain open.
 
 The final BT-3 audit accepts builtin evidence-based completion and scoped replay.
 It preserves the initial installed failures, corrected external fixture coverage,
@@ -14898,3 +14898,166 @@ No GitHub push, merge, release publication or whole-lane closure is part of this
 - `tests/interfaces/test_cli_process_exit_semantics.py`
 - `tests/interfaces/test_server_entrypoint.py`
 - `tests/interfaces/test_settings_protocol_determinism_controls.py`
+
+
+### API startup ownership checkpoint: 2026-09-18
+
+Observed path: primary. Result: partial success for the full goal. Core 0.6.22
+owns API initialization through admitted invocation lifetime, captures startup
+owners before awaiting, registers subscription cleanup and manages broadcaster
+failure. Close drains initialization before engine teardown. Broadcast delivery
+releases queue bookkeeping even when serialization fails. Authentication posture
+reports effective anonymous access; a configured key plus an insecure flag no longer
+claims disabled authentication. The unused invocation `logs/` creation is removed.
+The contract delta is `docs/architecture/CONTRACT_DELTA_API_STARTUP_D_2026-09-18.md`.
+
+Real local proof covers immediate lifespan exit, held initialization cleanup,
+held root-observation I/O, an independently responsive app, authenticated TCP
+requests and a genuine JSON serialization failure through the ASGI WebSocket
+endpoint. The latter is ASGI transport proof, not TCP WebSocket proof. Managed
+broadcast failure closes admission and remains failed teardown. Other manually
+registered API tasks retain their documented limits.
+
+Repository-owned benchmark/Phase 4 commands and affected test launchers retain
+the selected interpreter. Explicit runner templates retain operator choice.
+Settings tests use temporary persistence; preview/chat contracts use explicit
+async ports and assert driver close. The SQLite commitment fixture holds real
+queued I/O while preserving execute's awaitable/context-manager protocol. Other
+repairs bound non-Git fixture discovery, deterministically vary serializer output,
+recognize exact migrated aliases and admit exact intentional CLI output sites.
+No broad mock, import or print-policy waiver is added.
+
+Marshaller clone enables `core.longpaths` for that command and clone only. Real
+clone/patch/gate proof passes with a 240-character clone path and longer Git object
+paths; the source repository remains unchanged. The earlier overlong native cwd
+still fails Python/Git launch on Windows, including an extended-path probe. This
+does not promise arbitrary path lengths or reopen the future-held marshaller lane.
+
+#### Source and installed observations
+
+Retained evidence is under `.tmp/d-api-startup/`. Before-state API proof retains
+four failures and one pass. Early `repaired/` setup selected a nonexistent module
+and never ran pytest; `preflight-note.json` is explicitly retrospective, and the
+original raw setup traceback was not retained. The corrected source run passes
+121 cases, followed by 31 lifetime cases. Quality runs retain three invalid fake
+factory failures and the overlong-cwd failure; subsequent corrections pass their
+bounded cases. The separate repository structural cohort passes 51 cases.
+
+The final selected source and installed matrix each run the same 667 unique cases:
+
+| Envelope | Pass / fail / error / skip | Seconds (JUnit except source elapsed) | Core origins |
+|---|---:|---:|---:|
+| Source Windows 3.11 | 667 / 0 / 0 / 0 | 444.11 | source |
+| win-py311 | 667 / 0 / 0 / 0 | 447.849 | 922 |
+| linux-py311 | 667 / 0 / 0 / 0 | 280.224 | 922 |
+| win-py312 | 667 / 0 / 0 / 0 | 546.557 | 922 |
+| linux-py312 | 667 / 0 / 0 / 0 | 348.150 | 922 |
+
+Each installed verifier checks package hashes, exact cases, actual import origins,
+unchanged copied inputs, normal/malformed CLI flows, ToolGate execution and owned
+child cleanup. The 1,896-file harness contains no core/SDK source shadow. All 1,040
+core Python files and 1,055 core package files agree across source, wheel and sdist.
+At most one Windows and one WSL cell ran concurrently with separate environments;
+deadlines stayed unchanged. This is portability proof, not capacity acceptance.
+
+After that matrix, the changelog compatibility token was corrected to `preserved`
+and one extra EOF newline was removed from the host-dispatch fixture. The first
+full source run then records 6,942 cases: 6,852 passed,
+1 failed, 0 errors and 89 skipped.
+Its remaining benchmark assertion expected bare `python`; a separate unchanged
+focused run confirms that mismatch. Two expectations now require `sys.executable`,
+and the existing test is explicitly labeled a controlled contract. It was copied
+into the installed harness but was not among its 667 selected cases. These exact
+test-only deltas are bound separately; matrix runtime package bytes are unchanged.
+No old manifest or failed observation is rewritten to claim final-byte coverage.
+
+The corrected contract passes its separate focused source observation, with no
+skip or input change. The full run remains a retained failed observation; this
+does not claim a fresh all-green full suite after the test correction. The full
+run took 2102.08 seconds. All 19 failures from 0.6.21 pass, using
+explicit identity mappings for the five moved API tests and split marshaller case.
+No earlier case disappears. Git-visible inputs are unchanged during the full and
+focused runs; each parent terminates and is reaped. This is not a process-wide proof of
+all possible detached descendants. Skipped provider/live tests remain absent proof.
+
+Actual benchmark-suite subprocesses also pass controlled task 001 twice plus
+valid memory schema/comparison checks, and return exit 2 for a missing workflow id
+or changed tool-result fingerprint. These are static memory fixtures, not a
+provider or live memory-store benchmark. Raw telemetry reports missing controls
+and token timing. An earlier quoted Windows runner token fails before outputs;
+the successful observation uses an unquoted path without spaces. Quoted-path
+portability remains unresolved and is retained in `benchmark-live-audit.json`.
+
+#### Remaining quality and acceptance limits
+
+The graph has 1,040 modules, 3,286 import sites, 20 forbidden pairs, no cross-layer
+cycles, eight analysis errors and no unknown modules. Only `api -> orket.utils`
+is removed; no forbidden pair is added. The eight remaining reflection errors
+are in extension loaders. Collection success is not a passing dependency verdict.
+Canonical `ruff check orket tests` reports 105 findings (89 core, 16 tests);
+the baseline collector's 89 is core-only. Changed-file lint is checked separately.
+
+The release checker accepted the initially invalid `compatible` token. The
+retained observation demonstrates that its version-alignment success does not
+validate compatibility vocabulary. Policy section 10 separately assigns
+compatibility correctness to operator review; the final `preserved` token is
+checked explicitly. This checkpoint does not claim new automated enum enforcement.
+
+No fresh provider, Gitea or hosted Quality execution is claimed here. Prior 0.6.21
+Gitea evidence and all 820 predecessor artifacts remain retained. Historical Linux
+timestamp reversal remains unexplained. Wider C/D, E1/E2, CAP-1/2/3, supported-host
+and performance acceptance, release readiness and explicit whole-lane acceptance
+remain open. The roadmap stays active. The local checkpoint is not release approval.
+
+Retained artifact bindings:
+
+- `.tmp/d-api-startup/candidate/manifest.json`: SHA-256 `859f2ea300a3e9a8b2d2d0f2b38ad037adc02ec2f838597f1941befb6a13aebc`.
+- `.tmp/d-api-startup/candidate/source-report.json`: SHA-256 `5a349366d6683c5df4c0906e627b2544e9d650f625a9664896b1db60808c4898`.
+- `.tmp/d-api-startup/candidate/native-audit.json`: SHA-256 `dd8840b4566fec8b3787b6ceea9251036fda6081c0220504470776129f71f8bc`.
+- `.tmp/d-api-startup/full-source/report.json`: SHA-256 `c9d71f6b55e41ea1733d7fca8ab1c2ab23e33a2f9d9be97bee5828cbc20a597d`.
+- `.tmp/d-api-startup/benchmark-expectations-fixed/report.json`: SHA-256 `b220034e4a61375f57d0d9e14544ddde4a525b705ab8bf24e8c82ad992426e16`.
+- `.tmp/d-api-startup/full-source-comparison.json`: SHA-256 `7f86030ea0ea50d7631b30a60e11f020716cd838b5f6e31dfdd4c58c2a9ca376`.
+- `.tmp/d-api-startup/benchmark-live-audit.json`: SHA-256 `dc8155cb564d4f8a0064aab61df4bcc4f12660d5c55d48d52f8876aba088f412`.
+- `.tmp/d-api-startup/canonical-ruff/report.json`: SHA-256 `739c90bc7cf690d8c82418810cea5ee0885b85e49de9cfff126e6512d0d8cf95`.
+
+Local commit/tag binding is recorded in `.tmp/d-api-startup/local-checkpoint.json`.
+Remote publication, if performed outside work hours, has a separate receipt and does not imply lane acceptance.
+
+#### Exact 0.6.22 checkpoint files
+
+- `.gitea/workflows/quality.yml`
+- `CHANGELOG.md`
+- `CURRENT_AUTHORITY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/CONTRIBUTOR.md`
+- `docs/architecture/CONTRACT_DELTA_API_STARTUP_D_2026-09-18.md`
+- `docs/architecture/dependency_graph_snapshot.json`
+- `docs/architecture/dependency_graph_snapshot.md`
+- `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`
+- `docs/projects/architectural-truth/architectural_truth_baseline.json`
+- `docs/specs/API_RUNTIME_LIFECYCLE.md`
+- `orket/application/services/api_authentication_service.py`
+- `orket/application/services/api_startup_service.py`
+- `orket/interfaces/api.py`
+- `orket/marshaller/attempt_runtime.py`
+- `pyproject.toml`
+- `scripts/benchmarks/run_benchmark_suite.py`
+- `scripts/benchmarks/run_phase4_benchmark.py`
+- `tests/application/test_check_skill_contracts_script.py`
+- `tests/application/test_offline_matrix_script.py`
+- `tests/application/test_phase4_runner.py`
+- `tests/application/test_quant_sweep_runtime_env.py`
+- `tests/application/test_retention_scripts.py`
+- `tests/application/test_run_benchmark_suite_memory_checks.py`
+- `tests/application/test_run_meta_breaker_scenarios.py`
+- `tests/application/test_run_textmystery_policy_conformance.py`
+- `tests/integration/test_api_startup_ownership.py`
+- `tests/integration/test_outward_ledger_commitments.py`
+- `tests/interfaces/test_api.py`
+- `tests/interfaces/test_api_host_dispatch.py`
+- `tests/marshaller/test_workload_registry.py`
+- `tests/platform/test_generate_tool_scoreboard.py`
+- `tests/platform/test_review_packet.py`
+- `tests/platform/test_runtime_print_policy.py`
+- `tests/rulesim/test_live_path_contract_failures.py`
+- `tests/runtime/test_runtime_subpackage_boundaries.py`

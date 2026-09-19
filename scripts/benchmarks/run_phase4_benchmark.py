@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -27,7 +28,7 @@ def main() -> int:
     Path(args.scored_out).parent.mkdir(parents=True, exist_ok=True)
 
     cmd = [
-        "python",
+        sys.executable,
         "scripts/benchmarks/run_benchmark_suite.py",
         "--task-bank",
         args.task_bank,
