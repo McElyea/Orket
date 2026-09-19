@@ -70,7 +70,7 @@ def test_driver_init_anchors_default_paths_to_project_root(monkeypatch, tmp_path
         def __init__(self, root):  # type: ignore[no-untyped-def]
             captures["fs_root"] = Path(root)
 
-    class _FakeReforgerTools:
+    class _FakeReforgerService:
         def __init__(self, workspace, allowed_roots):  # type: ignore[no-untyped-def]
             captures["workspace_root"] = Path(workspace)
             captures["allowed_roots"] = [Path(item) for item in allowed_roots]
@@ -92,7 +92,7 @@ def test_driver_init_anchors_default_paths_to_project_root(monkeypatch, tmp_path
     monkeypatch.chdir(off_root_cwd)
     monkeypatch.setattr("orket.driver._default_project_root", lambda: tmp_path)
     monkeypatch.setattr("orket.driver.AsyncFileTools", _FakeFileTools)
-    monkeypatch.setattr("orket.driver.ReforgerTools", _FakeReforgerTools)
+    monkeypatch.setattr("orket.driver.ReforgerService", _FakeReforgerService)
     monkeypatch.setattr("orket.driver.create_local_model_provider", _FakeProvider)
     monkeypatch.setattr("orket.driver.prepare_bootstrap_model_selection", lambda **kwargs: prepared_model_selection())
     monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)

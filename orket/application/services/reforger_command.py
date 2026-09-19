@@ -5,12 +5,15 @@ import json
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.storage.reforger_output import capture_inputs, publish_output, validate_output, write_report
+from orket.adapters.storage.verified_file import write_verified_bytes
 from orket.adapters.tools.families.base import BaseTools
 from orket.reforger.compiler import run_compile_pipeline
 from orket.reforger.routes import ROUTE_ID_TEXTMYSTERY_PERSONA_V0, TextMysteryPersonaRouteV0
 
 
-class ReforgerTools(BaseTools):
+class ReforgerCommand(BaseTools):
+    """Synchronous compiler coordination; only ReforgerService dispatches this worker."""
     _ROUTE_ALIASES = {
         "textmystery_v1": ROUTE_ID_TEXTMYSTERY_PERSONA_V0,
         ROUTE_ID_TEXTMYSTERY_PERSONA_V0: ROUTE_ID_TEXTMYSTERY_PERSONA_V0,
@@ -52,6 +55,9 @@ class ReforgerTools(BaseTools):
                 suite_ready = False
                 suite_requirements.append("scenario_pack")
 
+        return self._publish_inspection(route_id, input_dir, mode_raw, plan, suite_ready, suite_requirements)
+
+    def _publish_inspection(self, route_id, input_dir, mode_raw, plan, suite_ready, suite_requirements):
         artifact_root = self._artifact_root("inspect", route_id, input_dir, mode_raw or "none", 0, 0)
         artifact_root.mkdir(parents=True, exist_ok=True)
 
@@ -71,12 +77,8 @@ class ReforgerTools(BaseTools):
             "version": "validation_v0",
             "issues": self._issues_from_plan(plan),
         }
-        (artifact_root / "route_plan.json").write_text(
-            json.dumps(route_plan_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-        )
-        (artifact_root / "validation_report.normalize.json").write_text(
-            json.dumps(validation_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-        )
+        write_report(artifact_root / "route_plan.json", route_plan_payload)
+        write_report(artifact_root / "validation_report.normalize.json", validation_payload)
         return {
             "ok": bool(plan.ok),
             "tool": "reforger_inspect",
@@ -96,15 +98,13 @@ class ReforgerTools(BaseTools):
         route_id_raw = str(args.get("route_id") or "").strip()
         mode_raw = str(args.get("mode") or "").strip()
         scenario_pack_raw = str(args.get("scenario_pack") or "").strip()
-        forced = bool(args.get("forced", False))
-        force_reason = str(args.get("force_reason") or "")
-        seed = int(args.get("seed", 0))
-        max_iters = int(args.get("max_iters", 10))
-        model_id = str(args.get("model_id") or "fake")
         input_dir = self._resolve_safe_path(str(args.get("input_dir") or ""), write=False)
         output_raw = str(args.get("output_dir") or "").strip()
         try:
             output_dir = self._validate_output_dir(output_raw)
+            scenario = self._resolve_scenario_pack_path(scenario_pack_raw or None, input_dir)
+            protected = (self.workspace_root / "reforger", input_dir / "content", scenario)
+            validate_output(self.workspace_root, output_dir, protected)
         except ValueError as exc:
             return {
                 "ok": False,
@@ -131,6 +131,13 @@ class ReforgerTools(BaseTools):
                 "code": "MODE_UNSUPPORTED",
                 "error": f"Unsupported mode '{mode_raw}'",
             }
+        return self._compile(args, route_id, input_dir, output_dir, protected)
+
+    def _compile(self, args, route_id, input_dir, output_dir, protected):
+        mode_raw, scenario_pack_raw = str(args.get("mode") or "").strip(), str(args.get("scenario_pack") or "").strip()
+        forced, force_reason = bool(args.get("forced", False)), str(args.get("force_reason") or "")
+        seed, max_iters = int(args.get("seed", 0)), int(args.get("max_iters", 10))
+        model_id = str(args.get("model_id") or "fake")
         artifact_root = self._artifact_root("run", route_id, input_dir, mode_raw, seed, max_iters)
         scenario_pack_path = self._resolve_scenario_pack_path(scenario_pack_raw or None, input_dir)
         warnings: list[str] = []
@@ -147,9 +154,16 @@ class ReforgerTools(BaseTools):
             warnings.append("forced_without_scenario_pack")
 
         run_out_dir = artifact_root / "run"
+        admitted_input = artifact_root / "admitted-input"
+        for relative in TextMysteryPersonaRouteV0.expected_inputs:
+            self._resolve_safe_path(str(input_dir / relative))
+        capture_inputs(input_dir, TextMysteryPersonaRouteV0.expected_inputs, admitted_input, self.workspace_root)
+        scenario_bytes = scenario_pack_path.read_bytes()
+        scenario_pack_path = artifact_root / "admitted-scenario-pack.json"
+        write_verified_bytes(scenario_pack_path, scenario_bytes)
         result = run_compile_pipeline(
             route_id=route_id,
-            input_dir=input_dir,
+            input_dir=admitted_input,
             out_dir=run_out_dir,
             mode=mode_raw,
             model_id=model_id,
@@ -157,24 +171,8 @@ class ReforgerTools(BaseTools):
             max_iters=max_iters,
             scenario_pack_path=scenario_pack_path,
         )
-        materialized_src = result.materialized_root
-        if output_dir.exists():
-            for child in output_dir.iterdir():
-                if child.is_file():
-                    child.unlink()
-                else:
-                    import shutil
-
-                    shutil.rmtree(child)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        for item in materialized_src.rglob("*"):
-            rel = item.relative_to(materialized_src)
-            dest = output_dir / rel
-            if item.is_dir():
-                dest.mkdir(parents=True, exist_ok=True)
-            else:
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_bytes(item.read_bytes())
+        if result.ok:
+            publish_output(result.materialized_root, output_dir, self.workspace_root, protected)
 
         return {
             "ok": bool(result.ok),
@@ -201,14 +199,14 @@ class ReforgerTools(BaseTools):
 
     def _resolve_scenario_pack_path(self, scenario_pack: str | None, input_dir: Path) -> Path | None:
         if not scenario_pack:
-            return input_dir / "reforge" / "scenario_packs" / "truth_only_v0.json"
+            return self._resolve_safe_path(str(input_dir / "reforge" / "scenario_packs" / "truth_only_v0.json"))
         raw = str(scenario_pack).strip()
         direct = Path(raw)
         if direct.suffix.lower() == ".json":
             if direct.is_absolute():
-                return direct
-            return (input_dir / raw).resolve()
-        return (input_dir / "reforge" / "scenario_packs" / f"{raw}.json").resolve()
+                return self._resolve_safe_path(str(direct))
+            return self._resolve_safe_path(str(input_dir / raw))
+        return self._resolve_safe_path(str(input_dir / "reforge" / "scenario_packs" / f"{raw}.json"))
 
     def _artifact_root(
         self,
@@ -229,7 +227,7 @@ class ReforgerTools(BaseTools):
         }
         key = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("ascii")
         run_id = hashlib.sha256(key).hexdigest()[:16]
-        return self.workspace_root / "reforger" / kind / run_id
+        return self._resolve_safe_path(str(self.workspace_root / "reforger" / kind / run_id), write=True)
 
     def _issues_from_plan(self, plan: Any) -> list[dict[str, Any]]:
         issues: list[dict[str, Any]] = []
@@ -273,6 +271,5 @@ class ReforgerTools(BaseTools):
             ],
         }
         path = artifact_root / "forced_scenario_pack.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        write_report(path, payload)
         return path

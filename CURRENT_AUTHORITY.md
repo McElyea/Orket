@@ -4,6 +4,13 @@ Last updated: 2026-09-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Driver resource commands and model-proposed structural writes enter application
+services that capture inputs, retain workers and share native model-file admission.
+Application `ReforgerService` owns asynchronous compiler tools, retained route-input
+snapshots and verified output publication; workspace-root and overlapping outputs
+are refused. Migration, native lock locations and non-transactional failure limits:
+`docs/architecture/CONTRACT_DELTA_DRIVER_COMMANDS_CD_2026-09-19.md`.
+
 Interaction cancellation is admitted by application `InteractionCancellationService`.
 The selected session bounds the target lookup; accepted operator actions follow
 observed interruption and stream publication, with captured actor and clock.

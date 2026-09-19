@@ -136,10 +136,10 @@ async def test_process_request_handles_cool_as_conversation():
 
 
 @pytest.mark.asyncio
-async def test_process_request_capabilities_question_returns_help():
+async def test_process_request_capabilities_question_returns_help(tmp_path):
     """Layer: integration. Verifies capabilities output states the exact supported action surface."""
     driver = OrketDriver.__new__(OrketDriver)
-    driver.model_root = Path("model")
+    driver.model_root = tmp_path / "model"
     driver.skill = None
     driver.dialect = None
     driver.provider = SimpleNamespace(complete=None)
@@ -358,10 +358,10 @@ async def test_process_request_reforge_bare_and_slash_forms_match_usage_contract
 
 
 @pytest.mark.asyncio
-async def test_process_request_capabilities_reports_degraded_config_status():
+async def test_process_request_capabilities_reports_degraded_config_status(tmp_path):
     """Layer: integration. Verifies operator-visible degradation status in capabilities output."""
     driver = OrketDriver.__new__(OrketDriver)
-    driver.model_root = Path("model")
+    driver.model_root = tmp_path / "model"
     driver.skill = None
     driver.dialect = None
     driver.provider = SimpleNamespace(complete=None)

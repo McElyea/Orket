@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
 import pytest
 
-from orket.adapters.tools.families.reforger_tools import ReforgerTools
+from orket.application.services.reforger_service import ReforgerService
+
+pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 
 def _seed_textmystery_inputs(root: Path) -> None:
@@ -74,13 +77,13 @@ def _seed_textmystery_inputs(root: Path) -> None:
     )
 
 
-def test_reforger_tools_inspect_and_run(tmp_path: Path) -> None:
+async def test_reforger_tools_inspect_and_run(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     workspace.mkdir(parents=True, exist_ok=True)
-    tools = ReforgerTools(workspace, [tmp_path])
+    tools = ReforgerService(workspace, [tmp_path])
     _seed_textmystery_inputs(tmp_path)
 
-    inspect = tools.inspect(
+    inspect = await tools.inspect(
         {
             "route_id": "textmystery_v1",
             "input_dir": str(tmp_path),
@@ -92,10 +95,10 @@ def test_reforger_tools_inspect_and_run(tmp_path: Path) -> None:
     assert inspect["tool"] == "reforger_inspect"
     assert inspect["version"] == "1"
     assert inspect["suite_ready"] is True
-    assert Path(str(inspect["artifact_root"])).exists()
+    assert await asyncio.to_thread(Path(str(inspect["artifact_root"])).exists)
 
     out_dir = workspace / "materialized"
-    run = tools.run(
+    run = await tools.run(
         {
             "route_id": "textmystery_v1",
             "input_dir": str(tmp_path),
@@ -114,13 +117,13 @@ def test_reforger_tools_inspect_and_run(tmp_path: Path) -> None:
     assert (out_dir / "content" / "prompts" / "archetypes.yaml").exists()
 
 
-def test_reforger_run_rejects_absolute_and_parent_escape_output_dir(tmp_path: Path) -> None:
+async def test_reforger_run_rejects_absolute_and_parent_escape_output_dir(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     workspace.mkdir(parents=True, exist_ok=True)
-    tools = ReforgerTools(workspace, [tmp_path])
+    tools = ReforgerService(workspace, [tmp_path])
     _seed_textmystery_inputs(tmp_path)
 
-    bad_abs = tools.run(
+    bad_abs = await tools.run(
         {
             "route_id": "textmystery_v1",
             "input_dir": str(tmp_path),
@@ -134,7 +137,7 @@ def test_reforger_run_rejects_absolute_and_parent_escape_output_dir(tmp_path: Pa
     assert bad_abs["ok"] is False
     assert "workspace-relative" in bad_abs["error"]
 
-    bad_escape = tools.run(
+    bad_escape = await tools.run(
         {
             "route_id": "textmystery_v1",
             "input_dir": str(tmp_path),
@@ -148,7 +151,7 @@ def test_reforger_run_rejects_absolute_and_parent_escape_output_dir(tmp_path: Pa
     assert bad_escape["ok"] is False
     assert "must not contain '..'" in bad_escape["error"]
 
-    ok_dot = tools.run(
+    ok_dot = await tools.run(
         {
             "route_id": "textmystery_v1",
             "input_dir": str(tmp_path),
@@ -159,13 +162,14 @@ def test_reforger_run_rejects_absolute_and_parent_escape_output_dir(tmp_path: Pa
             "max_iters": 2,
         }
     )
-    assert ok_dot["ok"] is True
+    assert ok_dot["ok"] is False
+    assert ok_dot["code"] == "PATCH_OUT_OF_SURFACE"
 
 
-def test_reforger_run_deterministic_digests_with_same_inputs(tmp_path: Path) -> None:
+async def test_reforger_run_deterministic_digests_with_same_inputs(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     workspace.mkdir(parents=True, exist_ok=True)
-    tools = ReforgerTools(workspace, [tmp_path])
+    tools = ReforgerService(workspace, [tmp_path])
     _seed_textmystery_inputs(tmp_path)
 
     args = {
@@ -178,8 +182,8 @@ def test_reforger_run_deterministic_digests_with_same_inputs(tmp_path: Path) -> 
         "max_iters": 4,
         "model_id": "fake",
     }
-    run1 = tools.run(args)
-    run2 = tools.run(args)
+    run1 = await tools.run(args)
+    run2 = await tools.run(args)
     assert run1["ok"] is True and run2["ok"] is True
     assert run1["best_candidate_id"] == run2["best_candidate_id"]
 
@@ -192,14 +196,14 @@ def test_reforger_run_deterministic_digests_with_same_inputs(tmp_path: Path) -> 
     assert score1 == score2
 
 
-def test_reforger_run_force_fields_present(tmp_path: Path) -> None:
+async def test_reforger_run_force_fields_present(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     workspace.mkdir(parents=True, exist_ok=True)
-    tools = ReforgerTools(workspace, [tmp_path])
+    tools = ReforgerService(workspace, [tmp_path])
     _seed_textmystery_inputs(tmp_path)
     # Remove scenario pack so forced fallback path is exercised.
     (tmp_path / "reforge" / "scenario_packs" / "truth_only_v0.json").unlink()
-    run = tools.run(
+    run = await tools.run(
         {
             "route_id": "textmystery_v1",
             "input_dir": str(tmp_path),

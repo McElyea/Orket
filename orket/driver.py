@@ -9,10 +9,10 @@ from typing import Any
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.adapters.storage.async_file_tools import AsyncFileTools
-from orket.adapters.tools.families.reforger_tools import ReforgerTools
+from orket.application.services.driver_command_service import DriverCommandService
 from orket.application.services.local_model_factory import create_local_model_provider
 from orket.application.services.model_selection_service import prepare_bootstrap_model_selection
-from orket.driver_support_cli import DriverCliMixin
+from orket.application.services.reforger_service import ReforgerService
 from orket.driver_support_conversation import DriverConversationMixin
 from orket.driver_support_resources import DriverResourceMixin
 from orket.exceptions import CardNotFound
@@ -26,15 +26,11 @@ def _default_project_root() -> Path:
     return default_project_root()
 
 
-def _default_model_root() -> Path:
-    return default_model_root()
-
-
 def _default_workspace_root() -> Path:
     return default_workspace_root()
 
 
-class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
+class OrketDriver(DriverResourceMixin, DriverConversationMixin):
     """
     The Driver is the high-level intent parser and resource manager.
     It manages Rocks, Epics, Issues, and Team Selection.
@@ -46,7 +42,7 @@ class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
         *,
         provider: LocalModelProvider | None = None,
         fs: AsyncFileTools | None = None,
-        reforger_tools: ReforgerTools | None = None,
+        reforger_tools: ReforgerService | None = None,
         strict_config: bool | None = None,
         json_parse_mode: str | None = None,
         project_root: Path | None = None,
@@ -57,7 +53,7 @@ class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
         self.model_root = default_model_root(self.project_root)
         self.workspace_root = default_workspace_root(self.project_root)
         self.fs = fs or AsyncFileTools(self.project_root)
-        self.reforger_tools = reforger_tools or ReforgerTools(self.workspace_root, [self.project_root])
+        self.reforger_tools = reforger_tools or ReforgerService(self.workspace_root, [self.project_root])
 
         from orket.schema import OrganizationConfig
 
@@ -97,7 +93,7 @@ class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
         return Path(getattr(self, "workspace_root", _default_workspace_root()))
 
     def _operator_model_root(self) -> Path:
-        return Path(getattr(self, "model_root", _default_model_root()))
+        return Path(getattr(self, "model_root", default_model_root()))
 
     def _compatibility_parse_warning(self) -> str:
         if not bool(getattr(self, "_compatibility_parse_fallback_used", False)):
@@ -321,7 +317,8 @@ class OrketDriver(DriverResourceMixin, DriverCliMixin, DriverConversationMixin):
         workspace_root = self._operator_workspace_root()
         self._log_operator_metric("operator_request_total", route="received")
 
-        cli_response = await self._try_cli_command(message)
+        cli_response = await DriverCommandService(
+            self.model_root, getattr(self, "reforger_tools", None), self._capability_lines()).execute(message)
         if cli_response is not None:
             self._log_operator_metric("operator_request_total", route="cli")
             return cli_response

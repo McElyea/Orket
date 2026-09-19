@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.28] - 2026-09-19 - "Owned driver commands"
+
+### Fixed
+- Route driver resources and structural proposals through application-owned workers, captured inputs, native write admission and verified model-file publication.
+- Retain asynchronous Reforger commands through interruption; compile declared input snapshots and verify materialized output before reporting success.
+- Refuse workspace-root output replacement, compiler input/artifact overlap and model-directory escape.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration and limits: `docs/architecture/CONTRACT_DELTA_DRIVER_COMMANDS_CD_2026-09-19.md`.
+- Stability: scoped C/D progress; the full architectural-truth lane remains active.
+
 ## [0.6.27] - 2026-09-19 - "Observed interaction cancellation"
 
 ### Fixed
@@ -1720,7 +1732,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Schema Migration**: Fixed backward compatibility issues with legacy priority strings
 - **Verification Aliases**: Corrected field alias mappings for verification fixtures
-- **Line Ending Warnings**: Normalized line endings across core modules (LF → CRLF on Windows)
+- **Line Ending Warnings**: Normalized line endings across core modules (LF â†’ CRLF on Windows)
 
 ### Removed
 - **Obsolete Tests**: Removed deprecated test files (`test_examples_tictactoe.py`, `test_flow_loads.py`)
@@ -1788,7 +1800,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - iDesign enforcement framework
 - Prompt Engine updates
-- Book → Card terminology migration
+- Book â†’ Card terminology migration
 
 ### Changed
 - Major architectural alignment with iDesign principles

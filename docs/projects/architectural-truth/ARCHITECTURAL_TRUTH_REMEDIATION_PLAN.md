@@ -12516,11 +12516,11 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.27
-interaction cancellation work below. The graph has 11 forbidden pairs, zero cross-layer
+Next action: continue C/D from their numbered requirements after the 0.6.28
+driver command work below. The graph has eight forbidden pairs, zero cross-layer
 cycles and eight unresolved import/reflection sites. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff still has 103 findings. The prior stale benchmark expectation passes in the
+Ruff has 100 findings. The prior stale benchmark expectation passes in the
 new source/native selection, but no fresh all-green full suite is claimed.
 Remaining core clocks, schema identities, async reachability and
 adapter classification remain actionable. E1/E2, CAP-1/2/3, hosted Quality, release
@@ -15675,3 +15675,127 @@ explicit whole-lane acceptance remain open. The last full-suite observation is
 still the retained `.22` run (6,852 passed, one stale benchmark expectation failed,
 89 skipped); the corrected benchmark expectation passes the focused later cohorts.
 This checkpoint is not a fresh all-green full-suite claim.
+
+### Driver command ownership checkpoint: 2026-09-19 (0.6.28)
+
+Application `DriverCommandService` owns operator command dispatch. Resource
+commands and model-proposed structural writes share native model-file admission,
+retain workers through interruption, capture inputs and verify publication before
+success. Model acceptance-definition admission and legacy epic normalization
+remain intact. Department escapes are refused; fallback reports its actual root.
+The driver filesystem injection remains on bootstrap/other driver paths; changed
+resource commands use the explicit model store and its publication contract.
+The inherited interface CLI mixin is retired. Application `ReforgerService`
+replaces the adapter-owned compiler coordinator, captures arguments and roots,
+retains workers and verifies output files. ToolBox binds relative locations at
+construction; direct service embeddings supply absolute roots. Scenario packs
+must resolve within admitted workspace/reference roots.
+
+Compilation copies the four declared route inputs and selected scenario pack
+before dispatch, so its input manifest excludes unrelated files and prior output.
+Workspace-root output and overlap with inputs/artifacts are refused. Failed
+compilation cannot replace published output. This deterministic textmystery
+compiler work does not reopen the paused Gemma portability lane.
+
+Observed path: primary, including deliberate rejected/degraded operations.
+Result: partial success for the full goal. Live proof covers real command,
+compiler, filesystem, native lock and installed CLI paths. Graph/lint/workflow
+and size checks are structural. No live provider, Gitea, Docker or hosted CI
+proof is claimed.
+
+The retained baseline passed 95 cases. Its first harness attempt failed while
+copying a directory selection; no pytest/runtime proof occurred in that attempt.
+The initial ToolBox workspace-root counterexample returned a failure without the
+required admission code and retained its sentinel; it alone did not prove
+successful destructive publication. Separate runs of the sealed installed 0.6.27
+wheel show direct and ToolBox compilation returning `ok=true` after deleting the
+fixture sentinel and compiler artifacts. A live SQLite database inside the old
+whole-project input tree caused an earlier PermissionError instead. The final
+legacy probe selects an explicit fixture database outside the input tree. Its
+preliminary probe used the default database location; no unchanged-database
+claim is made for that preliminary observation.
+
+Other before-repair flows demonstrate direct driver event-loop blocking and an
+epic written outside the selected model root. Repairs retain ToolBox's already
+passing cancellation drain. The first extraction had a misplaced future import;
+the next run exposed whole-project hashing of the new native lock on Windows.
+Both failed runs remain retained. One new contention assertion initially expected
+an uppercase busy code; the observed native error was correctly
+`DRIVER_RESOURCE_UNCERTAIN:owner_busy`, and the assertion was corrected.
+
+The first installed Linux 3.11 run passed 1,308 cases but failed the corpus
+contract because it hard-coded `c:/Source/Orket`. The corresponding Windows
+run passed 1,309 but read the neighboring checkout for that case. The test now
+selects its own checkout, and the final harness includes the unchanged corpus
+JSON. Assertions are unchanged; no case is skipped. Both first-run observations
+remain under `candidate/` and native `a28-*` roots. Corrected proof under
+`candidate-final/` and `a28r-*` passed all 1,309 cases in source and all four
+installed cells. This fixes test portability without reopening model portability
+work. The later index check found trailing EOF blank lines in three new modules;
+the earlier unstaged whitespace check had not included those new files. The
+cleanup changes no syntax tree or compiled code object. The old inputs and failed
+index check remain in `precommit-format-delta.json` and related artifacts. Final
+proof is rebuilt from the cleaned source under `candidate-ship/` and `a28s-*`.
+
+A separate installed ToolBox flow executes both inspect and successful run,
+compares every published file digest with the compiler output manifest and
+checks that unrelated workspace state remains intact (`toolbox-live/report.json`).
+
+The affected cohort passed 113 cases; structural checks passed 51. The final
+source run passed 1,309 cases without failures, errors or skips in
+417.594 seconds including runner overhead. Every one of
+the prior 1,240 identities remains; 69 were added.
+The same cases pass in all four installed cells, with actual core origins,
+dependency, support-hash, CLI, ToolGate, root-database and cleanup checks passing.
+Every owned source/native process returned and its session was reaped.
+
+| Installed cell | Tests / failures / errors / skips | Core origins | Pytest seconds |
+|---|---:|---:|---:|
+| a28s-win-py311 | 1309 / 0 / 0 / 0 | 949 | 417.868 |
+| a28s-linux-py311 | 1309 / 0 / 0 / 0 | 949 | 294.157 |
+| a28s-win-py312 | 1309 / 0 / 0 / 0 | 949 | 514.516 |
+| a28s-linux-py312 | 1309 / 0 / 0 / 0 | 949 | 349.935 |
+
+The harness binds 1,911 support files without core/SDK
+source shadowing. Wheel/sdist parity matches 1,060 core Python
+and 1,075 package files without mismatch. Core is 0.6.28;
+SDK 0.7.0a1 and reference/starter 0.3.0a1 artifacts remain unchanged. Declared
+source/native/launcher budgets remain 1,500/1,800/2,100 seconds. Product deadlines
+were not widened; controlled worker checks retain 0.5-second responsiveness and
+3-second post-release settlement bounds.
+
+Evidence under `.tmp/c-driver-commands/`:
+- `candidate-ship/source-report.json`: SHA-256 `45313bc26f9e7e8b9c13242f0f0d6a62f5faf280b5f717a1422d23a59cfba297`.
+- `candidate-ship/manifest.json`: SHA-256 `fc910f492b5282c81f5349d4db64a8dd12e5562a9a973603a07850ba343145c5`.
+- `candidate-ship/native-audit.json`: SHA-256 `26a3219acb112a13cbe20ad5fba5849f7e32575fb275c6f424da81c4fb4f5f11`.
+- Core wheel: SHA-256 `d6e1b74235c6837cdc63ee78f198c143aa7ef152f278436ff997fa7582b45ad3`.
+- Core sdist: SHA-256 `30d318b160033f994f5b8aca4855682466129144bf81af735ac2a0750f2fa32f`.
+- Baseline, counterexample, failed repair and final command directories retain
+  declarations, input bytes, reports and logs. `legacy-root-admitted.json` binds
+  the installed destructive-success observation and its exact execution log.
+- `case-continuity.json`, `size-review.json`, `ruff-comparison.json`,
+  `remaining-boundaries.json`, `final-collection-ship/collection.json` and `review.json`
+  record their scopes. `CHANGESET.md` lists exact touched paths.
+
+The graph contains 1,060 modules and 3,334 import sites: eight forbidden pairs,
+eight analysis errors, zero unknown modules and zero cross-layer cycles. The two
+Reforger adapter/application pairs and driver/interface-mixin pair were removed
+without policy exceptions or reclassification. Canonical Ruff decreases from 103
+to 100 path/code/message findings with none added. Collection succeeds; dependency
+and release-ready verdicts remain false. All eleven new Python files fit the
+file/function limits, and the oversized driver shrinks from 456 to 453 lines.
+
+Native locks cover cooperating callers, not hostile processes or arbitrary
+external edits. Resource files/logs, epic/parent updates and compiler tree
+replacement remain separate effects; failures can leave partial state. No
+transactional directory replacement, automatic crash recovery, hard deadline
+for a hung worker, universal driver shutdown or model-completion guarantee is
+claimed. Driver bootstrap and conversation behavior remain broader D work.
+Migration: `docs/architecture/CONTRACT_DELTA_DRIVER_COMMANDS_CD_2026-09-19.md`.
+
+All sealed .27 and predecessor evidence remains unchanged. This checkpoint is
+committed/tagged locally; no GitHub push is performed under the user's current
+instruction. Full C/D, E1/E2, CAP-1/2/3, full Quality/coverage, hosted CI, release
+readiness and explicit whole-lane acceptance remain open. The last full-suite
+observation remains the retained .22 run described above; this is not a fresh
+all-green full-suite claim.

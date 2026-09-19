@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
-from orket.adapters.tools.families.reforger_tools import ReforgerTools
+from orket.application.services.reforger_service import ReforgerService
 from orket.driver import OrketDriver
 
 
@@ -21,7 +21,7 @@ def _build_driver(tmp_path: Path) -> OrketDriver:
     driver.skill = None
     driver.dialect = None
     driver.provider = SimpleNamespace(complete=None)
-    driver.reforger_tools = ReforgerTools(tmp_path / "workspace" / "default", [tmp_path])
+    driver.reforger_tools = ReforgerService(tmp_path / "workspace" / "default", [tmp_path])
     return driver
 
 

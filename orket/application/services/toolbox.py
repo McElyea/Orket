@@ -9,7 +9,6 @@ from orket.adapters.tools.families import (
     CardManagementTools,
     FileSystemTools,
     GovernanceTools,
-    ReforgerTools,
     VisionTools,
 )
 from orket.adapters.tools.runtime import ToolRuntimeExecutor
@@ -20,6 +19,7 @@ from orket.application.services.card_completion_turn_service import (
 )
 from orket.application.services.card_workspace_mutation_service import CardWorkspaceMutationService
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
+from orket.application.services.reforger_service import ReforgerService
 from orket.application.services.tool_composition_service import select_tool_bindings
 from orket.core.contracts.card_completion_commit import CardCompletionRejected, is_card_completion_call
 from orket.core.domain.execution import ExecutionTurn
@@ -45,8 +45,8 @@ class ToolBox:
         runtime_executor: ToolRuntimeExecutor | None = None,
         card_completion: CardCompletionService | None = None,
     ) -> None:
-        self.root = Path(workspace_root)
-        self.refs = [Path(r) for r in references]
+        self.root = Path(workspace_root).absolute()
+        self.refs = [Path(r).absolute() for r in references]
         self.db_path = resolve_runtime_db_path(db_path)
         self.organization = organization
         self.card_completion = card_completion
@@ -65,7 +65,7 @@ class ToolBox:
         self.fs = FileSystemTools(self.root, self.refs, mutation_authority=self.workspace_mutations)
         self.governance = GovernanceTools(self.root, self.refs, cards=self.cards)
         self.academy = AcademyTools(self.root, self.refs)
-        self.reforger = ReforgerTools(self.root, self.refs)
+        self.reforger = ReforgerService(self.root, self.refs)
 
     async def execute(
         self,

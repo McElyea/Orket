@@ -10,32 +10,9 @@ from orket.exceptions import ModelProviderError
 from orket.logging import log_event
 
 
-def _build_capabilities_summary(driver: Any) -> str:
-    model_root = getattr(driver, "model_root", Path())
-    departments = sorted([p.name for p in model_root.iterdir() if p.is_dir()]) if model_root.exists() else []
-    cli_help_text = getattr(driver, "_cli_help_text")
-    supported_action_summary_lines = getattr(driver, "_supported_action_summary_lines")
-    summary = [str(cli_help_text())]
-    summary.append("\n".join(supported_action_summary_lines()))
-    if departments:
-        summary.append(f"Detected departments: {', '.join(departments)}")
-    prompting_mode = str(getattr(driver, "prompting_mode", "unknown"))
-    json_parse_mode = str(getattr(driver, "json_parse_mode", "compatibility"))
-    summary.append(f"Active prompting mode: {prompting_mode}")
-    summary.append(f"Active JSON parse mode: {json_parse_mode}")
-    if bool(getattr(driver, "config_degraded", False)):
-        failures = getattr(driver, "config_load_failures", [])
-        summary.append(f"Config load status: degraded ({len(failures)} dependency load failure(s)).")
-    summary.append("Conversation mode is on by default. I only run structural actions when explicitly requested.")
-    return "\n".join(summary)
-
-
 class DriverConversationMixin:
     model_root: Path
     provider: Any
-
-    def _cli_help_text(self) -> str:
-        raise NotImplementedError
 
     def _supported_action_summary_lines(self) -> list[str]:
         raise NotImplementedError
@@ -98,8 +75,6 @@ class DriverConversationMixin:
             return "I am here. You can chat with me or ask me to make a specific board change."
 
         lowered = text.lower()
-        if "what can you do" in lowered or "capabilities" in lowered or "in this environment" in lowered:
-            return self._capabilities_summary()
         if (
             "tell me about this application" in lowered
             or "about this app" in lowered
@@ -179,8 +154,15 @@ class DriverConversationMixin:
                 return reasoning
         return text
 
-    def _capabilities_summary(self) -> str:
-        return _build_capabilities_summary(self)
+    def _capability_lines(self) -> tuple[str, ...]:
+        summary = self._supported_action_summary_lines()
+        summary.append(f"Active prompting mode: {getattr(self, 'prompting_mode', 'unknown')}")
+        summary.append(f"Active JSON parse mode: {getattr(self, 'json_parse_mode', 'compatibility')}")
+        if bool(getattr(self, "config_degraded", False)):
+            count = len(getattr(self, "config_load_failures", []))
+            summary.append(f"Config load status: degraded ({count} dependency load failure(s)).")
+        summary.append("Conversation mode is on by default. I only run structural actions when explicitly requested.")
+        return tuple(summary)
 
     def _log_operator_metric(self, metric_name: str, **tags: Any) -> None:
         try:

@@ -6,7 +6,8 @@ from pathlib import Path
 
 def test_bootstrap_corpus_freezes_bounded_challenge_slices() -> None:
     """Layer: contract. Verifies the bounded Gemma bootstrap corpus stays fixed to the admitted challenge slices and metrics."""
-    corpus_path = Path("c:/Source/Orket/docs/projects/PromptReforgerToolCompatibility/GEMMA_TOOL_USE_CHALLENGE_CORPUS_V1.json")
+    corpus_path = (Path(__file__).resolve().parents[3] / "docs/projects/PromptReforgerToolCompatibility"
+                   / "GEMMA_TOOL_USE_CHALLENGE_CORPUS_V1.json")
     payload = json.loads(corpus_path.read_text(encoding="utf-8"))
 
     assert payload["corpus_id"] == "challenge_workflow_runtime_bootstrap_v1"
